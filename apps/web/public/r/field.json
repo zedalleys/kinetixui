@@ -1,0 +1,30 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "field",
+  "type": "registry:ui",
+  "title": "Field",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "@radix-ui/react-slot",
+    "class-variance-authority",
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "tokens",
+    "label"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/field.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { Slot } from \"@radix-ui/react-slot\";\nimport { CircleAlert, CircleCheck, Info, TriangleAlert } from \"lucide-react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"@/lib/utils\";\nimport { Label } from \"@/components/ui/label\";\n\n/**\n * Field — the label + control + description + feedback composition, matching the\n * KinetixUI design source's input anatomy (label above, helper / feedback below,\n * label & message colour tracking the invalid state). Framework-agnostic: for\n * React Hook Form, use `Form` / `FormField` instead.\n *\n * <Field invalid={!!error}>\n *   <FieldLabel>Email</FieldLabel>\n *   <FieldControl><Input type=\"email\" /></FieldControl>\n *   <FieldDescription>We'll never share it.</FieldDescription>\n *   {error && <FieldMessage intent=\"error\">{error}</FieldMessage>}\n * </Field>\n */\n\ntype FieldContextValue = { id: string; descriptionId: string; messageId: string; invalid: boolean };\nconst FieldContext = React.createContext<FieldContextValue | null>(null);\n\nfunction useField() {\n  const ctx = React.useContext(FieldContext);\n  if (!ctx) throw new Error(\"Field parts must be used within <Field>\");\n  return ctx;\n}\n\ninterface FieldProps extends React.HTMLAttributes<HTMLDivElement> {\n  invalid?: boolean;\n}\n\nconst Field = React.forwardRef<HTMLDivElement, FieldProps>(\n  ({ className, invalid = false, ...props }, ref) => {\n    const id = React.useId();\n    const value = React.useMemo<FieldContextValue>(\n      () => ({ id: `${id}-control`, descriptionId: `${id}-description`, messageId: `${id}-message`, invalid }),\n      [id, invalid],\n    );\n    return (\n      <FieldContext.Provider value={value}>\n        <div ref={ref} data-invalid={invalid || undefined} className={cn(\"grid gap-1.5\", className)} {...props} />\n      </FieldContext.Provider>\n    );\n  },\n);\nField.displayName = \"Field\";\n\nconst FieldLabel = React.forwardRef<\n  React.ElementRef<typeof Label>,\n  React.ComponentPropsWithoutRef<typeof Label>\n>(({ className, ...props }, ref) => {\n  const { id, invalid } = useField();\n  return <Label ref={ref} htmlFor={id} className={cn(invalid && \"text-destructive\", className)} {...props} />;\n});\nFieldLabel.displayName = \"FieldLabel\";\n\n/** wraps a single form control (Input, Textarea, Select…) and wires a11y attrs */\nconst FieldControl = React.forwardRef<HTMLElement, React.ComponentPropsWithoutRef<typeof Slot>>(\n  ({ ...props }, ref) => {\n    const { id, descriptionId, messageId, invalid } = useField();\n    return (\n      <Slot\n        ref={ref}\n        id={id}\n        aria-invalid={invalid || undefined}\n        aria-describedby={`${descriptionId} ${messageId}`}\n        {...props}\n      />\n    );\n  },\n);\nFieldControl.displayName = \"FieldControl\";\n\nconst FieldDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(\n  ({ className, ...props }, ref) => {\n    const { descriptionId } = useField();\n    return <p ref={ref} id={descriptionId} className={cn(\"text-body-sm text-muted-foreground\", className)} {...props} />;\n  },\n);\nFieldDescription.displayName = \"FieldDescription\";\n\nconst messageVariants = cva(\"flex items-center gap-1.5 text-body-sm [&>svg]:size-3.5 [&>svg]:shrink-0\", {\n  variants: {\n    intent: {\n      error: \"text-destructive\",\n      warning: \"text-warning\",\n      success: \"text-success\",\n      info: \"text-muted-foreground\",\n    },\n  },\n  defaultVariants: { intent: \"error\" },\n});\n\nconst INTENT_ICON = {\n  error: CircleAlert,\n  warning: TriangleAlert,\n  success: CircleCheck,\n  info: Info,\n} as const;\n\ninterface FieldMessageProps\n  extends React.HTMLAttributes<HTMLParagraphElement>,\n    VariantProps<typeof messageVariants> {\n  /** hide the leading intent icon */\n  hideIcon?: boolean;\n}\n\nconst FieldMessage = React.forwardRef<HTMLParagraphElement, FieldMessageProps>(\n  ({ className, intent = \"error\", hideIcon, children, ...props }, ref) => {\n    const { messageId } = useField();\n    const Icon = INTENT_ICON[intent ?? \"error\"];\n    if (!children) return null;\n    return (\n      <p ref={ref} id={messageId} className={cn(messageVariants({ intent }), className)} {...props}>\n        {!hideIcon && <Icon />}\n        <span>{children}</span>\n      </p>\n    );\n  },\n);\nFieldMessage.displayName = \"FieldMessage\";\n\nexport { Field, FieldLabel, FieldControl, FieldDescription, FieldMessage, messageVariants };\n",
+      "type": "registry:ui",
+      "target": "components/ui/field.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

@@ -501,6 +501,33 @@
       ]
     },
     {
+      "name": "field",
+      "type": "registry:ui",
+      "title": "Field",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "@radix-ui/react-slot",
+        "class-variance-authority",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "tokens",
+        "label"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/field.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/field.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "form",
       "type": "registry:ui",
       "title": "Form",

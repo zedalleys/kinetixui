@@ -5,9 +5,12 @@
   "exports": {
     ".": "./dist/web/tokens.ts",
     "./css": "./dist/web/globals.css",
-    "./css/dark": "./dist/web/globals.dark.css"
+    "./css/dark": "./dist/web/globals.dark.css",
+    "./css/extras": "./dist/web/extras.css"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "node ../../style-dictionary/build.mjs",
     "clean": "rimraf dist"

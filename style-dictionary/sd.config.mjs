@@ -18,19 +18,28 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import StyleDictionary from 'style-dictionary';
-import { androidDimen, dimensionToPx, hslChannels, shadcnCssName, tsNestedFormat } from './hooks.mjs';
+import {
+  androidDimen,
+  dimensionToPx,
+  extrasCssFormat,
+  hslChannels,
+  shadcnCssName,
+  tsNestedFormat,
+} from './hooks.mjs';
 
 StyleDictionary.registerTransform(dimensionToPx);
 StyleDictionary.registerTransform(shadcnCssName);
 StyleDictionary.registerTransform(androidDimen);
 StyleDictionary.registerTransform(hslChannels);
 StyleDictionary.registerFormat(tsNestedFormat);
+StyleDictionary.registerFormat(extrasCssFormat);
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = `${ROOT}/packages/tokens/dist`;
 
 const isColor = (t) => t.$type === 'color';
 const isSemantic = (t) => t.filePath.includes(`${'/'}semantic${'/'}`);
+const isSimpleForCss = (t) => t.$type !== 'shadow' && t.$type !== 'typography';
 
 /**
  * @param {'light'|'dark'} theme
@@ -43,6 +52,8 @@ export function getConfig(theme) {
     source: [
       `${ROOT}/tokens/primitives/**/*.json`,
       `${ROOT}/tokens/semantic/color.${theme}.json`,
+      `${ROOT}/tokens/semantic/shadow.json`,
+      `${ROOT}/tokens/semantic/typography.json`,
     ],
     platforms: {
       /* ---------------------------------------------------------- WEB CSS */
@@ -59,9 +70,8 @@ export function getConfig(theme) {
           {
             destination: light ? 'globals.css' : 'globals.dark.css',
             format: 'css/variables',
-            // light: everything (primitives + semantic).  dark: semantic only —
-            // the primitive ramps are already defined once under :root.
-            filter: light ? undefined : (t) => isSemantic(t),
+            // colour + dimension only — shadow/typography composites go to extras.css
+            filter: (t) => isSimpleForCss(t) && (light || isSemantic(t)),
             options: { selector: light ? ':root' : '.dark' },
           },
         ],
@@ -70,6 +80,18 @@ export function getConfig(theme) {
       /* Everything below is theme-independent — only the light run emits it. */
       ...(light
         ? {
+            'css-extras': {
+              transforms: ['attribute/cti', 'kinetix/dimension-px'],
+              buildPath: `${DIST}/web/`,
+              options: { outputReferences: false },
+              files: [
+                {
+                  destination: 'extras.css',
+                  format: 'kinetix/extras-css',
+                  filter: (t) => t.$type === 'shadow' || t.$type === 'typography',
+                },
+              ],
+            },
             ts: {
               // custom format walks token.path, so only value transforms matter here
               transforms: ['attribute/cti', 'name/camel', 'color/css', 'kinetix/dimension-px'],

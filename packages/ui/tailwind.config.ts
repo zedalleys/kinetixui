@@ -15,6 +15,38 @@ export default {
   theme: {
     extend: {
       fontFamily: { sans: "var(--font-sans)" },
+      // Material-3 type scale — `text-body-md`, `text-headline-lg`, … each carries
+      // its line-height, tracking and weight. Mirrors tokens/semantic/typography.json.
+      fontSize: {
+        "display-lg": ["57px", { lineHeight: "64px", letterSpacing: "-0.25px", fontWeight: "500" }],
+        "display-md": ["45px", { lineHeight: "52px", letterSpacing: "0", fontWeight: "500" }],
+        "display-sm": ["36px", { lineHeight: "44px", letterSpacing: "0", fontWeight: "400" }],
+        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "0", fontWeight: "600" }],
+        "headline-md": ["28px", { lineHeight: "36px", letterSpacing: "0", fontWeight: "400" }],
+        "headline-sm": ["24px", { lineHeight: "32px", letterSpacing: "0", fontWeight: "400" }],
+        "title-lg": ["22px", { lineHeight: "28px", letterSpacing: "0", fontWeight: "400" }],
+        "title-md": ["16px", { lineHeight: "24px", letterSpacing: "0.15px", fontWeight: "500" }],
+        "title-sm": ["14px", { lineHeight: "20px", letterSpacing: "0.1px", fontWeight: "500" }],
+        "title-dialog": ["18px", { lineHeight: "24px", letterSpacing: "0", fontWeight: "600" }],
+        "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.1px", fontWeight: "500" }],
+        "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.5px", fontWeight: "500" }],
+        "label-sm": ["11px", { lineHeight: "16px", letterSpacing: "0.5px", fontWeight: "500" }],
+        "body-lg": ["16px", { lineHeight: "24px", letterSpacing: "0.5px", fontWeight: "400" }],
+        "body-md": ["14px", { lineHeight: "20px", letterSpacing: "0.25px", fontWeight: "400" }],
+        "body-sm": ["12px", { lineHeight: "16px", letterSpacing: "0", fontWeight: "400" }],
+      },
+      boxShadow: {
+        sm: "var(--shadow-sm)",
+        DEFAULT: "var(--shadow-md)",
+        md: "var(--shadow-md)",
+        lg: "var(--shadow-lg)",
+        xl: "var(--shadow-xl)",
+        focus: "var(--shadow-focus)",
+        "focus-destructive": "var(--shadow-focus-destructive)",
+        "focus-success": "var(--shadow-focus-success)",
+        "focus-warning": "var(--shadow-focus-warning)",
+        none: "none",
+      },
       colors: {
         background: c("--background"),
         foreground: c("--foreground"),

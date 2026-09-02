@@ -7,6 +7,18 @@ export const metadata = {
 
 ## Unreleased
 
+- **Elevation tokens** (new category, Finesse-UI-inspired) — `--shadow-sm/md/lg/xl`
+  plus `--shadow-focus` / `-destructive` / `-success` / `-warning` (the focus ring
+  as a crisp edge + soft colour glow). Wired into the Tailwind preset (`shadow-*`,
+  `shadow-focus*`); Input / Textarea / Select now use `shadow-focus`.
+- **Typography build** — `tokens/semantic/typography.json` now compiles: an
+  `extras.css` with `--text-<style>` shorthands, and a `text-<style>` Tailwind
+  scale carrying line-height / tracking / weight (`text-body-md`, `text-headline-lg`…).
+- **`Field`** — label + control + description + feedback composition;
+  `FieldMessage` intents `error | warning | success | info` each with an icon,
+  label & message colour track the invalid state.
+- 51-item registry.
+
 - **Components — full shadcn/ui parity.** 15 more shipped: Calendar, Carousel,
   Chart, Combobox, Command, Context Menu, Data Table, Date Picker, Drawer, Form,
   Input OTP, Menubar, Navigation Menu, Resizable, Sidebar. **47 components**;

@@ -8,6 +8,8 @@ Source of truth: the KinetixUI design file in Figma, node `3877-10388`
 
 | Layer | File | Origin |
 |---|---|---|
+| Shadows | `tokens/semantic/shadow.json` | `--shadow-sm/md/lg/xl` + `--shadow-focus*` (focus ring as colour glow) → `extras.css` |
+| Text styles | `tokens/semantic/typography.json` | composites → `--text-<style>` in `extras.css` + `text-<style>` Tailwind scale |
 | Primitives — 6 brand ramps + neutral | `tokens/primitives/color.json` | Figma *Brand Colors* frame, step labels `0…10` remapped to a `0–1000` integer scale |
 | Primitives — spacing / radius | `tokens/primitives/dimension.json` | Figma `spacing/*`, `Small`/`Button`/`Popup`/`Full` |
 | Primitives — type | `tokens/primitives/typography.json` | Figma `fontSize/*`, `lineHeight/*` (Material 3 scale) |

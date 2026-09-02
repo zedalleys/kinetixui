@@ -659,12 +659,39 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
+  Field,
+  FieldControl,
+  FieldDescription,
+  FieldLabel,
+  FieldMessage,
   Modal,
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
   Tag,
 } from "@kinetixui/ui";
+
+add(
+  "field-demo",
+  () => {
+    const [v, setV] = React.useState("");
+    const invalid = v.length > 0 && !v.includes("@");
+    return (
+      <div className="w-full max-w-sm">
+        <Field invalid={invalid}>
+          <FieldLabel>Email</FieldLabel>
+          <FieldControl>
+            <Input value={v} onChange={(e) => setV(e.target.value)} placeholder="you@example.com" />
+          </FieldControl>
+          <FieldDescription>We&rsquo;ll only use it to send receipts.</FieldDescription>
+          {invalid && <FieldMessage intent="error">Enter a valid email address.</FieldMessage>}
+          {!invalid && v.includes("@") && <FieldMessage intent="success">Looks good.</FieldMessage>}
+        </Field>
+      </div>
+    );
+  },
+  `<Field invalid={!!error}>\n  <FieldLabel>Email</FieldLabel>\n  <FieldControl><Input type="email" {...register("email")} /></FieldControl>\n  <FieldDescription>We'll only use it to send receipts.</FieldDescription>\n  {error && <FieldMessage intent="error">{error.message}</FieldMessage>}\n</Field>`,
+);
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 add(

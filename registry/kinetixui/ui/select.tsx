@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 /**
  * Select — reconciled 1:1 with the KinetixUI design source, node 54855:13882.
  * The trigger mirrors Input: `rounded-sm`, `border-input`, `--spacing-3` pad,
- * Body Medium text, 1px inset `--ring` on focus, `--destructive` on aria-invalid.
+ * Body Medium text, a soft `--shadow-focus` glow, `--destructive` on aria-invalid.
  */
 const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
@@ -25,9 +25,9 @@ const SelectTrigger = React.forwardRef<
       "font-sans text-[14px] leading-5 tracking-[0.25px] text-foreground",
       "data-[placeholder]:text-muted-foreground [&>span]:line-clamp-1",
       "outline-none transition-colors",
-      "focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary",
+      "focus:border-primary focus:shadow-focus",
       "data-[state=open]:border-primary",
-      "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus:border-destructive aria-[invalid=true]:focus:ring-destructive",
+      "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus:border-destructive aria-[invalid=true]:focus:shadow-focus-destructive",
       "disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}

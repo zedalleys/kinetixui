@@ -245,6 +245,236 @@ export const tokens = {
     "wide-15": "0.15px",
     "wide-25": "0.25px",
     "wide-5": "0.5px"
+  },
+  "shadow": {
+    "sm": [
+      {
+        "color": "#0000000d",
+        "offsetX": "0",
+        "offsetY": "1",
+        "blur": "2",
+        "spread": "0"
+      }
+    ],
+    "md": [
+      {
+        "color": "#0000001f",
+        "offsetX": "0",
+        "offsetY": "1",
+        "blur": "1",
+        "spread": "0"
+      },
+      {
+        "color": "#676e7614",
+        "offsetX": "0",
+        "offsetY": "2",
+        "blur": "5",
+        "spread": "0"
+      }
+    ],
+    "lg": [
+      {
+        "color": "#00000012",
+        "offsetX": "0",
+        "offsetY": "4",
+        "blur": "6",
+        "spread": "-1"
+      },
+      {
+        "color": "#0000000f",
+        "offsetX": "0",
+        "offsetY": "2",
+        "blur": "4",
+        "spread": "-2"
+      }
+    ],
+    "xl": [
+      {
+        "color": "#0000001f",
+        "offsetX": "0",
+        "offsetY": "4",
+        "blur": "24",
+        "spread": "0"
+      }
+    ],
+    "focus": [
+      {
+        "color": "#1b3c53",
+        "offsetX": "0",
+        "offsetY": "0",
+        "blur": "0",
+        "spread": "1"
+      },
+      {
+        "color": "#1b3c5333",
+        "offsetX": "0",
+        "offsetY": "0",
+        "blur": "0",
+        "spread": "4"
+      }
+    ],
+    "focus-destructive": [
+      {
+        "color": "#ec5047",
+        "offsetX": "0",
+        "offsetY": "0",
+        "blur": "0",
+        "spread": "1"
+      },
+      {
+        "color": "#ec504733",
+        "offsetX": "0",
+        "offsetY": "0",
+        "blur": "0",
+        "spread": "4"
+      }
+    ],
+    "focus-success": [
+      {
+        "color": "#5d6d5c",
+        "offsetX": "0",
+        "offsetY": "0",
+        "blur": "0",
+        "spread": "1"
+      },
+      {
+        "color": "#5d6d5c33",
+        "offsetX": "0",
+        "offsetY": "0",
+        "blur": "0",
+        "spread": "4"
+      }
+    ],
+    "focus-warning": [
+      {
+        "color": "#f97907",
+        "offsetX": "0",
+        "offsetY": "0",
+        "blur": "0",
+        "spread": "1"
+      },
+      {
+        "color": "#f9790733",
+        "offsetX": "0",
+        "offsetY": "0",
+        "blur": "0",
+        "spread": "4"
+      }
+    ]
+  },
+  "text": {
+    "display-lg": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "500",
+      "fontSize": "57px",
+      "lineHeight": "64px",
+      "letterSpacing": "-0.25px"
+    },
+    "display-md": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "500",
+      "fontSize": "45px",
+      "lineHeight": "52px",
+      "letterSpacing": "0"
+    },
+    "display-sm": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "400",
+      "fontSize": "36px",
+      "lineHeight": "44px",
+      "letterSpacing": "0"
+    },
+    "headline-lg": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "600",
+      "fontSize": "32px",
+      "lineHeight": "40px",
+      "letterSpacing": "0"
+    },
+    "headline-md": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "400",
+      "fontSize": "28px",
+      "lineHeight": "36px",
+      "letterSpacing": "0"
+    },
+    "headline-sm": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "400",
+      "fontSize": "24px",
+      "lineHeight": "32px",
+      "letterSpacing": "0"
+    },
+    "title-lg": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "400",
+      "fontSize": "22px",
+      "lineHeight": "28px",
+      "letterSpacing": "0"
+    },
+    "title-md": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "500",
+      "fontSize": "16px",
+      "lineHeight": "24px",
+      "letterSpacing": "0.15px"
+    },
+    "title-sm": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "500",
+      "fontSize": "14px",
+      "lineHeight": "20px",
+      "letterSpacing": "0.1px"
+    },
+    "title-dialog": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "600",
+      "fontSize": "18px",
+      "lineHeight": "24px",
+      "letterSpacing": "0"
+    },
+    "label-lg": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "500",
+      "fontSize": "14px",
+      "lineHeight": "20px",
+      "letterSpacing": "0.1px"
+    },
+    "label-md": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "500",
+      "fontSize": "12px",
+      "lineHeight": "16px",
+      "letterSpacing": "0.5px"
+    },
+    "label-sm": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "500",
+      "fontSize": "11px",
+      "lineHeight": "16px",
+      "letterSpacing": "0.5px"
+    },
+    "body-lg": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "400",
+      "fontSize": "16px",
+      "lineHeight": "24px",
+      "letterSpacing": "0.5px"
+    },
+    "body-md": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "400",
+      "fontSize": "14px",
+      "lineHeight": "20px",
+      "letterSpacing": "0.25px"
+    },
+    "body-sm": {
+      "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": "400",
+      "fontSize": "12px",
+      "lineHeight": "16px",
+      "letterSpacing": "0"
+    }
   }
 } as const;
 

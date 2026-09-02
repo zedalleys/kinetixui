@@ -1,0 +1,26 @@
+export const metadata = {
+  title: "Field",
+  description: "The label + control + description + feedback composition (label & message colour track the invalid state). Feedback intents: error | warning | success | info, each with an icon.",
+};
+
+# Field
+
+The label + control + description + feedback composition (label & message colour track the invalid state). Feedback intents: error | warning | success | info, each with an icon.
+
+<ComponentPreview name="field-demo" />
+
+## Installation
+
+```bash
+npx shadcn@latest add https://kinetixui.com/r/field.json
+```
+
+## Usage
+
+```tsx
+import { Field, FieldLabel, FieldControl, FieldDescription, FieldMessage } from "@kinetixui/ui";
+```
+
+Styled entirely from the KinetixUI token contract — `bg-primary`,
+`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
+with no extra config.

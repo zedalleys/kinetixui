@@ -74,6 +74,7 @@ export const docsNav: NavGroup[] = [
       built("Dialog", "dialog"),
       built("Drawer", "drawer"),
       built("Dropdown Menu", "dropdown-menu"),
+      built("Field", "field"),
       built("Form", "form"),
       built("Hover Card", "hover-card"),
       built("Input", "input"),

@@ -30,6 +30,7 @@ const BUILT = {
   "dropdown-menu": ["DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator", "Displays a menu to the user — such as a set of actions or functions — triggered by a button."],
   "hover-card": ["HoverCard, HoverCardTrigger, HoverCardContent", "For sighted users to preview content available behind a link."],
   label: ["Label", "Renders an accessible label associated with controls."],
+  field: ["Field, FieldLabel, FieldControl, FieldDescription, FieldMessage", "The label + control + description + feedback composition (label & message colour track the invalid state). Feedback intents: error | warning | success | info, each with an icon."],
   pagination: ["Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis", "Pagination with page navigation, next and previous links."],
   popover: ["Popover, PopoverTrigger, PopoverContent", "Displays rich content in a portal, triggered by a button."],
   progress: ["Progress", "Displays an indicator showing the completion progress of a task."],

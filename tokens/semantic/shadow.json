@@ -1,0 +1,35 @@
+{
+  "$description": "Shadows. sm/md/lg/xl = elevation scale. focus-* bake the focus ring in as a crisp 1px edge + a soft colour glow (Finesse-UI pattern) so a control's focus style is one box-shadow token. No dark variant yet.",
+  "shadow": {
+    "sm": { "$type": "shadow", "$value": [
+      { "color": "#0000000d", "offsetX": "0", "offsetY": "1", "blur": "2", "spread": "0" }
+    ]},
+    "md": { "$type": "shadow", "$value": [
+      { "color": "#0000001f", "offsetX": "0", "offsetY": "1", "blur": "1", "spread": "0" },
+      { "color": "#676e7614", "offsetX": "0", "offsetY": "2", "blur": "5", "spread": "0" }
+    ]},
+    "lg": { "$type": "shadow", "$value": [
+      { "color": "#00000012", "offsetX": "0", "offsetY": "4", "blur": "6", "spread": "-1" },
+      { "color": "#0000000f", "offsetX": "0", "offsetY": "2", "blur": "4", "spread": "-2" }
+    ]},
+    "xl": { "$type": "shadow", "$value": [
+      { "color": "#0000001f", "offsetX": "0", "offsetY": "4", "blur": "24", "spread": "0" }
+    ]},
+    "focus": { "$type": "shadow", "$value": [
+      { "color": "#1b3c53", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1" },
+      { "color": "#1b3c5333", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "4" }
+    ]},
+    "focus-destructive": { "$type": "shadow", "$value": [
+      { "color": "#ec5047", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1" },
+      { "color": "#ec504733", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "4" }
+    ]},
+    "focus-success": { "$type": "shadow", "$value": [
+      { "color": "#5d6d5c", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1" },
+      { "color": "#5d6d5c33", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "4" }
+    ]},
+    "focus-warning": { "$type": "shadow", "$value": [
+      { "color": "#f97907", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1" },
+      { "color": "#f9790733", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "4" }
+    ]}
+  }
+}

@@ -17,15 +17,15 @@ const textareaVariants = cva(
     "font-sans text-[14px] leading-5 tracking-[0.25px] text-foreground",
     "placeholder:text-muted-foreground",
     "outline-none transition-colors",
-    "focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-inset",
+    "focus-visible:border-primary focus-visible:shadow-focus",
     "disabled:cursor-not-allowed disabled:opacity-50",
-    "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:border-destructive aria-[invalid=true]:focus-visible:ring-destructive",
+    "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:border-destructive aria-[invalid=true]:focus-visible:shadow-focus-destructive",
   ],
   {
     variants: {
       state: {
         Default: "",
-        Focus: "border-primary ring-1 ring-inset ring-primary",
+        Focus: "border-primary shadow-focus",
         Error: "border-destructive",
         Disabled: "opacity-50 pointer-events-none resize-none",
       },
