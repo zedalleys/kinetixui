@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Tokens",
+  description: "The token engine — sources, platforms, and the build.",
+};
+
+# Tokens
+
+## Source
+
+```
+tokens/
+├─ primitives/
+│  ├─ color.json        6 brand ramps + synthesized neutral, 0–1000
+│  ├─ dimension.json    spacing, radius, border width
+│  └─ typography.json   Material-3 scale, Montserrat
+└─ semantic/
+   ├─ color.light.json  aliases → shadcn contract
+   ├─ color.dark.json   synthesized
+   └─ typography.json    composite text styles
+```
+
+All DTCG format (`$value` / `$type`), extracted from Figma variables.
+
+## Build
+
+```bash
+pnpm build:tokens   # node style-dictionary/build.mjs
+```
+
+Style Dictionary v4 runs **once per theme** (light emits every platform, dark
+emits only `globals.dark.css`) because two files defining the same token path
+would collide in a single run.
+
+## Output
+
+| Platform | Files |
+| --- | --- |
+| Web | `web/globals.css`, `web/globals.dark.css`, `web/tokens.ts` |
+| iOS | `ios/StrataColors.swift`, `ios/Theme.swift` |
+| Android | `android/Color.kt`, `android/Theme.kt`, `res/values/{colors,dimens}.xml` |
+| Flutter | `flutter/app_colors.dart`, `flutter/app_theme.dart` |
+
+## Deviations from raw Figma
+
+The build fixes the `Primay` typo, rounds `letterSpacing` float artifacts, and
+synthesizes what Figma lacks (`--card`, `--popover`, `--ring`, the neutral ramp,
+the dark theme, `radius.lg`, `spacing.7`). Each is documented in `TOKENS.md`
+with its rationale.

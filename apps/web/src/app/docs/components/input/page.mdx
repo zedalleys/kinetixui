@@ -1,0 +1,41 @@
+export const metadata = {
+  title: "Input",
+  description: "A single-line text field. Generated 1:1 from Figma node 54855:13836.",
+};
+
+# Input
+
+A single-line text field. Generated from Figma `Personal Design System` ›
+01. Form Inputs › Input (`54855:13836`).
+
+<ComponentPreview name="input-demo" />
+
+## Installation
+
+```bash
+npx shadcn@latest add https://strata.design/r/input.json
+```
+
+## Usage
+
+```tsx
+import { Input } from "@strata/ui";
+
+<Input type="email" placeholder="you@example.com" />
+```
+
+## States
+
+<ComponentPreview name="input-states" />
+
+`Focus` is `:focus-visible` and `Disabled` is the native attribute. Setting
+`state="Error"` also sets `aria-invalid`. Label and helper text are not part of
+the control — they belong to a `Field` composition (coming soon).
+
+## API
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `state` | `"Default" \| "Focus" \| "Error" \| "Disabled"` | `"Default"` |
+
+Plus all native `<input>` attributes.

@@ -1,0 +1,56 @@
+export const metadata = {
+  title: "Introduction",
+  description: "What Strata is and how the pieces fit together.",
+};
+
+# Introduction
+
+Strata is a **personal design system** with a single source of truth in Figma
+(`Personal Design System`, node `3877-10388`). Everything downstream is
+generated or hand-built against that source:
+
+- **Tokens** — DTCG token files, compiled by Style Dictionary v4 into CSS
+  variables, a TypeScript object, SwiftUI, Jetpack Compose, and Flutter.
+- **Components** — React + `class-variance-authority` + Radix primitives,
+  styled with Tailwind against the token contract.
+- **Registry** — a shadcn custom registry, so you `npx shadcn add` a component
+  and own the code.
+- **This site** — built entirely on `@strata/ui` and `@strata/tokens`, in the
+  same light and dark themes it documents.
+
+<Callout>
+  This is not a dependency you install and theme. You copy components into your
+  app and they become yours — Strata just keeps them in sync with the design
+  file.
+</Callout>
+
+## How it flows
+
+<Steps>
+
+<Step>Design tokens live in Figma variables.</Step>
+
+The six brand ramps, spacing, radius, and the Material-3 type scale are Figma
+variables. They are extracted verbatim into `tokens/primitives`.
+
+<Step>Semantic tokens map to the shadcn contract.</Step>
+
+`tokens/semantic/color.light.json` aliases primitives to `--primary`,
+`--muted`, `--ring`, and the rest. A synthesized `color.dark.json` mirrors it.
+
+<Step>Style Dictionary compiles every platform.</Step>
+
+`pnpm build:tokens` runs once per theme and writes
+`packages/tokens/dist/{web,ios,android,flutter}`.
+
+<Step>Components consume the contract.</Step>
+
+`@strata/ui` never hard-codes a hex — every colour is `bg-primary`,
+`text-muted-foreground`, `border-input`.
+
+</Steps>
+
+## Next
+
+Head to [Installation](/docs/installation) to add Strata to a project, or jump
+straight to [Button](/docs/components/button).

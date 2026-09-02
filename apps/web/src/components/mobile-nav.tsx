@@ -1,0 +1,50 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { Menu, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { docsNav, mainNav } from "@/lib/site";
+
+export function MobileNav() {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <div className="md:hidden">
+      <button
+        aria-label="Menu"
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+      >
+        {open ? <X className="size-4" /> : <Menu className="size-4" />}
+      </button>
+      {open && (
+        <div className="fixed inset-x-0 top-14 z-40 max-h-[calc(100vh-3.5rem)] overflow-y-auto border-b border-border bg-background p-4">
+          <nav className="flex flex-col gap-1 text-sm">
+            {mainNav.map((i) => (
+              <Link key={i.href} href={i.href} onClick={() => setOpen(false)} className="rounded px-2 py-2 hover:bg-muted">
+                {i.title}
+              </Link>
+            ))}
+            <div className="my-2 h-px bg-border" />
+            {docsNav.map((g) => (
+              <div key={g.title} className="py-1">
+                <p className="px-2 py-1 text-xs font-medium text-muted-foreground">{g.title}</p>
+                {g.items.map((i) => (
+                  <Link
+                    key={i.href}
+                    href={i.disabled ? "#" : i.href}
+                    onClick={() => setOpen(false)}
+                    className={cn("block rounded px-2 py-1.5", i.disabled ? "opacity-40" : "hover:bg-muted")}
+                  >
+                    {i.title}
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </nav>
+        </div>
+      )}
+    </div>
+  );
+}

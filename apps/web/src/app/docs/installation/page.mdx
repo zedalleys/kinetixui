@@ -1,0 +1,56 @@
+export const metadata = {
+  title: "Installation",
+  description: "Add Strata tokens and components to a project.",
+};
+
+# Installation
+
+## Tokens
+
+Pull the CSS variable contract into your global stylesheet:
+
+```bash
+npx shadcn@latest add https://strata.design/r/tokens.json
+```
+
+This writes `:root` (light) and `.dark` blocks plus the six primitive ramps. Or
+vendor the generated file directly from `@strata/tokens`:
+
+```css
+@import "@strata/tokens/css";
+@import "@strata/tokens/css/dark";
+```
+
+## A component
+
+```bash
+npx shadcn@latest add https://strata.design/r/button.json
+```
+
+The CLI resolves `tokens` first (a registry dependency), installs
+`@radix-ui/react-slot`, `class-variance-authority`, `clsx`, `tailwind-merge`,
+then drops `button.tsx` into `components/ui`.
+
+## Tailwind
+
+Map the utilities onto the contract — Strata ships a preset:
+
+```ts
+// tailwind.config.ts
+import preset from "@strata/ui/tailwind.config";
+
+export default {
+  presets: [preset],
+  darkMode: ["class"],
+  content: ["./src/**/*.{ts,tsx}"],
+};
+```
+
+<Callout>
+  The preset only wires `colors`, `borderRadius`, `spacing`, and `fontFamily` to
+  CSS variables. It adds no plugins and no reset.
+</Callout>
+
+## Dark mode
+
+Strata's dark theme is a class toggle on `<html>`. See [Dark Mode](/docs/dark-mode).

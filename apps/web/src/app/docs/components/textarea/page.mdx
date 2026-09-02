@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Textarea",
+  description: "A multi-line text field. Generated 1:1 from Figma node 54855:13857.",
+};
+
+# Textarea
+
+A multi-line text field — the same state matrix and tokens as `Input`, with
+`min-h-[100px]` and vertical resize. Figma `54855:13857`.
+
+<ComponentPreview name="textarea-demo" />
+
+## Installation
+
+```bash
+npx shadcn@latest add https://strata.design/r/textarea.json
+```
+
+## Usage
+
+```tsx
+import { Textarea } from "@strata/ui";
+
+<Textarea placeholder="Type your message…" rows={4} />
+```
+
+## API
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `state` | `"Default" \| "Focus" \| "Error" \| "Disabled"` | `"Default"` |
+
+Plus all native `<textarea>` attributes.

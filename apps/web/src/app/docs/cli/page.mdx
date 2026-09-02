@@ -1,0 +1,47 @@
+export const metadata = {
+  title: "CLI",
+  description: "Using the shadcn CLI with the Strata registry.",
+};
+
+# CLI
+
+Strata publishes a shadcn **custom registry**. Any `shadcn`-compatible CLI can
+consume it.
+
+## Add a component
+
+```bash
+npx shadcn@latest add https://strata.design/r/button.json
+```
+
+Pass a bare name once the registry is configured in `components.json`:
+
+```json
+{
+  "registries": {
+    "@strata": "https://strata.design/r/{name}.json"
+  }
+}
+```
+
+```bash
+npx shadcn@latest add @strata/button
+```
+
+## Available items
+
+| Item | Type | Notes |
+| --- | --- | --- |
+| `tokens` | `registry:style` | `:root` + `.dark` contract, primitive ramps |
+| `button` | `registry:ui` | 6 variants × 4 sizes × 5 states |
+| `input` | `registry:ui` | `state`: Default / Focus / Error / Disabled |
+| `textarea` | `registry:ui` | multi-line Input |
+
+`button` declares `tokens` as a registry dependency, so adding it pulls the
+contract automatically.
+
+## Build the registry
+
+```bash
+pnpm build:registry   # shadcn build registry/registry.json --output public/r
+```

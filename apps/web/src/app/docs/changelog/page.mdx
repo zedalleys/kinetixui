@@ -1,0 +1,25 @@
+export const metadata = {
+  title: "Changelog",
+  description: "What shipped, newest first.",
+};
+
+# Changelog
+
+## Unreleased
+
+- **Web** — presentation site (`apps/web`), Next.js App Router, built on
+  `@strata/ui` in light and dark.
+- **Components** — `Input` and `Textarea` (Figma `54855:13836` / `54855:13857`),
+  `state` = Default / Focus / Error / Disabled.
+- **Registry** — `input` and `textarea` items; `tokens.json` now ships the full
+  generated contract (light + dark).
+- **Tokens** — per-theme Style Dictionary build; Android `dp` fix; clean nested
+  `tokens.ts`.
+
+## 0.1.0
+
+- Monorepo scaffold (pnpm + Turborepo).
+- Token engine: DTCG source → web / iOS / Android / Flutter.
+- `Button` — 6 variants × 4 sizes × 5 states, generated 1:1 from Figma
+  `54863:351`.
+- shadcn custom registry + Storybook 8.

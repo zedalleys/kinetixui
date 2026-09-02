@@ -12,6 +12,8 @@
     "build:ui": "pnpm --filter @strata/ui build",
     "storybook": "pnpm --filter @strata/docs storybook",
     "build-storybook": "pnpm --filter @strata/docs build-storybook",
+    "dev:web": "pnpm --filter @strata/web dev",
+    "build:web": "pnpm --filter @strata/web build",
     "clean": "turbo run clean && rimraf node_modules",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck"

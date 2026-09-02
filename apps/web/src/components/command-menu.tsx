@@ -1,0 +1,147 @@
+"use client";
+
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { Command } from "cmdk";
+import { Circle, FileText, Laptop, Moon, Search, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
+import { docsNav, mainNav } from "@/lib/site";
+
+export function CommandMenu() {
+  const router = useRouter();
+  const { setTheme } = useTheme();
+  const [open, setOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if ((e.key === "k" && (e.metaKey || e.ctrlKey)) || e.key === "/") {
+        if (
+          (e.target instanceof HTMLElement && e.target.isContentEditable) ||
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        )
+          return;
+        e.preventDefault();
+        setOpen((o) => !o);
+      }
+    };
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
+
+  const run = React.useCallback((fn: () => void) => {
+    setOpen(false);
+    fn();
+  }, []);
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="inline-flex h-9 w-full items-center gap-2 rounded-md border border-input bg-muted/50 px-3 text-[13px] text-muted-foreground transition-colors hover:bg-muted sm:w-56"
+      >
+        <Search className="size-4" />
+        <span className="flex-1 text-left">Search…</span>
+        <kbd className="pointer-events-none hidden rounded border border-border bg-background px-1.5 font-mono text-[10px] font-medium sm:inline-block">
+          ⌘K
+        </kbd>
+      </button>
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[20vh]" role="dialog" aria-modal>
+          <button
+            aria-label="Close"
+            className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
+            onClick={() => setOpen(false)}
+          />
+          <Command
+            label="Command menu"
+            className="relative z-10 w-full max-w-lg overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl"
+          >
+            <div className="flex items-center gap-2 border-b border-border px-3">
+              <Search className="size-4 text-muted-foreground" />
+              <Command.Input
+                autoFocus
+                placeholder="Type a command or search…"
+                className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              />
+            </div>
+            <Command.List className="max-h-80 overflow-y-auto p-2">
+              <Command.Empty className="py-6 text-center text-sm text-muted-foreground">
+                No results found.
+              </Command.Empty>
+
+              <Command.Group heading="Links" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground">
+                {mainNav.map((item) => (
+                  <Item key={item.href} onSelect={() => run(() => router.push(item.href))}>
+                    <Circle className="size-3" />
+                    {item.title}
+                  </Item>
+                ))}
+              </Command.Group>
+
+              {docsNav.map((group) => (
+                <Command.Group
+                  key={group.title}
+                  heading={group.title}
+                  className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground"
+                >
+                  {group.items.map((item) => (
+                    <Item
+                      key={item.href}
+                      disabled={item.disabled}
+                      onSelect={() => run(() => router.push(item.href))}
+                    >
+                      <FileText className="size-3" />
+                      {item.title}
+                      {item.label && (
+                        <span className="ml-auto text-[10px] text-muted-foreground">{item.label}</span>
+                      )}
+                    </Item>
+                  ))}
+                </Command.Group>
+              ))}
+
+              <Command.Group heading="Theme" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground">
+                <Item onSelect={() => run(() => setTheme("light"))}>
+                  <Sun className="size-3" /> Light
+                </Item>
+                <Item onSelect={() => run(() => setTheme("dark"))}>
+                  <Moon className="size-3" /> Dark
+                </Item>
+                <Item onSelect={() => run(() => setTheme("system"))}>
+                  <Laptop className="size-3" /> System
+                </Item>
+              </Command.Group>
+            </Command.List>
+          </Command>
+        </div>
+      )}
+    </>
+  );
+}
+
+function Item({
+  children,
+  onSelect,
+  disabled,
+}: {
+  children: React.ReactNode;
+  onSelect: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Command.Item
+      onSelect={onSelect}
+      disabled={disabled}
+      className={cn(
+        "flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm",
+        "aria-selected:bg-accent aria-selected:text-accent-foreground",
+        "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-40",
+      )}
+    >
+      {children}
+    </Command.Item>
+  );
+}

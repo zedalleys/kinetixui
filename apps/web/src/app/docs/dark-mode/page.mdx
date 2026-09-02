@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Dark Mode",
+  description: "How Strata's dark theme works and how to wire a toggle.",
+};
+
+# Dark Mode
+
+The dark theme is a `.dark` class on `<html>`. `@strata/tokens/css/dark`
+redefines the semantic contract under that selector — primitives are unchanged.
+
+<Callout>
+  Strata has no dark mode in Figma yet. `color.dark.json` is synthesized by
+  walking each ramp toward its dark end and swapping foreground / background
+  roles. Treat the values as provisional.
+</Callout>
+
+## Next.js
+
+```tsx
+// app/layout.tsx
+import { ThemeProvider } from "next-themes";
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+This very site uses exactly that. Toggle it from the header — the whole page,
+including these code blocks, re-themes off the same contract.
+
+## Vanilla
+
+```js
+document.documentElement.classList.toggle("dark");
+```
+
+Any framework works; the contract is just CSS.
