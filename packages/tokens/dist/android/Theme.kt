@@ -4,12 +4,12 @@
 
 
 
-package design.strata.tokens
+package com.kinetixui.tokens
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.*
 
-object StrataTheme {
+object KinetixTheme {
   val colorAccent = Color(0xfff0f7ff)
   val colorAccentForeground = Color(0xff1b3c53)
   val colorBackground = Color(0xffffffff)

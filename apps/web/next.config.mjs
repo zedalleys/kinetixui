@@ -20,7 +20,7 @@ const withMDX = createMDX({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ["ts", "tsx", "md", "mdx"],
-  transpilePackages: ["@strata/ui", "@strata/tokens"],
+  transpilePackages: ["@kinetixui/ui", "@kinetixui/tokens"],
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
   experimental: { mdxRs: false },
 };

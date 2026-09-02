@@ -1,4 +1,4 @@
-// @strata/ui — public entrypoint
+// @kinetixui/ui — public entrypoint
 export { Button, buttonVariants, type ButtonProps } from "./components/button";
 export { Input, inputVariants, type InputProps } from "./components/input";
 export { Textarea, textareaVariants, type TextareaProps } from "./components/textarea";

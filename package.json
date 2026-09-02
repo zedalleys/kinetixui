@@ -1,5 +1,5 @@
 {
-  "name": "strata-design-system",
+  "name": "kinetixui",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,11 +9,11 @@
     "build": "turbo run build",
     "build:tokens": "node style-dictionary/build.mjs",
     "build:registry": "shadcn build registry/registry.json --output public/r",
-    "build:ui": "pnpm --filter @strata/ui build",
-    "storybook": "pnpm --filter @strata/docs storybook",
-    "build-storybook": "pnpm --filter @strata/docs build-storybook",
-    "dev:web": "pnpm --filter @strata/web dev",
-    "build:web": "pnpm --filter @strata/web build",
+    "build:ui": "pnpm --filter @kinetixui/ui build",
+    "storybook": "pnpm --filter @kinetixui/docs storybook",
+    "build-storybook": "pnpm --filter @kinetixui/docs build-storybook",
+    "dev:web": "pnpm --filter @kinetixui/web dev",
+    "build:web": "pnpm --filter @kinetixui/web build",
     "clean": "turbo run clean && rimraf node_modules",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck"

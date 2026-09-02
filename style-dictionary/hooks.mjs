@@ -5,7 +5,7 @@
 
 /** unitless dimension number -> "Npx" (web). Figma dimension tokens are plain numbers. */
 export const dimensionToPx = {
-  name: 'strata/dimension-px',
+  name: 'kinetix/dimension-px',
   type: 'value',
   transitive: true,
   filter: (t) => t.$type === 'dimension',
@@ -19,7 +19,7 @@ export const dimensionToPx = {
 /** unitless dimension number -> "Ndp" for Android resource XML.
  *  (The built-in `android` transformGroup assumes rem input and multiplies by 16.) */
 export const androidDimen = {
-  name: 'strata/android-dimen',
+  name: 'kinetix/android-dimen',
   type: 'value',
   transitive: true,
   filter: (t) => t.$type === 'dimension',
@@ -32,7 +32,7 @@ export const androidDimen = {
 
 /** clean nested value-only TS module: { color: { blue: { "500": "#1b3c53" } } } */
 export const tsNestedFormat = {
-  name: 'strata/ts-nested',
+  name: 'kinetix/ts-nested',
   format: ({ dictionary }) => {
     const tree = {};
     for (const t of dictionary.allTokens) {
@@ -54,7 +54,7 @@ export const tsNestedFormat = {
 /** strip a leading "color" segment and kebab-case the rest so CSS vars read
  *  --primary / --font-size-label-lg, not --color-primary / --fontSize-label-lg */
 export const shadcnCssName = {
-  name: 'strata/shadcn-css-name',
+  name: 'kinetix/shadcn-css-name',
   type: 'name',
   transform: (t) => {
     const path = t.path[0] === 'color' ? t.path.slice(1) : t.path;

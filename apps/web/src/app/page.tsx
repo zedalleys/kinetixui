@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, Boxes, Palette, Smartphone, Sparkles } from "lucide-react";
-import { Button, Input } from "@strata/ui";
+import { ArrowRight, Boxes, Palette, Smartphone, Sparkles, Zap } from "lucide-react";
+import { Button, Input } from "@kinetixui/ui";
 import { CodeBlock } from "@/components/code-block";
-import { siteConfig } from "@/lib/site";
 
 export default function HomePage() {
   return (
@@ -14,16 +13,16 @@ export default function HomePage() {
           className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted"
         >
           <Sparkles className="size-3 text-primary" />
-          New — token engine ships web, iOS, Android &amp; Flutter
+          Free while in beta — every component, every platform
           <ArrowRight className="size-3" />
         </Link>
 
         <h1 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight md:text-6xl">
-          The design system, in <span className="text-primary">code</span> and{" "}
-          <span className="text-primary">design</span>.
+          One token architecture, <span className="text-primary">in motion</span> across every platform.
         </h1>
-        <p className="max-w-xl text-balance text-muted-foreground md:text-lg">
-          {siteConfig.description} Copy a component, own the code, keep it in sync with Figma.
+        <p className="max-w-2xl text-balance text-muted-foreground md:text-lg">
+          KinetixUI turns a single design source into living tokens and components for React, SwiftUI,
+          Jetpack Compose and Flutter. Copy a component, own the code, stay in sync as the design moves.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
@@ -31,22 +30,22 @@ export default function HomePage() {
             <Link href="/docs">Get Started</Link>
           </Button>
           <Button asChild size="lg" variant="Outline">
-            <Link href="/docs/components/button">Browse Components</Link>
+            <Link href="/components">Browse Components</Link>
           </Button>
         </div>
 
         <div className="w-full max-w-md pt-4">
-          <CodeBlock code="npx shadcn@latest add https://strata.design/r/button.json" />
+          <CodeBlock code="npx shadcn@latest add https://kinetixui.com/r/button.json" />
         </div>
       </section>
 
       {/* feature grid */}
       <section className="grid gap-4 pb-16 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { icon: Palette, title: "One token source", body: "DTCG tokens extracted from Figma, compiled by Style Dictionary v4." },
-          { icon: Smartphone, title: "Every platform", body: "CSS variables, TS, SwiftUI, Jetpack Compose, Flutter — from the same file." },
-          { icon: Boxes, title: "shadcn registry", body: "Components you install with the shadcn CLI and own outright." },
-          { icon: Sparkles, title: "Light & dark", body: "A synthesized dark theme rides the same semantic contract." },
+          { icon: Zap, title: "Dynamic tokens", body: "One DTCG source, compiled by Style Dictionary v4 — change it once, it moves everywhere." },
+          { icon: Smartphone, title: "Every platform", body: "CSS variables, TypeScript, SwiftUI, Jetpack Compose and Flutter from the same file." },
+          { icon: Boxes, title: "Own your code", body: "Components install through the shadcn CLI and land in your repo — no runtime dependency." },
+          { icon: Palette, title: "Light & dark", body: "One semantic contract, two value sets, toggled with a class." },
         ].map((f) => (
           <div key={f.title} className="rounded-xl border border-border bg-card p-5">
             <f.icon className="size-5 text-primary" />
@@ -56,9 +55,18 @@ export default function HomePage() {
         ))}
       </section>
 
+      {/* who it's for */}
+      <section className="mb-16 rounded-2xl border border-border bg-muted/30 p-8 text-center">
+        <p className="mx-auto max-w-2xl text-muted-foreground">
+          Built for product teams, agencies and companies that ship on more than one platform and want
+          their design system to be the same everywhere. Free today; advanced tooling arrives as{" "}
+          <span className="text-foreground">KinetixUI Pro</span>.
+        </p>
+      </section>
+
       {/* live showcase */}
       <section className="mb-24 rounded-2xl border border-border bg-card p-8">
-        <p className="text-sm font-medium text-muted-foreground">Live — rendered by @strata/ui</p>
+        <p className="text-sm font-medium text-muted-foreground">Live — rendered by @kinetixui/ui</p>
         <div className="mt-6 flex flex-wrap items-end gap-4">
           <Button>Primary</Button>
           <Button variant="Secondary">Secondary</Button>

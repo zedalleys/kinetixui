@@ -1,42 +1,48 @@
 export const metadata = {
   title: "Introduction",
-  description: "What Strata is and how the pieces fit together.",
+  description: "What KinetixUI is and how the pieces fit together.",
 };
 
 # Introduction
 
-Strata is a **personal design system** with a single source of truth in Figma
-(`Personal Design System`, node `3877-10388`). Everything downstream is
-generated or hand-built against that source:
+**KinetixUI** is a design system built to move. A single design source becomes
+living tokens and components that stay in sync across four platforms — the name
+comes from *kinetics*: change it once, and it propagates everywhere.
 
 - **Tokens** — DTCG token files, compiled by Style Dictionary v4 into CSS
   variables, a TypeScript object, SwiftUI, Jetpack Compose, and Flutter.
 - **Components** — React + `class-variance-authority` + Radix primitives,
   styled with Tailwind against the token contract.
 - **Registry** — a shadcn custom registry, so you `npx shadcn add` a component
-  and own the code.
-- **This site** — built entirely on `@strata/ui` and `@strata/tokens`, in the
-  same light and dark themes it documents.
+  and own the code outright.
+- **This site** — built entirely on `@kinetixui/ui` and `@kinetixui/tokens`, in
+  the same light and dark themes it documents.
 
 <Callout>
-  This is not a dependency you install and theme. You copy components into your
-  app and they become yours — Strata just keeps them in sync with the design
-  file.
+  Nothing here is a runtime dependency you install and theme. You copy components
+  into your app and they become yours — KinetixUI keeps them aligned with the
+  design source.
 </Callout>
+
+## Who it's for
+
+Product teams, agencies, and companies shipping on more than one platform that
+want one design system, identical everywhere. KinetixUI is **free while in
+beta**; deeper tooling will arrive as KinetixUI Pro.
 
 ## How it flows
 
 <Steps>
 
-<Step>Design tokens live in Figma variables.</Step>
+<Step>Design tokens live as variables in the design source.</Step>
 
-The six brand ramps, spacing, radius, and the Material-3 type scale are Figma
-variables. They are extracted verbatim into `tokens/primitives`.
+Six brand ramps, spacing, radius, and a Material-3 type scale are extracted
+verbatim into `tokens/primitives`.
 
 <Step>Semantic tokens map to the shadcn contract.</Step>
 
 `tokens/semantic/color.light.json` aliases primitives to `--primary`,
-`--muted`, `--ring`, and the rest. A synthesized `color.dark.json` mirrors it.
+`--muted`, `--ring`, and the rest. A generated `color.dark.json` mirrors it.
 
 <Step>Style Dictionary compiles every platform.</Step>
 
@@ -45,12 +51,12 @@ variables. They are extracted verbatim into `tokens/primitives`.
 
 <Step>Components consume the contract.</Step>
 
-`@strata/ui` never hard-codes a hex — every colour is `bg-primary`,
+`@kinetixui/ui` never hard-codes a hex — every colour is `bg-primary`,
 `text-muted-foreground`, `border-input`.
 
 </Steps>
 
 ## Next
 
-Head to [Installation](/docs/installation) to add Strata to a project, or jump
+Head to [Installation](/docs/installation) to add KinetixUI to a project, or jump
 straight to [Button](/docs/components/button).

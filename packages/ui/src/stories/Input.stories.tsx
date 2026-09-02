@@ -11,7 +11,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Generated from Figma `Personal Design System` › UI Components › 01. Form Inputs › Input (node 54855:13836). State matrix mirrors the Figma component property `state = Default | Focus | Error | Disabled`; Focus is `:focus-visible`, Disabled is native, `state=\"Error\"` sets `aria-invalid`.",
+          "Generated from Figma `KinetixUI` › UI Components › 01. Form Inputs › Input (node 54855:13836). State matrix mirrors the Figma component property `state = Default | Focus | Error | Disabled`; Focus is `:focus-visible`, Disabled is native, `state=\"Error\"` sets `aria-invalid`.",
       },
     },
   },

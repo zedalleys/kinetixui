@@ -1,12 +1,11 @@
 export const siteConfig = {
-  name: "Strata",
-  tagline: "The design system, in code and design.",
+  name: "KinetixUI",
+  tagline: "One token architecture, in motion across every platform.",
   description:
-    "A personal design system compiled from Figma. Tokens for web, iOS, Android and Flutter; React components; a shadcn registry.",
-  url: "https://strata.design",
-  repo: "https://github.com/strata/design-system",
-  figma:
-    "https://www.figma.com/design/GQXTKKJAPbawd4wcuE77Pf/Personal-Design-System?node-id=3877-10388",
+    "KinetixUI turns a single design source into living tokens and components for React, SwiftUI, Jetpack Compose and Flutter.",
+  url: "https://kinetixui.com",
+  repo: "https://github.com/kinetixui/kinetixui",
+  figma: "https://www.figma.com/design/GQXTKKJAPbawd4wcuE77Pf/KinetixUI?node-id=3877-10388",
 };
 
 export type NavItem = {
@@ -28,7 +27,7 @@ export const mainNav: NavItem[] = [
   { title: "Colors", href: "/colors" },
 ];
 
-/** docs left sidebar — mirrors shadcn's structure */
+/** docs left sidebar */
 export const docsNav: NavGroup[] = [
   {
     title: "Getting Started",

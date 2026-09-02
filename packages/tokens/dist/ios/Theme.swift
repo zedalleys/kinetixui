@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-public class StrataTheme {
+public class KinetixTheme {
     public static let colorAccent = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1) /** figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons) */
     public static let colorAccentForeground = UIColor(red: 0.106, green: 0.235, blue: 0.325, alpha: 1) /** synth: = primary for readable text on accent */
     public static let colorBackground = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1) /** figma: surfaceContainerLowest #ffffff */

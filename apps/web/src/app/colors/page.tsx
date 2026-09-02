@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import tokens from "@strata/tokens";
+import tokens from "@kinetixui/tokens";
 import { Check, Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
 

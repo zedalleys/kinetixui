@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/utils";
 
 /**
- * Button — generated from Figma "Personal Design System" › UI Components ›
+ * Button — generated from Figma "KinetixUI" › UI Components ›
  * 02. Controls & Actions › Button (node 54863:351).
  *
  * Figma variant matrix (mirrored 1:1 below):
@@ -17,7 +17,7 @@ import { cn } from "../lib/utils";
  * The optional `state` prop force-pins one visual state for docs / snapshots.
  *
  * Colors resolve to the semantic token contract in
- * @strata/tokens/dist/web/globals.css.
+ * @kinetixui/tokens/dist/web/globals.css.
  */
 
 const buttonVariants = cva(

@@ -6,9 +6,10 @@ export function SiteFooter() {
     <footer className="border-t border-border py-8">
       <div className="mx-auto flex max-w-screen-2xl flex-col items-center justify-between gap-3 px-4 text-sm text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
         <p>
-          Built with the <span className="text-foreground">Strata</span> design system. Tokens compiled from{" "}
+          <span className="text-foreground">KinetixUI</span> — this site is built with it, in light and dark.
+          Tokens compiled from{" "}
           <Link href={siteConfig.figma} target="_blank" rel="noreferrer" className="underline underline-offset-4 hover:text-foreground">
-            Figma
+            the design source
           </Link>{" "}
           via Style Dictionary.
         </p>

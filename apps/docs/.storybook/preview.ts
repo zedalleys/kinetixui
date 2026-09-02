@@ -2,8 +2,8 @@ import type { Preview } from "@storybook/react";
 import { withThemeByClassName } from "@storybook/addon-themes";
 
 // Token contract — light in :root, dark under .dark
-import "@strata/tokens/css";
-import "@strata/tokens/css/dark";
+import "@kinetixui/tokens/css";
+import "@kinetixui/tokens/css/dark";
 // Tailwind utilities layer for the stories
 import "./tailwind.css";
 

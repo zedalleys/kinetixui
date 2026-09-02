@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Installation",
-  description: "Add Strata tokens and components to a project.",
+  description: "Add KinetixUI tokens and components to a project.",
 };
 
 # Installation
@@ -10,21 +10,21 @@ export const metadata = {
 Pull the CSS variable contract into your global stylesheet:
 
 ```bash
-npx shadcn@latest add https://strata.design/r/tokens.json
+npx shadcn@latest add https://kinetixui.com/r/tokens.json
 ```
 
 This writes `:root` (light) and `.dark` blocks plus the six primitive ramps. Or
-vendor the generated file directly from `@strata/tokens`:
+vendor the generated file directly from `@kinetixui/tokens`:
 
 ```css
-@import "@strata/tokens/css";
-@import "@strata/tokens/css/dark";
+@import "@kinetixui/tokens/css";
+@import "@kinetixui/tokens/css/dark";
 ```
 
 ## A component
 
 ```bash
-npx shadcn@latest add https://strata.design/r/button.json
+npx shadcn@latest add https://kinetixui.com/r/button.json
 ```
 
 The CLI resolves `tokens` first (a registry dependency), installs
@@ -33,11 +33,11 @@ then drops `button.tsx` into `components/ui`.
 
 ## Tailwind
 
-Map the utilities onto the contract — Strata ships a preset:
+Map the utilities onto the contract — KinetixUI ships a preset:
 
 ```ts
 // tailwind.config.ts
-import preset from "@strata/ui/tailwind.config";
+import preset from "@kinetixui/ui/tailwind.config";
 
 export default {
   presets: [preset],
@@ -53,4 +53,4 @@ export default {
 
 ## Dark mode
 
-Strata's dark theme is a class toggle on `<html>`. See [Dark Mode](/docs/dark-mode).
+KinetixUI's dark theme is a class toggle on `<html>`. See [Dark Mode](/docs/dark-mode).

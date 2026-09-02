@@ -1,5 +1,5 @@
 {
-  "name": "@strata/docs",
+  "name": "@kinetixui/docs",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -8,8 +8,8 @@
     "build-storybook": "storybook build -o storybook-static"
   },
   "dependencies": {
-    "@strata/ui": "workspace:*",
-    "@strata/tokens": "workspace:*",
+    "@kinetixui/ui": "workspace:*",
+    "@kinetixui/tokens": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

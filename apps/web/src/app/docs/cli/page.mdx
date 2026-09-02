@@ -1,17 +1,17 @@
 export const metadata = {
   title: "CLI",
-  description: "Using the shadcn CLI with the Strata registry.",
+  description: "Using the shadcn CLI with the KinetixUI registry.",
 };
 
 # CLI
 
-Strata publishes a shadcn **custom registry**. Any `shadcn`-compatible CLI can
+KinetixUI publishes a shadcn **custom registry**. Any `shadcn`-compatible CLI can
 consume it.
 
 ## Add a component
 
 ```bash
-npx shadcn@latest add https://strata.design/r/button.json
+npx shadcn@latest add https://kinetixui.com/r/button.json
 ```
 
 Pass a bare name once the registry is configured in `components.json`:
@@ -19,13 +19,13 @@ Pass a bare name once the registry is configured in `components.json`:
 ```json
 {
   "registries": {
-    "@strata": "https://strata.design/r/{name}.json"
+    "@kinetixui": "https://kinetixui.com/r/{name}.json"
   }
 }
 ```
 
 ```bash
-npx shadcn@latest add @strata/button
+npx shadcn@latest add @kinetixui/button
 ```
 
 ## Available items

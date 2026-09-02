@@ -1,17 +1,18 @@
 export const metadata = {
   title: "Dark Mode",
-  description: "How Strata's dark theme works and how to wire a toggle.",
+  description: "How KinetixUI's dark theme works and how to wire a toggle.",
 };
 
 # Dark Mode
 
-The dark theme is a `.dark` class on `<html>`. `@strata/tokens/css/dark`
+The dark theme is a `.dark` class on `<html>`. `@kinetixui/tokens/css/dark`
 redefines the semantic contract under that selector — primitives are unchanged.
 
 <Callout>
-  Strata has no dark mode in Figma yet. `color.dark.json` is synthesized by
-  walking each ramp toward its dark end and swapping foreground / background
-  roles. Treat the values as provisional.
+  The dark palette is currently **generated**, not hand-designed: `color.dark.json`
+  is derived by walking each ramp toward its dark end and swapping foreground /
+  background roles. It is production-usable and will be refined against a
+  hand-tuned dark source.
 </Callout>
 
 ## Next.js

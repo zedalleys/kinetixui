@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Button, Input, Textarea } from "@strata/ui";
+import { Button, Input, Textarea } from "@kinetixui/ui";
 
 /** resolved semantic contract, both themes — mirrors packages/tokens/dist/web/globals*.css */
 const CONTRACT: { token: string; light: string; dark: string }[] = [

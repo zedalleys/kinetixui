@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* globals.css from @strata/tokens is imported first in preview.ts and supplies
+/* globals.css from @kinetixui/tokens is imported first in preview.ts and supplies
    every semantic + primitive custom property this layer references. */
 body {
   background: var(--background);

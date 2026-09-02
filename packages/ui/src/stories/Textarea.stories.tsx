@@ -11,7 +11,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Generated from Figma `Personal Design System` › UI Components › 01. Form Inputs › Textarea (node 54855:13857). Same state matrix and tokens as Input; multi-line with `min-h-[100px]` (Figma `h: 100`) and vertical resize.",
+          "Generated from Figma `KinetixUI` › UI Components › 01. Form Inputs › Textarea (node 54855:13857). Same state matrix and tokens as Input; multi-line with `min-h-[100px]` (Figma `h: 100`) and vertical resize.",
       },
     },
   },

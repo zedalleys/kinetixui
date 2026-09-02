@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Button } from "@strata/ui";
+import { Button } from "@kinetixui/ui";
 
 export function ModeToggle() {
   const { setTheme, resolvedTheme } = useTheme();

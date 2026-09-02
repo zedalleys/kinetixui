@@ -11,11 +11,11 @@
     "prefix": ""
   },
   "aliases": {
-    "components": "@strata/ui/components",
-    "utils": "@strata/ui/lib/utils",
-    "ui": "@strata/ui/components"
+    "components": "@kinetixui/ui/components",
+    "utils": "@kinetixui/ui/lib/utils",
+    "ui": "@kinetixui/ui/components"
   },
   "registries": {
-    "@strata": "https://strata.design/r/{name}.json"
+    "@kinetixui": "https://kinetixui.com/r/{name}.json"
   }
 }

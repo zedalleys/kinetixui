@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/utils";
 
 /**
- * Textarea — generated from Figma "Personal Design System" › UI Components ›
+ * Textarea — generated from Figma "KinetixUI" › UI Components ›
  * 01. Form Inputs › Textarea (node 54855:13857).
  *
  * Identical to `Input` except the field is multi-line: `min-h-[100px]`

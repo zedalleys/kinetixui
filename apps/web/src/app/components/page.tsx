@@ -1,12 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
-import { Button, Input, Textarea } from "@strata/ui";
+import { Button, Input, Textarea } from "@kinetixui/ui";
 import { docsNav } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Components",
-  description: "Every component in the Strata registry.",
+  description: "Every component in the KinetixUI registry.",
 };
 
 const previews: Record<string, React.ReactNode> = {

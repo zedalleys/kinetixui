@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * Strata Button — generated 1:1 from Figma node 54863:351.
+ * KinetixUI Button — generated 1:1 from Figma node 54863:351.
  * variant: Primary | Secondary | Outline | Destructive | Ghost | Link
  * size:    sm | md | lg | icon
  * state:   Default | Hover | Focus | Active | Disabled  (Hover/Focus/Active are

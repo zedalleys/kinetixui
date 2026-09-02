@@ -9,7 +9,7 @@ export default function ChartsPage() {
       <LineChart className="size-8 text-primary" />
       <h1 className="mt-4 text-3xl font-semibold tracking-tight">Charts</h1>
       <p className="mt-2 max-w-md text-muted-foreground">
-        Chart components themed with the Strata token contract. Planned once the core set lands —
+        Chart components themed with the KinetixUI token contract. Planned once the core set lands —
         the palette (six ramps) is already in place on the{" "}
         <a href="/colors" className="font-medium text-primary underline underline-offset-4">Colors</a>{" "}
         page.

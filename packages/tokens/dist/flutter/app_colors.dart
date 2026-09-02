@@ -9,8 +9,8 @@
 
 import 'dart:ui';
 
-class AppColors {
-    AppColors._();
+class KinetixColors {
+    KinetixColors._();
 
     static const colorAccent = Color(0xFFF0F7FF); /** figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons) */
     static const colorAccentForeground = Color(0xFF1B3C53); /** synth: = primary for readable text on accent */

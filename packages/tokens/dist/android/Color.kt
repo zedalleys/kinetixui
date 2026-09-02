@@ -4,12 +4,12 @@
 
 
 
-package design.strata.tokens
+package com.kinetixui.tokens
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.*
 
-object StrataPalette {
+object KinetixPalette {
   val colorAmber0 = Color(0xffffffff)
   val colorAmber100 = Color(0xfffff2dd)
   val colorAmber1000 = Color(0xff2a1a00)

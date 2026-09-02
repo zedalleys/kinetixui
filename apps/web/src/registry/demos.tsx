@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Input, Textarea } from "@strata/ui";
+import { Button, Input, Textarea } from "@kinetixui/ui";
 
 /* Live demos used by <ComponentPreview name="…" />. Keep each self-contained. */
 
@@ -63,7 +63,7 @@ export const demoRegistry: Record<
 > = {
   "button-demo": {
     component: ButtonDemo,
-    source: `import { Button } from "@strata/ui"
+    source: `import { Button } from "@kinetixui/ui"
 
 export function ButtonDemo() {
   return <Button>Button</Button>
@@ -71,7 +71,7 @@ export function ButtonDemo() {
   },
   "button-variants": {
     component: ButtonVariants,
-    source: `import { Button } from "@strata/ui"
+    source: `import { Button } from "@kinetixui/ui"
 
 export function ButtonVariants() {
   return (
@@ -88,7 +88,7 @@ export function ButtonVariants() {
   },
   "button-sizes": {
     component: ButtonSizes,
-    source: `import { Button } from "@strata/ui"
+    source: `import { Button } from "@kinetixui/ui"
 
 export function ButtonSizes() {
   return (
@@ -102,7 +102,7 @@ export function ButtonSizes() {
   },
   "input-demo": {
     component: InputDemo,
-    source: `import { Input } from "@strata/ui"
+    source: `import { Input } from "@kinetixui/ui"
 
 export function InputDemo() {
   return <Input placeholder="you@example.com" type="email" />
@@ -110,7 +110,7 @@ export function InputDemo() {
   },
   "input-states": {
     component: InputStates,
-    source: `import { Input } from "@strata/ui"
+    source: `import { Input } from "@kinetixui/ui"
 
 export function InputStates() {
   return (
@@ -124,7 +124,7 @@ export function InputStates() {
   },
   "textarea-demo": {
     component: TextareaDemo,
-    source: `import { Textarea } from "@strata/ui"
+    source: `import { Textarea } from "@kinetixui/ui"
 
 export function TextareaDemo() {
   return <Textarea placeholder="Type your message…" />

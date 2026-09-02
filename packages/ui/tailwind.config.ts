@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Maps Tailwind color/radius utilities onto the Strata semantic token contract
+ * Maps Tailwind color/radius utilities onto the KinetixUI semantic token contract
  * (packages/tokens/dist/web/globals.css). Consumers import that CSS once, then
  * use `bg-primary`, `text-muted-foreground`, `rounded-md`, etc.
  */

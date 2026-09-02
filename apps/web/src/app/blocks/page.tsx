@@ -10,7 +10,7 @@ export default function BlocksPage() {
       <Blocks className="size-8 text-primary" />
       <h1 className="mt-4 text-3xl font-semibold tracking-tight">Blocks</h1>
       <p className="mt-2 max-w-md text-muted-foreground">
-        Ready-made sections — auth forms, dashboards, marketing headers — assembled from Strata
+        Ready-made sections — auth forms, dashboards, marketing headers — assembled from KinetixUI
         components. Nothing to show until more components ship.
       </p>
       <Link

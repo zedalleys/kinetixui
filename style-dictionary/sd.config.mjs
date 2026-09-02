@@ -1,5 +1,5 @@
 /**
- * Style Dictionary v4 — Strata cross-platform token engine (config factory).
+ * Style Dictionary v4 — KinetixUI cross-platform token engine (config factory).
  *
  * Multi-theme is handled the idiomatic v4 way: one build run per theme, each
  * with its own source set, so light and dark never collide on the same token
@@ -48,9 +48,9 @@ export function getConfig(theme) {
       css: {
         transforms: [
           'attribute/cti',
-          'strata/shadcn-css-name',
+          'kinetix/shadcn-css-name',
           'color/css',
-          'strata/dimension-px',
+          'kinetix/dimension-px',
         ],
         buildPath: `${DIST}/web/`,
         options: { outputReferences: light },
@@ -71,25 +71,25 @@ export function getConfig(theme) {
         ? {
             ts: {
               // custom format walks token.path, so only value transforms matter here
-              transforms: ['attribute/cti', 'name/camel', 'color/css', 'strata/dimension-px'],
+              transforms: ['attribute/cti', 'name/camel', 'color/css', 'kinetix/dimension-px'],
               buildPath: `${DIST}/web/`,
-              files: [{ destination: 'tokens.ts', format: 'strata/ts-nested' }],
+              files: [{ destination: 'tokens.ts', format: 'kinetix/ts-nested' }],
             },
             'ios-swift': {
               transformGroup: 'ios-swift',
               buildPath: `${DIST}/ios/`,
               files: [
                 {
-                  destination: 'StrataColors.swift',
+                  destination: 'KinetixColors.swift',
                   format: 'ios-swift/enum.swift',
                   filter: isColor,
-                  options: { className: 'StrataColor', accessControl: 'public', import: ['SwiftUI'] },
+                  options: { className: 'KinetixColor', accessControl: 'public', import: ['SwiftUI'] },
                 },
                 {
                   destination: 'Theme.swift',
                   format: 'ios-swift/class.swift',
                   filter: (t) => isColor(t) && isSemantic(t),
-                  options: { className: 'StrataTheme', accessControl: 'public', import: ['SwiftUI'] },
+                  options: { className: 'KinetixTheme', accessControl: 'public', import: ['SwiftUI'] },
                 },
               ],
             },
@@ -101,18 +101,18 @@ export function getConfig(theme) {
                   destination: 'Color.kt',
                   format: 'compose/object',
                   filter: (t) => isColor(t) && t.filePath.includes(`${'/'}primitives${'/'}`),
-                  options: { className: 'StrataPalette', packageName: 'design.strata.tokens' },
+                  options: { className: 'KinetixPalette', packageName: 'com.kinetixui.tokens' },
                 },
                 {
                   destination: 'Theme.kt',
                   format: 'compose/object',
                   filter: (t) => isColor(t) && isSemantic(t),
-                  options: { className: 'StrataTheme', packageName: 'design.strata.tokens' },
+                  options: { className: 'KinetixTheme', packageName: 'com.kinetixui.tokens' },
                 },
               ],
             },
             'android-xml': {
-              transforms: ['attribute/cti', 'name/snake', 'color/hex8android', 'strata/android-dimen'],
+              transforms: ['attribute/cti', 'name/snake', 'color/hex8android', 'kinetix/android-dimen'],
               buildPath: `${DIST}/android/res/values/`,
               files: [
                 { destination: 'colors.xml', format: 'android/colors', filter: isColor },
@@ -127,13 +127,13 @@ export function getConfig(theme) {
                   destination: 'app_colors.dart',
                   format: 'flutter/class.dart',
                   filter: isColor,
-                  options: { className: 'AppColors' },
+                  options: { className: 'KinetixColors' },
                 },
                 {
                   destination: 'app_theme.dart',
                   format: 'flutter/class.dart',
                   filter: (t) => isColor(t) && isSemantic(t),
-                  options: { className: 'AppTheme' },
+                  options: { className: 'KinetixTheme' },
                 },
               ],
             },

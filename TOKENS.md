@@ -1,8 +1,8 @@
-# Strata token engine — Figma → code mapping
+# KinetixUI token engine — design source → code mapping
 
-Source of truth: **Figma "Personal Design System"**, node `3877-10388`
-(`GQXTKKJAPbawd4wcuE77Pf`). Extracted via Figma MCP `get_variable_defs` +
-`get_design_context`. Compiled by Style Dictionary v4 (`style-dictionary/sd.config.mjs`).
+Source of truth: the KinetixUI design file in Figma, node `3877-10388`
+(file `GQXTKKJAPbawd4wcuE77Pf`). Extracted via Figma MCP `get_variable_defs` +
+`get_design_context`. Compiled by Style Dictionary v4 (`style-dictionary/build.mjs`).
 
 ## Layers
 
