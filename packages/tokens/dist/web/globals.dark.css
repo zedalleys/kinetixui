@@ -31,4 +31,12 @@
   --chart-3: 37 100% 73%;
   --chart-4: 0 63% 64%;
   --chart-5: 24 24% 77%;
+  --sidebar: 205 50% 9%;
+  --sidebar-foreground: 212 100% 97%;
+  --sidebar-primary: 204 33% 68%;
+  --sidebar-primary-foreground: 205 55% 4%;
+  --sidebar-accent: 205 52% 13%;
+  --sidebar-accent-foreground: 212 100% 97%;
+  --sidebar-border: 204 33% 33%;
+  --sidebar-ring: 204 33% 68%;
 }

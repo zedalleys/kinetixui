@@ -203,6 +203,14 @@
   --chart-3: var(--amber-500);
   --chart-4: var(--red-400);
   --chart-5: var(--taupe-600);
+  --sidebar: var(--neutral-50);
+  --sidebar-foreground: var(--blue-900);
+  --sidebar-primary: var(--blue-500);
+  --sidebar-primary-foreground: var(--blue-50);
+  --sidebar-accent: var(--blue-50);
+  --sidebar-accent-foreground: var(--blue-500);
+  --sidebar-border: var(--neutral-300);
+  --sidebar-ring: var(--blue-500);
 }
 
 /**
@@ -238,4 +246,12 @@
   --chart-3: 37 100% 73%;
   --chart-4: 0 63% 64%;
   --chart-5: 24 24% 77%;
+  --sidebar: 205 50% 9%;
+  --sidebar-foreground: 212 100% 97%;
+  --sidebar-primary: 204 33% 68%;
+  --sidebar-primary-foreground: 205 55% 4%;
+  --sidebar-accent: 205 52% 13%;
+  --sidebar-accent-foreground: 212 100% 97%;
+  --sidebar-border: 204 33% 33%;
+  --sidebar-ring: 204 33% 68%;
 }

@@ -45,13 +45,24 @@ const BUILT = {
   toggle: ["Toggle", "A two-state button that can be either on or off."],
   "toggle-group": ["ToggleGroup, ToggleGroupItem", "A set of two-state buttons that can be toggled on or off."],
   tooltip: ["Tooltip, TooltipProvider, TooltipTrigger, TooltipContent", "A popup that displays information related to an element on focus / hover."],
+  calendar: ["Calendar", "A date field component built on react-day-picker."],
+  carousel: ["Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext", "A carousel with motion and swipe, built on Embla."],
+  chart: ["ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent", "Charts built on Recharts, themed with `--chart-1…5`."],
+  combobox: ["Command, Popover, Button", "Autocomplete input and command palette — Popover + Command."],
+  command: ["Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandDialog", "Fast, composable, unstyled command menu for React (cmdk)."],
+  "context-menu": ["ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator", "Displays a menu located at the pointer, triggered by a right click."],
+  "data-table": ["DataTable, Table", "Powerful table and datagrid built with TanStack Table."],
+  "date-picker": ["Calendar, Popover, Button", "A date picker — Popover + Calendar."],
+  drawer: ["Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter", "A drawer component for React, built on Vaul."],
+  form: ["Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage", "Building forms with React Hook Form and Zod."],
+  "input-otp": ["InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator", "Accessible one-time-password input with copy-paste."],
+  menubar: ["Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarSeparator", "A visually persistent menu common in desktop applications."],
+  "navigation-menu": ["NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuLink", "A collection of links for navigating websites."],
+  resizable: ["ResizablePanelGroup, ResizablePanel, ResizableHandle", "Accessible resizable panel groups and layouts."],
+  sidebar: ["SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger, SidebarInset", "A composable, themeable and customizable sidebar — uses `--sidebar-*` tokens."],
 };
 
-const SOON = {
-  calendar: "54855:13882", carousel: "—", chart: "—", combobox: "—", command: "—",
-  "context-menu": "—", "data-table": "—", "date-picker": "—", drawer: "—", form: "—",
-  "input-otp": "—", menubar: "—", "navigation-menu": "—", resizable: "—", sidebar: "—",
-};
+const SOON = {};
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 

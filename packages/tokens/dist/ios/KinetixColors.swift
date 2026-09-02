@@ -127,6 +127,14 @@ public enum KinetixColor {
     public static let colorSemanticOnWarningContainer = UIColor(red: 0.976, green: 0.475, blue: 0.027, alpha: 1) /** figma: onWarningContainer */
     public static let colorSemanticTertiary = UIColor(red: 0.690, green: 0.690, blue: 0.690, alpha: 1) /** figma: tertiary (flat grey, not tied to a ramp) */
     public static let colorSemanticWarningContainer = UIColor(red: 1.000, green: 0.973, blue: 0.922, alpha: 1) /** figma: warningContainer */
+    public static let colorSidebar = UIColor(red: 0.980, green: 0.980, blue: 0.980, alpha: 1)
+    public static let colorSidebarAccent = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
+    public static let colorSidebarAccentForeground = UIColor(red: 0.106, green: 0.235, blue: 0.325, alpha: 1)
+    public static let colorSidebarBorder = UIColor(red: 0.878, green: 0.878, blue: 0.878, alpha: 1)
+    public static let colorSidebarForeground = UIColor(red: 0.020, green: 0.047, blue: 0.067, alpha: 1)
+    public static let colorSidebarPrimary = UIColor(red: 0.106, green: 0.235, blue: 0.325, alpha: 1)
+    public static let colorSidebarPrimaryForeground = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
+    public static let colorSidebarRing = UIColor(red: 0.106, green: 0.235, blue: 0.325, alpha: 1)
     public static let colorStaticBlack = UIColor(red: 0.000, green: 0.000, blue: 0.000, alpha: 1)
     public static let colorStaticWhite = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1)
     public static let colorSuccess = UIColor(red: 0.365, green: 0.427, blue: 0.361, alpha: 1) /** synth: no Figma success token; green ramp step 6 (distinct from secondary) */

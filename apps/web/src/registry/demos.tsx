@@ -614,4 +614,311 @@ add(
   `<TooltipProvider>\n  <Tooltip>\n    <TooltipTrigger asChild><Button variant="Outline">Hover</Button></TooltipTrigger>\n    <TooltipContent>Add to library</TooltipContent>\n  </Tooltip>\n</TooltipProvider>`,
 );
 
+/* ---- batch 2 ------------------------------------------------------------ */
+import {
+  Calendar,
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  Command as Cmd,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+  DataTable,
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarTrigger,
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@kinetixui/ui";
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+
+add(
+  "calendar-demo",
+  () => {
+    const [date, setDate] = React.useState<Date | undefined>(new Date());
+    return <Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border" />;
+  },
+  `const [date, setDate] = React.useState<Date>()\n<Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border" />`,
+);
+add(
+  "carousel-demo",
+  () => (
+    <Carousel className="w-full max-w-xs">
+      <CarouselContent>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <CarouselItem key={i}>
+            <div className="flex aspect-square items-center justify-center rounded-lg border bg-muted text-3xl font-semibold">
+              {i + 1}
+            </div>
+          </CarouselItem>
+        ))}
+      </CarouselContent>
+      <CarouselPrevious />
+      <CarouselNext />
+    </Carousel>
+  ),
+  `<Carousel>\n  <CarouselContent>\n    {items.map((n) => <CarouselItem key={n}>{n}</CarouselItem>)}\n  </CarouselContent>\n  <CarouselPrevious />\n  <CarouselNext />\n</Carousel>`,
+);
+add(
+  "chart-demo",
+  () => {
+    const data = [
+      { month: "Jan", desktop: 186, mobile: 80 },
+      { month: "Feb", desktop: 305, mobile: 200 },
+      { month: "Mar", desktop: 237, mobile: 120 },
+      { month: "Apr", desktop: 73, mobile: 190 },
+      { month: "May", desktop: 209, mobile: 130 },
+      { month: "Jun", desktop: 214, mobile: 140 },
+    ];
+    const config = {
+      desktop: { label: "Desktop", color: "hsl(var(--chart-1))" },
+      mobile: { label: "Mobile", color: "hsl(var(--chart-2))" },
+    };
+    return (
+      <ChartContainer config={config} className="min-h-[240px] w-full">
+        <BarChart accessibilityLayer data={data}>
+          <CartesianGrid vertical={false} />
+          <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
+          <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+        </BarChart>
+      </ChartContainer>
+    );
+  },
+  `const config = {\n  desktop: { label: "Desktop", color: "hsl(var(--chart-1))" },\n  mobile: { label: "Mobile", color: "hsl(var(--chart-2))" },\n}\n<ChartContainer config={config}>\n  <BarChart data={data}>\n    <CartesianGrid vertical={false} />\n    <XAxis dataKey="month" />\n    <ChartTooltip content={<ChartTooltipContent />} />\n    <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />\n  </BarChart>\n</ChartContainer>`,
+);
+add(
+  "command-demo",
+  () => (
+    <Cmd className="max-w-[420px] rounded-lg border shadow-md">
+      <CommandInput placeholder="Type a command or search…" />
+      <CommandList>
+        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandGroup heading="Suggestions">
+          <CommandItem>Calendar</CommandItem>
+          <CommandItem>Search Emoji</CommandItem>
+          <CommandItem>Launch</CommandItem>
+        </CommandGroup>
+      </CommandList>
+    </Cmd>
+  ),
+  `<Command>\n  <CommandInput placeholder="Type a command…" />\n  <CommandList>\n    <CommandEmpty>No results found.</CommandEmpty>\n    <CommandGroup heading="Suggestions">\n      <CommandItem>Calendar</CommandItem>\n    </CommandGroup>\n  </CommandList>\n</Command>`,
+);
+add(
+  "combobox-demo",
+  () => (
+    <Cmd className="w-[240px] rounded-lg border">
+      <CommandInput placeholder="Search framework…" />
+      <CommandList>
+        <CommandEmpty>No framework found.</CommandEmpty>
+        <CommandGroup>
+          {["Next.js", "SvelteKit", "Nuxt", "Remix", "Astro"].map((f) => (
+            <CommandItem key={f}>{f}</CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+    </Cmd>
+  ),
+  `// Popover + Command\n<Popover>\n  <PopoverTrigger asChild><Button variant="Outline">Select framework…</Button></PopoverTrigger>\n  <PopoverContent className="p-0">\n    <Command>…</Command>\n  </PopoverContent>\n</Popover>`,
+);
+add(
+  "context-menu-demo",
+  () => (
+    <ContextMenu>
+      <ContextMenuTrigger className="flex h-32 w-64 items-center justify-center rounded-md border border-dashed text-sm">
+        Right-click here
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-52">
+        <ContextMenuItem>Back</ContextMenuItem>
+        <ContextMenuItem>Forward</ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem>Reload</ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  ),
+  `<ContextMenu>\n  <ContextMenuTrigger>Right-click here</ContextMenuTrigger>\n  <ContextMenuContent>\n    <ContextMenuItem>Back</ContextMenuItem>\n  </ContextMenuContent>\n</ContextMenu>`,
+);
+add(
+  "data-table-demo",
+  () => {
+    const columns = [
+      { accessorKey: "invoice", header: "Invoice" },
+      { accessorKey: "status", header: "Status" },
+      { accessorKey: "amount", header: "Amount" },
+    ] as never;
+    const data = [
+      { invoice: "INV001", status: "Paid", amount: "$250.00" },
+      { invoice: "INV002", status: "Pending", amount: "$150.00" },
+      { invoice: "INV003", status: "Unpaid", amount: "$350.00" },
+    ];
+    return <DataTable columns={columns} data={data} pageSize={5} />;
+  },
+  `const columns: ColumnDef<Invoice>[] = [\n  { accessorKey: "invoice", header: "Invoice" },\n  { accessorKey: "amount", header: "Amount" },\n]\n<DataTable columns={columns} data={data} />`,
+);
+add(
+  "date-picker-demo",
+  () => {
+    const [date, setDate] = React.useState<Date | undefined>();
+    return <Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border" />;
+  },
+  `<Popover>\n  <PopoverTrigger asChild>\n    <Button variant="Outline">{date ? format(date, "PPP") : "Pick a date"}</Button>\n  </PopoverTrigger>\n  <PopoverContent className="w-auto p-0">\n    <Calendar mode="single" selected={date} onSelect={setDate} />\n  </PopoverContent>\n</Popover>`,
+);
+add(
+  "drawer-demo",
+  () => (
+    <Drawer>
+      <DrawerTrigger asChild>
+        <Button variant="Outline">Open Drawer</Button>
+      </DrawerTrigger>
+      <DrawerContent>
+        <div className="mx-auto w-full max-w-sm">
+          <DrawerHeader>
+            <DrawerTitle>Move goal</DrawerTitle>
+            <DrawerDescription>Set your daily activity goal.</DrawerDescription>
+          </DrawerHeader>
+          <DrawerFooter>
+            <Button>Submit</Button>
+            <DrawerClose asChild>
+              <Button variant="Outline">Cancel</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  ),
+  `<Drawer>\n  <DrawerTrigger asChild><Button variant="Outline">Open Drawer</Button></DrawerTrigger>\n  <DrawerContent>…</DrawerContent>\n</Drawer>`,
+);
+add(
+  "form-demo",
+  () => (
+    <form className="w-full max-w-sm space-y-4" onSubmit={(e) => e.preventDefault()}>
+      <div className="grid gap-2">
+        <label htmlFor="fd-user" className="text-sm font-medium">Username</label>
+        <Input id="fd-user" placeholder="kinetixui" />
+        <p className="text-sm text-muted-foreground">This is your public display name.</p>
+      </div>
+      <Button type="submit">Submit</Button>
+    </form>
+  ),
+  `const form = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema) })\n\n<Form {...form}>\n  <form onSubmit={form.handleSubmit(onSubmit)}>\n    <FormField control={form.control} name="username" render={({ field }) => (\n      <FormItem>\n        <FormLabel>Username</FormLabel>\n        <FormControl><Input {...field} /></FormControl>\n        <FormMessage />\n      </FormItem>\n    )} />\n    <Button type="submit">Submit</Button>\n  </form>\n</Form>`,
+);
+add(
+  "input-otp-demo",
+  () => (
+    <InputOTP maxLength={6}>
+      <InputOTPGroup>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <InputOTPSlot key={i} index={i} />
+        ))}
+      </InputOTPGroup>
+    </InputOTP>
+  ),
+  `<InputOTP maxLength={6}>\n  <InputOTPGroup>\n    <InputOTPSlot index={0} />\n    ...\n    <InputOTPSlot index={5} />\n  </InputOTPGroup>\n</InputOTP>`,
+);
+add(
+  "menubar-demo",
+  () => (
+    <Menubar>
+      <MenubarMenu>
+        <MenubarTrigger>File</MenubarTrigger>
+        <MenubarContent>
+          <MenubarItem>New Tab</MenubarItem>
+          <MenubarItem>New Window</MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem>Share</MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+      <MenubarMenu>
+        <MenubarTrigger>Edit</MenubarTrigger>
+        <MenubarContent>
+          <MenubarItem>Undo</MenubarItem>
+          <MenubarItem>Redo</MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+    </Menubar>
+  ),
+  `<Menubar>\n  <MenubarMenu>\n    <MenubarTrigger>File</MenubarTrigger>\n    <MenubarContent>\n      <MenubarItem>New Tab</MenubarItem>\n    </MenubarContent>\n  </MenubarMenu>\n</Menubar>`,
+);
+add(
+  "navigation-menu-demo",
+  () => (
+    <NavigationMenu>
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>Getting started</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <div className="grid w-[320px] gap-2 p-4 text-sm">
+              <NavigationMenuLink className="rounded-md p-2 hover:bg-accent">Introduction</NavigationMenuLink>
+              <NavigationMenuLink className="rounded-md p-2 hover:bg-accent">Installation</NavigationMenuLink>
+              <NavigationMenuLink className="rounded-md p-2 hover:bg-accent">Theming</NavigationMenuLink>
+            </div>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
+  ),
+  `<NavigationMenu>\n  <NavigationMenuList>\n    <NavigationMenuItem>\n      <NavigationMenuTrigger>Getting started</NavigationMenuTrigger>\n      <NavigationMenuContent>…</NavigationMenuContent>\n    </NavigationMenuItem>\n  </NavigationMenuList>\n</NavigationMenu>`,
+);
+add(
+  "resizable-demo",
+  () => (
+    <ResizablePanelGroup direction="horizontal" className="max-w-md rounded-lg border">
+      <ResizablePanel defaultSize={50}>
+        <div className="flex h-32 items-center justify-center p-6 text-sm">One</div>
+      </ResizablePanel>
+      <ResizableHandle withHandle />
+      <ResizablePanel defaultSize={50}>
+        <div className="flex h-32 items-center justify-center p-6 text-sm">Two</div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
+  ),
+  `<ResizablePanelGroup direction="horizontal">\n  <ResizablePanel defaultSize={50}>One</ResizablePanel>\n  <ResizableHandle withHandle />\n  <ResizablePanel defaultSize={50}>Two</ResizablePanel>\n</ResizablePanelGroup>`,
+);
+add(
+  "sidebar-demo",
+  () => (
+    <div className="w-full rounded-lg border p-4 text-sm text-muted-foreground">
+      The <code className="text-foreground">Sidebar</code> is a full-page layout primitive
+      (<code className="text-foreground">SidebarProvider</code> + <code className="text-foreground">SidebarInset</code>).
+      See the code tab for a minimal shell; it themes from the <code className="text-foreground">--sidebar-*</code> tokens.
+    </div>
+  ),
+  `<SidebarProvider>\n  <Sidebar>\n    <SidebarHeader>…</SidebarHeader>\n    <SidebarContent>\n      <SidebarGroup>\n        <SidebarMenu>\n          <SidebarMenuItem>\n            <SidebarMenuButton isActive>Home</SidebarMenuButton>\n          </SidebarMenuItem>\n        </SidebarMenu>\n      </SidebarGroup>\n    </SidebarContent>\n  </Sidebar>\n  <SidebarInset>\n    <SidebarTrigger />\n    {/* page content */}\n  </SidebarInset>\n</SidebarProvider>`,
+);
+
 export const demoRegistry = reg;

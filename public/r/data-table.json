@@ -1,0 +1,29 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "data-table",
+  "type": "registry:ui",
+  "title": "Data Table",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "@tanstack/react-table"
+  ],
+  "registryDependencies": [
+    "tokens",
+    "button",
+    "table"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/data-table.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport {\n  flexRender,\n  getCoreRowModel,\n  getPaginationRowModel,\n  getSortedRowModel,\n  useReactTable,\n  type ColumnDef,\n  type SortingState,\n} from \"@tanstack/react-table\";\nimport { cn } from \"@/lib/utils\";\nimport { Button } from \"@/components/ui/button\";\nimport { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from \"@/components/ui/table\";\n\n/**\n * DataTable — a thin wrapper over @tanstack/react-table + the KinetixUI Table.\n * Pass `columns` and `data`; sorting + pagination are on by default. For full\n * control, drop down to `useReactTable` directly.\n */\nexport function DataTable<TData, TValue>({\n  columns,\n  data,\n  className,\n  pageSize = 10,\n}: {\n  columns: ColumnDef<TData, TValue>[];\n  data: TData[];\n  className?: string;\n  pageSize?: number;\n}) {\n  const [sorting, setSorting] = React.useState<SortingState>([]);\n\n  const table = useReactTable({\n    data,\n    columns,\n    state: { sorting },\n    onSortingChange: setSorting,\n    getCoreRowModel: getCoreRowModel(),\n    getSortedRowModel: getSortedRowModel(),\n    getPaginationRowModel: getPaginationRowModel(),\n    initialState: { pagination: { pageSize } },\n  });\n\n  return (\n    <div className={cn(\"space-y-3\", className)}>\n      <div className=\"rounded-md border\">\n        <Table>\n          <TableHeader>\n            {table.getHeaderGroups().map((hg) => (\n              <TableRow key={hg.id}>\n                {hg.headers.map((header) => (\n                  <TableHead key={header.id}>\n                    {header.isPlaceholder\n                      ? null\n                      : flexRender(header.column.columnDef.header, header.getContext())}\n                  </TableHead>\n                ))}\n              </TableRow>\n            ))}\n          </TableHeader>\n          <TableBody>\n            {table.getRowModel().rows.length ? (\n              table.getRowModel().rows.map((row) => (\n                <TableRow key={row.id} data-state={row.getIsSelected() && \"selected\"}>\n                  {row.getVisibleCells().map((cell) => (\n                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>\n                  ))}\n                </TableRow>\n              ))\n            ) : (\n              <TableRow>\n                <TableCell colSpan={columns.length} className=\"h-24 text-center\">\n                  No results.\n                </TableCell>\n              </TableRow>\n            )}\n          </TableBody>\n        </Table>\n      </div>\n      <div className=\"flex items-center justify-end gap-2\">\n        <Button variant=\"Outline\" size=\"sm\" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>\n          Previous\n        </Button>\n        <Button variant=\"Outline\" size=\"sm\" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>\n          Next\n        </Button>\n      </div>\n    </div>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "components/ui/data-table.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

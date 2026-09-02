@@ -45,9 +45,9 @@ for (const file of files) {
   writeFileSync(`${OUT}/${file}`, code);
 
   const deps = new Set();
-  for (const m of code.matchAll(/from "(@radix-ui\/[^"]+|lucide-react|sonner|class-variance-authority|clsx|tailwind-merge)"/g)) {
-    deps.add(m[1]);
-  }
+  const depRe =
+    /from "(@radix-ui\/[^"]+|@hookform\/resolvers|@tanstack\/react-table|lucide-react|sonner|class-variance-authority|clsx|tailwind-merge|cmdk|vaul|recharts|embla-carousel-react|input-otp|react-day-picker|react-hook-form|react-resizable-panels|date-fns|zod)"/g;
+  for (const m of code.matchAll(depRe)) deps.add(m[1]);
   const registryDeps = new Set(["tokens"]);
   for (const m of code.matchAll(/from "@\/components\/ui\/([a-z-]+)"/g)) registryDeps.add(m[1]);
 

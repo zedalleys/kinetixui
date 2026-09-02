@@ -43,6 +43,14 @@ class KinetixTheme {
     static const colorSemanticOnWarningContainer = Color(0xFFF97907); /** figma: onWarningContainer */
     static const colorSemanticTertiary = Color(0xFFB0B0B0); /** figma: tertiary (flat grey, not tied to a ramp) */
     static const colorSemanticWarningContainer = Color(0xFFFFF8EB); /** figma: warningContainer */
+    static const colorSidebar = Color(0xFFFAFAFA);
+    static const colorSidebarAccent = Color(0xFFF0F7FF);
+    static const colorSidebarAccentForeground = Color(0xFF1B3C53);
+    static const colorSidebarBorder = Color(0xFFE0E0E0);
+    static const colorSidebarForeground = Color(0xFF050C11);
+    static const colorSidebarPrimary = Color(0xFF1B3C53);
+    static const colorSidebarPrimaryForeground = Color(0xFFF0F7FF);
+    static const colorSidebarRing = Color(0xFF1B3C53);
     static const colorSuccess = Color(0xFF5D6D5C); /** synth: no Figma success token; green ramp step 6 (distinct from secondary) */
     static const colorSuccessForeground = Color(0xFFF1F3F1); /** synth */
     static const colorWarning = Color(0xFFF97907); /** figma: onWarningContainer #f97907 (only warning role Figma exposes at full chroma) */

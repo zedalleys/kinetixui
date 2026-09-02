@@ -55,15 +55,14 @@ npx shadcn@latest add https://kinetixui.com/r/button.json
 - ✅ **Token engine** — `pnpm build:tokens` clean; 11 files across web / iOS /
   Android / Flutter. Web CSS is HSL channels (opacity modifiers work); `--chart-1…5`
   added.
-- ✅ **Components** — 34 in `@kinetixui/ui`: `Button` / `Input` / `Textarea`
-  (design-source-native API) + 31 ported onto the token contract (Accordion …
-  Tooltip). 35-item shadcn registry.
-- ✅ **kinetixui.com** — 47-route component catalogue matching shadcn/ui coverage,
-  docs (MDX + live previews), Colors, Themes, ⌘K, light/dark. `pnpm build:web`
-  passes; every route prerenders static.
-- 🟡 15 heavier components are doc shells (Calendar, Chart, Command, Combobox,
-  Context Menu, Data Table, Date Picker, Drawer, Form, Input OTP, Menubar,
-  Navigation Menu, Resizable, Sidebar, Carousel) — next batch.
-- 🟡 Storybook has stories for Button / Input / Textarea only.
+- ✅ **Components — 47 in `@kinetixui/ui`**, full shadcn/ui parity: `Button` /
+  `Input` / `Textarea` (design-source-native API) + 44 ported onto the token
+  contract (Accordion … Tooltip, plus Calendar, Carousel, Chart, Command,
+  Context Menu, Data Table, Drawer, Form, Input OTP, Menubar, Navigation Menu,
+  Resizable, Sidebar). **48-item** shadcn registry.
+- ✅ **kinetixui.com** — every shadcn/ui doc route (49 component pages) with live
+  previews, Colors, Themes, ⌘K, light/dark. `pnpm build:web` passes; all static.
+- 🟡 Storybook has stories for Button / Input / Textarea only (site is the
+  primary doc surface).
 - 🟡 No CI. Deploy: see `DEPLOY.md` (Vercel + GoDaddy).
 - See `TOKENS.md` for every deviation from the raw design tokens.

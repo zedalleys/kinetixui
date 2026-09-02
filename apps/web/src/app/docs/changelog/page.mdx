@@ -7,18 +7,17 @@ export const metadata = {
 
 ## Unreleased
 
-- **Components** — 31 new components ported onto the KinetixUI token contract:
-  Accordion, Alert, Alert Dialog, Aspect Ratio, Avatar, Badge, Breadcrumb, Card,
-  Checkbox, Collapsible, Dialog, Dropdown Menu, Hover Card, Label, Pagination,
-  Popover, Progress, Radio Group, Scroll Area, Select, Separator, Sheet,
-  Skeleton, Slider, Sonner, Switch, Table, Tabs, Toggle, Toggle Group, Tooltip.
-  34 components total; registry now has 35 items.
-- **Tokens** — web CSS emitted as **HSL channels** so Tailwind opacity modifiers
-  work (`bg-primary/90`, `ring-ring/40`); added `--chart-1…5` (light + dark).
-- **Site** — full component catalogue (47 routes) matching shadcn/ui's coverage;
-  ⌘K search across all of them; every page prerenders as static content.
-- **Deploy** — `pnpm build:web` passes clean; `apps/web/vercel.json` +
-  `DEPLOY.md` playbook (Vercel + GoDaddy DNS).
+- **Components — full shadcn/ui parity.** 15 more shipped: Calendar, Carousel,
+  Chart, Combobox, Command, Context Menu, Data Table, Date Picker, Drawer, Form,
+  Input OTP, Menubar, Navigation Menu, Resizable, Sidebar. **47 components**;
+  **48-item registry**. New deps: recharts, react-day-picker, embla, vaul, cmdk,
+  react-hook-form + zod, input-otp, @tanstack/react-table, react-resizable-panels.
+- Earlier in this cycle: 31 components ported (Accordion … Tooltip), web CSS as
+  **HSL channels** (opacity modifiers), `--chart-1…5` and `--sidebar-*` tokens
+  (+ `caret-blink` animation).
+- **Site** — every shadcn/ui doc route present; ⌘K over all of them; all static.
+- **Deploy** — `pnpm build:web` passes; `vercel.json` + `DEPLOY.md` (Vercel +
+  GoDaddy DNS).
 
 ## 0.2.0
 

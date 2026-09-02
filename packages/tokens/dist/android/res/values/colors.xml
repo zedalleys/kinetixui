@@ -143,4 +143,12 @@
   <color name="color_chart_3">#ffffbc53</color>
   <color name="color_chart_4">#ffd13a3a</color>
   <color name="color_chart_5">#ffb4a499</color>
+  <color name="color_sidebar">#fffafafa</color>
+  <color name="color_sidebar_foreground">#ff050c11</color>
+  <color name="color_sidebar_primary">#ff1b3c53</color>
+  <color name="color_sidebar_primary_foreground">#fff0f7ff</color>
+  <color name="color_sidebar_accent">#fff0f7ff</color>
+  <color name="color_sidebar_accent_foreground">#ff1b3c53</color>
+  <color name="color_sidebar_border">#ffe0e0e0</color>
+  <color name="color_sidebar_ring">#ff1b3c53</color>
 </resources>

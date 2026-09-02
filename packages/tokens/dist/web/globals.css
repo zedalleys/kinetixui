@@ -201,4 +201,12 @@
   --chart-3: var(--amber-500);
   --chart-4: var(--red-400);
   --chart-5: var(--taupe-600);
+  --sidebar: var(--neutral-50);
+  --sidebar-foreground: var(--blue-900);
+  --sidebar-primary: var(--blue-500);
+  --sidebar-primary-foreground: var(--blue-50);
+  --sidebar-accent: var(--blue-50);
+  --sidebar-accent-foreground: var(--blue-500);
+  --sidebar-border: var(--neutral-300);
+  --sidebar-ring: var(--blue-500);
 }

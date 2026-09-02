@@ -1,0 +1,26 @@
+export const metadata = {
+  title: "Sidebar",
+  description: "A composable, themeable and customizable sidebar — uses `--sidebar-*` tokens.",
+};
+
+# Sidebar
+
+A composable, themeable and customizable sidebar — uses `--sidebar-*` tokens.
+
+<ComponentPreview name="sidebar-demo" />
+
+## Installation
+
+```bash
+npx shadcn@latest add https://kinetixui.com/r/sidebar.json
+```
+
+## Usage
+
+```tsx
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger, SidebarInset } from "@kinetixui/ui";
+```
+
+Styled entirely from the KinetixUI token contract — `bg-primary`,
+`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
+with no extra config.

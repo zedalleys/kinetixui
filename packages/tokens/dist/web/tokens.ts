@@ -158,7 +158,15 @@ export const tokens = {
     "chart-2": "#748873",
     "chart-3": "#ffbc53",
     "chart-4": "#d13a3a",
-    "chart-5": "#b4a499"
+    "chart-5": "#b4a499",
+    "sidebar": "#fafafa",
+    "sidebar-foreground": "#050c11",
+    "sidebar-primary": "#1b3c53",
+    "sidebar-primary-foreground": "#f0f7ff",
+    "sidebar-accent": "#f0f7ff",
+    "sidebar-accent-foreground": "#1b3c53",
+    "sidebar-border": "#e0e0e0",
+    "sidebar-ring": "#1b3c53"
   },
   "spacing": {
     "0": "0",
