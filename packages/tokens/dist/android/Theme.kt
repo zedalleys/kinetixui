@@ -39,7 +39,6 @@ object KinetixTheme {
   val colorSemanticOnError = Color(0xfffef3f2)
   val colorSemanticOnErrorContainer = Color(0xffec5047)
   val colorSemanticOnWarningContainer = Color(0xfff97907)
-  val colorSemanticTertiary = Color(0xffb0b0b0)
   val colorSemanticWarningContainer = Color(0xfffff8eb)
   val colorSidebar = Color(0xfffafafa)
   val colorSidebarAccent = Color(0xfff0f7ff)
@@ -51,6 +50,8 @@ object KinetixTheme {
   val colorSidebarRing = Color(0xff1b3c53)
   val colorSuccess = Color(0xff5d6d5c)
   val colorSuccessForeground = Color(0xfff1f3f1)
+  val colorTertiary = Color(0xffb0b0b0)
+  val colorTertiaryForeground = Color(0xfff0f7ff)
   val colorWarning = Color(0xfff97907)
   val colorWarningForeground = Color(0xfffff8eb)
 }

@@ -145,11 +145,6 @@
         "$value": "#f97907",
         "$type": "color",
         "$description": "figma: onWarningContainer"
-      },
-      "tertiary": {
-        "$value": "#b0b0b0",
-        "$type": "color",
-        "$description": "figma: tertiary (flat grey, not tied to a ramp)"
       }
     },
     "chart-1": {
@@ -203,6 +198,15 @@
     },
     "sidebar-ring": {
       "$value": "{color.blue.500}",
+      "$type": "color"
+    },
+    "tertiary": {
+      "$value": "#b0b0b0",
+      "$type": "color",
+      "$description": "figma: tertiary — switch off-track"
+    },
+    "tertiary-foreground": {
+      "$value": "{color.blue.50}",
       "$type": "color"
     }
   }

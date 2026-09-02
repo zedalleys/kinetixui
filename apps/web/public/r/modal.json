@@ -1,0 +1,30 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "modal",
+  "type": "registry:ui",
+  "title": "Modal",
+  "description": "Generated 1:1 from the KinetixUI design source, node 54857:1322.",
+  "dependencies": [
+    "@radix-ui/react-dialog",
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "tokens",
+    "button",
+    "dialog"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/modal.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport * as DialogPrimitive from \"@radix-ui/react-dialog\";\nimport { X } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\nimport { Button } from \"@/components/ui/button\";\nimport { Dialog, DialogOverlay, DialogPortal, DialogTrigger } from \"@/components/ui/dialog\";\n\n/**\n * Modal — reconciled 1:1 with the KinetixUI design source, node 54857:1322.\n * A structured dialog: header (title + close) · divider · body (description) ·\n * divider · right-aligned footer. `--radius-xl` corner, soft popup shadow.\n *\n * type:\n *   Info          → one primary action (\"Got it\")\n *   Confirmation  → Cancel + primary (\"Confirm\")\n *   Warning       → Cancel + primary (\"Proceed\")\n *   Destructive   → Cancel + destructive (\"Delete\")\n */\nexport type ModalType = \"Info\" | \"Confirmation\" | \"Warning\" | \"Destructive\";\n\nconst DEFAULT_ACTION: Record<ModalType, string> = {\n  Info: \"Got it\",\n  Confirmation: \"Confirm\",\n  Warning: \"Proceed\",\n  Destructive: \"Delete\",\n};\n\nexport interface ModalProps {\n  type?: ModalType;\n  title: React.ReactNode;\n  description?: React.ReactNode;\n  /** overrides the type's default action label */\n  actionLabel?: string;\n  cancelLabel?: string;\n  onAction?: () => void;\n  onCancel?: () => void;\n  open?: boolean;\n  defaultOpen?: boolean;\n  onOpenChange?: (open: boolean) => void;\n  trigger?: React.ReactNode;\n  children?: React.ReactNode;\n  className?: string;\n}\n\nfunction Modal({\n  type = \"Info\",\n  title,\n  description,\n  actionLabel,\n  cancelLabel = \"Cancel\",\n  onAction,\n  onCancel,\n  open,\n  defaultOpen,\n  onOpenChange,\n  trigger,\n  children,\n  className,\n}: ModalProps) {\n  const showCancel = type !== \"Info\";\n\n  return (\n    <Dialog open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>\n      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}\n      <DialogPortal>\n        <DialogOverlay />\n        <DialogPrimitive.Content\n          className={cn(\n            \"fixed left-1/2 top-1/2 z-50 flex w-full max-w-[480px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl bg-background font-sans\",\n            \"shadow-[0_4px_24px_rgba(0,0,0,0.12)]\",\n            \"data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95\",\n            className,\n          )}\n        >\n          <header className=\"flex items-center justify-between px-6 pb-3 pt-5\">\n            <DialogPrimitive.Title className=\"min-w-0 flex-1 text-[18px] font-semibold leading-6 text-foreground\">\n              {title}\n            </DialogPrimitive.Title>\n            <DialogPrimitive.Close\n              className=\"rounded-sm opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring\"\n              aria-label=\"Close\"\n            >\n              <X className=\"size-5\" />\n            </DialogPrimitive.Close>\n          </header>\n\n          <div className=\"h-px w-full bg-border\" />\n\n          <div className=\"px-6 py-5\">\n            {description && (\n              <DialogPrimitive.Description className=\"text-[14px] leading-5 tracking-[0.25px] text-muted-foreground\">\n                {description}\n              </DialogPrimitive.Description>\n            )}\n            {children}\n          </div>\n\n          <div className=\"h-px w-full bg-border\" />\n\n          <footer className=\"flex items-center justify-end gap-3 px-6 py-4\">\n            {showCancel && (\n              <DialogPrimitive.Close asChild>\n                <Button variant=\"Outline\" size=\"lg\" onClick={onCancel}>\n                  {cancelLabel}\n                </Button>\n              </DialogPrimitive.Close>\n            )}\n            <DialogPrimitive.Close asChild>\n              <Button\n                variant={type === \"Destructive\" ? \"Destructive\" : \"Primary\"}\n                size=\"lg\"\n                onClick={onAction}\n              >\n                {actionLabel ?? DEFAULT_ACTION[type]}\n              </Button>\n            </DialogPrimitive.Close>\n          </footer>\n        </DialogPrimitive.Content>\n      </DialogPortal>\n    </Dialog>\n  );\n}\n\nexport { Modal };\n",
+      "type": "registry:ui",
+      "target": "components/ui/modal.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

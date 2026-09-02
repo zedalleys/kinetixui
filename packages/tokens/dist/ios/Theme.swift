@@ -38,7 +38,6 @@ public class KinetixTheme {
     public static let colorSemanticOnError = UIColor(red: 0.996, green: 0.953, blue: 0.949, alpha: 1) /** figma: onError */
     public static let colorSemanticOnErrorContainer = UIColor(red: 0.925, green: 0.314, blue: 0.278, alpha: 1) /** figma: onErrorContainer */
     public static let colorSemanticOnWarningContainer = UIColor(red: 0.976, green: 0.475, blue: 0.027, alpha: 1) /** figma: onWarningContainer */
-    public static let colorSemanticTertiary = UIColor(red: 0.690, green: 0.690, blue: 0.690, alpha: 1) /** figma: tertiary (flat grey, not tied to a ramp) */
     public static let colorSemanticWarningContainer = UIColor(red: 1.000, green: 0.973, blue: 0.922, alpha: 1) /** figma: warningContainer */
     public static let colorSidebar = UIColor(red: 0.980, green: 0.980, blue: 0.980, alpha: 1)
     public static let colorSidebarAccent = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
@@ -50,6 +49,8 @@ public class KinetixTheme {
     public static let colorSidebarRing = UIColor(red: 0.106, green: 0.235, blue: 0.325, alpha: 1)
     public static let colorSuccess = UIColor(red: 0.365, green: 0.427, blue: 0.361, alpha: 1) /** synth: no Figma success token; green ramp step 6 (distinct from secondary) */
     public static let colorSuccessForeground = UIColor(red: 0.945, green: 0.953, blue: 0.945, alpha: 1) /** synth */
+    public static let colorTertiary = UIColor(red: 0.690, green: 0.690, blue: 0.690, alpha: 1) /** figma: tertiary — switch off-track */
+    public static let colorTertiaryForeground = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
     public static let colorWarning = UIColor(red: 0.976, green: 0.475, blue: 0.027, alpha: 1) /** figma: onWarningContainer #f97907 (only warning role Figma exposes at full chroma) */
     public static let colorWarningForeground = UIColor(red: 1.000, green: 0.973, blue: 0.922, alpha: 1) /** figma: warningContainer #fff8eb */
 }

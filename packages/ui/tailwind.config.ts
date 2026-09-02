@@ -27,6 +27,7 @@ export default {
         destructive: { DEFAULT: c("--destructive"), foreground: c("--destructive-foreground") },
         success: { DEFAULT: c("--success"), foreground: c("--success-foreground") },
         warning: { DEFAULT: c("--warning"), foreground: c("--warning-foreground") },
+        tertiary: { DEFAULT: c("--tertiary"), foreground: c("--tertiary-foreground") },
         border: c("--border"),
         input: c("--input"),
         ring: c("--ring"),

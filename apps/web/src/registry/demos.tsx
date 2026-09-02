@@ -236,11 +236,10 @@ add(
       <Badge variant="secondary">Secondary</Badge>
       <Badge variant="destructive">Destructive</Badge>
       <Badge variant="outline">Outline</Badge>
-      <Badge variant="success">Success</Badge>
-      <Badge variant="warning">Warning</Badge>
+      <Badge variant="subtle">Subtle</Badge>
     </div>
   ),
-  `<Badge>Default</Badge>\n<Badge variant="secondary">Secondary</Badge>\n<Badge variant="destructive">Destructive</Badge>\n<Badge variant="outline">Outline</Badge>`,
+  `<Badge>Default</Badge>\n<Badge variant="secondary">Secondary</Badge>\n<Badge variant="destructive">Destructive</Badge>\n<Badge variant="outline">Outline</Badge>\n<Badge variant="subtle">Subtle</Badge>`,
 );
 add(
   "breadcrumb-demo",
@@ -660,11 +659,51 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
+  Modal,
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
+  Tag,
 } from "@kinetixui/ui";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+
+add(
+  "tag-demo",
+  () => {
+    const [tags, setTags] = React.useState(["design", "tokens", "figma"]);
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        {tags.map((t) => (
+          <Tag key={t} onRemove={() => setTags((cur) => cur.filter((x) => x !== t))}>
+            {t}
+          </Tag>
+        ))}
+        <Tag variant="secondary">secondary</Tag>
+        <Tag variant="destructive">destructive</Tag>
+        <Tag variant="warning">warning</Tag>
+        <Tag variant="outline">outline</Tag>
+      </div>
+    );
+  },
+  `<Tag onRemove={() => remove(t)}>{t}</Tag>\n<Tag variant="secondary">secondary</Tag>\n<Tag variant="warning">warning</Tag>\n<Tag variant="outline">outline</Tag>`,
+);
+add(
+  "modal-demo",
+  () => (
+    <div className="flex flex-wrap gap-3">
+      {(["Info", "Confirmation", "Warning", "Destructive"] as const).map((type) => (
+        <Modal
+          key={type}
+          type={type}
+          title={`${type} dialog`}
+          description="Dialog description text — this modal is the design-source composition (header · divider · body · divider · footer)."
+          trigger={<Button variant="Outline">{type}</Button>}
+        />
+      ))}
+    </div>
+  ),
+  `<Modal\n  type="Confirmation"\n  title="Are you sure?"\n  description="This action cannot be undone."\n  trigger={<Button variant="Outline">Delete</Button>}\n  onAction={handleDelete}\n/>`,
+);
 
 add(
   "calendar-demo",

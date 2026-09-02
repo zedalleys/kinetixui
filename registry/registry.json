@@ -651,6 +651,33 @@
       ]
     },
     {
+      "name": "modal",
+      "type": "registry:ui",
+      "title": "Modal",
+      "description": "Generated 1:1 from the KinetixUI design source, node 54857:1322.",
+      "dependencies": [
+        "@radix-ui/react-dialog",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "tokens",
+        "button",
+        "dialog"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/modal.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/modal.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "navigation-menu",
       "type": "registry:ui",
       "title": "Navigation Menu",
@@ -1057,6 +1084,31 @@
           "path": "registry/kinetixui/ui/tabs.tsx",
           "type": "registry:ui",
           "target": "components/ui/tabs.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "tag",
+      "type": "registry:ui",
+      "title": "Tag",
+      "description": "Generated 1:1 from the KinetixUI design source, node 54855:14021.",
+      "dependencies": [
+        "class-variance-authority",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/tag.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/tag.tsx"
         },
         {
           "path": "registry/kinetixui/lib/utils.ts",

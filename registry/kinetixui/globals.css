@@ -115,7 +115,7 @@
   --semantic-on-error-container: 3 81% 60%; /** figma: onErrorContainer */
   --semantic-warning-container: 39 100% 96%; /** figma: warningContainer */
   --semantic-on-warning-container: 28 95% 50%; /** figma: onWarningContainer */
-  --semantic-tertiary: 0 0% 69%; /** figma: tertiary (flat grey, not tied to a ramp) */
+  --tertiary: 0 0% 69%; /** figma: tertiary — switch off-track */
   --spacing-0: 0;
   --spacing-1: 4px;
   --spacing-2: 8px;
@@ -211,6 +211,7 @@
   --sidebar-accent-foreground: var(--blue-500);
   --sidebar-border: var(--neutral-300);
   --sidebar-ring: var(--blue-500);
+  --tertiary-foreground: var(--blue-50);
 }
 
 /**
@@ -254,4 +255,6 @@
   --sidebar-accent-foreground: 212 100% 97%;
   --sidebar-border: 204 33% 33%;
   --sidebar-ring: 204 33% 68%;
+  --tertiary: 204 33% 33%;
+  --tertiary-foreground: 212 100% 97%;
 }

@@ -19,7 +19,8 @@ const NATIVE = new Set(["button", "input", "textarea"]);
 const NODE = {
   button: "54863:351", input: "54855:13836", textarea: "54855:13857",
   select: "54855:13882", checkbox: "54863:483", "radio-group": "54863:536",
-  switch: "54855:13984", badge: "54855:13995",
+  switch: "54855:13984", badge: "54855:13995", tag: "54855:14021",
+  modal: "54857:1322",
 };
 
 const items = [

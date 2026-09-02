@@ -5,20 +5,24 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * Badge — Figma "KinetixUI" node 54855:13995.
- * variant: default | secondary | destructive | outline | success | warning
+ * Badge — reconciled 1:1 with the KinetixUI design source, node 54855:13995.
+ * Solid pill status marker. Label Medium type (12 / 16, +0.5). Variants:
+ * default | secondary | destructive | outline | subtle.
+ *
+ * Note: the design's "Secondary" badge is the saturated sage (`#748873`), which
+ * in this token contract is `--secondary-foreground`; `--secondary` is its light
+ * container. Hence the swapped bg/text on that one variant.
  */
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium font-sans transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium font-sans tracking-[0.5px] transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/90",
-        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "text-foreground",
-        success: "border-transparent bg-success text-success-foreground hover:bg-success/90",
-        warning: "border-transparent bg-warning text-warning-foreground hover:bg-warning/90",
+        default: "bg-primary text-primary-foreground",
+        secondary: "bg-secondary-foreground text-secondary",
+        destructive: "bg-destructive text-destructive-foreground",
+        outline: "border border-input text-foreground",
+        subtle: "bg-accent text-accent-foreground",
       },
     },
     defaultVariants: { variant: "default" },

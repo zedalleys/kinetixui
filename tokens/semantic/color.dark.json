@@ -143,6 +143,14 @@
     "sidebar-ring": {
       "$value": "{color.blue.100}",
       "$type": "color"
+    },
+    "tertiary": {
+      "$value": "{color.blue.400}",
+      "$type": "color"
+    },
+    "tertiary-foreground": {
+      "$value": "{color.blue.50}",
+      "$type": "color"
     }
   }
 }

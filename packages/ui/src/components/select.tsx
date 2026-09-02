@@ -5,7 +5,11 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "../lib/utils";
 
-/** Select — Figma "KinetixUI" node 54855:13882 (Radix-backed). */
+/**
+ * Select — reconciled 1:1 with the KinetixUI design source, node 54855:13882.
+ * The trigger mirrors Input: `rounded-sm`, `border-input`, `--spacing-3` pad,
+ * Body Medium text, 1px inset `--ring` on focus, `--destructive` on aria-invalid.
+ */
 const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
 const SelectValue = SelectPrimitive.Value;
@@ -17,18 +21,21 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between rounded-sm border border-input bg-background px-3 py-2 text-sm font-sans",
-      "placeholder:text-muted-foreground [&>span]:line-clamp-1",
-      "focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary",
-      "disabled:cursor-not-allowed disabled:opacity-50",
+      "flex min-h-[44px] w-full items-center justify-between rounded-sm border border-input bg-background px-3 py-3",
+      "font-sans text-[14px] leading-5 tracking-[0.25px] text-foreground",
+      "data-[placeholder]:text-muted-foreground [&>span]:line-clamp-1",
+      "outline-none transition-colors",
+      "focus:border-primary focus:ring-1 focus:ring-inset focus:ring-primary",
       "data-[state=open]:border-primary",
+      "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus:border-destructive aria-[invalid=true]:focus:ring-destructive",
+      "disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}
     {...props}
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <ChevronDown className="size-4 opacity-60" />
+      <ChevronDown className="size-4 shrink-0 opacity-60" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ));

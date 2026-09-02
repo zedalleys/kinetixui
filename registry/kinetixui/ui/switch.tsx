@@ -4,7 +4,11 @@ import * as React from "react";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
 import { cn } from "@/lib/utils";
 
-/** Switch — Figma "KinetixUI" node 54855:13984. */
+/**
+ * Switch — reconciled 1:1 with the KinetixUI design source, node 54855:13984.
+ * 48×24 pill track. Off = `--tertiary` (#b0b0b0), on = `--primary`. 20px
+ * `--background` thumb, travels 24px. Focus = 2px `--ring` offset.
+ */
 const Switch = React.forwardRef<
   React.ElementRef<typeof SwitchPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SwitchPrimitive.Root>
@@ -12,18 +16,18 @@ const Switch = React.forwardRef<
   <SwitchPrimitive.Root
     ref={ref}
     className={cn(
-      "peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors",
+      "peer inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
       "disabled:cursor-not-allowed disabled:opacity-50",
-      "data-[state=checked]:bg-primary data-[state=unchecked]:bg-input",
+      "data-[state=checked]:bg-primary data-[state=unchecked]:bg-tertiary",
       className,
     )}
     {...props}
   >
     <SwitchPrimitive.Thumb
       className={cn(
-        "pointer-events-none block size-4 rounded-full bg-background shadow-lg ring-0 transition-transform",
-        "data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0",
+        "pointer-events-none block size-5 rounded-full bg-background shadow-lg ring-0 transition-transform",
+        "data-[state=checked]:translate-x-6 data-[state=unchecked]:translate-x-0",
       )}
     />
   </SwitchPrimitive.Root>

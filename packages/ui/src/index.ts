@@ -112,10 +112,12 @@ export {
   SheetTitle,
   SheetDescription,
 } from "./components/sheet";
+export { Modal, type ModalType, type ModalProps } from "./components/modal";
 export { Skeleton } from "./components/skeleton";
 export { Slider } from "./components/slider";
 export { Toaster, toast } from "./components/sonner";
 export { Switch } from "./components/switch";
+export { Tag, tagVariants, type TagProps } from "./components/tag";
 export {
   Table,
   TableHeader,

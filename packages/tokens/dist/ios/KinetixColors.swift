@@ -125,7 +125,6 @@ public enum KinetixColor {
     public static let colorSemanticOnError = UIColor(red: 0.996, green: 0.953, blue: 0.949, alpha: 1) /** figma: onError */
     public static let colorSemanticOnErrorContainer = UIColor(red: 0.925, green: 0.314, blue: 0.278, alpha: 1) /** figma: onErrorContainer */
     public static let colorSemanticOnWarningContainer = UIColor(red: 0.976, green: 0.475, blue: 0.027, alpha: 1) /** figma: onWarningContainer */
-    public static let colorSemanticTertiary = UIColor(red: 0.690, green: 0.690, blue: 0.690, alpha: 1) /** figma: tertiary (flat grey, not tied to a ramp) */
     public static let colorSemanticWarningContainer = UIColor(red: 1.000, green: 0.973, blue: 0.922, alpha: 1) /** figma: warningContainer */
     public static let colorSidebar = UIColor(red: 0.980, green: 0.980, blue: 0.980, alpha: 1)
     public static let colorSidebarAccent = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
@@ -154,6 +153,8 @@ public enum KinetixColor {
     public static let colorTaupe850 = UIColor(red: 0.412, green: 0.353, blue: 0.318, alpha: 1)
     public static let colorTaupe900 = UIColor(red: 0.353, green: 0.294, blue: 0.259, alpha: 1)
     public static let colorTaupe950 = UIColor(red: 0.294, green: 0.239, blue: 0.204, alpha: 1)
+    public static let colorTertiary = UIColor(red: 0.690, green: 0.690, blue: 0.690, alpha: 1) /** figma: tertiary — switch off-track */
+    public static let colorTertiaryForeground = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
     public static let colorWarning = UIColor(red: 0.976, green: 0.475, blue: 0.027, alpha: 1) /** figma: onWarningContainer #f97907 (only warning role Figma exposes at full chroma) */
     public static let colorWarningForeground = UIColor(red: 1.000, green: 0.973, blue: 0.922, alpha: 1) /** figma: warningContainer #fff8eb */
 }

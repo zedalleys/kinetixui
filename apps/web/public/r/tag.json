@@ -1,0 +1,28 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "tag",
+  "type": "registry:ui",
+  "title": "Tag",
+  "description": "Generated 1:1 from the KinetixUI design source, node 54855:14021.",
+  "dependencies": [
+    "class-variance-authority",
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/tag.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { X } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * Tag — reconciled 1:1 with the KinetixUI design source, node 54855:14021.\n * Container-tinted, dismissible chip (distinct from Badge, which is a solid\n * pill). `rounded-sm`, `--spacing-2` / `--spacing-1` pad, Label Medium type,\n * optional close button. Variants: default | secondary | destructive | warning | outline.\n */\nconst tagVariants = cva(\n  \"inline-flex items-center gap-1 rounded-sm px-2 py-1 text-xs font-medium font-sans tracking-[0.5px]\",\n  {\n    variants: {\n      variant: {\n        default: \"bg-accent text-accent-foreground\",\n        secondary: \"bg-secondary text-secondary-foreground\",\n        destructive: \"bg-destructive-foreground text-destructive\",\n        warning: \"bg-warning-foreground text-warning\",\n        outline: \"border border-input text-foreground\",\n      },\n    },\n    defaultVariants: { variant: \"default\" },\n  },\n);\n\nexport interface TagProps\n  extends React.HTMLAttributes<HTMLSpanElement>,\n    VariantProps<typeof tagVariants> {\n  /** show a dismiss button; called when it's clicked */\n  onRemove?: () => void;\n}\n\nconst Tag = React.forwardRef<HTMLSpanElement, TagProps>(\n  ({ className, variant, onRemove, children, ...props }, ref) => (\n    <span ref={ref} className={cn(tagVariants({ variant }), className)} {...props}>\n      {children}\n      {onRemove && (\n        <button\n          type=\"button\"\n          onClick={onRemove}\n          aria-label=\"Remove\"\n          className=\"-mr-0.5 ml-0.5 rounded-[2px] opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-1 focus-visible:ring-current\"\n        >\n          <X className=\"size-3.5\" />\n        </button>\n      )}\n    </span>\n  ),\n);\nTag.displayName = \"Tag\";\n\nexport { Tag, tagVariants };\n",
+      "type": "registry:ui",
+      "target": "components/ui/tag.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

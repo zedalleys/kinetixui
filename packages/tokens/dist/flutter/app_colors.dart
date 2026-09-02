@@ -128,7 +128,6 @@ class KinetixColors {
     static const colorSemanticOnError = Color(0xFFFEF3F2); /** figma: onError */
     static const colorSemanticOnErrorContainer = Color(0xFFEC5047); /** figma: onErrorContainer */
     static const colorSemanticOnWarningContainer = Color(0xFFF97907); /** figma: onWarningContainer */
-    static const colorSemanticTertiary = Color(0xFFB0B0B0); /** figma: tertiary (flat grey, not tied to a ramp) */
     static const colorSemanticWarningContainer = Color(0xFFFFF8EB); /** figma: warningContainer */
     static const colorSidebar = Color(0xFFFAFAFA);
     static const colorSidebarAccent = Color(0xFFF0F7FF);
@@ -157,6 +156,8 @@ class KinetixColors {
     static const colorTaupe850 = Color(0xFF695A51);
     static const colorTaupe900 = Color(0xFF5A4B42);
     static const colorTaupe950 = Color(0xFF4B3D34);
+    static const colorTertiary = Color(0xFFB0B0B0); /** figma: tertiary — switch off-track */
+    static const colorTertiaryForeground = Color(0xFFF0F7FF);
     static const colorWarning = Color(0xFFF97907); /** figma: onWarningContainer #f97907 (only warning role Figma exposes at full chroma) */
     static const colorWarningForeground = Color(0xFFFFF8EB); /** figma: warningContainer #fff8eb */
 }
