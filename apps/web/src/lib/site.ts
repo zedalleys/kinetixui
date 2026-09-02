@@ -4,7 +4,7 @@ export const siteConfig = {
   description:
     "KinetixUI turns a single design source into living tokens and components for React, SwiftUI, Jetpack Compose and Flutter.",
   url: "https://kinetixui.com",
-  repo: "https://github.com/kinetixui/kinetixui",
+  repo: "https://github.com/ziadfteha/kinetixui",
   figma: "https://www.figma.com/design/GQXTKKJAPbawd4wcuE77Pf/KinetixUI?node-id=3877-10388",
 };
 

@@ -11,7 +11,7 @@ You said you'd create the repo. Once it exists:
 
 ```bash
 cd "D:/src/strata design system"
-git remote add origin https://github.com/<you>/kinetixui.git
+git remote add origin https://github.com/ziadfteha/kinetixui.git
 git push -u origin main          # (branch is 'main'; rename with: git branch -M main)
 ```
 
