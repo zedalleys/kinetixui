@@ -49,11 +49,24 @@
       "name": "input",
       "type": "registry:ui",
       "title": "Input",
-      "description": "STUB — form input, Figma node 54855:13836 (state: Default | Focus | Error | Disabled).",
+      "description": "Text input, generated 1:1 from Figma node 54855:13836 (state: Default | Focus | Error | Disabled).",
       "dependencies": ["class-variance-authority", "clsx", "tailwind-merge"],
       "registryDependencies": ["tokens"],
       "files": [
-        { "path": "registry/strata/ui/input.tsx", "type": "registry:ui", "target": "components/ui/input.tsx" }
+        { "path": "registry/strata/ui/input.tsx", "type": "registry:ui", "target": "components/ui/input.tsx" },
+        { "path": "registry/strata/lib/utils.ts", "type": "registry:lib", "target": "lib/utils.ts" }
+      ]
+    },
+    {
+      "name": "textarea",
+      "type": "registry:ui",
+      "title": "Textarea",
+      "description": "Multi-line text input, generated 1:1 from Figma node 54855:13857 (state: Default | Focus | Error | Disabled).",
+      "dependencies": ["class-variance-authority", "clsx", "tailwind-merge"],
+      "registryDependencies": ["tokens"],
+      "files": [
+        { "path": "registry/strata/ui/textarea.tsx", "type": "registry:ui", "target": "components/ui/textarea.tsx" },
+        { "path": "registry/strata/lib/utils.ts", "type": "registry:lib", "target": "lib/utils.ts" }
       ]
     }
   ]

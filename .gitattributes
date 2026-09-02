@@ -1,0 +1,10 @@
+# Normalize line endings — LF in the repo, tools check out native on Windows.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary
+pnpm-lock.yaml linguist-generated=true
+packages/tokens/dist/** linguist-generated=true
+public/r/** linguist-generated=true

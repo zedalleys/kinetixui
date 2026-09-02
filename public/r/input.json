@@ -3,7 +3,7 @@
   "name": "input",
   "type": "registry:ui",
   "title": "Input",
-  "description": "STUB — form input, Figma node 54855:13836 (state: Default | Focus | Error | Disabled).",
+  "description": "Text input, generated 1:1 from Figma node 54855:13836 (state: Default | Focus | Error | Disabled).",
   "dependencies": [
     "class-variance-authority",
     "clsx",
@@ -15,9 +15,15 @@
   "files": [
     {
       "path": "registry/strata/ui/input.tsx",
-      "content": "import * as React from \"react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"@/lib/utils\";\n\n/** STUB — see packages/ui/src/components/input.tsx. Fill from Figma node 54855:13836. */\nconst inputVariants = cva(\n  \"flex w-full rounded-md border bg-background px-3 py-2 text-[14px] leading-5 font-sans text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50\",\n  {\n    variants: {\n      state: { Default: \"border-input\", Error: \"border-destructive focus-visible:ring-destructive\" },\n    },\n    defaultVariants: { state: \"Default\" },\n  },\n);\n\nexport interface InputProps\n  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, \"size\">,\n    VariantProps<typeof inputVariants> {}\n\nconst Input = React.forwardRef<HTMLInputElement, InputProps>(\n  ({ className, state, type = \"text\", ...props }, ref) => (\n    <input ref={ref} type={type} data-slot=\"input\" className={cn(inputVariants({ state }), className)} {...props} />\n  ),\n);\nInput.displayName = \"Input\";\n\nexport { Input, inputVariants };\n",
+      "content": "import * as React from \"react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * Strata Input — generated 1:1 from Figma node 54855:13836.\n * state: Default | Focus | Error | Disabled  (Focus = :focus-visible,\n * Disabled = native, state=\"Error\" sets aria-invalid). Bare control — label +\n * helper live in the Field composition.\n */\nconst inputVariants = cva(\n  [\n    \"flex w-full rounded-sm border border-input bg-background px-3 py-3\",\n    \"font-sans text-[14px] leading-5 tracking-[0.25px] text-foreground\",\n    \"placeholder:text-muted-foreground outline-none transition-colors\",\n    \"focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-inset\",\n    \"disabled:cursor-not-allowed disabled:opacity-50\",\n    \"aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:border-destructive aria-[invalid=true]:focus-visible:ring-destructive\",\n  ],\n  {\n    variants: {\n      state: {\n        Default: \"\",\n        Focus: \"border-primary ring-1 ring-inset ring-primary\",\n        Error: \"border-destructive\",\n        Disabled: \"opacity-50 pointer-events-none\",\n      },\n    },\n    defaultVariants: { state: \"Default\" },\n  },\n);\n\nexport interface InputProps\n  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, \"size\">,\n    VariantProps<typeof inputVariants> {}\n\nconst Input = React.forwardRef<HTMLInputElement, InputProps>(\n  ({ className, state, type = \"text\", disabled, \"aria-invalid\": ariaInvalid, ...props }, ref) => (\n    <input\n      ref={ref}\n      type={type}\n      data-slot=\"input\"\n      data-state={state ? state.toLowerCase() : undefined}\n      aria-invalid={ariaInvalid ?? (state === \"Error\" || undefined)}\n      disabled={disabled || state === \"Disabled\"}\n      className={cn(inputVariants({ state }), className)}\n      {...props}\n    />\n  ),\n);\nInput.displayName = \"Input\";\n\nexport { Input, inputVariants };\n",
       "type": "registry:ui",
       "target": "components/ui/input.tsx"
+    },
+    {
+      "path": "registry/strata/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
     }
   ]
 }
