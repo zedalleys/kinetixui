@@ -7,19 +7,29 @@ export const metadata = {
 
 ## Unreleased
 
-- **Web** — presentation site (`apps/web`), Next.js App Router, built on
-  `@kinetixui/ui` in light and dark.
-- **Components** — `Input` and `Textarea` (Figma `54855:13836` / `54855:13857`),
-  `state` = Default / Focus / Error / Disabled.
-- **Registry** — `input` and `textarea` items; `tokens.json` now ships the full
-  generated contract (light + dark).
-- **Tokens** — per-theme Style Dictionary build; Android `dp` fix; clean nested
-  `tokens.ts`.
+- **Components** — 31 new components ported onto the KinetixUI token contract:
+  Accordion, Alert, Alert Dialog, Aspect Ratio, Avatar, Badge, Breadcrumb, Card,
+  Checkbox, Collapsible, Dialog, Dropdown Menu, Hover Card, Label, Pagination,
+  Popover, Progress, Radio Group, Scroll Area, Select, Separator, Sheet,
+  Skeleton, Slider, Sonner, Switch, Table, Tabs, Toggle, Toggle Group, Tooltip.
+  34 components total; registry now has 35 items.
+- **Tokens** — web CSS emitted as **HSL channels** so Tailwind opacity modifiers
+  work (`bg-primary/90`, `ring-ring/40`); added `--chart-1…5` (light + dark).
+- **Site** — full component catalogue (47 routes) matching shadcn/ui's coverage;
+  ⌘K search across all of them; every page prerenders as static content.
+- **Deploy** — `pnpm build:web` passes clean; `apps/web/vercel.json` +
+  `DEPLOY.md` playbook (Vercel + GoDaddy DNS).
+
+## 0.2.0
+
+- Rebrand: Strata → **KinetixUI** (`@kinetixui/*`, kinetixui.com).
+- `Input` + `Textarea` (design-source nodes 54855:13836 / 54855:13857).
+- `kinetixui.com` — Next.js App Router site built on `@kinetixui/ui`.
 
 ## 0.1.0
 
 - Monorepo scaffold (pnpm + Turborepo).
 - Token engine: DTCG source → web / iOS / Android / Flutter.
-- `Button` — 6 variants × 4 sizes × 5 states, generated 1:1 from Figma
-  `54863:351`.
+- `Button` — 6 variants × 4 sizes × 5 states, generated 1:1 from the design
+  source (node 54863:351).
 - shadcn custom registry + Storybook 8.

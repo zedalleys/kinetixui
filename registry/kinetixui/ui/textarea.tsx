@@ -1,16 +1,22 @@
+"use client";
+
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * KinetixUI Textarea — generated 1:1 from Figma node 54855:13857.
- * Same state matrix / tokens as Input; multi-line (`min-h-[100px]`, resize-y).
+ * Textarea — generated from Figma "KinetixUI" › UI Components ›
+ * 01. Form Inputs › Textarea (node 54855:13857).
+ *
+ * Identical to `Input` except the field is multi-line: `min-h-[100px]`
+ * (Figma `h: 100`) and vertical resize. Same state matrix and tokens.
  */
 const textareaVariants = cva(
   [
     "flex w-full min-h-[100px] resize-y rounded-sm border border-input bg-background px-3 py-3",
     "font-sans text-[14px] leading-5 tracking-[0.25px] text-foreground",
-    "placeholder:text-muted-foreground outline-none transition-colors",
+    "placeholder:text-muted-foreground",
+    "outline-none transition-colors",
     "focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-inset",
     "disabled:cursor-not-allowed disabled:opacity-50",
     "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:border-destructive aria-[invalid=true]:focus-visible:ring-destructive",

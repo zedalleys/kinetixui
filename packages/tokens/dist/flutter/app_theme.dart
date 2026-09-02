@@ -18,6 +18,11 @@ class KinetixTheme {
     static const colorBorder = Color(0xFF92B2C8); /** figma: outline #92b2c8 */
     static const colorCard = Color(0xFFFFFFFF); /** synth: no Figma card token; = background */
     static const colorCardForeground = Color(0xFF050C11); /** synth: = foreground */
+    static const colorChart1 = Color(0xFF1B3C53); /** synth: brand ramps for data viz */
+    static const colorChart2 = Color(0xFF748873);
+    static const colorChart3 = Color(0xFFFFBC53);
+    static const colorChart4 = Color(0xFFD13A3A);
+    static const colorChart5 = Color(0xFFB4A499);
     static const colorDestructive = Color(0xFFEC5047); /** figma: error #ec5047 */
     static const colorDestructiveForeground = Color(0xFFFEF3F2); /** figma: onError #fef3f2 */
     static const colorForeground = Color(0xFF050C11); /** figma: onSurface #050c11 */

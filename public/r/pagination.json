@@ -1,0 +1,28 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "pagination",
+  "type": "registry:ui",
+  "title": "Pagination",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "tokens",
+    "button"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/pagination.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { ChevronLeft, ChevronRight, MoreHorizontal } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\nimport { buttonVariants } from \"@/components/ui/button\";\n\nconst Pagination = ({ className, ...props }: React.ComponentProps<\"nav\">) => (\n  <nav\n    role=\"navigation\"\n    aria-label=\"pagination\"\n    className={cn(\"mx-auto flex w-full justify-center font-sans\", className)}\n    {...props}\n  />\n);\nPagination.displayName = \"Pagination\";\n\nconst PaginationContent = React.forwardRef<HTMLUListElement, React.ComponentProps<\"ul\">>(\n  ({ className, ...props }, ref) => (\n    <ul ref={ref} className={cn(\"flex flex-row items-center gap-1\", className)} {...props} />\n  ),\n);\nPaginationContent.displayName = \"PaginationContent\";\n\nconst PaginationItem = React.forwardRef<HTMLLIElement, React.ComponentProps<\"li\">>(\n  ({ className, ...props }, ref) => <li ref={ref} className={cn(\"\", className)} {...props} />,\n);\nPaginationItem.displayName = \"PaginationItem\";\n\ntype PaginationLinkProps = { isActive?: boolean } & React.ComponentProps<\"a\">;\n\nconst PaginationLink = ({ className, isActive, ...props }: PaginationLinkProps) => (\n  <a\n    aria-current={isActive ? \"page\" : undefined}\n    className={cn(\n      buttonVariants({ variant: isActive ? \"Outline\" : \"Ghost\", size: \"icon\" }),\n      \"size-9\",\n      className,\n    )}\n    {...props}\n  />\n);\nPaginationLink.displayName = \"PaginationLink\";\n\nconst PaginationPrevious = ({ className, ...props }: React.ComponentProps<typeof PaginationLink>) => (\n  <PaginationLink aria-label=\"Go to previous page\" className={cn(\"w-auto gap-1 px-2.5\", className)} {...props}>\n    <ChevronLeft className=\"size-4\" />\n    <span>Previous</span>\n  </PaginationLink>\n);\nPaginationPrevious.displayName = \"PaginationPrevious\";\n\nconst PaginationNext = ({ className, ...props }: React.ComponentProps<typeof PaginationLink>) => (\n  <PaginationLink aria-label=\"Go to next page\" className={cn(\"w-auto gap-1 px-2.5\", className)} {...props}>\n    <span>Next</span>\n    <ChevronRight className=\"size-4\" />\n  </PaginationLink>\n);\nPaginationNext.displayName = \"PaginationNext\";\n\nconst PaginationEllipsis = ({ className, ...props }: React.ComponentProps<\"span\">) => (\n  <span aria-hidden className={cn(\"flex size-9 items-center justify-center\", className)} {...props}>\n    <MoreHorizontal className=\"size-4\" />\n    <span className=\"sr-only\">More pages</span>\n  </span>\n);\nPaginationEllipsis.displayName = \"PaginationEllipsis\";\n\nexport {\n  Pagination,\n  PaginationContent,\n  PaginationItem,\n  PaginationLink,\n  PaginationPrevious,\n  PaginationNext,\n  PaginationEllipsis,\n};\n",
+      "type": "registry:ui",
+      "target": "components/ui/pagination.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

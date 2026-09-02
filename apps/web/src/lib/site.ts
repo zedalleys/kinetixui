@@ -17,7 +17,6 @@ export type NavItem = {
 
 export type NavGroup = { title: string; items: NavItem[] };
 
-/** top bar */
 export const mainNav: NavItem[] = [
   { title: "Docs", href: "/docs" },
   { title: "Components", href: "/components" },
@@ -27,7 +26,15 @@ export const mainNav: NavItem[] = [
   { title: "Colors", href: "/colors" },
 ];
 
-/** docs left sidebar */
+/** built = has a real component + doc page; soon = doc shell only */
+const built = (title: string, slug: string): NavItem => ({ title, href: `/docs/components/${slug}` });
+const soon = (title: string, slug: string): NavItem => ({
+  title,
+  href: `/docs/components/${slug}`,
+  label: "Soon",
+  disabled: true,
+});
+
 export const docsNav: NavGroup[] = [
   {
     title: "Getting Started",
@@ -45,19 +52,57 @@ export const docsNav: NavGroup[] = [
   {
     title: "Components",
     items: [
-      { title: "Button", href: "/docs/components/button" },
-      { title: "Input", href: "/docs/components/input" },
-      { title: "Textarea", href: "/docs/components/textarea" },
-      { title: "Select", href: "/docs/components/select", label: "Soon", disabled: true },
-      { title: "Checkbox", href: "/docs/components/checkbox", label: "Soon", disabled: true },
-      { title: "Radio Group", href: "/docs/components/radio-group", label: "Soon", disabled: true },
-      { title: "Switch", href: "/docs/components/switch", label: "Soon", disabled: true },
-      { title: "Badge", href: "/docs/components/badge", label: "Soon", disabled: true },
-      { title: "Tag", href: "/docs/components/tag", label: "Soon", disabled: true },
-      { title: "Dialog", href: "/docs/components/dialog", label: "Soon", disabled: true },
+      built("Accordion", "accordion"),
+      built("Alert", "alert"),
+      built("Alert Dialog", "alert-dialog"),
+      built("Aspect Ratio", "aspect-ratio"),
+      built("Avatar", "avatar"),
+      built("Badge", "badge"),
+      built("Breadcrumb", "breadcrumb"),
+      built("Button", "button"),
+      soon("Calendar", "calendar"),
+      built("Card", "card"),
+      soon("Carousel", "carousel"),
+      soon("Chart", "chart"),
+      built("Checkbox", "checkbox"),
+      built("Collapsible", "collapsible"),
+      soon("Combobox", "combobox"),
+      soon("Command", "command"),
+      soon("Context Menu", "context-menu"),
+      soon("Data Table", "data-table"),
+      soon("Date Picker", "date-picker"),
+      built("Dialog", "dialog"),
+      soon("Drawer", "drawer"),
+      built("Dropdown Menu", "dropdown-menu"),
+      soon("Form", "form"),
+      built("Hover Card", "hover-card"),
+      built("Input", "input"),
+      soon("Input OTP", "input-otp"),
+      built("Label", "label"),
+      soon("Menubar", "menubar"),
+      soon("Navigation Menu", "navigation-menu"),
+      built("Pagination", "pagination"),
+      built("Popover", "popover"),
+      built("Progress", "progress"),
+      built("Radio Group", "radio-group"),
+      soon("Resizable", "resizable"),
+      built("Scroll Area", "scroll-area"),
+      built("Select", "select"),
+      built("Separator", "separator"),
+      built("Sheet", "sheet"),
+      soon("Sidebar", "sidebar"),
+      built("Skeleton", "skeleton"),
+      built("Slider", "slider"),
+      built("Sonner", "sonner"),
+      built("Switch", "switch"),
+      built("Table", "table"),
+      built("Tabs", "tabs"),
+      built("Textarea", "textarea"),
+      built("Toggle", "toggle"),
+      built("Toggle Group", "toggle-group"),
+      built("Tooltip", "tooltip"),
     ],
   },
 ];
 
-/** flat list for the ⌘K command menu */
 export const allDocsLinks: NavItem[] = docsNav.flatMap((g) => g.items);

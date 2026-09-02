@@ -52,14 +52,18 @@ npx shadcn@latest add https://kinetixui.com/r/button.json
 
 ## Status
 
-- ✅ **Token engine** — `pnpm build:tokens` runs clean; 11 files across web / iOS /
-  Android / Flutter, values verified (px on web, dp on Android, `Color(0x…)` on
-  Compose/Flutter, `UIColor` on Swift, light `:root` + dark `.dark`).
-- ✅ **Components** — `Button` (6 × 4 × 5), `Input`, `Textarea`; CVA + Radix,
-  registry items, Storybook stories.
-- ✅ **kinetixui.com** — landing, docs (MDX), component pages with live previews,
-  Colors, Themes, ⌘K, light/dark.
-- 🟡 7 more components scaffolded (`select`, `checkbox`, `radio-group`, `switch`,
-  `badge`, `tag`, `dialog`) — each carries its design-source node id.
-- 🟡 No CI yet; `pnpm build:web` not run in a clean environment.
+- ✅ **Token engine** — `pnpm build:tokens` clean; 11 files across web / iOS /
+  Android / Flutter. Web CSS is HSL channels (opacity modifiers work); `--chart-1…5`
+  added.
+- ✅ **Components** — 34 in `@kinetixui/ui`: `Button` / `Input` / `Textarea`
+  (design-source-native API) + 31 ported onto the token contract (Accordion …
+  Tooltip). 35-item shadcn registry.
+- ✅ **kinetixui.com** — 47-route component catalogue matching shadcn/ui coverage,
+  docs (MDX + live previews), Colors, Themes, ⌘K, light/dark. `pnpm build:web`
+  passes; every route prerenders static.
+- 🟡 15 heavier components are doc shells (Calendar, Chart, Command, Combobox,
+  Context Menu, Data Table, Date Picker, Drawer, Form, Input OTP, Menubar,
+  Navigation Menu, Resizable, Sidebar, Carousel) — next batch.
+- 🟡 Storybook has stories for Button / Input / Textarea only.
+- 🟡 No CI. Deploy: see `DEPLOY.md` (Vercel + GoDaddy).
 - See `TOKENS.md` for every deviation from the raw design tokens.

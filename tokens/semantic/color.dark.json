@@ -91,6 +91,26 @@
     "ring": {
       "$value": "{color.blue.100}",
       "$type": "color"
+    },
+    "chart-1": {
+      "$value": "{color.blue.100}",
+      "$type": "color"
+    },
+    "chart-2": {
+      "$value": "{color.green.400}",
+      "$type": "color"
+    },
+    "chart-3": {
+      "$value": "{color.amber.400}",
+      "$type": "color"
+    },
+    "chart-4": {
+      "$value": "{color.red.300}",
+      "$type": "color"
+    },
+    "chart-5": {
+      "$value": "{color.taupe.500}",
+      "$type": "color"
     }
   }
 }

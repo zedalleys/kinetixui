@@ -51,6 +51,43 @@ export const tsNestedFormat = {
   },
 };
 
+/** hex "#1b3c53" -> HSL channels "205 51% 22%" so Tailwind opacity modifiers
+ *  work: `hsl(var(--primary) / <alpha-value>)`. Non-hex values pass through. */
+function hexToHslChannels(hex) {
+  let h = hex.replace('#', '').trim();
+  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  const r = parseInt(h.slice(0, 2), 16) / 255;
+  const g = parseInt(h.slice(2, 4), 16) / 255;
+  const b = parseInt(h.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  let hue = 0;
+  let sat = 0;
+  if (max !== min) {
+    const d = max - min;
+    sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: hue = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: hue = (b - r) / d + 2; break;
+      default: hue = (r - g) / d + 4;
+    }
+    hue /= 6;
+  }
+  return `${Math.round(hue * 360)} ${Math.round(sat * 100)}% ${Math.round(l * 100)}%`;
+}
+
+export const hslChannels = {
+  name: 'kinetix/hsl-channels',
+  type: 'value',
+  transitive: true,
+  filter: (t) => t.$type === 'color',
+  transform: (t) => {
+    const v = String(t.$value);
+    return v.startsWith('#') ? hexToHslChannels(v) : v;
+  },
+};
+
 /** strip a leading "color" segment and kebab-case the rest so CSS vars read
  *  --primary / --font-size-label-lg, not --color-primary / --fontSize-label-lg */
 export const shadcnCssName = {

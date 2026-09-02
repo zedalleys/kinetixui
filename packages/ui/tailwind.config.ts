@@ -1,49 +1,61 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Maps Tailwind color/radius utilities onto the KinetixUI semantic token contract
- * (packages/tokens/dist/web/globals.css). Consumers import that CSS once, then
- * use `bg-primary`, `text-muted-foreground`, `rounded-md`, etc.
+ * Maps Tailwind utilities onto the KinetixUI semantic token contract
+ * (packages/tokens/dist/web/globals.css). Colours are emitted as HSL channels
+ * (`H S% L%`) so Tailwind's opacity modifiers work — `bg-primary/90`,
+ * `ring-ring/40`, etc. Consumers import the token CSS once, then use
+ * `bg-primary`, `text-muted-foreground`, `rounded-md`, ...
  */
+const c = (v: string) => `hsl(var(${v}) / <alpha-value>)`;
+
 export default {
   darkMode: ["class"],
-  content: [
-    "./src/**/*.{ts,tsx}",
-    "../../apps/**/*.{ts,tsx,mdx}",
-  ],
+  content: ["./src/**/*.{ts,tsx}", "../../apps/**/*.{ts,tsx,mdx}"],
   theme: {
     extend: {
-      fontFamily: {
-        sans: "var(--font-sans)",
-      },
+      fontFamily: { sans: "var(--font-sans)" },
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
-        card: { DEFAULT: "var(--card)", foreground: "var(--card-foreground)" },
-        popover: { DEFAULT: "var(--popover)", foreground: "var(--popover-foreground)" },
-        primary: { DEFAULT: "var(--primary)", foreground: "var(--primary-foreground)" },
-        secondary: { DEFAULT: "var(--secondary)", foreground: "var(--secondary-foreground)" },
-        muted: { DEFAULT: "var(--muted)", foreground: "var(--muted-foreground)" },
-        accent: { DEFAULT: "var(--accent)", foreground: "var(--accent-foreground)" },
-        destructive: { DEFAULT: "var(--destructive)", foreground: "var(--destructive-foreground)" },
-        success: { DEFAULT: "var(--success)", foreground: "var(--success-foreground)" },
-        warning: { DEFAULT: "var(--warning)", foreground: "var(--warning-foreground)" },
-        border: "var(--border)",
-        input: "var(--input)",
-        ring: "var(--ring)",
+        background: c("--background"),
+        foreground: c("--foreground"),
+        card: { DEFAULT: c("--card"), foreground: c("--card-foreground") },
+        popover: { DEFAULT: c("--popover"), foreground: c("--popover-foreground") },
+        primary: { DEFAULT: c("--primary"), foreground: c("--primary-foreground") },
+        secondary: { DEFAULT: c("--secondary"), foreground: c("--secondary-foreground") },
+        muted: { DEFAULT: c("--muted"), foreground: c("--muted-foreground") },
+        accent: { DEFAULT: c("--accent"), foreground: c("--accent-foreground") },
+        destructive: { DEFAULT: c("--destructive"), foreground: c("--destructive-foreground") },
+        success: { DEFAULT: c("--success"), foreground: c("--success-foreground") },
+        warning: { DEFAULT: c("--warning"), foreground: c("--warning-foreground") },
+        border: c("--border"),
+        input: c("--input"),
+        ring: c("--ring"),
+        chart: {
+          1: c("--chart-1"),
+          2: c("--chart-2"),
+          3: c("--chart-3"),
+          4: c("--chart-4"),
+          5: c("--chart-5"),
+        },
       },
+      borderColor: { DEFAULT: c("--border") },
       borderRadius: {
         sm: "var(--radius-sm)",
         md: "var(--radius-md)",
         lg: "var(--radius-lg)",
         xl: "var(--radius-xl)",
+        "2xl": "calc(var(--radius-lg) + 8px)",
         full: "var(--radius-full)",
       },
-      spacing: {
-        1: "var(--spacing-1)", 2: "var(--spacing-2)", 3: "var(--spacing-3)", 4: "var(--spacing-4)",
-        5: "var(--spacing-5)", 6: "var(--spacing-6)", 7: "var(--spacing-7)", 8: "var(--spacing-8)",
+      keyframes: {
+        "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
+        "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 } satisfies Config;

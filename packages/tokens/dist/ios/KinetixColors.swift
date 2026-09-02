@@ -45,6 +45,11 @@ public enum KinetixColor {
     public static let colorBorder = UIColor(red: 0.573, green: 0.698, blue: 0.784, alpha: 1) /** figma: outline #92b2c8 */
     public static let colorCard = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1) /** synth: no Figma card token; = background */
     public static let colorCardForeground = UIColor(red: 0.020, green: 0.047, blue: 0.067, alpha: 1) /** synth: = foreground */
+    public static let colorChart1 = UIColor(red: 0.106, green: 0.235, blue: 0.325, alpha: 1) /** synth: brand ramps for data viz */
+    public static let colorChart2 = UIColor(red: 0.455, green: 0.533, blue: 0.451, alpha: 1)
+    public static let colorChart3 = UIColor(red: 1.000, green: 0.737, blue: 0.325, alpha: 1)
+    public static let colorChart4 = UIColor(red: 0.820, green: 0.227, blue: 0.227, alpha: 1)
+    public static let colorChart5 = UIColor(red: 0.706, green: 0.643, blue: 0.600, alpha: 1)
     public static let colorCream0 = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1)
     public static let colorCream100 = UIColor(red: 0.996, green: 0.992, blue: 0.988, alpha: 1)
     public static let colorCream1000 = UIColor(red: 0.549, green: 0.341, blue: 0.204, alpha: 1)

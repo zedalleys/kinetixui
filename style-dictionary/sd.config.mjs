@@ -18,11 +18,12 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import StyleDictionary from 'style-dictionary';
-import { androidDimen, dimensionToPx, shadcnCssName, tsNestedFormat } from './hooks.mjs';
+import { androidDimen, dimensionToPx, hslChannels, shadcnCssName, tsNestedFormat } from './hooks.mjs';
 
 StyleDictionary.registerTransform(dimensionToPx);
 StyleDictionary.registerTransform(shadcnCssName);
 StyleDictionary.registerTransform(androidDimen);
+StyleDictionary.registerTransform(hslChannels);
 StyleDictionary.registerFormat(tsNestedFormat);
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -49,7 +50,7 @@ export function getConfig(theme) {
         transforms: [
           'attribute/cti',
           'kinetix/shadcn-css-name',
-          'color/css',
+          'kinetix/hsl-channels',
           'kinetix/dimension-px',
         ],
         buildPath: `${DIST}/web/`,

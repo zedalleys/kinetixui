@@ -1,18 +1,30 @@
+"use client";
+
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * KinetixUI Input — generated 1:1 from Figma node 54855:13836.
- * state: Default | Focus | Error | Disabled  (Focus = :focus-visible,
- * Disabled = native, state="Error" sets aria-invalid). Bare control — label +
- * helper live in the Field composition.
+ * Input — generated from Figma "KinetixUI" › UI Components ›
+ * 01. Form Inputs › Input (node 54855:13836).
+ *
+ * Figma component property: state = Default | Focus | Error | Disabled.
+ * Focus is the CSS `:focus-visible` pseudo-class and Disabled is the native
+ * attribute; the `state` prop force-pins one for docs / snapshots, and
+ * `state="Error"` is the ergonomic way to set `aria-invalid`.
+ *
+ * Figma's component bundles a label + helper text; those live in the `Field`
+ * composition (their colour tracks the control's state). This is the bare
+ * control. Tokens: border `--input`, focus `--ring`, error `--destructive`,
+ * radius `--radius-sm` (Figma `input` = 4px), padding `--spacing-3`,
+ * text = Body Medium (14 / 20, +0.25).
  */
 const inputVariants = cva(
   [
     "flex w-full rounded-sm border border-input bg-background px-3 py-3",
     "font-sans text-[14px] leading-5 tracking-[0.25px] text-foreground",
-    "placeholder:text-muted-foreground outline-none transition-colors",
+    "placeholder:text-muted-foreground",
+    "outline-none transition-colors",
     "focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-inset",
     "disabled:cursor-not-allowed disabled:opacity-50",
     "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:border-destructive aria-[invalid=true]:focus-visible:ring-destructive",

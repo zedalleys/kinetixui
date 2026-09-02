@@ -153,7 +153,12 @@ export const tokens = {
       "warning-container": "#fff8eb",
       "on-warning-container": "#f97907",
       "tertiary": "#b0b0b0"
-    }
+    },
+    "chart-1": "#1b3c53",
+    "chart-2": "#748873",
+    "chart-3": "#ffbc53",
+    "chart-4": "#d13a3a",
+    "chart-5": "#b4a499"
   },
   "spacing": {
     "0": "0",

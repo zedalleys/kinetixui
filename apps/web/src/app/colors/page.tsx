@@ -18,7 +18,7 @@ export default function ColorsPage() {
     });
   }
 
-  const color = tokens.color as Record<string, Record<string, string>>;
+  const color = tokens.color as unknown as Record<string, Record<string, string>>;
 
   return (
     <div className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8">

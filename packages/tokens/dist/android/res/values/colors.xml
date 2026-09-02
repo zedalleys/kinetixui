@@ -138,4 +138,9 @@
   <color name="color_semantic_warning_container">#fffff8eb</color>
   <color name="color_semantic_on_warning_container">#fff97907</color>
   <color name="color_semantic_tertiary">#ffb0b0b0</color>
+  <color name="color_chart_1">#ff1b3c53</color>
+  <color name="color_chart_2">#ff748873</color>
+  <color name="color_chart_3">#ffffbc53</color>
+  <color name="color_chart_4">#ffd13a3a</color>
+  <color name="color_chart_5">#ffb4a499</color>
 </resources>
