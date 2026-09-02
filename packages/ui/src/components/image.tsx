@@ -25,9 +25,26 @@ export interface ImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 }
 
 const Image = React.forwardRef<HTMLImageElement, ImageProps>(
-  ({ ratio = "1:1", rounded = true, fallback, className, alt = "", onLoad, onError, ...props }, ref) => {
+  ({ ratio = "1:1", rounded = true, fallback, className, alt = "", onLoad, onError, ...props }, forwardedRef) => {
     const [status, setStatus] = React.useState<"loading" | "loaded" | "error">("loading");
+    const innerRef = React.useRef<HTMLImageElement | null>(null);
+    const setRef = React.useCallback(
+      (node: HTMLImageElement | null) => {
+        innerRef.current = node;
+        if (typeof forwardedRef === "function") forwardedRef(node);
+        else if (forwardedRef) (forwardedRef as React.MutableRefObject<HTMLImageElement | null>).current = node;
+      },
+      [forwardedRef],
+    );
     const r = typeof ratio === "number" ? ratio : (RATIOS[ratio] ?? 1);
+
+    // A cached image can finish loading before React attaches onLoad (notably
+    // after hydration of a statically-rendered page) — reconcile on mount.
+    React.useEffect(() => {
+      const img = innerRef.current;
+      if (!img) return;
+      if (img.complete) setStatus(img.naturalWidth > 0 ? "loaded" : "error");
+    }, [props.src]);
 
     return (
       <div
@@ -44,7 +61,7 @@ const Image = React.forwardRef<HTMLImageElement, ImageProps>(
           </div>
         ) : (
           <img
-            ref={ref}
+            ref={setRef}
             alt={alt}
             className={cn(
               "size-full object-cover transition-opacity duration-300",
