@@ -7,6 +7,10 @@ export const metadata = {
 
 ## Unreleased
 
+- **Native text styles** — typography composites now also compile to
+  `KinetixType.swift` (SwiftUI), `KinetixType.kt` (Compose `TextStyle`) and
+  `app_text.dart` (Flutter `TextStyle`), and land in `tokens.ts` as a `text.*`
+  object. Web + all 3 mobile platforms now carry the full type scale.
 - **Elevation tokens** (new category, Finesse-UI-inspired) — `--shadow-sm/md/lg/xl`
   plus `--shadow-focus` / `-destructive` / `-success` / `-warning` (the focus ring
   as a crisp edge + soft colour glow). Wired into the Tailwind preset (`shadow-*`,

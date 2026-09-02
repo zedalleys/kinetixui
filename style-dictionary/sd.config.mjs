@@ -10,10 +10,9 @@
  * Source of truth: /tokens/**  (DTCG, extracted from Figma "Personal Design
  * System", node 3877-10388). Outputs -> packages/tokens/dist/<platform>.
  *
- * NOTE: tokens/semantic/typography.json ($type "typography" composites) is not
- * consumed here — primitive fontSize/lineHeight/weight tokens are emitted; the
- * composite text styles get a dedicated pass so mobile formatters don't
- * stringify them to "[object Object]".
+ * Typography composites (tokens/semantic/typography.json) ARE consumed: web
+ * `--text-*` shorthands (extras.css) + a `text-*` Tailwind scale, and native
+ * text styles via KinetixType.swift / KinetixType.kt / app_text.dart.
  */
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,6 +24,9 @@ import {
   hslChannels,
   shadcnCssName,
   tsNestedFormat,
+  typeComposeFormat,
+  typeDartFormat,
+  typeSwiftFormat,
 } from './hooks.mjs';
 
 StyleDictionary.registerTransform(dimensionToPx);
@@ -33,6 +35,11 @@ StyleDictionary.registerTransform(androidDimen);
 StyleDictionary.registerTransform(hslChannels);
 StyleDictionary.registerFormat(tsNestedFormat);
 StyleDictionary.registerFormat(extrasCssFormat);
+StyleDictionary.registerFormat(typeSwiftFormat);
+StyleDictionary.registerFormat(typeComposeFormat);
+StyleDictionary.registerFormat(typeDartFormat);
+
+const isType = (t) => t.$type === 'typography';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = `${ROOT}/packages/tokens/dist`;
@@ -116,6 +123,11 @@ export function getConfig(theme) {
                 },
               ],
             },
+            'ios-type': {
+              transforms: ['attribute/cti'],
+              buildPath: `${DIST}/ios/`,
+              files: [{ destination: 'KinetixType.swift', format: 'kinetix/type-swift', filter: isType }],
+            },
             'android-compose': {
               transformGroup: 'compose',
               buildPath: `${DIST}/android/`,
@@ -133,6 +145,12 @@ export function getConfig(theme) {
                   options: { className: 'KinetixTheme', packageName: 'com.kinetixui.tokens' },
                 },
               ],
+            },
+            'android-type': {
+              transforms: ['attribute/cti'],
+              buildPath: `${DIST}/android/`,
+              options: { packageName: 'com.kinetixui.tokens' },
+              files: [{ destination: 'KinetixType.kt', format: 'kinetix/type-compose', filter: isType }],
             },
             'android-xml': {
               transforms: ['attribute/cti', 'name/snake', 'color/hex8android', 'kinetix/android-dimen'],
@@ -159,6 +177,11 @@ export function getConfig(theme) {
                   options: { className: 'KinetixTheme' },
                 },
               ],
+            },
+            'flutter-type': {
+              transforms: ['attribute/cti'],
+              buildPath: `${DIST}/flutter/`,
+              files: [{ destination: 'app_text.dart', format: 'kinetix/type-dart', filter: isType }],
             },
           }
         : {}),
