@@ -17,7 +17,16 @@ export const metadata = {
 - **`Field`** — label + control + description + feedback composition;
   `FieldMessage` intents `error | warning | success | info` each with an icon,
   label & message colour track the invalid state.
-- 51-item registry.
+- **`InputGroup`** + `InputGroupInput` / `InputGroupAddon` / `InputGroupText` /
+  `InputGroupButton` — the design source's Fixed Add-on pattern (prefix/suffix
+  icon, text, dropdown, button in one bordered shell). Plus **`PasswordInput`**
+  recipe (show/hide toggle).
+- **`--info`** semantic colour + `success` / `info` container roles; wired into
+  `Alert` (`variant="info"`) and `FieldMessage`.
+- **`corners`** prop on `Input` (`sharp | default | rounded | pill`) and `Button`
+  (`sharp | default | pill`); `Button` / `Input` / `Textarea` / `Select` focus
+  now uses `--shadow-focus` throughout.
+- 53-item registry.
 
 - **Components — full shadcn/ui parity.** 15 more shipped: Calendar, Carousel,
   Chart, Combobox, Command, Context Menu, Data Table, Date Picker, Drawer, Form,

@@ -151,7 +151,12 @@ export const tokens = {
       "error-container": "#fef3f2",
       "on-error-container": "#ec5047",
       "warning-container": "#fff8eb",
-      "on-warning-container": "#f97907"
+      "on-warning-container": "#f97907",
+      "success-container": "#f1f3f1",
+      "on-success-container": "#465245",
+      "warning": "#f97907",
+      "info-container": "#f0f7ff",
+      "on-info-container": "#395a70"
     },
     "chart-1": "#1b3c53",
     "chart-2": "#748873",
@@ -167,7 +172,9 @@ export const tokens = {
     "sidebar-border": "#e0e0e0",
     "sidebar-ring": "#1b3c53",
     "tertiary": "#b0b0b0",
-    "tertiary-foreground": "#f0f7ff"
+    "tertiary-foreground": "#f0f7ff",
+    "info": "#57778d",
+    "info-foreground": "#f0f7ff"
   },
   "spacing": {
     "0": "0",

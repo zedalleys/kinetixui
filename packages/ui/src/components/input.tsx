@@ -21,7 +21,7 @@ import { cn } from "../lib/utils";
  */
 const inputVariants = cva(
   [
-    "flex w-full rounded-sm border border-input bg-background px-3 py-3",
+    "flex w-full border border-input bg-background px-3 py-3",
     "font-sans text-[14px] leading-5 tracking-[0.25px] text-foreground",
     "placeholder:text-muted-foreground",
     "outline-none transition-colors",
@@ -37,8 +37,15 @@ const inputVariants = cva(
         Error: "border-destructive",
         Disabled: "opacity-50 pointer-events-none",
       },
+      /** corner style — matches the design source's Corners property */
+      corners: {
+        sharp: "rounded-none",
+        default: "rounded-sm",
+        rounded: "rounded-md",
+        pill: "rounded-full px-4",
+      },
     },
-    defaultVariants: { state: "Default" },
+    defaultVariants: { state: "Default", corners: "default" },
   },
 );
 
@@ -47,7 +54,7 @@ export interface InputProps
     VariantProps<typeof inputVariants> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, state, type = "text", disabled, "aria-invalid": ariaInvalid, ...props }, ref) => (
+  ({ className, state, corners, type = "text", disabled, "aria-invalid": ariaInvalid, ...props }, ref) => (
     <input
       ref={ref}
       type={type}
@@ -55,7 +62,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       data-state={state ? state.toLowerCase() : undefined}
       aria-invalid={ariaInvalid ?? (state === "Error" || undefined)}
       disabled={disabled || state === "Disabled"}
-      className={cn(inputVariants({ state }), className)}
+      className={cn(inputVariants({ state, corners }), className)}
       {...props}
     />
   ),

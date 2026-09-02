@@ -137,6 +137,11 @@
   <color name="color_semantic_on_error_container">#ffec5047</color>
   <color name="color_semantic_warning_container">#fffff8eb</color>
   <color name="color_semantic_on_warning_container">#fff97907</color>
+  <color name="color_semantic_success_container">#fff1f3f1</color>
+  <color name="color_semantic_on_success_container">#ff465245</color>
+  <color name="color_semantic_warning">#fff97907</color>
+  <color name="color_semantic_info_container">#fff0f7ff</color>
+  <color name="color_semantic_on_info_container">#ff395a70</color>
   <color name="color_chart_1">#ff1b3c53</color>
   <color name="color_chart_2">#ff748873</color>
   <color name="color_chart_3">#ffffbc53</color>
@@ -152,4 +157,6 @@
   <color name="color_sidebar_ring">#ff1b3c53</color>
   <color name="color_tertiary">#ffb0b0b0</color>
   <color name="color_tertiary_foreground">#fff0f7ff</color>
+  <color name="color_info">#ff57778d</color>
+  <color name="color_info_foreground">#fff0f7ff</color>
 </resources>

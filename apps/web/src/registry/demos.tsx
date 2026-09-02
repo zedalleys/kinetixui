@@ -664,13 +664,49 @@ import {
   FieldDescription,
   FieldLabel,
   FieldMessage,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+  InputGroupText,
   Modal,
+  PasswordInput,
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
   Tag,
 } from "@kinetixui/ui";
 
+add(
+  "input-group-demo",
+  () => (
+    <div className="flex w-full max-w-sm flex-col gap-3">
+      <InputGroup>
+        <InputGroupText>https://</InputGroupText>
+        <InputGroupInput placeholder="kinetixui.com" />
+      </InputGroup>
+      <InputGroup>
+        <InputGroupAddon align="start">$</InputGroupAddon>
+        <InputGroupInput placeholder="0.00" inputMode="decimal" />
+        <InputGroupText>USD</InputGroupText>
+      </InputGroup>
+      <InputGroup>
+        <InputGroupInput placeholder="Search components…" />
+        <InputGroupButton>Search</InputGroupButton>
+      </InputGroup>
+    </div>
+  ),
+  `<InputGroup>\n  <InputGroupText>https://</InputGroupText>\n  <InputGroupInput placeholder="kinetixui.com" />\n</InputGroup>\n\n<InputGroup>\n  <InputGroupAddon align="start">$</InputGroupAddon>\n  <InputGroupInput placeholder="0.00" />\n  <InputGroupText>USD</InputGroupText>\n</InputGroup>`,
+);
+add(
+  "password-input-demo",
+  () => (
+    <div className="w-full max-w-sm">
+      <PasswordInput placeholder="••••••••" defaultValue="hunter2" />
+    </div>
+  ),
+  `<PasswordInput placeholder="••••••••" />`,
+);
 add(
   "field-demo",
   () => {

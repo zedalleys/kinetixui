@@ -211,7 +211,15 @@ export {
   FormMessage,
   FormField,
 } from "./components/form";
+export {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon,
+  InputGroupText,
+  InputGroupButton,
+} from "./components/input-group";
 export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "./components/input-otp";
+export { PasswordInput } from "./components/password-input";
 export {
   Menubar,
   MenubarMenu,

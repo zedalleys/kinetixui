@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "input-group",
+  "type": "registry:ui",
+  "title": "Input Group",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "class-variance-authority"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/input-group.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * InputGroup — a single bordered shell that hosts an input plus fixed add-ons\n * (icon, text, dropdown, button) on either side. Matches the KinetixUI design\n * source's \"Fixed Add-on\" pattern. Border / focus glow / invalid state apply to\n * the whole group.\n *\n * <InputGroup>\n *   <InputGroupText>https://</InputGroupText>\n *   <InputGroupInput placeholder=\"kinetixui.com\" />\n * </InputGroup>\n */\nconst InputGroup = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(\n  ({ className, ...props }, ref) => (\n    <div\n      ref={ref}\n      data-slot=\"input-group\"\n      className={cn(\n        \"flex w-full items-center overflow-hidden rounded-sm border border-input bg-background font-sans transition-colors\",\n        \"focus-within:border-primary focus-within:shadow-focus\",\n        \"has-[[aria-invalid=true]]:border-destructive has-[[aria-invalid=true]]:focus-within:shadow-focus-destructive\",\n        \"has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50\",\n        className,\n      )}\n      {...props}\n    />\n  ),\n);\nInputGroup.displayName = \"InputGroup\";\n\nconst InputGroupInput = React.forwardRef<\n  HTMLInputElement,\n  Omit<React.InputHTMLAttributes<HTMLInputElement>, \"size\">\n>(({ className, type = \"text\", ...props }, ref) => (\n  <input\n    ref={ref}\n    type={type}\n    data-slot=\"input-group-input\"\n    className={cn(\n      \"min-w-0 flex-1 bg-transparent px-3 py-3 text-body-md text-foreground\",\n      \"placeholder:text-muted-foreground outline-none disabled:cursor-not-allowed\",\n      className,\n    )}\n    {...props}\n  />\n));\nInputGroupInput.displayName = \"InputGroupInput\";\n\nconst addonVariants = cva(\"flex shrink-0 items-center gap-2 text-muted-foreground [&_svg]:size-4 [&_svg]:shrink-0\", {\n  variants: { align: { start: \"pl-3\", end: \"pr-3\" } },\n  defaultVariants: { align: \"start\" },\n});\n\nconst InputGroupAddon = React.forwardRef<\n  HTMLDivElement,\n  React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof addonVariants>\n>(({ className, align, ...props }, ref) => (\n  <div ref={ref} data-slot=\"input-group-addon\" className={cn(addonVariants({ align }), className)} {...props} />\n));\nInputGroupAddon.displayName = \"InputGroupAddon\";\n\nconst InputGroupText = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanElement>>(\n  ({ className, ...props }, ref) => (\n    <span\n      ref={ref}\n      className={cn(\"select-none whitespace-nowrap px-3 text-body-md text-muted-foreground\", className)}\n      {...props}\n    />\n  ),\n);\nInputGroupText.displayName = \"InputGroupText\";\n\nconst InputGroupButton = React.forwardRef<\n  HTMLButtonElement,\n  React.ButtonHTMLAttributes<HTMLButtonElement>\n>(({ className, type = \"button\", ...props }, ref) => (\n  <button\n    ref={ref}\n    type={type}\n    className={cn(\n      \"flex h-full shrink-0 items-center gap-1.5 self-stretch border-l border-input bg-muted px-3 text-label-md text-foreground\",\n      \"outline-none transition-colors hover:bg-accent focus-visible:bg-accent disabled:cursor-not-allowed disabled:opacity-50\",\n      \"[&_svg]:size-4 [&_svg]:shrink-0\",\n      className,\n    )}\n    {...props}\n  />\n));\nInputGroupButton.displayName = \"InputGroupButton\";\n\nexport { InputGroup, InputGroupInput, InputGroupAddon, InputGroupText, InputGroupButton };\n",
+      "type": "registry:ui",
+      "target": "components/ui/input-group.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

@@ -23,6 +23,8 @@ public class KinetixTheme {
     public static let colorDestructive = UIColor(red: 0.925, green: 0.314, blue: 0.278, alpha: 1) /** figma: error #ec5047 */
     public static let colorDestructiveForeground = UIColor(red: 0.996, green: 0.953, blue: 0.949, alpha: 1) /** figma: onError #fef3f2 */
     public static let colorForeground = UIColor(red: 0.020, green: 0.047, blue: 0.067, alpha: 1) /** figma: onSurface #050c11 */
+    public static let colorInfo = UIColor(red: 0.341, green: 0.467, blue: 0.553, alpha: 1) /** synth: steel blue, distinct from navy primary */
+    public static let colorInfoForeground = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
     public static let colorInput = UIColor(red: 0.573, green: 0.698, blue: 0.784, alpha: 1) /** figma: outline #92b2c8 (same as border) */
     public static let colorMuted = UIColor(red: 0.965, green: 0.965, blue: 0.965, alpha: 1) /** figma: surfaceContainer #f6f6f6 */
     public static let colorMutedForeground = UIColor(red: 0.427, green: 0.427, blue: 0.427, alpha: 1) /** figma: onSurfaceVariant #6d6d6d */
@@ -35,9 +37,14 @@ public class KinetixTheme {
     public static let colorSecondaryForeground = UIColor(red: 0.455, green: 0.533, blue: 0.451, alpha: 1) /** figma: onSecondaryContainer #748873 */
     public static let colorSemanticError = UIColor(red: 0.925, green: 0.314, blue: 0.278, alpha: 1) /** figma: error (NOT red.500 #c60a0a — Figma keeps error as its own value) */
     public static let colorSemanticErrorContainer = UIColor(red: 0.996, green: 0.953, blue: 0.949, alpha: 1) /** figma: errorContainer */
+    public static let colorSemanticInfoContainer = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
     public static let colorSemanticOnError = UIColor(red: 0.996, green: 0.953, blue: 0.949, alpha: 1) /** figma: onError */
     public static let colorSemanticOnErrorContainer = UIColor(red: 0.925, green: 0.314, blue: 0.278, alpha: 1) /** figma: onErrorContainer */
+    public static let colorSemanticOnInfoContainer = UIColor(red: 0.224, green: 0.353, blue: 0.439, alpha: 1)
+    public static let colorSemanticOnSuccessContainer = UIColor(red: 0.275, green: 0.322, blue: 0.271, alpha: 1)
     public static let colorSemanticOnWarningContainer = UIColor(red: 0.976, green: 0.475, blue: 0.027, alpha: 1) /** figma: onWarningContainer */
+    public static let colorSemanticSuccessContainer = UIColor(red: 0.945, green: 0.953, blue: 0.945, alpha: 1)
+    public static let colorSemanticWarning = UIColor(red: 0.976, green: 0.475, blue: 0.027, alpha: 1)
     public static let colorSemanticWarningContainer = UIColor(red: 1.000, green: 0.973, blue: 0.922, alpha: 1) /** figma: warningContainer */
     public static let colorSidebar = UIColor(red: 0.980, green: 0.980, blue: 0.980, alpha: 1)
     public static let colorSidebarAccent = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)

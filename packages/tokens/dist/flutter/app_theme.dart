@@ -26,6 +26,8 @@ class KinetixTheme {
     static const colorDestructive = Color(0xFFEC5047); /** figma: error #ec5047 */
     static const colorDestructiveForeground = Color(0xFFFEF3F2); /** figma: onError #fef3f2 */
     static const colorForeground = Color(0xFF050C11); /** figma: onSurface #050c11 */
+    static const colorInfo = Color(0xFF57778D); /** synth: steel blue, distinct from navy primary */
+    static const colorInfoForeground = Color(0xFFF0F7FF);
     static const colorInput = Color(0xFF92B2C8); /** figma: outline #92b2c8 (same as border) */
     static const colorMuted = Color(0xFFF6F6F6); /** figma: surfaceContainer #f6f6f6 */
     static const colorMutedForeground = Color(0xFF6D6D6D); /** figma: onSurfaceVariant #6d6d6d */
@@ -38,9 +40,14 @@ class KinetixTheme {
     static const colorSecondaryForeground = Color(0xFF748873); /** figma: onSecondaryContainer #748873 */
     static const colorSemanticError = Color(0xFFEC5047); /** figma: error (NOT red.500 #c60a0a — Figma keeps error as its own value) */
     static const colorSemanticErrorContainer = Color(0xFFFEF3F2); /** figma: errorContainer */
+    static const colorSemanticInfoContainer = Color(0xFFF0F7FF);
     static const colorSemanticOnError = Color(0xFFFEF3F2); /** figma: onError */
     static const colorSemanticOnErrorContainer = Color(0xFFEC5047); /** figma: onErrorContainer */
+    static const colorSemanticOnInfoContainer = Color(0xFF395A70);
+    static const colorSemanticOnSuccessContainer = Color(0xFF465245);
     static const colorSemanticOnWarningContainer = Color(0xFFF97907); /** figma: onWarningContainer */
+    static const colorSemanticSuccessContainer = Color(0xFFF1F3F1);
+    static const colorSemanticWarning = Color(0xFFF97907);
     static const colorSemanticWarningContainer = Color(0xFFFFF8EB); /** figma: warningContainer */
     static const colorSidebar = Color(0xFFFAFAFA);
     static const colorSidebarAccent = Color(0xFFF0F7FF);

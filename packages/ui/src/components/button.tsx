@@ -27,7 +27,7 @@ const buttonVariants = cva(
     "inline-flex items-center justify-center gap-1 shrink-0",
     "font-sans font-medium whitespace-nowrap select-none",
     "rounded-md transition-colors outline-none",
-    "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0",
+    "focus-visible:shadow-focus",
     "disabled:pointer-events-none disabled:opacity-50",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-[18px]",
   ],
@@ -63,12 +63,19 @@ const buttonVariants = cva(
       state: {
         Default: "",
         Hover: "",
-        Focus: "ring-2 ring-ring",
+        Focus: "shadow-focus",
         Active: "",
         Disabled: "pointer-events-none opacity-50",
       },
+      /** corner style — matches the design source's Corners property */
+      corners: {
+        sharp: "rounded-none",
+        default: "",
+        pill: "rounded-full",
+      },
     },
     compoundVariants: [
+      { variant: "Destructive", class: "focus-visible:shadow-focus-destructive" },
       { variant: "Primary", state: "Hover", class: "bg-[--color-blue-600]" },
       { variant: "Primary", state: "Active", class: "bg-[--color-blue-700]" },
       { variant: "Secondary", state: "Hover", class: "bg-[--color-green-500] text-[--color-green-50]" },
@@ -80,7 +87,7 @@ const buttonVariants = cva(
       { variant: "Link", state: "Hover", class: "underline text-foreground" },
       { variant: "Link", size: ["sm", "md", "lg"], class: "py-2 px-0 h-auto" },
     ],
-    defaultVariants: { variant: "Primary", size: "md", state: "Default" },
+    defaultVariants: { variant: "Primary", size: "md", state: "Default", corners: "default" },
   },
 );
 
@@ -92,7 +99,7 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, state, asChild = false, disabled, ...props }, ref) => {
+  ({ className, variant, size, state, corners, asChild = false, disabled, ...props }, ref) => {
     const Comp: React.ElementType = asChild ? Slot : "button";
     return (
       <Comp
@@ -101,7 +108,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         data-variant={variant ?? "Primary"}
         data-size={size ?? "md"}
         disabled={disabled || state === "Disabled"}
-        className={cn(buttonVariants({ variant, size, state }), className)}
+        className={cn(buttonVariants({ variant, size, state, corners }), className)}
         {...props}
       />
     );

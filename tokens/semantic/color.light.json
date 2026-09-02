@@ -145,6 +145,26 @@
         "$value": "#f97907",
         "$type": "color",
         "$description": "figma: onWarningContainer"
+      },
+      "success-container": {
+        "$value": "#f1f3f1",
+        "$type": "color"
+      },
+      "on-success-container": {
+        "$value": "#465245",
+        "$type": "color"
+      },
+      "warning": {
+        "$value": "#f97907",
+        "$type": "color"
+      },
+      "info-container": {
+        "$value": "#f0f7ff",
+        "$type": "color"
+      },
+      "on-info-container": {
+        "$value": "#395a70",
+        "$type": "color"
       }
     },
     "chart-1": {
@@ -206,6 +226,15 @@
       "$description": "figma: tertiary — switch off-track"
     },
     "tertiary-foreground": {
+      "$value": "{color.blue.50}",
+      "$type": "color"
+    },
+    "info": {
+      "$value": "{color.blue.300}",
+      "$type": "color",
+      "$description": "synth: steel blue, distinct from navy primary"
+    },
+    "info-foreground": {
       "$value": "{color.blue.50}",
       "$type": "color"
     }

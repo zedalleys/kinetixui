@@ -90,7 +90,7 @@ const messageVariants = cva("flex items-center gap-1.5 text-body-sm [&>svg]:size
       error: "text-destructive",
       warning: "text-warning",
       success: "text-success",
-      info: "text-muted-foreground",
+      info: "text-info",
     },
   },
   defaultVariants: { intent: "error" },

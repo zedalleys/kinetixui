@@ -151,6 +151,14 @@
     "tertiary-foreground": {
       "$value": "{color.blue.50}",
       "$type": "color"
+    },
+    "info": {
+      "$value": "{color.blue.100}",
+      "$type": "color"
+    },
+    "info-foreground": {
+      "$value": "{color.blue.900}",
+      "$type": "color"
     }
   }
 }
