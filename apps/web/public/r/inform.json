@@ -1,0 +1,28 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "inform",
+  "type": "registry:ui",
+  "title": "Inform",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "class-variance-authority",
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/inform.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { CircleAlert, CircleCheck, Info, TriangleAlert, X } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * Inform — a persistent, dismissible, intent-tinted inline notice with an\n * optional action (design source: Capi \"Inform\" — Information / Warning /\n * Success / Error / Action). Distinct from `Alert` (border-only, static): Inform\n * is filled, closable, and can carry a CTA.\n */\nconst informVariants = cva(\n  \"flex items-start gap-2.5 rounded-md p-3 text-body-sm font-sans [&>svg]:mt-0.5 [&>svg]:size-4 [&>svg]:shrink-0\",\n  {\n    variants: {\n      variant: {\n        information: \"bg-info/10 text-info\",\n        warning: \"bg-warning/15 text-warning\",\n        success: \"bg-success/15 text-success\",\n        error: \"bg-destructive/10 text-destructive\",\n        action: \"bg-foreground text-background\",\n      },\n    },\n    defaultVariants: { variant: \"information\" },\n  },\n);\n\nconst ICON = {\n  information: Info,\n  warning: TriangleAlert,\n  success: CircleCheck,\n  error: CircleAlert,\n  action: Info,\n} as const;\n\nexport interface InformProps\n  extends React.HTMLAttributes<HTMLDivElement>,\n    VariantProps<typeof informVariants> {\n  hideIcon?: boolean;\n  onDismiss?: () => void;\n  /** optional CTA rendered below the message */\n  action?: { label: React.ReactNode; onClick?: () => void; icon?: React.ReactNode };\n}\n\nconst Inform = React.forwardRef<HTMLDivElement, InformProps>(\n  ({ className, variant = \"information\", hideIcon, onDismiss, action, children, ...props }, ref) => {\n    const Icon = ICON[variant ?? \"information\"];\n    return (\n      <div ref={ref} role=\"status\" className={cn(informVariants({ variant }), className)} {...props}>\n        {!hideIcon && <Icon />}\n        <div className=\"min-w-0 flex-1\">\n          <p className=\"[&:not(:only-child)]:mb-2\">{children}</p>\n          {action && (\n            <button\n              type=\"button\"\n              onClick={action.onClick}\n              className=\"inline-flex items-center gap-1.5 text-label-md font-medium underline-offset-2 outline-none hover:underline focus-visible:underline [&>svg]:size-4\"\n            >\n              {action.icon}\n              {action.label}\n            </button>\n          )}\n        </div>\n        {onDismiss && (\n          <button\n            type=\"button\"\n            onClick={onDismiss}\n            aria-label=\"Dismiss\"\n            className=\"-m-0.5 shrink-0 rounded-[2px] p-0.5 opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-1 focus-visible:ring-current\"\n          >\n            <X className=\"size-3.5\" />\n          </button>\n        )}\n      </div>\n    );\n  },\n);\nInform.displayName = \"Inform\";\n\nexport { Inform, informVariants };\n",
+      "type": "registry:ui",
+      "target": "components/ui/inform.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

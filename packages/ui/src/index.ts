@@ -270,4 +270,10 @@ export {
   useSidebar,
 } from "./components/sidebar";
 
+/* Batch 3 — Capi design-source gap components */
+export { AudioPlayer, type AudioPlayerProps } from "./components/audio-player";
+export { CircularProgress, type CircularProgressProps } from "./components/circular-progress";
+export { Image, type ImageProps } from "./components/image";
+export { Inform, informVariants, type InformProps } from "./components/inform";
+
 export { cn } from "./lib/utils";

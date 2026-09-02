@@ -7,6 +7,13 @@ export const metadata = {
 
 ## Unreleased
 
+- **Capi design-source gap fill** — 4 components ported from the TapNTry / Capi
+  kit: **`AudioPlayer`** (`variant="full" | "mini"` — native `<audio>` with a
+  scrubber, `mm:ss` labels, ±10s skip, prev/next), **`CircularProgress`** (ring
+  with optional centre value), **`Image`** (ratio presets 1:1 / 3:2 / 4:3 / 3:4 /
+  3:1 / 16:9, muted loading placeholder, error fallback), **`Inform`**
+  (persistent dismissible intent-tinted notice with an optional CTA —
+  information / warning / success / error / action). **57-item registry.**
 - **Native text styles** — typography composites now also compile to
   `KinetixType.swift` (SwiftUI), `KinetixType.kt` (Compose `TextStyle`) and
   `app_text.dart` (Flutter `TextStyle`), and land in `tokens.ts` as a `text.*`
@@ -30,7 +37,7 @@ export const metadata = {
 - **`corners`** prop on `Input` (`sharp | default | rounded | pill`) and `Button`
   (`sharp | default | pill`); `Button` / `Input` / `Textarea` / `Select` focus
   now uses `--shadow-focus` throughout.
-- 53-item registry.
+- 57-item registry.
 
 - **Components — full shadcn/ui parity.** 15 more shipped: Calendar, Carousel,
   Chart, Combobox, Command, Context Menu, Data Table, Date Picker, Drawer, Form,

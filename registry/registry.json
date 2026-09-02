@@ -110,6 +110,31 @@
       ]
     },
     {
+      "name": "audio-player",
+      "type": "registry:ui",
+      "title": "Audio Player",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "tokens",
+        "slider"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/audio-player.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/audio-player.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "avatar",
       "type": "registry:ui",
       "title": "Avatar",
@@ -322,6 +347,28 @@
           "path": "registry/kinetixui/ui/checkbox.tsx",
           "type": "registry:ui",
           "target": "components/ui/checkbox.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "circular-progress",
+      "type": "registry:ui",
+      "title": "Circular Progress",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/circular-progress.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/circular-progress.tsx"
         },
         {
           "path": "registry/kinetixui/lib/utils.ts",
@@ -570,6 +617,55 @@
           "path": "registry/kinetixui/ui/hover-card.tsx",
           "type": "registry:ui",
           "target": "components/ui/hover-card.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "image",
+      "type": "registry:ui",
+      "title": "Image",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/image.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/image.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "inform",
+      "type": "registry:ui",
+      "title": "Inform",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "class-variance-authority",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/inform.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/inform.tsx"
         },
         {
           "path": "registry/kinetixui/lib/utils.ts",

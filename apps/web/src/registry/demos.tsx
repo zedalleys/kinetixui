@@ -675,6 +675,10 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
   Tag,
+  AudioPlayer,
+  CircularProgress,
+  Image,
+  Inform,
 } from "@kinetixui/ui";
 
 add(
@@ -1021,6 +1025,65 @@ add(
     </div>
   ),
   `<SidebarProvider>\n  <Sidebar>\n    <SidebarHeader>…</SidebarHeader>\n    <SidebarContent>\n      <SidebarGroup>\n        <SidebarMenu>\n          <SidebarMenuItem>\n            <SidebarMenuButton isActive>Home</SidebarMenuButton>\n          </SidebarMenuItem>\n        </SidebarMenu>\n      </SidebarGroup>\n    </SidebarContent>\n  </Sidebar>\n  <SidebarInset>\n    <SidebarTrigger />\n    {/* page content */}\n  </SidebarInset>\n</SidebarProvider>`,
+);
+
+/* ---- batch 3 — Capi gap components ----------------------------------- */
+const SAMPLE_AUDIO = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+
+add(
+  "audio-player-demo",
+  () => (
+    <div className="flex w-full max-w-[380px] flex-col gap-6">
+      <AudioPlayer src={SAMPLE_AUDIO} title="SoundHelix Song 1" artist="T. Schürger" />
+      <AudioPlayer variant="mini" src={SAMPLE_AUDIO} title="SoundHelix Song 1" artist="T. Schürger" />
+    </div>
+  ),
+  `<AudioPlayer src="/audio/song.mp3" title="Song 1" artist="Artist" />\n\n<AudioPlayer variant="mini" src="/audio/song.mp3" title="Song 1" artist="Artist" />`,
+);
+add(
+  "circular-progress-demo",
+  () => {
+    const [v, setV] = React.useState(25);
+    React.useEffect(() => {
+      const t = setInterval(() => setV((c) => (c >= 100 ? 25 : c + 5)), 400);
+      return () => clearInterval(t);
+    }, []);
+    return (
+      <div className="flex items-center gap-6">
+        <CircularProgress value={v} showValue />
+        <CircularProgress value={v} size={64} strokeWidth={6} showValue />
+        <CircularProgress value={v} />
+      </div>
+    );
+  },
+  `<CircularProgress value={66} showValue />\n<CircularProgress value={66} size={64} strokeWidth={6} showValue />`,
+);
+add(
+  "image-demo",
+  () => (
+    <div className="grid w-full max-w-md grid-cols-3 gap-3">
+      <Image ratio="1:1" src="https://picsum.photos/seed/kx1/400" alt="" />
+      <Image ratio="4:3" src="https://picsum.photos/seed/kx2/400/300" alt="" />
+      <Image ratio="3:4" src="https://picsum.photos/seed/kx3/300/400" alt="" />
+    </div>
+  ),
+  `<Image ratio="1:1" src="/photo.jpg" alt="" />\n<Image ratio="4:3" src="/photo.jpg" alt="" />\n<Image ratio="16:9" src="/photo.jpg" alt="" rounded={false} />`,
+);
+add(
+  "inform-demo",
+  () => (
+    <div className="flex w-full max-w-md flex-col gap-3">
+      <Inform variant="information" onDismiss={() => {}}>
+        A new software update is available.
+      </Inform>
+      <Inform variant="success">Your changes have been saved.</Inform>
+      <Inform variant="warning">Your subscription expires in 3 days.</Inform>
+      <Inform variant="error" action={{ label: "Retry" }}>
+        We couldn&rsquo;t process your payment.
+      </Inform>
+    </div>
+  ),
+  `<Inform variant="information" onDismiss={close}>\n  A new software update is available.\n</Inform>\n\n<Inform variant="error" action={{ label: "Retry", onClick: retry }}>\n  We couldn't process your payment.\n</Inform>`,
 );
 
 export const demoRegistry = reg;

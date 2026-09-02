@@ -64,12 +64,13 @@ are private and never published.
 - ✅ **Token engine** — `pnpm build:tokens` clean; 11 files across web / iOS /
   Android / Flutter. Web CSS is HSL channels (opacity modifiers work); `--chart-1…5`
   added.
-- ✅ **Components — 47 in `@kinetixui/ui`**, full shadcn/ui parity: `Button` /
-  `Input` / `Textarea` (design-source-native API) + 44 ported onto the token
+- ✅ **Components — 51 in `@kinetixui/ui`**, full shadcn/ui parity: `Button` /
+  `Input` / `Textarea` (design-source-native API) + 48 ported onto the token
   contract (Accordion … Tooltip, plus Calendar, Carousel, Chart, Command,
   Context Menu, Data Table, Drawer, Form, Input OTP, Menubar, Navigation Menu,
-  Resizable, Sidebar). **48-item** shadcn registry.
-- ✅ **kinetixui.com** — every shadcn/ui doc route (49 component pages) with live
+  Resizable, Sidebar, and — from the Capi kit — AudioPlayer, CircularProgress,
+  Image, Inform). **57-item** shadcn registry.
+- ✅ **kinetixui.com** — every shadcn/ui doc route (53 component pages) with live
   previews, Colors, Themes, ⌘K, light/dark. `pnpm build:web` passes; all static.
 - 🟡 Storybook has stories for Button / Input / Textarea only (site is the
   primary doc surface).

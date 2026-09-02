@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "image",
+  "type": "registry:ui",
+  "title": "Image",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/image.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { ImageOff } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * Image — a ratio-locked image with a muted placeholder while loading and a\n * fallback on error (design source: Capi \"Image\", ratios 1:1 / 3:2 / 4:3 / 3:4\n * / 3:1 / 16:9). Pass `ratio` as a preset string or a number (w / h).\n */\nconst RATIOS: Record<string, number> = {\n  \"1:1\": 1,\n  \"3:2\": 3 / 2,\n  \"4:3\": 4 / 3,\n  \"3:4\": 3 / 4,\n  \"3:1\": 3,\n  \"16:9\": 16 / 9,\n};\n\nexport interface ImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {\n  ratio?: keyof typeof RATIOS | number;\n  rounded?: boolean;\n  fallback?: React.ReactNode;\n}\n\nconst Image = React.forwardRef<HTMLImageElement, ImageProps>(\n  ({ ratio = \"1:1\", rounded = true, fallback, className, alt = \"\", onLoad, onError, ...props }, ref) => {\n    const [status, setStatus] = React.useState<\"loading\" | \"loaded\" | \"error\">(\"loading\");\n    const r = typeof ratio === \"number\" ? ratio : (RATIOS[ratio] ?? 1);\n\n    return (\n      <div\n        className={cn(\n          \"relative w-full overflow-hidden bg-muted\",\n          rounded && \"rounded-md\",\n          className,\n        )}\n        style={{ aspectRatio: r }}\n      >\n        {status === \"error\" ? (\n          <div className=\"absolute inset-0 grid place-items-center text-muted-foreground\">\n            {fallback ?? <ImageOff className=\"size-6\" />}\n          </div>\n        ) : (\n          <img\n            ref={ref}\n            alt={alt}\n            className={cn(\n              \"size-full object-cover transition-opacity duration-300\",\n              status === \"loaded\" ? \"opacity-100\" : \"opacity-0\",\n            )}\n            onLoad={(e) => {\n              setStatus(\"loaded\");\n              onLoad?.(e);\n            }}\n            onError={(e) => {\n              setStatus(\"error\");\n              onError?.(e);\n            }}\n            {...props}\n          />\n        )}\n      </div>\n    );\n  },\n);\nImage.displayName = \"Image\";\n\nexport { Image };\n",
+      "type": "registry:ui",
+      "target": "components/ui/image.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

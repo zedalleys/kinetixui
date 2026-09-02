@@ -65,6 +65,10 @@ const BUILT = {
   "navigation-menu": ["NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuLink", "A collection of links for navigating websites."],
   resizable: ["ResizablePanelGroup, ResizablePanel, ResizableHandle", "Accessible resizable panel groups and layouts."],
   sidebar: ["SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger, SidebarInset", "A composable, themeable and customizable sidebar — uses `--sidebar-*` tokens."],
+  "audio-player": ["AudioPlayer", "Native `<audio>` playback with a scrubber, time labels and transport controls. Ported 1:1 from design source node — Capi \"Audio player\" (variant: full | mini)."],
+  "circular-progress": ["CircularProgress", "A ring progress indicator with an optional centre value. Ported 1:1 from design source — Capi \"Progress Bar\" › Circle."],
+  image: ["Image", "A ratio-locked image with a muted loading placeholder and an error fallback. Ported 1:1 from design source — Capi \"Image\" (ratios 1:1 / 3:2 / 4:3 / 3:4 / 3:1 / 16:9)."],
+  inform: ["Inform, informVariants", "A persistent, dismissible, intent-tinted inline notice with an optional action. Ported 1:1 from design source — Capi \"Inform\" (variant: information | warning | success | error | action)."],
 };
 
 const SOON = {};
