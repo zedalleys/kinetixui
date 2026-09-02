@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@9.15.0",
-  "workspaces": ["packages/*", "apps/*"],
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
     "build": "turbo run build",
     "build:tokens": "node style-dictionary/build.mjs",
@@ -18,9 +21,13 @@
     "build:web": "pnpm --filter @kinetixui/web build",
     "clean": "turbo run clean && rimraf node_modules",
     "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build:tokens && pnpm --filter @kinetixui/ui build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.1",
     "rimraf": "^6.0.1",
     "shadcn": "^2.1.8",
     "style-dictionary": "^4.3.0",

@@ -44,11 +44,20 @@ kinetixui/
 | `pnpm storybook` | Storybook dev server on :6006 |
 | `pnpm build` | Turborepo: tokens → ui → registry |
 
-## Consume the registry
+## Consume it
 
 ```bash
+# registry — own the code
 npx shadcn@latest add https://kinetixui.com/r/button.json
+
+# npm — versioned dependency
+npm i @kinetixui/tokens @kinetixui/ui
 ```
+
+Publishing is Changesets-driven: `pnpm changeset` to describe a change; on merge
+to `main` the Release workflow opens a **Version Packages** PR, and merging that
+publishes to npm (needs the `NPM_TOKEN` repo secret). `apps/web` / `apps/docs`
+are private and never published.
 
 ## Status
 

@@ -5,23 +5,45 @@ export const metadata = {
 
 # Installation
 
+KinetixUI ships two ways. Use whichever fits — they're the same tokens.
+
+| | Registry (own the code) | npm (versioned dependency) |
+| --- | --- | --- |
+| Components | `npx shadcn add https://kinetixui.com/r/<name>.json` | `npm i @kinetixui/ui` |
+| Tokens | `npx shadcn add …/r/tokens.json` | `npm i @kinetixui/tokens` |
+
+The registry drops source into your repo (you edit it freely). The npm packages
+update with `npm update`. Tokens are a good npm dependency; components are often
+nicer copied.
+
 ## Tokens
 
-Pull the CSS variable contract into your global stylesheet:
+**Registry** — writes `:root` (light) + `.dark` + the shadow / type composites
+into your global stylesheet:
 
 ```bash
 npx shadcn@latest add https://kinetixui.com/r/tokens.json
 ```
 
-This writes `:root` (light) and `.dark` blocks plus the six primitive ramps. Or
-vendor the generated file directly from `@kinetixui/tokens`:
+**npm** — import the generated CSS, or the typed object:
 
 ```css
 @import "@kinetixui/tokens/css";
 @import "@kinetixui/tokens/css/dark";
+@import "@kinetixui/tokens/css/extras"; /* --shadow-* + --text-* */
 ```
 
+```ts
+import tokens from "@kinetixui/tokens";
+tokens.color.blue[500]; // "#1b3c53"
+```
+
+Native text styles ship too: `KinetixType.swift`, `KinetixType.kt`,
+`app_text.dart` under the package's `dist/{ios,android,flutter}`.
+
 ## A component
+
+**Registry:**
 
 ```bash
 npx shadcn@latest add https://kinetixui.com/r/button.json
@@ -30,6 +52,16 @@ npx shadcn@latest add https://kinetixui.com/r/button.json
 The CLI resolves `tokens` first (a registry dependency), installs
 `@radix-ui/react-slot`, `class-variance-authority`, `clsx`, `tailwind-merge`,
 then drops `button.tsx` into `components/ui`.
+
+**npm:**
+
+```bash
+npm i @kinetixui/ui
+```
+
+```tsx
+import { Button, Field, FieldLabel } from "@kinetixui/ui";
+```
 
 ## Tailwind
 

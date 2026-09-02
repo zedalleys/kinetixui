@@ -1,16 +1,23 @@
 {
   "name": "@kinetixui/tokens",
-  "version": "0.1.0",
+  "version": "0.0.0",
+  "description": "KinetixUI design tokens — CSS variables, a TypeScript object, and native SwiftUI / Jetpack Compose / Flutter text styles, compiled by Style Dictionary.",
+  "keywords": ["design-tokens", "design-system", "style-dictionary", "css-variables", "kinetixui"],
+  "license": "MIT",
+  "author": "KinetixUI",
+  "homepage": "https://kinetixui.com",
+  "repository": { "type": "git", "url": "https://github.com/ziadfteha/kinetixui.git", "directory": "packages/tokens" },
   "type": "module",
+  "sideEffects": ["*.css"],
   "exports": {
-    ".": "./dist/web/tokens.ts",
+    ".": { "types": "./dist/web/tokens.d.ts", "import": "./dist/web/tokens.js" },
     "./css": "./dist/web/globals.css",
     "./css/dark": "./dist/web/globals.dark.css",
-    "./css/extras": "./dist/web/extras.css"
+    "./css/extras": "./dist/web/extras.css",
+    "./package.json": "./package.json"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
+  "publishConfig": { "access": "public" },
   "scripts": {
     "build": "node ../../style-dictionary/build.mjs",
     "clean": "rimraf dist"
