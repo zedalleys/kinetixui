@@ -1,0 +1,11 @@
+node_modules/
+.turbo/
+dist/
+storybook-static/
+*.log
+.DS_Store
+
+# Style Dictionary output IS committed so consumers can vendor the tokens
+# without running the build.
+!packages/tokens/dist/
+!packages/tokens/dist/**

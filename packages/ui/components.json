@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "../tokens/dist/web/globals.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@strata/ui/components",
+    "utils": "@strata/ui/lib/utils",
+    "ui": "@strata/ui/components"
+  },
+  "registries": {
+    "@strata": "https://strata.design/r/{name}.json"
+  }
+}

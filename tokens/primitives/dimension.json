@@ -1,0 +1,78 @@
+{
+  "spacing": {
+    "0": {
+      "$value": "0",
+      "$type": "dimension"
+    },
+    "1": {
+      "$value": "4",
+      "$type": "dimension"
+    },
+    "2": {
+      "$value": "8",
+      "$type": "dimension"
+    },
+    "3": {
+      "$value": "12",
+      "$type": "dimension"
+    },
+    "4": {
+      "$value": "16",
+      "$type": "dimension"
+    },
+    "5": {
+      "$value": "20",
+      "$type": "dimension"
+    },
+    "6": {
+      "$value": "24",
+      "$type": "dimension"
+    },
+    "7": {
+      "$value": "28",
+      "$type": "dimension",
+      "$description": "SYNTHESIZED"
+    },
+    "8": {
+      "$value": "32",
+      "$type": "dimension"
+    }
+  },
+  "radius": {
+    "none": {
+      "$value": "0",
+      "$type": "dimension"
+    },
+    "sm": {
+      "$value": "4",
+      "$type": "dimension"
+    },
+    "md": {
+      "$value": "8",
+      "$type": "dimension"
+    },
+    "lg": {
+      "$value": "12",
+      "$type": "dimension",
+      "$description": "SYNTHESIZED"
+    },
+    "xl": {
+      "$value": "16",
+      "$type": "dimension"
+    },
+    "full": {
+      "$value": "9999",
+      "$type": "dimension"
+    }
+  },
+  "borderWidth": {
+    "default": {
+      "$value": "1",
+      "$type": "dimension"
+    },
+    "focus": {
+      "$value": "2",
+      "$type": "dimension"
+    }
+  }
+}

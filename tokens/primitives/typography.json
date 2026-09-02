@@ -1,0 +1,182 @@
+{
+  "font": {
+    "family": {
+      "sans": {
+        "$value": "Montserrat, ui-sans-serif, system-ui, sans-serif",
+        "$type": "fontFamily"
+      }
+    },
+    "weight": {
+      "regular": {
+        "$value": "400",
+        "$type": "fontWeight"
+      },
+      "medium": {
+        "$value": "500",
+        "$type": "fontWeight"
+      },
+      "semibold": {
+        "$value": "600",
+        "$type": "fontWeight"
+      }
+    }
+  },
+  "fontSize": {
+    "display-lg": {
+      "$value": "57",
+      "$type": "dimension"
+    },
+    "display-md": {
+      "$value": "45",
+      "$type": "dimension"
+    },
+    "display-sm": {
+      "$value": "36",
+      "$type": "dimension"
+    },
+    "headline-lg": {
+      "$value": "32",
+      "$type": "dimension"
+    },
+    "headline-md": {
+      "$value": "28",
+      "$type": "dimension"
+    },
+    "headline-sm": {
+      "$value": "24",
+      "$type": "dimension"
+    },
+    "title-lg": {
+      "$value": "22",
+      "$type": "dimension"
+    },
+    "title-md": {
+      "$value": "16",
+      "$type": "dimension"
+    },
+    "title-sm": {
+      "$value": "14",
+      "$type": "dimension"
+    },
+    "title-dialog": {
+      "$value": "18",
+      "$type": "dimension"
+    },
+    "label-lg": {
+      "$value": "14",
+      "$type": "dimension"
+    },
+    "label-md": {
+      "$value": "12",
+      "$type": "dimension"
+    },
+    "label-sm": {
+      "$value": "11",
+      "$type": "dimension"
+    },
+    "body-lg": {
+      "$value": "16",
+      "$type": "dimension"
+    },
+    "body-md": {
+      "$value": "14",
+      "$type": "dimension"
+    },
+    "body-sm": {
+      "$value": "12",
+      "$type": "dimension"
+    }
+  },
+  "lineHeight": {
+    "display-lg": {
+      "$value": "64",
+      "$type": "dimension"
+    },
+    "display-md": {
+      "$value": "52",
+      "$type": "dimension"
+    },
+    "display-sm": {
+      "$value": "44",
+      "$type": "dimension"
+    },
+    "headline-lg": {
+      "$value": "40",
+      "$type": "dimension"
+    },
+    "headline-md": {
+      "$value": "36",
+      "$type": "dimension"
+    },
+    "headline-sm": {
+      "$value": "32",
+      "$type": "dimension"
+    },
+    "title-lg": {
+      "$value": "28",
+      "$type": "dimension"
+    },
+    "title-md": {
+      "$value": "24",
+      "$type": "dimension"
+    },
+    "title-sm": {
+      "$value": "20",
+      "$type": "dimension"
+    },
+    "title-dialog": {
+      "$value": "24",
+      "$type": "dimension"
+    },
+    "label-lg": {
+      "$value": "20",
+      "$type": "dimension"
+    },
+    "label-md": {
+      "$value": "16",
+      "$type": "dimension"
+    },
+    "label-sm": {
+      "$value": "16",
+      "$type": "dimension"
+    },
+    "body-lg": {
+      "$value": "24",
+      "$type": "dimension"
+    },
+    "body-md": {
+      "$value": "20",
+      "$type": "dimension"
+    },
+    "body-sm": {
+      "$value": "16",
+      "$type": "dimension"
+    }
+  },
+  "letterSpacing": {
+    "tighter": {
+      "$value": "-0.25",
+      "$type": "dimension"
+    },
+    "normal": {
+      "$value": "0",
+      "$type": "dimension"
+    },
+    "wide-1": {
+      "$value": "0.1",
+      "$type": "dimension"
+    },
+    "wide-15": {
+      "$value": "0.15",
+      "$type": "dimension"
+    },
+    "wide-25": {
+      "$value": "0.25",
+      "$type": "dimension"
+    },
+    "wide-5": {
+      "$value": "0.5",
+      "$type": "dimension"
+    }
+  }
+}

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Do not edit directly, this file was auto-generated.
+-->
+<resources>
+  <dimen name="spacing_0">0dp</dimen>
+  <dimen name="spacing_1">4dp</dimen>
+  <dimen name="spacing_2">8dp</dimen>
+  <dimen name="spacing_3">12dp</dimen>
+  <dimen name="spacing_4">16dp</dimen>
+  <dimen name="spacing_5">20dp</dimen>
+  <dimen name="spacing_6">24dp</dimen>
+  <dimen name="spacing_7">28dp</dimen>
+  <dimen name="spacing_8">32dp</dimen>
+  <dimen name="radius_none">0dp</dimen>
+  <dimen name="radius_sm">4dp</dimen>
+  <dimen name="radius_md">8dp</dimen>
+  <dimen name="radius_lg">12dp</dimen>
+  <dimen name="radius_xl">16dp</dimen>
+  <dimen name="radius_full">9999dp</dimen>
+  <dimen name="border_width_default">1dp</dimen>
+  <dimen name="border_width_focus">2dp</dimen>
+  <dimen name="font_size_display_lg">57dp</dimen>
+  <dimen name="font_size_display_md">45dp</dimen>
+  <dimen name="font_size_display_sm">36dp</dimen>
+  <dimen name="font_size_headline_lg">32dp</dimen>
+  <dimen name="font_size_headline_md">28dp</dimen>
+  <dimen name="font_size_headline_sm">24dp</dimen>
+  <dimen name="font_size_title_lg">22dp</dimen>
+  <dimen name="font_size_title_md">16dp</dimen>
+  <dimen name="font_size_title_sm">14dp</dimen>
+  <dimen name="font_size_title_dialog">18dp</dimen>
+  <dimen name="font_size_label_lg">14dp</dimen>
+  <dimen name="font_size_label_md">12dp</dimen>
+  <dimen name="font_size_label_sm">11dp</dimen>
+  <dimen name="font_size_body_lg">16dp</dimen>
+  <dimen name="font_size_body_md">14dp</dimen>
+  <dimen name="font_size_body_sm">12dp</dimen>
+  <dimen name="line_height_display_lg">64dp</dimen>
+  <dimen name="line_height_display_md">52dp</dimen>
+  <dimen name="line_height_display_sm">44dp</dimen>
+  <dimen name="line_height_headline_lg">40dp</dimen>
+  <dimen name="line_height_headline_md">36dp</dimen>
+  <dimen name="line_height_headline_sm">32dp</dimen>
+  <dimen name="line_height_title_lg">28dp</dimen>
+  <dimen name="line_height_title_md">24dp</dimen>
+  <dimen name="line_height_title_sm">20dp</dimen>
+  <dimen name="line_height_title_dialog">24dp</dimen>
+  <dimen name="line_height_label_lg">20dp</dimen>
+  <dimen name="line_height_label_md">16dp</dimen>
+  <dimen name="line_height_label_sm">16dp</dimen>
+  <dimen name="line_height_body_lg">24dp</dimen>
+  <dimen name="line_height_body_md">20dp</dimen>
+  <dimen name="line_height_body_sm">16dp</dimen>
+  <dimen name="letter_spacing_tighter">-0.25dp</dimen>
+  <dimen name="letter_spacing_normal">0dp</dimen>
+  <dimen name="letter_spacing_wide_1">0.1dp</dimen>
+  <dimen name="letter_spacing_wide_15">0.15dp</dimen>
+  <dimen name="letter_spacing_wide_25">0.25dp</dimen>
+  <dimen name="letter_spacing_wide_5">0.5dp</dimen>
+</resources>

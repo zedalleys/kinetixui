@@ -1,0 +1,26 @@
+{
+  "name": "strata-design-system",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.0",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "build": "turbo run build",
+    "build:tokens": "node style-dictionary/build.mjs",
+    "build:registry": "shadcn build registry/registry.json --output public/r",
+    "build:ui": "pnpm --filter @strata/ui build",
+    "storybook": "pnpm --filter @strata/docs storybook",
+    "build-storybook": "pnpm --filter @strata/docs build-storybook",
+    "clean": "turbo run clean && rimraf node_modules",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "shadcn": "^2.1.8",
+    "style-dictionary": "^4.3.0",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  }
+}

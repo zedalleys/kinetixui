@@ -1,0 +1,29 @@
+/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+.dark {
+  --background: #050c11;
+  --foreground: #f0f7ff;
+  --card: #0b1821;
+  --card-foreground: #f0f7ff;
+  --popover: #0b1821;
+  --popover-foreground: #f0f7ff;
+  --primary: #92b2c8;
+  --primary-foreground: #050c11;
+  --secondary: #2e362e;
+  --secondary-foreground: #e3e7e3;
+  --muted: #102432;
+  --muted-foreground: #92b2c8;
+  --accent: #102432;
+  --accent-foreground: #f0f7ff;
+  --destructive: #dd6a6a;
+  --destructive-foreground: #280202;
+  --success: #90a08f;
+  --success-foreground: #171b17;
+  --warning: #ffc975;
+  --warning-foreground: #2a1a00;
+  --border: #395a70;
+  --input: #395a70;
+  --ring: #92b2c8;
+}

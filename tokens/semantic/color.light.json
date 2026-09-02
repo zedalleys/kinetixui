@@ -1,0 +1,156 @@
+{
+  "color": {
+    "background": {
+      "$value": "{color.neutral.0}",
+      "$type": "color",
+      "$description": "figma: surfaceContainerLowest #ffffff"
+    },
+    "foreground": {
+      "$value": "{color.blue.900}",
+      "$type": "color",
+      "$description": "figma: onSurface #050c11"
+    },
+    "card": {
+      "$value": "{color.neutral.0}",
+      "$type": "color",
+      "$description": "synth: no Figma card token; = background"
+    },
+    "card-foreground": {
+      "$value": "{color.blue.900}",
+      "$type": "color",
+      "$description": "synth: = foreground"
+    },
+    "popover": {
+      "$value": "{color.neutral.0}",
+      "$type": "color",
+      "$description": "synth: no Figma popover token; = background"
+    },
+    "popover-foreground": {
+      "$value": "{color.blue.900}",
+      "$type": "color",
+      "$description": "synth: = foreground"
+    },
+    "primary": {
+      "$value": "{color.blue.500}",
+      "$type": "color",
+      "$description": "figma: 'Primay' (sic) #1b3c53 -> renamed primary"
+    },
+    "primary-foreground": {
+      "$value": "{color.blue.50}",
+      "$type": "color",
+      "$description": "figma: 'On Primary' #f0f7ff -> renamed primary-foreground"
+    },
+    "secondary": {
+      "$value": "{color.green.50}",
+      "$type": "color",
+      "$description": "figma: secondaryContainer #f1f3f1 (shadcn 'secondary' == Figma container role)"
+    },
+    "secondary-foreground": {
+      "$value": "{color.green.500}",
+      "$type": "color",
+      "$description": "figma: onSecondaryContainer #748873"
+    },
+    "muted": {
+      "$value": "{color.neutral.100}",
+      "$type": "color",
+      "$description": "figma: surfaceContainer #f6f6f6"
+    },
+    "muted-foreground": {
+      "$value": "{color.neutral.600}",
+      "$type": "color",
+      "$description": "figma: onSurfaceVariant #6d6d6d"
+    },
+    "accent": {
+      "$value": "{color.blue.50}",
+      "$type": "color",
+      "$description": "figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons)"
+    },
+    "accent-foreground": {
+      "$value": "{color.blue.500}",
+      "$type": "color",
+      "$description": "synth: = primary for readable text on accent"
+    },
+    "destructive": {
+      "$value": "{color.semantic.error}",
+      "$type": "color",
+      "$description": "figma: error #ec5047"
+    },
+    "destructive-foreground": {
+      "$value": "{color.semantic.on-error}",
+      "$type": "color",
+      "$description": "figma: onError #fef3f2"
+    },
+    "success": {
+      "$value": "{color.green.600}",
+      "$type": "color",
+      "$description": "synth: no Figma success token; green ramp step 6 (distinct from secondary)"
+    },
+    "success-foreground": {
+      "$value": "{color.green.50}",
+      "$type": "color",
+      "$description": "synth"
+    },
+    "warning": {
+      "$value": "{color.semantic.on-warning-container}",
+      "$type": "color",
+      "$description": "figma: onWarningContainer #f97907 (only warning role Figma exposes at full chroma)"
+    },
+    "warning-foreground": {
+      "$value": "{color.semantic.warning-container}",
+      "$type": "color",
+      "$description": "figma: warningContainer #fff8eb"
+    },
+    "border": {
+      "$value": "{color.blue.100}",
+      "$type": "color",
+      "$description": "figma: outline #92b2c8"
+    },
+    "input": {
+      "$value": "{color.blue.100}",
+      "$type": "color",
+      "$description": "figma: outline #92b2c8 (same as border)"
+    },
+    "ring": {
+      "$value": "{color.blue.500}",
+      "$type": "color",
+      "$description": "figma: focus state draws a 2px 'Primay' border"
+    },
+    "semantic": {
+      "error": {
+        "$value": "#ec5047",
+        "$type": "color",
+        "$description": "figma: error (NOT red.500 #c60a0a — Figma keeps error as its own value)"
+      },
+      "on-error": {
+        "$value": "#fef3f2",
+        "$type": "color",
+        "$description": "figma: onError"
+      },
+      "error-container": {
+        "$value": "#fef3f2",
+        "$type": "color",
+        "$description": "figma: errorContainer"
+      },
+      "on-error-container": {
+        "$value": "#ec5047",
+        "$type": "color",
+        "$description": "figma: onErrorContainer"
+      },
+      "warning-container": {
+        "$value": "#fff8eb",
+        "$type": "color",
+        "$description": "figma: warningContainer"
+      },
+      "on-warning-container": {
+        "$value": "#f97907",
+        "$type": "color",
+        "$description": "figma: onWarningContainer"
+      },
+      "tertiary": {
+        "$value": "#b0b0b0",
+        "$type": "color",
+        "$description": "figma: tertiary (flat grey, not tied to a ramp)"
+      }
+    }
+  }
+}

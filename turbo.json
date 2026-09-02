@@ -1,0 +1,22 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build:tokens": {
+      "inputs": ["tokens/**", "style-dictionary/**"],
+      "outputs": ["packages/tokens/dist/**"]
+    },
+    "build": {
+      "dependsOn": ["^build", "build:tokens"],
+      "outputs": ["dist/**", "storybook-static/**", "public/r/**"]
+    },
+    "build:registry": {
+      "dependsOn": ["build:tokens"],
+      "inputs": ["registry/**", "packages/ui/src/**"],
+      "outputs": ["public/r/**"]
+    },
+    "lint": {},
+    "typecheck": { "dependsOn": ["^build", "build:tokens"] },
+    "clean": { "cache": false },
+    "storybook": { "cache": false, "persistent": true, "dependsOn": ["build:tokens"] }
+  }
+}

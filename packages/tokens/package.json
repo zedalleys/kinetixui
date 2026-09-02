@@ -1,0 +1,19 @@
+{
+  "name": "@strata/tokens",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./dist/web/tokens.ts",
+    "./css": "./dist/web/globals.css",
+    "./css/dark": "./dist/web/globals.dark.css"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "node ../../style-dictionary/build.mjs",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "style-dictionary": "^4.3.0"
+  }
+}

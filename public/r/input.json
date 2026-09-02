@@ -1,0 +1,23 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "input",
+  "type": "registry:ui",
+  "title": "Input",
+  "description": "STUB — form input, Figma node 54855:13836 (state: Default | Focus | Error | Disabled).",
+  "dependencies": [
+    "class-variance-authority",
+    "clsx",
+    "tailwind-merge"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/strata/ui/input.tsx",
+      "content": "import * as React from \"react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"@/lib/utils\";\n\n/** STUB — see packages/ui/src/components/input.tsx. Fill from Figma node 54855:13836. */\nconst inputVariants = cva(\n  \"flex w-full rounded-md border bg-background px-3 py-2 text-[14px] leading-5 font-sans text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50\",\n  {\n    variants: {\n      state: { Default: \"border-input\", Error: \"border-destructive focus-visible:ring-destructive\" },\n    },\n    defaultVariants: { state: \"Default\" },\n  },\n);\n\nexport interface InputProps\n  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, \"size\">,\n    VariantProps<typeof inputVariants> {}\n\nconst Input = React.forwardRef<HTMLInputElement, InputProps>(\n  ({ className, state, type = \"text\", ...props }, ref) => (\n    <input ref={ref} type={type} data-slot=\"input\" className={cn(inputVariants({ state }), className)} {...props} />\n  ),\n);\nInput.displayName = \"Input\";\n\nexport { Input, inputVariants };\n",
+      "type": "registry:ui",
+      "target": "components/ui/input.tsx"
+    }
+  ]
+}
