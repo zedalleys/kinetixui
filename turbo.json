@@ -7,12 +7,12 @@
     },
     "build": {
       "dependsOn": ["^build", "build:tokens"],
-      "outputs": ["dist/**", "storybook-static/**", "public/r/**"]
+      "outputs": ["dist/**", "storybook-static/**", "apps/web/public/r/**"]
     },
     "build:registry": {
       "dependsOn": ["build:tokens"],
       "inputs": ["registry/**", "packages/ui/src/**"],
-      "outputs": ["public/r/**"]
+      "outputs": ["apps/web/public/r/**"]
     },
     "lint": {},
     "typecheck": { "dependsOn": ["^build", "build:tokens"] },

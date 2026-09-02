@@ -10,7 +10,7 @@
     "build:tokens": "node style-dictionary/build.mjs",
     "gen:registry": "node scripts/gen-registry.mjs",
     "gen:docs": "node scripts/gen-docs.mjs",
-    "build:registry": "node scripts/gen-registry.mjs && shadcn build registry/registry.json --output public/r",
+    "build:registry": "node scripts/gen-registry.mjs && shadcn build registry/registry.json --output apps/web/public/r",
     "build:ui": "pnpm --filter @kinetixui/ui build",
     "storybook": "pnpm --filter @kinetixui/docs storybook",
     "build-storybook": "pnpm --filter @kinetixui/docs build-storybook",
