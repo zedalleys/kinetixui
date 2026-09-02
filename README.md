@@ -64,5 +64,7 @@ npx shadcn@latest add https://kinetixui.com/r/button.json
   previews, Colors, Themes, ⌘K, light/dark. `pnpm build:web` passes; all static.
 - 🟡 Storybook has stories for Button / Input / Textarea only (site is the
   primary doc surface).
-- 🟡 No CI. Deploy: see `DEPLOY.md` (Vercel + GoDaddy).
+- ✅ CI — GitHub Actions builds tokens → ui → registry → site on every push/PR,
+  and fails if generated output (`packages/tokens/dist`, `apps/web/public/r`) is stale.
+- Deploy: see `DEPLOY.md` (Vercel + GoDaddy).
 - See `TOKENS.md` for every deviation from the raw design tokens.
