@@ -70,8 +70,8 @@ and publishes on merge. Needs the `NPM_TOKEN` repo secret.
 ## Component doc "Code" tab
 
 `ComponentPreview` (`apps/web/src/components/component-preview.tsx`) renders the
-Code tab as per-platform sub-tabs (React · HTML · SwiftUI · Compose · Flutter),
-each with a copy button.
+Code tab as per-platform sub-tabs — **React · HTML · iOS · Android · Flutter**
+(iOS = SwiftUI, Android = Jetpack Compose) — each with a copy button.
 
 - The **React** snippet is canonical and lives in the demo registry
   (`demoRegistry[name].source`).
@@ -80,14 +80,11 @@ each with a copy button.
   snippets compose the platform's own primitives with the real
   `@kinetixui/tokens` output (`KinetixColor.color*` for SwiftUI,
   `KinetixTheme.color*` for Compose/Flutter, CSS vars for HTML).
-- A component with no `platform-code.ts` entry shows just the React pane.
-  Currently populated (28): the token-driven primitives and their native
-  equivalents — button, badge, alert, card, input, textarea, switch, checkbox,
-  separator, avatar, label, aspect-ratio, skeleton, spinner, progress,
-  circular-progress, slider, tabs, tooltip, radio-group, select, dialog, sheet,
-  accordion, collapsible, breadcrumb, tag, toggle. Add more by extending that
-  file — components with no honest native equivalent (Command, Data Table,
-  Carousel, Resizable, …) stay React-only on purpose.
+- **All 72 nav components** have an entry. Labels/`PLATFORM_ORDER` live at the
+  top of `platform-code.ts`. A handful of web-first patterns (chart, command,
+  resizable, sonner, hover-card) carry a `//` note where the platform lacks a
+  first-party primitive and a third-party package or composed approach is
+  shown instead.
 
 ## `/components` gallery
 
