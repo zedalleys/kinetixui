@@ -63,6 +63,11 @@ and publishes on merge. Needs the `NPM_TOKEN` repo secret.
   (`scripts/gen-stories.mjs`) parses the demo registry
   (`apps/web/src/registry/demos.tsx`) and emits one self-contained story each.
   Rerun after editing demos.
+- ~18 single-primitive components (badge, alert, spinner, fab, inform, tag,
+  toggle, rating, progress, slider, switch, checkbox, number-input, metric,
+  image, aspect-ratio, separator, circular-progress) also get an interactive
+  **Playground** story with `argTypes` controls — from the `CONTROLS` map in
+  `gen-stories.mjs`, options mirroring each component's CVA variants.
 - `packages/ui/tsconfig.json` excludes `src/stories` from `tsc` (stories import
   `@storybook/react`, an `apps/docs`-only dep).
 - Not built in CI. `pnpm build-storybook` builds it locally.

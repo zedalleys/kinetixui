@@ -46,6 +46,186 @@ const PADDED = new Set([
   "sidebar", "stepper", "menubar", "navigation-menu",
 ]);
 
+/**
+ * Components with a single primary export and variant-style props get an
+ * interactive `Playground` story with controls, alongside the canonical `Default`
+ * demo. `comp` is the export used for `component:`; `imports` names any extra
+ * identifiers the render needs. Options mirror the CVA variants in the source.
+ */
+const CONTROLS = {
+  badge: {
+    comp: "Badge",
+    args: `{ variant: "default", children: "Badge" }`,
+    argTypes: `{
+    variant: { control: "select", options: ["default", "secondary", "destructive", "outline", "subtle"] },
+    children: { control: "text" },
+  }`,
+    render: `(args) => <Badge {...args} />`,
+  },
+  alert: {
+    comp: "Alert",
+    imports: "AlertTitle AlertDescription",
+    args: `{ variant: "default" }`,
+    argTypes: `{
+    variant: { control: "inline-radio", options: ["default", "destructive", "success", "warning", "info"] },
+  }`,
+    render: `(args) => (
+    <Alert {...args} className="max-w-md">
+      <AlertTitle>Heads up!</AlertTitle>
+      <AlertDescription>You can add components to your app using the CLI.</AlertDescription>
+    </Alert>
+  )`,
+  },
+  spinner: {
+    comp: "Spinner",
+    args: `{ size: "md", variant: "default" }`,
+    argTypes: `{
+    size: { control: "inline-radio", options: ["sm", "md", "lg"] },
+    variant: { control: "inline-radio", options: ["default", "muted", "onColor"] },
+  }`,
+    render: `(args) => <Spinner {...args} />`,
+  },
+  fab: {
+    comp: "Fab",
+    imports: "Plus",
+    args: `{ variant: "Primary", size: "default", extended: false }`,
+    argTypes: `{
+    variant: { control: "inline-radio", options: ["Primary", "Secondary"] },
+    size: { control: "inline-radio", options: ["default", "sm"] },
+    extended: { control: "boolean" },
+  }`,
+    render: `(args) => (
+    <Fab {...args} aria-label="Add">
+      <Plus />
+      {args.extended ? "New item" : null}
+    </Fab>
+  )`,
+  },
+  inform: {
+    comp: "Inform",
+    args: `{ variant: "information" }`,
+    argTypes: `{
+    variant: { control: "inline-radio", options: ["information", "warning", "success", "error"] },
+  }`,
+    render: `(args) => (
+    <Inform {...args} className="max-w-md">A new software update is available.</Inform>
+  )`,
+  },
+  tag: {
+    comp: "Tag",
+    args: `{ variant: "default", children: "tag" }`,
+    argTypes: `{
+    variant: { control: "select", options: ["default", "secondary", "destructive", "warning", "outline"] },
+    children: { control: "text" },
+  }`,
+    render: `(args) => <Tag {...args} />`,
+  },
+  toggle: {
+    comp: "Toggle",
+    imports: "Italic",
+    args: `{ variant: "default", size: "default" }`,
+    argTypes: `{
+    variant: { control: "inline-radio", options: ["default", "outline"] },
+    size: { control: "inline-radio", options: ["default", "sm", "lg"] },
+  }`,
+    render: `(args) => (
+    <Toggle {...args} aria-label="Toggle italic"><Italic className="size-4" /></Toggle>
+  )`,
+  },
+  rating: {
+    comp: "Rating",
+    args: `{ size: "md", readOnly: false, defaultValue: 3 }`,
+    argTypes: `{
+    size: { control: "inline-radio", options: ["sm", "md", "lg"] },
+    readOnly: { control: "boolean" },
+  }`,
+    render: `(args) => <Rating {...args} />`,
+  },
+  "circular-progress": {
+    comp: "CircularProgress",
+    args: `{ value: 66, size: 48, strokeWidth: 4, showValue: true }`,
+    argTypes: `{
+    value: { control: { type: "range", min: 0, max: 100 } },
+    size: { control: { type: "range", min: 24, max: 120 } },
+    strokeWidth: { control: { type: "range", min: 2, max: 12 } },
+    showValue: { control: "boolean" },
+  }`,
+    render: `(args) => <CircularProgress {...args} />`,
+  },
+  progress: {
+    comp: "Progress",
+    args: `{ value: 66 }`,
+    argTypes: `{ value: { control: { type: "range", min: 0, max: 100 } } }`,
+    render: `(args) => <Progress {...args} className="w-60" />`,
+  },
+  slider: {
+    comp: "Slider",
+    args: `{ disabled: false }`,
+    argTypes: `{ disabled: { control: "boolean" } }`,
+    render: `(args) => <Slider {...args} defaultValue={[50]} max={100} step={1} className="w-60" />`,
+  },
+  separator: {
+    comp: "Separator",
+    args: `{ orientation: "horizontal" }`,
+    argTypes: `{ orientation: { control: "inline-radio", options: ["horizontal", "vertical"] } }`,
+    render: `(args) => (
+    <div className="flex h-16 w-48 items-center justify-center">
+      <Separator {...args} />
+    </div>
+  )`,
+  },
+  switch: {
+    comp: "Switch",
+    args: `{ disabled: false, defaultChecked: false }`,
+    argTypes: `{ disabled: { control: "boolean" }, defaultChecked: { control: "boolean" } }`,
+    render: `(args) => <Switch {...args} />`,
+  },
+  checkbox: {
+    comp: "Checkbox",
+    args: `{ disabled: false, defaultChecked: false }`,
+    argTypes: `{ disabled: { control: "boolean" }, defaultChecked: { control: "boolean" } }`,
+    render: `(args) => <Checkbox {...args} />`,
+  },
+  "number-input": {
+    comp: "NumberInput",
+    args: `{ defaultValue: 2, min: 0, max: 10, step: 1 }`,
+    argTypes: `{
+    min: { control: "number" }, max: { control: "number" }, step: { control: "number" },
+  }`,
+    render: `(args) => <NumberInput {...args} className="w-32" />`,
+  },
+  metric: {
+    comp: "Metric",
+    args: `{ label: "Active users", value: "2,420", trend: "up", change: "12%" }`,
+    argTypes: `{
+    trend: { control: "inline-radio", options: ["up", "down", "neutral"] },
+    label: { control: "text" }, value: { control: "text" }, change: { control: "text" },
+  }`,
+    render: `(args) => <Metric {...args} />`,
+  },
+  image: {
+    comp: "Image",
+    args: `{ ratio: "4:3", rounded: true }`,
+    argTypes: `{
+    ratio: { control: "inline-radio", options: ["1:1", "4:3", "3:4", "16:9"] },
+    rounded: { control: "boolean" },
+  }`,
+    render: `(args) => (
+    <Image {...args} src="https://picsum.photos/seed/kx/400/300" alt="" className="w-56" />
+  )`,
+  },
+  "aspect-ratio": {
+    comp: "AspectRatio",
+    args: `{ ratio: 1.7778 }`,
+    argTypes: `{ ratio: { control: { type: "number", step: 0.05 } } }`,
+    render: `(args) => (
+    <div className="w-64">
+      <AspectRatio {...args} className="rounded-md bg-muted" />
+    </div>
+  )`,
+  },
+};
+
 const src = readFileSync(DEMOS, "utf8");
 
 /* ---- map every imported identifier to its source module -------------- */
@@ -150,17 +330,21 @@ for (const { key, component, source } of entries) {
   const layout = PADDED.has(slug) ? "padded" : "centered";
   const usedConsts = constDecls.filter((c) => new RegExp(`\\b${c.name}\\b`).test(component));
   const constBlock = usedConsts.map((c) => c.code).join("\n");
+  const ctrl = CONTROLS[slug];
+  const importBody = ctrl
+    ? `${component} ${ctrl.comp} ${ctrl.imports ?? ""} ${ctrl.render}`
+    : component;
 
   const file = `/* AUTO-GENERATED by scripts/gen-stories.mjs — do not edit.
-   Source of truth: apps/web/src/registry/demos.tsx */
+   Source of truth: apps/web/src/registry/demos.tsx${ctrl ? " · controls: scripts/gen-stories.mjs CONTROLS" : ""} */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-${importsFor(component)}
+${importsFor(importBody)}
 ${constBlock ? `\n${constBlock}\n` : ""}
 const Demo = ${component};
 
 const meta = {
-  title: ${JSON.stringify(`${group}/${Name}`)},
+  title: ${JSON.stringify(`${group}/${Name}`)},${ctrl ? `\n  component: ${ctrl.comp},\n  args: ${ctrl.args},\n  argTypes: ${ctrl.argTypes},` : ""}
   parameters: {
     layout: ${JSON.stringify(layout)},
     docs: { source: { code: \`${source.replace(/`/g, "\\`").replace(/\$\{/g, "\\${")}\`, language: "tsx" } },
@@ -168,7 +352,7 @@ const meta = {
 } satisfies Meta;
 
 export default meta;
-
+${ctrl ? `\nexport const Playground: StoryObj<typeof meta> = { render: ${ctrl.render} };\n` : ""}
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
 `;
   writeFileSync(`${OUT}/${Name}.stories.tsx`, file);
