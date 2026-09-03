@@ -350,4 +350,535 @@ export const platformCode: Record<string, Entry> = {
     style: TextStyle(color: KinetixTheme.colorMutedForeground)),
 )`,
   },
+
+  "label-demo": {
+    html: `<label for="email" class="kx-label">Your email address</label>
+<!-- text: var(--foreground) · 14px / medium -->`,
+    swift: `Text("Your email address")
+  .font(.subheadline).fontWeight(.medium)
+  .foregroundStyle(Color(KinetixColor.colorForeground))`,
+    kotlin: `Text(
+  "Your email address",
+  style = MaterialTheme.typography.labelLarge,
+  color = KinetixTheme.colorForeground,
+)`,
+    dart: `Text('Your email address',
+  style: TextStyle(
+    fontSize: 14, fontWeight: FontWeight.w500,
+    color: KinetixTheme.colorForeground))`,
+  },
+
+  "aspect-ratio-demo": {
+    html: `<div class="kx-aspect" style="aspect-ratio: 16 / 9"></div>
+<!-- bg: var(--muted) · radius: var(--radius) -->`,
+    swift: `Color(KinetixColor.colorMuted)
+  .aspectRatio(16 / 9, contentMode: .fit)
+  .clipShape(RoundedRectangle(cornerRadius: 8)) // --radius`,
+    kotlin: `Box(
+  Modifier
+    .fillMaxWidth()
+    .aspectRatio(16f / 9f)
+    .clip(RoundedCornerShape(8.dp))
+    .background(KinetixTheme.colorMuted),
+)`,
+    dart: `AspectRatio(
+  aspectRatio: 16 / 9,
+  child: DecoratedBox(
+    decoration: BoxDecoration(
+      color: KinetixTheme.colorMuted,
+      borderRadius: BorderRadius.circular(8),
+    ),
+  ),
+)`,
+  },
+
+  "skeleton-demo": {
+    html: `<div class="kx-skeleton" style="width: 200px; height: 16px"></div>
+<!-- bg: var(--muted) · pulse animation · radius: var(--radius) -->`,
+    swift: `RoundedRectangle(cornerRadius: 6)
+  .fill(Color(KinetixColor.colorMuted))
+  .frame(width: 200, height: 16)
+  .redacted(reason: .placeholder)`,
+    kotlin: `Box(
+  Modifier
+    .size(width = 200.dp, height = 16.dp)
+    .clip(RoundedCornerShape(6.dp))
+    .background(KinetixTheme.colorMuted),
+) // wrap with a shimmer modifier for the pulse`,
+    dart: `Container(
+  width: 200,
+  height: 16,
+  decoration: BoxDecoration(
+    color: KinetixTheme.colorMuted,
+    borderRadius: BorderRadius.circular(6),
+  ),
+) // e.g. wrap in a Shimmer for the pulse`,
+  },
+
+  "spinner-demo": {
+    html: `<span class="kx-spinner" role="status" aria-label="Loading"></span>
+<!-- border-color: var(--primary) · spin animation -->`,
+    swift: `ProgressView()
+  .progressViewStyle(.circular)
+  .tint(Color(KinetixColor.colorPrimary))`,
+    kotlin: `CircularProgressIndicator(color = KinetixTheme.colorPrimary)`,
+    dart: `CircularProgressIndicator(color: KinetixTheme.colorPrimary)`,
+  },
+
+  "progress-demo": {
+    html: `<div class="kx-progress" role="progressbar" aria-valuenow="66">
+  <div class="kx-progress__bar" style="width: 66%"></div>
+</div>
+<!-- track: var(--muted) · bar: var(--primary) -->`,
+    swift: `ProgressView(value: 0.66)
+  .tint(Color(KinetixColor.colorPrimary))`,
+    kotlin: `LinearProgressIndicator(
+  progress = { 0.66f },
+  color = KinetixTheme.colorPrimary,
+  trackColor = KinetixTheme.colorMuted,
+)`,
+    dart: `LinearProgressIndicator(
+  value: 0.66,
+  color: KinetixTheme.colorPrimary,
+  backgroundColor: KinetixTheme.colorMuted,
+)`,
+  },
+
+  "circular-progress-demo": {
+    html: `<svg class="kx-circular-progress" viewBox="0 0 48 48" role="progressbar" aria-valuenow="66">
+  <circle cx="24" cy="24" r="20" /><circle cx="24" cy="24" r="20" pathLength="100" />
+</svg>
+<!-- track: var(--muted) · arc: var(--primary) -->`,
+    swift: `ProgressView(value: 0.66)
+  .progressViewStyle(.circular)
+  .tint(Color(KinetixColor.colorPrimary))`,
+    kotlin: `CircularProgressIndicator(
+  progress = { 0.66f },
+  color = KinetixTheme.colorPrimary,
+  trackColor = KinetixTheme.colorMuted,
+)`,
+    dart: `CircularProgressIndicator(
+  value: 0.66,
+  color: KinetixTheme.colorPrimary,
+  backgroundColor: KinetixTheme.colorMuted,
+)`,
+  },
+
+  "slider-demo": {
+    html: `<input type="range" class="kx-slider" min="0" max="100" step="1" value="50" />
+<!-- track: var(--muted) · range + thumb: var(--primary) -->`,
+    swift: `Slider(value: $value, in: 0...100, step: 1)
+  .tint(Color(KinetixColor.colorPrimary))`,
+    kotlin: `Slider(
+  value = value,
+  onValueChange = { value = it },
+  valueRange = 0f..100f,
+  colors = SliderDefaults.colors(
+    thumbColor = KinetixTheme.colorPrimary,
+    activeTrackColor = KinetixTheme.colorPrimary,
+    inactiveTrackColor = KinetixTheme.colorMuted,
+  ),
+)`,
+    dart: `Slider(
+  value: value,
+  min: 0, max: 100, divisions: 100,
+  onChanged: (v) => setState(() => value = v),
+  activeColor: KinetixTheme.colorPrimary,
+  inactiveColor: KinetixTheme.colorMuted,
+)`,
+  },
+
+  "tabs-demo": {
+    html: `<div class="kx-tabs">
+  <div role="tablist">
+    <button role="tab" aria-selected="true">Account</button>
+    <button role="tab">Password</button>
+  </div>
+  <div role="tabpanel">Make changes to your account here.</div>
+</div>
+<!-- active indicator: var(--primary) -->`,
+    swift: `Picker("", selection: $tab) {
+  Text("Account").tag(0)
+  Text("Password").tag(1)
+}
+.pickerStyle(.segmented)`,
+    kotlin: `TabRow(
+  selectedTabIndex = tab,
+  contentColor = KinetixTheme.colorPrimary,
+) {
+  Tab(selected = tab == 0, onClick = { tab = 0 }) { Text("Account") }
+  Tab(selected = tab == 1, onClick = { tab = 1 }) { Text("Password") }
+}`,
+    dart: `DefaultTabController(
+  length: 2,
+  child: TabBar(
+    labelColor: KinetixTheme.colorPrimary,
+    indicatorColor: KinetixTheme.colorPrimary,
+    tabs: const [Tab(text: 'Account'), Tab(text: 'Password')],
+  ),
+)`,
+  },
+
+  "tooltip-demo": {
+    html: `<button aria-describedby="tt">Hover</button>
+<div id="tt" role="tooltip" class="kx-tooltip">Add to library</div>
+<!-- bg: var(--primary) · text: var(--primary-foreground) -->`,
+    swift: `Button("Hover") {}
+  .help("Add to library") // pointer / VoiceOver hint`,
+    kotlin: `TooltipBox(
+  positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+  tooltip = { PlainTooltip { Text("Add to library") } },
+  state = rememberTooltipState(),
+) {
+  Button(onClick = {}) { Text("Hover") }
+}`,
+    dart: `Tooltip(
+  message: 'Add to library',
+  child: OutlinedButton(onPressed: () {}, child: const Text('Hover')),
+)`,
+  },
+
+  "radio-group-demo": {
+    html: `<fieldset class="kx-radio-group">
+  <label><input type="radio" name="density" value="comfortable" checked /> Comfortable</label>
+  <label><input type="radio" name="density" value="compact" /> Compact</label>
+</fieldset>
+<!-- selected dot: var(--primary) -->`,
+    swift: `Picker("Density", selection: $density) {
+  Text("Default").tag("default")
+  Text("Comfortable").tag("comfortable")
+  Text("Compact").tag("compact")
+}
+.pickerStyle(.inline)`,
+    kotlin: `Column(Modifier.selectableGroup()) {
+  listOf("default", "comfortable", "compact").forEach { value ->
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      RadioButton(
+        selected = density == value,
+        onClick = { density = value },
+        colors = RadioButtonDefaults.colors(selectedColor = KinetixTheme.colorPrimary),
+      )
+      Text(value.replaceFirstChar { it.uppercase() })
+    }
+  }
+}`,
+    dart: `Column(
+  children: ['default', 'comfortable', 'compact'].map((value) {
+    return RadioListTile<String>(
+      value: value,
+      groupValue: density,
+      onChanged: (v) => setState(() => density = v!),
+      activeColor: KinetixTheme.colorPrimary,
+      title: Text(value),
+    );
+  }).toList(),
+)`,
+  },
+
+  "select-demo": {
+    html: `<select class="kx-select">
+  <option value="apple">Apple</option>
+  <option value="banana">Banana</option>
+</select>
+<!-- border: var(--input) · focus ring: var(--ring) -->`,
+    swift: `Picker("Fruit", selection: $fruit) {
+  Text("Apple").tag("apple")
+  Text("Banana").tag("banana")
+  Text("Blueberry").tag("blueberry")
+}
+.pickerStyle(.menu)`,
+    kotlin: `ExposedDropdownMenuBox(expanded = open, onExpandedChange = { open = it }) {
+  OutlinedTextField(
+    value = fruit, onValueChange = {}, readOnly = true,
+    modifier = Modifier.menuAnchor(),
+    colors = OutlinedTextFieldDefaults.colors(
+      unfocusedBorderColor = KinetixTheme.colorInput,
+      focusedBorderColor = KinetixTheme.colorRing,
+    ),
+  )
+  ExposedDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+    listOf("Apple", "Banana", "Blueberry").forEach {
+      DropdownMenuItem(text = { Text(it) }, onClick = { fruit = it; open = false })
+    }
+  }
+}`,
+    dart: `DropdownButtonFormField<String>(
+  value: fruit,
+  decoration: InputDecoration(
+    border: OutlineInputBorder(
+      borderSide: BorderSide(color: KinetixTheme.colorInput)),
+  ),
+  items: const [
+    DropdownMenuItem(value: 'apple', child: Text('Apple')),
+    DropdownMenuItem(value: 'banana', child: Text('Banana')),
+  ],
+  onChanged: (v) => setState(() => fruit = v),
+)`,
+  },
+
+  "dialog-demo": {
+    html: `<dialog class="kx-dialog">
+  <h2>Edit profile</h2>
+  <p>Make changes to your profile here.</p>
+  <button>Save changes</button>
+</dialog>
+<!-- surface: var(--popover) · overlay: black/50 -->`,
+    swift: `.sheet(isPresented: $showEditProfile) {
+  VStack(alignment: .leading, spacing: 16) {
+    Text("Edit profile").font(.headline)
+    TextField("Name", text: $name)
+    Button("Save changes") { save() }
+      .buttonStyle(.borderedProminent)
+      .tint(Color(KinetixColor.colorPrimary))
+  }
+  .padding(24)
+  .presentationDetents([.medium])
+}`,
+    kotlin: `AlertDialog(
+  onDismissRequest = { open = false },
+  containerColor = KinetixTheme.colorPopover,
+  title = { Text("Edit profile") },
+  text = {
+    OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
+  },
+  confirmButton = {
+    TextButton(onClick = ::save) { Text("Save changes") }
+  },
+)`,
+    dart: `showDialog(
+  context: context,
+  builder: (_) => AlertDialog(
+    backgroundColor: KinetixTheme.colorPopover,
+    title: const Text('Edit profile'),
+    content: TextField(
+      controller: nameController,
+      decoration: const InputDecoration(labelText: 'Name'),
+    ),
+    actions: [
+      FilledButton(onPressed: save, child: const Text('Save changes')),
+    ],
+  ),
+)`,
+  },
+
+  "sheet-demo": {
+    html: `<div class="kx-sheet" data-side="right">
+  <h2>Edit profile</h2>
+  <p>Make changes to your profile here.</p>
+</div>
+<!-- surface: var(--background) · slides from the edge -->`,
+    swift: `.sheet(isPresented: $open) {
+  VStack(alignment: .leading, spacing: 8) {
+    Text("Edit profile").font(.headline)
+    Text("Make changes to your profile here.")
+      .foregroundStyle(Color(KinetixColor.colorMutedForeground))
+  }
+  .padding(24)
+  .frame(maxWidth: .infinity, alignment: .leading)
+  .presentationDetents([.medium, .large])
+}`,
+    kotlin: `ModalBottomSheet(
+  onDismissRequest = { open = false },
+  containerColor = KinetixTheme.colorBackground,
+) {
+  Column(Modifier.padding(24.dp)) {
+    Text("Edit profile", style = MaterialTheme.typography.titleMedium)
+    Text("Make changes to your profile here.",
+      color = KinetixTheme.colorMutedForeground)
+  }
+}`,
+    dart: `showModalBottomSheet(
+  context: context,
+  backgroundColor: KinetixTheme.colorBackground,
+  builder: (_) => Padding(
+    padding: const EdgeInsets.all(24),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Edit profile', style: TextStyle(fontWeight: FontWeight.w600)),
+        Text('Make changes to your profile here.',
+          style: TextStyle(color: KinetixTheme.colorMutedForeground)),
+      ],
+    ),
+  ),
+)`,
+  },
+
+  "accordion-demo": {
+    html: `<details class="kx-accordion__item">
+  <summary>Is it accessible?</summary>
+  <div>Yes. It follows the WAI-ARIA design pattern.</div>
+</details>
+<!-- border: var(--border) · chevron rotates on open -->`,
+    swift: `DisclosureGroup("Is it accessible?") {
+  Text("Yes. It follows the WAI-ARIA design pattern.")
+    .foregroundStyle(Color(KinetixColor.colorMutedForeground))
+    .frame(maxWidth: .infinity, alignment: .leading)
+}
+.tint(Color(KinetixColor.colorForeground))`,
+    kotlin: `Column {
+  Row(
+    Modifier.fillMaxWidth().clickable { open = !open },
+    horizontalArrangement = Arrangement.SpaceBetween,
+  ) {
+    Text("Is it accessible?", fontWeight = FontWeight.Medium)
+    Icon(Icons.Default.ExpandMore, null, Modifier.rotate(if (open) 180f else 0f))
+  }
+  AnimatedVisibility(open) {
+    Text("Yes. It follows the WAI-ARIA design pattern.",
+      color = KinetixTheme.colorMutedForeground)
+  }
+}`,
+    dart: `ExpansionTile(
+  title: const Text('Is it accessible?'),
+  shape: Border.all(color: KinetixTheme.colorBorder),
+  collapsedShape: Border.all(color: KinetixTheme.colorBorder),
+  children: const [
+    Padding(
+      padding: EdgeInsets.all(16),
+      child: Text('Yes. It follows the WAI-ARIA design pattern.'),
+    ),
+  ],
+)`,
+  },
+
+  "collapsible-demo": {
+    html: `<div class="kx-collapsible">
+  <button aria-expanded="false">Toggle</button>
+  <div hidden>@radix-ui/primitives</div>
+</div>`,
+    swift: `DisclosureGroup(isExpanded: $open) {
+  Text("@radix-ui/primitives")
+  Text("@stitches/react")
+} label: {
+  Text("@kinetixui starred 3 repositories")
+}`,
+    kotlin: `Column {
+  Row(
+    Modifier.fillMaxWidth(),
+    horizontalArrangement = Arrangement.SpaceBetween,
+  ) {
+    Text("@kinetixui starred 3 repositories")
+    TextButton(onClick = { open = !open }) { Text("Toggle") }
+  }
+  AnimatedVisibility(open) {
+    Column { Text("@radix-ui/primitives"); Text("@stitches/react") }
+  }
+}`,
+    dart: `Column(
+  children: [
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text('@kinetixui starred 3 repositories'),
+        TextButton(
+          onPressed: () => setState(() => open = !open),
+          child: const Text('Toggle'),
+        ),
+      ],
+    ),
+    if (open) ...const [Text('@radix-ui/primitives'), Text('@stitches/react')],
+  ],
+)`,
+  },
+
+  "breadcrumb-demo": {
+    html: `<nav class="kx-breadcrumb" aria-label="Breadcrumb">
+  <a href="/">Home</a> <span>/</span>
+  <a href="/docs">Docs</a> <span>/</span>
+  <span aria-current="page">Breadcrumb</span>
+</nav>
+<!-- links: var(--muted-foreground) · current: var(--foreground) -->`,
+    swift: `HStack(spacing: 6) {
+  Button("Home") {}.buttonStyle(.plain)
+  Image(systemName: "chevron.right").font(.caption2)
+  Button("Docs") {}.buttonStyle(.plain)
+  Image(systemName: "chevron.right").font(.caption2)
+  Text("Breadcrumb").fontWeight(.medium)
+}
+.foregroundStyle(Color(KinetixColor.colorMutedForeground))`,
+    kotlin: `Row(
+  verticalAlignment = Alignment.CenterVertically,
+  horizontalArrangement = Arrangement.spacedBy(6.dp),
+) {
+  Text("Home", color = KinetixTheme.colorMutedForeground)
+  Icon(Icons.Default.ChevronRight, null, Modifier.size(14.dp))
+  Text("Docs", color = KinetixTheme.colorMutedForeground)
+  Icon(Icons.Default.ChevronRight, null, Modifier.size(14.dp))
+  Text("Breadcrumb", color = KinetixTheme.colorForeground)
+}`,
+    dart: `Row(
+  children: [
+    Text('Home', style: TextStyle(color: KinetixTheme.colorMutedForeground)),
+    const Icon(Icons.chevron_right, size: 16),
+    Text('Docs', style: TextStyle(color: KinetixTheme.colorMutedForeground)),
+    const Icon(Icons.chevron_right, size: 16),
+    Text('Breadcrumb', style: TextStyle(color: KinetixTheme.colorForeground)),
+  ],
+)`,
+  },
+
+  "tag-demo": {
+    html: `<span class="kx-tag">design <button aria-label="Remove">×</button></span>
+<!-- bg: var(--secondary) · text: var(--secondary-foreground) · pill -->`,
+    swift: `HStack(spacing: 4) {
+  Text("design")
+  Button { remove() } label: { Image(systemName: "xmark").font(.caption2) }
+}
+.padding(.horizontal, 10).padding(.vertical, 4)
+.background(Color(KinetixColor.colorSecondary))
+.foregroundStyle(Color(KinetixColor.colorSecondaryForeground))
+.clipShape(Capsule())`,
+    kotlin: `InputChip(
+  selected = false,
+  onClick = {},
+  label = { Text("design") },
+  trailingIcon = {
+    Icon(Icons.Default.Close, "Remove", Modifier.size(16.dp))
+  },
+  colors = InputChipDefaults.inputChipColors(
+    containerColor = KinetixTheme.colorSecondary,
+    labelColor = KinetixTheme.colorSecondaryForeground,
+  ),
+)`,
+    dart: `Chip(
+  label: const Text('design'),
+  onDeleted: remove,
+  deleteIcon: const Icon(Icons.close, size: 16),
+  backgroundColor: KinetixTheme.colorSecondary,
+  labelStyle: TextStyle(color: KinetixTheme.colorSecondaryForeground),
+)`,
+  },
+
+  "toggle-demo": {
+    html: `<button class="kx-toggle" aria-pressed="false" aria-label="Toggle italic">
+  <svg><!-- italic icon --></svg>
+</button>
+<!-- pressed bg: var(--accent) · pressed text: var(--accent-foreground) -->`,
+    swift: `Toggle(isOn: $italic) {
+  Image(systemName: "italic")
+}
+.toggleStyle(.button)
+.tint(Color(KinetixColor.colorAccent))`,
+    kotlin: `FilledIconToggleButton(
+  checked = italic,
+  onCheckedChange = { italic = it },
+  colors = IconButtonDefaults.filledIconToggleButtonColors(
+    checkedContainerColor = KinetixTheme.colorAccent,
+    checkedContentColor = KinetixTheme.colorAccentForeground,
+  ),
+) {
+  Icon(Icons.Default.FormatItalic, "Toggle italic")
+}`,
+    dart: `IconButton.filledTonal(
+  isSelected: italic,
+  onPressed: () => setState(() => italic = !italic),
+  icon: const Icon(Icons.format_italic),
+  style: IconButton.styleFrom(
+    backgroundColor: italic ? KinetixTheme.colorAccent : null,
+    foregroundColor: italic ? KinetixTheme.colorAccentForeground : null,
+  ),
+)`,
+  },
 };

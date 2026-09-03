@@ -81,8 +81,13 @@ each with a copy button.
   `@kinetixui/tokens` output (`KinetixColor.color*` for SwiftUI,
   `KinetixTheme.color*` for Compose/Flutter, CSS vars for HTML).
 - A component with no `platform-code.ts` entry shows just the React pane.
-  Currently populated: button, badge, alert, card, input, textarea, switch,
-  checkbox, separator, avatar. Add more by extending that file.
+  Currently populated (28): the token-driven primitives and their native
+  equivalents — button, badge, alert, card, input, textarea, switch, checkbox,
+  separator, avatar, label, aspect-ratio, skeleton, spinner, progress,
+  circular-progress, slider, tabs, tooltip, radio-group, select, dialog, sheet,
+  accordion, collapsible, breadcrumb, tag, toggle. Add more by extending that
+  file — components with no honest native equivalent (Command, Data Table,
+  Carousel, Resizable, …) stay React-only on purpose.
 
 ## `/components` gallery
 
