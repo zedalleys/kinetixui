@@ -35,7 +35,7 @@ export default function HomePage() {
         </div>
 
         <div className="w-full max-w-md pt-4">
-          <CodeBlock code="npx kinetixui add button" />
+          <CodeBlock code="npx @kinetixui/cli add button" />
         </div>
       </section>
 

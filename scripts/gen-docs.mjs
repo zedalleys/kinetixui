@@ -109,7 +109,7 @@ ${desc}
 ## Installation
 
 \`\`\`bash
-npx kinetixui add ${slug}
+npx @kinetixui/cli add ${slug}
 \`\`\`
 
 ## Usage

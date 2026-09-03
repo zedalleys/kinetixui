@@ -9,8 +9,8 @@ KinetixUI ships two ways. Use whichever fits — they're the same tokens.
 
 | | Registry (own the code) | npm (versioned dependency) |
 | --- | --- | --- |
-| Components | `npx kinetixui add <name>` | `npm i @kinetixui/ui` |
-| Tokens | `npx kinetixui init` | `npm i @kinetixui/tokens` |
+| Components | `npx @kinetixui/cli add <name>` | `npm i @kinetixui/ui` |
+| Tokens | `npx @kinetixui/cli init` | `npm i @kinetixui/tokens` |
 
 The registry drops source into your repo (you edit it freely) via the
 [kinetixui CLI](/docs/cli). The npm packages update with `npm update`.
@@ -22,7 +22,7 @@ Tokens are a good npm dependency; components are often nicer copied.
 into your global stylesheet:
 
 ```bash
-npx kinetixui init
+npx @kinetixui/cli init
 ```
 
 **npm** — import the generated CSS, or the typed object:
@@ -46,7 +46,7 @@ Native text styles ship too: `KinetixType.swift`, `KinetixType.kt`,
 **Registry:**
 
 ```bash
-npx kinetixui add button
+npx @kinetixui/cli add button
 ```
 
 The CLI resolves `tokens` first (a registry dependency), installs

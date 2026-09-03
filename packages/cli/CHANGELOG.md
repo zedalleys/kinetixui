@@ -1,4 +1,8 @@
-# kinetixui
+# @kinetixui/cli
+
+> Published as `@kinetixui/cli` since 0.2.0. The `0.1.0` release under the
+> unscoped name `kinetixui` is deprecated; the installed command is still
+> `kinetixui` (run via `npx @kinetixui/cli`).
 
 ## 0.2.0
 

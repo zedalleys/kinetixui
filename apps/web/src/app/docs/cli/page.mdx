@@ -13,7 +13,7 @@ account, no build step to consume it, just files you own.
 Set up `kinetixui.json` (your aliases) and pull in the token contract:
 
 ```bash
-npx kinetixui init
+npx @kinetixui/cli init
 ```
 
 You'll be asked where your global CSS file lives and which import aliases to
@@ -23,13 +23,13 @@ prompts.
 ## add
 
 ```bash
-npx kinetixui add button
+npx @kinetixui/cli add button
 ```
 
 Add more than one at once:
 
 ```bash
-npx kinetixui add button card dialog
+npx @kinetixui/cli add button card dialog
 ```
 
 `add` resolves registry dependencies automatically — asking for `button`

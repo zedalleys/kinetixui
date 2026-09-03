@@ -1,5 +1,5 @@
 {
-  "name": "kinetixui",
+  "name": "@kinetixui/cli",
   "version": "0.2.0",
   "description": "Add KinetixUI components and tokens to your project.",
   "type": "module",

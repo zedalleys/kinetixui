@@ -8,7 +8,7 @@ const DEFAULT_REGISTRY = "https://kinetixui.com/r";
 
 const program = new Command();
 
-program.name("kinetixui").description("Add KinetixUI components and tokens to your project.").version("0.1.0");
+program.name("kinetixui").description("Add KinetixUI components and tokens to your project.").version("0.2.0");
 
 program
   .command("init")

@@ -9,10 +9,10 @@ export const metadata = {
 
 - **`kinetixui` CLI** — a first-party install tool (`packages/cli`). `npx
   kinetixui init` sets up `kinetixui.json` (your aliases) and pulls in the
-  token contract; `npx kinetixui add <name>` resolves registry dependencies,
+  token contract; `npx @kinetixui/cli add <name>` resolves registry dependencies,
   installs the npm packages a component needs with whichever package manager
   your project already uses, and writes the source into your configured
-  directory. Every doc page's install snippet now reads `npx kinetixui add
+  directory. Every doc page's install snippet now reads `npx @kinetixui/cli add
   <name>` — no other tool's CLI required.
 - **6 more components** — web-pattern gap fill, all on the existing token
   contract: **`CodeBlock`** (copy button, optional file tabs), **`Metric`**
