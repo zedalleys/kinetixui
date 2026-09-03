@@ -38,6 +38,9 @@ jobs:
       - name: Build registry
         run: pnpm build:registry
 
+      - name: Test (@kinetixui/ui)
+        run: pnpm --filter @kinetixui/ui test
+
       - name: Generated files in sync
         run: |
           if ! git diff --exit-code -- \

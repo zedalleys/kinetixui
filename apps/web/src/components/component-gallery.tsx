@@ -26,9 +26,9 @@ export function ComponentGallery() {
               href={item.href}
               className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/40"
             >
-              <div className="relative h-[168px] overflow-hidden border-b border-border/60 bg-muted/20">
+              <div className="relative h-[180px] overflow-hidden border-b border-border/60 bg-muted/20">
                 {Demo ? (
-                  <div className="pointer-events-none absolute inset-0 flex scale-[0.72] items-center justify-center p-4">
+                  <div className="pointer-events-none absolute inset-0 flex origin-top scale-[0.7] items-start justify-center px-4 pt-6">
                     <Demo />
                   </div>
                 ) : (
@@ -36,7 +36,7 @@ export function ComponentGallery() {
                     {item.title}
                   </div>
                 )}
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-card to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card to-transparent" />
               </div>
               <div className="flex items-center justify-between p-4">
                 <span className="font-medium">{item.title}</span>

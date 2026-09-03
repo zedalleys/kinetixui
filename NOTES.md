@@ -76,9 +76,24 @@ thumbnail. `ComponentGallery` is a client component **by necessity** —
 `demoRegistry` is exported from a `"use client"` module and reads as an empty
 proxy from a server component.
 
+## Tests
+
+`packages/ui` uses **Vitest + Testing Library** (jsdom). `pnpm test` at the
+root, or `pnpm --filter @kinetixui/ui test`.
+
+- `src/components-smoke.test.tsx` — globs every `stories/*.stories.tsx` and
+  mounts it; a broken component render fails here.
+- `src/components-behavior.test.tsx` — targeted assertions for the
+  design-source-native components (Button variants / `asChild`, Input
+  `aria-invalid`, Accordion open, …).
+- `test/setup.ts` shims the DOM APIs jsdom lacks (`matchMedia`,
+  `ResizeObserver`, pointer capture, `HTMLMediaElement.play`).
+- Test files are excluded from `packages/ui` `tsc` (they pull `vitest` /
+  `@testing-library`, dev-only) — same treatment as `src/stories`.
+
 ## CI
 
-`.github/workflows/ci.yml` — builds tokens → ui → registry → site on every
-push/PR and fails if generated output (`packages/tokens/dist`,
-`apps/web/public/r`) is stale. The `@kinetixui/ui` typecheck step is
-`continue-on-error`.
+`.github/workflows/ci.yml` — builds tokens → ui → registry → site and runs the
+`@kinetixui/ui` tests on every push/PR; fails if generated output
+(`packages/tokens/dist`, `apps/web/public/r`) is stale. The `@kinetixui/ui`
+typecheck step is `continue-on-error`.

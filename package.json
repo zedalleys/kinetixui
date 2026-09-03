@@ -23,6 +23,7 @@
     "build:web": "pnpm --filter @kinetixui/web build",
     "clean": "turbo run clean && rimraf node_modules",
     "lint": "turbo run lint",
+    "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "changeset": "changeset",
     "version-packages": "changeset version",

@@ -82,12 +82,16 @@ are private and never published.
   registry dependencies, installs npm deps with the detected package manager,
   and writes source into your configured directory. No other tool's CLI
   required — every doc page's install snippet reads `npx @kinetixui/cli add <name>`.
-- ✅ **Storybook** — a story for every component. `Button` / `Input` / `Textarea`
-  are hand-written (variant/state matrices); the rest are generated from the
-  canonical demo registry by `pnpm gen:stories`
+- ✅ **Storybook** — a story for every component, with the a11y addon.
+  `Button` / `Input` / `Textarea` are hand-written (variant/state matrices);
+  the rest are generated from the canonical demo registry by `pnpm gen:stories`
   (`scripts/gen-stories.mjs` → `packages/ui/src/stories/*.stories.tsx`).
-- ✅ CI — GitHub Actions builds tokens → ui → registry → site on every push/PR,
-  and fails if generated output (`packages/tokens/dist`, `apps/web/public/r`) is stale.
+- ✅ **Tests** — `pnpm test` (Vitest + Testing Library, jsdom). Every story is
+  smoke-mounted (`packages/ui/src/components-smoke.test.tsx`) plus targeted
+  behaviour tests for the design-source-native components.
+- ✅ CI — GitHub Actions builds tokens → ui → registry → site and runs the
+  `@kinetixui/ui` tests on every push/PR; fails if generated output
+  (`packages/tokens/dist`, `apps/web/public/r`) is stale.
 - Deploy: [`DEPLOY.md`](DEPLOY.md) is the setup guide; [`NOTES.md`](NOTES.md) is
   the current live state (Vercel project, DNS, npm layout, Storybook, CI).
 - See [`TOKENS.md`](TOKENS.md) for every deviation from the raw design tokens.
