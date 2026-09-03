@@ -67,6 +67,23 @@ and publishes on merge. Needs the `NPM_TOKEN` repo secret.
   `@storybook/react`, an `apps/docs`-only dep).
 - Not built in CI. `pnpm build-storybook` builds it locally.
 
+## Component doc "Code" tab
+
+`ComponentPreview` (`apps/web/src/components/component-preview.tsx`) renders the
+Code tab as per-platform sub-tabs (React · HTML · SwiftUI · Compose · Flutter),
+each with a copy button.
+
+- The **React** snippet is canonical and lives in the demo registry
+  (`demoRegistry[name].source`).
+- The other platforms come from `apps/web/src/registry/platform-code.ts` —
+  keyed by demo name, one map so there's a single source per language. Native
+  snippets compose the platform's own primitives with the real
+  `@kinetixui/tokens` output (`KinetixColor.color*` for SwiftUI,
+  `KinetixTheme.color*` for Compose/Flutter, CSS vars for HTML).
+- A component with no `platform-code.ts` entry shows just the React pane.
+  Currently populated: button, badge, alert, card, input, textarea, switch,
+  checkbox, separator, avatar. Add more by extending that file.
+
 ## `/components` gallery
 
 `apps/web/src/app/components/page.tsx` → `<ComponentGallery>`

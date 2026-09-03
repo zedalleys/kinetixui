@@ -76,6 +76,9 @@ are private and never published.
   **72-item** component registry.
 - ✅ **kinetixui.com** — every component doc route (72 component pages) with
   live previews, Colors, Themes, ⌘K, light/dark. `pnpm build:web` passes; all static.
+  The Code tab has per-platform sub-tabs (React · HTML · SwiftUI · Compose ·
+  Flutter) with copy, for the token-driven primitives that have a native
+  equivalent (`apps/web/src/registry/platform-code.ts`).
 - ✅ **`@kinetixui/cli`** — first-party install tool (`packages/cli`), command
   name `kinetixui`. `init`
   scaffolds `kinetixui.json` + the token contract; `add <name>` resolves
