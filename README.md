@@ -82,8 +82,10 @@ are private and never published.
   registry dependencies, installs npm deps with the detected package manager,
   and writes source into your configured directory. No other tool's CLI
   required — every doc page's install snippet reads `npx @kinetixui/cli add <name>`.
-- 🟡 Storybook has stories for Button / Input / Textarea only (site is the
-  primary doc surface).
+- ✅ **Storybook** — a story for every component. `Button` / `Input` / `Textarea`
+  are hand-written (variant/state matrices); the rest are generated from the
+  canonical demo registry by `pnpm gen:stories`
+  (`scripts/gen-stories.mjs` → `packages/ui/src/stories/*.stories.tsx`).
 - ✅ CI — GitHub Actions builds tokens → ui → registry → site on every push/PR,
   and fails if generated output (`packages/tokens/dist`, `apps/web/public/r`) is stale.
 - Deploy: see `DEPLOY.md` (Vercel + GoDaddy).

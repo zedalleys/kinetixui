@@ -13,6 +13,7 @@
     "build:tokens": "node style-dictionary/build.mjs",
     "gen:registry": "node scripts/gen-registry.mjs",
     "gen:docs": "node scripts/gen-docs.mjs",
+    "gen:stories": "node scripts/gen-stories.mjs",
     "build:registry": "node scripts/gen-registry.mjs && shadcn build registry/registry.json --output apps/web/public/r && node scripts/rewrite-schema.mjs",
     "build:ui": "pnpm --filter @kinetixui/ui build",
     "build:cli": "pnpm --filter @kinetixui/cli build",
