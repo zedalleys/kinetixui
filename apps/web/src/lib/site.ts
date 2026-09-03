@@ -37,6 +37,7 @@ export const docsNav: NavGroup[] = [
       { title: "kinetixui.json", href: "/docs/kinetixui-json" },
       { title: "Theming", href: "/docs/theming" },
       { title: "Dark Mode", href: "/docs/dark-mode" },
+      { title: "Accessibility", href: "/docs/accessibility" },
       { title: "CLI", href: "/docs/cli" },
       { title: "Tokens", href: "/docs/tokens" },
       { title: "Changelog", href: "/docs/changelog" },

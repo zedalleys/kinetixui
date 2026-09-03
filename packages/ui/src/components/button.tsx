@@ -40,13 +40,16 @@ const buttonVariants = cva(
         // rest = secondaryContainer; hover/active promote to full secondary with on-secondary text
         Secondary:
           "bg-secondary text-secondary-foreground hover:bg-[--color-green-500] hover:text-[--color-green-50] active:bg-[--color-green-600] active:text-[--color-green-50] focus-visible:bg-secondary disabled:bg-border disabled:text-muted-foreground",
-        // 1px outline; hover fills with accent (LightBlue); active pins primary border+text
+        // 1px outline; hover fills with accent + strengthens the edge to --ring so the
+        // state stays visible on the darkest surfaces (WCAG 2.2 SC 1.4.11); active pins primary
         Outline:
-          "border border-input bg-transparent text-foreground hover:bg-accent active:border-primary active:bg-accent active:text-primary disabled:border-input disabled:text-muted-foreground disabled:bg-transparent",
+          "border border-input bg-transparent text-foreground hover:border-ring hover:bg-accent active:border-primary active:bg-accent active:text-primary disabled:border-input disabled:text-muted-foreground disabled:bg-transparent",
         Destructive:
           "bg-destructive text-destructive-foreground hover:brightness-95 active:brightness-90 disabled:bg-border disabled:text-muted-foreground",
+        // transparent rest; hover adds an inset --ring outline (the accent fill alone is
+        // <3:1 against the page on dark) plus the accent fill; active pins primary text
         Ghost:
-          "bg-transparent text-foreground hover:bg-accent active:bg-accent active:text-primary disabled:text-muted-foreground disabled:bg-transparent",
+          "bg-transparent text-foreground hover:bg-accent hover:ring-1 hover:ring-inset hover:ring-ring active:bg-accent active:text-primary active:ring-0 disabled:text-muted-foreground disabled:bg-transparent",
         Link: "bg-transparent text-primary underline-offset-4 hover:underline hover:text-foreground rounded-none px-0 disabled:text-muted-foreground disabled:no-underline",
       },
       size: {
@@ -80,9 +83,9 @@ const buttonVariants = cva(
       { variant: "Primary", state: "Active", class: "bg-[--color-blue-700]" },
       { variant: "Secondary", state: "Hover", class: "bg-[--color-green-500] text-[--color-green-50]" },
       { variant: "Secondary", state: "Active", class: "bg-[--color-green-600] text-[--color-green-50]" },
-      { variant: "Outline", state: "Hover", class: "bg-accent" },
+      { variant: "Outline", state: "Hover", class: "border-ring bg-accent" },
       { variant: "Outline", state: "Active", class: "border-primary bg-accent text-primary" },
-      { variant: "Ghost", state: "Hover", class: "bg-accent" },
+      { variant: "Ghost", state: "Hover", class: "bg-accent ring-1 ring-inset ring-ring" },
       { variant: "Ghost", state: "Active", class: "bg-accent text-primary" },
       { variant: "Link", state: "Hover", class: "underline text-foreground" },
       { variant: "Link", size: ["sm", "md", "lg"], class: "py-2 px-0 h-auto" },

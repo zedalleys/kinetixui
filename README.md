@@ -93,6 +93,10 @@ are private and never published.
 - ✅ **Tests** — `pnpm test` (Vitest + Testing Library, jsdom). Every story is
   smoke-mounted (`packages/ui/src/components-smoke.test.tsx`) plus targeted
   behaviour tests for the design-source-native components.
+- ✅ **Accessibility** — Radix primitives (keyboard + ARIA), `focus-visible`
+  `--ring` outlines, `pnpm check:contrast` (in CI) audits every token pair
+  against WCAG AA. See `/docs/accessibility` for the details and the one
+  documented trade-off.
 - ✅ CI — GitHub Actions builds tokens → ui → registry → site and runs the
   `@kinetixui/ui` tests on every push/PR; fails if generated output
   (`packages/tokens/dist`, `apps/web/public/r`) is stale.

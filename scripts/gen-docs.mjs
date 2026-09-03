@@ -117,7 +117,8 @@ import { ${exports} } from "@kinetixui/ui";
 
 Styled entirely from the KinetixUI token contract — \`bg-primary\`,
 \`text-muted-foreground\`, \`border-input\`, \`ring-ring\`. Works in light and dark
-with no extra config.
+with no extra config, and keyboard + ARIA behaviour comes from Radix — see
+[Accessibility](/docs/accessibility).
 `;
   writeFileSync(`${dir}/page.mdx`, mdx);
   console.log("mdx  ", slug);

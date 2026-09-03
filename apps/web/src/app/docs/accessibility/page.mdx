@@ -1,0 +1,52 @@
+export const metadata = {
+  title: "Accessibility",
+  description: "How KinetixUI components meet WCAG, and the known trade-offs.",
+};
+
+# Accessibility
+
+Accessibility is a build constraint here, not a review step. Every interactive
+component is a [Radix Primitive](https://www.radix-ui.com/primitives) underneath,
+so keyboard interaction, focus management, and ARIA roles come correct by
+default — KinetixUI only styles them against the token contract.
+
+## What you get
+
+- **Keyboard** — every menu, dialog, tab set, combobox, and disclosure is fully
+  operable without a mouse (arrow keys, `Home`/`End`, `Esc`, type-ahead, focus
+  trapping in overlays). This is Radix behaviour, preserved as-is.
+- **Focus visibility** — interactive components draw a `--ring` outline on
+  `:focus-visible` (`shadow-focus`). `--ring` clears **8.8:1** against the page
+  in dark mode and **11.6:1** in light — well past the 3:1 that WCAG 2.2
+  [SC 1.4.11](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast)
+  asks for.
+- **Text contrast** — every foreground/surface pair components actually render
+  is audited by [`scripts/check-contrast.mjs`](https://github.com/ziadfteha/kinetixui/blob/main/scripts/check-contrast.mjs)
+  (`pnpm check:contrast`, run in CI). All pairs meet **WCAG AA (4.5:1)**; the one
+  exception is `secondary-foreground` on `secondary` in light mode at 3.42:1,
+  which is AA for large text only — avoid the `Secondary` button at `sm` size
+  for critical labels.
+- **Labels** — icon-only controls (`Button size="icon"`, `Fab`, close buttons)
+  require an `aria-label`; the components don't render without one where it
+  matters.
+- **Reduced motion** — transitions are short and `transition-colors` only;
+  nothing animates position or opacity on a loop.
+
+## The one trade-off
+
+On the darkest surface, a **subtle hover fill can't reach 3:1 on its own**.
+`--accent` (the hover wash used by ghost/outline buttons, menu items, list rows)
+sits at ~1.2:1 against `--background` in dark mode — visible, but below the
+non-text-contrast bar if it were the *only* cue.
+
+So components never make it the only cue:
+
+- **Ghost / Outline buttons** add a `--ring` inset outline on `:hover`, not just
+  the fill.
+- **Menu items, list rows, tabs** are always reachable by keyboard, where
+  `:focus-visible` draws the full ring.
+- Selected / active states also shift text colour to `--primary`.
+
+If you retheme, keep `--ring` high-contrast against `--background` and
+`--foreground` in both modes — the focus outline depends on it. Run
+`pnpm check:contrast` after changing the palette.
