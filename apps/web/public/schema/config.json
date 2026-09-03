@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://kinetixui.com/schema/config.json",
+  "title": "kinetixui.json",
+  "description": "Project config read by the kinetixui CLI (`kinetixui init` writes it, `kinetixui add` reads it).",
+  "type": "object",
+  "required": ["tailwind", "aliases"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "tailwind": {
+      "type": "object",
+      "required": ["css"],
+      "properties": {
+        "css": { "type": "string", "description": "Path to the global stylesheet the token contract is written into." }
+      }
+    },
+    "aliases": {
+      "type": "object",
+      "required": ["components", "ui", "lib", "utils"],
+      "properties": {
+        "components": { "type": "string" },
+        "ui": { "type": "string", "description": "Where `kinetixui add <name>` writes component files." },
+        "lib": { "type": "string" },
+        "utils": { "type": "string" }
+      }
+    },
+    "srcDir": { "type": "boolean", "description": "Prefix every resolved path with src/." }
+  }
+}

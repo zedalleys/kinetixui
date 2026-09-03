@@ -1,47 +1,51 @@
 export const metadata = {
   title: "CLI",
-  description: "Using the shadcn CLI with the KinetixUI registry.",
+  description: "Add components with the kinetixui CLI.",
 };
 
 # CLI
 
-KinetixUI publishes a shadcn **custom registry**. Any `shadcn`-compatible CLI can
-consume it.
+The `kinetixui` CLI drops component source straight into your project — no
+account, no build step to consume it, just files you own.
 
-## Add a component
+## init
 
-```bash
-npx shadcn@latest add https://kinetixui.com/r/button.json
-```
-
-Pass a bare name once the registry is configured in `components.json`:
-
-```json
-{
-  "registries": {
-    "@kinetixui": "https://kinetixui.com/r/{name}.json"
-  }
-}
-```
+Set up `kinetixui.json` (your aliases) and pull in the token contract:
 
 ```bash
-npx shadcn@latest add @kinetixui/button
+npx kinetixui init
 ```
 
-## Available items
+You'll be asked where your global CSS file lives and which import aliases to
+use for components and utils. Pass `-y` to accept the defaults and skip the
+prompts.
 
-| Item | Type | Notes |
+## add
+
+```bash
+npx kinetixui add button
+```
+
+Add more than one at once:
+
+```bash
+npx kinetixui add button card dialog
+```
+
+`add` resolves registry dependencies automatically — asking for `button`
+also pulls in `tokens` the first time, installs the npm packages it needs
+(`@radix-ui/react-slot`, `class-variance-authority`, …) with whichever
+package manager your project already uses (pnpm / yarn / bun / npm, detected
+from the lockfile), and writes the component into your configured `ui`
+alias directory. Existing files are left alone unless you pass
+`--overwrite`.
+
+## Options
+
+| Flag | Applies to | Does |
 | --- | --- | --- |
-| `tokens` | `registry:style` | `:root` + `.dark` contract, primitive ramps |
-| `button` | `registry:ui` | 6 variants × 4 sizes × 5 states |
-| `input` | `registry:ui` | `state`: Default / Focus / Error / Disabled |
-| `textarea` | `registry:ui` | multi-line Input |
+| `-y, --yes` | `init` | skip prompts, use defaults |
+| `-o, --overwrite` | `add` | replace files that already exist |
+| `-r, --registry <url>` | both | point at a different registry (defaults to `https://kinetixui.com/r`) |
 
-`button` declares `tokens` as a registry dependency, so adding it pulls the
-contract automatically.
-
-## Build the registry
-
-```bash
-pnpm build:registry   # shadcn build registry/registry.json --output public/r
-```
+See [kinetixui.json](/docs/kinetixui-json) for what the config file controls.

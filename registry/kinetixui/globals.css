@@ -188,7 +188,7 @@
   --popover-foreground: var(--blue-900); /** synth: = foreground */
   --primary: var(--blue-500); /** figma: 'Primay' (sic) #1b3c53 -> renamed primary */
   --primary-foreground: var(--blue-50); /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground */
-  --secondary: var(--green-50); /** figma: secondaryContainer #f1f3f1 (shadcn 'secondary' == Figma container role) */
+  --secondary: var(--green-50); /** figma: secondaryContainer #f1f3f1 (our 'secondary' == Figma container role) */
   --secondary-foreground: var(--green-500); /** figma: onSecondaryContainer #748873 */
   --muted: var(--neutral-100); /** figma: surfaceContainer #f6f6f6 */
   --muted-foreground: var(--neutral-600); /** figma: onSurfaceVariant #6d6d6d */

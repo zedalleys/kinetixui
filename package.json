@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@9.15.0",
+  "packageManager": "pnpm@12.3.1+sha512.3c14c15408d1489d350f8ed7f93361d26cc707054f6849a4eea3bb7407ff4fe4564b413a1c421a773a176ab1168a8df1c7d548f2cd0dc7d344f58c4e680a5b18",
   "workspaces": [
     "packages/*",
     "apps/*"
@@ -13,8 +13,9 @@
     "build:tokens": "node style-dictionary/build.mjs",
     "gen:registry": "node scripts/gen-registry.mjs",
     "gen:docs": "node scripts/gen-docs.mjs",
-    "build:registry": "node scripts/gen-registry.mjs && shadcn build registry/registry.json --output apps/web/public/r",
+    "build:registry": "node scripts/gen-registry.mjs && shadcn build registry/registry.json --output apps/web/public/r && node scripts/rewrite-schema.mjs",
     "build:ui": "pnpm --filter @kinetixui/ui build",
+    "build:cli": "pnpm --filter kinetixui build",
     "storybook": "pnpm --filter @kinetixui/docs storybook",
     "build-storybook": "pnpm --filter @kinetixui/docs build-storybook",
     "dev:web": "pnpm --filter @kinetixui/web dev",
@@ -24,7 +25,7 @@
     "typecheck": "turbo run typecheck",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build:tokens && pnpm --filter @kinetixui/ui build && changeset publish"
+    "release": "pnpm build:tokens && pnpm --filter @kinetixui/ui build && pnpm --filter kinetixui build && changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.1",

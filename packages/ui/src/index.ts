@@ -7,7 +7,7 @@ export { Button, buttonVariants, type ButtonProps } from "./components/button";
 export { Input, inputVariants, type InputProps } from "./components/input";
 export { Textarea, textareaVariants, type TextareaProps } from "./components/textarea";
 
-/* Ported onto the KinetixUI token contract (shadcn API conventions) */
+/* Ported onto the KinetixUI token contract (common component API conventions) */
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./components/accordion";
 export { Alert, AlertTitle, AlertDescription } from "./components/alert";
 export {

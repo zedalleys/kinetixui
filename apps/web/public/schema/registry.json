@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://kinetixui.com/schema/registry.json",
+  "title": "KinetixUI registry manifest",
+  "description": "The manifest listing every item in the KinetixUI registry.",
+  "type": "object",
+  "required": ["name", "items"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": { "type": "string" },
+    "homepage": { "type": "string" },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "https://kinetixui.com/schema/registry-item.json" }
+    }
+  }
+}

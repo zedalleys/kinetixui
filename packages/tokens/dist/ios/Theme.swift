@@ -33,7 +33,7 @@ public class KinetixTheme {
     public static let colorPrimary = UIColor(red: 0.106, green: 0.235, blue: 0.325, alpha: 1) /** figma: 'Primay' (sic) #1b3c53 -> renamed primary */
     public static let colorPrimaryForeground = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1) /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground */
     public static let colorRing = UIColor(red: 0.106, green: 0.235, blue: 0.325, alpha: 1) /** figma: focus state draws a 2px 'Primay' border */
-    public static let colorSecondary = UIColor(red: 0.945, green: 0.953, blue: 0.945, alpha: 1) /** figma: secondaryContainer #f1f3f1 (shadcn 'secondary' == Figma container role) */
+    public static let colorSecondary = UIColor(red: 0.945, green: 0.953, blue: 0.945, alpha: 1) /** figma: secondaryContainer #f1f3f1 (our 'secondary' == Figma container role) */
     public static let colorSecondaryForeground = UIColor(red: 0.455, green: 0.533, blue: 0.451, alpha: 1) /** figma: onSecondaryContainer #748873 */
     public static let colorSemanticError = UIColor(red: 0.925, green: 0.314, blue: 0.278, alpha: 1) /** figma: error (NOT red.500 #c60a0a — Figma keeps error as its own value) */
     public static let colorSemanticErrorContainer = UIColor(red: 0.996, green: 0.953, blue: 0.949, alpha: 1) /** figma: errorContainer */

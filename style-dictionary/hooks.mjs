@@ -228,8 +228,8 @@ function camelize(s) {
 
 /** strip a leading "color" segment and kebab-case the rest so CSS vars read
  *  --primary / --font-size-label-lg, not --color-primary / --fontSize-label-lg */
-export const shadcnCssName = {
-  name: 'kinetix/shadcn-css-name',
+export const cssVarName = {
+  name: 'kinetix/css-var-name',
   type: 'name',
   transform: (t) => {
     const path = t.path[0] === 'color' ? t.path.slice(1) : t.path;

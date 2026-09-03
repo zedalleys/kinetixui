@@ -43,7 +43,7 @@
     "secondary": {
       "$value": "{color.green.50}",
       "$type": "color",
-      "$description": "figma: secondaryContainer #f1f3f1 (shadcn 'secondary' == Figma container role)"
+      "$description": "figma: secondaryContainer #f1f3f1 (our 'secondary' == Figma container role)"
     },
     "secondary-foreground": {
       "$value": "{color.green.500}",

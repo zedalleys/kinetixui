@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://kinetixui.com/schema/registry-item.json",
+  "title": "KinetixUI registry item",
+  "description": "A single installable item in the KinetixUI registry — a component, a lib file, or the token style sheet.",
+  "type": "object",
+  "required": ["name", "type", "files"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": { "type": "string" },
+    "type": {
+      "type": "string",
+      "enum": ["registry:ui", "registry:lib", "registry:file", "registry:style"]
+    },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "npm packages this item needs."
+    },
+    "registryDependencies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Other registry item names this item needs, resolved recursively."
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "content", "type", "target"],
+        "properties": {
+          "path": { "type": "string", "description": "Source path in the KinetixUI repo." },
+          "content": { "type": "string", "description": "The file's full source." },
+          "type": { "type": "string" },
+          "target": { "type": "string", "description": "Relative path to write into the consuming project." }
+        }
+      }
+    }
+  }
+}

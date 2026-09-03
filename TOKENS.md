@@ -13,19 +13,19 @@ Source of truth: the KinetixUI design file in Figma, node `3877-10388`
 | Primitives — 6 brand ramps + neutral | `tokens/primitives/color.json` | Figma *Brand Colors* frame, step labels `0…10` remapped to a `0–1000` integer scale |
 | Primitives — spacing / radius | `tokens/primitives/dimension.json` | Figma `spacing/*`, `Small`/`Button`/`Popup`/`Full` |
 | Primitives — type | `tokens/primitives/typography.json` | Figma `fontSize/*`, `lineHeight/*` (Material 3 scale) |
-| Semantic — light | `tokens/semantic/color.light.json` | aliases to primitives, named to the **shadcn** contract |
+| Semantic — light | `tokens/semantic/color.light.json` | aliases to primitives, named to the **semantic token** contract |
 | Semantic — dark | `tokens/semantic/color.dark.json` | **synthesized** (no dark mode in Figma) |
 | Semantic — text styles | `tokens/semantic/typography.json` | Figma composite text styles |
 
-## shadcn variable → Figma variable
+## Semantic variable → Figma variable
 
-| shadcn `--var` | value | Figma variable | notes |
+| variable `--var` | value | Figma variable | notes |
 |---|---|---|---|
 | `--background` | `#ffffff` | `surfaceContainerLowest` | |
 | `--foreground` | `#050c11` | `onSurface` | |
 | `--primary` | `#1b3c53` | `Primay` *(sic)* | **typo in Figma** — renamed `primary` here |
 | `--primary-foreground` | `#f0f7ff` | `On Primary` | renamed `primary-foreground` |
-| `--secondary` | `#f1f3f1` | `secondaryContainer` | shadcn "secondary" == Figma *container* role |
+| `--secondary` | `#f1f3f1` | `secondaryContainer` | our "secondary" == Figma *container* role |
 | `--secondary-foreground` | `#748873` | `onSecondaryContainer` | |
 | `--muted` | `#f6f6f6` | `surfaceContainer` | |
 | `--muted-foreground` | `#6d6d6d` | `onSurfaceVariant` | |
@@ -41,7 +41,7 @@ Source of truth: the KinetixUI design file in Figma, node `3877-10388`
 
 | Token | Value | Rationale |
 |---|---|---|
-| `--card`, `--popover` (+ `-foreground`) | = background / foreground | shadcn contract needs them; Figma has no card/popover tokens |
+| `--card`, `--popover` (+ `-foreground`) | = background / foreground | the semantic contract needs them; Figma has no card/popover tokens |
 | `--accent-foreground` | `primary` | readable text on `accent` |
 | `--success`, `--success-foreground` | `green.600` / `green.50` | Figma has no success colour; taken from the green ramp, kept distinct from `secondary` |
 | `--warning`, `--warning-foreground` | `#f97907` / `#fff8eb` | Figma only exposes `warningContainer` / `onWarningContainer` |

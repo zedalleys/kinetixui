@@ -23,7 +23,8 @@ kinetixui/
 ├─ packages/
 │  ├─ tokens/                  @kinetixui/tokens — build output for all platforms
 │  │  └─ dist/{web,ios,android,flutter}
-│  └─ ui/                      @kinetixui/ui — React + CVA + Radix + Tailwind
+│  ├─ ui/                      @kinetixui/ui — React + CVA + Radix + Tailwind
+│  └─ cli/                     kinetixui — first-party install CLI (init / add)
 ├─ registry/
 │  ├─ registry.json            component registry manifest
 │  └─ kinetixui/               registry source files (ui/ · lib/ · globals.css)
@@ -39,6 +40,7 @@ kinetixui/
 |---|---|
 | `pnpm build:tokens` | `node style-dictionary/build.mjs` → `packages/tokens/dist/{web,ios,android,flutter}` (11 files) |
 | `pnpm build:ui` | bundle `@kinetixui/ui` (tsup) |
+| `pnpm build:cli` | bundle the `kinetixui` CLI (tsup) |
 | `pnpm build:registry` | `shadcn build` → static registry JSON in `public/r/` |
 | `pnpm dev:web` | kinetixui.com dev server on :3000 |
 | `pnpm storybook` | Storybook dev server on :6006 |
@@ -48,7 +50,7 @@ kinetixui/
 
 ```bash
 # registry — own the code
-npx shadcn@latest add https://kinetixui.com/r/button.json
+npx kinetixui add button
 
 # npm — versioned dependency
 npm i @kinetixui/tokens @kinetixui/ui
@@ -74,6 +76,11 @@ are private and never published.
   **72-item** component registry.
 - ✅ **kinetixui.com** — every component doc route (72 component pages) with
   live previews, Colors, Themes, ⌘K, light/dark. `pnpm build:web` passes; all static.
+- ✅ **`kinetixui` CLI** — first-party install tool (`packages/cli`). `init`
+  scaffolds `kinetixui.json` + the token contract; `add <name>` resolves
+  registry dependencies, installs npm deps with the detected package manager,
+  and writes source into your configured directory. No other tool's CLI
+  required — every doc page's install snippet reads `npx kinetixui add <name>`.
 - 🟡 Storybook has stories for Button / Input / Textarea only (site is the
   primary doc surface).
 - ✅ CI — GitHub Actions builds tokens → ui → registry → site on every push/PR,

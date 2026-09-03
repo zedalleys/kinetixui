@@ -22,7 +22,7 @@ import {
   dimensionToPx,
   extrasCssFormat,
   hslChannels,
-  shadcnCssName,
+  cssVarName,
   tsNestedFormat,
   typeComposeFormat,
   typeDartFormat,
@@ -30,7 +30,7 @@ import {
 } from './hooks.mjs';
 
 StyleDictionary.registerTransform(dimensionToPx);
-StyleDictionary.registerTransform(shadcnCssName);
+StyleDictionary.registerTransform(cssVarName);
 StyleDictionary.registerTransform(androidDimen);
 StyleDictionary.registerTransform(hslChannels);
 StyleDictionary.registerFormat(tsNestedFormat);
@@ -67,7 +67,7 @@ export function getConfig(theme) {
       css: {
         transforms: [
           'attribute/cti',
-          'kinetix/shadcn-css-name',
+          'kinetix/css-var-name',
           'kinetix/hsl-channels',
           'kinetix/dimension-px',
         ],

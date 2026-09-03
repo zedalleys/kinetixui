@@ -27,7 +27,7 @@ export default function ComponentsPage() {
     <div className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-semibold tracking-tight">Components</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">
-        Built from Figma, styled against the token contract, distributed through the shadcn registry.
+        Built from Figma, styled against the token contract, distributed through the kinetixui registry.
         {" "}
         {items.filter((i) => !i.disabled).length} of {items.length} shipped.
       </p>

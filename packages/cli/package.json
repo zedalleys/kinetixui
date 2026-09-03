@@ -1,0 +1,37 @@
+{
+  "name": "kinetixui",
+  "version": "0.1.0",
+  "description": "Add KinetixUI components and tokens to your project.",
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://kinetixui.com",
+  "repository": "ziadfteha/kinetixui",
+  "bin": {
+    "kinetixui": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --clean",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsup src/index.ts --format esm --watch --onSuccess \"node dist/index.js\""
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "picocolors": "^1.1.1",
+    "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/prompts": "^2.4.9",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

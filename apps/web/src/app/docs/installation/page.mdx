@@ -9,12 +9,12 @@ KinetixUI ships two ways. Use whichever fits — they're the same tokens.
 
 | | Registry (own the code) | npm (versioned dependency) |
 | --- | --- | --- |
-| Components | `npx shadcn add https://kinetixui.com/r/<name>.json` | `npm i @kinetixui/ui` |
-| Tokens | `npx shadcn add …/r/tokens.json` | `npm i @kinetixui/tokens` |
+| Components | `npx kinetixui add <name>` | `npm i @kinetixui/ui` |
+| Tokens | `npx kinetixui init` | `npm i @kinetixui/tokens` |
 
-The registry drops source into your repo (you edit it freely). The npm packages
-update with `npm update`. Tokens are a good npm dependency; components are often
-nicer copied.
+The registry drops source into your repo (you edit it freely) via the
+[kinetixui CLI](/docs/cli). The npm packages update with `npm update`.
+Tokens are a good npm dependency; components are often nicer copied.
 
 ## Tokens
 
@@ -22,7 +22,7 @@ nicer copied.
 into your global stylesheet:
 
 ```bash
-npx shadcn@latest add https://kinetixui.com/r/tokens.json
+npx kinetixui init
 ```
 
 **npm** — import the generated CSS, or the typed object:
@@ -46,12 +46,12 @@ Native text styles ship too: `KinetixType.swift`, `KinetixType.kt`,
 **Registry:**
 
 ```bash
-npx shadcn@latest add https://kinetixui.com/r/button.json
+npx kinetixui add button
 ```
 
 The CLI resolves `tokens` first (a registry dependency), installs
 `@radix-ui/react-slot`, `class-variance-authority`, `clsx`, `tailwind-merge`,
-then drops `button.tsx` into `components/ui`.
+then drops `button.tsx` into your configured components directory.
 
 **npm:**
 

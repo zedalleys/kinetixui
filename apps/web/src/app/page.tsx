@@ -35,7 +35,7 @@ export default function HomePage() {
         </div>
 
         <div className="w-full max-w-md pt-4">
-          <CodeBlock code="npx shadcn@latest add https://kinetixui.com/r/button.json" />
+          <CodeBlock code="npx kinetixui add button" />
         </div>
       </section>
 
@@ -44,7 +44,7 @@ export default function HomePage() {
         {[
           { icon: Zap, title: "Dynamic tokens", body: "One DTCG source, compiled by Style Dictionary v4 — change it once, it moves everywhere." },
           { icon: Smartphone, title: "Every platform", body: "CSS variables, TypeScript, SwiftUI, Jetpack Compose and Flutter from the same file." },
-          { icon: Boxes, title: "Own your code", body: "Components install through the shadcn CLI and land in your repo — no runtime dependency." },
+          { icon: Boxes, title: "Own your code", body: "Components install through the kinetixui CLI and land in your repo — no runtime dependency." },
           { icon: Palette, title: "Light & dark", body: "One semantic contract, two value sets, toggled with a class." },
         ].map((f) => (
           <div key={f.title} className="rounded-xl border border-border bg-card p-5">

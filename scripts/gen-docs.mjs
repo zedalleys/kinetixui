@@ -109,7 +109,7 @@ ${desc}
 ## Installation
 
 \`\`\`bash
-npx shadcn@latest add https://kinetixui.com/r/${slug}.json
+npx kinetixui add ${slug}
 \`\`\`
 
 ## Usage

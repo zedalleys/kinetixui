@@ -17,7 +17,7 @@ for (const theme of ['light', 'dark']) {
   await sd.buildAllPlatforms();
 }
 
-// bundle the shadcn registry stylesheet: :root (light) + .dark + shadow/type extras
+// bundle the registry stylesheet: :root (light) + .dark + shadow/type extras
 const web = `${ROOT}/packages/tokens/dist/web`;
 writeFileSync(
   `${ROOT}/registry/kinetixui/globals.css`,

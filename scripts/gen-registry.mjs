@@ -1,7 +1,7 @@
 /**
  * Generate registry/registry.json + registry/kinetixui/ui/*.tsx from the
- * @kinetixui/ui source. Import paths are rewritten to the shadcn consumer
- * convention (@/lib/utils, @/components/ui/<name>).
+ * @kinetixui/ui source. Import paths are rewritten to the kinetixui CLI's
+ * consumer convention (@/lib/utils, @/components/ui/<name>).
  *
  *   node scripts/gen-registry.mjs   (then: pnpm build:registry)
  */
@@ -71,7 +71,7 @@ for (const file of files) {
 }
 
 const manifest = {
-  $schema: "https://ui.shadcn.com/schema/registry.json",
+  $schema: "https://kinetixui.com/schema/registry.json",
   name: "kinetixui",
   homepage: "https://kinetixui.com",
   items,

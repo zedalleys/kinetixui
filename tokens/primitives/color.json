@@ -421,7 +421,7 @@
         "$value": "#000000",
         "$type": "color"
       },
-      "$description": "SYNTHESIZED. Figma exposes only surfaceContainerLowest (#ffffff), surfaceContainer (#f6f6f6) and onSurfaceVariant (#6d6d6d) as variables. This low-chroma ramp is interpolated from those anchors to give the shadcn --card / --muted / --border family a real scale. Swap for a published Figma ramp when one exists."
+      "$description": "SYNTHESIZED. Figma exposes only surfaceContainerLowest (#ffffff), surfaceContainer (#f6f6f6) and onSurfaceVariant (#6d6d6d) as variables. This low-chroma ramp is interpolated from those anchors to give the --card / --muted / --border family a real scale. Swap for a published Figma ramp when one exists."
     },
     "static": {
       "white": {

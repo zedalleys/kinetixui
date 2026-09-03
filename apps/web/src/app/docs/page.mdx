@@ -13,8 +13,8 @@ comes from *kinetics*: change it once, and it propagates everywhere.
   variables, a TypeScript object, SwiftUI, Jetpack Compose, and Flutter.
 - **Components** — React + `class-variance-authority` + Radix primitives,
   styled with Tailwind against the token contract.
-- **Registry** — a shadcn custom registry, so you `npx shadcn add` a component
-  and own the code outright.
+- **Registry** — a component registry of our own, so you `npx kinetixui add` a
+  component and own the code outright.
 - **This site** — built entirely on `@kinetixui/ui` and `@kinetixui/tokens`, in
   the same light and dark themes it documents.
 
@@ -39,7 +39,7 @@ beta**; deeper tooling will arrive as KinetixUI Pro.
 Six brand ramps, spacing, radius, and a Material-3 type scale are extracted
 verbatim into `tokens/primitives`.
 
-<Step>Semantic tokens map to the shadcn contract.</Step>
+<Step>Semantic tokens map to the KinetixUI contract.</Step>
 
 `tokens/semantic/color.light.json` aliases primitives to `--primary`,
 `--muted`, `--ring`, and the rest. A generated `color.dark.json` mirrors it.

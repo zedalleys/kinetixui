@@ -36,7 +36,7 @@ class KinetixTheme {
     static const colorPrimary = Color(0xFF1B3C53); /** figma: 'Primay' (sic) #1b3c53 -> renamed primary */
     static const colorPrimaryForeground = Color(0xFFF0F7FF); /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground */
     static const colorRing = Color(0xFF1B3C53); /** figma: focus state draws a 2px 'Primay' border */
-    static const colorSecondary = Color(0xFFF1F3F1); /** figma: secondaryContainer #f1f3f1 (shadcn 'secondary' == Figma container role) */
+    static const colorSecondary = Color(0xFFF1F3F1); /** figma: secondaryContainer #f1f3f1 (our 'secondary' == Figma container role) */
     static const colorSecondaryForeground = Color(0xFF748873); /** figma: onSecondaryContainer #748873 */
     static const colorSemanticError = Color(0xFFEC5047); /** figma: error (NOT red.500 #c60a0a — Figma keeps error as its own value) */
     static const colorSemanticErrorContainer = Color(0xFFFEF3F2); /** figma: errorContainer */

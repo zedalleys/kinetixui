@@ -1,5 +1,5 @@
 {
-  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "quote",
   "type": "registry:ui",
   "title": "Quote",

@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "kinetixui.json",
+  description: "The config file the kinetixui CLI reads.",
+};
+
+# kinetixui.json
+
+`kinetixui init` writes this file at your project root. `kinetixui add`
+reads it to know where files go.
+
+```json
+{
+  "$schema": "https://kinetixui.com/schema/config.json",
+  "tailwind": {
+    "css": "app/globals.css"
+  },
+  "aliases": {
+    "components": "@/components",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "utils": "@/lib/utils"
+  },
+  "srcDir": true
+}
+```
+
+| Field | Does |
+| --- | --- |
+| `tailwind.css` | where the token contract (`:root` / `.dark` variables) is written |
+| `aliases.ui` | where component files land, e.g. `add button` → `<ui>/button.tsx` |
+| `aliases.lib` | where shared library files (like `utils.ts`) land |
+| `srcDir` | prefix every path above with `src/` |
+
+No `kinetixui.json`? `add` still works — it falls back to the defaults shown
+above (matching a standard `create-next-app` layout with `@/*` mapped to
+`src/*` in `tsconfig.json`).
