@@ -88,5 +88,6 @@ are private and never published.
   (`scripts/gen-stories.mjs` → `packages/ui/src/stories/*.stories.tsx`).
 - ✅ CI — GitHub Actions builds tokens → ui → registry → site on every push/PR,
   and fails if generated output (`packages/tokens/dist`, `apps/web/public/r`) is stale.
-- Deploy: see `DEPLOY.md` (Vercel + GoDaddy).
+- Deploy: `DEPLOY.md` is the setup guide; `NOTES.md` is the current live state
+  (Vercel project, DNS, npm layout, Storybook, CI).
 - See `TOKENS.md` for every deviation from the raw design tokens.
