@@ -35,11 +35,15 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // bg primary / text on-primary; hover+active step down the blue ramp; disabled -> border grey
+        // rest = --primary; hover/active dim it via opacity so it works in BOTH themes.
+        // (the old hover:bg-[--color-blue-600] was a hard-coded dark navy — on dark mode,
+        //  where --primary is light, it inverted the button into the near-black background.)
         Primary:
-          "bg-primary text-primary-foreground hover:bg-[--color-blue-600] active:bg-[--color-blue-700] disabled:bg-border disabled:text-muted-foreground",
-        // rest = secondaryContainer; hover/active promote to full secondary with on-secondary text
+          "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 disabled:bg-border disabled:text-muted-foreground",
+        // rest = --secondary; hover/active promote to the --secondary-foreground fill with
+        //  inverted text — theme-aware, unlike the previous hard-coded green primitives
         Secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[--color-green-500] hover:text-[--color-green-50] active:bg-[--color-green-600] active:text-[--color-green-50] focus-visible:bg-secondary disabled:bg-border disabled:text-muted-foreground",
+          "bg-secondary text-secondary-foreground hover:bg-secondary-foreground hover:text-secondary active:bg-secondary-foreground/90 active:text-secondary focus-visible:bg-secondary disabled:bg-border disabled:text-muted-foreground",
         // 1px outline; hover fills with accent + strengthens the edge to --ring so the
         // state stays visible on the darkest surfaces (WCAG 2.2 SC 1.4.11); active pins primary
         Outline:
@@ -79,10 +83,10 @@ const buttonVariants = cva(
     },
     compoundVariants: [
       { variant: "Destructive", class: "focus-visible:shadow-focus-destructive" },
-      { variant: "Primary", state: "Hover", class: "bg-[--color-blue-600]" },
-      { variant: "Primary", state: "Active", class: "bg-[--color-blue-700]" },
-      { variant: "Secondary", state: "Hover", class: "bg-[--color-green-500] text-[--color-green-50]" },
-      { variant: "Secondary", state: "Active", class: "bg-[--color-green-600] text-[--color-green-50]" },
+      { variant: "Primary", state: "Hover", class: "bg-primary/90" },
+      { variant: "Primary", state: "Active", class: "bg-primary/80" },
+      { variant: "Secondary", state: "Hover", class: "bg-secondary-foreground text-secondary" },
+      { variant: "Secondary", state: "Active", class: "bg-secondary-foreground/90 text-secondary" },
       { variant: "Outline", state: "Hover", class: "border-ring bg-accent" },
       { variant: "Outline", state: "Active", class: "border-primary bg-accent text-primary" },
       { variant: "Ghost", state: "Hover", class: "bg-accent ring-1 ring-inset ring-ring" },
