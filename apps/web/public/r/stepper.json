@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "stepper",
+  "type": "registry:ui",
+  "title": "Stepper",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/stepper.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { Check } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * Stepper — a numbered multi-step progress indicator. Horizontal or\n * vertical; each step is complete / current / upcoming, derived from\n * `current` against its index.\n */\nexport interface StepperStep {\n  label: React.ReactNode;\n  description?: React.ReactNode;\n}\n\nexport interface StepperProps extends React.HTMLAttributes<HTMLOListElement> {\n  steps: StepperStep[];\n  /** zero-based index of the active step */\n  current: number;\n  orientation?: \"horizontal\" | \"vertical\";\n}\n\nconst Stepper = React.forwardRef<HTMLOListElement, StepperProps>(\n  ({ className, steps, current, orientation = \"horizontal\", ...props }, ref) => {\n    const vertical = orientation === \"vertical\";\n    return (\n      <ol ref={ref} className={cn(\"flex font-sans\", vertical ? \"flex-col\" : \"w-full items-start\", className)} {...props}>\n        {steps.map((step, i) => {\n          const status = i < current ? \"complete\" : i === current ? \"current\" : \"upcoming\";\n          const isLast = i === steps.length - 1;\n          return (\n            <li\n              key={i}\n              className={cn(\"flex\", vertical ? \"flex-row gap-3\" : \"flex-1 flex-col items-center gap-2 text-center\")}\n              aria-current={status === \"current\" ? \"step\" : undefined}\n            >\n              <div className={cn(\"flex items-center\", vertical ? \"flex-col\" : \"w-full\")}>\n                <span\n                  className={cn(\n                    \"flex size-7 shrink-0 items-center justify-center rounded-full text-label-md font-medium\",\n                    status === \"complete\" && \"bg-primary text-primary-foreground\",\n                    status === \"current\" && \"border-2 border-primary text-primary\",\n                    status === \"upcoming\" && \"border border-input text-muted-foreground\",\n                  )}\n                >\n                  {status === \"complete\" ? <Check className=\"size-4\" /> : i + 1}\n                </span>\n                {!isLast && (\n                  <span\n                    aria-hidden\n                    className={cn(\n                      \"bg-border\",\n                      vertical ? \"my-1 min-h-6 w-px flex-1 self-stretch\" : \"mt-3.5 h-px flex-1\",\n                      status === \"complete\" && \"bg-primary\",\n                    )}\n                  />\n                )}\n              </div>\n              <div className={cn(vertical && \"pb-6\")}>\n                <p className={cn(\"text-label-md font-medium\", status === \"upcoming\" ? \"text-muted-foreground\" : \"text-foreground\")}>\n                  {step.label}\n                </p>\n                {step.description && <p className=\"text-body-sm text-muted-foreground\">{step.description}</p>}\n              </div>\n            </li>\n          );\n        })}\n      </ol>\n    );\n  },\n);\nStepper.displayName = \"Stepper\";\n\nexport { Stepper };\n",
+      "type": "registry:ui",
+      "target": "components/ui/stepper.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

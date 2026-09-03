@@ -1,0 +1,25 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "quote",
+  "type": "registry:ui",
+  "title": "Quote",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/quote.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * Quote — a blockquote with an optional attributed author (name, title,\n * avatar slot).\n */\nexport interface QuoteProps extends React.HTMLAttributes<HTMLElement> {\n  author?: React.ReactNode;\n  authorTitle?: React.ReactNode;\n  avatar?: React.ReactNode;\n}\n\nconst Quote = React.forwardRef<HTMLElement, QuoteProps>(\n  ({ className, author, authorTitle, avatar, children, ...props }, ref) => (\n    <figure ref={ref} className={cn(\"flex flex-col gap-4 font-sans\", className)} {...props}>\n      <blockquote className=\"text-title-md font-medium text-foreground\">&ldquo;{children}&rdquo;</blockquote>\n      {(author || authorTitle) && (\n        <figcaption className=\"flex items-center gap-3\">\n          {avatar}\n          <div>\n            {author && <p className=\"text-body-md font-medium text-foreground\">{author}</p>}\n            {authorTitle && <p className=\"text-body-sm text-muted-foreground\">{authorTitle}</p>}\n          </div>\n        </figcaption>\n      )}\n    </figure>\n  ),\n);\nQuote.displayName = \"Quote\";\n\nexport { Quote };\n",
+      "type": "registry:ui",
+      "target": "components/ui/quote.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

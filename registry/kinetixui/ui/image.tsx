@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 
 /**
  * Image — a ratio-locked image with a muted placeholder while loading and a
- * fallback on error (design source: Capi "Image", ratios 1:1 / 3:2 / 4:3 / 3:4
- * / 3:1 / 16:9). Pass `ratio` as a preset string or a number (w / h).
+ * fallback on error (presets 1:1 / 3:2 / 4:3 / 3:4 / 3:1 / 16:9). Pass
+ * `ratio` as a preset string or a number (w / h).
  */
 const RATIOS: Record<string, number> = {
   "1:1": 1,

@@ -4,9 +4,8 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * CircularProgress — a ring progress indicator (design source: Capi "Progress
- * Bar" › Circle). Track = `--muted`, indicator = `--primary`. Optionally shows
- * the value in the centre.
+ * CircularProgress — a ring progress indicator. Track = `--muted`, indicator
+ * = `--primary`. Optionally shows the value in the centre.
  */
 export interface CircularProgressProps extends React.HTMLAttributes<HTMLDivElement> {
   value?: number;

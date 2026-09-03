@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "navigation-bar",
+  "type": "registry:ui",
+  "title": "Navigation Bar",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/navigation-bar.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { ChevronLeft } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * NavigationBar — a mobile top app bar. Leading back button (or a custom\n * `leading` slot), title with optional info text, trailing actions.\n */\nexport interface NavigationBarProps extends Omit<React.HTMLAttributes<HTMLElement>, \"title\"> {\n  title: React.ReactNode;\n  infoText?: React.ReactNode;\n  onBack?: () => void;\n  leading?: React.ReactNode;\n  actions?: React.ReactNode;\n}\n\nconst NavigationBar = React.forwardRef<HTMLElement, NavigationBarProps>(\n  ({ className, title, infoText, onBack, leading, actions, ...props }, ref) => (\n    <header\n      ref={ref}\n      className={cn(\"flex h-14 w-full items-center gap-2 border-b border-border bg-background px-2 font-sans\", className)}\n      {...props}\n    >\n      <div className=\"flex min-w-9 shrink-0 items-center\">\n        {leading ??\n          (onBack && (\n            <button\n              type=\"button\"\n              onClick={onBack}\n              aria-label=\"Back\"\n              className=\"flex size-9 items-center justify-center rounded-full text-foreground outline-none transition-colors hover:bg-accent focus-visible:bg-accent\"\n            >\n              <ChevronLeft className=\"size-5\" />\n            </button>\n          ))}\n      </div>\n      <div className=\"min-w-0 flex-1\">\n        <p className=\"truncate text-body-lg font-medium text-foreground\">{title}</p>\n        {infoText && <p className=\"truncate text-body-sm text-muted-foreground\">{infoText}</p>}\n      </div>\n      {actions && <div className=\"flex shrink-0 items-center gap-1\">{actions}</div>}\n    </header>\n  ),\n);\nNavigationBar.displayName = \"NavigationBar\";\n\nexport { NavigationBar };\n",
+      "type": "registry:ui",
+      "target": "components/ui/navigation-bar.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

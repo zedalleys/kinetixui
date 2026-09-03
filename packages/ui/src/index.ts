@@ -24,7 +24,7 @@ export {
   AlertDialogCancel,
 } from "./components/alert-dialog";
 export { AspectRatio } from "./components/aspect-ratio";
-export { Avatar, AvatarImage, AvatarFallback } from "./components/avatar";
+export { Avatar, AvatarImage, AvatarFallback, AvatarGroup, type AvatarGroupProps } from "./components/avatar";
 export { Badge, badgeVariants, type BadgeProps } from "./components/badge";
 export {
   Breadcrumb,
@@ -270,10 +270,36 @@ export {
   useSidebar,
 } from "./components/sidebar";
 
-/* Batch 3 — Capi design-source gap components */
+/* Batch 3 — additional gap-fill components */
 export { AudioPlayer, type AudioPlayerProps } from "./components/audio-player";
 export { CircularProgress, type CircularProgressProps } from "./components/circular-progress";
 export { Image, type ImageProps } from "./components/image";
 export { Inform, informVariants, type InformProps } from "./components/inform";
+
+/* Batch 4 — mobile-pattern gap-fill components */
+export { Rating, type RatingProps } from "./components/rating";
+export { Spinner, spinnerVariants, type SpinnerProps } from "./components/spinner";
+export { List, ListItem, type ListItemProps } from "./components/list";
+export { Stepper, type StepperProps, type StepperStep } from "./components/stepper";
+export { Fab, fabVariants, type FabProps } from "./components/fab";
+export { TabBar, TabBarItem, type TabBarItemProps } from "./components/tab-bar";
+export { NavigationBar, type NavigationBarProps } from "./components/navigation-bar";
+export {
+  FileUpload,
+  FileUploadItem,
+  formatBytes,
+  type UploadFile,
+  type FileUploadProps,
+  type FileUploadItemProps,
+} from "./components/file-upload";
+export { DatePicker, type DatePickerProps } from "./components/date-picker";
+
+/* Batch 5 — web-pattern gap-fill components */
+export { CodeBlock, type CodeBlockProps, type CodeBlockFile } from "./components/code-block";
+export { Metric, type MetricProps } from "./components/metric";
+export { NumberInput, type NumberInputProps } from "./components/number-input";
+export { Quote, type QuoteProps } from "./components/quote";
+export { Footer, FooterColumn, FooterLink, FooterBottom, type FooterColumnProps } from "./components/footer";
+export { TableOfContents, type TableOfContentsProps, type TocItem } from "./components/table-of-contents";
 
 export { cn } from "./lib/utils";

@@ -7,18 +7,36 @@ export const metadata = {
 
 ## Unreleased
 
-- **Capi design-source gap fill** — 4 components ported from the TapNTry / Capi
-  kit: **`AudioPlayer`** (`variant="full" | "mini"` — native `<audio>` with a
-  scrubber, `mm:ss` labels, ±10s skip, prev/next), **`CircularProgress`** (ring
-  with optional centre value), **`Image`** (ratio presets 1:1 / 3:2 / 4:3 / 3:4 /
-  3:1 / 16:9, muted loading placeholder, error fallback), **`Inform`**
-  (persistent dismissible intent-tinted notice with an optional CTA —
-  information / warning / success / error / action). **57-item registry.**
+- **6 more components** — web-pattern gap fill, all on the existing token
+  contract: **`CodeBlock`** (copy button, optional file tabs), **`Metric`**
+  (stat/KPI display — label, value, trend indicator, optional chart slot),
+  **`NumberInput`** (increment/decrement numeric field), **`Quote`**
+  (blockquote with attributed author), **`Footer`** / `FooterColumn` /
+  `FooterLink` / `FooterBottom` (page footer shell), **`TableOfContents`**
+  (anchor-link nav with active-item state). **72-item registry.**
+- **9 more components** — mobile-pattern gap fill, all on the existing token
+  contract: **`Rating`** (star input/display), **`Spinner`** (loading
+  indicator), **`List`** / **`ListItem`** (leading icon/avatar, title,
+  description, trailing content), **`Stepper`** (horizontal/vertical numbered
+  progress), **`Fab`** (floating action button, circular or extended),
+  **`TabBar`** / **`TabBarItem`** (mobile bottom navigation),
+  **`NavigationBar`** (mobile top app bar), **`FileUpload`** /
+  **`FileUploadItem`** (drag-and-drop zone + file list), **`AvatarGroup`**
+  (stacked avatars with overflow). **`DatePicker`** promoted from a
+  Popover+Calendar recipe to a real component (label / helper text / error
+  states). **66-item registry.**
+- **4 more components** — **`AudioPlayer`** (`variant="full" | "mini"` —
+  native `<audio>` with a scrubber, `mm:ss` labels, ±10s skip, prev/next),
+  **`CircularProgress`** (ring with optional centre value), **`Image`**
+  (ratio presets 1:1 / 3:2 / 4:3 / 3:4 / 3:1 / 16:9, muted loading
+  placeholder, error fallback), **`Inform`** (persistent dismissible
+  intent-tinted notice with an optional CTA — information / warning /
+  success / error / action). **57-item registry.**
 - **Native text styles** — typography composites now also compile to
   `KinetixType.swift` (SwiftUI), `KinetixType.kt` (Compose `TextStyle`) and
   `app_text.dart` (Flutter `TextStyle`), and land in `tokens.ts` as a `text.*`
   object. Web + all 3 mobile platforms now carry the full type scale.
-- **Elevation tokens** (new category, Finesse-UI-inspired) — `--shadow-sm/md/lg/xl`
+- **Elevation tokens** (new category) — `--shadow-sm/md/lg/xl`
   plus `--shadow-focus` / `-destructive` / `-success` / `-warning` (the focus ring
   as a crisp edge + soft colour glow). Wired into the Tailwind preset (`shadow-*`,
   `shadow-focus*`); Input / Textarea / Select now use `shadow-focus`.
@@ -39,7 +57,7 @@ export const metadata = {
   now uses `--shadow-focus` throughout.
 - 57-item registry.
 
-- **Components — full shadcn/ui parity.** 15 more shipped: Calendar, Carousel,
+- **Components — full component parity.** 15 more shipped: Calendar, Carousel,
   Chart, Combobox, Command, Context Menu, Data Table, Date Picker, Drawer, Form,
   Input OTP, Menubar, Navigation Menu, Resizable, Sidebar. **47 components**;
   **48-item registry**. New deps: recharts, react-day-picker, embla, vaul, cmdk,
@@ -47,7 +65,7 @@ export const metadata = {
 - Earlier in this cycle: 31 components ported (Accordion … Tooltip), web CSS as
   **HSL channels** (opacity modifiers), `--chart-1…5` and `--sidebar-*` tokens
   (+ `caret-blink` animation).
-- **Site** — every shadcn/ui doc route present; ⌘K over all of them; all static.
+- **Site** — every component doc route present; ⌘K over all of them; all static.
 - **Deploy** — `pnpm build:web` passes; `vercel.json` + `DEPLOY.md` (Vercel +
   GoDaddy DNS).
 
@@ -63,4 +81,4 @@ export const metadata = {
 - Token engine: DTCG source → web / iOS / Android / Flutter.
 - `Button` — 6 variants × 4 sizes × 5 states, generated 1:1 from the design
   source (node 54863:351).
-- shadcn custom registry + Storybook 8.
+- Portable component registry + Storybook 8.

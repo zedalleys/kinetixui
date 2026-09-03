@@ -1,0 +1,28 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "rating",
+  "type": "registry:ui",
+  "title": "Rating",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "class-variance-authority",
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/rating.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { Star } from \"lucide-react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * Rating — a star rating input / display. Controlled (`value`) or\n * uncontrolled (`defaultValue`); `readOnly` renders a static display, e.g.\n * inside a Card.\n */\nconst starVariants = cva(\"transition-colors\", {\n  variants: {\n    size: {\n      sm: \"size-4\",\n      md: \"size-5\",\n      lg: \"size-6\",\n    },\n  },\n  defaultVariants: { size: \"md\" },\n});\n\nexport interface RatingProps\n  extends Omit<React.HTMLAttributes<HTMLDivElement>, \"onChange\">,\n    VariantProps<typeof starVariants> {\n  value?: number;\n  defaultValue?: number;\n  max?: number;\n  readOnly?: boolean;\n  onChange?: (value: number) => void;\n}\n\nconst Rating = React.forwardRef<HTMLDivElement, RatingProps>(\n  ({ className, value, defaultValue = 0, max = 5, size, readOnly = false, onChange, ...props }, ref) => {\n    const [internal, setInternal] = React.useState(defaultValue);\n    const [hovered, setHovered] = React.useState<number | null>(null);\n    const current = value ?? internal;\n    const display = hovered ?? current;\n\n    const set = (n: number) => {\n      if (readOnly) return;\n      setInternal(n);\n      onChange?.(n);\n    };\n\n    return (\n      <div\n        ref={ref}\n        role={readOnly ? \"img\" : \"radiogroup\"}\n        aria-label={readOnly ? `Rated ${current} out of ${max}` : \"Rating\"}\n        className={cn(\"inline-flex items-center gap-0.5\", className)}\n        onMouseLeave={() => setHovered(null)}\n        {...props}\n      >\n        {Array.from({ length: max }, (_, i) => {\n          const n = i + 1;\n          const filled = n <= display;\n          return (\n            <button\n              key={n}\n              type=\"button\"\n              disabled={readOnly}\n              aria-label={`${n} star${n > 1 ? \"s\" : \"\"}`}\n              aria-pressed={n <= current}\n              onMouseEnter={() => !readOnly && setHovered(n)}\n              onClick={() => set(n)}\n              className={cn(\n                \"rounded-[2px] outline-none disabled:cursor-default\",\n                !readOnly && \"cursor-pointer focus-visible:ring-2 focus-visible:ring-ring\",\n              )}\n            >\n              <Star\n                className={cn(\n                  starVariants({ size }),\n                  filled ? \"fill-warning text-warning\" : \"fill-transparent text-muted-foreground\",\n                )}\n              />\n            </button>\n          );\n        })}\n      </div>\n    );\n  },\n);\nRating.displayName = \"Rating\";\n\nexport { Rating };\n",
+      "type": "registry:ui",
+      "target": "components/ui/rating.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

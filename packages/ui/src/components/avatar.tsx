@@ -39,4 +39,38 @@ const AvatarFallback = React.forwardRef<
 ));
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;
 
-export { Avatar, AvatarImage, AvatarFallback };
+/**
+ * AvatarGroup — stacked, overlapping avatars with a "+N" overflow marker.
+ */
+export interface AvatarGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** cap the number of visible avatars, folding the rest into a "+N" marker */
+  max?: number;
+}
+
+const AvatarGroup = React.forwardRef<HTMLDivElement, AvatarGroupProps>(
+  ({ className, max, children, ...props }, ref) => {
+    const items = React.Children.toArray(children);
+    const visible = max ? items.slice(0, max) : items;
+    const overflow = max ? items.length - max : 0;
+
+    return (
+      <div ref={ref} className={cn("flex -space-x-2", className)} {...props}>
+        {visible.map((child, i) => (
+          <div key={i} className="rounded-full ring-2 ring-background">
+            {child}
+          </div>
+        ))}
+        {overflow > 0 && (
+          <div className="rounded-full ring-2 ring-background">
+            <Avatar>
+              <AvatarFallback>+{overflow}</AvatarFallback>
+            </Avatar>
+          </div>
+        )}
+      </div>
+    );
+  },
+);
+AvatarGroup.displayName = "AvatarGroup";
+
+export { Avatar, AvatarImage, AvatarFallback, AvatarGroup };

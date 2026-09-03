@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-block",
+  "type": "registry:ui",
+  "title": "Code Block",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/code-block.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { Check, Copy } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * CodeBlock — a code display with a copy button and, for more than one\n * file, a tab strip. Presentational only: bring your own syntax\n * highlighting by rendering highlighted markup as `code`/`files[].code`.\n */\nexport interface CodeBlockFile {\n  name: string;\n  code: string;\n  language?: string;\n}\n\nexport interface CodeBlockProps extends Omit<React.HTMLAttributes<HTMLDivElement>, \"children\"> {\n  code?: string;\n  language?: string;\n  filename?: string;\n  files?: CodeBlockFile[];\n  hideCopy?: boolean;\n}\n\nconst CodeBlock = React.forwardRef<HTMLDivElement, CodeBlockProps>(\n  ({ className, code, language, filename, files, hideCopy, ...props }, ref) => {\n    const tabs = files && files.length > 0 ? files : [{ name: filename ?? language ?? \"\", code: code ?? \"\" }];\n    const [active, setActive] = React.useState(0);\n    const [copied, setCopied] = React.useState(false);\n    const current = tabs[active] ?? tabs[0]!;\n    const hasHeader = tabs.length > 1 || !!current.name;\n\n    const copy = async () => {\n      try {\n        await navigator.clipboard.writeText(current.code);\n        setCopied(true);\n        window.setTimeout(() => setCopied(false), 1500);\n      } catch {\n        // clipboard unavailable — no-op\n      }\n    };\n\n    return (\n      <div ref={ref} className={cn(\"overflow-hidden rounded-md border border-input bg-muted font-sans\", className)} {...props}>\n        {hasHeader && (\n          <div className=\"flex items-center justify-between border-b border-input bg-background px-2\">\n            <div className=\"flex\">\n              {tabs.map((t, i) => (\n                <button\n                  key={t.name || i}\n                  type=\"button\"\n                  onClick={() => setActive(i)}\n                  className={cn(\n                    \"border-b-2 px-3 py-2 text-body-sm transition-colors outline-none\",\n                    i === active ? \"border-primary text-foreground\" : \"border-transparent text-muted-foreground hover:text-foreground\",\n                  )}\n                >\n                  {t.name || \"code\"}\n                </button>\n              ))}\n            </div>\n            {!hideCopy && (\n              <button\n                type=\"button\"\n                onClick={copy}\n                aria-label=\"Copy code\"\n                className=\"rounded-[2px] p-1.5 text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-1 focus-visible:ring-current\"\n              >\n                {copied ? <Check className=\"size-4\" /> : <Copy className=\"size-4\" />}\n              </button>\n            )}\n          </div>\n        )}\n        <div className=\"relative\">\n          {!hasHeader && !hideCopy && (\n            <button\n              type=\"button\"\n              onClick={copy}\n              aria-label=\"Copy code\"\n              className=\"absolute right-2 top-2 rounded-[2px] p-1.5 text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-1 focus-visible:ring-current\"\n            >\n              {copied ? <Check className=\"size-4\" /> : <Copy className=\"size-4\" />}\n            </button>\n          )}\n          <pre className=\"overflow-x-auto p-4 text-body-sm text-foreground\">\n            <code>{current.code}</code>\n          </pre>\n        </div>\n      </div>\n    );\n  },\n);\nCodeBlock.displayName = \"CodeBlock\";\n\nexport { CodeBlock };\n",
+      "type": "registry:ui",
+      "target": "components/ui/code-block.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

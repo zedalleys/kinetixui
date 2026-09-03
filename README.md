@@ -4,7 +4,7 @@
 
 KinetixUI turns a single design source into living tokens and components for
 **React, SwiftUI, Jetpack Compose, and Flutter** — one source of truth,
-multi-platform output, a React component library, a shadcn custom registry, and
+multi-platform output, a React component library, a portable component registry, and
 Storybook docs.
 
 Free while in beta. Advanced tooling ships later as **KinetixUI Pro**.
@@ -15,7 +15,7 @@ Free while in beta. Advanced tooling ships later as **KinetixUI Pro**.
 kinetixui/
 ├─ tokens/                     DTCG token source (extracted from the design source)
 │  ├─ primitives/              color ramps · spacing · radius · type
-│  └─ semantic/                shadcn-named aliases (light + dark) · text styles
+│  └─ semantic/                semantic token aliases (light + dark) · text styles
 ├─ style-dictionary/
 │  ├─ build.mjs                entrypoint — runs SD once per theme (light, dark)
 │  ├─ sd.config.mjs            Style Dictionary v4 config factory — 5 platform targets
@@ -25,7 +25,7 @@ kinetixui/
 │  │  └─ dist/{web,ios,android,flutter}
 │  └─ ui/                      @kinetixui/ui — React + CVA + Radix + Tailwind
 ├─ registry/
-│  ├─ registry.json            shadcn custom registry manifest
+│  ├─ registry.json            component registry manifest
 │  └─ kinetixui/               registry source files (ui/ · lib/ · globals.css)
 ├─ public/r/                   built static registry — /r/button.json …
 └─ apps/
@@ -64,14 +64,16 @@ are private and never published.
 - ✅ **Token engine** — `pnpm build:tokens` clean; 11 files across web / iOS /
   Android / Flutter. Web CSS is HSL channels (opacity modifiers work); `--chart-1…5`
   added.
-- ✅ **Components — 51 in `@kinetixui/ui`**, full shadcn/ui parity: `Button` /
-  `Input` / `Textarea` (design-source-native API) + 48 ported onto the token
+- ✅ **Components — 66 in `@kinetixui/ui`**, full component parity: `Button` /
+  `Input` / `Textarea` (design-source-native API) + 63 ported onto the token
   contract (Accordion … Tooltip, plus Calendar, Carousel, Chart, Command,
   Context Menu, Data Table, Drawer, Form, Input OTP, Menubar, Navigation Menu,
-  Resizable, Sidebar, and — from the Capi kit — AudioPlayer, CircularProgress,
-  Image, Inform). **57-item** shadcn registry.
-- ✅ **kinetixui.com** — every shadcn/ui doc route (53 component pages) with live
-  previews, Colors, Themes, ⌘K, light/dark. `pnpm build:web` passes; all static.
+  Resizable, Sidebar, AudioPlayer, CircularProgress, Image, Inform, Rating,
+  Spinner, List, Stepper, Fab, TabBar, NavigationBar, FileUpload, AvatarGroup,
+  DatePicker, CodeBlock, Metric, NumberInput, Quote, Footer, TableOfContents).
+  **72-item** component registry.
+- ✅ **kinetixui.com** — every component doc route (72 component pages) with
+  live previews, Colors, Themes, ⌘K, light/dark. `pnpm build:web` passes; all static.
 - 🟡 Storybook has stories for Button / Input / Textarea only (site is the
   primary doc surface).
 - ✅ CI — GitHub Actions builds tokens → ui → registry → site on every push/PR,

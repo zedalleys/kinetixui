@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "spinner",
+  "type": "registry:ui",
+  "title": "Spinner",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "class-variance-authority"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/spinner.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * Spinner — a lightweight loading indicator. Border-based ring, no icon\n * dependency; `size` sets the diameter, `variant` swaps the indicator\n * colour for on-color surfaces.\n */\nconst spinnerVariants = cva(\"inline-block animate-spin rounded-full border-2 border-current border-t-transparent\", {\n  variants: {\n    size: {\n      sm: \"size-4\",\n      md: \"size-6\",\n      lg: \"size-8\",\n    },\n    variant: {\n      default: \"text-primary\",\n      muted: \"text-muted-foreground\",\n      onColor: \"text-primary-foreground\",\n    },\n  },\n  defaultVariants: { size: \"md\", variant: \"default\" },\n});\n\nexport interface SpinnerProps\n  extends React.HTMLAttributes<HTMLSpanElement>,\n    VariantProps<typeof spinnerVariants> {\n  label?: string;\n}\n\nconst Spinner = React.forwardRef<HTMLSpanElement, SpinnerProps>(\n  ({ className, size, variant, label = \"Loading…\", ...props }, ref) => (\n    <span ref={ref} role=\"status\" aria-label={label} className={cn(spinnerVariants({ size, variant }), className)} {...props}>\n      <span className=\"sr-only\">{label}</span>\n    </span>\n  ),\n);\nSpinner.displayName = \"Spinner\";\n\nexport { Spinner, spinnerVariants };\n",
+      "type": "registry:ui",
+      "target": "components/ui/spinner.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

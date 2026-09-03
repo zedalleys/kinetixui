@@ -1,0 +1,28 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "fab",
+  "type": "registry:ui",
+  "title": "Fab",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "@radix-ui/react-slot",
+    "class-variance-authority"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/fab.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { Slot } from \"@radix-ui/react-slot\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * Fab — a floating action button. Circular by default; pass a text child\n * alongside the icon to render the extended pill form (`extended`).\n */\nconst fabVariants = cva(\n  [\n    \"inline-flex shrink-0 items-center justify-center gap-2 rounded-full font-sans font-medium\",\n    \"shadow-lg outline-none transition-colors\",\n    \"focus-visible:shadow-focus disabled:pointer-events-none disabled:opacity-50\",\n    \"[&_svg]:pointer-events-none [&_svg]:shrink-0\",\n  ],\n  {\n    variants: {\n      variant: {\n        Primary: \"bg-primary text-primary-foreground hover:bg-[--color-blue-600] active:bg-[--color-blue-700]\",\n        Secondary:\n          \"bg-secondary text-secondary-foreground hover:bg-[--color-green-500] hover:text-[--color-green-50] active:bg-[--color-green-600] active:text-[--color-green-50]\",\n      },\n      size: {\n        default: \"size-14 [&_svg]:size-6\",\n        sm: \"size-11 [&_svg]:size-5\",\n      },\n      extended: {\n        true: \"w-auto px-5\",\n        false: \"\",\n      },\n    },\n    defaultVariants: { variant: \"Primary\", size: \"default\", extended: false },\n  },\n);\n\nexport interface FabProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof fabVariants> {\n  asChild?: boolean;\n}\n\nconst Fab = React.forwardRef<HTMLButtonElement, FabProps>(\n  ({ className, variant, size, extended, asChild = false, ...props }, ref) => {\n    const Comp: React.ElementType = asChild ? Slot : \"button\";\n    return (\n      <Comp\n        ref={ref}\n        data-slot=\"fab\"\n        className={cn(fabVariants({ variant, size, extended }), className)}\n        {...props}\n      />\n    );\n  },\n);\nFab.displayName = \"Fab\";\n\nexport { Fab, fabVariants };\n",
+      "type": "registry:ui",
+      "target": "components/ui/fab.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

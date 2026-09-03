@@ -88,7 +88,7 @@ export const hslChannels = {
   },
 };
 
-/* ── shadow + typography → CSS (Finesse-UI-style token categories) ────────── */
+/* ── shadow + typography → CSS ───────────────────────────────────────────── */
 const px = (v) => {
   const n = Number(v);
   return Number.isFinite(n) ? (n === 0 ? '0' : `${n}px`) : String(v);

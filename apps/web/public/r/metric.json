@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "metric",
+  "type": "registry:ui",
+  "title": "Metric",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/metric.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { ArrowDown, ArrowUp } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * Metric — a stat / KPI display: label, value, an optional trend indicator\n * and an optional chart or icon slot (bring your own chart, e.g. compose\n * with `ChartContainer`).\n */\nexport interface MetricProps extends React.HTMLAttributes<HTMLDivElement> {\n  label: React.ReactNode;\n  value: React.ReactNode;\n  trend?: \"up\" | \"down\" | \"neutral\";\n  change?: React.ReactNode;\n  icon?: React.ReactNode;\n  chart?: React.ReactNode;\n}\n\nconst Metric = React.forwardRef<HTMLDivElement, MetricProps>(\n  ({ className, label, value, trend, change, icon, chart, ...props }, ref) => (\n    <div ref={ref} className={cn(\"flex flex-col gap-2 rounded-md border border-input p-4 font-sans\", className)} {...props}>\n      <div className=\"flex items-center justify-between\">\n        <p className=\"text-body-sm text-muted-foreground\">{label}</p>\n        {icon && <span className=\"text-muted-foreground [&_svg]:size-5\">{icon}</span>}\n      </div>\n      <div className=\"flex items-end justify-between gap-2\">\n        <p className=\"text-headline-sm font-medium text-foreground\">{value}</p>\n        {trend && (\n          <span\n            className={cn(\n              \"inline-flex items-center gap-0.5 text-label-md font-medium\",\n              trend === \"up\" && \"text-success\",\n              trend === \"down\" && \"text-destructive\",\n              trend === \"neutral\" && \"text-muted-foreground\",\n            )}\n          >\n            {trend === \"up\" && <ArrowUp className=\"size-3.5\" />}\n            {trend === \"down\" && <ArrowDown className=\"size-3.5\" />}\n            {change}\n          </span>\n        )}\n      </div>\n      {chart && <div className=\"mt-1\">{chart}</div>}\n    </div>\n  ),\n);\nMetric.displayName = \"Metric\";\n\nexport { Metric };\n",
+      "type": "registry:ui",
+      "target": "components/ui/metric.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

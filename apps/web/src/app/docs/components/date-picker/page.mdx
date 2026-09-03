@@ -1,11 +1,13 @@
 export const metadata = {
   title: "Date Picker",
-  description: "A date picker — Popover + Calendar.",
+  description:
+    "A text-field trigger + calendar popover, with label / helper text / error states.",
 };
 
 # Date Picker
 
-A date picker — Popover + Calendar.
+A text-field trigger + calendar popover, with label / helper text / error
+states. Composes `Popover` + `Calendar`.
 
 <ComponentPreview name="date-picker-demo" />
 
@@ -18,8 +20,18 @@ npx shadcn@latest add https://kinetixui.com/r/date-picker.json
 ## Usage
 
 ```tsx
-import { Calendar, Popover, Button } from "@kinetixui/ui";
+import { DatePicker } from "@kinetixui/ui";
+
+<DatePicker
+  label="Appointment date"
+  value={date}
+  onChange={setDate}
+  helperText="Choose a weekday"
+/>
 ```
+
+For a range picker, compose `Calendar mode="range"` directly — see the
+[Calendar](/docs/components/calendar) docs.
 
 Styled entirely from the KinetixUI token contract — `bg-primary`,
 `text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark

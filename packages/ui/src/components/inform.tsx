@@ -7,9 +7,9 @@ import { cn } from "../lib/utils";
 
 /**
  * Inform — a persistent, dismissible, intent-tinted inline notice with an
- * optional action (design source: Capi "Inform" — Information / Warning /
- * Success / Error / Action). Distinct from `Alert` (border-only, static): Inform
- * is filled, closable, and can carry a CTA.
+ * optional action (information / warning / success / error / action).
+ * Distinct from `Alert` (border-only, static): Inform is filled, closable,
+ * and can carry a CTA.
  */
 const informVariants = cva(
   "flex items-start gap-2.5 rounded-md p-3 text-body-sm font-sans [&>svg]:mt-0.5 [&>svg]:size-4 [&>svg]:shrink-0",

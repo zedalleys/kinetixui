@@ -2,7 +2,7 @@
 "@kinetixui/ui": minor
 ---
 
-Add 4 components ported from the TapNTry / Capi design source:
+Add 4 more components on the existing token contract:
 
 - **`AudioPlayer`** — native `<audio>` playback with a scrubber, `mm:ss` time
   labels, ±10s skip and prev/next callbacks. `variant="full" | "mini"`.

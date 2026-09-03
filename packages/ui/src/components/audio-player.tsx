@@ -6,9 +6,9 @@ import { cn } from "../lib/utils";
 import { Slider } from "./slider";
 
 /**
- * AudioPlayer — interactive playback controls (design source: Capi "Audio
- * player", Full + Mini). Wraps a native <audio> element: play / pause, scrubber
- * with time, ±10s skip, and optional prev / next track callbacks.
+ * AudioPlayer — interactive playback controls, full or mini. Wraps a native
+ * <audio> element: play / pause, scrubber with time, ±10s skip, and optional
+ * prev / next track callbacks.
  */
 export interface AudioPlayerProps extends React.HTMLAttributes<HTMLDivElement> {
   src: string;

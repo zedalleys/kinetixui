@@ -1,0 +1,25 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "table-of-contents",
+  "type": "registry:ui",
+  "title": "Table Of Contents",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/table-of-contents.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * TableOfContents — an anchor-link nav list with indent levels and an\n * active-item state (drive `active` from your own scroll-spy).\n */\nexport interface TocItem {\n  id: string;\n  label: React.ReactNode;\n  level?: number;\n}\n\nexport interface TableOfContentsProps extends React.HTMLAttributes<HTMLElement> {\n  items: TocItem[];\n  active?: string;\n}\n\nconst TableOfContents = React.forwardRef<HTMLElement, TableOfContentsProps>(\n  ({ className, items, active, ...props }, ref) => (\n    <nav ref={ref} aria-label=\"Table of contents\" className={cn(\"flex flex-col gap-0.5 font-sans\", className)} {...props}>\n      {items.map((item) => {\n        const isActive = item.id === active;\n        return (\n          <a\n            key={item.id}\n            href={`#${item.id}`}\n            aria-current={isActive ? \"location\" : undefined}\n            style={{ paddingInlineStart: `${((item.level ?? 1) - 1) * 12 + 12}px` }}\n            className={cn(\n              \"-ms-px border-s py-1.5 text-body-sm outline-none transition-colors\",\n              isActive ? \"border-primary font-medium text-primary\" : \"border-transparent text-muted-foreground hover:text-foreground\",\n            )}\n          >\n            {item.label}\n          </a>\n        );\n      })}\n    </nav>\n  ),\n);\nTableOfContents.displayName = \"TableOfContents\";\n\nexport { TableOfContents };\n",
+      "type": "registry:ui",
+      "target": "components/ui/table-of-contents.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

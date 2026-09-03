@@ -108,6 +108,7 @@ import {
   toast,
 } from "@kinetixui/ui";
 import { Bold, Italic, Terminal, Underline } from "lucide-react";
+import { Bell, Home, Mail, Plus, Search, Settings, User } from "lucide-react";
 
 type Entry = { component: React.ComponentType; source: string };
 const reg: Record<string, Entry> = {};
@@ -679,6 +680,27 @@ import {
   CircularProgress,
   Image,
   Inform,
+  Rating,
+  Spinner,
+  List,
+  ListItem,
+  Stepper,
+  Fab,
+  TabBar,
+  TabBarItem,
+  NavigationBar,
+  FileUpload,
+  DatePicker,
+  AvatarGroup,
+  CodeBlock,
+  Metric,
+  NumberInput,
+  Quote,
+  Footer,
+  FooterColumn,
+  FooterLink,
+  FooterBottom,
+  TableOfContents,
 } from "@kinetixui/ui";
 
 add(
@@ -900,9 +922,17 @@ add(
   "date-picker-demo",
   () => {
     const [date, setDate] = React.useState<Date | undefined>();
-    return <Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border" />;
+    return (
+      <DatePicker
+        label="Appointment date"
+        value={date}
+        onChange={setDate}
+        helperText="Choose a weekday"
+        className="w-[280px]"
+      />
+    );
   },
-  `<Popover>\n  <PopoverTrigger asChild>\n    <Button variant="Outline">{date ? format(date, "PPP") : "Pick a date"}</Button>\n  </PopoverTrigger>\n  <PopoverContent className="w-auto p-0">\n    <Calendar mode="single" selected={date} onSelect={setDate} />\n  </PopoverContent>\n</Popover>`,
+  `<DatePicker\n  label="Appointment date"\n  value={date}\n  onChange={setDate}\n  helperText="Choose a weekday"\n/>`,
 );
 add(
   "drawer-demo",
@@ -1027,7 +1057,7 @@ add(
   `<SidebarProvider>\n  <Sidebar>\n    <SidebarHeader>…</SidebarHeader>\n    <SidebarContent>\n      <SidebarGroup>\n        <SidebarMenu>\n          <SidebarMenuItem>\n            <SidebarMenuButton isActive>Home</SidebarMenuButton>\n          </SidebarMenuItem>\n        </SidebarMenu>\n      </SidebarGroup>\n    </SidebarContent>\n  </Sidebar>\n  <SidebarInset>\n    <SidebarTrigger />\n    {/* page content */}\n  </SidebarInset>\n</SidebarProvider>`,
 );
 
-/* ---- batch 3 — Capi gap components ----------------------------------- */
+/* ---- batch 3 — additional gap-fill components ------------------------ */
 const SAMPLE_AUDIO = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
 
 add(
@@ -1084,6 +1114,255 @@ add(
     </div>
   ),
   `<Inform variant="information" onDismiss={close}>\n  A new software update is available.\n</Inform>\n\n<Inform variant="error" action={{ label: "Retry", onClick: retry }}>\n  We couldn't process your payment.\n</Inform>`,
+);
+
+/* ---- batch 4 — mobile-pattern gap-fill components --------------------- */
+add(
+  "rating-demo",
+  () => {
+    const [v, setV] = React.useState(3);
+    return (
+      <div className="flex flex-col gap-3">
+        <Rating value={v} onChange={setV} />
+        <Rating value={4} readOnly size="sm" />
+      </div>
+    );
+  },
+  `<Rating value={value} onChange={setValue} />\n<Rating value={4} readOnly size="sm" />`,
+);
+add(
+  "spinner-demo",
+  () => (
+    <div className="flex items-center gap-4">
+      <Spinner size="sm" />
+      <Spinner />
+      <Spinner size="lg" />
+    </div>
+  ),
+  `<Spinner size="sm" />\n<Spinner />\n<Spinner size="lg" />`,
+);
+add(
+  "list-demo",
+  () => (
+    <List className="w-full max-w-sm rounded-md border">
+      <ListItem leading={<User className="size-5 text-muted-foreground" />} title="Profile" description="Name, photo, and personal details" trailing={<Badge variant="outline">2</Badge>} onSelect={() => {}} />
+      <ListItem leading={<Bell className="size-5 text-muted-foreground" />} title="Notifications" description="Push, email and SMS preferences" trailing={<Switch />} />
+      <ListItem leading={<Settings className="size-5 text-muted-foreground" />} title="Settings" onSelect={() => {}} />
+    </List>
+  ),
+  `<List>\n  <ListItem\n    leading={<User />}\n    title="Profile"\n    description="Name, photo, and personal details"\n    onSelect={() => router.push("/profile")}\n  />\n  <ListItem leading={<Bell />} title="Notifications" trailing={<Switch />} />\n</List>`,
+);
+add(
+  "stepper-demo",
+  () => (
+    <div className="flex w-full max-w-lg flex-col gap-8">
+      <Stepper
+        current={1}
+        steps={[{ label: "Account" }, { label: "Profile" }, { label: "Review" }]}
+      />
+      <Stepper
+        orientation="vertical"
+        current={1}
+        steps={[
+          { label: "Order placed", description: "We've received your order." },
+          { label: "Processing", description: "Your order is being prepared." },
+          { label: "Shipped", description: "On its way to you." },
+        ]}
+      />
+    </div>
+  ),
+  `<Stepper\n  current={1}\n  steps={[{ label: "Account" }, { label: "Profile" }, { label: "Review" }]}\n/>`,
+);
+add(
+  "fab-demo",
+  () => (
+    <div className="flex items-center gap-4">
+      <Fab aria-label="Add">
+        <Plus />
+      </Fab>
+      <Fab extended>
+        <Plus />
+        New item
+      </Fab>
+      <Fab variant="Secondary" size="sm" aria-label="Add">
+        <Plus />
+      </Fab>
+    </div>
+  ),
+  `<Fab aria-label="Add">\n  <Plus />\n</Fab>\n\n<Fab extended>\n  <Plus />\n  New item\n</Fab>`,
+);
+add(
+  "tab-bar-demo",
+  () => {
+    const [active, setActive] = React.useState("home");
+    const items = [
+      { key: "home", icon: <Home />, label: "Home" },
+      { key: "search", icon: <Search />, label: "Search" },
+      { key: "mail", icon: <Mail />, label: "Mail", badge: 3 },
+      { key: "profile", icon: <User />, label: "Profile" },
+    ];
+    return (
+      <TabBar className="w-full max-w-sm rounded-md">
+        {items.map((it) => (
+          <TabBarItem key={it.key} icon={it.icon} label={it.label} badge={it.badge} active={active === it.key} onClick={() => setActive(it.key)} />
+        ))}
+      </TabBar>
+    );
+  },
+  `<TabBar>\n  <TabBarItem icon={<Home />} label="Home" active={tab === "home"} onClick={() => setTab("home")} />\n  <TabBarItem icon={<Mail />} label="Mail" badge={3} active={tab === "mail"} onClick={() => setTab("mail")} />\n</TabBar>`,
+);
+add(
+  "navigation-bar-demo",
+  () => (
+    <NavigationBar
+      className="w-full max-w-md rounded-md"
+      title="Appointments"
+      infoText="3 upcoming"
+      onBack={() => {}}
+      actions={
+        <button type="button" aria-label="Search" className="flex size-9 items-center justify-center rounded-full hover:bg-accent">
+          <Search className="size-5" />
+        </button>
+      }
+    />
+  ),
+  `<NavigationBar\n  title="Appointments"\n  infoText="3 upcoming"\n  onBack={() => router.back()}\n  actions={<Button variant="Ghost" size="icon"><Search /></Button>}\n/>`,
+);
+add(
+  "file-upload-demo",
+  () => {
+    const [files, setFiles] = React.useState([
+      { id: "1", name: "passport-scan.pdf", size: 245_000, status: "uploaded" as const },
+      { id: "2", name: "photo.png", size: 1_200_000, status: "error" as const, error: "File exceeds 1 MB limit" },
+    ]);
+    return (
+      <FileUpload
+        className="w-full max-w-sm"
+        multiple
+        helperText="PDF, PNG up to 5 MB"
+        files={files}
+        onFilesSelected={(picked) =>
+          setFiles((f) => [...f, ...picked.map((p, i) => ({ id: `new-${i}-${p.name}`, name: p.name, size: p.size, status: "uploaded" as const }))])
+        }
+        onRemove={(id) => setFiles((f) => f.filter((x) => x.id !== id))}
+      />
+    );
+  },
+  `<FileUpload\n  multiple\n  files={files}\n  onFilesSelected={(picked) => upload(picked)}\n  onRemove={(id) => removeFile(id)}\n/>`,
+);
+add(
+  "avatar-group-demo",
+  () => (
+    <AvatarGroup max={3}>
+      <Avatar>
+        <AvatarFallback>JD</AvatarFallback>
+      </Avatar>
+      <Avatar>
+        <AvatarFallback>AK</AvatarFallback>
+      </Avatar>
+      <Avatar>
+        <AvatarFallback>MO</AvatarFallback>
+      </Avatar>
+      <Avatar>
+        <AvatarFallback>RS</AvatarFallback>
+      </Avatar>
+      <Avatar>
+        <AvatarFallback>TL</AvatarFallback>
+      </Avatar>
+    </AvatarGroup>
+  ),
+  `<AvatarGroup max={3}>\n  <Avatar><AvatarFallback>JD</AvatarFallback></Avatar>\n  <Avatar><AvatarFallback>AK</AvatarFallback></Avatar>\n  <Avatar><AvatarFallback>MO</AvatarFallback></Avatar>\n</AvatarGroup>`,
+);
+
+/* ---- batch 5 — web-pattern gap-fill components -------------------------- */
+add(
+  "code-block-demo",
+  () => (
+    <CodeBlock
+      className="w-full max-w-lg"
+      filename="button.tsx"
+      code={`export function Button({ children }) {\n  return <button className="btn">{children}</button>;\n}`}
+    />
+  ),
+  `<CodeBlock filename="button.tsx" code={source} />`,
+);
+add(
+  "metric-demo",
+  () => (
+    <div className="grid w-full max-w-lg grid-cols-2 gap-4">
+      <Metric label="Active users" value="2,420" trend="up" change="12%" />
+      <Metric label="Churn rate" value="1.2%" trend="down" change="0.3%" />
+    </div>
+  ),
+  `<Metric label="Active users" value="2,420" trend="up" change="12%" />`,
+);
+add(
+  "number-input-demo",
+  () => {
+    const [v, setV] = React.useState(2);
+    return <NumberInput value={v} onChange={setV} min={0} max={10} className="w-32" />;
+  },
+  `<NumberInput value={qty} onChange={setQty} min={0} max={10} />`,
+);
+add(
+  "quote-demo",
+  () => (
+    <Quote
+      className="max-w-md"
+      author="Amira K."
+      authorTitle="Product Designer"
+      avatar={
+        <Avatar>
+          <AvatarFallback>AK</AvatarFallback>
+        </Avatar>
+      }
+    >
+      This is exactly the token workflow our team needed.
+    </Quote>
+  ),
+  `<Quote author="Amira K." authorTitle="Product Designer" avatar={<Avatar>...</Avatar>}>\n  This is exactly the token workflow our team needed.\n</Quote>`,
+);
+add(
+  "footer-demo",
+  () => (
+    <Footer className="w-full max-w-lg rounded-md">
+      <div className="grid grid-cols-2 gap-6">
+        <FooterColumn title="Product">
+          <FooterLink href="#">Overview</FooterLink>
+          <FooterLink href="#">Pricing</FooterLink>
+        </FooterColumn>
+        <FooterColumn title="Company">
+          <FooterLink href="#">About</FooterLink>
+          <FooterLink href="#">Careers</FooterLink>
+        </FooterColumn>
+      </div>
+      <FooterBottom>
+        <span>© 2026 Acme Inc.</span>
+        <div className="flex gap-3">
+          <FooterLink href="#">Privacy</FooterLink>
+          <FooterLink href="#">Terms</FooterLink>
+        </div>
+      </FooterBottom>
+    </Footer>
+  ),
+  `<Footer>\n  <div className="grid grid-cols-2 gap-6">\n    <FooterColumn title="Product">\n      <FooterLink href="/pricing">Pricing</FooterLink>\n    </FooterColumn>\n  </div>\n  <FooterBottom>© 2026 Acme Inc.</FooterBottom>\n</Footer>`,
+);
+add(
+  "table-of-contents-demo",
+  () => (
+    <TableOfContents
+      className="w-full max-w-xs"
+      active="props"
+      items={[
+        { id: "overview", label: "Overview", level: 1 },
+        { id: "installation", label: "Installation", level: 1 },
+        { id: "usage", label: "Usage", level: 1 },
+        { id: "props", label: "Props", level: 2 },
+        { id: "examples", label: "Examples", level: 2 },
+      ]}
+    />
+  ),
+  `<TableOfContents\n  active={activeId}\n  items={[{ id: "overview", label: "Overview" }, { id: "props", label: "Props", level: 2 }]}\n/>`,
 );
 
 export const demoRegistry = reg;

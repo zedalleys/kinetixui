@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "number-input",
+  "type": "registry:ui",
+  "title": "Number Input",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/number-input.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { Minus, Plus } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * NumberInput — a numeric field with increment / decrement controls.\n */\nexport interface NumberInputProps\n  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, \"type\" | \"value\" | \"defaultValue\" | \"onChange\"> {\n  value?: number;\n  defaultValue?: number;\n  min?: number;\n  max?: number;\n  step?: number;\n  onChange?: (value: number) => void;\n}\n\nconst NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(\n  ({ className, value, defaultValue = 0, min, max, step = 1, onChange, disabled, ...props }, ref) => {\n    const [internal, setInternal] = React.useState(defaultValue);\n    const current = value ?? internal;\n\n    const clamp = (n: number) => {\n      let v = n;\n      if (min != null) v = Math.max(min, v);\n      if (max != null) v = Math.min(max, v);\n      return v;\n    };\n\n    const set = (n: number) => {\n      const v = clamp(n);\n      setInternal(v);\n      onChange?.(v);\n    };\n\n    return (\n      <div\n        className={cn(\n          \"flex h-10 items-stretch overflow-hidden rounded-md border border-input font-sans focus-within:shadow-focus\",\n          disabled && \"pointer-events-none opacity-50\",\n          className,\n        )}\n      >\n        <button\n          type=\"button\"\n          aria-label=\"Decrease\"\n          disabled={disabled || (min != null && current <= min)}\n          onClick={() => set(current - step)}\n          className=\"flex w-9 shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50\"\n        >\n          <Minus className=\"size-4\" />\n        </button>\n        <input\n          ref={ref}\n          type=\"number\"\n          inputMode=\"numeric\"\n          value={current}\n          min={min}\n          max={max}\n          step={step}\n          disabled={disabled}\n          onChange={(e) => {\n            const n = e.target.valueAsNumber;\n            if (!Number.isNaN(n)) set(n);\n          }}\n          className=\"w-full min-w-0 flex-1 border-x border-input bg-transparent px-2 text-center text-body-md text-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none\"\n          {...props}\n        />\n        <button\n          type=\"button\"\n          aria-label=\"Increase\"\n          disabled={disabled || (max != null && current >= max)}\n          onClick={() => set(current + step)}\n          className=\"flex w-9 shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50\"\n        >\n          <Plus className=\"size-4\" />\n        </button>\n      </div>\n    );\n  },\n);\nNumberInput.displayName = \"NumberInput\";\n\nexport { NumberInput };\n",
+      "type": "registry:ui",
+      "target": "components/ui/number-input.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

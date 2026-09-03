@@ -1,0 +1,25 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "tab-bar",
+  "type": "registry:ui",
+  "title": "Tab Bar",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/tab-bar.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * TabBar — a mobile bottom navigation bar. A fixed row of icon + label\n * destinations; the active item is driven by `active` on `TabBarItem`.\n */\nconst TabBar = React.forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(\n  ({ className, children, ...props }, ref) => (\n    <nav\n      ref={ref}\n      className={cn(\"flex w-full items-stretch border-t border-border bg-background font-sans\", className)}\n      {...props}\n    >\n      {children}\n    </nav>\n  ),\n);\nTabBar.displayName = \"TabBar\";\n\nexport interface TabBarItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {\n  icon: React.ReactNode;\n  label: React.ReactNode;\n  active?: boolean;\n  badge?: React.ReactNode;\n}\n\nconst TabBarItem = React.forwardRef<HTMLButtonElement, TabBarItemProps>(\n  ({ className, icon, label, active, badge, ...props }, ref) => (\n    <button\n      ref={ref}\n      type=\"button\"\n      aria-current={active ? \"page\" : undefined}\n      className={cn(\n        \"relative flex flex-1 flex-col items-center justify-center gap-1 py-2 text-label-sm outline-none transition-colors\",\n        active ? \"text-primary\" : \"text-muted-foreground hover:text-foreground\",\n        \"focus-visible:bg-accent\",\n        className,\n      )}\n      {...props}\n    >\n      <span className=\"relative [&_svg]:size-6\">\n        {icon}\n        {badge && (\n          <span className=\"absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground\">\n            {badge}\n          </span>\n        )}\n      </span>\n      <span className=\"font-medium\">{label}</span>\n    </button>\n  ),\n);\nTabBarItem.displayName = \"TabBarItem\";\n\nexport { TabBar, TabBarItem };\n",
+      "type": "registry:ui",
+      "target": "components/ui/tab-bar.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

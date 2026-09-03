@@ -1,0 +1,25 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "footer",
+  "type": "registry:ui",
+  "title": "Footer",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/footer.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * Footer — a page footer shell: columns of nav links plus a bottom bar\n * (copyright, legal, social). Compose `FooterColumn` / `FooterLink` /\n * `FooterBottom` inside it.\n */\nconst Footer = React.forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(\n  ({ className, children, ...props }, ref) => (\n    <footer ref={ref} className={cn(\"w-full border-t border-border bg-background px-6 py-10 font-sans\", className)} {...props}>\n      {children}\n    </footer>\n  ),\n);\nFooter.displayName = \"Footer\";\n\nexport interface FooterColumnProps extends Omit<React.HTMLAttributes<HTMLDivElement>, \"title\"> {\n  title: React.ReactNode;\n}\n\nconst FooterColumn = React.forwardRef<HTMLDivElement, FooterColumnProps>(\n  ({ className, title, children, ...props }, ref) => (\n    <div ref={ref} className={cn(\"flex flex-col gap-3\", className)} {...props}>\n      <p className=\"text-label-md font-medium text-foreground\">{title}</p>\n      <div className=\"flex flex-col gap-2\">{children}</div>\n    </div>\n  ),\n);\nFooterColumn.displayName = \"FooterColumn\";\n\nconst FooterLink = React.forwardRef<HTMLAnchorElement, React.AnchorHTMLAttributes<HTMLAnchorElement>>(\n  ({ className, ...props }, ref) => (\n    <a\n      ref={ref}\n      className={cn(\n        \"text-body-sm text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:text-foreground\",\n        className,\n      )}\n      {...props}\n    />\n  ),\n);\nFooterLink.displayName = \"FooterLink\";\n\nconst FooterBottom = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(\n  ({ className, ...props }, ref) => (\n    <div\n      ref={ref}\n      className={cn(\n        \"mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6 text-body-sm text-muted-foreground\",\n        className,\n      )}\n      {...props}\n    />\n  ),\n);\nFooterBottom.displayName = \"FooterBottom\";\n\nexport { Footer, FooterColumn, FooterLink, FooterBottom };\n",
+      "type": "registry:ui",
+      "target": "components/ui/footer.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "$description": "Shadows. sm/md/lg/xl = elevation scale. focus-* bake the focus ring in as a crisp 1px edge + a soft colour glow (Finesse-UI pattern) so a control's focus style is one box-shadow token. No dark variant yet.",
+  "$description": "Shadows. sm/md/lg/xl = elevation scale. focus-* bake the focus ring in as a crisp 1px edge + a soft colour glow so a control's focus style is one box-shadow token. No dark variant yet.",
   "shadow": {
     "sm": { "$type": "shadow", "$value": [
       { "color": "#0000000d", "offsetX": "0", "offsetY": "1", "blur": "2", "spread": "0" }
