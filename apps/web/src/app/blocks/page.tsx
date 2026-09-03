@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Blocks } from "lucide-react";
 
-export const metadata: Metadata = { title: "Blocks", description: "Composed sections — coming soon." };
+export const metadata: Metadata = {
+  title: "Blocks",
+  description: "Ready-made sections assembled from KinetixUI components.",
+};
 
 export default function BlocksPage() {
   return (

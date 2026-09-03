@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { LineChart } from "lucide-react";
 
-export const metadata: Metadata = { title: "Charts", description: "Chart primitives — coming soon." };
+export const metadata: Metadata = {
+  title: "Charts",
+  description: "Chart components themed with the KinetixUI token contract.",
+};
 
 export default function ChartsPage() {
   return (
