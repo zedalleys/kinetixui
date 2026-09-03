@@ -20,23 +20,15 @@ export function DocsSidebar() {
                 return (
                   <li key={item.href}>
                     <Link
-                      href={item.disabled ? "#" : item.href}
-                      aria-disabled={item.disabled}
+                      href={item.href}
                       className={cn(
                         "flex items-center rounded-md px-2 py-1.5 text-sm transition-colors",
-                        item.disabled
-                          ? "cursor-not-allowed text-muted-foreground/50"
-                          : active
-                            ? "bg-muted font-medium text-foreground"
-                            : "text-muted-foreground hover:text-foreground",
+                        active
+                          ? "bg-muted font-medium text-foreground"
+                          : "text-muted-foreground hover:text-foreground",
                       )}
                     >
                       {item.title}
-                      {item.label && (
-                        <span className="ml-auto rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                          {item.label}
-                        </span>
-                      )}
                     </Link>
                   </li>
                 );

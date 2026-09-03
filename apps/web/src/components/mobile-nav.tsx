@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { docsNav, mainNav } from "@/lib/site";
 
 export function MobileNav() {
@@ -33,9 +32,9 @@ export function MobileNav() {
                 {g.items.map((i) => (
                   <Link
                     key={i.href}
-                    href={i.disabled ? "#" : i.href}
+                    href={i.href}
                     onClick={() => setOpen(false)}
-                    className={cn("block rounded px-2 py-1.5", i.disabled ? "opacity-40" : "hover:bg-muted")}
+                    className="block rounded px-2 py-1.5 hover:bg-muted"
                   >
                     {i.title}
                   </Link>

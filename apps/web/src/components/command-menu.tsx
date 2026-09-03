@@ -88,16 +88,9 @@ export function CommandMenu() {
                   className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground"
                 >
                   {group.items.map((item) => (
-                    <Item
-                      key={item.href}
-                      disabled={item.disabled}
-                      onSelect={() => run(() => router.push(item.href))}
-                    >
+                    <Item key={item.href} onSelect={() => run(() => router.push(item.href))}>
                       <FileText className="size-3" />
                       {item.title}
-                      {item.label && (
-                        <span className="ml-auto text-[10px] text-muted-foreground">{item.label}</span>
-                      )}
                     </Item>
                   ))}
                 </Command.Group>
@@ -122,23 +115,13 @@ export function CommandMenu() {
   );
 }
 
-function Item({
-  children,
-  onSelect,
-  disabled,
-}: {
-  children: React.ReactNode;
-  onSelect: () => void;
-  disabled?: boolean;
-}) {
+function Item({ children, onSelect }: { children: React.ReactNode; onSelect: () => void }) {
   return (
     <Command.Item
       onSelect={onSelect}
-      disabled={disabled}
       className={cn(
         "flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm",
         "aria-selected:bg-accent aria-selected:text-accent-foreground",
-        "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-40",
       )}
     >
       {children}

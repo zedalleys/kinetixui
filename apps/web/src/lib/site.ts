@@ -11,8 +11,6 @@ export const siteConfig = {
 export type NavItem = {
   title: string;
   href: string;
-  label?: string;
-  disabled?: boolean;
 };
 
 export type NavGroup = { title: string; items: NavItem[] };

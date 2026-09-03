@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { docsNav } from "@/lib/site";
 
-const flat = docsNav.flatMap((g) => g.items).filter((i) => !i.disabled);
+const flat = docsNav.flatMap((g) => g.items);
 
 export function DocsPager() {
   const pathname = usePathname();
