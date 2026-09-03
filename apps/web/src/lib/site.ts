@@ -26,14 +26,7 @@ export const mainNav: NavItem[] = [
   { title: "Colors", href: "/colors" },
 ];
 
-/** built = has a real component + doc page; soon = doc shell only */
 const built = (title: string, slug: string): NavItem => ({ title, href: `/docs/components/${slug}` });
-const soon = (title: string, slug: string): NavItem => ({
-  title,
-  href: `/docs/components/${slug}`,
-  label: "Soon",
-  disabled: true,
-});
 
 export const docsNav: NavGroup[] = [
   {

@@ -1,8 +1,7 @@
 /**
- * Generate apps/web/src/app/docs/components/<slug>/page.{mdx,tsx} for every
- * component. Built components get an MDX page with a live <ComponentPreview>;
- * unbuilt ones get a <ComingSoon> shell. Existing button/input/textarea MDX
- * pages are left untouched.
+ * Generate apps/web/src/app/docs/components/<slug>/page.mdx for every
+ * component — an MDX page with a live <ComponentPreview>. Existing
+ * button/input/textarea MDX pages are left untouched.
  *
  *   node scripts/gen-docs.mjs
  */
@@ -87,8 +86,6 @@ const BUILT = {
   "table-of-contents": ["TableOfContents", "An anchor-link nav list with indent levels and an active-item state."],
 };
 
-const SOON = {};
-
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 
 for (const [slug, [exports, desc]] of Object.entries(BUILT)) {
@@ -124,22 +121,4 @@ with no extra config.
 `;
   writeFileSync(`${dir}/page.mdx`, mdx);
   console.log("mdx  ", slug);
-}
-
-for (const [slug, node] of Object.entries(SOON)) {
-  const dir = `${DOCS}/${slug}`;
-  if (existsSync(`${dir}/page.mdx`) || existsSync(`${dir}/page.tsx`)) continue;
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(
-    `${dir}/page.tsx`,
-    `import { ComingSoon } from "@/components/coming-soon";
-
-export const metadata = { title: ${JSON.stringify(title(slug))} };
-
-export default function Page() {
-  return <ComingSoon title=${JSON.stringify(title(slug))} node=${JSON.stringify(node)} />;
-}
-`,
-  );
-  console.log("shell", slug);
 }
