@@ -30,7 +30,7 @@ const NavigationBar = React.forwardRef<HTMLElement, NavigationBarProps>(
               type="button"
               onClick={onBack}
               aria-label="Back"
-              className="flex size-9 items-center justify-center rounded-full text-foreground outline-none transition-colors hover:bg-accent focus-visible:bg-accent"
+              className="flex size-9 items-center justify-center rounded-full text-foreground outline-none transition-colors hover:bg-accent hover:ring-1 hover:ring-inset hover:ring-ring focus-visible:bg-accent focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
             >
               <ChevronLeft className="size-5" />
             </button>

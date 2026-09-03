@@ -117,7 +117,7 @@
   <color name="color_primary">#ff1b3c53</color>
   <color name="color_primary_foreground">#fff0f7ff</color>
   <color name="color_secondary">#fff1f3f1</color>
-  <color name="color_secondary_foreground">#ff748873</color>
+  <color name="color_secondary_foreground">#ff5d6d5c</color>
   <color name="color_muted">#fff6f6f6</color>
   <color name="color_muted_foreground">#ff6d6d6d</color>
   <color name="color_accent">#fff0f7ff</color>

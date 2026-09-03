@@ -46,9 +46,9 @@
       "$description": "figma: secondaryContainer #f1f3f1 (our 'secondary' == Figma container role)"
     },
     "secondary-foreground": {
-      "$value": "{color.green.500}",
+      "$value": "{color.green.600}",
       "$type": "color",
-      "$description": "figma: onSecondaryContainer #748873"
+      "$description": "figma onSecondaryContainer was green.500 (#748873) = 3.42:1 on secondary (AA-large only); green.600 (#5d6d5c) = 4.95:1"
     },
     "muted": {
       "$value": "{color.neutral.100}",

@@ -189,7 +189,7 @@
   --primary: var(--blue-500); /** figma: 'Primay' (sic) #1b3c53 -> renamed primary */
   --primary-foreground: var(--blue-50); /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground */
   --secondary: var(--green-50); /** figma: secondaryContainer #f1f3f1 (our 'secondary' == Figma container role) */
-  --secondary-foreground: var(--green-500); /** figma: onSecondaryContainer #748873 */
+  --secondary-foreground: var(--green-600); /** figma onSecondaryContainer was green.500 (#748873) = 3.42:1 on secondary (AA-large only); green.600 (#5d6d5c) = 4.95:1 */
   --muted: var(--neutral-100); /** figma: surfaceContainer #f6f6f6 */
   --muted-foreground: var(--neutral-600); /** figma: onSurfaceVariant #6d6d6d */
   --accent: var(--blue-50); /** figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons) */

@@ -130,7 +130,7 @@ export const tokens = {
     "primary": "#1b3c53",
     "primary-foreground": "#f0f7ff",
     "secondary": "#f1f3f1",
-    "secondary-foreground": "#748873",
+    "secondary-foreground": "#5d6d5c",
     "muted": "#f6f6f6",
     "muted-foreground": "#6d6d6d",
     "accent": "#f0f7ff",

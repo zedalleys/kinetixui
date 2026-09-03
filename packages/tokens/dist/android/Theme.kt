@@ -35,7 +35,7 @@ object KinetixTheme {
   val colorPrimaryForeground = Color(0xfff0f7ff)
   val colorRing = Color(0xff1b3c53)
   val colorSecondary = Color(0xfff1f3f1)
-  val colorSecondaryForeground = Color(0xff748873)
+  val colorSecondaryForeground = Color(0xff5d6d5c)
   val colorSemanticError = Color(0xffec5047)
   val colorSemanticErrorContainer = Color(0xfffef3f2)
   val colorSemanticInfoContainer = Color(0xfff0f7ff)

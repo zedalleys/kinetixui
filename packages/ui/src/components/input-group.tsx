@@ -84,7 +84,8 @@ const InputGroupButton = React.forwardRef<
     type={type}
     className={cn(
       "flex h-full shrink-0 items-center gap-1.5 self-stretch border-l border-input bg-muted px-3 text-label-md text-foreground",
-      "outline-none transition-colors hover:bg-accent focus-visible:bg-accent disabled:cursor-not-allowed disabled:opacity-50",
+      // base is bg-muted and muted==accent on dark, so the fill is a no-op there — the ring carries it
+      "outline-none transition-colors hover:bg-accent hover:ring-1 hover:ring-inset hover:ring-ring focus-visible:bg-accent focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
       "[&_svg]:size-4 [&_svg]:shrink-0",
       className,
     )}

@@ -48,7 +48,9 @@ const ListItem = React.forwardRef<HTMLDivElement, ListItemProps>(
         }
         className={cn(
           "flex items-center gap-3 px-3 py-3 font-sans outline-none",
-          interactive && "cursor-pointer hover:bg-accent focus-visible:bg-accent",
+          // ring keeps the highlighted row perceptible where the accent fill is <3:1 (dark)
+          interactive &&
+            "cursor-pointer hover:bg-accent hover:ring-1 hover:ring-inset hover:ring-ring focus-visible:bg-accent focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
           disabled && "pointer-events-none opacity-50",
           className,
         )}

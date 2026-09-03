@@ -22,10 +22,8 @@ default — KinetixUI only styles them against the token contract.
   asks for.
 - **Text contrast** — every foreground/surface pair components actually render
   is audited by [`scripts/check-contrast.mjs`](https://github.com/ziadfteha/kinetixui/blob/main/scripts/check-contrast.mjs)
-  (`pnpm check:contrast`, run in CI). All pairs meet **WCAG AA (4.5:1)**; the one
-  exception is `secondary-foreground` on `secondary` in light mode at 3.42:1,
-  which is AA for large text only — avoid the `Secondary` button at `sm` size
-  for critical labels.
+  (`pnpm check:contrast`, run in CI). Every pair meets **WCAG AA (4.5:1)** in
+  both themes — CI fails the build if that regresses.
 - **Labels** — icon-only controls (`Button size="icon"`, `Fab`, close buttons)
   require an `aria-label`; the components don't render without one where it
   matters.
@@ -39,13 +37,15 @@ On the darkest surface, a **subtle hover fill can't reach 3:1 on its own**.
 sits at ~1.2:1 against `--background` in dark mode — visible, but below the
 non-text-contrast bar if it were the *only* cue.
 
-So components never make it the only cue:
+So components never make it the only cue — the highlighted / hovered state also
+draws a `--ring` inset outline (8.8:1 dark / 11.6:1 light):
 
-- **Ghost / Outline buttons** add a `--ring` inset outline on `:hover`, not just
-  the fill.
-- **Menu items, list rows, tabs** are always reachable by keyboard, where
-  `:focus-visible` draws the full ring.
-- Selected / active states also shift text colour to `--primary`.
+- **Ghost / Outline buttons** on `:hover`.
+- **Menu items** (dropdown, context, menubar, select) and **interactive list
+  rows** on `:focus` / `:hover`.
+- **Toggle** and menubar triggers in their pressed / open state.
+- Everything is also keyboard-reachable, where `:focus-visible` draws the same
+  ring.
 
 If you retheme, keep `--ring` high-contrast against `--background` and
 `--foreground` in both modes — the focus outline depends on it. Run
