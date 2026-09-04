@@ -797,7 +797,10 @@ add(
 add(
   "calendar-demo",
   () => {
-    const [date, setDate] = React.useState<Date | undefined>(new Date());
+    // no initial value: seeding with `new Date()` would bake "today" into the
+    // static build's server-rendered HTML, which then mismatches the client's
+    // own "today" the moment a day passes without a rebuild.
+    const [date, setDate] = React.useState<Date | undefined>();
     return <Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border" />;
   },
   `const [date, setDate] = React.useState<Date>()\n<Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border" />`,
