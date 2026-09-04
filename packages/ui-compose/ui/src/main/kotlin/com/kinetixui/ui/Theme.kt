@@ -11,8 +11,8 @@ import com.kinetixui.tokens.KinetixThemeDark as GeneratedDark
 
 /**
  * The semantic color set a KinetixUI component reads from — the same handful
- * of tokens every variant in packages/ui/src/components/*.tsx resolves to
- * (bg-primary, text-foreground, …). Built from the generated
+ * of tokens every variant in the React source (packages/ui/src/components)
+ * resolves to (bg-primary, text-foreground, …). Built from the generated
  * [com.kinetixui.tokens.KinetixTheme] / [com.kinetixui.tokens.KinetixThemeDark]
  * objects (vendored from packages/tokens/dist/android — do not hand-edit those,
  * re-run `node scripts/vendor-compose-tokens.mjs` after `pnpm build:tokens`).
