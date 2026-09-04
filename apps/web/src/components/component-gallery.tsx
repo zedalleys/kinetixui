@@ -8,13 +8,28 @@ import { demoRegistry } from "@/registry/demos";
 const slugOf = (href: string) => href.split("/").pop() ?? "";
 
 /**
- * Demos whose libraries move the viewport on mount (cmdk calls
- * `scrollIntoView` on its first item; recharts' `accessibilityLayer` focuses
- * its <svg>). Harmless in a real, in-view preview, but in a below-the-fold
- * gallery thumbnail it scrolls the page down to the card. Render a plain
- * label for these instead of the live demo.
+ * Demos that can't render as a decorative thumbnail inside this card's own
+ * <Link>. Two different reasons land a slug here:
+ *  - command / combobox / chart: their libraries move the viewport on mount
+ *    (cmdk calls `scrollIntoView` on its first item; recharts'
+ *    `accessibilityLayer` focuses its <svg>) — harmless in a real, in-view
+ *    preview, but scrolls a below-the-fold card into view.
+ *  - breadcrumb / pagination / footer: the demo itself renders real <a href>
+ *    elements, which nest an <a> inside this card's <a> — invalid HTML that
+ *    Chrome silently "fixes" by closing the outer anchor early, so the
+ *    server-rendered markup no longer matches what React expects on the
+ *    client → a hydration mismatch on every load of /components.
+ * Render a plain label for these instead of the live demo.
  */
-const NO_LIVE_THUMBNAIL = new Set(["command", "combobox", "chart"]);
+const NO_LIVE_THUMBNAIL = new Set([
+  "command",
+  "combobox",
+  "chart",
+  "breadcrumb",
+  "pagination",
+  "footer",
+  "table-of-contents",
+]);
 
 export function ComponentGallery() {
   const items = componentDocs;
