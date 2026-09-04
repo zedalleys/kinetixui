@@ -84,6 +84,27 @@ export function getConfig(theme) {
         ],
       },
 
+      /* Semantic-only Kotlin theme object — runs on BOTH passes, mirroring
+         the css / css-extras split above. Needed by the Compose KinetixTheme
+         composable (packages/ui-compose), which requires real light AND dark
+         values, unlike every other native platform output (iOS/Flutter stay
+         light-only below — nothing else consumes a native dark pass yet). */
+      'android-compose-theme': {
+        transformGroup: 'compose',
+        buildPath: `${DIST}/android/`,
+        files: [
+          {
+            destination: light ? 'Theme.kt' : 'Theme.dark.kt',
+            format: 'compose/object',
+            filter: (t) => isColor(t) && isSemantic(t),
+            options: {
+              className: light ? 'KinetixTheme' : 'KinetixThemeDark',
+              packageName: 'com.kinetixui.tokens',
+            },
+          },
+        ],
+      },
+
       /* Everything below is theme-independent — only the light run emits it. */
       ...(light
         ? {
@@ -129,6 +150,8 @@ export function getConfig(theme) {
               files: [{ destination: 'KinetixType.swift', format: 'kinetix/type-swift', filter: isType }],
             },
             'android-compose': {
+              // semantic Theme.kt / Theme.dark.kt moved to 'android-compose-theme'
+              // above (runs on both passes) — this block is primitives only.
               transformGroup: 'compose',
               buildPath: `${DIST}/android/`,
               files: [
@@ -137,12 +160,6 @@ export function getConfig(theme) {
                   format: 'compose/object',
                   filter: (t) => isColor(t) && t.filePath.includes(`${'/'}primitives${'/'}`),
                   options: { className: 'KinetixPalette', packageName: 'com.kinetixui.tokens' },
-                },
-                {
-                  destination: 'Theme.kt',
-                  format: 'compose/object',
-                  filter: (t) => isColor(t) && isSemantic(t),
-                  options: { className: 'KinetixTheme', packageName: 'com.kinetixui.tokens' },
                 },
               ],
             },

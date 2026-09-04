@@ -1,0 +1,62 @@
+# @kinetixui/ui-compose
+
+Jetpack Compose port of KinetixUI, starting with `KinetixButton`. First of the
+native platforms — SwiftUI and Flutter aren't started yet.
+
+This is a **standalone Gradle project**, not a pnpm/npm workspace package —
+there's no `package.json` here on purpose, so it's invisible to
+`pnpm install` / Turborepo. It only exists inside this monorepo for
+proximity to the token source it depends on.
+
+## What's here
+
+- `ui/src/main/kotlin/com/kinetixui/ui/Theme.kt` — `KinetixTheme` composable
+  + `KinetixColorScheme`, the first real theme wrapper on any native
+  platform (iOS/Flutter still only have static token constants, no
+  framework-idiomatic wrapper).
+- `ui/src/main/kotlin/com/kinetixui/ui/Button.kt` — `KinetixButton`, mirroring
+  `packages/ui/src/components/button.tsx`'s variant × size matrix 1:1.
+- `ui/src/main/kotlin/com/kinetixui/tokens/` — **generated, do not edit.**
+  Vendored from `packages/tokens/dist/android/`; re-copy after any token
+  change with `pnpm build:tokens && pnpm vendor:compose` from the repo root.
+- `ui/src/main/res/values/{colors,dimens}.xml` — same deal, vendored for
+  `R.color.*` / `R.dimen.*` access (Button.kt's padding/type-scale/radius are
+  all read from here — nothing is a hand-picked number).
+
+## Known gaps (read before opening an issue about them)
+
+- **No committed Gradle wrapper** (`gradlew`, `gradlew.bat`,
+  `gradle-wrapper.jar`) — generating the wrapper jar needs a real Gradle
+  installation, which the environment this package was scaffolded in didn't
+  have. `gradle/wrapper/gradle-wrapper.properties` (pinning Gradle 8.7) is
+  committed. To open in Android Studio: it can sync this project with its
+  own bundled Gradle with no wrapper present. To generate the wrapper
+  properly for other contributors, run `gradle wrapper --gradle-version 8.7`
+  once from this directory (needs a system Gradle) and commit the result.
+- **Untested by me.** Nothing in this package has been compiled by the
+  agent that wrote it — this dev environment has no JDK/Android
+  SDK/Gradle. Verify in Android Studio before relying on it. CI
+  (`.github/workflows/native-compose.yml`) provisions a real Gradle via
+  `gradle/actions/setup-gradle` and runs `assembleDebug` + `lintDebug` on
+  every push that touches this package or the token source — treat a green
+  run there as the first real signal, and Android Studio as the second.
+- **Dark mode only exists for this one Android theme file.** Extending
+  `sd.config.mjs`'s `android-compose-theme` platform was scoped narrowly to
+  unblock `KinetixTheme`; iOS/Flutter native token output is still
+  light-only.
+- **No hover/focus states.** The React `Button`'s CVA `state` axis
+  (Hover/Focus/Active) is docs/snapshot tooling on the web, not carried over
+  — Material3 gives real press/ripple feedback for free instead.
+- **No remote publishing.** `./gradlew publishToMavenLocal` works; Maven
+  Central / GitHub Packages needs your own signing key and repository
+  credentials, deliberately not configured here.
+
+## Try it
+
+```kotlin
+KinetixTheme {
+    KinetixButton(onClick = { /* ... */ }, variant = KinetixButtonVariant.Primary) {
+        Text("Get started")
+    }
+}
+```

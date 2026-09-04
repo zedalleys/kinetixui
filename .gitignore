@@ -12,3 +12,14 @@ storybook-static/
 # without running the build.
 !packages/tokens/dist/
 !packages/tokens/dist/**
+
+# packages/ui-compose (Gradle/Android) — local build + IDE state only.
+# NOTE: gradlew / gradlew.bat / gradle-wrapper.jar are deliberately NOT
+# ignored — generate them with `gradle wrapper --gradle-version 8.7` and
+# commit the result (see packages/ui-compose/README.md); the normal Gradle
+# convention is to commit the wrapper, not ignore it.
+packages/ui-compose/**/build/
+packages/ui-compose/.gradle/
+packages/ui-compose/local.properties
+packages/ui-compose/.idea/
+packages/ui-compose/**/*.iml
