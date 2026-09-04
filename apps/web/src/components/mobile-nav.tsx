@@ -18,7 +18,7 @@ export function MobileNav() {
         {open ? <X className="size-4" /> : <Menu className="size-4" />}
       </button>
       {open && (
-        <div className="fixed inset-x-0 top-14 z-40 max-h-[calc(100vh-3.5rem)] overflow-y-auto border-b border-border bg-background p-4">
+        <div className="fixed inset-x-0 top-12 z-40 max-h-[calc(100dvh-3rem)] overflow-y-auto border-b border-border bg-background p-4">
           <nav className="flex flex-col gap-1 text-sm">
             {mainNav.map((i) => (
               <Link key={i.href} href={i.href} onClick={() => setOpen(false)} className="rounded px-2 py-2 hover:bg-muted">

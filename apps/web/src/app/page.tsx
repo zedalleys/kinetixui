@@ -45,7 +45,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden border-b border-border">
         <div className="pointer-events-none absolute inset-0 kx-grid-bg" />
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-12 py-20 md:py-28 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-16">
+          <div className="grid gap-12 py-16 md:py-28 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-16">
             {/* headline */}
             <div className="max-w-3xl">
               <Link
@@ -56,12 +56,12 @@ export default function HomePage() {
                 <ArrowRight className="size-3" />
               </Link>
 
-              <h1 className="mt-6 font-display text-[2.6rem] font-bold leading-[1.02] tracking-[-0.03em] sm:text-6xl lg:text-[4.5rem]">
-                One token
-                <br />
+              <h1 className="mt-6 text-balance font-display text-[2rem] font-bold leading-[1.1] tracking-[-0.03em] sm:text-6xl sm:leading-[1.02] lg:text-[4.5rem]">
+                One token{" "}
+                <br className="hidden sm:block" />
                 architecture,{" "}
-                <span className="kx-underline text-primary">in&nbsp;motion</span>
-                <br />
+                <span className="kx-underline text-primary">in motion</span>{" "}
+                <br className="hidden sm:block" />
                 across every platform.
               </h1>
 
