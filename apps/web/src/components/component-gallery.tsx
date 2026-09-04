@@ -28,7 +28,17 @@ export function ComponentGallery() {
             >
               <div className="relative h-[180px] overflow-hidden border-b border-border/60 bg-muted/20">
                 {Demo ? (
-                  <div className="pointer-events-none absolute inset-0 flex origin-top scale-[0.7] items-start justify-center px-4 pt-6">
+                  <div
+                    // decorative preview: keep it out of the a11y tree and make
+                    // the whole subtree non-focusable so nested widgets (e.g. a
+                    // recharts `accessibilityLayer` svg) can't grab focus and
+                    // scroll the card into view on mount.
+                    ref={(el) => {
+                      if (el) el.inert = true;
+                    }}
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 flex origin-top scale-[0.7] items-start justify-center px-4 pt-6"
+                  >
                     <Demo />
                   </div>
                 ) : (
