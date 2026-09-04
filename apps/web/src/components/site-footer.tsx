@@ -81,7 +81,7 @@ export function SiteFooter() {
         </div>
 
         <div className="flex flex-col gap-2 border-t border-border py-6 font-mono text-[11px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 KinetixUI — free while in beta · KinetixUI Pro coming later</p>
+          <p>© 2026 KinetixUI — beta</p>
           <p>tokens · DTCG → Style Dictionary v4</p>
         </div>
       </div>
