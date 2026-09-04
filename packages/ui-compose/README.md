@@ -25,21 +25,15 @@ proximity to the token source it depends on.
 
 ## Known gaps (read before opening an issue about them)
 
-- **No committed Gradle wrapper** (`gradlew`, `gradlew.bat`,
-  `gradle-wrapper.jar`) — generating the wrapper jar needs a real Gradle
-  installation, which the environment this package was scaffolded in didn't
-  have. `gradle/wrapper/gradle-wrapper.properties` (pinning Gradle 8.7) is
-  committed. To open in Android Studio: it can sync this project with its
-  own bundled Gradle with no wrapper present. To generate the wrapper
-  properly for other contributors, run `gradle wrapper --gradle-version 8.7`
-  once from this directory (needs a system Gradle) and commit the result.
-- **Untested by me.** Nothing in this package has been compiled by the
-  agent that wrote it — this dev environment has no JDK/Android
-  SDK/Gradle. Verify in Android Studio before relying on it. CI
-  (`.github/workflows/native-compose.yml`) provisions a real Gradle via
-  `gradle/actions/setup-gradle` and runs `assembleDebug` + `lintDebug` on
-  every push that touches this package or the token source — treat a green
-  run there as the first real signal, and Android Studio as the second.
+- **Compiled and previewed on a real machine, not just CI.** Nothing in this
+  package was written by a toolchain that could compile it — this repo's dev
+  environment has no JDK/Android SDK/Gradle. It's since been built and
+  synced in a real Android Studio (Gradle 8.7, Kotlin 1.9.22, JVM 21, Windows
+  11), which generated and committed the Gradle wrapper (`gradlew`,
+  `gradlew.bat`, `gradle/wrapper/gradle-wrapper.jar`) — `./gradlew :ui:assembleDebug`
+  works locally now, no separate Gradle install needed. CI
+  (`.github/workflows/native-compose.yml`) also runs `assembleDebug` +
+  `lintDebug` on every push that touches this package or the token source.
 - **Dark mode only exists for this one Android theme file.** Extending
   `sd.config.mjs`'s `android-compose-theme` platform was scoped narrowly to
   unblock `KinetixTheme`; iOS/Flutter native token output is still
