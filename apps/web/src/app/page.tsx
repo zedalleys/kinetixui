@@ -3,8 +3,17 @@ import { ArrowRight, ArrowUpRight, Boxes, Palette, Smartphone, Zap } from "lucid
 import { Button, Input } from "@kinetixui/ui";
 import { CodeBlock } from "@/components/code-block";
 import { Marquee, Reveal } from "@/components/reveal";
+import { SectionHead } from "@/components/section-head";
 
 const PLATFORMS = ["React", "SwiftUI", "Jetpack Compose", "Flutter", "HTML + CSS"];
+
+const SPEC: [string, string][] = [
+  ["Targets", "05"],
+  ["Source", "DTCG"],
+  ["Runtime deps", "0"],
+  ["Components", "72"],
+  ["License", "Beta"],
+];
 
 const FEATURES = [
   {
@@ -35,94 +44,127 @@ export default function HomePage() {
       {/* ─── hero ─────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-border">
         <div className="pointer-events-none absolute inset-0 kx-grid-bg" />
-        <div className="relative mx-auto max-w-screen-2xl px-4 py-24 sm:px-6 md:py-32 lg:px-8">
-          <div className="mx-auto max-w-4xl text-center">
-            <Link
-              href="/docs/changelog"
-              className="eyebrow inline-flex items-center gap-2 transition-colors hover:text-foreground"
-            >
-              Free while in beta
-              <ArrowRight className="size-3" />
-            </Link>
+        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-12 py-20 md:py-28 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-16">
+            {/* headline */}
+            <div className="max-w-3xl">
+              <Link
+                href="/docs/changelog"
+                className="eyebrow inline-flex items-center gap-2 transition-colors hover:text-foreground"
+              >
+                <span className="text-primary">[00]</span> Free while in beta
+                <ArrowRight className="size-3" />
+              </Link>
 
-            <h1 className="mt-6 text-balance font-display text-5xl font-bold leading-[1.03] md:text-7xl">
-              One token architecture,{" "}
-              <span className="kx-underline text-primary">in motion</span>
-              <br className="hidden sm:block" /> across every platform.
-            </h1>
+              <h1 className="mt-6 font-display text-[2.6rem] font-bold leading-[1.02] tracking-[-0.03em] sm:text-6xl lg:text-[4.5rem]">
+                One token
+                <br />
+                architecture,{" "}
+                <span className="kx-underline text-primary">in&nbsp;motion</span>
+                <br />
+                across every platform.
+              </h1>
 
-            <p className="mx-auto mt-6 max-w-2xl text-balance text-muted-foreground md:text-lg">
-              KinetixUI turns a single design source into living tokens and components for React,
-              SwiftUI, Jetpack Compose and Flutter. Copy a component, own the code, stay in sync as the
-              design moves.
-            </p>
+              <p className="mt-7 max-w-xl text-muted-foreground md:text-lg">
+                KinetixUI compiles one design source into living tokens and components for React,
+                SwiftUI, Jetpack Compose and Flutter. Copy a component, own the code, stay in sync as
+                the design moves.
+              </p>
 
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Button asChild size="lg">
-                <Link href="/docs">
-                  Get started <ArrowUpRight className="size-4" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="Outline">
-                <Link href="/components">Browse components</Link>
-              </Button>
+              <div className="mt-9 flex flex-wrap items-center gap-3">
+                <Button asChild size="lg">
+                  <Link href="/docs">
+                    Get started <ArrowUpRight className="size-4" />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="Outline">
+                  <Link href="/components">Browse components</Link>
+                </Button>
+              </div>
+
+              <div className="mt-8 w-full max-w-sm">
+                <CodeBlock code="npx @kinetixui/cli add button" />
+              </div>
             </div>
 
-            <div className="mx-auto mt-8 w-full max-w-sm">
-              <CodeBlock code="npx @kinetixui/cli add button" />
-            </div>
+            {/* spec panel */}
+            <aside className="kx-frame hidden self-start border border-border bg-background/60 lg:block">
+              <p className="border-b border-border px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                spec
+              </p>
+              <dl className="divide-y divide-border">
+                {SPEC.map(([k, v]) => (
+                  <div key={k} className="flex items-center justify-between gap-4 px-4 py-3">
+                    <dt className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+                      {k}
+                    </dt>
+                    <dd className="font-display text-sm font-semibold">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </aside>
           </div>
         </div>
 
-        {/* platform ticker */}
-        <div className="relative border-t border-border py-4">
-          <Marquee durationSeconds={26}>
-            {PLATFORMS.map((p) => (
-              <span key={p} className="flex items-center gap-3 px-6 font-display text-sm text-muted-foreground">
-                <span className="size-1.5 rounded-full bg-primary" />
-                {p}
-              </span>
-            ))}
-          </Marquee>
+        {/* targets ticker — a hard structural band */}
+        <div className="relative border-t border-border">
+          <div className="mx-auto flex max-w-screen-2xl items-stretch">
+            <span className="hidden shrink-0 items-center border-r border-border px-4 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground sm:flex sm:px-6 lg:px-8">
+              Targets&nbsp;→
+            </span>
+            <Marquee durationSeconds={26} className="flex-1 py-4">
+              {PLATFORMS.map((p) => (
+                <span
+                  key={p}
+                  className="flex items-center gap-3 px-6 font-display text-sm text-muted-foreground"
+                >
+                  <span className="size-1.5 rounded-full bg-primary" />
+                  {p}
+                </span>
+              ))}
+            </Marquee>
+          </div>
         </div>
       </section>
 
-      {/* ─── features ─────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 lg:px-8">
-        <Reveal className="max-w-2xl">
-          <p className="eyebrow">Why KinetixUI</p>
-          <h2 className="mt-3 text-balance text-3xl font-semibold md:text-4xl">
-            A design system that moves with your design, not after it.
-          </h2>
-        </Reveal>
+      {/* ─── features ledger ──────────────────────────────────────────── */}
+      <section className="border-b border-border">
+        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+          <Reveal>
+            <SectionHead index="01" label="Why KinetixUI" meta="04 principles" />
+            <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
+              A design system that moves with your design, not after it.
+            </h2>
+          </Reveal>
 
-        <Reveal className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
-          {FEATURES.map((f, i) => (
-            <div
-              key={f.title}
-              className="group bg-background p-8 transition-colors hover:bg-muted/40"
-            >
-              <div className="flex items-center gap-3">
-                <span className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary transition-transform duration-300 group-hover:-translate-y-0.5">
-                  <f.icon className="size-5" />
-                </span>
-                <span className="font-mono text-xs text-muted-foreground">
+          <Reveal className="mt-12 border-t border-border">
+            {FEATURES.map((f, i) => (
+              <div
+                key={f.title}
+                className="group grid gap-4 border-b border-border py-8 md:grid-cols-[5rem_1fr_1.4fr] md:gap-8 md:py-10"
+              >
+                <span className="font-display text-4xl font-bold leading-none text-muted-foreground/40 transition-colors group-hover:text-primary md:text-5xl">
                   {String(i + 1).padStart(2, "0")}
                 </span>
+                <div className="flex items-start gap-3">
+                  <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <f.icon className="size-5" />
+                  </span>
+                  <h3 className="mt-1 font-display text-lg font-semibold">{f.title}</h3>
+                </div>
+                <p className="text-sm leading-relaxed text-muted-foreground md:text-base">{f.body}</p>
               </div>
-              <h3 className="mt-4 text-lg font-semibold">{f.title}</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">{f.body}</p>
-            </div>
-          ))}
-        </Reveal>
+            ))}
+          </Reveal>
+        </div>
       </section>
 
       {/* ─── live strip ───────────────────────────────────────────────── */}
-      <section className="border-y border-border bg-muted/30">
-        <div className="mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 lg:px-8">
+      <section className="border-b border-border bg-muted/20">
+        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 lg:px-8">
           <Reveal>
-            <p className="eyebrow">Live · rendered by @kinetixui/ui</p>
-            <div className="mt-6 flex flex-wrap items-center gap-4">
+            <SectionHead index="02" label="Rendered by @kinetixui/ui" meta="live" />
+            <div className="kx-frame mt-10 flex flex-wrap items-center gap-4 border border-border bg-background p-8">
               <Button>Primary</Button>
               <Button variant="Secondary">Secondary</Button>
               <Button variant="Outline">Outline</Button>
@@ -138,23 +180,27 @@ export default function HomePage() {
       </section>
 
       {/* ─── closer ───────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-screen-2xl px-4 py-24 sm:px-6 lg:px-8">
-        <Reveal className="mx-auto max-w-2xl text-center">
-          <h2 className="text-balance text-3xl font-semibold md:text-4xl">
-            Built for teams that ship on more than one platform.
-          </h2>
-          <p className="mt-4 text-muted-foreground">
-            Agencies and product teams that want their design system to be the same everywhere. Free
-            today; advanced tooling arrives as <span className="text-foreground">KinetixUI Pro</span>.
-          </p>
-          <div className="mt-8 flex justify-center">
-            <Button asChild size="lg">
-              <Link href="/docs">
-                Read the docs <ArrowUpRight className="size-4" />
-              </Link>
-            </Button>
-          </div>
-        </Reveal>
+      <section>
+        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 md:py-28 lg:px-8">
+          <Reveal className="max-w-3xl">
+            <SectionHead index="03" label="Who it's for" />
+            <h2 className="mt-6 text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-5xl">
+              Built for teams that ship on more than one platform.
+            </h2>
+            <p className="mt-5 max-w-xl text-muted-foreground md:text-lg">
+              Agencies and product teams that want their design system to be identical everywhere.
+              Free today; advanced tooling arrives as{" "}
+              <span className="text-foreground">KinetixUI Pro</span>.
+            </p>
+            <div className="mt-8">
+              <Button asChild size="lg">
+                <Link href="/docs">
+                  Read the docs <ArrowUpRight className="size-4" />
+                </Link>
+              </Button>
+            </div>
+          </Reveal>
+        </div>
       </section>
     </div>
   );

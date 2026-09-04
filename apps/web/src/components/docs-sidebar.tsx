@@ -10,7 +10,7 @@ export function DocsSidebar() {
 
   return (
     <aside className="hidden w-56 shrink-0 lg:block">
-      <div className="sticky top-16 -ml-2 h-[calc(100dvh-4rem)] overflow-y-auto py-10 pr-4">
+      <div className="sticky top-[5.5rem] -ml-2 h-[calc(100dvh-5.5rem)] overflow-y-auto py-10 pr-4">
         {docsNav.map((group) => (
           <div key={group.title} className="pb-7">
             <p className="eyebrow mb-2.5 px-3">{group.title}</p>

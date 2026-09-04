@@ -32,7 +32,7 @@ export function DocsToc() {
 
   return (
     <div className="hidden xl:block xl:w-56 xl:shrink-0">
-      <div className="sticky top-16 h-[calc(100dvh-4rem)] overflow-y-auto py-10 pl-4">
+      <div className="sticky top-[5.5rem] h-[calc(100dvh-5.5rem)] overflow-y-auto py-10 pl-4">
         <p className="eyebrow mb-3">On this page</p>
         <ul className="grid gap-0.5 border-l border-border text-sm">
           {headings.map((h) => (

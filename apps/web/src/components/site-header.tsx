@@ -14,7 +14,8 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="mx-auto flex h-16 max-w-screen-2xl items-center gap-6 px-4 sm:px-6 lg:px-8">
+      {/* row 1 — identity + tools */}
+      <div className="mx-auto flex h-12 max-w-screen-2xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="group flex items-center gap-2.5">
           <span className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:rotate-6">
             <Layers className="size-[18px]" />
@@ -24,30 +25,9 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 text-sm md:flex">
-          {mainNav.map((item) => {
-            const active =
-              item.href === "/docs" ? pathname.startsWith("/docs") : pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "relative rounded-md px-3 py-1.5 font-medium transition-colors",
-                  active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {item.title}
-                <span
-                  className={cn(
-                    "absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-primary transition-transform duration-300",
-                    active ? "scale-x-100" : "scale-x-0",
-                  )}
-                />
-              </Link>
-            );
-          })}
-        </nav>
+        <span className="hidden font-mono text-[11px] text-muted-foreground sm:inline">
+          v0.2 — beta
+        </span>
 
         <div className="ml-auto flex items-center gap-2">
           <div className="hidden sm:block">
@@ -66,6 +46,36 @@ export function SiteHeader() {
           <MobileNav />
         </div>
       </div>
+
+      {/* row 2 — numbered section index (desktop) */}
+      <nav className="mx-auto hidden h-10 max-w-screen-2xl items-stretch border-t border-border px-4 text-sm sm:px-6 md:flex lg:px-8">
+        {mainNav.map((item, i) => {
+          const active =
+            item.href === "/docs" ? pathname.startsWith("/docs") : pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "group relative flex items-center gap-2 px-4 font-medium transition-colors",
+                active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <span className="font-mono text-[10px] text-muted-foreground/70 transition-colors group-hover:text-primary">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              {item.title}
+              <span
+                className={cn(
+                  "absolute inset-x-4 -bottom-px h-0.5 bg-primary transition-transform duration-300",
+                  active ? "scale-x-100" : "scale-x-0",
+                )}
+              />
+            </Link>
+          );
+        })}
+      </nav>
+
       {/* kinetic hairline */}
       <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
     </header>

@@ -34,8 +34,8 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
 export function SiteFooter() {
   return (
     <footer className="border-t border-border">
-      <div className="mx-auto max-w-screen-2xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="grid gap-10 md:grid-cols-[1.5fr_repeat(3,1fr)]">
+      <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-10 py-14 md:grid-cols-[1.5fr_repeat(3,1fr)]">
           <div>
             <div className="flex items-center gap-2.5">
               <span className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground">
@@ -73,9 +73,16 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>Free while in beta. Advanced tooling ships later as KinetixUI Pro.</p>
-          <p>Tokens compiled from the design source via Style Dictionary.</p>
+        {/* oversized specimen wordmark */}
+        <div aria-hidden className="select-none overflow-hidden border-t border-border pt-6">
+          <span className="block font-display text-[13vw] font-bold uppercase leading-[0.82] tracking-[-0.045em] text-muted-foreground/15">
+            Kinetixui
+          </span>
+        </div>
+
+        <div className="flex flex-col gap-2 border-t border-border py-6 font-mono text-[11px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <p>© 2026 KinetixUI — free while in beta · KinetixUI Pro coming later</p>
+          <p>tokens · DTCG → Style Dictionary v4</p>
         </div>
       </div>
     </footer>

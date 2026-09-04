@@ -35,7 +35,7 @@
   }
   html {
     scroll-behavior: smooth;
-    scroll-padding-top: 5rem;
+    scroll-padding-top: 6.5rem;
   }
   body {
     background: var(--background);
@@ -90,14 +90,74 @@
     }
   }
 
-  /* subtle grid backdrop for hero / section panels */
+  /* structural grid backdrop for hero / section panels */
   .kx-grid-bg {
     background-image:
-      linear-gradient(color-mix(in srgb, var(--border) 55%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in srgb, var(--border) 55%, transparent) 1px, transparent 1px);
+      linear-gradient(color-mix(in srgb, var(--border) 65%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--border) 65%, transparent) 1px, transparent 1px);
     background-size: 44px 44px;
-    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 85% 65% at 30% 0%, #000 45%, transparent 100%);
+    mask-image: radial-gradient(ellipse 85% 65% at 30% 0%, #000 45%, transparent 100%);
+  }
+
+  /* crop-mark corner ticks — the "measured drawing" frame */
+  .kx-frame {
+    position: relative;
+  }
+  .kx-frame::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    pointer-events: none;
+    --tc: color-mix(in srgb, var(--primary) 65%, transparent);
+    --tl: 10px;
+    background:
+      linear-gradient(var(--tc) 0 0) 0 0 / var(--tl) 1px no-repeat,
+      linear-gradient(var(--tc) 0 0) 0 0 / 1px var(--tl) no-repeat,
+      linear-gradient(var(--tc) 0 0) 100% 0 / var(--tl) 1px no-repeat,
+      linear-gradient(var(--tc) 0 0) 100% 0 / 1px var(--tl) no-repeat,
+      linear-gradient(var(--tc) 0 0) 0 100% / var(--tl) 1px no-repeat,
+      linear-gradient(var(--tc) 0 0) 0 100% / 1px var(--tl) no-repeat,
+      linear-gradient(var(--tc) 0 0) 100% 100% / var(--tl) 1px no-repeat,
+      linear-gradient(var(--tc) 0 0) 100% 100% / 1px var(--tl) no-repeat;
+  }
+
+  /* vertical margin rules at a container's edges — graph-paper structure */
+  .kx-edges {
+    position: relative;
+  }
+  .kx-edges::before,
+  .kx-edges::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+    pointer-events: none;
+  }
+  /* sit ~10px inside the section's px-4 / sm:px-6 / lg:px-8 content edge */
+  .kx-edges::before {
+    left: 0.375rem;
+  }
+  .kx-edges::after {
+    right: 0.375rem;
+  }
+  @media (min-width: 640px) {
+    .kx-edges::before {
+      left: 0.875rem;
+    }
+    .kx-edges::after {
+      right: 0.875rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .kx-edges::before {
+      left: 1.375rem;
+    }
+    .kx-edges::after {
+      right: 1.375rem;
+    }
   }
 
   /* scroll-reveal — <Reveal> toggles data-shown */
