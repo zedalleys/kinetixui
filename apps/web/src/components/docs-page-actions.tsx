@@ -94,10 +94,10 @@ function block(el: HTMLElement): string {
       return "```" + lang + "\n" + text.replace(/\n$/, "") + "\n```";
     }
     default: {
-      // wrappers (e.g. rehype-pretty-code <figure>, table scroll <div>): recurse
-      const table = el.querySelector(":scope > table");
+      // wrappers (rehype-pretty-code <figure> → <div> → <pre>, table scroll <div>)
+      const table = el.querySelector("table");
       if (table) return tableMd(table as HTMLElement);
-      const pre = el.querySelector(":scope > pre");
+      const pre = el.querySelector("pre");
       if (pre) return block(pre as HTMLElement);
       return Array.from(el.children)
         .map((c) => block(c as HTMLElement))

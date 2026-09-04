@@ -244,6 +244,7 @@
     background: var(--muted);
     padding: 0.15rem 0.35rem;
     border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
     font-size: 0.85em;
   }
 }

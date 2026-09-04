@@ -56,7 +56,41 @@ verbatim into `tokens/primitives`.
 
 </Steps>
 
+## Quickstart
+
+<Steps>
+
+<Step>Initialise</Step>
+
+```bash
+npx @kinetixui/cli init
+```
+
+Writes `kinetixui.json` and pulls the token contract into your `globals.css`.
+
+<Step>Add a component</Step>
+
+```bash
+npx @kinetixui/cli add button
+```
+
+The source lands in your repo under the path from `kinetixui.json` — no runtime
+package.
+
+<Step>Use it</Step>
+
+```tsx
+import { Button } from "@/components/ui/button";
+
+export default function Page() {
+  return <Button>Ship it</Button>;
+}
+```
+
+</Steps>
+
 ## Next
 
-Head to [Installation](/docs/installation) to add KinetixUI to a project, or jump
-straight to [Button](/docs/components/button).
+Full setup is on [Installation](/docs/installation); the contract and retheming
+live in [Theming](/docs/theming). Or jump straight to
+[Button](/docs/components/button).
