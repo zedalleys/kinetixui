@@ -224,6 +224,161 @@ const CONTROLS = {
     </div>
   )`,
   },
+  accordion: {
+    comp: "Accordion",
+    args: `{ type: "single", collapsible: true }`,
+    argTypes: `{
+    type: { control: "inline-radio", options: ["single", "multiple"] },
+    collapsible: { control: "boolean" },
+  }`,
+    render: `(args) => (
+    <Accordion {...args} className="w-full max-w-md">
+      <AccordionItem value="a">
+        <AccordionTrigger>Is it accessible?</AccordionTrigger>
+        <AccordionContent>Yes. It follows the WAI-ARIA design pattern.</AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="b">
+        <AccordionTrigger>Is it themed?</AccordionTrigger>
+        <AccordionContent>Yes — entirely from the KinetixUI token contract.</AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  )`,
+  },
+  tabs: {
+    comp: "Tabs",
+    args: `{ defaultValue: "account" }`,
+    argTypes: `{ defaultValue: { control: "inline-radio", options: ["account", "password"] } }`,
+    render: `(args) => (
+    <Tabs {...args} className="w-[360px]">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="account">Account</TabsTrigger>
+        <TabsTrigger value="password">Password</TabsTrigger>
+      </TabsList>
+      <TabsContent value="account" className="text-sm text-muted-foreground">
+        Make changes to your account here.
+      </TabsContent>
+      <TabsContent value="password" className="text-sm text-muted-foreground">
+        Change your password here.
+      </TabsContent>
+    </Tabs>
+  )`,
+  },
+  "toggle-group": {
+    comp: "ToggleGroup",
+    args: `{ type: "multiple" }`,
+    argTypes: `{ type: { control: "inline-radio", options: ["single", "multiple"] } }`,
+    render: `(args) => (
+    <ToggleGroup {...args}>
+      <ToggleGroupItem value="bold"><Bold className="size-4" /></ToggleGroupItem>
+      <ToggleGroupItem value="italic"><Italic className="size-4" /></ToggleGroupItem>
+      <ToggleGroupItem value="underline"><Underline className="size-4" /></ToggleGroupItem>
+    </ToggleGroup>
+  )`,
+  },
+  "radio-group": {
+    comp: "RadioGroup",
+    args: `{ defaultValue: "comfortable", disabled: false }`,
+    argTypes: `{
+    defaultValue: { control: "inline-radio", options: ["default", "comfortable", "compact"] },
+    disabled: { control: "boolean" },
+  }`,
+    render: `(args) => (
+    <RadioGroup {...args}>
+      {["default", "comfortable", "compact"].map((v) => (
+        <div key={v} className="flex items-center gap-2">
+          <RadioGroupItem value={v} id={v} />
+          <Label htmlFor={v} className="capitalize">{v}</Label>
+        </div>
+      ))}
+    </RadioGroup>
+  )`,
+  },
+  collapsible: {
+    comp: "Collapsible",
+    args: `{ defaultOpen: false, disabled: false }`,
+    argTypes: `{ defaultOpen: { control: "boolean" }, disabled: { control: "boolean" } }`,
+    render: `(args) => (
+    <Collapsible {...args} className="w-full max-w-md space-y-2">
+      <div className="flex items-center justify-between rounded-md border px-4 py-2 text-sm">
+        @kinetixui starred 3 repositories
+        <CollapsibleTrigger asChild>
+          <Button variant="Ghost" size="sm">Toggle</Button>
+        </CollapsibleTrigger>
+      </div>
+      <CollapsibleContent className="space-y-2">
+        <div className="rounded-md border px-4 py-2 text-sm">@radix-ui/primitives</div>
+        <div className="rounded-md border px-4 py-2 text-sm">@stitches/react</div>
+      </CollapsibleContent>
+    </Collapsible>
+  )`,
+  },
+  popover: {
+    comp: "Popover",
+    args: `{ side: "bottom", align: "center" }`,
+    argTypes: `{
+    side: { control: "inline-radio", options: ["top", "right", "bottom", "left"] },
+    align: { control: "inline-radio", options: ["start", "center", "end"] },
+  }`,
+    render: `(args) => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="Outline">Open popover</Button>
+      </PopoverTrigger>
+      <PopoverContent {...args}>
+        <p className="text-sm font-medium">Dimensions</p>
+        <p className="mt-1 text-sm text-muted-foreground">Set the dimensions for the layer.</p>
+      </PopoverContent>
+    </Popover>
+  )`,
+  },
+  "hover-card": {
+    comp: "HoverCard",
+    args: `{ openDelay: 200, closeDelay: 200 }`,
+    argTypes: `{
+    openDelay: { control: { type: "number", step: 100 } },
+    closeDelay: { control: { type: "number", step: 100 } },
+  }`,
+    render: `(args) => (
+    <HoverCard {...args}>
+      <HoverCardTrigger asChild>
+        <Button variant="Link">@kinetixui</Button>
+      </HoverCardTrigger>
+      <HoverCardContent>One token architecture, in motion across every platform.</HoverCardContent>
+    </HoverCard>
+  )`,
+  },
+  tooltip: {
+    comp: "Tooltip",
+    args: `{ delayDuration: 200 }`,
+    argTypes: `{ delayDuration: { control: { type: "number", step: 100 } } }`,
+    render: `(args) => (
+    <TooltipProvider>
+      <Tooltip {...args}>
+        <TooltipTrigger asChild>
+          <Button variant="Outline">Hover</Button>
+        </TooltipTrigger>
+        <TooltipContent>Add to library</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )`,
+  },
+  select: {
+    comp: "Select",
+    args: `{ disabled: false }`,
+    argTypes: `{ disabled: { control: "boolean" } }`,
+    render: `(args) => (
+    <Select {...args}>
+      <SelectTrigger className="w-[220px]">
+        <SelectValue placeholder="Select a fruit" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="apple">Apple</SelectItem>
+        <SelectItem value="banana">Banana</SelectItem>
+        <SelectItem value="blueberry">Blueberry</SelectItem>
+      </SelectContent>
+    </Select>
+  )`,
+  },
 };
 
 const src = readFileSync(DEMOS, "utf8");
