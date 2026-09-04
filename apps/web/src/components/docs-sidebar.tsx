@@ -10,11 +10,11 @@ export function DocsSidebar() {
 
   return (
     <aside className="hidden w-56 shrink-0 lg:block">
-      <div className="sticky top-14 -ml-2 h-[calc(100dvh-3.5rem)] overflow-y-auto py-8 pr-4">
+      <div className="sticky top-16 -ml-2 h-[calc(100dvh-4rem)] overflow-y-auto py-10 pr-4">
         {docsNav.map((group) => (
-          <div key={group.title} className="pb-6">
-            <p className="mb-2 px-2 text-sm font-semibold">{group.title}</p>
-            <ul className="grid gap-0.5">
+          <div key={group.title} className="pb-7">
+            <p className="eyebrow mb-2.5 px-3">{group.title}</p>
+            <ul className="grid gap-0.5 border-l border-border">
               {group.items.map((item) => {
                 const active = pathname === item.href;
                 return (
@@ -22,10 +22,10 @@ export function DocsSidebar() {
                     <Link
                       href={item.href}
                       className={cn(
-                        "flex items-center rounded-md px-2 py-1.5 text-sm transition-colors",
+                        "-ml-px flex items-center border-l-2 px-3 py-1.5 text-sm transition-colors",
                         active
-                          ? "bg-muted font-medium text-foreground"
-                          : "text-muted-foreground hover:text-foreground",
+                          ? "border-primary font-medium text-foreground"
+                          : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
                       )}
                     >
                       {item.title}

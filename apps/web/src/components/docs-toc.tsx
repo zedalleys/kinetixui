@@ -32,16 +32,19 @@ export function DocsToc() {
 
   return (
     <div className="hidden xl:block xl:w-56 xl:shrink-0">
-      <div className="sticky top-14 h-[calc(100dvh-3.5rem)] overflow-y-auto py-8 pl-4">
-        <p className="mb-3 text-sm font-semibold">On this page</p>
-        <ul className="grid gap-2 text-sm">
+      <div className="sticky top-16 h-[calc(100dvh-4rem)] overflow-y-auto py-10 pl-4">
+        <p className="eyebrow mb-3">On this page</p>
+        <ul className="grid gap-0.5 border-l border-border text-sm">
           {headings.map((h) => (
-            <li key={h.id} className={h.level === 3 ? "pl-3" : ""}>
+            <li key={h.id}>
               <a
                 href={`#${h.id}`}
                 className={cn(
-                  "transition-colors hover:text-foreground",
-                  activeId === h.id ? "font-medium text-foreground" : "text-muted-foreground",
+                  "-ml-px block border-l-2 py-1 transition-colors",
+                  h.level === 3 ? "pl-6" : "pl-3",
+                  activeId === h.id
+                    ? "border-primary font-medium text-foreground"
+                    : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
                 )}
               >
                 {h.text}

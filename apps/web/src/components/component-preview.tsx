@@ -7,11 +7,16 @@ import { CopyButton } from "./copy-button";
 import { demoRegistry } from "@/registry/demos";
 import { PLATFORM_LABEL, PLATFORM_ORDER, platformCode, type Platform } from "@/registry/platform-code";
 
+const tabTrigger = cn(
+  "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
+  "hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground",
+);
+
 function CodePane({ code }: { code: string }) {
   return (
     <div className="relative">
       <CopyButton value={code} className="absolute right-3 top-3 z-10" />
-      <pre className="overflow-x-auto p-4 text-[13px] leading-relaxed">
+      <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed">
         <code>{code}</code>
       </pre>
     </div>
@@ -31,7 +36,7 @@ export function ComponentPreview({
 
   if (!entry) {
     return (
-      <div className="my-6 rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+      <div className="my-6 rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
         Demo <code className="text-foreground">{name}</code> not found.
       </div>
     );
@@ -46,18 +51,11 @@ export function ComponentPreview({
   const [platform, setPlatform] = React.useState<Platform>("react");
 
   return (
-    <div className={cn("my-6", className)}>
+    <div className={cn("my-6 overflow-hidden rounded-xl border border-border", className)}>
       <Tabs.Root defaultValue="preview">
-        <Tabs.List className="flex items-center gap-1 border-b border-border">
+        <Tabs.List className="flex items-center gap-1 bg-muted/30 px-2">
           {["preview", "code"].map((v) => (
-            <Tabs.Trigger
-              key={v}
-              value={v}
-              className={cn(
-                "-mb-px border-b-2 border-transparent px-3 py-2 text-sm capitalize text-muted-foreground transition-colors",
-                "data-[state=active]:border-primary data-[state=active]:text-foreground",
-              )}
-            >
+            <Tabs.Trigger key={v} value={v} className={tabTrigger}>
               {v}
             </Tabs.Trigger>
           ))}
@@ -66,7 +64,7 @@ export function ComponentPreview({
         <Tabs.Content value="preview">
           <div
             className={cn(
-              "flex min-h-[350px] w-full rounded-b-lg border-x border-b border-border p-10",
+              "flex min-h-[350px] w-full border-t border-border bg-background p-10",
               align === "center" ? "items-center justify-center" : "items-start justify-start",
             )}
           >
@@ -75,7 +73,7 @@ export function ComponentPreview({
         </Tabs.Content>
 
         <Tabs.Content value="code">
-          <div className="rounded-b-lg border-x border-b border-border bg-muted/40">
+          <div className="border-t border-border bg-muted/40">
             {platforms.length > 1 ? (
               <Tabs.Root value={platform} onValueChange={(v) => setPlatform(v as Platform)}>
                 <Tabs.List className="flex items-center gap-1 border-b border-border px-2">
@@ -84,8 +82,8 @@ export function ComponentPreview({
                       key={p}
                       value={p}
                       className={cn(
-                        "-mb-px border-b-2 border-transparent px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors",
-                        "data-[state=active]:border-primary data-[state=active]:text-foreground",
+                        "-mb-px border-b-2 border-transparent px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground transition-colors",
+                        "hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground",
                       )}
                     >
                       {PLATFORM_LABEL[p]}

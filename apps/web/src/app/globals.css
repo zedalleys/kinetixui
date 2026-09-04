@@ -44,6 +44,110 @@
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
   }
+  /* headings carry the display face; big ones tighten up */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  /* uppercase mono eyebrow label */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  /* the kinetic underline under an accented word in headings */
+  .kx-underline {
+    position: relative;
+    white-space: nowrap;
+  }
+  .kx-underline::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0.06em;
+    height: 0.14em;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary-foreground));
+    transform-origin: left;
+    animation: kx-sweep 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
+  }
+  @keyframes kx-sweep {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  /* subtle grid backdrop for hero / section panels */
+  .kx-grid-bg {
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--border) 55%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--border) 55%, transparent) 1px, transparent 1px);
+    background-size: 44px 44px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+  }
+
+  /* scroll-reveal — <Reveal> toggles data-shown */
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  [data-reveal][data-shown] {
+    animation: reveal-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* marquee track: duplicate children inside, animate the wrapper */
+  .kx-marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee var(--marquee-duration, 32s) linear infinite;
+  }
+  .kx-marquee:hover .kx-marquee-track {
+    animation-play-state: paused;
+  }
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kx-underline::after,
+  .kx-marquee-track,
+  [data-reveal][data-shown] {
+    animation: none !important;
+  }
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* rehype-pretty-code */
