@@ -13,9 +13,15 @@ export function DocsToc() {
     const article = document.querySelector("[data-docs-content]");
     if (!article) return;
     const nodes = Array.from(article.querySelectorAll("h2, h3")) as HTMLElement[];
+    const headingText = (n: HTMLElement) =>
+      Array.from(n.childNodes)
+        .filter((c) => !(c instanceof HTMLElement && c.dataset.headingAnchor !== undefined))
+        .map((c) => c.textContent ?? "")
+        .join("")
+        .trim();
     const hs = nodes
       .filter((n) => n.id)
-      .map((n) => ({ id: n.id, text: n.textContent ?? "", level: Number(n.tagName[1]) }));
+      .map((n) => ({ id: n.id, text: headingText(n), level: Number(n.tagName[1]) }));
     setHeadings(hs);
 
     const observer = new IntersectionObserver(

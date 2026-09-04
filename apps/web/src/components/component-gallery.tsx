@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { docsNav } from "@/lib/site";
+import { componentDocs } from "@/lib/site";
 import { demoRegistry } from "@/registry/demos";
 
 const slugOf = (href: string) => href.split("/").pop() ?? "";
@@ -17,7 +17,7 @@ const slugOf = (href: string) => href.split("/").pop() ?? "";
 const NO_LIVE_THUMBNAIL = new Set(["command", "combobox", "chart"]);
 
 export function ComponentGallery() {
-  const items = docsNav.find((g) => g.title === "Components")!.items;
+  const items = componentDocs;
 
   return (
     <>

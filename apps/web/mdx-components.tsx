@@ -1,21 +1,38 @@
 import type { MDXComponents } from "mdx/types";
+import type { ComponentPropsWithoutRef } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ComponentPreview } from "@/components/component-preview";
 import { Callout } from "@/components/callout";
 import { Steps, Step } from "@/components/steps";
 
+/** Heading with a hover-revealed `#` permalink (id comes from rehype-slug). */
+function heading(Tag: "h2" | "h3" | "h4") {
+  return function Heading({ id, children, className, ...p }: ComponentPropsWithoutRef<"h2">) {
+    return (
+      <Tag id={id} className={cn("group scroll-mt-28", className)} {...p}>
+        {children}
+        {id ? (
+          <a
+            href={`#${id}`}
+            data-heading-anchor
+            aria-label="Permalink to this section"
+            className="ml-2 text-muted-foreground no-underline opacity-0 transition-opacity hover:text-primary focus-visible:opacity-100 group-hover:opacity-100"
+          >
+            #
+          </a>
+        ) : null}
+      </Tag>
+    );
+  };
+}
+
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
-    h1: (p) => <h1 className="mt-2 scroll-m-20 text-3xl font-semibold tracking-tight" {...p} />,
-    h2: (p) => (
-      <h2
-        className="mt-12 scroll-m-20 border-b border-border pb-2 text-xl font-semibold tracking-tight first:mt-0"
-        {...p}
-      />
-    ),
-    h3: (p) => <h3 className="mt-8 scroll-m-20 text-lg font-semibold tracking-tight" {...p} />,
-    h4: (p) => <h4 className="mt-6 scroll-m-20 font-semibold tracking-tight" {...p} />,
+    h1: (p) => <h1 className="mt-2 scroll-mt-28 text-3xl font-semibold tracking-tight" {...p} />,
+    h2: heading("h2"),
+    h3: heading("h3"),
+    h4: heading("h4"),
     p: (p) => <p className="leading-7 [&:not(:first-child)]:mt-5" {...p} />,
     ul: (p) => <ul className="my-5 ml-6 list-disc [&>li]:mt-2" {...p} />,
     ol: (p) => <ol className="my-5 ml-6 list-decimal [&>li]:mt-2" {...p} />,

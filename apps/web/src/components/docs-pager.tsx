@@ -15,7 +15,10 @@ export function DocsPager() {
   const next = flat[idx + 1];
 
   return (
-    <div className="mt-12 flex items-center justify-between border-t border-border pt-6">
+    <div
+      data-docs-chrome
+      className="mt-12 flex items-center justify-between border-t border-border pt-6"
+    >
       {prev ? (
         <Link
           href={prev.href}

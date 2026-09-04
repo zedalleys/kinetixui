@@ -51,7 +51,10 @@ export function ComponentPreview({
   const [platform, setPlatform] = React.useState<Platform>("react");
 
   return (
-    <div className={cn("my-6 overflow-hidden rounded-xl border border-border", className)}>
+    <div
+      data-cp
+      className={cn("my-6 overflow-hidden rounded-xl border border-border", className)}
+    >
       <Tabs.Root defaultValue="preview">
         <Tabs.List className="flex items-center gap-1 bg-muted/30 px-2">
           {["preview", "code"].map((v) => (

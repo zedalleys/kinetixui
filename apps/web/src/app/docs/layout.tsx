@@ -1,6 +1,8 @@
 import { DocsSidebar } from "@/components/docs-sidebar";
 import { DocsToc } from "@/components/docs-toc";
 import { DocsPager } from "@/components/docs-pager";
+import { DocsBreadcrumb } from "@/components/docs-breadcrumb";
+import { DocsPageActions } from "@/components/docs-page-actions";
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,11 +14,18 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           className={[
             "min-w-0 max-w-3xl flex-1",
             "[&_h1]:mb-3 [&_h1]:font-display [&_h1]:text-4xl [&_h1]:font-bold [&_h1]:tracking-[-0.02em]",
-            "[&_h2]:mt-12 [&_h2]:mb-3 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-semibold",
+            "[&_h2]:mt-12 [&_h2]:mb-4 [&_h2]:border-b [&_h2]:border-border [&_h2]:pb-2 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-semibold",
             "[&_h3]:mt-8 [&_h3]:mb-2 [&_h3]:font-display [&_h3]:text-lg [&_h3]:font-semibold",
             "[&_p]:leading-relaxed [&_:not(pre)>code]:font-mono",
           ].join(" ")}
         >
+          <div
+            data-docs-chrome
+            className="mb-8 flex items-start justify-between gap-4 border-b border-border pb-4"
+          >
+            <DocsBreadcrumb />
+            <DocsPageActions />
+          </div>
           {children}
           <DocsPager />
         </article>
