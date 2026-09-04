@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ThemePreview } from "@/components/theme-preview";
 import { TokenTable } from "@/components/token-table";
 
@@ -26,6 +27,21 @@ export default function ThemesPage() {
       <div className="mt-10">
         <ThemePreview />
       </div>
+
+      <Link
+        href="/theme-builder"
+        className="group mt-8 flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/20 px-4 py-3 transition-colors hover:border-primary/40"
+      >
+        <span>
+          <span className="font-medium">Have your own palette?</span>{" "}
+          <span className="text-sm text-muted-foreground">
+            Paste it into the Theme Builder and preview it on real components.
+          </span>
+        </span>
+        <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-primary transition-transform group-hover:translate-x-0.5">
+          Try it →
+        </span>
+      </Link>
 
       <h2 className="mt-14 font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
         The contract
