@@ -40,20 +40,21 @@ export function DocsBreadcrumb() {
       <Link href="/docs" className="transition-colors hover:text-foreground">
         Docs
       </Link>
-      {isComponent && (
-        <>
+
+      {/* middle crumbs collapse below sm so the trail stays one line on phones */}
+      {(isComponent || group) && (
+        <span className="hidden items-center gap-2 sm:inline-flex">
           <span aria-hidden>/</span>
-          <Link href="/components" className="transition-colors hover:text-foreground">
-            Components
-          </Link>
-        </>
+          {isComponent && (
+            <Link href="/components" className="transition-colors hover:text-foreground">
+              Components
+            </Link>
+          )}
+          {isComponent && group && <span aria-hidden>/</span>}
+          {group && <span>{group}</span>}
+        </span>
       )}
-      {group && (
-        <>
-          <span aria-hidden>/</span>
-          <span>{group}</span>
-        </>
-      )}
+
       {title && (
         <>
           <span aria-hidden>/</span>
