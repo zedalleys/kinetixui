@@ -9,7 +9,8 @@ export const metadata: Metadata = {
 export default function ComponentsPage() {
   return (
     <div className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-semibold tracking-tight">Components</h1>
+      <p className="eyebrow">Registry</p>
+      <h1 className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] md:text-4xl">Components</h1>
       <ComponentGallery />
     </div>
   );

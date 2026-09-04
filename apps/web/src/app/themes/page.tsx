@@ -11,8 +11,9 @@ export const metadata: Metadata = {
 export default function ThemesPage() {
   return (
     <div className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="font-display text-3xl font-semibold tracking-tight">Themes</h1>
-      <p className="mt-2 max-w-2xl text-muted-foreground">
+      <p className="eyebrow">Light &amp; dark</p>
+      <h1 className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] md:text-4xl">Themes</h1>
+      <p className="mt-3 max-w-2xl text-muted-foreground">
         One semantic contract, two value sets. Light is aliased from Figma; dark is synthesized —
         see{" "}
         <a
