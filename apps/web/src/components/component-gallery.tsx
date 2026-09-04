@@ -37,7 +37,7 @@ export function ComponentGallery() {
                       if (el) el.inert = true;
                     }}
                     aria-hidden
-                    className="pointer-events-none absolute inset-0 flex origin-top scale-[0.7] items-start justify-center px-4 pt-6"
+                    className="pointer-events-none absolute inset-0 flex origin-center scale-[0.7] items-center justify-center px-4"
                   >
                     <Demo />
                   </div>
