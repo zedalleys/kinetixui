@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Blocks } from "lucide-react";
+import { BlocksContent } from "./blocks-content";
 
 export const metadata: Metadata = {
   title: "Blocks",
@@ -9,19 +8,14 @@ export const metadata: Metadata = {
 
 export default function BlocksPage() {
   return (
-    <div className="mx-auto flex max-w-screen-xl flex-col items-center px-4 py-24 text-center sm:px-6 lg:px-8">
-      <Blocks className="size-8 text-primary" />
-      <h1 className="mt-4 text-3xl font-semibold tracking-tight">Blocks</h1>
-      <p className="mt-2 max-w-md text-muted-foreground">
-        Ready-made sections — auth forms, dashboards, marketing headers — assembled from KinetixUI
-        components. Nothing to show until more components ship.
+    <div className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8">
+      <h1 className="text-3xl font-semibold tracking-tight">Blocks</h1>
+      <p className="mt-2 max-w-2xl text-muted-foreground">
+        Whole sections put together from the registry — sign-in cards, dashboard headers, pricing,
+        toolbars. Copy the code, add the components it uses with{" "}
+        <code className="text-foreground">npx @kinetixui/cli add …</code>, and adjust.
       </p>
-      <Link
-        href="/docs/components/button"
-        className="mt-6 text-sm font-medium text-primary underline underline-offset-4"
-      >
-        Browse components instead
-      </Link>
+      <BlocksContent />
     </div>
   );
 }
