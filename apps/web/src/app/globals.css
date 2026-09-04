@@ -7,26 +7,56 @@
 @tailwind components;
 @tailwind utilities;
 
-/* force a fixed theme on a subtree regardless of the <html> class (Themes page) */
+/*
+ * Force the full light contract on a subtree regardless of the <html> class
+ * (Themes / Theming docs previews). Mirrors :root in
+ * packages/tokens/dist/web/globals.css — every token .dark overrides needs a
+ * light value here too, or it leaks through from an ancestor .dark. Primitive
+ * refs (--blue-500 etc.) have NO "color-" prefix — that was the bug: the old
+ * block referenced --color-* names that don't exist anywhere in the token
+ * output, so it silently set nothing and every value leaked from the page.
+ */
 .theme-light {
-  --background: var(--color-neutral-0);
-  --foreground: var(--color-blue-900);
-  --card: var(--color-neutral-0);
-  --card-foreground: var(--color-blue-900);
-  --popover: var(--color-neutral-0);
-  --popover-foreground: var(--color-blue-900);
-  --primary: var(--color-blue-500);
-  --primary-foreground: var(--color-blue-50);
-  --secondary: var(--color-green-50);
-  --secondary-foreground: var(--color-green-500);
-  --muted: var(--color-neutral-100);
-  --muted-foreground: var(--color-neutral-600);
-  --accent: var(--color-blue-50);
-  --accent-foreground: var(--color-blue-500);
-  --destructive: #ec5047;
-  --border: var(--color-blue-100);
-  --input: var(--color-blue-100);
-  --ring: var(--color-blue-500);
+  --background: var(--neutral-0);
+  --foreground: var(--blue-900);
+  --card: var(--neutral-0);
+  --card-foreground: var(--blue-900);
+  --popover: var(--neutral-0);
+  --popover-foreground: var(--blue-900);
+  --primary: var(--blue-500);
+  --primary-foreground: var(--blue-50);
+  --secondary: var(--green-50);
+  --secondary-foreground: var(--green-600);
+  --muted: var(--neutral-100);
+  --muted-foreground: var(--neutral-600);
+  --accent: var(--blue-50);
+  --accent-foreground: var(--blue-500);
+  --destructive: var(--semantic-error);
+  --destructive-foreground: var(--semantic-on-error);
+  --success: var(--green-600);
+  --success-foreground: var(--green-50);
+  --warning: var(--semantic-on-warning-container);
+  --warning-foreground: var(--semantic-warning-container);
+  --tertiary: 0 0% 69%;
+  --tertiary-foreground: var(--blue-50);
+  --info: var(--blue-300);
+  --info-foreground: var(--blue-50);
+  --border: var(--blue-100);
+  --input: var(--blue-100);
+  --ring: var(--blue-500);
+  --chart-1: var(--blue-500);
+  --chart-2: var(--green-500);
+  --chart-3: var(--amber-500);
+  --chart-4: var(--red-400);
+  --chart-5: var(--taupe-600);
+  --sidebar: var(--neutral-50);
+  --sidebar-foreground: var(--blue-900);
+  --sidebar-primary: var(--blue-500);
+  --sidebar-primary-foreground: var(--blue-50);
+  --sidebar-accent: var(--blue-50);
+  --sidebar-accent-foreground: var(--blue-500);
+  --sidebar-border: var(--neutral-300);
+  --sidebar-ring: var(--blue-500);
 }
 
 @layer base {
