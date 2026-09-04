@@ -50,6 +50,7 @@ private fun kinetixButtonSpec(size: KinetixButtonSize): KinetixButtonSpec {
     val spacing4 = dimensionResource(R.dimen.spacing_4)
     val spacing6 = dimensionResource(R.dimen.spacing_6)
 
+    @Composable
     fun textStyle(fontSizeRes: Int, lineHeightRes: Int, trackingRes: Int) = TextStyle(
         fontWeight = FontWeight.Medium,
         fontSize = dimensionResource(fontSizeRes).value.sp,
