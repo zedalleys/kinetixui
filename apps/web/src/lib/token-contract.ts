@@ -5,6 +5,12 @@
  */
 export type TokenRow = { token: string; light: string; dark: string; note?: string };
 
+/** hex (case-insensitive) -> the semantic token it backs, light theme. Built from TOKEN_CONTRACT below. */
+export function tokenNameForHex(hex: string): string | undefined {
+  const h = hex.toLowerCase();
+  return TOKEN_CONTRACT.find((r) => r.light.toLowerCase() === h)?.token;
+}
+
 export const TOKEN_CONTRACT: TokenRow[] = [
   { token: "background", light: "#ffffff", dark: "#050c11" },
   { token: "foreground", light: "#050c11", dark: "#f0f7ff" },

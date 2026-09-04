@@ -4,12 +4,80 @@ import * as React from "react";
 import tokens from "@kinetixui/tokens";
 import { Check, Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { tokenNameForHex } from "@/lib/token-contract";
+import { SectionHead } from "@/components/section-head";
 
 const RAMPS = ["blue", "green", "taupe", "cream", "amber", "red", "neutral"] as const;
 const STEPS = ["0", "50", "100", "150", "200", "300", "400", "500", "600", "700", "800", "850", "900", "950", "1000"];
+const FORMATS = ["hex", "hsl", "rgb"] as const;
+type Format = (typeof FORMATS)[number];
+
+const RAMP_NOTE: Record<(typeof RAMPS)[number], string> = {
+  blue: "Brand anchor — backs --primary, --ring, --border/--input, and --foreground on light.",
+  green: "Secondary + success — backs --secondary, --secondary-foreground, --success.",
+  amber: "Reserved for --warning and the data-viz palette (--chart-3).",
+  red: "Powers the data-viz palette (--chart-4); --destructive is a standalone Figma value, not this ramp.",
+  taupe: "Data-viz only today (--chart-5) — open for a semantic role in a future release.",
+  cream: "Not yet wired to a semantic token — free for a future surface or accent.",
+  neutral: "Synthesized (Figma exposes only three anchors) — backs --background, --card, --muted.",
+};
+
+/* ---- color math (no deps) ---- */
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? h.replace(/(.)/g, "$1$1") : h, 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
+  (r /= 255), (g /= 255), (b /= 255);
+  const max = Math.max(r, g, b),
+    min = Math.min(r, g, b);
+  let h = 0,
+    s = 0;
+  const l = (max + min) / 2;
+  const d = max - min;
+  if (d !== 0) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    switch (max) {
+      case r:
+        h = ((g - b) / d) % 6;
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      default:
+        h = (r - g) / d + 4;
+    }
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
+}
+function relLuminance([r, g, b]: [number, number, number]) {
+  const c = [r, g, b].map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+function contrast(hexA: string, hexB: string) {
+  const la = relLuminance(hexToRgb(hexA)) + 0.05;
+  const lb = relLuminance(hexToRgb(hexB)) + 0.05;
+  return la > lb ? la / lb : lb / la;
+}
+
+function formatValue(hex: string, fmt: Format) {
+  if (fmt === "hex") return hex;
+  const [r, g, b] = hexToRgb(hex);
+  if (fmt === "rgb") return `rgb(${r} ${g} ${b})`;
+  const [h, s, l] = rgbToHsl(r, g, b);
+  return `hsl(${h} ${s}% ${l}%)`;
+}
 
 export default function ColorsPage() {
   const [copied, setCopied] = React.useState<string>("");
+  const [format, setFormat] = React.useState<Format>("hex");
+  const [hoverStep, setHoverStep] = React.useState<string | null>(null);
 
   function copy(value: string) {
     navigator.clipboard.writeText(value).then(() => {
@@ -18,49 +86,137 @@ export default function ColorsPage() {
     });
   }
 
+  function copyRamp(ramp: string, steps: string[]) {
+    const css = steps.map((s) => `--${ramp}-${s}: ${color[ramp][s]};`).join("\n");
+    copy(css);
+  }
+
   const color = tokens.color as unknown as Record<string, Record<string, string>>;
 
   return (
     <div className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-semibold tracking-tight">Colors</h1>
-      <p className="mt-2 max-w-2xl text-muted-foreground">
-        The six brand ramps and a synthesized neutral, extracted verbatim from Figma and remapped
-        to a 0–1000 scale. Click any swatch to copy its hex.
+      <p className="eyebrow">Color system</p>
+      <h1 className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] md:text-4xl">Colors</h1>
+      <p className="mt-3 max-w-2xl text-muted-foreground">
+        Six brand ramps and a synthesized neutral, extracted verbatim from Figma and remapped to a
+        0–1000 scale. Every semantic token in the{" "}
+        <a href="/docs/theming" className="font-medium text-primary underline underline-offset-4">
+          contract
+        </a>{" "}
+        resolves to one of these steps — swatches that back a live token are tagged below.
       </p>
 
-      <div className="mt-10 space-y-8">
-        {RAMPS.map((ramp) => (
-          <section key={ramp}>
-            <h2 className="mb-3 text-sm font-semibold capitalize">{ramp}</h2>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-8 xl:[grid-template-columns:repeat(15,minmax(0,1fr))]">
-              {STEPS.filter((s) => color[ramp]?.[s]).map((step) => {
-                const hex = color[ramp][step];
-                return (
-                  <button
-                    key={step}
-                    onClick={() => copy(hex)}
-                    className="group flex flex-col overflow-hidden rounded-lg border border-border text-left"
-                  >
-                    <span className="h-14 w-full" style={{ background: hex }} />
-                    <span className="flex items-center justify-between gap-1 px-2 py-1.5 text-[11px]">
-                      <span className="font-medium">{step}</span>
-                      <span className="text-muted-foreground group-hover:hidden">{hex}</span>
-                      <span className="hidden text-muted-foreground group-hover:inline">
-                        {copied === hex ? <Check className="size-3" /> : <Copy className="size-3" />}
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        ))}
+      {/* quick jump + format toggle */}
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-y border-border py-3">
+        <nav className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+          {RAMPS.map((r) => (
+            <a key={r} href={`#${r}`} className="transition-colors hover:text-foreground">
+              {r}
+            </a>
+          ))}
+        </nav>
+        <div className="inline-flex rounded-md border border-border p-0.5">
+          {FORMATS.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFormat(f)}
+              className={cn(
+                "rounded px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors",
+                format === f ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <p className="mt-10 text-sm text-muted-foreground">
-        <code className="rounded bg-muted px-1.5 py-0.5 text-foreground">neutral</code> is synthesized —
-        Figma exposes only three anchors. See{" "}
-        <a href="/docs/theming" className={cn("font-medium text-primary underline underline-offset-4")}>
+      <div className="mt-4 space-y-16">
+        {RAMPS.map((ramp, i) => {
+          const steps = STEPS.filter((s) => color[ramp]?.[s]);
+          return (
+            <section key={ramp} id={ramp} className="scroll-mt-28">
+              <SectionHead
+                index={String(i + 1).padStart(2, "0")}
+                label={ramp}
+                meta={`${steps.length} steps`}
+              />
+              <p className="mt-3 max-w-2xl text-sm text-muted-foreground">{RAMP_NOTE[ramp]}</p>
+
+              <div className="mt-5 flex justify-end">
+                <button
+                  onClick={() => copyRamp(ramp, steps)}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <Copy className="size-3.5" />
+                  Copy ramp as CSS
+                </button>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                {steps.map((step) => {
+                  const hex = color[ramp][step];
+                  const value = formatValue(hex, format);
+                  const onWhite = contrast(hex, "#ffffff");
+                  const onBlack = contrast(hex, "#000000");
+                  const useWhiteText = onWhite >= onBlack;
+                  const textHex = useWhiteText ? "#ffffff" : "#000000";
+                  const bestRatio = Math.max(onWhite, onBlack);
+                  const aaTag = bestRatio >= 4.5 ? "AA" : bestRatio >= 3 ? "AA (large)" : null;
+                  const tokenName = tokenNameForHex(hex);
+                  const active = hoverStep === step;
+
+                  return (
+                    <button
+                      key={step}
+                      onClick={() => copy(value)}
+                      onMouseEnter={() => setHoverStep(step)}
+                      onMouseLeave={() => setHoverStep(null)}
+                      className={cn(
+                        "group flex flex-col overflow-hidden rounded-lg border text-left transition-colors",
+                        active ? "border-primary ring-1 ring-primary" : "border-border",
+                      )}
+                    >
+                      <span
+                        className="relative flex h-24 w-full flex-col justify-between p-2"
+                        style={{ background: hex, color: textHex }}
+                      >
+                        <span className="flex items-start justify-between gap-1">
+                          <span className="font-mono text-[11px] font-medium">{step}</span>
+                          {aaTag && (
+                            <span
+                              className="rounded px-1 py-0.5 font-mono text-[9px] uppercase leading-none"
+                              style={{ background: `${textHex}22` }}
+                            >
+                              {aaTag}
+                            </span>
+                          )}
+                        </span>
+                        {tokenName && (
+                          <span className="self-start rounded px-1.5 py-0.5 font-mono text-[9px] uppercase leading-none" style={{ background: `${textHex}22` }}>
+                            --{tokenName}
+                          </span>
+                        )}
+                      </span>
+                      <span className="flex items-center justify-between gap-1 px-2 py-1.5 text-[11px]">
+                        <span className="truncate font-mono text-muted-foreground">{value}</span>
+                        <span className="shrink-0 text-muted-foreground">
+                          {copied === value ? <Check className="size-3" /> : <Copy className="size-3 opacity-0 transition-opacity group-hover:opacity-100" />}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      <p className="mt-14 border-t border-border pt-6 text-sm text-muted-foreground">
+        <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-foreground">neutral</code> is
+        synthesized — Figma exposes only three anchors. Full mapping (and how to override it) is on{" "}
+        <a href="/docs/theming" className="font-medium text-primary underline underline-offset-4">
           Theming
         </a>
         .
