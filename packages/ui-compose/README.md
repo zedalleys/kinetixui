@@ -1,8 +1,10 @@
 # @kinetixui/ui-compose
 
 Jetpack Compose port of KinetixUI. First of the native platforms — SwiftUI
-and Flutter aren't started yet. Five components so far: `KinetixButton`,
-`KinetixBadge`, `KinetixSwitch`, `KinetixInput`, `KinetixSeparator`.
+and Flutter aren't started yet. Ten components so far: `KinetixButton`,
+`KinetixBadge`, `KinetixSwitch`, `KinetixInput`, `KinetixSeparator`,
+`KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`, `KinetixTag`,
+`KinetixProgress`.
 
 This is a **standalone Gradle project**, not a pnpm/npm workspace package —
 there's no `package.json` here on purpose, so it's invisible to
@@ -17,14 +19,19 @@ proximity to the token source it depends on.
   framework-idiomatic wrapper).
 - `ui/src/main/kotlin/com/kinetixui/ui/Button.kt` — `KinetixButton`, mirroring
   `packages/ui/src/components/button.tsx`'s variant × size matrix 1:1.
-- `Badge.kt` / `Switch.kt` / `Input.kt` / `Separator.kt` — mirror their
+- `Badge.kt` / `Switch.kt` / `Input.kt` / `Separator.kt` / `Label.kt` /
+  `Spinner.kt` / `Skeleton.kt` / `Tag.kt` / `Progress.kt` — mirror their
   `packages/ui/src/components/*.tsx` counterparts. Each file's doc comment
   says exactly what wasn't carried over (mostly: CVA axes that only exist
   for web docs/snapshot tooling, and a couple of literal Figma pixel values
-  that aren't on the shared `spacing_*` token scale).
-- `ButtonPreviews.kt` / `ComponentPreviews.kt` — `@Preview` galleries, light
-  + dark, for everything above. Not public API — open these in Android
-  Studio's Design/Split view to actually look at something.
+  that aren't on the shared `spacing_*` token scale). `KinetixSpinner` and
+  `KinetixSkeleton` are the first two components with a running animation
+  (`rememberInfiniteTransition`) — no Compose equivalent of `animate-spin`
+  or `animate-pulse` exists as a modifier, so both are hand-rolled.
+- `ButtonPreviews.kt` / `ComponentPreviews.kt` / `ComponentPreviews2.kt` —
+  `@Preview` galleries, light + dark, for everything above. Not public API —
+  open these in Android Studio's Design/Split view to actually look at
+  something.
 - `ui/src/main/kotlin/com/kinetixui/tokens/` — **generated, do not edit.**
   Vendored from `packages/tokens/dist/android/`; re-copy after any token
   change with `pnpm build:tokens && pnpm vendor:compose` from the repo root.
@@ -66,6 +73,11 @@ KinetixTheme {
         KinetixSwitch(checked = enabled, onCheckedChange = { enabled = it })
         KinetixInput(value = email, onValueChange = { email = it }, placeholder = "you@example.com")
         KinetixSeparator()
+        KinetixLabel(text = "Email address")
+        KinetixSpinner()
+        KinetixSkeleton(modifier = Modifier.width(240.dp).height(16.dp))
+        KinetixTag(text = "Beta", variant = KinetixTagVariant.Secondary, onRemove = { /* ... */ })
+        KinetixProgress(value = 66f)
     }
 }
 ```
