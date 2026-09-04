@@ -7,6 +7,15 @@ import { demoRegistry } from "@/registry/demos";
 
 const slugOf = (href: string) => href.split("/").pop() ?? "";
 
+/**
+ * Demos whose libraries move the viewport on mount (cmdk calls
+ * `scrollIntoView` on its first item; recharts' `accessibilityLayer` focuses
+ * its <svg>). Harmless in a real, in-view preview, but in a below-the-fold
+ * gallery thumbnail it scrolls the page down to the card. Render a plain
+ * label for these instead of the live demo.
+ */
+const NO_LIVE_THUMBNAIL = new Set(["command", "combobox", "chart"]);
+
 export function ComponentGallery() {
   const items = docsNav.find((g) => g.title === "Components")!.items;
 
@@ -19,7 +28,10 @@ export function ComponentGallery() {
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => {
-          const Demo = demoRegistry[`${slugOf(item.href)}-demo`]?.component;
+          const slug = slugOf(item.href);
+          const Demo = NO_LIVE_THUMBNAIL.has(slug)
+            ? undefined
+            : demoRegistry[`${slug}-demo`]?.component;
           return (
             <Link
               key={item.href}
