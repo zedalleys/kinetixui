@@ -1,11 +1,12 @@
 # @kinetixui/ui-compose
 
 Jetpack Compose port of KinetixUI. First of the native platforms — SwiftUI
-and Flutter aren't started yet. Fifteen components so far: `KinetixButton`,
+and Flutter aren't started yet. Twenty components so far: `KinetixButton`,
 `KinetixBadge`, `KinetixSwitch`, `KinetixInput`, `KinetixSeparator`,
 `KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`, `KinetixTag`,
 `KinetixProgress`, `KinetixAvatar`, `KinetixAlert`, `KinetixCheckbox`,
-`KinetixTextarea`, `KinetixCard`.
+`KinetixTextarea`, `KinetixCard`, `KinetixRadioGroup`, `KinetixToggle`,
+`KinetixAspectRatio`, `KinetixCircularProgress`, `KinetixRating`.
 
 This is a **standalone Gradle project**, not a pnpm/npm workspace package —
 there's no `package.json` here on purpose, so it's invisible to
@@ -36,10 +37,20 @@ proximity to the token source it depends on.
   versions get for free. `KinetixCheckbox` uses Compose's built-in
   `ToggleableState` for Radix's tri-state (checked/unchecked/indeterminate)
   model rather than a bespoke enum.
+- `RadioGroup.kt` / `Toggle.kt` / `AspectRatio.kt` / `CircularProgress.kt` /
+  `Rating.kt` — same pattern. `KinetixRadioButton`/`Toggle`/`Rating` reuse
+  Compose's built-in selection/toggle modifiers (`selectable`,
+  `toggleable`) rather than hand-rolling interaction handling.
+  `KinetixCircularProgress` is the third hand-rolled animation
+  (`animateFloatAsState` driving a `Canvas` arc, same technique as
+  `KinetixSpinner`/`KinetixProgress`). `KinetixRating` draws its star with a
+  hand-built `Path` — no icon library is wired into this package yet, and a
+  5-point star has no clean Unicode glyph at arbitrary sizes the way Tag's
+  "×" or Checkbox's "✓" do.
 - `ButtonPreviews.kt` / `ComponentPreviews.kt` / `ComponentPreviews2.kt` /
-  `ComponentPreviews3.kt` — `@Preview` galleries, light + dark, for
-  everything above. Not public API — open these in Android Studio's
-  Design/Split view to actually look at something.
+  `ComponentPreviews3.kt` / `ComponentPreviews4.kt` — `@Preview` galleries,
+  light + dark, for everything above. Not public API — open these in
+  Android Studio's Design/Split view to actually look at something.
 - `ui/src/main/kotlin/com/kinetixui/tokens/` — **generated, do not edit.**
   Vendored from `packages/tokens/dist/android/`; re-copy after any token
   change with `pnpm build:tokens && pnpm vendor:compose` from the repo root.
@@ -100,6 +111,13 @@ KinetixTheme {
             }
             KinetixCardContent { KinetixLabel(text = "Email alerts") }
         }
+        KinetixRadioGroup {
+            KinetixRadioButton(selected = choice == "a", onClick = { choice = "a" })
+        }
+        KinetixToggle(pressed = bold, onPressedChange = { bold = it }) { Text("B") }
+        KinetixAspectRatio(ratio = 16f / 9f) { /* ... */ }
+        KinetixCircularProgress(value = 75f, showValue = true)
+        KinetixRating(value = stars, onValueChange = { stars = it })
     }
 }
 ```
