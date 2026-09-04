@@ -57,7 +57,12 @@ fun KinetixCheckbox(
         modifier = modifier
             .size(18.dp)
             .clip(shape)
-            .triStateToggleable(state = state, onClick = onClick, enabled = enabled, role = Role.Checkbox)
+            .triStateToggleable(
+                state = state,
+                onClick = { onClick?.invoke() },
+                enabled = enabled && onClick != null,
+                role = Role.Checkbox,
+            )
             .background(fillColor, shape)
             .border(dimensionResource(R.dimen.border_width_focus), borderColor, shape),
         contentAlignment = Alignment.Center,
