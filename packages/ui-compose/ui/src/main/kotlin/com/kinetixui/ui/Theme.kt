@@ -31,6 +31,7 @@ data class KinetixColors(
     val mutedForeground: Color,
     val accent: Color,
     val accentForeground: Color,
+    val tertiary: Color,
 )
 
 private val LightKinetixColors = KinetixColors(
@@ -47,6 +48,7 @@ private val LightKinetixColors = KinetixColors(
     mutedForeground = GeneratedLight.colorMutedForeground,
     accent = GeneratedLight.colorAccent,
     accentForeground = GeneratedLight.colorAccentForeground,
+    tertiary = GeneratedLight.colorTertiary,
 )
 
 private val DarkKinetixColors = KinetixColors(
@@ -63,6 +65,7 @@ private val DarkKinetixColors = KinetixColors(
     mutedForeground = GeneratedDark.colorMutedForeground,
     accent = GeneratedDark.colorAccent,
     accentForeground = GeneratedDark.colorAccentForeground,
+    tertiary = GeneratedDark.colorTertiary,
 )
 
 private val LocalKinetixColors = compositionLocalOf { LightKinetixColors }
