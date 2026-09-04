@@ -1,10 +1,11 @@
 # @kinetixui/ui-compose
 
 Jetpack Compose port of KinetixUI. First of the native platforms — SwiftUI
-and Flutter aren't started yet. Ten components so far: `KinetixButton`,
+and Flutter aren't started yet. Fifteen components so far: `KinetixButton`,
 `KinetixBadge`, `KinetixSwitch`, `KinetixInput`, `KinetixSeparator`,
 `KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`, `KinetixTag`,
-`KinetixProgress`.
+`KinetixProgress`, `KinetixAvatar`, `KinetixAlert`, `KinetixCheckbox`,
+`KinetixTextarea`, `KinetixCard`.
 
 This is a **standalone Gradle project**, not a pnpm/npm workspace package —
 there's no `package.json` here on purpose, so it's invisible to
@@ -28,10 +29,17 @@ proximity to the token source it depends on.
   `KinetixSkeleton` are the first two components with a running animation
   (`rememberInfiniteTransition`) — no Compose equivalent of `animate-spin`
   or `animate-pulse` exists as a modifier, so both are hand-rolled.
-- `ButtonPreviews.kt` / `ComponentPreviews.kt` / `ComponentPreviews2.kt` —
-  `@Preview` galleries, light + dark, for everything above. Not public API —
-  open these in Android Studio's Design/Split view to actually look at
-  something.
+- `Avatar.kt` / `Alert.kt` / `Checkbox.kt` / `Textarea.kt` / `Card.kt` —
+  same pattern. `KinetixAlert` and `KinetixCard` cascade a text color down to
+  their child slots (Title/Description/etc.) via Material3's
+  `LocalContentColor`, mirroring the CSS color-inheritance the React
+  versions get for free. `KinetixCheckbox` uses Compose's built-in
+  `ToggleableState` for Radix's tri-state (checked/unchecked/indeterminate)
+  model rather than a bespoke enum.
+- `ButtonPreviews.kt` / `ComponentPreviews.kt` / `ComponentPreviews2.kt` /
+  `ComponentPreviews3.kt` — `@Preview` galleries, light + dark, for
+  everything above. Not public API — open these in Android Studio's
+  Design/Split view to actually look at something.
 - `ui/src/main/kotlin/com/kinetixui/tokens/` — **generated, do not edit.**
   Vendored from `packages/tokens/dist/android/`; re-copy after any token
   change with `pnpm build:tokens && pnpm vendor:compose` from the repo root.
@@ -78,6 +86,20 @@ KinetixTheme {
         KinetixSkeleton(modifier = Modifier.width(240.dp).height(16.dp))
         KinetixTag(text = "Beta", variant = KinetixTagVariant.Secondary, onRemove = { /* ... */ })
         KinetixProgress(value = 66f)
+        KinetixAvatar { KinetixAvatarFallback(text = "ZF") }
+        KinetixAlert(variant = KinetixAlertVariant.Info) {
+            KinetixAlertTitle(text = "Heads up")
+            KinetixAlertDescription(text = "This is an alert.")
+        }
+        KinetixCheckbox(checked = agreed, onCheckedChange = { agreed = it })
+        KinetixTextarea(value = comment, onValueChange = { comment = it }, placeholder = "Leave a comment")
+        KinetixCard {
+            KinetixCardHeader {
+                KinetixCardTitle(text = "Notifications")
+                KinetixCardDescription(text = "Manage your preferences.")
+            }
+            KinetixCardContent { KinetixLabel(text = "Email alerts") }
+        }
     }
 }
 ```

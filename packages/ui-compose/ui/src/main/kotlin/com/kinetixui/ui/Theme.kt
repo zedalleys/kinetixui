@@ -34,6 +34,12 @@ data class KinetixColors(
     val tertiary: Color,
     val warning: Color,
     val warningForeground: Color,
+    val card: Color,
+    val cardForeground: Color,
+    val success: Color,
+    val successForeground: Color,
+    val info: Color,
+    val infoForeground: Color,
 )
 
 private val LightKinetixColors = KinetixColors(
@@ -53,6 +59,12 @@ private val LightKinetixColors = KinetixColors(
     tertiary = GeneratedLight.colorTertiary,
     warning = GeneratedLight.colorWarning,
     warningForeground = GeneratedLight.colorWarningForeground,
+    card = GeneratedLight.colorCard,
+    cardForeground = GeneratedLight.colorCardForeground,
+    success = GeneratedLight.colorSuccess,
+    successForeground = GeneratedLight.colorSuccessForeground,
+    info = GeneratedLight.colorInfo,
+    infoForeground = GeneratedLight.colorInfoForeground,
 )
 
 private val DarkKinetixColors = KinetixColors(
@@ -72,6 +84,12 @@ private val DarkKinetixColors = KinetixColors(
     tertiary = GeneratedDark.colorTertiary,
     warning = GeneratedDark.colorWarning,
     warningForeground = GeneratedDark.colorWarningForeground,
+    card = GeneratedDark.colorCard,
+    cardForeground = GeneratedDark.colorCardForeground,
+    success = GeneratedDark.colorSuccess,
+    successForeground = GeneratedDark.colorSuccessForeground,
+    info = GeneratedDark.colorInfo,
+    infoForeground = GeneratedDark.colorInfoForeground,
 )
 
 private val LocalKinetixColors = compositionLocalOf { LightKinetixColors }
