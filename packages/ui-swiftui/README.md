@@ -2,7 +2,9 @@
 
 SwiftUI port of KinetixUI — the iOS counterpart to
 [`packages/ui-compose`](../ui-compose) (Jetpack Compose). Built in
-batches the same way the Compose library was. **34 components so far:**
+batches the same way the Compose library was. **38 components so far**
+(overlay-class started — `KinetixDialog`, `KinetixAlertDialog`,
+`KinetixSheet`, `KinetixTooltip`):
 `KinetixButton`, `KinetixBadge`, `KinetixTag`, `KinetixLabel`,
 `KinetixSeparator`, `KinetixSkeleton`, `KinetixSpinner`,
 `KinetixProgress`, `KinetixCircularProgress`, `KinetixCard` (+ `Header` /
@@ -16,7 +18,11 @@ batches the same way the Compose library was. **34 components so far:**
 `KinetixCollapsible`, `KinetixList` / `KinetixListItem`, `KinetixStepper`,
 `KinetixTabsList` / `Trigger` / `Content`, `KinetixBreadcrumb` (+ `Link` /
 `Page` / `Separator`), `KinetixPagination` (+ `Item` / `Previous` /
-`Next` / `Ellipsis`), `KinetixQuote`, `KinetixMetric`, `KinetixFab`.
+`Next` / `Ellipsis`), `KinetixQuote`, `KinetixMetric`, `KinetixFab`,
+`KinetixDialog` (+ `Header` / `Footer` / `Title` / `Description`),
+`KinetixAlertDialog` (+ `Action` / `Cancel`), `KinetixSheet` (bottom;
+`Header` / `Footer` / `Title` / `Description` alias the Dialog parts),
+`KinetixTooltip`.
 
 - `Sources/KinetixUI/Theme.swift` — `KinetixColors` (the semantic colour
   set), `@Environment(\.kinetixColors)`, and the `KinetixTheme { … }`
