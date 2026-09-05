@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
@@ -42,7 +41,7 @@ fun KinetixInform(
     onDismiss: (() -> Unit)? = null,
 ) {
     val colors = KinetixColorScheme.current
-    val (container, content): Pair<Color, Color> = when (variant) {
+    val (container, content) = when (variant) {
         KinetixInformVariant.Information -> colors.info.copy(alpha = 0.1f) to colors.info
         KinetixInformVariant.Warning -> colors.warning.copy(alpha = 0.15f) to colors.warning
         KinetixInformVariant.Success -> colors.success.copy(alpha = 0.15f) to colors.success

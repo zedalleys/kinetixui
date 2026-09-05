@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.kinetixui.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -31,7 +33,6 @@ import kotlinx.coroutines.launch
  */
 enum class KinetixCarouselOrientation { Horizontal, Vertical }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun KinetixCarousel(
     pagerState: PagerState,
