@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 
-import 'theme.dart';
 import 'toggle.dart';
 
 /// Mirrors `packages/ui/src/components/toggle-group.tsx`. `variant` /
