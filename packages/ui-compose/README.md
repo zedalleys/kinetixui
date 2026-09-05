@@ -1,12 +1,14 @@
 # @kinetixui/ui-compose
 
 Jetpack Compose port of KinetixUI. First of the native platforms — SwiftUI
-and Flutter aren't started yet. Twenty components so far: `KinetixButton`,
-`KinetixBadge`, `KinetixSwitch`, `KinetixInput`, `KinetixSeparator`,
-`KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`, `KinetixTag`,
-`KinetixProgress`, `KinetixAvatar`, `KinetixAlert`, `KinetixCheckbox`,
-`KinetixTextarea`, `KinetixCard`, `KinetixRadioGroup`, `KinetixToggle`,
-`KinetixAspectRatio`, `KinetixCircularProgress`, `KinetixRating`.
+and Flutter aren't started yet. Twenty-five components so far:
+`KinetixButton`, `KinetixBadge`, `KinetixSwitch`, `KinetixInput`,
+`KinetixSeparator`, `KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`,
+`KinetixTag`, `KinetixProgress`, `KinetixAvatar`, `KinetixAlert`,
+`KinetixCheckbox`, `KinetixTextarea`, `KinetixCard`, `KinetixRadioGroup`,
+`KinetixToggle`, `KinetixAspectRatio`, `KinetixCircularProgress`,
+`KinetixRating`, `KinetixField`, `KinetixFab`, `KinetixQuote`,
+`KinetixSlider`, `KinetixPasswordInput`.
 
 This is a **standalone Gradle project**, not a pnpm/npm workspace package —
 there's no `package.json` here on purpose, so it's invisible to
@@ -47,10 +49,23 @@ proximity to the token source it depends on.
   hand-built `Path` — no icon library is wired into this package yet, and a
   5-point star has no clean Unicode glyph at arbitrary sizes the way Tag's
   "×" or Checkbox's "✓" do.
+- `Field.kt` / `Fab.kt` / `Quote.kt` / `Slider.kt` / `PasswordInput.kt` —
+  same pattern. `KinetixField`/`KinetixFieldLabel`/`KinetixFieldMessage`
+  share an `invalid` flag through a `compositionLocalOf`, playing the role
+  the React source's `useField()` context does (the `id`/`aria-describedby`
+  wiring itself isn't ported — no Android equivalent). `KinetixSlider` is
+  the first component to wrap a Material3 control outright rather than
+  hand-rolling interaction (`Modifier.toggleable`/`selectable` elsewhere) —
+  a slider's drag/keyboard/RTL handling is real surface area worth reusing,
+  at the cost of the thumb using Material3's own size instead of the
+  source's exact spec. `KinetixInput` gained `trailing` (an addon-style end
+  slot) and `keyboardType`/`visualTransformation` params specifically to
+  support `KinetixPasswordInput`'s show/hide toggle and masking.
 - `ButtonPreviews.kt` / `ComponentPreviews.kt` / `ComponentPreviews2.kt` /
-  `ComponentPreviews3.kt` / `ComponentPreviews4.kt` — `@Preview` galleries,
-  light + dark, for everything above. Not public API — open these in
-  Android Studio's Design/Split view to actually look at something.
+  `ComponentPreviews3.kt` / `ComponentPreviews4.kt` / `ComponentPreviews5.kt`
+  — `@Preview` galleries, light + dark, for everything above. Not public
+  API — open these in Android Studio's Design/Split view to actually look
+  at something.
 - `ui/src/main/kotlin/com/kinetixui/tokens/` — **generated, do not edit.**
   Vendored from `packages/tokens/dist/android/`; re-copy after any token
   change with `pnpm build:tokens && pnpm vendor:compose` from the repo root.
@@ -118,6 +133,15 @@ KinetixTheme {
         KinetixAspectRatio(ratio = 16f / 9f) { /* ... */ }
         KinetixCircularProgress(value = 75f, showValue = true)
         KinetixRating(value = stars, onValueChange = { stars = it })
+        KinetixField(invalid = emailError != null) {
+            KinetixFieldLabel(text = "Email")
+            KinetixInput(value = email, onValueChange = { email = it }, isError = emailError != null)
+            emailError?.let { KinetixFieldMessage(text = it) }
+        }
+        KinetixFab(onClick = { /* ... */ }) { Text("+") }
+        KinetixQuote(text = "Good design is as little design as possible.", author = "Dieter Rams")
+        KinetixSlider(value = volume, onValueChange = { volume = it })
+        KinetixPasswordInput(value = password, onValueChange = { password = it })
     }
 }
 ```
