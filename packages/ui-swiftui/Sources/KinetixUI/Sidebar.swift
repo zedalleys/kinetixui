@@ -35,7 +35,8 @@ public struct KinetixSidebar<Content: View>: View {
 
                 VStack(alignment: .leading, spacing: 4) { content }
                     .padding(16)
-                    .frame(width: width, maxHeight: .infinity, alignment: .topLeading)
+                    .frame(width: width, alignment: .topLeading)
+                    .frame(maxHeight: .infinity, alignment: .topLeading)
                     .background(colors.background)
                     .overlay(alignment: .trailing) {
                         Rectangle().fill(colors.border).frame(width: 1)
