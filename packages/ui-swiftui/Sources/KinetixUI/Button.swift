@@ -57,7 +57,7 @@ private func spec(for size: KinetixButtonSize) -> KinetixButtonSizeSpec {
     }
 }
 
-private func cornerRadius(_ corners: KinetixCorners) -> CGFloat {
+private func kinetixCornerRadius(_ corners: KinetixCorners) -> CGFloat {
     switch corners {
     case .sharp:    return 0        // radius/none
     case .default:  return 8        // radius/md — React's `rounded-md`
@@ -99,7 +99,7 @@ public struct KinetixButton<Label: View>: View {
     public var body: some View {
         let s = spec(for: size)
         let isLink = variant == .link
-        let radius = isLink ? 0 : cornerRadius(corners)
+        let radius: CGFloat = isLink ? 0 : kinetixCornerRadius(corners)
 
         Button(action: action) {
             label
