@@ -7,6 +7,22 @@ export const metadata = {
 
 ## Unreleased
 
+- **Flutter library** (`packages/ui-flutter`) — the fourth platform.
+  **68 `Kinetix*` widgets — the full React component surface** bar the
+  same three non-ports (`Form`, `NavigationMenu`, `Combobox`). Dart
+  package (`kinetix_ui`), standalone (no `package.json`), `publish_to:
+  none`. `KinetixTheme` `InheritedWidget` + `KinetixColors` (27 fields +
+  the `--chart-1…5` palette) built from a new additive
+  `KinetixColorScheme` / `…Dark` token output — the existing
+  `app_theme.dart` / `app_colors.dart` (light-only, colliding class
+  names) are untouched. Verified by `flutter analyze` on `ubuntu-latest`
+  on every push. New [Flutter](/docs/flutter) docs page.
+- **All four platforms are now at component parity.** React, Jetpack
+  Compose, SwiftUI and Flutter each carry a 1:1 port of the same ~68
+  components on the same token contract. New
+  [Contributing](/docs/contributing) page codifies the four-platform
+  rule: a new component or block isn't done until it ships on all four
+  (or is a documented non-port), CI-verified per platform.
 - **SwiftUI library** (`packages/ui-swiftui`) — the native iOS port,
   built the same way the Compose library was: `KinetixTheme` (the
   `@Environment(\.kinetixColors)` semantic set + a light/dark wrapper)

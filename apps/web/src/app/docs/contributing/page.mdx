@@ -1,0 +1,95 @@
+export const metadata = {
+  title: "Contributing",
+  description: "The four-platform rule — every new component or block ships React, Jetpack Compose, SwiftUI and Flutter code, each CI-verified.",
+};
+
+# Contributing
+
+KinetixUI is **one design source, four platforms**. React
+(`@kinetixui/ui`) is the source of truth; Jetpack Compose
+(`packages/ui-compose`), SwiftUI (`packages/ui-swiftui`) and Flutter
+(`packages/ui-flutter`) each carry a 1:1 port of the same component
+surface on the same token contract.
+
+## The four-platform rule
+
+**A new component or block is not "done" until it exists on all four
+platforms** (or is a documented, deliberate non-port on the ones where it
+has no native idiom). Each port:
+
+1. **Mirrors the React source 1:1** — the same variants, sizes, states
+   and prop names, adjusted only for platform idiom (`onPressed` /
+   `onChanged` callbacks instead of DOM events, `value` + `ValueChanged`
+   instead of controlled inputs, etc.).
+2. **Resolves the same semantic tokens** — never a hard-coded colour.
+   Every port reads its `KinetixTheme` / `KinetixColors` /
+   `@Environment(\.kinetixColors)`, which come from the shared token
+   pipeline.
+3. **Carries a doc comment** at the top of the file naming its
+   `packages/ui/src/components/*.tsx` counterpart and stating exactly
+   what wasn't carried over and why.
+4. **Compiles in CI** — see the per-platform workflow below. A port that
+   only exists locally doesn't count.
+
+### The three standing non-ports
+
+`Form`, `NavigationMenu` and `Combobox` are **not** ported to any native
+platform, by design:
+
+| Component | Why | Use instead |
+| --- | --- | --- |
+| `Form` | react-hook-form glue with no native analogue | `KinetixField` (+ `Label` / `Description` / `Message`) |
+| `NavigationMenu` | hover-triggered desktop mega-menu, no touch idiom | platform navigation (`NavigationSplitView`, `NavigationRail`, …) |
+| `Combobox` | a recipe (Popover + Command), not a standalone component | `KinetixPopover` + a filtered list, or `KinetixSelect` |
+
+Anything else that can't be ported cleanly is **scoped down and
+documented**, not silently skipped — e.g. `KinetixSheet` is bottom-only,
+`KinetixSidebar` drops rail mode, `KinetixChart` is bar-only on Flutter.
+
+## Workflow for a new component
+
+1. **Design tokens first.** If the component needs a token that doesn't
+   exist, add it to `tokens/` (DTCG), run `pnpm build:tokens`, and commit
+   the regenerated `packages/tokens/dist/**`. The CI "generated files in
+   sync" gate fails otherwise. If a native library needs the new semantic
+   colour, it flows through automatically — the
+   `android-compose-theme` / `ios-swiftui-theme` / `flutter-color-scheme`
+   blocks run on both light and dark passes.
+2. **React** — build it in `packages/ui/src/components/<name>.tsx`, add a
+   Storybook story and a demo. `pnpm build:registry` picks it up for the
+   CLI automatically.
+3. **Jetpack Compose** — `packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/<Name>.kt`.
+   Vendored tokens: `pnpm build:tokens && pnpm vendor:compose`.
+4. **SwiftUI** — `packages/ui-swiftui/Sources/KinetixUI/<Name>.swift`.
+   Vendored tokens: `pnpm build:tokens && pnpm vendor:swiftui`.
+5. **Flutter** — `packages/ui-flutter/lib/src/<name>.dart`, plus an
+   `export` line in `lib/kinetix_ui.dart`. Vendored tokens:
+   `pnpm build:tokens && pnpm vendor:flutter`.
+6. **Docs** — add the component to `/docs/compose`, `/docs/swiftui` and
+   `/docs/flutter`'s "what's covered" lists and to `/docs/changelog`.
+
+## CI — the compiler feedback loop
+
+None of the native toolchains are assumed to be on a contributor's
+machine. Each platform has a path-filtered workflow that is the sole
+compile check for that library — additive, never touching `ci.yml` /
+`release.yml`:
+
+| Platform | Workflow | Runner | Check |
+| --- | --- | --- | --- |
+| React / tokens | `ci.yml` | ubuntu | `vitest`, `build:registry`, generated-files-in-sync, `build:web` |
+| Jetpack Compose | `native-compose.yml` | ubuntu | `gradle :ui:assembleDebug` + `:ui:lintDebug` |
+| SwiftUI | `native-swiftui.yml` | macos | `swift build` (`.macOS(.v13)` target, no simulator) |
+| Flutter | `native-flutter.yml` | ubuntu | `flutter pub get` + `flutter analyze` |
+
+All four are path-filtered to the platform's package **plus** `tokens/**`
+and `style-dictionary/**`, so a token change re-checks every native
+library.
+
+## Blocks
+
+Blocks (the composed examples on [/blocks](/blocks)) follow the same
+rule: a block is a composition of `Kinetix*` primitives, so a block that
+works on the web should be expressible on each native platform from that
+platform's primitives. Where a block leans on a web-only primitive, note
+it.

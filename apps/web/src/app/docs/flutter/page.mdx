@@ -1,0 +1,156 @@
+export const metadata = {
+  title: "Flutter",
+  description: "The Flutter component library — a Dart port on the KinetixUI token contract, the full React surface (68 Kinetix* widgets).",
+};
+
+# Flutter
+
+`packages/ui-flutter` is the **Flutter** port of KinetixUI — the fourth
+platform alongside React (`@kinetixui/ui`),
+[Jetpack Compose](/docs/compose) and [SwiftUI](/docs/swiftui). **68
+`Kinetix*` widgets — the full React component surface** bar three
+deliberate non-ports, built in batches on a CI `flutter analyze` path;
+each mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with
+a doc comment stating anything not carried over.
+
+It's a **standalone Flutter package** inside this monorepo, not a
+pnpm/npm workspace member — there's no `package.json`, so it's invisible
+to `pnpm install` / Turborepo, exactly like `packages/ui-compose`
+(Gradle) and `packages/ui-swiftui` (SwiftPM). It lives here for proximity
+to the token source it depends on.
+
+<Callout>
+  Not on pub.dev (`publish_to: none`). Consume it from a repo checkout
+  with a `path:` dependency — the same "own the code" model as the other
+  ports.
+</Callout>
+
+## Setup
+
+`pubspec.yaml` targets `sdk: ">=3.3.0 <4.0.0"` / `flutter: ">=3.19.0"`.
+Add it via a path dependency:
+
+```yaml
+dependencies:
+  kinetix_ui:
+    path: ../kinetixui/packages/ui-flutter
+```
+
+Wrap your app — or a screen — in `KinetixTheme`, then read colours with
+`KinetixTheme.of(context)`:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:kinetix_ui/kinetix_ui.dart';
+
+class Demo extends StatelessWidget {
+  const Demo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return KinetixTheme(
+      // Picks light/dark off the platform brightness — pass
+      // `brightness:` to force it.
+      child: Column(
+        children: [
+          KinetixButton(onPressed: () {}, child: const Text('Save')),
+          KinetixButton(
+            variant: KinetixButtonVariant.outline,
+            size: KinetixButtonSize.sm,
+            onPressed: () {},
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+## Tokens: a real dark pass, no name collision
+
+The pre-existing Flutter token output (`packages/tokens/dist/flutter/`:
+`app_colors.dart`, `app_theme.dart`, `app_text.dart`) is **light-only**
+and uses the class names `KinetixColors` / `KinetixTheme` — which would
+collide with this package's `KinetixColors` value type and `KinetixTheme`
+widget. So the token engine emits an **additive** Flutter-`Color`
+semantic set for this library — `KinetixColorScheme` (light) /
+`KinetixColorSchemeDark` (dark) — from the `flutter-color-scheme`
+platform block in `style-dictionary/sd.config.mjs`, running on **both**
+Style Dictionary passes (including the `--chart-1…5` palette exposed as
+`KinetixColors.chart`). The existing three files are byte-identical and
+untouched. Same additive split as the SwiftUI `KinetixColorsSwiftUI`
+output.
+
+After any token change:
+
+```bash
+pnpm build:tokens && pnpm vendor:flutter
+```
+
+## What's covered
+
+`KinetixTheme` plus 68 `Kinetix*` widgets:
+
+- **Controls** — `KinetixButton` (`buttonVariants` CVA 1:1),
+  `KinetixCheckbox`, `KinetixSwitch`, `KinetixToggle` /
+  `KinetixToggleGroup`, `KinetixSlider`, `KinetixRadioGroup` /
+  `KinetixRadioButton`, `KinetixRating`, `KinetixFab`, `KinetixStepper`.
+- **Inputs** — `KinetixInput`, `KinetixTextarea`, `KinetixNumberInput`,
+  `KinetixPasswordInput`, `KinetixInputOtp`, `KinetixInputGroup` family,
+  `KinetixSelect`, `KinetixDatePicker`, `KinetixCalendar`,
+  `KinetixFileUpload`, `KinetixField` family.
+- **Display** — `KinetixBadge`, `KinetixTag`, `KinetixLabel`,
+  `KinetixSeparator`, `KinetixSkeleton`, `KinetixSpinner`,
+  `KinetixProgress`, `KinetixCircularProgress`, `KinetixAvatar` family,
+  `KinetixImage`, `KinetixCard` family, `KinetixAlert` family,
+  `KinetixQuote`, `KinetixMetric`, `KinetixCodeBlock`, `KinetixChart`,
+  `KinetixAudioPlayer`, `KinetixAspectRatio`.
+- **Data** — `KinetixTable` family, `KinetixDataTable`,
+  `KinetixCarousel`.
+- **Navigation & disclosure** — `KinetixAccordion` family,
+  `KinetixCollapsible`, `KinetixTabsList` / `Trigger` / `Content`,
+  `KinetixList` / `KinetixListItem`, `KinetixScrollArea`,
+  `KinetixResizablePanels`, `KinetixBreadcrumb` family,
+  `KinetixPagination` family, `KinetixTableOfContents`,
+  `KinetixNavigationBar`, `KinetixTabBar` / `Item`, `KinetixFooter`
+  family.
+- **Overlays & menus** — `KinetixDialog` family, `KinetixAlertDialog`,
+  `KinetixModal`, `KinetixSheet`, `KinetixDrawer`, `KinetixPopover`,
+  `KinetixHoverCard`, `KinetixTooltip`, `KinetixDropdownMenu` (+ shared
+  `KinetixMenuItem` / `Separator` / `Label`), `KinetixContextMenu`,
+  `KinetixMenubar` / `Menu`, `KinetixCommandDialog` family,
+  `KinetixToaster`.
+
+Selection / expansion / presentation state is caller-owned — `value` +
+`ValueChanged<T>` on the controls, a plain `visible` / `expanded` flag on
+overlays and disclosures. Overlay widgets (`KinetixDialog`,
+`KinetixSheet`, `KinetixToaster`, …) are placed in a top-level `Stack`.
+
+## Not ported (deliberate)
+
+- **`Form`** — `KinetixField` (+ `Label` / `Description` / `Message`)
+  **is** the equivalent; there's no `react-hook-form`-shaped context.
+- **`NavigationMenu`** — a hover-triggered desktop mega-menu, no touch
+  idiom.
+- **`Combobox`** — a recipe (Popover + Command) on the web, not a
+  component; compose `KinetixPopover` + a filtered list, or reach for
+  `KinetixSelect`.
+
+## Known gaps
+
+- **No remote publishing.** `flutter analyze` on `ubuntu-latest`
+  (`subosito/flutter-action`) is the sole compiler feedback on every push
+  that touches `packages/ui-flutter`, `tokens/`, or `style-dictionary/`.
+- **Platform widgets are reused where they're strong** — `KinetixSlider`,
+  `KinetixCalendar`, `KinetixDatePicker`, `KinetixCarousel`,
+  `KinetixTooltip` and the menu widgets wrap the Flutter built-in
+  (`Slider`, `CalendarDatePicker`, `showDatePicker`, `PageView`,
+  `Tooltip`, `MenuAnchor` / `MenuBar`), re-tinted onto the tokens.
+  `KinetixCalendar` is single-date only.
+- **`KinetixChart` is bar-only** — a hand-drawn `CustomPaint` over the
+  `--chart-1…5` palette (the package takes no charting dependency). Line
+  / area kinds are a follow-up.
+- **No type-scale API yet.** Widgets use raw font sizes from the Figma
+  type scale; a `kinetixTextStyle(context, KinetixType.labelMd)` reading
+  `app_text.dart` is a follow-up.
