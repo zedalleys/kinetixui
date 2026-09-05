@@ -7,6 +7,11 @@ export const metadata = {
 
 ## Unreleased
 
+- **CLI `list` + `add --all`** (`@kinetixui/cli@0.3.0`) — `npx @kinetixui/cli
+  list` prints every component in the registry; `npx @kinetixui/cli add --all`
+  installs all of them in one shot instead of naming each one. Backed by a
+  new registry index manifest (`apps/web/public/r/registry.json`), generated
+  alongside the per-component files.
 - **`kinetixui` CLI** — a first-party install tool (`packages/cli`). `npx
   kinetixui init` sets up `kinetixui.json` (your aliases) and pulls in the
   token contract; `npx @kinetixui/cli add <name>` resolves registry dependencies,

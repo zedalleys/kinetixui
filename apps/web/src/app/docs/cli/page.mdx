@@ -40,12 +40,27 @@ from the lockfile), and writes the component into your configured `ui`
 alias directory. Existing files are left alone unless you pass
 `--overwrite`.
 
+Want everything at once instead of naming each one?
+
+```bash
+npx @kinetixui/cli add --all
+```
+
+## list
+
+Not sure what's available? List every component in the registry:
+
+```bash
+npx @kinetixui/cli list
+```
+
 ## Options
 
 | Flag | Applies to | Does |
 | --- | --- | --- |
 | `-y, --yes` | `init` | skip prompts, use defaults |
+| `-a, --all` | `add` | install every component in the registry |
 | `-o, --overwrite` | `add` | replace files that already exist |
-| `-r, --registry <url>` | both | point at a different registry (defaults to `https://kinetixui.com/r`) |
+| `-r, --registry <url>` | all | point at a different registry (defaults to `https://kinetixui.com/r`) |
 
 See [kinetixui.json](/docs/kinetixui-json) for what the config file controls.
