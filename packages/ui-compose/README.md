@@ -1,7 +1,7 @@
 # @kinetixui/ui-compose
 
 Jetpack Compose port of KinetixUI. First of the native platforms — SwiftUI
-and Flutter aren't started yet. Sixty-five components so far:
+and Flutter aren't started yet. Sixty-nine components so far:
 `KinetixButton`, `KinetixBadge`, `KinetixSwitch`, `KinetixInput`,
 `KinetixSeparator`, `KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`,
 `KinetixTag`, `KinetixProgress`, `KinetixAvatar`, `KinetixAlert`,
@@ -20,7 +20,8 @@ and Flutter aren't started yet. Sixty-five components so far:
 `KinetixTabBar`, `KinetixInform`, `KinetixCommandDialog`,
 `KinetixCarousel`, `KinetixResizablePanels`, `KinetixCodeBlock`,
 `KinetixCalendar`, `KinetixDatePicker`, `KinetixDataTable`,
-`KinetixFileUpload`, `KinetixDrawer`.
+`KinetixFileUpload`, `KinetixDrawer`, `KinetixAudioPlayer`,
+`KinetixFooter`, `KinetixTableOfContents`, `KinetixSidebar`.
 
 This is a **standalone Gradle project**, not a pnpm/npm workspace package —
 there's no `package.json` here on purpose, so it's invisible to
@@ -208,11 +209,37 @@ proximity to the token source it depends on.
   border is a `PathEffect.dashPathEffect` `Stroke`. `KinetixDrawer` is
   thin pass-throughs to the `KinetixSheet*` family — `vaul`'s Drawer and a
   bottom Sheet are the same drag-handled bottom panel on Android.
+- `AudioPlayer.kt` / `Footer.kt` / `TableOfContents.kt` / `Sidebar.kt` —
+  fourth "needs its own design pass" batch. `KinetixAudioPlayer` is
+  presentational only (same call [KinetixFileUpload] made) — playback is
+  the caller's `MediaPlayer`/Media3, wired via `isPlaying`/`positionMs`/
+  `durationMs` in and `onPlayPause`/`onSeek`/… out; the scrubber reuses
+  [KinetixSlider]. `KinetixFooter`/`Column`/`Link`/`Bottom` and
+  `KinetixTableOfContents` are plain styled containers — a bottom
+  links/legal block and a jump-to-section nav are real native patterns
+  too, so they port 1:1. `KinetixSidebar` is a **scoped** port of a
+  390-line desktop-web dashboard shell: it wraps Material3's
+  `ModalNavigationDrawer` + `NavigationDrawerItem` (the idiomatic Android
+  nav drawer) and re-themes them; the caller owns the `DrawerState`
+  (like `KinetixCarousel`'s `PagerState`). Rail/icon-collapse mode,
+  `SidebarInset`, the cookie and the keyboard shortcut aren't ported —
+  desktop-web concerns.
+- **`Chart` and `Form` aren't ported.** The React `Chart` is a `recharts`
+  theming shell with no chart rendering of its own — a Compose equivalent
+  needs a charting-library decision (Vico / YCharts) or hand-rolled
+  `Canvas` primitives, both out of scope; draw against `KinetixColorScheme`
+  yourself. The React `Form` is 100% `react-hook-form` glue —
+  `KinetixField` + `KinetixFieldLabel`/`KinetixFieldDescription`/
+  `KinetixFieldMessage` (already here) *are* the Compose equivalent of
+  `FormItem`/`FormLabel`/etc.; there's no `KinetixForm` because Compose
+  has no RHF-shaped context to wrap (form state is `remember {
+  mutableStateOf() }` + your own validation).
 - `ButtonPreviews.kt` / `ComponentPreviews.kt` / `ComponentPreviews2.kt` /
   `ComponentPreviews3.kt` / `ComponentPreviews4.kt` / `ComponentPreviews5.kt`
   / `ComponentPreviews6.kt` / `ComponentPreviews7.kt` / `ComponentPreviews8.kt`
   / `ComponentPreviews9.kt` / `ComponentPreviews10.kt` / `ComponentPreviews11.kt`
-  / `ComponentPreviews12.kt` / `ComponentPreviews13.kt` — `@Preview` galleries, light + dark, for
+  / `ComponentPreviews12.kt` / `ComponentPreviews13.kt` / `ComponentPreviews14.kt`
+  — `@Preview` galleries, light + dark, for
   everything above. Not public API — open these in Android Studio's
   Design/Split view to actually look at something (`ComponentPreviews7.kt`'s
   own doc comment flags that `Dialog`/`Popup`-based overlay *content*
