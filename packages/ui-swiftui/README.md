@@ -2,18 +2,21 @@
 
 SwiftUI port of KinetixUI — the iOS counterpart to
 [`packages/ui-compose`](../ui-compose) (Jetpack Compose). Built in
-batches the same way the Compose library was. **28 components so far:**
+batches the same way the Compose library was. **34 components so far:**
 `KinetixButton`, `KinetixBadge`, `KinetixTag`, `KinetixLabel`,
 `KinetixSeparator`, `KinetixSkeleton`, `KinetixSpinner`,
 `KinetixProgress`, `KinetixCircularProgress`, `KinetixCard` (+ `Header` /
 `Title` / `Description` / `Content` / `Footer`), `KinetixAspectRatio`,
 `KinetixCheckbox`, `KinetixSwitch`, `KinetixToggle`, `KinetixSlider`,
 `KinetixRadioGroup` / `KinetixRadioButton`, `KinetixRating`,
-`KinetixInput`, `KinetixTextarea`, `KinetixAvatar` (+ `Fallback`),
-`KinetixAlert` (+ `Title` / `Description`), `KinetixAccordion` (+ `Item` /
-`Trigger` / `Content`), `KinetixCollapsible`, `KinetixTabsList` /
-`Trigger` / `Content`, `KinetixBreadcrumb` (+ `Link` / `Page` /
-`Separator`), `KinetixQuote`, `KinetixMetric`, `KinetixFab`.
+`KinetixInput`, `KinetixTextarea`, `KinetixNumberInput`,
+`KinetixPasswordInput`, `KinetixField` (+ `Label` / `Description` /
+`Message`), `KinetixAvatar` (+ `Fallback`), `KinetixAlert` (+ `Title` /
+`Description`), `KinetixAccordion` (+ `Item` / `Trigger` / `Content`),
+`KinetixCollapsible`, `KinetixList` / `KinetixListItem`, `KinetixStepper`,
+`KinetixTabsList` / `Trigger` / `Content`, `KinetixBreadcrumb` (+ `Link` /
+`Page` / `Separator`), `KinetixPagination` (+ `Item` / `Previous` /
+`Next` / `Ellipsis`), `KinetixQuote`, `KinetixMetric`, `KinetixFab`.
 
 - `Sources/KinetixUI/Theme.swift` — `KinetixColors` (the semantic colour
   set), `@Environment(\.kinetixColors)`, and the `KinetixTheme { … }`
