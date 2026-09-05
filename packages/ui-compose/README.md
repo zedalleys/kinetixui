@@ -1,7 +1,7 @@
 # @kinetixui/ui-compose
 
 Jetpack Compose port of KinetixUI. First of the native platforms — SwiftUI
-and Flutter aren't started yet. Forty-four components so far:
+and Flutter aren't started yet. Forty-nine components so far:
 `KinetixButton`, `KinetixBadge`, `KinetixSwitch`, `KinetixInput`,
 `KinetixSeparator`, `KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`,
 `KinetixTag`, `KinetixProgress`, `KinetixAvatar`, `KinetixAlert`,
@@ -14,7 +14,8 @@ and Flutter aren't started yet. Forty-four components so far:
 `KinetixDropdownMenu`, `KinetixSheet`, `KinetixAlertDialog`,
 `KinetixHoverCard`, `KinetixContextMenu`, `KinetixMenubar`, `KinetixList`,
 `KinetixImage`, `KinetixInputOtp`, `KinetixInputGroup`,
-`KinetixCollapsible`.
+`KinetixCollapsible`, `KinetixTabs`, `KinetixAccordion`,
+`KinetixToggleGroup`, `KinetixScrollArea`, `KinetixToaster`.
 
 This is a **standalone Gradle project**, not a pnpm/npm workspace package —
 there's no `package.json` here on purpose, so it's invisible to
@@ -128,16 +129,36 @@ proximity to the token source it depends on.
   approach `KinetixRating`'s star uses. `KinetixCollapsible` is a two-line
   wrapper over Compose's built-in `AnimatedVisibility` — the underlying
   Radix primitive it mirrors provides nothing beyond that animation.
+- `Tabs.kt` / `Accordion.kt` / `ToggleGroup.kt` / `ScrollArea.kt` /
+  `Sonner.kt` — the last of the straightforward primitives; what's left
+  after this is genuinely data/layout-heavy (Table, DataTable, Calendar,
+  Carousel, Select, Sidebar…) and needs its own design pass. There's no
+  `KinetixTabs` root — Compose has no context to thread a shared selected
+  value through the way Radix does, so `KinetixTabsTrigger` takes
+  `selected`/`onClick` directly, caller-owned like everything else here.
+  `KinetixToggleGroup`/`KinetixToggleGroupItem` share `variant`/`size` via
+  a `compositionLocalOf`, the same role the React source's own
+  `ToggleGroupContext` plays — `KinetixToggleGroupItem` is a thin
+  pass-through to [KinetixToggle], not a reimplementation.
+  `KinetixScrollArea` wraps Compose's built-in `verticalScroll`/
+  `horizontalScroll`; Radix `ScrollArea`'s whole reason to exist (a custom
+  draggable scrollbar replacing the browser's native one) isn't ported —
+  Android's own system scroll indicators already cover that need, so
+  there's nothing to replace. **`KinetixToaster`/`kinetixToast` wrap
+  Material3's `SnackbarHostState`/`SnackbarHost` directly** rather than
+  hand-rolling a toast queue — the same real queue/auto-dismiss/
+  swipe-to-dismiss machinery `sonner` provides on the web, reused instead
+  of re-derived (the same call made for `KinetixSlider`/`KinetixDialog`).
 - `ButtonPreviews.kt` / `ComponentPreviews.kt` / `ComponentPreviews2.kt` /
   `ComponentPreviews3.kt` / `ComponentPreviews4.kt` / `ComponentPreviews5.kt`
   / `ComponentPreviews6.kt` / `ComponentPreviews7.kt` / `ComponentPreviews8.kt`
-  / `ComponentPreviews9.kt` — `@Preview` galleries, light + dark, for
-  everything above. Not public API — open these in Android Studio's
-  Design/Split view to actually look at something (`ComponentPreviews7.kt`'s
-  own doc comment flags that `Dialog`/`Popup`-based overlay *content*
-  doesn't reliably render inside the static Preview renderer — a known
-  Compose limitation, not a bug here; verify those in a running app or
-  Interactive Preview).
+  / `ComponentPreviews9.kt` / `ComponentPreviews10.kt` — `@Preview` galleries,
+  light + dark, for everything above. Not public API — open these in
+  Android Studio's Design/Split view to actually look at something
+  (`ComponentPreviews7.kt`'s own doc comment flags that `Dialog`/`Popup`-based
+  overlay *content* doesn't reliably render inside the static Preview
+  renderer — a known Compose limitation, not a bug here; verify those in a
+  running app or Interactive Preview).
 - `ui/src/main/kotlin/com/kinetixui/tokens/` — **generated, do not edit.**
   Vendored from `packages/tokens/dist/android/`; re-copy after any token
   change with `pnpm build:tokens && pnpm vendor:compose` from the repo root.
@@ -309,6 +330,34 @@ KinetixTheme {
             KinetixInputGroupInput(value = url, onValueChange = { url = it }, placeholder = "kinetixui.com")
         }
         KinetixCollapsible(expanded = detailsOpen) { KinetixLabel(text = "Extra details") }
+
+        var tab by remember { mutableIntStateOf(0) }
+        KinetixTabsList {
+            KinetixTabsTrigger(text = "Account", selected = tab == 0, onClick = { tab = 0 })
+            KinetixTabsTrigger(text = "Password", selected = tab == 1, onClick = { tab = 1 })
+        }
+        KinetixTabsContent { KinetixLabel(text = if (tab == 0) "Account settings" else "Password settings") }
+
+        var faqOpen by remember { mutableStateOf(false) }
+        KinetixAccordion {
+            KinetixAccordionItem {
+                KinetixAccordionTrigger(text = "Is it accessible?", expanded = faqOpen, onClick = { faqOpen = !faqOpen })
+                KinetixAccordionContent(expanded = faqOpen) { KinetixLabel(text = "Yes.") }
+            }
+        }
+
+        KinetixToggleGroup {
+            KinetixToggleGroupItem(pressed = bold, onPressedChange = { bold = it }) { Text("B") }
+        }
+
+        KinetixScrollArea(modifier = Modifier.height(200.dp)) {
+            Column { repeat(50) { i -> KinetixLabel(text = "Row $i") } }
+        }
+
+        val toastHostState = remember { SnackbarHostState() }
+        KinetixToaster(hostState = toastHostState)
+        // elsewhere, inside a coroutine scope:
+        // kinetixToast(toastHostState, message = "Saved successfully")
     }
 }
 ```
