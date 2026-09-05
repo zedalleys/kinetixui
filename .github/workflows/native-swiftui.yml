@@ -1,0 +1,42 @@
+name: Native (SwiftUI)
+
+# Path-filtered so this never runs — and can never fail — on an unrelated
+# push; entirely additive, doesn't touch ci.yml / release.yml.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/ui-swiftui/**"
+      - "tokens/**"
+      - "style-dictionary/**"
+  pull_request:
+    paths:
+      - "packages/ui-swiftui/**"
+      - "tokens/**"
+      - "style-dictionary/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-swiftui-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: packages/ui-swiftui
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Swift toolchain
+        run: swift --version
+
+      # The Package.swift target is .macOS(.v13) as well as .iOS(.v16), so
+      # `swift build` compiles the SwiftUI sources on the runner with no
+      # simulator. This is the sole compiler feedback for the package —
+      # the dev box has no Swift toolchain.
+      - name: Build
+        run: swift build

@@ -12,6 +12,7 @@
     "build": "turbo run build",
     "build:tokens": "node style-dictionary/build.mjs",
     "vendor:compose": "node scripts/vendor-compose-tokens.mjs",
+    "vendor:swiftui": "node scripts/vendor-swiftui-tokens.mjs",
     "gen:registry": "node scripts/gen-registry.mjs",
     "gen:docs": "node scripts/gen-docs.mjs",
     "gen:stories": "node scripts/gen-stories.mjs",

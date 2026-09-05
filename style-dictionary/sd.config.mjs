@@ -23,6 +23,7 @@ import {
   extrasCssFormat,
   hslChannels,
   cssVarName,
+  swiftUIColorFormat,
   tsNestedFormat,
   typeComposeFormat,
   typeDartFormat,
@@ -38,6 +39,7 @@ StyleDictionary.registerFormat(extrasCssFormat);
 StyleDictionary.registerFormat(typeSwiftFormat);
 StyleDictionary.registerFormat(typeComposeFormat);
 StyleDictionary.registerFormat(typeDartFormat);
+StyleDictionary.registerFormat(swiftUIColorFormat);
 
 const isType = (t) => t.$type === 'typography';
 
@@ -101,6 +103,28 @@ export function getConfig(theme) {
               className: light ? 'KinetixTheme' : 'KinetixThemeDark',
               packageName: 'com.kinetixui.tokens',
             },
+          },
+        ],
+      },
+
+      /* SwiftUI-Color semantic set — also runs on BOTH passes, for the
+         packages/ui-swiftui component library (UIColor is UIKit-only and
+         can't `swift build` on macOS, so this is Color-valued). Additive:
+         the ios-swift block below (KinetixColors.swift / Theme.swift,
+         UIColor) is untouched and stays light-only. */
+      'ios-swiftui-theme': {
+        transforms: ['attribute/cti'],
+        buildPath: `${DIST}/ios/`,
+        files: [
+          {
+            destination: light ? 'KinetixColorsSwiftUI.swift' : 'KinetixColorsSwiftUI.dark.swift',
+            format: 'kinetix/swiftui-color-enum',
+            // top-level semantic colours only — path ['color', <name>].
+            // The nested `color.semantic.*` group is internal plumbing (raw
+            // Figma error/warning container roles the real tokens alias)
+            // and would collide on leaf names like `warning`.
+            filter: (t) => isColor(t) && isSemantic(t) && t.path.length === 2,
+            options: { className: light ? 'KinetixColorsSwiftUI' : 'KinetixColorsSwiftUIDark' },
           },
         ],
       },
