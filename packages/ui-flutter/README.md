@@ -6,17 +6,10 @@ Flutter port of KinetixUI — the fourth platform alongside React
 path; each widget mirrors its `packages/ui/src/components/*.tsx`
 counterpart 1:1, with a doc comment stating anything not carried over.
 
-**28 components so far:** `KinetixButton`, `KinetixBadge`, `KinetixTag`,
-`KinetixLabel`, `KinetixSeparator`, `KinetixSkeleton`, `KinetixSpinner`,
-`KinetixProgress`, `KinetixCircularProgress`, `KinetixCard` (+ `Header` /
-`Title` / `Description` / `Content` / `Footer`), `KinetixAspectRatio`,
-`KinetixCheckbox`, `KinetixSwitch`, `KinetixToggle`, `KinetixSlider`,
-`KinetixRadioGroup` / `KinetixRadioButton`, `KinetixRating`,
-`KinetixInput`, `KinetixTextarea`, `KinetixAvatar` (+ `Fallback`),
-`KinetixAlert` (+ `Title` / `Description`), `KinetixAccordion` (+ `Item` /
-`Trigger` / `Content`), `KinetixCollapsible`, `KinetixTabsList` /
-`Trigger` / `Content`, `KinetixBreadcrumb` (+ `Link` / `Page` /
-`Separator`), `KinetixQuote`, `KinetixMetric`, `KinetixFab`.
+**43 components so far.** Controls, the full input + field set, display
+primitives, disclosure/navigation, and the mobile chrome — everything bar
+the overlay & menu classes (next batch) and the deliberate non-ports.
+`kinetix_ui.dart` is the full export list.
 
 - `lib/src/theme.dart` — `KinetixColors` (the semantic set), the
   `KinetixTheme` `InheritedWidget`, and `KinetixTheme.of(context)`. The
