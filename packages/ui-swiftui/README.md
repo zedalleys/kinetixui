@@ -2,7 +2,7 @@
 
 SwiftUI port of KinetixUI — the iOS counterpart to
 [`packages/ui-compose`](../ui-compose) (Jetpack Compose). Built in
-batches the same way the Compose library was. **43 components so far**
+batches the same way the Compose library was. **49 components so far**
 (overlay & menu classes included):
 `KinetixButton`, `KinetixBadge`, `KinetixTag`, `KinetixLabel`,
 `KinetixSeparator`, `KinetixSkeleton`, `KinetixSpinner`,
@@ -24,7 +24,10 @@ batches the same way the Compose library was. **43 components so far**
 `KinetixTooltip`, `KinetixPopover`, `KinetixHoverCard`,
 `KinetixDropdownMenu` (+ `KinetixMenuItem` / `KinetixMenuSeparator` /
 `KinetixMenuLabel`, shared), `KinetixContextMenu`, `KinetixMenubar` /
-`KinetixMenubarMenu`.
+`KinetixMenubarMenu`, `KinetixToggleGroup` / `KinetixToggleGroupItem`,
+`KinetixScrollArea`, `KinetixImage`, `KinetixInputGroup` (+ `Input` /
+`Text` / `Addon` / `Button`), `KinetixTableOfContents`, `KinetixFooter`
+(+ `Column` / `Link` / `Bottom`).
 
 - `Sources/KinetixUI/Theme.swift` — `KinetixColors` (the semantic colour
   set), `@Environment(\.kinetixColors)`, and the `KinetixTheme { … }`
