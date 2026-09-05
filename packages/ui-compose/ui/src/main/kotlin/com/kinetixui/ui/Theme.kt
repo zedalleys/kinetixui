@@ -40,6 +40,8 @@ data class KinetixColors(
     val successForeground: Color,
     val info: Color,
     val infoForeground: Color,
+    val popover: Color,
+    val popoverForeground: Color,
 )
 
 private val LightKinetixColors = KinetixColors(
@@ -65,6 +67,8 @@ private val LightKinetixColors = KinetixColors(
     successForeground = GeneratedLight.colorSuccessForeground,
     info = GeneratedLight.colorInfo,
     infoForeground = GeneratedLight.colorInfoForeground,
+    popover = GeneratedLight.colorPopover,
+    popoverForeground = GeneratedLight.colorPopoverForeground,
 )
 
 private val DarkKinetixColors = KinetixColors(
@@ -90,6 +94,8 @@ private val DarkKinetixColors = KinetixColors(
     successForeground = GeneratedDark.colorSuccessForeground,
     info = GeneratedDark.colorInfo,
     infoForeground = GeneratedDark.colorInfoForeground,
+    popover = GeneratedDark.colorPopover,
+    popoverForeground = GeneratedDark.colorPopoverForeground,
 )
 
 private val LocalKinetixColors = compositionLocalOf { LightKinetixColors }

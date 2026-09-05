@@ -1,15 +1,17 @@
 # @kinetixui/ui-compose
 
 Jetpack Compose port of KinetixUI. First of the native platforms — SwiftUI
-and Flutter aren't started yet. Thirty components so far: `KinetixButton`,
-`KinetixBadge`, `KinetixSwitch`, `KinetixInput`, `KinetixSeparator`,
-`KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`, `KinetixTag`,
-`KinetixProgress`, `KinetixAvatar`, `KinetixAlert`, `KinetixCheckbox`,
-`KinetixTextarea`, `KinetixCard`, `KinetixRadioGroup`, `KinetixToggle`,
-`KinetixAspectRatio`, `KinetixCircularProgress`, `KinetixRating`,
-`KinetixField`, `KinetixFab`, `KinetixQuote`, `KinetixSlider`,
-`KinetixPasswordInput`, `KinetixMetric`, `KinetixNumberInput`,
-`KinetixStepper`, `KinetixBreadcrumb`, `KinetixPagination`.
+and Flutter aren't started yet. Thirty-five components so far:
+`KinetixButton`, `KinetixBadge`, `KinetixSwitch`, `KinetixInput`,
+`KinetixSeparator`, `KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`,
+`KinetixTag`, `KinetixProgress`, `KinetixAvatar`, `KinetixAlert`,
+`KinetixCheckbox`, `KinetixTextarea`, `KinetixCard`, `KinetixRadioGroup`,
+`KinetixToggle`, `KinetixAspectRatio`, `KinetixCircularProgress`,
+`KinetixRating`, `KinetixField`, `KinetixFab`, `KinetixQuote`,
+`KinetixSlider`, `KinetixPasswordInput`, `KinetixMetric`,
+`KinetixNumberInput`, `KinetixStepper`, `KinetixBreadcrumb`,
+`KinetixPagination`, `KinetixDialog`, `KinetixPopover`, `KinetixTooltip`,
+`KinetixDropdownMenu`, `KinetixSheet`.
 
 This is a **standalone Gradle project**, not a pnpm/npm workspace package —
 there's no `package.json` here on purpose, so it's invisible to
@@ -71,11 +73,31 @@ proximity to the token source it depends on.
   Compose has no cheap stretch-to-fill-siblings without a custom layout, a
   real documented simplification. `KinetixNumberInput` models its value as
   `Int`, not the source's arbitrary fractional-`step` number.
+- `Dialog.kt` / `Popover.kt` / `Tooltip.kt` / `DropdownMenu.kt` / `Sheet.kt`
+  — the first **overlay-class** components (everything above renders
+  inline; these render in their own window/layer). Radix's Portal +
+  Root/Trigger/Content composition doesn't map to Compose 1:1, so each
+  wraps the closest matching Compose/Material3 overlay primitive directly
+  instead: `androidx.compose.ui.window.Dialog` (Dialog), Material3's
+  `DropdownMenu` (Popover *and* DropdownMenu — restyled two different ways
+  over the same anchored-popup mechanism, matching how thin the React
+  Popover already is over the same Radix primitive family DropdownMenu
+  uses), `TooltipBox`/`PlainTooltip` (Tooltip), `ModalBottomSheet` (Sheet —
+  bottom only; left/right/top aren't ported). Every one of these visibility
+  states is caller-owned (`visible: Boolean` + `onDismissRequest: () ->
+  Unit`) rather than a separate `Trigger`/`Portal` sub-component graph —
+  simpler, and equivalent to Radix's own controlled `open`/`onOpenChange`
+  mode. `DropdownMenuSub` (nested submenus) isn't ported. See "Known gaps"
+  below for the full list of what these five simplify away.
 - `ButtonPreviews.kt` / `ComponentPreviews.kt` / `ComponentPreviews2.kt` /
   `ComponentPreviews3.kt` / `ComponentPreviews4.kt` / `ComponentPreviews5.kt`
-  / `ComponentPreviews6.kt` — `@Preview` galleries, light + dark, for
-  everything above. Not public API — open these in Android Studio's
-  Design/Split view to actually look at something.
+  / `ComponentPreviews6.kt` / `ComponentPreviews7.kt` — `@Preview`
+  galleries, light + dark, for everything above. Not public API — open
+  these in Android Studio's Design/Split view to actually look at
+  something (`ComponentPreviews7.kt`'s own doc comment flags that
+  `Dialog`/`Popup`-based overlay *content* doesn't reliably render inside
+  the static Preview renderer — a known Compose limitation, not a bug
+  here; verify those five in a running app or Interactive Preview).
 - `ui/src/main/kotlin/com/kinetixui/tokens/` — **generated, do not edit.**
   Vendored from `packages/tokens/dist/android/`; re-copy after any token
   change with `pnpm build:tokens && pnpm vendor:compose` from the repo root.
@@ -104,6 +126,16 @@ proximity to the token source it depends on.
 - **No remote publishing.** `./gradlew publishToMavenLocal` works; Maven
   Central / GitHub Packages needs your own signing key and repository
   credentials, deliberately not configured here.
+- **Overlay components simplify Radix's exact behavior.** `KinetixSheet`
+  only has a bottom variant (no left/right/top slide-in — no equally
+  idiomatic single Android primitive for those). `KinetixDropdownMenu` has
+  no nested-submenu support. `KinetixPopover`/`KinetixDropdownMenu`'s
+  positioning (side/align/auto-flip) and `KinetixTooltip`'s content padding
+  are entirely whatever Material3's underlying `DropdownMenu`/`PlainTooltip`
+  default to, not tuned to match the source pixel-for-pixel. `TooltipBox`/
+  `ModalBottomSheet` are `@ExperimentalMaterial3Api` at this project's
+  Material3 version (1.2.1 via the pinned BOM) — stable behavior, just an
+  opt-in annotation, worth re-checking on the next BOM bump.
 
 ## Try it
 
@@ -166,6 +198,33 @@ KinetixTheme {
                 KinetixPaginationLink(text = "1", onClick = { /* ... */ }, isActive = true)
                 KinetixPaginationNext(onClick = { /* ... */ })
             }
+        }
+
+        var dialogVisible by remember { mutableStateOf(false) }
+        KinetixButton(onClick = { dialogVisible = true }) { Text("Open dialog") }
+        KinetixDialog(visible = dialogVisible, onDismissRequest = { dialogVisible = false }) {
+            KinetixDialogHeader {
+                KinetixDialogTitle(text = "Delete item?")
+                KinetixDialogDescription(text = "This action cannot be undone.")
+            }
+            KinetixDialogFooter {
+                KinetixButton(onClick = { dialogVisible = false }, variant = KinetixButtonVariant.Destructive) {
+                    Text("Delete")
+                }
+            }
+        }
+
+        var menuVisible by remember { mutableStateOf(false) }
+        KinetixDropdownMenu(
+            visible = menuVisible,
+            onDismissRequest = { menuVisible = false },
+            anchor = { KinetixButton(onClick = { menuVisible = true }) { Text("Options") } },
+        ) {
+            KinetixDropdownMenuItem(text = "Profile", onClick = { menuVisible = false })
+        }
+
+        KinetixTooltip(text = "Saved to your library") {
+            KinetixButton(onClick = { /* ... */ }) { Text("Hover me") }
         }
     }
 }
