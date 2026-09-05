@@ -1,14 +1,15 @@
 # @kinetixui/ui-compose
 
 Jetpack Compose port of KinetixUI. First of the native platforms — SwiftUI
-and Flutter aren't started yet. Twenty-five components so far:
-`KinetixButton`, `KinetixBadge`, `KinetixSwitch`, `KinetixInput`,
-`KinetixSeparator`, `KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`,
-`KinetixTag`, `KinetixProgress`, `KinetixAvatar`, `KinetixAlert`,
-`KinetixCheckbox`, `KinetixTextarea`, `KinetixCard`, `KinetixRadioGroup`,
-`KinetixToggle`, `KinetixAspectRatio`, `KinetixCircularProgress`,
-`KinetixRating`, `KinetixField`, `KinetixFab`, `KinetixQuote`,
-`KinetixSlider`, `KinetixPasswordInput`.
+and Flutter aren't started yet. Thirty components so far: `KinetixButton`,
+`KinetixBadge`, `KinetixSwitch`, `KinetixInput`, `KinetixSeparator`,
+`KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`, `KinetixTag`,
+`KinetixProgress`, `KinetixAvatar`, `KinetixAlert`, `KinetixCheckbox`,
+`KinetixTextarea`, `KinetixCard`, `KinetixRadioGroup`, `KinetixToggle`,
+`KinetixAspectRatio`, `KinetixCircularProgress`, `KinetixRating`,
+`KinetixField`, `KinetixFab`, `KinetixQuote`, `KinetixSlider`,
+`KinetixPasswordInput`, `KinetixMetric`, `KinetixNumberInput`,
+`KinetixStepper`, `KinetixBreadcrumb`, `KinetixPagination`.
 
 This is a **standalone Gradle project**, not a pnpm/npm workspace package —
 there's no `package.json` here on purpose, so it's invisible to
@@ -61,11 +62,20 @@ proximity to the token source it depends on.
   source's exact spec. `KinetixInput` gained `trailing` (an addon-style end
   slot) and `keyboardType`/`visualTransformation` params specifically to
   support `KinetixPasswordInput`'s show/hide toggle and masking.
+- `Metric.kt` / `NumberInput.kt` / `Stepper.kt` / `Breadcrumb.kt` /
+  `Pagination.kt` — same pattern. `KinetixPagination*` reuses
+  [KinetixButton] directly (Outline/Ghost, Icon size) rather than
+  re-deriving the same colors, mirroring how the React source is itself
+  just `buttonVariants` recipes. `KinetixStepper`'s vertical connector is a
+  fixed `min-h-6` rather than the source's dynamic `flex-1 self-stretch` —
+  Compose has no cheap stretch-to-fill-siblings without a custom layout, a
+  real documented simplification. `KinetixNumberInput` models its value as
+  `Int`, not the source's arbitrary fractional-`step` number.
 - `ButtonPreviews.kt` / `ComponentPreviews.kt` / `ComponentPreviews2.kt` /
   `ComponentPreviews3.kt` / `ComponentPreviews4.kt` / `ComponentPreviews5.kt`
-  — `@Preview` galleries, light + dark, for everything above. Not public
-  API — open these in Android Studio's Design/Split view to actually look
-  at something.
+  / `ComponentPreviews6.kt` — `@Preview` galleries, light + dark, for
+  everything above. Not public API — open these in Android Studio's
+  Design/Split view to actually look at something.
 - `ui/src/main/kotlin/com/kinetixui/tokens/` — **generated, do not edit.**
   Vendored from `packages/tokens/dist/android/`; re-copy after any token
   change with `pnpm build:tokens && pnpm vendor:compose` from the repo root.
@@ -142,6 +152,21 @@ KinetixTheme {
         KinetixQuote(text = "Good design is as little design as possible.", author = "Dieter Rams")
         KinetixSlider(value = volume, onValueChange = { volume = it })
         KinetixPasswordInput(value = password, onValueChange = { password = it })
+        KinetixMetric(label = "Revenue", value = "$12,480", trend = KinetixMetricTrend.Up, change = "12%")
+        KinetixNumberInput(value = qty, onValueChange = { qty = it }, min = 0, max = 10)
+        KinetixStepper(steps = listOf(KinetixStep("Account"), KinetixStep("Profile")), current = 0)
+        KinetixBreadcrumb {
+            KinetixBreadcrumbLink(text = "Home", onClick = { /* ... */ })
+            KinetixBreadcrumbSeparator()
+            KinetixBreadcrumbPage(text = "Components")
+        }
+        KinetixPagination {
+            KinetixPaginationContent {
+                KinetixPaginationPrevious(onClick = { /* ... */ })
+                KinetixPaginationLink(text = "1", onClick = { /* ... */ }, isActive = true)
+                KinetixPaginationNext(onClick = { /* ... */ })
+            }
+        }
     }
 }
 ```
