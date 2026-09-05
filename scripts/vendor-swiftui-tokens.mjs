@@ -18,7 +18,11 @@ const DEST = `${ROOT}/packages/ui-swiftui/Sources/KinetixUI`;
 
 mkdirSync(DEST, { recursive: true });
 
-const files = ["KinetixColorsSwiftUI.swift", "KinetixColorsSwiftUI.dark.swift"];
+const files = [
+  "KinetixColorsSwiftUI.swift",
+  "KinetixColorsSwiftUI.dark.swift",
+  "KinetixType.swift", // KinetixTextStyle + KinetixType.<style>
+];
 for (const f of files) {
   copyFileSync(`${SRC}/${f}`, `${DEST}/${f}`);
   console.log(`vendor:swiftui — ${f}`);

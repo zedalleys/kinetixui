@@ -7,6 +7,7 @@
 library kinetix_ui;
 
 export 'src/theme.dart';
+export 'src/kinetix_type.dart';
 
 export 'src/accordion.dart';
 export 'src/alert.dart';

@@ -18,7 +18,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC_ANDROID = `${ROOT}/packages/tokens/dist/android`;
 const DEST_PKG = `${ROOT}/packages/ui-compose/ui/src/main`;
 
-const KOTLIN_FILES = ["Color.kt", "Theme.kt", "Theme.dark.kt"];
+const KOTLIN_FILES = ["Color.kt", "Theme.kt", "Theme.dark.kt", "KinetixType.kt"];
 const RES_FILES = ["colors.xml", "dimens.xml"];
 
 function copy(from, to) {

@@ -18,7 +18,11 @@ const DEST = `${ROOT}/packages/ui-flutter/lib/src`;
 
 mkdirSync(DEST, { recursive: true });
 
-const files = ["kinetix_color_scheme.dart", "kinetix_color_scheme.dark.dart"];
+const files = [
+  "kinetix_color_scheme.dart",
+  "kinetix_color_scheme.dark.dart",
+  "app_text.dart", // class AppText — the type scale (aliased as KinetixType)
+];
 for (const f of files) {
   copyFileSync(`${SRC}/${f}`, `${DEST}/${f}`);
   console.log(`vendor:flutter — ${f}`);

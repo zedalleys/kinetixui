@@ -42,7 +42,13 @@ jobs:
 
       # `flutter analyze` type-checks + lints the whole package — the
       # equivalent of `swift build` / `gradle assembleDebug` for the other
-      # native libraries. This is the sole compiler feedback (no Flutter
+      # native libraries. This is the primary compiler feedback (no Flutter
       # toolchain on the dev box).
       - name: Analyze
         run: flutter analyze
+
+      # Widget smoke tests: every Kinetix* widget builds (light + dark)
+      # inside a KinetixTheme without throwing — catches build-phase asserts
+      # `analyze` can't see.
+      - name: Test
+        run: flutter test
