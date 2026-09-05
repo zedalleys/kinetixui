@@ -50,6 +50,8 @@ public struct KinetixColors {
     public let infoForeground: Color
     public let popover: Color
     public let popoverForeground: Color
+    /// The 5-stop categorical chart palette (`--chart-1` … `--chart-5`).
+    public let chart: [Color]
 
     public init(
         primary: Color,
@@ -78,7 +80,8 @@ public struct KinetixColors {
         info: Color,
         infoForeground: Color,
         popover: Color,
-        popoverForeground: Color
+        popoverForeground: Color,
+        chart: [Color]
     ) {
         self.primary = primary
         self.primaryForeground = primaryForeground
@@ -107,6 +110,7 @@ public struct KinetixColors {
         self.infoForeground = infoForeground
         self.popover = popover
         self.popoverForeground = popoverForeground
+        self.chart = chart
     }
 }
 
@@ -139,7 +143,14 @@ public extension KinetixColors {
         info: KinetixColorsSwiftUI.info,
         infoForeground: KinetixColorsSwiftUI.infoForeground,
         popover: KinetixColorsSwiftUI.popover,
-        popoverForeground: KinetixColorsSwiftUI.popoverForeground
+        popoverForeground: KinetixColorsSwiftUI.popoverForeground,
+        chart: [
+            KinetixColorsSwiftUI.chart1,
+            KinetixColorsSwiftUI.chart2,
+            KinetixColorsSwiftUI.chart3,
+            KinetixColorsSwiftUI.chart4,
+            KinetixColorsSwiftUI.chart5,
+        ]
     )
 
     /// Built from the generated dark enum — the real dark pass, same as the
@@ -171,7 +182,14 @@ public extension KinetixColors {
         info: KinetixColorsSwiftUIDark.info,
         infoForeground: KinetixColorsSwiftUIDark.infoForeground,
         popover: KinetixColorsSwiftUIDark.popover,
-        popoverForeground: KinetixColorsSwiftUIDark.popoverForeground
+        popoverForeground: KinetixColorsSwiftUIDark.popoverForeground,
+        chart: [
+            KinetixColorsSwiftUIDark.chart1,
+            KinetixColorsSwiftUIDark.chart2,
+            KinetixColorsSwiftUIDark.chart3,
+            KinetixColorsSwiftUIDark.chart4,
+            KinetixColorsSwiftUIDark.chart5,
+        ]
     )
 }
 

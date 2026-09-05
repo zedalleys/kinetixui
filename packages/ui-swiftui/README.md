@@ -2,7 +2,8 @@
 
 SwiftUI port of KinetixUI — the iOS counterpart to
 [`packages/ui-compose`](../ui-compose) (Jetpack Compose). Built in
-batches the same way the Compose library was. **64 components so far**:
+batches the same way the Compose library was. **68 components** — the
+full React component surface bar three deliberate non-ports:
 `KinetixButton`, `KinetixBadge`, `KinetixTag`, `KinetixLabel`,
 `KinetixSeparator`, `KinetixSkeleton`, `KinetixSpinner`,
 `KinetixProgress`, `KinetixCircularProgress`, `KinetixCard` (+ `Header` /
@@ -33,15 +34,22 @@ batches the same way the Compose library was. **64 components so far**:
 `KinetixInputOtp`, `KinetixToaster` / `KinetixToast`, `KinetixTable`
 family, `KinetixDataTable` (+ `KinetixDataColumn`), `KinetixCarousel`,
 `KinetixFileUpload` (+ `KinetixFileItem`), `KinetixAudioPlayer`,
-`KinetixResizablePanels`.
+`KinetixResizablePanels`, `KinetixCommandDialog` (+ `Group` / `Item` /
+`Separator`), `KinetixSidebar` / `KinetixSidebarItem`, `KinetixCalendar`,
+`KinetixChart` (+ `KinetixChartPoint`, over the system `Charts`
+framework).
 
-### Not ported
+### Not ported (deliberate)
 
-Deliberately left as permanent non-ports (no native idiom / needs a
-dedicated design pass), matching the Compose port's known-gaps stance:
-`Calendar`, `Command`, `Combobox`, `Sidebar`, `NavigationMenu`, `Chart`,
-`Form`. Reach for SwiftUI's `DatePicker(.graphical)`, `.searchable`,
-`NavigationSplitView`, and the `Charts` framework instead.
+Matching the Compose port's known-gaps stance:
+
+- **`Form`** — `KinetixField` (+ `Label` / `Description` / `Message`) is
+  the equivalent; there's no `react-hook-form`-shaped context to wrap.
+- **`NavigationMenu`** — a hover-triggered desktop mega-menu with no
+  touch idiom.
+- **`Combobox`** — a recipe (Popover + Command) on the web, not a
+  standalone component; compose `KinetixPopover` + a filtered list, or
+  use `KinetixSelect`.
 
 - `Sources/KinetixUI/Theme.swift` — `KinetixColors` (the semantic colour
   set), `@Environment(\.kinetixColors)`, and the `KinetixTheme { … }`
