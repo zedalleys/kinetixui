@@ -53,7 +53,13 @@ The CLI resolves `tokens` first (a registry dependency), installs
 `@radix-ui/react-slot`, `class-variance-authority`, `clsx`, `tailwind-merge`,
 then drops `button.tsx` into your configured components directory.
 
-**npm:**
+Name several at once (`add button card dialog`), run `npx @kinetixui/cli
+list` to see everything available, or pull the whole library in one go
+with `npx @kinetixui/cli add --all`. See the [CLI reference](/docs/cli)
+for every flag.
+
+**npm** — every component ships in the one package, so there's no
+per-component step:
 
 ```bash
 npm i @kinetixui/ui

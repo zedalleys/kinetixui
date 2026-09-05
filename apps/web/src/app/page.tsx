@@ -84,6 +84,13 @@ export default function HomePage() {
 
               <div className="mt-8 w-full max-w-sm">
                 <CodeBlock code="npx @kinetixui/cli add button" />
+                <p className="mt-2 text-[13px] text-muted-foreground">
+                  Example — adds one component.{" "}
+                  <Link href="/docs/installation" className="text-primary underline-offset-4 hover:underline">
+                    Installation
+                  </Link>{" "}
+                  covers the full library.
+                </p>
               </div>
             </div>
 
