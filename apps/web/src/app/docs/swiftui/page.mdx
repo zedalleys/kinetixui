@@ -1,15 +1,15 @@
 export const metadata = {
   title: "SwiftUI",
-  description: "The native iOS component library — a SwiftUI port on the KinetixUI token contract, 34 Kinetix* views so far.",
+  description: "The native iOS component library — a SwiftUI port on the KinetixUI token contract, 58 Kinetix* views.",
 };
 
 # SwiftUI
 
 `packages/ui-swiftui` is the native **SwiftUI** port of KinetixUI — the
-iOS counterpart to the [Jetpack Compose](/docs/compose) library. **34
-`Kinetix*` views so far**, built in batches on a macOS `swift build` CI
-path; each mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1,
-with a doc comment stating anything not carried over.
+iOS counterpart to the [Jetpack Compose](/docs/compose) library. **58
+`Kinetix*` views**, built in batches on a macOS `swift build` CI path;
+each mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with
+a doc comment stating anything not carried over.
 
 It's a **standalone SwiftPM package** inside this monorepo, not a
 pnpm/npm workspace package — there's no `package.json`, so it's invisible
@@ -83,43 +83,59 @@ pnpm build:tokens && pnpm vendor:swiftui
 
 ## What's covered
 
-`KinetixTheme` plus 34 `Kinetix*` views:
+`KinetixTheme` plus 58 `Kinetix*` views:
 
 - **Controls** — `KinetixButton` (`buttonVariants` CVA 1:1: variant ×
-  size × corners), `KinetixCheckbox`, `KinetixSwitch`, `KinetixToggle`,
-  `KinetixSlider`, `KinetixRadioGroup` / `KinetixRadioButton`,
-  `KinetixRating`, `KinetixFab`, `KinetixStepper`.
+  size × corners), `KinetixCheckbox`, `KinetixSwitch`, `KinetixToggle` /
+  `KinetixToggleGroup`, `KinetixSlider`, `KinetixRadioGroup` /
+  `KinetixRadioButton`, `KinetixRating`, `KinetixFab`, `KinetixStepper`.
 - **Inputs** — `KinetixInput` (corners enum, trailing slot),
   `KinetixTextarea`, `KinetixNumberInput`, `KinetixPasswordInput`,
-  `KinetixField` (+ `Label` / `Description` / `Message`).
+  `KinetixInputOtp`, `KinetixInputGroup` family, `KinetixSelect`,
+  `KinetixDatePicker`, `KinetixField` (+ `Label` / `Description` /
+  `Message`).
 - **Display** — `KinetixBadge`, `KinetixTag`, `KinetixLabel`,
   `KinetixSeparator`, `KinetixSkeleton`, `KinetixSpinner`,
   `KinetixProgress`, `KinetixCircularProgress`, `KinetixAvatar` (+
-  `Fallback`), `KinetixCard` family, `KinetixAlert` family,
-  `KinetixQuote`, `KinetixMetric`, `KinetixAspectRatio`.
+  `Fallback`), `KinetixImage`, `KinetixCard` family, `KinetixAlert`
+  family, `KinetixQuote`, `KinetixMetric`, `KinetixCodeBlock`,
+  `KinetixAspectRatio`.
 - **Navigation & disclosure** — `KinetixAccordion` family,
   `KinetixCollapsible`, `KinetixTabsList` / `Trigger` / `Content`,
-  `KinetixList` / `KinetixListItem`, `KinetixBreadcrumb` family,
-  `KinetixPagination` family.
+  `KinetixList` / `KinetixListItem`, `KinetixScrollArea`,
+  `KinetixBreadcrumb` family, `KinetixPagination` family,
+  `KinetixTableOfContents`, `KinetixNavigationBar`, `KinetixTabBar` /
+  `Item`, `KinetixFooter` family.
+- **Overlays & menus** — `KinetixDialog` family, `KinetixAlertDialog`,
+  `KinetixModal`, `KinetixSheet`, `KinetixDrawer`, `KinetixPopover`,
+  `KinetixHoverCard`, `KinetixTooltip`, `KinetixDropdownMenu` (+ shared
+  `KinetixMenuItem` / `Separator` / `Label`), `KinetixContextMenu`,
+  `KinetixMenubar` / `Menu`, `KinetixToaster`.
 
-Selection / expansion state is caller-owned throughout (a `@Binding` or a
-plain `isExpanded` / `isSelected` + action), the same division the
-Compose port uses — there's no SwiftUI context to thread a shared value
-through the way Radix does.
+Selection / expansion / presentation state is caller-owned throughout (a
+`@Binding` or a plain `isExpanded` / `isSelected` + action) — the same
+division the Compose port uses, since there's no SwiftUI context to
+thread a shared value through the way Radix does. Overlay views
+(`KinetixDialog`, `KinetixSheet`, `KinetixToaster`, …) are placed in an
+`.overlay { }` or a top-level `ZStack` and driven by an `isPresented`
+binding.
 
 ## Known gaps
 
-- **Overlay-class components** (dialog, popover, sheet, dropdown / context
-  menus, tooltip, hover card, command palette) aren't ported yet — the
-  next batch.
+- **Data-heavy / no-native-idiom components aren't ported** — `Calendar`,
+  `Carousel`, `Table`, `DataTable`, `Command`, `Combobox`, `Resizable`,
+  `Sidebar`, `NavigationMenu`, `FileUpload`, `AudioPlayer`, `Chart`,
+  `Form`. Reach for SwiftUI's `List`, `TabView`, `NavigationSplitView`,
+  `Charts` and `.searchable` for those, the same stance the Compose port
+  takes on its own gaps.
 - **No remote publishing.** `swift build` on `macos-latest` (against the
   `.macOS(.v13)` target, no simulator) is the sole compiler feedback on
   every push that touches `packages/ui-swiftui`, `tokens/`, or
   `style-dictionary/`.
 - **Platform controls are reused where they're strong** — `KinetixSlider`
-  wraps SwiftUI's `Slider`, so the thumb/track use the system look, not
-  the source's exact circle (a documented gap, same call as the Compose
-  Material3 wrap).
+  / `KinetixDatePicker` / `KinetixScrollArea` wrap the SwiftUI control,
+  so those use the system look, not a hand-built one (a documented gap,
+  same call as the Compose Material3 wraps).
 - **No type-scale modifier yet.** Views use raw sizes from the Figma type
   scale; a real `.kinetixFont(.labelMd)` reading `KinetixType.swift` is a
   follow-up.

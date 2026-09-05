@@ -10,16 +10,18 @@ export const metadata = {
 - **SwiftUI library** (`packages/ui-swiftui`) — the native iOS port,
   built the same way the Compose library was: `KinetixTheme` (the
   `@Environment(\.kinetixColors)` semantic set + a light/dark wrapper)
-  plus **34 `Kinetix*` views** so far, each mirroring its
-  `packages/ui/src/components/*.tsx` counterpart 1:1 — controls, inputs,
-  field composition, display primitives, and disclosure/navigation
-  (Accordion, Tabs, List, Breadcrumb, Pagination). Overlay-class
-  components are the next batch. The token engine emits a SwiftUI-`Color`
-  semantic set (`KinetixColorsSwiftUI` / `…Dark`, both passes) alongside
-  the untouched UIColor output — `UIColor` is UIKit-only and won't
-  compile on macOS. Verified by `swift build` on `macos-latest` on every
-  push. New [SwiftUI](/docs/swiftui) docs page. Standalone SwiftPM
-  package, not on the registry.
+  plus **58 `Kinetix*` views**, each mirroring its
+  `packages/ui/src/components/*.tsx` counterpart 1:1 — controls, the full
+  input + field set, display primitives, disclosure/navigation, and the
+  overlay & menu classes (Dialog, Sheet, Popover, Dropdown/Context menus,
+  Tooltip, Toaster). The data-heavy components (Calendar, DataTable,
+  Command, Chart, …) are deferred to native SwiftUI equivalents, the same
+  stance the Compose port takes on its gaps. The token engine emits a
+  SwiftUI-`Color` semantic set (`KinetixColorsSwiftUI` / `…Dark`, both
+  passes) alongside the untouched UIColor output — `UIColor` is
+  UIKit-only and won't compile on macOS. Verified by `swift build` on
+  `macos-latest` on every push. New [SwiftUI](/docs/swiftui) docs page.
+  Standalone SwiftPM package, not on the registry.
 - **Jetpack Compose library** (`packages/ui-compose`) — 69 native
   `Kinetix*` composables on the token contract, one per React component
   (`Chart`, `Form`, `NavigationMenu` documented as deliberate non-ports).
