@@ -1,7 +1,7 @@
 # @kinetixui/ui-compose
 
 Jetpack Compose port of KinetixUI. First of the native platforms — SwiftUI
-and Flutter aren't started yet. Forty-nine components so far:
+and Flutter aren't started yet. Fifty-four components so far:
 `KinetixButton`, `KinetixBadge`, `KinetixSwitch`, `KinetixInput`,
 `KinetixSeparator`, `KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`,
 `KinetixTag`, `KinetixProgress`, `KinetixAvatar`, `KinetixAlert`,
@@ -15,7 +15,9 @@ and Flutter aren't started yet. Forty-nine components so far:
 `KinetixHoverCard`, `KinetixContextMenu`, `KinetixMenubar`, `KinetixList`,
 `KinetixImage`, `KinetixInputOtp`, `KinetixInputGroup`,
 `KinetixCollapsible`, `KinetixTabs`, `KinetixAccordion`,
-`KinetixToggleGroup`, `KinetixScrollArea`, `KinetixToaster`.
+`KinetixToggleGroup`, `KinetixScrollArea`, `KinetixToaster`,
+`KinetixSelect`, `KinetixTable`, `KinetixModal`, `KinetixNavigationBar`,
+`KinetixTabBar`.
 
 This is a **standalone Gradle project**, not a pnpm/npm workspace package —
 there's no `package.json` here on purpose, so it's invisible to
@@ -149,13 +151,34 @@ proximity to the token source it depends on.
   hand-rolling a toast queue — the same real queue/auto-dismiss/
   swipe-to-dismiss machinery `sonner` provides on the web, reused instead
   of re-derived (the same call made for `KinetixSlider`/`KinetixDialog`).
+- `Select.kt` / `Table.kt` / `Modal.kt` / `NavigationBar.kt` / `TabBar.kt` —
+  the first batch from the "needs its own design pass" tier, picked for
+  being both genuinely native-relevant and highly reusable. There's no
+  `KinetixSelect` wrapper — a select is structurally exactly
+  [KinetixDropdownMenu] with a styled trigger and checkmarked items, so
+  `KinetixSelectTrigger`/`KinetixSelectItem` compose it directly rather
+  than wrapping it again. `KinetixModal` is a single high-level
+  composable built entirely from [KinetixDialog]/[KinetixButton] — the
+  source itself is just that same composition over its own `Dialog`
+  primitives, so this is almost pure reuse. `KinetixTable` wraps
+  [KinetixScrollArea] (horizontal) for the source's `overflow-auto`; since
+  Compose has no `<table>` layout primitive, `KinetixTableHead`/
+  `KinetixTableCell` take a `weight` the caller matches across rows — the
+  standard Compose stand-in for HTML column alignment.
+  `KinetixNavigationBar`/`KinetixTabBar` mirror Android's own Material3
+  `TopAppBar`/`NavigationBar` shape almost exactly (this pair *is* the
+  native mobile top-bar/bottom-nav pattern) but are written as plain
+  composables rather than wrapping those Material3 components, so the
+  leading/title/actions and icon/label/badge layouts match the source
+  precisely rather than Material3's own app-bar/nav-bar conventions.
 - `ButtonPreviews.kt` / `ComponentPreviews.kt` / `ComponentPreviews2.kt` /
   `ComponentPreviews3.kt` / `ComponentPreviews4.kt` / `ComponentPreviews5.kt`
   / `ComponentPreviews6.kt` / `ComponentPreviews7.kt` / `ComponentPreviews8.kt`
-  / `ComponentPreviews9.kt` / `ComponentPreviews10.kt` — `@Preview` galleries,
-  light + dark, for everything above. Not public API — open these in
-  Android Studio's Design/Split view to actually look at something
-  (`ComponentPreviews7.kt`'s own doc comment flags that `Dialog`/`Popup`-based
+  / `ComponentPreviews9.kt` / `ComponentPreviews10.kt` / `ComponentPreviews11.kt`
+  — `@Preview` galleries, light + dark, for everything above. Not public
+  API — open these in Android Studio's Design/Split view to actually look
+  at something (`ComponentPreviews7.kt`'s own doc comment flags that
+  `Dialog`/`Popup`-based
   overlay *content* doesn't reliably render inside the static Preview
   renderer — a known Compose limitation, not a bug here; verify those in a
   running app or Interactive Preview).
