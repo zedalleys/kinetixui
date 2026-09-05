@@ -128,6 +128,103 @@
     background-size: 44px 44px;
     -webkit-mask-image: radial-gradient(ellipse 85% 65% at 30% 0%, #000 45%, transparent 100%);
     mask-image: radial-gradient(ellipse 85% 65% at 30% 0%, #000 45%, transparent 100%);
+    /* barely-there ambient drift — one cell over a full minute */
+    animation: kx-grid-drift 60s linear infinite;
+  }
+  @keyframes kx-grid-drift {
+    to {
+      background-position: 44px 44px;
+    }
+  }
+
+  /* hero: staggered fade-up of the headline block's direct children on load */
+  .kx-hero-enter > * {
+    opacity: 0;
+    animation: reveal-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .kx-hero-enter > *:nth-child(1) {
+    animation-delay: 0.04s;
+  }
+  .kx-hero-enter > *:nth-child(2) {
+    animation-delay: 0.11s;
+  }
+  .kx-hero-enter > *:nth-child(3) {
+    animation-delay: 0.19s;
+  }
+  .kx-hero-enter > *:nth-child(4) {
+    animation-delay: 0.27s;
+  }
+  .kx-hero-enter > *:nth-child(5) {
+    animation-delay: 0.35s;
+  }
+
+  /* hero "one token → four platforms" fan diagram (decorative) */
+  .kx-fan-wire {
+    fill: none;
+    stroke: color-mix(in srgb, var(--primary) 55%, transparent);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 6;
+    animation: kx-flow 1.1s linear infinite;
+  }
+  .kx-fan-source {
+    fill: var(--primary);
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: kx-source-pulse 2.4s ease-in-out infinite;
+  }
+  .kx-fan-node {
+    fill: var(--primary);
+    animation: kx-node-pulse 2s ease-in-out infinite;
+  }
+  .kx-fan-label {
+    fill: var(--muted-foreground);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  @keyframes kx-flow {
+    to {
+      stroke-dashoffset: -20;
+    }
+  }
+  @keyframes kx-node-pulse {
+    0%,
+    100% {
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  @keyframes kx-source-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.12);
+      opacity: 0.82;
+    }
+  }
+
+  /* blueprint placeholder for "coming soon" panels */
+  .kx-blueprint {
+    position: relative;
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--border) 50%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--border) 50%, transparent) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  .kx-blueprint::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent 0 10px,
+      color-mix(in srgb, var(--primary) 9%, transparent) 10px 11px
+    );
   }
 
   /* crop-mark corner ticks — the "measured drawing" frame */
@@ -231,12 +328,23 @@
 @media (prefers-reduced-motion: reduce) {
   .kx-underline::after,
   .kx-marquee-track,
+  .kx-grid-bg,
+  .kx-fan-wire,
+  .kx-fan-source,
+  .kx-fan-node,
   [data-reveal][data-shown] {
     animation: none !important;
   }
-  [data-reveal] {
+  [data-reveal],
+  .kx-hero-enter > * {
     opacity: 1;
     transform: none;
+  }
+  .kx-hero-enter > * {
+    animation: none !important;
+  }
+  .kx-fan-node {
+    opacity: 0.85;
   }
 }
 

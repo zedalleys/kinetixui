@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Boxes, Palette, Smartphone, Zap } from "lucide-react";
 import { Button, Input } from "@kinetixui/ui";
 import { CodeBlock } from "@/components/code-block";
+import { ComingSoon } from "@/components/coming-soon";
+import { HeroTokenFan } from "@/components/hero-token-fan";
 import { Marquee, Reveal } from "@/components/reveal";
 import { SectionHead } from "@/components/section-head";
 
@@ -47,13 +49,13 @@ export default function HomePage() {
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-12 py-16 md:py-28 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-16">
             {/* headline */}
-            <div className="max-w-3xl">
+            <div className="kx-hero-enter max-w-3xl">
               <Link
                 href="/docs/changelog"
-                className="eyebrow inline-flex items-center gap-2 transition-colors hover:text-foreground"
+                className="eyebrow group inline-flex items-center gap-2 transition-colors hover:text-foreground"
               >
                 <span className="text-primary">[00]</span> Free while in beta
-                <ArrowRight className="size-3" />
+                <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
               </Link>
 
               <h1 className="mt-6 text-balance font-display text-[2rem] font-bold leading-[1.1] tracking-[-0.03em] sm:text-6xl sm:leading-[1.02] lg:text-[4.5rem]">
@@ -94,21 +96,24 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* spec panel */}
-            <aside className="kx-frame hidden self-start border border-border bg-background/60 lg:block">
-              <p className="border-b border-border px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                spec
-              </p>
-              <dl className="divide-y divide-border">
-                {SPEC.map(([k, v]) => (
-                  <div key={k} className="flex items-center justify-between gap-4 px-4 py-3">
-                    <dt className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
-                      {k}
-                    </dt>
-                    <dd className="font-display text-sm font-semibold">{v}</dd>
-                  </div>
-                ))}
-              </dl>
+            {/* right rail: token fan-out + spec panel */}
+            <aside className="hidden flex-col gap-4 self-start lg:flex">
+              <HeroTokenFan />
+              <div className="kx-frame border border-border bg-background/60">
+                <p className="border-b border-border px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                  spec
+                </p>
+                <dl className="divide-y divide-border">
+                  {SPEC.map(([k, v]) => (
+                    <div key={k} className="flex items-center justify-between gap-4 px-4 py-3">
+                      <dt className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+                        {k}
+                      </dt>
+                      <dd className="font-display text-sm font-semibold">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
             </aside>
           </div>
         </div>
@@ -186,11 +191,41 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── infographic (coming soon) ────────────────────────────────── */}
+      <section className="border-b border-border">
+        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+          <Reveal>
+            <SectionHead index="03" label="Infographic" meta="coming soon" />
+            <div className="mt-10 flex flex-col gap-8 md:flex-row md:items-center md:gap-12">
+              <div className="max-w-xl">
+                <h2 className="text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
+                  The pipeline, drawn to scale.
+                </h2>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
+                  One measured diagram: a single DTCG source, the Style Dictionary pass, five
+                  platform outputs, and every component that rides on them — with the numbers that
+                  move when you change a token.
+                </p>
+                <ComingSoon className="mt-6" />
+              </div>
+
+              {/* blueprint placeholder */}
+              <div className="kx-frame relative w-full shrink-0 overflow-hidden border border-dashed border-border bg-muted/20 md:max-w-md">
+                <div className="kx-blueprint aspect-[4/3] w-full" />
+                <div className="absolute inset-0 grid place-items-center">
+                  <span className="eyebrow bg-background/75 px-2 py-1">preview pending</span>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ─── closer ───────────────────────────────────────────────────── */}
       <section>
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 md:py-28 lg:px-8">
           <Reveal className="max-w-3xl">
-            <SectionHead index="03" label="Who it's for" />
+            <SectionHead index="04" label="Who it's for" />
             <h2 className="mt-6 text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-5xl">
               Built for teams that ship on more than one platform.
             </h2>
