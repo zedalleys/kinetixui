@@ -1,0 +1,44 @@
+name: Publish (SwiftUI)
+
+# Manual — SwiftPM can't consume a package from a monorepo subdirectory,
+# so distribution is a `git subtree split` of packages/ui-swiftui pushed
+# to a thin mirror repo (Package.swift lands at the mirror root). Set the
+# SWIFTUI_MIRROR_REPO secret to an authenticated push URL, e.g.
+#   https://x-access-token:<PAT>@github.com/<you>/kinetix-ui-swift.git
+# Without it this is a dry run (local split only).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "SemVer tag for the mirror, e.g. 0.1.0"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build sanity
+        run: swift build --package-path packages/ui-swiftui
+
+      - name: Split & push to mirror
+        env:
+          MIRROR: ${{ secrets.SWIFTUI_MIRROR_REPO }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          git subtree split --prefix=packages/ui-swiftui -b swiftui-dist
+          SHA=$(git rev-parse swiftui-dist)
+          echo "subtree split → $SHA"
+          if [ -z "$MIRROR" ]; then
+            echo "::notice::SWIFTUI_MIRROR_REPO not set — dry run, nothing pushed."
+            exit 0
+          fi
+          git push --force "$MIRROR" swiftui-dist:main
+          git push "$MIRROR" "$SHA:refs/tags/$VERSION"
+          echo "Published. Consumers: .package(url: \"<mirror-url>\", from: \"$VERSION\")"

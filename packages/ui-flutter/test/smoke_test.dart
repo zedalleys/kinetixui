@@ -3,6 +3,9 @@
 // asserts that `flutter analyze` can't see (the analogue of the React
 // components-smoke suite and the Compose/SwiftUI compile checks).
 
+// This fixture instantiates ~55 widgets by hand; `const` on each is noise.
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kinetix_ui/kinetix_ui.dart';

@@ -1,0 +1,56 @@
+name: Publish (Flutter)
+
+# Manual — publishes packages/ui-flutter to pub.dev. Defaults to a dry run;
+# a real publish needs the PUB_DEV_CREDENTIALS secret and `dry_run: false`.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "pub.dev version, e.g. 0.1.0"
+        required: true
+      dry_run:
+        description: "dry run only — no publish"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/ui-flutter
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+
+      - name: Stage for publish
+        run: |
+          # `pub publish` refuses `publish_to: none`; it also wants a LICENSE
+          # in the package directory. Both are set up here, not committed.
+          sed -i '/^publish_to:/d' pubspec.yaml
+          sed -i "s/^version: .*/version: ${{ inputs.version }}/" pubspec.yaml
+          cp ../../LICENSE ./LICENSE 2>/dev/null || true
+
+      - name: Dry run
+        run: flutter pub publish --dry-run
+
+      - name: Publish
+        if: ${{ inputs.dry_run == false }}
+        env:
+          PUB_DEV_CREDENTIALS: ${{ secrets.PUB_DEV_CREDENTIALS }}
+        run: |
+          if [ -z "$PUB_DEV_CREDENTIALS" ]; then
+            echo "::error::PUB_DEV_CREDENTIALS is not set. Run \`dart pub login\` locally and add the contents of ~/.config/dart/pub-credentials.json as that secret."
+            exit 1
+          fi
+          mkdir -p "$HOME/.config/dart"
+          printf '%s' "$PUB_DEV_CREDENTIALS" > "$HOME/.config/dart/pub-credentials.json"
+          flutter pub publish --force
