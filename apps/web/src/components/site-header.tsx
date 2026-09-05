@@ -26,7 +26,7 @@ export function SiteHeader() {
         </Link>
 
         <span className="hidden font-mono text-[11px] text-muted-foreground sm:inline">
-          v0.2 — beta
+          v{siteConfig.version} — beta
         </span>
 
         <div className="ml-auto flex items-center gap-2">

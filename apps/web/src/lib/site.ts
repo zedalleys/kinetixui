@@ -1,3 +1,5 @@
+import uiPkg from "@kinetixui/ui/package.json";
+
 export const siteConfig = {
   name: "KinetixUI",
   tagline: "One token architecture, in motion across every platform.",
@@ -6,6 +8,9 @@ export const siteConfig = {
   url: "https://kinetixui.com",
   repo: "https://github.com/ziadfteha/kinetixui",
   figma: "https://www.figma.com/design/GQXTKKJAPbawd4wcuE77Pf/KinetixUI?node-id=3877-10388",
+  // Read from @kinetixui/ui at build time — @kinetixui/{ui,cli,tokens} are a
+  // changesets `fixed` group, so this one number tracks all three.
+  version: uiPkg.version,
 };
 
 export type NavItem = {
