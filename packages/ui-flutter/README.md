@@ -6,8 +6,10 @@ Flutter port of KinetixUI — the fourth platform alongside React
 path; each widget mirrors its `packages/ui/src/components/*.tsx`
 counterpart 1:1, with a doc comment stating anything not carried over.
 
-**Kickoff:** `KinetixTheme` + `KinetixButton` + the CI path. Components
-follow in batches.
+**10 components so far:** `KinetixButton`, `KinetixBadge`, `KinetixTag`,
+`KinetixLabel`, `KinetixSeparator`, `KinetixSkeleton`, `KinetixSpinner`,
+`KinetixProgress`, `KinetixCard` (+ `Header` / `Title` / `Description` /
+`Content` / `Footer`), `KinetixAspectRatio`.
 
 - `lib/src/theme.dart` — `KinetixColors` (the semantic set), the
   `KinetixTheme` `InheritedWidget`, and `KinetixTheme.of(context)`. The

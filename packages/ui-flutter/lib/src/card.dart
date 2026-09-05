@@ -1,0 +1,124 @@
+import 'package:flutter/widgets.dart';
+
+import 'theme.dart';
+
+/// Mirrors `packages/ui/src/components/card.tsx`'s Card / CardHeader /
+/// CardTitle / CardDescription / CardContent / CardFooter — thin styled
+/// slots. `p-6` (24) and `radius-xl` (16) are on the shared token scale;
+/// the `space-y-1.5` header gap (6) isn't. `shadow-sm` has no token — a
+/// small literal shadow, same as the other ports.
+class KinetixCard extends StatelessWidget {
+  const KinetixCard({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = KinetixTheme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.border, width: 1),
+        boxShadow: const [
+          BoxShadow(color: Color(0x0D000000), blurRadius: 2, offset: Offset(0, 1)),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: DefaultTextStyle.merge(
+        style: TextStyle(color: c.cardForeground, fontSize: 14),
+        child: child,
+      ),
+    );
+  }
+}
+
+class KinetixCardHeader extends StatelessWidget {
+  const KinetixCardHeader({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: _spaced(children, 6),
+      ),
+    );
+  }
+}
+
+class KinetixCardTitle extends StatelessWidget {
+  const KinetixCardTitle(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = KinetixTheme.of(context);
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.4, // tracking-tight
+        color: c.foreground,
+      ),
+    );
+  }
+}
+
+class KinetixCardDescription extends StatelessWidget {
+  const KinetixCardDescription(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = KinetixTheme.of(context);
+    return Text(text, style: TextStyle(fontSize: 14, color: c.mutedForeground));
+  }
+}
+
+class KinetixCardContent extends StatelessWidget {
+  const KinetixCardContent({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24), // p-6 pt-0
+      child: child,
+    );
+  }
+}
+
+class KinetixCardFooter extends StatelessWidget {
+  const KinetixCardFooter({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      child: Row(mainAxisSize: MainAxisSize.min, children: _spaced(children, 8, horizontal: true)),
+    );
+  }
+}
+
+List<Widget> _spaced(List<Widget> items, double gap, {bool horizontal = false}) {
+  if (items.length < 2) return items;
+  final out = <Widget>[];
+  for (var i = 0; i < items.length; i++) {
+    if (i > 0) {
+      out.add(horizontal ? SizedBox(width: gap) : SizedBox(height: gap));
+    }
+    out.add(items[i]);
+  }
+  return out;
+}
