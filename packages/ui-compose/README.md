@@ -1,7 +1,7 @@
 # @kinetixui/ui-compose
 
 Jetpack Compose port of KinetixUI. First of the native platforms — SwiftUI
-and Flutter aren't started yet. Fifty-four components so far:
+and Flutter aren't started yet. Fifty-nine components so far:
 `KinetixButton`, `KinetixBadge`, `KinetixSwitch`, `KinetixInput`,
 `KinetixSeparator`, `KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`,
 `KinetixTag`, `KinetixProgress`, `KinetixAvatar`, `KinetixAlert`,
@@ -17,7 +17,8 @@ and Flutter aren't started yet. Fifty-four components so far:
 `KinetixCollapsible`, `KinetixTabs`, `KinetixAccordion`,
 `KinetixToggleGroup`, `KinetixScrollArea`, `KinetixToaster`,
 `KinetixSelect`, `KinetixTable`, `KinetixModal`, `KinetixNavigationBar`,
-`KinetixTabBar`.
+`KinetixTabBar`, `KinetixInform`, `KinetixCommandDialog`,
+`KinetixCarousel`, `KinetixResizablePanels`, `KinetixCodeBlock`.
 
 This is a **standalone Gradle project**, not a pnpm/npm workspace package —
 there's no `package.json` here on purpose, so it's invisible to
@@ -171,17 +172,33 @@ proximity to the token source it depends on.
   composables rather than wrapping those Material3 components, so the
   leading/title/actions and icon/label/badge layouts match the source
   precisely rather than Material3's own app-bar/nav-bar conventions.
+- `Inform.kt` / `Command.kt` / `Carousel.kt` / `Resizable.kt` / `CodeBlock.kt`
+  — second batch from the "needs its own design pass" tier, each solving a
+  real reuse-or-rebuild question: `KinetixCommandDialog` composes
+  [KinetixDialog] directly and doesn't reimplement `cmdk`'s fuzzy-scored
+  filtering — the caller filters its own `items` against `query` and this
+  just renders whatever results; `KinetixCarousel` wraps Compose's own
+  `HorizontalPager`/`VerticalPager` (`@ExperimentalFoundationApi` — stable
+  behavior, an opt-in) instead of a hand-rolled swipe implementation, the
+  same call `KinetixSlider` made for drag gestures; `KinetixCodeBlock`
+  uses `LocalClipboardManager` for real copy-to-clipboard, no new
+  dependency, and stays presentational-only for syntax highlighting, same
+  as the source. `KinetixResizablePanels` is scoped to exactly **two**
+  panels rather than the source's arbitrary `PanelGroup` — a real,
+  deliberately narrowed scope avoiding that library's N-panel
+  redistribution algorithm — with the split fraction tracked via
+  `Modifier.draggable` against the container's own measured size.
 - `ButtonPreviews.kt` / `ComponentPreviews.kt` / `ComponentPreviews2.kt` /
   `ComponentPreviews3.kt` / `ComponentPreviews4.kt` / `ComponentPreviews5.kt`
   / `ComponentPreviews6.kt` / `ComponentPreviews7.kt` / `ComponentPreviews8.kt`
   / `ComponentPreviews9.kt` / `ComponentPreviews10.kt` / `ComponentPreviews11.kt`
-  — `@Preview` galleries, light + dark, for everything above. Not public
-  API — open these in Android Studio's Design/Split view to actually look
-  at something (`ComponentPreviews7.kt`'s own doc comment flags that
-  `Dialog`/`Popup`-based
-  overlay *content* doesn't reliably render inside the static Preview
-  renderer — a known Compose limitation, not a bug here; verify those in a
-  running app or Interactive Preview).
+  / `ComponentPreviews12.kt` — `@Preview` galleries, light + dark, for
+  everything above. Not public API — open these in Android Studio's
+  Design/Split view to actually look at something (`ComponentPreviews7.kt`'s
+  own doc comment flags that `Dialog`/`Popup`-based overlay *content*
+  doesn't reliably render inside the static Preview renderer — a known
+  Compose limitation, not a bug here; verify those in a running app or
+  Interactive Preview).
 - `ui/src/main/kotlin/com/kinetixui/tokens/` — **generated, do not edit.**
   Vendored from `packages/tokens/dist/android/`; re-copy after any token
   change with `pnpm build:tokens && pnpm vendor:compose` from the repo root.
@@ -225,6 +242,14 @@ proximity to the token source it depends on.
   no equivalent Android idiom. `KinetixContextMenu` opens anchored to its
   container, not the exact long-press point (no custom `PopupPositionProvider`
   math yet).
+- **`KinetixCommandDialog` doesn't filter.** No fuzzy-scored search — the
+  caller filters `items` against `query` itself; this only renders the
+  result. **`KinetixResizablePanels` supports exactly two panels**, not an
+  arbitrary `PanelGroup`. **`KinetixCodeBlock` has no syntax highlighting**
+  (same as the source — bring your own pre-highlighted text if needed).
+  `HorizontalPager`/`VerticalPager` (`KinetixCarousel`) are
+  `@ExperimentalFoundationApi` at this project's Compose version — stable
+  behavior, just an opt-in, worth re-checking on the next Compose bump.
 
 ## Try it
 
