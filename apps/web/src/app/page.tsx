@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Boxes, Palette, Smartphone, Zap } from "lucide-react";
 import { Button, Input } from "@kinetixui/ui";
-import { CodeBlock } from "@/components/code-block";
 import { ComingSoon } from "@/components/coming-soon";
+import { HeroCommand } from "@/components/hero-command";
 import { HeroTokenFan } from "@/components/hero-token-fan";
 import { Marquee, Reveal } from "@/components/reveal";
 import { SectionHead } from "@/components/section-head";
@@ -85,7 +85,7 @@ export default function HomePage() {
               </div>
 
               <div className="mt-8 w-full max-w-sm">
-                <CodeBlock code="npx @kinetixui/cli add button" />
+                <HeroCommand />
                 <p className="mt-2 text-[13px] text-muted-foreground">
                   Example — adds one component.{" "}
                   <Link href="/docs/installation" className="text-primary underline-offset-4 hover:underline">
@@ -97,9 +97,9 @@ export default function HomePage() {
             </div>
 
             {/* right rail: token fan-out + spec panel */}
-            <aside className="hidden flex-col gap-4 self-start lg:flex">
+            <aside className="flex flex-col gap-4 self-start">
               <HeroTokenFan />
-              <div className="kx-frame border border-border bg-background/60">
+              <div className="kx-frame hidden border border-border bg-background/60 lg:block">
                 <p className="border-b border-border px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                   spec
                 </p>
