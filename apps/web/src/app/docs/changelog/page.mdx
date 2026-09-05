@@ -7,6 +7,12 @@ export const metadata = {
 
 ## Unreleased
 
+- **Jetpack Compose library** (`packages/ui-compose`) — 69 native
+  `Kinetix*` composables on the token contract, one per React component
+  (`Chart`, `Form`, `NavigationMenu` documented as deliberate non-ports).
+  New [Jetpack Compose](/docs/compose) docs page: `KinetixTheme` setup,
+  the vendored-token flow, and the full known-gaps list. Compiled in CI
+  on every push. Not on Maven yet.
 - **CLI `list` + `add --all`** (`@kinetixui/cli@0.3.0`) — `npx @kinetixui/cli
   list` prints every component in the registry; `npx @kinetixui/cli add --all`
   installs all of them in one shot instead of naming each one. Backed by a

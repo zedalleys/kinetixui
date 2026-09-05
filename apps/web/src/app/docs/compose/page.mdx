@@ -1,0 +1,112 @@
+export const metadata = {
+  title: "Jetpack Compose",
+  description: "The native Android component library — 69 Kotlin composables on the KinetixUI token contract.",
+};
+
+# Jetpack Compose
+
+`packages/ui-compose` is a native **Jetpack Compose** port of KinetixUI —
+**69 `Kinetix*` composables** on the same token contract as the web
+library, one for every React component (or a documented reason it isn't).
+
+It's a **standalone Gradle project** inside this monorepo, not a
+pnpm/npm workspace package — there's no `package.json`, so it's invisible
+to `pnpm install` / Turborepo. It lives here for proximity to the token
+source it's built from.
+
+<Callout>
+  Not on Maven Central yet. Consume it by cloning the repo and copying the
+  `packages/ui-compose/ui` module into your project (or `includeBuild`-ing
+  it), the same "own the code" model as the web CLI. Remote publishing
+  needs a signing key and is deliberately not wired up.
+</Callout>
+
+## Setup
+
+The `ui` module is `com.android.library`, `namespace com.kinetixui.ui`,
+`compileSdk 34` / `minSdk 24`, Compose enabled. It depends only on
+`compose-bom` + `androidx.compose.ui` / `material3`.
+
+Wrap your app (or a screen, or a `@Preview`) in `KinetixTheme` so every
+`Kinetix*` composable resolves to the right light/dark token set:
+
+```kotlin
+import com.kinetixui.ui.*
+
+KinetixTheme {
+    // KinetixTheme() defaults to isSystemInDarkTheme(),
+    // same as the web "system" mode. Pass darkTheme = … to force it.
+    Column(modifier = Modifier.padding(16.dp)) {
+        KinetixButton(onClick = { /* … */ }, variant = KinetixButtonVariant.Primary) {
+            Text("Get started")
+        }
+        KinetixField(invalid = emailError != null) {
+            KinetixFieldLabel(text = "Email")
+            KinetixInput(value = email, onValueChange = { email = it }, isError = emailError != null)
+            emailError?.let { KinetixFieldMessage(text = it) }
+        }
+        KinetixSwitch(checked = enabled, onCheckedChange = { enabled = it })
+    }
+}
+```
+
+`KinetixColorScheme.current` exposes the active `KinetixColors` set if you
+need a token directly.
+
+## Tokens
+
+The Kotlin token objects and `res/values/{colors,dimens}.xml` under
+`ui/src/main/kotlin/com/kinetixui/tokens/` are **generated and vendored** —
+copied from `packages/tokens/dist/android/` by
+`scripts/vendor-compose-tokens.mjs`. Don't hand-edit them. After any
+token change:
+
+```bash
+pnpm build:tokens && pnpm vendor:compose
+```
+
+Every spacing / radius / type value in a component is read via
+`dimensionResource(R.dimen.*)` — nothing is a hand-picked number, unless
+a Figma value doesn't land on the shared scale (those are hardcoded with
+a comment).
+
+## What's covered
+
+All 69, one per React component — Button, Input, Dialog, Popover, Sheet,
+DropdownMenu, DataTable, Calendar, Carousel, Sidebar, and the rest. The
+[components gallery](/components) is the master list; each Compose file
+mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with a
+doc comment stating exactly what wasn't carried over.
+
+Reuse over re-derivation is the rule: `KinetixSlider` wraps Material3's
+`Slider`, `KinetixCalendar` its `DatePicker`, `KinetixToaster` its
+`SnackbarHost`, `KinetixCarousel` `HorizontalPager`, `KinetixSidebar`
+`ModalNavigationDrawer` — each re-themed onto the token contract rather
+than hand-built. `KinetixSelect` / `KinetixDrawer` are thin aliases over
+`KinetixDropdownMenu` / `KinetixSheet` — the same primitive under a
+different name.
+
+## Known gaps
+
+- **`Chart` and `Form` aren't ported.** The React `Chart` is a `recharts`
+  theming shell with no rendering of its own — a Compose equivalent needs
+  a charting-library decision (Vico / YCharts) or hand-rolled `Canvas`.
+  The React `Form` is `react-hook-form` glue; `KinetixField` +
+  `KinetixFieldLabel` / `Description` / `Message` **are** the Compose
+  equivalent — Compose has no RHF-shaped context to wrap.
+- **`NavigationMenu` isn't ported** — a hover-triggered desktop mega-menu
+  with no Android idiom.
+- **Scoped ports:** `KinetixSheet` is bottom-only. `KinetixSidebar` drops
+  rail/icon-collapse mode, `SidebarInset`, the cookie and the shortcut.
+  `KinetixDropdownMenu` / `ContextMenu` / `Menubar` have no nested
+  submenus. `KinetixResizablePanels` is two panels. `KinetixCommandDialog`
+  doesn't fuzzy-filter (the caller filters). `KinetixCodeBlock` has no
+  syntax highlighting. `KinetixCalendar` / `DatePicker` have no range
+  select. `KinetixImage` / `FileUpload` / `AudioPlayer` are presentational
+  — no Coil, file picker, or media playback; you wire those in.
+- **No remote publishing, no screenshot-test harness.** CI compiles the
+  whole package (`assembleDebug` + `lintDebug`) on every push that
+  touches it or the token source.
+
+SwiftUI and Flutter component libraries aren't started — the token engine
+emits Swift and Dart, but there's no `Kinetix*` library for either yet.

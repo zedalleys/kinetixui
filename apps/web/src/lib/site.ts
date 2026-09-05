@@ -168,6 +168,7 @@ export const docsNav: NavGroup[] = [
       { title: "Accessibility", href: "/docs/accessibility" },
       { title: "CLI", href: "/docs/cli" },
       { title: "Tokens", href: "/docs/tokens" },
+      { title: "Jetpack Compose", href: "/docs/compose" },
       { title: "Changelog", href: "/docs/changelog" },
     ],
   },
