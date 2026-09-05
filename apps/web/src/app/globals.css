@@ -224,23 +224,38 @@
     }
   }
 
-  /* blueprint placeholder for "coming soon" panels */
-  .kx-blueprint {
+  /* pipeline infographic — animated flow bar between stages + output chips */
+  .kx-flow-bar {
     position: relative;
-    background-image:
-      linear-gradient(color-mix(in srgb, hsl(var(--border)) 50%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in srgb, hsl(var(--border)) 50%, transparent) 1px, transparent 1px);
-    background-size: 22px 22px;
+    align-self: center;
+    width: 28px;
+    height: 2px;
+    overflow: hidden;
+    background: color-mix(in srgb, hsl(var(--border)) 70%, transparent);
   }
-  .kx-blueprint::after {
+  .kx-flow-bar::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: repeating-linear-gradient(
-      45deg,
-      transparent 0 10px,
-      color-mix(in srgb, hsl(var(--primary)) 9%, transparent) 10px 11px
-    );
+    width: 40%;
+    background: hsl(var(--primary));
+    animation: kx-flow-bar 1.4s linear infinite;
+  }
+  @keyframes kx-flow-bar {
+    from {
+      transform: translateX(-120%);
+    }
+    to {
+      transform: translateX(300%);
+    }
+  }
+  .kx-pipe-chip {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 6px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 3px;
+    color: hsl(var(--muted-foreground));
   }
 
   /* crop-mark corner ticks — the "measured drawing" frame */
@@ -349,8 +364,13 @@
   .kx-fan-source,
   .kx-fan-node,
   .kx-caret,
+  .kx-flow-bar::after,
   [data-reveal][data-shown] {
     animation: none !important;
+  }
+  .kx-flow-bar::after {
+    width: 100%;
+    opacity: 0.5;
   }
   [data-reveal],
   .kx-hero-enter > * {

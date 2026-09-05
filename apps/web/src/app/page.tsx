@@ -4,6 +4,7 @@ import { Button, Input } from "@kinetixui/ui";
 import { ComingSoon } from "@/components/coming-soon";
 import { HeroCommand } from "@/components/hero-command";
 import { HeroTokenFan } from "@/components/hero-token-fan";
+import { PipelineInfographic } from "@/components/pipeline-infographic";
 import { Marquee, Reveal } from "@/components/reveal";
 import { SectionHead } from "@/components/section-head";
 
@@ -196,7 +197,7 @@ export default function HomePage() {
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
           <Reveal>
             <SectionHead index="03" label="Infographic" meta="coming soon" />
-            <div className="mt-10 flex flex-col gap-8 md:flex-row md:items-center md:gap-12">
+            <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,22rem)_1fr] lg:gap-12">
               <div className="max-w-xl">
                 <h2 className="text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
                   The pipeline, drawn to scale.
@@ -204,18 +205,13 @@ export default function HomePage() {
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
                   One measured diagram: a single DTCG source, the Style Dictionary pass, five
                   platform outputs, and every component that rides on them — with the numbers that
-                  move when you change a token.
+                  move when you change a token. The preview is live; the full, interactive version
+                  is next.
                 </p>
                 <ComingSoon className="mt-6" />
               </div>
 
-              {/* blueprint placeholder */}
-              <div className="kx-frame relative w-full shrink-0 overflow-hidden border border-dashed border-border bg-muted/20 md:max-w-md">
-                <div className="kx-blueprint aspect-[4/3] w-full" />
-                <div className="absolute inset-0 grid place-items-center">
-                  <span className="eyebrow bg-background/75 px-2 py-1">preview pending</span>
-                </div>
-              </div>
+              <PipelineInfographic />
             </div>
           </Reveal>
         </div>
