@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 /**
  * KinetixDialog family — mirrors `packages/ui/src/components/dialog.tsx`.
@@ -37,19 +38,28 @@ import androidx.compose.ui.window.Dialog
  * — hardcoded, same reasoning as `KinetixFab`'s off-scale sizes. The
  * backdrop blur has no direct Compose equivalent and isn't approximated —
  * the dim scrim alone reads as "modal" without it.
+ *
+ * `dismissible = false` (used by [KinetixAlertDialog]) drops the close
+ * affordance and disables back-press/outside-tap dismissal, mirroring
+ * Radix `AlertDialog`'s "must choose an explicit action" behavior — the
+ * one real difference between it and a plain Dialog.
  */
 @Composable
 fun KinetixDialog(
     visible: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    dismissible: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     if (!visible) return
     val colors = KinetixColorScheme.current
     val shape = RoundedCornerShape(dimensionResource(R.dimen.radius_xl))
 
-    Dialog(onDismissRequest = onDismissRequest) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(dismissOnBackPress = dismissible, dismissOnClickOutside = dismissible),
+    ) {
         Box(
             modifier = modifier
                 .widthIn(max = 448.dp) // max-w-lg, not on the shared scale
@@ -65,14 +75,16 @@ fun KinetixDialog(
                     content()
                 }
             }
-            Text(
-                text = "×",
-                color = colors.mutedForeground,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(dimensionResource(R.dimen.spacing_4))
-                    .clickable(onClick = onDismissRequest),
-            )
+            if (dismissible) {
+                Text(
+                    text = "×",
+                    color = colors.mutedForeground,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(dimensionResource(R.dimen.spacing_4))
+                        .clickable(onClick = onDismissRequest),
+                )
+            }
         }
     }
 }

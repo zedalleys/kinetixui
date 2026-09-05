@@ -1,7 +1,7 @@
 # @kinetixui/ui-compose
 
 Jetpack Compose port of KinetixUI. First of the native platforms — SwiftUI
-and Flutter aren't started yet. Thirty-five components so far:
+and Flutter aren't started yet. Thirty-nine components so far:
 `KinetixButton`, `KinetixBadge`, `KinetixSwitch`, `KinetixInput`,
 `KinetixSeparator`, `KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`,
 `KinetixTag`, `KinetixProgress`, `KinetixAvatar`, `KinetixAlert`,
@@ -11,7 +11,8 @@ and Flutter aren't started yet. Thirty-five components so far:
 `KinetixSlider`, `KinetixPasswordInput`, `KinetixMetric`,
 `KinetixNumberInput`, `KinetixStepper`, `KinetixBreadcrumb`,
 `KinetixPagination`, `KinetixDialog`, `KinetixPopover`, `KinetixTooltip`,
-`KinetixDropdownMenu`, `KinetixSheet`.
+`KinetixDropdownMenu`, `KinetixSheet`, `KinetixAlertDialog`,
+`KinetixHoverCard`, `KinetixContextMenu`, `KinetixMenubar`.
 
 This is a **standalone Gradle project**, not a pnpm/npm workspace package —
 there's no `package.json` here on purpose, so it's invisible to
@@ -89,15 +90,36 @@ proximity to the token source it depends on.
   simpler, and equivalent to Radix's own controlled `open`/`onOpenChange`
   mode. `DropdownMenuSub` (nested submenus) isn't ported. See "Known gaps"
   below for the full list of what these five simplify away.
+- `AlertDialog.kt` / `HoverCard.kt` / `ContextMenu.kt` / `Menubar.kt` — the
+  overlay follow-up batch, same architecture as the five above.
+  `KinetixAlertDialog` composes [KinetixDialog] directly (`dismissible =
+  false`) and reuses its Header/Footer/Title/Description rather than
+  re-deriving near-identical copies — the React `AlertDialog` really is
+  just `Dialog` plus `Action`/`Cancel` buttons. `KinetixHoverCard` is
+  [KinetixPopover]'s exact mechanism at a different width; hover-triggering
+  itself isn't wired in (touch has no hover — the caller decides what sets
+  `visible`). `KinetixContextMenu` and `KinetixMenubar` reuse
+  `KinetixDropdownMenuItem`/`CheckboxItem`/`RadioItem`/`Label`/`Separator`
+  directly — both are, functionally, dropdown menus with a different
+  trigger (long-press; a row of always-visible triggers). `KinetixContextMenu`
+  is the one overlay in this package whose visibility isn't caller-owned —
+  the long-press gesture that defines a context menu lives inside the
+  composable itself, and it opens anchored to its container rather than the
+  exact press point (documented, not silently approximated).
+  **`NavigationMenu` was evaluated and deliberately skipped**: it's a
+  hover-triggered, multi-panel desktop nav pattern with no equivalent
+  Android navigation idiom (Android's own primary-nav patterns are
+  `NavigationBar`/`Drawer`, already differently shaped) — porting it would
+  produce something unconvincing rather than something useful.
 - `ButtonPreviews.kt` / `ComponentPreviews.kt` / `ComponentPreviews2.kt` /
   `ComponentPreviews3.kt` / `ComponentPreviews4.kt` / `ComponentPreviews5.kt`
-  / `ComponentPreviews6.kt` / `ComponentPreviews7.kt` — `@Preview`
-  galleries, light + dark, for everything above. Not public API — open
-  these in Android Studio's Design/Split view to actually look at
-  something (`ComponentPreviews7.kt`'s own doc comment flags that
+  / `ComponentPreviews6.kt` / `ComponentPreviews7.kt` / `ComponentPreviews8.kt`
+  — `@Preview` galleries, light + dark, for everything above. Not public
+  API — open these in Android Studio's Design/Split view to actually look
+  at something (`ComponentPreviews7.kt`'s own doc comment flags that
   `Dialog`/`Popup`-based overlay *content* doesn't reliably render inside
   the static Preview renderer — a known Compose limitation, not a bug
-  here; verify those five in a running app or Interactive Preview).
+  here; verify those in a running app or Interactive Preview).
 - `ui/src/main/kotlin/com/kinetixui/tokens/` — **generated, do not edit.**
   Vendored from `packages/tokens/dist/android/`; re-copy after any token
   change with `pnpm build:tokens && pnpm vendor:compose` from the repo root.
@@ -136,6 +158,11 @@ proximity to the token source it depends on.
   `ModalBottomSheet` are `@ExperimentalMaterial3Api` at this project's
   Material3 version (1.2.1 via the pinned BOM) — stable behavior, just an
   opt-in annotation, worth re-checking on the next BOM bump.
+- **`NavigationMenu` isn't ported.** Evaluated deliberately, not an
+  oversight: it's a hover-triggered, multi-panel desktop nav pattern with
+  no equivalent Android idiom. `KinetixContextMenu` opens anchored to its
+  container, not the exact long-press point (no custom `PopupPositionProvider`
+  math yet).
 
 ## Try it
 
@@ -225,6 +252,31 @@ KinetixTheme {
 
         KinetixTooltip(text = "Saved to your library") {
             KinetixButton(onClick = { /* ... */ }) { Text("Hover me") }
+        }
+
+        var confirmVisible by remember { mutableStateOf(false) }
+        KinetixAlertDialog(visible = confirmVisible, onDismissRequest = { confirmVisible = false }) {
+            KinetixDialogHeader { KinetixDialogTitle(text = "Are you sure?") }
+            KinetixDialogFooter {
+                KinetixAlertDialogCancel(text = "Cancel", onClick = { confirmVisible = false })
+                KinetixAlertDialogAction(text = "Continue", onClick = { confirmVisible = false })
+            }
+        }
+
+        KinetixContextMenu(
+            content = { KinetixLabel(text = "Long-press me") },
+            menuContent = { KinetixDropdownMenuItem(text = "Copy", onClick = { /* ... */ }) },
+        )
+
+        var fileMenuVisible by remember { mutableStateOf(false) }
+        KinetixMenubar {
+            KinetixMenubarMenu(
+                text = "File",
+                visible = fileMenuVisible,
+                onDismissRequest = { fileMenuVisible = false },
+                onTriggerClick = { fileMenuVisible = true },
+                menuContent = { KinetixDropdownMenuItem(text = "New file", onClick = { fileMenuVisible = false }) },
+            )
         }
     }
 }
