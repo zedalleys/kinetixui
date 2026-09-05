@@ -2,11 +2,13 @@
 
 SwiftUI port of KinetixUI — the iOS counterpart to
 [`packages/ui-compose`](../ui-compose) (Jetpack Compose). Built in
-batches the same way the Compose library was. **10 components so far:**
+batches the same way the Compose library was. **16 components so far:**
 `KinetixButton`, `KinetixBadge`, `KinetixTag`, `KinetixLabel`,
 `KinetixSeparator`, `KinetixSkeleton`, `KinetixSpinner`,
 `KinetixProgress`, `KinetixCard` (+ `Header` / `Title` / `Description` /
-`Content` / `Footer`), `KinetixAspectRatio`.
+`Content` / `Footer`), `KinetixAspectRatio`, `KinetixCheckbox`,
+`KinetixSwitch`, `KinetixToggle`, `KinetixRadioGroup` /
+`KinetixRadioButton`, `KinetixInput`, `KinetixTextarea`.
 
 - `Sources/KinetixUI/Theme.swift` — `KinetixColors` (the semantic colour
   set), `@Environment(\.kinetixColors)`, and the `KinetixTheme { … }`
@@ -79,8 +81,8 @@ sole compiler feedback.
 ## Not in this pass
 
 - The rest of the ~70-component surface — added in batches (same as the
-  Compose arc). Overlay-class components (dialog, popover, menus) and
-  the input primitives are still to come.
+  Compose arc). Overlay-class components (dialog, popover, menus) are
+  still to come.
 - A tagged SPM release — needs repo/signing decisions; consume via
   `.package(path:)` for now.
 - A real `.kinetixFont(.labelMd)` type-scale modifier — `KinetixButton`
