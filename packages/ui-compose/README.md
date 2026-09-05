@@ -1,7 +1,7 @@
 # @kinetixui/ui-compose
 
 Jetpack Compose port of KinetixUI. First of the native platforms — SwiftUI
-and Flutter aren't started yet. Fifty-nine components so far:
+and Flutter aren't started yet. Sixty-five components so far:
 `KinetixButton`, `KinetixBadge`, `KinetixSwitch`, `KinetixInput`,
 `KinetixSeparator`, `KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`,
 `KinetixTag`, `KinetixProgress`, `KinetixAvatar`, `KinetixAlert`,
@@ -18,7 +18,9 @@ and Flutter aren't started yet. Fifty-nine components so far:
 `KinetixToggleGroup`, `KinetixScrollArea`, `KinetixToaster`,
 `KinetixSelect`, `KinetixTable`, `KinetixModal`, `KinetixNavigationBar`,
 `KinetixTabBar`, `KinetixInform`, `KinetixCommandDialog`,
-`KinetixCarousel`, `KinetixResizablePanels`, `KinetixCodeBlock`.
+`KinetixCarousel`, `KinetixResizablePanels`, `KinetixCodeBlock`,
+`KinetixCalendar`, `KinetixDatePicker`, `KinetixDataTable`,
+`KinetixFileUpload`, `KinetixDrawer`.
 
 This is a **standalone Gradle project**, not a pnpm/npm workspace package —
 there's no `package.json` here on purpose, so it's invisible to
@@ -188,11 +190,29 @@ proximity to the token source it depends on.
   deliberately narrowed scope avoiding that library's N-panel
   redistribution algorithm — with the split fraction tracked via
   `Modifier.draggable` against the container's own measured size.
+- `Calendar.kt` / `DatePicker.kt` / `DataTable.kt` / `FileUpload.kt` /
+  `Drawer.kt` — third "needs its own design pass" batch, mostly reuse.
+  `KinetixCalendar` wraps Material3's own `DatePicker` composable
+  (`@ExperimentalMaterial3Api`) and only re-maps its colors — the same
+  "reuse the widget, restyle it" call `KinetixSlider`/`KinetixCarousel`
+  made. `KinetixDatePicker` is straight [KinetixPopover] + [KinetixCalendar]
+  + [KinetixLabel]/[KinetixButton], mirroring the React source's Popover +
+  Calendar composition; formats dates with `SimpleDateFormat` rather than a
+  date library. `KinetixDataTable` hand-holds sort + pagination state
+  (no `@tanstack/react-table` equivalent) but renders entirely through
+  the existing `KinetixTable*` + `KinetixButton` primitives; a
+  `KinetixColumn` gives a header, a `String` cell mapper and an optional
+  `sortKey`. `KinetixFileUpload` is presentational only (same as the
+  source) — `onBrowse` replaces the web drag-and-drop (wire it to an
+  `ActivityResultContracts.GetContent` launcher); the dashed drop-zone
+  border is a `PathEffect.dashPathEffect` `Stroke`. `KinetixDrawer` is
+  thin pass-throughs to the `KinetixSheet*` family — `vaul`'s Drawer and a
+  bottom Sheet are the same drag-handled bottom panel on Android.
 - `ButtonPreviews.kt` / `ComponentPreviews.kt` / `ComponentPreviews2.kt` /
   `ComponentPreviews3.kt` / `ComponentPreviews4.kt` / `ComponentPreviews5.kt`
   / `ComponentPreviews6.kt` / `ComponentPreviews7.kt` / `ComponentPreviews8.kt`
   / `ComponentPreviews9.kt` / `ComponentPreviews10.kt` / `ComponentPreviews11.kt`
-  / `ComponentPreviews12.kt` — `@Preview` galleries, light + dark, for
+  / `ComponentPreviews12.kt` / `ComponentPreviews13.kt` — `@Preview` galleries, light + dark, for
   everything above. Not public API — open these in Android Studio's
   Design/Split view to actually look at something (`ComponentPreviews7.kt`'s
   own doc comment flags that `Dialog`/`Popup`-based overlay *content*
@@ -250,6 +270,15 @@ proximity to the token source it depends on.
   `HorizontalPager`/`VerticalPager` (`KinetixCarousel`) are
   `@ExperimentalFoundationApi` at this project's Compose version — stable
   behavior, just an opt-in, worth re-checking on the next Compose bump.
+- **`KinetixCalendar`/`KinetixDatePicker` wrap Material3's `DatePicker`**
+  (`@ExperimentalMaterial3Api` here — re-check on the next Material3 bump);
+  no range selection. **`KinetixFileUpload` is presentational** — no file
+  picker or upload logic (wire `onBrowse` to your own launcher), and no
+  web-style drag-and-drop (Android has none). **`KinetixDataTable`** has
+  no column resize/reorder/filter — just single-column sort + pagination.
+  **`KinetixDrawer`** is an alias for the bottom `KinetixSheet`; the
+  `vaul`-specific `shouldScaleBackground` has no `ModalBottomSheet`
+  equivalent.
 
 ## Try it
 
