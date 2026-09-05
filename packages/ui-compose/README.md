@@ -1,7 +1,7 @@
 # @kinetixui/ui-compose
 
 Jetpack Compose port of KinetixUI. First of the native platforms — SwiftUI
-and Flutter aren't started yet. Thirty-nine components so far:
+and Flutter aren't started yet. Forty-four components so far:
 `KinetixButton`, `KinetixBadge`, `KinetixSwitch`, `KinetixInput`,
 `KinetixSeparator`, `KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`,
 `KinetixTag`, `KinetixProgress`, `KinetixAvatar`, `KinetixAlert`,
@@ -12,7 +12,9 @@ and Flutter aren't started yet. Thirty-nine components so far:
 `KinetixNumberInput`, `KinetixStepper`, `KinetixBreadcrumb`,
 `KinetixPagination`, `KinetixDialog`, `KinetixPopover`, `KinetixTooltip`,
 `KinetixDropdownMenu`, `KinetixSheet`, `KinetixAlertDialog`,
-`KinetixHoverCard`, `KinetixContextMenu`, `KinetixMenubar`.
+`KinetixHoverCard`, `KinetixContextMenu`, `KinetixMenubar`, `KinetixList`,
+`KinetixImage`, `KinetixInputOtp`, `KinetixInputGroup`,
+`KinetixCollapsible`.
 
 This is a **standalone Gradle project**, not a pnpm/npm workspace package —
 there's no `package.json` here on purpose, so it's invisible to
@@ -111,15 +113,31 @@ proximity to the token source it depends on.
   Android navigation idiom (Android's own primary-nav patterns are
   `NavigationBar`/`Drawer`, already differently shaped) — porting it would
   produce something unconvincing rather than something useful.
+- `List.kt` / `Image.kt` / `InputOtp.kt` / `InputGroup.kt` / `Collapsible.kt`
+  — back to inline components; these round out the remaining
+  straightforward primitives. `KinetixImage` only supplies the
+  ratio-locked, muted, rounded container — no image-loading library
+  (Coil, etc.) is wired in, so the caller's own image solution goes in its
+  `content` slot. `KinetixInputOtp` uses the standard Compose OTP recipe
+  (a transparent `BasicTextField` capturing keystrokes under a visible row
+  of boxes) rather than reimplementing the `input-otp` library's internals.
+  `KinetixInputGroup` doesn't reproduce the source's CSS `focus-within`
+  border glow (no descendant-focus tracking across arbitrary children
+  without a shared `InteractionSource`); its button add-on's single-side
+  border is hand-drawn with `drawBehind`, the same "draw it yourself"
+  approach `KinetixRating`'s star uses. `KinetixCollapsible` is a two-line
+  wrapper over Compose's built-in `AnimatedVisibility` — the underlying
+  Radix primitive it mirrors provides nothing beyond that animation.
 - `ButtonPreviews.kt` / `ComponentPreviews.kt` / `ComponentPreviews2.kt` /
   `ComponentPreviews3.kt` / `ComponentPreviews4.kt` / `ComponentPreviews5.kt`
   / `ComponentPreviews6.kt` / `ComponentPreviews7.kt` / `ComponentPreviews8.kt`
-  — `@Preview` galleries, light + dark, for everything above. Not public
-  API — open these in Android Studio's Design/Split view to actually look
-  at something (`ComponentPreviews7.kt`'s own doc comment flags that
-  `Dialog`/`Popup`-based overlay *content* doesn't reliably render inside
-  the static Preview renderer — a known Compose limitation, not a bug
-  here; verify those in a running app or Interactive Preview).
+  / `ComponentPreviews9.kt` — `@Preview` galleries, light + dark, for
+  everything above. Not public API — open these in Android Studio's
+  Design/Split view to actually look at something (`ComponentPreviews7.kt`'s
+  own doc comment flags that `Dialog`/`Popup`-based overlay *content*
+  doesn't reliably render inside the static Preview renderer — a known
+  Compose limitation, not a bug here; verify those in a running app or
+  Interactive Preview).
 - `ui/src/main/kotlin/com/kinetixui/tokens/` — **generated, do not edit.**
   Vendored from `packages/tokens/dist/android/`; re-copy after any token
   change with `pnpm build:tokens && pnpm vendor:compose` from the repo root.
@@ -278,6 +296,19 @@ KinetixTheme {
                 menuContent = { KinetixDropdownMenuItem(text = "New file", onClick = { fileMenuVisible = false }) },
             )
         }
+
+        KinetixList {
+            KinetixListItem(title = "Email", description = "Product news", trailing = { KinetixSwitch(checked = true, onCheckedChange = {}) })
+        }
+        KinetixImage(ratio = KinetixImageRatio.Widescreen16To9) {
+            // place your own AsyncImage/painterResource here
+        }
+        KinetixInputOtp(value = code, onValueChange = { code = it }, length = 6)
+        KinetixInputGroup {
+            KinetixInputGroupText(text = "https://")
+            KinetixInputGroupInput(value = url, onValueChange = { url = it }, placeholder = "kinetixui.com")
+        }
+        KinetixCollapsible(expanded = detailsOpen) { KinetixLabel(text = "Extra details") }
     }
 }
 ```
