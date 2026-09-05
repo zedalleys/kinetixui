@@ -1,5 +1,11 @@
 # @kinetixui/cli
 
+## 0.3.0
+
+### Minor Changes
+
+- fe501e3: Add `kinetixui list` to enumerate every component in the registry, and an `--all` flag on `kinetixui add` to install all of them in one command.
+
 > Published as `@kinetixui/cli` since 0.2.0. The `0.1.0` release under the
 > unscoped name `kinetixui` is deprecated; the installed command is still
 > `kinetixui` (run via `npx @kinetixui/cli`).
