@@ -6,10 +6,25 @@ Flutter port of KinetixUI — the fourth platform alongside React
 path; each widget mirrors its `packages/ui/src/components/*.tsx`
 counterpart 1:1, with a doc comment stating anything not carried over.
 
-**43 components so far.** Controls, the full input + field set, display
-primitives, disclosure/navigation, and the mobile chrome — everything bar
-the overlay & menu classes (next batch) and the deliberate non-ports.
-`kinetix_ui.dart` is the full export list.
+**68 components — the full React component surface** bar three deliberate
+non-ports. Controls, the full input + field set, display primitives,
+data (Table / DataTable / Carousel), disclosure/navigation, the overlay &
+menu classes (Dialog, Sheet, Popover, Dropdown/Context menus, Command,
+Tooltip, Toaster), plus `KinetixCalendar` (over `CalendarDatePicker`) and
+a hand-drawn `KinetixChart` bar chart. `kinetix_ui.dart` is the full
+export list.
+
+### Not ported (deliberate)
+
+Matching the Compose / SwiftUI ports' stance:
+
+- **`Form`** — `KinetixField` (+ `Label` / `Description` / `Message`) is
+  the equivalent; there's no `react-hook-form`-shaped context to wrap.
+- **`NavigationMenu`** — a hover-triggered desktop mega-menu with no
+  touch idiom.
+- **`Combobox`** — a recipe (Popover + Command) on the web, not a
+  standalone component; compose `KinetixPopover` + a filtered list, or
+  use `KinetixSelect`.
 
 - `lib/src/theme.dart` — `KinetixColors` (the semantic set), the
   `KinetixTheme` `InheritedWidget`, and `KinetixTheme.of(context)`. The
