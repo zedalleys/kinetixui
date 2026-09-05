@@ -27,18 +27,26 @@ All DTCG format (`$value` / `$type`), extracted from Figma variables.
 pnpm build:tokens   # node style-dictionary/build.mjs
 ```
 
-Style Dictionary v4 runs **once per theme** (light emits every platform, dark
-emits only `globals.dark.css`) because two files defining the same token path
-would collide in a single run.
+Style Dictionary v4 runs **once per theme** because two files defining the same
+token path would collide in a single run. The light pass emits every platform;
+the dark pass emits the web `globals.dark.css` **and** the native semantic
+theme files that a `KinetixTheme` needs real dark values for — `Theme.dark.kt`
+(Compose), `KinetixColorsSwiftUI.dark.swift` (SwiftUI) and
+`kinetix_color_scheme.dark.dart` (Flutter).
 
 ## Output
 
 | Platform | Files |
 | --- | --- |
 | Web | `web/globals.css`, `web/globals.dark.css`, `web/tokens.ts` |
-| iOS | `ios/KinetixColors.swift`, `ios/Theme.swift` |
-| Android | `android/Color.kt`, `android/Theme.kt`, `res/values/{colors,dimens}.xml` |
-| Flutter | `flutter/app_colors.dart`, `flutter/app_theme.dart` |
+| iOS | `ios/KinetixColors.swift`, `ios/Theme.swift` (UIColor), `ios/KinetixType.swift`; `ios/KinetixColorsSwiftUI.swift` + `.dark.swift` (SwiftUI `Color`, for `packages/ui-swiftui`) |
+| Android | `android/Color.kt`, `android/Theme.kt` + `Theme.dark.kt`, `android/KinetixType.kt`, `res/values/{colors,dimens}.xml` |
+| Flutter | `flutter/app_colors.dart`, `flutter/app_theme.dart`, `flutter/app_text.dart`; `flutter/kinetix_color_scheme.dart` + `.dark.dart` (for `packages/ui-flutter`) |
+
+The `KinetixColorsSwiftUI` / `KinetixColorScheme` pairs are **additive** — the
+older `Theme.swift` / `app_theme.dart` outputs (light-only, colliding class
+names) are untouched. See [SwiftUI](/docs/swiftui) and [Flutter](/docs/flutter)
+for why.
 
 ## Semantic contract
 

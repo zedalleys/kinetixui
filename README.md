@@ -4,8 +4,8 @@
 
 KinetixUI turns a single design source into living tokens and components for
 **React, SwiftUI, Jetpack Compose, and Flutter** — one source of truth,
-multi-platform output, a React component library, a portable component registry, and
-Storybook docs.
+multi-platform output, a component library **on all four platforms** at parity,
+a portable component registry, and Storybook docs.
 
 Free while in beta. Advanced tooling ships later as **KinetixUI Pro**.
 
@@ -18,12 +18,15 @@ kinetixui/
 │  └─ semantic/                semantic token aliases (light + dark) · text styles
 ├─ style-dictionary/
 │  ├─ build.mjs                entrypoint — runs SD once per theme (light, dark)
-│  ├─ sd.config.mjs            Style Dictionary v4 config factory — 5 platform targets
-│  └─ hooks.mjs                custom transforms + TS format
+│  ├─ sd.config.mjs            Style Dictionary v4 config factory — web + iOS + Android + Flutter
+│  └─ hooks.mjs                custom transforms + formats (TS, SwiftUI Color, Dart Color, type scales)
 ├─ packages/
 │  ├─ tokens/                  @kinetixui/tokens — build output for all platforms
 │  │  └─ dist/{web,ios,android,flutter}
 │  ├─ ui/                      @kinetixui/ui — React + CVA + Radix + Tailwind
+│  ├─ ui-compose/              Jetpack Compose port (Gradle; no package.json) — /docs/compose
+│  ├─ ui-swiftui/              SwiftUI port (SwiftPM; no package.json) — /docs/swiftui
+│  ├─ ui-flutter/              Flutter port (Dart; no package.json) — /docs/flutter
 │  └─ cli/                     @kinetixui/cli — first-party install CLI (init / add)
 ├─ registry/
 │  ├─ registry.json            component registry manifest
@@ -38,7 +41,8 @@ kinetixui/
 
 | Command | Does |
 |---|---|
-| `pnpm build:tokens` | `node style-dictionary/build.mjs` → `packages/tokens/dist/{web,ios,android,flutter}` (11 files) |
+| `pnpm build:tokens` | `node style-dictionary/build.mjs` → `packages/tokens/dist/{web,ios,android,flutter}` (colours light + dark, theme, type scale, dimensions) |
+| `pnpm vendor:compose` / `vendor:swiftui` / `vendor:flutter` | copy the generated native token files into `packages/ui-{compose,swiftui,flutter}` (run after `build:tokens`) |
 | `pnpm build:ui` | bundle `@kinetixui/ui` (tsup) |
 | `pnpm build:cli` | bundle the `@kinetixui/cli` package (tsup) |
 | `pnpm build:registry` | `shadcn build` → static registry JSON in `public/r/` |
@@ -63,17 +67,21 @@ are private and never published.
 
 ## Status
 
-- ✅ **Token engine** — `pnpm build:tokens` clean; 11 files across web / iOS /
-  Android / Flutter. Web CSS is HSL channels (opacity modifiers work); `--chart-1…5`
-  added.
-- ✅ **Components — 66 in `@kinetixui/ui`**, full component parity: `Button` /
-  `Input` / `Textarea` (design-source-native API) + 63 ported onto the token
-  contract (Accordion … Tooltip, plus Calendar, Carousel, Chart, Command,
-  Context Menu, Data Table, Drawer, Form, Input OTP, Menubar, Navigation Menu,
-  Resizable, Sidebar, AudioPlayer, CircularProgress, Image, Inform, Rating,
-  Spinner, List, Stepper, Fab, TabBar, NavigationBar, FileUpload, AvatarGroup,
-  DatePicker, CodeBlock, Metric, NumberInput, Quote, Footer, TableOfContents).
-  **72-item** component registry.
+- ✅ **Token engine** — `pnpm build:tokens` clean; web / iOS / Android / Flutter
+  output, with a real light **and** dark pass for the native semantic themes.
+  Web CSS is HSL channels (opacity modifiers work); `--chart-1…5` added.
+- ✅ **React — `@kinetixui/ui`**, the source of truth: `Button` / `Input` /
+  `Textarea` (design-source-native API) + the rest ported onto the token
+  contract. **72-item** component registry; published to npm + the CLI registry.
+- ✅ **Native ports at parity** — Jetpack Compose (`packages/ui-compose`, 69
+  composables), SwiftUI (`packages/ui-swiftui`, 68 views) and Flutter
+  (`packages/ui-flutter`, 68 widgets) each carry a 1:1 port of the React
+  surface on the same token contract. Standing non-ports: `Form`,
+  `NavigationMenu`, `Combobox`. Each has its own CI workflow
+  (`native-{compose,swiftui,flutter}.yml`: `gradle assembleDebug` /
+  `swift build` / `flutter analyze`). The **four-platform rule** — a new
+  component isn't done until all four have a CI-verified port — is at
+  `/docs/contributing`.
 - ✅ **kinetixui.com** — every component doc route (72 component pages) with
   live previews, Colors, Themes, ⌘K, light/dark. `pnpm build:web` passes; all static.
   The Code tab has per-platform sub-tabs — React · HTML · iOS (SwiftUI) ·
@@ -99,7 +107,9 @@ are private and never published.
   documented trade-off.
 - ✅ CI — GitHub Actions builds tokens → ui → registry → site and runs the
   `@kinetixui/ui` tests on every push/PR; fails if generated output
-  (`packages/tokens/dist`, `apps/web/public/r`) is stale.
+  (`packages/tokens/dist`, `apps/web/public/r`) is stale. Three additional
+  path-filtered workflows compile the native ports
+  (`native-{compose,swiftui,flutter}.yml`).
 - Deploy: [`DEPLOY.md`](DEPLOY.md) is the setup guide; [`NOTES.md`](NOTES.md) is
   the current live state (Vercel project, DNS, npm layout, Storybook, CI).
 - See [`TOKENS.md`](TOKENS.md) for every deviation from the raw design tokens.
