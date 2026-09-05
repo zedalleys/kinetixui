@@ -2,8 +2,7 @@
 
 SwiftUI port of KinetixUI — the iOS counterpart to
 [`packages/ui-compose`](../ui-compose) (Jetpack Compose). Built in
-batches the same way the Compose library was. **49 components so far**
-(overlay & menu classes included):
+batches the same way the Compose library was. **55 components so far**:
 `KinetixButton`, `KinetixBadge`, `KinetixTag`, `KinetixLabel`,
 `KinetixSeparator`, `KinetixSkeleton`, `KinetixSpinner`,
 `KinetixProgress`, `KinetixCircularProgress`, `KinetixCard` (+ `Header` /
@@ -27,7 +26,21 @@ batches the same way the Compose library was. **49 components so far**
 `KinetixMenubarMenu`, `KinetixToggleGroup` / `KinetixToggleGroupItem`,
 `KinetixScrollArea`, `KinetixImage`, `KinetixInputGroup` (+ `Input` /
 `Text` / `Addon` / `Button`), `KinetixTableOfContents`, `KinetixFooter`
-(+ `Column` / `Link` / `Bottom`).
+(+ `Column` / `Link` / `Bottom`), `KinetixSelect`, `KinetixDrawer`
+(bottom; parts alias the Dialog parts), `KinetixModal`,
+`KinetixNavigationBar` (+ `KinetixNavigationBackButton`), `KinetixTabBar`
+/ `KinetixTabBarItem`, `KinetixCodeBlock`.
+
+### Not ported
+
+The data-heavy / highly composed components are deliberately left for a
+later pass (or, like the Compose port, as permanent non-ports where
+there's no native idiom): `Calendar`, `DatePicker`, `Carousel`, `Table`,
+`DataTable`, `Command`, `Combobox`, `Resizable`, `Sidebar`,
+`NavigationMenu`, `FileUpload`, `AudioPlayer`, `Chart`, `Form`,
+`Toaster`, `InputOtp`. Use SwiftUI's native `DatePicker`, `List`,
+`TabView`, `NavigationSplitView`, `Charts`, and `.searchable` for those in
+the meantime.
 
 - `Sources/KinetixUI/Theme.swift` — `KinetixColors` (the semantic colour
   set), `@Environment(\.kinetixColors)`, and the `KinetixTheme { … }`
