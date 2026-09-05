@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'theme.dart';
+import 'util.dart';
 
 /// Mirrors `packages/ui/src/components/card.tsx`'s Card / CardHeader /
 /// CardTitle / CardDescription / CardContent / CardFooter — thin styled
@@ -45,7 +46,7 @@ class KinetixCardHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
-        children: _spaced(children, 6),
+        children: gapAll(children, 6),
       ),
     );
   }
@@ -106,19 +107,7 @@ class KinetixCardFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-      child: Row(mainAxisSize: MainAxisSize.min, children: _spaced(children, 8, horizontal: true)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: gapAll(children, 8, axis: Axis.horizontal)),
     );
   }
-}
-
-List<Widget> _spaced(List<Widget> items, double gap, {bool horizontal = false}) {
-  if (items.length < 2) return items;
-  final out = <Widget>[];
-  for (var i = 0; i < items.length; i++) {
-    if (i > 0) {
-      out.add(horizontal ? SizedBox(width: gap) : SizedBox(height: gap));
-    }
-    out.add(items[i]);
-  }
-  return out;
 }
