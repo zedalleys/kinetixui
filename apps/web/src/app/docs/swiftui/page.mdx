@@ -1,0 +1,110 @@
+export const metadata = {
+  title: "SwiftUI",
+  description: "The native iOS component library — a SwiftUI port on the KinetixUI token contract, kicked off with KinetixButton.",
+};
+
+# SwiftUI
+
+`packages/ui-swiftui` is the native **SwiftUI** port of KinetixUI — the
+iOS counterpart to the [Jetpack Compose](/docs/compose) library. It's at
+the **kickoff stage**: the theme layer, one component end-to-end
+(`KinetixButton`), and a macOS `swift build` CI path, so the rest can
+follow in batches the same way the Compose library was built.
+
+It's a **standalone SwiftPM package** inside this monorepo, not a
+pnpm/npm workspace package — there's no `package.json`, so it's invisible
+to `pnpm install` / Turborepo. It lives here for proximity to the token
+source it's built from.
+
+<Callout>
+  Not on the SwiftPM registry. Consume it from a repo checkout with
+  `.package(path: "…/packages/ui-swiftui")` — the same "own the code"
+  model as the web CLI and the Compose library. A tagged release needs
+  repo/signing decisions and is deliberately not wired up.
+</Callout>
+
+## Setup
+
+`Package.swift` declares one library target, `KinetixUI`, for
+`.iOS(.v16)` / `.macOS(.v13)` (the floor is 16 / 13 because
+`KinetixButton` uses the View-level `.tracking` text modifier).
+
+Wrap a screen — or a `#Preview` — in `KinetixTheme` so every `Kinetix*`
+view resolves to the right light/dark token set:
+
+```swift
+import KinetixUI
+import SwiftUI
+
+struct ContentView: View {
+    @State private var enabled = true
+
+    var body: some View {
+        KinetixTheme {
+            // KinetixTheme picks light/dark off the system colorScheme,
+            // the same as the web "system" mode.
+            VStack(spacing: 12) {
+                KinetixButton(action: {}) { Text("Get started") }
+                KinetixButton(variant: .outline, size: .sm, action: {}) { Text("Cancel") }
+                KinetixButton(variant: .destructive, action: {}) { Text("Delete") }
+                    .disabled(!enabled)
+            }
+            .padding(16)
+        }
+    }
+}
+```
+
+`@Environment(\.kinetixColors)` exposes the active `KinetixColors` set if
+you need a token directly.
+
+## Tokens: SwiftUI `Color`, not `UIColor`
+
+The pre-existing iOS token output
+(`packages/tokens/dist/ios/KinetixColors.swift`, `Theme.swift`) is
+`UIColor`-based. `UIColor` is UIKit-only — it doesn't compile on macOS,
+so a package that must `swift build` on a macOS CI runner can't consume
+it. The token engine emits a **parallel SwiftUI-`Color` semantic set**
+for this library (`KinetixColorsSwiftUI` light /
+`KinetixColorsSwiftUIDark` dark), from the `ios-swiftui-theme` platform
+block in `style-dictionary/sd.config.mjs`. The UIColor output is
+untouched — this is purely additive, the same way Android has `Color.kt`
+alongside `Theme.kt` / `Theme.dark.kt`.
+
+Unlike every other native platform, this set runs on **both** Style
+Dictionary passes — a `KinetixTheme` needs real light *and* dark values.
+
+The vendored copies under `Sources/KinetixUI/` are generated. After any
+token change:
+
+```bash
+pnpm build:tokens && pnpm vendor:swiftui
+```
+
+## What's covered
+
+- **`KinetixTheme`** — `KinetixColors` (the semantic set), the
+  `@Environment(\.kinetixColors)` key, and the wrapper view.
+- **`KinetixButton`** — mirrors
+  `packages/ui/src/components/button.tsx`'s `buttonVariants` CVA 1:1:
+  `KinetixButtonVariant` (`.primary .secondary .outline .destructive
+  .ghost .link`), `KinetixButtonSize` (`.sm .md .lg .icon`),
+  `KinetixCorners` (`.sharp .default .pill`). The `state` axis
+  (Hover/Focus/Active) and the `sr-only` icon-label treatment aren't
+  ported — SwiftUI gives press feedback for free — the same calls the
+  Compose port made. Padding / radii / type are hardcoded from the Figma
+  scale (no `dimensionResource` equivalent for a plain SwiftPM target),
+  annotated with the token each maps to.
+
+## Known gaps
+
+- **One component so far.** This establishes token → theme → component →
+  CI once; the rest of the surface follows in batches, exactly like the
+  Compose arc did.
+- **No remote publishing.** `swift build` on `macos-latest` (against the
+  `.macOS(.v13)` target, no simulator) is the sole compiler feedback on
+  every push that touches `packages/ui-swiftui`, `tokens/`, or
+  `style-dictionary/`.
+- **No type-scale modifier yet.** `KinetixButton` uses raw sizes from the
+  Figma type scale; a real `.kinetixFont(.labelMd)` reading
+  `KinetixType.swift` is a follow-up.

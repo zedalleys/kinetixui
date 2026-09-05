@@ -169,6 +169,7 @@ export const docsNav: NavGroup[] = [
       { title: "CLI", href: "/docs/cli" },
       { title: "Tokens", href: "/docs/tokens" },
       { title: "Jetpack Compose", href: "/docs/compose" },
+      { title: "SwiftUI", href: "/docs/swiftui" },
       { title: "Changelog", href: "/docs/changelog" },
     ],
   },
