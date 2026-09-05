@@ -1,13 +1,14 @@
 export const metadata = {
   title: "SwiftUI",
-  description: "The native iOS component library — a SwiftUI port on the KinetixUI token contract, 58 Kinetix* views.",
+  description: "The native iOS component library — a SwiftUI port on the KinetixUI token contract, the full React surface (68 Kinetix* views).",
 };
 
 # SwiftUI
 
 `packages/ui-swiftui` is the native **SwiftUI** port of KinetixUI — the
-iOS counterpart to the [Jetpack Compose](/docs/compose) library. **58
-`Kinetix*` views**, built in batches on a macOS `swift build` CI path;
+iOS counterpart to the [Jetpack Compose](/docs/compose) library. **68
+`Kinetix*` views — the full React component surface** bar three
+deliberate non-ports, built in batches on a macOS `swift build` CI path;
 each mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with
 a doc comment stating anything not carried over.
 
@@ -83,7 +84,8 @@ pnpm build:tokens && pnpm vendor:swiftui
 
 ## What's covered
 
-`KinetixTheme` plus 58 `Kinetix*` views:
+`KinetixTheme` plus 68 `Kinetix*` views — everything in
+`packages/ui/src/components` except the three non-ports below.
 
 - **Controls** — `KinetixButton` (`buttonVariants` CVA 1:1: variant ×
   size × corners), `KinetixCheckbox`, `KinetixSwitch`, `KinetixToggle` /
@@ -92,17 +94,20 @@ pnpm build:tokens && pnpm vendor:swiftui
 - **Inputs** — `KinetixInput` (corners enum, trailing slot),
   `KinetixTextarea`, `KinetixNumberInput`, `KinetixPasswordInput`,
   `KinetixInputOtp`, `KinetixInputGroup` family, `KinetixSelect`,
-  `KinetixDatePicker`, `KinetixField` (+ `Label` / `Description` /
-  `Message`).
+  `KinetixDatePicker`, `KinetixCalendar`, `KinetixFileUpload`,
+  `KinetixField` (+ `Label` / `Description` / `Message`).
 - **Display** — `KinetixBadge`, `KinetixTag`, `KinetixLabel`,
   `KinetixSeparator`, `KinetixSkeleton`, `KinetixSpinner`,
   `KinetixProgress`, `KinetixCircularProgress`, `KinetixAvatar` (+
   `Fallback`), `KinetixImage`, `KinetixCard` family, `KinetixAlert`
   family, `KinetixQuote`, `KinetixMetric`, `KinetixCodeBlock`,
-  `KinetixAspectRatio`.
+  `KinetixChart`, `KinetixAudioPlayer`, `KinetixAspectRatio`.
+- **Data** — `KinetixTable` family, `KinetixDataTable` (sort +
+  pagination), `KinetixCarousel`.
 - **Navigation & disclosure** — `KinetixAccordion` family,
   `KinetixCollapsible`, `KinetixTabsList` / `Trigger` / `Content`,
   `KinetixList` / `KinetixListItem`, `KinetixScrollArea`,
+  `KinetixResizablePanels`, `KinetixSidebar` / `Item`,
   `KinetixBreadcrumb` family, `KinetixPagination` family,
   `KinetixTableOfContents`, `KinetixNavigationBar`, `KinetixTabBar` /
   `Item`, `KinetixFooter` family.
@@ -110,32 +115,40 @@ pnpm build:tokens && pnpm vendor:swiftui
   `KinetixModal`, `KinetixSheet`, `KinetixDrawer`, `KinetixPopover`,
   `KinetixHoverCard`, `KinetixTooltip`, `KinetixDropdownMenu` (+ shared
   `KinetixMenuItem` / `Separator` / `Label`), `KinetixContextMenu`,
-  `KinetixMenubar` / `Menu`, `KinetixToaster`.
+  `KinetixMenubar` / `Menu`, `KinetixCommandDialog` family,
+  `KinetixToaster`.
 
 Selection / expansion / presentation state is caller-owned throughout (a
 `@Binding` or a plain `isExpanded` / `isSelected` + action) — the same
 division the Compose port uses, since there's no SwiftUI context to
 thread a shared value through the way Radix does. Overlay views
-(`KinetixDialog`, `KinetixSheet`, `KinetixToaster`, …) are placed in an
-`.overlay { }` or a top-level `ZStack` and driven by an `isPresented`
-binding.
+(`KinetixDialog`, `KinetixSheet`, `KinetixSidebar`, `KinetixToaster`, …)
+are placed in an `.overlay { }` or a top-level `ZStack` and driven by an
+`isPresented` / `isOpen` binding.
+
+## Not ported (deliberate)
+
+- **`Form`** — `KinetixField` (+ `Label` / `Description` / `Message`)
+  **is** the equivalent; there's no `react-hook-form`-shaped context to
+  wrap. Same call as the Compose port.
+- **`NavigationMenu`** — a hover-triggered desktop mega-menu with no
+  touch idiom.
+- **`Combobox`** — a recipe (Popover + Command) on the web, not a
+  standalone component; compose `KinetixPopover` + a filtered list, or
+  reach for `KinetixSelect`.
 
 ## Known gaps
 
-- **Data-heavy / no-native-idiom components aren't ported** — `Calendar`,
-  `Carousel`, `Table`, `DataTable`, `Command`, `Combobox`, `Resizable`,
-  `Sidebar`, `NavigationMenu`, `FileUpload`, `AudioPlayer`, `Chart`,
-  `Form`. Reach for SwiftUI's `List`, `TabView`, `NavigationSplitView`,
-  `Charts` and `.searchable` for those, the same stance the Compose port
-  takes on its own gaps.
 - **No remote publishing.** `swift build` on `macos-latest` (against the
   `.macOS(.v13)` target, no simulator) is the sole compiler feedback on
   every push that touches `packages/ui-swiftui`, `tokens/`, or
   `style-dictionary/`.
 - **Platform controls are reused where they're strong** — `KinetixSlider`
-  / `KinetixDatePicker` / `KinetixScrollArea` wrap the SwiftUI control,
-  so those use the system look, not a hand-built one (a documented gap,
-  same call as the Compose Material3 wraps).
+  / `KinetixDatePicker` / `KinetixCalendar` / `KinetixScrollArea` /
+  `KinetixCarousel` / `KinetixChart` wrap the SwiftUI control (or the
+  `Charts` framework), so those use the system look, not a hand-built one
+  (a documented gap, same call as the Compose Material3 wraps).
+  `KinetixCalendar` is single-date only, no range select.
 - **No type-scale modifier yet.** Views use raw sizes from the Figma type
   scale; a real `.kinetixFont(.labelMd)` reading `KinetixType.swift` is a
   follow-up.

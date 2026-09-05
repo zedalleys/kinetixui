@@ -10,18 +10,21 @@ export const metadata = {
 - **SwiftUI library** (`packages/ui-swiftui`) — the native iOS port,
   built the same way the Compose library was: `KinetixTheme` (the
   `@Environment(\.kinetixColors)` semantic set + a light/dark wrapper)
-  plus **58 `Kinetix*` views**, each mirroring its
-  `packages/ui/src/components/*.tsx` counterpart 1:1 — controls, the full
-  input + field set, display primitives, disclosure/navigation, and the
-  overlay & menu classes (Dialog, Sheet, Popover, Dropdown/Context menus,
-  Tooltip, Toaster). The data-heavy components (Calendar, DataTable,
-  Command, Chart, …) are deferred to native SwiftUI equivalents, the same
-  stance the Compose port takes on its gaps. The token engine emits a
-  SwiftUI-`Color` semantic set (`KinetixColorsSwiftUI` / `…Dark`, both
-  passes) alongside the untouched UIColor output — `UIColor` is
-  UIKit-only and won't compile on macOS. Verified by `swift build` on
-  `macos-latest` on every push. New [SwiftUI](/docs/swiftui) docs page.
-  Standalone SwiftPM package, not on the registry.
+  plus **68 `Kinetix*` views — the full React component surface** bar
+  three deliberate non-ports (`Form` — `KinetixField` is the equivalent;
+  `NavigationMenu` — no touch idiom; `Combobox` — a recipe). Each mirrors
+  its `packages/ui/src/components/*.tsx` counterpart 1:1: controls, the
+  full input + field set, display primitives, data (Table / DataTable /
+  Carousel), disclosure/navigation, the overlay & menu classes (Dialog,
+  Sheet, Popover, Dropdown/Context menus, Command palette, Tooltip,
+  Toaster), plus `KinetixChart` over the system `Charts` framework and
+  `KinetixCalendar` over `DatePicker(.graphical)`. The token engine emits
+  a SwiftUI-`Color` semantic set (`KinetixColorsSwiftUI` / `…Dark`, both
+  passes, now including the `--chart-1…5` palette) alongside the untouched
+  UIColor output — `UIColor` is UIKit-only and won't compile on macOS.
+  Verified by `swift build` on `macos-latest` on every push. New
+  [SwiftUI](/docs/swiftui) docs page. Standalone SwiftPM package, not on
+  the registry.
 - **Jetpack Compose library** (`packages/ui-compose`) — 69 native
   `Kinetix*` composables on the token contract, one per React component
   (`Chart`, `Form`, `NavigationMenu` documented as deliberate non-ports).
