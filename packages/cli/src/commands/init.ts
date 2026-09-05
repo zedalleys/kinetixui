@@ -96,4 +96,5 @@ export async function init(options: InitOptions): Promise<void> {
 
   console.log();
   console.log(`Next: ${pc.cyan("npx @kinetixui/cli add button")}`);
+  console.log(`See everything: ${pc.cyan("npx @kinetixui/cli list")}`);
 }
