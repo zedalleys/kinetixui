@@ -1,16 +1,20 @@
 # KinetixUI (SwiftUI)
 
 SwiftUI port of KinetixUI — the iOS counterpart to
-[`packages/ui-compose`](../ui-compose) (Jetpack Compose). Kickoff scope:
-one component end-to-end plus the theme layer and a CI compile path, so
-the rest can be added in batches the same way the Compose library was.
+[`packages/ui-compose`](../ui-compose) (Jetpack Compose). Built in
+batches the same way the Compose library was. **10 components so far:**
+`KinetixButton`, `KinetixBadge`, `KinetixTag`, `KinetixLabel`,
+`KinetixSeparator`, `KinetixSkeleton`, `KinetixSpinner`,
+`KinetixProgress`, `KinetixCard` (+ `Header` / `Title` / `Description` /
+`Content` / `Footer`), `KinetixAspectRatio`.
 
 - `Sources/KinetixUI/Theme.swift` — `KinetixColors` (the semantic colour
   set), `@Environment(\.kinetixColors)`, and the `KinetixTheme { … }`
   wrapper that picks light/dark off the system `colorScheme`. The SwiftUI
   analogue of Compose's `KinetixColorScheme` / `KinetixTheme`.
-- `Sources/KinetixUI/Button.swift` — `KinetixButton`, mirroring
-  `packages/ui/src/components/button.tsx`'s variant × size × corners CVA 1:1.
+- One file per component, each mirroring its
+  `packages/ui/src/components/*.tsx` counterpart 1:1, with a doc comment
+  stating what wasn't carried over.
 - `Sources/KinetixUI/KinetixColorsSwiftUI.swift` / `.dark.swift` —
   **generated, vendored.** Do not hand-edit. Re-run
   `node scripts/vendor-swiftui-tokens.mjs` (or `pnpm vendor:swiftui`)
@@ -74,8 +78,9 @@ sole compiler feedback.
 
 ## Not in this pass
 
-- The other ~68 components — this establishes token → theme → component →
-  CI once, then repeats in batches (same as the Compose arc).
+- The rest of the ~70-component surface — added in batches (same as the
+  Compose arc). Overlay-class components (dialog, popover, menus) and
+  the input primitives are still to come.
 - A tagged SPM release — needs repo/signing decisions; consume via
   `.package(path:)` for now.
 - A real `.kinetixFont(.labelMd)` type-scale modifier — `KinetixButton`
