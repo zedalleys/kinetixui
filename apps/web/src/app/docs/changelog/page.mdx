@@ -7,15 +7,19 @@ export const metadata = {
 
 ## Unreleased
 
-- **SwiftUI library — kickoff** (`packages/ui-swiftui`) — the native iOS
-  port, started the same way the Compose library was: `KinetixTheme` (the
-  `@Environment(\.kinetixColors)` semantic set + a light/dark wrapper),
-  one component end-to-end (`KinetixButton`, mirroring `button.tsx`'s CVA
-  1:1), and a `macos-latest` `swift build` CI path. The token engine now
-  emits a SwiftUI-`Color` semantic set (`KinetixColorsSwiftUI` /
-  `…Dark`, both passes) alongside the untouched UIColor output — `UIColor`
-  is UIKit-only and won't compile on macOS. New [SwiftUI](/docs/swiftui)
-  docs page. Standalone SwiftPM package, not on the registry.
+- **SwiftUI library** (`packages/ui-swiftui`) — the native iOS port,
+  built the same way the Compose library was: `KinetixTheme` (the
+  `@Environment(\.kinetixColors)` semantic set + a light/dark wrapper)
+  plus **34 `Kinetix*` views** so far, each mirroring its
+  `packages/ui/src/components/*.tsx` counterpart 1:1 — controls, inputs,
+  field composition, display primitives, and disclosure/navigation
+  (Accordion, Tabs, List, Breadcrumb, Pagination). Overlay-class
+  components are the next batch. The token engine emits a SwiftUI-`Color`
+  semantic set (`KinetixColorsSwiftUI` / `…Dark`, both passes) alongside
+  the untouched UIColor output — `UIColor` is UIKit-only and won't
+  compile on macOS. Verified by `swift build` on `macos-latest` on every
+  push. New [SwiftUI](/docs/swiftui) docs page. Standalone SwiftPM
+  package, not on the registry.
 - **Jetpack Compose library** (`packages/ui-compose`) — 69 native
   `Kinetix*` composables on the token contract, one per React component
   (`Chart`, `Form`, `NavigationMenu` documented as deliberate non-ports).
