@@ -65,6 +65,11 @@ export function SiteHeader() {
                 {String(i + 1).padStart(2, "0")}
               </span>
               {item.title}
+              {item.soon && (
+                <span className="rounded-[3px] border border-border px-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                  soon
+                </span>
+              )}
               <span
                 className={cn(
                   "absolute inset-x-4 -bottom-px h-0.5 bg-primary transition-transform duration-300",

@@ -21,8 +21,18 @@ export function MobileNav() {
         <div className="fixed inset-x-0 top-12 z-40 max-h-[calc(100dvh-3rem)] overflow-y-auto border-b border-border bg-background p-4">
           <nav className="flex flex-col gap-1 text-sm">
             {mainNav.map((i) => (
-              <Link key={i.href} href={i.href} onClick={() => setOpen(false)} className="rounded px-2 py-2 hover:bg-muted">
+              <Link
+                key={i.href}
+                href={i.href}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 rounded px-2 py-2 hover:bg-muted"
+              >
                 {i.title}
+                {i.soon && (
+                  <span className="rounded-[3px] border border-border px-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                    soon
+                  </span>
+                )}
               </Link>
             ))}
             <div className="my-2 h-px bg-border" />

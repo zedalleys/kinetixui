@@ -16,6 +16,8 @@ export const siteConfig = {
 export type NavItem = {
   title: string;
   href: string;
+  /** show a "soon" marker in the nav; the route is a coming-soon page */
+  soon?: boolean;
 };
 
 export type NavGroup = { title: string; items: NavItem[] };
@@ -25,6 +27,7 @@ export const mainNav: NavItem[] = [
   { title: "Components", href: "/components" },
   { title: "Blocks", href: "/blocks" },
   { title: "Charts", href: "/charts" },
+  { title: "Infographic", href: "/infographic", soon: true },
   { title: "Themes", href: "/themes" },
   { title: "Colors", href: "/colors" },
 ];
