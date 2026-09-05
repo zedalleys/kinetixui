@@ -1,0 +1,17 @@
+name: kinetix_ui
+description: >-
+  Flutter port of KinetixUI — Kinetix* widgets on the shared design-token
+  contract. Standalone package, not published to pub.dev.
+version: 0.0.0
+publish_to: none
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: ^4.0.0

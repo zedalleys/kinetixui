@@ -24,6 +24,7 @@ import {
   hslChannels,
   cssVarName,
   swiftUIColorFormat,
+  dartColorClassFormat,
   tsNestedFormat,
   typeComposeFormat,
   typeDartFormat,
@@ -40,6 +41,7 @@ StyleDictionary.registerFormat(typeSwiftFormat);
 StyleDictionary.registerFormat(typeComposeFormat);
 StyleDictionary.registerFormat(typeDartFormat);
 StyleDictionary.registerFormat(swiftUIColorFormat);
+StyleDictionary.registerFormat(dartColorClassFormat);
 
 const isType = (t) => t.$type === 'typography';
 
@@ -125,6 +127,25 @@ export function getConfig(theme) {
             // and would collide on leaf names like `warning`.
             filter: (t) => isColor(t) && isSemantic(t) && t.path.length === 2,
             options: { className: light ? 'KinetixColorsSwiftUI' : 'KinetixColorsSwiftUIDark' },
+          },
+        ],
+      },
+
+      /* Flutter-Color semantic set — also BOTH passes, for the
+         packages/ui-flutter widget library's KinetixTheme. Additive: the
+         app_theme.dart / app_colors.dart block below (class names
+         KinetixTheme / KinetixColors, light-only) is untouched — same
+         split as the SwiftUI KinetixColorsSwiftUI output. */
+      'flutter-color-scheme': {
+        transforms: ['attribute/cti'],
+        buildPath: `${DIST}/flutter/`,
+        files: [
+          {
+            destination: light ? 'kinetix_color_scheme.dart' : 'kinetix_color_scheme.dark.dart',
+            format: 'kinetix/dart-color-class',
+            // top-level semantic colours only — see the ios-swiftui-theme note
+            filter: (t) => isColor(t) && isSemantic(t) && t.path.length === 2,
+            options: { className: light ? 'KinetixColorScheme' : 'KinetixColorSchemeDark' },
           },
         ],
       },

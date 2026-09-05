@@ -1,0 +1,48 @@
+name: Native (Flutter)
+
+# Path-filtered so this never runs — and can never fail — on an unrelated
+# push; entirely additive, doesn't touch ci.yml / release.yml.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/ui-flutter/**"
+      - "tokens/**"
+      - "style-dictionary/**"
+  pull_request:
+    paths:
+      - "packages/ui-flutter/**"
+      - "tokens/**"
+      - "style-dictionary/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-flutter-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/ui-flutter
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter --version
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      # `flutter analyze` type-checks + lints the whole package — the
+      # equivalent of `swift build` / `gradle assembleDebug` for the other
+      # native libraries. This is the sole compiler feedback (no Flutter
+      # toolchain on the dev box).
+      - name: Analyze
+        run: flutter analyze
