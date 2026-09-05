@@ -1,7 +1,12 @@
 "use client";
 
-import { ArrowUpRight, Check, DollarSign, Github, Search, TrendingDown, Users } from "lucide-react";
+import { ArrowUpRight, Check, DollarSign, Github, Inbox, Search, TrendingDown, Users } from "lucide-react";
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Avatar,
+  AvatarFallback,
   Badge,
   Button,
   Card,
@@ -16,6 +21,7 @@ import {
   List,
   ListItem,
   Metric,
+  Quote,
   Select,
   SelectContent,
   SelectItem,
@@ -29,6 +35,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  Textarea,
 } from "@kinetixui/ui";
 import { Showcase } from "@/components/showcase";
 
@@ -296,6 +303,172 @@ export function BlocksContent() {
             </List>
           </CardContent>
         </Card>
+      </Showcase>
+
+      {/* ---- team members ---- */}
+      <Showcase
+        title="Team members"
+        description="Avatar, name/role, and a per-row action."
+        code={`<Card className="w-full max-w-sm">
+  <CardHeader><CardTitle>Team</CardTitle></CardHeader>
+  <CardContent className="p-0">
+    <List>
+      {team.map((m) => (
+        <ListItem
+          key={m.name}
+          leading={<Avatar><AvatarFallback>{m.initials}</AvatarFallback></Avatar>}
+          title={m.name}
+          description={m.role}
+          trailing={<Button variant="Ghost" size="sm">Remove</Button>}
+        />
+      ))}
+    </List>
+  </CardContent>
+</Card>`}
+      >
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle>Team</CardTitle>
+          </CardHeader>
+          <Separator />
+          <CardContent className="p-0">
+            <List>
+              {[
+                { name: "Ada Lovelace", role: "Owner", initials: "AL" },
+                { name: "Grace Hopper", role: "Admin", initials: "GH" },
+                { name: "Alan Turing", role: "Member", initials: "AT" },
+              ].map((m) => (
+                <ListItem
+                  key={m.name}
+                  leading={
+                    <Avatar>
+                      <AvatarFallback>{m.initials}</AvatarFallback>
+                    </Avatar>
+                  }
+                  title={m.name}
+                  description={m.role}
+                  trailing={
+                    <Button variant="Ghost" size="sm">
+                      Remove
+                    </Button>
+                  }
+                />
+              ))}
+            </List>
+          </CardContent>
+        </Card>
+      </Showcase>
+
+      {/* ---- comment box ---- */}
+      <Showcase
+        title="Comment box"
+        description="Avatar, Textarea, and a submit action."
+        code={`<Card className="w-full max-w-md">
+  <CardContent className="flex items-start gap-3 pt-6">
+    <Avatar><AvatarFallback>ZF</AvatarFallback></Avatar>
+    <div className="grid w-full gap-2">
+      <Textarea placeholder="Add a comment…" />
+      <Button className="ml-auto w-fit">Comment</Button>
+    </div>
+  </CardContent>
+</Card>`}
+      >
+        <Card className="w-full max-w-md">
+          <CardContent className="flex items-start gap-3 pt-6">
+            <Avatar>
+              <AvatarFallback>ZF</AvatarFallback>
+            </Avatar>
+            <div className="grid w-full gap-2">
+              <Textarea placeholder="Add a comment…" />
+              <Button className="ml-auto w-fit">Comment</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </Showcase>
+
+      {/* ---- empty state ---- */}
+      <Showcase
+        title="Empty state"
+        description="Centered icon, heading, description, and a CTA."
+        contentClassName="items-stretch"
+        code={`<div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border py-16 text-center">
+  <Inbox className="size-8 text-muted-foreground" />
+  <h3 className="mt-2 font-medium">No messages yet</h3>
+  <p className="text-sm text-muted-foreground">When someone messages you, it'll show up here.</p>
+  <Button className="mt-4">Start a conversation</Button>
+</div>`}
+      >
+        <div className="flex w-full flex-col items-center gap-2 rounded-lg border border-dashed border-border py-16 text-center">
+          <Inbox className="size-8 text-muted-foreground" />
+          <h3 className="mt-2 font-medium">No messages yet</h3>
+          <p className="text-sm text-muted-foreground">
+            When someone messages you, it&apos;ll show up here.
+          </p>
+          <Button className="mt-4">Start a conversation</Button>
+        </div>
+      </Showcase>
+
+      {/* ---- alert stack ---- */}
+      <Showcase
+        title="Alert stack"
+        description="Default, destructive, and success variants."
+        contentClassName="items-stretch"
+        code={`<div className="grid w-full max-w-md gap-3">
+  <Alert>
+    <AlertTitle>Heads up</AlertTitle>
+    <AlertDescription>You can add components to your app using the CLI.</AlertDescription>
+  </Alert>
+  <Alert variant="destructive">
+    <AlertTitle>Payment failed</AlertTitle>
+    <AlertDescription>Update your billing details to keep your subscription active.</AlertDescription>
+  </Alert>
+  <Alert variant="success">
+    <AlertTitle>Changes saved</AlertTitle>
+  </Alert>
+</div>`}
+      >
+        <div className="grid w-full max-w-md gap-3">
+          <Alert>
+            <AlertTitle>Heads up</AlertTitle>
+            <AlertDescription>You can add components to your app using the CLI.</AlertDescription>
+          </Alert>
+          <Alert variant="destructive">
+            <AlertTitle>Payment failed</AlertTitle>
+            <AlertDescription>
+              Update your billing details to keep your subscription active.
+            </AlertDescription>
+          </Alert>
+          <Alert variant="success">
+            <AlertTitle>Changes saved</AlertTitle>
+          </Alert>
+        </div>
+      </Showcase>
+
+      {/* ---- testimonial ---- */}
+      <Showcase
+        title="Testimonial"
+        description="Quote with an attributed author."
+        code={`<Quote
+  author="Dieter Rams"
+  authorTitle="Industrial Designer"
+  avatar={<Avatar><AvatarFallback>DR</AvatarFallback></Avatar>}
+  className="max-w-md"
+>
+  Good design is as little design as possible.
+</Quote>`}
+      >
+        <Quote
+          author="Dieter Rams"
+          authorTitle="Industrial Designer"
+          avatar={
+            <Avatar>
+              <AvatarFallback>DR</AvatarFallback>
+            </Avatar>
+          }
+          className="max-w-md"
+        >
+          Good design is as little design as possible.
+        </Quote>
       </Showcase>
     </div>
   );
