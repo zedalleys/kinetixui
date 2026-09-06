@@ -48,7 +48,7 @@ public struct KinetixDialog<Content: View>: View {
                         if dismissible {
                             Button { isPresented = false } label: {
                                 Image(systemName: "xmark")
-                                    .font(.system(size: 14, weight: .medium))
+                                    .font(.kinetixLabelLg)
                                     .foregroundStyle(colors.mutedForeground)
                             }
                             .buttonStyle(.plain)
@@ -105,7 +105,7 @@ public struct KinetixDialogTitle: View {
 
     public var body: some View {
         Text(text)
-            .font(.system(size: 18, weight: .semibold))
+            .font(.kinetixTitleDialog)
             .tracking(-0.4) // tracking-tight
             .foregroundStyle(colors.foreground)
     }
@@ -121,7 +121,7 @@ public struct KinetixDialogDescription: View {
 
     public var body: some View {
         Text(text)
-            .font(.system(size: 14))
+            .font(.kinetixBody)
             .foregroundStyle(colors.mutedForeground)
             .fixedSize(horizontal: false, vertical: true)
     }

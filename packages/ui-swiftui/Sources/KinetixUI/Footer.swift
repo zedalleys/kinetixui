@@ -42,7 +42,7 @@ public struct KinetixFooterColumn<Content: View>: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(.kinetixLabelMd)
                 .foregroundStyle(colors.foreground)
             VStack(alignment: .leading, spacing: 8) { content }
         }

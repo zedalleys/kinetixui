@@ -63,12 +63,12 @@ public struct KinetixSelect<Value: Hashable>: View {
         } label: {
             HStack {
                 Text(currentLabel)
-                    .font(.system(size: 14))
+                    .font(.kinetixBody)
                     .foregroundStyle(selection == nil ? colors.mutedForeground : colors.foreground)
                     .lineLimit(1)
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 14))
+                    .font(.kinetixBody)
                     .foregroundStyle(colors.foreground.opacity(0.6))
             }
             .padding(.horizontal, 12) // spacing/3

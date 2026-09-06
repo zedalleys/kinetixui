@@ -42,7 +42,7 @@ public struct KinetixTag: View {
         let (bg, fg, border) = palette
         HStack(spacing: 4) {
             Text(text)
-                .font(.system(size: 12, weight: .medium))
+                .font(.kinetixLabelMd)
                 .tracking(0.5)
             if let onRemove {
                 Button(action: onRemove) {

@@ -30,7 +30,7 @@ public struct KinetixPasswordInput: View {
                 visible.toggle()
             } label: {
                 Image(systemName: visible ? "eye.slash" : "eye")
-                    .font(.system(size: 14))
+                    .font(.kinetixBody)
                     .foregroundStyle(colors.mutedForeground)
             }
             .buttonStyle(.plain)

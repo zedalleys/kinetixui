@@ -41,7 +41,7 @@ public struct KinetixQuote<Avatar: View>: View {
                     VStack(alignment: .leading, spacing: 2) {
                         if let author {
                             Text(author)
-                                .font(.system(size: 14, weight: .medium))
+                                .font(.kinetixLabelLg)
                                 .foregroundStyle(colors.foreground)
                         }
                         if let authorTitle {

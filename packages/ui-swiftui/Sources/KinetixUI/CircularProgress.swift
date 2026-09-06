@@ -45,7 +45,7 @@ public struct KinetixCircularProgress: View {
                 .animation(.easeOut(duration: 0.3), value: fraction)
             if showValue || label != nil {
                 Text(label ?? "\(Int((fraction * 100).rounded()))%")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.kinetixLabelMd)
                     .foregroundStyle(colors.foreground)
             }
         }

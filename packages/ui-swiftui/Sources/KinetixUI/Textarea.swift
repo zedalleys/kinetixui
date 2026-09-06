@@ -36,7 +36,7 @@ public struct KinetixTextarea: View {
     public var body: some View {
         TextEditor(text: $text)
             .focused($focused)
-            .font(.system(size: 14))
+            .font(.kinetixBody)
             .foregroundStyle(colors.foreground)
             .scrollContentBackground(.hidden) // iOS 16 / macOS 13
             .frame(minHeight: 100, alignment: .topLeading)
@@ -45,7 +45,7 @@ public struct KinetixTextarea: View {
             .overlay(alignment: .topLeading) {
                 if text.isEmpty {
                     Text(placeholder)
-                        .font(.system(size: 14))
+                        .font(.kinetixBody)
                         .foregroundStyle(colors.mutedForeground)
                         .padding(.top, 20)
                         .padding(.leading, 17)

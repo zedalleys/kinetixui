@@ -56,11 +56,11 @@ public struct KinetixAccordionTrigger: View {
         Button(action: action) {
             HStack {
                 Text(text)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.kinetixLabelLg)
                     .foregroundStyle(colors.foreground)
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 14))
+                    .font(.kinetixBody)
                     .foregroundStyle(colors.mutedForeground)
                     .rotationEffect(.degrees(isExpanded ? 180 : 0))
             }

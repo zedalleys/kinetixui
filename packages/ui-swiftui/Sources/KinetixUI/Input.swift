@@ -77,7 +77,7 @@ public struct KinetixInput<Trailing: View>: View {
         HStack(spacing: 8) {
             field
                 .textFieldStyle(.plain)
-                .font(.system(size: 14))
+                .font(.kinetixBody)
                 .tracking(0.25)
                 .foregroundStyle(colors.foreground)
             trailing

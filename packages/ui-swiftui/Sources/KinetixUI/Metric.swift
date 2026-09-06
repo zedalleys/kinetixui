@@ -56,17 +56,17 @@ public struct KinetixMetric<Icon: View>: View {
             }
             HStack(alignment: .bottom) {
                 Text(value)
-                    .font(.system(size: 22, weight: .medium))
+                    .font(.kinetixTitleLg.weight(.medium))
                     .foregroundStyle(colors.foreground)
                 Spacer()
                 if let trend {
                     HStack(spacing: 2) {
                         if trend != .neutral {
                             Image(systemName: trend == .up ? "arrow.up" : "arrow.down")
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.kinetixLabelMd)
                         }
                         if let change {
-                            Text(change).font(.system(size: 12, weight: .medium))
+                            Text(change).font(.kinetixLabelMd)
                         }
                     }
                     .foregroundStyle(trendColor)

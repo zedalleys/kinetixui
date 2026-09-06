@@ -37,7 +37,7 @@ public struct KinetixBreadcrumbLink: View {
     public var body: some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: 14))
+                .font(.kinetixBody)
                 .foregroundStyle(colors.mutedForeground)
         }
         .buttonStyle(.plain)
@@ -55,7 +55,7 @@ public struct KinetixBreadcrumbPage: View {
 
     public var body: some View {
         Text(text)
-            .font(.system(size: 14))
+            .font(.kinetixBody)
             .foregroundStyle(colors.foreground)
     }
 }
@@ -71,7 +71,7 @@ public struct KinetixBreadcrumbSeparator: View {
 
     public var body: some View {
         Image(systemName: symbol)
-            .font(.system(size: 12))
+            .font(.kinetixBodySm)
             .foregroundStyle(colors.mutedForeground)
             .accessibilityHidden(true)
     }

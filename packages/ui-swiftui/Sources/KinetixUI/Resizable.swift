@@ -48,7 +48,7 @@ public struct KinetixResizablePanels<First: View, Second: View>: View {
                 ZStack {
                     Rectangle().fill(colors.border).frame(width: 1)
                     Image(systemName: "ellipsis")
-                        .font(.system(size: 12))
+                        .font(.kinetixBodySm)
                         .foregroundStyle(colors.mutedForeground)
                         .rotationEffect(.degrees(90))
                         .frame(width: handleWidth)

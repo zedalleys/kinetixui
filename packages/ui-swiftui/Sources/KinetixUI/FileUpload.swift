@@ -71,7 +71,7 @@ public struct KinetixFileUpload: View {
                     Image(systemName: "arrow.up.doc")
                         .font(.system(size: 28))
                     Text(prompt)
-                        .font(.system(size: 14))
+                        .font(.kinetixBody)
                 }
                 .foregroundStyle(colors.mutedForeground)
                 .frame(maxWidth: .infinity)
@@ -92,19 +92,19 @@ public struct KinetixFileUpload: View {
                         .foregroundStyle(statusColor(file.status))
                     VStack(alignment: .leading, spacing: 2) {
                         Text(file.name)
-                            .font(.system(size: 14))
+                            .font(.kinetixBody)
                             .foregroundStyle(colors.foreground)
                             .lineLimit(1)
                         if let detail = file.detail {
                             Text(detail)
-                                .font(.system(size: 12))
+                                .font(.kinetixBodySm)
                                 .foregroundStyle(colors.mutedForeground)
                         }
                     }
                     Spacer(minLength: 0)
                     Button { onRemove(file) } label: {
                         Image(systemName: "xmark")
-                            .font(.system(size: 12))
+                            .font(.kinetixBodySm)
                             .foregroundStyle(colors.mutedForeground)
                     }
                     .buttonStyle(.plain)

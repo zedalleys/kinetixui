@@ -45,7 +45,7 @@ public struct KinetixTabsTrigger: View {
     public var body: some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: 14, weight: .medium))
+                .font(.kinetixLabelLg)
                 .foregroundStyle(isSelected ? colors.foreground : colors.mutedForeground)
                 .padding(.horizontal, 12) // px-3
                 .padding(.vertical, 4)    // py-1

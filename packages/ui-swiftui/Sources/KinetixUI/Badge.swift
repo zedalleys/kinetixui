@@ -31,7 +31,7 @@ public struct KinetixBadge: View {
     public var body: some View {
         let (bg, fg, border) = palette
         Text(text)
-            .font(.system(size: 12, weight: .medium))
+            .font(.kinetixLabelMd)
             .tracking(0.5)
             // px-2.5 isn't on the shared spacing scale (0/4/8/12/16/…) —
             // 10 mirrors the React `px-2.5` literally, same call as Compose.

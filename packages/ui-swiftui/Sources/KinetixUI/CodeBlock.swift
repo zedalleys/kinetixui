@@ -119,7 +119,7 @@ public struct KinetixCodeBlock: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { copied = false }
         } label: {
             Image(systemName: copied ? "checkmark" : "doc.on.doc")
-                .font(.system(size: 14))
+                .font(.kinetixBody)
                 .foregroundStyle(colors.mutedForeground)
                 .padding(6)
                 .contentShape(Rectangle())

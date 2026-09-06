@@ -52,7 +52,7 @@ public struct KinetixListItem<Leading: View, Trailing: View>: View {
             leading
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 14))
+                    .font(.kinetixBody)
                     .foregroundStyle(colors.foreground)
                     .lineLimit(1)
                 if let description {

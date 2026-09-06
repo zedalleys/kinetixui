@@ -71,7 +71,7 @@ public struct KinetixTableHead: View {
 
     public var body: some View {
         Text(text)
-            .font(.system(size: 14, weight: .medium))
+            .font(.kinetixLabelLg)
             .foregroundStyle(colors.mutedForeground)
             .frame(maxWidth: width == nil ? .infinity : nil, alignment: .leading)
             .frame(width: width, alignment: .leading)
@@ -108,7 +108,7 @@ public struct KinetixTableCaption: View {
 
     public var body: some View {
         Text(text)
-            .font(.system(size: 14))
+            .font(.kinetixBody)
             .foregroundStyle(colors.mutedForeground)
             .padding(.top, 16)
     }

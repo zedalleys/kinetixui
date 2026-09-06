@@ -42,7 +42,7 @@ public struct KinetixPaginationItem: View {
     public var body: some View {
         Button(action: action) {
             Text(label)
-                .font(.system(size: 14, weight: .medium))
+                .font(.kinetixLabelLg)
                 .foregroundStyle(isActive ? colors.foreground : colors.mutedForeground)
                 .frame(width: 36, height: 36) // size-9
                 .background(
@@ -76,7 +76,7 @@ public struct KinetixPaginationPrevious: View {
                 Image(systemName: "chevron.left")
                 Text("Previous")
             }
-            .font(.system(size: 14, weight: .medium))
+            .font(.kinetixLabelLg)
             .foregroundStyle(colors.foreground)
             .padding(.horizontal, 10)
             .frame(height: 36)
@@ -101,7 +101,7 @@ public struct KinetixPaginationNext: View {
                 Text("Next")
                 Image(systemName: "chevron.right")
             }
-            .font(.system(size: 14, weight: .medium))
+            .font(.kinetixLabelLg)
             .foregroundStyle(colors.foreground)
             .padding(.horizontal, 10)
             .frame(height: 36)
@@ -119,7 +119,7 @@ public struct KinetixPaginationEllipsis: View {
 
     public var body: some View {
         Image(systemName: "ellipsis")
-            .font(.system(size: 14))
+            .font(.kinetixBody)
             .foregroundStyle(colors.mutedForeground)
             .frame(width: 36, height: 36)
             .accessibilityLabel("More pages")

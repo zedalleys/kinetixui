@@ -61,7 +61,7 @@ public struct KinetixToggle<Label: View>: View {
             isOn.toggle()
         } label: {
             label
-                .font(.system(size: 14, weight: .medium))
+                .font(.kinetixLabelLg)
                 .foregroundStyle(isOn ? colors.accentForeground : colors.foreground)
                 .padding(.horizontal, horizontalPadding)
                 .frame(height: dimension)

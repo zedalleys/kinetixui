@@ -62,7 +62,7 @@ public struct KinetixAlertTitle: View {
 
     public var body: some View {
         Text(text)
-            .font(.system(size: 14, weight: .medium))
+            .font(.kinetixLabelLg)
             .tracking(-0.4) // tracking-tight
             .padding(.bottom, 4)
     }
@@ -77,7 +77,7 @@ public struct KinetixAlertDescription: View {
 
     public var body: some View {
         Text(text)
-            .font(.system(size: 14))
+            .font(.kinetixBody)
             .fixedSize(horizontal: false, vertical: true)
     }
 }

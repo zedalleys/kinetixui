@@ -56,7 +56,7 @@ public struct KinetixCardTitle: View {
 
     public var body: some View {
         Text(text)
-            .font(.system(size: 16, weight: .semibold))
+            .font(.kinetixTitleMd.weight(.semibold))
             .tracking(-0.4) // tracking-tight
     }
 }
@@ -71,7 +71,7 @@ public struct KinetixCardDescription: View {
 
     public var body: some View {
         Text(text)
-            .font(.system(size: 14))
+            .font(.kinetixBody)
             .foregroundStyle(colors.mutedForeground)
     }
 }

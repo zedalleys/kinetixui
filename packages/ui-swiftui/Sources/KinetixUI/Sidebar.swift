@@ -75,7 +75,7 @@ public struct KinetixSidebarItem: View {
                     Image(systemName: systemImage).frame(width: 18)
                 }
                 Text(title)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.kinetixLabelLg)
                 Spacer(minLength: 0)
             }
             .foregroundStyle(isActive ? colors.accentForeground : colors.foreground)

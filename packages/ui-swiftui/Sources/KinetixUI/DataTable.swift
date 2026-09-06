@@ -92,7 +92,7 @@ public struct KinetixDataTable<Row: Identifiable>: View {
                         } label: {
                             HStack(spacing: 4) {
                                 Text(col.header)
-                                    .font(.system(size: 14, weight: .medium))
+                                    .font(.kinetixLabelLg)
                                 if sortColumn == col.id {
                                     Image(systemName: sortAscending ? "chevron.up" : "chevron.down")
                                         .font(.system(size: 10))
@@ -114,7 +114,7 @@ public struct KinetixDataTable<Row: Identifiable>: View {
                         ForEach(columns) { col in
                             KinetixTableCell(width: col.width) {
                                 Text(col.cell(row))
-                                    .font(.system(size: 14))
+                                    .font(.kinetixBody)
                                     .foregroundStyle(colors.foreground)
                             }
                         }

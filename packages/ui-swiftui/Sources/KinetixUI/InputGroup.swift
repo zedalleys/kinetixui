@@ -58,7 +58,7 @@ public struct KinetixInputGroupInput: View {
     public var body: some View {
         field
             .textFieldStyle(.plain)
-            .font(.system(size: 14))
+            .font(.kinetixBody)
             .foregroundStyle(colors.foreground)
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
@@ -75,7 +75,7 @@ public struct KinetixInputGroupText: View {
 
     public var body: some View {
         Text(text)
-            .font(.system(size: 14))
+            .font(.kinetixBody)
             .foregroundStyle(colors.mutedForeground)
             .padding(.horizontal, 12)
             .fixedSize(horizontal: true, vertical: false)
@@ -113,7 +113,7 @@ public struct KinetixInputGroupButton: View {
     public var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(.kinetixLabelMd)
                 .foregroundStyle(colors.foreground)
                 .padding(.horizontal, 12)
                 .frame(maxHeight: .infinity)

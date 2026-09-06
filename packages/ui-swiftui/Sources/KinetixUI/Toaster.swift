@@ -52,7 +52,7 @@ public struct KinetixToaster: View {
                         Image(systemName: toast.intent == .success ? "checkmark.circle" : "exclamationmark.circle")
                     }
                     Text(toast.message)
-                        .font(.system(size: 14))
+                        .font(.kinetixBody)
                     Spacer(minLength: 0)
                 }
                 .foregroundStyle(color(for: toast.intent))

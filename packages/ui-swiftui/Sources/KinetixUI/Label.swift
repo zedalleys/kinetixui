@@ -22,7 +22,7 @@ public struct KinetixLabel: View {
 
     public var body: some View {
         Text(text)
-            .font(.system(size: 14, weight: .medium))
+            .font(.kinetixLabelLg)
             .foregroundStyle(color ?? colors.foreground)
     }
 }

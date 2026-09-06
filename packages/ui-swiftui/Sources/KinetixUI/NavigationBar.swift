@@ -35,7 +35,7 @@ public struct KinetixNavigationBar<Leading: View, Actions: View>: View {
                 .frame(minWidth: 36, alignment: .leading)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.kinetixTitleMd)
                     .foregroundStyle(colors.foreground)
                     .lineLimit(1)
                 if let infoText {

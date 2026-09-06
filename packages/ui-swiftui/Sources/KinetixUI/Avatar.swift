@@ -43,7 +43,7 @@ public struct KinetixAvatarFallback: View {
         colors.muted
             .overlay {
                 Text(text)
-                    .font(.system(size: 14))
+                    .font(.kinetixBody)
                     .foregroundStyle(colors.mutedForeground)
             }
     }

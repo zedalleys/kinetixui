@@ -66,7 +66,7 @@ public struct KinetixTabBarItem<Icon: View>: View {
                         }
                     }
                 Text(label)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.kinetixLabelSm)
             }
             .foregroundStyle(isActive ? colors.primary : colors.mutedForeground)
             .frame(maxWidth: .infinity)

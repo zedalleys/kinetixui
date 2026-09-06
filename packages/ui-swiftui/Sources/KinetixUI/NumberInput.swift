@@ -41,7 +41,7 @@ public struct KinetixNumberInput: View {
             stepButton(symbol: "minus", enabled: canDecrement) { value = clamp(value - step) }
             Rectangle().fill(colors.input).frame(width: 1)
             Text("\(value)")
-                .font(.system(size: 14))
+                .font(.kinetixBody)
                 .foregroundStyle(colors.foreground)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 8)
@@ -62,7 +62,7 @@ public struct KinetixNumberInput: View {
     private func stepButton(symbol: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 14))
+                .font(.kinetixBody)
                 .foregroundStyle(colors.mutedForeground)
                 .frame(width: 36, height: 40) // w-9
                 .contentShape(Rectangle())

@@ -73,12 +73,12 @@ public struct KinetixStepper: View {
             case .current:
                 Circle().strokeBorder(colors.primary, lineWidth: 2)
                 Text("\(number)")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.kinetixLabelMd)
                     .foregroundStyle(colors.primary)
             case .upcoming:
                 Circle().strokeBorder(colors.input, lineWidth: 1)
                 Text("\(number)")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.kinetixLabelMd)
                     .foregroundStyle(colors.mutedForeground)
             }
         }
@@ -89,7 +89,7 @@ public struct KinetixStepper: View {
     private func stepLabel(_ st: Status, step: KinetixStep) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(step.label)
-                .font(.system(size: 12, weight: .medium))
+                .font(.kinetixLabelMd)
                 .foregroundStyle(st == .upcoming ? colors.mutedForeground : colors.foreground)
             if let d = step.description {
                 Text(d)

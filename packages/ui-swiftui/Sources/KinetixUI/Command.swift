@@ -39,7 +39,7 @@ public struct KinetixCommandDialog<Content: View>: View {
                         .foregroundStyle(colors.mutedForeground)
                     TextField(placeholder, text: $query)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 14))
+                        .font(.kinetixBody)
                         .foregroundStyle(colors.foreground)
                 }
                 .padding(.vertical, 12)
@@ -69,7 +69,7 @@ public struct KinetixCommandGroup<Content: View>: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(heading)
-                .font(.system(size: 11, weight: .medium))
+                .font(.kinetixLabelSm)
                 .foregroundStyle(colors.mutedForeground)
                 .padding(.horizontal, 8)
                 .padding(.top, 4)
@@ -99,7 +99,7 @@ public struct KinetixCommandItem: View {
                         .frame(width: 16)
                 }
                 Text(title)
-                    .font(.system(size: 14))
+                    .font(.kinetixBody)
                     .foregroundStyle(colors.foreground)
                 Spacer(minLength: 0)
             }

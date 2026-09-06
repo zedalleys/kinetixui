@@ -76,7 +76,7 @@ public struct KinetixAudioPlayer: View {
             VStack(alignment: .leading, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.kinetixLabelLg)
                         .foregroundStyle(colors.foreground)
                     if let subtitle {
                         Text(subtitle)
@@ -90,7 +90,7 @@ public struct KinetixAudioPlayer: View {
                     Spacer()
                     Text(timeLabel(duration))
                 }
-                .font(.system(size: 12))
+                .font(.kinetixBodySm)
                 .foregroundStyle(colors.mutedForeground)
                 HStack(spacing: 4) {
                     Spacer()
