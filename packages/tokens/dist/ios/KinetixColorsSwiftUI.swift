@@ -23,7 +23,7 @@ public enum KinetixColorsSwiftUI {
     public static let destructiveForeground = Color(red: 0.996, green: 0.953, blue: 0.949)
     public static let success = Color(red: 0.365, green: 0.427, blue: 0.361)
     public static let successForeground = Color(red: 0.945, green: 0.953, blue: 0.945)
-    public static let warning = Color(red: 0.976, green: 0.475, blue: 0.027)
+    public static let warning = Color(red: 0.498, green: 0.357, blue: 0.129)
     public static let warningForeground = Color(red: 1, green: 0.973, blue: 0.922)
     public static let border = Color(red: 0.573, green: 0.698, blue: 0.784)
     public static let input = Color(red: 0.573, green: 0.698, blue: 0.784)

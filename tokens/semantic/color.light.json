@@ -91,9 +91,9 @@
       "$description": "synth"
     },
     "warning": {
-      "$value": "{color.semantic.on-warning-container}",
+      "$value": "{color.amber.800}",
       "$type": "color",
-      "$description": "figma: onWarningContainer #f97907 (only warning role Figma exposes at full chroma)"
+      "$description": "a11y: Figma onWarningContainer #f97907 is 2.7:1 as text on the page / 2.6:1 in the Tag warning variant — fails WCAG AA. amber.800 #7f5b21 clears 6.1:1 / 5.8:1. Dark --warning stays bright (amber.400). See ACCESSIBILITY-AUDIT.md."
     },
     "warning-foreground": {
       "$value": "{color.semantic.warning-container}",

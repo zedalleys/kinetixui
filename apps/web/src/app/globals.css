@@ -36,7 +36,7 @@
   --destructive-foreground: var(--semantic-on-error);
   --success: var(--green-600);
   --success-foreground: var(--green-50);
-  --warning: var(--semantic-on-warning-container);
+  --warning: var(--amber-800);
   --warning-foreground: var(--semantic-warning-container);
   --tertiary: 0 0% 69%;
   --tertiary-foreground: var(--blue-50);

@@ -59,6 +59,6 @@ object KinetixTheme {
   val colorSuccessForeground = Color(0xfff1f3f1)
   val colorTertiary = Color(0xffb0b0b0)
   val colorTertiaryForeground = Color(0xfff0f7ff)
-  val colorWarning = Color(0xfff97907)
+  val colorWarning = Color(0xff7f5b21)
   val colorWarningForeground = Color(0xfffff8eb)
 }

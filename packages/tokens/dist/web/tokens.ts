@@ -140,7 +140,7 @@ export const tokens = {
     "destructive-foreground": "#fef3f2",
     "success": "#5d6d5c",
     "success-foreground": "#f1f3f1",
-    "warning": "#f97907",
+    "warning": "#7f5b21",
     "warning-foreground": "#fff8eb",
     "border": "#92b2c8",
     "input": "#92b2c8",

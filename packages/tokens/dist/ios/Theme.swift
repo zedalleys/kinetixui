@@ -58,6 +58,6 @@ public class KinetixTheme {
     public static let colorSuccessForeground = UIColor(red: 0.945, green: 0.953, blue: 0.945, alpha: 1) /** synth */
     public static let colorTertiary = UIColor(red: 0.690, green: 0.690, blue: 0.690, alpha: 1) /** figma: tertiary — switch off-track */
     public static let colorTertiaryForeground = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
-    public static let colorWarning = UIColor(red: 0.976, green: 0.475, blue: 0.027, alpha: 1) /** figma: onWarningContainer #f97907 (only warning role Figma exposes at full chroma) */
+    public static let colorWarning = UIColor(red: 0.498, green: 0.357, blue: 0.129, alpha: 1) /** a11y: Figma onWarningContainer #f97907 is 2.7:1 as text on the page / 2.6:1 in the Tag warning variant — fails WCAG AA. amber.800 #7f5b21 clears 6.1:1 / 5.8:1. Dark --warning stays bright (amber.400). See ACCESSIBILITY-AUDIT.md. */
     public static let colorWarningForeground = UIColor(red: 1.000, green: 0.973, blue: 0.922, alpha: 1) /** figma: warningContainer #fff8eb */
 }

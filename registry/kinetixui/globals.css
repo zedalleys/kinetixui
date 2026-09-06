@@ -198,7 +198,7 @@
   --destructive-foreground: var(--semantic-on-error); /** figma: onError #fef3f2 */
   --success: var(--green-600); /** synth: no Figma success token; green ramp step 6 (distinct from secondary) */
   --success-foreground: var(--green-50); /** synth */
-  --warning: var(--semantic-on-warning-container); /** figma: onWarningContainer #f97907 (only warning role Figma exposes at full chroma) */
+  --warning: var(--amber-800); /** a11y: Figma onWarningContainer #f97907 is 2.7:1 as text on the page / 2.6:1 in the Tag warning variant — fails WCAG AA. amber.800 #7f5b21 clears 6.1:1 / 5.8:1. Dark --warning stays bright (amber.400). See ACCESSIBILITY-AUDIT.md. */
   --warning-foreground: var(--semantic-warning-container); /** figma: warningContainer #fff8eb */
   --border: var(--blue-100); /** figma: outline #92b2c8 */
   --input: var(--blue-100); /** figma: outline #92b2c8 (same as border) */

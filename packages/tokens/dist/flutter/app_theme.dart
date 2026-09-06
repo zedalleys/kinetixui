@@ -61,6 +61,6 @@ class KinetixTheme {
     static const colorSuccessForeground = Color(0xFFF1F3F1); /** synth */
     static const colorTertiary = Color(0xFFB0B0B0); /** figma: tertiary — switch off-track */
     static const colorTertiaryForeground = Color(0xFFF0F7FF);
-    static const colorWarning = Color(0xFFF97907); /** figma: onWarningContainer #f97907 (only warning role Figma exposes at full chroma) */
+    static const colorWarning = Color(0xFF7F5B21); /** a11y: Figma onWarningContainer #f97907 is 2.7:1 as text on the page / 2.6:1 in the Tag warning variant — fails WCAG AA. amber.800 #7f5b21 clears 6.1:1 / 5.8:1. Dark --warning stays bright (amber.400). See ACCESSIBILITY-AUDIT.md. */
     static const colorWarningForeground = Color(0xFFFFF8EB); /** figma: warningContainer #fff8eb */
 }

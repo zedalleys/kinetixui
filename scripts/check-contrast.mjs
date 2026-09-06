@@ -87,8 +87,7 @@ const NON_TEXT_PAIRS = [
  *   key: `${fg}/${bg}@${mode}`
  */
 const KNOWN_SUBAA = new Set([
-  "warning-foreground/warning@light", // 2.56 — Tag warning variant
-  "warning/background@light", //         2.70 — text-warning on the page
+  // (empty) — light --warning was darkened to amber.800 (6.1:1); nothing tracked.
 ]);
 
 let failures = 0;

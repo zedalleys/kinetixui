@@ -25,7 +25,7 @@ class KinetixColorScheme {
   static const destructiveForeground = Color(0xFFFEF3F2);
   static const success = Color(0xFF5D6D5C);
   static const successForeground = Color(0xFFF1F3F1);
-  static const warning = Color(0xFFF97907);
+  static const warning = Color(0xFF7F5B21);
   static const warningForeground = Color(0xFFFFF8EB);
   static const border = Color(0xFF92B2C8);
   static const input = Color(0xFF92B2C8);

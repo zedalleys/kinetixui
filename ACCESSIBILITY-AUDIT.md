@@ -46,16 +46,19 @@ contract that feeds all four component libraries.
 | 2 | **Serious** | **Light `--destructive` fails AA.** Figma `error` `#ec5047`: **3.33:1** under `destructive-foreground` (destructive Button), **3.62:1** as `text-destructive` on the page (Alert, Field error). | Fixed — light `--destructive` → `red.500` `#c60a0a` = **5.60 / 6.09:1**. Changed in `tokens/semantic/color.light.json` + the `.theme-light` block of `globals.css`; `pnpm build:tokens` re-run. This intentionally stops tracking the Figma `error` value (noted in the token `$description`). |
 | 3 | **Serious** | **`--shadow-focus` had no dark variant.** `tokens/semantic/shadow.json` bakes `#1b3c53` navy. In dark mode the focus ring on Button / Input / Select / Textarea / Fab / NumberInput / InputGroup / FileUpload landed at **1.70:1** against the page, **1.56:1** on a card — fails SC 1.4.11 / 2.4.13 (3:1). | **Fixed at the source (was R1).** New `tokens/semantic/shadow.dark.json` + a both-passes `css-extras` build emit `.dark { --shadow-focus* }` from the dark `--ring` / `--destructive` / `--success` / `--warning` primitives → `extras.dark.css`, bundled into `registry/kinetixui/globals.css` and exported as `@kinetixui/tokens/css/extras/dark`. Dark ring now **8.83:1** on the page. Every downstream consumer gets it; the earlier `globals.css` `html.dark` override is removed. |
 
-### A2. Tracked exceptions (allow-listed in `check-contrast.mjs`, still fail CI if a *new* pair regresses)
+### A2. Tracked exceptions — none
 
-| Sev | Pair | Ratio (light) | Where it renders |
-|-----|------|---------------|------------------|
-| **Serious** | `warning` as text on the page | **2.70:1** | `Alert` / `Field` / `Inform` / `Rating` — `text-warning` |
-| **Serious** | `warning` on `warning-foreground` | **2.56:1** | `Tag` `variant="warning"` (orange text on pale-orange fill) |
+`check-contrast.mjs`'s `KNOWN_SUBAA` allow-list is now empty. The two light
+`--warning` failures below have been fixed:
 
-`--warning` light is `#f97907`. Dark mode is fine (11–13:1). This needs a design
-decision on the value, not a one-liner — see **R2**. Until then, `--warning`
-should be treated as icon / large-text-only in light mode.
+| Was | Now | Where |
+|-----|-----|-------|
+| `warning` as text on the page — **2.70:1** | **6.14:1** | `Alert` / `Field` / `Inform` / `Rating` |
+| `warning` on `warning-foreground` — **2.56:1** | **5.81:1** | `Tag` `variant="warning"` |
+
+Light `--warning` moved from the Figma `onWarningContainer` orange (`#f97907`)
+to `amber.800` (`#7f5b21`) — a muted dark-amber that reads as "caution" and
+clears AA. **Dark `--warning` is unchanged** (bright `amber.400`, 11–13:1).
 
 ### A3. Non-text cues below 3:1 — acceptable *as designed*
 
@@ -130,11 +133,9 @@ fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
   `@kinetixui/tokens/css/extras/dark`. Dark focus ring: 1.70 → **8.83:1**.
   Still open: add the four `shadow-focus*` composites to `check-contrast.mjs`'s
   non-text pass so a future regression is caught automatically.
-- **R2 — decide the light `--warning` value.** Options, cheapest first:
-  (a) darken to ~`amber.800` `#7f5b21` (6.1:1) — reads brown, loses the orange;
-  (b) keep `#f97907` as a large-text/icon token and add `--warning-strong`
-  (dark amber) for `Tag` / body text; (c) invert the `Tag` warning variant to a
-  pale fill + dark-amber text. Then remove the two entries from `KNOWN_SUBAA`.
+- **R2 — DONE.** Light `--warning` → `amber.800` `#7f5b21` (6.1 / 5.8:1). Chosen
+  over adding a second `--warning-strong` token to keep the contract
+  single-valued. Dark stays bright `amber.400`. `KNOWN_SUBAA` is now empty.
 - **R3 — run the axe-core light/dark pass** once the Chrome extension is
   connected (or add `@axe-core/playwright` as a dev dep and a
   `scripts/a11y.mjs` that walks the route list headless — better, since it can

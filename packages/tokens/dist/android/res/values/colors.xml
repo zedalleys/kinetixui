@@ -126,7 +126,7 @@
   <color name="color_destructive_foreground">#fffef3f2</color>
   <color name="color_success">#ff5d6d5c</color>
   <color name="color_success_foreground">#fff1f3f1</color>
-  <color name="color_warning">#fff97907</color>
+  <color name="color_warning">#ff7f5b21</color>
   <color name="color_warning_foreground">#fffff8eb</color>
   <color name="color_border">#ff92b2c8</color>
   <color name="color_input">#ff92b2c8</color>
