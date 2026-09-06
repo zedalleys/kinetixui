@@ -26,7 +26,9 @@ writeFileSync(
     '\n' +
     readFileSync(`${web}/globals.dark.css`, 'utf8') +
     '\n' +
-    readFileSync(`${web}/extras.css`, 'utf8'),
+    readFileSync(`${web}/extras.css`, 'utf8') +
+    '\n' +
+    readFileSync(`${web}/extras.dark.css`, 'utf8'),
 );
 
 // derive tokens.js + tokens.d.ts from the generated tokens.ts so the npm

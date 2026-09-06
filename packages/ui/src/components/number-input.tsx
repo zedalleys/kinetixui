@@ -6,6 +6,9 @@ import { cn } from "../lib/utils";
 
 /**
  * NumberInput — a numeric field with increment / decrement controls.
+ * The wrapper shows `--shadow-focus` on `focus-within`; each stepper also
+ * draws its own `--ring` inset outline on `:focus-visible` so keyboard users
+ * can tell which control is focused.
  */
 export interface NumberInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type" | "value" | "defaultValue" | "onChange"> {
@@ -48,7 +51,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           aria-label="Decrease"
           disabled={disabled || (min != null && current <= min)}
           onClick={() => set(current - step)}
-          className="flex w-9 shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+          className="flex w-9 shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:text-foreground focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
         >
           <Minus className="size-4" />
         </button>
@@ -73,7 +76,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           aria-label="Increase"
           disabled={disabled || (max != null && current >= max)}
           onClick={() => set(current + step)}
-          className="flex w-9 shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+          className="flex w-9 shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:text-foreground focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
         >
           <Plus className="size-4" />
         </button>

@@ -44,7 +44,7 @@ contract that feeds all four component libraries.
 |---|-----|---------|--------|
 | 1 | **Serious** | `scripts/check-contrast.mjs` could not resolve `{color.semantic.*}` refs, so it **silently skipped** `destructive / destructive-foreground` in light mode. The `/docs/accessibility` page cited this script as proof "every pair meets AA in both themes." | Fixed — resolver now flattens the per-mode `semantic` block and follows one hop of indirection. Pair list extended from 10 → 19 text pairs (adds `destructive`, `success`, `warning`, `info`, `sidebar-*` as text; `tertiary` as non-text). |
 | 2 | **Serious** | **Light `--destructive` fails AA.** Figma `error` `#ec5047`: **3.33:1** under `destructive-foreground` (destructive Button), **3.62:1** as `text-destructive` on the page (Alert, Field error). | Fixed — light `--destructive` → `red.500` `#c60a0a` = **5.60 / 6.09:1**. Changed in `tokens/semantic/color.light.json` + the `.theme-light` block of `globals.css`; `pnpm build:tokens` re-run. This intentionally stops tracking the Figma `error` value (noted in the token `$description`). |
-| 3 | **Serious** | **`--shadow-focus` has no dark variant.** `tokens/semantic/shadow.json` bakes `#1b3c53` navy. In dark mode the focus ring on Button / Input / Select / Textarea / Fab / NumberInput / InputGroup / FileUpload lands at **1.70:1** against the page, **1.56:1** on a card — fails SC 1.4.11 / 2.4.13 (3:1). The other focus mechanism (`focus-visible:ring-ring`, used by checkbox/radio/switch/menus/list rows) was already fine (8.8:1 dark). | **Partially fixed** — `apps/web/src/app/globals.css` now re-points `--shadow-focus{,-destructive,-success,-warning}` at the theme-aware `--ring` / semantic tokens under `html.dark`. **Upstream gap remains:** the token package still emits a light-only value, so consumers of the raw registry `globals.css` don't get the fix. → Recommendation R1. |
+| 3 | **Serious** | **`--shadow-focus` had no dark variant.** `tokens/semantic/shadow.json` bakes `#1b3c53` navy. In dark mode the focus ring on Button / Input / Select / Textarea / Fab / NumberInput / InputGroup / FileUpload landed at **1.70:1** against the page, **1.56:1** on a card — fails SC 1.4.11 / 2.4.13 (3:1). | **Fixed at the source (was R1).** New `tokens/semantic/shadow.dark.json` + a both-passes `css-extras` build emit `.dark { --shadow-focus* }` from the dark `--ring` / `--destructive` / `--success` / `--warning` primitives → `extras.dark.css`, bundled into `registry/kinetixui/globals.css` and exported as `@kinetixui/tokens/css/extras/dark`. Dark ring now **8.83:1** on the page. Every downstream consumer gets it; the earlier `globals.css` `html.dark` override is removed. |
 
 ### A2. Tracked exceptions (allow-listed in `check-contrast.mjs`, still fail CI if a *new* pair regresses)
 
@@ -87,13 +87,18 @@ pairs its track with a moving thumb + `aria-checked`. No change. Keep the
 
 | # | Sev | Area | Finding | Recommendation |
 |---|-----|------|---------|----------------|
-| B8 | **Serious** | `@kinetixui/ui` `number-input.tsx` | The **−/+ stepper buttons** use `outline-none` with a `:hover`-only style — no `:focus-visible`. Keyboard focus shows only as a container-level `focus-within:shadow-focus`, so you can't tell which control is focused; the middle `<input>` has the same issue. | Add `focus-visible:bg-accent focus-visible:text-foreground focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:outline-none` to both buttons (matches the pattern already in `list.tsx` / `input-group.tsx`). Ships to consumers → needs a `ui` rebuild + changeset. Patch is a 1-line class add per button. |
-| B9 | Moderate | `/colors` `page.tsx` | The **hex/rgb/hsl format toggle** exposes its active state with `bg-primary` only — no `role="group"` / `aria-pressed`. Swatch copy-buttons have **no `:focus-visible`** and reveal their selected ring on `onMouseEnter` only (no `onFocus`). No `aria-live` confirmation after copy. | Mirror the pattern used in the new gallery filter (`role="group"` + `aria-pressed`); add `focus-visible:ring-2 ring-ring`; add an `onFocus`/`onBlur` alongside the mouse handlers; add a visually-hidden `aria-live="polite"` "Copied <value>" region. |
 | B10 | Moderate | `charts-content.tsx` + `@kinetixui/ui` `chart.tsx` | Recharts is rendered **without `accessibilityLayer`** and with **no text alternative** — charts are not keyboard-navigable and convey data by colour + position only (SC 1.1.1, 2.1.1, 1.4.1). | Pass `accessibilityLayer` to every chart; give `ChartContainer` a `role="img"` + `aria-label` summary prop; offer an optional visually-hidden `<table>` fallback of the series data. Tracked as a cross-cutting item in `COMPONENT-ADDITIONS.md` §2. |
 | B11 | Minor | `/charts`, `/blocks` | Heading order **skips h2** — page `<h1>` then `Showcase`/block `<h3>`. | `Showcase` should render `<h2>` (or the pages should introduce an h2 section head, which `/colors` and `/components` already do via `SectionHead`). |
 | B12 | Minor | `mobile-nav.tsx` | The open menu is a plain `{open && <div>}` — **no `Esc` to close, no focus move** into/out of the panel, background not inert. | Close on `Esc`; move focus to the first link on open and back to the toggle on close; `inert` the page behind it (or switch to the `Sheet` primitive, which already does all three). |
-| B13 | Minor | `/colors` `page.tsx` | The ramp jump-list `<nav>` (`<a href="#blue">…`) has no accessible name. | `aria-label="Jump to a ramp"`. |
 | B14 | Minor | `theme-provider` / first paint | `defaultTheme="system"` with `enableSystem` is correct, but verify the pre-hydration theme script doesn't cause a flash that could disorient (it uses `disableTransitionOnChange`, so likely fine — confirm in the live pass). | Confirm in axe/visual pass B (pending). |
+
+### Fixed in a follow-up pass (`a11y/focus-and-audit-followups`)
+
+| # | Sev | Area | Finding | Fix |
+|---|-----|------|---------|-----|
+| B8 | **Serious** | `@kinetixui/ui` `number-input.tsx` | The **−/+ stepper buttons** used `outline-none` with a `:hover`-only style — no `:focus-visible`; keyboard focus showed only as a container-level `focus-within:shadow-focus`. | Both steppers now draw `focus-visible:bg-accent focus-visible:text-foreground focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring` (the `list.tsx` / `input-group.tsx` pattern). Ships in the next `@kinetixui/ui` release. |
+| B9 | Moderate | `/colors` `page.tsx` | hex/rgb/hsl toggle exposed active state via `bg-primary` only; swatch buttons had no `:focus-visible` and no post-copy announcement. | Toggle: `role="group"` + `aria-pressed` + focus ring. Swatches: `focus-visible:border-primary/ring-1` + a descriptive `aria-label`. Added a visually-hidden `aria-live="polite"` "Copied …" region. |
+| B13 | Minor | `/colors` `page.tsx` | Ramp jump-list `<nav>` had no accessible name; its links had no focus ring. | `aria-label="Jump to a ramp"` + `focus-visible:ring-2`. |
 
 ### Confirmed good (no action)
 
@@ -115,13 +120,13 @@ pairs its track with a moving thumb + `aria-checked`. No change. Keep the
 
 ## C. Recommendations carried out of this audit
 
-- **R1 — give `shadow.json` a dark set.** Add `shadow.dark.json` (or a `$extensions`
-  mode) with `focus*` rings built from the dark `--ring` / semantic values, and
-  wire a dark output in `style-dictionary/build.mjs` so
-  `packages/tokens/dist/web/extras.css` emits a `.dark { --shadow-focus… }`
-  block. Removes the app-level override in `globals.css` and fixes every
-  downstream consumer. Also add the four `shadow-focus*` composites to
-  `check-contrast.mjs`'s non-text pass so a regression is caught.
+- **R1 — DONE** (`a11y/focus-and-audit-followups`). `tokens/semantic/shadow.dark.json`
+  added; `style-dictionary/sd.config.mjs` runs `css-extras` on both passes and
+  `hooks.mjs` takes a `selector`; `extras.dark.css` is emitted, bundled into
+  `registry/kinetixui/globals.css`, and exported as
+  `@kinetixui/tokens/css/extras/dark`. Dark focus ring: 1.70 → **8.83:1**.
+  Still open: add the four `shadow-focus*` composites to `check-contrast.mjs`'s
+  non-text pass so a future regression is caught automatically.
 - **R2 — decide the light `--warning` value.** Options, cheapest first:
   (a) darken to ~`amber.800` `#7f5b21` (6.1:1) — reads brown, loses the orange;
   (b) keep `#f97907` as a large-text/icon token and add `--warning-strong`
