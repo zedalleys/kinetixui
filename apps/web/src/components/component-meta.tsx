@@ -2,49 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-/** slug → the primitive the component is built on (only the ones we're sure of). */
-const PRIMITIVE: Record<string, string> = {
-  accordion: "Radix Accordion",
-  "alert-dialog": "Radix Alert Dialog",
-  "aspect-ratio": "Radix Aspect Ratio",
-  avatar: "Radix Avatar",
-  "avatar-group": "Radix Avatar",
-  calendar: "React DayPicker",
-  "date-picker": "React DayPicker",
-  carousel: "Embla Carousel",
-  checkbox: "Radix Checkbox",
-  collapsible: "Radix Collapsible",
-  combobox: "cmdk + Radix Popover",
-  command: "cmdk",
-  "context-menu": "Radix Context Menu",
-  dialog: "Radix Dialog",
-  modal: "Radix Dialog",
-  drawer: "Vaul",
-  sheet: "Radix Dialog",
-  "dropdown-menu": "Radix Dropdown Menu",
-  "hover-card": "Radix Hover Card",
-  label: "Radix Label",
-  menubar: "Radix Menubar",
-  "navigation-menu": "Radix Navigation Menu",
-  popover: "Radix Popover",
-  progress: "Radix Progress",
-  "circular-progress": "Radix Progress",
-  "radio-group": "Radix Radio Group",
-  resizable: "react-resizable-panels",
-  "scroll-area": "Radix Scroll Area",
-  select: "Radix Select",
-  separator: "Radix Separator",
-  slider: "Radix Slider",
-  sonner: "Sonner",
-  switch: "Radix Switch",
-  tabs: "Radix Tabs",
-  "tab-bar": "Radix Tabs",
-  toggle: "Radix Toggle",
-  "toggle-group": "Radix Toggle Group",
-  tooltip: "Radix Tooltip",
-  form: "React Hook Form + Radix",
-};
+import { PRIMITIVE, COMPONENT_CATEGORY } from "@/lib/component-registry";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -64,7 +22,11 @@ export function ComponentMeta() {
   if (!slug) return null;
 
   return (
-    <dl className="my-6 divide-y divide-border rounded-lg border border-border bg-muted/20">
+    <dl
+      aria-label="Component metadata"
+      className="my-6 divide-y divide-border rounded-lg border border-border bg-muted/20"
+    >
+      {COMPONENT_CATEGORY[slug] && <Row label="Category">{COMPONENT_CATEGORY[slug]}</Row>}
       {PRIMITIVE[slug] && <Row label="Built on">{PRIMITIVE[slug]}</Row>}
       <Row label="CLI">
         <span className="break-all">npx @kinetixui/cli add {slug}</span>
