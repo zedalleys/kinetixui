@@ -31,14 +31,14 @@
       "$description": "synth: = foreground"
     },
     "primary": {
-      "$value": "{color.blue.600}",
+      "$value": "{color.blue.700}",
       "$type": "color",
-      "$description": "figma 'Primay' (sic) was blue.500 #1b3c53 (11.55:1 on bg); deepened one ramp step to blue.600 #163042 (~13:1) for headroom on tints/overlays — same navy hue"
+      "$description": "figma 'Primay' (sic) was blue.500 #1b3c53 (11.55:1 on bg); deepened two ramp steps to blue.700 #102432 (~15.5:1) — same navy hue, near-black for max contrast"
     },
     "primary-foreground": {
       "$value": "{color.blue.50}",
       "$type": "color",
-      "$description": "figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on blue.600 primary ~12:1)"
+      "$description": "figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on blue.700 primary ~14:1)"
     },
     "secondary": {
       "$value": "{color.green.100}",
@@ -66,7 +66,7 @@
       "$description": "figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons)"
     },
     "accent-foreground": {
-      "$value": "{color.blue.600}",
+      "$value": "{color.blue.700}",
       "$type": "color",
       "$description": "synth: = primary for readable text on accent"
     },
@@ -111,9 +111,9 @@
       "$description": "figma: outline #92b2c8 (same as border)"
     },
     "ring": {
-      "$value": "{color.blue.600}",
+      "$value": "{color.blue.700}",
       "$type": "color",
-      "$description": "figma: focus state draws a 2px 'Primay' border — tracks --primary (blue.600)"
+      "$description": "figma: focus state draws a 2px 'Primay' border — tracks --primary (blue.700)"
     },
     "semantic": {
       "error": {
@@ -212,7 +212,7 @@
       "$type": "color"
     },
     "sidebar-primary": {
-      "$value": "{color.blue.600}",
+      "$value": "{color.blue.700}",
       "$type": "color"
     },
     "sidebar-primary-foreground": {
@@ -224,7 +224,7 @@
       "$type": "color"
     },
     "sidebar-accent-foreground": {
-      "$value": "{color.blue.600}",
+      "$value": "{color.blue.700}",
       "$type": "color"
     },
     "sidebar-border": {
@@ -232,7 +232,7 @@
       "$type": "color"
     },
     "sidebar-ring": {
-      "$value": "{color.blue.600}",
+      "$value": "{color.blue.700}",
       "$type": "color"
     },
     "tertiary": {

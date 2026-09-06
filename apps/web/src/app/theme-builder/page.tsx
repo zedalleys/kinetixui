@@ -15,14 +15,14 @@ import { SectionHead } from "@/components/section-head";
 
 const TEMPLATE = [
   "token,hex",
-  "primary,#163042",
+  "primary,#102432",
   "secondary,#748873",
   "accent,#f0f7ff",
   "destructive,#ec5047",
   "background,#ffffff",
   "foreground,#050c11",
   "border,#92b2c8",
-  "ring,#163042",
+  "ring,#102432",
 ].join("\n");
 
 function useClipboardCopy() {
@@ -105,7 +105,7 @@ export default function ThemeBuilderPage() {
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={"token, hex\nprimary, #163042\nsecondary, #748873\n…"}
+            placeholder={"token, hex\nprimary, #102432\nsecondary, #748873\n…"}
             rows={12}
             spellCheck={false}
             className="mt-3 w-full rounded-lg border border-border bg-muted/20 p-3 font-mono text-[13px] leading-relaxed outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"

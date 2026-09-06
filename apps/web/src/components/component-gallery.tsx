@@ -54,7 +54,7 @@ function Thumbnail({ item }: { item: Item }) {
     : demoRegistry[`${item.slug}-demo`]?.component;
 
   return (
-    <div className="relative h-[176px] overflow-hidden border-b border-border/60 bg-muted/20">
+    <div className="relative h-[184px] overflow-hidden border-b border-border/60 bg-muted/20 bg-[radial-gradient(hsl(var(--border)/0.45)_1px,transparent_1px)] [background-size:16px_16px]">
       {Demo ? (
         <div
           // decorative preview: keep it out of the a11y tree and make the whole
@@ -65,7 +65,7 @@ function Thumbnail({ item }: { item: Item }) {
             if (el) el.inert = true;
           }}
           aria-hidden
-          className="pointer-events-none absolute inset-0 flex origin-center scale-[0.7] items-center justify-center px-4"
+          className="pointer-events-none absolute inset-0 flex origin-center scale-[0.72] items-center justify-center px-4 transition-transform duration-300 motion-safe:group-hover:scale-[0.76]"
         >
           <Demo />
         </div>
@@ -74,8 +74,8 @@ function Thumbnail({ item }: { item: Item }) {
           {item.title}
         </div>
       )}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card to-transparent" />
-      <span className="pointer-events-none absolute left-2 top-2 font-mono text-[10px] tracking-[0.14em] text-muted-foreground">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-card via-card/80 to-transparent" />
+      <span className="pointer-events-none absolute left-2.5 top-2.5 rounded bg-background/70 px-1.5 py-0.5 font-mono text-[10px] tracking-[0.14em] text-muted-foreground backdrop-blur-sm">
         {item.slug}
       </span>
     </div>
@@ -87,20 +87,34 @@ function Card({ item }: { item: Item }) {
     <Link
       href={item.href}
       className={cn(
-        "group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors",
-        "hover:border-primary/40",
+        "group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card",
+        "transition-[transform,box-shadow,border-color] duration-200 motion-safe:hover:-translate-y-1",
+        "hover:border-primary/50 hover:shadow-lg",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
       )}
     >
+      {/* accent edge that wipes in on hover/focus */}
+      <span
+        aria-hidden
+        className="absolute inset-x-0 top-0 z-10 h-0.5 origin-left scale-x-0 bg-primary transition-transform duration-300 group-hover:scale-x-100 group-focus-visible:scale-x-100"
+      />
       <Thumbnail item={item} />
       <div className="flex items-center justify-between gap-3 p-4">
         <span className="min-w-0">
           <span className="block truncate font-medium">{item.title}</span>
-          <span className="mt-0.5 block truncate font-mono text-[11px] text-muted-foreground">
+          <span className="mt-1 inline-block max-w-full truncate rounded border border-border/70 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
             {item.primitive ?? item.category}
           </span>
         </span>
-        <ArrowRight className="size-4 shrink-0 text-muted-foreground motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5" />
+        <span
+          aria-hidden
+          className={cn(
+            "grid size-8 shrink-0 place-items-center rounded-full border border-border text-muted-foreground",
+            "transition-colors duration-200 group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground",
+          )}
+        >
+          <ArrowRight className="size-4 motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5" />
+        </span>
       </div>
     </Link>
   );
