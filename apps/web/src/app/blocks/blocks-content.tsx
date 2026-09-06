@@ -72,6 +72,70 @@ export function BlocksContent() {
     <Button variant="Outline" className="w-full"><Github className="size-4" /> Continue with GitHub</Button>
   </CardFooter>
 </Card>`}
+        native={{
+          compose: `KinetixCard(Modifier.width(360.dp)) {
+  KinetixCardHeader {
+    KinetixCardTitle("Sign in")
+    KinetixCardDescription("Enter your email to sign in to your account.")
+  }
+  KinetixCardContent {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+      KinetixLabel("Email")
+      KinetixInput(email, { email = it }, placeholder = "you@example.com")
+      KinetixLabel("Password")
+      KinetixInput(pw, { pw = it }, visualTransformation = PasswordVisualTransformation())
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        KinetixCheckbox(remember, { remember = it })
+        Spacer(Modifier.width(8.dp)); Text("Remember me")
+      }
+    }
+  }
+  KinetixCardFooter {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      KinetixButton(::signIn, Modifier.fillMaxWidth()) { Text("Sign in") }
+      KinetixButton(::github, Modifier.fillMaxWidth(), variant = KinetixButtonVariant.Outline) {
+        Text("Continue with GitHub")
+      }
+    }
+  }
+}`,
+          flutter: `KinetixCard(
+  child: Column(mainAxisSize: MainAxisSize.min, children: [
+    const KinetixCardHeader(children: [
+      KinetixCardTitle('Sign in'),
+      KinetixCardDescription('Enter your email to sign in to your account.'),
+    ]),
+    KinetixCardContent(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const KinetixLabel('Email'),
+        KinetixInput(controller: email, placeholder: 'you@example.com'),
+        const SizedBox(height: 12),
+        const KinetixLabel('Password'),
+        KinetixInput(controller: password, obscureText: true),
+        const SizedBox(height: 12),
+        Row(children: [
+          KinetixCheckbox(value: remember, onChanged: (v) => setState(() => remember = v)),
+          const SizedBox(width: 8),
+          const Text('Remember me'),
+        ]),
+      ]),
+    ),
+    KinetixCardFooter(children: [
+      Expanded(
+        child: Column(children: [
+          SizedBox(width: double.infinity,
+            child: KinetixButton(onPressed: signIn, child: const Text('Sign in'))),
+          const SizedBox(height: 8),
+          SizedBox(width: double.infinity,
+            child: KinetixButton(onPressed: github,
+              variant: KinetixButtonVariant.outline,
+              child: const Text('Continue with GitHub'))),
+        ]),
+      ),
+    ]),
+  ]),
+)`,
+        }}
       >
         <Card className="w-full max-w-sm">
           <CardHeader>
@@ -115,6 +179,55 @@ export function BlocksContent() {
   <Metric label="Active users" value="2,420" trend="up" change="8.1%" icon={<Users />} />
   <Metric label="Churn" value="1.2%" trend="down" change="0.3%" icon={<TrendingDown />} />
 </div>`}
+        native={{
+          compose: `Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+  KinetixMetric(
+    label = "Revenue", value = "$45,231",
+    trend = KinetixMetricTrend.Up, change = "12.5%",
+    icon = { Icon(Icons.Default.AttachMoney, null) },
+    modifier = Modifier.weight(1f),
+  )
+  KinetixMetric(
+    label = "Active users", value = "2,420",
+    trend = KinetixMetricTrend.Up, change = "8.1%",
+    icon = { Icon(Icons.Default.Group, null) },
+    modifier = Modifier.weight(1f),
+  )
+  KinetixMetric(
+    label = "Churn", value = "1.2%",
+    trend = KinetixMetricTrend.Down, change = "0.3%",
+    icon = { Icon(Icons.Default.TrendingDown, null) },
+    modifier = Modifier.weight(1f),
+  )
+}`,
+          flutter: `Row(
+  children: [
+    Expanded(
+      child: KinetixMetric(
+        label: 'Revenue', value: r'$45,231',
+        trend: KinetixMetricTrend.up, change: '12.5%',
+        icon: const Icon(Icons.attach_money, size: 16),
+      ),
+    ),
+    const SizedBox(width: 16),
+    Expanded(
+      child: KinetixMetric(
+        label: 'Active users', value: '2,420',
+        trend: KinetixMetricTrend.up, change: '8.1%',
+        icon: const Icon(Icons.group_outlined, size: 16),
+      ),
+    ),
+    const SizedBox(width: 16),
+    Expanded(
+      child: KinetixMetric(
+        label: 'Churn', value: '1.2%',
+        trend: KinetixMetricTrend.down, change: '0.3%',
+        icon: const Icon(Icons.trending_down, size: 16),
+      ),
+    ),
+  ],
+)`,
+        }}
       >
         <div className="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Metric label="Revenue" value="$45,231" trend="up" change="12.5%" icon={<DollarSign />} />
@@ -141,6 +254,61 @@ export function BlocksContent() {
   </CardContent>
   <CardFooter><Button className="w-full">Upgrade to Pro</Button></CardFooter>
 </Card>`}
+        native={{
+          compose: `KinetixCard(Modifier.width(300.dp)) {
+  KinetixCardHeader {
+    KinetixBadge("Most popular", variant = KinetixBadgeVariant.Subtle)
+    KinetixCardTitle("Pro")
+    KinetixCardDescription("For growing teams.")
+    Text("$29", fontSize = 30.sp, fontWeight = FontWeight.SemiBold)
+  }
+  KinetixCardContent {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      listOf("Unlimited projects", "Priority support", "Custom domains", "Analytics").forEach {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Icon(Icons.Default.Check, null, tint = KinetixColorScheme.current.primary)
+          Spacer(Modifier.width(8.dp)); Text(it)
+        }
+      }
+    }
+  }
+  KinetixCardFooter {
+    KinetixButton(::upgrade, Modifier.fillMaxWidth()) { Text("Upgrade to Pro") }
+  }
+}`,
+          flutter: `KinetixCard(
+  child: Column(mainAxisSize: MainAxisSize.min, children: [
+    const KinetixCardHeader(children: [
+      KinetixBadge('Most popular', variant: KinetixBadgeVariant.subtle),
+      KinetixCardTitle('Pro'),
+      KinetixCardDescription('For growing teams.'),
+      Text('\\\$29', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600)),
+    ]),
+    KinetixCardContent(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final f in const ['Unlimited projects', 'Priority support',
+              'Custom domains', 'Analytics'])
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(children: [
+                Icon(Icons.check, size: 16, color: KinetixTheme.of(context).primary),
+                const SizedBox(width: 8),
+                Text(f),
+              ]),
+            ),
+        ],
+      ),
+    ),
+    KinetixCardFooter(children: [
+      Expanded(
+        child: KinetixButton(onPressed: upgrade, child: const Text('Upgrade to Pro')),
+      ),
+    ]),
+  ]),
+)`,
+        }}
       >
         <Card className="w-full max-w-xs">
           <CardHeader>
@@ -181,6 +349,59 @@ export function BlocksContent() {
     <Button variant="Outline">Read the docs</Button>
   </div>
 </div>`}
+        native={{
+          compose: `val colors = KinetixColorScheme.current
+Row(
+  Modifier
+    .fillMaxWidth()
+    .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+    .background(colors.muted.copy(alpha = 0.4f))
+    .padding(32.dp),
+  horizontalArrangement = Arrangement.SpaceBetween,
+  verticalAlignment = Alignment.CenterVertically,
+) {
+  Column {
+    Text("Ship with one token architecture",
+      fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+    Text("React, SwiftUI, Compose and Flutter from a single source.",
+      color = colors.mutedForeground, fontSize = 14.sp)
+  }
+  Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    KinetixButton(::start) { Text("Get started"); Icon(Icons.Default.NorthEast, null) }
+    KinetixButton(::docs, variant = KinetixButtonVariant.Outline) { Text("Read the docs") }
+  }
+}`,
+          flutter: `final c = KinetixTheme.of(context);
+Container(
+  padding: const EdgeInsets.all(32),
+  decoration: BoxDecoration(
+    color: c.muted.withValues(alpha: 0.4),
+    border: Border.all(color: c.border),
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Ship with one token architecture',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+          Text('React, SwiftUI, Compose and Flutter from a single source.',
+            style: TextStyle(fontSize: 14, color: c.mutedForeground)),
+        ],
+      ),
+      Row(children: [
+        KinetixButton(onPressed: start, child: const Text('Get started')),
+        const SizedBox(width: 8),
+        KinetixButton(onPressed: docs,
+          variant: KinetixButtonVariant.outline, child: const Text('Read the docs')),
+      ]),
+    ],
+  ),
+)`,
+        }}
       >
         <div className="flex w-full flex-col items-start gap-4 rounded-lg border border-border bg-muted/40 p-8 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -221,6 +442,72 @@ export function BlocksContent() {
   </div>
   <Table className="mt-4">…</Table>
 </div>`}
+        native={{
+          compose: `Column {
+  Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+    KinetixInput(query, { query = it }, Modifier.weight(1f), placeholder = "Search invoices…")
+    KinetixDropdownMenu(
+      visible = open, onDismissRequest = { open = false },
+      anchor = { KinetixSelectTrigger(status, { open = true }, Modifier.width(144.dp)) },
+    ) {
+      statuses.forEach { KinetixSelectItem(it, it == status, { status = it; open = false }) }
+    }
+    KinetixButton(::add) { Text("Add invoice") }
+  }
+  KinetixTable(Modifier.padding(top = 16.dp)) {
+    KinetixTableHeader {
+      KinetixTableRow {
+        KinetixTableHead("Invoice"); KinetixTableHead("Status"); KinetixTableHead("Amount")
+      }
+    }
+    KinetixTableBody {
+      rows.forEach { r ->
+        KinetixTableRow {
+          KinetixTableCell(r.id)
+          KinetixTableCell(r.status)
+          KinetixTableCell(r.amount)
+        }
+      }
+    }
+  }
+}`,
+          flutter: `Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Row(children: [
+      Expanded(child: KinetixInput(controller: query, placeholder: 'Search invoices…')),
+      const SizedBox(width: 8),
+      SizedBox(
+        width: 144,
+        child: KinetixSelect<String>(
+          value: status,
+          options: const [
+            KinetixSelectOption('all', 'All statuses'),
+            KinetixSelectOption('paid', 'Paid'),
+            KinetixSelectOption('pending', 'Pending'),
+          ],
+          onChanged: (v) => setState(() => status = v),
+        ),
+      ),
+      const SizedBox(width: 8),
+      KinetixButton(onPressed: add, child: const Text('Add invoice')),
+    ]),
+    const SizedBox(height: 16),
+    KinetixTable(children: [
+      const KinetixTableRow(isHeader: true, cells: [
+        KinetixTableHead('Invoice'), KinetixTableHead('Status'), KinetixTableHead('Amount'),
+      ]),
+      for (final r in rows)
+        KinetixTableRow(cells: [
+          KinetixTableCell(child: Text(r.id)),
+          KinetixTableCell(child: KinetixBadge(r.status,
+            variant: r.paid ? KinetixBadgeVariant.subtle : KinetixBadgeVariant.outline)),
+          KinetixTableCell(child: Text(r.amount)),
+        ]),
+    ]),
+  ],
+)`,
+        }}
       >
         <div className="w-full max-w-2xl">
           <div className="flex items-center gap-2">
@@ -281,6 +568,34 @@ export function BlocksContent() {
     </List>
   </CardContent>
 </Card>`}
+        native={{
+          compose: `KinetixCard(Modifier.width(360.dp)) {
+  KinetixCardHeader { KinetixCardTitle("Notifications") }
+  KinetixSeparator()
+  KinetixList {
+    KinetixListItem("Email", description = "Product news and receipts",
+      trailing = { KinetixSwitch(email, { email = it }) })
+    KinetixListItem("Push", description = "Activity on your projects",
+      trailing = { KinetixSwitch(push, { push = it }) })
+    KinetixListItem("SMS", description = "Only critical alerts",
+      trailing = { KinetixSwitch(sms, { sms = it }) })
+  }
+}`,
+          flutter: `KinetixCard(
+  child: Column(mainAxisSize: MainAxisSize.min, children: [
+    const KinetixCardHeader(children: [KinetixCardTitle('Notifications')]),
+    const KinetixSeparator(),
+    KinetixList(children: [
+      KinetixListItem(title: 'Email', description: 'Product news and receipts',
+        trailing: KinetixSwitch(value: email, onChanged: (v) => setState(() => email = v))),
+      KinetixListItem(title: 'Push', description: 'Activity on your projects',
+        trailing: KinetixSwitch(value: push, onChanged: (v) => setState(() => push = v))),
+      KinetixListItem(title: 'SMS', description: 'Only critical alerts',
+        trailing: KinetixSwitch(value: sms, onChanged: (v) => setState(() => sms = v))),
+    ]),
+  ]),
+)`,
+        }}
       >
         <Card className="w-full max-w-sm">
           <CardHeader>
@@ -325,6 +640,44 @@ export function BlocksContent() {
     </List>
   </CardContent>
 </Card>`}
+        native={{
+          compose: `KinetixCard(Modifier.width(360.dp)) {
+  KinetixCardHeader { KinetixCardTitle("Team") }
+  KinetixSeparator()
+  KinetixList {
+    team.forEach { m ->
+      KinetixListItem(
+        title = m.name, description = m.role,
+        leading = { KinetixAvatar { KinetixAvatarFallback(m.initials) } },
+        trailing = {
+          KinetixButton({ remove(m) }, variant = KinetixButtonVariant.Ghost,
+            size = KinetixButtonSize.Sm) { Text("Remove") }
+        },
+      )
+    }
+  }
+}`,
+          flutter: `KinetixCard(
+  child: Column(mainAxisSize: MainAxisSize.min, children: [
+    const KinetixCardHeader(children: [KinetixCardTitle('Team')]),
+    const KinetixSeparator(),
+    KinetixList(children: [
+      for (final m in team)
+        KinetixListItem(
+          title: m.name,
+          description: m.role,
+          leading: KinetixAvatar(child: KinetixAvatarFallback(m.initials)),
+          trailing: KinetixButton(
+            onPressed: () => remove(m),
+            variant: KinetixButtonVariant.ghost,
+            size: KinetixButtonSize.sm,
+            child: const Text('Remove'),
+          ),
+        ),
+    ]),
+  ]),
+)`,
+        }}
       >
         <Card className="w-full max-w-sm">
           <CardHeader>
@@ -372,6 +725,40 @@ export function BlocksContent() {
     </div>
   </CardContent>
 </Card>`}
+        native={{
+          compose: `KinetixCard(Modifier.width(420.dp)) {
+  KinetixCardContent {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+      KinetixAvatar { KinetixAvatarFallback("ZF") }
+      Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        KinetixTextarea(body, { body = it }, placeholder = "Add a comment…")
+        KinetixButton(::submit, Modifier.align(Alignment.End)) { Text("Comment") }
+      }
+    }
+  }
+}`,
+          flutter: `KinetixCard(
+  child: KinetixCardContent(
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const KinetixAvatar(child: KinetixAvatarFallback('ZF')),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              KinetixTextarea(controller: body, placeholder: 'Add a comment…'),
+              const SizedBox(height: 8),
+              KinetixButton(onPressed: submit, child: const Text('Comment')),
+            ],
+          ),
+        ),
+      ],
+    ),
+  ),
+)`,
+        }}
       >
         <Card className="w-full max-w-md">
           <CardContent className="flex items-start gap-3 pt-6">
@@ -397,6 +784,44 @@ export function BlocksContent() {
   <p className="text-sm text-muted-foreground">When someone messages you, it'll show up here.</p>
   <Button className="mt-4">Start a conversation</Button>
 </div>`}
+        native={{
+          compose: `val colors = KinetixColorScheme.current
+Column(
+  Modifier
+    .fillMaxWidth()
+    // dashed rule: drawBehind { drawRoundRect(pathEffect = dashPathEffect(…)) }
+    .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+    .padding(vertical = 64.dp),
+  horizontalAlignment = Alignment.CenterHorizontally,
+  verticalArrangement = Arrangement.spacedBy(8.dp),
+) {
+  Icon(Icons.Default.Inbox, null, Modifier.size(32.dp), tint = colors.mutedForeground)
+  Text("No messages yet", fontWeight = FontWeight.Medium)
+  Text("When someone messages you, it'll show up here.",
+    color = colors.mutedForeground, fontSize = 14.sp)
+  KinetixButton(::start, Modifier.padding(top = 16.dp)) { Text("Start a conversation") }
+}`,
+          flutter: `final c = KinetixTheme.of(context);
+Container(
+  padding: const EdgeInsets.symmetric(vertical: 64),
+  decoration: BoxDecoration(
+    // dashed rule: paint a CustomPainter border, or the dotted_border package
+    border: Border.all(color: c.border),
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Column(
+    children: [
+      Icon(Icons.inbox_outlined, size: 32, color: c.mutedForeground),
+      const SizedBox(height: 8),
+      const Text('No messages yet', style: TextStyle(fontWeight: FontWeight.w500)),
+      Text("When someone messages you, it'll show up here.",
+        style: TextStyle(fontSize: 14, color: c.mutedForeground)),
+      const SizedBox(height: 16),
+      KinetixButton(onPressed: start, child: const Text('Start a conversation')),
+    ],
+  ),
+)`,
+        }}
       >
         <div className="flex w-full flex-col items-center gap-2 rounded-lg border border-dashed border-border py-16 text-center">
           <Inbox className="size-8 text-muted-foreground" />
@@ -426,6 +851,42 @@ export function BlocksContent() {
     <AlertTitle>Changes saved</AlertTitle>
   </Alert>
 </div>`}
+        native={{
+          compose: `Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+  KinetixAlert {
+    KinetixAlertTitle("Heads up")
+    KinetixAlertDescription("You can add components to your app using the CLI.")
+  }
+  KinetixAlert(variant = KinetixAlertVariant.Destructive) {
+    KinetixAlertTitle("Payment failed")
+    KinetixAlertDescription("Update your billing details to keep your subscription active.")
+  }
+  KinetixAlert(variant = KinetixAlertVariant.Success) {
+    KinetixAlertTitle("Changes saved")
+  }
+}`,
+          flutter: `Column(
+  children: const [
+    KinetixAlert(children: [
+      KinetixAlertTitle('Heads up'),
+      KinetixAlertDescription('You can add components to your app using the CLI.'),
+    ]),
+    SizedBox(height: 12),
+    KinetixAlert(
+      variant: KinetixAlertVariant.destructive,
+      children: [
+        KinetixAlertTitle('Payment failed'),
+        KinetixAlertDescription('Update your billing details to keep your subscription active.'),
+      ],
+    ),
+    SizedBox(height: 12),
+    KinetixAlert(
+      variant: KinetixAlertVariant.success,
+      children: [KinetixAlertTitle('Changes saved')],
+    ),
+  ],
+)`,
+        }}
       >
         <div className="grid w-full max-w-md gap-3">
           <Alert>
@@ -456,6 +917,21 @@ export function BlocksContent() {
 >
   Good design is as little design as possible.
 </Quote>`}
+        native={{
+          compose: `KinetixQuote(
+  text = "Good design is as little design as possible.",
+  author = "Dieter Rams",
+  authorTitle = "Industrial Designer",
+  avatar = { KinetixAvatar { KinetixAvatarFallback("DR") } },
+  modifier = Modifier.width(420.dp),
+)`,
+          flutter: `const KinetixQuote(
+  'Good design is as little design as possible.',
+  author: 'Dieter Rams',
+  authorTitle: 'Industrial Designer',
+  avatar: KinetixAvatar(child: KinetixAvatarFallback('DR')),
+)`,
+        }}
       >
         <Quote
           author="Dieter Rams"

@@ -14,7 +14,10 @@ export default function BlocksPage() {
       <p className="mt-3 max-w-2xl text-muted-foreground">
         Whole sections put together from the registry — sign-in cards, dashboard headers, pricing,
         toolbars. Copy the code, add the components it uses with{" "}
-        <code className="text-foreground">npx @kinetixui/cli add …</code>, and adjust.
+        <code className="text-foreground">npx @kinetixui/cli add …</code>, and adjust. Each block&apos;s
+        code tab also carries the <span className="text-foreground">Compose</span> and{" "}
+        <span className="text-foreground">Flutter</span> equivalent, composed from the same{" "}
+        <code className="text-foreground">Kinetix*</code> primitives.
       </p>
       <BlocksContent />
     </div>
