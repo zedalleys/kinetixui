@@ -150,19 +150,6 @@ export function ComponentGallery() {
     setQuery((cur) => (cur.trim() === urlQuery.trim() ? cur : urlQuery));
   }, [urlQuery]);
 
-  // "/" focuses the search from anywhere on the page
-  React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
-      const el = document.activeElement;
-      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) return;
-      e.preventDefault();
-      searchRef.current?.focus();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
-
   const setCat = (cat: string | null) => {
     const next = new URLSearchParams(Array.from(params.entries()));
     if (cat) next.set("cat", cat);
@@ -233,7 +220,7 @@ export function ComponentGallery() {
                   "[&::-webkit-search-cancel-button]:appearance-none",
                 )}
               />
-              {query ? (
+              {query && (
                 <button
                   type="button"
                   aria-label="Clear search"
@@ -245,10 +232,6 @@ export function ComponentGallery() {
                 >
                   <X aria-hidden className="size-3.5" />
                 </button>
-              ) : (
-                <kbd className="pointer-events-none hidden shrink-0 rounded border border-border px-1 font-mono text-[10px] text-muted-foreground peer-focus:opacity-0 sm:block">
-                  /
-                </kbd>
               )}
             </div>
             {isFiltered && (
