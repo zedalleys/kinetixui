@@ -75,7 +75,7 @@ function Thumbnail({ item }: { item: Item }) {
         </div>
       )}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card to-transparent" />
-      <span className="pointer-events-none absolute left-2 top-2 font-mono text-[10px] tracking-[0.14em] text-muted-foreground/50">
+      <span className="pointer-events-none absolute left-2 top-2 font-mono text-[10px] tracking-[0.14em] text-muted-foreground">
         {item.slug}
       </span>
     </div>
@@ -256,7 +256,7 @@ export function ComponentGallery() {
               onClick={() => setCat(null)}
               className={catButton(!activeCat)}
             >
-              All <span className="opacity-60">{ITEMS.length}</span>
+              All <span className="tabular-nums opacity-80">{ITEMS.length}</span>
             </button>
             {CATEGORY_ORDER.map((cat) => (
               <button
@@ -266,7 +266,7 @@ export function ComponentGallery() {
                 onClick={() => setCat(activeCat === cat ? null : cat)}
                 className={catButton(activeCat === cat)}
               >
-                {cat} <span className="opacity-60">{CATEGORY_COUNT[cat] ?? 0}</span>
+                {cat} <span className="tabular-nums opacity-80">{CATEGORY_COUNT[cat] ?? 0}</span>
               </button>
             ))}
           </div>
