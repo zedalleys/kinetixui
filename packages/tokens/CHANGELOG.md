@@ -1,5 +1,38 @@
 # @kinetixui/tokens
 
+## 0.4.2
+
+### Patch Changes
+
+- 7ad6a21: **Chart text alternative.** `ChartContainer` now renders `role="img"` with an
+  `aria-label` — pass `label` with a one-line summary of what the chart shows
+  (WCAG 1.1.1); it falls back to `"Chart"`. Cartesian recipes already pass
+  `accessibilityLayer` for keyboard data-point navigation.
+- 32779bc: `ChartContainer` now scrubs two redundant Recharts a11y artefacts from its
+  rendered output: the `role="img"` (no `<title>`) that Recharts stamps on every
+  sector / dot `<path>` — noise, since the container already carries the text
+  alternative — and the unnamed `<svg role="application">` its
+  `accessibilityLayer` leaves behind, which now gets the container's label. Clears
+  axe `svg-img-alt` on chart pages.
+- f44e7a2: **Dark-mode focus ring.** The `--shadow-focus{,-destructive,-success,-warning}`
+  composites now carry a real dark set built from the dark `--ring` / semantic
+  primitives (`tokens/semantic/shadow.dark.json`). Previously they baked a
+  light-theme navy that measured ~1.7:1 against the dark surface — below WCAG 2.2
+  SC 1.4.11 (3:1); it now clears 8.8:1. New export
+  `@kinetixui/tokens/css/extras/dark` (also bundled into
+  `registry/kinetixui/globals.css`); add its `@import` after
+  `@kinetixui/tokens/css/extras`.
+  
+  **NumberInput** — the −/+ stepper buttons now draw a `--ring` inset outline on
+  `:focus-visible` so keyboard users can tell which control is focused (they
+  previously showed only a container-level ring).
+- 183abbf: Light-mode `--warning` moved from the Figma `onWarningContainer` orange
+  (`#f97907`) to `amber.800` (`#7f5b21`). The orange was **2.7:1** as `text-warning`
+  on the page and **2.6:1** in the `Tag` warning variant — both fail WCAG AA; the
+  dark-amber clears 5.8–6.1:1. Dark-mode `--warning` is unchanged (bright
+  `amber.400`). `check:contrast` now enforces every warning pair with no
+  allow-list.
+
 ## 0.4.1
 
 ### Patch Changes
