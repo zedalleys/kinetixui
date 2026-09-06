@@ -64,6 +64,8 @@ export function getConfig(theme) {
       `${ROOT}/tokens/primitives/**/*.json`,
       `${ROOT}/tokens/semantic/color.${theme}.json`,
       `${ROOT}/tokens/semantic/shadow.json`,
+      // dark overrides the focus-* rings (elevation scale stays as-is)
+      ...(light ? [] : [`${ROOT}/tokens/semantic/shadow.dark.json`]),
       `${ROOT}/tokens/semantic/typography.json`,
     ],
     platforms: {
@@ -83,6 +85,26 @@ export function getConfig(theme) {
             format: 'css/variables',
             // colour + dimension only — shadow/typography composites go to extras.css
             filter: (t) => isSimpleForCss(t) && (light || isSemantic(t)),
+            options: { selector: light ? ':root' : '.dark' },
+          },
+        ],
+      },
+
+      /* Shadow composites — BOTH passes now. Light writes the full
+         :root { --shadow-* + --text-* } set; dark writes .dark { --shadow-focus* }
+         only (the focus rings are the sole theme-dependent shadows, and
+         typography is theme-independent). */
+      'css-extras': {
+        transforms: ['attribute/cti', 'kinetix/dimension-px'],
+        buildPath: `${DIST}/web/`,
+        options: { outputReferences: false },
+        files: [
+          {
+            destination: light ? 'extras.css' : 'extras.dark.css',
+            format: 'kinetix/extras-css',
+            filter: light
+              ? (t) => t.$type === 'shadow' || t.$type === 'typography'
+              : (t) => t.$type === 'shadow' && t.path.at(-1).startsWith('focus'),
             options: { selector: light ? ':root' : '.dark' },
           },
         ],
@@ -153,18 +175,6 @@ export function getConfig(theme) {
       /* Everything below is theme-independent — only the light run emits it. */
       ...(light
         ? {
-            'css-extras': {
-              transforms: ['attribute/cti', 'kinetix/dimension-px'],
-              buildPath: `${DIST}/web/`,
-              options: { outputReferences: false },
-              files: [
-                {
-                  destination: 'extras.css',
-                  format: 'kinetix/extras-css',
-                  filter: (t) => t.$type === 'shadow' || t.$type === 'typography',
-                },
-              ],
-            },
             ts: {
               // custom format walks token.path, so only value transforms matter here
               transforms: ['attribute/cti', 'name/camel', 'color/css', 'kinetix/dimension-px'],

@@ -43,7 +43,7 @@ export function Showcase({
 
   return (
     <section className={cn("scroll-mt-28", className)}>
-      <h3 className="font-display text-lg font-semibold tracking-[-0.01em]">{title}</h3>
+      <h2 className="font-display text-lg font-semibold tracking-[-0.01em]">{title}</h2>
       {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
 
       <div className="mt-3 overflow-hidden rounded-xl border border-border">

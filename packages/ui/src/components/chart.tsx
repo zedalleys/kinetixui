@@ -27,8 +27,16 @@ const ChartContainer = React.forwardRef<
   React.ComponentProps<"div"> & {
     config: ChartConfig;
     children: React.ComponentProps<typeof RechartsPrimitive.ResponsiveContainer>["children"];
+    /**
+     * Text alternative for the chart (WCAG 1.1.1). A chart conveys its data by
+     * colour + position, which a screen reader can't relay — pass a one-line
+     * summary of what it shows and the trend. Falls back to "Chart".
+     * Cartesian charts should also get `accessibilityLayer` on the Recharts
+     * primitive for keyboard data-point navigation.
+     */
+    label?: string;
   }
->(({ id, className, children, config, ...props }, ref) => {
+>(({ id, className, children, config, label, role, "aria-label": ariaLabel, ...props }, ref) => {
   const uniqueId = React.useId();
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
 
@@ -37,6 +45,8 @@ const ChartContainer = React.forwardRef<
       <div
         data-chart={chartId}
         ref={ref}
+        role={role ?? "img"}
+        aria-label={ariaLabel ?? label ?? "Chart"}
         className={cn(
           "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
           className,

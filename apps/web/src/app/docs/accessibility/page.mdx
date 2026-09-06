@@ -22,10 +22,9 @@ default — KinetixUI only styles them against the token contract.
   [SC 1.4.11](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast)
   asks for. Form controls (Button, Input, Select, Textarea, Fab, NumberInput,
   InputGroup, FileUpload) instead use the `--shadow-focus` composite token,
-  which this site re-points at the theme-aware `--ring` / `--destructive` /
-  `--success` / `--warning` colours in dark mode (`apps/web/src/app/globals.css`)
-  — the token package's `shadow.json` still ships a light-only value, tracked
-  below.
+  which now carries a real dark set (`tokens/semantic/shadow.dark.json` →
+  `@kinetixui/tokens/css/extras/dark`), so the ring clears **8.8:1** in dark
+  too — not just on this site.
 - **Text contrast** — every foreground/surface pair components actually render
   is audited by [`scripts/check-contrast.mjs`](https://github.com/zedalleys/kinetixui/blob/main/scripts/check-contrast.mjs)
   (`pnpm check:contrast`, run in CI). Every pair meets **WCAG AA (4.5:1)** in
@@ -66,10 +65,10 @@ From the platform accessibility audit (`ACCESSIBILITY-AUDIT.md`):
   page and **2.6:1** in the `Tag` warning variant. It needs a design call on a
   darker value; `check:contrast` allow-lists these two pairs and still fails on
   anything new. Use `--warning` for icons and large text only until then.
-- **`--shadow-focus` has no dark variant in the token package** — the generated
-  `shadow.json` output bakes a light-theme navy. In dark mode that ring is
-  ~1.7:1 on the page. This site overrides it in `globals.css`; consumers of the
-  raw registry `globals.css` do not get that fix yet.
+- **~~`--shadow-focus` has no dark variant~~** — fixed. `shadow.dark.json` now
+  feeds a `.dark { --shadow-focus* }` block into `extras.dark.css` /
+  `registry/kinetixui/globals.css`; the dark ring clears 8.8:1. Remaining:
+  `check-contrast.mjs` doesn't yet assert the four `--shadow-focus*` composites.
 - **`--shadow-focus` was the light-mode `destructive` fill too** — the Figma
   `error` value `#ec5047` failed AA (3.3:1). `--destructive` on light is now
   `red.500` (`#c60a0a`, 5.6–6.1:1); it no longer tracks the Figma error token.

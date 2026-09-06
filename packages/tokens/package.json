@@ -14,6 +14,7 @@
     "./css": "./dist/web/globals.css",
     "./css/dark": "./dist/web/globals.dark.css",
     "./css/extras": "./dist/web/extras.css",
+    "./css/extras/dark": "./dist/web/extras.dark.css",
     "./package.json": "./package.json"
   },
   "files": ["dist"],

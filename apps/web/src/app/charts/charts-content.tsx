@@ -111,7 +111,11 @@ export function ChartsContent() {
   mobile: { label: "Mobile", color: "hsl(var(--chart-2))" },
 } satisfies ChartConfig
 
-<ChartContainer config={config} className="min-h-[260px] w-full">
+<ChartContainer
+  config={config}
+  className="min-h-[260px] w-full"
+  label="Website visits by month — desktop vs mobile, Jan to Jun. Both trend up; desktop leads every month."
+>
   <BarChart accessibilityLayer data={months}>
     <CartesianGrid vertical={false} />
     <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
@@ -122,7 +126,11 @@ export function ChartsContent() {
   </BarChart>
 </ChartContainer>`}
       >
-        <ChartContainer config={pairConfig} className={box}>
+        <ChartContainer
+          config={pairConfig}
+          className={box}
+          label="Website visits by month — desktop vs mobile, Jan to Jun. Both trend up; desktop leads every month."
+        >
           <BarChart accessibilityLayer data={months}>
             <CartesianGrid vertical={false} />
             <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />

@@ -55,6 +55,9 @@ export default function ColorsPage() {
     <div className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8">
       <p className="eyebrow">Color system</p>
       <h1 className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] md:text-4xl">Colors</h1>
+      <p aria-live="polite" className="sr-only">
+        {copied ? `Copied ${copied}` : ""}
+      </p>
       <p className="mt-3 max-w-2xl text-muted-foreground">
         Six brand ramps and a synthesized neutral, extracted verbatim from Figma and remapped to a
         0–1000 scale. Every semantic token in the{" "}
@@ -81,20 +84,30 @@ export default function ColorsPage() {
 
       {/* quick jump + format toggle */}
       <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-y border-border py-3">
-        <nav className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+        <nav
+          aria-label="Jump to a ramp"
+          className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground"
+        >
           {RAMPS.map((r) => (
-            <a key={r} href={`#${r}`} className="transition-colors hover:text-foreground">
+            <a
+              key={r}
+              href={`#${r}`}
+              className="rounded-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               {r}
             </a>
           ))}
         </nav>
-        <div className="inline-flex rounded-md border border-border p-0.5">
+        <div role="group" aria-label="Value format" className="inline-flex rounded-md border border-border p-0.5">
           {FORMATS.map((f) => (
             <button
               key={f}
+              type="button"
+              aria-pressed={format === f}
               onClick={() => setFormat(f)}
               className={cn(
                 "rounded px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 format === f ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -142,11 +155,14 @@ export default function ColorsPage() {
                   return (
                     <button
                       key={step}
+                      type="button"
+                      aria-label={`Copy ${ramp} ${step}${tokenName ? ` (--${tokenName})` : ""} — ${value}`}
                       onClick={() => copy(value)}
                       onMouseEnter={() => setHoverStep(step)}
                       onMouseLeave={() => setHoverStep(null)}
                       className={cn(
                         "group flex flex-col overflow-hidden rounded-lg border text-left transition-colors",
+                        "focus-visible:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
                         active ? "border-primary ring-1 ring-primary" : "border-border",
                       )}
                     >
