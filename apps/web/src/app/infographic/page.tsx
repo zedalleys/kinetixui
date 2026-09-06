@@ -80,7 +80,7 @@ const PLATFORMS = ["React", "SwiftUI", "Compose", "Flutter"] as const;
 const MARK: Record<Cell, { glyph: string; cls: string; label: string }> = {
   full: { glyph: "●", cls: "text-primary", label: "full" },
   partial: { glyph: "◐", cls: "text-muted-foreground", label: "partial" },
-  none: { glyph: "○", cls: "text-muted-foreground/40", label: "none" },
+  none: { glyph: "○", cls: "text-muted-foreground/60", label: "none" },
 };
 
 const VS = {
@@ -137,7 +137,7 @@ export default function InfographicPage() {
               key={l.n}
               className="grid gap-2 border-b border-border py-5 md:grid-cols-[3rem_12rem_1fr] md:gap-6"
             >
-              <span className="font-display text-2xl font-bold leading-none text-muted-foreground/40">
+              <span className="font-display text-2xl font-bold leading-none text-muted-foreground/60">
                 {l.n}
               </span>
               <div>
@@ -200,7 +200,12 @@ export default function InfographicPage() {
           <table className="w-full min-w-[38rem] border-collapse text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="py-2 pr-4 text-left font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground" />
+                <th
+                  scope="col"
+                  className="py-2 pr-4 text-left font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+                >
+                  <span className="sr-only">Capability</span>
+                </th>
                 {VS.cols.map((c, i) => (
                   <th
                     key={c}
@@ -221,7 +226,7 @@ export default function InfographicPage() {
                   {r.cells.map((yes, i) => (
                     <td key={i} className="px-3 py-2.5 text-center">
                       <span
-                        className={yes ? "text-primary" : "text-muted-foreground/40"}
+                        className={yes ? "text-primary" : "text-muted-foreground/60"}
                         aria-label={yes ? "yes" : "no"}
                       >
                         {yes ? "●" : "○"}

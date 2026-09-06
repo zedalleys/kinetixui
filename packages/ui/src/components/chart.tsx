@@ -39,14 +39,43 @@ const ChartContainer = React.forwardRef<
 >(({ id, className, children, config, label, role, "aria-label": ariaLabel, ...props }, ref) => {
   const uniqueId = React.useId();
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
+  const name = ariaLabel ?? label ?? "Chart";
+
+  const innerRef = React.useRef<HTMLDivElement | null>(null);
+  const setRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      innerRef.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    },
+    [ref],
+  );
+
+  // The container carries the text alternative (role="img" + aria-label).
+  // Recharts additionally (a) tags individual sector / dot <path>s with
+  // role="img" and no <title> — redundant noise that fails axe's svg-img-alt —
+  // and (b) leaves its accessibilityLayer <svg role="application"> unnamed.
+  // Fix both on the rendered output; re-run on Recharts re-layout.
+  React.useEffect(() => {
+    const el = innerRef.current;
+    if (!el) return;
+    const scrub = () => {
+      el.querySelector(".recharts-surface")?.setAttribute("aria-label", name);
+      el.querySelectorAll('[role="img"]:not([data-chart])').forEach((n) => n.removeAttribute("role"));
+    };
+    scrub();
+    const mo = new MutationObserver(scrub);
+    mo.observe(el, { childList: true, subtree: true });
+    return () => mo.disconnect();
+  }, [name]);
 
   return (
     <ChartContext.Provider value={{ config }}>
       <div
         data-chart={chartId}
-        ref={ref}
+        ref={setRef}
         role={role ?? "img"}
-        aria-label={ariaLabel ?? label ?? "Chart"}
+        aria-label={name}
         className={cn(
           "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
           className,
