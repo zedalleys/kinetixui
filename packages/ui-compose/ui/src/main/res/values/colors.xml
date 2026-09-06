@@ -4,6 +4,21 @@
   Do not edit directly, this file was auto-generated.
 -->
 <resources>
+  <color name="color_azure_0">#fff7faff</color>
+  <color name="color_azure_50">#ffeff6ff</color>
+  <color name="color_azure_100">#ffdbeafe</color>
+  <color name="color_azure_150">#ffcde1fd</color>
+  <color name="color_azure_200">#ffbfdbfe</color>
+  <color name="color_azure_300">#ff93c5fd</color>
+  <color name="color_azure_400">#ff60a5fa</color>
+  <color name="color_azure_500">#ff3b82f6</color>
+  <color name="color_azure_600">#ff2563eb</color>
+  <color name="color_azure_700">#ff1d4ed8</color>
+  <color name="color_azure_800">#ff1e40af</color>
+  <color name="color_azure_850">#ff1b3897</color>
+  <color name="color_azure_900">#ff1e3a8a</color>
+  <color name="color_azure_950">#ff172554</color>
+  <color name="color_azure_1000">#ff0f172a</color>
   <color name="color_blue_0">#fff6fbff</color>
   <color name="color_blue_50">#fff0f7ff</color>
   <color name="color_blue_100">#ff92b2c8</color>

@@ -31,7 +31,7 @@
       "$description": "synth: = foreground"
     },
     "primary": {
-      "$value": "#1d4ed8",
+      "$value": "{color.azure.700}",
       "$type": "color",
       "$description": "was Figma 'Primay' navy (blue.500 -> blue.700). Swapped for a bright action blue #1d4ed8 (6.55:1 on bg) so primary buttons/links pop rather than reading as near-black. Dark uses a lighter step (#60a5fa) — navy/this hue would fail on the dark surface."
     },
@@ -66,7 +66,7 @@
       "$description": "figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons)"
     },
     "accent-foreground": {
-      "$value": "#1d4ed8",
+      "$value": "{color.azure.700}",
       "$type": "color",
       "$description": "synth: = primary for readable text on accent (#1d4ed8 on accent #f0f7ff ~5.7:1)"
     },
@@ -111,7 +111,7 @@
       "$description": "figma: outline #92b2c8 (same as border)"
     },
     "ring": {
-      "$value": "#1d4ed8",
+      "$value": "{color.azure.700}",
       "$type": "color",
       "$description": "focus ring — tracks --primary (#1d4ed8, 6.55:1 on bg)"
     },
@@ -212,7 +212,7 @@
       "$type": "color"
     },
     "sidebar-primary": {
-      "$value": "#1d4ed8",
+      "$value": "{color.azure.700}",
       "$type": "color"
     },
     "sidebar-primary-foreground": {
@@ -224,7 +224,7 @@
       "$type": "color"
     },
     "sidebar-accent-foreground": {
-      "$value": "#1d4ed8",
+      "$value": "{color.azure.700}",
       "$type": "color"
     },
     "sidebar-border": {
@@ -232,7 +232,7 @@
       "$type": "color"
     },
     "sidebar-ring": {
-      "$value": "#1d4ed8",
+      "$value": "{color.azure.700}",
       "$type": "color"
     },
     "tertiary": {

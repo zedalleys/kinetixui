@@ -25,7 +25,7 @@
       "$type": "color"
     },
     "primary": {
-      "$value": "#60a5fa",
+      "$value": "{color.azure.400}",
       "$type": "color",
       "$description": "light-theme primary is a bright #1d4ed8; on the near-black dark surface that would be ~2.9:1, so dark uses a lighter step of the same blue (#60a5fa, ~7.6:1 on bg). Two independent palettes — this is not a flip of the light value."
     },
@@ -91,7 +91,7 @@
       "$type": "color"
     },
     "ring": {
-      "$value": "#60a5fa",
+      "$value": "{color.azure.400}",
       "$type": "color",
       "$description": "focus ring — tracks dark --primary (#60a5fa)"
     },
@@ -136,7 +136,7 @@
       "$type": "color"
     },
     "sidebar-primary": {
-      "$value": "#60a5fa",
+      "$value": "{color.azure.400}",
       "$type": "color"
     },
     "sidebar-primary-foreground": {
@@ -156,7 +156,7 @@
       "$type": "color"
     },
     "sidebar-ring": {
-      "$value": "#60a5fa",
+      "$value": "{color.azure.400}",
       "$type": "color"
     },
     "tertiary": {
