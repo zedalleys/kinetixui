@@ -208,6 +208,9 @@
   --chart-3: var(--amber-500);
   --chart-4: var(--red-400);
   --chart-5: var(--taupe-600);
+  --chart-6: var(--blue-300); /** synth: 6th data-viz hue — steel blue, distinct from the navy chart-1 */
+  --chart-7: var(--red-600); /** synth: 7th data-viz hue — deep red, distinct from chart-4 */
+  --chart-8: var(--green-700); /** synth: 8th data-viz hue — deep green, distinct from chart-2 */
   --sidebar: var(--neutral-50);
   --sidebar-foreground: var(--blue-900);
   --sidebar-primary: var(--blue-500);
@@ -254,6 +257,9 @@
   --chart-3: 37 100% 73%;
   --chart-4: 0 63% 64%;
   --chart-5: 24 24% 77%;
+  --chart-6: 204 25% 56%;
+  --chart-7: 0 62% 52%;
+  --chart-8: 117 8% 49%;
   --sidebar: 205 50% 9%;
   --sidebar-foreground: 212 100% 97%;
   --sidebar-primary: 204 33% 68%;

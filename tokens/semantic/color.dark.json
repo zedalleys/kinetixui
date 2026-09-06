@@ -112,6 +112,18 @@
       "$value": "{color.taupe.500}",
       "$type": "color"
     },
+    "chart-6": {
+      "$value": "{color.blue.200}",
+      "$type": "color"
+    },
+    "chart-7": {
+      "$value": "{color.red.400}",
+      "$type": "color"
+    },
+    "chart-8": {
+      "$value": "{color.green.500}",
+      "$type": "color"
+    },
     "sidebar": {
       "$value": "{color.blue.800}",
       "$type": "color"

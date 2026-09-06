@@ -50,6 +50,9 @@ public enum KinetixColor {
     public static let colorChart3 = UIColor(red: 1.000, green: 0.737, blue: 0.325, alpha: 1)
     public static let colorChart4 = UIColor(red: 0.820, green: 0.227, blue: 0.227, alpha: 1)
     public static let colorChart5 = UIColor(red: 0.706, green: 0.643, blue: 0.600, alpha: 1)
+    public static let colorChart6 = UIColor(red: 0.341, green: 0.467, blue: 0.553, alpha: 1) /** synth: 6th data-viz hue — steel blue, distinct from the navy chart-1 */
+    public static let colorChart7 = UIColor(red: 0.620, green: 0.031, blue: 0.031, alpha: 1) /** synth: 7th data-viz hue — deep red, distinct from chart-4 */
+    public static let colorChart8 = UIColor(red: 0.275, green: 0.322, blue: 0.271, alpha: 1) /** synth: 8th data-viz hue — deep green, distinct from chart-2 */
     public static let colorCream0 = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1)
     public static let colorCream100 = UIColor(red: 0.996, green: 0.992, blue: 0.988, alpha: 1)
     public static let colorCream1000 = UIColor(red: 0.549, green: 0.341, blue: 0.204, alpha: 1)

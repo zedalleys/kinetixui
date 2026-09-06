@@ -3,7 +3,12 @@ import Link from "next/link";
 import tokens from "@kinetixui/tokens";
 import { PipelineInfographic } from "@/components/pipeline-infographic";
 import { SectionHead } from "@/components/section-head";
+import { WorldMap } from "@/components/infographic/world-map";
+import { ContrastGrid } from "@/components/infographic/contrast-grid";
+import { TokenExplorer } from "@/components/infographic/token-explorer";
+import { RegistryTreemap } from "@/components/infographic/registry-treemap";
 import { componentDocs, CATEGORY_ORDER } from "@/lib/site";
+import { PRIMITIVE } from "@/lib/component-registry";
 
 export const metadata: Metadata = {
   title: "Infographic",
@@ -21,7 +26,7 @@ const TOKEN_COUNT = leafCount(tokens);
 const STATS = [
   { n: TOKEN_COUNT, label: "design tokens", sub: "primitives + semantic, DTCG" },
   { n: componentDocs.length, label: "React components", sub: `${CATEGORY_ORDER.length} categories` },
-  { n: 22, label: "chart recipes", sub: "Recharts, token-driven" },
+  { n: 36, label: "chart recipes", sub: "Recharts, token-driven" },
   { n: 5, label: "platform outputs", sub: "web · tokens.ts · SwiftUI · Compose · Flutter" },
   { n: "100%", label: "WCAG AA", sub: "text pairs, light + dark, CI-gated" },
   { n: 4, label: "component libraries", sub: "React · SwiftUI · Compose · Flutter" },
@@ -66,6 +71,38 @@ const LAYERS = [
   },
 ];
 
+const ANATOMY = [
+  { prop: "background", token: "--primary" },
+  { prop: "text colour", token: "--primary-foreground" },
+  { prop: "corner radius", token: "--radius-md" },
+  { prop: "padding", token: "--spacing-3 / --spacing-4" },
+  { prop: "font", token: "--text-label-lg" },
+  { prop: "focus ring", token: "--shadow-focus" },
+  { prop: "hover fill (ghost)", token: "--accent" },
+  { prop: "disabled", token: "opacity + --muted-foreground" },
+];
+
+const TIMELINE = [
+  { v: "0.3.0", note: "First public registry — 60-odd components, the token contract, dark mode." },
+  { v: "0.3.1", note: "CLI hardening; registry schema settled." },
+  { v: "0.4.0", note: "72 components, SwiftUI + Compose + Flutter ports, type scale wired everywhere." },
+  { v: "0.4.1", note: "Light --destructive to WCAG AA; repo moved to github.com/zedalleys." },
+  {
+    v: "0.4.2",
+    note: "Dark focus-ring token set, --warning to AA, NumberInput / chart / mobile-nav a11y, --chart-6…8.",
+  },
+];
+
+const slugOf = (href: string) => href.split("/").pop() ?? "";
+const BY_PRIMITIVE = (() => {
+  const groups = new Map<string, string[]>();
+  for (const c of componentDocs) {
+    const key = PRIMITIVE[slugOf(c.href)] ?? "own / composition";
+    groups.set(key, [...(groups.get(key) ?? []), c.title]);
+  }
+  return [...groups.entries()].sort((a, b) => b[1].length - a[1].length);
+})();
+
 type Cell = "full" | "partial" | "none";
 const COVERAGE: { row: string; cells: Cell[] }[] = [
   { row: "Component surface", cells: ["full", "partial", "partial", "partial"] },
@@ -102,12 +139,12 @@ export default function InfographicPage() {
       <h1 className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] md:text-4xl">Infographic</h1>
       <p className="mt-3 max-w-2xl text-muted-foreground">
         One measured drawing of the whole system: a single design source, the compile step, five
-        platform outputs, and the four component libraries that resolve to them. Numbers below are
-        read from the build, not hand-typed.
+        platform outputs, and the four component libraries that resolve to them. Numbers are read
+        from the build, not hand-typed.
       </p>
 
-      {/* live counters */}
-      <div className="mt-10">
+      {/* 01 — counters */}
+      <section className="mt-10">
         <SectionHead index="01" label="By the numbers" meta="from the build" />
         <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">
           {STATS.map((s) => (
@@ -118,18 +155,18 @@ export default function InfographicPage() {
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* pipeline */}
-      <div className="mt-14">
+      {/* 02 — pipeline */}
+      <section className="mt-14">
         <SectionHead index="02" label="The pipeline, drawn to scale" meta="source → compile → output" />
         <div className="mt-5">
           <PipelineInfographic />
         </div>
-      </div>
+      </section>
 
-      {/* architecture layers */}
-      <div className="mt-14">
+      {/* 03 — layers */}
+      <section className="mt-14">
         <SectionHead index="03" label="Layers" meta="hex → your app" />
         <div className="mt-5 border-t border-border">
           {LAYERS.map((l) => (
@@ -148,21 +185,88 @@ export default function InfographicPage() {
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* platform coverage */}
-      <div className="mt-14">
-        <SectionHead index="04" label="Platform coverage" meta="● full · ◐ partial · ○ none" />
+      {/* 04 — anatomy */}
+      <section className="mt-14">
+        <SectionHead index="04" label="Anatomy of a Button" meta="every property → a token" />
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {ANATOMY.map((a) => (
+            <div
+              key={a.prop}
+              className="flex items-baseline justify-between gap-3 rounded-md border border-border bg-muted/20 px-3.5 py-2.5"
+            >
+              <span className="text-sm">{a.prop}</span>
+              <code className="font-mono text-[12px] text-primary">{a.token}</code>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Nothing in the recipe is a literal value — the whole component is a wiring diagram over the
+          token contract, which is why one edit re-skins it on every platform.
+        </p>
+      </section>
+
+      {/* 05 — change a token */}
+      <section className="mt-14">
+        <SectionHead index="05" label="Change a token, watch it move" meta="interactive" />
+        <TokenExplorer />
+      </section>
+
+      {/* 06 — contrast grid */}
+      <section className="mt-14">
+        <SectionHead index="06" label="Contrast grid" meta="light + dark, WCAG" />
+        <ContrastGrid />
+      </section>
+
+      {/* 07 — registry by category */}
+      <section className="mt-14">
+        <SectionHead index="07" label="Registry, by category" meta={`${componentDocs.length} components`} />
+        <RegistryTreemap />
+      </section>
+
+      {/* 08 — component → primitive */}
+      <section className="mt-14">
+        <SectionHead index="08" label="What every component sits on" meta="component → primitive" />
+        <div className="mt-5 space-y-4 border-t border-border pt-4">
+          {BY_PRIMITIVE.map(([prim, names]) => (
+            <div key={prim} className="grid gap-2 md:grid-cols-[14rem_1fr] md:gap-6">
+              <div className="font-mono text-[12px]">
+                <span className="text-foreground">{prim}</span>
+                <span className="ml-2 text-muted-foreground">{names.length}</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {names.map((n) => (
+                  <span
+                    key={n}
+                    className="rounded border border-border/70 px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
+                  >
+                    {n}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 09 — platform coverage */}
+      <section className="mt-14">
+        <SectionHead index="09" label="Platform coverage" meta="● full · ◐ partial · ○ none" />
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[34rem] border-collapse text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="py-2 pr-4 text-left font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                <th
+                  scope="col"
+                  className="py-2 pr-4 text-left font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+                >
                   Capability
                 </th>
                 {PLATFORMS.map((p) => (
                   <th
                     key={p}
+                    scope="col"
                     className="px-3 py-2 text-center font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
                   >
                     {p}
@@ -191,11 +295,36 @@ export default function InfographicPage() {
           verified native component so far, with parity snippets for all of them. Every port rides the
           same token contract.
         </p>
-      </div>
+      </section>
 
-      {/* vs alternatives */}
-      <div className="mt-14">
-        <SectionHead index="05" label="Against the alternatives" meta="honest matrix" />
+      {/* 10 — timeline */}
+      <section className="mt-14">
+        <SectionHead index="10" label="Release timeline" meta="from the changelogs" />
+        <ol className="mt-5 border-l border-border">
+          {TIMELINE.map((t) => (
+            <li key={t.v} className="relative pb-6 pl-6 last:pb-0">
+              <span
+                aria-hidden
+                className="absolute -left-[5px] top-1.5 size-2.5 rounded-full border-2 border-background bg-primary"
+              />
+              <p className="font-mono text-[13px] font-semibold text-foreground">v{t.v}</p>
+              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">{t.note}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* 11 — world map */}
+      <section className="mt-14">
+        <SectionHead index="11" label="Where it runs" meta="one contract, everywhere" />
+        <div className="mt-5">
+          <WorldMap />
+        </div>
+      </section>
+
+      {/* 12 — vs alternatives */}
+      <section className="mt-14">
+        <SectionHead index="12" label="Against the alternatives" meta="honest matrix" />
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[38rem] border-collapse text-sm">
             <thead>
@@ -209,6 +338,7 @@ export default function InfographicPage() {
                 {VS.cols.map((c, i) => (
                   <th
                     key={c}
+                    scope="col"
                     className={
                       "px-3 py-2 text-center font-mono text-[11px] font-medium uppercase tracking-[0.12em] " +
                       (i === 0 ? "text-primary" : "text-muted-foreground")
@@ -238,7 +368,7 @@ export default function InfographicPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
 
       <p className="mt-14 border-t border-border pt-6 text-sm text-muted-foreground">
         The same story in prose:{" "}

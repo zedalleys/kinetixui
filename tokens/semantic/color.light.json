@@ -188,6 +188,21 @@
       "$value": "{color.taupe.600}",
       "$type": "color"
     },
+    "chart-6": {
+      "$value": "{color.blue.300}",
+      "$type": "color",
+      "$description": "synth: 6th data-viz hue — steel blue, distinct from the navy chart-1"
+    },
+    "chart-7": {
+      "$value": "{color.red.600}",
+      "$type": "color",
+      "$description": "synth: 7th data-viz hue — deep red, distinct from chart-4"
+    },
+    "chart-8": {
+      "$value": "{color.green.700}",
+      "$type": "color",
+      "$description": "synth: 8th data-viz hue — deep green, distinct from chart-2"
+    },
     "sidebar": {
       "$value": "{color.neutral.50}",
       "$type": "color"

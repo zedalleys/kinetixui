@@ -53,6 +53,9 @@ class KinetixColors {
     static const colorChart3 = Color(0xFFFFBC53);
     static const colorChart4 = Color(0xFFD13A3A);
     static const colorChart5 = Color(0xFFB4A499);
+    static const colorChart6 = Color(0xFF57778D); /** synth: 6th data-viz hue — steel blue, distinct from the navy chart-1 */
+    static const colorChart7 = Color(0xFF9E0808); /** synth: 7th data-viz hue — deep red, distinct from chart-4 */
+    static const colorChart8 = Color(0xFF465245); /** synth: 8th data-viz hue — deep green, distinct from chart-2 */
     static const colorCream0 = Color(0xFFFFFFFF);
     static const colorCream100 = Color(0xFFFEFDFC);
     static const colorCream1000 = Color(0xFF8C5734);

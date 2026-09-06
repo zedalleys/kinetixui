@@ -50,6 +50,9 @@
   --chart-3: var(--amber-500);
   --chart-4: var(--red-400);
   --chart-5: var(--taupe-600);
+  --chart-6: var(--blue-300);
+  --chart-7: var(--red-600);
+  --chart-8: var(--green-700);
   --sidebar: var(--neutral-50);
   --sidebar-foreground: var(--blue-900);
   --sidebar-primary: var(--blue-500);
