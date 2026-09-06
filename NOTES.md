@@ -3,7 +3,7 @@
 Current state of the live site and publishing pipeline. `DEPLOY.md` is the
 step-by-step setup guide; this file is what's actually running.
 
-_Last updated: 2026-09-03._
+_Last updated: 2026-09-06._
 
 ## Hosting — Vercel
 
@@ -63,11 +63,15 @@ and publishes on merge. Needs the `NPM_TOKEN` repo secret.
   (`scripts/gen-stories.mjs`) parses the demo registry
   (`apps/web/src/registry/demos.tsx`) and emits one self-contained story each.
   Rerun after editing demos.
-- ~18 single-primitive components (badge, alert, spinner, fab, inform, tag,
-  toggle, rating, progress, slider, switch, checkbox, number-input, metric,
-  image, aspect-ratio, separator, circular-progress) also get an interactive
+- Components with meaningful root-level props also get an interactive
   **Playground** story with `argTypes` controls — from the `CONTROLS` map in
-  `gen-stories.mjs`, options mirroring each component's CVA variants.
+  `gen-stories.mjs`, options mirroring each component's CVA variants. Covers the
+  single-primitive set (badge, alert, spinner, fab, inform, tag, toggle, rating,
+  progress, slider, switch, checkbox, number-input, metric, image, aspect-ratio,
+  separator, circular-progress) plus the compound components whose state reads
+  well at the root (Accordion, Tabs, ToggleGroup, RadioGroup, Collapsible,
+  Select, Popover, HoverCard, Tooltip). Trigger-driven overlays and data-shaped
+  components stay demo-only.
 - `packages/ui/tsconfig.json` excludes `src/stories` from `tsc` (stories import
   `@storybook/react`, an `apps/docs`-only dep).
 - Not built in CI. `pnpm build-storybook` builds it locally.
@@ -81,10 +85,10 @@ Code tab as per-platform sub-tabs — **React · HTML · iOS · Android · Flutt
 - The **React** snippet is canonical and lives in the demo registry
   (`demoRegistry[name].source`).
 - The other platforms come from `apps/web/src/registry/platform-code.ts` —
-  keyed by demo name, one map so there's a single source per language. Native
-  snippets compose the platform's own primitives with the real
-  `@kinetixui/tokens` output (`KinetixColor.color*` for SwiftUI,
-  `KinetixTheme.color*` for Compose/Flutter, CSS vars for HTML).
+  keyed by demo name, one map so there's a single source per language. The
+  `swift` / `kotlin` / `dart` snippets call the real `Kinetix*` component
+  libraries 1:1 with the React example; `html` uses the CSS-var contract
+  directly. Illustrative, not CI-compiled.
 - **All 72 nav components** have an entry. Labels/`PLATFORM_ORDER` live at the
   top of `platform-code.ts`. A handful of web-first patterns (chart, command,
   resizable, sonner, hover-card) carry a `//` note where the platform lacks a
@@ -94,11 +98,15 @@ Code tab as per-platform sub-tabs — **React · HTML · iOS · Android · Flutt
 ## `/components` gallery
 
 `apps/web/src/app/components/page.tsx` → `<ComponentGallery>`
-(`apps/web/src/components/component-gallery.tsx`). Each card renders the
-component's canonical demo from the demo registry as a clipped, non-interactive
-thumbnail. `ComponentGallery` is a client component **by necessity** —
-`demoRegistry` is exported from a `"use client"` module and reads as an empty
-proxy from a server component.
+(`apps/web/src/components/component-gallery.tsx`). Each card's thumbnail is,
+in order of preference: a purpose-built static mock from
+`component-thumbnails.tsx` (`THUMBNAIL_MOCKS` — used for portal components like
+dialog/sheet/menus and near-empty ones like table/chart/image), else the
+component's clipped, non-interactive demo from the demo registry, else the title.
+`ComponentGallery` is a client component **by necessity** — `demoRegistry` is
+exported from a `"use client"` module and reads as an empty proxy from a server
+component. Clicking a card goes to `/docs/components/<slug>`, which has a
+`loading.tsx` skeleton.
 
 ## Tests
 
@@ -121,3 +129,13 @@ root, or `pnpm --filter @kinetixui/ui test`.
 `@kinetixui/ui` tests on every push/PR; fails if generated output
 (`packages/tokens/dist`, `apps/web/public/r`) is stale. The `@kinetixui/ui`
 typecheck step is `continue-on-error`.
+
+Other workflows:
+- `native-{compose,swiftui,flutter}.yml` — path-filtered; compile each native
+  port (`gradle assembleDebug` / `swift build` / `flutter analyze` + `flutter
+  test`).
+- `release.yml` — Changesets on push to `main`: opens a **Version Packages** PR
+  when changesets are pending, publishes `@kinetixui/{tokens,ui,cli}` to npm on
+  merge, and creates the GitHub Release.
+- `publish-{compose,swiftui,flutter}.yml` — `workflow_dispatch`, inert until the
+  corresponding registry secret is set; dry-run by default.
