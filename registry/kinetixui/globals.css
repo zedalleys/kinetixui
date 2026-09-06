@@ -109,6 +109,9 @@
   --neutral-1000: 0 0% 0%;
   --static-white: 0 0% 100%;
   --static-black: 0 0% 0%;
+  --primary: 224 76% 48%; /** was Figma 'Primay' navy (blue.500 -> blue.700). Swapped for a bright action blue #1d4ed8 (6.55:1 on bg) so primary buttons/links pop rather than reading as near-black. Dark uses a lighter step (#60a5fa) — navy/this hue would fail on the dark surface. */
+  --accent-foreground: 224 76% 48%; /** synth: = primary for readable text on accent (#1d4ed8 on accent #f0f7ff ~5.7:1) */
+  --ring: 224 76% 48%; /** focus ring — tracks --primary (#1d4ed8, 6.55:1 on bg) */
   --semantic-error: 3 81% 60%; /** figma: error (NOT red.500 #c60a0a — Figma keeps error as its own value) */
   --semantic-on-error: 5 86% 97%; /** figma: onError */
   --semantic-error-container: 5 86% 97%; /** figma: errorContainer */
@@ -120,6 +123,9 @@
   --semantic-warning: 28 95% 50%;
   --semantic-info-container: 212 100% 97%;
   --semantic-on-info-container: 204 33% 33%;
+  --sidebar-primary: 224 76% 48%;
+  --sidebar-accent-foreground: 224 76% 48%;
+  --sidebar-ring: 224 76% 48%;
   --tertiary: 0 0% 69%; /** figma: tertiary — switch off-track */
   --spacing-0: 0;
   --spacing-1: 4px;
@@ -186,14 +192,12 @@
   --card-foreground: var(--blue-900); /** synth: = foreground */
   --popover: var(--neutral-0); /** synth: no Figma popover token; = background */
   --popover-foreground: var(--blue-900); /** synth: = foreground */
-  --primary: var(--blue-700); /** figma 'Primay' (sic) was blue.500 #1b3c53 (11.55:1 on bg); deepened two ramp steps to blue.700 #102432 (~15.5:1) — same navy hue, near-black for max contrast */
-  --primary-foreground: var(--blue-50); /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on blue.700 primary ~14:1) */
-  --secondary: var(--green-100); /** figma secondaryContainer was green.50 #f1f3f1 (barely distinct from bg); deepened to green.100 #e3e7e3 so the surface reads as a control — same sage hue */
-  --secondary-foreground: var(--green-700); /** green.600 #5d6d5c on the old secondary was 4.95:1 (marginal AA); green.700 #465245 on green.100 clears ~6.5:1 */
+  --primary-foreground: var(--blue-50); /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on #1d4ed8 primary ~6:1) */
+  --secondary: var(--green-200); /** figma secondaryContainer was green.50 #f1f3f1 (invisible on bg); deepened to green.200 #c7cfc7 so a secondary button/chip clearly stands off the white page — same sage hue */
+  --secondary-foreground: var(--green-700); /** green.700 #465245 on secondary green.200 #c7cfc7 clears ~5.2:1 */
   --muted: var(--neutral-100); /** figma: surfaceContainer #f6f6f6 */
   --muted-foreground: var(--neutral-600); /** figma: onSurfaceVariant #6d6d6d */
   --accent: var(--blue-50); /** figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons) */
-  --accent-foreground: var(--blue-700); /** synth: = primary for readable text on accent */
   --destructive: var(--red-500); /** a11y: figma error #ec5047 is 3.33:1 under on-error / 3.62:1 as text on the page — fails WCAG AA. red.500 #c60a0a clears 5.6:1 / 6.1:1. See ACCESSIBILITY-AUDIT.md. */
   --destructive-foreground: var(--semantic-on-error); /** figma: onError #fef3f2 */
   --success: var(--green-600); /** synth: no Figma success token; green ramp step 6 (distinct from secondary) */
@@ -202,7 +206,6 @@
   --warning-foreground: var(--semantic-warning-container); /** figma: warningContainer #fff8eb */
   --border: var(--blue-100); /** figma: outline #92b2c8 */
   --input: var(--blue-100); /** figma: outline #92b2c8 (same as border) */
-  --ring: var(--blue-700); /** figma: focus state draws a 2px 'Primay' border — tracks --primary (blue.700) */
   --chart-1: var(--blue-500); /** synth: brand ramps for data viz */
   --chart-2: var(--green-500);
   --chart-3: var(--amber-500);
@@ -213,12 +216,9 @@
   --chart-8: var(--green-700); /** synth: 8th data-viz hue — deep green, distinct from chart-2 */
   --sidebar: var(--neutral-50);
   --sidebar-foreground: var(--blue-900);
-  --sidebar-primary: var(--blue-700);
   --sidebar-primary-foreground: var(--blue-50);
   --sidebar-accent: var(--blue-50);
-  --sidebar-accent-foreground: var(--blue-700);
   --sidebar-border: var(--neutral-300);
-  --sidebar-ring: var(--blue-700);
   --tertiary-foreground: var(--blue-50);
   --info: var(--blue-300); /** synth: steel blue, distinct from navy primary */
   --info-foreground: var(--blue-50);
@@ -235,8 +235,8 @@
   --card-foreground: 212 100% 97%;
   --popover: 205 50% 9%;
   --popover-foreground: 212 100% 97%;
-  --primary: 204 33% 68%;
-  --primary-foreground: 205 55% 4%;
+  --primary: 213 94% 68%; /** light-theme primary is a bright #1d4ed8; on the near-black dark surface that would be ~2.9:1, so dark uses a lighter step of the same blue (#60a5fa, ~7.6:1 on bg). Two independent palettes — this is not a flip of the light value. */
+  --primary-foreground: 205 55% 4%; /** near-black text on the light-blue dark --primary (~7:1) */
   --secondary: 120 8% 20%;
   --secondary-foreground: 120 8% 90%;
   --muted: 205 52% 13%;
@@ -251,7 +251,7 @@
   --warning-foreground: 37 100% 8%;
   --border: 204 33% 33%;
   --input: 204 33% 33%;
-  --ring: 204 33% 68%;
+  --ring: 213 94% 68%; /** focus ring — tracks dark --primary (#60a5fa) */
   --chart-1: 204 33% 68%;
   --chart-2: 116 8% 59%;
   --chart-3: 37 100% 73%;
@@ -262,12 +262,12 @@
   --chart-8: 117 8% 49%;
   --sidebar: 205 50% 9%;
   --sidebar-foreground: 212 100% 97%;
-  --sidebar-primary: 204 33% 68%;
+  --sidebar-primary: 213 94% 68%;
   --sidebar-primary-foreground: 205 55% 4%;
   --sidebar-accent: 205 52% 13%;
   --sidebar-accent-foreground: 212 100% 97%;
   --sidebar-border: 204 33% 33%;
-  --sidebar-ring: 204 33% 68%;
+  --sidebar-ring: 213 94% 68%;
   --tertiary: 204 33% 33%;
   --tertiary-foreground: 212 100% 97%;
   --info: 204 33% 68%;
@@ -281,7 +281,7 @@
   --shadow-md: 0 1px 1px 0 #0000001f, 0 2px 5px 0 #676e7614;
   --shadow-lg: 0 4px 6px -1px #00000012, 0 2px 4px -2px #0000000f;
   --shadow-xl: 0 4px 24px 0 #0000001f;
-  --shadow-focus: 0 0 0 1px #102432, 0 0 0 4px #10243233;
+  --shadow-focus: 0 0 0 1px #1d4ed8, 0 0 0 4px #1d4ed833;
   --shadow-focus-destructive: 0 0 0 1px #ec5047, 0 0 0 4px #ec504733;
   --shadow-focus-success: 0 0 0 1px #5d6d5c, 0 0 0 4px #5d6d5c33;
   --shadow-focus-warning: 0 0 0 1px #f97907, 0 0 0 4px #f9790733;
@@ -307,7 +307,7 @@
 /* Generated by Style Dictionary — shadow + typography composites. */
 
 .dark {
-  --shadow-focus: 0 0 0 1px #92b2c8, 0 0 0 4px #92b2c852;
+  --shadow-focus: 0 0 0 1px #60a5fa, 0 0 0 4px #60a5fa52;
   --shadow-focus-destructive: 0 0 0 1px #dd6a6a, 0 0 0 4px #dd6a6a52;
   --shadow-focus-success: 0 0 0 1px #90a08f, 0 0 0 4px #90a08f52;
   --shadow-focus-warning: 0 0 0 1px #ffc975, 0 0 0 4px #ffc97552;

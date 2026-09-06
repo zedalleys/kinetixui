@@ -31,24 +31,24 @@
       "$description": "synth: = foreground"
     },
     "primary": {
-      "$value": "{color.blue.700}",
+      "$value": "#1d4ed8",
       "$type": "color",
-      "$description": "figma 'Primay' (sic) was blue.500 #1b3c53 (11.55:1 on bg); deepened two ramp steps to blue.700 #102432 (~15.5:1) — same navy hue, near-black for max contrast"
+      "$description": "was Figma 'Primay' navy (blue.500 -> blue.700). Swapped for a bright action blue #1d4ed8 (6.55:1 on bg) so primary buttons/links pop rather than reading as near-black. Dark uses a lighter step (#60a5fa) — navy/this hue would fail on the dark surface."
     },
     "primary-foreground": {
       "$value": "{color.blue.50}",
       "$type": "color",
-      "$description": "figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on blue.700 primary ~14:1)"
+      "$description": "figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on #1d4ed8 primary ~6:1)"
     },
     "secondary": {
-      "$value": "{color.green.100}",
+      "$value": "{color.green.200}",
       "$type": "color",
-      "$description": "figma secondaryContainer was green.50 #f1f3f1 (barely distinct from bg); deepened to green.100 #e3e7e3 so the surface reads as a control — same sage hue"
+      "$description": "figma secondaryContainer was green.50 #f1f3f1 (invisible on bg); deepened to green.200 #c7cfc7 so a secondary button/chip clearly stands off the white page — same sage hue"
     },
     "secondary-foreground": {
       "$value": "{color.green.700}",
       "$type": "color",
-      "$description": "green.600 #5d6d5c on the old secondary was 4.95:1 (marginal AA); green.700 #465245 on green.100 clears ~6.5:1"
+      "$description": "green.700 #465245 on secondary green.200 #c7cfc7 clears ~5.2:1"
     },
     "muted": {
       "$value": "{color.neutral.100}",
@@ -66,9 +66,9 @@
       "$description": "figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons)"
     },
     "accent-foreground": {
-      "$value": "{color.blue.700}",
+      "$value": "#1d4ed8",
       "$type": "color",
-      "$description": "synth: = primary for readable text on accent"
+      "$description": "synth: = primary for readable text on accent (#1d4ed8 on accent #f0f7ff ~5.7:1)"
     },
     "destructive": {
       "$value": "{color.red.500}",
@@ -111,9 +111,9 @@
       "$description": "figma: outline #92b2c8 (same as border)"
     },
     "ring": {
-      "$value": "{color.blue.700}",
+      "$value": "#1d4ed8",
       "$type": "color",
-      "$description": "figma: focus state draws a 2px 'Primay' border — tracks --primary (blue.700)"
+      "$description": "focus ring — tracks --primary (#1d4ed8, 6.55:1 on bg)"
     },
     "semantic": {
       "error": {
@@ -212,7 +212,7 @@
       "$type": "color"
     },
     "sidebar-primary": {
-      "$value": "{color.blue.700}",
+      "$value": "#1d4ed8",
       "$type": "color"
     },
     "sidebar-primary-foreground": {
@@ -224,7 +224,7 @@
       "$type": "color"
     },
     "sidebar-accent-foreground": {
-      "$value": "{color.blue.700}",
+      "$value": "#1d4ed8",
       "$type": "color"
     },
     "sidebar-border": {
@@ -232,7 +232,7 @@
       "$type": "color"
     },
     "sidebar-ring": {
-      "$value": "{color.blue.700}",
+      "$value": "#1d4ed8",
       "$type": "color"
     },
     "tertiary": {

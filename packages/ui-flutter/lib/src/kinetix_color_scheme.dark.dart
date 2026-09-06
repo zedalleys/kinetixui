@@ -13,7 +13,7 @@ class KinetixColorSchemeDark {
   static const cardForeground = Color(0xFFF0F7FF);
   static const popover = Color(0xFF0B1821);
   static const popoverForeground = Color(0xFFF0F7FF);
-  static const primary = Color(0xFF92B2C8);
+  static const primary = Color(0xFF60A5FA);
   static const primaryForeground = Color(0xFF050C11);
   static const secondary = Color(0xFF2E362E);
   static const secondaryForeground = Color(0xFFE3E7E3);
@@ -29,7 +29,7 @@ class KinetixColorSchemeDark {
   static const warningForeground = Color(0xFF2A1A00);
   static const border = Color(0xFF395A70);
   static const input = Color(0xFF395A70);
-  static const ring = Color(0xFF92B2C8);
+  static const ring = Color(0xFF60A5FA);
   static const chart1 = Color(0xFF92B2C8);
   static const chart2 = Color(0xFF90A08F);
   static const chart3 = Color(0xFFFFC975);
@@ -40,12 +40,12 @@ class KinetixColorSchemeDark {
   static const chart8 = Color(0xFF748873);
   static const sidebar = Color(0xFF0B1821);
   static const sidebarForeground = Color(0xFFF0F7FF);
-  static const sidebarPrimary = Color(0xFF92B2C8);
+  static const sidebarPrimary = Color(0xFF60A5FA);
   static const sidebarPrimaryForeground = Color(0xFF050C11);
   static const sidebarAccent = Color(0xFF102432);
   static const sidebarAccentForeground = Color(0xFFF0F7FF);
   static const sidebarBorder = Color(0xFF395A70);
-  static const sidebarRing = Color(0xFF92B2C8);
+  static const sidebarRing = Color(0xFF60A5FA);
   static const tertiary = Color(0xFF395A70);
   static const tertiaryForeground = Color(0xFFF0F7FF);
   static const info = Color(0xFF92B2C8);

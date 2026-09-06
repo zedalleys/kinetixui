@@ -1,21 +1,27 @@
 ---
-"@kinetixui/cli": patch
-"@kinetixui/tokens": patch
-"@kinetixui/ui": patch
+"@kinetixui/cli": minor
+"@kinetixui/tokens": minor
+"@kinetixui/ui": minor
 ---
 
-**Light `--primary` / `--secondary` deepened for contrast** — same navy and sage
-hues, no hue shift:
+**New `--primary`: an action blue, set independently per theme.** The desaturated
+navy (`Primay` from Figma) read as near-black once pushed for contrast, so
+`--primary` is now a real blue that pops as a button/link colour. Light and dark
+carry their own value — this is two palettes, not one flipped:
 
-- `--primary`, `--ring`, `--accent-foreground`, `--sidebar-primary`,
-  `--sidebar-accent-foreground`, `--sidebar-ring`: `blue.500` → `blue.700`
-  (`#1b3c53` → `#102432`). `--primary` on the background goes 11.55:1 → 15.90:1;
-  `--primary-foreground` on `--primary` 10.70:1 → 14.73:1.
-- `--secondary`: `green.50` → `green.100` (`#f1f3f1` → `#e3e7e3`) so the surface
-  actually reads as a control against the page.
-- `--secondary-foreground`: `green.600` → `green.700` (`#5d6d5c` → `#465245`) —
-  the marginal 4.95:1 pair now clears ~6.6:1.
-- `shadow.focus` re-baked from `#1b3c53` to `#102432` to match the new `--ring`.
+- light `--primary` / `--ring` / `--accent-foreground` / `--sidebar-primary` /
+  `--sidebar-accent-foreground` / `--sidebar-ring` → `#1d4ed8`
+  (6.7:1 on the background, 6.2:1 under `--primary-foreground`).
+- dark `--primary` / `--ring` / `--sidebar-primary` / `--sidebar-ring` →
+  `#60a5fa` (`#1d4ed8` would be ~2.9:1 on the near-black dark surface;
+  `#60a5fa` clears 7.7:1).
+- `shadow.focus` re-baked per theme (`#1d4ed8` light, `#60a5fa` dark).
 
-Dark theme is unchanged. Native token sets (SwiftUI / Compose / Flutter) and the
-CLI registry `tokens` style are regenerated to match.
+**`--secondary` deepened** `green.50` → `green.200` (`#f1f3f1` → `#c7cfc7`) so a
+secondary button/chip actually stands off the white page; `--secondary-foreground`
+`green.600` → `green.700` (`#465245`), 5.2:1 on the new surface.
+
+`--chart-1` stays navy (`blue.500`) — the data-viz ramp is tuned for categorical
+separation, not brand. `check:contrast` passes AA in both themes. Native token
+sets (SwiftUI / Compose / Flutter) and the CLI registry `tokens` style are
+regenerated.

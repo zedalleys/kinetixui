@@ -13,7 +13,7 @@ class KinetixTheme {
     KinetixTheme._();
 
     static const colorAccent = Color(0xFFF0F7FF); /** figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons) */
-    static const colorAccentForeground = Color(0xFF102432); /** synth: = primary for readable text on accent */
+    static const colorAccentForeground = Color(0xFF1D4ED8); /** synth: = primary for readable text on accent (#1d4ed8 on accent #f0f7ff ~5.7:1) */
     static const colorBackground = Color(0xFFFFFFFF); /** figma: surfaceContainerLowest #ffffff */
     static const colorBorder = Color(0xFF92B2C8); /** figma: outline #92b2c8 */
     static const colorCard = Color(0xFFFFFFFF); /** synth: no Figma card token; = background */
@@ -36,11 +36,11 @@ class KinetixTheme {
     static const colorMutedForeground = Color(0xFF6D6D6D); /** figma: onSurfaceVariant #6d6d6d */
     static const colorPopover = Color(0xFFFFFFFF); /** synth: no Figma popover token; = background */
     static const colorPopoverForeground = Color(0xFF050C11); /** synth: = foreground */
-    static const colorPrimary = Color(0xFF102432); /** figma 'Primay' (sic) was blue.500 #1b3c53 (11.55:1 on bg); deepened two ramp steps to blue.700 #102432 (~15.5:1) — same navy hue, near-black for max contrast */
-    static const colorPrimaryForeground = Color(0xFFF0F7FF); /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on blue.700 primary ~14:1) */
-    static const colorRing = Color(0xFF102432); /** figma: focus state draws a 2px 'Primay' border — tracks --primary (blue.700) */
-    static const colorSecondary = Color(0xFFE3E7E3); /** figma secondaryContainer was green.50 #f1f3f1 (barely distinct from bg); deepened to green.100 #e3e7e3 so the surface reads as a control — same sage hue */
-    static const colorSecondaryForeground = Color(0xFF465245); /** green.600 #5d6d5c on the old secondary was 4.95:1 (marginal AA); green.700 #465245 on green.100 clears ~6.5:1 */
+    static const colorPrimary = Color(0xFF1D4ED8); /** was Figma 'Primay' navy (blue.500 -> blue.700). Swapped for a bright action blue #1d4ed8 (6.55:1 on bg) so primary buttons/links pop rather than reading as near-black. Dark uses a lighter step (#60a5fa) — navy/this hue would fail on the dark surface. */
+    static const colorPrimaryForeground = Color(0xFFF0F7FF); /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on #1d4ed8 primary ~6:1) */
+    static const colorRing = Color(0xFF1D4ED8); /** focus ring — tracks --primary (#1d4ed8, 6.55:1 on bg) */
+    static const colorSecondary = Color(0xFFC7CFC7); /** figma secondaryContainer was green.50 #f1f3f1 (invisible on bg); deepened to green.200 #c7cfc7 so a secondary button/chip clearly stands off the white page — same sage hue */
+    static const colorSecondaryForeground = Color(0xFF465245); /** green.700 #465245 on secondary green.200 #c7cfc7 clears ~5.2:1 */
     static const colorSemanticError = Color(0xFFEC5047); /** figma: error (NOT red.500 #c60a0a — Figma keeps error as its own value) */
     static const colorSemanticErrorContainer = Color(0xFFFEF3F2); /** figma: errorContainer */
     static const colorSemanticInfoContainer = Color(0xFFF0F7FF);
@@ -54,12 +54,12 @@ class KinetixTheme {
     static const colorSemanticWarningContainer = Color(0xFFFFF8EB); /** figma: warningContainer */
     static const colorSidebar = Color(0xFFFAFAFA);
     static const colorSidebarAccent = Color(0xFFF0F7FF);
-    static const colorSidebarAccentForeground = Color(0xFF102432);
+    static const colorSidebarAccentForeground = Color(0xFF1D4ED8);
     static const colorSidebarBorder = Color(0xFFE0E0E0);
     static const colorSidebarForeground = Color(0xFF050C11);
-    static const colorSidebarPrimary = Color(0xFF102432);
+    static const colorSidebarPrimary = Color(0xFF1D4ED8);
     static const colorSidebarPrimaryForeground = Color(0xFFF0F7FF);
-    static const colorSidebarRing = Color(0xFF102432);
+    static const colorSidebarRing = Color(0xFF1D4ED8);
     static const colorSuccess = Color(0xFF5D6D5C); /** synth: no Figma success token; green ramp step 6 (distinct from secondary) */
     static const colorSuccessForeground = Color(0xFFF1F3F1); /** synth */
     static const colorTertiary = Color(0xFFB0B0B0); /** figma: tertiary — switch off-track */

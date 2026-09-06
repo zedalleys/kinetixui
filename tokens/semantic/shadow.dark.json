@@ -2,8 +2,8 @@
   "$description": "Dark-theme focus rings. The elevation scale (sm/md/lg/xl) is theme-independent black-alpha and stays in shadow.json; only the focus-* rings need a dark set, built from the dark --ring / --destructive / --success / --warning primitives so the ring clears SC 1.4.11 (3:1) on the dark surface. Overrides shadow.json on the dark build pass.",
   "shadow": {
     "focus": { "$type": "shadow", "$value": [
-      { "color": "#92b2c8", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1" },
-      { "color": "#92b2c852", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "4" }
+      { "color": "#60a5fa", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1" },
+      { "color": "#60a5fa52", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "4" }
     ]},
     "focus-destructive": { "$type": "shadow", "$value": [
       { "color": "#dd6a6a", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1" },
