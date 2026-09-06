@@ -1,6 +1,6 @@
 {
   "name": "@kinetixui/tokens",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "KinetixUI design tokens — CSS variables, a TypeScript object, and native SwiftUI / Jetpack Compose / Flutter text styles, compiled by Style Dictionary.",
   "keywords": ["design-tokens", "design-system", "style-dictionary", "css-variables", "kinetixui"],
   "license": "MIT",
