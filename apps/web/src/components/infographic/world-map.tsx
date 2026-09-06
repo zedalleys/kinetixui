@@ -1,10 +1,13 @@
+"use client";
+
 import * as React from "react";
 
 /**
  * Dotted equirectangular world map — a "measured drawing" of reach.
  * Land is generated procedurally from coarse continent blobs + a deterministic
  * coastline dither, so it stays compact and reads as a world without shipping
- * geojson. Markers are decorative; the whole figure carries one aria-label.
+ * geojson. The platform nodes are interactive: hover or keyboard-focus one to
+ * light its link back to the token contract and read what it resolves to.
  */
 
 const COLS = 66;
@@ -49,57 +52,145 @@ for (let y = 0; y < ROWS; y++) {
   }
 }
 
-// decorative "one system, everywhere" nodes at rough city positions
+// The token contract sits at the centre; every platform node links back to it.
+const HUB = { x: 20, y: 20, label: "token contract", output: "tokens/semantic/**" };
 const NODES = [
-  { x: 12, y: 9, label: "React" },
-  { x: 31, y: 7, label: "Web" },
-  { x: 50, y: 9, label: "Compose" },
-  { x: 57, y: 8, label: "SwiftUI" },
-  { x: 57, y: 22, label: "Flutter" },
-  { x: 20, y: 20, label: "tokens" },
+  { x: 12, y: 9, label: "React", output: "@kinetixui/ui · globals.css" },
+  { x: 31, y: 7, label: "Web", output: "dist/web/tokens.ts" },
+  { x: 50, y: 9, label: "Compose", output: "Theme.kt · Color.kt" },
+  { x: 57, y: 8, label: "SwiftUI", output: "KinetixColorsSwiftUI.swift" },
+  { x: 57, y: 22, label: "Flutter", output: "kinetix_color_scheme.dart" },
 ];
+
+const px = (n: number) => n * CELL + CELL / 2;
 
 export function WorldMap() {
   const w = COLS * CELL;
   const h = ROWS * CELL;
+  const [active, setActive] = React.useState<number | null>(null);
+  const [pinned, setPinned] = React.useState<number | null>(null);
+
+  const shown = active ?? pinned;
+  const node = shown == null ? null : NODES[shown];
+
   return (
-    <div
-      role="img"
-      aria-label="World map — KinetixUI's single token contract resolves to React, Web, SwiftUI, Jetpack Compose and Flutter, wherever the app runs."
-      className="kx-frame w-full overflow-x-auto border border-border bg-background/60 p-4"
-    >
-      <svg viewBox={`0 0 ${w} ${h}`} className="mx-auto block w-full max-w-3xl" aria-hidden>
+    <figure className="kx-frame m-0 w-full border border-border bg-background/60 p-4">
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        className="mx-auto block w-full max-w-3xl"
+        role="group"
+        aria-label="World map — KinetixUI's single token contract resolves to React, Web, SwiftUI, Jetpack Compose and Flutter, wherever the app runs. Focus a platform marker for its generated output."
+      >
         {LAND.map(([x, y]) => (
           <circle
             key={`${x}-${y}`}
-            cx={x * CELL + CELL / 2}
-            cy={y * CELL + CELL / 2}
+            cx={px(x)}
+            cy={px(y)}
             r={R}
             className="fill-muted-foreground/35"
+            aria-hidden
           />
         ))}
+
+        {/* links: token contract → each platform */}
         {NODES.map((n, i) => (
-          <g key={n.label} transform={`translate(${n.x * CELL + CELL / 2} ${n.y * CELL + CELL / 2})`}>
-            <circle r={9} className="fill-primary/15" />
-            <circle
-              r={3.4}
-              className="fill-primary motion-safe:animate-pulse"
-              style={{ animationDelay: `${i * 240}ms` }}
-            />
-            <text
-              x={9}
-              y={3.5}
-              className="fill-foreground font-mono"
-              style={{ fontSize: 9, letterSpacing: 0.3 }}
-            >
-              {n.label}
-            </text>
-          </g>
+          <line
+            key={`link-${n.label}`}
+            x1={px(HUB.x)}
+            y1={px(HUB.y)}
+            x2={px(n.x)}
+            y2={px(n.y)}
+            className={
+              shown === i
+                ? "stroke-primary"
+                : shown == null
+                  ? "stroke-primary/25"
+                  : "stroke-primary/10"
+            }
+            strokeWidth={shown === i ? 1.6 : 1}
+            strokeDasharray="2 3"
+            aria-hidden
+          />
         ))}
+
+        {/* hub */}
+        <g transform={`translate(${px(HUB.x)} ${px(HUB.y)})`} aria-hidden>
+          <circle r={10} className="fill-primary/10" />
+          <circle r={3.6} className="fill-primary" />
+          <text
+            x={0}
+            y={-13}
+            textAnchor="middle"
+            className="fill-muted-foreground font-mono"
+            style={{ fontSize: 8, letterSpacing: 0.3 }}
+          >
+            {HUB.label}
+          </text>
+        </g>
+
+        {/* interactive platform nodes */}
+        {NODES.map((n, i) => {
+          const on = shown === i;
+          return (
+            <g
+              key={n.label}
+              transform={`translate(${px(n.x)} ${px(n.y)})`}
+              tabIndex={0}
+              role="button"
+              aria-pressed={pinned === i}
+              aria-label={`${n.label} — resolves to ${n.output}`}
+              className="cursor-pointer outline-none"
+              onMouseEnter={() => setActive(i)}
+              onMouseLeave={() => setActive(null)}
+              onFocus={() => setActive(i)}
+              onBlur={() => setActive(null)}
+              onClick={() => setPinned((p) => (p === i ? null : i))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setPinned((p) => (p === i ? null : i));
+                }
+              }}
+            >
+              <circle
+                r={13}
+                className={on ? "fill-transparent stroke-ring" : "fill-transparent stroke-transparent"}
+                strokeWidth={1.5}
+              />
+              <circle r={on ? 11 : 9} className="fill-primary/15 transition-all" />
+              <circle
+                r={on ? 4.4 : 3.4}
+                className="fill-primary transition-all motion-safe:animate-pulse"
+                style={{ animationDelay: `${i * 240}ms` }}
+              />
+              <text
+                x={9}
+                y={3.5}
+                className={on ? "fill-foreground font-mono" : "fill-muted-foreground font-mono"}
+                style={{ fontSize: 9, letterSpacing: 0.3, fontWeight: on ? 600 : 400 }}
+              >
+                {n.label}
+              </text>
+            </g>
+          );
+        })}
       </svg>
-      <p className="mt-3 border-t border-border pt-2 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-        one token contract · five outputs · wherever the app ships
-      </p>
-    </div>
+
+      <figcaption
+        aria-live="polite"
+        className="mt-3 border-t border-border pt-2 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
+      >
+        {node ? (
+          <>
+            <span className="text-foreground">{node.label}</span>
+            {" · "}
+            {node.output}
+            {pinned != null && <span className="text-muted-foreground/70"> · click to unpin</span>}
+          </>
+        ) : (
+          <>one token contract · five outputs · hover a node to trace it</>
+        )}
+      </figcaption>
+    </figure>
   );
 }

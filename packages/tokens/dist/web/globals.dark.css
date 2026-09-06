@@ -9,8 +9,8 @@
   --card-foreground: 212 100% 97%;
   --popover: 205 50% 9%;
   --popover-foreground: 212 100% 97%;
-  --primary: 204 33% 68%;
-  --primary-foreground: 205 55% 4%;
+  --primary: 213 94% 68%; /** light-theme primary is a bright #1d4ed8; on the near-black dark surface that would be ~2.9:1, so dark uses a lighter step of the same blue (#60a5fa, ~7.6:1 on bg). Two independent palettes — this is not a flip of the light value. */
+  --primary-foreground: 205 55% 4%; /** near-black text on the light-blue dark --primary (~7:1) */
   --secondary: 120 8% 20%;
   --secondary-foreground: 120 8% 90%;
   --muted: 205 52% 13%;
@@ -25,7 +25,7 @@
   --warning-foreground: 37 100% 8%;
   --border: 204 33% 33%;
   --input: 204 33% 33%;
-  --ring: 204 33% 68%;
+  --ring: 213 94% 68%; /** focus ring — tracks dark --primary (#60a5fa) */
   --chart-1: 204 33% 68%;
   --chart-2: 116 8% 59%;
   --chart-3: 37 100% 73%;
@@ -36,12 +36,12 @@
   --chart-8: 117 8% 49%;
   --sidebar: 205 50% 9%;
   --sidebar-foreground: 212 100% 97%;
-  --sidebar-primary: 204 33% 68%;
+  --sidebar-primary: 213 94% 68%;
   --sidebar-primary-foreground: 205 55% 4%;
   --sidebar-accent: 205 52% 13%;
   --sidebar-accent-foreground: 212 100% 97%;
   --sidebar-border: 204 33% 33%;
-  --sidebar-ring: 204 33% 68%;
+  --sidebar-ring: 213 94% 68%;
   --tertiary: 204 33% 33%;
   --tertiary-foreground: 212 100% 97%;
   --info: 204 33% 68%;

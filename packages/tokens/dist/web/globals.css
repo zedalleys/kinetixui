@@ -3,6 +3,21 @@
  */
 
 :root {
+  --azure-0: 218 100% 98%;
+  --azure-50: 214 100% 97%;
+  --azure-100: 214 95% 93%;
+  --azure-150: 215 92% 90%;
+  --azure-200: 213 97% 87%;
+  --azure-300: 212 96% 78%;
+  --azure-400: 213 94% 68%;
+  --azure-500: 217 91% 60%;
+  --azure-600: 221 83% 53%;
+  --azure-700: 224 76% 48%;
+  --azure-800: 226 71% 40%;
+  --azure-850: 226 70% 35%;
+  --azure-900: 224 64% 33%;
+  --azure-950: 226 57% 21%;
+  --azure-1000: 222 47% 11%;
   --blue-0: 207 100% 98%;
   --blue-50: 212 100% 97%;
   --blue-100: 204 33% 68%;
@@ -184,14 +199,14 @@
   --card-foreground: var(--blue-900); /** synth: = foreground */
   --popover: var(--neutral-0); /** synth: no Figma popover token; = background */
   --popover-foreground: var(--blue-900); /** synth: = foreground */
-  --primary: var(--blue-500); /** figma: 'Primay' (sic) #1b3c53 -> renamed primary */
-  --primary-foreground: var(--blue-50); /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground */
-  --secondary: var(--green-50); /** figma: secondaryContainer #f1f3f1 (our 'secondary' == Figma container role) */
-  --secondary-foreground: var(--green-600); /** figma onSecondaryContainer was green.500 (#748873) = 3.42:1 on secondary (AA-large only); green.600 (#5d6d5c) = 4.95:1 */
+  --primary: var(--azure-700); /** was Figma 'Primay' navy (blue.500 -> blue.700). Swapped for a bright action blue #1d4ed8 (6.55:1 on bg) so primary buttons/links pop rather than reading as near-black. Dark uses a lighter step (#60a5fa) — navy/this hue would fail on the dark surface. */
+  --primary-foreground: var(--blue-50); /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on #1d4ed8 primary ~6:1) */
+  --secondary: var(--green-200); /** figma secondaryContainer was green.50 #f1f3f1 (invisible on bg); deepened to green.200 #c7cfc7 so a secondary button/chip clearly stands off the white page — same sage hue */
+  --secondary-foreground: var(--green-700); /** green.700 #465245 on secondary green.200 #c7cfc7 clears ~5.2:1 */
   --muted: var(--neutral-100); /** figma: surfaceContainer #f6f6f6 */
   --muted-foreground: var(--neutral-600); /** figma: onSurfaceVariant #6d6d6d */
   --accent: var(--blue-50); /** figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons) */
-  --accent-foreground: var(--blue-500); /** synth: = primary for readable text on accent */
+  --accent-foreground: var(--azure-700); /** synth: = primary for readable text on accent (#1d4ed8 on accent #f0f7ff ~5.7:1) */
   --destructive: var(--red-500); /** a11y: figma error #ec5047 is 3.33:1 under on-error / 3.62:1 as text on the page — fails WCAG AA. red.500 #c60a0a clears 5.6:1 / 6.1:1. See ACCESSIBILITY-AUDIT.md. */
   --destructive-foreground: var(--semantic-on-error); /** figma: onError #fef3f2 */
   --success: var(--green-600); /** synth: no Figma success token; green ramp step 6 (distinct from secondary) */
@@ -200,7 +215,7 @@
   --warning-foreground: var(--semantic-warning-container); /** figma: warningContainer #fff8eb */
   --border: var(--blue-100); /** figma: outline #92b2c8 */
   --input: var(--blue-100); /** figma: outline #92b2c8 (same as border) */
-  --ring: var(--blue-500); /** figma: focus state draws a 2px 'Primay' border */
+  --ring: var(--azure-700); /** focus ring — tracks --primary (#1d4ed8, 6.55:1 on bg) */
   --chart-1: var(--blue-500); /** synth: brand ramps for data viz */
   --chart-2: var(--green-500);
   --chart-3: var(--amber-500);
@@ -211,12 +226,12 @@
   --chart-8: var(--green-700); /** synth: 8th data-viz hue — deep green, distinct from chart-2 */
   --sidebar: var(--neutral-50);
   --sidebar-foreground: var(--blue-900);
-  --sidebar-primary: var(--blue-500);
+  --sidebar-primary: var(--azure-700);
   --sidebar-primary-foreground: var(--blue-50);
   --sidebar-accent: var(--blue-50);
-  --sidebar-accent-foreground: var(--blue-500);
+  --sidebar-accent-foreground: var(--azure-700);
   --sidebar-border: var(--neutral-300);
-  --sidebar-ring: var(--blue-500);
+  --sidebar-ring: var(--azure-700);
   --tertiary-foreground: var(--blue-50);
   --info: var(--blue-300); /** synth: steel blue, distinct from navy primary */
   --info-foreground: var(--blue-50);

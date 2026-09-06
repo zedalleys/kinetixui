@@ -1,5 +1,23 @@
 {
   "color": {
+    "azure": {
+      "$description": "Action blue — the brand's interactive hue. Backs --primary / --ring / --accent-foreground (light = azure.700 #1d4ed8, dark = azure.400 #60a5fa). Ramp follows the Tailwind blue scale, remapped to the 0–1000 / 15-step structure.",
+      "0": { "$value": "#f7faff", "$type": "color" },
+      "50": { "$value": "#eff6ff", "$type": "color" },
+      "100": { "$value": "#dbeafe", "$type": "color" },
+      "150": { "$value": "#cde1fd", "$type": "color" },
+      "200": { "$value": "#bfdbfe", "$type": "color" },
+      "300": { "$value": "#93c5fd", "$type": "color" },
+      "400": { "$value": "#60a5fa", "$type": "color" },
+      "500": { "$value": "#3b82f6", "$type": "color" },
+      "600": { "$value": "#2563eb", "$type": "color" },
+      "700": { "$value": "#1d4ed8", "$type": "color" },
+      "800": { "$value": "#1e40af", "$type": "color" },
+      "850": { "$value": "#1b3897", "$type": "color" },
+      "900": { "$value": "#1e3a8a", "$type": "color" },
+      "950": { "$value": "#172554", "$type": "color" },
+      "1000": { "$value": "#0f172a", "$type": "color" }
+    },
     "blue": {
       "0": {
         "$value": "#f6fbff",

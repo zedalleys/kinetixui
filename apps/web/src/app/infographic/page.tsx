@@ -1,14 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import tokens from "@kinetixui/tokens";
 import { PipelineInfographic } from "@/components/pipeline-infographic";
 import { SectionHead } from "@/components/section-head";
 import { WorldMap } from "@/components/infographic/world-map";
-import { ContrastGrid } from "@/components/infographic/contrast-grid";
-import { TokenExplorer } from "@/components/infographic/token-explorer";
 import { RegistryTreemap } from "@/components/infographic/registry-treemap";
 import { componentDocs, CATEGORY_ORDER } from "@/lib/site";
-import { PRIMITIVE } from "@/lib/component-registry";
 
 export const metadata: Metadata = {
   title: "Infographic",
@@ -32,56 +28,6 @@ const STATS = [
   { n: 4, label: "component libraries", sub: "React · SwiftUI · Compose · Flutter" },
 ];
 
-const LAYERS = [
-  {
-    n: "01",
-    label: "Primitives",
-    meta: "tokens/primitives/**",
-    body: "Raw values pulled verbatim from Figma — colour ramps (0–1000), spacing, radii, type. No decisions, just the palette.",
-  },
-  {
-    n: "02",
-    label: "Semantic tokens",
-    meta: "tokens/semantic/**",
-    body: "Roles, per theme: --primary, --destructive, --ring, --shadow-focus… Each resolves to a primitive. This is the contract components code against.",
-  },
-  {
-    n: "03",
-    label: "Style Dictionary v4",
-    meta: "pnpm build:tokens",
-    body: "One build run per theme. Emits CSS custom properties, a typed tokens.ts, and native SwiftUI / Compose / Flutter colour + type sets.",
-  },
-  {
-    n: "04",
-    label: "Component recipes",
-    meta: "@kinetixui/ui",
-    body: "CVA + Radix + Tailwind, styled only against the semantic layer — never a hex. Ports mirror the same recipe per platform.",
-  },
-  {
-    n: "05",
-    label: "Registry",
-    meta: "apps/web/public/r/*.json",
-    body: "Every component serialised to a shadcn-compatible JSON descriptor — source, dependencies, target path.",
-  },
-  {
-    n: "06",
-    label: "CLI → your app",
-    meta: "npx @kinetixui/cli add …",
-    body: "Copies the component and its deps into your tree. You own the code; re-theming is a token edit, everywhere at once.",
-  },
-];
-
-const ANATOMY = [
-  { prop: "background", token: "--primary" },
-  { prop: "text colour", token: "--primary-foreground" },
-  { prop: "corner radius", token: "--radius-md" },
-  { prop: "padding", token: "--spacing-3 / --spacing-4" },
-  { prop: "font", token: "--text-label-lg" },
-  { prop: "focus ring", token: "--shadow-focus" },
-  { prop: "hover fill (ghost)", token: "--accent" },
-  { prop: "disabled", token: "opacity + --muted-foreground" },
-];
-
 const TIMELINE = [
   { v: "0.3.0", note: "First public registry — 60-odd components, the token contract, dark mode." },
   { v: "0.3.1", note: "CLI hardening; registry schema settled." },
@@ -92,16 +38,6 @@ const TIMELINE = [
     note: "Dark focus-ring token set, --warning to AA, NumberInput / chart / mobile-nav a11y, --chart-6…8.",
   },
 ];
-
-const slugOf = (href: string) => href.split("/").pop() ?? "";
-const BY_PRIMITIVE = (() => {
-  const groups = new Map<string, string[]>();
-  for (const c of componentDocs) {
-    const key = PRIMITIVE[slugOf(c.href)] ?? "own / composition";
-    groups.set(key, [...(groups.get(key) ?? []), c.title]);
-  }
-  return [...groups.entries()].sort((a, b) => b[1].length - a[1].length);
-})();
 
 type Cell = "full" | "partial" | "none";
 const COVERAGE: { row: string; cells: Cell[] }[] = [
@@ -165,94 +101,15 @@ export default function InfographicPage() {
         </div>
       </section>
 
-      {/* 03 — layers */}
+      {/* 03 — registry by category */}
       <section className="mt-14">
-        <SectionHead index="03" label="Layers" meta="hex → your app" />
-        <div className="mt-5 border-t border-border">
-          {LAYERS.map((l) => (
-            <div
-              key={l.n}
-              className="grid gap-2 border-b border-border py-5 md:grid-cols-[3rem_12rem_1fr] md:gap-6"
-            >
-              <span className="font-display text-2xl font-bold leading-none text-muted-foreground/60">
-                {l.n}
-              </span>
-              <div>
-                <h2 className="font-display text-sm font-semibold">{l.label}</h2>
-                <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{l.meta}</p>
-              </div>
-              <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{l.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 04 — anatomy */}
-      <section className="mt-14">
-        <SectionHead index="04" label="Anatomy of a Button" meta="every property → a token" />
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          {ANATOMY.map((a) => (
-            <div
-              key={a.prop}
-              className="flex items-baseline justify-between gap-3 rounded-md border border-border bg-muted/20 px-3.5 py-2.5"
-            >
-              <span className="text-sm">{a.prop}</span>
-              <code className="font-mono text-[12px] text-primary">{a.token}</code>
-            </div>
-          ))}
-        </div>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Nothing in the recipe is a literal value — the whole component is a wiring diagram over the
-          token contract, which is why one edit re-skins it on every platform.
-        </p>
-      </section>
-
-      {/* 05 — change a token */}
-      <section className="mt-14">
-        <SectionHead index="05" label="Change a token, watch it move" meta="interactive" />
-        <TokenExplorer />
-      </section>
-
-      {/* 06 — contrast grid */}
-      <section className="mt-14">
-        <SectionHead index="06" label="Contrast grid" meta="light + dark, WCAG" />
-        <ContrastGrid />
-      </section>
-
-      {/* 07 — registry by category */}
-      <section className="mt-14">
-        <SectionHead index="07" label="Registry, by category" meta={`${componentDocs.length} components`} />
+        <SectionHead index="03" label="Registry, by category" meta={`${componentDocs.length} components`} />
         <RegistryTreemap />
       </section>
 
-      {/* 08 — component → primitive */}
+      {/* 04 — platform coverage */}
       <section className="mt-14">
-        <SectionHead index="08" label="What every component sits on" meta="component → primitive" />
-        <div className="mt-5 space-y-4 border-t border-border pt-4">
-          {BY_PRIMITIVE.map(([prim, names]) => (
-            <div key={prim} className="grid gap-2 md:grid-cols-[14rem_1fr] md:gap-6">
-              <div className="font-mono text-[12px]">
-                <span className="text-foreground">{prim}</span>
-                <span className="ml-2 text-muted-foreground">{names.length}</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {names.map((n) => (
-                  <span
-                    key={n}
-                    className="rounded border border-border/70 px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
-                  >
-                    {n}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 09 — platform coverage */}
-      <section className="mt-14">
-        <SectionHead index="09" label="Platform coverage" meta="● full · ◐ partial · ○ none" />
+        <SectionHead index="04" label="Platform coverage" meta="● full · ◐ partial · ○ none" />
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[34rem] border-collapse text-sm">
             <thead>
@@ -297,9 +154,9 @@ export default function InfographicPage() {
         </p>
       </section>
 
-      {/* 10 — timeline */}
+      {/* 05 — timeline */}
       <section className="mt-14">
-        <SectionHead index="10" label="Release timeline" meta="from the changelogs" />
+        <SectionHead index="05" label="Release timeline" meta="from the changelogs" />
         <ol className="mt-5 border-l border-border">
           {TIMELINE.map((t) => (
             <li key={t.v} className="relative pb-6 pl-6 last:pb-0">
@@ -314,17 +171,17 @@ export default function InfographicPage() {
         </ol>
       </section>
 
-      {/* 11 — world map */}
+      {/* 06 — world map */}
       <section className="mt-14">
-        <SectionHead index="11" label="Where it runs" meta="one contract, everywhere" />
+        <SectionHead index="06" label="Where it runs" meta="one contract, everywhere" />
         <div className="mt-5">
           <WorldMap />
         </div>
       </section>
 
-      {/* 12 — vs alternatives */}
+      {/* 07 — vs alternatives */}
       <section className="mt-14">
-        <SectionHead index="12" label="Against the alternatives" meta="honest matrix" />
+        <SectionHead index="07" label="Against the alternatives" meta="honest matrix" />
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[38rem] border-collapse text-sm">
             <thead>
@@ -369,21 +226,6 @@ export default function InfographicPage() {
           </table>
         </div>
       </section>
-
-      <p className="mt-14 border-t border-border pt-6 text-sm text-muted-foreground">
-        The same story in prose:{" "}
-        <Link href="/docs/tokens" className="font-medium text-primary underline underline-offset-4">
-          Tokens
-        </Link>{" "}
-        and{" "}
-        <Link
-          href="/docs/contributing"
-          className="font-medium text-primary underline underline-offset-4"
-        >
-          the four-platform rule
-        </Link>
-        .
-      </p>
     </div>
   );
 }

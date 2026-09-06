@@ -9,13 +9,14 @@ import { tokenNameForHex } from "@/lib/token-contract";
 import { SectionHead } from "@/components/section-head";
 import { hexToRgb, rgbToHsl, contrastRatio } from "@/lib/color-math";
 
-const RAMPS = ["blue", "green", "taupe", "cream", "amber", "red", "neutral"] as const;
+const RAMPS = ["azure", "blue", "green", "taupe", "cream", "amber", "red", "neutral"] as const;
 const STEPS = ["0", "50", "100", "150", "200", "300", "400", "500", "600", "700", "800", "850", "900", "950", "1000"];
 const FORMATS = ["hex", "hsl", "rgb"] as const;
 type Format = (typeof FORMATS)[number];
 
 const RAMP_NOTE: Record<(typeof RAMPS)[number], string> = {
-  blue: "Brand anchor — backs --primary, --ring, --border/--input, and --foreground on light.",
+  azure: "Action blue — the interactive hue. Backs --primary, --ring and --accent-foreground (light = azure.700, dark = azure.400).",
+  blue: "Navy — backs --foreground and the dark surface scale, plus --border/--input and --accent on light.",
   green: "Secondary + success — backs --secondary, --secondary-foreground, --success.",
   amber: "Reserved for --warning and the data-viz palette (--chart-3).",
   red: "Powers the data-viz palette (--chart-4); --destructive is a standalone Figma value, not this ramp.",
@@ -59,8 +60,9 @@ export default function ColorsPage() {
         {copied ? `Copied ${copied}` : ""}
       </p>
       <p className="mt-3 max-w-2xl text-muted-foreground">
-        Six brand ramps and a synthesized neutral, extracted verbatim from Figma and remapped to a
-        0–1000 scale. Every semantic token in the{" "}
+        Seven brand ramps and a synthesized neutral, remapped to a 0–1000 scale — the navy family and
+        the sage/warm hues verbatim from Figma, plus an <code className="font-mono text-foreground">azure</code>{" "}
+        action-blue ramp for the interactive tokens. Every semantic token in the{" "}
         <a href="/docs/theming" className="font-medium text-primary underline underline-offset-4">
           contract
         </a>{" "}

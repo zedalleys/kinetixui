@@ -14,14 +14,14 @@ semantic names only; the mapping to real colours lives in one place.
 | --- | --- | --- |
 | `--background` | `#ffffff` | `surfaceContainerLowest` |
 | `--foreground` | `#050c11` | `onSurface` |
-| `--primary` | `#1b3c53` | `Primay` *(renamed)* |
+| `--primary` | `#1d4ed8` | action blue *(replaces Figma `Primay` navy)* |
 | `--primary-foreground` | `#f0f7ff` | `On Primary` |
-| `--secondary` | `#f1f3f1` | `secondaryContainer` |
+| `--secondary` | `#c7cfc7` | `secondaryContainer` *(deepened for surface contrast)* |
 | `--muted` / `--muted-foreground` | `#f6f6f6` / `#6d6d6d` | `surfaceContainer` / `onSurfaceVariant` |
 | `--accent` | `#f0f7ff` | `LightBlue` |
 | `--destructive` | `#ec5047` | `error` |
 | `--border` / `--input` | `#92b2c8` | `outline` |
-| `--ring` | `#1b3c53` | focus outline |
+| `--ring` | `#1d4ed8` | focus outline *(tracks `--primary`)* |
 | `--radius` | `8px` | `Button` |
 
 `--card`, `--popover`, `--ring`, the neutral ramp, and the entire dark theme are
@@ -30,8 +30,10 @@ listed in the repo's `TOKENS.md`.
 
 ## Both themes
 
-The same components against each value set — light aliased from Figma, dark
-synthesized:
+Light and dark are two independent palettes — not one value set flipped. Most
+light roles are aliased from Figma; `--primary` / `--ring` are an action blue
+(`#1d4ed8` light, `#60a5fa` dark, each picked to clear WCAG AA on its own
+surface); the rest of dark is synthesized.
 
 <ThemePreview />
 
