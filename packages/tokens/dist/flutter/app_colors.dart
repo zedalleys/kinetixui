@@ -13,7 +13,7 @@ class KinetixColors {
     KinetixColors._();
 
     static const colorAccent = Color(0xFFF0F7FF); /** figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons) */
-    static const colorAccentForeground = Color(0xFF1B3C53); /** synth: = primary for readable text on accent */
+    static const colorAccentForeground = Color(0xFF163042); /** synth: = primary for readable text on accent */
     static const colorAmber0 = Color(0xFFFFFFFF);
     static const colorAmber100 = Color(0xFFFFF2DD);
     static const colorAmber1000 = Color(0xFF2A1A00);
@@ -108,8 +108,8 @@ class KinetixColors {
     static const colorNeutral900 = Color(0xFF1F1F1F);
     static const colorPopover = Color(0xFFFFFFFF); /** synth: no Figma popover token; = background */
     static const colorPopoverForeground = Color(0xFF050C11); /** synth: = foreground */
-    static const colorPrimary = Color(0xFF1B3C53); /** figma: 'Primay' (sic) #1b3c53 -> renamed primary */
-    static const colorPrimaryForeground = Color(0xFFF0F7FF); /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground */
+    static const colorPrimary = Color(0xFF163042); /** figma 'Primay' (sic) was blue.500 #1b3c53 (11.55:1 on bg); deepened one ramp step to blue.600 #163042 (~13:1) for headroom on tints/overlays — same navy hue */
+    static const colorPrimaryForeground = Color(0xFFF0F7FF); /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on blue.600 primary ~12:1) */
     static const colorRed0 = Color(0xFFFFF9F9);
     static const colorRed100 = Color(0xFFF4C9C9);
     static const colorRed1000 = Color(0xFF000000);
@@ -125,9 +125,9 @@ class KinetixColors {
     static const colorRed850 = Color(0xFF3B0303);
     static const colorRed900 = Color(0xFF280202);
     static const colorRed950 = Color(0xFF140101);
-    static const colorRing = Color(0xFF1B3C53); /** figma: focus state draws a 2px 'Primay' border */
-    static const colorSecondary = Color(0xFFF1F3F1); /** figma: secondaryContainer #f1f3f1 (our 'secondary' == Figma container role) */
-    static const colorSecondaryForeground = Color(0xFF5D6D5C); /** figma onSecondaryContainer was green.500 (#748873) = 3.42:1 on secondary (AA-large only); green.600 (#5d6d5c) = 4.95:1 */
+    static const colorRing = Color(0xFF163042); /** figma: focus state draws a 2px 'Primay' border — tracks --primary (blue.600) */
+    static const colorSecondary = Color(0xFFE3E7E3); /** figma secondaryContainer was green.50 #f1f3f1 (barely distinct from bg); deepened to green.100 #e3e7e3 so the surface reads as a control — same sage hue */
+    static const colorSecondaryForeground = Color(0xFF465245); /** green.600 #5d6d5c on the old secondary was 4.95:1 (marginal AA); green.700 #465245 on green.100 clears ~6.5:1 */
     static const colorSemanticError = Color(0xFFEC5047); /** figma: error (NOT red.500 #c60a0a — Figma keeps error as its own value) */
     static const colorSemanticErrorContainer = Color(0xFFFEF3F2); /** figma: errorContainer */
     static const colorSemanticInfoContainer = Color(0xFFF0F7FF);
@@ -141,12 +141,12 @@ class KinetixColors {
     static const colorSemanticWarningContainer = Color(0xFFFFF8EB); /** figma: warningContainer */
     static const colorSidebar = Color(0xFFFAFAFA);
     static const colorSidebarAccent = Color(0xFFF0F7FF);
-    static const colorSidebarAccentForeground = Color(0xFF1B3C53);
+    static const colorSidebarAccentForeground = Color(0xFF163042);
     static const colorSidebarBorder = Color(0xFFE0E0E0);
     static const colorSidebarForeground = Color(0xFF050C11);
-    static const colorSidebarPrimary = Color(0xFF1B3C53);
+    static const colorSidebarPrimary = Color(0xFF163042);
     static const colorSidebarPrimaryForeground = Color(0xFFF0F7FF);
-    static const colorSidebarRing = Color(0xFF1B3C53);
+    static const colorSidebarRing = Color(0xFF163042);
     static const colorStaticBlack = Color(0xFF000000);
     static const colorStaticWhite = Color(0xFFFFFFFF);
     static const colorSuccess = Color(0xFF5D6D5C); /** synth: no Figma success token; green ramp step 6 (distinct from secondary) */

@@ -24,14 +24,14 @@
   --card-foreground: var(--blue-900);
   --popover: var(--neutral-0);
   --popover-foreground: var(--blue-900);
-  --primary: var(--blue-500);
+  --primary: var(--blue-600);
   --primary-foreground: var(--blue-50);
-  --secondary: var(--green-50);
-  --secondary-foreground: var(--green-600);
+  --secondary: var(--green-100);
+  --secondary-foreground: var(--green-700);
   --muted: var(--neutral-100);
   --muted-foreground: var(--neutral-600);
   --accent: var(--blue-50);
-  --accent-foreground: var(--blue-500);
+  --accent-foreground: var(--blue-600);
   --destructive: var(--red-500);
   --destructive-foreground: var(--semantic-on-error);
   --success: var(--green-600);
@@ -44,7 +44,7 @@
   --info-foreground: var(--blue-50);
   --border: var(--blue-100);
   --input: var(--blue-100);
-  --ring: var(--blue-500);
+  --ring: var(--blue-600);
   --chart-1: var(--blue-500);
   --chart-2: var(--green-500);
   --chart-3: var(--amber-500);
@@ -55,12 +55,12 @@
   --chart-8: var(--green-700);
   --sidebar: var(--neutral-50);
   --sidebar-foreground: var(--blue-900);
-  --sidebar-primary: var(--blue-500);
+  --sidebar-primary: var(--blue-600);
   --sidebar-primary-foreground: var(--blue-50);
   --sidebar-accent: var(--blue-50);
-  --sidebar-accent-foreground: var(--blue-500);
+  --sidebar-accent-foreground: var(--blue-600);
   --sidebar-border: var(--neutral-300);
-  --sidebar-ring: var(--blue-500);
+  --sidebar-ring: var(--blue-600);
 }
 
 @layer base {

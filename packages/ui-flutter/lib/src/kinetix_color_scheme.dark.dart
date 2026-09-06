@@ -35,6 +35,9 @@ class KinetixColorSchemeDark {
   static const chart3 = Color(0xFFFFC975);
   static const chart4 = Color(0xFFDD6A6A);
   static const chart5 = Color(0xFFD2C1B6);
+  static const chart6 = Color(0xFF7495AB);
+  static const chart7 = Color(0xFFD13A3A);
+  static const chart8 = Color(0xFF748873);
   static const sidebar = Color(0xFF0B1821);
   static const sidebarForeground = Color(0xFFF0F7FF);
   static const sidebarPrimary = Color(0xFF92B2C8);

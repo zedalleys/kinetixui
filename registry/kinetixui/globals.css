@@ -186,14 +186,14 @@
   --card-foreground: var(--blue-900); /** synth: = foreground */
   --popover: var(--neutral-0); /** synth: no Figma popover token; = background */
   --popover-foreground: var(--blue-900); /** synth: = foreground */
-  --primary: var(--blue-500); /** figma: 'Primay' (sic) #1b3c53 -> renamed primary */
-  --primary-foreground: var(--blue-50); /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground */
-  --secondary: var(--green-50); /** figma: secondaryContainer #f1f3f1 (our 'secondary' == Figma container role) */
-  --secondary-foreground: var(--green-600); /** figma onSecondaryContainer was green.500 (#748873) = 3.42:1 on secondary (AA-large only); green.600 (#5d6d5c) = 4.95:1 */
+  --primary: var(--blue-600); /** figma 'Primay' (sic) was blue.500 #1b3c53 (11.55:1 on bg); deepened one ramp step to blue.600 #163042 (~13:1) for headroom on tints/overlays — same navy hue */
+  --primary-foreground: var(--blue-50); /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on blue.600 primary ~12:1) */
+  --secondary: var(--green-100); /** figma secondaryContainer was green.50 #f1f3f1 (barely distinct from bg); deepened to green.100 #e3e7e3 so the surface reads as a control — same sage hue */
+  --secondary-foreground: var(--green-700); /** green.600 #5d6d5c on the old secondary was 4.95:1 (marginal AA); green.700 #465245 on green.100 clears ~6.5:1 */
   --muted: var(--neutral-100); /** figma: surfaceContainer #f6f6f6 */
   --muted-foreground: var(--neutral-600); /** figma: onSurfaceVariant #6d6d6d */
   --accent: var(--blue-50); /** figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons) */
-  --accent-foreground: var(--blue-500); /** synth: = primary for readable text on accent */
+  --accent-foreground: var(--blue-600); /** synth: = primary for readable text on accent */
   --destructive: var(--red-500); /** a11y: figma error #ec5047 is 3.33:1 under on-error / 3.62:1 as text on the page — fails WCAG AA. red.500 #c60a0a clears 5.6:1 / 6.1:1. See ACCESSIBILITY-AUDIT.md. */
   --destructive-foreground: var(--semantic-on-error); /** figma: onError #fef3f2 */
   --success: var(--green-600); /** synth: no Figma success token; green ramp step 6 (distinct from secondary) */
@@ -202,7 +202,7 @@
   --warning-foreground: var(--semantic-warning-container); /** figma: warningContainer #fff8eb */
   --border: var(--blue-100); /** figma: outline #92b2c8 */
   --input: var(--blue-100); /** figma: outline #92b2c8 (same as border) */
-  --ring: var(--blue-500); /** figma: focus state draws a 2px 'Primay' border */
+  --ring: var(--blue-600); /** figma: focus state draws a 2px 'Primay' border — tracks --primary (blue.600) */
   --chart-1: var(--blue-500); /** synth: brand ramps for data viz */
   --chart-2: var(--green-500);
   --chart-3: var(--amber-500);
@@ -213,12 +213,12 @@
   --chart-8: var(--green-700); /** synth: 8th data-viz hue — deep green, distinct from chart-2 */
   --sidebar: var(--neutral-50);
   --sidebar-foreground: var(--blue-900);
-  --sidebar-primary: var(--blue-500);
+  --sidebar-primary: var(--blue-600);
   --sidebar-primary-foreground: var(--blue-50);
   --sidebar-accent: var(--blue-50);
-  --sidebar-accent-foreground: var(--blue-500);
+  --sidebar-accent-foreground: var(--blue-600);
   --sidebar-border: var(--neutral-300);
-  --sidebar-ring: var(--blue-500);
+  --sidebar-ring: var(--blue-600);
   --tertiary-foreground: var(--blue-50);
   --info: var(--blue-300); /** synth: steel blue, distinct from navy primary */
   --info-foreground: var(--blue-50);
@@ -281,7 +281,7 @@
   --shadow-md: 0 1px 1px 0 #0000001f, 0 2px 5px 0 #676e7614;
   --shadow-lg: 0 4px 6px -1px #00000012, 0 2px 4px -2px #0000000f;
   --shadow-xl: 0 4px 24px 0 #0000001f;
-  --shadow-focus: 0 0 0 1px #1b3c53, 0 0 0 4px #1b3c5333;
+  --shadow-focus: 0 0 0 1px #163042, 0 0 0 4px #16304233;
   --shadow-focus-destructive: 0 0 0 1px #ec5047, 0 0 0 4px #ec504733;
   --shadow-focus-success: 0 0 0 1px #5d6d5c, 0 0 0 4px #5d6d5c33;
   --shadow-focus-warning: 0 0 0 1px #f97907, 0 0 0 4px #f9790733;

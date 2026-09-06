@@ -16,8 +16,8 @@
       { "color": "#0000001f", "offsetX": "0", "offsetY": "4", "blur": "24", "spread": "0" }
     ]},
     "focus": { "$type": "shadow", "$value": [
-      { "color": "#1b3c53", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1" },
-      { "color": "#1b3c5333", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "4" }
+      { "color": "#163042", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1" },
+      { "color": "#16304233", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "4" }
     ]},
     "focus-destructive": { "$type": "shadow", "$value": [
       { "color": "#ec5047", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1" },

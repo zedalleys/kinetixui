@@ -31,24 +31,24 @@
       "$description": "synth: = foreground"
     },
     "primary": {
-      "$value": "{color.blue.500}",
+      "$value": "{color.blue.600}",
       "$type": "color",
-      "$description": "figma: 'Primay' (sic) #1b3c53 -> renamed primary"
+      "$description": "figma 'Primay' (sic) was blue.500 #1b3c53 (11.55:1 on bg); deepened one ramp step to blue.600 #163042 (~13:1) for headroom on tints/overlays — same navy hue"
     },
     "primary-foreground": {
       "$value": "{color.blue.50}",
       "$type": "color",
-      "$description": "figma: 'On Primary' #f0f7ff -> renamed primary-foreground"
+      "$description": "figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on blue.600 primary ~12:1)"
     },
     "secondary": {
-      "$value": "{color.green.50}",
+      "$value": "{color.green.100}",
       "$type": "color",
-      "$description": "figma: secondaryContainer #f1f3f1 (our 'secondary' == Figma container role)"
+      "$description": "figma secondaryContainer was green.50 #f1f3f1 (barely distinct from bg); deepened to green.100 #e3e7e3 so the surface reads as a control — same sage hue"
     },
     "secondary-foreground": {
-      "$value": "{color.green.600}",
+      "$value": "{color.green.700}",
       "$type": "color",
-      "$description": "figma onSecondaryContainer was green.500 (#748873) = 3.42:1 on secondary (AA-large only); green.600 (#5d6d5c) = 4.95:1"
+      "$description": "green.600 #5d6d5c on the old secondary was 4.95:1 (marginal AA); green.700 #465245 on green.100 clears ~6.5:1"
     },
     "muted": {
       "$value": "{color.neutral.100}",
@@ -66,7 +66,7 @@
       "$description": "figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons)"
     },
     "accent-foreground": {
-      "$value": "{color.blue.500}",
+      "$value": "{color.blue.600}",
       "$type": "color",
       "$description": "synth: = primary for readable text on accent"
     },
@@ -111,9 +111,9 @@
       "$description": "figma: outline #92b2c8 (same as border)"
     },
     "ring": {
-      "$value": "{color.blue.500}",
+      "$value": "{color.blue.600}",
       "$type": "color",
-      "$description": "figma: focus state draws a 2px 'Primay' border"
+      "$description": "figma: focus state draws a 2px 'Primay' border — tracks --primary (blue.600)"
     },
     "semantic": {
       "error": {
@@ -212,7 +212,7 @@
       "$type": "color"
     },
     "sidebar-primary": {
-      "$value": "{color.blue.500}",
+      "$value": "{color.blue.600}",
       "$type": "color"
     },
     "sidebar-primary-foreground": {
@@ -224,7 +224,7 @@
       "$type": "color"
     },
     "sidebar-accent-foreground": {
-      "$value": "{color.blue.500}",
+      "$value": "{color.blue.600}",
       "$type": "color"
     },
     "sidebar-border": {
@@ -232,7 +232,7 @@
       "$type": "color"
     },
     "sidebar-ring": {
-      "$value": "{color.blue.500}",
+      "$value": "{color.blue.600}",
       "$type": "color"
     },
     "tertiary": {
