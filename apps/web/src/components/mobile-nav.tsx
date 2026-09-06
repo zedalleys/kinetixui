@@ -7,10 +7,33 @@ import { docsNav, mainNav } from "@/lib/site";
 
 export function MobileNav() {
   const [open, setOpen] = React.useState(false);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const panelRef = React.useRef<HTMLDivElement>(null);
+
+  // Esc closes; when it closes, focus goes back to the trigger. When it opens,
+  // focus moves to the first link in the panel.
+  React.useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    panelRef.current?.querySelector<HTMLElement>("a,button")?.focus();
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  const close = () => {
+    setOpen(false);
+    triggerRef.current?.focus();
+  };
 
   return (
     <div className="md:hidden">
       <button
+        ref={triggerRef}
         aria-label="Menu"
         aria-expanded={open}
         aria-controls="mobile-nav-panel"
@@ -21,6 +44,7 @@ export function MobileNav() {
       </button>
       {open && (
         <div
+          ref={panelRef}
           id="mobile-nav-panel"
           className="fixed inset-x-0 top-12 z-40 max-h-[calc(100dvh-3rem)] overflow-y-auto border-b border-border bg-background p-4"
         >
@@ -29,7 +53,7 @@ export function MobileNav() {
               <Link
                 key={i.href}
                 href={i.href}
-                onClick={() => setOpen(false)}
+                onClick={close}
                 className="flex items-center gap-2 rounded px-2 py-2 hover:bg-muted"
               >
                 {i.title}
@@ -48,7 +72,7 @@ export function MobileNav() {
                   <Link
                     key={i.href}
                     href={i.href}
-                    onClick={() => setOpen(false)}
+                    onClick={close}
                     className="block rounded px-2 py-1.5 hover:bg-muted"
                   >
                     {i.title}

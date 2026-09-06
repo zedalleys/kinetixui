@@ -27,7 +27,12 @@ export default function ChartsPage() {
         and scatter. Copy one and swap the data.{" "}
         <code className="text-foreground">npx @kinetixui/cli add chart</code>. The native ports carry
         the common types too — SwiftUI over the system{" "}
-        <code className="text-foreground">Charts</code> framework, Flutter as a hand-drawn bar chart.
+        <code className="text-foreground">Charts</code> framework, Flutter as a hand-drawn bar chart.{" "}
+        For accessibility, Cartesian recipes pass{" "}
+        <code className="text-foreground">accessibilityLayer</code> for keyboard data-point
+        navigation, and <code className="text-foreground">ChartContainer</code> takes a{" "}
+        <code className="text-foreground">label</code> — a one-line text alternative screen readers
+        announce in place of the SVG (it defaults to &ldquo;Chart&rdquo;).
       </p>
       <ChartsContent />
     </div>

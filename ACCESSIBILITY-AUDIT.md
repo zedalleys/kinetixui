@@ -87,10 +87,10 @@ pairs its track with a moving thumb + `aria-checked`. No change. Keep the
 
 | # | Sev | Area | Finding | Recommendation |
 |---|-----|------|---------|----------------|
-| B10 | Moderate | `charts-content.tsx` + `@kinetixui/ui` `chart.tsx` | Recharts is rendered **without `accessibilityLayer`** and with **no text alternative** — charts are not keyboard-navigable and convey data by colour + position only (SC 1.1.1, 2.1.1, 1.4.1). | Pass `accessibilityLayer` to every chart; give `ChartContainer` a `role="img"` + `aria-label` summary prop; offer an optional visually-hidden `<table>` fallback of the series data. Tracked as a cross-cutting item in `COMPONENT-ADDITIONS.md` §2. |
-| B11 | Minor | `/charts`, `/blocks` | Heading order **skips h2** — page `<h1>` then `Showcase`/block `<h3>`. | `Showcase` should render `<h2>` (or the pages should introduce an h2 section head, which `/colors` and `/components` already do via `SectionHead`). |
-| B12 | Minor | `mobile-nav.tsx` | The open menu is a plain `{open && <div>}` — **no `Esc` to close, no focus move** into/out of the panel, background not inert. | Close on `Esc`; move focus to the first link on open and back to the toggle on close; `inert` the page behind it (or switch to the `Sheet` primitive, which already does all three). |
 | B14 | Minor | `theme-provider` / first paint | `defaultTheme="system"` with `enableSystem` is correct, but verify the pre-hydration theme script doesn't cause a flash that could disorient (it uses `disableTransitionOnChange`, so likely fine — confirm in the live pass). | Confirm in axe/visual pass B (pending). |
+
+Cross-cutting chart items (loading/empty/error states, legend toggle, pattern
+fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
 
 ### Fixed in a follow-up pass (`a11y/focus-and-audit-followups`)
 
@@ -99,6 +99,9 @@ pairs its track with a moving thumb + `aria-checked`. No change. Keep the
 | B8 | **Serious** | `@kinetixui/ui` `number-input.tsx` | The **−/+ stepper buttons** used `outline-none` with a `:hover`-only style — no `:focus-visible`; keyboard focus showed only as a container-level `focus-within:shadow-focus`. | Both steppers now draw `focus-visible:bg-accent focus-visible:text-foreground focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring` (the `list.tsx` / `input-group.tsx` pattern). Ships in the next `@kinetixui/ui` release. |
 | B9 | Moderate | `/colors` `page.tsx` | hex/rgb/hsl toggle exposed active state via `bg-primary` only; swatch buttons had no `:focus-visible` and no post-copy announcement. | Toggle: `role="group"` + `aria-pressed` + focus ring. Swatches: `focus-visible:border-primary/ring-1` + a descriptive `aria-label`. Added a visually-hidden `aria-live="polite"` "Copied …" region. |
 | B13 | Minor | `/colors` `page.tsx` | Ramp jump-list `<nav>` had no accessible name; its links had no focus ring. | `aria-label="Jump to a ramp"` + `focus-visible:ring-2`. |
+| B10 | Moderate | `@kinetixui/ui` `chart.tsx` + `/charts` | No text alternative for charts (SC 1.1.1) — colour + position only. (`/charts` Cartesian recipes already passed `accessibilityLayer`.) | `ChartContainer` now renders `role="img"` + `aria-label`, driven by a new `label` prop (falls back to `"Chart"`); `/charts` intro + the Bar recipe show the pattern. |
+| B11 | Minor | `Showcase` (`/charts`, `/blocks`) | Heading order skipped h2 — page `<h1>` then `Showcase` `<h3>`. | `Showcase` now renders `<h2>`. |
+| B12 | Minor | `mobile-nav.tsx` | Open menu had no `Esc` to close and no focus movement. | `Esc` closes and returns focus to the trigger; opening moves focus to the first link. (Full `inert`-background trap deferred — a `Sheet` swap is the cleaner long-term fix.) |
 
 ### Confirmed good (no action)
 
