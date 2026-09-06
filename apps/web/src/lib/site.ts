@@ -6,7 +6,7 @@ export const siteConfig = {
   description:
     "KinetixUI turns a single design source into living tokens and components for React, SwiftUI, Jetpack Compose and Flutter.",
   url: "https://kinetixui.com",
-  repo: "https://github.com/ziadfteha/kinetixui",
+  repo: "https://github.com/zedalleys/kinetixui",
   figma: "https://www.figma.com/design/GQXTKKJAPbawd4wcuE77Pf/KinetixUI?node-id=3877-10388",
   // Read from @kinetixui/ui at build time — @kinetixui/{ui,cli,tokens} are a
   // changesets `fixed` group, so this one number tracks all three.
@@ -113,7 +113,7 @@ export const componentDocs: NavItem[] = [
 ];
 
 /** slug → sidebar category. Mirrors the taxonomy in scripts/gen-stories.mjs. */
-const COMPONENT_CATEGORY: Record<string, string> = {
+export const COMPONENT_CATEGORY: Record<string, string> = {
   "aspect-ratio": "Foundations", separator: "Foundations", skeleton: "Foundations",
   spinner: "Foundations", label: "Foundations", image: "Foundations", "code-block": "Foundations",
 
@@ -144,7 +144,7 @@ const COMPONENT_CATEGORY: Record<string, string> = {
   footer: "Data Display", "audio-player": "Data Display",
 };
 
-const CATEGORY_ORDER = [
+export const CATEGORY_ORDER = [
   "Foundations",
   "Form Inputs",
   "Controls & Actions",

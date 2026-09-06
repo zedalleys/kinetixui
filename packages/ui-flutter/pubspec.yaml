@@ -4,8 +4,8 @@ description: >-
   contract. Standalone package, not published to pub.dev.
 version: 0.0.0
 publish_to: none
-repository: https://github.com/ziadfteha/kinetixui
-issue_tracker: https://github.com/ziadfteha/kinetixui/issues
+repository: https://github.com/zedalleys/kinetixui
+issue_tracker: https://github.com/zedalleys/kinetixui/issues
 
 environment:
   sdk: ">=3.3.0 <4.0.0"

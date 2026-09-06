@@ -7,7 +7,7 @@
   "license": "MIT",
   "author": "KinetixUI",
   "homepage": "https://kinetixui.com",
-  "repository": { "type": "git", "url": "https://github.com/ziadfteha/kinetixui.git", "directory": "packages/ui" },
+  "repository": { "type": "git", "url": "https://github.com/zedalleys/kinetixui.git", "directory": "packages/ui" },
   "type": "module",
   "sideEffects": false,
   "exports": {

@@ -98,25 +98,25 @@ publishing {
                     "The Jetpack Compose port of KinetixUI — Kinetix* composables " +
                         "on the shared design-token contract.",
                 )
-                url.set("https://github.com/ziadfteha/kinetixui")
+                url.set("https://github.com/zedalleys/kinetixui")
                 licenses {
                     license {
                         name.set("MIT")
-                        url.set("https://github.com/ziadfteha/kinetixui/blob/main/LICENSE")
+                        url.set("https://github.com/zedalleys/kinetixui/blob/main/LICENSE")
                         distribution.set("repo")
                     }
                 }
                 developers {
                     developer {
-                        id.set("ziadfteha")
+                        id.set("zedalleys")
                         name.set("Ziad Fteha")
-                        url.set("https://github.com/ziadfteha")
+                        url.set("https://github.com/zedalleys")
                     }
                 }
                 scm {
-                    url.set("https://github.com/ziadfteha/kinetixui")
-                    connection.set("scm:git:https://github.com/ziadfteha/kinetixui.git")
-                    developerConnection.set("scm:git:ssh://git@github.com/ziadfteha/kinetixui.git")
+                    url.set("https://github.com/zedalleys/kinetixui")
+                    connection.set("scm:git:https://github.com/zedalleys/kinetixui.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/zedalleys/kinetixui.git")
                 }
             }
         }

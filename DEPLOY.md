@@ -18,7 +18,7 @@ served by the Next site. `apps/docs` is Storybook, *not* the website.
 ## 1. Push to GitHub  ✅ done
 
 ```bash
-git remote add origin https://github.com/ziadfteha/kinetixui.git
+git remote add origin https://github.com/zedalleys/kinetixui.git
 git push -u origin main
 ```
 
@@ -26,7 +26,7 @@ git push -u origin main
 
 ### Option A — dashboard (no CLI)
 
-1. vercel.com → **Add New… → Project** → import `ziadfteha/kinetixui`.
+1. vercel.com → **Add New… → Project** → import `zedalleys/kinetixui`.
 2. **Root Directory:** click **Edit** and select **`apps/web`**.
    ⚠️ Vercel may pre-select `apps/docs` (Storybook / Vite) — that is the wrong
    folder. It must be `apps/web`.
@@ -97,6 +97,6 @@ site or the registry.
 ## 6. After go-live
 
 - `siteConfig.url` / `repo` in `apps/web/src/lib/site.ts` are already correct
-  (`kinetixui.com` / `github.com/ziadfteha/kinetixui`).
+  (`kinetixui.com` / `github.com/zedalleys/kinetixui`).
 - `apps/web/public/r/*.json` is committed and served as-is; regenerate with
   `pnpm build:registry` and commit when components change (Vercel does not run it).
