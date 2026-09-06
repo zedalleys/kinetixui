@@ -1,0 +1,67 @@
+name: Publish (Compose)
+
+# Manual — publishes packages/ui-compose (com.kinetixui:ui-compose) to Maven
+# Central via the Central Portal's OSSRH-compatible staging API. Defaults to
+# a dry run (build + unsigned publishToMavenLocal, no upload). A real upload
+# needs four secrets; releasing the staged deployment to Central is then a
+# manual click at https://central.sonatype.com -> Deployments.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Maven version, e.g. 0.1.0"
+        required: true
+      dry_run:
+        description: "dry run only — build + publishToMavenLocal, no upload"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/ui-compose
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      # Same as native-compose.yml: this package's gradle-wrapper.jar isn't
+      # committed, so CI provisions a real Gradle instead of ./gradlew.
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Dry run — build + publishToMavenLocal (unsigned)
+        env:
+          VERSION_NAME: ${{ inputs.version }}
+        run: gradle :ui:publishReleasePublicationToMavenLocal
+
+      - name: Publish to Maven Central (Portal staging)
+        if: ${{ inputs.dry_run == false }}
+        env:
+          VERSION_NAME: ${{ inputs.version }}
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          if [ -z "$MAVEN_CENTRAL_USERNAME" ] || [ -z "$MAVEN_CENTRAL_PASSWORD" ]; then
+            echo "::error::MAVEN_CENTRAL_USERNAME / MAVEN_CENTRAL_PASSWORD not set. Create a user token at https://central.sonatype.com/account and add both as repo secrets."
+            exit 1
+          fi
+          if [ -z "$SIGNING_KEY" ]; then
+            echo "::error::SIGNING_KEY not set. Run \`gpg --armor --export-secret-keys <key-id>\` and add it (plus SIGNING_KEY_PASSWORD) as repo secrets."
+            exit 1
+          fi
+          gradle :ui:publishReleasePublicationToCentralPortalRepository
+          echo "::notice::Uploaded. Release the deployment at https://central.sonatype.com -> Deployments."

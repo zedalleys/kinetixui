@@ -98,7 +98,7 @@ you add the secret:
 | --- | --- | --- | --- |
 | Flutter | `publish-flutter.yml` | `flutter pub publish` to pub.dev (dry-run by default) | `PUB_DEV_CREDENTIALS` — the contents of `~/.config/dart/pub-credentials.json` after `dart pub login` |
 | SwiftUI | `publish-swiftui.yml` | `git subtree split` of `packages/ui-swiftui` → a thin **mirror repo** (SwiftPM can't resolve a package in a monorepo subdirectory) | `SWIFTUI_MIRROR_REPO` — an authenticated push URL, `https://x-access-token:<PAT>@github.com/<you>/<mirror>.git` |
-| Jetpack Compose | *(not wired)* | `gradle publish` to Maven Central needs a Sonatype (OSSRH) account + a GPG signing key in `packages/ui-compose/ui/build.gradle`'s `publishing {}` / `signing {}` — add those, then a `publish-compose.yml` mirroring the other two |
+| Jetpack Compose | `publish-compose.yml` | `gradle publish` to Maven Central via the Central Portal's OSSRH-compatible staging API (dry-run = unsigned `publishToMavenLocal`); the staged deployment is then released by hand at [central.sonatype.com](https://central.sonatype.com) | `MAVEN_CENTRAL_USERNAME` / `MAVEN_CENTRAL_PASSWORD` (a Portal user token) **and** `SIGNING_KEY` / `SIGNING_KEY_PASSWORD` (an ASCII-armored GPG key — `gpg --armor --export-secret-keys`) |
 
 ## Blocks
 

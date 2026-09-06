@@ -271,9 +271,18 @@ proximity to the token source it depends on.
 - **No hover/focus states.** The React `Button`'s CVA `state` axis
   (Hover/Focus/Active) is docs/snapshot tooling on the web, not carried over
   — Material3 gives real press/ripple feedback for free instead.
-- **No remote publishing.** `./gradlew publishToMavenLocal` works; Maven
-  Central / GitHub Packages needs your own signing key and repository
-  credentials, deliberately not configured here.
+- **Remote publishing is wired but credential-gated.**
+  `./gradlew publishToMavenLocal` works unsigned with zero setup.
+  `.github/workflows/publish-compose.yml` (`workflow_dispatch`, dry-run by
+  default) uploads to Maven Central via the Central Portal's
+  OSSRH-compatible staging API — it needs `MAVEN_CENTRAL_USERNAME` /
+  `MAVEN_CENTRAL_PASSWORD` (a Portal user token) and `SIGNING_KEY` /
+  `SIGNING_KEY_PASSWORD` (an ASCII-armored GPG key) as repo secrets, and
+  the staged deployment is then released by hand at
+  [central.sonatype.com](https://central.sonatype.com). The `publishing {}`
+  / `signing {}` blocks in `ui/build.gradle.kts` read those from `-P`
+  properties or env vars — nothing sensitive is committed. `groupId`
+  `com.kinetixui`, `artifactId` `ui-compose`.
 - **Overlay components simplify Radix's exact behavior.** `KinetixSheet`
   only has a bottom variant (no left/right/top slide-in — no equally
   idiomatic single Android primitive for those). `KinetixDropdownMenu` has
