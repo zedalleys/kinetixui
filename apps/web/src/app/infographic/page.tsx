@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { Metadata } from "next";
 import tokens from "@kinetixui/tokens";
 import { PipelineInfographic } from "@/components/pipeline-infographic";
@@ -13,20 +15,40 @@ export const metadata: Metadata = {
     "The KinetixUI system drawn to scale — one design source, five outputs, four component libraries, measured.",
 };
 
-/* count token leaves at build time so the number can't drift from the source */
+/* -------- build-time counts: every figure below is derived, not typed -------- */
+
+/* count token leaves so the number can't drift from the source */
 function leafCount(o: unknown): number {
   if (!o || typeof o !== "object") return 1;
   return Object.values(o as Record<string, unknown>).reduce<number>((n, v) => n + leafCount(v), 0);
 }
 const TOKEN_COUNT = leafCount(tokens);
 
+/* count the <Showcase> recipes rendered on /charts by reading its source at build.
+   /infographic is statically rendered, so this runs on the build machine where the
+   file exists; the fallback is only a floor for the (unreached) dynamic path. */
+function chartRecipeCount(): number {
+  try {
+    const src = readFileSync(join(process.cwd(), "src/app/charts/charts-content.tsx"), "utf8");
+    const n = (src.match(/<Showcase\b/g) ?? []).length;
+    return n > 0 ? n : 36;
+  } catch {
+    return 36;
+  }
+}
+const CHART_RECIPES = chartRecipeCount();
+
+/* the four component libraries and the five compiled outputs of the token engine */
+const PLATFORMS = ["React", "SwiftUI", "Compose", "Flutter"] as const;
+const PLATFORM_OUTPUTS = ["Web CSS", "tokens.ts", "SwiftUI", "Compose", "Flutter"] as const;
+
 const STATS = [
   { n: TOKEN_COUNT, label: "design tokens", sub: "primitives + semantic, DTCG" },
   { n: componentDocs.length, label: "React components", sub: `${CATEGORY_ORDER.length} categories` },
-  { n: 36, label: "chart recipes", sub: "Recharts, token-driven" },
-  { n: 5, label: "platform outputs", sub: "web · tokens.ts · SwiftUI · Compose · Flutter" },
+  { n: CHART_RECIPES, label: "chart recipes", sub: "Recharts, token-driven" },
+  { n: PLATFORM_OUTPUTS.length, label: "platform outputs", sub: PLATFORM_OUTPUTS.join(" · ") },
   { n: "100%", label: "WCAG AA", sub: "text pairs, light + dark, CI-gated" },
-  { n: 4, label: "component libraries", sub: "React · SwiftUI · Compose · Flutter" },
+  { n: PLATFORMS.length, label: "component libraries", sub: PLATFORMS.join(" · ") },
 ];
 
 /* oldest → newest, straight from the changelog source so the two never drift */
@@ -43,7 +65,6 @@ const COVERAGE: { row: string; cells: Cell[] }[] = [
   { row: "CI build check", cells: ["full", "full", "full", "full"] },
   { row: "Published package", cells: ["full", "full", "full", "partial"] },
 ];
-const PLATFORMS = ["React", "SwiftUI", "Compose", "Flutter"] as const;
 
 const MARK: Record<Cell, { glyph: string; cls: string; label: string }> = {
   full: { glyph: "●", cls: "text-primary", label: "full" },
