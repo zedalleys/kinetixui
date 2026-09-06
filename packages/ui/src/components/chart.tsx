@@ -35,8 +35,31 @@ const ChartContainer = React.forwardRef<
      * primitive for keyboard data-point navigation.
      */
     label?: string;
+    /**
+     * Render a placeholder in place of the chart. `"loading"` shows a shimmer,
+     * `"empty"` / `"error"` show a message (override with `stateMessage`).
+     */
+    state?: "loading" | "empty" | "error";
+    stateMessage?: string;
+    /**
+     * Visually-hidden `<table>` rendered after the chart so a screen reader can
+     * read the underlying numbers. Pair with a concise `label`.
+     */
+    srTable?: { columns: React.ReactNode[]; rows: React.ReactNode[][] };
   }
->(({ id, className, children, config, label, role, "aria-label": ariaLabel, ...props }, ref) => {
+>(({
+  id,
+  className,
+  children,
+  config,
+  label,
+  state,
+  stateMessage,
+  srTable,
+  role,
+  "aria-label": ariaLabel,
+  ...props
+}, ref) => {
   const uniqueId = React.useId();
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
   const name = ariaLabel ?? label ?? "Chart";
@@ -83,12 +106,93 @@ const ChartContainer = React.forwardRef<
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
-        <RechartsPrimitive.ResponsiveContainer>{children}</RechartsPrimitive.ResponsiveContainer>
+        {state ? (
+          <ChartState state={state} message={stateMessage} />
+        ) : (
+          <RechartsPrimitive.ResponsiveContainer>{children}</RechartsPrimitive.ResponsiveContainer>
+        )}
+        {srTable && !state ? <ChartSrTable {...srTable} /> : null}
       </div>
     </ChartContext.Provider>
   );
 });
 ChartContainer.displayName = "Chart";
+
+const STATE_COPY = {
+  loading: "Loading chart…",
+  empty: "No data to show",
+  error: "Couldn't load this chart",
+} as const;
+
+function ChartState({
+  state,
+  message,
+}: {
+  state: "loading" | "empty" | "error";
+  message?: string;
+}) {
+  return (
+    <div
+      role={state === "error" ? "alert" : "status"}
+      className={cn(
+        "flex h-full w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed p-6 text-center text-xs",
+        state === "error" ? "border-destructive/40 text-destructive" : "border-border text-muted-foreground",
+      )}
+    >
+      {state === "loading" ? (
+        <div aria-hidden className="flex w-full max-w-[220px] items-end justify-between gap-1.5">
+          {[40, 72, 56, 88, 48, 64, 80].map((h, i) => (
+            <span
+              key={i}
+              className="w-full animate-pulse rounded-sm bg-muted"
+              style={{ height: `${h}px`, animationDelay: `${i * 90}ms` }}
+            />
+          ))}
+        </div>
+      ) : (
+        <svg aria-hidden viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.5}>
+          {state === "empty" ? (
+            <path d="M3 3v18h18M7 15l4-4 3 3 5-6" strokeLinecap="round" strokeLinejoin="round" />
+          ) : (
+            <path d="M12 9v4m0 4h.01M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.7 3.86a2 2 0 0 0-3.42 0Z" strokeLinecap="round" strokeLinejoin="round" />
+          )}
+        </svg>
+      )}
+      <span>{message ?? STATE_COPY[state]}</span>
+    </div>
+  );
+}
+
+function ChartSrTable({
+  columns,
+  rows,
+}: {
+  columns: React.ReactNode[];
+  rows: React.ReactNode[][];
+}) {
+  return (
+    <table className="sr-only">
+      <thead>
+        <tr>
+          {columns.map((c, i) => (
+            <th key={i} scope="col">
+              {c}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r, i) => (
+          <tr key={i}>
+            {r.map((cell, j) => (
+              <td key={j}>{cell}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(([, c]) => c.theme || c.color);

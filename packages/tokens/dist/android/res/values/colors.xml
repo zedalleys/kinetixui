@@ -147,6 +147,9 @@
   <color name="color_chart_3">#ffffbc53</color>
   <color name="color_chart_4">#ffd13a3a</color>
   <color name="color_chart_5">#ffb4a499</color>
+  <color name="color_chart_6">#ff57778d</color>
+  <color name="color_chart_7">#ff9e0808</color>
+  <color name="color_chart_8">#ff465245</color>
   <color name="color_sidebar">#fffafafa</color>
   <color name="color_sidebar_foreground">#ff050c11</color>
   <color name="color_sidebar_primary">#ff1b3c53</color>

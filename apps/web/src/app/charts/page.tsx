@@ -21,19 +21,20 @@ export default function ChartsPage() {
         >
           Recharts
         </a>{" "}
-        and drives colour from the five <code className="text-foreground">--chart-1…5</code> tokens,
-        so a chart re-themes with the rest of the system. Twenty-two recipes below — bar (grouped,
-        stacked, horizontal), line, step, area, sparkline, composed, pie, donut, radial bar, radar,
-        scatter, plus KPI tiles, funnel, gauge, treemap, waterfall, bullet, histogram, heatmap and
-        reference lines / bands. Copy one and swap the data.{" "}
+        and drives colour from the <code className="text-foreground">--chart-1…8</code> tokens, so a
+        chart re-themes with the rest of the system. Thirty-six recipes below — the cartesian and
+        radial staples, plus KPI tiles, funnel, gauge, treemap, waterfall, bullet, histogram, two
+        heatmaps, sankey, candlestick, box plot, bump, dumbbell, 100%-stacked area, a brush/zoom
+        range, an interactive legend, pattern fills, number formatting, and loading / empty / error
+        states. Copy one and swap the data.{" "}
         <code className="text-foreground">npx @kinetixui/cli add chart</code>. The native ports carry
         the common types too — SwiftUI over the system{" "}
         <code className="text-foreground">Charts</code> framework, Flutter as a hand-drawn bar chart.{" "}
-        For accessibility, Cartesian recipes pass{" "}
+        For accessibility, cartesian recipes pass{" "}
         <code className="text-foreground">accessibilityLayer</code> for keyboard data-point
         navigation, and <code className="text-foreground">ChartContainer</code> takes a{" "}
-        <code className="text-foreground">label</code> — a one-line text alternative screen readers
-        announce in place of the SVG (it defaults to &ldquo;Chart&rdquo;).
+        <code className="text-foreground">label</code> text alternative plus an optional{" "}
+        <code className="text-foreground">srTable</code> of the raw numbers.
       </p>
       <ChartsContent />
     </div>

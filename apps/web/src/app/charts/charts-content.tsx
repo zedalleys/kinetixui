@@ -7,6 +7,7 @@ import {
   AreaChart,
   Bar,
   BarChart,
+  Brush,
   CartesianGrid,
   Cell,
   ComposedChart,
@@ -24,6 +25,7 @@ import {
   RadarChart,
   RadialBar,
   RadialBarChart,
+  Sankey,
   ReferenceArea,
   ReferenceLine,
   Scatter,
@@ -169,6 +171,115 @@ const heat = heatDays.map((day, r) =>
   heatCols.map((_, c) => Math.round(20 + 80 * Math.abs(Math.sin((r + 1) * (c + 1) * 0.7)))),
 );
 const heatMax = Math.max(...heat.flat());
+
+/* ---- data for the deep-cut recipes ---------------------------------- */
+const share = [
+  { month: "Jan", web: 60, ios: 25, android: 15 },
+  { month: "Feb", web: 55, ios: 28, android: 17 },
+  { month: "Mar", web: 52, ios: 30, android: 18 },
+  { month: "Apr", web: 48, ios: 32, android: 20 },
+  { month: "May", web: 45, ios: 33, android: 22 },
+  { month: "Jun", web: 42, ios: 35, android: 23 },
+];
+
+const long = Array.from({ length: 40 }, (_, i) => ({
+  d: `D${i + 1}`,
+  v: Math.round(120 + 60 * Math.sin(i / 3) + (i % 7) * 8),
+}));
+
+const sankeyData = {
+  nodes: [
+    { name: "DTCG source" },
+    { name: "Style Dictionary" },
+    { name: "Web CSS" },
+    { name: "tokens.ts" },
+    { name: "SwiftUI" },
+    { name: "Compose" },
+    { name: "Flutter" },
+    { name: "72 components" },
+  ],
+  links: [
+    { source: 0, target: 1, value: 20 },
+    { source: 1, target: 2, value: 8 },
+    { source: 1, target: 3, value: 3 },
+    { source: 1, target: 4, value: 3 },
+    { source: 1, target: 5, value: 3 },
+    { source: 1, target: 6, value: 3 },
+    { source: 2, target: 7, value: 8 },
+    { source: 3, target: 7, value: 3 },
+  ],
+};
+
+// candlestick: wick = [low, high], body = [min(open,close), max(open,close)]
+const ohlcRaw = [
+  { day: "Mon", open: 42, close: 48, low: 40, high: 50 },
+  { day: "Tue", open: 48, close: 45, low: 43, high: 49 },
+  { day: "Wed", open: 45, close: 52, low: 44, high: 54 },
+  { day: "Thu", open: 52, close: 51, low: 49, high: 55 },
+  { day: "Fri", open: 51, close: 58, low: 50, high: 60 },
+];
+const ohlc = ohlcRaw.map((d) => ({
+  day: d.day,
+  wick: [d.low, d.high] as [number, number],
+  body: [Math.min(d.open, d.close), Math.max(d.open, d.close)] as [number, number],
+  up: d.close >= d.open,
+}));
+
+// box plot: whisker = [min, max], box = [q1, q3], plus median dot
+const boxes = [
+  { group: "v0.2", min: 30, q1: 42, median: 55, q3: 68, max: 82 },
+  { group: "v0.3", min: 28, q1: 40, median: 50, q3: 62, max: 78 },
+  { group: "v0.4", min: 24, q1: 36, median: 44, q3: 54, max: 70 },
+].map((b) => ({ ...b, whisker: [b.min, b.max] as [number, number], iqr: [b.q1, b.q3] as [number, number] }));
+
+// bump / rank: lower rank number = better; Y axis is reversed
+const rank = [
+  { q: "Q1", react: 1, vue: 2, svelte: 4, solid: 3 },
+  { q: "Q2", react: 1, vue: 3, svelte: 2, solid: 4 },
+  { q: "Q3", react: 2, vue: 3, svelte: 1, solid: 4 },
+  { q: "Q4", react: 1, vue: 2, svelte: 3, solid: 4 },
+];
+
+// dumbbell: one row per team, a value at the start and end of the period
+const dumbbell = [
+  { team: "Design", start: 40, end: 72 },
+  { team: "Frontend", start: 55, end: 88 },
+  { team: "Backend", start: 60, end: 70 },
+  { team: "Docs", start: 30, end: 64 },
+  { team: "QA", start: 48, end: 80 },
+];
+
+// calendar heatmap: 53 weeks x 7 days of a "commits" count
+const calWeeks = 26;
+const calendar = Array.from({ length: calWeeks * 7 }, (_, i) =>
+  Math.max(0, Math.round(4 * Math.sin(i / 9) + (i % 5) - 1 + (i % 13 === 0 ? 6 : 0))),
+);
+const calMax = Math.max(...calendar);
+
+const eightConfig = {
+  a: { label: "Alpha", color: "hsl(var(--chart-1))" },
+  b: { label: "Bravo", color: "hsl(var(--chart-2))" },
+  c: { label: "Charlie", color: "hsl(var(--chart-3))" },
+  d: { label: "Delta", color: "hsl(var(--chart-4))" },
+  e: { label: "Echo", color: "hsl(var(--chart-5))" },
+  f: { label: "Foxtrot", color: "hsl(var(--chart-6))" },
+  g: { label: "Golf", color: "hsl(var(--chart-7))" },
+  h: { label: "Hotel", color: "hsl(var(--chart-8))" },
+} satisfies ChartConfig;
+const eight = ["W1", "W2", "W3", "W4", "W5", "W6"].map((w, i) => ({
+  w,
+  a: 20 + i * 3,
+  b: 30 - i * 2,
+  c: 15 + (i % 3) * 6,
+  d: 22 + i,
+  e: 18 + ((i * 2) % 7),
+  f: 26 - i,
+  g: 12 + i * 2,
+  h: 24 + ((i * 3) % 5),
+}));
+
+const nf = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
+const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 export function ChartsContent() {
   return (
@@ -933,6 +1044,585 @@ export function ChartsContent() {
           </div>
         </div>
       </Showcase>
+
+      {/* ---- deep cuts -------------------------------------------------- */}
+
+      <Showcase
+        title="100% stacked area"
+        description="Share of total over time — AreaChart with an expand stack offset."
+        contentClassName="block p-4"
+        code={`<ChartContainer config={config} className="min-h-[260px] w-full">
+  <AreaChart accessibilityLayer data={share} stackOffset="expand" margin={{ left: 12, right: 12 }}>
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+    <YAxis tickFormatter={(v) => \`\${Math.round(v * 100)}%\`} tickLine={false} axisLine={false} width={38} />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    {["web", "ios", "android"].map((k, i) => (
+      <Area key={k} dataKey={k} stackId="s" type="monotone"
+        stroke={\`hsl(var(--chart-\${i + 1}))\`} fill={\`hsl(var(--chart-\${i + 1}))\`} fillOpacity={0.35} isAnimationActive={false} />
+    ))}
+  </AreaChart>
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={{ web: { label: "Web", color: "hsl(var(--chart-1))" }, ios: { label: "iOS", color: "hsl(var(--chart-2))" }, android: { label: "Android", color: "hsl(var(--chart-3))" } } satisfies ChartConfig}
+          className={box}
+          label="Platform share of sessions, Jan–Jun — web falls from 60% to 42% as iOS and Android grow."
+        >
+          <AreaChart accessibilityLayer data={share} stackOffset="expand" margin={{ left: 12, right: 12 }}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+            <YAxis tickFormatter={(v) => `${Math.round(v * 100)}%`} tickLine={false} axisLine={false} width={38} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            {(["web", "ios", "android"] as const).map((k, i) => (
+              <Area
+                key={k}
+                dataKey={k}
+                stackId="s"
+                type="monotone"
+                stroke={`hsl(var(--chart-${i + 1}))`}
+                fill={`hsl(var(--chart-${i + 1}))`}
+                fillOpacity={0.35}
+                isAnimationActive={false}
+              />
+            ))}
+          </AreaChart>
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Brush + zoom"
+        description="A long series with a draggable range selector underneath."
+        contentClassName="block p-4"
+        code={`<ChartContainer config={config} className="min-h-[280px] w-full">
+  <LineChart accessibilityLayer data={long} margin={{ left: 8, right: 8 }}>
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="d" tickLine={false} axisLine={false} minTickGap={24} />
+    <YAxis tickLine={false} axisLine={false} width={32} tickFormatter={(v) => nf.format(v)} />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <Line dataKey="v" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} isAnimationActive={false} />
+    <Brush dataKey="d" height={22} travellerWidth={8} stroke="hsl(var(--chart-1))"
+      fill="hsl(var(--muted))" startIndex={8} endIndex={28} />
+  </LineChart>
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={{ v: { label: "Requests", color: "hsl(var(--chart-1))" } } satisfies ChartConfig}
+          className="h-[300px] w-full"
+          label="40 days of request volume; drag the range selector below the chart to zoom the axis."
+        >
+          <LineChart accessibilityLayer data={long} margin={{ left: 8, right: 8 }}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="d" tickLine={false} axisLine={false} minTickGap={24} />
+            <YAxis tickLine={false} axisLine={false} width={32} tickFormatter={(v) => nf.format(v)} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Line dataKey="v" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} isAnimationActive={false} />
+            <Brush
+              dataKey="d"
+              height={22}
+              travellerWidth={8}
+              stroke="hsl(var(--chart-1))"
+              fill="hsl(var(--muted))"
+              startIndex={8}
+              endIndex={28}
+            />
+          </LineChart>
+        </ChartContainer>
+      </Showcase>
+
+      <InteractiveLegendChart />
+
+      <Showcase
+        title="Pattern fills"
+        description="Texture, not just hue — SVG <pattern> defs so stacked series stay distinct for colour-blind readers."
+        contentClassName="block p-4"
+        code={`<svg width="0" height="0" className="absolute">
+  <defs>
+    <pattern id="p-diag" width={6} height={6} patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <rect width={6} height={6} fill="hsl(var(--chart-2))" />
+      <line x1={0} y1={0} x2={0} y2={6} stroke="hsl(var(--background))" strokeWidth={2} />
+    </pattern>
+    <pattern id="p-dot" width={6} height={6} patternUnits="userSpaceOnUse">
+      <rect width={6} height={6} fill="hsl(var(--chart-3))" />
+      <circle cx={3} cy={3} r={1.2} fill="hsl(var(--background))" />
+    </pattern>
+  </defs>
+</svg>
+// then: <Bar dataKey="mobile" fill="url(#p-diag)" /> etc.`}
+      >
+        <div className="w-full">
+          <svg width="0" height="0" className="absolute">
+            <defs>
+              <pattern
+                id="p-diag"
+                width={6}
+                height={6}
+                patternTransform="rotate(45)"
+                patternUnits="userSpaceOnUse"
+              >
+                <rect width={6} height={6} fill="hsl(var(--chart-2))" />
+                <line x1={0} y1={0} x2={0} y2={6} stroke="hsl(var(--background))" strokeWidth={2} />
+              </pattern>
+              <pattern id="p-dot" width={6} height={6} patternUnits="userSpaceOnUse">
+                <rect width={6} height={6} fill="hsl(var(--chart-3))" />
+                <circle cx={3} cy={3} r={1.2} fill="hsl(var(--background))" />
+              </pattern>
+            </defs>
+          </svg>
+          <ChartContainer
+            config={{ desktop: { label: "Desktop" }, mobile: { label: "Mobile" }, tablet: { label: "Tablet" } } satisfies ChartConfig}
+            className={box}
+            label="Sessions by device with textured fills — solid, diagonal hatch, and dots — so the stack reads without colour."
+          >
+            <BarChart accessibilityLayer data={months.map((m) => ({ ...m, tablet: 60 }))}>
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="desktop" stackId="p" fill="hsl(var(--chart-1))" isAnimationActive={false} />
+              <Bar dataKey="mobile" stackId="p" fill="url(#p-diag)" isAnimationActive={false} />
+              <Bar dataKey="tablet" stackId="p" fill="url(#p-dot)" radius={[2, 2, 0, 0]} isAnimationActive={false} />
+            </BarChart>
+          </ChartContainer>
+        </div>
+      </Showcase>
+
+      <Showcase
+        title="Sankey"
+        description="Flow between nodes — here the token pipeline: source → compiler → outputs → components."
+        contentClassName="block p-4"
+        code={`<ChartContainer config={{}} className="min-h-[300px] w-full">
+  <Sankey data={data} nodePadding={24} linkCurvature={0.5}
+    node={{ fill: "hsl(var(--chart-1))" }} link={{ stroke: "hsl(var(--chart-1))" }} />
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={{} satisfies ChartConfig}
+          className="h-[320px] w-full"
+          label="Token flow — one DTCG source through Style Dictionary into five outputs, converging on the 72 components."
+        >
+          <Sankey
+            data={sankeyData}
+            nodePadding={22}
+            linkCurvature={0.5}
+            node={{ fill: "hsl(var(--chart-1))" }}
+            link={{ stroke: "hsl(var(--chart-1))", strokeOpacity: 0.25 }}
+          >
+            <ChartTooltip content={<ChartTooltipContent />} />
+          </Sankey>
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Candlestick / OHLC"
+        description="Open-high-low-close ranges — a thin wick bar plus a body bar, coloured by direction."
+        contentClassName="block p-4"
+        code={`// data: { day, wick: [low, high], body: [min(open,close), max(open,close)], up }
+<ChartContainer config={config} className="min-h-[260px] w-full">
+  <ComposedChart accessibilityLayer data={ohlc}>
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="day" tickLine={false} axisLine={false} />
+    <YAxis domain={["dataMin - 4", "dataMax + 4"]} tickLine={false} axisLine={false} width={32} />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <Bar dataKey="wick" barSize={2} isAnimationActive={false}>
+      {ohlc.map((d, i) => <Cell key={i} fill={d.up ? "hsl(var(--chart-2))" : "hsl(var(--chart-4))"} />)}
+    </Bar>
+    <Bar dataKey="body" barSize={12} isAnimationActive={false}>
+      {ohlc.map((d, i) => <Cell key={i} fill={d.up ? "hsl(var(--chart-2))" : "hsl(var(--chart-4))"} />)}
+    </Bar>
+  </ComposedChart>
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={{ body: { label: "O/C range" }, wick: { label: "H/L range" } } satisfies ChartConfig}
+          className={box}
+          label="Five sessions of OHLC — closes above opens on three of five days; Friday is the strongest."
+        >
+          <ComposedChart accessibilityLayer data={ohlc}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="day" tickLine={false} axisLine={false} />
+            <YAxis domain={["dataMin - 4", "dataMax + 4"]} tickLine={false} axisLine={false} width={32} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="wick" barSize={2} isAnimationActive={false}>
+              {ohlc.map((d, i) => (
+                <Cell key={i} fill={d.up ? "hsl(var(--chart-2))" : "hsl(var(--chart-4))"} />
+              ))}
+            </Bar>
+            <Bar dataKey="body" barSize={12} radius={1} isAnimationActive={false}>
+              {ohlc.map((d, i) => (
+                <Cell key={i} fill={d.up ? "hsl(var(--chart-2))" : "hsl(var(--chart-4))"} />
+              ))}
+            </Bar>
+          </ComposedChart>
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Box plot"
+        description="Distribution per group — whisker bar (min–max), IQR box (q1–q3), median dot."
+        contentClassName="block p-4"
+        code={`// data: { group, whisker: [min, max], iqr: [q1, q3], median }
+<ChartContainer config={config} className="min-h-[260px] w-full">
+  <ComposedChart accessibilityLayer data={boxes}>
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="group" tickLine={false} axisLine={false} />
+    <YAxis tickLine={false} axisLine={false} width={32} />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <Bar dataKey="whisker" barSize={2} fill="hsl(var(--muted-foreground))" isAnimationActive={false} />
+    <Bar dataKey="iqr" barSize={28} fill="hsl(var(--chart-1))" fillOpacity={0.35}
+      stroke="hsl(var(--chart-1))" isAnimationActive={false} />
+    <Scatter dataKey="median" fill="hsl(var(--foreground))" shape="diamond" />
+  </ComposedChart>
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={{ iqr: { label: "IQR" }, whisker: { label: "min–max" }, median: { label: "median" } } satisfies ChartConfig}
+          className={box}
+          label="Latency distribution across three releases — median and spread both fall from v0.2 to v0.4."
+        >
+          <ComposedChart accessibilityLayer data={boxes}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="group" tickLine={false} axisLine={false} />
+            <YAxis tickLine={false} axisLine={false} width={32} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="whisker" barSize={2} fill="hsl(var(--muted-foreground))" isAnimationActive={false} />
+            <Bar
+              dataKey="iqr"
+              barSize={28}
+              fill="hsl(var(--chart-1))"
+              fillOpacity={0.35}
+              stroke="hsl(var(--chart-1))"
+              isAnimationActive={false}
+            />
+            <Scatter dataKey="median" fill="hsl(var(--foreground))" shape="diamond" />
+          </ComposedChart>
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Bump / rank"
+        description="Ranking over time — Y axis reversed so #1 sits on top."
+        contentClassName="block p-4"
+        code={`<ChartContainer config={config} className="min-h-[260px] w-full">
+  <LineChart accessibilityLayer data={rank} margin={{ left: 8, right: 8 }}>
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="q" tickLine={false} axisLine={false} />
+    <YAxis reversed domain={[1, 4]} ticks={[1, 2, 3, 4]} tickLine={false} axisLine={false} width={24} />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    {["react", "vue", "svelte", "solid"].map((k, i) => (
+      <Line key={k} dataKey={k} stroke={\`hsl(var(--chart-\${i + 1}))\`} strokeWidth={2}
+        dot={{ r: 4 }} isAnimationActive={false} />
+    ))}
+  </LineChart>
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={{ react: { label: "React", color: "hsl(var(--chart-1))" }, vue: { label: "Vue", color: "hsl(var(--chart-2))" }, svelte: { label: "Svelte", color: "hsl(var(--chart-3))" }, solid: { label: "Solid", color: "hsl(var(--chart-4))" } } satisfies ChartConfig}
+          className={box}
+          label="Framework rank by quarter — React holds #1 most quarters; Svelte tops Q3."
+        >
+          <LineChart accessibilityLayer data={rank} margin={{ left: 8, right: 8 }}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="q" tickLine={false} axisLine={false} />
+            <YAxis reversed domain={[1, 4]} ticks={[1, 2, 3, 4]} tickLine={false} axisLine={false} width={24} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            {(["react", "vue", "svelte", "solid"] as const).map((k, i) => (
+              <Line
+                key={k}
+                dataKey={k}
+                stroke={`hsl(var(--chart-${i + 1}))`}
+                strokeWidth={2}
+                dot={{ r: 4 }}
+                isAnimationActive={false}
+              />
+            ))}
+          </LineChart>
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Dumbbell"
+        description="Two points per row with a connector — before vs after, min vs max."
+        contentClassName="block p-4"
+        code={`<ChartContainer config={config} className="min-h-[240px] w-full">
+  <ComposedChart layout="vertical" data={dumbbell} margin={{ left: 16, right: 16 }}>
+    <CartesianGrid horizontal={false} />
+    <XAxis type="number" domain={[0, 100]} tickLine={false} axisLine={false} />
+    <YAxis type="category" dataKey="team" tickLine={false} axisLine={false} width={72} />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <Bar dataKey={(d) => [d.start, d.end]} barSize={3} fill="hsl(var(--border))" isAnimationActive={false} />
+    <Scatter dataKey="start" fill="hsl(var(--muted-foreground))" />
+    <Scatter dataKey="end" fill="hsl(var(--chart-1))" />
+  </ComposedChart>
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={{ start: { label: "Start" }, end: { label: "End" } } satisfies ChartConfig}
+          className="h-[260px] w-full"
+          label="Adoption score by team, start vs end of quarter — every team rose, Docs the most."
+        >
+          <ComposedChart layout="vertical" data={dumbbell} margin={{ left: 16, right: 16 }}>
+            <CartesianGrid horizontal={false} />
+            <XAxis type="number" domain={[0, 100]} tickLine={false} axisLine={false} />
+            <YAxis type="category" dataKey="team" tickLine={false} axisLine={false} width={72} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar
+              dataKey={(d: (typeof dumbbell)[number]) => [d.start, d.end]}
+              barSize={3}
+              fill="hsl(var(--border))"
+              isAnimationActive={false}
+            />
+            <Scatter dataKey="start" fill="hsl(var(--muted-foreground))" />
+            <Scatter dataKey="end" fill="hsl(var(--chart-1))" />
+          </ComposedChart>
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Eight series"
+        description="The full --chart-1…8 categorical ramp on one stacked bar."
+        contentClassName="block p-4"
+        code={`// tokens: --chart-1 … --chart-8 (added in this release)
+<ChartContainer config={eightConfig} className="min-h-[260px] w-full">
+  <BarChart accessibilityLayer data={eight}>
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="w" tickLine={false} axisLine={false} />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    {"abcdefgh".split("").map((k, i) => (
+      <Bar key={k} dataKey={k} stackId="e" fill={\`hsl(var(--chart-\${i + 1}))\`} isAnimationActive={false} />
+    ))}
+  </BarChart>
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={eightConfig}
+          className={box}
+          label="Eight categories stacked per week, one per --chart token, to show the full ramp stays distinguishable."
+        >
+          <BarChart accessibilityLayer data={eight}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="w" tickLine={false} axisLine={false} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            {"abcdefgh".split("").map((k, i) => (
+              <Bar
+                key={k}
+                dataKey={k}
+                stackId="e"
+                fill={`hsl(var(--chart-${i + 1}))`}
+                radius={i === 7 ? [2, 2, 0, 0] : 0}
+                isAnimationActive={false}
+              />
+            ))}
+          </BarChart>
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Number formatting"
+        description="Axis and tooltip formatters — compact, currency, percent — via Intl.NumberFormat."
+        contentClassName="block p-4"
+        code={`const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
+
+<YAxis tickFormatter={(v) => usd.format(v)} />
+<ChartTooltip content={<ChartTooltipContent formatter={(v) => usd.format(Number(v))} />} />`}
+      >
+        <ChartContainer
+          config={{ desktop: { label: "Revenue", color: "hsl(var(--chart-1))" } } satisfies ChartConfig}
+          className={box}
+          label="Monthly revenue with a currency-formatted axis, Jan–Jun."
+        >
+          <BarChart accessibilityLayer data={months.map((m) => ({ ...m, desktop: m.desktop * 37 }))}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+            <YAxis
+              tickFormatter={(v) => usd.format(v)}
+              tickLine={false}
+              axisLine={false}
+              width={64}
+            />
+            <ChartTooltip
+              content={<ChartTooltipContent formatter={(v) => usd.format(Number(v))} />}
+            />
+            <Bar dataKey="desktop" fill="hsl(var(--chart-1))" radius={4} isAnimationActive={false} />
+          </BarChart>
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Loading / empty / error"
+        description="ChartContainer state prop — a shimmer, a message, or an alert in place of the chart."
+        contentClassName="block p-4"
+        code={`<ChartContainer config={config} state="loading" className="min-h-[180px] w-full" label="…" />
+<ChartContainer config={config} state="empty"   className="min-h-[180px] w-full" label="…" />
+<ChartContainer config={config} state="error"   stateMessage="Metrics API timed out" className="min-h-[180px] w-full" label="…" />`}
+      >
+        <div className="grid w-full gap-3 sm:grid-cols-3">
+          {(["loading", "empty", "error"] as const).map((s) => (
+            <ChartContainer
+              key={s}
+              config={{} satisfies ChartConfig}
+              state={s}
+              stateMessage={s === "error" ? "Metrics API timed out" : undefined}
+              className="h-[180px] w-full"
+              label={`Chart in the ${s} state`}
+            >
+              <BarChart data={[]} />
+            </ChartContainer>
+          ))}
+        </div>
+      </Showcase>
+
+      <Showcase
+        title="SR data table"
+        description="A visually-hidden <table> of the numbers for screen readers — pass srTable to ChartContainer."
+        contentClassName="block p-4"
+        code={`<ChartContainer
+  config={pairConfig}
+  label="Desktop vs mobile visits, Jan–Jun."
+  srTable={{
+    columns: ["Month", "Desktop", "Mobile"],
+    rows: months.map((m) => [m.month, m.desktop, m.mobile]),
+  }}
+  className="min-h-[260px] w-full"
+>
+  <BarChart accessibilityLayer data={months}>…</BarChart>
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={pairConfig}
+          className={box}
+          label="Desktop vs mobile visits, Jan–Jun — a screen reader also gets the numbers as a table."
+          srTable={{
+            columns: ["Month", "Desktop", "Mobile"],
+            rows: months.map((m) => [m.month, m.desktop, m.mobile]),
+          }}
+        >
+          <BarChart accessibilityLayer data={months}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} isAnimationActive={false} />
+            <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} isAnimationActive={false} />
+          </BarChart>
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Calendar heatmap"
+        description="Contribution-graph grid — 26 weeks × 7 days, tinted by count. Pure CSS grid, no Recharts."
+        contentClassName="block p-4"
+        code={`<div className="grid grid-flow-col grid-rows-7 gap-1" style={{ width: "max-content" }}>
+  {calendar.map((v, i) => (
+    <div key={i} className="size-3 rounded-[2px]"
+      style={{ background: v === 0 ? "hsl(var(--muted))"
+        : \`color-mix(in srgb, hsl(var(--chart-2)) \${20 + (v / calMax) * 80}%, transparent)\` }} />
+  ))}
+</div>`}
+      >
+        <div
+          className="overflow-x-auto"
+          role="img"
+          aria-label="Commit calendar, 26 weeks — activity clusters at the start of each month."
+        >
+          <div
+            className="grid grid-flow-col grid-rows-7 gap-1"
+            style={{ width: "max-content" }}
+          >
+            {calendar.map((v, i) => (
+              <div
+                key={i}
+                className="size-3 rounded-[2px] border border-border/40"
+                title={`Week ${Math.floor(i / 7) + 1}, day ${(i % 7) + 1} — ${v} commits`}
+                style={{
+                  background:
+                    v === 0
+                      ? "hsl(var(--muted))"
+                      : `color-mix(in srgb, hsl(var(--chart-2)) ${Math.round(20 + (v / calMax) * 80)}%, transparent)`,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </Showcase>
     </div>
+  );
+}
+
+/** Legend items toggle their series on click (aria-pressed). */
+function InteractiveLegendChart() {
+  const [hidden, setHidden] = React.useState<Record<string, boolean>>({});
+  const series = [
+    { key: "desktop", label: "Desktop", color: "hsl(var(--chart-1))" },
+    { key: "mobile", label: "Mobile", color: "hsl(var(--chart-2))" },
+  ];
+  return (
+    <Showcase
+      title="Interactive legend"
+      description="Click a legend entry to mute or restore its series — state lives in the page, the legend is buttons."
+      contentClassName="block p-4"
+      code={`const [hidden, setHidden] = React.useState({})
+// …
+<div role="group" aria-label="Toggle series">
+  {series.map((s) => (
+    <button key={s.key} type="button" aria-pressed={!hidden[s.key]}
+      onClick={() => setHidden((h) => ({ ...h, [s.key]: !h[s.key] }))}>
+      <span style={{ background: s.color }} /> {s.label}
+    </button>
+  ))}
+</div>
+<BarChart data={months}>
+  {series.map((s) => <Bar key={s.key} dataKey={s.key} hide={hidden[s.key]} fill={s.color} />)}
+</BarChart>`}
+    >
+      <div className="w-full">
+        <div role="group" aria-label="Toggle series" className="mb-3 flex flex-wrap justify-center gap-2">
+          {series.map((s) => {
+            const on = !hidden[s.key];
+            return (
+              <button
+                key={s.key}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setHidden((h) => ({ ...h, [s.key]: !h[s.key] }))}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  on ? "border-border text-foreground" : "border-border/50 text-muted-foreground line-through",
+                )}
+              >
+                <span
+                  aria-hidden
+                  className="size-2 rounded-[2px]"
+                  style={{ background: s.color, opacity: on ? 1 : 0.3 }}
+                />
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
+        <ChartContainer
+          config={{ desktop: { label: "Desktop", color: "hsl(var(--chart-1))" }, mobile: { label: "Mobile", color: "hsl(var(--chart-2))" } } satisfies ChartConfig}
+          className={box}
+          label="Desktop vs mobile visits — toggle either series with the buttons above the chart."
+        >
+          <BarChart accessibilityLayer data={months}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            {series.map((s) => (
+              <Bar
+                key={s.key}
+                dataKey={s.key}
+                hide={hidden[s.key]}
+                fill={s.color}
+                radius={4}
+                isAnimationActive={false}
+              />
+            ))}
+          </BarChart>
+        </ChartContainer>
+      </div>
+    </Showcase>
   );
 }
