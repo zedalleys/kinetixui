@@ -5,6 +5,7 @@ import { SectionHead } from "@/components/section-head";
 import { WorldMap } from "@/components/infographic/world-map";
 import { RegistryTreemap } from "@/components/infographic/registry-treemap";
 import { componentDocs, CATEGORY_ORDER } from "@/lib/site";
+import { RELEASES } from "@/lib/releases";
 
 export const metadata: Metadata = {
   title: "Infographic",
@@ -28,16 +29,10 @@ const STATS = [
   { n: 4, label: "component libraries", sub: "React · SwiftUI · Compose · Flutter" },
 ];
 
-const TIMELINE = [
-  { v: "0.3.0", note: "First public registry — 60-odd components, the token contract, dark mode." },
-  { v: "0.3.1", note: "CLI hardening; registry schema settled." },
-  { v: "0.4.0", note: "72 components, SwiftUI + Compose + Flutter ports, type scale wired everywhere." },
-  { v: "0.4.1", note: "Light --destructive to WCAG AA; repo moved to github.com/zedalleys." },
-  {
-    v: "0.4.2",
-    note: "Dark focus-ring token set, --warning to AA, NumberInput / chart / mobile-nav a11y, --chart-6…8.",
-  },
-];
+/* oldest → newest, straight from the changelog source so the two never drift */
+const TIMELINE = [...RELEASES]
+  .reverse()
+  .map((r) => ({ v: r.version, note: r.summary }));
 
 type Cell = "full" | "partial" | "none";
 const COVERAGE: { row: string; cells: Cell[] }[] = [
