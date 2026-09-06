@@ -151,6 +151,8 @@ overlays and disclosures. Overlay widgets (`KinetixDialog`,
 - **`KinetixChart` is bar-only** — a hand-drawn `CustomPaint` over the
   `--chart-1…5` palette (the package takes no charting dependency). Line
   / area kinds are a follow-up.
-- **No type-scale API yet.** Widgets use raw font sizes from the Figma
-  type scale; a `kinetixTextStyle(context, KinetixType.labelMd)` reading
-  `app_text.dart` is a follow-up.
+- **Type scale is wired.** The widgets' text uses
+  `AppText.<style>.copyWith(color: …)` from the vendored `app_text.dart`
+  (`KinetixType` is a `typedef` alias); the scale is exported for your own
+  text. A handful of 13px small-captions stay literal (no 13px step on
+  the M3 scale).

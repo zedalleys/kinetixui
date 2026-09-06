@@ -149,8 +149,11 @@ are placed in an `.overlay { }` or a top-level `ZStack` and driven by an
   `Charts` framework), so those use the system look, not a hand-built one
   (a documented gap, same call as the Compose Material3 wraps).
   `KinetixCalendar` is single-date only, no range select.
-- **No type-scale modifier yet.** Views use raw sizes from the Figma type
-  scale; a real `.kinetixFont(.labelMd)` reading `KinetixType.swift` is a
-  follow-up.
+- **Type scale is wired.** `Font.kinetixBody` / `.kinetixLabelMd` /
+  `.kinetixTitleMd` … (`TypeScale.swift`, from the vendored
+  `KinetixType.swift`) back the components' `.font(…)`; `KinetixTextStyle`
+  + `KinetixType.<style>` are public for your own text. Letter-spacing is
+  still a sibling `.tracking(…)`; a single style-and-tracking modifier is
+  a possible follow-up.
 - **Icons** use SF Symbols (`checkmark`, `chevron.down`, `star.fill`, …)
   rather than the web's lucide set — the closest system equivalent.

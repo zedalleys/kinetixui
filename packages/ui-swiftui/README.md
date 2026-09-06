@@ -119,12 +119,18 @@ The dev environment has no Swift toolchain. `.github/workflows/native-swiftui.ym
 `packages/ui-swiftui/**` + `tokens/**` + `style-dictionary/**`) is the
 sole compiler feedback.
 
+## Type scale
+
+`Sources/KinetixUI/KinetixType.swift` is **generated, vendored** (same
+flow as the colour set — `pnpm build:tokens` then `pnpm vendor:swiftui`).
+`TypeScale.swift` exposes it as named `Font`s — `Font.kinetixBody`,
+`.kinetixLabelMd`, `.kinetixTitleMd`, … — and the component views apply
+those via `.font(…)`. `KinetixTextStyle` + `KinetixType.<style>` are
+public for your own text. Letter-spacing is still a sibling `.tracking(…)`
+on the `Text` (SwiftUI has no single text style that also carries
+tracking) — a combined modifier is a possible follow-up.
+
 ## Not in this pass
 
-- The rest of the ~70-component surface — added in batches (same as the
-  Compose arc). Overlay-class components (dialog, popover, menus) are
-  still to come.
 - A tagged SPM release — needs repo/signing decisions; consume via
   `.package(path:)` for now.
-- A real `.kinetixFont(.labelMd)` type-scale modifier — `KinetixButton`
-  uses raw sizes from the Figma type scale for now.

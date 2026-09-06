@@ -100,9 +100,19 @@ class Demo extends StatelessWidget {
 }
 ```
 
+## Type scale
+
+`lib/src/app_text.dart` is **generated, vendored** (same flow as the
+colour set — `pnpm build:tokens` then `pnpm vendor:flutter`). The widgets
+apply it as `AppText.<style>.copyWith(color: …)`; `lib/src/kinetix_type.dart`
+re-exports it and aliases `KinetixType = AppText`. A handful of 13px
+small-captions stay literal — there's no 13px step on the M3 scale.
+
 ## Verification
 
 The dev environment has no Flutter toolchain.
 `.github/workflows/native-flutter.yml` (`flutter pub get` + `flutter
-analyze`, path-filtered to `packages/ui-flutter/**` + `tokens/**` +
-`style-dictionary/**`) is the sole compiler feedback.
+analyze` + `flutter test`, path-filtered to `packages/ui-flutter/**` +
+`tokens/**` + `style-dictionary/**`) is the sole compiler feedback.
+`flutter analyze` here is fatal on `info`-level lints, not just
+errors/warnings.
