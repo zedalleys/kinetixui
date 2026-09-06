@@ -125,6 +125,9 @@ export function ComponentGallery() {
 
   // debounce the search term into the URL so a filtered view is shareable and
   // Back/Forward restore it, without a history entry per keystroke.
+  const searchRef = React.useRef<HTMLInputElement>(null);
+
+  // debounce the typed term into the URL (shareable, Back/Forward-restorable)
   React.useEffect(() => {
     const id = setTimeout(() => {
       const next = new URLSearchParams(Array.from(params.entries()));
@@ -139,6 +142,26 @@ export function ComponentGallery() {
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
+
+  // keep the input in sync when the URL changes from outside (Back/Forward,
+  // a shared link, "Clear filters") — otherwise the field goes stale.
+  const urlQuery = params.get("q") ?? "";
+  React.useEffect(() => {
+    setQuery((cur) => (cur.trim() === urlQuery.trim() ? cur : urlQuery));
+  }, [urlQuery]);
+
+  // "/" focuses the search from anywhere on the page
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = document.activeElement;
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) return;
+      e.preventDefault();
+      searchRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   const setCat = (cat: string | null) => {
     const next = new URLSearchParams(Array.from(params.entries()));
@@ -185,38 +208,60 @@ export function ComponentGallery() {
       >
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
-            <div className="relative flex-1 sm:max-w-xs">
-              <label htmlFor="component-search" className="sr-only">
-                Filter components by name, primitive or category
-              </label>
+            <label htmlFor="component-search" className="sr-only">
+              Filter components by name, primitive or category
+            </label>
+            <div
+              className={cn(
+                "group/search relative flex h-9 flex-1 items-center gap-2 rounded-md border border-input bg-background px-2.5 sm:max-w-xs",
+                "transition-colors focus-within:border-primary focus-within:shadow-focus",
+              )}
+            >
               <Search
                 aria-hidden
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                className="size-4 shrink-0 text-muted-foreground transition-colors group-focus-within/search:text-primary"
               />
               <input
                 id="component-search"
+                ref={searchRef}
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search components…"
                 className={cn(
-                  "h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm",
-                  "placeholder:text-muted-foreground",
-                  "focus-visible:border-primary focus-visible:shadow-focus focus-visible:outline-none",
+                  "peer h-full w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground",
+                  "[&::-webkit-search-cancel-button]:appearance-none",
                 )}
               />
+              {query ? (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() => {
+                    setQuery("");
+                    searchRef.current?.focus();
+                  }}
+                  className="shrink-0 rounded-sm p-0.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <X aria-hidden className="size-3.5" />
+                </button>
+              ) : (
+                <kbd className="pointer-events-none hidden shrink-0 rounded border border-border px-1 font-mono text-[10px] text-muted-foreground peer-focus:opacity-0 sm:block">
+                  /
+                </kbd>
+              )}
             </div>
             {isFiltered && (
               <button
                 type="button"
                 onClick={clearAll}
                 className={cn(
-                  "inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-sm text-muted-foreground",
+                  "inline-flex h-9 shrink-0 items-center gap-1 rounded-md px-2.5 text-sm text-muted-foreground",
                   "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 )}
               >
                 <X aria-hidden className="size-3.5" />
-                Clear
+                Clear all
               </button>
             )}
           </div>
