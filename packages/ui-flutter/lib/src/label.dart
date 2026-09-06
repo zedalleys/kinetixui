@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/label.tsx` (`text-sm font-medium`).
@@ -16,7 +17,7 @@ class KinetixLabel extends StatelessWidget {
     final c = KinetixTheme.of(context);
     return Text(
       text,
-      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: color ?? c.foreground),
+      style: AppText.labelLg.copyWith(color: color ?? c.foreground),
     );
   }
 }

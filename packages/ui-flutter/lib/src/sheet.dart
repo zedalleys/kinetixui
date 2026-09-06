@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'dialog.dart';
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/sheet.tsx`. Collapsed to **bottom
@@ -59,7 +60,7 @@ class KinetixSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   DefaultTextStyle.merge(
-                    style: TextStyle(color: c.foreground, fontSize: 14),
+                    style: AppText.bodyMd.copyWith(color: c.foreground),
                     child: child,
                   ),
                 ],

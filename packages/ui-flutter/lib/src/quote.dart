@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/quote.tsx`: a blockquote with an
@@ -37,7 +38,7 @@ class KinetixQuote extends StatelessWidget {
                   if (author != null)
                     Text(
                       author!,
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.foreground),
+                      style: AppText.labelLg.copyWith(color: c.foreground),
                     ),
                   if (authorTitle != null)
                     Text(authorTitle!, style: TextStyle(fontSize: 13, color: c.mutedForeground)),

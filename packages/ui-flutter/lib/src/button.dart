@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/button.tsx`'s `buttonVariants` CVA
@@ -42,12 +43,12 @@ class KinetixButton extends StatelessWidget {
     final bool enabled = onPressed != null;
     final bool isLink = variant == KinetixButtonVariant.link;
 
-    // horizontal, vertical, fontSize, letterSpacing — Figma spacing + type scale
-    final (double hPad, double vPad, double fontSize, double tracking) = switch (size) {
-      KinetixButtonSize.sm => (12, 8, 11, 0.5), // spacing/3 + spacing/2 ; Label Small
-      KinetixButtonSize.md => (16, 12, 12, 0.5), // spacing/4 + spacing/3 ; Label Medium
-      KinetixButtonSize.lg => (24, 12, 14, 0.1), // spacing/6 + spacing/3 ; Label Large
-      KinetixButtonSize.icon => (12, 12, 12, 0.5), // spacing/3 all round
+    // horizontal + vertical padding (Figma spacing) + the type-scale style
+    final (double hPad, double vPad, TextStyle textStyle) = switch (size) {
+      KinetixButtonSize.sm => (12, 8, AppText.labelSm), // spacing/3 + spacing/2
+      KinetixButtonSize.md => (16, 12, AppText.labelMd), // spacing/4 + spacing/3
+      KinetixButtonSize.lg => (24, 12, AppText.labelLg), // spacing/6 + spacing/3
+      KinetixButtonSize.icon => (12, 12, AppText.labelMd), // spacing/3 all round
     };
 
     final double radius = switch (corners) {
@@ -113,12 +114,7 @@ class KinetixButton extends StatelessWidget {
             border: borderColor != null ? Border.all(color: borderColor, width: 1) : null,
           ),
           child: DefaultTextStyle.merge(
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w500,
-              letterSpacing: tracking,
-              color: fg,
-            ),
+            style: textStyle.copyWith(color: fg),
             child: IconTheme.merge(
               data: IconThemeData(color: fg, size: 18),
               child: child,

@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 import 'util.dart';
 
@@ -27,7 +28,7 @@ class KinetixCard extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: DefaultTextStyle.merge(
-        style: TextStyle(color: c.cardForeground, fontSize: 14),
+        style: AppText.bodyMd.copyWith(color: c.cardForeground),
         child: child,
       ),
     );
@@ -62,10 +63,11 @@ class KinetixCardTitle extends StatelessWidget {
     final c = KinetixTheme.of(context);
     return Text(
       text,
-      style: TextStyle(
-        fontSize: 16,
+      // titleMd size/family from the token scale; w600 + tight tracking are the
+      // component's own (M3 titleMd is medium / +0.15).
+      style: AppText.titleMd.copyWith(
         fontWeight: FontWeight.w600,
-        letterSpacing: -0.4, // tracking-tight
+        letterSpacing: -0.4,
         color: c.foreground,
       ),
     );
@@ -80,7 +82,7 @@ class KinetixCardDescription extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
-    return Text(text, style: TextStyle(fontSize: 14, color: c.mutedForeground));
+    return Text(text, style: AppText.bodyMd.copyWith(color: c.mutedForeground));
   }
 }
 

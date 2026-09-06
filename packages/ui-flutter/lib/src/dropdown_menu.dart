@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/dropdown-menu.tsx`. Wraps Flutter's
@@ -59,7 +60,7 @@ class KinetixMenuItem extends StatelessWidget {
     return MenuItemButton(
       onPressed: onPressed,
       leadingIcon: icon != null ? Icon(icon, size: 16, color: color) : null,
-      child: Text(label, style: TextStyle(fontSize: 14, color: color)),
+      child: Text(label, style: AppText.bodyMd.copyWith(color: color)),
     );
   }
 }
@@ -86,7 +87,7 @@ class KinetixMenuLabel extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
       child: Text(
         text,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.mutedForeground),
+        style: AppText.labelSm.copyWith(color: c.mutedForeground),
       ),
     );
   }

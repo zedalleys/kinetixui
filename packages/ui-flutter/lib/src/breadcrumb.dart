@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 import 'util.dart';
 
@@ -28,7 +29,7 @@ class KinetixBreadcrumbLink extends StatelessWidget {
     final c = KinetixTheme.of(context);
     return GestureDetector(
       onTap: onTap,
-      child: Text(text, style: TextStyle(fontSize: 14, color: c.mutedForeground)),
+      child: Text(text, style: AppText.bodyMd.copyWith(color: c.mutedForeground)),
     );
   }
 }
@@ -41,7 +42,7 @@ class KinetixBreadcrumbPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
-    return Text(text, style: TextStyle(fontSize: 14, color: c.foreground));
+    return Text(text, style: AppText.bodyMd.copyWith(color: c.foreground));
   }
 }
 

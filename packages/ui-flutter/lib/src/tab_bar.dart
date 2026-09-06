@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/tab-bar.tsx`: a mobile bottom
@@ -84,7 +85,7 @@ class KinetixTabBarItem extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: color)),
+            Text(label, style: AppText.labelSm.copyWith(color: color)),
           ],
         ),
       ),

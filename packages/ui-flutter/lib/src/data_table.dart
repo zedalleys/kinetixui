@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'button.dart';
 import 'table.dart';
+import 'app_text.dart';
 import 'theme.dart';
 
 class KinetixDataColumn<T> {
@@ -101,7 +102,7 @@ class _KinetixDataTableState<T> extends State<KinetixDataTable<T>> {
                   for (final col in widget.columns)
                     KinetixTableCell(
                       width: col.width,
-                      child: Text(col.cell(row), style: TextStyle(fontSize: 14, color: c.foreground)),
+                      child: Text(col.cell(row), style: AppText.bodyMd.copyWith(color: c.foreground)),
                     ),
                 ],
               ),
@@ -147,7 +148,7 @@ class _KinetixDataTableState<T> extends State<KinetixDataTable<T>> {
           children: [
             Text(
               col.header,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.mutedForeground),
+              style: AppText.labelLg.copyWith(color: c.mutedForeground),
             ),
             if (_sortColumn == i) ...[
               const SizedBox(width: 4),

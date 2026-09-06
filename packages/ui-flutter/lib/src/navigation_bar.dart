@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/navigation-bar.tsx`: a mobile top
@@ -44,7 +45,7 @@ class KinetixNavigationBar extends StatelessWidget {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: c.foreground),
+                  style: AppText.titleMd.copyWith(color: c.foreground),
                 ),
                 if (infoText != null)
                   Text(

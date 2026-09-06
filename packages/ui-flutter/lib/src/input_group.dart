@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 enum KinetixInputGroupAddonAlign { start, end }
@@ -59,12 +60,12 @@ class KinetixInputGroupField extends StatelessWidget {
             onChanged: onChanged,
             obscureText: obscureText,
             cursorColor: c.primary,
-            style: TextStyle(fontSize: 14, color: c.foreground),
+            style: AppText.bodyMd.copyWith(color: c.foreground),
             decoration: InputDecoration(
               isCollapsed: true,
               border: InputBorder.none,
               hintText: placeholder,
-              hintStyle: TextStyle(fontSize: 14, color: c.mutedForeground),
+              hintStyle: AppText.bodyMd.copyWith(color: c.mutedForeground),
             ),
           ),
         ),
@@ -84,7 +85,7 @@ class KinetixInputGroupText extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Center(
-        child: Text(text, style: TextStyle(fontSize: 14, color: c.mutedForeground)),
+        child: Text(text, style: AppText.bodyMd.copyWith(color: c.mutedForeground)),
       ),
     );
   }
@@ -139,7 +140,7 @@ class KinetixInputGroupButton extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: c.foreground),
+          style: AppText.labelMd.copyWith(color: c.foreground),
         ),
       ),
     );

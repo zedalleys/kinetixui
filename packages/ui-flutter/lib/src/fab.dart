@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 enum KinetixFabVariant { primary, secondary }
@@ -34,11 +35,7 @@ class KinetixFab extends StatelessWidget {
     final Color fg = variant == KinetixFabVariant.primary ? c.primaryForeground : c.secondaryForeground;
 
     final Widget label = DefaultTextStyle.merge(
-      style: TextStyle(
-        fontSize: size == KinetixFabSize.standard ? 16 : 14,
-        fontWeight: FontWeight.w500,
-        color: fg,
-      ),
+      style: (size == KinetixFabSize.standard ? AppText.titleMd : AppText.labelLg).copyWith(color: fg),
       child: IconTheme.merge(
         data: IconThemeData(color: fg, size: size == KinetixFabSize.standard ? 24 : 20),
         child: child,

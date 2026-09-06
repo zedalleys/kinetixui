@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/number-input.tsx`: a numeric value
@@ -67,7 +68,7 @@ class KinetixNumberInput extends StatelessWidget {
               Container(width: 1, color: c.input),
               Expanded(
                 child: Center(
-                  child: Text('$value', style: TextStyle(fontSize: 14, color: c.foreground)),
+                  child: Text('$value', style: AppText.bodyMd.copyWith(color: c.foreground)),
                 ),
               ),
               Container(width: 1, color: c.input),

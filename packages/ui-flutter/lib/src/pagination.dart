@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 import 'util.dart';
 
@@ -45,11 +46,7 @@ class KinetixPaginationItem extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: isActive ? c.foreground : c.mutedForeground,
-          ),
+          style: AppText.labelLg.copyWith(color: isActive ? c.foreground : c.mutedForeground),
         ),
       ),
     );
@@ -78,7 +75,7 @@ class KinetixPaginationPrevious extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               'Previous',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.foreground),
+              style: AppText.labelLg.copyWith(color: c.foreground),
             ),
           ],
         ),
@@ -107,7 +104,7 @@ class KinetixPaginationNext extends StatelessWidget {
           children: [
             Text(
               'Next',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.foreground),
+              style: AppText.labelLg.copyWith(color: c.foreground),
             ),
             const SizedBox(width: 4),
             Icon(Icons.chevron_right, size: 16, color: c.foreground),

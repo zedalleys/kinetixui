@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/textarea.tsx` — identical to
@@ -70,12 +71,12 @@ class _KinetixTextareaState extends State<KinetixTextarea> {
             minLines: widget.minLines,
             maxLines: null,
             cursorColor: c.primary,
-            style: TextStyle(fontSize: 14, letterSpacing: 0.25, color: c.foreground),
+            style: AppText.bodyMd.copyWith(color: c.foreground),
             decoration: InputDecoration(
               isCollapsed: true,
               border: InputBorder.none,
               hintText: widget.placeholder,
-              hintStyle: TextStyle(fontSize: 14, color: c.mutedForeground),
+              hintStyle: AppText.bodyMd.copyWith(color: c.mutedForeground),
             ),
           ),
         ),

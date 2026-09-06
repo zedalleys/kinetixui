@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/circular-progress.tsx`: a ring,
@@ -46,7 +47,7 @@ class KinetixCircularProgress extends StatelessWidget {
           if (showValue || label != null)
             Text(
               label ?? '${(fraction * 100).round()}%',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: c.foreground),
+              style: AppText.labelMd.copyWith(color: c.foreground),
             ),
         ],
       ),

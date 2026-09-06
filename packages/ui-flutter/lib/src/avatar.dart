@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirror `packages/ui/src/components/avatar.tsx`'s `Avatar` /
@@ -32,7 +33,7 @@ class KinetixAvatarFallback extends StatelessWidget {
     return ColoredBox(
       color: c.muted,
       child: Center(
-        child: Text(text, style: TextStyle(fontSize: 14, color: c.mutedForeground)),
+        child: Text(text, style: AppText.bodyMd.copyWith(color: c.mutedForeground)),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/accordion.tsx`. Expand/collapse
@@ -57,7 +58,7 @@ class KinetixAccordionTrigger extends StatelessWidget {
             Expanded(
               child: Text(
                 text,
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.foreground),
+                style: AppText.labelLg.copyWith(color: c.foreground),
               ),
             ),
             AnimatedRotation(

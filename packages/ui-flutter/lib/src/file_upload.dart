@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 enum KinetixFileStatus { pending, uploading, done, error }
@@ -55,7 +56,7 @@ class KinetixFileUpload extends StatelessWidget {
                 children: [
                   Icon(Icons.upload_file_outlined, size: 28, color: c.mutedForeground),
                   const SizedBox(height: 8),
-                  Text(prompt, style: TextStyle(fontSize: 14, color: c.mutedForeground)),
+                  Text(prompt, style: AppText.bodyMd.copyWith(color: c.mutedForeground)),
                 ],
               ),
             ),
@@ -91,10 +92,10 @@ class KinetixFileUpload extends StatelessWidget {
                         file.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 14, color: c.foreground),
+                        style: AppText.bodyMd.copyWith(color: c.foreground),
                       ),
                       if (file.detail != null)
-                        Text(file.detail!, style: TextStyle(fontSize: 12, color: c.mutedForeground)),
+                        Text(file.detail!, style: AppText.bodySm.copyWith(color: c.mutedForeground)),
                     ],
                   ),
                 ),

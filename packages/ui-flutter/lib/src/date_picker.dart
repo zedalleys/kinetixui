@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 String _fmt(DateTime d) =>
@@ -49,7 +50,7 @@ class KinetixDatePicker extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Text(_fmt(selectedDate), style: TextStyle(fontSize: 14, color: c.foreground)),
+              child: Text(_fmt(selectedDate), style: AppText.bodyMd.copyWith(color: c.foreground)),
             ),
             Icon(Icons.calendar_today, size: 16, color: c.mutedForeground),
           ],

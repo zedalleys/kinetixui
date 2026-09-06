@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/table.tsx`. Cells take an optional
@@ -55,7 +56,7 @@ class KinetixTableHead extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Text(
         text,
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.mutedForeground),
+        style: AppText.labelLg.copyWith(color: c.mutedForeground),
       ),
     );
     return width == null ? Expanded(child: label) : SizedBox(width: width, child: label);
@@ -88,7 +89,7 @@ class KinetixTableCaption extends StatelessWidget {
     final c = KinetixTheme.of(context);
     return Padding(
       padding: const EdgeInsets.only(top: 16),
-      child: Text(text, style: TextStyle(fontSize: 14, color: c.mutedForeground)),
+      child: Text(text, style: AppText.bodyMd.copyWith(color: c.mutedForeground)),
     );
   }
 }

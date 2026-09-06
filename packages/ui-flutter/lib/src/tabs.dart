@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/tabs.tsx`. No root — the caller
@@ -47,11 +48,7 @@ class KinetixTabsTrigger extends StatelessWidget {
         ),
         child: Text(
           text,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: selected ? c.foreground : c.mutedForeground,
-          ),
+          style: AppText.labelLg.copyWith(color: selected ? c.foreground : c.mutedForeground),
         ),
       ),
     );

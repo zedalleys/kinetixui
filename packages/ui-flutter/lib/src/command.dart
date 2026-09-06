@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'dialog.dart';
 import 'separator.dart';
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/command.tsx` (a themed wrapper over
@@ -49,12 +50,12 @@ class KinetixCommandDialog extends StatelessWidget {
                     onChanged: onQueryChanged,
                     autofocus: true,
                     cursorColor: c.primary,
-                    style: TextStyle(fontSize: 14, color: c.foreground),
+                    style: AppText.bodyMd.copyWith(color: c.foreground),
                     decoration: InputDecoration(
                       isCollapsed: true,
                       border: InputBorder.none,
                       hintText: placeholder,
-                      hintStyle: TextStyle(fontSize: 14, color: c.mutedForeground),
+                      hintStyle: AppText.bodyMd.copyWith(color: c.mutedForeground),
                     ),
                   ),
                 ),
@@ -97,7 +98,7 @@ class KinetixCommandGroup extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(8, 4, 8, 2),
           child: Text(
             heading,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.mutedForeground),
+            style: AppText.labelSm.copyWith(color: c.mutedForeground),
           ),
         ),
         ...children,
@@ -127,7 +128,7 @@ class KinetixCommandItem extends StatelessWidget {
               Icon(icon, size: 16, color: c.mutedForeground),
               const SizedBox(width: 8),
             ],
-            Expanded(child: Text(label, style: TextStyle(fontSize: 14, color: c.foreground))),
+            Expanded(child: Text(label, style: AppText.bodyMd.copyWith(color: c.foreground))),
           ],
         ),
       ),

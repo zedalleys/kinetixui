@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 class KinetixSelectOption<T> {
@@ -56,7 +57,7 @@ class KinetixSelect<T> extends StatelessWidget {
             leadingIcon: o.value == value
                 ? Icon(Icons.check, size: 16, color: c.foreground)
                 : const SizedBox(width: 16),
-            child: Text(o.label, style: TextStyle(fontSize: 14, color: c.foreground)),
+            child: Text(o.label, style: AppText.bodyMd.copyWith(color: c.foreground)),
           ),
       ],
       builder: (context, controller, _) => GestureDetector(
@@ -77,10 +78,7 @@ class KinetixSelect<T> extends StatelessWidget {
                   current,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: value == null ? c.mutedForeground : c.foreground,
-                  ),
+                  style: AppText.bodyMd.copyWith(color: value == null ? c.mutedForeground : c.foreground),
                 ),
               ),
               Icon(Icons.keyboard_arrow_down, size: 18, color: c.mutedForeground),

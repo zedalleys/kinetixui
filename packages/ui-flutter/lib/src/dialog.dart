@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 import 'util.dart';
 
@@ -55,7 +56,7 @@ class KinetixDialog extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.all(24), // p-6
                         child: DefaultTextStyle.merge(
-                          style: TextStyle(color: c.foreground, fontSize: 14),
+                          style: AppText.bodyMd.copyWith(color: c.foreground),
                           child: child,
                         ),
                       ),
@@ -122,7 +123,7 @@ class KinetixDialogTitle extends StatelessWidget {
     final c = KinetixTheme.of(context);
     return Text(
       text,
-      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: -0.4, color: c.foreground),
+      style: AppText.titleDialog.copyWith(color: c.foreground, letterSpacing: -0.4),
     );
   }
 }
@@ -135,6 +136,6 @@ class KinetixDialogDescription extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
-    return Text(text, style: TextStyle(fontSize: 14, color: c.mutedForeground));
+    return Text(text, style: AppText.bodyMd.copyWith(color: c.mutedForeground));
   }
 }

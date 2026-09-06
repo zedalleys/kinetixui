@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'slider.dart';
+import 'app_text.dart';
 import 'theme.dart';
 
 enum KinetixAudioPlayerVariant { full, mini }
@@ -109,7 +110,7 @@ class KinetixAudioPlayer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.foreground)),
+          Text(title, style: AppText.labelLg.copyWith(color: c.foreground)),
           if (subtitle != null)
             Text(subtitle!, style: TextStyle(fontSize: 13, color: c.mutedForeground)),
           const SizedBox(height: 8),
@@ -117,8 +118,8 @@ class KinetixAudioPlayer extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(_time(position), style: TextStyle(fontSize: 12, color: c.mutedForeground)),
-              Text(_time(duration), style: TextStyle(fontSize: 12, color: c.mutedForeground)),
+              Text(_time(position), style: AppText.bodySm.copyWith(color: c.mutedForeground)),
+              Text(_time(duration), style: AppText.bodySm.copyWith(color: c.mutedForeground)),
             ],
           ),
           Row(

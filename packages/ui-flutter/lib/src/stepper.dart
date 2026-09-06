@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 class KinetixStep {
@@ -50,11 +51,7 @@ class KinetixStepper extends StatelessWidget {
           ? Icon(Icons.check, size: 14, color: c.primaryForeground)
           : Text(
               '${i + 1}',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: status == _StepStatus.current ? c.primary : c.mutedForeground,
-              ),
+              style: AppText.labelMd.copyWith(color: status == _StepStatus.current ? c.primary : c.mutedForeground),
             ),
     );
   }
@@ -67,11 +64,7 @@ class KinetixStepper extends StatelessWidget {
       children: [
         Text(
           step.label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: status == _StepStatus.upcoming ? c.mutedForeground : c.foreground,
-          ),
+          style: AppText.labelMd.copyWith(color: status == _StepStatus.upcoming ? c.mutedForeground : c.foreground),
         ),
         if (step.description != null)
           Text(step.description!, style: TextStyle(fontSize: 13, color: c.mutedForeground)),

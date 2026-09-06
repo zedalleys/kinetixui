@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 enum KinetixToastIntent { normal, success, error }
@@ -91,7 +92,7 @@ class _KinetixToasterState extends State<KinetixToaster> {
                   ),
                   const SizedBox(width: 8),
                 ],
-                Flexible(child: Text(toast.message, style: TextStyle(fontSize: 14, color: color))),
+                Flexible(child: Text(toast.message, style: AppText.bodyMd.copyWith(color: color))),
               ],
             ),
           ),

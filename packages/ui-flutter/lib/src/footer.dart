@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 import 'util.dart';
 
@@ -45,7 +46,7 @@ class KinetixFooterColumn extends StatelessWidget {
       children: [
         Text(
           title,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: c.foreground),
+          style: AppText.labelMd.copyWith(color: c.foreground),
         ),
         const SizedBox(height: 12),
         ...gapAll(children, 8),

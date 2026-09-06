@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// The design source's Corners property (`standard` == React's default,
@@ -92,12 +93,12 @@ class _KinetixInputState extends State<KinetixInput> {
                   enabled: widget.enabled,
                   obscureText: widget.obscureText,
                   cursorColor: c.primary,
-                  style: TextStyle(fontSize: 14, letterSpacing: 0.25, color: c.foreground),
+                  style: AppText.bodyMd.copyWith(color: c.foreground),
                   decoration: InputDecoration(
                     isCollapsed: true,
                     border: InputBorder.none,
                     hintText: widget.placeholder,
-                    hintStyle: TextStyle(fontSize: 14, color: c.mutedForeground),
+                    hintStyle: AppText.bodyMd.copyWith(color: c.mutedForeground),
                   ),
                 ),
               ),

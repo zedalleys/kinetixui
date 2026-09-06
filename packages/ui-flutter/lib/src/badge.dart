@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/badge.tsx`'s `badgeVariants` CVA.
@@ -35,7 +36,7 @@ class KinetixBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, letterSpacing: 0.5, color: fg),
+        style: AppText.labelMd.copyWith(color: fg),
       ),
     );
   }

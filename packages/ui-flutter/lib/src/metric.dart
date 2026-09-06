@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 enum KinetixMetricTrend { up, down, neutral }
@@ -62,7 +63,7 @@ class KinetixMetric extends StatelessWidget {
             children: [
               Text(
                 value,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500, color: c.foreground),
+                style: AppText.titleLg.copyWith(color: c.foreground, fontWeight: FontWeight.w500),
               ),
               const Spacer(),
               if (trend != null)
@@ -78,7 +79,7 @@ class KinetixMetric extends StatelessWidget {
                     if (change != null)
                       Text(
                         change!,
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: trendColor),
+                        style: AppText.labelMd.copyWith(color: trendColor),
                       ),
                   ],
                 ),

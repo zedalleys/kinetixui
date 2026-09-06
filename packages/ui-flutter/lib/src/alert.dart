@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 import 'util.dart';
 
@@ -35,7 +36,7 @@ class KinetixAlert extends StatelessWidget {
         border: Border.all(color: border, width: 1),
       ),
       child: DefaultTextStyle.merge(
-        style: TextStyle(color: fg, fontSize: 14),
+        style: AppText.bodyMd.copyWith(color: fg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -55,7 +56,7 @@ class KinetixAlertTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: -0.4),
+      style: AppText.labelLg.copyWith(letterSpacing: -0.4),
     );
   }
 }
@@ -67,6 +68,6 @@ class KinetixAlertDescription extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(text, style: const TextStyle(fontSize: 14));
+    return Text(text, style: AppText.bodyMd);
   }
 }

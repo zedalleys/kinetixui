@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/tag.tsx` (`tagVariants`). A
@@ -38,7 +39,7 @@ class KinetixTag extends StatelessWidget {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, letterSpacing: 0.5, color: fg),
+            style: AppText.labelMd.copyWith(color: fg),
           ),
           if (onRemove != null) ...[
             const SizedBox(width: 4),

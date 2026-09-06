@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirror `packages/ui/src/components/list.tsx`: single-column rows
@@ -58,7 +59,7 @@ class KinetixListItem extends StatelessWidget {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 14, color: c.foreground),
+                    style: AppText.bodyMd.copyWith(color: c.foreground),
                   ),
                   if (description != null)
                     Text(

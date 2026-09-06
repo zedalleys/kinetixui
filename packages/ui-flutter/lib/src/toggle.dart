@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'app_text.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/toggle.tsx` (`toggleVariants`).
@@ -53,7 +54,7 @@ class KinetixToggle extends StatelessWidget {
             border: showBorder ? Border.all(color: pressed ? c.ring : c.input, width: 1) : null,
           ),
           child: DefaultTextStyle.merge(
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: contentColor),
+            style: AppText.labelLg.copyWith(color: contentColor),
             child: IconTheme.merge(
               data: IconThemeData(color: contentColor, size: 16),
               child: child,
