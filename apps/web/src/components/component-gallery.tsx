@@ -9,6 +9,7 @@ import { componentDocs } from "@/lib/site";
 import { CATEGORY_ORDER, PRIMITIVE, categoryOf } from "@/lib/component-registry";
 import { SectionHead } from "@/components/section-head";
 import { demoRegistry } from "@/registry/demos";
+import { THUMBNAIL_MOCKS } from "@/components/component-thumbnails";
 
 const slugOf = (href: string) => href.split("/").pop() ?? "";
 
@@ -49,13 +50,25 @@ const CATEGORY_COUNT: Record<string, number> = ITEMS.reduce(
 );
 
 function Thumbnail({ item }: { item: Item }) {
-  const Demo = NO_LIVE_THUMBNAIL.has(item.slug)
-    ? undefined
-    : demoRegistry[`${item.slug}-demo`]?.component;
+  // A hand-built static mock wins over everything — portal components (dialog,
+  // sheet, menus…) and near-empty demos (table, chart, image…) don't read as a
+  // decorative thumbnail otherwise.
+  const Mock = THUMBNAIL_MOCKS[item.slug];
+  const Demo =
+    Mock || NO_LIVE_THUMBNAIL.has(item.slug)
+      ? undefined
+      : demoRegistry[`${item.slug}-demo`]?.component;
 
   return (
     <div className="relative h-[184px] overflow-hidden border-b border-border/60 bg-muted/20 bg-[radial-gradient(hsl(var(--border)/0.45)_1px,transparent_1px)] [background-size:16px_16px]">
-      {Demo ? (
+      {Mock ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 transition-transform duration-300 motion-safe:group-hover:scale-[1.04]"
+        >
+          <Mock />
+        </div>
+      ) : Demo ? (
         <div
           // decorative preview: keep it out of the a11y tree and make the whole
           // subtree non-focusable so nested widgets (e.g. a recharts
