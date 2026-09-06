@@ -165,15 +165,30 @@ export const docsNav: NavGroup[] = [
     items: [
       { title: "Introduction", href: "/docs" },
       { title: "Installation", href: "/docs/installation" },
+      { title: "CLI", href: "/docs/cli" },
       { title: "kinetixui.json", href: "/docs/kinetixui-json" },
+    ],
+  },
+  {
+    title: "Styling",
+    items: [
+      { title: "Tokens", href: "/docs/tokens" },
       { title: "Theming", href: "/docs/theming" },
       { title: "Dark Mode", href: "/docs/dark-mode" },
       { title: "Accessibility", href: "/docs/accessibility" },
-      { title: "CLI", href: "/docs/cli" },
-      { title: "Tokens", href: "/docs/tokens" },
+    ],
+  },
+  {
+    title: "Native Platforms",
+    items: [
       { title: "Jetpack Compose", href: "/docs/compose" },
       { title: "SwiftUI", href: "/docs/swiftui" },
       { title: "Flutter", href: "/docs/flutter" },
+    ],
+  },
+  {
+    title: "Project",
+    items: [
       { title: "Contributing", href: "/docs/contributing" },
       { title: "Changelog", href: "/docs/changelog" },
     ],
