@@ -21,7 +21,7 @@ class KinetixColorScheme {
   static const mutedForeground = Color(0xFF6D6D6D);
   static const accent = Color(0xFFF0F7FF);
   static const accentForeground = Color(0xFF1B3C53);
-  static const destructive = Color(0xFFEC5047);
+  static const destructive = Color(0xFFC60A0A);
   static const destructiveForeground = Color(0xFFFEF3F2);
   static const success = Color(0xFF5D6D5C);
   static const successForeground = Color(0xFFF1F3F1);

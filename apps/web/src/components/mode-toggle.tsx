@@ -18,7 +18,7 @@ export function ModeToggle() {
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
     >
       {mounted && resolvedTheme === "dark" ? <Moon /> : <Sun />}
-      <span>Toggle theme</span>
+      <span className="sr-only">Toggle theme</span>
     </Button>
   );
 }

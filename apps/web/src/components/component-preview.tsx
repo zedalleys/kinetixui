@@ -56,7 +56,7 @@ export function ComponentPreview({
       className={cn("my-6 overflow-hidden rounded-xl border border-border", className)}
     >
       <Tabs.Root defaultValue="preview">
-        <Tabs.List className="flex items-center gap-1 bg-muted/30 px-2">
+        <Tabs.List aria-label="View preview or code" className="flex items-center gap-1 bg-muted/30 px-2">
           {["preview", "code"].map((v) => (
             <Tabs.Trigger key={v} value={v} className={tabTrigger}>
               {v}
@@ -79,7 +79,7 @@ export function ComponentPreview({
           <div className="border-t border-border bg-muted/40">
             {platforms.length > 1 ? (
               <Tabs.Root value={platform} onValueChange={(v) => setPlatform(v as Platform)}>
-                <Tabs.List className="flex items-center gap-1 border-b border-border px-2">
+                <Tabs.List aria-label="Platform" className="flex items-center gap-1 border-b border-border px-2">
                   {platforms.map((p) => (
                     <Tabs.Trigger
                       key={p}

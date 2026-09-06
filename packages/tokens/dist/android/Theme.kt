@@ -21,7 +21,7 @@ object KinetixTheme {
   val colorChart3 = Color(0xffffbc53)
   val colorChart4 = Color(0xffd13a3a)
   val colorChart5 = Color(0xffb4a499)
-  val colorDestructive = Color(0xffec5047)
+  val colorDestructive = Color(0xffc60a0a)
   val colorDestructiveForeground = Color(0xfffef3f2)
   val colorForeground = Color(0xff050c11)
   val colorInfo = Color(0xff57778d)

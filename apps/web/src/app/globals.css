@@ -31,7 +31,7 @@
   --muted-foreground: var(--neutral-600);
   --accent: var(--blue-50);
   --accent-foreground: var(--blue-500);
-  --destructive: var(--semantic-error);
+  --destructive: var(--red-500);
   --destructive-foreground: var(--semantic-on-error);
   --success: var(--green-600);
   --success-foreground: var(--green-50);
@@ -57,6 +57,24 @@
   --sidebar-accent-foreground: var(--blue-500);
   --sidebar-border: var(--neutral-300);
   --sidebar-ring: var(--blue-500);
+}
+
+/*
+ * Dark-mode focus ring. The generated --shadow-focus* tokens
+ * (packages/tokens/dist/web/extras.css, from tokens/semantic/shadow.json which
+ * has "no dark variant yet") bake a light-theme navy / red / green / amber hex.
+ * In dark mode --shadow-focus (#1b3c53) lands at ~1.7:1 against the page — far
+ * under WCAG 2.2 SC 1.4.11 (3:1), so the focus ring on Button / Input / Select /
+ * Textarea / Fab / NumberInput / InputGroup / FileUpload is barely visible.
+ * Re-point the tokens at the theme-aware semantic colours for dark only.
+ * Upstream fix (a dark shadow set in the token package) is tracked in
+ * ACCESSIBILITY-AUDIT.md.
+ */
+html.dark {
+  --shadow-focus: 0 0 0 1px hsl(var(--ring)), 0 0 0 4px hsl(var(--ring) / 0.32);
+  --shadow-focus-destructive: 0 0 0 1px hsl(var(--destructive)), 0 0 0 4px hsl(var(--destructive) / 0.32);
+  --shadow-focus-success: 0 0 0 1px hsl(var(--success)), 0 0 0 4px hsl(var(--success) / 0.32);
+  --shadow-focus-warning: 0 0 0 1px hsl(var(--warning)), 0 0 0 4px hsl(var(--warning) / 0.32);
 }
 
 @layer base {

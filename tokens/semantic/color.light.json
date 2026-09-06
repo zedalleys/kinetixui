@@ -71,9 +71,9 @@
       "$description": "synth: = primary for readable text on accent"
     },
     "destructive": {
-      "$value": "{color.semantic.error}",
+      "$value": "{color.red.500}",
       "$type": "color",
-      "$description": "figma: error #ec5047"
+      "$description": "a11y: figma error #ec5047 is 3.33:1 under on-error / 3.62:1 as text on the page — fails WCAG AA. red.500 #c60a0a clears 5.6:1 / 6.1:1. See ACCESSIBILITY-AUDIT.md."
     },
     "destructive-foreground": {
       "$value": "{color.semantic.on-error}",

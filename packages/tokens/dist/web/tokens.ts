@@ -136,7 +136,7 @@ export const tokens = {
     "muted-foreground": "#6d6d6d",
     "accent": "#f0f7ff",
     "accent-foreground": "#1b3c53",
-    "destructive": "#ec5047",
+    "destructive": "#c60a0a",
     "destructive-foreground": "#fef3f2",
     "success": "#5d6d5c",
     "success-foreground": "#f1f3f1",

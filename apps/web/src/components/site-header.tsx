@@ -48,7 +48,10 @@ export function SiteHeader() {
       </div>
 
       {/* row 2 — numbered section index (desktop) */}
-      <nav className="mx-auto hidden h-10 max-w-screen-2xl items-stretch border-t border-border px-4 text-sm sm:px-6 md:flex lg:px-8">
+      <nav
+        aria-label="Primary"
+        className="mx-auto hidden h-10 max-w-screen-2xl items-stretch border-t border-border px-4 text-sm sm:px-6 md:flex lg:px-8"
+      >
         {mainNav.map((item, i) => {
           const active =
             item.href === "/docs" ? pathname.startsWith("/docs") : pathname === item.href;

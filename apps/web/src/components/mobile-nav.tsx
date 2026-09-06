@@ -12,14 +12,19 @@ export function MobileNav() {
     <div className="md:hidden">
       <button
         aria-label="Menu"
+        aria-expanded={open}
+        aria-controls="mobile-nav-panel"
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+        className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {open ? <X className="size-4" /> : <Menu className="size-4" />}
       </button>
       {open && (
-        <div className="fixed inset-x-0 top-12 z-40 max-h-[calc(100dvh-3rem)] overflow-y-auto border-b border-border bg-background p-4">
-          <nav className="flex flex-col gap-1 text-sm">
+        <div
+          id="mobile-nav-panel"
+          className="fixed inset-x-0 top-12 z-40 max-h-[calc(100dvh-3rem)] overflow-y-auto border-b border-border bg-background p-4"
+        >
+          <nav aria-label="Mobile" className="flex flex-col gap-1 text-sm">
             {mainNav.map((i) => (
               <Link
                 key={i.href}

@@ -122,7 +122,7 @@
   <color name="color_muted_foreground">#ff6d6d6d</color>
   <color name="color_accent">#fff0f7ff</color>
   <color name="color_accent_foreground">#ff1b3c53</color>
-  <color name="color_destructive">#ffec5047</color>
+  <color name="color_destructive">#ffc60a0a</color>
   <color name="color_destructive_foreground">#fffef3f2</color>
   <color name="color_success">#ff5d6d5c</color>
   <color name="color_success_foreground">#fff1f3f1</color>

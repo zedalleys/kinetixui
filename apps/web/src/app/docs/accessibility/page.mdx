@@ -15,15 +15,22 @@ default — KinetixUI only styles them against the token contract.
 - **Keyboard** — every menu, dialog, tab set, combobox, and disclosure is fully
   operable without a mouse (arrow keys, `Home`/`End`, `Esc`, type-ahead, focus
   trapping in overlays). This is Radix behaviour, preserved as-is.
-- **Focus visibility** — interactive components draw a `--ring` outline on
-  `:focus-visible` (`shadow-focus`). `--ring` clears **8.8:1** against the page
-  in dark mode and **11.6:1** in light — well past the 3:1 that WCAG 2.2
+- **Focus visibility** — most components draw a **2px `--ring` outline** on
+  `:focus-visible` (checkbox, radio, switch, list rows, menu items, close
+  buttons, nav). `--ring` clears **8.8:1** against the page in dark mode and
+  **11.6:1** in light — well past the 3:1 that WCAG 2.2
   [SC 1.4.11](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast)
-  asks for.
+  asks for. Form controls (Button, Input, Select, Textarea, Fab, NumberInput,
+  InputGroup, FileUpload) instead use the `--shadow-focus` composite token,
+  which this site re-points at the theme-aware `--ring` / `--destructive` /
+  `--success` / `--warning` colours in dark mode (`apps/web/src/app/globals.css`)
+  — the token package's `shadow.json` still ships a light-only value, tracked
+  below.
 - **Text contrast** — every foreground/surface pair components actually render
-  is audited by [`scripts/check-contrast.mjs`](https://github.com/ziadfteha/kinetixui/blob/main/scripts/check-contrast.mjs)
+  is audited by [`scripts/check-contrast.mjs`](https://github.com/zedalleys/kinetixui/blob/main/scripts/check-contrast.mjs)
   (`pnpm check:contrast`, run in CI). Every pair meets **WCAG AA (4.5:1)** in
-  both themes — CI fails the build if that regresses.
+  both themes, with two documented exceptions on the light `--warning` orange
+  (see below). CI fails the build if a new pair regresses.
 - **Labels** — icon-only controls (`Button size="icon"`, `Fab`, close buttons)
   require an `aria-label`; the components don't render without one where it
   matters.
@@ -50,3 +57,19 @@ draws a `--ring` inset outline (8.8:1 dark / 11.6:1 light):
 If you retheme, keep `--ring` high-contrast against `--background` and
 `--foreground` in both modes — the focus outline depends on it. Run
 `pnpm check:contrast` after changing the palette.
+
+## Known gaps (tracked)
+
+From the platform accessibility audit (`ACCESSIBILITY-AUDIT.md`):
+
+- **`--warning` on light** — the orange (`#f97907`) is **2.7:1** as text on the
+  page and **2.6:1** in the `Tag` warning variant. It needs a design call on a
+  darker value; `check:contrast` allow-lists these two pairs and still fails on
+  anything new. Use `--warning` for icons and large text only until then.
+- **`--shadow-focus` has no dark variant in the token package** — the generated
+  `shadow.json` output bakes a light-theme navy. In dark mode that ring is
+  ~1.7:1 on the page. This site overrides it in `globals.css`; consumers of the
+  raw registry `globals.css` do not get that fix yet.
+- **`--shadow-focus` was the light-mode `destructive` fill too** — the Figma
+  `error` value `#ec5047` failed AA (3.3:1). `--destructive` on light is now
+  `red.500` (`#c60a0a`, 5.6–6.1:1); it no longer tracks the Figma error token.

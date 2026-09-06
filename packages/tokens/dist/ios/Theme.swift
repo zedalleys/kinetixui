@@ -20,7 +20,7 @@ public class KinetixTheme {
     public static let colorChart3 = UIColor(red: 1.000, green: 0.737, blue: 0.325, alpha: 1)
     public static let colorChart4 = UIColor(red: 0.820, green: 0.227, blue: 0.227, alpha: 1)
     public static let colorChart5 = UIColor(red: 0.706, green: 0.643, blue: 0.600, alpha: 1)
-    public static let colorDestructive = UIColor(red: 0.925, green: 0.314, blue: 0.278, alpha: 1) /** figma: error #ec5047 */
+    public static let colorDestructive = UIColor(red: 0.776, green: 0.039, blue: 0.039, alpha: 1) /** a11y: figma error #ec5047 is 3.33:1 under on-error / 3.62:1 as text on the page — fails WCAG AA. red.500 #c60a0a clears 5.6:1 / 6.1:1. See ACCESSIBILITY-AUDIT.md. */
     public static let colorDestructiveForeground = UIColor(red: 0.996, green: 0.953, blue: 0.949, alpha: 1) /** figma: onError #fef3f2 */
     public static let colorForeground = UIColor(red: 0.020, green: 0.047, blue: 0.067, alpha: 1) /** figma: onSurface #050c11 */
     public static let colorInfo = UIColor(red: 0.341, green: 0.467, blue: 0.553, alpha: 1) /** synth: steel blue, distinct from navy primary */

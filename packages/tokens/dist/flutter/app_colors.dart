@@ -68,7 +68,7 @@ class KinetixColors {
     static const colorCream850 = Color(0xFFAD866C);
     static const colorCream900 = Color(0xFFA27659);
     static const colorCream950 = Color(0xFF976747);
-    static const colorDestructive = Color(0xFFEC5047); /** figma: error #ec5047 */
+    static const colorDestructive = Color(0xFFC60A0A); /** a11y: figma error #ec5047 is 3.33:1 under on-error / 3.62:1 as text on the page — fails WCAG AA. red.500 #c60a0a clears 5.6:1 / 6.1:1. See ACCESSIBILITY-AUDIT.md. */
     static const colorDestructiveForeground = Color(0xFFFEF3F2); /** figma: onError #fef3f2 */
     static const colorForeground = Color(0xFF050C11); /** figma: onSurface #050c11 */
     static const colorGreen0 = Color(0xFFFFFFFF);
