@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Github, Layers } from "lucide-react";
+import { Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { mainNav, siteConfig } from "@/lib/site";
 import { CommandMenu } from "./command-menu";
+import { GitHubButton } from "./github-button";
 import { ModeToggle } from "./mode-toggle";
 import { MobileNav } from "./mobile-nav";
 
@@ -33,15 +34,7 @@ export function SiteHeader() {
           <div className="hidden sm:block">
             <CommandMenu />
           </div>
-          <Link
-            href={siteConfig.repo}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="GitHub"
-          >
-            <Github className="size-4" />
-          </Link>
+          <GitHubButton />
           <ModeToggle />
           <MobileNav />
         </div>
