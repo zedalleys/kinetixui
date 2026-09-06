@@ -3,8 +3,7 @@ import * as React from "react";
 /**
  * The token pipeline as a measured drawing: source → compile → platform
  * output, with the flow bars animated (CSS only; static under
- * `prefers-reduced-motion`). A preview of the full interactive
- * infographic — see the "coming soon" note above.
+ * `prefers-reduced-motion`). Used on /infographic and the home page.
  */
 const STAGES = [
   { n: "01", label: "DTCG source", sub: "tokens/**" },
@@ -16,7 +15,7 @@ const OUTPUTS = ["Web CSS", "tokens.ts", "SwiftUI", "Compose", "Flutter"] as con
 
 export function PipelineInfographic() {
   return (
-    <div aria-hidden className="kx-frame w-full border border-border bg-background/60 p-5">
+    <div className="kx-frame w-full border border-border bg-background/60 p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
         {STAGES.map((s, i) => (
           <React.Fragment key={s.n}>

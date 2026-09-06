@@ -27,7 +27,7 @@ export const mainNav: NavItem[] = [
   { title: "Components", href: "/components" },
   { title: "Blocks", href: "/blocks" },
   { title: "Charts", href: "/charts" },
-  { title: "Infographic", href: "/infographic", soon: true },
+  { title: "Infographic", href: "/infographic" },
   { title: "Themes", href: "/themes" },
   { title: "Colors", href: "/colors" },
 ];

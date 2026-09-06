@@ -1,5 +1,7 @@
 "use client";
 
+import * as React from "react";
+import { cn } from "@/lib/utils";
 import {
   Area,
   AreaChart,
@@ -8,6 +10,8 @@ import {
   CartesianGrid,
   Cell,
   ComposedChart,
+  Funnel,
+  FunnelChart,
   LabelList,
   Line,
   LineChart,
@@ -20,8 +24,11 @@ import {
   RadarChart,
   RadialBar,
   RadialBarChart,
+  ReferenceArea,
+  ReferenceLine,
   Scatter,
   ScatterChart,
+  Treemap,
   XAxis,
   YAxis,
   ZAxis,
@@ -98,6 +105,70 @@ const scatter = [
 const spark = months.map((m) => ({ month: m.month, v: m.desktop }));
 
 const box = "h-[280px] w-full";
+
+/* ---- data for the extended recipes ----------------------------------- */
+const funnel = [
+  { stage: "Visited", value: 5200, fill: "hsl(var(--chart-1))" },
+  { stage: "Signed up", value: 3100, fill: "hsl(var(--chart-2))" },
+  { stage: "Activated", value: 1700, fill: "hsl(var(--chart-3))" },
+  { stage: "Subscribed", value: 920, fill: "hsl(var(--chart-4))" },
+  { stage: "Renewed", value: 610, fill: "hsl(var(--chart-5))" },
+];
+
+const treemap = [
+  { name: "@kinetixui/ui", size: 4200 },
+  { name: "tokens", size: 1800 },
+  { name: "docs", size: 2600 },
+  { name: "cli", size: 900 },
+  { name: "charts", size: 700 },
+  { name: "compose", size: 1100 },
+];
+
+// waterfall: running total with an invisible "base" bar + a visible delta bar
+const waterfallRaw = [
+  { name: "Open", delta: 1200 },
+  { name: "Q1", delta: 420 },
+  { name: "Q2", delta: -180 },
+  { name: "Q3", delta: 310 },
+  { name: "Q4", delta: -140 },
+];
+let _wfRun = 0;
+const waterfall = waterfallRaw.map((d, i) => {
+  const start = i === 0 ? 0 : _wfRun;
+  _wfRun = start + d.delta;
+  return {
+    name: d.name,
+    base: Math.min(start, _wfRun),
+    delta: Math.abs(d.delta),
+    up: d.delta >= 0,
+    total: _wfRun,
+  };
+});
+
+// histogram: bucket a set of response-time samples into 20ms bins
+const samples = [
+  12, 18, 22, 25, 28, 30, 31, 33, 35, 36, 38, 40, 41, 43, 44, 45, 47, 48, 50, 52, 55, 58, 60, 63, 66,
+  70, 74, 78, 85, 92, 105, 120,
+];
+const histogram = Array.from({ length: 7 }, (_, i) => {
+  const lo = i * 20;
+  return { bin: `${lo}–${lo + 20}`, count: samples.filter((s) => s >= lo && s < lo + 20).length };
+});
+
+const kpis = [
+  { label: "MRR", value: "$48.2k", delta: 12.4, spark: [31, 34, 33, 38, 40, 44, 48] },
+  { label: "Active users", value: "9,310", delta: 4.1, spark: [82, 84, 83, 88, 90, 92, 93] },
+  { label: "Churn", value: "1.8%", delta: -0.3, spark: [24, 23, 22, 22, 21, 20, 18] },
+  { label: "p95 latency", value: "132 ms", delta: -6.0, spark: [180, 172, 168, 150, 141, 138, 132] },
+];
+
+// heatmap: activity by weekday (rows) × hour-block (cols)
+const heatDays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+const heatCols = ["00", "04", "08", "12", "16", "20"];
+const heat = heatDays.map((day, r) =>
+  heatCols.map((_, c) => Math.round(20 + 80 * Math.abs(Math.sin((r + 1) * (c + 1) * 0.7)))),
+);
+const heatMax = Math.max(...heat.flat());
 
 export function ChartsContent() {
   return (
@@ -507,6 +578,360 @@ export function ChartsContent() {
             <Scatter data={scatter} fill="var(--color-latency)" isAnimationActive={false} />
           </ScatterChart>
         </ChartContainer>
+      </Showcase>
+
+      {/* ---- extended recipes -------------------------------------------- */}
+
+      <Showcase
+        title="KPI tiles"
+        description="Headline number + period delta + a bare sparkline. The dashboard workhorse."
+        contentClassName="block p-4"
+        code={`{kpis.map((k) => (
+  <div key={k.label} className="rounded-lg border border-border p-3">
+    <p className="text-xs text-muted-foreground">{k.label}</p>
+    <p className="mt-1 font-mono text-xl font-semibold tabular-nums">{k.value}</p>
+    <p className={k.delta >= 0 ? "text-success" : "text-destructive"}>
+      {k.delta >= 0 ? "▲" : "▼"} {Math.abs(k.delta)}%
+    </p>
+    <ChartContainer config={{ v: { color: "hsl(var(--chart-1))" } }} className="mt-2 h-8 w-full">
+      <AreaChart data={k.spark.map((v, i) => ({ i, v }))}>
+        <Area dataKey="v" type="monotone" stroke="var(--color-v)"
+          fill="var(--color-v)" fillOpacity={0.15} strokeWidth={1.5} isAnimationActive={false} />
+      </AreaChart>
+    </ChartContainer>
+  </div>
+))}`}
+      >
+        <div className="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {kpis.map((k) => (
+            <div key={k.label} className="rounded-lg border border-border p-3">
+              <p className="text-xs text-muted-foreground">{k.label}</p>
+              <p className="mt-1 font-mono text-xl font-semibold tabular-nums">{k.value}</p>
+              <p
+                className={cn(
+                  "mt-0.5 font-mono text-[11px] tabular-nums",
+                  k.delta >= 0 ? "text-success" : "text-destructive",
+                )}
+              >
+                {k.delta >= 0 ? "▲" : "▼"} {Math.abs(k.delta)}%
+              </p>
+              <ChartContainer
+                config={{ v: { label: k.label, color: "hsl(var(--chart-1))" } } satisfies ChartConfig}
+                className="mt-2 h-8 w-full"
+                label={`${k.label} trend, last 7 periods`}
+              >
+                <AreaChart data={k.spark.map((v, i) => ({ i, v }))}>
+                  <Area
+                    dataKey="v"
+                    type="monotone"
+                    stroke="var(--color-v)"
+                    fill="var(--color-v)"
+                    fillOpacity={0.15}
+                    strokeWidth={1.5}
+                    isAnimationActive={false}
+                  />
+                </AreaChart>
+              </ChartContainer>
+            </div>
+          ))}
+        </div>
+      </Showcase>
+
+      <Showcase
+        title="Funnel"
+        description="Stage-to-stage drop-off. Each band is one --chart token."
+        contentClassName="block p-4"
+        code={`<ChartContainer config={config} className="min-h-[260px] w-full">
+  <FunnelChart>
+    <ChartTooltip content={<ChartTooltipContent nameKey="stage" />} />
+    <Funnel dataKey="value" data={data} isAnimationActive={false}>
+      <LabelList dataKey="stage" position="right" className="fill-foreground" fontSize={12} />
+    </Funnel>
+  </FunnelChart>
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={{ value: { label: "Users" } } satisfies ChartConfig}
+          className={box}
+          label="Conversion funnel — 5,200 visited down to 610 renewed, the steepest drop between visited and signed up."
+        >
+          <FunnelChart>
+            <ChartTooltip content={<ChartTooltipContent nameKey="stage" />} />
+            <Funnel dataKey="value" data={funnel} isAnimationActive={false}>
+              <LabelList
+                dataKey="stage"
+                position="right"
+                className="fill-foreground"
+                fontSize={12}
+                stroke="none"
+              />
+            </Funnel>
+          </FunnelChart>
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Gauge"
+        description="One value against a 0–100 range — a radial bar with a centred read-out."
+        contentClassName="block p-4"
+        code={`<div className="relative mx-auto h-[220px] w-[220px]">
+  <ChartContainer config={config} className="h-full w-full">
+    <RadialBarChart data={[{ name: "score", value: 72, fill: "hsl(var(--chart-1))" }]}
+      startAngle={220} endAngle={-40} innerRadius={80} outerRadius={110}>
+      <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+      <RadialBar dataKey="value" background cornerRadius={8} isAnimationActive={false} />
+    </RadialBarChart>
+  </ChartContainer>
+  <span className="absolute inset-0 grid place-items-center font-mono text-3xl font-semibold">72</span>
+</div>`}
+      >
+        <div className="relative mx-auto h-[220px] w-[220px]">
+          <ChartContainer
+            config={{ value: { label: "Score", color: "hsl(var(--chart-1))" } } satisfies ChartConfig}
+            className="h-full w-full"
+            label="Health score gauge — 72 out of 100"
+          >
+            <RadialBarChart
+              data={[{ name: "score", value: 72, fill: "hsl(var(--chart-1))" }]}
+              startAngle={220}
+              endAngle={-40}
+              innerRadius={80}
+              outerRadius={110}
+            >
+              <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+              <RadialBar dataKey="value" background cornerRadius={8} isAnimationActive={false} />
+            </RadialBarChart>
+          </ChartContainer>
+          <span className="pointer-events-none absolute inset-0 grid place-items-center font-mono text-3xl font-semibold tabular-nums">
+            72
+          </span>
+        </div>
+      </Showcase>
+
+      <Showcase
+        title="Treemap"
+        description="Part-to-whole by area — good for bundle size, spend, storage."
+        contentClassName="block p-4"
+        code={`<ChartContainer config={{}} className="min-h-[260px] w-full">
+  <Treemap data={data} dataKey="size" nameKey="name" stroke="hsl(var(--background))"
+    fill="hsl(var(--chart-1))" isAnimationActive={false} />
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={{} satisfies ChartConfig}
+          className={box}
+          label="Workspace size by package — @kinetixui/ui is the largest at ~4,200, then docs, then tokens."
+        >
+          <Treemap
+            data={treemap}
+            dataKey="size"
+            nameKey="name"
+            stroke="hsl(var(--background))"
+            fill="hsl(var(--chart-1))"
+            isAnimationActive={false}
+          />
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Waterfall"
+        description="Running total with up / down steps — a P&L bridge. Invisible base bar + a coloured delta."
+        contentClassName="block p-4"
+        code={`// precompute: base = min(runningStart, runningEnd), delta = |change|, up = change >= 0
+<ChartContainer config={config} className="min-h-[260px] w-full">
+  <BarChart accessibilityLayer data={waterfall}>
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <Bar dataKey="base" stackId="w" fill="transparent" isAnimationActive={false} />
+    <Bar dataKey="delta" stackId="w" radius={2} isAnimationActive={false}>
+      {waterfall.map((d, i) => (
+        <Cell key={i} fill={d.up ? "hsl(var(--chart-2))" : "hsl(var(--chart-4))"} />
+      ))}
+    </Bar>
+  </BarChart>
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={{ delta: { label: "Change" } } satisfies ChartConfig}
+          className={box}
+          label="Balance bridge — opens at 1,200, net positive across the year, ending near 1,610."
+        >
+          <BarChart accessibilityLayer data={waterfall}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="base" stackId="w" fill="transparent" isAnimationActive={false} />
+            <Bar dataKey="delta" stackId="w" radius={2} isAnimationActive={false}>
+              {waterfall.map((d, i) => (
+                <Cell key={i} fill={d.up ? "hsl(var(--chart-2))" : "hsl(var(--chart-4))"} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Bullet"
+        description="Actual vs target vs qualitative bands — a compact KPI row. ReferenceArea bands + a target line."
+        contentClassName="block p-4"
+        code={`<ChartContainer config={config} className="h-20 w-full">
+  <BarChart layout="vertical" data={[{ name: "Revenue", value: 82 }]}
+    margin={{ left: 8, right: 12 }}>
+    <XAxis type="number" domain={[0, 100]} hide />
+    <YAxis type="category" dataKey="name" hide />
+    <ReferenceArea x1={0} x2={55} fill="hsl(var(--muted-foreground))" fillOpacity={0.12} />
+    <ReferenceArea x1={55} x2={80} fill="hsl(var(--muted-foreground))" fillOpacity={0.2} />
+    <Bar dataKey="value" barSize={10} radius={2} fill="hsl(var(--chart-1))" isAnimationActive={false} />
+    <ReferenceLine x={90} stroke="hsl(var(--foreground))" strokeWidth={2} />
+  </BarChart>
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={{ value: { label: "Revenue" } } satisfies ChartConfig}
+          className="h-20 w-full"
+          label="Revenue vs target — at 82 against a target of 90, inside the top qualitative band."
+        >
+          <BarChart layout="vertical" data={[{ name: "Revenue", value: 82 }]} margin={{ left: 8, right: 12 }}>
+            <XAxis type="number" domain={[0, 100]} hide />
+            <YAxis type="category" dataKey="name" hide />
+            <ReferenceArea x1={0} x2={55} fill="hsl(var(--muted-foreground))" fillOpacity={0.12} />
+            <ReferenceArea x1={55} x2={80} fill="hsl(var(--muted-foreground))" fillOpacity={0.2} />
+            <Bar dataKey="value" barSize={10} radius={2} fill="hsl(var(--chart-1))" isAnimationActive={false} />
+            <ReferenceLine x={90} stroke="hsl(var(--foreground))" strokeWidth={2} />
+          </BarChart>
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Histogram"
+        description="Distribution of one variable — bin the samples, then it's a bar chart."
+        contentClassName="block p-4"
+        code={`const histogram = Array.from({ length: 7 }, (_, i) => {
+  const lo = i * 20
+  return { bin: \`\${lo}–\${lo + 20}\`, count: samples.filter((s) => s >= lo && s < lo + 20).length }
+})
+
+<ChartContainer config={config} className="min-h-[260px] w-full">
+  <BarChart accessibilityLayer data={histogram}>
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="bin" tickLine={false} axisLine={false} tickMargin={8} />
+    <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={24} />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[2, 2, 0, 0]} isAnimationActive={false} />
+  </BarChart>
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={{ count: { label: "Samples" } } satisfies ChartConfig}
+          className={box}
+          label="Response-time distribution — most samples fall in the 20–60 ms bins, with a thin tail past 100 ms."
+        >
+          <BarChart accessibilityLayer data={histogram}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="bin" tickLine={false} axisLine={false} tickMargin={8} />
+            <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={24} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[2, 2, 0, 0]} isAnimationActive={false} />
+          </BarChart>
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Reference lines & bands"
+        description="Annotate a series — a target line and an SLA band via ReferenceLine / ReferenceArea."
+        contentClassName="block p-4"
+        code={`<ChartContainer config={config} className="min-h-[260px] w-full">
+  <LineChart accessibilityLayer data={months} margin={{ left: 12, right: 12 }}>
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+    <ReferenceArea y1={150} y2={250} fill="hsl(var(--chart-2))" fillOpacity={0.1} />
+    <ReferenceLine y={200} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4"
+      label={{ value: "target", position: "insideTopRight", fontSize: 11 }} />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <Line dataKey="desktop" stroke="var(--color-desktop)" strokeWidth={2} dot={false} isAnimationActive={false} />
+  </LineChart>
+</ChartContainer>`}
+      >
+        <ChartContainer
+          config={pairConfig}
+          className={box}
+          label="Desktop visits against a target of 200 and a 150–250 acceptable band; the series crosses above target from March."
+        >
+          <LineChart accessibilityLayer data={months} margin={{ left: 12, right: 12 }}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+            <ReferenceArea y1={150} y2={250} fill="hsl(var(--chart-2))" fillOpacity={0.1} />
+            <ReferenceLine
+              y={200}
+              stroke="hsl(var(--muted-foreground))"
+              strokeDasharray="4 4"
+              label={{ value: "target", position: "insideTopRight", fontSize: 11 }}
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Line
+              dataKey="desktop"
+              stroke="var(--color-desktop)"
+              strokeWidth={2}
+              dot={false}
+              isAnimationActive={false}
+            />
+          </LineChart>
+        </ChartContainer>
+      </Showcase>
+
+      <Showcase
+        title="Heatmap"
+        description="A value grid — no Recharts primitive, just a CSS grid tinted by --chart-1."
+        contentClassName="block p-4"
+        code={`<div className="grid gap-1" style={{ gridTemplateColumns: \`auto repeat(\${cols.length}, 1fr)\` }}>
+  {days.map((day, r) => (
+    <Fragment key={day}>
+      <span className="pr-2 text-right font-mono text-[11px] text-muted-foreground">{day}</span>
+      {cols.map((_, c) => (
+        <div key={c} className="aspect-square rounded-[3px]"
+          style={{ background: \`color-mix(in srgb, hsl(var(--chart-1)) \${(heat[r][c] / max) * 100}%, transparent)\` }} />
+      ))}
+    </Fragment>
+  ))}
+</div>`}
+      >
+        <div
+          className="w-full max-w-md"
+          role="img"
+          aria-label="Activity heatmap by weekday and hour block — busiest mid-week around midday."
+        >
+          <div
+            className="grid gap-1"
+            style={{ gridTemplateColumns: `auto repeat(${heatCols.length}, 1fr)` }}
+          >
+            {heatDays.map((day, r) => (
+              <React.Fragment key={day}>
+                <span className="self-center pr-2 text-right font-mono text-[11px] text-muted-foreground">
+                  {day}
+                </span>
+                {heatCols.map((_, c) => (
+                  <div
+                    key={c}
+                    className="aspect-square rounded-[3px] border border-border/40"
+                    style={{
+                      background: `color-mix(in srgb, hsl(var(--chart-1)) ${Math.round(
+                        (heat[r][c] / heatMax) * 100,
+                      )}%, transparent)`,
+                    }}
+                    title={`${day} ${heatCols[c]}:00 — ${heat[r][c]}`}
+                  />
+                ))}
+              </React.Fragment>
+            ))}
+            <span />
+            {heatCols.map((h) => (
+              <span key={h} className="text-center font-mono text-[10px] text-muted-foreground">
+                {h}
+              </span>
+            ))}
+          </div>
+        </div>
       </Showcase>
     </div>
   );
