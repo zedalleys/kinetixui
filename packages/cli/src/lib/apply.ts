@@ -33,7 +33,13 @@ export async function writeItems(
     for (const dep of item.dependencies ?? []) deps.add(dep);
 
     for (const file of item.files) {
-      const dest = targetPath(cwd, config, file);
+      const dest = path.resolve(targetPath(cwd, config, file));
+      const root = path.resolve(cwd);
+      if (dest !== root && !dest.startsWith(root + path.sep)) {
+        // targetPath already basenames the registry-supplied filename; this
+        // catches a kinetixui.json whose aliases / css path escape the project.
+        throw new Error(`Refusing to write outside the project: ${path.relative(root, dest)}`);
+      }
       const rel = path.relative(cwd, dest);
 
       if (existsSync(dest) && !overwrite) {
