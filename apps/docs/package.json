@@ -11,7 +11,7 @@
     "@kinetixui/ui": "workspace:*",
     "@kinetixui/tokens": "workspace:*",
     "lucide-react": "^0.468.0",
-    "react": "^18.3.1",
+    "react": "^19.2.8",
     "react-dom": "^18.3.1",
     "recharts": "^2.15.0"
   },
