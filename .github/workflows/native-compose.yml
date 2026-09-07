@@ -36,13 +36,13 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
 
       # This package's own gradle-wrapper.jar isn't committed (a binary I
       # can't produce here — see packages/ui-compose/README.md); Android
       # Studio generates it on first sync locally. CI provisions a real
       # Gradle directly instead of relying on ./gradlew.
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4
         with:
           gradle-version: "8.7"
 
