@@ -1,0 +1,54 @@
+# Dependency updates. Security updates land regardless of this file (they're
+# enabled at the repo level); this schedules the routine version bumps and
+# groups them so review stays cheap.
+version: 2
+updates:
+  # JS / TS — the pnpm workspace (root + every package under packages/, apps/)
+  - package-ecosystem: npm
+    directories:
+      - "/"
+      - "/packages/*"
+      - "/apps/*"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+      radix:
+        patterns: ["@radix-ui/*"]
+      types:
+        patterns: ["@types/*"]
+
+  # GitHub Actions used by the workflows
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # Jetpack Compose port
+  - package-ecosystem: gradle
+    directory: "/packages/ui-compose"
+    schedule:
+      interval: weekly
+      day: monday
+
+  # Flutter port
+  - package-ecosystem: pub
+    directory: "/packages/ui-flutter"
+    schedule:
+      interval: weekly
+      day: monday
+
+  # SwiftUI port
+  - package-ecosystem: swift
+    directory: "/packages/ui-swiftui"
+    schedule:
+      interval: weekly
+      day: monday
