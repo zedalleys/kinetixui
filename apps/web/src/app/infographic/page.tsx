@@ -6,8 +6,10 @@ import { PipelineInfographic } from "@/components/pipeline-infographic";
 import { SectionHead } from "@/components/section-head";
 import { WorldMap } from "@/components/infographic/world-map";
 import { RegistryTreemap } from "@/components/infographic/registry-treemap";
+import { DepsBar } from "@/components/infographic/deps-bar";
 import { componentDocs, CATEGORY_ORDER } from "@/lib/site";
 import { RELEASES } from "@/lib/releases";
+import { countOnPlatform, type Platform } from "@/lib/platform-parity";
 
 export const metadata: Metadata = {
   title: "Infographic",
@@ -56,9 +58,26 @@ const TIMELINE = [...RELEASES]
   .reverse()
   .map((r) => ({ v: r.version, note: r.summary }));
 
+/* per-platform component counts, straight from the parity table */
+const REACT_SLUGS = componentDocs.map((c) => c.href.split("/").pop() ?? "");
+const NATIVE_COUNT: Record<Exclude<Platform, "React">, number> = {
+  SwiftUI: countOnPlatform(REACT_SLUGS, "SwiftUI"),
+  Compose: countOnPlatform(REACT_SLUGS, "Compose"),
+  Flutter: countOnPlatform(REACT_SLUGS, "Flutter"),
+};
+
 type Cell = "full" | "partial" | "none";
+const surfaceCell = (n: number): Cell => (n >= REACT_SLUGS.length ? "full" : "partial");
 const COVERAGE: { row: string; cells: Cell[] }[] = [
-  { row: "Component surface", cells: ["full", "partial", "partial", "partial"] },
+  {
+    row: "Component surface",
+    cells: [
+      "full",
+      surfaceCell(NATIVE_COUNT.SwiftUI),
+      surfaceCell(NATIVE_COUNT.Compose),
+      surfaceCell(NATIVE_COUNT.Flutter),
+    ],
+  },
   { row: "Design-token contract", cells: ["full", "full", "full", "full"] },
   { row: "Light + dark", cells: ["full", "full", "full", "full"] },
   { row: "Type scale wired", cells: ["full", "full", "full", "full"] },
@@ -164,9 +183,10 @@ export default function InfographicPage() {
           </table>
         </div>
         <p className="mt-3 font-mono text-[10px] text-muted-foreground">
-          SwiftUI & Flutter port 68 of the {componentDocs.length} React components; Compose ships one
-          verified native component so far, with parity snippets for all of them. Every port rides the
-          same token contract.
+          Of the {componentDocs.length} React components, SwiftUI ports {NATIVE_COUNT.SwiftUI},
+          Jetpack Compose {NATIVE_COUNT.Compose} and Flutter {NATIVE_COUNT.Flutter}; the rest
+          (Form, Navigation Menu, Combobox and a couple of platform-specific gaps) stay React-only,
+          with parity snippets for all of them. Every port rides the same token contract.
         </p>
       </section>
 
@@ -241,6 +261,12 @@ export default function InfographicPage() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      {/* 08 — runtime footprint */}
+      <section className="mt-14">
+        <SectionHead index="08" label="What lands in node_modules" meta="0 to install" />
+        <DepsBar />
       </section>
     </div>
   );
