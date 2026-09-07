@@ -1,3 +1,5 @@
+import { assertComponentName, assertRegistryUrl } from "./validate.js";
+
 export interface RegistryFile {
   path: string;
   content: string;
@@ -27,7 +29,7 @@ export interface RegistryIndexItem {
  *  per-item `{name}.json` files `shadcn build` emits have no index of their
  *  own, so this is a separate, deliberately small manifest). */
 export async function fetchRegistryIndex(registryUrl: string): Promise<RegistryIndexItem[]> {
-  const url = `${registryUrl.replace(/\/$/, "")}/registry.json`;
+  const url = `${assertRegistryUrl(registryUrl).replace(/\/$/, "")}/registry.json`;
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`Could not load the registry index (${res.status} at ${url}).`);
@@ -44,7 +46,8 @@ export async function fetchComponentNames(registryUrl: string): Promise<string[]
 }
 
 export async function fetchRegistryItem(registryUrl: string, name: string): Promise<RegistryItem> {
-  const url = `${registryUrl.replace(/\/$/, "")}/${name}.json`;
+  const base = assertRegistryUrl(registryUrl).replace(/\/$/, "");
+  const url = `${base}/${assertComponentName(name)}.json`;
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`Could not find "${name}" in the registry (${res.status} at ${url}).`);
@@ -60,10 +63,10 @@ export async function resolveTree(registryUrl: string, names: string[]): Promise
   while (queue.length) {
     const name = queue.shift();
     if (!name || resolved.has(name)) continue;
-    const item = await fetchRegistryItem(registryUrl, name);
+    const item = await fetchRegistryItem(registryUrl, assertComponentName(name));
     resolved.set(name, item);
     for (const dep of item.registryDependencies ?? []) {
-      if (!resolved.has(dep)) queue.push(dep);
+      if (!resolved.has(dep)) queue.push(assertComponentName(dep));
     }
   }
 
