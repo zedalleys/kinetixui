@@ -1545,7 +1545,63 @@ export function ChartsContent() {
           </div>
         </div>
       </Showcase>
+
+      <ThemeParityChart />
     </div>
+  );
+}
+
+/** The same chart, the same markup — only the wrapper's theme class differs.
+ *  Nothing here names a colour; every bar reads `--chart-*` from its scope. */
+function ThemeParityChart() {
+  const chart = (
+    <BarChart accessibilityLayer data={browsers} margin={{ left: 4, right: 4 }}>
+      <CartesianGrid vertical={false} />
+      <XAxis dataKey="browser" tickLine={false} axisLine={false} tickMargin={8} />
+      <ChartTooltip content={<ChartTooltipContent />} />
+      <Bar dataKey="visitors" radius={4} isAnimationActive={false}>
+        {browsers.map((b) => (
+          <Cell key={b.browser} fill={b.fill} />
+        ))}
+      </Bar>
+    </BarChart>
+  );
+
+  return (
+    <Showcase
+      title="Token-driven — same chart, both themes"
+      description="One component, no colour literals. Each panel just sets a theme class on its wrapper; the bars pick up that scope's --chart-1…5."
+      contentClassName="block p-4"
+      code={`// no fill="#..." anywhere — Cell reads the scope's token
+<Bar dataKey="visitors">
+  {browsers.map((b) => <Cell key={b.browser} fill={b.fill} /> /* hsl(var(--chart-N)) */)}
+</Bar>
+
+// drop the same chart into any theme scope:
+<div className="theme-light">{chart}</div>
+<div className="dark">{chart}</div>`}
+    >
+      <div className="grid w-full gap-4 sm:grid-cols-2">
+        {(["theme-light", "dark"] as const).map((scope) => (
+          <div key={scope} className={scope}>
+            <div className="rounded-xl border border-border bg-background p-4 text-foreground">
+              <p className="mb-2 font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+                {scope === "dark" ? "dark" : "light"}
+              </p>
+              <ChartContainer
+                config={browserConfig}
+                className="h-[220px] w-full"
+                label={`Visitors by browser, rendered under the ${
+                  scope === "dark" ? "dark" : "light"
+                } token set.`}
+              >
+                {chart}
+              </ChartContainer>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Showcase>
   );
 }
 
