@@ -8,10 +8,33 @@ import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { docsNav, mainNav } from "@/lib/site";
 
+/** "⌘" on Apple platforms, "Ctrl" everywhere else. Resolves after mount to keep
+ *  SSR output stable; renders the neutral "Ctrl" until then. */
+function useModKey() {
+  const [mod, setMod] = React.useState<"⌘" | "Ctrl">("Ctrl");
+  React.useEffect(() => {
+    const platform =
+      (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform ||
+      navigator.platform ||
+      "";
+    if (/mac|iphone|ipad|ipod/i.test(platform)) setMod("⌘");
+  }, []);
+  return mod;
+}
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="inline-flex min-w-[1.5rem] items-center justify-center rounded border border-border bg-background px-1.5 py-0.5 font-mono text-[11px] font-medium leading-none text-muted-foreground">
+      {children}
+    </kbd>
+  );
+}
+
 export function CommandMenu() {
   const router = useRouter();
   const { setTheme } = useTheme();
   const [open, setOpen] = React.useState(false);
+  const mod = useModKey();
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -43,9 +66,10 @@ export function CommandMenu() {
       >
         <Search className="size-4" />
         <span className="flex-1 text-left">Search…</span>
-        <kbd className="pointer-events-none hidden rounded border border-border bg-background px-1.5 font-mono text-[10px] font-medium sm:inline-block">
-          ⌘K
-        </kbd>
+        <span className="pointer-events-none hidden items-center gap-1 sm:flex">
+          <Kbd>{mod}</Kbd>
+          <Kbd>K</Kbd>
+        </span>
       </button>
 
       {open && (
@@ -108,6 +132,28 @@ export function CommandMenu() {
                 </Item>
               </Command.Group>
             </Command.List>
+
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border px-3 py-2 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <Kbd>↑</Kbd>
+                <Kbd>↓</Kbd>
+                to navigate
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Kbd>↵</Kbd>
+                to select
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Kbd>Esc</Kbd>
+                to close
+              </span>
+              <span className="ml-auto flex items-center gap-1.5">
+                <Kbd>{mod}</Kbd>
+                <Kbd>K</Kbd>
+                or
+                <Kbd>/</Kbd>
+              </span>
+            </div>
           </Command>
         </div>
       )}
