@@ -194,9 +194,20 @@ function ChartSrTable({
   );
 }
 
+// This is the one spot that writes an inline <style>. `id`, the config keys and
+// the colour strings are author-supplied, but harden the interpolation anyway:
+// strip everything but `[\w-]` from identifiers, and drop any colour value that
+// carries characters able to close the declaration or the rule.
+const cssIdent = (s: string) => String(s).replace(/[^\w-]/g, "");
+// keep parens (hsl(), var(), color-mix()…); reject only what can end the
+// declaration, close the rule, open an at-rule, a comment, or the <style>.
+const cssValue = (s: string) => (/[<>{}\[\];@]|\/\*|\*\//.test(s) ? "" : s.trim());
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(([, c]) => c.theme || c.color);
   if (!colorConfig.length) return null;
+
+  const chartSelector = cssIdent(id);
 
   return (
     <style
@@ -204,11 +215,12 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
         __html: Object.entries(THEMES)
           .map(
             ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
+${prefix} [data-chart=${chartSelector}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
-    const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    const raw = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
+    const color = raw ? cssValue(raw) : "";
+    return color ? `  --color-${cssIdent(key)}: ${color};` : null;
   })
   .join("\n")}
 }
