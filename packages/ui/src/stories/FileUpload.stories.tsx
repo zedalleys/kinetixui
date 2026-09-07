@@ -27,7 +27,7 @@ const meta = {
   title: "Form Inputs/FileUpload",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<FileUpload\n  multiple\n  files={files}\n  onFilesSelected={(picked) => upload(picked)}\n  onRemove={(id) => removeFile(id)}\n/>`, language: "tsx" } },
+    docs: { source: { code: "<FileUpload\\n  multiple\\n  files={files}\\n  onFilesSelected={(picked) => upload(picked)}\\n  onRemove={(id) => removeFile(id)}\\n/>", language: "tsx" } },
   },
 } satisfies Meta;
 

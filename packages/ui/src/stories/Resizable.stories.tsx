@@ -20,7 +20,7 @@ const meta = {
   title: "Data Display/Resizable",
   parameters: {
     layout: "padded",
-    docs: { source: { code: `<ResizablePanelGroup direction="horizontal">\n  <ResizablePanel defaultSize={50}>One</ResizablePanel>\n  <ResizableHandle withHandle />\n  <ResizablePanel defaultSize={50}>Two</ResizablePanel>\n</ResizablePanelGroup>`, language: "tsx" } },
+    docs: { source: { code: "<ResizablePanelGroup direction=\"horizontal\">\\n  <ResizablePanel defaultSize={50}>One</ResizablePanel>\\n  <ResizableHandle withHandle />\\n  <ResizablePanel defaultSize={50}>Two</ResizablePanel>\\n</ResizablePanelGroup>", language: "tsx" } },
   },
 } satisfies Meta;
 

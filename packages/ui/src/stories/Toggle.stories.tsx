@@ -21,7 +21,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Toggle aria-label="Toggle italic"><Italic className="size-4" /></Toggle>`, language: "tsx" } },
+    docs: { source: { code: "<Toggle aria-label=\"Toggle italic\"><Italic className=\"size-4\" /></Toggle>", language: "tsx" } },
   },
 } satisfies Meta;
 

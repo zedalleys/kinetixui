@@ -17,7 +17,7 @@ const meta = {
   argTypes: { ratio: { control: { type: "number", step: 0.05 } } },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<AspectRatio ratio={16 / 9} className="bg-muted rounded-md" />`, language: "tsx" } },
+    docs: { source: { code: "<AspectRatio ratio={16 / 9} className=\"bg-muted rounded-md\" />", language: "tsx" } },
   },
 } satisfies Meta;
 

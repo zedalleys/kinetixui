@@ -23,7 +23,7 @@ const meta = {
   title: "Data Display/Quote",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Quote author="Amira K." authorTitle="Product Designer" avatar={<Avatar>...</Avatar>}>\n  This is exactly the token workflow our team needed.\n</Quote>`, language: "tsx" } },
+    docs: { source: { code: "<Quote author=\"Amira K.\" authorTitle=\"Product Designer\" avatar={<Avatar>...</Avatar>}>\\n  This is exactly the token workflow our team needed.\\n</Quote>", language: "tsx" } },
   },
 } satisfies Meta;
 

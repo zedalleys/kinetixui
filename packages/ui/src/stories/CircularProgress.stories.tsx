@@ -31,7 +31,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<CircularProgress value={66} showValue />\n<CircularProgress value={66} size={64} strokeWidth={6} showValue />`, language: "tsx" } },
+    docs: { source: { code: "<CircularProgress value={66} showValue />\\n<CircularProgress value={66} size={64} strokeWidth={6} showValue />", language: "tsx" } },
   },
 } satisfies Meta;
 

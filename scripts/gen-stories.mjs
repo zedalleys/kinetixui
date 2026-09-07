@@ -502,7 +502,7 @@ const meta = {
   title: ${JSON.stringify(`${group}/${Name}`)},${ctrl ? `\n  component: ${ctrl.comp},\n  args: ${ctrl.args},\n  argTypes: ${ctrl.argTypes},` : ""}
   parameters: {
     layout: ${JSON.stringify(layout)},
-    docs: { source: { code: \`${source.replace(/`/g, "\\`").replace(/\$\{/g, "\\${")}\`, language: "tsx" } },
+    docs: { source: { code: ${JSON.stringify(source)}, language: "tsx" } },
   },
 } satisfies Meta;
 

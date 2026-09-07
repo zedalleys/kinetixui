@@ -14,7 +14,7 @@ const meta = {
   title: "Data Display/Avatar",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Avatar>\n  <AvatarImage src="/avatar.png" alt="@kinetixui" />\n  <AvatarFallback>KX</AvatarFallback>\n</Avatar>`, language: "tsx" } },
+    docs: { source: { code: "<Avatar>\\n  <AvatarImage src=\"/avatar.png\" alt=\"@kinetixui\" />\\n  <AvatarFallback>KX</AvatarFallback>\\n</Avatar>", language: "tsx" } },
   },
 } satisfies Meta;
 

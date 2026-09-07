@@ -25,7 +25,7 @@ const meta = {
   title: "Navigation/NavigationMenu",
   parameters: {
     layout: "padded",
-    docs: { source: { code: `<NavigationMenu>\n  <NavigationMenuList>\n    <NavigationMenuItem>\n      <NavigationMenuTrigger>Getting started</NavigationMenuTrigger>\n      <NavigationMenuContent>…</NavigationMenuContent>\n    </NavigationMenuItem>\n  </NavigationMenuList>\n</NavigationMenu>`, language: "tsx" } },
+    docs: { source: { code: "<NavigationMenu>\\n  <NavigationMenuList>\\n    <NavigationMenuItem>\\n      <NavigationMenuTrigger>Getting started</NavigationMenuTrigger>\\n      <NavigationMenuContent>…</NavigationMenuContent>\\n    </NavigationMenuItem>\\n  </NavigationMenuList>\\n</NavigationMenu>", language: "tsx" } },
   },
 } satisfies Meta;
 

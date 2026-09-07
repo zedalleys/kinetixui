@@ -30,7 +30,7 @@ const meta = {
   title: "Overlays/Drawer",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Drawer>\n  <DrawerTrigger asChild><Button variant="Outline">Open Drawer</Button></DrawerTrigger>\n  <DrawerContent>…</DrawerContent>\n</Drawer>`, language: "tsx" } },
+    docs: { source: { code: "<Drawer>\\n  <DrawerTrigger asChild><Button variant=\"Outline\">Open Drawer</Button></DrawerTrigger>\\n  <DrawerContent>…</DrawerContent>\\n</Drawer>", language: "tsx" } },
   },
 } satisfies Meta;
 

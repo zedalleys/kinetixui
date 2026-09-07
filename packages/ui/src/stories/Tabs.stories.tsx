@@ -26,7 +26,7 @@ const meta = {
   argTypes: { defaultValue: { control: "inline-radio", options: ["account", "password"] } },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Tabs defaultValue="account">\n  <TabsList>\n    <TabsTrigger value="account">Account</TabsTrigger>\n    <TabsTrigger value="password">Password</TabsTrigger>\n  </TabsList>\n  <TabsContent value="account">…</TabsContent>\n</Tabs>`, language: "tsx" } },
+    docs: { source: { code: "<Tabs defaultValue=\"account\">\\n  <TabsList>\\n    <TabsTrigger value=\"account\">Account</TabsTrigger>\\n    <TabsTrigger value=\"password\">Password</TabsTrigger>\\n  </TabsList>\\n  <TabsContent value=\"account\">…</TabsContent>\\n</Tabs>", language: "tsx" } },
   },
 } satisfies Meta;
 

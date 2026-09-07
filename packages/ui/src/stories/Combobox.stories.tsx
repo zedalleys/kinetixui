@@ -23,7 +23,7 @@ const meta = {
   title: "Controls & Actions/Combobox",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `// Popover + Command\n<Popover>\n  <PopoverTrigger asChild><Button variant="Outline">Select framework…</Button></PopoverTrigger>\n  <PopoverContent className="p-0">\n    <Command>…</Command>\n  </PopoverContent>\n</Popover>`, language: "tsx" } },
+    docs: { source: { code: "// Popover + Command\\n<Popover>\\n  <PopoverTrigger asChild><Button variant=\"Outline\">Select framework…</Button></PopoverTrigger>\\n  <PopoverContent className=\"p-0\">\\n    <Command>…</Command>\\n  </PopoverContent>\\n</Popover>", language: "tsx" } },
   },
 } satisfies Meta;
 

@@ -18,7 +18,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<NumberInput value={qty} onChange={setQty} min={0} max={10} />`, language: "tsx" } },
+    docs: { source: { code: "<NumberInput value={qty} onChange={setQty} min={0} max={10} />", language: "tsx" } },
   },
 } satisfies Meta;
 

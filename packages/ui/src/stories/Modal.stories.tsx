@@ -22,7 +22,7 @@ const meta = {
   title: "Overlays/Modal",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Modal\n  type="Confirmation"\n  title="Are you sure?"\n  description="This action cannot be undone."\n  trigger={<Button variant="Outline">Delete</Button>}\n  onAction={handleDelete}\n/>`, language: "tsx" } },
+    docs: { source: { code: "<Modal\\n  type=\"Confirmation\"\\n  title=\"Are you sure?\"\\n  description=\"This action cannot be undone.\"\\n  trigger={<Button variant=\"Outline\">Delete</Button>}\\n  onAction={handleDelete}\\n/>", language: "tsx" } },
   },
 } satisfies Meta;
 

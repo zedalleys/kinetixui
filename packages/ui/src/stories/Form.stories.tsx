@@ -19,7 +19,7 @@ const meta = {
   title: "Form Inputs/Form",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `const form = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema) })\n\n<Form {...form}>\n  <form onSubmit={form.handleSubmit(onSubmit)}>\n    <FormField control={form.control} name="username" render={({ field }) => (\n      <FormItem>\n        <FormLabel>Username</FormLabel>\n        <FormControl><Input {...field} /></FormControl>\n        <FormMessage />\n      </FormItem>\n    )} />\n    <Button type="submit">Submit</Button>\n  </form>\n</Form>`, language: "tsx" } },
+    docs: { source: { code: "const form = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema) })\\n\\n<Form {...form}>\\n  <form onSubmit={form.handleSubmit(onSubmit)}>\\n    <FormField control={form.control} name=\"username\" render={({ field }) => (\\n      <FormItem>\\n        <FormLabel>Username</FormLabel>\\n        <FormControl><Input {...field} /></FormControl>\\n        <FormMessage />\\n      </FormItem>\\n    )} />\\n    <Button type=\"submit\">Submit</Button>\\n  </form>\\n</Form>", language: "tsx" } },
   },
 } satisfies Meta;
 

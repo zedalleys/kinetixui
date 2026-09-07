@@ -17,7 +17,7 @@ const meta = {
   title: "Data Display/AudioPlayer",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<AudioPlayer src="/audio/song.mp3" title="Song 1" artist="Artist" />\n\n<AudioPlayer variant="mini" src="/audio/song.mp3" title="Song 1" artist="Artist" />`, language: "tsx" } },
+    docs: { source: { code: "<AudioPlayer src=\"/audio/song.mp3\" title=\"Song 1\" artist=\"Artist\" />\\n\\n<AudioPlayer variant=\"mini\" src=\"/audio/song.mp3\" title=\"Song 1\" artist=\"Artist\" />", language: "tsx" } },
   },
 } satisfies Meta;
 

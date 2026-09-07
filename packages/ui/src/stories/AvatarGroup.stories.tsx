@@ -28,7 +28,7 @@ const meta = {
   title: "Data Display/AvatarGroup",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<AvatarGroup max={3}>\n  <Avatar><AvatarFallback>JD</AvatarFallback></Avatar>\n  <Avatar><AvatarFallback>AK</AvatarFallback></Avatar>\n  <Avatar><AvatarFallback>MO</AvatarFallback></Avatar>\n</AvatarGroup>`, language: "tsx" } },
+    docs: { source: { code: "<AvatarGroup max={3}>\\n  <Avatar><AvatarFallback>JD</AvatarFallback></Avatar>\\n  <Avatar><AvatarFallback>AK</AvatarFallback></Avatar>\\n  <Avatar><AvatarFallback>MO</AvatarFallback></Avatar>\\n</AvatarGroup>", language: "tsx" } },
   },
 } satisfies Meta;
 

@@ -26,7 +26,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Popover>\n  <PopoverTrigger asChild><Button variant="Outline">Open popover</Button></PopoverTrigger>\n  <PopoverContent>…</PopoverContent>\n</Popover>`, language: "tsx" } },
+    docs: { source: { code: "<Popover>\\n  <PopoverTrigger asChild><Button variant=\"Outline\">Open popover</Button></PopoverTrigger>\\n  <PopoverContent>…</PopoverContent>\\n</Popover>", language: "tsx" } },
   },
 } satisfies Meta;
 

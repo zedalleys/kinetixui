@@ -26,7 +26,7 @@ const meta = {
   title: "Form Inputs/Field",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Field invalid={!!error}>\n  <FieldLabel>Email</FieldLabel>\n  <FieldControl><Input type="email" {...register("email")} /></FieldControl>\n  <FieldDescription>We'll only use it to send receipts.</FieldDescription>\n  {error && <FieldMessage intent="error">{error.message}</FieldMessage>}\n</Field>`, language: "tsx" } },
+    docs: { source: { code: "<Field invalid={!!error}>\\n  <FieldLabel>Email</FieldLabel>\\n  <FieldControl><Input type=\"email\" {...register(\"email\")} /></FieldControl>\\n  <FieldDescription>We'll only use it to send receipts.</FieldDescription>\\n  {error && <FieldMessage intent=\"error\">{error.message}</FieldMessage>}\\n</Field>", language: "tsx" } },
   },
 } satisfies Meta;
 

@@ -24,7 +24,7 @@ const meta = {
   argTypes: { disabled: { control: "boolean" } },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Select>\n  <SelectTrigger><SelectValue placeholder="Select a fruit" /></SelectTrigger>\n  <SelectContent>\n    <SelectItem value="apple">Apple</SelectItem>\n  </SelectContent>\n</Select>`, language: "tsx" } },
+    docs: { source: { code: "<Select>\\n  <SelectTrigger><SelectValue placeholder=\"Select a fruit\" /></SelectTrigger>\\n  <SelectContent>\\n    <SelectItem value=\"apple\">Apple</SelectItem>\\n  </SelectContent>\\n</Select>", language: "tsx" } },
   },
 } satisfies Meta;
 
