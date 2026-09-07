@@ -5,6 +5,14 @@
 contract that feeds all four component libraries.
 **Standard:** WCAG 2.2 AA.
 
+> **Note (2026-09-06, post-audit):** the token contract has moved on since this
+> ledger was written — `--primary` / `--ring` are now an `azure` action blue
+> (`#1d4ed8` light, `#60a5fa` dark), `--secondary` deepened to `green.200`, and
+> `shadow.focus` was re-baked per theme. `scripts/check-contrast.mjs` still
+> **PASS**es AA in both themes; the current resolved values live in
+> `TOKENS.md`, `apps/web/src/lib/token-contract.ts`, and `/docs/changelog`.
+> Hex values in the findings below are as they were at audit time.
+
 ## Method
 
 1. **Token contrast** — `scripts/check-contrast.mjs` resolves every semantic

@@ -42,7 +42,7 @@ git push -u origin main
 
 ```bash
 npm i -g vercel
-cd "D:/src/strata design system/apps/web"
+cd apps/web
 vercel            # first run links the project — pick the repo, Root = apps/web
 vercel --prod     # production deploy → prints the live URL
 ```
@@ -54,8 +54,12 @@ In Vercel: **Project → Settings → Domains → Add** `kinetixui.com` **and**
 
 | Type  | Name / Host | Value                     | TTL  |
 |-------|-------------|---------------------------|------|
-| A     | `@`         | `76.76.21.21`             | 600  |
+| A     | `@`         | `216.198.79.1`            | 600  |
 | CNAME | `www`       | `cname.vercel-dns.com`    | 600  |
+
+> The `A` value is Vercel's current anycast range. The older `76.76.21.21` still
+> resolves, but **always use the value the Vercel Domains panel shows you** —
+> it's the source of truth.
 
 In **GoDaddy → Domain Portfolio → kinetixui.com → DNS**:
 
@@ -67,10 +71,9 @@ In **GoDaddy → Domain Portfolio → kinetixui.com → DNS**:
 4. Save. Propagation is usually minutes, up to 48h. Vercel's Domains panel
    shows a green check when it resolves, then issues the SSL cert automatically.
 
-> Prefer `www` as primary? Add `CNAME www → cname.vercel-dns.com`, then in
-> Vercel set `www.kinetixui.com` as the primary domain and it will 308-redirect
-> the apex to it (the apex still needs the `A @ → 76.76.21.21` record so the
-> redirect works).
+> **Live setup:** apex `kinetixui.com` is primary/canonical; `www` 308-redirects
+> to it. To prefer `www` instead, set `www.kinetixui.com` as the primary domain
+> in Vercel — the apex still needs its `A @` record so the redirect resolves.
 
 ## 4. Registry endpoint
 
