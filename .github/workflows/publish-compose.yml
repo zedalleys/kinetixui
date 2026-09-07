@@ -26,18 +26,18 @@ jobs:
       run:
         working-directory: packages/ui-compose
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
 
       # Same as native-compose.yml: this package's gradle-wrapper.jar isn't
       # committed, so CI provisions a real Gradle instead of ./gradlew.
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: "8.7"
 
