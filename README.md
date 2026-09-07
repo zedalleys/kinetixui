@@ -25,6 +25,12 @@ Free while in beta.
 
 ---
 
+<div align="center">
+  <a href="https://kinetixui.com">
+    <img src=".github/assets/home.png" alt="KinetixUI — one token architecture, in motion across every platform" />
+  </a>
+</div>
+
 ## Quick start
 
 ```bash
