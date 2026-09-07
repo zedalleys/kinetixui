@@ -37,7 +37,7 @@
     "@changesets/cli": "^3.0.1",
     "rimraf": "^6.0.1",
     "shadcn": "^2.1.8",
-    "style-dictionary": "^4.3.0",
+    "style-dictionary": "^5.5.2",
     "turbo": "^2.3.3",
     "typescript": "^5.7.2"
   }

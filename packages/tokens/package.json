@@ -2,29 +2,48 @@
   "name": "@kinetixui/tokens",
   "version": "0.5.0",
   "description": "KinetixUI design tokens — CSS variables, a TypeScript object, and native SwiftUI / Jetpack Compose / Flutter text styles, compiled by Style Dictionary.",
-  "keywords": ["design-tokens", "design-system", "style-dictionary", "css-variables", "kinetixui"],
+  "keywords": [
+    "design-tokens",
+    "design-system",
+    "style-dictionary",
+    "css-variables",
+    "kinetixui"
+  ],
   "license": "MIT",
   "author": "KinetixUI",
   "homepage": "https://kinetixui.com",
-  "repository": { "type": "git", "url": "https://github.com/zedalleys/kinetixui.git", "directory": "packages/tokens" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zedalleys/kinetixui.git",
+    "directory": "packages/tokens"
+  },
   "type": "module",
-  "sideEffects": ["*.css"],
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
-    ".": { "types": "./dist/web/tokens.d.ts", "import": "./dist/web/tokens.js" },
+    ".": {
+      "types": "./dist/web/tokens.d.ts",
+      "import": "./dist/web/tokens.js"
+    },
     "./css": "./dist/web/globals.css",
     "./css/dark": "./dist/web/globals.dark.css",
     "./css/extras": "./dist/web/extras.css",
     "./css/extras/dark": "./dist/web/extras.dark.css",
     "./package.json": "./package.json"
   },
-  "files": ["dist"],
-  "publishConfig": { "access": "public" },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "node ../../style-dictionary/build.mjs",
     "clean": "rimraf dist"
   },
   "devDependencies": {
     "rimraf": "^6.0.1",
-    "style-dictionary": "^4.3.0"
+    "style-dictionary": "^5.5.2"
   }
 }
