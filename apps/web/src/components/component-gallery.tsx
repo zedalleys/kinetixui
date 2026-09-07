@@ -4,9 +4,12 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Search, X } from "lucide-react";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@kinetixui/ui";
 import { cn } from "@/lib/utils";
 import { componentDocs } from "@/lib/site";
 import { CATEGORY_ORDER, PRIMITIVE, categoryOf } from "@/lib/component-registry";
+import { NATIVE_PLATFORMS, isOnPlatform, countOnPlatform } from "@/lib/platform-parity";
+import { PlatformBadges } from "@/components/platform-badges";
 import { SectionHead } from "@/components/section-head";
 import { demoRegistry } from "@/registry/demos";
 import { THUMBNAIL_MOCKS } from "@/components/component-thumbnails";
@@ -47,6 +50,11 @@ const ITEMS: Item[] = componentDocs.map((item) => {
 const CATEGORY_COUNT: Record<string, number> = ITEMS.reduce(
   (acc, it) => ((acc[it.category] = (acc[it.category] ?? 0) + 1), acc),
   {} as Record<string, number>,
+);
+
+const ALL_SLUGS = ITEMS.map((it) => it.slug);
+const PLATFORM_COUNT: Record<string, number> = Object.fromEntries(
+  NATIVE_PLATFORMS.map((p) => [p, countOnPlatform(ALL_SLUGS, p)]),
 );
 
 function Thumbnail({ item }: { item: Item }) {
@@ -118,6 +126,7 @@ function Card({ item }: { item: Item }) {
           <span className="mt-1 inline-block max-w-full truncate rounded border border-border/70 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
             {item.primitive ?? item.category}
           </span>
+          <PlatformBadges slug={item.slug} className="mt-2" />
         </span>
         <span
           aria-hidden
@@ -149,6 +158,7 @@ export function ComponentGallery() {
 
   const [query, setQuery] = React.useState(params.get("q") ?? "");
   const activeCat = params.get("cat");
+  const activePlatform = NATIVE_PLATFORMS.find((p) => p === params.get("platform")) ?? null;
 
   // debounce the search term into the URL so a filtered view is shareable and
   // Back/Forward restore it, without a history entry per keystroke.
@@ -177,13 +187,15 @@ export function ComponentGallery() {
     setQuery((cur) => (cur.trim() === urlQuery.trim() ? cur : urlQuery));
   }, [urlQuery]);
 
-  const setCat = (cat: string | null) => {
+  const setParam = (key: string, value: string | null) => {
     const next = new URLSearchParams(Array.from(params.entries()));
-    if (cat) next.set("cat", cat);
-    else next.delete("cat");
+    if (value) next.set(key, value);
+    else next.delete(key);
     const qs = next.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
+  const setCat = (cat: string | null) => setParam("cat", cat);
+  const setPlatform = (p: string | null) => setParam("platform", p);
 
   const clearAll = () => {
     setQuery("");
@@ -193,6 +205,7 @@ export function ComponentGallery() {
   const q = query.trim().toLowerCase();
   const filtered = ITEMS.filter((it) => {
     if (activeCat && it.category !== activeCat) return false;
+    if (activePlatform && !isOnPlatform(it.slug, activePlatform)) return false;
     if (!q) return true;
     return (
       it.title.toLowerCase().includes(q) ||
@@ -202,15 +215,17 @@ export function ComponentGallery() {
     );
   });
 
-  const grouped = !q && !activeCat;
-  const isFiltered = Boolean(q || activeCat);
+  const grouped = !q && !activeCat && !activePlatform;
+  const isFiltered = Boolean(q || activeCat || activePlatform);
 
   return (
     <>
       <p className="mt-2 max-w-2xl text-muted-foreground">
         {ITEMS.length} components across {CATEGORY_ORDER.length} categories — built from Figma,
         styled against the token contract, distributed through the kinetixui registry. React,
-        SwiftUI, Jetpack Compose and Flutter snippets ship with every one.
+        SwiftUI, Jetpack Compose and Flutter snippets ship with every one; the{" "}
+        <span className="font-mono text-[11px] uppercase tracking-[0.1em]">RE SW JC FL</span> tags
+        on each card mark which native libraries carry it today.
       </p>
 
       {/* filter bar */}
@@ -225,42 +240,35 @@ export function ComponentGallery() {
             <label htmlFor="component-search" className="sr-only">
               Filter components by name, primitive or category
             </label>
-            <div
-              className={cn(
-                "group/search relative flex h-9 flex-1 items-center gap-2 rounded-md border border-input bg-background px-2.5 sm:max-w-xs",
-                "transition-colors focus-within:border-primary focus-within:shadow-focus",
-              )}
-            >
-              <Search
-                aria-hidden
-                className="size-4 shrink-0 text-muted-foreground transition-colors group-focus-within/search:text-primary"
-              />
-              <input
+            <InputGroup className="h-9 flex-1 rounded-md sm:max-w-xs">
+              <InputGroupAddon>
+                <Search aria-hidden />
+              </InputGroupAddon>
+              <InputGroupInput
                 id="component-search"
                 ref={searchRef}
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search components…"
-                className={cn(
-                  "peer h-full w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground",
-                  "[&::-webkit-search-cancel-button]:appearance-none",
-                )}
+                className="py-0 text-sm [&::-webkit-search-cancel-button]:appearance-none"
               />
               {query && (
-                <button
-                  type="button"
-                  aria-label="Clear search"
-                  onClick={() => {
-                    setQuery("");
-                    searchRef.current?.focus();
-                  }}
-                  className="shrink-0 rounded-sm p-0.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <X aria-hidden className="size-3.5" />
-                </button>
+                <InputGroupAddon align="end">
+                  <button
+                    type="button"
+                    aria-label="Clear search"
+                    onClick={() => {
+                      setQuery("");
+                      searchRef.current?.focus();
+                    }}
+                    className="rounded-sm p-0.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <X aria-hidden className="size-3.5" />
+                  </button>
+                </InputGroupAddon>
               )}
-            </div>
+            </InputGroup>
             {isFiltered && (
               <button
                 type="button"
@@ -297,6 +305,27 @@ export function ComponentGallery() {
               </button>
             ))}
           </div>
+
+          <div role="group" aria-label="Filter by platform" className="flex flex-wrap items-center gap-1.5">
+            <span className="mr-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+              Platform
+            </span>
+            {NATIVE_PLATFORMS.map((p) => {
+              const on = activePlatform === p;
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setPlatform(on ? null : p)}
+                  className={catButton(on)}
+                  title={`Components shipping in the ${p} library`}
+                >
+                  {p} <span className="tabular-nums opacity-80">{PLATFORM_COUNT[p] ?? 0}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -305,6 +334,7 @@ export function ComponentGallery() {
           ? `${ITEMS.length} components`
           : `${filtered.length} of ${ITEMS.length} components`}
         {activeCat ? ` · ${activeCat}` : ""}
+        {activePlatform ? ` · ${activePlatform}` : ""}
         {q ? ` · “${query.trim()}”` : ""}
       </p>
 
@@ -312,7 +342,8 @@ export function ComponentGallery() {
         <div className="mt-10 rounded-xl border border-dashed border-border py-16 text-center">
           <p className="text-sm text-muted-foreground">
             No components match{q ? ` “${query.trim()}”` : ""}
-            {activeCat ? ` in ${activeCat}` : ""}.
+            {activeCat ? ` in ${activeCat}` : ""}
+            {activePlatform ? ` on ${activePlatform}` : ""}.
           </p>
           <button
             type="button"

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PRIMITIVE, COMPONENT_CATEGORY } from "@/lib/component-registry";
+import { PlatformBadges } from "@/components/platform-badges";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -28,6 +29,9 @@ export function ComponentMeta() {
     >
       {COMPONENT_CATEGORY[slug] && <Row label="Category">{COMPONENT_CATEGORY[slug]}</Row>}
       {PRIMITIVE[slug] && <Row label="Built on">{PRIMITIVE[slug]}</Row>}
+      <Row label="Platforms">
+        <PlatformBadges slug={slug} />
+      </Row>
       <Row label="CLI">
         <span className="break-all">npx @kinetixui/cli add {slug}</span>
       </Row>
