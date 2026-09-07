@@ -27,7 +27,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Accordion type="single" collapsible>\n  <AccordionItem value="a">\n    <AccordionTrigger>Is it accessible?</AccordionTrigger>\n    <AccordionContent>Yes. It follows the WAI-ARIA design pattern.</AccordionContent>\n  </AccordionItem>\n</Accordion>`, language: "tsx" } },
+    docs: { source: { code: "<Accordion type=\"single\" collapsible>\\n  <AccordionItem value=\"a\">\\n    <AccordionTrigger>Is it accessible?</AccordionTrigger>\\n    <AccordionContent>Yes. It follows the WAI-ARIA design pattern.</AccordionContent>\\n  </AccordionItem>\\n</Accordion>", language: "tsx" } },
   },
 } satisfies Meta;
 

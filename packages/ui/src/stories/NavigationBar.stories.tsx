@@ -23,7 +23,7 @@ const meta = {
   title: "Navigation/NavigationBar",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<NavigationBar\n  title="Appointments"\n  infoText="3 upcoming"\n  onBack={() => router.back()}\n  actions={<Button variant="Ghost" size="icon"><Search /></Button>}\n/>`, language: "tsx" } },
+    docs: { source: { code: "<NavigationBar\\n  title=\"Appointments\"\\n  infoText=\"3 upcoming\"\\n  onBack={() => router.back()}\\n  actions={<Button variant=\"Ghost\" size=\"icon\"><Search /></Button>}\\n/>", language: "tsx" } },
   },
 } satisfies Meta;
 

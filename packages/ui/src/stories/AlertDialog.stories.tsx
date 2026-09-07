@@ -26,7 +26,7 @@ const meta = {
   title: "Overlays/AlertDialog",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<AlertDialog>\n  <AlertDialogTrigger asChild><Button variant="Outline">Delete account</Button></AlertDialogTrigger>\n  <AlertDialogContent>…</AlertDialogContent>\n</AlertDialog>`, language: "tsx" } },
+    docs: { source: { code: "<AlertDialog>\\n  <AlertDialogTrigger asChild><Button variant=\"Outline\">Delete account</Button></AlertDialogTrigger>\\n  <AlertDialogContent>…</AlertDialogContent>\\n</AlertDialog>", language: "tsx" } },
   },
 } satisfies Meta;
 

@@ -26,7 +26,7 @@ const meta = {
   title: "Navigation/Stepper",
   parameters: {
     layout: "padded",
-    docs: { source: { code: `<Stepper\n  current={1}\n  steps={[{ label: "Account" }, { label: "Profile" }, { label: "Review" }]}\n/>`, language: "tsx" } },
+    docs: { source: { code: "<Stepper\\n  current={1}\\n  steps={[{ label: \"Account\" }, { label: \"Profile\" }, { label: \"Review\" }]}\\n/>", language: "tsx" } },
   },
 } satisfies Meta;
 

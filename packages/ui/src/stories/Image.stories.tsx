@@ -22,7 +22,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Image ratio="1:1" src="/photo.jpg" alt="" />\n<Image ratio="4:3" src="/photo.jpg" alt="" />\n<Image ratio="16:9" src="/photo.jpg" alt="" rounded={false} />`, language: "tsx" } },
+    docs: { source: { code: "<Image ratio=\"1:1\" src=\"/photo.jpg\" alt=\"\" />\\n<Image ratio=\"4:3\" src=\"/photo.jpg\" alt=\"\" />\\n<Image ratio=\"16:9\" src=\"/photo.jpg\" alt=\"\" rounded={false} />", language: "tsx" } },
   },
 } satisfies Meta;
 

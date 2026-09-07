@@ -29,7 +29,7 @@ const meta = {
   title: "Overlays/Dialog",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Dialog>\n  <DialogTrigger asChild><Button variant="Outline">Edit profile</Button></DialogTrigger>\n  <DialogContent>…</DialogContent>\n</Dialog>`, language: "tsx" } },
+    docs: { source: { code: "<Dialog>\\n  <DialogTrigger asChild><Button variant=\"Outline\">Edit profile</Button></DialogTrigger>\\n  <DialogContent>…</DialogContent>\\n</Dialog>", language: "tsx" } },
   },
 } satisfies Meta;
 

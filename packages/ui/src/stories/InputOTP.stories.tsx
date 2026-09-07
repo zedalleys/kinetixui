@@ -18,7 +18,7 @@ const meta = {
   title: "Form Inputs/InputOTP",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<InputOTP maxLength={6}>\n  <InputOTPGroup>\n    <InputOTPSlot index={0} />\n    ...\n    <InputOTPSlot index={5} />\n  </InputOTPGroup>\n</InputOTP>`, language: "tsx" } },
+    docs: { source: { code: "<InputOTP maxLength={6}>\\n  <InputOTPGroup>\\n    <InputOTPSlot index={0} />\\n    ...\\n    <InputOTPSlot index={5} />\\n  </InputOTPGroup>\\n</InputOTP>", language: "tsx" } },
   },
 } satisfies Meta;
 

@@ -13,7 +13,7 @@ const meta = {
   argTypes: { disabled: { control: "boolean" } },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Slider defaultValue={[50]} max={100} step={1} />`, language: "tsx" } },
+    docs: { source: { code: "<Slider defaultValue={[50]} max={100} step={1} />", language: "tsx" } },
   },
 } satisfies Meta;
 

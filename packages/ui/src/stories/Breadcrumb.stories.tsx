@@ -27,7 +27,7 @@ const meta = {
   title: "Navigation/Breadcrumb",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Breadcrumb>\n  <BreadcrumbList>\n    <BreadcrumbItem><BreadcrumbLink href="/">Home</BreadcrumbLink></BreadcrumbItem>\n    <BreadcrumbSeparator />\n    <BreadcrumbItem><BreadcrumbPage>Breadcrumb</BreadcrumbPage></BreadcrumbItem>\n  </BreadcrumbList>\n</Breadcrumb>`, language: "tsx" } },
+    docs: { source: { code: "<Breadcrumb>\\n  <BreadcrumbList>\\n    <BreadcrumbItem><BreadcrumbLink href=\"/\">Home</BreadcrumbLink></BreadcrumbItem>\\n    <BreadcrumbSeparator />\\n    <BreadcrumbItem><BreadcrumbPage>Breadcrumb</BreadcrumbPage></BreadcrumbItem>\\n  </BreadcrumbList>\\n</Breadcrumb>", language: "tsx" } },
   },
 } satisfies Meta;
 

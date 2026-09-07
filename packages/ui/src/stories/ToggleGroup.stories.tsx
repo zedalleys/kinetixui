@@ -20,7 +20,7 @@ const meta = {
   argTypes: { type: { control: "inline-radio", options: ["single", "multiple"] } },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<ToggleGroup type="multiple">\n  <ToggleGroupItem value="bold"><Bold /></ToggleGroupItem>\n  <ToggleGroupItem value="italic"><Italic /></ToggleGroupItem>\n</ToggleGroup>`, language: "tsx" } },
+    docs: { source: { code: "<ToggleGroup type=\"multiple\">\\n  <ToggleGroupItem value=\"bold\"><Bold /></ToggleGroupItem>\\n  <ToggleGroupItem value=\"italic\"><Italic /></ToggleGroupItem>\\n</ToggleGroup>", language: "tsx" } },
   },
 } satisfies Meta;
 

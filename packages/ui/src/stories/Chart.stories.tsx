@@ -35,7 +35,7 @@ const meta = {
   title: "Data Display/Chart",
   parameters: {
     layout: "padded",
-    docs: { source: { code: `const config = {\n  desktop: { label: "Desktop", color: "hsl(var(--chart-1))" },\n  mobile: { label: "Mobile", color: "hsl(var(--chart-2))" },\n}\n<ChartContainer config={config}>\n  <BarChart data={data}>\n    <CartesianGrid vertical={false} />\n    <XAxis dataKey="month" />\n    <ChartTooltip content={<ChartTooltipContent />} />\n    <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />\n  </BarChart>\n</ChartContainer>`, language: "tsx" } },
+    docs: { source: { code: "const config = {\\n  desktop: { label: \"Desktop\", color: \"hsl(var(--chart-1))\" },\\n  mobile: { label: \"Mobile\", color: \"hsl(var(--chart-2))\" },\\n}\\n<ChartContainer config={config}>\\n  <BarChart data={data}>\\n    <CartesianGrid vertical={false} />\\n    <XAxis dataKey=\"month\" />\\n    <ChartTooltip content={<ChartTooltipContent />} />\\n    <Bar dataKey=\"desktop\" fill=\"var(--color-desktop)\" radius={4} />\\n  </BarChart>\\n</ChartContainer>", language: "tsx" } },
   },
 } satisfies Meta;
 

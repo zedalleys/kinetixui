@@ -18,7 +18,7 @@ const meta = {
   argTypes: { disabled: { control: "boolean" }, defaultChecked: { control: "boolean" } },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<div className="flex items-center gap-2">\n  <Checkbox id="c1" />\n  <Label htmlFor="c1">Accept terms and conditions</Label>\n</div>`, language: "tsx" } },
+    docs: { source: { code: "<div className=\"flex items-center gap-2\">\\n  <Checkbox id=\"c1\" />\\n  <Label htmlFor=\"c1\">Accept terms and conditions</Label>\\n</div>", language: "tsx" } },
   },
 } satisfies Meta;
 

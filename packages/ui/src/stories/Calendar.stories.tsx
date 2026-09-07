@@ -16,7 +16,7 @@ const meta = {
   title: "Form Inputs/Calendar",
   parameters: {
     layout: "padded",
-    docs: { source: { code: `const [date, setDate] = React.useState<Date>()\n<Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border" />`, language: "tsx" } },
+    docs: { source: { code: "const [date, setDate] = React.useState<Date>()\\n<Calendar mode=\"single\" selected={date} onSelect={setDate} className=\"rounded-md border\" />", language: "tsx" } },
   },
 } satisfies Meta;
 

@@ -18,7 +18,7 @@ const meta = {
   argTypes: { disabled: { control: "boolean" }, defaultChecked: { control: "boolean" } },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<div className="flex items-center gap-2">\n  <Switch id="airplane" />\n  <Label htmlFor="airplane">Airplane mode</Label>\n</div>`, language: "tsx" } },
+    docs: { source: { code: "<div className=\"flex items-center gap-2\">\\n  <Switch id=\"airplane\" />\\n  <Label htmlFor=\"airplane\">Airplane mode</Label>\\n</div>", language: "tsx" } },
   },
 } satisfies Meta;
 

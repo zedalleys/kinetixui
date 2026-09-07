@@ -20,7 +20,7 @@ const meta = {
   argTypes: { value: { control: { type: "range", min: 0, max: 100 } } },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `const [value, setValue] = React.useState(13)\n// ...\n<Progress value={value} />`, language: "tsx" } },
+    docs: { source: { code: "const [value, setValue] = React.useState(13)\\n// ...\\n<Progress value={value} />", language: "tsx" } },
   },
 } satisfies Meta;
 

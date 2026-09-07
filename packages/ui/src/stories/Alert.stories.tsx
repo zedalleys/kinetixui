@@ -22,7 +22,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Alert>\n  <Terminal className="size-4" />\n  <AlertTitle>Heads up!</AlertTitle>\n  <AlertDescription>You can add components to your app using the CLI.</AlertDescription>\n</Alert>`, language: "tsx" } },
+    docs: { source: { code: "<Alert>\\n  <Terminal className=\"size-4\" />\\n  <AlertTitle>Heads up!</AlertTitle>\\n  <AlertDescription>You can add components to your app using the CLI.</AlertDescription>\\n</Alert>", language: "tsx" } },
   },
 } satisfies Meta;
 

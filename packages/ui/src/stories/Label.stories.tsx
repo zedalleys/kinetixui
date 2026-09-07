@@ -15,7 +15,7 @@ const meta = {
   title: "Foundations/Label",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Label htmlFor="email">Your email address</Label>`, language: "tsx" } },
+    docs: { source: { code: "<Label htmlFor=\"email\">Your email address</Label>", language: "tsx" } },
   },
 } satisfies Meta;
 

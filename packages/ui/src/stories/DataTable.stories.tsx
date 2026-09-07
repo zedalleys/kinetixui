@@ -22,7 +22,7 @@ const meta = {
   title: "Data Display/DataTable",
   parameters: {
     layout: "padded",
-    docs: { source: { code: `const columns: ColumnDef<Invoice>[] = [\n  { accessorKey: "invoice", header: "Invoice" },\n  { accessorKey: "amount", header: "Amount" },\n]\n<DataTable columns={columns} data={data} />`, language: "tsx" } },
+    docs: { source: { code: "const columns: ColumnDef<Invoice>[] = [\\n  { accessorKey: \"invoice\", header: \"Invoice\" },\\n  { accessorKey: \"amount\", header: \"Amount\" },\\n]\\n<DataTable columns={columns} data={data} />", language: "tsx" } },
   },
 } satisfies Meta;
 

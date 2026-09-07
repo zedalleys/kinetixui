@@ -48,7 +48,10 @@ function tableMd(el: HTMLElement): string {
   const rows = Array.from(el.querySelectorAll("tr"));
   if (!rows.length) return "";
   const cells = (tr: Element) =>
-    Array.from(tr.children).map((c) => inline(c as HTMLElement).trim().replace(/\|/g, "\\|"));
+    Array.from(tr.children).map((c) =>
+      // escape backslash first, then the cell delimiter
+      inline(c as HTMLElement).trim().replace(/\\/g, "\\\\").replace(/\|/g, "\\|"),
+    );
   const head = cells(rows[0]);
   const out = [`| ${head.join(" | ")} |`, `| ${head.map(() => "---").join(" | ")} |`];
   for (const tr of rows.slice(1)) out.push(`| ${cells(tr).join(" | ")} |`);

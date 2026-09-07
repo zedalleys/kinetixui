@@ -18,7 +18,7 @@ const meta = {
   title: "Foundations/Skeleton",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Skeleton className="size-12 rounded-full" />\n<Skeleton className="h-4 w-[200px]" />`, language: "tsx" } },
+    docs: { source: { code: "<Skeleton className=\"size-12 rounded-full\" />\\n<Skeleton className=\"h-4 w-[200px]\" />", language: "tsx" } },
   },
 } satisfies Meta;
 

@@ -31,7 +31,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Fab aria-label="Add">\n  <Plus />\n</Fab>\n\n<Fab extended>\n  <Plus />\n  New item\n</Fab>`, language: "tsx" } },
+    docs: { source: { code: "<Fab aria-label=\"Add\">\\n  <Plus />\\n</Fab>\\n\\n<Fab extended>\\n  <Plus />\\n  New item\\n</Fab>", language: "tsx" } },
   },
 } satisfies Meta;
 

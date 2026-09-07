@@ -21,7 +21,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Metric label="Active users" value="2,420" trend="up" change="12%" />`, language: "tsx" } },
+    docs: { source: { code: "<Metric label=\"Active users\" value=\"2,420\" trend=\"up\" change=\"12%\" />", language: "tsx" } },
   },
 } satisfies Meta;
 

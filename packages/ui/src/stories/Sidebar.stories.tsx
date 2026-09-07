@@ -16,7 +16,7 @@ const meta = {
   title: "Navigation/Sidebar",
   parameters: {
     layout: "padded",
-    docs: { source: { code: `<SidebarProvider>\n  <Sidebar>\n    <SidebarHeader>…</SidebarHeader>\n    <SidebarContent>\n      <SidebarGroup>\n        <SidebarMenu>\n          <SidebarMenuItem>\n            <SidebarMenuButton isActive>Home</SidebarMenuButton>\n          </SidebarMenuItem>\n        </SidebarMenu>\n      </SidebarGroup>\n    </SidebarContent>\n  </Sidebar>\n  <SidebarInset>\n    <SidebarTrigger />\n    {/* page content */}\n  </SidebarInset>\n</SidebarProvider>`, language: "tsx" } },
+    docs: { source: { code: "<SidebarProvider>\\n  <Sidebar>\\n    <SidebarHeader>…</SidebarHeader>\\n    <SidebarContent>\\n      <SidebarGroup>\\n        <SidebarMenu>\\n          <SidebarMenuItem>\\n            <SidebarMenuButton isActive>Home</SidebarMenuButton>\\n          </SidebarMenuItem>\\n        </SidebarMenu>\\n      </SidebarGroup>\\n    </SidebarContent>\\n  </Sidebar>\\n  <SidebarInset>\\n    <SidebarTrigger />\\n    {/* page content */}\\n  </SidebarInset>\\n</SidebarProvider>", language: "tsx" } },
   },
 } satisfies Meta;
 

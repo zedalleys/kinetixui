@@ -29,7 +29,7 @@ const meta = {
   title: "Navigation/Menubar",
   parameters: {
     layout: "padded",
-    docs: { source: { code: `<Menubar>\n  <MenubarMenu>\n    <MenubarTrigger>File</MenubarTrigger>\n    <MenubarContent>\n      <MenubarItem>New Tab</MenubarItem>\n    </MenubarContent>\n  </MenubarMenu>\n</Menubar>`, language: "tsx" } },
+    docs: { source: { code: "<Menubar>\\n  <MenubarMenu>\\n    <MenubarTrigger>File</MenubarTrigger>\\n    <MenubarContent>\\n      <MenubarItem>New Tab</MenubarItem>\\n    </MenubarContent>\\n  </MenubarMenu>\\n</Menubar>", language: "tsx" } },
   },
 } satisfies Meta;
 

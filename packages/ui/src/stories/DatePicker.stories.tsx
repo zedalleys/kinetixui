@@ -21,7 +21,7 @@ const meta = {
   title: "Form Inputs/DatePicker",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<DatePicker\n  label="Appointment date"\n  value={date}\n  onChange={setDate}\n  helperText="Choose a weekday"\n/>`, language: "tsx" } },
+    docs: { source: { code: "<DatePicker\\n  label=\"Appointment date\"\\n  value={date}\\n  onChange={setDate}\\n  helperText=\"Choose a weekday\"\\n/>", language: "tsx" } },
   },
 } satisfies Meta;
 

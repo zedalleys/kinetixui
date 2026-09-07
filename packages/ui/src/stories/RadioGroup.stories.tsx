@@ -25,7 +25,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<RadioGroup defaultValue="comfortable">\n  <div className="flex items-center gap-2">\n    <RadioGroupItem value="default" id="r1" />\n    <Label htmlFor="r1">Default</Label>\n  </div>\n</RadioGroup>`, language: "tsx" } },
+    docs: { source: { code: "<RadioGroup defaultValue=\"comfortable\">\\n  <div className=\"flex items-center gap-2\">\\n    <RadioGroupItem value=\"default\" id=\"r1\" />\\n    <Label htmlFor=\"r1\">Default</Label>\\n  </div>\\n</RadioGroup>", language: "tsx" } },
   },
 } satisfies Meta;
 
