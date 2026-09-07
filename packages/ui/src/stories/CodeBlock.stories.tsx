@@ -16,7 +16,7 @@ const meta = {
   title: "Foundations/CodeBlock",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<CodeBlock filename="button.tsx" code={source} />`, language: "tsx" } },
+    docs: { source: { code: "<CodeBlock filename=\"button.tsx\" code={source} />", language: "tsx" } },
   },
 } satisfies Meta;
 

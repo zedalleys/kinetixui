@@ -22,7 +22,7 @@ const meta = {
   title: "Navigation/TableOfContents",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<TableOfContents\n  active={activeId}\n  items={[{ id: "overview", label: "Overview" }, { id: "props", label: "Props", level: 2 }]}\n/>`, language: "tsx" } },
+    docs: { source: { code: "<TableOfContents\\n  active={activeId}\\n  items={[{ id: \"overview\", label: \"Overview\" }, { id: \"props\", label: \"Props\", level: 2 }]}\\n/>", language: "tsx" } },
   },
 } satisfies Meta;
 

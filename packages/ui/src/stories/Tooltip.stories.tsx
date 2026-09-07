@@ -22,7 +22,7 @@ const meta = {
   argTypes: { delayDuration: { control: { type: "number", step: 100 } } },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<TooltipProvider>\n  <Tooltip>\n    <TooltipTrigger asChild><Button variant="Outline">Hover</Button></TooltipTrigger>\n    <TooltipContent>Add to library</TooltipContent>\n  </Tooltip>\n</TooltipProvider>`, language: "tsx" } },
+    docs: { source: { code: "<TooltipProvider>\\n  <Tooltip>\\n    <TooltipTrigger asChild><Button variant=\"Outline\">Hover</Button></TooltipTrigger>\\n    <TooltipContent>Add to library</TooltipContent>\\n  </Tooltip>\\n</TooltipProvider>", language: "tsx" } },
   },
 } satisfies Meta;
 

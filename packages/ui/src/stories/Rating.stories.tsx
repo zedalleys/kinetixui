@@ -24,7 +24,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Rating value={value} onChange={setValue} />\n<Rating value={4} readOnly size="sm" />`, language: "tsx" } },
+    docs: { source: { code: "<Rating value={value} onChange={setValue} />\\n<Rating value={4} readOnly size=\"sm\" />", language: "tsx" } },
   },
 } satisfies Meta;
 

@@ -26,7 +26,7 @@ const meta = {
   argTypes: { defaultOpen: { control: "boolean" }, disabled: { control: "boolean" } },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Collapsible>\n  <CollapsibleTrigger>Toggle</CollapsibleTrigger>\n  <CollapsibleContent>…</CollapsibleContent>\n</Collapsible>`, language: "tsx" } },
+    docs: { source: { code: "<Collapsible>\\n  <CollapsibleTrigger>Toggle</CollapsibleTrigger>\\n  <CollapsibleContent>…</CollapsibleContent>\\n</Collapsible>", language: "tsx" } },
   },
 } satisfies Meta;
 

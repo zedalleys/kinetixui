@@ -23,7 +23,7 @@ const meta = {
   title: "Controls & Actions/Command",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Command>\n  <CommandInput placeholder="Type a command…" />\n  <CommandList>\n    <CommandEmpty>No results found.</CommandEmpty>\n    <CommandGroup heading="Suggestions">\n      <CommandItem>Calendar</CommandItem>\n    </CommandGroup>\n  </CommandList>\n</Command>`, language: "tsx" } },
+    docs: { source: { code: "<Command>\\n  <CommandInput placeholder=\"Type a command…\" />\\n  <CommandList>\\n    <CommandEmpty>No results found.</CommandEmpty>\\n    <CommandGroup heading=\"Suggestions\">\\n      <CommandItem>Calendar</CommandItem>\\n    </CommandGroup>\\n  </CommandList>\\n</Command>", language: "tsx" } },
   },
 } satisfies Meta;
 

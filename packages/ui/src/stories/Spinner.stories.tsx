@@ -22,7 +22,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Spinner size="sm" />\n<Spinner />\n<Spinner size="lg" />`, language: "tsx" } },
+    docs: { source: { code: "<Spinner size=\"sm\" />\\n<Spinner />\\n<Spinner size=\"lg\" />", language: "tsx" } },
   },
 } satisfies Meta;
 

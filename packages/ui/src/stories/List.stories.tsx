@@ -17,7 +17,7 @@ const meta = {
   title: "Data Display/List",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<List>\n  <ListItem\n    leading={<User />}\n    title="Profile"\n    description="Name, photo, and personal details"\n    onSelect={() => router.push("/profile")}\n  />\n  <ListItem leading={<Bell />} title="Notifications" trailing={<Switch />} />\n</List>`, language: "tsx" } },
+    docs: { source: { code: "<List>\\n  <ListItem\\n    leading={<User />}\\n    title=\"Profile\"\\n    description=\"Name, photo, and personal details\"\\n    onSelect={() => router.push(\"/profile\")}\\n  />\\n  <ListItem leading={<Bell />} title=\"Notifications\" trailing={<Switch />} />\\n</List>", language: "tsx" } },
   },
 } satisfies Meta;
 

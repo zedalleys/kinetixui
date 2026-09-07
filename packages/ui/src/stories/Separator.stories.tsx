@@ -26,7 +26,7 @@ const meta = {
   argTypes: { orientation: { control: "inline-radio", options: ["horizontal", "vertical"] } },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Separator />\n<Separator orientation="vertical" />`, language: "tsx" } },
+    docs: { source: { code: "<Separator />\\n<Separator orientation=\"vertical\" />", language: "tsx" } },
   },
 } satisfies Meta;
 

@@ -21,7 +21,7 @@ const meta = {
   title: "Controls & Actions/Pagination",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Pagination>\n  <PaginationContent>\n    <PaginationItem><PaginationPrevious href="#" /></PaginationItem>\n    <PaginationItem><PaginationLink href="#" isActive>2</PaginationLink></PaginationItem>\n    <PaginationItem><PaginationNext href="#" /></PaginationItem>\n  </PaginationContent>\n</Pagination>`, language: "tsx" } },
+    docs: { source: { code: "<Pagination>\\n  <PaginationContent>\\n    <PaginationItem><PaginationPrevious href=\"#\" /></PaginationItem>\\n    <PaginationItem><PaginationLink href=\"#\" isActive>2</PaginationLink></PaginationItem>\\n    <PaginationItem><PaginationNext href=\"#\" /></PaginationItem>\\n  </PaginationContent>\\n</Pagination>", language: "tsx" } },
   },
 } satisfies Meta;
 

@@ -14,7 +14,7 @@ const meta = {
   title: "Form Inputs/PasswordInput",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<PasswordInput placeholder="••••••••" />`, language: "tsx" } },
+    docs: { source: { code: "<PasswordInput placeholder=\"••••••••\" />", language: "tsx" } },
   },
 } satisfies Meta;
 

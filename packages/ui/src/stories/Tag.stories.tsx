@@ -31,7 +31,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Tag onRemove={() => remove(t)}>{t}</Tag>\n<Tag variant="secondary">secondary</Tag>\n<Tag variant="warning">warning</Tag>\n<Tag variant="outline">outline</Tag>`, language: "tsx" } },
+    docs: { source: { code: "<Tag onRemove={() => remove(t)}>{t}</Tag>\\n<Tag variant=\"secondary\">secondary</Tag>\\n<Tag variant=\"warning\">warning</Tag>\\n<Tag variant=\"outline\">outline</Tag>", language: "tsx" } },
   },
 } satisfies Meta;
 

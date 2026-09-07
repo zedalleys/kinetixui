@@ -23,7 +23,7 @@ const meta = {
   title: "Overlays/DropdownMenu",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<DropdownMenu>\n  <DropdownMenuTrigger asChild><Button variant="Outline">Open</Button></DropdownMenuTrigger>\n  <DropdownMenuContent>…</DropdownMenuContent>\n</DropdownMenu>`, language: "tsx" } },
+    docs: { source: { code: "<DropdownMenu>\\n  <DropdownMenuTrigger asChild><Button variant=\"Outline\">Open</Button></DropdownMenuTrigger>\\n  <DropdownMenuContent>…</DropdownMenuContent>\\n</DropdownMenu>", language: "tsx" } },
   },
 } satisfies Meta;
 

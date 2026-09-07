@@ -30,7 +30,7 @@ const meta = {
   title: "Data Display/Footer",
   parameters: {
     layout: "padded",
-    docs: { source: { code: `<Footer>\n  <div className="grid grid-cols-2 gap-6">\n    <FooterColumn title="Product">\n      <FooterLink href="/pricing">Pricing</FooterLink>\n    </FooterColumn>\n  </div>\n  <FooterBottom>© 2026 Acme Inc.</FooterBottom>\n</Footer>`, language: "tsx" } },
+    docs: { source: { code: "<Footer>\\n  <div className=\"grid grid-cols-2 gap-6\">\\n    <FooterColumn title=\"Product\">\\n      <FooterLink href=\"/pricing\">Pricing</FooterLink>\\n    </FooterColumn>\\n  </div>\\n  <FooterBottom>© 2026 Acme Inc.</FooterBottom>\\n</Footer>", language: "tsx" } },
   },
 } satisfies Meta;
 

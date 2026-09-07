@@ -24,7 +24,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Badge>Default</Badge>\n<Badge variant="secondary">Secondary</Badge>\n<Badge variant="destructive">Destructive</Badge>\n<Badge variant="outline">Outline</Badge>\n<Badge variant="subtle">Subtle</Badge>`, language: "tsx" } },
+    docs: { source: { code: "<Badge>Default</Badge>\\n<Badge variant=\"secondary\">Secondary</Badge>\\n<Badge variant=\"destructive\">Destructive</Badge>\\n<Badge variant=\"outline\">Outline</Badge>\\n<Badge variant=\"subtle\">Subtle</Badge>", language: "tsx" } },
   },
 } satisfies Meta;
 

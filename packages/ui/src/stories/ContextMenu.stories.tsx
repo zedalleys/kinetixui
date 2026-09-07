@@ -22,7 +22,7 @@ const meta = {
   title: "Overlays/ContextMenu",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<ContextMenu>\n  <ContextMenuTrigger>Right-click here</ContextMenuTrigger>\n  <ContextMenuContent>\n    <ContextMenuItem>Back</ContextMenuItem>\n  </ContextMenuContent>\n</ContextMenu>`, language: "tsx" } },
+    docs: { source: { code: "<ContextMenu>\\n  <ContextMenuTrigger>Right-click here</ContextMenuTrigger>\\n  <ContextMenuContent>\\n    <ContextMenuItem>Back</ContextMenuItem>\\n  </ContextMenuContent>\\n</ContextMenu>", language: "tsx" } },
   },
 } satisfies Meta;
 

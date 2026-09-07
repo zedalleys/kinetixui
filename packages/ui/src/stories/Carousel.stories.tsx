@@ -24,7 +24,7 @@ const meta = {
   title: "Data Display/Carousel",
   parameters: {
     layout: "padded",
-    docs: { source: { code: `<Carousel>\n  <CarouselContent>\n    {items.map((n) => <CarouselItem key={n}>{n}</CarouselItem>)}\n  </CarouselContent>\n  <CarouselPrevious />\n  <CarouselNext />\n</Carousel>`, language: "tsx" } },
+    docs: { source: { code: "<Carousel>\\n  <CarouselContent>\\n    {items.map((n) => <CarouselItem key={n}>{n}</CarouselItem>)}\\n  </CarouselContent>\\n  <CarouselPrevious />\\n  <CarouselNext />\\n</Carousel>", language: "tsx" } },
   },
 } satisfies Meta;
 

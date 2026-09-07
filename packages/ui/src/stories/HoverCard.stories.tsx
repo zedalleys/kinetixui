@@ -23,7 +23,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<HoverCard>\n  <HoverCardTrigger>@kinetixui</HoverCardTrigger>\n  <HoverCardContent>…</HoverCardContent>\n</HoverCard>`, language: "tsx" } },
+    docs: { source: { code: "<HoverCard>\\n  <HoverCardTrigger>@kinetixui</HoverCardTrigger>\\n  <HoverCardContent>…</HoverCardContent>\\n</HoverCard>", language: "tsx" } },
   },
 } satisfies Meta;
 

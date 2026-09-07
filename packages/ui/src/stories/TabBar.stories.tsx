@@ -26,7 +26,7 @@ const meta = {
   title: "Navigation/TabBar",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<TabBar>\n  <TabBarItem icon={<Home />} label="Home" active={tab === "home"} onClick={() => setTab("home")} />\n  <TabBarItem icon={<Mail />} label="Mail" badge={3} active={tab === "mail"} onClick={() => setTab("mail")} />\n</TabBar>`, language: "tsx" } },
+    docs: { source: { code: "<TabBar>\\n  <TabBarItem icon={<Home />} label=\"Home\" active={tab === \"home\"} onClick={() => setTab(\"home\")} />\\n  <TabBarItem icon={<Mail />} label=\"Mail\" badge={3} active={tab === \"mail\"} onClick={() => setTab(\"mail\")} />\\n</TabBar>", language: "tsx" } },
   },
 } satisfies Meta;
 

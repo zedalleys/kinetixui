@@ -33,7 +33,7 @@ const meta = {
   title: "Data Display/Table",
   parameters: {
     layout: "padded",
-    docs: { source: { code: `<Table>\n  <TableHeader>…</TableHeader>\n  <TableBody>\n    <TableRow><TableCell>INV001</TableCell>…</TableRow>\n  </TableBody>\n</Table>`, language: "tsx" } },
+    docs: { source: { code: "<Table>\\n  <TableHeader>…</TableHeader>\\n  <TableBody>\\n    <TableRow><TableCell>INV001</TableCell>…</TableRow>\\n  </TableBody>\\n</Table>", language: "tsx" } },
   },
 } satisfies Meta;
 

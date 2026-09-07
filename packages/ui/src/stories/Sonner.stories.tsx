@@ -17,7 +17,7 @@ const meta = {
   title: "Feedback/Sonner",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `// app/layout.tsx\n<Toaster />\n\n// anywhere\ntoast("Event created", { description: "Sunday, December 03" })`, language: "tsx" } },
+    docs: { source: { code: "// app/layout.tsx\\n<Toaster />\\n\\n// anywhere\\ntoast(\"Event created\", { description: \"Sunday, December 03\" })", language: "tsx" } },
   },
 } satisfies Meta;
 

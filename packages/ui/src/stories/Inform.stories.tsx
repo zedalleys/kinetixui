@@ -26,7 +26,7 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Inform variant="information" onDismiss={close}>\n  A new software update is available.\n</Inform>\n\n<Inform variant="error" action={{ label: "Retry", onClick: retry }}>\n  We couldn't process your payment.\n</Inform>`, language: "tsx" } },
+    docs: { source: { code: "<Inform variant=\"information\" onDismiss={close}>\\n  A new software update is available.\\n</Inform>\\n\\n<Inform variant=\"error\" action={{ label: \"Retry\", onClick: retry }}>\\n  We couldn't process your payment.\\n</Inform>", language: "tsx" } },
   },
 } satisfies Meta;
 

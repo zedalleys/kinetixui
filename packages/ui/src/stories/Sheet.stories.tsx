@@ -22,7 +22,7 @@ const meta = {
   title: "Overlays/Sheet",
   parameters: {
     layout: "centered",
-    docs: { source: { code: `<Sheet>\n  <SheetTrigger asChild><Button variant="Outline">Open</Button></SheetTrigger>\n  <SheetContent side="right">…</SheetContent>\n</Sheet>`, language: "tsx" } },
+    docs: { source: { code: "<Sheet>\\n  <SheetTrigger asChild><Button variant=\"Outline\">Open</Button></SheetTrigger>\\n  <SheetContent side=\"right\">…</SheetContent>\\n</Sheet>", language: "tsx" } },
   },
 } satisfies Meta;
 
