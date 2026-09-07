@@ -2,13 +2,8 @@
 
 ## Supported versions
 
-KinetixUI is in beta. `@kinetixui/tokens`, `@kinetixui/ui` and `@kinetixui/cli`
-share one version line; only the latest published release is supported.
-
-| Version | Supported |
-| ------- | --------- |
-| 0.5.x   | ✅        |
-| < 0.5   | ❌        |
+`@kinetixui/tokens`, `@kinetixui/ui` and `@kinetixui/cli` share one version
+line. Fixes ship in the **latest published release** — upgrade to pick them up.
 
 ## Reporting a vulnerability
 

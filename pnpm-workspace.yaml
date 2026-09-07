@@ -3,6 +3,10 @@ packages:
   - "apps/*"
 overrides:
   fast-uri: "3.1.6"
+  # force next's bundled postcss past GHSA-qx2v-qp2m-jg93 / -fxqj-rqcc-2cmp
+  # (arbitrary .map file read via sourceMappingURL; build-time only). Drop once
+  # next ships a patched postcss.
+  "postcss@<8.5.28": "^8.5.28"
 allowBuilds:
   '@bundled-es-modules/glob': true
   esbuild: true
