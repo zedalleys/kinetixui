@@ -6,6 +6,11 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  AppBar,
+  AppBarActions,
+  AppBarBrand,
+  AppBarLink,
+  AppBarNav,
   Alert,
   AlertDescription,
   AlertTitle,
@@ -1230,6 +1235,37 @@ add(
     />
   ),
   `<NavigationBar\n  title="Appointments"\n  infoText="3 upcoming"\n  onBack={() => router.back()}\n  actions={<Button variant="Ghost" size="icon"><Search /></Button>}\n/>`,
+);
+add(
+  "app-bar-demo",
+  () => (
+    <AppBar className="w-full max-w-2xl rounded-md border">
+      <AppBarBrand>
+        <span className="grid size-6 place-items-center rounded bg-primary text-[11px] font-bold text-primary-foreground">
+          A
+        </span>
+        Acme
+      </AppBarBrand>
+      <AppBarNav>
+        <AppBarLink href="#" active>
+          Overview
+        </AppBarLink>
+        <AppBarLink href="#">Reports</AppBarLink>
+        <AppBarLink href="#">Team</AppBarLink>
+      </AppBarNav>
+      <AppBarActions>
+        <button
+          type="button"
+          aria-label="Notifications"
+          className="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          <Bell className="size-4" />
+        </button>
+        <span className="grid size-8 place-items-center rounded-full bg-muted text-xs font-medium">KZ</span>
+      </AppBarActions>
+    </AppBar>
+  ),
+  `<AppBar>\n  <AppBarBrand>Acme</AppBarBrand>\n  <AppBarNav>\n    <AppBarLink href="/" active>Overview</AppBarLink>\n    <AppBarLink href="/reports">Reports</AppBarLink>\n    <AppBarLink href="/team">Team</AppBarLink>\n  </AppBarNav>\n  <AppBarActions>\n    <Button variant="Ghost" size="icon"><Bell /></Button>\n    <Avatar>…</Avatar>\n  </AppBarActions>\n</AppBar>`,
 );
 add(
   "file-upload-demo",

@@ -76,6 +76,7 @@ const BUILT = {
   fab: ["Fab, fabVariants", "A floating action button — circular or extended."],
   "tab-bar": ["TabBar, TabBarItem", "A mobile bottom navigation bar."],
   "navigation-bar": ["NavigationBar", "A mobile top app bar — back button, title, actions."],
+  "app-bar": ["AppBar, AppBarBrand, AppBarNav, AppBarLink, AppBarActions", "A web application top bar — brand, primary nav links and trailing actions in a sticky header; the nav collapses behind a menu toggle on small screens."],
   "file-upload": ["FileUpload, FileUploadItem", "A drag-and-drop zone plus file list, single or multiple."],
 
   "code-block": ["CodeBlock", "A code display with a copy button and, for more than one file, a tab strip."],
