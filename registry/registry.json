@@ -91,6 +91,31 @@
       ]
     },
     {
+      "name": "app-bar",
+      "type": "registry:ui",
+      "title": "App Bar",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "@radix-ui/react-slot",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/app-bar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/app-bar.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "aspect-ratio",
       "type": "registry:ui",
       "title": "Aspect Ratio",

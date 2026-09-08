@@ -285,6 +285,15 @@ export { Fab, fabVariants, type FabProps } from "./components/fab";
 export { TabBar, TabBarItem, type TabBarItemProps } from "./components/tab-bar";
 export { NavigationBar, type NavigationBarProps } from "./components/navigation-bar";
 export {
+  AppBar,
+  AppBarBrand,
+  AppBarNav,
+  AppBarLink,
+  AppBarActions,
+  useAppBar,
+  type AppBarLinkProps,
+} from "./components/app-bar";
+export {
   FileUpload,
   FileUploadItem,
   formatBytes,

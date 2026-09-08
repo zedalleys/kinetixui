@@ -41,6 +41,7 @@ export const componentDocs: NavItem[] = [
   built("Accordion", "accordion"),
   built("Alert", "alert"),
   built("Alert Dialog", "alert-dialog"),
+  built("App Bar", "app-bar"),
   built("Aspect Ratio", "aspect-ratio"),
   built("Audio Player", "audio-player"),
   built("Avatar", "avatar"),
@@ -128,8 +129,8 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   combobox: "Controls & Actions",
 
   breadcrumb: "Navigation", tabs: "Navigation", "tab-bar": "Navigation", "navigation-menu": "Navigation",
-  "navigation-bar": "Navigation", menubar: "Navigation", sidebar: "Navigation", stepper: "Navigation",
-  "table-of-contents": "Navigation",
+  "navigation-bar": "Navigation", "app-bar": "Navigation", menubar: "Navigation", sidebar: "Navigation",
+  stepper: "Navigation", "table-of-contents": "Navigation",
 
   dialog: "Overlays", "alert-dialog": "Overlays", sheet: "Overlays", drawer: "Overlays",
   popover: "Overlays", "hover-card": "Overlays", tooltip: "Overlays", "dropdown-menu": "Overlays",

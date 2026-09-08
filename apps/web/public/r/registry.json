@@ -27,6 +27,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "app-bar",
+      "type": "registry:ui",
+      "title": "App Bar",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "aspect-ratio",
       "type": "registry:ui",
       "title": "Aspect Ratio",
