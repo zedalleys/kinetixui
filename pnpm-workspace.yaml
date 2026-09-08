@@ -7,6 +7,10 @@ overrides:
   # (arbitrary .map file read via sourceMappingURL; build-time only). Drop once
   # next ships a patched postcss.
   "postcss@<8.5.28": "^8.5.28"
+  # vite 7.3.6 still resolves esbuild 0.27.x — GHSA-67mh-4wv8-2f99 (dev-server
+  # arbitrary file read on Windows) is fixed in 0.28.1. API-compatible for
+  # vite's use. Drop once vite bumps its esbuild floor.
+  "esbuild@<0.28.1": "^0.28.2"
 allowBuilds:
   '@bundled-es-modules/glob': true
   esbuild: true
