@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Input } from "../components/input";
 
 const STATES = ["Default", "Focus", "Error", "Disabled"] as const;
