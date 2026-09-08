@@ -25,6 +25,36 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.6.0",
+    date: "2026-09-08",
+    summary: "New AppBar component — a web application top bar.",
+    changes: [
+      {
+        title: "AppBar",
+        body: "AppBar + AppBarBrand / AppBarNav / AppBarLink / AppBarActions (and a useAppBar hook): a sticky bordered header with a brand slot, a row of primary nav links (active marks the current one, asChild forwards to a framework <Link>), and a trailing actions slot. Below the md breakpoint the nav collapses behind a menu toggle. NavigationBar stays the mobile back-button bar; AppBar is the desktop app shell. Ported to SwiftUI, Jetpack Compose and Flutter (native ports keep the nav visible and horizontally scrollable instead of a menu toggle).",
+      },
+    ],
+  },
+  {
+    version: "0.5.1",
+    date: "2026-09-08",
+    summary: "Security hardening for the CLI and the chart style injection.",
+    changes: [
+      {
+        title: "@kinetixui/cli input validation",
+        body: "The CLI now validates the registry base URL (http/https only), every component / registry-dependency name, and every npm dependency spec before it reaches a fetch URL or the package manager, and refuses to write files outside the project root — a hostile registry or a checked-in kinetixui.json can no longer steer it.",
+      },
+      {
+        title: "chart.tsx <style> sanitisation",
+        body: "The one component that emits an inline <style> now strips its interpolated identifiers to [\\w-] and drops colour values carrying characters that could close the declaration, the rule, or the element.",
+      },
+      {
+        title: "Published with npm provenance",
+        body: "Releases now carry OIDC provenance attestations, and the site ships a Content-Security-Policy plus the standard hardening headers.",
+      },
+    ],
+  },
+  {
     version: "0.5.0",
     date: "2026-09-06",
     summary: "Action-blue primary set per theme; component gallery and infographic overhaul.",

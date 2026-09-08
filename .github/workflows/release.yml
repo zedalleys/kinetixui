@@ -35,7 +35,12 @@ jobs:
           commit: "chore: version packages"
           title: "chore: version packages"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITHUB_TOKEN can publish but can't open the Version Packages PR
+          # ("GitHub Actions is not permitted to create pull requests" — a
+          # deliberate org setting). Add a fine-grained PAT with `contents:write`
+          # + `pull-requests:write` as the RELEASE_PAT secret and the PR opens
+          # itself; without it, publish still works and the PR is opened by hand.
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT || secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"

@@ -29,7 +29,8 @@ full React component surface bar three deliberate non-ports:
 `Text` / `Addon` / `Button`), `KinetixTableOfContents`, `KinetixFooter`
 (+ `Column` / `Link` / `Bottom`), `KinetixSelect`, `KinetixDrawer`
 (bottom; parts alias the Dialog parts), `KinetixModal`,
-`KinetixNavigationBar` (+ `KinetixNavigationBackButton`), `KinetixTabBar`
+`KinetixNavigationBar` (+ `KinetixNavigationBackButton`), `KinetixAppBar`
+(+ `KinetixAppBarLink`), `KinetixTabBar`
 / `KinetixTabBarItem`, `KinetixCodeBlock`, `KinetixDatePicker`,
 `KinetixInputOtp`, `KinetixToaster` / `KinetixToast`, `KinetixTable`
 family, `KinetixDataTable` (+ `KinetixDataColumn`), `KinetixCarousel`,

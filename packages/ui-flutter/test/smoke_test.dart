@@ -101,6 +101,14 @@ List<Widget> inlineWidgets() => [
         KinetixFooterBottom(children: const [Text('© KinetixUI')]),
       ]),
       const KinetixNavigationBar(title: 'Screen', infoText: '3 items'),
+      KinetixAppBar(
+        brand: const Text('Acme'),
+        nav: [
+          KinetixAppBarLink('Overview', active: true, onTap: () {}),
+          KinetixAppBarLink('Reports', onTap: () {}),
+        ],
+        actions: const [Icon(Icons.notifications)],
+      ),
       KinetixTabBar(children: [
         KinetixTabBarItem(label: 'Home', icon: const Icon(Icons.home), isActive: true, onTap: () {}),
         KinetixTabBarItem(label: 'Search', icon: const Icon(Icons.search), badge: '2', onTap: () {}),

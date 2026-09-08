@@ -12,6 +12,7 @@ export 'src/kinetix_type.dart';
 export 'src/accordion.dart';
 export 'src/alert.dart';
 export 'src/alert_dialog.dart';
+export 'src/app_bar.dart';
 export 'src/aspect_ratio.dart';
 export 'src/audio_player.dart';
 export 'src/avatar.dart';

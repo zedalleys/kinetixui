@@ -34,7 +34,6 @@ const EXCEPTIONS: Record<string, Platform[]> = {
   combobox: ["React"], // standing non-port
   form: ["React"], // standing non-port
   "navigation-menu": ["React"], // standing non-port
-  "app-bar": ["React"], // new — native ports pending
   inform: ["React", "Compose"],
   sidebar: ["React", "SwiftUI", "Compose"],
 };
