@@ -100,6 +100,8 @@ for (const [slug, [exports, desc]] of Object.entries(BUILT)) {
 
 # ${title(slug)}
 
+<ComponentMeta />
+
 ${desc}
 
 <ComponentPreview name="${slug}-demo" />
