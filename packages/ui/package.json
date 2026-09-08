@@ -1,6 +1,6 @@
 {
   "name": "@kinetixui/ui",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": false,
   "description": "KinetixUI React components — CVA + Radix + Tailwind on the KinetixUI token contract. Also distributed via the kinetixui CLI as a component registry.",
   "keywords": [
