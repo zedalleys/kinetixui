@@ -6,7 +6,7 @@ const config: StorybookConfig = {
     "../../../packages/ui/src/**/*.stories.@(ts|tsx)",
   ],
   addons: [
-    "@storybook/addon-essentials",
+    // addon-essentials is built into the core `storybook` package from v9 on
     "@storybook/addon-themes",
     "@storybook/addon-a11y",
   ],
