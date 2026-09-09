@@ -17,7 +17,7 @@ and Flutter aren't started yet. Sixty-nine components so far:
 `KinetixCollapsible`, `KinetixTabs`, `KinetixAccordion`,
 `KinetixToggleGroup`, `KinetixScrollArea`, `KinetixToaster`,
 `KinetixSelect`, `KinetixTable`, `KinetixModal`, `KinetixNavigationBar`,
-`KinetixTabBar`, `KinetixInform`, `KinetixCommandDialog`,
+`KinetixAppBar`, `KinetixTabBar`, `KinetixInform`, `KinetixCommandDialog`,
 `KinetixCarousel`, `KinetixResizablePanels`, `KinetixCodeBlock`,
 `KinetixCalendar`, `KinetixDatePicker`, `KinetixDataTable`,
 `KinetixFileUpload`, `KinetixDrawer`, `KinetixAudioPlayer`,
