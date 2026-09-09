@@ -31,7 +31,7 @@
     "typecheck": "turbo run typecheck",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build:tokens && pnpm --filter @kinetixui/ui build && pnpm --filter @kinetixui/cli build && changeset publish"
+    "release": "pnpm build:tokens && pnpm --filter @kinetixui/ui build && pnpm --filter @kinetixui/cli build && pnpm -r publish --no-git-checks --provenance && changeset git-tag && git push --tags"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.1",
