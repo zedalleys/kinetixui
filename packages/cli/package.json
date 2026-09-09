@@ -1,6 +1,6 @@
 {
   "name": "@kinetixui/cli",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Add KinetixUI components and tokens to your project.",
   "type": "module",
   "license": "MIT",
