@@ -41,11 +41,13 @@ jobs:
           # + `pull-requests:write` as the RELEASE_PAT secret and the PR opens
           # itself; without it, publish still works and the PR is opened by hand.
           GITHUB_TOKEN: ${{ secrets.RELEASE_PAT || secrets.GITHUB_TOKEN }}
-          # Auth is npm trusted publishing via OIDC — each of the three packages
-          # has a trusted publisher (repo + release.yml) configured on npmjs.com,
-          # so no NPM_TOKEN. If a publish ever fails auth, re-add
-          # `NPM_TOKEN: ${{ secrets.NPM_TOKEN }}` + `NODE_AUTH_TOKEN` here (the
-          # secret is still in the repo).
+          # Auth: NPM_TOKEN. `pnpm publish` probes OIDC first (the harmless
+          # ERR_PNPM_AUTH_TOKEN_EXCHANGE warning) and falls back to the token.
+          # To move to token-less publishing, configure a Trusted Publisher for
+          # each of @kinetixui/{tokens,ui,cli} on npmjs.com (repo + this
+          # workflow filename), then drop these two lines.
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           # provenance comes from `pnpm -r publish --provenance` (+ publishConfig
           # per package); this env is a harmless extra belt.
           NPM_CONFIG_PROVENANCE: "true"
