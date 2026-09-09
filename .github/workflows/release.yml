@@ -43,4 +43,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.RELEASE_PAT || secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # provenance is driven by `pnpm -r publish --provenance` in the
+          # `release` script (+ publishConfig.provenance per package); this env
+          # var is a harmless extra belt.
           NPM_CONFIG_PROVENANCE: "true"
