@@ -1,5 +1,11 @@
 # @kinetixui/tokens
 
+## 0.6.2
+
+### Patch Changes
+
+- ce4184f: The release now publishes via `pnpm -r publish --provenance` (a directory publish) instead of `changeset publish` (which packs to a tarball first — that path drops provenance). Git tags are created with `changeset git-tag`. This is the release that should finally carry an npm provenance attestation.
+
 ## 0.6.1
 
 ### Patch Changes
