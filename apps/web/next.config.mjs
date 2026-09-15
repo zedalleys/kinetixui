@@ -51,6 +51,15 @@ const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
 ];
 
+// The component registry (public/r/*.json) is meant to be fetched dynamically
+// by the CLI and by third-party tools — a v0-style builder, another site's
+// live playground — from the browser. Scoped to /r/* only: nothing else on
+// the site needs to loosen CORS.
+const registryCorsHeaders = [
+  { key: "Access-Control-Allow-Origin", value: "*" },
+  { key: "Access-Control-Allow-Methods", value: "GET, OPTIONS" },
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ["ts", "tsx", "md", "mdx"],
@@ -59,7 +68,10 @@ const nextConfig = {
   poweredByHeader: false,
   experimental: { mdxRs: false },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      { source: "/r/:path*", headers: registryCorsHeaders },
+    ];
   },
 };
 
