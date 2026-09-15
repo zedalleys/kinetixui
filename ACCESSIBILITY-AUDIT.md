@@ -44,7 +44,8 @@ contract that feeds all four component libraries.
 
 ## A. Token contrast ledger (after fixes)
 
-`node scripts/check-contrast.mjs` → **PASS** (2 tracked exceptions, see A2).
+`node scripts/check-contrast.mjs` → **PASS** (0 tracked text exceptions, see
+A2; 5 tracked non-text exceptions — 10 counting both themes — see A3).
 
 ### A1. What was wrong
 
@@ -77,6 +78,15 @@ cue** — hover/selected states also draw a `--ring` inset outline, and the Swit
 pairs its track with a moving thumb + `aria-checked`. No change. Keep the
 "never the only cue" rule when adding components (documented on
 `/docs/accessibility`).
+
+**Now CI-enforced, not just documented (2026-09-15):** these five pairs are
+the `KNOWN_SUB3` tracked-exceptions set in `check-contrast.mjs`, seeded from
+this section — the check was previously report-only for non-text pairs and
+couldn't fail the build. Any *new* sub-3:1 non-text pair (not on this list)
+now fails `pnpm check:contrast` / CI, the same way `KNOWN_SUBAA` already
+gates text pairs. Retheming one of the five on purpose means updating
+`KNOWN_SUB3` deliberately alongside this section, not discovering a silent
+regression later.
 
 ---
 
@@ -155,7 +165,7 @@ fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
 ## Verification
 
 ```
-node scripts/check-contrast.mjs      # PASS — 19 text pairs, both themes, 2 tracked
+node scripts/check-contrast.mjs      # PASS — 19 text pairs (0 tracked) + 7 non-text pairs (5 tracked), both themes
 cd apps/web && node node_modules/next/dist/bin/next build   # clean
 ```
 

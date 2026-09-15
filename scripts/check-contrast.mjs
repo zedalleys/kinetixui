@@ -6,8 +6,11 @@
  * Resolves every semantic color (light + dark) to its primitive hex and checks
  * the foreground/surface pairs components actually render:
  *   - text pairs must clear 4.5:1 (AA) — 3:1 is flagged as large-text-only
- *   - the hover/border "non-text" cues are reported against SC 1.4.11 (3:1)
- * Exits non-zero if any text pair fails AA.
+ *   - non-text "cue" pairs (hover fill, border, focus ring, …) must clear
+ *     SC 1.4.11 (3:1)
+ * Exits non-zero if any pair fails and isn't in its KNOWN_* tracked-exceptions
+ * set (see ACCESSIBILITY-AUDIT.md §A3 for why the current non-text exceptions
+ * are acceptable as designed, not oversights).
  *
  * The resolver understands three ref shapes:
  *   {color.<family>.<step>}     -> tokens/primitives/color.json
@@ -90,6 +93,29 @@ const KNOWN_SUBAA = new Set([
   // (empty) — light --warning was darkened to amber.800 (6.1:1); nothing tracked.
 ]);
 
+/**
+ * Non-text pairs that sit below 3:1 by design, not oversight — each is
+ * intentionally subtle and, per ACCESSIBILITY-AUDIT.md §A3, is never the
+ * only cue a component relies on (the hover/selected/focus state also draws
+ * a `--ring` inset outline, or — for `tertiary` — the Switch pairs its track
+ * with a moving thumb + `aria-checked`). A NEW sub-3:1 pair not on this list
+ * still fails CI; retheming one of these on purpose means updating this set
+ * deliberately, not silently.
+ *   key: `${fg}/${bg}@${mode}`
+ */
+const KNOWN_SUB3 = new Set([
+  "accent/background@light",
+  "accent/background@dark",
+  "border/background@light",
+  "border/background@dark",
+  "input/background@light",
+  "input/background@dark",
+  "tertiary/background@light",
+  "tertiary/background@dark",
+  "sidebar-border/sidebar@light",
+  "sidebar-border/sidebar@dark",
+]);
+
 let failures = 0;
 
 for (const mode of ["light", "dark"]) {
@@ -143,16 +169,21 @@ for (const mode of ["light", "dark"]) {
   for (const [fg, bg] of NON_TEXT_PAIRS) {
     if (!S[fg] || !S[bg]) continue;
     const r = ratio(S[fg], S[bg]);
-    console.log(
-      `  ${`${fg} / ${bg}`.padEnd(44)} ${r.toFixed(2)}:1  ${
-        r >= 3 ? "ok" : "sub-3:1 — components must pair with a ring/border"
-      }`,
-    );
+    const known = KNOWN_SUB3.has(`${fg}/${bg}@${mode}`);
+    let tag;
+    if (r >= 3) tag = "ok";
+    else if (known) tag = "sub-3:1 — KNOWN, tracked (see ACCESSIBILITY-AUDIT.md §A3)";
+    else {
+      tag = "** FAIL ** — pair with a ring/border, or track it deliberately if by design";
+      failures += 1;
+    }
+    console.log(`  ${`${fg} / ${bg}`.padEnd(44)} ${r.toFixed(2)}:1  ${tag}`);
   }
 }
 
 console.log(
-  `\n${failures === 0 ? "PASS" : `FAIL (${failures})`} — text pairs meet WCAG AA` +
+  `\n${failures === 0 ? "PASS" : `FAIL (${failures})`} — text pairs meet WCAG AA and non-text` +
+    ` cue pairs meet SC 1.4.11` +
     (failures === 0 ? "." : "; see above."),
 );
 process.exit(failures === 0 ? 0 : 1);
