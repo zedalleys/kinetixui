@@ -33,10 +33,13 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+      # Same override as native-compose.yml: the default "tools" package no
+      # longer exists in Google's SDK repository.
+      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
+        with:
+          packages: "platform-tools"
 
-      # Same as native-compose.yml: this package's gradle-wrapper.jar isn't
-      # committed, so CI provisions a real Gradle instead of ./gradlew.
+      # CI provisions a real Gradle directly instead of relying on ./gradlew.
       - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
         with:
           gradle-version: "9.7.1"
