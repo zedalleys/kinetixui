@@ -39,7 +39,7 @@ jobs:
       # committed, so CI provisions a real Gradle instead of ./gradlew.
       - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
         with:
-          gradle-version: "8.7"
+          gradle-version: "9.7.1"
 
       - name: Dry run — build + publishToMavenLocal (unsigned)
         env:

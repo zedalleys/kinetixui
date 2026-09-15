@@ -1,13 +1,19 @@
 plugins {
     id("com.android.library")
-    id("org.jetbrains.kotlin.android")
+    // No org.jetbrains.kotlin.android plugin: AGP 9's built-in Kotlin
+    // support replaces it (applying it explicitly is now a build error —
+    // see https://kotl.in/gradle/agp-built-in-kotlin). The Compose compiler
+    // is still its own Gradle plugin, versioned alongside Kotlin, replacing
+    // the composeOptions block below.
+    id("org.jetbrains.kotlin.plugin.compose")
     id("maven-publish")
     id("signing")
 }
 
 android {
     namespace = "com.kinetixui.ui"
-    compileSdk = 34
+    // Compose BOM 2026.08.00 (Compose 1.12) requires compileSdk 37 + AGP 9.1.1+.
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 24
@@ -17,12 +23,10 @@ android {
         compose = true
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+        }
     }
 
     compileOptions {
@@ -42,7 +46,7 @@ android {
 }
 
 dependencies {
-    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
+    implementation(platform("androidx.compose:compose-bom:2026.08.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
