@@ -1,5 +1,6 @@
 node_modules/
 .turbo/
+.claude/settings.local.json
 dist/
 .next/
 next-env.d.ts
