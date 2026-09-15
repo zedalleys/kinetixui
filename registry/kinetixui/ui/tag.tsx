@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Slot, Slottable } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,24 +33,35 @@ export interface TagProps
     VariantProps<typeof tagVariants> {
   /** show a dismiss button; called when it's clicked */
   onRemove?: () => void;
+  /** render as the single child element (Radix Slot) instead of <span> —
+   * e.g. `<Tag asChild><a href="/filter">Active</a></Tag>` for a linked tag.
+   * Combined with `onRemove`, the remove button nests inside the slotted
+   * element (Slot can only render one root node) — fine for a <div>/<span>,
+   * but avoid pairing asChild+onRemove with an <a>, since a nested <button>
+   * inside an anchor is invalid HTML. */
+  asChild?: boolean;
 }
 
 const Tag = React.forwardRef<HTMLSpanElement, TagProps>(
-  ({ className, variant, onRemove, children, ...props }, ref) => (
-    <span ref={ref} className={cn(tagVariants({ variant }), className)} {...props}>
-      {children}
-      {onRemove && (
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label="Remove"
-          className="-mr-0.5 ml-0.5 rounded-[2px] opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-1 focus-visible:ring-current"
-        >
-          <X className="size-3.5" />
-        </button>
-      )}
-    </span>
-  ),
+  ({ className, variant, onRemove, children, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "span";
+    const removeButton = onRemove && (
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label="Remove"
+        className="-mr-0.5 ml-0.5 rounded-[2px] opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-1 focus-visible:ring-current"
+      >
+        <X className="size-3.5" />
+      </button>
+    );
+    return (
+      <Comp ref={ref} className={cn(tagVariants({ variant }), className)} {...props}>
+        {asChild ? <Slottable>{children}</Slottable> : children}
+        {removeButton}
+      </Comp>
+    );
+  },
 );
 Tag.displayName = "Tag";
 

@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Badge } from "./components/badge";
 import { Button } from "./components/button";
 import { Input } from "./components/input";
+import { Tag } from "./components/tag";
 import {
   Accordion,
   AccordionContent,
@@ -54,6 +55,42 @@ describe("Badge", () => {
     rerender(<Badge variant="secondary">tag</Badge>);
     expect(screen.getByText("tag").className).not.toBe(def);
     expect(screen.getByText("tag")).toHaveClass("text-secondary");
+  });
+
+  it("renders as a child element with asChild", () => {
+    render(
+      <Badge asChild>
+        <a href="/new">New</a>
+      </Badge>,
+    );
+    const link = screen.getByRole("link", { name: "New" });
+    expect(link).toHaveAttribute("href", "/new");
+    expect(link).toHaveClass("bg-primary"); // badge classes merged onto the <a>
+  });
+});
+
+describe("Tag", () => {
+  it("renders as a child element with asChild", () => {
+    render(
+      <Tag asChild>
+        <a href="/filter">Active</a>
+      </Tag>,
+    );
+    const link = screen.getByRole("link", { name: "Active" });
+    expect(link).toHaveAttribute("href", "/filter");
+    expect(link).toHaveClass("bg-accent"); // tag classes merged onto the <a>
+  });
+
+  it("nests the remove button inside the slotted element when combined with onRemove", async () => {
+    const onRemove = vi.fn();
+    render(
+      <Tag asChild onRemove={onRemove}>
+        <div>Active</div>
+      </Tag>,
+    );
+    const remove = screen.getByRole("button", { name: "Remove" });
+    await userEvent.click(remove);
+    expect(onRemove).toHaveBeenCalledOnce();
   });
 });
 
