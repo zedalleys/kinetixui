@@ -1,0 +1,34 @@
+{
+  "zIndex": {
+    "base": {
+      "$type": "number",
+      "$value": 0,
+      "$description": "Default stacking context."
+    },
+    "raised": {
+      "$type": "number",
+      "$value": 1,
+      "$description": "Subtly above sibling content — NavigationMenu viewport indicator."
+    },
+    "docked": {
+      "$type": "number",
+      "$value": 10,
+      "$description": "Fixed/positioned local elements — Sidebar, NavigationMenu bar, Resizable drag handle, InputOTP active caret."
+    },
+    "focus": {
+      "$type": "number",
+      "$value": 20,
+      "$description": "A locally-focused element above unfocused siblings — Calendar day cell."
+    },
+    "sticky": {
+      "$type": "number",
+      "$value": 40,
+      "$description": "Viewport-sticky chrome — AppBar."
+    },
+    "overlay": {
+      "$type": "number",
+      "$value": 50,
+      "$description": "Modal and floating overlay layers — Dialog, AlertDialog, Drawer, Sheet, Modal, Popover, Tooltip, DropdownMenu, ContextMenu, Menubar, HoverCard, Select."
+    }
+  }
+}

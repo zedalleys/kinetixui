@@ -218,6 +218,32 @@ export const tokens = {
     "default": "1px",
     "focus": "2px"
   },
+  "duration": {
+    "fast": "200ms",
+    "base": "300ms",
+    "slow": "500ms",
+    "slower": "1000ms"
+  },
+  "easing": {
+    "linear": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "standard": [
+      0.4,
+      0,
+      0.2,
+      1
+    ]
+  },
+  "opacity": {
+    "hidden": 0,
+    "disabled": 0.5,
+    "muted": 0.7,
+    "visible": 1
+  },
   "font": {
     "family": {
       "sans": "Montserrat, ui-sans-serif, system-ui, sans-serif"
@@ -271,6 +297,14 @@ export const tokens = {
     "wide-15": "0.15px",
     "wide-25": "0.25px",
     "wide-5": "0.5px"
+  },
+  "zIndex": {
+    "base": 0,
+    "raised": 1,
+    "docked": 10,
+    "focus": 20,
+    "sticky": 40,
+    "overlay": 50
   },
   "shadow": {
     "sm": [

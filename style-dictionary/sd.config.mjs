@@ -13,16 +13,26 @@
  * Typography composites (tokens/semantic/typography.json) ARE consumed: web
  * `--text-*` shorthands (extras.css) + a `text-*` Tailwind scale, and native
  * text styles via KinetixType.swift / KinetixType.kt / app_text.dart.
+ *
+ * Motion + scale primitives (tokens/primitives/{motion,opacity,z-index}.json)
+ * are theme-independent, like typography: web gets `--duration-*` /
+ * `--easing-*` / `--opacity-*` / `--z-index-*` custom properties in
+ * globals.css `:root`; native gets KinetixMotion.swift / .kt / .dart (each
+ * with Duration/Easing/Opacity/ZIndex groups).
  */
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import StyleDictionary from 'style-dictionary';
 import {
   androidDimen,
+  cssEasing,
   dimensionToPx,
   extrasCssFormat,
   hslChannels,
   cssVarName,
+  motionComposeFormat,
+  motionDartFormat,
+  motionSwiftFormat,
   swiftUIColorFormat,
   dartColorClassFormat,
   tsNestedFormat,
@@ -35,6 +45,7 @@ StyleDictionary.registerTransform(dimensionToPx);
 StyleDictionary.registerTransform(cssVarName);
 StyleDictionary.registerTransform(androidDimen);
 StyleDictionary.registerTransform(hslChannels);
+StyleDictionary.registerTransform(cssEasing);
 StyleDictionary.registerFormat(tsNestedFormat);
 StyleDictionary.registerFormat(extrasCssFormat);
 StyleDictionary.registerFormat(typeSwiftFormat);
@@ -42,8 +53,14 @@ StyleDictionary.registerFormat(typeComposeFormat);
 StyleDictionary.registerFormat(typeDartFormat);
 StyleDictionary.registerFormat(swiftUIColorFormat);
 StyleDictionary.registerFormat(dartColorClassFormat);
+StyleDictionary.registerFormat(motionSwiftFormat);
+StyleDictionary.registerFormat(motionComposeFormat);
+StyleDictionary.registerFormat(motionDartFormat);
 
 const isType = (t) => t.$type === 'typography';
+/** duration / cubicBezier / number — the motion + scale primitive categories
+ *  (tokens/primitives/{motion,opacity,z-index}.json). Theme-independent. */
+const isMotionOrScale = (t) => ['duration', 'cubicBezier', 'number'].includes(t.$type);
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = `${ROOT}/packages/tokens/dist`;
@@ -76,6 +93,7 @@ export function getConfig(theme) {
           'kinetix/css-var-name',
           'kinetix/hsl-channels',
           'kinetix/dimension-px',
+          'kinetix/css-easing',
         ],
         buildPath: `${DIST}/web/`,
         options: { outputReferences: light },
@@ -202,7 +220,10 @@ export function getConfig(theme) {
             'ios-type': {
               transforms: ['attribute/cti'],
               buildPath: `${DIST}/ios/`,
-              files: [{ destination: 'KinetixType.swift', format: 'kinetix/type-swift', filter: isType }],
+              files: [
+                { destination: 'KinetixType.swift', format: 'kinetix/type-swift', filter: isType },
+                { destination: 'KinetixMotion.swift', format: 'kinetix/motion-swift', filter: isMotionOrScale },
+              ],
             },
             'android-compose': {
               // semantic Theme.kt / Theme.dark.kt moved to 'android-compose-theme'
@@ -222,7 +243,10 @@ export function getConfig(theme) {
               transforms: ['attribute/cti'],
               buildPath: `${DIST}/android/`,
               options: { packageName: 'com.kinetixui.tokens' },
-              files: [{ destination: 'KinetixType.kt', format: 'kinetix/type-compose', filter: isType }],
+              files: [
+                { destination: 'KinetixType.kt', format: 'kinetix/type-compose', filter: isType },
+                { destination: 'KinetixMotion.kt', format: 'kinetix/motion-compose', filter: isMotionOrScale },
+              ],
             },
             'android-xml': {
               transforms: ['attribute/cti', 'name/snake', 'color/hex8android', 'kinetix/android-dimen'],
@@ -253,7 +277,10 @@ export function getConfig(theme) {
             'flutter-type': {
               transforms: ['attribute/cti'],
               buildPath: `${DIST}/flutter/`,
-              files: [{ destination: 'app_text.dart', format: 'kinetix/type-dart', filter: isType }],
+              files: [
+                { destination: 'app_text.dart', format: 'kinetix/type-dart', filter: isType },
+                { destination: 'kinetix_motion.dart', format: 'kinetix/motion-dart', filter: isMotionOrScale },
+              ],
             },
           }
         : {}),

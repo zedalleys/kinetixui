@@ -1,0 +1,36 @@
+{
+  "duration": {
+    "fast": {
+      "$type": "duration",
+      "$value": "200ms",
+      "$description": "Quick UI transitions — icon rotation, chevrons, sidebar collapse."
+    },
+    "base": {
+      "$type": "duration",
+      "$value": "300ms",
+      "$description": "Default transition speed — fades, stroke/progress animations."
+    },
+    "slow": {
+      "$type": "duration",
+      "$value": "500ms",
+      "$description": "Entrance transitions for larger surfaces — sheet/drawer open."
+    },
+    "slower": {
+      "$type": "duration",
+      "$value": "1000ms",
+      "$description": "Looping animations — caret blink."
+    }
+  },
+  "easing": {
+    "linear": {
+      "$type": "cubicBezier",
+      "$value": [0, 0, 1, 1],
+      "$description": "Constant-speed motion — panel slides (Sidebar)."
+    },
+    "standard": {
+      "$type": "cubicBezier",
+      "$value": [0.4, 0, 0.2, 1],
+      "$description": "Default ease-in-out — dialogs, sheets, overlays."
+    }
+  }
+}

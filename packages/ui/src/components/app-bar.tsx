@@ -48,7 +48,7 @@ const AppBar = React.forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
         <header
           ref={ref}
           className={cn(
-            "sticky top-0 z-40 w-full border-b border-border bg-background/95 font-sans",
+            "sticky top-0 z-sticky w-full border-b border-border bg-background/95 font-sans",
             "backdrop-blur supports-[backdrop-filter]:bg-background/75",
             className,
           )}

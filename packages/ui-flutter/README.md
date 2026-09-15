@@ -108,6 +108,14 @@ apply it as `AppText.<style>.copyWith(color: …)`; `lib/src/kinetix_type.dart`
 re-exports it and aliases `KinetixType = AppText`. A handful of 13px
 small-captions stay literal — there's no 13px step on the M3 scale.
 
+## Motion + scale
+
+`lib/src/kinetix_motion.dart` is **generated, vendored** (same flow),
+re-exported from `kinetix_ui.dart`. `KinetixDuration` (`Duration`),
+`KinetixEasing` (`Curve`, via `Cubic`), `KinetixOpacity` (`double`), and
+`KinetixZIndex` (`double` — advisory only; Flutter has no native z-index,
+stacking follows widget order in a `Stack`).
+
 ## Verification
 
 The dev environment has no Flutter toolchain.

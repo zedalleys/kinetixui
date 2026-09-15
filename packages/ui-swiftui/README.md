@@ -131,6 +131,14 @@ public for your own text. Letter-spacing is still a sibling `.tracking(…)`
 on the `Text` (SwiftUI has no single text style that also carries
 tracking) — a combined modifier is a possible follow-up.
 
+## Motion + scale
+
+`Sources/KinetixUI/KinetixMotion.swift` is **generated, vendored** (same
+flow). `KinetixDuration` (Swift `Duration`), `KinetixEasing` (cubic-bezier
+control-point tuples — no `UnitCurve` dependency, since that's iOS 17+ and
+this package floors at 16), `KinetixOpacity`, and `KinetixZIndex` are all
+public.
+
 ## Not in this pass
 
 - A tagged SPM release — needs repo/signing decisions; consume via

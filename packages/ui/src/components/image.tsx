@@ -64,8 +64,8 @@ const Image = React.forwardRef<HTMLImageElement, ImageProps>(
             ref={setRef}
             alt={alt}
             className={cn(
-              "size-full object-cover transition-opacity duration-300",
-              status === "loaded" ? "opacity-100" : "opacity-0",
+              "size-full object-cover transition-opacity duration-base",
+              status === "loaded" ? "opacity-visible" : "opacity-hidden",
             )}
             onLoad={(e) => {
               setStatus("loaded");

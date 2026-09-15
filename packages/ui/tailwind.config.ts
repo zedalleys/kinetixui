@@ -94,6 +94,35 @@ export default {
         "2xl": "calc(var(--radius-lg) + 8px)",
         full: "var(--radius-full)",
       },
+      // Motion + scale — tokens/primitives/{motion,opacity,z-index}.json.
+      // Added alongside Tailwind's own numeric scales (z-10, opacity-50, …),
+      // not replacing them — these are the token-backed semantic names.
+      transitionDuration: {
+        fast: "var(--duration-fast)",
+        base: "var(--duration-base)",
+        slow: "var(--duration-slow)",
+        slower: "var(--duration-slower)",
+      },
+      transitionTimingFunction: {
+        // overrides Tailwind's built-in `ease-linear` with the identical
+        // cubic-bezier(0,0,1,1) value, now token-backed instead of hardcoded
+        linear: "var(--easing-linear)",
+        standard: "var(--easing-standard)",
+      },
+      zIndex: {
+        base: "var(--z-index-base)",
+        raised: "var(--z-index-raised)",
+        docked: "var(--z-index-docked)",
+        focus: "var(--z-index-focus)",
+        sticky: "var(--z-index-sticky)",
+        overlay: "var(--z-index-overlay)",
+      },
+      opacity: {
+        hidden: "var(--opacity-hidden)",
+        disabled: "var(--opacity-disabled)",
+        muted: "var(--opacity-muted)",
+        visible: "var(--opacity-visible)",
+      },
       keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
         "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },

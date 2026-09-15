@@ -12,7 +12,10 @@ tokens/
 ├─ primitives/
 │  ├─ color.json        6 brand ramps + synthesized neutral, 0–1000
 │  ├─ dimension.json    spacing, radius, border width
-│  └─ typography.json   Material-3 scale, Montserrat
+│  ├─ typography.json   Material-3 scale, Montserrat
+│  ├─ motion.json       duration + easing (cubicBezier)
+│  ├─ opacity.json      hidden/disabled/muted/visible scale
+│  └─ z-index.json      base/raised/docked/focus/sticky/overlay scale
 └─ semantic/
    ├─ color.light.json  aliases → semantic contract
    ├─ color.dark.json   synthesized
@@ -39,14 +42,28 @@ theme files that a `KinetixTheme` needs real dark values for — `Theme.dark.kt`
 | Platform | Files |
 | --- | --- |
 | Web | `web/globals.css`, `web/globals.dark.css`, `web/tokens.ts` |
-| iOS | `ios/KinetixColors.swift`, `ios/Theme.swift` (UIColor), `ios/KinetixType.swift`; `ios/KinetixColorsSwiftUI.swift` + `.dark.swift` (SwiftUI `Color`, for `packages/ui-swiftui`) |
-| Android | `android/Color.kt`, `android/Theme.kt` + `Theme.dark.kt`, `android/KinetixType.kt`, `res/values/{colors,dimens}.xml` |
-| Flutter | `flutter/app_colors.dart`, `flutter/app_theme.dart`, `flutter/app_text.dart`; `flutter/kinetix_color_scheme.dart` + `.dark.dart` (for `packages/ui-flutter`) |
+| iOS | `ios/KinetixColors.swift`, `ios/Theme.swift` (UIColor), `ios/KinetixType.swift`; `ios/KinetixColorsSwiftUI.swift` + `.dark.swift` (SwiftUI `Color`, for `packages/ui-swiftui`); `ios/KinetixMotion.swift` |
+| Android | `android/Color.kt`, `android/Theme.kt` + `Theme.dark.kt`, `android/KinetixType.kt`, `res/values/{colors,dimens}.xml`; `android/KinetixMotion.kt` |
+| Flutter | `flutter/app_colors.dart`, `flutter/app_theme.dart`, `flutter/app_text.dart`; `flutter/kinetix_color_scheme.dart` + `.dark.dart` (for `packages/ui-flutter`); `flutter/kinetix_motion.dart` |
 
 The `KinetixColorsSwiftUI` / `KinetixColorScheme` pairs are **additive** — the
 older `Theme.swift` / `app_theme.dart` outputs (light-only, colliding class
 names) are untouched. See [SwiftUI](/docs/swiftui) and [Flutter](/docs/flutter)
 for why.
+
+## Motion + scale
+
+`duration`, `easing`, `opacity`, and `z-index` are theme-independent, like
+typography — defined once, the same in light and dark. Each platform's output
+groups them into `KinetixDuration` / `KinetixEasing` / `KinetixOpacity` /
+`KinetixZIndex` (native) or `--duration-*` / `--easing-*` / `--opacity-*` /
+`--z-index-*` custom properties (web), and `packages/ui`'s `tailwind.config.ts`
+wires the web ones into real Tailwind utilities — `duration-fast`,
+`ease-standard`, `opacity-disabled`, `z-overlay` — used directly in component
+source instead of the ad hoc `duration-200` / `z-50` literals components used
+to carry. A handful of pre-existing values that don't cleanly match a token
+step (e.g. a couple of `opacity-40`/`opacity-60` icon dimmings) are left as
+literals with a comment, rather than silently changed to the nearest token.
 
 ## Semantic contract
 
