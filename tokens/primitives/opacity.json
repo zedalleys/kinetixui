@@ -1,0 +1,24 @@
+{
+  "opacity": {
+    "hidden": {
+      "$type": "number",
+      "$value": 0,
+      "$description": "Fully transparent."
+    },
+    "disabled": {
+      "$type": "number",
+      "$value": 0.5,
+      "$description": "Disabled-state dimming for interactive controls."
+    },
+    "muted": {
+      "$type": "number",
+      "$value": 0.7,
+      "$description": "De-emphasized icon/text dimming — e.g. a hover-to-reveal action."
+    },
+    "visible": {
+      "$type": "number",
+      "$value": 1,
+      "$description": "Fully opaque."
+    }
+  }
+}

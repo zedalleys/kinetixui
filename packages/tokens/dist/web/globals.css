@@ -151,6 +151,16 @@
   --radius-full: 9999px;
   --border-width-default: 1px;
   --border-width-focus: 2px;
+  --duration-fast: 200ms; /** Quick UI transitions — icon rotation, chevrons, sidebar collapse. */
+  --duration-base: 300ms; /** Default transition speed — fades, stroke/progress animations. */
+  --duration-slow: 500ms; /** Entrance transitions for larger surfaces — sheet/drawer open. */
+  --duration-slower: 1000ms; /** Looping animations — caret blink. */
+  --easing-linear: cubic-bezier(0, 0, 1, 1); /** Constant-speed motion — panel slides (Sidebar). */
+  --easing-standard: cubic-bezier(0.4, 0, 0.2, 1); /** Default ease-in-out — dialogs, sheets, overlays. */
+  --opacity-hidden: 0; /** Fully transparent. */
+  --opacity-disabled: 0.5; /** Disabled-state dimming for interactive controls. */
+  --opacity-muted: 0.7; /** De-emphasized icon/text dimming — e.g. a hover-to-reveal action. */
+  --opacity-visible: 1; /** Fully opaque. */
   --font-family-sans: Montserrat, ui-sans-serif, system-ui, sans-serif;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
@@ -193,6 +203,12 @@
   --letter-spacing-wide-15: 0.15px;
   --letter-spacing-wide-25: 0.25px;
   --letter-spacing-wide-5: 0.5px;
+  --z-index-base: 0; /** Default stacking context. */
+  --z-index-raised: 1; /** Subtly above sibling content — NavigationMenu viewport indicator. */
+  --z-index-docked: 10; /** Fixed/positioned local elements — Sidebar, NavigationMenu bar, Resizable drag handle, InputOTP active caret. */
+  --z-index-focus: 20; /** A locally-focused element above unfocused siblings — Calendar day cell. */
+  --z-index-sticky: 40; /** Viewport-sticky chrome — AppBar. */
+  --z-index-overlay: 50; /** Modal and floating overlay layers — Dialog, AlertDialog, Drawer, Sheet, Modal, Popover, Tooltip, DropdownMenu, ContextMenu, Menubar, HoverCard, Select. */
   --background: var(--neutral-0); /** figma: surfaceContainerLowest #ffffff */
   --foreground: var(--blue-900); /** figma: onSurface #050c11 */
   --card: var(--neutral-0); /** synth: no Figma card token; = background */

@@ -84,7 +84,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
             "flex flex-col items-center gap-2 rounded-md border border-dashed border-input p-6 text-center outline-none transition-colors",
             !disabled && "cursor-pointer hover:bg-accent/50 focus-visible:shadow-focus",
             dragging && "border-primary bg-accent",
-            disabled && "pointer-events-none opacity-50",
+            disabled && "pointer-events-none opacity-disabled",
           )}
         >
           <Upload className="size-6 text-muted-foreground" aria-hidden />

@@ -73,6 +73,9 @@ const AudioPlayer = React.forwardRef<HTMLDivElement, AudioPlayerProps>(
       </button>
     );
 
+    // disabled:opacity-40 (not --opacity-disabled's 0.5) is a real, pre-existing
+    // inconsistency — left as a literal rather than silently changing the
+    // rendered value; a design call, not a rename.
     const iconBtn =
       "grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:text-foreground disabled:opacity-40 [&>svg]:size-4";
 

@@ -13,7 +13,7 @@ const fabVariants = cva(
   [
     "inline-flex shrink-0 items-center justify-center gap-2 rounded-full font-sans font-medium",
     "shadow-lg outline-none transition-colors",
-    "focus-visible:shadow-focus disabled:pointer-events-none disabled:opacity-50",
+    "focus-visible:shadow-focus disabled:pointer-events-none disabled:opacity-disabled",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0",
   ],
   {

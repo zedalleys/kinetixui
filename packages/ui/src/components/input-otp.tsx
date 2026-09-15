@@ -11,7 +11,7 @@ const InputOTP = React.forwardRef<
 >(({ className, containerClassName, ...props }, ref) => (
   <OTPInput
     ref={ref}
-    containerClassName={cn("flex items-center gap-2 has-[:disabled]:opacity-50", containerClassName)}
+    containerClassName={cn("flex items-center gap-2 has-[:disabled]:opacity-disabled", containerClassName)}
     className={cn("disabled:cursor-not-allowed", className)}
     {...props}
   />
@@ -35,7 +35,7 @@ const InputOTPSlot = React.forwardRef<
       ref={ref}
       className={cn(
         "relative flex size-9 items-center justify-center border-y border-r border-input text-sm shadow-sm transition-all first:rounded-l-md first:border-l last:rounded-r-md",
-        isActive && "z-10 ring-1 ring-ring",
+        isActive && "z-docked ring-1 ring-ring",
         className,
       )}
       {...props}
@@ -43,7 +43,7 @@ const InputOTPSlot = React.forwardRef<
       {char}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-4 w-px animate-caret-blink bg-foreground duration-1000" />
+          <div className="h-4 w-px animate-caret-blink bg-foreground duration-slower" />
         </div>
       )}
     </div>

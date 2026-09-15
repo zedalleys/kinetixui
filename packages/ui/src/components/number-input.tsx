@@ -42,7 +42,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
       <div
         className={cn(
           "flex h-10 items-stretch overflow-hidden rounded-md border border-input font-sans focus-within:shadow-focus",
-          disabled && "pointer-events-none opacity-50",
+          disabled && "pointer-events-none opacity-disabled",
           className,
         )}
       >
@@ -51,7 +51,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           aria-label="Decrease"
           disabled={disabled || (min != null && current <= min)}
           onClick={() => set(current - step)}
-          className="flex w-9 shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:text-foreground focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+          className="flex w-9 shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:text-foreground focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-disabled"
         >
           <Minus className="size-4" />
         </button>
@@ -76,7 +76,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           aria-label="Increase"
           disabled={disabled || (max != null && current >= max)}
           onClick={() => set(current + step)}
-          className="flex w-9 shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:text-foreground focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+          className="flex w-9 shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:text-foreground focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-disabled"
         >
           <Plus className="size-4" />
         </button>

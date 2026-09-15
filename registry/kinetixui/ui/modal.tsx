@@ -68,7 +68,7 @@ function Modal({
         <DialogOverlay />
         <DialogPrimitive.Content
           className={cn(
-            "fixed left-1/2 top-1/2 z-50 flex w-full max-w-[480px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl bg-background font-sans",
+            "fixed left-1/2 top-1/2 z-overlay flex w-full max-w-[480px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl bg-background font-sans",
             "shadow-[0_4px_24px_rgba(0,0,0,0.12)]",
             "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
             className,
@@ -79,7 +79,7 @@ function Modal({
               {title}
             </DialogPrimitive.Title>
             <DialogPrimitive.Close
-              className="rounded-sm opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring"
+              className="rounded-sm opacity-muted outline-none transition-opacity hover:opacity-visible focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="Close"
             >
               <X className="size-5" />

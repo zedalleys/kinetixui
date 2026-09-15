@@ -68,7 +68,7 @@ const Inform = React.forwardRef<HTMLDivElement, InformProps>(
             type="button"
             onClick={onDismiss}
             aria-label="Dismiss"
-            className="-m-0.5 shrink-0 rounded-[2px] p-0.5 opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-1 focus-visible:ring-current"
+            className="-m-0.5 shrink-0 rounded-[2px] p-0.5 opacity-muted outline-none transition-opacity hover:opacity-visible focus-visible:opacity-visible focus-visible:ring-1 focus-visible:ring-current"
           >
             <X className="size-3.5" />
           </button>

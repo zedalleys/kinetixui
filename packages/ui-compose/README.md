@@ -249,6 +249,9 @@ proximity to the token source it depends on.
 - `ui/src/main/kotlin/com/kinetixui/tokens/` — **generated, do not edit.**
   Vendored from `packages/tokens/dist/android/`; re-copy after any token
   change with `pnpm build:tokens && pnpm vendor:compose` from the repo root.
+  Includes `KinetixMotion.kt` — `KinetixDuration` (Int ms), `KinetixEasing`
+  (`CubicBezierEasing`), `KinetixOpacity` / `KinetixZIndex` (Float, the
+  latter matching `Modifier.zIndex`).
 - `ui/src/main/res/values/{colors,dimens}.xml` — same deal, vendored for
   `R.color.*` / `R.dimen.*` access (Button.kt's padding/type-scale/radius are
   all read from here — nothing is a hand-picked number).

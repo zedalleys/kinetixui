@@ -28,7 +28,7 @@ const buttonVariants = cva(
     "font-sans font-medium whitespace-nowrap select-none",
     "rounded-md transition-colors outline-none",
     "focus-visible:shadow-focus",
-    "disabled:pointer-events-none disabled:opacity-50",
+    "disabled:pointer-events-none disabled:opacity-disabled",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-[18px]",
   ],
   {
@@ -72,7 +72,7 @@ const buttonVariants = cva(
         Hover: "",
         Focus: "shadow-focus",
         Active: "",
-        Disabled: "pointer-events-none opacity-50",
+        Disabled: "pointer-events-none opacity-disabled",
       },
       /** corner style — matches the design source's Corners property */
       corners: {

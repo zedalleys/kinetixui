@@ -26,7 +26,7 @@ const inputVariants = cva(
     "placeholder:text-muted-foreground",
     "outline-none transition-colors",
     "focus-visible:border-primary focus-visible:shadow-focus",
-    "disabled:cursor-not-allowed disabled:opacity-50",
+    "disabled:cursor-not-allowed disabled:opacity-disabled",
     "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:border-destructive aria-[invalid=true]:focus-visible:shadow-focus-destructive",
   ],
   {
@@ -35,7 +35,7 @@ const inputVariants = cva(
         Default: "",
         Focus: "border-primary shadow-focus",
         Error: "border-destructive",
-        Disabled: "opacity-50 pointer-events-none",
+        Disabled: "opacity-disabled pointer-events-none",
       },
       /** corner style — matches the design source's Corners property */
       corners: {

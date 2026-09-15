@@ -8,6 +8,7 @@ library;
 
 export 'src/theme.dart';
 export 'src/kinetix_type.dart';
+export 'src/kinetix_motion.dart';
 
 export 'src/accordion.dart';
 export 'src/alert.dart';

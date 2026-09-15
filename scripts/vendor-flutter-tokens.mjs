@@ -22,6 +22,7 @@ const files = [
   "kinetix_color_scheme.dart",
   "kinetix_color_scheme.dark.dart",
   "app_text.dart", // class AppText — the type scale (aliased as KinetixType)
+  "kinetix_motion.dart", // KinetixDuration/Easing/Opacity/ZIndex
 ];
 for (const f of files) {
   copyFileSync(`${SRC}/${f}`, `${DEST}/${f}`);

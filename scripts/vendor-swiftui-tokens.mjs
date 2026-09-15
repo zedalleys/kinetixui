@@ -22,6 +22,7 @@ const files = [
   "KinetixColorsSwiftUI.swift",
   "KinetixColorsSwiftUI.dark.swift",
   "KinetixType.swift", // KinetixTextStyle + KinetixType.<style>
+  "KinetixMotion.swift", // KinetixDuration/Easing/Opacity/ZIndex
 ];
 for (const f of files) {
   copyFileSync(`${SRC}/${f}`, `${DEST}/${f}`);

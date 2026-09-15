@@ -19,13 +19,17 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         month_caption: "flex justify-center pt-1 relative items-center w-full",
         caption_label: "text-sm font-medium",
         nav: "flex items-center gap-1",
+        // Resting-dim/hover-brighten nav icons — numerically the disabled
+        // value (0.5) but not a disabled state, so left as a literal rather
+        // than forced into --opacity-disabled or --opacity-muted (0.7, which
+        // would change the rendered value).
         button_previous: cn(
           buttonVariants({ variant: "Outline", size: "icon" }),
-          "absolute left-1 size-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+          "absolute left-1 size-7 bg-transparent p-0 opacity-50 hover:opacity-visible",
         ),
         button_next: cn(
           buttonVariants({ variant: "Outline", size: "icon" }),
-          "absolute right-1 size-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+          "absolute right-1 size-7 bg-transparent p-0 opacity-50 hover:opacity-visible",
         ),
         month_grid: "w-full border-collapse space-x-1",
         weekdays: "flex",
@@ -36,19 +40,19 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         // accent background + corner rounding and hands the primary-colored
         // "selected" circle down to `day_button` via a `group` class.
         day: cn(
-          "group relative p-0 text-center text-sm focus-within:relative focus-within:z-20 aria-selected:bg-accent",
+          "group relative p-0 text-center text-sm focus-within:relative focus-within:z-focus aria-selected:bg-accent",
           props.mode === "range" ? "" : "aria-selected:rounded-md",
         ),
         day_button: cn(
           buttonVariants({ variant: "Ghost", size: "icon" }),
-          "size-8 p-0 font-normal group-aria-selected:opacity-100 group-data-[selected=true]:bg-primary group-data-[selected=true]:text-primary-foreground group-data-[selected=true]:hover:bg-primary group-data-[selected=true]:hover:text-primary-foreground group-data-[selected=true]:focus:bg-primary group-data-[selected=true]:focus:text-primary-foreground",
+          "size-8 p-0 font-normal group-aria-selected:opacity-visible group-data-[selected=true]:bg-primary group-data-[selected=true]:text-primary-foreground group-data-[selected=true]:hover:bg-primary group-data-[selected=true]:hover:text-primary-foreground group-data-[selected=true]:focus:bg-primary group-data-[selected=true]:focus:text-primary-foreground",
         ),
         range_start: "day-range-start rounded-l-md",
         range_end: "day-range-end rounded-r-md",
         range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
         today: "bg-accent text-accent-foreground",
         outside: "day-outside text-muted-foreground aria-selected:text-muted-foreground",
-        disabled: "text-muted-foreground opacity-50",
+        disabled: "text-muted-foreground opacity-disabled",
         hidden: "invisible",
         ...classNames,
       }}

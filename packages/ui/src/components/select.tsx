@@ -28,13 +28,15 @@ const SelectTrigger = React.forwardRef<
       "focus:border-primary focus:shadow-focus",
       "data-[state=open]:border-primary",
       "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus:border-destructive aria-[invalid=true]:focus:shadow-focus-destructive",
-      "disabled:cursor-not-allowed disabled:opacity-50",
+      "disabled:cursor-not-allowed disabled:opacity-disabled",
       className,
     )}
     {...props}
   >
     {children}
     <SelectPrimitive.Icon asChild>
+      {/* opacity-60 (not --opacity-muted's 0.7) is a pre-existing
+          inconsistency — left as a literal, see dropdown-menu.tsx */}
       <ChevronDown className="size-4 shrink-0 opacity-60" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
@@ -50,7 +52,7 @@ const SelectContent = React.forwardRef<
       ref={ref}
       position={position}
       className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md font-sans",
+        "relative z-overlay max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md font-sans",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
         className,
@@ -89,7 +91,7 @@ const SelectItem = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none",
-      "focus:bg-accent focus:text-accent-foreground focus:ring-1 focus:ring-inset focus:ring-ring data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "focus:bg-accent focus:text-accent-foreground focus:ring-1 focus:ring-inset focus:ring-ring data-[disabled]:pointer-events-none data-[disabled]:opacity-disabled",
       className,
     )}
     {...props}

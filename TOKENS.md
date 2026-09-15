@@ -16,6 +16,9 @@ Source of truth: the KinetixUI design file in Figma, node `3877-10388`
 | Semantic — light | `tokens/semantic/color.light.json` | aliases to primitives, named to the **semantic token** contract |
 | Semantic — dark | `tokens/semantic/color.dark.json` | **synthesized** (no dark mode in Figma) |
 | Semantic — text styles | `tokens/semantic/typography.json` | Figma composite text styles |
+| Primitives — motion | `tokens/primitives/motion.json` | not from Figma — `duration`/`easing` scale grounded in the values already hardcoded across `packages/ui/src/components/*.tsx` (`duration-200/300/500/1000`, `ease-linear`/`ease-in-out`) |
+| Primitives — opacity | `tokens/primitives/opacity.json` | not from Figma — grounded in the dominant `opacity-0/50/70/100` usages already in components |
+| Primitives — z-index | `tokens/primitives/z-index.json` | not from Figma — grounded in the `z-[1]/z-10/z-20/z-40/z-50` usages already in components |
 
 ## Semantic variable → Figma variable (light theme)
 
@@ -56,6 +59,7 @@ palette (`color.dark.json`), not a flip of these. The live table on
 | `color.neutral.*` ramp | interpolated | Figma exposes only 3 neutral anchors (`#ffffff`, `#f6f6f6`, `#6d6d6d`) |
 | entire **dark** theme | its own palette (`color.dark.json`) — not a flip of light | no dark mode in Figma |
 | `radius.lg` (12), `spacing.7` (28) | interpolated | gaps in the Figma scale |
+| `duration.*`, `easing.*`, `opacity.*`, `zIndex.*` | see table above | not Figma extractions at all — a named scale for values that were previously ad hoc Tailwind literals scattered per-component (`z-50`, `duration-300`, …); each name earns its value from a real, distinct existing usage (see `tokens/primitives/{motion,opacity,z-index}.json` `$description`s). A handful of pre-existing values that don't cleanly match a step (`disabled:opacity-40` in `audio-player.tsx`, `opacity-60` in `dropdown-menu.tsx`/`select.tsx`, the Calendar nav buttons' resting `opacity-50`) are left as literals with a comment rather than silently normalized — that's a design call, not a rename. |
 
 ## Cleaned during extraction
 
