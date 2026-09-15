@@ -34,11 +34,11 @@
     "release": "pnpm build:tokens && pnpm --filter @kinetixui/ui build && pnpm --filter @kinetixui/cli build && pnpm -r publish --no-git-checks --provenance && changeset git-tag && git push --tags"
   },
   "devDependencies": {
-    "@changesets/cli": "^3.0.1",
-    "rimraf": "^6.0.1",
-    "shadcn": "^2.1.8",
-    "style-dictionary": "^5.5.2",
-    "turbo": "^2.3.3",
-    "typescript": "^5.7.2"
+    "@changesets/cli": "^3.0.3",
+    "rimraf": "^6.1.3",
+    "shadcn": "^4.21.0",
+    "style-dictionary": "^5.5.3",
+    "turbo": "^2.10.13",
+    "typescript": "^5.9.3"
   }
 }

@@ -236,8 +236,14 @@ const ChartTooltip = RechartsPrimitive.Tooltip;
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-    React.ComponentProps<"div"> & {
+  // Recharts v3 moved active/payload/label/coordinate to context-only props
+  // (`PropertiesReadFromContext`, omitted from `TooltipProps`) — the custom
+  // `content` render prop receives them back via `TooltipContentProps`.
+  // Partial because `<ChartTooltip content={<ChartTooltipContent />} />`
+  // constructs the element with no props — Recharts clones it with the real
+  // values at render time.
+  Partial<RechartsPrimitive.TooltipContentProps> &
+    Omit<React.ComponentProps<"div">, "content"> & {
       hideLabel?: boolean;
       hideIndicator?: boolean;
       indicator?: "line" | "dot" | "dashed";
@@ -246,7 +252,7 @@ const ChartTooltipContent = React.forwardRef<
     }
 >(
   (
-    { active, payload, className, indicator = "dot", hideLabel = false, hideIndicator = false, label, labelFormatter, formatter, color },
+    { active, payload, className, indicator = "dot", hideLabel = false, hideIndicator = false, label, labelFormatter, formatter },
     ref,
   ) => {
     const { config } = useChart();
@@ -268,7 +274,7 @@ const ChartTooltipContent = React.forwardRef<
           {payload.map((item, i) => {
             const key = `${item.name || item.dataKey || "value"}`;
             const itemConfig = config[key];
-            const indicatorColor = color || (item.payload as Record<string, string>)?.fill || item.color;
+            const indicatorColor = (item.payload as Record<string, string>)?.fill || item.color;
             return (
               <div key={key + i} className="flex w-full items-center gap-2">
                 {!hideIndicator && (
@@ -303,8 +309,14 @@ const ChartLegend = RechartsPrimitive.Legend;
 
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"div"> &
-    Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & { hideIcon?: boolean; nameKey?: string }
+  // Recharts v3 dropped `payload` from the exported `LegendProps` (also
+  // context-only now, like Tooltip's) — type it from `LegendPayload` directly.
+  React.ComponentProps<"div"> & {
+    payload?: ReadonlyArray<RechartsPrimitive.LegendPayload>;
+    verticalAlign?: RechartsPrimitive.LegendProps["verticalAlign"];
+    hideIcon?: boolean;
+    nameKey?: string;
+  }
 >(({ className, payload, verticalAlign = "bottom" }, ref) => {
   const { config } = useChart();
   if (!payload?.length) return null;

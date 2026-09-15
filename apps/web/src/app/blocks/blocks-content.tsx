@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowUpRight, Check, DollarSign, Github, Inbox, Search, TrendingDown, Users } from "lucide-react";
+import { ArrowUpRight, Check, DollarSign, Inbox, Search, TrendingDown, Users } from "lucide-react";
+import { GithubIcon } from "@/components/github-button";
 import {
   Alert,
   AlertDescription,
@@ -69,7 +70,7 @@ export function BlocksContent() {
   </CardContent>
   <CardFooter className="flex-col gap-2">
     <Button className="w-full">Sign in</Button>
-    <Button variant="Outline" className="w-full"><Github className="size-4" /> Continue with GitHub</Button>
+    <Button variant="Outline" className="w-full"><GithubIcon className="size-4" /> Continue with GitHub</Button>
   </CardFooter>
 </Card>`}
         native={{
@@ -163,7 +164,7 @@ export function BlocksContent() {
           <CardFooter className="flex-col gap-2">
             <Button className="w-full">Sign in</Button>
             <Button variant="Outline" className="w-full">
-              <Github className="size-4" /> Continue with GitHub
+              <GithubIcon className="size-4" /> Continue with GitHub
             </Button>
           </CardFooter>
         </Card>

@@ -1,7 +1,6 @@
 {
   "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "toggle-group",
-  "type": "registry:ui",
   "title": "Toggle Group",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
@@ -25,5 +24,6 @@
       "type": "registry:lib",
       "target": "lib/utils.ts"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

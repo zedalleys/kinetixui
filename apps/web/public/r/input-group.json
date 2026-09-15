@@ -1,7 +1,6 @@
 {
   "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "input-group",
-  "type": "registry:ui",
   "title": "Input Group",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
@@ -23,5 +22,6 @@
       "type": "registry:lib",
       "target": "lib/utils.ts"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

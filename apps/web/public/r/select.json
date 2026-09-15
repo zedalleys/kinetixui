@@ -1,7 +1,6 @@
 {
   "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "select",
-  "type": "registry:ui",
   "title": "Select",
   "description": "Generated 1:1 from the KinetixUI design source, node 54855:13882.",
   "dependencies": [
@@ -24,5 +23,6 @@
       "type": "registry:lib",
       "target": "lib/utils.ts"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

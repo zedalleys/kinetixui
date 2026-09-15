@@ -1,7 +1,6 @@
 {
   "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "sonner",
-  "type": "registry:ui",
   "title": "Sonner",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
@@ -17,5 +16,6 @@
       "type": "registry:ui",
       "target": "components/ui/sonner.tsx"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }
