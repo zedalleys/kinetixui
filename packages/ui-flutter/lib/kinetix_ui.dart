@@ -4,7 +4,7 @@
 ///
 /// Wrap your app (or a screen) in [KinetixTheme], then read colours with
 /// `KinetixTheme.of(context)`.
-library kinetix_ui;
+library;
 
 export 'src/theme.dart';
 export 'src/kinetix_type.dart';
