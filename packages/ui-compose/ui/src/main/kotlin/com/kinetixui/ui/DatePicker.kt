@@ -14,12 +14,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 /**
  * KinetixDatePicker — mirrors `packages/ui/src/components/date-picker.tsx`:
@@ -45,9 +45,13 @@ fun KinetixDatePicker(
     val colors = KinetixColorScheme.current
     var open by remember { mutableStateOf(false) }
 
+    // Read the locale from LocalLocale (recomposes when it changes), not
+    // Locale.getDefault() — the latter isn't observable state, so the UI
+    // would silently keep formatting with the old locale after a switch.
+    val locale = LocalLocale.current.platformLocale
     val selectedMillis = state.selectedDateMillis
     val display = if (selectedMillis != null) {
-        SimpleDateFormat(dateFormat, Locale.getDefault()).format(Date(selectedMillis))
+        SimpleDateFormat(dateFormat, locale).format(Date(selectedMillis))
     } else {
         placeholder
     }

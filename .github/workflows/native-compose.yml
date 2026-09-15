@@ -31,20 +31,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+      # `packages` defaults to "tools platform-tools" — the standalone
+      # "tools" package was removed from Google's SDK repository, so the
+      # default now fails outright. Only platform-tools is actually needed;
+      # AGP/Gradle auto-download the compileSdk platform + build-tools.
+      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
+        with:
+          packages: "platform-tools"
 
-      # This package's own gradle-wrapper.jar isn't committed (a binary I
-      # can't produce here — see packages/ui-compose/README.md); Android
-      # Studio generates it on first sync locally. CI provisions a real
-      # Gradle directly instead of relying on ./gradlew.
+      # CI provisions a real Gradle directly instead of relying on
+      # ./gradlew (the wrapper jar is committed for local/Android Studio use
+      # — see packages/ui-compose/README.md — but CI doesn't depend on it).
       - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
         with:
-          gradle-version: "8.7"
+          gradle-version: "9.7.1"
 
       - name: Assemble
         run: gradle :ui:assembleDebug

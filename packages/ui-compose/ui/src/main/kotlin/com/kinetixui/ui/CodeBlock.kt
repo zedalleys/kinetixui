@@ -23,12 +23,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.sp
+import android.content.ClipData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -38,7 +39,7 @@ import kotlinx.coroutines.launch
  * strip. Presentational only, same as the source — bring your own syntax
  * highlighting by passing pre-highlighted text if needed; this just
  * renders `code`/`files[].code` as plain monospace text. Copy uses
- * Compose's own `LocalClipboardManager` — no new dependency, same "the
+ * Compose's own `LocalClipboard` — no new dependency, same "the
  * platform already has this" reuse as `KinetixToaster` wrapping
  * `SnackbarHostState`. Horizontal overflow wraps [KinetixScrollArea],
  * genuine reuse rather than a new scroll implementation. The
@@ -61,15 +62,15 @@ fun KinetixCodeBlock(
     var copied by remember { mutableStateOf(false) }
     val current = tabs.getOrElse(active) { tabs[0] }
     val hasHeader = tabs.size > 1 || current.name.isNotEmpty()
-    val clipboard = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
     val borderWidthPx = with(LocalDensity.current) { dimensionResource(R.dimen.border_width_default).toPx() }
     val shape = RoundedCornerShape(dimensionResource(R.dimen.radius_md))
 
     fun copy() {
-        clipboard.setText(AnnotatedString(current.code))
-        copied = true
         scope.launch {
+            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("code", current.code)))
+            copied = true
             delay(1500)
             copied = false
         }

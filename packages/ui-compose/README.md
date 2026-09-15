@@ -257,13 +257,14 @@ proximity to the token source it depends on.
 
 - **Compiled and previewed on a real machine, not just CI.** Nothing in this
   package was written by a toolchain that could compile it — this repo's dev
-  environment has no JDK/Android SDK/Gradle. It's since been built and
-  synced in a real Android Studio (Gradle 8.7, Kotlin 1.9.22, JVM 21, Windows
-  11), which generated and committed the Gradle wrapper (`gradlew`,
-  `gradlew.bat`, `gradle/wrapper/gradle-wrapper.jar`) — `./gradlew :ui:assembleDebug`
-  works locally now, no separate Gradle install needed. CI
-  (`.github/workflows/native-compose.yml`) also runs `assembleDebug` +
-  `lintDebug` on every push that touches this package or the token source.
+  environment originally had no JDK/Android SDK/Gradle. It's since been built
+  and synced in a real Android Studio, which generated and committed the
+  Gradle wrapper (`gradlew`, `gradlew.bat`, `gradle/wrapper/gradle-wrapper.jar`)
+  — `./gradlew :ui:assembleDebug` works locally now, no separate Gradle
+  install needed (current toolchain: Gradle 9.7.1, AGP 9.4.0, Kotlin 2.4.20,
+  JVM 21, compileSdk 37). CI (`.github/workflows/native-compose.yml`) also
+  runs `assembleDebug` + `lintDebug` on every push that touches this package
+  or the token source.
 - **Dark mode only exists for this one Android theme file.** Extending
   `sd.config.mjs`'s `android-compose-theme` platform was scoped narrowly to
   unblock `KinetixTheme`; iOS/Flutter native token output is still
