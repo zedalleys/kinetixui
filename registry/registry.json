@@ -189,6 +189,7 @@
       "title": "Badge",
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:13995.",
       "dependencies": [
+        "@radix-ui/react-slot",
         "class-variance-authority"
       ],
       "registryDependencies": [
@@ -1652,6 +1653,7 @@
       "title": "Tag",
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:14021.",
       "dependencies": [
+        "@radix-ui/react-slot",
         "class-variance-authority",
         "lucide-react"
       ],

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/utils";
 
@@ -31,10 +32,18 @@ const badgeVariants = cva(
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
-
-function Badge({ className, variant, ...props }: BadgeProps) {
-  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
+    VariantProps<typeof badgeVariants> {
+  /** render as the single child element (Radix Slot) instead of <div> —
+   * e.g. `<Badge asChild><a href="/new">New</a></Badge>` for a linked badge */
+  asChild?: boolean;
 }
+
+const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
+  ({ className, variant, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "div";
+    return <Comp ref={ref} className={cn(badgeVariants({ variant }), className)} {...props} />;
+  },
+);
+Badge.displayName = "Badge";
 
 export { Badge, badgeVariants };
