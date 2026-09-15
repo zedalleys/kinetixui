@@ -1,5 +1,16 @@
 # @kinetixui/ui
 
+## 0.7.0
+
+### Minor Changes
+
+- 7f19c38: Add `asChild` support to `Badge` and `Tag`, so both can render as a single wrapped element (e.g. `<Badge asChild><a href="/new">New</a></Badge>`) instead of always forcing a `<div>`/`<span>`. `Toggle` and `ToggleGroup` already supported `asChild` transparently via their underlying Radix primitives — no change needed there, just confirming for the record.
+  
+  `Tag`'s `onRemove` dismiss button still works with `asChild`: it nests inside the slotted element (Radix `Slot` can only render one root node). Avoid pairing `asChild` + `onRemove` with an `<a>` child specifically, since a nested `<button>` inside an anchor is invalid HTML.
+- 7d1ef8f: Add three new DTCG token primitives — `duration`/`easing` (motion), `opacity`, and `z-index` — grounded in the values already hardcoded across the component library (`duration-200/300/500/1000`, `ease-linear`/`ease-in-out`, `opacity-0/50/70/100`, `z-[1]/z-10/z-20/z-40/z-50`), rather than invented from scratch. Compiled to `--duration-*`/`--easing-*`/`--opacity-*`/`--z-index-*` CSS custom properties, `KinetixMotion.swift`/`.kt`/`.dart` on the three native platforms, and new `packages/ui`'s `tailwind.config.ts` utilities (`duration-fast`, `ease-standard`, `opacity-disabled`, `z-overlay`, etc.) that every component that previously hardcoded these values now uses directly.
+  
+  A handful of pre-existing values that don't cleanly match a token step (`disabled:opacity-40` in `AudioPlayer`, `opacity-60` in `DropdownMenu`/`Select`, the `Calendar` nav buttons' resting `opacity-50`) are left as literals with a comment rather than silently normalized to the nearest token — that's a design call for later, not a rename.
+
 ## 0.6.5
 
 No changes in this release.
