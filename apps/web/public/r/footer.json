@@ -1,7 +1,6 @@
 {
   "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "footer",
-  "type": "registry:ui",
   "title": "Footer",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [],
@@ -21,5 +20,6 @@
       "type": "registry:lib",
       "target": "lib/utils.ts"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

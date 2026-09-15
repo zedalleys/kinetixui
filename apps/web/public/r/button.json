@@ -1,7 +1,6 @@
 {
   "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "button",
-  "type": "registry:ui",
   "title": "Button",
   "description": "Generated 1:1 from the KinetixUI design source, node 54863:351.",
   "dependencies": [
@@ -24,5 +23,6 @@
       "type": "registry:lib",
       "target": "lib/utils.ts"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

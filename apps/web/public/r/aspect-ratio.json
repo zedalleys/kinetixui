@@ -1,7 +1,6 @@
 {
   "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "aspect-ratio",
-  "type": "registry:ui",
   "title": "Aspect Ratio",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
@@ -17,5 +16,6 @@
       "type": "registry:ui",
       "target": "components/ui/aspect-ratio.tsx"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

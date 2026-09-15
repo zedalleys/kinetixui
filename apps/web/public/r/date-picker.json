@@ -1,7 +1,6 @@
 {
   "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "date-picker",
-  "type": "registry:ui",
   "title": "Date Picker",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
@@ -27,5 +26,6 @@
       "type": "registry:lib",
       "target": "lib/utils.ts"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

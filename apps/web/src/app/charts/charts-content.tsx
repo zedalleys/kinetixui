@@ -422,7 +422,7 @@ export function ChartsContent() {
                 <Cell key={d.browser} fill={d.fill} />
               ))}
             </Pie>
-            <ChartLegend content={<ChartLegendContent nameKey="browser" />} className="-translate-y-2" />
+            <ChartLegend content={<ChartLegendContent nameKey="browser" className="-translate-y-2" />} />
           </PieChart>
         </ChartContainer>
       </Showcase>

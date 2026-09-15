@@ -1,7 +1,6 @@
 {
   "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "modal",
-  "type": "registry:ui",
   "title": "Modal",
   "description": "Generated 1:1 from the KinetixUI design source, node 54857:1322.",
   "dependencies": [
@@ -26,5 +25,6 @@
       "type": "registry:lib",
       "target": "lib/utils.ts"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

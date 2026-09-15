@@ -1,7 +1,6 @@
 {
   "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "sidebar",
-  "type": "registry:ui",
   "title": "Sidebar",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
@@ -31,5 +30,6 @@
       "type": "registry:lib",
       "target": "lib/utils.ts"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

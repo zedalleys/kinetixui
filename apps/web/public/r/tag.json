@@ -1,7 +1,6 @@
 {
   "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "tag",
-  "type": "registry:ui",
   "title": "Tag",
   "description": "Generated 1:1 from the KinetixUI design source, node 54855:14021.",
   "dependencies": [
@@ -24,5 +23,6 @@
       "type": "registry:lib",
       "target": "lib/utils.ts"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }
