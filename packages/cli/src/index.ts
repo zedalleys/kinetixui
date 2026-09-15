@@ -4,12 +4,15 @@ import pc from "picocolors";
 import { add } from "./commands/add.js";
 import { init } from "./commands/init.js";
 import { list } from "./commands/list.js";
+// Bundled at build time (esbuild inlines JSON imports), not read at runtime —
+// so `kinetixui --version` can never drift from the published package again.
+import pkg from "../package.json" with { type: "json" };
 
 const DEFAULT_REGISTRY = "https://kinetixui.com/r";
 
 const program = new Command();
 
-program.name("kinetixui").description("Add KinetixUI components and tokens to your project.").version("0.3.0");
+program.name("kinetixui").description("Add KinetixUI components and tokens to your project.").version(pkg.version);
 
 program
   .command("init")
