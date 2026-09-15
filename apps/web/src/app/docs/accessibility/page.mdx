@@ -29,6 +29,10 @@ default — KinetixUI only styles them against the token contract.
   is audited by [`scripts/check-contrast.mjs`](https://github.com/zedalleys/kinetixui/blob/main/scripts/check-contrast.mjs)
   (`pnpm check:contrast`, run in CI). **Every pair meets WCAG AA (4.5:1) in both
   themes** — no exceptions. CI fails the build if a new pair regresses.
+- **Non-text contrast** — the same script also checks every hover-fill/border/
+  focus-ring pair against SC 1.4.11 (3:1). Five pairs sit below 3:1 by design
+  (see "The one trade-off" below) and are tracked as explicit exceptions; any
+  *other* sub-3:1 pair fails CI the same way a text regression does.
 - **Labels** — icon-only controls (`Button size="icon"`, `Fab`, close buttons)
   require an `aria-label`; the components don't render without one where it
   matters.
@@ -54,7 +58,9 @@ draws a `--ring` inset outline (8.8:1 dark / 11.6:1 light):
 
 If you retheme, keep `--ring` high-contrast against `--background` and
 `--foreground` in both modes — the focus outline depends on it. Run
-`pnpm check:contrast` after changing the palette.
+`pnpm check:contrast` after changing the palette — it now fails the build if
+a non-text pair regresses below 3:1 without being added to the script's
+tracked-exceptions set on purpose, not just this one.
 
 ## Palette changes for AA
 
