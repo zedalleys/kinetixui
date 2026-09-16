@@ -3,7 +3,7 @@
 What to add next: **components**, **chart types**, and **infographic modules**.
 Written as a prioritised backlog — nothing here is built yet.
 
-**Baseline:** 80 components shipped, 13 chart recipes on `/charts`, `/blocks`
+**Baseline:** 81 components shipped, 13 chart recipes on `/charts`, `/blocks`
 compositions, `/infographic` is a "coming soon" preview.
 
 **The four-platform rule** (`/docs/contributing`): a component isn't "done"
@@ -28,7 +28,7 @@ Effort: **S** ≈ ½–1 day · **M** ≈ 2–4 days · **L** ≈ a week+.
 | ~~**Banner / Announcement**~~ | Full-bleed page-level notice (info/promo/maintenance), dismissible, optional `sticky`. | **Shipped** — `Banner`, all four platforms (`sticky` is web-only; natives document pinning by placement instead, same as `AppBar`). | **S** |
 | **Timeline** | Ordered events down a rail — dot, connector, time, content; left / alternating. | No way to show history/activity/changelog today. Ant, MUI Lab, Mantine, Primer. | **M** |
 | **Stat / KPI** | Label + big value + delta (▲ 12% vs prev) + optional sparkline. | `Metric` exists but is a single number with no trend/delta. Tremor's core primitive; Ant `Statistic`. Pairs with §2 chart tiles. | **M** |
-| **Segmented Control** | iOS-style single-select strip. | Functionally `ToggleGroup type="single"` — ship as a **thin documented preset** so people stop rebuilding it (the `/colors` format switch, `Showcase` tabs, etc.). | **S** (alias) |
+| ~~**Segmented Control**~~ | iOS-style single-select strip. | **Shipped** — `SegmentedControl`/`SegmentedControlItem`, a thin preset over `ToggleGroup type="single"` with `Tabs`' filled-track visual, all four platforms. | **S** (alias) |
 | ~~**Avatar Group**~~ | Overlapping avatars + "+N" overflow. | **Shipped** — own gallery card + doc page at `/docs/components/avatar-group`; standing non-port on native (documented at `/docs/contributing`, same as `Combobox`). | **S** |
 
 ### Tier 2 — fills a category, moderate cost

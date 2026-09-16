@@ -345,5 +345,10 @@ export {
   type DescriptionListItemProps,
 } from "./components/description-list";
 export { Banner, bannerVariants, type BannerProps } from "./components/banner";
+export {
+  SegmentedControl,
+  SegmentedControlItem,
+  type SegmentedControlProps,
+} from "./components/segmented-control";
 
 export { cn } from "./lib/utils";

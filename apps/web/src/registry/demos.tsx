@@ -723,6 +723,8 @@ import {
   DescriptionList,
   DescriptionListItem,
   Banner,
+  SegmentedControl,
+  SegmentedControlItem,
 } from "@kinetixui/ui";
 
 add(
@@ -1517,6 +1519,18 @@ add(
     </div>
   ),
   `<Banner variant="information" onDismiss={close} action={{ label: "Learn more" }}>\n  A new version of KinetixUI is available.\n</Banner>`,
+);
+
+add(
+  "segmented-control-demo",
+  () => (
+    <SegmentedControl defaultValue="grid" className="w-full max-w-xs">
+      <SegmentedControlItem value="list">List</SegmentedControlItem>
+      <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
+      <SegmentedControlItem value="board">Board</SegmentedControlItem>
+    </SegmentedControl>
+  ),
+  `<SegmentedControl defaultValue="grid">\n  <SegmentedControlItem value="list">List</SegmentedControlItem>\n  <SegmentedControlItem value="grid">Grid</SegmentedControlItem>\n  <SegmentedControlItem value="board">Board</SegmentedControlItem>\n</SegmentedControl>`,
 );
 
 export const demoRegistry = reg;

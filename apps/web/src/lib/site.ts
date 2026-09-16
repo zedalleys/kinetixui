@@ -99,6 +99,7 @@ export const componentDocs: NavItem[] = [
   built("Rating", "rating"),
   built("Resizable", "resizable"),
   built("Scroll Area", "scroll-area"),
+  built("Segmented Control", "segmented-control"),
   built("Select", "select"),
   built("Separator", "separator"),
   built("Sheet", "sheet"),
@@ -133,7 +134,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   calendar: "Form Inputs", rating: "Form Inputs",
 
   button: "Controls & Actions", "button-group": "Controls & Actions", toggle: "Controls & Actions",
-  "toggle-group": "Controls & Actions",
+  "toggle-group": "Controls & Actions", "segmented-control": "Controls & Actions",
   fab: "Controls & Actions", pagination: "Controls & Actions", command: "Controls & Actions",
   combobox: "Controls & Actions",
 
