@@ -363,6 +363,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "segmented-control",
+      "type": "registry:ui",
+      "title": "Segmented Control",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "select",
       "type": "registry:ui",
       "title": "Select",

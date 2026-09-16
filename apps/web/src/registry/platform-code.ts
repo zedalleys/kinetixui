@@ -2291,4 +2291,30 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   onAction: openChangelog,
 )`,
   },
+
+  "segmented-control-demo": {
+    html: `<div class="kx-segmented-control" role="radiogroup">
+  <button role="radio" aria-checked="false">List</button>
+  <button role="radio" aria-checked="true">Grid</button>
+  <button role="radio" aria-checked="false">Board</button>
+</div>
+<!-- track: bg-muted rounded-lg p-1 · selected: bg-background shadow-sm -->`,
+    swift: `KinetixSegmentedControl {
+  KinetixSegmentedControlItem("List", isSelected: view == .list) { view = .list }
+  KinetixSegmentedControlItem("Grid", isSelected: view == .grid) { view = .grid }
+  KinetixSegmentedControlItem("Board", isSelected: view == .board) { view = .board }
+}`,
+    kotlin: `KinetixSegmentedControl {
+  KinetixSegmentedControlItem("List", selected = view == View.List, onClick = { view = View.List })
+  KinetixSegmentedControlItem("Grid", selected = view == View.Grid, onClick = { view = View.Grid })
+  KinetixSegmentedControlItem("Board", selected = view == View.Board, onClick = { view = View.Board })
+}`,
+    dart: `KinetixSegmentedControl(
+  children: [
+    KinetixSegmentedControlItem('List', selected: view == View.list, onTap: () => setState(() => view = View.list)),
+    KinetixSegmentedControlItem('Grid', selected: view == View.grid, onTap: () => setState(() => view = View.grid)),
+    KinetixSegmentedControlItem('Board', selected: view == View.board, onTap: () => setState(() => view = View.board)),
+  ],
+)`,
+  },
 };

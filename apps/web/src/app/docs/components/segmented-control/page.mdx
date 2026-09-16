@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Segmented Control",
+  description: "An iOS-style single-select strip — a thin, documented preset over ToggleGroup type=\"single\".",
+};
+
+# Segmented Control
+
+<ComponentMeta />
+
+An iOS-style single-select strip — a thin, documented preset over ToggleGroup type="single".
+
+<ComponentPreview name="segmented-control-demo" />
+
+## Installation
+
+```bash
+npx @kinetixui/cli add segmented-control
+```
+
+## Usage
+
+```tsx
+import { SegmentedControl, SegmentedControlItem } from "@kinetixui/ui";
+```
+
+Styled entirely from the KinetixUI token contract — `bg-primary`,
+`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
+with no extra config, and keyboard + ARIA behaviour comes from Radix — see
+[Accessibility](/docs/accessibility).

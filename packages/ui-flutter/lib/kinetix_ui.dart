@@ -65,6 +65,7 @@ export 'src/radio_group.dart';
 export 'src/rating.dart';
 export 'src/resizable.dart';
 export 'src/scroll_area.dart';
+export 'src/segmented_control.dart';
 export 'src/select.dart';
 export 'src/separator.dart';
 export 'src/sheet.dart';

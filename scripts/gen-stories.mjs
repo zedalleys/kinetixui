@@ -25,7 +25,7 @@ const GROUP = {
   "input-group": "Form Inputs", "password-input": "Form Inputs", "number-input": "Form Inputs",
   field: "Form Inputs", form: "Form Inputs", "file-upload": "Form Inputs", "date-picker": "Form Inputs",
   calendar: "Form Inputs", rating: "Form Inputs",
-  button: "Controls & Actions", "button-group": "Controls & Actions", toggle: "Controls & Actions", "toggle-group": "Controls & Actions",
+  button: "Controls & Actions", "button-group": "Controls & Actions", toggle: "Controls & Actions", "toggle-group": "Controls & Actions", "segmented-control": "Controls & Actions",
   fab: "Controls & Actions", pagination: "Controls & Actions", command: "Controls & Actions",
   combobox: "Controls & Actions",
   breadcrumb: "Navigation", tabs: "Navigation", "tab-bar": "Navigation", "navigation-menu": "Navigation",
