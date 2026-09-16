@@ -19,6 +19,7 @@ const HANDWRITTEN = new Set(["button", "input", "textarea"]);
 const GROUP = {
   "aspect-ratio": "Foundations", separator: "Foundations", skeleton: "Foundations",
   spinner: "Foundations", label: "Foundations", image: "Foundations", "code-block": "Foundations",
+  kbd: "Foundations",
   input: "Form Inputs", textarea: "Form Inputs", checkbox: "Form Inputs", "radio-group": "Form Inputs",
   select: "Form Inputs", slider: "Form Inputs", switch: "Form Inputs", "input-otp": "Form Inputs",
   "input-group": "Form Inputs", "password-input": "Form Inputs", "number-input": "Form Inputs",

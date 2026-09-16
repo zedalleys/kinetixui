@@ -85,6 +85,8 @@ const BUILT = {
   quote: ["Quote", "A blockquote with an optional attributed author (name, title, avatar)."],
   footer: ["Footer, FooterColumn, FooterLink, FooterBottom", "A page footer shell — columns of nav links plus a bottom bar."],
   "table-of-contents": ["TableOfContents", "An anchor-link nav list with indent levels and an active-item state."],
+
+  kbd: ["Kbd, KbdGroup", "A single keyboard key glyph; wrap several in KbdGroup for a shortcut combo."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");

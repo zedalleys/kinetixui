@@ -311,4 +311,7 @@ export { Quote, type QuoteProps } from "./components/quote";
 export { Footer, FooterColumn, FooterLink, FooterBottom, type FooterColumnProps } from "./components/footer";
 export { TableOfContents, type TableOfContentsProps, type TocItem } from "./components/table-of-contents";
 
+/* Batch 6 — infra/design-system audit gap-fill components */
+export { Kbd, KbdGroup, type KbdProps, type KbdGroupProps } from "./components/kbd";
+
 export { cn } from "./lib/utils";
