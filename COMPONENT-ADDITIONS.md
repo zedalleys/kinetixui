@@ -3,7 +3,7 @@
 What to add next: **components**, **chart types**, and **infographic modules**.
 Written as a prioritised backlog — nothing here is built yet.
 
-**Baseline:** 78 components shipped, 13 chart recipes on `/charts`, `/blocks`
+**Baseline:** 79 components shipped, 13 chart recipes on `/charts`, `/blocks`
 compositions, `/infographic` is a "coming soon" preview.
 
 **The four-platform rule** (`/docs/contributing`): a component isn't "done"
@@ -24,7 +24,7 @@ Effort: **S** ≈ ½–1 day · **M** ≈ 2–4 days · **L** ≈ a week+.
 |-----------|-----------|-----------------------|--------|
 | ~~**Kbd**~~ | Inline `<kbd>` key cap, single or combo (`⌘ K`). | **Shipped** — `Kbd`/`KbdGroup`, all four platforms. | **S** |
 | ~~**Empty State**~~ | Icon + title + body + action slot for "no data / no results". | **Shipped** — `Empty` family, all four platforms. | **S** |
-| **Description List** | `<dl>` term/detail rows with a spec-sheet skin. | `ComponentMeta` and several blocks re-implement it inline; matches the site's own visual language. | **S** |
+| ~~**Description List**~~ | `<dl>` term/detail rows with a spec-sheet skin. | **Shipped** — `DescriptionList`/`DescriptionListItem`, all four platforms. `ComponentMeta` and the homepage's hand-rolled versions were left as-is (not migrated — out of scope). | **S** |
 | **Banner / Announcement** | Full-bleed page-level notice (info/promo/maintenance), dismissible, optional `sticky`. | Distinct from `Alert` (in-flow) and `Sonner` (transient). GitHub, Vercel, Ant `Alert banner`, Polaris `Banner`. | **S** |
 | **Timeline** | Ordered events down a rail — dot, connector, time, content; left / alternating. | No way to show history/activity/changelog today. Ant, MUI Lab, Mantine, Primer. | **M** |
 | **Stat / KPI** | Label + big value + delta (▲ 12% vs prev) + optional sparkline. | `Metric` exists but is a single number with no trend/delta. Tremor's core primitive; Ant `Statistic`. Pairs with §2 chart tiles. | **M** |

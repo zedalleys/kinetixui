@@ -1,0 +1,25 @@
+{
+  "$schema": "https://kinetixui.com/schema/registry-item.json",
+  "name": "description-list",
+  "title": "Description List",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/description-list.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * DescriptionList — `<dl>` term/detail rows with the site's own spec-sheet\n * skin (mono, uppercase, tracked term labels; a divided rounded shell).\n * Lifted out of two hand-rolled call sites — `ComponentMeta`'s doc-page\n * spec strip and the homepage's \"spec\" card — into a reusable component.\n * Gap-fill addition (not in the original Figma source).\n */\nconst DescriptionList = React.forwardRef<HTMLDListElement, React.HTMLAttributes<HTMLDListElement>>(\n  ({ className, ...props }, ref) => (\n    <dl\n      ref={ref}\n      className={cn(\"divide-y divide-border rounded-lg border border-border bg-muted/20\", className)}\n      {...props}\n    />\n  ),\n);\nDescriptionList.displayName = \"DescriptionList\";\n\nexport interface DescriptionListItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, \"children\"> {\n  term: React.ReactNode;\n  children: React.ReactNode;\n  /** `row` (default) puts the term and value side by side; `stacked` puts the value below a full-width term — better for long values. */\n  layout?: \"row\" | \"stacked\";\n}\n\nconst DescriptionListItem = React.forwardRef<HTMLDivElement, DescriptionListItemProps>(\n  ({ className, term, children, layout = \"row\", ...props }, ref) => (\n    <div\n      ref={ref}\n      className={cn(\"gap-3 px-3.5 py-2.5\", layout === \"row\" ? \"flex items-baseline\" : \"flex flex-col\", className)}\n      {...props}\n    >\n      <dt\n        className={cn(\n          \"shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground\",\n          layout === \"row\" && \"w-24\",\n        )}\n      >\n        {term}\n      </dt>\n      <dd className=\"min-w-0 text-body-sm text-foreground\">{children}</dd>\n    </div>\n  ),\n);\nDescriptionListItem.displayName = \"DescriptionListItem\";\n\nexport { DescriptionList, DescriptionListItem };\n",
+      "type": "registry:ui",
+      "target": "components/ui/description-list.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ],
+  "type": "registry:ui"
+}

@@ -2236,4 +2236,32 @@ KinetixDropdownMenu(/* ... */)`,
 // use that instead.
 KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => setState(() => fruit = v))`,
   },
+
+  "description-list-demo": {
+    html: `<dl class="kx-description-list">
+  <div class="kx-description-list__row">
+    <dt>Category</dt>
+    <dd>Data Display</dd>
+  </div>
+  <div class="kx-description-list__row">
+    <dt>Built on</dt>
+    <dd>Radix Avatar</dd>
+  </div>
+</dl>
+<!-- shell: bg-muted/20 · border · divide-y · term: font-mono text-[10px] uppercase -->`,
+    swift: `KinetixDescriptionList {
+  KinetixDescriptionListItem(term: "Category") { Text("Data Display") }
+  KinetixDescriptionListItem(term: "Built on") { Text("Radix Avatar") }
+}`,
+    kotlin: `KinetixDescriptionList {
+  KinetixDescriptionListItem(term = "Category") { Text("Data Display") }
+  KinetixDescriptionListItem(term = "Built on") { Text("Radix Avatar") }
+}`,
+    dart: `KinetixDescriptionList(
+  children: [
+    KinetixDescriptionListItem(term: 'Category', child: const Text('Data Display')),
+    KinetixDescriptionListItem(term: 'Built on', child: const Text('Radix Avatar')),
+  ],
+)`,
+  },
 };

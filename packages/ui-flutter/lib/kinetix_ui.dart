@@ -33,6 +33,7 @@ export 'src/command.dart';
 export 'src/context_menu.dart';
 export 'src/data_table.dart';
 export 'src/date_picker.dart';
+export 'src/description_list.dart';
 export 'src/dialog.dart';
 export 'src/drawer.dart';
 export 'src/dropdown_menu.dart';

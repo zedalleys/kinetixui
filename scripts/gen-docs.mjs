@@ -90,6 +90,7 @@ const BUILT = {
   empty: ["Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent", "A placeholder for a zero-results state — an empty table, an empty search, a fresh workspace."],
   "button-group": ["ButtonGroup, ButtonGroupSeparator, ButtonGroupText", "Visually joins a row or column of buttons into a connected, segmented-control-style cluster."],
   "native-select": ["NativeSelect, NativeSelectOption, NativeSelectOptGroup", "A styled wrapper around the native `<select>` element — for the OS-native picker instead of Select's custom popover."],
+  "description-list": ["DescriptionList, DescriptionListItem", "`<dl>` term/detail rows with a spec-sheet skin — a `row` or `stacked` layout, each row with its own divider."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
