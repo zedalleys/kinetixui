@@ -350,5 +350,6 @@ export {
   SegmentedControlItem,
   type SegmentedControlProps,
 } from "./components/segmented-control";
+export { Timeline, type TimelineItem, type TimelineProps } from "./components/timeline";
 
 export { cn } from "./lib/utils";

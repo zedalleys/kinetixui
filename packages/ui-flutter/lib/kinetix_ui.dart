@@ -80,6 +80,7 @@ export 'src/table_of_contents.dart';
 export 'src/tabs.dart';
 export 'src/tag.dart';
 export 'src/textarea.dart';
+export 'src/timeline.dart';
 export 'src/toaster.dart';
 export 'src/toggle.dart';
 export 'src/toggle_group.dart';

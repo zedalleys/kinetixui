@@ -465,6 +465,12 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:13857."
     },
     {
+      "name": "timeline",
+      "type": "registry:ui",
+      "title": "Timeline",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "toggle-group",
       "type": "registry:ui",
       "title": "Toggle Group",

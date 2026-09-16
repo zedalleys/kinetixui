@@ -725,6 +725,7 @@ import {
   Banner,
   SegmentedControl,
   SegmentedControlItem,
+  Timeline,
 } from "@kinetixui/ui";
 
 add(
@@ -1531,6 +1532,21 @@ add(
     </SegmentedControl>
   ),
   `<SegmentedControl defaultValue="grid">\n  <SegmentedControlItem value="list">List</SegmentedControlItem>\n  <SegmentedControlItem value="grid">Grid</SegmentedControlItem>\n  <SegmentedControlItem value="board">Board</SegmentedControlItem>\n</SegmentedControl>`,
+);
+
+add(
+  "timeline-demo",
+  () => (
+    <Timeline
+      className="w-full max-w-sm"
+      items={[
+        { time: "2 hours ago", title: "Deployed to production", content: "v0.9.0 shipped." },
+        { time: "Yesterday", title: "Opened PR #100", content: "feat(ui): add SegmentedControl" },
+        { time: "3 days ago", title: "Project created" },
+      ]}
+    />
+  ),
+  `<Timeline\n  items={[\n    { time: "2 hours ago", title: "Deployed to production", content: "v0.9.0 shipped." },\n    { time: "Yesterday", title: "Opened PR #100" },\n  ]}\n/>`,
 );
 
 export const demoRegistry = reg;

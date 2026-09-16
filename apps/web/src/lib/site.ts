@@ -116,6 +116,7 @@ export const componentDocs: NavItem[] = [
   built("Table of Contents", "table-of-contents"),
   built("Tabs", "tabs"),
   built("Textarea", "textarea"),
+  built("Timeline", "timeline"),
   built("Toggle", "toggle"),
   built("Toggle Group", "toggle-group"),
   built("Tooltip", "tooltip"),
@@ -154,6 +155,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   carousel: "Data Display", chart: "Data Display", avatar: "Data Display", "avatar-group": "Data Display", collapsible: "Data Display",
   "scroll-area": "Data Display", resizable: "Data Display", list: "Data Display", quote: "Data Display",
   footer: "Data Display", "audio-player": "Data Display", "description-list": "Data Display",
+  timeline: "Data Display",
 };
 
 export const CATEGORY_ORDER = [

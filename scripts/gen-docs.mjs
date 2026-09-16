@@ -93,6 +93,7 @@ const BUILT = {
   "description-list": ["DescriptionList, DescriptionListItem", "`<dl>` term/detail rows with a spec-sheet skin — a `row` or `stacked` layout, each row with its own divider."],
   banner: ["Banner", "A full-bleed, page-level notice — dismissible, with an optional action, distinct from Alert (in-flow) and the toast (transient)."],
   "segmented-control": ["SegmentedControl, SegmentedControlItem", "An iOS-style single-select strip — a thin, documented preset over ToggleGroup type=\"single\"."],
+  timeline: ["Timeline", "Ordered events down a rail — dot, connector, time, content — left-aligned or alternating left/right of a centered rail."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
