@@ -1,5 +1,19 @@
 # @kinetixui/ui
 
+## 0.11.0
+
+### Minor Changes
+
+- 17062c4: Add `ComparisonSlider` — a drag handle wiping between two stacked layers (before/after image, a redesign preview). Second pick from the `COMPONENT-ADDITIONS.md` Tier 2 backlog. Built on Radix's `Slider` for the drag/keyboard/ARIA behavior (a plain 0–100 value), but fully custom-drawn — Radix's own `Range` fill can't be reused as the divider line since it's Radix's own inline `width` style, which would win over any Tailwind width class, so the line is a separate element positioned from the same value instead.
+  
+  Ships on all four platforms per the four-platform rule: `KinetixComparisonSlider` on Jetpack Compose, SwiftUI, and Flutter too, each using the same "duplicate the layers, clip one of them from the handle position" technique the web's CSS `clip-path` uses. The Compose and SwiftUI ports only support dragging the handle itself, not clicking anywhere on the track to jump (the web's Radix `Slider` supports both) — a documented scope-down, not a silent gap; Flutter's plain `GestureDetector` gets both for free.
+- f591419: Add `Marquee` — an auto-scrolling horizontal ticker (logo strip, testimonials), pausing on hover and respecting `prefers-reduced-motion`. First pick from the `COMPONENT-ADDITIONS.md` Tier 2 backlog. Lifted out of the marketing site's `reveal.tsx` (which leaned on a hand-written `.kx-marquee-track`/`@keyframes marquee` in its own `globals.css` — not something a CLI-installed app would have) onto the shared Tailwind preset (`animate-marquee`, `motion-reduce:animate-none`) instead, so it's portable. Also fixes an accessibility bug found in the site version: both content copies were marked `aria-hidden`, hiding the whole marquee from screen readers — only the duplicate copy needed for the seamless loop is hidden here.
+  
+  Ships on all four platforms per the four-platform rule: `KinetixMarquee` on Jetpack Compose, SwiftUI, and Flutter too, each using the same "duplicate the content, measure it, translate by exactly one content-width in an infinite loop" technique (no CSS keyframe to lean on natively). `pauseOnHover` is web-only — hover isn't a primary mobile interaction, so the native ports don't carry it.
+- 612b21c: Add `PageHeader` — title + optional breadcrumb + description + action cluster + optional tabs row, closed off with a bottom border. Third pick from the `COMPONENT-ADDITIONS.md` Tier 2 backlog, and the last S-effort item on it. `breadcrumb`/`actions`/`tabs` are plain slots — `PageHeader` doesn't re-implement `Breadcrumb`, `Button`, or `Tabs`, callers compose their own into it.
+  
+  Ships on all four platforms per the four-platform rule: `KinetixPageHeader` on Jetpack Compose, SwiftUI, and Flutter too, each with the same plain-slot shape and closed off with the platform's own `Separator`.
+
 ## 0.10.0
 
 ### Minor Changes
