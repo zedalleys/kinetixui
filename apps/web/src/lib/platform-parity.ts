@@ -31,6 +31,7 @@ export const PLATFORM_ABBR: Record<Platform, string> = {
 /** slug → the platforms it *is* on. Absent slug ⇒ all four. */
 const EXCEPTIONS: Record<string, Platform[]> = {
   chart: ["React", "SwiftUI", "Flutter"], // no Recharts equivalent wired for Compose yet
+  "avatar-group": ["React"], // standing non-port — re-wraps its children, not idiomatic on native platforms; compose an Avatar row directly
   combobox: ["React"], // standing non-port
   form: ["React"], // standing non-port
   "navigation-menu": ["React"], // standing non-port

@@ -249,6 +249,40 @@ export const platformCode: Record<string, Entry> = {
 )`,
   },
 
+  "avatar-group-demo": {
+    html: `<div class="kx-avatar-group">
+  <span class="kx-avatar"><span class="kx-avatar__fallback">JD</span></span>
+  <span class="kx-avatar"><span class="kx-avatar__fallback">AK</span></span>
+  <span class="kx-avatar"><span class="kx-avatar__fallback">+2</span></span>
+</div>
+<!-- -space-x-2 overlap · each avatar ring-2 ring-background -->`,
+    swift: `// AvatarGroup re-wraps its children — not idiomatic in SwiftUI.
+// Compose it directly with negative HStack spacing:
+HStack(spacing: -8) {
+  KinetixAvatar { KinetixAvatarFallback("JD") }
+    .overlay(Circle().stroke(colors.background, lineWidth: 2))
+  KinetixAvatar { KinetixAvatarFallback("AK") }
+    .overlay(Circle().stroke(colors.background, lineWidth: 2))
+  KinetixAvatar { KinetixAvatarFallback("+2") }
+    .overlay(Circle().stroke(colors.background, lineWidth: 2))
+}`,
+    kotlin: `// AvatarGroup re-wraps its children — not idiomatic in Compose.
+// Compose it directly with negative Row spacing:
+Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
+  KinetixAvatar(Modifier.border(2.dp, colors.background, CircleShape)) { KinetixAvatarFallback("JD") }
+  KinetixAvatar(Modifier.border(2.dp, colors.background, CircleShape)) { KinetixAvatarFallback("AK") }
+  KinetixAvatar(Modifier.border(2.dp, colors.background, CircleShape)) { KinetixAvatarFallback("+2") }
+}`,
+    dart: `// AvatarGroup isn't ported — compose it directly with a negative-offset Row:
+Row(
+  children: [
+    const KinetixAvatar(child: KinetixAvatarFallback('JD')),
+    Transform.translate(offset: const Offset(-8, 0), child: const KinetixAvatar(child: KinetixAvatarFallback('AK'))),
+    Transform.translate(offset: const Offset(-16, 0), child: const KinetixAvatar(child: KinetixAvatarFallback('+2'))),
+  ],
+)`,
+  },
+
   "label-demo": {
     html: `<label for="email" class="kx-label">Your email address</label>
 <!-- text: var(--foreground) · 14px / medium -->`,
