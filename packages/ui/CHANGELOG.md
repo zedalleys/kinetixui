@@ -1,5 +1,22 @@
 # @kinetixui/ui
 
+## 0.10.0
+
+### Minor Changes
+
+- 9db6327: Add `Banner` — a full-bleed, page-level notice (info/promo/maintenance), optionally dismissible with an optional action. Fourth pick from the `COMPONENT-ADDITIONS.md` Tier 1 backlog. Distinct from `Alert` (in-flow, static) and `Sonner` (transient toast): persistent and edge-to-edge. Distinct from `Inform` (contained, rounded inline card): `Banner` has no rounded corners or own width — it spans whatever it's placed in, typically the full viewport. Reuses `Inform`'s intent taxonomy and icon set for a consistent look.
+  
+  Ships on all four platforms per the four-platform rule: `KinetixBanner` on Jetpack Compose, SwiftUI, and Flutter too. The web version's `sticky` prop has no component-level native equivalent — the native ports document pinning by placement instead (a `Scaffold`'s top bar, `.safeAreaInset(edge: .top)`, or the first child of a non-scrolling container), the same convention already established for `AppBar`.
+- 17e6930: Add `DescriptionList`/`DescriptionListItem` — `<dl>` term/detail rows with the site's own spec-sheet skin (mono, uppercase, tracked term labels; a divided rounded shell). Third pick from the `COMPONENT-ADDITIONS.md` Tier 1 backlog — lifted out of two hand-rolled call sites (`ComponentMeta`'s doc-page spec strip and the homepage's "spec" card) into a reusable component; those two call sites were left as-is rather than migrated, which is out of scope here.
+  
+  `layout="row"` (default, term and value side by side) or `layout="stacked"` (value below a full-width term, for longer values); `showDivider` on each item. Ships on all four platforms per the four-platform rule: `KinetixDescriptionList`/`KinetixDescriptionListItem` on Jetpack Compose, SwiftUI, and Flutter too — each draws its own bottom divider per item rather than a shared `divide-y`, the same documented simplification already established for `List`/`ListItem`.
+- 70a6d44: Add `SegmentedControl`/`SegmentedControlItem` — an iOS-style single-select strip. Fifth pick from the `COMPONENT-ADDITIONS.md` Tier 1 backlog. Functionally `ToggleGroup type="single"`: a thin, documented preset over the same Radix primitive (`type="single"` is fixed, not exposed) with `Tabs`' visual treatment — a filled `bg-muted` track and a raised, shadowed active segment — instead of `Toggle`'s individually-outlined-button look.
+  
+  Ships on all four platforms per the four-platform rule: `KinetixSegmentedControl`/`KinetixSegmentedControlItem` on Jetpack Compose, SwiftUI, and Flutter too, reusing each platform's existing `Tabs` visual treatment and its stateless, caller-owns-the-selected-value shape (no context to thread a shared value through the way Radix's `ToggleGroup` does).
+- 89ca728: Add `Timeline` — ordered events down a rail (dot, connector, time, content). Sixth pick from the `COMPONENT-ADDITIONS.md` Tier 1 backlog, the first of the two remaining M-effort items. `alternating` lays content left/right of a centered rail (desktop); the default is a single left-aligned rail. Same rail/dot/connector technique as `Stepper`, but for a history/activity log rather than a progress indicator — an array of arbitrary events instead of complete/current/upcoming states.
+  
+  Ships on all four platforms per the four-platform rule: `KinetixTimeline` on Jetpack Compose, SwiftUI, and Flutter too. Compose/SwiftUI reuse `Stepper`'s documented connector simplification (a fixed minimum height instead of React's dynamic `flex-1` stretch — neither platform has a cheap equivalent without a custom layout); Flutter's `IntrinsicHeight` + `Expanded` gets a genuine dynamic-stretch connector, matching the web exactly.
+
 ## 0.9.0
 
 ### Minor Changes
