@@ -1260,6 +1260,32 @@
       ]
     },
     {
+      "name": "notification-center",
+      "type": "registry:ui",
+      "title": "Notification Center",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "tokens",
+        "popover",
+        "button"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/notification-center.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/notification-center.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "number-input",
       "type": "registry:ui",
       "title": "Number Input",

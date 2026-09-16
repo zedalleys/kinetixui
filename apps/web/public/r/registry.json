@@ -315,6 +315,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "notification-center",
+      "type": "registry:ui",
+      "title": "Notification Center",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "number-input",
       "type": "registry:ui",
       "title": "Number Input",

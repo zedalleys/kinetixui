@@ -729,6 +729,10 @@ import {
   Marquee,
   ComparisonSlider,
   PageHeader,
+  NotificationCenter,
+  NotificationCenterTrigger,
+  NotificationCenterContent,
+  NotificationItem,
 } from "@kinetixui/ui";
 
 add(
@@ -1612,6 +1616,34 @@ add(
     />
   ),
   `<PageHeader\n  breadcrumb={<Breadcrumb>...</Breadcrumb>}\n  title="KinetixUI"\n  description="One token architecture, in motion across every platform."\n  actions={<><Button variant="Outline" size="sm">Settings</Button><Button size="sm">Deploy</Button></>}\n/>`,
+);
+
+add(
+  "notification-center-demo",
+  () => {
+    const [unread, setUnread] = React.useState(2);
+    return (
+      <NotificationCenter>
+        <NotificationCenterTrigger unreadCount={unread} />
+        <NotificationCenterContent onMarkAllRead={() => setUnread(0)}>
+          <NotificationItem
+            unread={unread > 0}
+            title="PR #106 merged"
+            description="feat(ui): add PageHeader"
+            time="2m ago"
+          />
+          <NotificationItem
+            unread={unread > 1}
+            title="Deploy succeeded"
+            description="v0.11.0 is live"
+            time="1h ago"
+          />
+          <NotificationItem title="Welcome to KinetixUI" time="2d ago" />
+        </NotificationCenterContent>
+      </NotificationCenter>
+    );
+  },
+  `<NotificationCenter>\n  <NotificationCenterTrigger unreadCount={2} />\n  <NotificationCenterContent onMarkAllRead={markAllRead}>\n    <NotificationItem unread title="PR #106 merged" time="2m ago" />\n    <NotificationItem title="Welcome to KinetixUI" time="2d ago" />\n  </NotificationCenterContent>\n</NotificationCenter>`,
 );
 
 export const demoRegistry = reg;

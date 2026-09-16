@@ -354,5 +354,14 @@ export { Timeline, type TimelineItem, type TimelineProps } from "./components/ti
 export { Marquee, type MarqueeProps } from "./components/marquee";
 export { ComparisonSlider, type ComparisonSliderProps } from "./components/comparison-slider";
 export { PageHeader, type PageHeaderProps } from "./components/page-header";
+export {
+  NotificationCenter,
+  NotificationCenterTrigger,
+  NotificationCenterContent,
+  NotificationItem,
+  type NotificationCenterTriggerProps,
+  type NotificationCenterContentProps,
+  type NotificationItemProps,
+} from "./components/notification-center";
 
 export { cn } from "./lib/utils";
