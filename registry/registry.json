@@ -2054,6 +2054,31 @@
           "target": "lib/utils.ts"
         }
       ]
+    },
+    {
+      "name": "tree-view",
+      "type": "registry:ui",
+      "title": "Tree View",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "tokens",
+        "checkbox"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/tree-view.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/tree-view.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
     }
   ]
 }

@@ -733,6 +733,8 @@ import {
   NotificationCenterTrigger,
   NotificationCenterContent,
   NotificationItem,
+  TreeView,
+  TreeItem,
 } from "@kinetixui/ui";
 
 add(
@@ -1644,6 +1646,31 @@ add(
     );
   },
   `<NotificationCenter>\n  <NotificationCenterTrigger unreadCount={2} />\n  <NotificationCenterContent onMarkAllRead={markAllRead}>\n    <NotificationItem unread title="PR #106 merged" time="2m ago" />\n    <NotificationItem title="Welcome to KinetixUI" time="2d ago" />\n  </NotificationCenterContent>\n</NotificationCenter>`,
+);
+
+add(
+  "tree-view-demo",
+  () => {
+    const [selected, setSelected] = React.useState("button.tsx");
+    return (
+      <TreeView
+        className="w-full max-w-xs"
+        selected={selected}
+        onSelectedChange={setSelected}
+        defaultExpanded={["src", "src/components"]}
+      >
+        <TreeItem value="src" label="src">
+          <TreeItem value="src/components" label="components">
+            <TreeItem value="button.tsx" label="button.tsx" />
+            <TreeItem value="badge.tsx" label="badge.tsx" />
+          </TreeItem>
+          <TreeItem value="index.ts" label="index.ts" />
+        </TreeItem>
+        <TreeItem value="readme" label="README.md" />
+      </TreeView>
+    );
+  },
+  `<TreeView selected={selected} onSelectedChange={setSelected} defaultExpanded={["src"]}>\n  <TreeItem value="src" label="src">\n    <TreeItem value="index.ts" label="index.ts" />\n  </TreeItem>\n  <TreeItem value="readme" label="README.md" />\n</TreeView>`,
 );
 
 export const demoRegistry = reg;

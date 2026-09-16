@@ -363,5 +363,6 @@ export {
   type NotificationCenterContentProps,
   type NotificationItemProps,
 } from "./components/notification-center";
+export { TreeView, TreeItem, type TreeViewProps, type TreeItemProps } from "./components/tree-view";
 
 export { cn } from "./lib/utils";
