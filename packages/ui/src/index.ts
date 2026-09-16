@@ -339,5 +339,10 @@ export {
   type NativeSelectOptionProps,
   type NativeSelectOptGroupProps,
 } from "./components/native-select";
+export {
+  DescriptionList,
+  DescriptionListItem,
+  type DescriptionListItemProps,
+} from "./components/description-list";
 
 export { cn } from "./lib/utils";

@@ -147,6 +147,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "description-list",
+      "type": "registry:ui",
+      "title": "Description List",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "dialog",
       "type": "registry:ui",
       "title": "Dialog",

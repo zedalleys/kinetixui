@@ -40,7 +40,7 @@ const GROUP = {
   accordion: "Data Display", card: "Data Display", table: "Data Display", "data-table": "Data Display",
   carousel: "Data Display", chart: "Data Display", avatar: "Data Display", "avatar-group": "Data Display",
   collapsible: "Data Display", "scroll-area": "Data Display", resizable: "Data Display", list: "Data Display",
-  quote: "Data Display", footer: "Data Display", "audio-player": "Data Display",
+  quote: "Data Display", footer: "Data Display", "audio-player": "Data Display", "description-list": "Data Display",
 };
 
 const PADDED = new Set([

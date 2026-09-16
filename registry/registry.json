@@ -574,6 +574,28 @@
       ]
     },
     {
+      "name": "description-list",
+      "type": "registry:ui",
+      "title": "Description List",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/description-list.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/description-list.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "dialog",
       "type": "registry:ui",
       "title": "Dialog",

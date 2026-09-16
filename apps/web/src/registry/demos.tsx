@@ -720,6 +720,8 @@ import {
   NativeSelect,
   NativeSelectOption,
   NativeSelectOptGroup,
+  DescriptionList,
+  DescriptionListItem,
 } from "@kinetixui/ui";
 
 add(
@@ -1486,6 +1488,19 @@ add(
     </NativeSelect>
   ),
   `<NativeSelect defaultValue="">\n  <NativeSelectOption value="" disabled>Select a fruit…</NativeSelectOption>\n  <NativeSelectOptGroup label="Citrus">\n    <NativeSelectOption value="orange">Orange</NativeSelectOption>\n  </NativeSelectOptGroup>\n</NativeSelect>`,
+);
+
+add(
+  "description-list-demo",
+  () => (
+    <DescriptionList className="w-full max-w-sm">
+      <DescriptionListItem term="Category">Data Display</DescriptionListItem>
+      <DescriptionListItem term="Built on">Radix Avatar</DescriptionListItem>
+      <DescriptionListItem term="Platforms">React, SwiftUI, Compose, Flutter</DescriptionListItem>
+      <DescriptionListItem term="CLI">npx @kinetixui/cli add avatar</DescriptionListItem>
+    </DescriptionList>
+  ),
+  `<DescriptionList>\n  <DescriptionListItem term="Category">Data Display</DescriptionListItem>\n  <DescriptionListItem term="Built on">Radix Avatar</DescriptionListItem>\n</DescriptionList>`,
 );
 
 export const demoRegistry = reg;

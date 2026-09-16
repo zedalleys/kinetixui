@@ -63,6 +63,7 @@ export const componentDocs: NavItem[] = [
   built("Context Menu", "context-menu"),
   built("Data Table", "data-table"),
   built("Date Picker", "date-picker"),
+  built("Description List", "description-list"),
   built("Dialog", "dialog"),
   built("Drawer", "drawer"),
   built("Dropdown Menu", "dropdown-menu"),
@@ -150,7 +151,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   accordion: "Data Display", card: "Data Display", table: "Data Display", "data-table": "Data Display",
   carousel: "Data Display", chart: "Data Display", avatar: "Data Display", "avatar-group": "Data Display", collapsible: "Data Display",
   "scroll-area": "Data Display", resizable: "Data Display", list: "Data Display", quote: "Data Display",
-  footer: "Data Display", "audio-player": "Data Display",
+  footer: "Data Display", "audio-player": "Data Display", "description-list": "Data Display",
 };
 
 export const CATEGORY_ORDER = [
