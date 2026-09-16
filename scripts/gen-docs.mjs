@@ -87,6 +87,7 @@ const BUILT = {
   "table-of-contents": ["TableOfContents", "An anchor-link nav list with indent levels and an active-item state."],
 
   kbd: ["Kbd, KbdGroup", "A single keyboard key glyph; wrap several in KbdGroup for a shortcut combo."],
+  empty: ["Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent", "A placeholder for a zero-results state — an empty table, an empty search, a fresh workspace."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");

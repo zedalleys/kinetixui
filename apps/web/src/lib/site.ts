@@ -64,6 +64,7 @@ export const componentDocs: NavItem[] = [
   built("Dialog", "dialog"),
   built("Drawer", "drawer"),
   built("Dropdown Menu", "dropdown-menu"),
+  built("Empty", "empty"),
   built("Fab", "fab"),
   built("Field", "field"),
   built("File Upload", "file-upload"),
@@ -139,6 +140,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   "context-menu": "Overlays", modal: "Overlays",
 
   alert: "Feedback", inform: "Feedback", progress: "Feedback", "circular-progress": "Feedback",
+  empty: "Feedback",
   sonner: "Feedback", badge: "Feedback", tag: "Feedback", metric: "Feedback",
 
   accordion: "Data Display", card: "Data Display", table: "Data Display", "data-table": "Data Display",
