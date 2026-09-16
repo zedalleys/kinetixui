@@ -2317,4 +2317,33 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   ],
 )`,
   },
+
+  "timeline-demo": {
+    html: `<ol class="kx-timeline">
+  <li>
+    <span class="kx-timeline__dot"></span>
+    <span class="kx-timeline__connector"></span>
+    <time>2 hours ago</time>
+    <p>Deployed to production</p>
+  </li>
+  <li>
+    <span class="kx-timeline__dot"></span>
+    <time>Yesterday</time>
+    <p>Opened PR #100</p>
+  </li>
+</ol>
+<!-- dot: bg-primary · connector: bg-border w-px -->`,
+    swift: `KinetixTimeline(items: [
+  KinetixTimelineItem(title: "Deployed to production", time: "2 hours ago", content: "v0.9.0 shipped."),
+  KinetixTimelineItem(title: "Opened PR #100", time: "Yesterday"),
+])`,
+    kotlin: `KinetixTimeline(items = listOf(
+  KinetixTimelineItem(title = "Deployed to production", time = "2 hours ago", content = "v0.9.0 shipped."),
+  KinetixTimelineItem(title = "Opened PR #100", time = "Yesterday"),
+))`,
+    dart: `KinetixTimeline(items: const [
+  KinetixTimelineItem('Deployed to production', time: '2 hours ago', content: 'v0.9.0 shipped.'),
+  KinetixTimelineItem('Opened PR #100', time: 'Yesterday'),
+])`,
+  },
 };
