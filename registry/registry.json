@@ -1062,6 +1062,28 @@
       ]
     },
     {
+      "name": "marquee",
+      "type": "registry:ui",
+      "title": "Marquee",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/marquee.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/marquee.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "menubar",
       "type": "registry:ui",
       "title": "Menubar",

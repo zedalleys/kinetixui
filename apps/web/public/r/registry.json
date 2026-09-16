@@ -267,6 +267,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "marquee",
+      "type": "registry:ui",
+      "title": "Marquee",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "menubar",
       "type": "registry:ui",
       "title": "Menubar",

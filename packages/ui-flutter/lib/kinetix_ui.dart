@@ -51,6 +51,7 @@ export 'src/input_otp.dart';
 export 'src/kbd.dart';
 export 'src/label.dart';
 export 'src/list.dart';
+export 'src/marquee.dart';
 export 'src/menubar.dart';
 export 'src/metric.dart';
 export 'src/modal.dart';
