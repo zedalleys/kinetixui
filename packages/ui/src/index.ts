@@ -353,5 +353,6 @@ export {
 export { Timeline, type TimelineItem, type TimelineProps } from "./components/timeline";
 export { Marquee, type MarqueeProps } from "./components/marquee";
 export { ComparisonSlider, type ComparisonSliderProps } from "./components/comparison-slider";
+export { PageHeader, type PageHeaderProps } from "./components/page-header";
 
 export { cn } from "./lib/utils";

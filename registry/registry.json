@@ -1284,6 +1284,28 @@
       ]
     },
     {
+      "name": "page-header",
+      "type": "registry:ui",
+      "title": "Page Header",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/page-header.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/page-header.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "pagination",
       "type": "registry:ui",
       "title": "Pagination",

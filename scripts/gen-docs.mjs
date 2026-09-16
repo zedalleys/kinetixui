@@ -96,6 +96,7 @@ const BUILT = {
   timeline: ["Timeline", "Ordered events down a rail — dot, connector, time, content — left-aligned or alternating left/right of a centered rail."],
   marquee: ["Marquee", "An auto-scrolling horizontal ticker (logo strip, testimonials), pausing on hover and respecting prefers-reduced-motion."],
   "comparison-slider": ["ComparisonSlider", "A drag handle wiping between two stacked layers — a before/after image, a redesign preview."],
+  "page-header": ["PageHeader", "Title + optional breadcrumb + description + action cluster + optional tabs row — a recipe every docs/app screen re-lays out by hand."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");

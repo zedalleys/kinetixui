@@ -29,6 +29,7 @@ const GROUP = {
   fab: "Controls & Actions", pagination: "Controls & Actions", command: "Controls & Actions",
   combobox: "Controls & Actions", "comparison-slider": "Controls & Actions",
   breadcrumb: "Navigation", tabs: "Navigation", "tab-bar": "Navigation", "navigation-menu": "Navigation",
+  "page-header": "Navigation",
   "navigation-bar": "Navigation", menubar: "Navigation", sidebar: "Navigation", stepper: "Navigation",
   "table-of-contents": "Navigation",
   dialog: "Overlays", "alert-dialog": "Overlays", sheet: "Overlays", drawer: "Overlays",

@@ -728,6 +728,7 @@ import {
   Timeline,
   Marquee,
   ComparisonSlider,
+  PageHeader,
 } from "@kinetixui/ui";
 
 add(
@@ -1578,6 +1579,39 @@ add(
     />
   ),
   `<ComparisonSlider\n  beforeLabel="Before"\n  afterLabel="After"\n  before={<img src="/before.jpg" alt="" />}\n  after={<img src="/after.jpg" alt="" />}\n/>`,
+);
+
+add(
+  "page-header-demo",
+  () => (
+    <PageHeader
+      className="w-full"
+      breadcrumb={
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="#">Projects</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>KinetixUI</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      }
+      title="KinetixUI"
+      description="One token architecture, in motion across every platform."
+      actions={
+        <>
+          <Button variant="Outline" size="sm">
+            Settings
+          </Button>
+          <Button size="sm">Deploy</Button>
+        </>
+      }
+    />
+  ),
+  `<PageHeader\n  breadcrumb={<Breadcrumb>...</Breadcrumb>}\n  title="KinetixUI"\n  description="One token architecture, in motion across every platform."\n  actions={<><Button variant="Outline" size="sm">Settings</Button><Button size="sm">Deploy</Button></>}\n/>`,
 );
 
 export const demoRegistry = reg;
