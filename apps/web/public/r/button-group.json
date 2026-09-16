@@ -1,0 +1,25 @@
+{
+  "$schema": "https://kinetixui.com/schema/registry-item.json",
+  "name": "button-group",
+  "title": "Button Group",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/button-group.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * ButtonGroup — visually joins adjacent buttons into a connected cluster\n * (segmented-control style): inner corners squared off, shared borders\n * overlapped by 1px so they don't double up, the focused child raised\n * above its neighbours so its ring isn't clipped. Gap-fill addition (not\n * in the original Figma source) — matches the shadcn/ui ButtonGroup API\n * shape. Works with any child that renders its own border/radius (Button,\n * ButtonGroupText, a Select trigger, …), not just `<Button>`.\n */\nexport interface ButtonGroupProps extends React.HTMLAttributes<HTMLDivElement> {\n  orientation?: \"horizontal\" | \"vertical\";\n}\n\nconst ButtonGroup = React.forwardRef<HTMLDivElement, ButtonGroupProps>(\n  ({ className, orientation = \"horizontal\", ...props }, ref) => (\n    <div\n      ref={ref}\n      role=\"group\"\n      data-orientation={orientation}\n      className={cn(\n        \"flex w-fit items-stretch [&>*]:relative [&>*]:focus-visible:z-10\",\n        orientation === \"horizontal\"\n          ? \"flex-row [&>*:not(:first-child)]:-ml-px [&>*:not(:first-child)]:rounded-l-none [&>*:not(:last-child)]:rounded-r-none\"\n          : \"flex-col [&>*:not(:first-child)]:-mt-px [&>*:not(:first-child)]:rounded-t-none [&>*:not(:last-child)]:rounded-b-none\",\n        className,\n      )}\n      {...props}\n    />\n  ),\n);\nButtonGroup.displayName = \"ButtonGroup\";\n\nexport interface ButtonGroupSeparatorProps extends React.HTMLAttributes<HTMLDivElement> {\n  orientation?: \"horizontal\" | \"vertical\";\n}\n\n/** A thin divider between segments — useful between non-outline buttons, where the group's own overlap trick has no shared border to lean on. */\nconst ButtonGroupSeparator = React.forwardRef<HTMLDivElement, ButtonGroupSeparatorProps>(\n  ({ className, orientation = \"vertical\", ...props }, ref) => (\n    <div\n      ref={ref}\n      role=\"separator\"\n      aria-orientation={orientation}\n      className={cn(\"shrink-0 self-stretch bg-border\", orientation === \"vertical\" ? \"my-1.5 w-px\" : \"mx-1.5 h-px\", className)}\n      {...props}\n    />\n  ),\n);\nButtonGroupSeparator.displayName = \"ButtonGroupSeparator\";\n\n/** A static, non-interactive label segment inside a group — e.g. a unit or a prefix next to steppers. */\nconst ButtonGroupText = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanElement>>(\n  ({ className, ...props }, ref) => (\n    <span\n      ref={ref}\n      className={cn(\n        \"flex items-center gap-1.5 rounded-md border border-input bg-muted px-3 text-label-md text-foreground\",\n        className,\n      )}\n      {...props}\n    />\n  ),\n);\nButtonGroupText.displayName = \"ButtonGroupText\";\n\nexport { ButtonGroup, ButtonGroupSeparator, ButtonGroupText };\n",
+      "type": "registry:ui",
+      "target": "components/ui/button-group.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ],
+  "type": "registry:ui"
+}

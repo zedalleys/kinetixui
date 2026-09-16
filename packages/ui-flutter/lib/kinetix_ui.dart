@@ -20,6 +20,7 @@ export 'src/avatar.dart';
 export 'src/badge.dart';
 export 'src/breadcrumb.dart';
 export 'src/button.dart';
+export 'src/button_group.dart';
 export 'src/calendar.dart';
 export 'src/card.dart';
 export 'src/carousel.dart';

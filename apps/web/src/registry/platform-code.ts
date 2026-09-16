@@ -2143,4 +2143,63 @@ setState(() => toast = const KinetixToast('Event created — Sunday, December 03
   ],
 )`,
   },
+
+  "button-group-demo": {
+    html: `<div class="kx-button-group" role="group" data-orientation="horizontal">
+  <button class="kx-btn--outline kx-btn--icon" aria-label="Bold"><svg><!-- bold --></svg></button>
+  <button class="kx-btn--outline kx-btn--icon" aria-label="Italic"><svg><!-- italic --></svg></button>
+  <button class="kx-btn--outline kx-btn--icon" aria-label="Underline"><svg><!-- underline --></svg></button>
+</div>
+<!-- inner borders overlap 1px, inner corners squared off -->`,
+    swift: `KinetixButtonGroup {
+  KinetixButton(variant: .outline, size: .icon, action: {}) { Image(systemName: "bold") }
+  KinetixButton(variant: .outline, size: .icon, action: {}) { Image(systemName: "italic") }
+  KinetixButton(variant: .outline, size: .icon, action: {}) { Image(systemName: "underline") }
+}`,
+    kotlin: `KinetixButtonGroup {
+  KinetixButton({}, variant = KinetixButtonVariant.Outline, size = KinetixButtonSize.Icon) {
+    Icon(Icons.Default.FormatBold, null)
+  }
+  KinetixButton({}, variant = KinetixButtonVariant.Outline, size = KinetixButtonSize.Icon) {
+    Icon(Icons.Default.FormatItalic, null)
+  }
+  KinetixButton({}, variant = KinetixButtonVariant.Outline, size = KinetixButtonSize.Icon) {
+    Icon(Icons.Default.FormatUnderlined, null)
+  }
+}`,
+    dart: `KinetixButtonGroup(
+  children: [
+    KinetixButton(onPressed: () {}, variant: KinetixButtonVariant.outline, size: KinetixButtonSize.icon, child: const Icon(Icons.format_bold)),
+    KinetixButton(onPressed: () {}, variant: KinetixButtonVariant.outline, size: KinetixButtonSize.icon, child: const Icon(Icons.format_italic)),
+    KinetixButton(onPressed: () {}, variant: KinetixButtonVariant.outline, size: KinetixButtonSize.icon, child: const Icon(Icons.format_underlined)),
+  ],
+)`,
+  },
+
+  "native-select-demo": {
+    html: `<select class="kx-native-select">
+  <option value="" disabled selected>Select a fruit…</option>
+  <optgroup label="Citrus">
+    <option value="orange">Orange</option>
+    <option value="lemon">Lemon</option>
+  </optgroup>
+  <optgroup label="Stone fruit">
+    <option value="peach">Peach</option>
+    <option value="plum">Plum</option>
+  </optgroup>
+</select>
+<!-- the browser's own <select> — for the OS-native picker instead of KinetixSelect's custom popover -->`,
+    swift: `// NativeSelect is a web-only escape hatch to the browser's own <select>.
+// KinetixSelect already wraps the platform's native picker (SwiftUI Menu) —
+// use that instead.
+KinetixSelect(selection: $fruit, options: fruitOptions, placeholder: "Select a fruit…")`,
+    kotlin: `// NativeSelect is a web-only escape hatch to the browser's own <select>.
+// KinetixSelect already wraps the platform's native picker (Material3 DropdownMenu) —
+// use that instead.
+KinetixDropdownMenu(/* ... */)`,
+    dart: `// NativeSelect is a web-only escape hatch to the browser's own <select>.
+// KinetixSelect already wraps the platform's native picker (MenuAnchor) —
+// use that instead.
+KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => setState(() => fruit = v))`,
+  },
 };

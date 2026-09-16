@@ -3,7 +3,7 @@
 What to add next: **components**, **chart types**, and **infographic modules**.
 Written as a prioritised backlog — nothing here is built yet.
 
-**Baseline:** 72 components shipped, 13 chart recipes on `/charts`, `/blocks`
+**Baseline:** 76 components shipped, 13 chart recipes on `/charts`, `/blocks`
 compositions, `/infographic` is a "coming soon" preview.
 
 **The four-platform rule** (`/docs/contributing`): a component isn't "done"
@@ -22,8 +22,8 @@ Effort: **S** ≈ ½–1 day · **M** ≈ 2–4 days · **L** ≈ a week+.
 
 | Component | What it is | Why (gap / precedent) | Effort |
 |-----------|-----------|-----------------------|--------|
-| **Kbd** | Inline `<kbd>` key cap, single or combo (`⌘ K`). | Every doc/shortcut UI needs it; the site's own `CommandMenu` fakes it. shadcn, Radix Themes, Nextra, MUI all ship one. | **S** |
-| **Empty State** | Icon + title + body + action slot for "no data / no results". | `/blocks` hand-rolls "No messages yet" twice; the new `/components` empty state is bespoke. Ant `Empty`, Chakra, Park UI, Atlassian. | **S** |
+| ~~**Kbd**~~ | Inline `<kbd>` key cap, single or combo (`⌘ K`). | **Shipped** — `Kbd`/`KbdGroup`, all four platforms. | **S** |
+| ~~**Empty State**~~ | Icon + title + body + action slot for "no data / no results". | **Shipped** — `Empty` family, all four platforms. | **S** |
 | **Description List** | `<dl>` term/detail rows with a spec-sheet skin. | `ComponentMeta` and several blocks re-implement it inline; matches the site's own visual language. | **S** |
 | **Banner / Announcement** | Full-bleed page-level notice (info/promo/maintenance), dismissible, optional `sticky`. | Distinct from `Alert` (in-flow) and `Sonner` (transient). GitHub, Vercel, Ant `Alert banner`, Polaris `Banner`. | **S** |
 | **Timeline** | Ordered events down a rail — dot, connector, time, content; left / alternating. | No way to show history/activity/changelog today. Ant, MUI Lab, Mantine, Primer. | **M** |
