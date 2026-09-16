@@ -81,6 +81,6 @@ public struct KinetixButtonGroupText<Content: View>: View {
 
 extension KinetixButtonGroupText where Content == Text {
     public init(_ text: String) {
-        self.init { Text(text).font(.kinetixLabelMd).foregroundStyle(.primary) }
+        self.init { Text(text).font(.kinetixLabelMd) }
     }
 }
