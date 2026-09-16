@@ -27,7 +27,7 @@ const GROUP = {
   calendar: "Form Inputs", rating: "Form Inputs",
   button: "Controls & Actions", "button-group": "Controls & Actions", toggle: "Controls & Actions", "toggle-group": "Controls & Actions", "segmented-control": "Controls & Actions",
   fab: "Controls & Actions", pagination: "Controls & Actions", command: "Controls & Actions",
-  combobox: "Controls & Actions",
+  combobox: "Controls & Actions", "comparison-slider": "Controls & Actions",
   breadcrumb: "Navigation", tabs: "Navigation", "tab-bar": "Navigation", "navigation-menu": "Navigation",
   "navigation-bar": "Navigation", menubar: "Navigation", sidebar: "Navigation", stepper: "Navigation",
   "table-of-contents": "Navigation",
