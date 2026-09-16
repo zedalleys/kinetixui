@@ -14,16 +14,12 @@ import { cn } from "@/lib/utils";
  * unselected or multi-select isn't the pattern. Gap-fill addition (not in
  * the original Figma source).
  */
-export type SegmentedControlProps = Omit<
-  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root>,
-  "type"
-> &
-  ToggleGroupPrimitive.ToggleGroupSingleProps;
+export type SegmentedControlProps = Omit<ToggleGroupPrimitive.ToggleGroupSingleProps, "type">;
 
 const SegmentedControl = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
   SegmentedControlProps
->(({ className, type: _type, ...props }, ref) => (
+>(({ className, ...props }, ref) => (
   <ToggleGroupPrimitive.Root
     ref={ref}
     type="single"
