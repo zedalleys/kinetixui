@@ -45,6 +45,7 @@ export const componentDocs: NavItem[] = [
   built("Aspect Ratio", "aspect-ratio"),
   built("Audio Player", "audio-player"),
   built("Avatar", "avatar"),
+  built("Avatar Group", "avatar-group"),
   built("Badge", "badge"),
   built("Breadcrumb", "breadcrumb"),
   built("Button", "button"),
@@ -147,7 +148,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   sonner: "Feedback", badge: "Feedback", tag: "Feedback", metric: "Feedback",
 
   accordion: "Data Display", card: "Data Display", table: "Data Display", "data-table": "Data Display",
-  carousel: "Data Display", chart: "Data Display", avatar: "Data Display", collapsible: "Data Display",
+  carousel: "Data Display", chart: "Data Display", avatar: "Data Display", "avatar-group": "Data Display", collapsible: "Data Display",
   "scroll-area": "Data Display", resizable: "Data Display", list: "Data Display", quote: "Data Display",
   footer: "Data Display", "audio-player": "Data Display",
 };

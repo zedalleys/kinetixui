@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Avatar Group",
+  description: "Stacked, overlapping avatars with a \"+N\" overflow marker.",
+};
+
+# Avatar Group
+
+<ComponentMeta />
+
+Stacked, overlapping avatars with a `max` prop that folds anything past the
+cap into a `+N` marker. Gap-fill addition (not in the original Figma
+source) — composes [`Avatar`](/docs/components/avatar) /
+[`AvatarFallback`](/docs/components/avatar), so it ships in the same
+install as those.
+
+<ComponentPreview name="avatar-group-demo" />
+
+## Installation
+
+```bash
+npx @kinetixui/cli add avatar
+```
+
+## Usage
+
+```tsx
+import { Avatar, AvatarFallback, AvatarGroup } from "@kinetixui/ui";
+
+<AvatarGroup max={3}>
+  <Avatar><AvatarFallback>JD</AvatarFallback></Avatar>
+  <Avatar><AvatarFallback>AK</AvatarFallback></Avatar>
+  <Avatar><AvatarFallback>MO</AvatarFallback></Avatar>
+  <Avatar><AvatarFallback>TL</AvatarFallback></Avatar>
+</AvatarGroup>
+```
+
+## API
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `max` | `number` | — (unset shows every child) |
+
+Everything past `max` folds into a single `+N` marker built from the same
+`Avatar`/`AvatarFallback`. Plus all native `<div>` attributes.
+
+Styled entirely from the KinetixUI token contract — `bg-muted`,
+`text-muted-foreground`, `ring-background`. Works in light and dark with no
+extra config — see [Accessibility](/docs/accessibility).

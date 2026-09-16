@@ -3,7 +3,7 @@
 What to add next: **components**, **chart types**, and **infographic modules**.
 Written as a prioritised backlog — nothing here is built yet.
 
-**Baseline:** 76 components shipped, 13 chart recipes on `/charts`, `/blocks`
+**Baseline:** 78 components shipped, 13 chart recipes on `/charts`, `/blocks`
 compositions, `/infographic` is a "coming soon" preview.
 
 **The four-platform rule** (`/docs/contributing`): a component isn't "done"
@@ -29,7 +29,7 @@ Effort: **S** ≈ ½–1 day · **M** ≈ 2–4 days · **L** ≈ a week+.
 | **Timeline** | Ordered events down a rail — dot, connector, time, content; left / alternating. | No way to show history/activity/changelog today. Ant, MUI Lab, Mantine, Primer. | **M** |
 | **Stat / KPI** | Label + big value + delta (▲ 12% vs prev) + optional sparkline. | `Metric` exists but is a single number with no trend/delta. Tremor's core primitive; Ant `Statistic`. Pairs with §2 chart tiles. | **M** |
 | **Segmented Control** | iOS-style single-select strip. | Functionally `ToggleGroup type="single"` — ship as a **thin documented preset** so people stop rebuilding it (the `/colors` format switch, `Showcase` tabs, etc.). | **S** (alias) |
-| **Avatar Group** | Overlapping avatars + "+N" overflow. | Already in `component-meta`'s `PRIMITIVE` map and referenced by blocks, but **not in the gallery / registry**. Promote it. | **S** |
+| ~~**Avatar Group**~~ | Overlapping avatars + "+N" overflow. | **Shipped** — own gallery card + doc page at `/docs/components/avatar-group`; standing non-port on native (documented at `/docs/contributing`, same as `Combobox`). | **S** |
 
 ### Tier 2 — fills a category, moderate cost
 
