@@ -1134,6 +1134,30 @@
       ]
     },
     {
+      "name": "message-bubble",
+      "type": "registry:ui",
+      "title": "Message Bubble",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/message-bubble.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/message-bubble.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "metric",
       "type": "registry:ui",
       "title": "Metric",

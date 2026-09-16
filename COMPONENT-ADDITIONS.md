@@ -3,7 +3,7 @@
 What to add next: **components**, **chart types**, and **infographic modules**.
 Written as a prioritised backlog — nothing here is built yet.
 
-**Baseline:** 88 components shipped, 13 chart recipes on `/charts`, `/blocks`
+**Baseline:** 89 components shipped, 13 chart recipes on `/charts`, `/blocks`
 compositions, `/infographic` is a "coming soon" preview.
 
 **The four-platform rule** (`/docs/contributing`): a component isn't "done"
@@ -40,7 +40,7 @@ Effort: **S** ≈ ½–1 day · **M** ≈ 2–4 days · **L** ≈ a week+.
 | ~~**Notification Center**~~ | Bell trigger → popover list of read/unread items, "mark all read". | **Shipped** — `NotificationCenter`/`NotificationCenterTrigger`/`NotificationCenterContent`/`NotificationItem`, all four platforms, built directly on `Popover`. Read-state stays the caller's, same as every other controlled component here. | **M** |
 | ~~**Comparison Slider**~~ | Drag handle wiping between two layers (before/after image). | **Shipped** — `ComparisonSlider`, all four platforms (built on Radix `Slider` for drag/keyboard/ARIA on web; native ports drag-gesture the handle directly, a documented scope-down from the web's click-anywhere-on-track). | **S** |
 | ~~**Marquee**~~ | Auto-scrolling logo/testimonial strip, pauses on hover, motion-safe. | **Shipped** — `Marquee`, all four platforms. Ported off the site's hand-written CSS onto the shared Tailwind preset (`animate-marquee`) so a CLI-installed app gets it too; also fixed an accessibility bug in the site version (both content copies were `aria-hidden`, hiding the whole marquee from screen readers). | **S** |
-| **Chat / Message Bubble** | Sent/received bubble, grouping, timestamp, status tick, typing indicator. | `/blocks` has a chat block but no reusable bubble. Growing need for AI UIs. | **M** |
+| ~~**Chat / Message Bubble**~~ | Sent/received bubble, grouping, timestamp, status tick, typing indicator. | **Shipped** — `MessageBubble`/`TypingIndicator`, all four platforms. Just the bubble primitive, not the broader "AI-chat kit" (Attachment/Bubble/Message Scroller/Questionnaire) — that stays a separate roadmap decision. | **M** |
 | ~~**Page Header**~~ | Title + breadcrumb + description + action cluster + optional tabs row. | **Shipped** — `PageHeader`, all four platforms. `breadcrumb`/`actions`/`tabs` are plain slots, not re-implementations of `Breadcrumb`/`Button`/`Tabs`. | **S** |
 
 ### Tier 3 — powerful, expensive, do when demanded

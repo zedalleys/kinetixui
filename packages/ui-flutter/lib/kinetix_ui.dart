@@ -54,6 +54,7 @@ export 'src/label.dart';
 export 'src/list.dart';
 export 'src/marquee.dart';
 export 'src/menubar.dart';
+export 'src/message_bubble.dart';
 export 'src/metric.dart';
 export 'src/modal.dart';
 export 'src/multi_select.dart';

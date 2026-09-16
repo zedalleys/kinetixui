@@ -365,5 +365,6 @@ export {
 } from "./components/notification-center";
 export { TreeView, TreeItem, type TreeViewProps, type TreeItemProps } from "./components/tree-view";
 export { MultiSelect, type MultiSelectOption, type MultiSelectProps } from "./components/multi-select";
+export { MessageBubble, TypingIndicator, type MessageBubbleProps } from "./components/message-bubble";
 
 export { cn } from "./lib/utils";
