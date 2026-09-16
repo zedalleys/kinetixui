@@ -2577,4 +2577,50 @@ KinetixTreeView(
   onSelectedChange: (v) => setState(() => selected = v),
 )`,
   },
+
+  "multi-select-demo": {
+    html: `<div class="kx-multi-select" role="combobox" aria-expanded="false">
+  <span class="kx-tag kx-tag--secondary">React <button aria-label="Remove React">×</button></span>
+  <span class="kx-tag kx-tag--secondary">SwiftUI <button aria-label="Remove SwiftUI">×</button></span>
+</div>
+<!-- Popover + Command recipe, wrapped as a real component — role=combobox on a div, not a button -->`,
+    swift: `@State private var selected: Set<String> = ["react", "swiftui"]
+
+KinetixMultiSelect(
+  options: [
+    KinetixMultiSelectOption(value: "react", label: "React"),
+    KinetixMultiSelectOption(value: "swiftui", label: "SwiftUI"),
+    KinetixMultiSelectOption(value: "compose", label: "Jetpack Compose"),
+    KinetixMultiSelectOption(value: "flutter", label: "Flutter"),
+  ],
+  selected: $selected,
+  placeholder: "Select platforms…"
+)`,
+    kotlin: `var selected by remember { mutableStateOf(setOf("react", "swiftui")) }
+
+KinetixMultiSelect(
+  options = listOf(
+    KinetixMultiSelectOption("react", "React"),
+    KinetixMultiSelectOption("swiftui", "SwiftUI"),
+    KinetixMultiSelectOption("compose", "Jetpack Compose"),
+    KinetixMultiSelectOption("flutter", "Flutter"),
+  ),
+  selected = selected,
+  onSelectedChange = { selected = it },
+  placeholder = "Select platforms…",
+)`,
+    dart: `Set<String> selected = {'react', 'swiftui'};
+
+KinetixMultiSelect(
+  options: const [
+    KinetixMultiSelectOption('react', 'React'),
+    KinetixMultiSelectOption('swiftui', 'SwiftUI'),
+    KinetixMultiSelectOption('compose', 'Jetpack Compose'),
+    KinetixMultiSelectOption('flutter', 'Flutter'),
+  ],
+  selected: selected,
+  onSelectedChange: (v) => setState(() => selected = v),
+  placeholder: 'Select platforms…',
+)`,
+  },
 };
