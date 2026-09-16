@@ -87,6 +87,7 @@ export const componentDocs: NavItem[] = [
   built("List", "list"),
   built("Marquee", "marquee"),
   built("Menubar", "menubar"),
+  built("Message Bubble", "message-bubble"),
   built("Metric", "metric"),
   built("Modal", "modal"),
   built("Multi-Select", "multi-select"),
@@ -163,7 +164,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   carousel: "Data Display", chart: "Data Display", avatar: "Data Display", "avatar-group": "Data Display", collapsible: "Data Display",
   "scroll-area": "Data Display", resizable: "Data Display", list: "Data Display", quote: "Data Display",
   footer: "Data Display", "audio-player": "Data Display", "description-list": "Data Display",
-  timeline: "Data Display", marquee: "Data Display",
+  timeline: "Data Display", marquee: "Data Display", "message-bubble": "Data Display",
 };
 
 export const CATEGORY_ORDER = [

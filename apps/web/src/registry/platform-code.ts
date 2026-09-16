@@ -2623,4 +2623,36 @@ KinetixMultiSelect(
   placeholder: 'Select platforms…',
 )`,
   },
+
+  "message-bubble-demo": {
+    html: `<div class="kx-message-bubble kx-message-bubble--received">
+  Hey, are we still on for tomorrow?
+  <time>10:42 AM</time>
+</div>
+<div class="kx-message-bubble kx-message-bubble--sent">
+  Yep! See you at 3.
+  <time>10:43 AM</time> <span class="kx-status kx-status--read">✓✓</span>
+</div>
+<div class="kx-typing-indicator"><span></span><span></span><span></span></div>
+<!-- grouped reduces the outer top corner's radius (rounded-tr-md / rounded-tl-md) -->`,
+    swift: `KinetixMessageBubble("Hey, are we still on for tomorrow?", timestamp: "10:42 AM")
+KinetixMessageBubble("Yep! See you at 3.", variant: .sent, timestamp: "10:43 AM", status: .read)
+KinetixTypingIndicator()`,
+    kotlin: `KinetixMessageBubble("Hey, are we still on for tomorrow?", timestamp = "10:42 AM")
+KinetixMessageBubble(
+  "Yep! See you at 3.",
+  variant = KinetixMessageVariant.Sent,
+  timestamp = "10:43 AM",
+  status = KinetixMessageStatus.Read,
+)
+KinetixTypingIndicator()`,
+    dart: `const KinetixMessageBubble('Hey, are we still on for tomorrow?', timestamp: '10:42 AM')
+const KinetixMessageBubble(
+  'Yep! See you at 3.',
+  variant: KinetixMessageVariant.sent,
+  timestamp: '10:43 AM',
+  status: KinetixMessageStatus.read,
+)
+const KinetixTypingIndicator()`,
+  },
 };

@@ -736,6 +736,8 @@ import {
   TreeView,
   TreeItem,
   MultiSelect,
+  MessageBubble,
+  TypingIndicator,
 } from "@kinetixui/ui";
 
 add(
@@ -1694,6 +1696,25 @@ add(
     );
   },
   `<MultiSelect\n  value={value}\n  onValueChange={setValue}\n  placeholder="Select platforms…"\n  options={[\n    { value: "react", label: "React" },\n    { value: "swiftui", label: "SwiftUI" },\n  ]}\n/>`,
+);
+
+add(
+  "message-bubble-demo",
+  () => (
+    <div className="flex w-full max-w-sm flex-col gap-1.5">
+      <MessageBubble variant="received" timestamp="10:42 AM">
+        Hey, are we still on for tomorrow?
+      </MessageBubble>
+      <MessageBubble variant="sent" timestamp="10:43 AM" status="read">
+        Yep! See you at 3.
+      </MessageBubble>
+      <MessageBubble variant="sent" grouped status="delivered">
+        I&rsquo;ll bring the slides.
+      </MessageBubble>
+      <TypingIndicator className="mt-1" />
+    </div>
+  ),
+  `<MessageBubble variant="received" timestamp="10:42 AM">\n  Hey, are we still on for tomorrow?\n</MessageBubble>\n<MessageBubble variant="sent" timestamp="10:43 AM" status="read">\n  Yep! See you at 3.\n</MessageBubble>\n<TypingIndicator />`,
 );
 
 export const demoRegistry = reg;

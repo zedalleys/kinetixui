@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Message Bubble",
+  description: "A sent/received chat bubble with grouping, timestamp, and a status tick, plus a typing indicator.",
+};
+
+# Message Bubble
+
+<ComponentMeta />
+
+A sent/received chat bubble with grouping, timestamp, and a status tick, plus a typing indicator.
+
+<ComponentPreview name="message-bubble-demo" />
+
+## Installation
+
+```bash
+npx @kinetixui/cli add message-bubble
+```
+
+## Usage
+
+```tsx
+import { MessageBubble, TypingIndicator } from "@kinetixui/ui";
+```
+
+Styled entirely from the KinetixUI token contract — `bg-primary`,
+`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
+with no extra config, and keyboard + ARIA behaviour comes from Radix — see
+[Accessibility](/docs/accessibility).
