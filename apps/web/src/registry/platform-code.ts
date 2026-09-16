@@ -2264,4 +2264,31 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   ],
 )`,
   },
+
+  "banner-demo": {
+    html: `<div class="kx-banner kx-banner--information" role="banner">
+  <svg><!-- info icon --></svg>
+  <span>A new version of KinetixUI is available.</span>
+  <button>Learn more</button>
+</div>
+<!-- full-bleed, no border-radius · border-b · bg-info/10 text-info -->`,
+    swift: `KinetixBanner(
+  "A new version of KinetixUI is available.",
+  variant: .information,
+  actionLabel: "Learn more",
+  onAction: openChangelog
+)`,
+    kotlin: `KinetixBanner(
+  text = "A new version of KinetixUI is available.",
+  variant = KinetixBannerVariant.Information,
+  actionLabel = "Learn more",
+  onAction = ::openChangelog,
+)`,
+    dart: `KinetixBanner(
+  'A new version of KinetixUI is available.',
+  variant: KinetixBannerVariant.information,
+  actionLabel: 'Learn more',
+  onAction: openChangelog,
+)`,
+  },
 };

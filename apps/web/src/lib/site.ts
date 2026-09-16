@@ -47,6 +47,7 @@ export const componentDocs: NavItem[] = [
   built("Avatar", "avatar"),
   built("Avatar Group", "avatar-group"),
   built("Badge", "badge"),
+  built("Banner", "banner"),
   built("Breadcrumb", "breadcrumb"),
   built("Button", "button"),
   built("Button Group", "button-group"),
@@ -144,7 +145,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   popover: "Overlays", "hover-card": "Overlays", tooltip: "Overlays", "dropdown-menu": "Overlays",
   "context-menu": "Overlays", modal: "Overlays",
 
-  alert: "Feedback", inform: "Feedback", progress: "Feedback", "circular-progress": "Feedback",
+  alert: "Feedback", inform: "Feedback", banner: "Feedback", progress: "Feedback", "circular-progress": "Feedback",
   empty: "Feedback",
   sonner: "Feedback", badge: "Feedback", tag: "Feedback", metric: "Feedback",
 

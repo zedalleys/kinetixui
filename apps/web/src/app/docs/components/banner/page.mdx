@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Banner",
+  description: "A full-bleed, page-level notice — dismissible, with an optional action, distinct from Alert (in-flow) and the toast (transient).",
+};
+
+# Banner
+
+<ComponentMeta />
+
+A full-bleed, page-level notice — dismissible, with an optional action, distinct from Alert (in-flow) and the toast (transient).
+
+<ComponentPreview name="banner-demo" />
+
+## Installation
+
+```bash
+npx @kinetixui/cli add banner
+```
+
+## Usage
+
+```tsx
+import { Banner } from "@kinetixui/ui";
+```
+
+Styled entirely from the KinetixUI token contract — `bg-primary`,
+`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
+with no extra config, and keyboard + ARIA behaviour comes from Radix — see
+[Accessibility](/docs/accessibility).
