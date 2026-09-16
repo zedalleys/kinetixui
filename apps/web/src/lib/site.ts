@@ -89,6 +89,7 @@ export const componentDocs: NavItem[] = [
   built("Menubar", "menubar"),
   built("Metric", "metric"),
   built("Modal", "modal"),
+  built("Multi-Select", "multi-select"),
   built("Native Select", "native-select"),
   built("Navigation Bar", "navigation-bar"),
   built("Navigation Menu", "navigation-menu"),
@@ -134,7 +135,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   kbd: "Foundations",
 
   input: "Form Inputs", textarea: "Form Inputs", checkbox: "Form Inputs", "radio-group": "Form Inputs",
-  select: "Form Inputs", "native-select": "Form Inputs", slider: "Form Inputs", switch: "Form Inputs", "input-otp": "Form Inputs",
+  select: "Form Inputs", "native-select": "Form Inputs", "multi-select": "Form Inputs", slider: "Form Inputs", switch: "Form Inputs", "input-otp": "Form Inputs",
   "input-group": "Form Inputs", "password-input": "Form Inputs", "number-input": "Form Inputs",
   field: "Form Inputs", form: "Form Inputs", "file-upload": "Form Inputs", "date-picker": "Form Inputs",
   calendar: "Form Inputs", rating: "Form Inputs",

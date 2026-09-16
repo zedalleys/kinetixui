@@ -735,6 +735,7 @@ import {
   NotificationItem,
   TreeView,
   TreeItem,
+  MultiSelect,
 } from "@kinetixui/ui";
 
 add(
@@ -1671,6 +1672,28 @@ add(
     );
   },
   `<TreeView selected={selected} onSelectedChange={setSelected} defaultExpanded={["src"]}>\n  <TreeItem value="src" label="src">\n    <TreeItem value="index.ts" label="index.ts" />\n  </TreeItem>\n  <TreeItem value="readme" label="README.md" />\n</TreeView>`,
+);
+
+add(
+  "multi-select-demo",
+  () => {
+    const [value, setValue] = React.useState(["react", "swiftui"]);
+    return (
+      <MultiSelect
+        className="w-full max-w-sm"
+        value={value}
+        onValueChange={setValue}
+        placeholder="Select platforms…"
+        options={[
+          { value: "react", label: "React" },
+          { value: "swiftui", label: "SwiftUI" },
+          { value: "compose", label: "Jetpack Compose" },
+          { value: "flutter", label: "Flutter" },
+        ]}
+      />
+    );
+  },
+  `<MultiSelect\n  value={value}\n  onValueChange={setValue}\n  placeholder="Select platforms…"\n  options={[\n    { value: "react", label: "React" },\n    { value: "swiftui", label: "SwiftUI" },\n  ]}\n/>`,
 );
 
 export const demoRegistry = reg;

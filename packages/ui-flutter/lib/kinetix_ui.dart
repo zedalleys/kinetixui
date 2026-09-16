@@ -56,6 +56,7 @@ export 'src/marquee.dart';
 export 'src/menubar.dart';
 export 'src/metric.dart';
 export 'src/modal.dart';
+export 'src/multi_select.dart';
 export 'src/navigation_bar.dart';
 export 'src/notification_center.dart';
 export 'src/number_input.dart';

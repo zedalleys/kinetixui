@@ -99,6 +99,7 @@ const BUILT = {
   "page-header": ["PageHeader", "Title + optional breadcrumb + description + action cluster + optional tabs row — a recipe every docs/app screen re-lays out by hand."],
   "notification-center": ["NotificationCenter, NotificationCenterTrigger, NotificationCenterContent, NotificationItem", "A bell trigger opening a popover list of read/unread items with a \"mark all read\" action."],
   "tree-view": ["TreeView, TreeItem", "Nested expand/collapse rows with keyboard roving tabindex and optional checkboxes."],
+  "multi-select": ["MultiSelect", "A Combobox that keeps multiple chips — a free-entry token field with `creatable`."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
