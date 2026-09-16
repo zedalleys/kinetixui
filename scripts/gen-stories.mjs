@@ -34,6 +34,7 @@ const GROUP = {
   "table-of-contents": "Navigation",
   dialog: "Overlays", "alert-dialog": "Overlays", sheet: "Overlays", drawer: "Overlays",
   popover: "Overlays", "hover-card": "Overlays", tooltip: "Overlays", "dropdown-menu": "Overlays",
+  "notification-center": "Overlays",
   "context-menu": "Overlays", modal: "Overlays",
   alert: "Feedback", inform: "Feedback", banner: "Feedback", progress: "Feedback", "circular-progress": "Feedback",
   empty: "Feedback",

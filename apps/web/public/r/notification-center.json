@@ -1,0 +1,29 @@
+{
+  "$schema": "https://kinetixui.com/schema/registry-item.json",
+  "name": "notification-center",
+  "title": "Notification Center",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "tokens",
+    "popover",
+    "button"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/notification-center.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { Bell } from \"lucide-react\";\nimport { Popover, PopoverTrigger, PopoverContent } from \"@/components/ui/popover\";\nimport { Button } from \"@/components/ui/button\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * NotificationCenter — a bell trigger opening a popover list of\n * read/unread items with a \"mark all read\" action. Composed directly\n * from `Popover` (re-exported as the root — no new open-state logic)\n * and `Button`; `NotificationItem` follows `ListItem`'s interactive-row\n * convention. `unreadCount`/`unread`/`onMarkAllRead` are plain props —\n * the read-state itself stays the caller's, same as every other\n * controlled/stateless component in this library. Gap-fill addition\n * (not in the original Figma source).\n */\nconst NotificationCenter = Popover;\n\nexport interface NotificationCenterTriggerProps extends React.ComponentPropsWithoutRef<typeof Button> {\n  unreadCount?: number;\n}\n\nconst NotificationCenterTrigger = React.forwardRef<HTMLButtonElement, NotificationCenterTriggerProps>(\n  ({ className, unreadCount = 0, children, ...props }, ref) => (\n    <PopoverTrigger asChild>\n      <Button\n        ref={ref}\n        variant=\"Ghost\"\n        size=\"icon\"\n        aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : \"Notifications\"}\n        className={cn(\"relative\", className)}\n        {...props}\n      >\n        {children ?? <Bell className=\"size-5\" />}\n        {unreadCount > 0 && (\n          <span className=\"absolute right-1.5 top-1.5 flex size-2 rounded-full bg-destructive ring-2 ring-background\" />\n        )}\n      </Button>\n    </PopoverTrigger>\n  ),\n);\nNotificationCenterTrigger.displayName = \"NotificationCenterTrigger\";\n\nexport interface NotificationCenterContentProps extends React.ComponentPropsWithoutRef<typeof PopoverContent> {\n  onMarkAllRead?: () => void;\n}\n\nconst NotificationCenterContent = React.forwardRef<HTMLDivElement, NotificationCenterContentProps>(\n  ({ className, onMarkAllRead, children, align = \"end\", ...props }, ref) => (\n    <PopoverContent ref={ref} align={align} className={cn(\"w-80 p-0\", className)} {...props}>\n      <div className=\"flex items-center justify-between border-b border-border px-4 py-3\">\n        <p className=\"text-title-sm font-medium text-foreground\">Notifications</p>\n        {onMarkAllRead && (\n          <button\n            type=\"button\"\n            onClick={onMarkAllRead}\n            className=\"text-label-md font-medium text-primary outline-none hover:underline focus-visible:underline\"\n          >\n            Mark all read\n          </button>\n        )}\n      </div>\n      <div className=\"flex max-h-80 flex-col divide-y divide-border overflow-y-auto\">{children}</div>\n    </PopoverContent>\n  ),\n);\nNotificationCenterContent.displayName = \"NotificationCenterContent\";\n\nexport interface NotificationItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, \"title\"> {\n  title: React.ReactNode;\n  description?: React.ReactNode;\n  time?: React.ReactNode;\n  unread?: boolean;\n  onSelect?: () => void;\n}\n\nconst NotificationItem = React.forwardRef<HTMLDivElement, NotificationItemProps>(\n  ({ className, title, description, time, unread, onSelect, ...props }, ref) => {\n    const interactive = !!onSelect;\n    return (\n      <div\n        ref={ref}\n        role={interactive ? \"button\" : undefined}\n        tabIndex={interactive ? 0 : undefined}\n        onClick={onSelect}\n        onKeyDown={\n          interactive\n            ? (e) => {\n                if (e.key === \"Enter\" || e.key === \" \") {\n                  e.preventDefault();\n                  onSelect?.();\n                }\n              }\n            : undefined\n        }\n        className={cn(\n          \"flex items-start gap-3 px-4 py-3 font-sans outline-none\",\n          interactive && \"cursor-pointer hover:bg-accent focus-visible:bg-accent\",\n          className,\n        )}\n        {...props}\n      >\n        <span className={cn(\"mt-1.5 size-2 shrink-0 rounded-full\", unread ? \"bg-primary\" : \"bg-transparent\")} />\n        <div className=\"min-w-0 flex-1\">\n          <p className={cn(\"truncate text-body-sm\", unread ? \"font-medium text-foreground\" : \"text-muted-foreground\")}>\n            {title}\n          </p>\n          {description && <p className=\"truncate text-body-sm text-muted-foreground\">{description}</p>}\n          {time && <p className=\"mt-0.5 text-label-sm text-muted-foreground\">{time}</p>}\n        </div>\n      </div>\n    );\n  },\n);\nNotificationItem.displayName = \"NotificationItem\";\n\nexport { NotificationCenter, NotificationCenterTrigger, NotificationCenterContent, NotificationItem };\n",
+      "type": "registry:ui",
+      "target": "components/ui/notification-center.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ],
+  "type": "registry:ui"
+}

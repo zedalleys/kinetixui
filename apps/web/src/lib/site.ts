@@ -92,6 +92,7 @@ export const componentDocs: NavItem[] = [
   built("Native Select", "native-select"),
   built("Navigation Bar", "navigation-bar"),
   built("Navigation Menu", "navigation-menu"),
+  built("Notification Center", "notification-center"),
   built("Number Input", "number-input"),
   built("Page Header", "page-header"),
   built("Pagination", "pagination"),
@@ -149,6 +150,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
 
   dialog: "Overlays", "alert-dialog": "Overlays", sheet: "Overlays", drawer: "Overlays",
   popover: "Overlays", "hover-card": "Overlays", tooltip: "Overlays", "dropdown-menu": "Overlays",
+  "notification-center": "Overlays",
   "context-menu": "Overlays", modal: "Overlays",
 
   alert: "Feedback", inform: "Feedback", banner: "Feedback", progress: "Feedback", "circular-progress": "Feedback",

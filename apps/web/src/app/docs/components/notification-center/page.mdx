@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Notification Center",
+  description: "A bell trigger opening a popover list of read/unread items with a \"mark all read\" action.",
+};
+
+# Notification Center
+
+<ComponentMeta />
+
+A bell trigger opening a popover list of read/unread items with a "mark all read" action.
+
+<ComponentPreview name="notification-center-demo" />
+
+## Installation
+
+```bash
+npx @kinetixui/cli add notification-center
+```
+
+## Usage
+
+```tsx
+import { NotificationCenter, NotificationCenterTrigger, NotificationCenterContent, NotificationItem } from "@kinetixui/ui";
+```
+
+Styled entirely from the KinetixUI token contract — `bg-primary`,
+`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
+with no extra config, and keyboard + ARIA behaviour comes from Radix — see
+[Accessibility](/docs/accessibility).

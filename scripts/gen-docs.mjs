@@ -97,6 +97,7 @@ const BUILT = {
   marquee: ["Marquee", "An auto-scrolling horizontal ticker (logo strip, testimonials), pausing on hover and respecting prefers-reduced-motion."],
   "comparison-slider": ["ComparisonSlider", "A drag handle wiping between two stacked layers — a before/after image, a redesign preview."],
   "page-header": ["PageHeader", "Title + optional breadcrumb + description + action cluster + optional tabs row — a recipe every docs/app screen re-lays out by hand."],
+  "notification-center": ["NotificationCenter, NotificationCenterTrigger, NotificationCenterContent, NotificationItem", "A bell trigger opening a popover list of read/unread items with a \"mark all read\" action."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");

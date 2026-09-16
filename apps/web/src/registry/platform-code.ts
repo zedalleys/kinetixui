@@ -2448,4 +2448,58 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   ],
 )`,
   },
+
+  "notification-center-demo": {
+    html: `<button class="kx-notification-trigger" aria-label="Notifications, 2 unread">
+  <svg><!-- bell --></svg>
+  <span class="kx-notification-trigger__dot"></span>
+</button>
+<div class="kx-popover" role="dialog">
+  <header>Notifications <button>Mark all read</button></header>
+  <div class="kx-notification-item kx-notification-item--unread">PR #106 merged · 2m ago</div>
+  <div class="kx-notification-item kx-notification-item--unread">Deploy succeeded · 1h ago</div>
+  <div class="kx-notification-item">Welcome to KinetixUI · 2d ago</div>
+</div>
+<!-- built directly on Popover — no new open-state logic -->`,
+    swift: `@State private var open = false
+@State private var unread = 2
+
+KinetixNotificationCenter(isPresented: $open, onMarkAllRead: { unread = 0 }) {
+  KinetixNotificationCenterTrigger(unreadCount: unread) { open = true }
+} content: {
+  KinetixNotificationItem("PR #106 merged", time: "2m ago", unread: unread > 0)
+  KinetixNotificationItem("Deploy succeeded", time: "1h ago", unread: unread > 1)
+  KinetixNotificationItem("Welcome to KinetixUI", time: "2d ago")
+}`,
+    kotlin: `var open by remember { mutableStateOf(false) }
+var unread by remember { mutableStateOf(2) }
+
+KinetixNotificationCenter(
+  expanded = open,
+  onDismissRequest = { open = false },
+  onMarkAllRead = { unread = 0 },
+  trigger = { KinetixNotificationCenterTrigger(onClick = { open = true }, unreadCount = unread) },
+) {
+  KinetixNotificationItem("PR #106 merged", time = "2m ago", unread = unread > 0)
+  KinetixNotificationItem("Deploy succeeded", time = "1h ago", unread = unread > 1)
+  KinetixNotificationItem("Welcome to KinetixUI", time = "2d ago")
+}`,
+    dart: `bool open = false;
+int unread = 2;
+
+KinetixNotificationCenter(
+  visible: open,
+  onDismiss: () => setState(() => open = false),
+  onMarkAllRead: () => setState(() => unread = 0),
+  anchor: KinetixNotificationCenterTrigger(
+    onPressed: () => setState(() => open = true),
+    unreadCount: unread,
+  ),
+  children: [
+    KinetixNotificationItem('PR #106 merged', time: '2m ago', unread: unread > 0),
+    KinetixNotificationItem('Deploy succeeded', time: '1h ago', unread: unread > 1),
+    const KinetixNotificationItem('Welcome to KinetixUI', time: '2d ago'),
+  ],
+)`,
+  },
 };
