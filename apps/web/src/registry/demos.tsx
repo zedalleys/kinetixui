@@ -726,6 +726,7 @@ import {
   SegmentedControl,
   SegmentedControlItem,
   Timeline,
+  Marquee,
 } from "@kinetixui/ui";
 
 add(
@@ -1547,6 +1548,21 @@ add(
     />
   ),
   `<Timeline\n  items={[\n    { time: "2 hours ago", title: "Deployed to production", content: "v0.9.0 shipped." },\n    { time: "Yesterday", title: "Opened PR #100" },\n  ]}\n/>`,
+);
+
+add(
+  "marquee-demo",
+  () => (
+    <Marquee durationSeconds={18} className="w-full max-w-md">
+      {["React", "SwiftUI", "Jetpack Compose", "Flutter"].map((p) => (
+        <span key={p} className="flex items-center gap-2 px-4 text-body-sm text-muted-foreground">
+          <span className="size-1.5 rounded-full bg-primary" />
+          {p}
+        </span>
+      ))}
+    </Marquee>
+  ),
+  `<Marquee durationSeconds={18}>\n  {items.map((item) => (\n    <span key={item}>{item}</span>\n  ))}\n</Marquee>`,
 );
 
 export const demoRegistry = reg;

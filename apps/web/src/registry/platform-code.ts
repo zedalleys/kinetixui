@@ -2346,4 +2346,36 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   KinetixTimelineItem('Opened PR #100', time: 'Yesterday'),
 ])`,
   },
+
+  "marquee-demo": {
+    html: `<div class="kx-marquee" role="marquee">
+  <div class="kx-marquee__track">
+    <div class="kx-marquee__copy">React · SwiftUI · Jetpack Compose · Flutter</div>
+    <div class="kx-marquee__copy" aria-hidden="true">React · SwiftUI · Jetpack Compose · Flutter</div>
+  </div>
+</div>
+<!-- animate-marquee (Tailwind keyframe) · mask-image fade at both edges · motion-reduce:animate-none -->`,
+    swift: `KinetixMarquee(durationSeconds: 18) {
+  HStack(spacing: 16) {
+    ForEach(platforms, id: \\.self) { p in
+      Text(p).font(.kinetixBodySm).foregroundStyle(colors.mutedForeground)
+    }
+  }
+}`,
+    kotlin: `KinetixMarquee(durationMillis = 18000) {
+  Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    platforms.forEach { p ->
+      Text(p, color = colors.mutedForeground, fontSize = dimensionResource(R.dimen.font_size_body_sm).value.sp)
+    }
+  }
+}`,
+    dart: `KinetixMarquee(
+  duration: const Duration(seconds: 18),
+  child: Row(
+    children: [
+      for (final p in platforms) Padding(padding: const EdgeInsets.only(right: 16), child: Text(p)),
+    ],
+  ),
+)`,
+  },
 };

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://kinetixui.com/schema/registry-item.json",
+  "name": "marquee",
+  "title": "Marquee",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/marquee.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * Marquee — an auto-scrolling horizontal ticker (logo strip, testimonials),\n * pausing on hover and respecting `prefers-reduced-motion`. Lifted out of\n * the marketing site's `reveal.tsx` (`.kx-marquee`/`.kx-marquee-track` in\n * its `globals.css`) into a portable component: the site version leaned on\n * a hand-written CSS file a CLI-installed app wouldn't have, so this port\n * moves the keyframe onto the shared Tailwind preset (`animate-marquee`,\n * `motion-reduce:animate-none`) instead. Also fixes an accessibility gap\n * in the site version, which marked *both* content copies `aria-hidden`\n * (hiding the marquee from screen readers entirely) — only the duplicate\n * copy needed for the seamless loop is hidden here; the first copy stays\n * in the accessible DOM flow. Gap-fill addition (not in the original\n * Figma source).\n */\nexport interface MarqueeProps extends React.HTMLAttributes<HTMLDivElement> {\n  /** seconds for one full loop */\n  durationSeconds?: number;\n  pauseOnHover?: boolean;\n}\n\nconst Marquee = React.forwardRef<HTMLDivElement, MarqueeProps>(\n  ({ className, children, durationSeconds = 32, pauseOnHover = true, style, ...props }, ref) => (\n    <div\n      ref={ref}\n      className={cn(\n        \"group relative flex overflow-hidden\",\n        \"[mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]\",\n        className,\n      )}\n      style={{ [\"--marquee-duration\" as string]: `${durationSeconds}s`, ...style }}\n      {...props}\n    >\n      {/* the track is 2x content width (two copies side by side); animating it\n          exactly -50% of its own width moves it one content-width, which is\n          what makes the loop seamless when it snaps back to 0. */}\n      <div\n        className={cn(\n          \"flex w-max animate-marquee motion-reduce:animate-none\",\n          pauseOnHover && \"group-hover:[animation-play-state:paused]\",\n        )}\n      >\n        <div className=\"flex shrink-0 items-center\">{children}</div>\n        <div aria-hidden=\"true\" className=\"flex shrink-0 items-center\">\n          {children}\n        </div>\n      </div>\n    </div>\n  ),\n);\nMarquee.displayName = \"Marquee\";\n\nexport { Marquee };\n",
+      "type": "registry:ui",
+      "target": "components/ui/marquee.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ],
+  "type": "registry:ui"
+}
