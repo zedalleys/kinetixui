@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
  * into them rather than PageHeader re-implementing any of those. Gap-fill
  * addition (not in the original Figma source).
  */
-export interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface PageHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   title: React.ReactNode;
   description?: React.ReactNode;
   breadcrumb?: React.ReactNode;
