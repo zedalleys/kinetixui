@@ -1,5 +1,12 @@
 # @kinetixui/ui
 
+## 0.8.0
+
+### Minor Changes
+
+- 419ae12: Add `Empty`/`EmptyHeader`/`EmptyMedia`/`EmptyTitle`/`EmptyDescription`/`EmptyContent` — a composable placeholder for zero-results states (an empty table, an empty search, a fresh workspace). Second pick from the "missing components" gap flagged in the infra/design-system audit against shadcn/ui's current matrix. Ships on all four platforms per the four-platform rule: `KinetixEmpty` family on Jetpack Compose, SwiftUI, and Flutter too.
+- 83830b2: Add `Kbd` and `KbdGroup` — a single keyboard key glyph, plus a wrapper for shortcut combos (`⌘` `K`). Fills the "missing components" gap flagged in the infra/design-system audit against shadcn/ui's current matrix. Ships on all four platforms per the four-platform rule: `KinetixKbd`/`KinetixKbdGroup` on Jetpack Compose, SwiftUI, and Flutter too.
+
 ## 0.7.0
 
 ### Minor Changes
