@@ -3,7 +3,7 @@
 What to add next: **components**, **chart types**, and **infographic modules**.
 Written as a prioritised backlog — nothing here is built yet.
 
-**Baseline:** 86 components shipped, 13 chart recipes on `/charts`, `/blocks`
+**Baseline:** 87 components shipped, 13 chart recipes on `/charts`, `/blocks`
 compositions, `/infographic` is a "coming soon" preview.
 
 **The four-platform rule** (`/docs/contributing`): a component isn't "done"
@@ -35,7 +35,7 @@ Effort: **S** ≈ ½–1 day · **M** ≈ 2–4 days · **L** ≈ a week+.
 
 | Component | What it is | Why | Effort |
 |-----------|-----------|-----|--------|
-| **Tree View** | Nested expand/collapse rows, keyboard roving tabindex, optional checkboxes. | Sidebar/file/nav trees have no primitive; `Sidebar` is flat. Radix has no tree; Base UI, MUI X, Ark UI, Spectrum do. | **M** |
+| ~~**Tree View**~~ | Nested expand/collapse rows, keyboard roving tabindex, optional checkboxes. | **Shipped** — `TreeView`/`TreeItem`, all four platforms. Web has full keyboard roving-tabindex arrow-key navigation (hand-rolled, no Radix primitive to build on); native ports are tap-to-expand/select only, a documented scope-down since touch is primary there. Checkboxes are independent per node on every platform (no parent-selects-all-children propagation). | **M** |
 | **Multi-Select / Tags Input** | `Combobox` that keeps multiple chips; free-entry token field variant. | `Combobox` is single-value; `Tag` is display-only. Very common form need. Downshift, Ark, Mantine, Ant `Select mode=multiple`. | **M** |
 | ~~**Notification Center**~~ | Bell trigger → popover list of read/unread items, "mark all read". | **Shipped** — `NotificationCenter`/`NotificationCenterTrigger`/`NotificationCenterContent`/`NotificationItem`, all four platforms, built directly on `Popover`. Read-state stays the caller's, same as every other controlled component here. | **M** |
 | ~~**Comparison Slider**~~ | Drag handle wiping between two layers (before/after image). | **Shipped** — `ComparisonSlider`, all four platforms (built on Radix `Slider` for drag/keyboard/ARIA on web; native ports drag-gesture the handle directly, a documented scope-down from the web's click-anywhere-on-track). | **S** |

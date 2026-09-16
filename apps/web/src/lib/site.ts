@@ -124,6 +124,7 @@ export const componentDocs: NavItem[] = [
   built("Toggle", "toggle"),
   built("Toggle Group", "toggle-group"),
   built("Tooltip", "tooltip"),
+  built("Tree View", "tree-view"),
 ];
 
 /** slug → sidebar category. Mirrors the taxonomy in scripts/gen-stories.mjs. */
@@ -144,7 +145,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   combobox: "Controls & Actions", "comparison-slider": "Controls & Actions",
 
   breadcrumb: "Navigation", tabs: "Navigation", "tab-bar": "Navigation", "navigation-menu": "Navigation",
-  "page-header": "Navigation",
+  "page-header": "Navigation", "tree-view": "Navigation",
   "navigation-bar": "Navigation", "app-bar": "Navigation", menubar: "Navigation", sidebar: "Navigation",
   stepper: "Navigation", "table-of-contents": "Navigation",
 

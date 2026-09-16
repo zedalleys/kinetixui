@@ -2502,4 +2502,79 @@ KinetixNotificationCenter(
   ],
 )`,
   },
+
+  "tree-view-demo": {
+    html: `<div role="tree">
+  <div role="treeitem" aria-expanded="true" tabindex="0">
+    <div>▾ src</div>
+    <div role="group">
+      <div role="treeitem" aria-expanded="true">
+        <div>▾ components</div>
+        <div role="group">
+          <div role="treeitem" aria-selected="true">button.tsx</div>
+          <div role="treeitem">badge.tsx</div>
+        </div>
+      </div>
+      <div role="treeitem">index.ts</div>
+    </div>
+  </div>
+  <div role="treeitem">README.md</div>
+</div>
+<!-- role=treeitem on each node's own container, not a separate row — keyboard nav walks the live DOM -->`,
+    swift: `@State private var expanded: Set<String> = ["src", "src/components"]
+@State private var selected: String? = "button.tsx"
+
+KinetixTreeView(
+  nodes: [
+    KinetixTreeNode(value: "src", label: "src", children: [
+      KinetixTreeNode(value: "src/components", label: "components", children: [
+        KinetixTreeNode(value: "button.tsx", label: "button.tsx"),
+        KinetixTreeNode(value: "badge.tsx", label: "badge.tsx"),
+      ]),
+      KinetixTreeNode(value: "index.ts", label: "index.ts"),
+    ]),
+    KinetixTreeNode(value: "readme", label: "README.md"),
+  ],
+  expanded: $expanded,
+  selected: $selected
+)`,
+    kotlin: `var expanded by remember { mutableStateOf(setOf("src", "src/components")) }
+var selected by remember { mutableStateOf<String?>("button.tsx") }
+
+KinetixTreeView(
+  nodes = listOf(
+    KinetixTreeNode("src", "src", children = listOf(
+      KinetixTreeNode("src/components", "components", children = listOf(
+        KinetixTreeNode("button.tsx", "button.tsx"),
+        KinetixTreeNode("badge.tsx", "badge.tsx"),
+      )),
+      KinetixTreeNode("index.ts", "index.ts"),
+    )),
+    KinetixTreeNode("readme", "README.md"),
+  ),
+  expanded = expanded,
+  onExpandedChange = { expanded = it },
+  selected = selected,
+  onSelectedChange = { selected = it },
+)`,
+    dart: `Set<String> expanded = {'src', 'src/components'};
+String? selected = 'button.tsx';
+
+KinetixTreeView(
+  nodes: const [
+    KinetixTreeNode('src', 'src', children: [
+      KinetixTreeNode('src/components', 'components', children: [
+        KinetixTreeNode('button.tsx', 'button.tsx'),
+        KinetixTreeNode('badge.tsx', 'badge.tsx'),
+      ]),
+      KinetixTreeNode('index.ts', 'index.ts'),
+    ]),
+    KinetixTreeNode('readme', 'README.md'),
+  ],
+  expanded: expanded,
+  onExpandedChange: (v) => setState(() => expanded = v),
+  selected: selected,
+  onSelectedChange: (v) => setState(() => selected = v),
+)`,
+  },
 };

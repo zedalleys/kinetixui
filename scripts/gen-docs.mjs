@@ -98,6 +98,7 @@ const BUILT = {
   "comparison-slider": ["ComparisonSlider", "A drag handle wiping between two stacked layers — a before/after image, a redesign preview."],
   "page-header": ["PageHeader", "Title + optional breadcrumb + description + action cluster + optional tabs row — a recipe every docs/app screen re-lays out by hand."],
   "notification-center": ["NotificationCenter, NotificationCenterTrigger, NotificationCenterContent, NotificationItem", "A bell trigger opening a popover list of read/unread items with a \"mark all read\" action."],
+  "tree-view": ["TreeView, TreeItem", "Nested expand/collapse rows with keyboard roving tabindex and optional checkboxes."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");

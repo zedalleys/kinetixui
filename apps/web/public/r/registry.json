@@ -511,6 +511,12 @@
       "type": "registry:ui",
       "title": "Tooltip",
       "description": "Ported onto the KinetixUI token contract."
+    },
+    {
+      "name": "tree-view",
+      "type": "registry:ui",
+      "title": "Tree View",
+      "description": "Ported onto the KinetixUI token contract."
     }
   ]
 }
