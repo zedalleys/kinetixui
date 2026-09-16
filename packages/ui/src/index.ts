@@ -323,5 +323,21 @@ export {
   emptyMediaVariants,
   type EmptyMediaProps,
 } from "./components/empty";
+export {
+  ButtonGroup,
+  ButtonGroupSeparator,
+  ButtonGroupText,
+  type ButtonGroupProps,
+  type ButtonGroupSeparatorProps,
+} from "./components/button-group";
+export {
+  NativeSelect,
+  NativeSelectOption,
+  NativeSelectOptGroup,
+  nativeSelectVariants,
+  type NativeSelectProps,
+  type NativeSelectOptionProps,
+  type NativeSelectOptGroupProps,
+} from "./components/native-select";
 
 export { cn } from "./lib/utils";

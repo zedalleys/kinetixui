@@ -714,6 +714,12 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyContent,
+  ButtonGroup,
+  ButtonGroupSeparator,
+  ButtonGroupText,
+  NativeSelect,
+  NativeSelectOption,
+  NativeSelectOptGroup,
 } from "@kinetixui/ui";
 
 add(
@@ -1443,6 +1449,43 @@ add(
     </Empty>
   ),
   `<Empty>\n  <EmptyHeader>\n    <EmptyMedia variant="icon"><Search /></EmptyMedia>\n    <EmptyTitle>No results found</EmptyTitle>\n    <EmptyDescription>Try adjusting your search or filters.</EmptyDescription>\n  </EmptyHeader>\n  <EmptyContent>\n    <Button variant="Outline" size="sm">Clear filters</Button>\n  </EmptyContent>\n</Empty>`,
+);
+
+add(
+  "button-group-demo",
+  () => (
+    <ButtonGroup>
+      <Button variant="Outline" size="icon" aria-label="Bold">
+        <Bold />
+      </Button>
+      <Button variant="Outline" size="icon" aria-label="Italic">
+        <Italic />
+      </Button>
+      <Button variant="Outline" size="icon" aria-label="Underline">
+        <Underline />
+      </Button>
+    </ButtonGroup>
+  ),
+  `<ButtonGroup>\n  <Button variant="Outline" size="icon"><Bold /></Button>\n  <Button variant="Outline" size="icon"><Italic /></Button>\n  <Button variant="Outline" size="icon"><Underline /></Button>\n</ButtonGroup>`,
+);
+add(
+  "native-select-demo",
+  () => (
+    <NativeSelect className="max-w-xs" defaultValue="">
+      <NativeSelectOption value="" disabled>
+        Select a fruit…
+      </NativeSelectOption>
+      <NativeSelectOptGroup label="Citrus">
+        <NativeSelectOption value="orange">Orange</NativeSelectOption>
+        <NativeSelectOption value="lemon">Lemon</NativeSelectOption>
+      </NativeSelectOptGroup>
+      <NativeSelectOptGroup label="Stone fruit">
+        <NativeSelectOption value="peach">Peach</NativeSelectOption>
+        <NativeSelectOption value="plum">Plum</NativeSelectOption>
+      </NativeSelectOptGroup>
+    </NativeSelect>
+  ),
+  `<NativeSelect defaultValue="">\n  <NativeSelectOption value="" disabled>Select a fruit…</NativeSelectOption>\n  <NativeSelectOptGroup label="Citrus">\n    <NativeSelectOption value="orange">Orange</NativeSelectOption>\n  </NativeSelectOptGroup>\n</NativeSelect>`,
 );
 
 export const demoRegistry = reg;

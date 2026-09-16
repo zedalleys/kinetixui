@@ -48,6 +48,7 @@ export const componentDocs: NavItem[] = [
   built("Badge", "badge"),
   built("Breadcrumb", "breadcrumb"),
   built("Button", "button"),
+  built("Button Group", "button-group"),
   built("Calendar", "calendar"),
   built("Card", "card"),
   built("Carousel", "carousel"),
@@ -83,6 +84,7 @@ export const componentDocs: NavItem[] = [
   built("Menubar", "menubar"),
   built("Metric", "metric"),
   built("Modal", "modal"),
+  built("Native Select", "native-select"),
   built("Navigation Bar", "navigation-bar"),
   built("Navigation Menu", "navigation-menu"),
   built("Number Input", "number-input"),
@@ -122,12 +124,13 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   kbd: "Foundations",
 
   input: "Form Inputs", textarea: "Form Inputs", checkbox: "Form Inputs", "radio-group": "Form Inputs",
-  select: "Form Inputs", slider: "Form Inputs", switch: "Form Inputs", "input-otp": "Form Inputs",
+  select: "Form Inputs", "native-select": "Form Inputs", slider: "Form Inputs", switch: "Form Inputs", "input-otp": "Form Inputs",
   "input-group": "Form Inputs", "password-input": "Form Inputs", "number-input": "Form Inputs",
   field: "Form Inputs", form: "Form Inputs", "file-upload": "Form Inputs", "date-picker": "Form Inputs",
   calendar: "Form Inputs", rating: "Form Inputs",
 
-  button: "Controls & Actions", toggle: "Controls & Actions", "toggle-group": "Controls & Actions",
+  button: "Controls & Actions", "button-group": "Controls & Actions", toggle: "Controls & Actions",
+  "toggle-group": "Controls & Actions",
   fab: "Controls & Actions", pagination: "Controls & Actions", command: "Controls & Actions",
   combobox: "Controls & Actions",
 

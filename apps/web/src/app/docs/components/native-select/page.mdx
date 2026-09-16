@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Native Select",
+  description: "A styled wrapper around the native `<select>` element — for the OS-native picker instead of Select's custom popover.",
+};
+
+# Native Select
+
+<ComponentMeta />
+
+A styled wrapper around the native `<select>` element — for the OS-native picker instead of Select's custom popover.
+
+<ComponentPreview name="native-select-demo" />
+
+## Installation
+
+```bash
+npx @kinetixui/cli add native-select
+```
+
+## Usage
+
+```tsx
+import { NativeSelect, NativeSelectOption, NativeSelectOptGroup } from "@kinetixui/ui";
+```
+
+Styled entirely from the KinetixUI token contract — `bg-primary`,
+`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
+with no extra config, and keyboard + ARIA behaviour comes from Radix — see
+[Accessibility](/docs/accessibility).

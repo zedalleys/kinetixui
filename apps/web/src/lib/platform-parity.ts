@@ -34,6 +34,7 @@ const EXCEPTIONS: Record<string, Platform[]> = {
   combobox: ["React"], // standing non-port
   form: ["React"], // standing non-port
   "navigation-menu": ["React"], // standing non-port
+  "native-select": ["React"], // standing non-port — KinetixSelect already wraps each platform's own native picker
   inform: ["React", "Compose"],
   sidebar: ["React", "SwiftUI", "Compose"],
 };

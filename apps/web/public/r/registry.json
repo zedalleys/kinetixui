@@ -63,6 +63,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "button-group",
+      "type": "registry:ui",
+      "title": "Button Group",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "button",
       "type": "registry:ui",
       "title": "Button",
@@ -265,6 +271,12 @@
       "type": "registry:ui",
       "title": "Modal",
       "description": "Generated 1:1 from the KinetixUI design source, node 54857:1322."
+    },
+    {
+      "name": "native-select",
+      "type": "registry:ui",
+      "title": "Native Select",
+      "description": "Ported onto the KinetixUI token contract."
     },
     {
       "name": "navigation-bar",

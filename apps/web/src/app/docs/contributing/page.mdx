@@ -31,16 +31,17 @@ has no native idiom). Each port:
 4. **Compiles in CI** — see the per-platform workflow below. A port that
    only exists locally doesn't count.
 
-### The three standing non-ports
+### The four standing non-ports
 
-`Form`, `NavigationMenu` and `Combobox` are **not** ported to any native
-platform, by design:
+`Form`, `NavigationMenu`, `Combobox` and `NativeSelect` are **not** ported to
+any native platform, by design:
 
 | Component | Why | Use instead |
 | --- | --- | --- |
 | `Form` | react-hook-form glue with no native analogue | `KinetixField` (+ `Label` / `Description` / `Message`) |
 | `NavigationMenu` | hover-triggered desktop mega-menu, no touch idiom | platform navigation (`NavigationSplitView`, `NavigationRail`, …) |
 | `Combobox` | a recipe (Popover + Command), not a standalone component | `KinetixPopover` + a filtered list, or `KinetixSelect` |
+| `NativeSelect` | wraps the browser's own `<select>` — a web-only escape hatch from `Select`'s custom popover | `KinetixSelect`, which already wraps *each* native platform's own picker mechanism (Material3 `DropdownMenu`, SwiftUI `Menu`, Flutter `MenuAnchor`) |
 
 Anything else that can't be ported cleanly is **scoped down and
 documented**, not silently skipped — e.g. `KinetixSheet` is bottom-only,

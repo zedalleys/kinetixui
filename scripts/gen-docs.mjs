@@ -88,6 +88,8 @@ const BUILT = {
 
   kbd: ["Kbd, KbdGroup", "A single keyboard key glyph; wrap several in KbdGroup for a shortcut combo."],
   empty: ["Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent", "A placeholder for a zero-results state — an empty table, an empty search, a fresh workspace."],
+  "button-group": ["ButtonGroup, ButtonGroupSeparator, ButtonGroupText", "Visually joins a row or column of buttons into a connected, segmented-control-style cluster."],
+  "native-select": ["NativeSelect, NativeSelectOption, NativeSelectOptGroup", "A styled wrapper around the native `<select>` element — for the OS-native picker instead of Select's custom popover."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
