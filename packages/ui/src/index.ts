@@ -352,5 +352,6 @@ export {
 } from "./components/segmented-control";
 export { Timeline, type TimelineItem, type TimelineProps } from "./components/timeline";
 export { Marquee, type MarqueeProps } from "./components/marquee";
+export { ComparisonSlider, type ComparisonSliderProps } from "./components/comparison-slider";
 
 export { cn } from "./lib/utils";

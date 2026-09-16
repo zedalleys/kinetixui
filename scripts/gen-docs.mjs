@@ -95,6 +95,7 @@ const BUILT = {
   "segmented-control": ["SegmentedControl, SegmentedControlItem", "An iOS-style single-select strip — a thin, documented preset over ToggleGroup type=\"single\"."],
   timeline: ["Timeline", "Ordered events down a rail — dot, connector, time, content — left-aligned or alternating left/right of a centered rail."],
   marquee: ["Marquee", "An auto-scrolling horizontal ticker (logo strip, testimonials), pausing on hover and respecting prefers-reduced-motion."],
+  "comparison-slider": ["ComparisonSlider", "A drag handle wiping between two stacked layers — a before/after image, a redesign preview."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");

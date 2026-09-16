@@ -3,7 +3,7 @@
 What to add next: **components**, **chart types**, and **infographic modules**.
 Written as a prioritised backlog — nothing here is built yet.
 
-**Baseline:** 83 components shipped, 13 chart recipes on `/charts`, `/blocks`
+**Baseline:** 84 components shipped, 13 chart recipes on `/charts`, `/blocks`
 compositions, `/infographic` is a "coming soon" preview.
 
 **The four-platform rule** (`/docs/contributing`): a component isn't "done"
@@ -38,7 +38,7 @@ Effort: **S** ≈ ½–1 day · **M** ≈ 2–4 days · **L** ≈ a week+.
 | **Tree View** | Nested expand/collapse rows, keyboard roving tabindex, optional checkboxes. | Sidebar/file/nav trees have no primitive; `Sidebar` is flat. Radix has no tree; Base UI, MUI X, Ark UI, Spectrum do. | **M** |
 | **Multi-Select / Tags Input** | `Combobox` that keeps multiple chips; free-entry token field variant. | `Combobox` is single-value; `Tag` is display-only. Very common form need. Downshift, Ark, Mantine, Ant `Select mode=multiple`. | **M** |
 | **Notification Center** | Bell trigger → popover list of read/unread items, "mark all read". | Composable from `Popover` + `List` today but everyone rebuilds the read-state logic. Novu, Knock, Ant. | **M** |
-| **Comparison Slider** | Drag handle wiping between two layers (before/after image). | Common marketing/media pattern; nothing close in the set. | **S** |
+| ~~**Comparison Slider**~~ | Drag handle wiping between two layers (before/after image). | **Shipped** — `ComparisonSlider`, all four platforms (built on Radix `Slider` for drag/keyboard/ARIA on web; native ports drag-gesture the handle directly, a documented scope-down from the web's click-anywhere-on-track). | **S** |
 | ~~**Marquee**~~ | Auto-scrolling logo/testimonial strip, pauses on hover, motion-safe. | **Shipped** — `Marquee`, all four platforms. Ported off the site's hand-written CSS onto the shared Tailwind preset (`animate-marquee`) so a CLI-installed app gets it too; also fixed an accessibility bug in the site version (both content copies were `aria-hidden`, hiding the whole marquee from screen readers). | **S** |
 | **Chat / Message Bubble** | Sent/received bubble, grouping, timestamp, status tick, typing indicator. | `/blocks` has a chat block but no reusable bubble. Growing need for AI UIs. | **M** |
 | **Page Header** | Title + breadcrumb + description + action cluster + optional tabs row. | Every docs/app screen re-lays this out; `/blocks` "dashboard header" is a one-off. Polaris, Ant `PageHeader`, Primer. | **S** |

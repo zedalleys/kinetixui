@@ -31,6 +31,7 @@ export 'src/circular_progress.dart';
 export 'src/code_block.dart';
 export 'src/collapsible.dart';
 export 'src/command.dart';
+export 'src/comparison_slider.dart';
 export 'src/context_menu.dart';
 export 'src/data_table.dart';
 export 'src/date_picker.dart';

@@ -61,6 +61,7 @@ export const componentDocs: NavItem[] = [
   built("Collapsible", "collapsible"),
   built("Combobox", "combobox"),
   built("Command", "command"),
+  built("Comparison Slider", "comparison-slider"),
   built("Context Menu", "context-menu"),
   built("Data Table", "data-table"),
   built("Date Picker", "date-picker"),
@@ -138,7 +139,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   button: "Controls & Actions", "button-group": "Controls & Actions", toggle: "Controls & Actions",
   "toggle-group": "Controls & Actions", "segmented-control": "Controls & Actions",
   fab: "Controls & Actions", pagination: "Controls & Actions", command: "Controls & Actions",
-  combobox: "Controls & Actions",
+  combobox: "Controls & Actions", "comparison-slider": "Controls & Actions",
 
   breadcrumb: "Navigation", tabs: "Navigation", "tab-bar": "Navigation", "navigation-menu": "Navigation",
   "navigation-bar": "Navigation", "app-bar": "Navigation", menubar: "Navigation", sidebar: "Navigation",

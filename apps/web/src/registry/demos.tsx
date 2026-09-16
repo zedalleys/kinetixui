@@ -727,6 +727,7 @@ import {
   SegmentedControlItem,
   Timeline,
   Marquee,
+  ComparisonSlider,
 } from "@kinetixui/ui";
 
 add(
@@ -1563,6 +1564,20 @@ add(
     </Marquee>
   ),
   `<Marquee durationSeconds={18}>\n  {items.map((item) => (\n    <span key={item}>{item}</span>\n  ))}\n</Marquee>`,
+);
+
+add(
+  "comparison-slider-demo",
+  () => (
+    <ComparisonSlider
+      className="w-full max-w-md"
+      beforeLabel="Before"
+      afterLabel="After"
+      before={<div className="flex size-full items-center justify-center bg-muted text-body-sm text-muted-foreground">Original</div>}
+      after={<div className="flex size-full items-center justify-center bg-primary/15 text-body-sm text-primary">Redesign</div>}
+    />
+  ),
+  `<ComparisonSlider\n  beforeLabel="Before"\n  afterLabel="After"\n  before={<img src="/before.jpg" alt="" />}\n  after={<img src="/after.jpg" alt="" />}\n/>`,
 );
 
 export const demoRegistry = reg;

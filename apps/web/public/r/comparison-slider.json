@@ -1,0 +1,28 @@
+{
+  "$schema": "https://kinetixui.com/schema/registry-item.json",
+  "name": "comparison-slider",
+  "title": "Comparison Slider",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "@radix-ui/react-slider",
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/comparison-slider.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport * as SliderPrimitive from \"@radix-ui/react-slider\";\nimport { GripVertical } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * ComparisonSlider — a drag handle wiping between two stacked layers\n * (before/after image, redesign preview, …). Built on Radix's `Slider`\n * for the drag + keyboard + ARIA behavior (a plain 0–100 value), but\n * fully custom-drawn: Radix's own `Range` fill can't be reused as the\n * divider line (it's Radix's own inline `width` style, which would win\n * over any Tailwind width class), so the line is a separate element\n * positioned from the same value instead. Gap-fill addition (not in the\n * original Figma source).\n */\nexport interface ComparisonSliderProps\n  extends Omit<React.HTMLAttributes<HTMLDivElement>, \"onChange\"> {\n  before: React.ReactNode;\n  after: React.ReactNode;\n  beforeLabel?: React.ReactNode;\n  afterLabel?: React.ReactNode;\n  value?: number;\n  defaultValue?: number;\n  onValueChange?: (value: number) => void;\n}\n\nconst ComparisonSlider = React.forwardRef<HTMLDivElement, ComparisonSliderProps>(\n  (\n    { className, before, after, beforeLabel, afterLabel, value, defaultValue = 50, onValueChange, ...props },\n    ref,\n  ) => {\n    const [internal, setInternal] = React.useState(defaultValue);\n    const current = value ?? internal;\n\n    const handleChange = (vals: number[]) => {\n      const v = vals[0] ?? current;\n      setInternal(v);\n      onValueChange?.(v);\n    };\n\n    return (\n      <div\n        ref={ref}\n        className={cn(\n          \"relative aspect-video w-full select-none overflow-hidden rounded-md bg-muted font-sans\",\n          \"[&_img]:size-full [&_img]:object-cover [&_video]:size-full [&_video]:object-cover\",\n          className,\n        )}\n        {...props}\n      >\n        <div className=\"absolute inset-0\">{before}</div>\n        <div className=\"absolute inset-0 overflow-hidden\" style={{ clipPath: `inset(0 0 0 ${current}%)` }}>\n          {after}\n        </div>\n\n        <div\n          aria-hidden\n          className=\"absolute inset-y-0 w-0.5 -translate-x-1/2 bg-background shadow-sm\"\n          style={{ left: `${current}%` }}\n        />\n\n        {beforeLabel && (\n          <span className=\"absolute left-2 top-2 rounded bg-background/80 px-2 py-0.5 text-label-sm text-foreground backdrop-blur-sm\">\n            {beforeLabel}\n          </span>\n        )}\n        {afterLabel && (\n          <span className=\"absolute right-2 top-2 rounded bg-background/80 px-2 py-0.5 text-label-sm text-foreground backdrop-blur-sm\">\n            {afterLabel}\n          </span>\n        )}\n\n        <SliderPrimitive.Root\n          value={[current]}\n          onValueChange={handleChange}\n          max={100}\n          step={0.1}\n          className=\"absolute inset-0 flex touch-none items-center\"\n        >\n          <SliderPrimitive.Track className=\"relative h-full w-full grow bg-transparent\">\n            <SliderPrimitive.Range className=\"absolute h-full bg-transparent\" />\n          </SliderPrimitive.Track>\n          <SliderPrimitive.Thumb\n            aria-label=\"Comparison position\"\n            className=\"flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-background bg-background/90 text-foreground shadow-md outline-none focus-visible:ring-2 focus-visible:ring-ring\"\n          >\n            <GripVertical className=\"size-4\" />\n          </SliderPrimitive.Thumb>\n        </SliderPrimitive.Root>\n      </div>\n    );\n  },\n);\nComparisonSlider.displayName = \"ComparisonSlider\";\n\nexport { ComparisonSlider };\n",
+      "type": "registry:ui",
+      "target": "components/ui/comparison-slider.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ],
+  "type": "registry:ui"
+}

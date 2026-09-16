@@ -135,6 +135,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "comparison-slider",
+      "type": "registry:ui",
+      "title": "Comparison Slider",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "context-menu",
       "type": "registry:ui",
       "title": "Context Menu",

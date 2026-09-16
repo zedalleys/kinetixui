@@ -196,7 +196,7 @@ const sankeyData = {
     { name: "SwiftUI" },
     { name: "Compose" },
     { name: "Flutter" },
-    { name: "83 components" },
+    { name: "84 components" },
   ],
   links: [
     { source: 0, target: 1, value: 20 },
@@ -1199,7 +1199,7 @@ export function ChartsContent() {
         <ChartContainer
           config={{} satisfies ChartConfig}
           className="h-[320px] w-full"
-          label="Token flow — one DTCG source through Style Dictionary into five outputs, converging on the 83 components."
+          label="Token flow — one DTCG source through Style Dictionary into five outputs, converging on the 84 components."
         >
           <Sankey
             data={sankeyData}

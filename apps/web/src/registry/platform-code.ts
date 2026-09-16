@@ -2378,4 +2378,30 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   ),
 )`,
   },
+
+  "comparison-slider-demo": {
+    html: `<div class="kx-comparison-slider" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+  <img class="kx-comparison-slider__before" src="/before.jpg" alt="" />
+  <img class="kx-comparison-slider__after" src="/after.jpg" alt="" style="clip-path: inset(0 0 0 50%)" />
+  <span class="kx-comparison-slider__handle"></span>
+</div>
+<!-- clip-path driven by a Radix Slider value · divider drawn separately, not Radix's own Range fill -->`,
+    swift: `KinetixComparisonSlider(beforeLabel: "Before", afterLabel: "After") {
+  Image("before").resizable().scaledToFill()
+} after: {
+  Image("after").resizable().scaledToFill()
+}`,
+    kotlin: `KinetixComparisonSlider(
+  beforeLabel = "Before",
+  afterLabel = "After",
+  before = { Image(painterResource(R.drawable.before), null, Modifier.fillMaxSize()) },
+  after = { Image(painterResource(R.drawable.after), null, Modifier.fillMaxSize()) },
+)`,
+    dart: `KinetixComparisonSlider(
+  beforeLabel: 'Before',
+  afterLabel: 'After',
+  before: Image.asset('before.jpg', fit: BoxFit.cover),
+  after: Image.asset('after.jpg', fit: BoxFit.cover),
+)`,
+  },
 };
