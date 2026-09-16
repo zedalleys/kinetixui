@@ -34,7 +34,7 @@ const GROUP = {
   dialog: "Overlays", "alert-dialog": "Overlays", sheet: "Overlays", drawer: "Overlays",
   popover: "Overlays", "hover-card": "Overlays", tooltip: "Overlays", "dropdown-menu": "Overlays",
   "context-menu": "Overlays", modal: "Overlays",
-  alert: "Feedback", inform: "Feedback", progress: "Feedback", "circular-progress": "Feedback",
+  alert: "Feedback", inform: "Feedback", banner: "Feedback", progress: "Feedback", "circular-progress": "Feedback",
   empty: "Feedback",
   sonner: "Feedback", badge: "Feedback", tag: "Feedback", metric: "Feedback",
   accordion: "Data Display", card: "Data Display", table: "Data Display", "data-table": "Data Display",

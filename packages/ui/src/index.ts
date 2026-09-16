@@ -344,5 +344,6 @@ export {
   DescriptionListItem,
   type DescriptionListItemProps,
 } from "./components/description-list";
+export { Banner, bannerVariants, type BannerProps } from "./components/banner";
 
 export { cn } from "./lib/utils";

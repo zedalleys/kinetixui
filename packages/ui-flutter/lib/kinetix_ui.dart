@@ -18,6 +18,7 @@ export 'src/aspect_ratio.dart';
 export 'src/audio_player.dart';
 export 'src/avatar.dart';
 export 'src/badge.dart';
+export 'src/banner.dart';
 export 'src/breadcrumb.dart';
 export 'src/button.dart';
 export 'src/button_group.dart';

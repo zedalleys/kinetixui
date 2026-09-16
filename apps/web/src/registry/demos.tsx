@@ -722,6 +722,7 @@ import {
   NativeSelectOptGroup,
   DescriptionList,
   DescriptionListItem,
+  Banner,
 } from "@kinetixui/ui";
 
 add(
@@ -1501,6 +1502,21 @@ add(
     </DescriptionList>
   ),
   `<DescriptionList>\n  <DescriptionListItem term="Category">Data Display</DescriptionListItem>\n  <DescriptionListItem term="Built on">Radix Avatar</DescriptionListItem>\n</DescriptionList>`,
+);
+
+add(
+  "banner-demo",
+  () => (
+    <div className="flex w-full flex-col gap-3">
+      <Banner variant="information" onDismiss={() => {}} action={{ label: "Learn more" }}>
+        A new version of KinetixUI is available.
+      </Banner>
+      <Banner variant="action" action={{ label: "Upgrade" }}>
+        You&rsquo;re on the free plan — upgrade for unlimited projects.
+      </Banner>
+    </div>
+  ),
+  `<Banner variant="information" onDismiss={close} action={{ label: "Learn more" }}>\n  A new version of KinetixUI is available.\n</Banner>`,
 );
 
 export const demoRegistry = reg;

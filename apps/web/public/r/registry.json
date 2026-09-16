@@ -57,6 +57,12 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:13995."
     },
     {
+      "name": "banner",
+      "type": "registry:ui",
+      "title": "Banner",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "breadcrumb",
       "type": "registry:ui",
       "title": "Breadcrumb",
