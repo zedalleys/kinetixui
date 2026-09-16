@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Kbd",
+  description: "A single keyboard key glyph; wrap several in KbdGroup for a shortcut combo.",
+};
+
+# Kbd
+
+<ComponentMeta />
+
+A single keyboard key glyph; wrap several in KbdGroup for a shortcut combo.
+
+<ComponentPreview name="kbd-demo" />
+
+## Installation
+
+```bash
+npx @kinetixui/cli add kbd
+```
+
+## Usage
+
+```tsx
+import { Kbd, KbdGroup } from "@kinetixui/ui";
+```
+
+Styled entirely from the KinetixUI token contract — `bg-primary`,
+`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
+with no extra config, and keyboard + ARIA behaviour comes from Radix — see
+[Accessibility](/docs/accessibility).

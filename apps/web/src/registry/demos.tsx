@@ -706,6 +706,8 @@ import {
   FooterLink,
   FooterBottom,
   TableOfContents,
+  Kbd,
+  KbdGroup,
 } from "@kinetixui/ui";
 
 add(
@@ -1402,6 +1404,19 @@ add(
     />
   ),
   `<TableOfContents\n  active={activeId}\n  items={[{ id: "overview", label: "Overview" }, { id: "props", label: "Props", level: 2 }]}\n/>`,
+);
+add(
+  "kbd-demo",
+  () => (
+    <div className="flex items-center gap-4">
+      <Kbd>⏎</Kbd>
+      <KbdGroup>
+        <Kbd>⌘</Kbd>
+        <Kbd>K</Kbd>
+      </KbdGroup>
+    </div>
+  ),
+  `<Kbd>⏎</Kbd>\n<KbdGroup>\n  <Kbd>⌘</Kbd>\n  <Kbd>K</Kbd>\n</KbdGroup>`,
 );
 
 export const demoRegistry = reg;

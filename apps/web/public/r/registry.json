@@ -225,6 +225,12 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:13836."
     },
     {
+      "name": "kbd",
+      "type": "registry:ui",
+      "title": "Kbd",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "label",
       "type": "registry:ui",
       "title": "Label",

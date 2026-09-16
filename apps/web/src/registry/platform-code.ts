@@ -2057,4 +2057,34 @@ setState(() => toast = const KinetixToast('Event created — Sunday, December 03
   onSeek: (d) => player.seek(d),
 )`,
   },
+
+  "kbd-demo": {
+    html: `<kbd class="kx-kbd">⏎</kbd>
+<span class="kx-kbd-group">
+  <kbd class="kx-kbd">⌘</kbd>
+  <kbd class="kx-kbd">K</kbd>
+</span>
+<!-- border: var(--input) · bg: var(--muted) · text: var(--muted-foreground) -->`,
+    swift: `HStack(spacing: 16) {
+  KinetixKbd("⏎")
+  KinetixKbdGroup {
+    KinetixKbd("⌘")
+    KinetixKbd("K")
+  }
+}`,
+    kotlin: `Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+  KinetixKbd("⏎")
+  KinetixKbdGroup {
+    KinetixKbd("⌘")
+    KinetixKbd("K")
+  }
+}`,
+    dart: `Row(
+  children: [
+    const KinetixKbd('⏎'),
+    const SizedBox(width: 16),
+    const KinetixKbdGroup(children: [KinetixKbd('⌘'), KinetixKbd('K')]),
+  ],
+)`,
+  },
 };

@@ -76,6 +76,7 @@ export const componentDocs: NavItem[] = [
   built("Input Group", "input-group"),
   built("Input OTP", "input-otp"),
   built("Password Input", "password-input"),
+  built("Kbd", "kbd"),
   built("Label", "label"),
   built("List", "list"),
   built("Menubar", "menubar"),
@@ -117,6 +118,7 @@ export const componentDocs: NavItem[] = [
 export const COMPONENT_CATEGORY: Record<string, string> = {
   "aspect-ratio": "Foundations", separator: "Foundations", skeleton: "Foundations",
   spinner: "Foundations", label: "Foundations", image: "Foundations", "code-block": "Foundations",
+  kbd: "Foundations",
 
   input: "Form Inputs", textarea: "Form Inputs", checkbox: "Form Inputs", "radio-group": "Form Inputs",
   select: "Form Inputs", slider: "Form Inputs", switch: "Form Inputs", "input-otp": "Form Inputs",
