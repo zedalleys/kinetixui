@@ -1,0 +1,27 @@
+{
+  "$schema": "https://kinetixui.com/schema/registry-item.json",
+  "name": "empty",
+  "title": "Empty",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "class-variance-authority"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/empty.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * Empty — a placeholder for a zero-results state (an empty table, an empty\n * search, a fresh workspace with nothing in it yet). Composition-based, like\n * Card: `Empty` is an unstyled-beyond-layout root so it composes cleanly\n * inside whatever already has a border (a Table cell, a Card, a bare page\n * section) instead of forcing its own. Gap-fill addition (not in the\n * original Figma source) — matches the shadcn/ui Empty API shape.\n */\nconst Empty = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(\n  ({ className, ...props }, ref) => (\n    <div\n      ref={ref}\n      className={cn(\"flex min-w-0 flex-1 flex-col items-center justify-center gap-6 p-10 text-center font-sans\", className)}\n      {...props}\n    />\n  ),\n);\nEmpty.displayName = \"Empty\";\n\nconst EmptyHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(\n  ({ className, ...props }, ref) => (\n    <div ref={ref} className={cn(\"flex max-w-sm flex-col items-center gap-2\", className)} {...props} />\n  ),\n);\nEmptyHeader.displayName = \"EmptyHeader\";\n\nconst emptyMediaVariants = cva(\"flex shrink-0 items-center justify-center\", {\n  variants: {\n    /** `icon` gives a muted circular badge behind the icon; `default` renders the child as-is (an illustration, an avatar, …) */\n    variant: {\n      default: \"\",\n      icon: \"size-10 rounded-full bg-muted text-muted-foreground [&_svg]:size-5\",\n    },\n  },\n  defaultVariants: { variant: \"default\" },\n});\n\nexport interface EmptyMediaProps\n  extends React.HTMLAttributes<HTMLDivElement>,\n    VariantProps<typeof emptyMediaVariants> {}\n\nconst EmptyMedia = React.forwardRef<HTMLDivElement, EmptyMediaProps>(\n  ({ className, variant, ...props }, ref) => (\n    <div ref={ref} className={cn(emptyMediaVariants({ variant }), className)} {...props} />\n  ),\n);\nEmptyMedia.displayName = \"EmptyMedia\";\n\nconst EmptyTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(\n  ({ className, ...props }, ref) => (\n    <p ref={ref} className={cn(\"text-title-sm font-medium text-foreground\", className)} {...props} />\n  ),\n);\nEmptyTitle.displayName = \"EmptyTitle\";\n\nconst EmptyDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(\n  ({ className, ...props }, ref) => (\n    <p ref={ref} className={cn(\"text-body-sm text-muted-foreground\", className)} {...props} />\n  ),\n);\nEmptyDescription.displayName = \"EmptyDescription\";\n\nconst EmptyContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(\n  ({ className, ...props }, ref) => (\n    <div ref={ref} className={cn(\"flex flex-col items-center gap-3\", className)} {...props} />\n  ),\n);\nEmptyContent.displayName = \"EmptyContent\";\n\nexport { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent, emptyMediaVariants };\n",
+      "type": "registry:ui",
+      "target": "components/ui/empty.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ],
+  "type": "registry:ui"
+}

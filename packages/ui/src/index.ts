@@ -313,5 +313,15 @@ export { TableOfContents, type TableOfContentsProps, type TocItem } from "./comp
 
 /* Batch 6 — infra/design-system audit gap-fill components */
 export { Kbd, KbdGroup, type KbdProps, type KbdGroupProps } from "./components/kbd";
+export {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+  emptyMediaVariants,
+  type EmptyMediaProps,
+} from "./components/empty";
 
 export { cn } from "./lib/utils";

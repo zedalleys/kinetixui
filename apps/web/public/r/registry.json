@@ -159,6 +159,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "empty",
+      "type": "registry:ui",
+      "title": "Empty",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "fab",
       "type": "registry:ui",
       "title": "Fab",

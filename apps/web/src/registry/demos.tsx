@@ -708,6 +708,12 @@ import {
   TableOfContents,
   Kbd,
   KbdGroup,
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
 } from "@kinetixui/ui";
 
 add(
@@ -1417,6 +1423,26 @@ add(
     </div>
   ),
   `<Kbd>⏎</Kbd>\n<KbdGroup>\n  <Kbd>⌘</Kbd>\n  <Kbd>K</Kbd>\n</KbdGroup>`,
+);
+add(
+  "empty-demo",
+  () => (
+    <Empty className="w-full max-w-sm rounded-lg border border-dashed">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <Search />
+        </EmptyMedia>
+        <EmptyTitle>No results found</EmptyTitle>
+        <EmptyDescription>Try adjusting your search or filters.</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Button variant="Outline" size="sm">
+          Clear filters
+        </Button>
+      </EmptyContent>
+    </Empty>
+  ),
+  `<Empty>\n  <EmptyHeader>\n    <EmptyMedia variant="icon"><Search /></EmptyMedia>\n    <EmptyTitle>No results found</EmptyTitle>\n    <EmptyDescription>Try adjusting your search or filters.</EmptyDescription>\n  </EmptyHeader>\n  <EmptyContent>\n    <Button variant="Outline" size="sm">Clear filters</Button>\n  </EmptyContent>\n</Empty>`,
 );
 
 export const demoRegistry = reg;

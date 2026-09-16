@@ -35,6 +35,7 @@ const GROUP = {
   popover: "Overlays", "hover-card": "Overlays", tooltip: "Overlays", "dropdown-menu": "Overlays",
   "context-menu": "Overlays", modal: "Overlays",
   alert: "Feedback", inform: "Feedback", progress: "Feedback", "circular-progress": "Feedback",
+  empty: "Feedback",
   sonner: "Feedback", badge: "Feedback", tag: "Feedback", metric: "Feedback",
   accordion: "Data Display", card: "Data Display", table: "Data Display", "data-table": "Data Display",
   carousel: "Data Display", chart: "Data Display", avatar: "Data Display", "avatar-group": "Data Display",

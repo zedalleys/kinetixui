@@ -2087,4 +2087,60 @@ setState(() => toast = const KinetixToast('Event created — Sunday, December 03
   ],
 )`,
   },
+
+  "empty-demo": {
+    html: `<div class="kx-empty">
+  <div class="kx-empty-media"><svg><!-- search icon --></svg></div>
+  <p class="kx-empty-title">No results found</p>
+  <p class="kx-empty-description">Try adjusting your search or filters.</p>
+  <button class="kx-button kx-button--outline">Clear filters</button>
+</div>
+<!-- title: var(--foreground) · description: var(--muted-foreground) -->`,
+    swift: `KinetixEmpty {
+  KinetixEmptyHeader {
+    KinetixEmptyMedia(variant: .icon) { Image(systemName: "magnifyingglass") }
+    KinetixEmptyTitle("No results found")
+    KinetixEmptyDescription("Try adjusting your search or filters.")
+  }
+  KinetixEmptyContent {
+    KinetixButton(variant: .outline, size: .sm, action: clearFilters) { Text("Clear filters") }
+  }
+}`,
+    kotlin: `KinetixEmpty {
+  KinetixEmptyHeader {
+    KinetixEmptyMedia(variant = KinetixEmptyMediaVariant.Icon) { Icon(Icons.Default.Search, null) }
+    KinetixEmptyTitle("No results found")
+    KinetixEmptyDescription("Try adjusting your search or filters.")
+  }
+  KinetixEmptyContent {
+    KinetixButton(::clearFilters, variant = KinetixButtonVariant.Outline, size = KinetixButtonSize.Sm) {
+      Text("Clear filters")
+    }
+  }
+}`,
+    dart: `KinetixEmpty(
+  children: [
+    KinetixEmptyHeader(
+      children: [
+        const KinetixEmptyMedia(
+          variant: KinetixEmptyMediaVariant.icon,
+          child: Icon(Icons.search),
+        ),
+        const KinetixEmptyTitle('No results found'),
+        const KinetixEmptyDescription('Try adjusting your search or filters.'),
+      ],
+    ),
+    KinetixEmptyContent(
+      children: [
+        KinetixButton(
+          onPressed: clearFilters,
+          variant: KinetixButtonVariant.outline,
+          size: KinetixButtonSize.sm,
+          child: const Text('Clear filters'),
+        ),
+      ],
+    ),
+  ],
+)`,
+  },
 };
