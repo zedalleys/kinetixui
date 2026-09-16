@@ -321,6 +321,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "page-header",
+      "type": "registry:ui",
+      "title": "Page Header",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "pagination",
       "type": "registry:ui",
       "title": "Pagination",

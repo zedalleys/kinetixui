@@ -93,6 +93,7 @@ export const componentDocs: NavItem[] = [
   built("Navigation Bar", "navigation-bar"),
   built("Navigation Menu", "navigation-menu"),
   built("Number Input", "number-input"),
+  built("Page Header", "page-header"),
   built("Pagination", "pagination"),
   built("Popover", "popover"),
   built("Progress", "progress"),
@@ -142,6 +143,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   combobox: "Controls & Actions", "comparison-slider": "Controls & Actions",
 
   breadcrumb: "Navigation", tabs: "Navigation", "tab-bar": "Navigation", "navigation-menu": "Navigation",
+  "page-header": "Navigation",
   "navigation-bar": "Navigation", "app-bar": "Navigation", menubar: "Navigation", sidebar: "Navigation",
   stepper: "Navigation", "table-of-contents": "Navigation",
 

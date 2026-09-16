@@ -58,6 +58,7 @@ export 'src/metric.dart';
 export 'src/modal.dart';
 export 'src/navigation_bar.dart';
 export 'src/number_input.dart';
+export 'src/page_header.dart';
 export 'src/pagination.dart';
 export 'src/password_input.dart';
 export 'src/popover.dart';

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://kinetixui.com/schema/registry-item.json",
+  "name": "page-header",
+  "title": "Page Header",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/page-header.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * PageHeader — title + optional breadcrumb + description + action\n * cluster + optional tabs row. A recipe every docs/app screen re-lays\n * out by hand; `breadcrumb`/`actions`/`tabs` are plain slots so callers\n * compose their own `Breadcrumb`/`Button`/`Tabs` (or `SegmentedControl`)\n * into them rather than PageHeader re-implementing any of those. Gap-fill\n * addition (not in the original Figma source).\n */\nexport interface PageHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, \"title\"> {\n  title: React.ReactNode;\n  description?: React.ReactNode;\n  breadcrumb?: React.ReactNode;\n  actions?: React.ReactNode;\n  tabs?: React.ReactNode;\n}\n\nconst PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(\n  ({ className, title, description, breadcrumb, actions, tabs, ...props }, ref) => (\n    <div\n      ref={ref}\n      className={cn(\"flex flex-col gap-4 border-b border-border pb-6 font-sans\", className)}\n      {...props}\n    >\n      {breadcrumb && <div className=\"text-body-sm\">{breadcrumb}</div>}\n      <div className=\"flex flex-wrap items-start justify-between gap-4\">\n        <div className=\"flex min-w-0 flex-col gap-1\">\n          <h1 className=\"text-headline-sm font-medium text-foreground\">{title}</h1>\n          {description && <p className=\"text-body-md text-muted-foreground\">{description}</p>}\n        </div>\n        {actions && <div className=\"flex shrink-0 flex-wrap items-center gap-2\">{actions}</div>}\n      </div>\n      {tabs && <div className=\"-mb-6\">{tabs}</div>}\n    </div>\n  ),\n);\nPageHeader.displayName = \"PageHeader\";\n\nexport { PageHeader };\n",
+      "type": "registry:ui",
+      "target": "components/ui/page-header.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ],
+  "type": "registry:ui"
+}

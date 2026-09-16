@@ -2404,4 +2404,48 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   after: Image.asset('after.jpg', fit: BoxFit.cover),
 )`,
   },
+
+  "page-header-demo": {
+    html: `<header class="kx-page-header">
+  <nav class="kx-breadcrumb" aria-label="Breadcrumb">Projects / KinetixUI</nav>
+  <div class="kx-page-header__row">
+    <div>
+      <h1>KinetixUI</h1>
+      <p>One token architecture, in motion across every platform.</p>
+    </div>
+    <div class="kx-page-header__actions">
+      <button class="kx-btn--outline">Settings</button>
+      <button class="kx-btn--primary">Deploy</button>
+    </div>
+  </div>
+</header>
+<!-- border-b pb-6 · title: text-headline-sm · description: text-muted-foreground -->`,
+    swift: `KinetixPageHeader(
+  "KinetixUI",
+  description: "One token architecture, in motion across every platform.",
+  breadcrumb: { Text("Projects / KinetixUI").font(.kinetixBodySm) },
+  actions: {
+    KinetixButton(variant: .outline, size: .sm, action: {}) { Text("Settings") }
+    KinetixButton(size: .sm, action: {}) { Text("Deploy") }
+  }
+)`,
+    kotlin: `KinetixPageHeader(
+  title = "KinetixUI",
+  description = "One token architecture, in motion across every platform.",
+  breadcrumb = { Text("Projects / KinetixUI") },
+  actions = {
+    KinetixButton({}, variant = KinetixButtonVariant.Outline, size = KinetixButtonSize.Sm) { Text("Settings") }
+    KinetixButton({}, size = KinetixButtonSize.Sm) { Text("Deploy") }
+  },
+)`,
+    dart: `KinetixPageHeader(
+  'KinetixUI',
+  description: 'One token architecture, in motion across every platform.',
+  breadcrumb: const Text('Projects / KinetixUI'),
+  actions: [
+    KinetixButton(onPressed: () {}, variant: KinetixButtonVariant.outline, size: KinetixButtonSize.sm, child: const Text('Settings')),
+    KinetixButton(onPressed: () {}, size: KinetixButtonSize.sm, child: const Text('Deploy')),
+  ],
+)`,
+  },
 };

@@ -3,7 +3,7 @@
 What to add next: **components**, **chart types**, and **infographic modules**.
 Written as a prioritised backlog — nothing here is built yet.
 
-**Baseline:** 84 components shipped, 13 chart recipes on `/charts`, `/blocks`
+**Baseline:** 85 components shipped, 13 chart recipes on `/charts`, `/blocks`
 compositions, `/infographic` is a "coming soon" preview.
 
 **The four-platform rule** (`/docs/contributing`): a component isn't "done"
@@ -41,7 +41,7 @@ Effort: **S** ≈ ½–1 day · **M** ≈ 2–4 days · **L** ≈ a week+.
 | ~~**Comparison Slider**~~ | Drag handle wiping between two layers (before/after image). | **Shipped** — `ComparisonSlider`, all four platforms (built on Radix `Slider` for drag/keyboard/ARIA on web; native ports drag-gesture the handle directly, a documented scope-down from the web's click-anywhere-on-track). | **S** |
 | ~~**Marquee**~~ | Auto-scrolling logo/testimonial strip, pauses on hover, motion-safe. | **Shipped** — `Marquee`, all four platforms. Ported off the site's hand-written CSS onto the shared Tailwind preset (`animate-marquee`) so a CLI-installed app gets it too; also fixed an accessibility bug in the site version (both content copies were `aria-hidden`, hiding the whole marquee from screen readers). | **S** |
 | **Chat / Message Bubble** | Sent/received bubble, grouping, timestamp, status tick, typing indicator. | `/blocks` has a chat block but no reusable bubble. Growing need for AI UIs. | **M** |
-| **Page Header** | Title + breadcrumb + description + action cluster + optional tabs row. | Every docs/app screen re-lays this out; `/blocks` "dashboard header" is a one-off. Polaris, Ant `PageHeader`, Primer. | **S** |
+| ~~**Page Header**~~ | Title + breadcrumb + description + action cluster + optional tabs row. | **Shipped** — `PageHeader`, all four platforms. `breadcrumb`/`actions`/`tabs` are plain slots, not re-implementations of `Breadcrumb`/`Button`/`Tabs`. | **S** |
 
 ### Tier 3 — powerful, expensive, do when demanded
 
