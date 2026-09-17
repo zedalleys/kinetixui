@@ -92,3 +92,4 @@ export 'src/toggle.dart';
 export 'src/toggle_group.dart';
 export 'src/tooltip.dart';
 export 'src/tree_view.dart';
+export 'src/virtual_list.dart';

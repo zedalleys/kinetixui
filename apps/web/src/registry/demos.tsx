@@ -739,6 +739,7 @@ import {
   MessageBubble,
   TypingIndicator,
   Tour,
+  VirtualList,
 } from "@kinetixui/ui";
 
 add(
@@ -1772,6 +1773,29 @@ add(
     );
   },
   `<Tour\n  open={open}\n  onOpenChange={setOpen}\n  stepIndex={stepIndex}\n  onStepIndexChange={setStepIndex}\n  steps={[\n    { target: '[data-tour="save"]', title: "Save your work", content: "…" },\n    { target: '[data-tour="share"]', title: "Invite others", content: "…" },\n  ]}\n/>`,
+);
+
+add(
+  "virtual-list-demo",
+  () => {
+    const rows = React.useMemo(
+      () => Array.from({ length: 10000 }, (_, i) => ({ id: i, label: `Row ${i + 1}` })),
+      [],
+    );
+    return (
+      <VirtualList
+        className="w-full max-w-sm rounded-md border"
+        items={rows}
+        itemHeight={36}
+        height={280}
+        getItemKey={(row) => row.id}
+        renderItem={(row) => (
+          <div className="flex h-full items-center border-b px-3 text-sm">{row.label}</div>
+        )}
+      />
+    );
+  },
+  `const rows = Array.from({ length: 10000 }, (_, i) => ({ id: i, label: \`Row \${i + 1}\` }));\n\n<VirtualList\n  items={rows}\n  itemHeight={36}\n  height={280}\n  getItemKey={(row) => row.id}\n  renderItem={(row) => <div>{row.label}</div>}\n/>`,
 );
 
 export const demoRegistry = reg;

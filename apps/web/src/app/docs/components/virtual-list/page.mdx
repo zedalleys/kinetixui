@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Virtual List",
+  description: "A windowed-rendering primitive — mounts only the rows visible in the scroll viewport plus overscan, so a list of thousands costs the same as a couple dozen.",
+};
+
+# Virtual List
+
+<ComponentMeta />
+
+A windowed-rendering primitive — mounts only the rows visible in the scroll viewport plus overscan, so a list of thousands costs the same as a couple dozen.
+
+<ComponentPreview name="virtual-list-demo" />
+
+## Installation
+
+```bash
+npx @kinetixui/cli add virtual-list
+```
+
+## Usage
+
+```tsx
+import { VirtualList } from "@kinetixui/ui";
+```
+
+Styled entirely from the KinetixUI token contract — `bg-primary`,
+`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
+with no extra config, and keyboard + ARIA behaviour comes from Radix — see
+[Accessibility](/docs/accessibility).

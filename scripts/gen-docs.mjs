@@ -102,6 +102,7 @@ const BUILT = {
   "multi-select": ["MultiSelect", "A Combobox that keeps multiple chips — a free-entry token field with `creatable`."],
   "message-bubble": ["MessageBubble, TypingIndicator", "A sent/received chat bubble with grouping, timestamp, and a status tick, plus a typing indicator."],
   tour: ["Tour", "Sequenced spotlight popovers over real elements (onboarding walkthroughs), with dismiss/skip/next."],
+  "virtual-list": ["VirtualList", "A windowed-rendering primitive — mounts only the rows visible in the scroll viewport plus overscan, so a list of thousands costs the same as a couple dozen."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");

@@ -367,5 +367,6 @@ export { TreeView, TreeItem, type TreeViewProps, type TreeItemProps } from "./co
 export { MultiSelect, type MultiSelectOption, type MultiSelectProps } from "./components/multi-select";
 export { MessageBubble, TypingIndicator, type MessageBubbleProps } from "./components/message-bubble";
 export { Tour, type TourStep, type TourProps } from "./components/tour";
+export { VirtualList, type VirtualListProps } from "./components/virtual-list";
 
 export { cn } from "./lib/utils";

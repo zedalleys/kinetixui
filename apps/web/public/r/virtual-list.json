@@ -1,0 +1,25 @@
+{
+  "$schema": "https://kinetixui.com/schema/registry-item.json",
+  "name": "virtual-list",
+  "title": "Virtual List",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/virtual-list.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { cn } from \"@/lib/utils\";\n\n/**\n * VirtualList — a windowed-rendering primitive: only the rows visible in\n * the scroll viewport (plus `overscan`) actually mount, so a list of\n * thousands of items costs the same as rendering a couple dozen. Fixed\n * row height only — variable-height virtualization needs a measurement\n * pass per row (a real library's job, e.g. `@tanstack/react-virtual`),\n * which is out of scope for this primitive. A prerequisite for `DataGrid`\n * and any `Command`/`Combobox`/`Select` with a large option list. Gap-fill\n * addition (not in the original Figma source).\n */\nexport interface VirtualListProps<T>\n  extends Omit<React.HTMLAttributes<HTMLDivElement>, \"children\"> {\n  items: T[];\n  /** row height in px — every row is this tall */\n  itemHeight: number;\n  /** viewport height — a number (px) or any CSS height value */\n  height: number | string;\n  renderItem: (item: T, index: number) => React.ReactNode;\n  /** extra rows rendered above/below the viewport, to reduce blank flashes on fast scroll */\n  overscan?: number;\n  getItemKey?: (item: T, index: number) => React.Key;\n}\n\nfunction VirtualList<T>({\n  items,\n  itemHeight,\n  height,\n  renderItem,\n  overscan = 4,\n  getItemKey,\n  className,\n  style,\n  onScroll,\n  ...props\n}: VirtualListProps<T>) {\n  const containerRef = React.useRef<HTMLDivElement>(null);\n  const [scrollTop, setScrollTop] = React.useState(0);\n  const [viewportHeight, setViewportHeight] = React.useState(typeof height === \"number\" ? height : 0);\n\n  React.useEffect(() => {\n    const el = containerRef.current;\n    if (!el) return;\n    const observer = new ResizeObserver((entries) => {\n      const entry = entries[0];\n      if (entry) setViewportHeight(entry.contentRect.height);\n    });\n    observer.observe(el);\n    return () => observer.disconnect();\n  }, []);\n\n  const totalHeight = items.length * itemHeight;\n  const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);\n  const visibleCount = Math.ceil(viewportHeight / itemHeight) + overscan * 2;\n  const endIndex = Math.min(items.length, startIndex + Math.max(visibleCount, 0));\n  const visibleItems = items.slice(startIndex, endIndex);\n\n  return (\n    <div\n      ref={containerRef}\n      role=\"list\"\n      className={cn(\"overflow-y-auto font-sans\", className)}\n      style={{ height, ...style }}\n      onScroll={(e) => {\n        onScroll?.(e);\n        setScrollTop(e.currentTarget.scrollTop);\n      }}\n      {...props}\n    >\n      <div style={{ height: totalHeight, position: \"relative\" }}>\n        {visibleItems.map((item, i) => {\n          const index = startIndex + i;\n          return (\n            <div\n              key={getItemKey ? getItemKey(item, index) : index}\n              role=\"listitem\"\n              style={{ position: \"absolute\", top: index * itemHeight, left: 0, right: 0, height: itemHeight }}\n            >\n              {renderItem(item, index)}\n            </div>\n          );\n        })}\n      </div>\n    </div>\n  );\n}\n\nexport { VirtualList };\n",
+      "type": "registry:ui",
+      "target": "components/ui/virtual-list.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
+    }
+  ],
+  "type": "registry:ui"
+}
