@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Color Picker",
+  description: "A saturation/value square, hue and alpha sliders, a hex field, swatches, and an optional eyedropper.",
+};
+
+# Color Picker
+
+<ComponentMeta />
+
+A saturation/value square, hue and alpha sliders, a hex field, swatches, and an optional eyedropper.
+
+<ComponentPreview name="color-picker-demo" />
+
+## Installation
+
+```bash
+npx @kinetixui/cli add color-picker
+```
+
+## Usage
+
+```tsx
+import { ColorPicker } from "@kinetixui/ui";
+```
+
+Styled entirely from the KinetixUI token contract — `bg-primary`,
+`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
+with no extra config, and keyboard + ARIA behaviour comes from Radix — see
+[Accessibility](/docs/accessibility).

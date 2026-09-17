@@ -59,6 +59,7 @@ export const componentDocs: NavItem[] = [
   built("Circular Progress", "circular-progress"),
   built("Code Block", "code-block"),
   built("Collapsible", "collapsible"),
+  built("Color Picker", "color-picker"),
   built("Combobox", "combobox"),
   built("Command", "command"),
   built("Comparison Slider", "comparison-slider"),
@@ -144,7 +145,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   select: "Form Inputs", "native-select": "Form Inputs", "multi-select": "Form Inputs", slider: "Form Inputs", switch: "Form Inputs", "input-otp": "Form Inputs",
   "input-group": "Form Inputs", "password-input": "Form Inputs", "number-input": "Form Inputs",
   field: "Form Inputs", form: "Form Inputs", "file-upload": "Form Inputs", "date-picker": "Form Inputs",
-  calendar: "Form Inputs", rating: "Form Inputs",
+  calendar: "Form Inputs", rating: "Form Inputs", "color-picker": "Form Inputs",
 
   button: "Controls & Actions", "button-group": "Controls & Actions", toggle: "Controls & Actions",
   "toggle-group": "Controls & Actions", "segmented-control": "Controls & Actions",

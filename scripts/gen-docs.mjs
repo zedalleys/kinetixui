@@ -106,6 +106,7 @@ const BUILT = {
   "virtual-list": ["VirtualList", "A windowed-rendering primitive — mounts only the rows visible in the scroll viewport plus overscan, so a list of thousands costs the same as a couple dozen."],
   "json-viewer": ["JsonViewer", "A collapsible, syntax-colored tree for arbitrary JSON data, with a copy-to-clipboard button."],
   "diff-viewer": ["DiffViewer", "A side-by-side or unified text diff with gutter line numbers, built on a hand-rolled LCS line diff."],
+  "color-picker": ["ColorPicker", "A saturation/value square, hue and alpha sliders, a hex field, swatches, and an optional eyedropper."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
