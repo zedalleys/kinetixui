@@ -2107,6 +2107,24 @@
       ]
     },
     {
+      "name": "tour",
+      "type": "registry:ui",
+      "title": "Tour",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [],
+      "registryDependencies": [
+        "tokens",
+        "button"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/tour.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/tour.tsx"
+        }
+      ]
+    },
+    {
       "name": "tree-view",
       "type": "registry:ui",
       "title": "Tree View",

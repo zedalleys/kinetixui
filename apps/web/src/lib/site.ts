@@ -126,6 +126,7 @@ export const componentDocs: NavItem[] = [
   built("Toggle", "toggle"),
   built("Toggle Group", "toggle-group"),
   built("Tooltip", "tooltip"),
+  built("Tour", "tour"),
   built("Tree View", "tree-view"),
 ];
 
@@ -153,7 +154,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
 
   dialog: "Overlays", "alert-dialog": "Overlays", sheet: "Overlays", drawer: "Overlays",
   popover: "Overlays", "hover-card": "Overlays", tooltip: "Overlays", "dropdown-menu": "Overlays",
-  "notification-center": "Overlays",
+  "notification-center": "Overlays", tour: "Overlays",
   "context-menu": "Overlays", modal: "Overlays",
 
   alert: "Feedback", inform: "Feedback", banner: "Feedback", progress: "Feedback", "circular-progress": "Feedback",
