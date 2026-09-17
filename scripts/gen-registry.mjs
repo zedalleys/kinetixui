@@ -47,7 +47,7 @@ for (const file of files) {
 
   const deps = new Set();
   const depRe =
-    /from "(@radix-ui\/[^"]+|@hookform\/resolvers|@tanstack\/react-table|lucide-react|sonner|class-variance-authority|clsx|tailwind-merge|cmdk|vaul|recharts|embla-carousel-react|input-otp|react-day-picker|react-hook-form|react-resizable-panels|date-fns|zod)"/g;
+    /from "(@radix-ui\/[^"]+|@dnd-kit\/[^"]+|@hookform\/resolvers|@tanstack\/react-table|lucide-react|sonner|class-variance-authority|clsx|tailwind-merge|cmdk|vaul|recharts|embla-carousel-react|input-otp|react-day-picker|react-hook-form|react-resizable-panels|date-fns|zod)"/g;
   for (const m of code.matchAll(depRe)) deps.add(m[1]);
   const registryDeps = new Set(["tokens"]);
   for (const m of code.matchAll(/from "@\/components\/ui\/([a-z-]+)"/g)) registryDeps.add(m[1]);
