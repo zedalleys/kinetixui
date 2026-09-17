@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PRIMITIVE, COMPONENT_CATEGORY } from "@/lib/component-registry";
 import { PlatformBadges } from "@/components/platform-badges";
+import { STATUS } from "@/lib/component-status";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -28,6 +29,29 @@ export function ComponentMeta() {
       className="my-6 divide-y divide-border rounded-lg border border-border bg-muted/20"
     >
       {COMPONENT_CATEGORY[slug] && <Row label="Category">{COMPONENT_CATEGORY[slug]}</Row>}
+      {STATUS[slug] && (
+        <Row label="Status">
+          <span className="inline-flex items-center gap-1.5">
+            <span
+              aria-hidden
+              className={
+                STATUS[slug] === "deprecated"
+                  ? "size-1.5 rounded-full bg-destructive"
+                  : "size-1.5 rounded-full bg-info"
+              }
+            />
+            <span className="capitalize">{STATUS[slug]}</span>
+            {STATUS[slug] === "beta" && (
+              <span className="text-muted-foreground">
+                — new this release,{" "}
+                <Link href="/docs/contributing#component-status" className="text-primary underline underline-offset-2">
+                  what that means →
+                </Link>
+              </span>
+            )}
+          </span>
+        </Row>
+      )}
       {PRIMITIVE[slug] && <Row label="Built on">{PRIMITIVE[slug]}</Row>}
       <Row label="Platforms">
         <PlatformBadges slug={slug} />
