@@ -104,6 +104,7 @@ const BUILT = {
   "message-bubble": ["MessageBubble, TypingIndicator", "A sent/received chat bubble with grouping, timestamp, and a status tick, plus a typing indicator."],
   tour: ["Tour", "Sequenced spotlight popovers over real elements (onboarding walkthroughs), with dismiss/skip/next."],
   "virtual-list": ["VirtualList", "A windowed-rendering primitive — mounts only the rows visible in the scroll viewport plus overscan, so a list of thousands costs the same as a couple dozen."],
+  "json-viewer": ["JsonViewer", "A collapsible, syntax-colored tree for arbitrary JSON data, with a copy-to-clipboard button."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");

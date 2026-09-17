@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Json Viewer",
+  description: "A collapsible, syntax-colored tree for arbitrary JSON data, with a copy-to-clipboard button.",
+};
+
+# Json Viewer
+
+<ComponentMeta />
+
+A collapsible, syntax-colored tree for arbitrary JSON data, with a copy-to-clipboard button.
+
+<ComponentPreview name="json-viewer-demo" />
+
+## Installation
+
+```bash
+npx @kinetixui/cli add json-viewer
+```
+
+## Usage
+
+```tsx
+import { JsonViewer } from "@kinetixui/ui";
+```
+
+Styled entirely from the KinetixUI token contract — `bg-primary`,
+`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
+with no extra config, and keyboard + ARIA behaviour comes from Radix — see
+[Accessibility](/docs/accessibility).

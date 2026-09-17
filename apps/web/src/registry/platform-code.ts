@@ -2171,6 +2171,36 @@ setState(() => toast = const KinetixToast('Event created — Sunday, December 03
 )`,
   },
 
+  "json-viewer-demo": {
+    html: `<div role="tree" class="kx-json-viewer">
+  <div>{ <span class="text-muted-foreground">2 keys</span> }</div>
+  <!-- expanded: each key/value row, string green (--success), number blue (--info), boolean amber (--warning) -->
+</div>
+<!-- copy button top-right writes JSON.stringify(data, null, 2) to the clipboard -->`,
+    swift: `KinetixJsonViewer(value: .object([
+  ("name", .string("kinetixui")),
+  ("version", .string("0.11.0")),
+  ("platforms", .array([.string("react"), .string("swiftui")])),
+  ("stable", .bool(false)),
+]))`,
+    kotlin: `KinetixJsonViewer(
+  value = mapOf(
+    "name" to "kinetixui",
+    "version" to "0.11.0",
+    "platforms" to listOf("react", "compose"),
+    "stable" to false,
+  ),
+)`,
+    dart: `KinetixJsonViewer(
+  data: {
+    'name': 'kinetixui',
+    'version': '0.11.0',
+    'platforms': ['react', 'flutter'],
+    'stable': false,
+  },
+)`,
+  },
+
   "empty-demo": {
     html: `<div class="kx-empty">
   <div class="kx-empty-media"><svg><!-- search icon --></svg></div>

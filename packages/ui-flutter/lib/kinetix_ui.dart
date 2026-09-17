@@ -50,6 +50,7 @@ export 'src/image.dart';
 export 'src/input.dart';
 export 'src/input_group.dart';
 export 'src/input_otp.dart';
+export 'src/json_viewer.dart';
 export 'src/kbd.dart';
 export 'src/label.dart';
 export 'src/list.dart';
