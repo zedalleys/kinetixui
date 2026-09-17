@@ -129,6 +129,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "color-picker",
+      "type": "registry:ui",
+      "title": "Color Picker",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "command",
       "type": "registry:ui",
       "title": "Command",

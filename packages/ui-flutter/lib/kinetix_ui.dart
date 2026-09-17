@@ -30,6 +30,7 @@ export 'src/checkbox.dart';
 export 'src/circular_progress.dart';
 export 'src/code_block.dart';
 export 'src/collapsible.dart';
+export 'src/color_picker.dart';
 export 'src/command.dart';
 export 'src/comparison_slider.dart';
 export 'src/context_menu.dart';

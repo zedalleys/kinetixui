@@ -711,6 +711,7 @@ import {
   KbdGroup,
   JsonViewer,
   DiffViewer,
+  ColorPicker,
   Empty,
   EmptyHeader,
   EmptyMedia,
@@ -1521,6 +1522,20 @@ add(
     />
   ),
   `<DiffViewer\n  mode="split"\n  oldText={before}\n  newText={after}\n/>`,
+);
+add(
+  "color-picker-demo",
+  () => {
+    const [color, setColor] = React.useState("#3b82f6");
+    return (
+      <ColorPicker
+        value={color}
+        onChange={setColor}
+        swatches={["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899"]}
+      />
+    );
+  },
+  `<ColorPicker\n  value={color}\n  onChange={setColor}\n  swatches={["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6"]}\n/>`,
 );
 add(
   "empty-demo",

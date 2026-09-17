@@ -2224,6 +2224,37 @@ setState(() => toast = const KinetixToast('Event created — Sunday, December 03
 )`,
   },
 
+  "color-picker-demo": {
+    html: `<div class="kx-color-picker">
+  <div role="slider" aria-label="Saturation and value" class="kx-sv-square"></div>
+  <div role="slider" aria-label="Hue" class="kx-hue-rail"></div>
+  <div class="kx-hex-field">#<input value="3B82F6" /></div>
+  <div class="kx-swatches"><!-- one button per swatch --></div>
+</div>
+<!-- hand-rolled 2D drag on the square; hue/alpha rails reuse @radix-ui/react-slider directly (not <Slider>, whose track styling is fixed) -->`,
+    swift: `@State private var color = "#3b82f6"
+
+KinetixColorPicker(
+  value: color,
+  onChange: { color = $0 },
+  swatches: ["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6"]
+)`,
+    kotlin: `var color by remember { mutableStateOf("#3b82f6") }
+
+KinetixColorPicker(
+  value = color,
+  onChange = { color = it },
+  swatches = listOf("#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6"),
+)`,
+    dart: `String color = '#3b82f6';
+
+KinetixColorPicker(
+  value: color,
+  onChanged: (v) => setState(() => color = v),
+  swatches: const ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'],
+)`,
+  },
+
   "empty-demo": {
     html: `<div class="kx-empty">
   <div class="kx-empty-media"><svg><!-- search icon --></svg></div>

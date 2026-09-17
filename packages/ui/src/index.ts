@@ -371,5 +371,6 @@ export { VirtualList, type VirtualListProps } from "./components/virtual-list";
 export { DataGrid, type DataGridColumn, type DataGridProps } from "./components/data-grid";
 export { JsonViewer, type JsonViewerProps } from "./components/json-viewer";
 export { DiffViewer, type DiffViewerProps } from "./components/diff-viewer";
+export { ColorPicker, type ColorPickerProps } from "./components/color-picker";
 
 export { cn } from "./lib/utils";
