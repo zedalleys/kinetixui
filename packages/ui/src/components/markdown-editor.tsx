@@ -56,6 +56,24 @@ function renderInline(escaped: string): string {
  * port identically to Compose/SwiftUI/Flutter, the same reasoning as
  * `DiffViewer`'s hand-rolled LCS diff.
  */
+
+/**
+ * Matches `markerRe` at the start of `line`, then requires at least one
+ * space/tab before returning the rest as `content`. Deliberately not a
+ * single `markerRe` + `\s+(.*)$` regex: two adjacent unbounded quantifiers
+ * over overlapping character classes (`\s` and `.` both match a space) is
+ * a catastrophic-backtracking shape CodeQL flags as a ReDoS — walking the
+ * whitespace run by hand is linear and can't backtrack.
+ */
+function matchMarker(line: string, markerRe: RegExp): { marker: string; content: string } | null {
+  const m = markerRe.exec(line);
+  if (!m) return null;
+  let i = m[0].length;
+  if (line[i] !== " " && line[i] !== "\t") return null;
+  while (line[i] === " " || line[i] === "\t") i++;
+  return { marker: m[0], content: line.slice(i) };
+}
+
 function renderMarkdown(source: string): string {
   const lines = source.split("\n");
   const out: string[] = [];
@@ -87,11 +105,11 @@ function renderMarkdown(source: string): string {
       continue;
     }
 
-    const heading = line.match(/^(#{1,6})\s+(.*)$/);
+    const heading = matchMarker(line, /^#{1,6}/);
     if (heading) {
       closeList();
-      const level = heading[1]!.length;
-      out.push(`<h${level}>${renderInline(escapeHtml(heading[2]!))}</h${level}>`);
+      const level = heading.marker.length;
+      out.push(`<h${level}>${renderInline(escapeHtml(heading.content))}</h${level}>`);
       continue;
     }
 
@@ -102,25 +120,25 @@ function renderMarkdown(source: string): string {
       continue;
     }
 
-    const bullet = line.match(/^[-*]\s+(.*)$/);
+    const bullet = matchMarker(line, /^[-*]/);
     if (bullet) {
       if (listType !== "ul") {
         closeList();
         out.push("<ul>");
         listType = "ul";
       }
-      out.push(`<li>${renderInline(escapeHtml(bullet[1]!))}</li>`);
+      out.push(`<li>${renderInline(escapeHtml(bullet.content))}</li>`);
       continue;
     }
 
-    const numbered = line.match(/^\d+\.\s+(.*)$/);
+    const numbered = matchMarker(line, /^\d+\./);
     if (numbered) {
       if (listType !== "ol") {
         closeList();
         out.push("<ol>");
         listType = "ol";
       }
-      out.push(`<li>${renderInline(escapeHtml(numbered[1]!))}</li>`);
+      out.push(`<li>${renderInline(escapeHtml(numbered.content))}</li>`);
       continue;
     }
 
