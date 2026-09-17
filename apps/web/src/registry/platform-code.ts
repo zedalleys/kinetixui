@@ -2681,4 +2681,31 @@ const KinetixTypingIndicator()`,
 // Reach for a sequence of KinetixPopover steps instead, each anchored to
 // the widget it explains.`,
   },
+
+  "virtual-list-demo": {
+    html: `<div role="list" style="overflow-y: auto; height: 280px;">
+  <div style="height: 360000px; position: relative;">
+    <!-- only the rows within the visible 280px, plus overscan, are ever in the DOM -->
+    <div role="listitem" style="position: absolute; top: 0; height: 36px;">Row 1</div>
+    <div role="listitem" style="position: absolute; top: 36px; height: 36px;">Row 2</div>
+  </div>
+</div>
+<!-- itemHeight * items.length reserves scrollbar space; rows are absolutely positioned within it -->`,
+    swift: `// SwiftUI's List already only instantiates rows near the viewport —
+// no manual scroll-offset math to port.
+KinetixVirtualList(rows, id: \\.id) { row in
+  Text(row.label)
+}`,
+    kotlin: `// LazyColumn already only composes rows near the viewport — same
+// "reuse the platform machinery" call as KinetixSlider/KinetixSelect.
+KinetixVirtualList(data = rows, key = { it.id }) { row ->
+  Text(row.label)
+}`,
+    dart: `// ListView.builder already only builds children near the viewport.
+KinetixVirtualList<Row>(
+  items: rows,
+  itemExtent: 36,
+  itemBuilder: (context, row, index) => Text(row.label),
+)`,
+  },
 };

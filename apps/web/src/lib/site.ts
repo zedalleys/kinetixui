@@ -128,6 +128,7 @@ export const componentDocs: NavItem[] = [
   built("Tooltip", "tooltip"),
   built("Tour", "tour"),
   built("Tree View", "tree-view"),
+  built("Virtual List", "virtual-list"),
 ];
 
 /** slug → sidebar category. Mirrors the taxonomy in scripts/gen-stories.mjs. */
@@ -166,6 +167,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   "scroll-area": "Data Display", resizable: "Data Display", list: "Data Display", quote: "Data Display",
   footer: "Data Display", "audio-player": "Data Display", "description-list": "Data Display",
   timeline: "Data Display", marquee: "Data Display", "message-bubble": "Data Display",
+  "virtual-list": "Data Display",
 };
 
 export const CATEGORY_ORDER = [

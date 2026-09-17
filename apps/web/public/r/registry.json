@@ -535,6 +535,12 @@
       "type": "registry:ui",
       "title": "Tree View",
       "description": "Ported onto the KinetixUI token contract."
+    },
+    {
+      "name": "virtual-list",
+      "type": "registry:ui",
+      "title": "Virtual List",
+      "description": "Ported onto the KinetixUI token contract."
     }
   ]
 }
