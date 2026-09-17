@@ -81,7 +81,7 @@ class _JsonNodeState extends State<_JsonNode> {
 
     final isArray = value is List;
     final entries = isArray
-        ? List.generate((value as List).length, (i) => MapEntry(i.toString(), value[i]))
+        ? List.generate(value.length, (i) => MapEntry(i.toString(), value[i]))
         : (value as Map).entries.map((e) => MapEntry(e.key.toString(), e.value)).toList();
     final openBracket = isArray ? '[' : '{';
     final closeBracket = isArray ? ']' : '}';
