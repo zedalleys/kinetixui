@@ -87,7 +87,7 @@ public struct KinetixMarkdownEditor: View {
     private func toolbarLabel(_ text: String, weight: Font.Weight = .regular, italic: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: 12, weight: weight).italic(italic))
+                .font(italic ? .system(size: 12, weight: weight).italic() : .system(size: 12, weight: weight))
                 .foregroundStyle(colors.mutedForeground)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
