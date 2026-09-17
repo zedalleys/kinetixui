@@ -69,37 +69,45 @@ Effort: **S** ≈ ½–1 day · **M** ≈ 2–4 days · **L** ≈ a week+.
 
 ## 2. Charts
 
-`/charts` ships **13**: bar (grouped / stacked / horizontal), line, step, area,
-sparkline, composed, pie, donut, radial bar, radar, scatter.
+**Correction (this entry was stale — everything below was already built and
+live on `/charts`, not a backlog):** `/charts` ships **37** recipes: the
+original 13 core types (bar/line/area/composed/pie/donut/radial
+bar/radar/scatter/step/sparkline, grouped/stacked/horizontal variants), all
+12 requested new chart types below, two bonus types not on the original
+list (**Bump / rank**, **Dumbbell**), and ~10 cross-cutting feature demos
+(reference lines & bands, 100%-stacked area, brush + zoom, pattern fills,
+number formatting, an 8-series stress test, loading/empty/error states, the
+screen-reader data table, token-driven theming, and an interactive
+mute/solo legend).
 
 ### New chart types (ranked by demand)
 
 | Chart | Use | Note | Effort |
 |-------|-----|------|--------|
-| **KPI / Stat tile row** | Dashboard headline numbers + delta + mini-trend. | Not a "chart" but the #1 dashboard need; pairs with the **Stat** component (§1). Tremor leads here. | **S** |
-| **Funnel** | Conversion drop-off across stages. | Recharts has `<Funnel>`; just a themed recipe. | **S** |
-| **Gauge / radial gauge** | Single value against a range (score, utilisation). | Compose from `RadialBarChart` + center label. | **S** |
-| **Heatmap / matrix** | Value grid (cohort, correlation, activity by hour×day). | No Recharts primitive — SVG `<rect>` grid + sequential scale. Needs a **sequential palette** (see `dataviz` skill). | **M** |
-| **Calendar heatmap** | GitHub-style contributions grid. | Specialised heatmap; high recognition. | **M** |
-| **Treemap** | Part-to-whole with nesting (bundle size, spend). | Recharts `<Treemap>` exists; theme + labels. | **S** |
-| **Waterfall** | Running total up/down (P&L bridge). | Stacked bar with invisible base series + up/down colours. | **M** |
-| **Bullet** | Actual vs target vs qualitative bands — compact. | Great in tables/KPI rows; hand-drawn SVG. | **S** |
-| **Histogram / density** | Distribution of one variable. | Binning helper + bar chart. | **S** |
-| **Box plot** | Distribution summary across groups. | Custom SVG shape layer on a Recharts cartesian grid. | **M** |
-| **Sankey** | Flow between nodes (token flow, funnel with branches). | Recharts `<Sankey>` exists — also feeds `/infographic` §3. | **M** |
-| **Candlestick / OHLC** | Financial ranges over time. | Custom bar shape; niche but expected in a "complete" set. | **M** |
+| ~~**KPI / Stat tile row**~~ | Dashboard headline numbers + delta + mini-trend. | **Shipped** — "KPI tiles" on `/charts`. | **S** |
+| ~~**Funnel**~~ | Conversion drop-off across stages. | **Shipped** — themed recipe over Recharts' `<Funnel>`. | **S** |
+| ~~**Gauge / radial gauge**~~ | Single value against a range (score, utilisation). | **Shipped** — `RadialBarChart` + center label. | **S** |
+| ~~**Heatmap / matrix**~~ | Value grid (cohort, correlation, activity by hour×day). | **Shipped** — SVG `<rect>` grid + sequential scale (no Recharts primitive for this one). | **M** |
+| ~~**Calendar heatmap**~~ | GitHub-style contributions grid. | **Shipped** — pure CSS grid, 26 weeks × 7 days, no Recharts. | **M** |
+| ~~**Treemap**~~ | Part-to-whole with nesting (bundle size, spend). | **Shipped** — themed `<Treemap>` + labels. | **S** |
+| ~~**Waterfall**~~ | Running total up/down (P&L bridge). | **Shipped** — stacked bar with an invisible base series. | **M** |
+| ~~**Bullet**~~ | Actual vs target vs qualitative bands — compact. | **Shipped** — hand-drawn SVG. | **S** |
+| ~~**Histogram / density**~~ | Distribution of one variable. | **Shipped** — binning helper + bar chart. | **S** |
+| ~~**Box plot**~~ | Distribution summary across groups. | **Shipped** — whisker bar + IQR box + median `Scatter` diamond on a `ComposedChart`. | **M** |
+| ~~**Sankey**~~ | Flow between nodes (token flow, funnel with branches). | **Shipped** — themed `<Sankey>`. | **M** |
+| ~~**Candlestick / OHLC**~~ | Financial ranges over time. | **Shipped** — custom bar shape. | **M** |
 
-### Cross-cutting (do these before adding more types)
+### Cross-cutting
 
 | Item | Why | Sev if skipped |
 |------|-----|----------------|
-| **`accessibilityLayer` on every chart + `role="img"` + `aria-label` summary + optional visually-hidden data `<table>`** | Charts today are keyboard-inert and colour-only — fails WCAG 1.1.1 / 1.4.1 / 2.1.1. Ties to **B10** in the audit. | **Serious** |
-| **Loading / empty / error states for `ChartContainer`** | Every real dashboard needs them; nothing exists. | Moderate |
-| **Reference lines & annotations** | "Target", "launch date", threshold bands — extremely common ask. | Moderate |
-| **Legend as toggle** | Click a series to mute/solo it. | Minor |
-| **Brush / zoom** for dense time series | Recharts `<Brush>` — one themed recipe. | Minor |
-| **Pattern/texture fills** (not just hue) | Colour-blind safety for stacked/categorical. | Moderate |
-| **`isAnimationActive={false}` in every docs snippet** | Recharts' mount animation causes below-the-fold charts to scroll into view (already a noted gotcha for the gallery). | Minor |
+| ~~**`accessibilityLayer` on every chart + `role="img"` + `aria-label` summary + optional visually-hidden data `<table>`**~~ | Charts today are keyboard-inert and colour-only — fails WCAG 1.1.1 / 1.4.1 / 2.1.1. | **Shipped** — `ChartContainer` carries `role="img"`/`aria-label` (defaulting to `"Chart"`, override with `label`) and an optional `srTable` prop rendering a `sr-only` `<table>` of the underlying numbers; a `MutationObserver` also scrubs Recharts' own redundant per-element `role="img"` noise and names the `.recharts-surface`. `accessibilityLayer` is on every cartesian chart on `/charts`. See the "SR data table" recipe. | — |
+| ~~**Loading / empty / error states for `ChartContainer`**~~ | Every real dashboard needs them. | **Shipped** — `state="loading" \| "empty" \| "error"` (+ `stateMessage`) renders a shimmer, a `role="status"` message, or a `role="alert"` message in place of the chart. See the "Loading / empty / error" recipe. | — |
+| ~~**Reference lines & annotations**~~ | "Target", "launch date", threshold bands — extremely common ask. | **Shipped** — "Reference lines & bands" recipe. | — |
+| ~~**Legend as toggle**~~ | Click a series to mute/solo it. | **Shipped** — "Interactive legend" recipe. | — |
+| ~~**Brush / zoom** for dense time series~~ | Recharts `<Brush>` — one themed recipe. | **Shipped** — "Brush + zoom" recipe. | — |
+| ~~**Pattern/texture fills** (not just hue)~~ | Colour-blind safety for stacked/categorical. | **Shipped** — "Pattern fills" recipe. | — |
+| ~~**`isAnimationActive={false}` in every docs snippet**~~ | Recharts' mount animation causes below-the-fold charts to scroll into view. | **Shipped** — applied across all 80+ animatable chart elements; the last 3 gaps (the Box Plot and Dumbbell recipes' `Scatter` markers) were found and fixed in this pass. | — |
 
 ---
 

@@ -1271,7 +1271,7 @@ export function ChartsContent() {
     <Bar dataKey="whisker" barSize={2} fill="hsl(var(--muted-foreground))" isAnimationActive={false} />
     <Bar dataKey="iqr" barSize={28} fill="hsl(var(--chart-1))" fillOpacity={0.35}
       stroke="hsl(var(--chart-1))" isAnimationActive={false} />
-    <Scatter dataKey="median" fill="hsl(var(--foreground))" shape="diamond" />
+    <Scatter dataKey="median" fill="hsl(var(--foreground))" shape="diamond" isAnimationActive={false} />
   </ComposedChart>
 </ChartContainer>`}
       >
@@ -1294,7 +1294,7 @@ export function ChartsContent() {
               stroke="hsl(var(--chart-1))"
               isAnimationActive={false}
             />
-            <Scatter dataKey="median" fill="hsl(var(--foreground))" shape="diamond" />
+            <Scatter dataKey="median" fill="hsl(var(--foreground))" shape="diamond" isAnimationActive={false} />
           </ComposedChart>
         </ChartContainer>
       </Showcase>
@@ -1352,8 +1352,8 @@ export function ChartsContent() {
     <YAxis type="category" dataKey="team" tickLine={false} axisLine={false} width={72} />
     <ChartTooltip content={<ChartTooltipContent />} />
     <Bar dataKey={(d) => [d.start, d.end]} barSize={3} fill="hsl(var(--border))" isAnimationActive={false} />
-    <Scatter dataKey="start" fill="hsl(var(--muted-foreground))" />
-    <Scatter dataKey="end" fill="hsl(var(--chart-1))" />
+    <Scatter dataKey="start" fill="hsl(var(--muted-foreground))" isAnimationActive={false} />
+    <Scatter dataKey="end" fill="hsl(var(--chart-1))" isAnimationActive={false} />
   </ComposedChart>
 </ChartContainer>`}
       >
@@ -1373,8 +1373,8 @@ export function ChartsContent() {
               fill="hsl(var(--border))"
               isAnimationActive={false}
             />
-            <Scatter dataKey="start" fill="hsl(var(--muted-foreground))" />
-            <Scatter dataKey="end" fill="hsl(var(--chart-1))" />
+            <Scatter dataKey="start" fill="hsl(var(--muted-foreground))" isAnimationActive={false} />
+            <Scatter dataKey="end" fill="hsl(var(--chart-1))" isAnimationActive={false} />
           </ComposedChart>
         </ChartContainer>
       </Showcase>
