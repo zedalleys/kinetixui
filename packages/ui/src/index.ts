@@ -24,6 +24,10 @@ export {
   AlertDialogCancel,
 } from "./components/alert-dialog";
 export { AspectRatio } from "./components/aspect-ratio";
+export {
+  KinetixDirectionProvider,
+  type KinetixDirectionProviderProps,
+} from "./components/direction-provider";
 export { Avatar, AvatarImage, AvatarFallback, AvatarGroup, type AvatarGroupProps } from "./components/avatar";
 export { Badge, badgeVariants, type BadgeProps } from "./components/badge";
 export {

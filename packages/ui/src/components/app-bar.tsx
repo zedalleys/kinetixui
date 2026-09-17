@@ -63,7 +63,7 @@ const AppBar = React.forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
                 aria-expanded={open}
                 onClick={() => setOpen((o) => !o)}
                 className={cn(
-                  "ml-auto inline-flex size-9 items-center justify-center rounded-md text-foreground outline-none transition-colors md:hidden",
+                  "ms-auto inline-flex size-9 items-center justify-center rounded-md text-foreground outline-none transition-colors md:hidden",
                   "hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
                 )}
               >
@@ -131,7 +131,7 @@ AppBarLink.displayName = "AppBarLink";
 
 const AppBarActions = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("ml-auto flex shrink-0 items-center gap-2", className)} {...props} />
+    <div ref={ref} className={cn("ms-auto flex shrink-0 items-center gap-2", className)} {...props} />
   ),
 );
 AppBarActions.displayName = "AppBarActions";
