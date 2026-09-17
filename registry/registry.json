@@ -693,6 +693,28 @@
       ]
     },
     {
+      "name": "diff-viewer",
+      "type": "registry:ui",
+      "title": "Diff Viewer",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/diff-viewer.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/diff-viewer.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "drawer",
       "type": "registry:ui",
       "title": "Drawer",

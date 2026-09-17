@@ -710,6 +710,7 @@ import {
   Kbd,
   KbdGroup,
   JsonViewer,
+  DiffViewer,
   Empty,
   EmptyHeader,
   EmptyMedia,
@@ -1508,6 +1509,18 @@ add(
     />
   ),
   `<JsonViewer\n  data={{\n    name: "kinetixui",\n    version: "0.11.0",\n    platforms: ["react", "swiftui", "compose", "flutter"],\n    stable: false,\n  }}\n/>`,
+);
+add(
+  "diff-viewer-demo",
+  () => (
+    <DiffViewer
+      className="w-full max-w-md"
+      mode="split"
+      oldText={'{\n  "name": "kinetixui",\n  "version": "0.10.0",\n  "private": true\n}'}
+      newText={'{\n  "name": "kinetixui",\n  "version": "0.11.0",\n  "stable": false\n}'}
+    />
+  ),
+  `<DiffViewer\n  mode="split"\n  oldText={before}\n  newText={after}\n/>`,
 );
 add(
   "empty-demo",
