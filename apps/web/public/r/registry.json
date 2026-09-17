@@ -177,6 +177,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "diff-viewer",
+      "type": "registry:ui",
+      "title": "Diff Viewer",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "drawer",
       "type": "registry:ui",
       "title": "Drawer",

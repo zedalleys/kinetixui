@@ -2201,6 +2201,29 @@ setState(() => toast = const KinetixToast('Event created — Sunday, December 03
 )`,
   },
 
+  "diff-viewer-demo": {
+    html: `<div class="kx-diff-viewer" role="table">
+  <div role="row" class="bg-destructive/10"><span>12</span><span></span><span>−</span><span>"version": "0.10.0",</span></div>
+  <div role="row" class="bg-success/10"><span></span><span>12</span><span>+</span><span>"version": "0.11.0",</span></div>
+</div>
+<!-- hand-rolled LCS line diff — no package dependency, same DP table on every platform -->`,
+    swift: `KinetixDiffViewer(
+  oldText: before,
+  newText: after,
+  mode: .split
+)`,
+    kotlin: `KinetixDiffViewer(
+  oldText = before,
+  newText = after,
+  mode = KinetixDiffMode.Split,
+)`,
+    dart: `KinetixDiffViewer(
+  oldText: before,
+  newText: after,
+  mode: KinetixDiffMode.split,
+)`,
+  },
+
   "empty-demo": {
     html: `<div class="kx-empty">
   <div class="kx-empty-media"><svg><!-- search icon --></svg></div>
