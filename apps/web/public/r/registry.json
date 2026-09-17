@@ -525,6 +525,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "tour",
+      "type": "registry:ui",
+      "title": "Tour",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "tree-view",
       "type": "registry:ui",
       "title": "Tree View",

@@ -101,6 +101,7 @@ const BUILT = {
   "tree-view": ["TreeView, TreeItem", "Nested expand/collapse rows with keyboard roving tabindex and optional checkboxes."],
   "multi-select": ["MultiSelect", "A Combobox that keeps multiple chips — a free-entry token field with `creatable`."],
   "message-bubble": ["MessageBubble, TypingIndicator", "A sent/received chat bubble with grouping, timestamp, and a status tick, plus a typing indicator."],
+  tour: ["Tour", "Sequenced spotlight popovers over real elements (onboarding walkthroughs), with dismiss/skip/next."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");

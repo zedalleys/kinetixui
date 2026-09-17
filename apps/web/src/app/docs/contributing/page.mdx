@@ -31,10 +31,10 @@ has no native idiom). Each port:
 4. **Compiles in CI** — see the per-platform workflow below. A port that
    only exists locally doesn't count.
 
-### The five standing non-ports
+### The six standing non-ports
 
-`Form`, `NavigationMenu`, `Combobox`, `NativeSelect` and `AvatarGroup` are
-**not** ported to any native platform, by design:
+`Form`, `NavigationMenu`, `Combobox`, `NativeSelect`, `AvatarGroup` and
+`Tour` are **not** ported to any native platform, by design:
 
 | Component | Why | Use instead |
 | --- | --- | --- |
@@ -43,6 +43,7 @@ has no native idiom). Each port:
 | `Combobox` | a recipe (Popover + Command), not a standalone component | `KinetixPopover` + a filtered list, or `KinetixSelect` |
 | `NativeSelect` | wraps the browser's own `<select>` — a web-only escape hatch from `Select`'s custom popover | `KinetixSelect`, which already wraps *each* native platform's own picker mechanism (Material3 `DropdownMenu`, SwiftUI `Menu`, Flutter `MenuAnchor`) |
 | `AvatarGroup` | re-wraps its children (`React.Children.toArray`) — not an idiomatic pattern on any native layout system | a `Row`/`HStack`/`Row` of `KinetixAvatar`s with negative spacing (`spacedBy((-8).dp)` / `spacing: -8` / a `Transform`-shifted `Stack`) |
+| `Tour` | targets an arbitrary already-rendered element by CSS selector — no native platform has an equivalent live-tree query, only opt-in position reporting (`Modifier.onGloballyPositioned` + a shared registry, a `PreferenceKey`, a `GlobalKey`) | a sequence of `KinetixPopover`/`KinetixDropdownMenu` steps, each anchored to the element it explains |
 
 Anything else that can't be ported cleanly is **scoped down and
 documented**, not silently skipped — e.g. `KinetixSheet` is bottom-only,

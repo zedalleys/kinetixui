@@ -2655,4 +2655,30 @@ const KinetixMessageBubble(
 )
 const KinetixTypingIndicator()`,
   },
+
+  "tour-demo": {
+    html: `<div class="kx-tour-spotlight" style="top: 40px; left: 120px; width: 96px; height: 32px; box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.6)"></div>
+<div class="kx-tour-card" role="dialog" aria-modal="true">
+  <p>Save your work</p>
+  <p>Changes save automatically, but you can force a save here.</p>
+  <button>Skip</button> <button>Next</button>
+</div>
+<!-- spotlight is one positioned div with a 9999px box-shadow "hole" — no SVG mask needed -->`,
+    swift: `// Tour is a standing non-port — a web-only escape hatch. Targeting an
+// already-rendered arbitrary element needs a CSS-selector equivalent to
+// query the live tree; SwiftUI has no such query, only ancestor-to-
+// descendant preference reporting (a target would need to opt in via a
+// PreferenceKey wrapper ahead of time, a materially different API shape
+// from "point a selector at any element"). Reach for a sequence of
+// KinetixPopover steps instead, each anchored to the view it explains.`,
+    kotlin: `// Tour is a standing non-port — see the Swift tab. Compose has no
+// live-tree query either, only a shared position registry a target
+// opts into ahead of time (Modifier.onGloballyPositioned + a shared
+// map). Reach for a sequence of KinetixDropdownMenu/KinetixPopover
+// steps instead, each anchored to the composable it explains.`,
+    dart: `// Tour is a standing non-port — see the Swift tab. Flutter has no live-
+// tree query either, only a GlobalKey a target opts into ahead of time.
+// Reach for a sequence of KinetixPopover steps instead, each anchored to
+// the widget it explains.`,
+  },
 };

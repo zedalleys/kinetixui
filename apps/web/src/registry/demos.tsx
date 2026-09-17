@@ -738,6 +738,7 @@ import {
   MultiSelect,
   MessageBubble,
   TypingIndicator,
+  Tour,
 } from "@kinetixui/ui";
 
 add(
@@ -1715,6 +1716,62 @@ add(
     </div>
   ),
   `<MessageBubble variant="received" timestamp="10:42 AM">\n  Hey, are we still on for tomorrow?\n</MessageBubble>\n<MessageBubble variant="sent" timestamp="10:43 AM" status="read">\n  Yep! See you at 3.\n</MessageBubble>\n<TypingIndicator />`,
+);
+
+add(
+  "tour-demo",
+  () => {
+    const [open, setOpen] = React.useState(false);
+    const [stepIndex, setStepIndex] = React.useState(0);
+    return (
+      <div className="flex w-full flex-col items-start gap-4">
+        <Button
+          size="sm"
+          onClick={() => {
+            setStepIndex(0);
+            setOpen(true);
+          }}
+        >
+          Start tour
+        </Button>
+        <div className="flex items-center gap-3">
+          <Button data-tour-demo="save" variant="Outline" size="sm">
+            Save
+          </Button>
+          <Button data-tour-demo="share" variant="Outline" size="sm">
+            Share
+          </Button>
+          <Button data-tour-demo="settings" variant="Ghost" size="icon" aria-label="Settings">
+            <Settings className="size-4" />
+          </Button>
+        </div>
+        <Tour
+          open={open}
+          onOpenChange={setOpen}
+          stepIndex={stepIndex}
+          onStepIndexChange={setStepIndex}
+          steps={[
+            {
+              target: '[data-tour-demo="save"]',
+              title: "Save your work",
+              content: "Changes save automatically, but you can force a save here.",
+            },
+            {
+              target: '[data-tour-demo="share"]',
+              title: "Invite others",
+              content: "Share this project with your team.",
+            },
+            {
+              target: '[data-tour-demo="settings"]',
+              title: "Fine-tune settings",
+              content: "Adjust preferences for this workspace.",
+            },
+          ]}
+        />
+      </div>
+    );
+  },
+  `<Tour\n  open={open}\n  onOpenChange={setOpen}\n  stepIndex={stepIndex}\n  onStepIndexChange={setStepIndex}\n  steps={[\n    { target: '[data-tour="save"]', title: "Save your work", content: "…" },\n    { target: '[data-tour="share"]', title: "Invite others", content: "…" },\n  ]}\n/>`,
 );
 
 export const demoRegistry = reg;
