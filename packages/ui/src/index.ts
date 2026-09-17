@@ -368,5 +368,6 @@ export { MultiSelect, type MultiSelectOption, type MultiSelectProps } from "./co
 export { MessageBubble, TypingIndicator, type MessageBubbleProps } from "./components/message-bubble";
 export { Tour, type TourStep, type TourProps } from "./components/tour";
 export { VirtualList, type VirtualListProps } from "./components/virtual-list";
+export { DataGrid, type DataGridColumn, type DataGridProps } from "./components/data-grid";
 
 export { cn } from "./lib/utils";

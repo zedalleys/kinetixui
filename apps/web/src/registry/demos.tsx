@@ -641,6 +641,7 @@ import {
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
+  DataGrid,
   DataTable,
   Drawer,
   DrawerClose,
@@ -942,6 +943,46 @@ add(
     </ContextMenu>
   ),
   `<ContextMenu>\n  <ContextMenuTrigger>Right-click here</ContextMenuTrigger>\n  <ContextMenuContent>\n    <ContextMenuItem>Back</ContextMenuItem>\n  </ContextMenuContent>\n</ContextMenu>`,
+);
+add(
+  "data-grid-demo",
+  () => {
+    const rows = React.useMemo(
+      () =>
+        Array.from({ length: 2000 }, (_, i) => ({
+          id: i,
+          name: `Item ${i + 1}`,
+          category: ["Widgets", "Gadgets", "Gizmos"][i % 3],
+          qty: (i * 7) % 500,
+        })),
+      [],
+    );
+    const [data, setData] = React.useState(rows);
+    return (
+      <DataGrid
+        className="w-full"
+        height={280}
+        data={data}
+        getRowId={(row) => row.id}
+        columns={[
+          { id: "id", header: "ID", cell: (row) => row.id, value: (row) => row.id, sortable: true, width: 72, pinned: "left" },
+          {
+            id: "name",
+            header: "Name",
+            cell: (row) => row.name,
+            value: (row) => row.name,
+            sortable: true,
+            editable: true,
+            onCellEdit: (row, rowIndex, value) =>
+              setData((prev) => prev.map((r, i) => (i === rowIndex ? { ...r, name: value } : r))),
+          },
+          { id: "category", header: "Category", cell: (row) => row.category, value: (row) => row.category, sortable: true },
+          { id: "qty", header: "Qty", cell: (row) => row.qty, value: (row) => row.qty, sortable: true, width: 100 },
+        ]}
+      />
+    );
+  },
+  `<DataGrid\n  height={280}\n  data={data}\n  getRowId={(row) => row.id}\n  columns={[\n    { id: "id", header: "ID", cell: (row) => row.id, value: (row) => row.id, sortable: true, pinned: "left" },\n    { id: "name", header: "Name", cell: (row) => row.name, value: (row) => row.name, editable: true, onCellEdit: updateName },\n    { id: "qty", header: "Qty", cell: (row) => row.qty, value: (row) => row.qty, sortable: true },\n  ]}\n/>`,
 );
 add(
   "data-table-demo",

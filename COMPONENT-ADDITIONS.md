@@ -3,7 +3,7 @@
 What to add next: **components**, **chart types**, and **infographic modules**.
 Written as a prioritised backlog — nothing here is built yet.
 
-**Baseline:** 91 components shipped, 13 chart recipes on `/charts`, `/blocks`
+**Baseline:** 92 components shipped, 13 chart recipes on `/charts`, `/blocks`
 compositions, `/infographic` is a "coming soon" preview.
 
 **The four-platform rule** (`/docs/contributing`): a component isn't "done"
@@ -47,7 +47,7 @@ Effort: **S** ≈ ½–1 day · **M** ≈ 2–4 days · **L** ≈ a week+.
 
 | Component | What it is | Why / cost note | Effort |
 |-----------|-----------|-----------------|--------|
-| **Data Grid** | Virtualized rows/cols, column resize/reorder/pin, sort, inline edit. | `DataTable` is TanStack-Table-light with no virtualization. This is a product on its own — native ports are hard. | **L** |
+| ~~**Data Grid**~~ | Virtualized rows/cols, column resize/reorder/pin, sort, inline edit. | **Shipped** — `DataGrid`, all four platforms. Web has the full feature set (row-only virtualization — column virtualization stayed out of scope as rarely-needed); native ports are a documented scope-down (virtualized rows, tap-to-sort, tap-to-edit) — column resize/reorder/pin are web-only, since none of the three platforms have a touch-friendly drag-a-column-border convention or a sticky-column layout their scroll containers give for free. | **L** |
 | **Kanban Board** | Draggable cards across columns, keyboard DnD. | No DnD primitive at all today. Consider adopting `@dnd-kit` and shipping `Sortable` first. | **L** |
 | **Rich Text / Markdown Editor** | Toolbar + contenteditable (Tiptap/Lexical) or a Markdown textarea with preview. | `Textarea` only. `contenteditable` doesn't port to native — scope as web-only or Markdown-mode. | **L** |
 | **Color Picker** | Saturation/value square, hue/alpha sliders, eyedropper, swatches. | `/theme-builder` hand-rolls parts of this. Canvas interaction — heavy native port. | **M–L** |
