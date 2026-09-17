@@ -712,6 +712,8 @@ import {
   JsonViewer,
   DiffViewer,
   ColorPicker,
+  KanbanBoard,
+  type KanbanColumn,
   MarkdownEditor,
   Empty,
   EmptyHeader,
@@ -1537,6 +1539,36 @@ add(
     );
   },
   `<ColorPicker\n  value={color}\n  onChange={setColor}\n  swatches={["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6"]}\n/>`,
+);
+add(
+  "kanban-board-demo",
+  () => {
+    const [columns, setColumns] = React.useState<KanbanColumn[]>([
+      {
+        id: "todo",
+        title: "To Do",
+        cards: [
+          { id: "1", content: "Design the onboarding flow" },
+          { id: "2", content: "Write API docs for /r/registry.json" },
+        ],
+      },
+      {
+        id: "in-progress",
+        title: "In Progress",
+        cards: [{ id: "3", content: "Port ColorPicker to Compose" }],
+      },
+      {
+        id: "done",
+        title: "Done",
+        cards: [
+          { id: "4", content: "Ship DiffViewer" },
+          { id: "5", content: "Ship JsonViewer" },
+        ],
+      },
+    ]);
+    return <KanbanBoard columns={columns} onColumnsChange={setColumns} className="w-full" />;
+  },
+  `<KanbanBoard\n  columns={columns}\n  onColumnsChange={setColumns}\n/>`,
 );
 add(
   "markdown-editor-demo",

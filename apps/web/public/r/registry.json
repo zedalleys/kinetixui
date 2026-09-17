@@ -279,6 +279,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "kanban-board",
+      "type": "registry:ui",
+      "title": "Kanban Board",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "kbd",
       "type": "registry:ui",
       "title": "Kbd",

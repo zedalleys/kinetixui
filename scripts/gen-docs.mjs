@@ -107,6 +107,7 @@ const BUILT = {
   "json-viewer": ["JsonViewer", "A collapsible, syntax-colored tree for arbitrary JSON data, with a copy-to-clipboard button."],
   "diff-viewer": ["DiffViewer", "A side-by-side or unified text diff with gutter line numbers, built on a hand-rolled LCS line diff."],
   "color-picker": ["ColorPicker", "A saturation/value square, hue and alpha sliders, a hex field, swatches, and an optional eyedropper."],
+  "kanban-board": ["KanbanBoard", "Draggable cards across columns with keyboard DnD, built on @dnd-kit's multiple-containers sortable pattern."],
   "markdown-editor": ["MarkdownEditor", "A formatting toolbar over a plain textarea (not contenteditable) with an optional rendered preview pane."],
 };
 

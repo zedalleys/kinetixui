@@ -45,10 +45,11 @@ const GROUP = {
   quote: "Data Display", footer: "Data Display", "audio-player": "Data Display", "description-list": "Data Display",
   timeline: "Data Display", marquee: "Data Display", "message-bubble": "Data Display",
   "virtual-list": "Data Display", "json-viewer": "Data Display", "diff-viewer": "Data Display",
+  "kanban-board": "Data Display",
 };
 
 const PADDED = new Set([
-  "chart", "data-table", "data-grid", "markdown-editor", "table", "footer", "calendar", "resizable", "carousel",
+  "chart", "data-table", "data-grid", "kanban-board", "markdown-editor", "table", "footer", "calendar", "resizable", "carousel",
   "sidebar", "stepper", "menubar", "navigation-menu",
 ]);
 
