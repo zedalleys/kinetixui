@@ -1111,6 +1111,32 @@
       ]
     },
     {
+      "name": "kanban-board",
+      "type": "registry:ui",
+      "title": "Kanban Board",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "@dnd-kit/core",
+        "@dnd-kit/sortable",
+        "@dnd-kit/utilities"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/kanban-board.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/kanban-board.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "kbd",
       "type": "registry:ui",
       "title": "Kbd",

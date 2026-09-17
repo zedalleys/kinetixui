@@ -86,6 +86,7 @@ export const componentDocs: NavItem[] = [
   built("Input OTP", "input-otp"),
   built("Password Input", "password-input"),
   built("JSON Viewer", "json-viewer"),
+  built("Kanban Board", "kanban-board"),
   built("Kbd", "kbd"),
   built("Label", "label"),
   built("List", "list"),
@@ -172,6 +173,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   footer: "Data Display", "audio-player": "Data Display", "description-list": "Data Display",
   timeline: "Data Display", marquee: "Data Display", "message-bubble": "Data Display",
   "virtual-list": "Data Display", "json-viewer": "Data Display", "diff-viewer": "Data Display",
+  "kanban-board": "Data Display",
 };
 
 export const CATEGORY_ORDER = [

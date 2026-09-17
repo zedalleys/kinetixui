@@ -2255,6 +2255,29 @@ KinetixColorPicker(
 )`,
   },
 
+  "kanban-board-demo": {
+    html: `<div role="group" class="kx-kanban-board">
+  <div class="kx-kanban-column"><!-- droppable + sortable list of cards --></div>
+  <div class="kx-kanban-column"></div>
+  <div class="kx-kanban-column"></div>
+</div>
+<!-- built on @dnd-kit's "multiple containers" sortable pattern: onDragOver re-parents a card into the hovered column live, onDragEnd commits the within-column reorder -->`,
+    swift: `// KanbanBoard is a standing non-port — built on @dnd-kit, which has no
+// equivalent dependency in this package. Hand-rolling accessible pointer +
+// touch + keyboard drag-and-drop with collision detection and live
+// reordering from scratch is a much bigger lift than porting the
+// component's own logic. Reach for SwiftUI's own drag primitives instead:
+// .draggable(_:) on each card and .dropDestination(for:) on each column,
+// composed by hand for the specific board.`,
+    kotlin: `// KanbanBoard is a standing non-port — see the Swift tab. Compose has no
+// @dnd-kit equivalent either. Reach for Compose's own drag gestures
+// (detectDragGesturesAfterLongPress, or LazyColumn + a manual reorder
+// state holder) composed by hand for the specific board instead.`,
+    dart: `// KanbanBoard is a standing non-port — see the Swift tab. Flutter has no
+// @dnd-kit equivalent either. Reach for Flutter's own Draggable/DragTarget
+// widgets, composed by hand for the specific board, instead.`,
+  },
+
   "empty-demo": {
     html: `<div class="kx-empty">
   <div class="kx-empty-media"><svg><!-- search icon --></svg></div>

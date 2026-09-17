@@ -372,5 +372,6 @@ export { DataGrid, type DataGridColumn, type DataGridProps } from "./components/
 export { JsonViewer, type JsonViewerProps } from "./components/json-viewer";
 export { DiffViewer, type DiffViewerProps } from "./components/diff-viewer";
 export { ColorPicker, type ColorPickerProps } from "./components/color-picker";
+export { KanbanBoard, type KanbanBoardProps, type KanbanColumn, type KanbanCard } from "./components/kanban-board";
 
 export { cn } from "./lib/utils";
