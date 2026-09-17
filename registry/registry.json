@@ -1182,6 +1182,31 @@
       ]
     },
     {
+      "name": "markdown-editor",
+      "type": "registry:ui",
+      "title": "Markdown Editor",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "tokens",
+        "textarea"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/markdown-editor.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/markdown-editor.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "marquee",
       "type": "registry:ui",
       "title": "Marquee",

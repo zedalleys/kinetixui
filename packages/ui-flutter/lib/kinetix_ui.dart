@@ -56,6 +56,7 @@ export 'src/json_viewer.dart';
 export 'src/kbd.dart';
 export 'src/label.dart';
 export 'src/list.dart';
+export 'src/markdown_editor.dart';
 export 'src/marquee.dart';
 export 'src/menubar.dart';
 export 'src/message_bubble.dart';

@@ -712,6 +712,7 @@ import {
   JsonViewer,
   DiffViewer,
   ColorPicker,
+  MarkdownEditor,
   Empty,
   EmptyHeader,
   EmptyMedia,
@@ -1536,6 +1537,16 @@ add(
     );
   },
   `<ColorPicker\n  value={color}\n  onChange={setColor}\n  swatches={["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6"]}\n/>`,
+);
+add(
+  "markdown-editor-demo",
+  () => {
+    const [text, setText] = React.useState(
+      "## Release notes\n\nShipped **MarkdownEditor** — a toolbar over a plain textarea, not `contenteditable`.\n\n- Bold, italic, links\n- Bulleted and numbered lists\n- An optional preview pane",
+    );
+    return <MarkdownEditor className="w-full" value={text} onChange={setText} rows={8} />;
+  },
+  `<MarkdownEditor\n  value={text}\n  onChange={setText}\n  rows={8}\n/>`,
 );
 add(
   "empty-demo",

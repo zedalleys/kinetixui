@@ -24,7 +24,7 @@ const GROUP = {
   select: "Form Inputs", "native-select": "Form Inputs", "multi-select": "Form Inputs", slider: "Form Inputs", switch: "Form Inputs", "input-otp": "Form Inputs",
   "input-group": "Form Inputs", "password-input": "Form Inputs", "number-input": "Form Inputs",
   field: "Form Inputs", form: "Form Inputs", "file-upload": "Form Inputs", "date-picker": "Form Inputs",
-  calendar: "Form Inputs", rating: "Form Inputs", "color-picker": "Form Inputs",
+  calendar: "Form Inputs", rating: "Form Inputs", "color-picker": "Form Inputs", "markdown-editor": "Form Inputs",
   button: "Controls & Actions", "button-group": "Controls & Actions", toggle: "Controls & Actions", "toggle-group": "Controls & Actions", "segmented-control": "Controls & Actions",
   fab: "Controls & Actions", pagination: "Controls & Actions", command: "Controls & Actions",
   combobox: "Controls & Actions", "comparison-slider": "Controls & Actions",
@@ -48,7 +48,7 @@ const GROUP = {
 };
 
 const PADDED = new Set([
-  "chart", "data-table", "data-grid", "table", "footer", "calendar", "resizable", "carousel",
+  "chart", "data-table", "data-grid", "markdown-editor", "table", "footer", "calendar", "resizable", "carousel",
   "sidebar", "stepper", "menubar", "navigation-menu",
 ]);
 

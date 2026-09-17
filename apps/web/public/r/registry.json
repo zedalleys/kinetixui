@@ -297,6 +297,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "markdown-editor",
+      "type": "registry:ui",
+      "title": "Markdown Editor",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "marquee",
       "type": "registry:ui",
       "title": "Marquee",

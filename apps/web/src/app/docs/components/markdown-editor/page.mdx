@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Markdown Editor",
+  description: "A formatting toolbar over a plain textarea (not contenteditable) with an optional rendered preview pane.",
+};
+
+# Markdown Editor
+
+<ComponentMeta />
+
+A formatting toolbar over a plain textarea (not contenteditable) with an optional rendered preview pane.
+
+<ComponentPreview name="markdown-editor-demo" />
+
+## Installation
+
+```bash
+npx @kinetixui/cli add markdown-editor
+```
+
+## Usage
+
+```tsx
+import { MarkdownEditor } from "@kinetixui/ui";
+```
+
+Styled entirely from the KinetixUI token contract — `bg-primary`,
+`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
+with no extra config, and keyboard + ARIA behaviour comes from Radix — see
+[Accessibility](/docs/accessibility).

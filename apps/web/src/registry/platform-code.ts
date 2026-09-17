@@ -2255,6 +2255,36 @@ KinetixColorPicker(
 )`,
   },
 
+  "markdown-editor-demo": {
+    html: `<div class="kx-markdown-editor" role="toolbar" aria-label="Formatting">
+  <button aria-label="Bold">B</button>
+  <button aria-label="Italic">I</button>
+  <!-- … Heading, Link, lists, code, quote … -->
+  <button aria-label="Show preview"><svg><!-- eye icon --></svg></button>
+</div>
+<textarea class="kx-markdown-editor-textarea"></textarea>
+<!-- never contenteditable — toolbar buttons wrap/insert markdown syntax at the textarea's selectionStart/selectionEnd -->`,
+    swift: `@State private var text = "## Release notes\\n\\nShipped **MarkdownEditor**."
+
+// SwiftUI's TextEditor has no selection API before iOS 17, so toolbar
+// buttons append the snippet at the end of the text rather than at the
+// cursor — a documented scope-down from the web/Compose/Flutter versions.
+KinetixMarkdownEditor(value: text, onChange: { text = $0 })`,
+    kotlin: `var text by remember { mutableStateOf("## Release notes\\n\\nShipped **MarkdownEditor**.") }
+
+// BasicTextField's TextFieldValue carries the selection, so toolbar
+// buttons insert/wrap syntax at the real cursor position.
+KinetixMarkdownEditor(value = text, onChange = { text = it })`,
+    dart: `String text = '## Release notes\\n\\nShipped **MarkdownEditor**.';
+
+// TextEditingController.selection gives full cursor-range access, so
+// toolbar buttons insert/wrap syntax at the real cursor position.
+KinetixMarkdownEditor(
+  value: text,
+  onChanged: (v) => setState(() => text = v),
+)`,
+  },
+
   "empty-demo": {
     html: `<div class="kx-empty">
   <div class="kx-empty-media"><svg><!-- search icon --></svg></div>
