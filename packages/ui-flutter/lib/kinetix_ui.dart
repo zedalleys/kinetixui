@@ -33,6 +33,7 @@ export 'src/collapsible.dart';
 export 'src/command.dart';
 export 'src/comparison_slider.dart';
 export 'src/context_menu.dart';
+export 'src/data_grid.dart';
 export 'src/data_table.dart';
 export 'src/date_picker.dart';
 export 'src/description_list.dart';

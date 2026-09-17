@@ -1329,6 +1329,55 @@ Row(
 )`,
   },
 
+  "data-grid-demo": {
+    html: `<div role="grid" style="overflow: auto; height: 280px;">
+  <div role="row" style="position: sticky; top: 0; display: flex;"><!-- draggable, resizable, optionally sticky-pinned headers --></div>
+  <div style="height: 80000px; position: relative;"><!-- only rows in view, plus overscan, are mounted --></div>
+</div>
+<!-- resize handle: pointerdown on a header's right edge; reorder: native HTML5 drag-and-drop on unpinned headers -->`,
+    swift: `// Column resize/reorder/pin are web-only — no drag-a-column-border
+// convention on iOS, and pinning needs a custom layout ScrollView doesn't
+// give for free. Virtualization, tap-to-sort, and tap-to-edit all map
+// directly onto SwiftUI, though.
+KinetixDataGrid(
+  columns: [
+    .init(id: "id", header: "ID", width: 72, sortable: true) { "\\($0.id)" },
+    .init(id: "name", header: "Name", sortable: true, editable: true, cellText: { $0.name }) { row, _, value in
+      row.name = value
+    },
+    .init(id: "qty", header: "Qty", width: 100, sortable: true) { "\\($0.qty)" },
+  ],
+  rows: items
+)`,
+    kotlin: `// Column resize/reorder/pin are web-only — see the Swift tab. LazyColumn
+// virtualization, tap-to-sort, and tap-to-edit (commits on IME "Done")
+// all map directly onto Compose.
+KinetixDataGrid(
+  columns = listOf(
+    KinetixDataGridColumn("id", "ID", width = 72.dp, sortable = true) { it.id.toString() },
+    KinetixDataGridColumn("name", "Name", sortable = true, editable = true, cellText = { it.name },
+      onCellEdit = { row, _, value -> updateName(row, value) }),
+    KinetixDataGridColumn("qty", "Qty", width = 100.dp, sortable = true) { it.qty.toString() },
+  ),
+  data = items,
+)`,
+    dart: `// Column resize/reorder/pin are web-only — see the Swift tab.
+// ListView.builder virtualization, tap-to-sort, and tap-to-edit (commits
+// on the keyboard submit action) all map directly onto Flutter.
+KinetixDataGrid<Item>(
+  columns: [
+    KinetixDataGridColumn(id: 'id', header: 'ID', width: 72, sortable: true, cellText: (r) => '\${r.id}'),
+    KinetixDataGridColumn(
+      id: 'name', header: 'Name', sortable: true, editable: true,
+      cellText: (r) => r.name,
+      onCellEdit: (row, index, value) => updateName(index, value),
+    ),
+    KinetixDataGridColumn(id: 'qty', header: 'Qty', width: 100, sortable: true, cellText: (r) => '\${r.qty}'),
+  ],
+  rows: items,
+)`,
+  },
+
   "data-table-demo": {
     html: `<div class="kx-data-table">
   <table><!-- sortable headers, pagination controls --></table>

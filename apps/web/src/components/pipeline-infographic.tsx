@@ -41,7 +41,7 @@ export function PipelineInfographic() {
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
         <span>one source</span>
         <span className="text-foreground">
-          91 components · 4 platform libraries · light + dark
+          92 components · 4 platform libraries · light + dark
         </span>
       </div>
     </div>

@@ -54,6 +54,7 @@ const BUILT = {
   command: ["Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandDialog", "Fast, composable, unstyled command menu for React (cmdk)."],
   "context-menu": ["ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator", "Displays a menu located at the pointer, triggered by a right click."],
   "data-table": ["DataTable, Table", "Powerful table and datagrid built with TanStack Table."],
+  "data-grid": ["DataGrid", "Row-virtualized grid with column resize, drag-to-reorder, left/right pin, sort, and double-click-to-edit cells."],
   "date-picker": ["DatePicker", "A text-field trigger + calendar popover, with label / helper text / error states. Composes Popover + Calendar."],
   drawer: ["Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter", "A drawer component for React, built on Vaul."],
   form: ["Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage", "Building forms with React Hook Form and Zod."],

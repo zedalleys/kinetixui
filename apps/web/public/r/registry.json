@@ -147,6 +147,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "data-grid",
+      "type": "registry:ui",
+      "title": "Data Grid",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "data-table",
       "type": "registry:ui",
       "title": "Data Table",
