@@ -1,0 +1,21 @@
+{
+  "$schema": "https://kinetixui.com/schema/registry-item.json",
+  "name": "direction-provider",
+  "title": "Direction Provider",
+  "description": "Ported onto the KinetixUI token contract.",
+  "dependencies": [
+    "@radix-ui/react-direction"
+  ],
+  "registryDependencies": [
+    "tokens"
+  ],
+  "files": [
+    {
+      "path": "registry/kinetixui/ui/direction-provider.tsx",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport { DirectionProvider as RadixDirectionProvider } from \"@radix-ui/react-direction\";\n\nexport interface KinetixDirectionProviderProps {\n  children?: React.ReactNode;\n  dir: \"ltr\" | \"rtl\";\n}\n\n/**\n * Every Radix primitive this library builds on (Select, DropdownMenu, Popover,\n * Tooltip, ContextMenu, Menubar, NavigationMenu, HoverCard, …) reads direction\n * from a `DirectionContext`, not from the ambient `dir` attribute — with no\n * provider in the tree it defaults hard to `\"ltr\"` and stamps that onto its own\n * portaled content, regardless of what `<html dir=\"rtl\">` says. Logical-property\n * CSS (see RTL.md) mirrors layout; this is what makes Radix's own positioning\n * and portaled content agree with it. Wrap your app root in this alongside\n * setting `dir` on `<html>`:\n *\n *   <html dir={dir}>\n *     <KinetixDirectionProvider dir={dir}>{children}</KinetixDirectionProvider>\n *   </html>\n */\nexport function KinetixDirectionProvider({ dir, children }: KinetixDirectionProviderProps) {\n  return <RadixDirectionProvider dir={dir}>{children}</RadixDirectionProvider>;\n}\n",
+      "type": "registry:ui",
+      "target": "components/ui/direction-provider.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

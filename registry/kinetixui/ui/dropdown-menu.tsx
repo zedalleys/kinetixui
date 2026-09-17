@@ -31,7 +31,7 @@ const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & { inset?: boolean }
 >(({ className, inset, ...props }, ref) => (
-  <DropdownMenuPrimitive.Item ref={ref} className={cn(itemCls, inset && "pl-8", className)} {...props} />
+  <DropdownMenuPrimitive.Item ref={ref} className={cn(itemCls, inset && "ps-8", className)} {...props} />
 ));
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName;
 
@@ -39,8 +39,8 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
 >(({ className, children, checked, ...props }, ref) => (
-  <DropdownMenuPrimitive.CheckboxItem ref={ref} className={cn(itemCls, "pl-8", className)} checked={checked} {...props}>
-    <span className="absolute left-2 flex size-3.5 items-center justify-center">
+  <DropdownMenuPrimitive.CheckboxItem ref={ref} className={cn(itemCls, "ps-8", className)} checked={checked} {...props}>
+    <span className="absolute start-2 flex size-3.5 items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator>
         <Check className="size-4" />
       </DropdownMenuPrimitive.ItemIndicator>
@@ -54,8 +54,8 @@ const DropdownMenuRadioItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
 >(({ className, children, ...props }, ref) => (
-  <DropdownMenuPrimitive.RadioItem ref={ref} className={cn(itemCls, "pl-8", className)} {...props}>
-    <span className="absolute left-2 flex size-3.5 items-center justify-center">
+  <DropdownMenuPrimitive.RadioItem ref={ref} className={cn(itemCls, "ps-8", className)} {...props}>
+    <span className="absolute start-2 flex size-3.5 items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator>
         <Circle className="size-2 fill-current" />
       </DropdownMenuPrimitive.ItemIndicator>
@@ -71,7 +71,7 @@ const DropdownMenuLabel = React.forwardRef<
 >(({ className, inset, ...props }, ref) => (
   <DropdownMenuPrimitive.Label
     ref={ref}
-    className={cn("px-2 py-1.5 text-sm font-semibold", inset && "pl-8", className)}
+    className={cn("px-2 py-1.5 text-sm font-semibold", inset && "ps-8", className)}
     {...props}
   />
 ));
@@ -88,7 +88,7 @@ DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName;
 // opacity-60 (not --opacity-muted's 0.7) is a pre-existing inconsistency —
 // left as a literal rather than silently changing the rendered value.
 const DropdownMenuShortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => (
-  <span className={cn("ml-auto text-xs tracking-widest opacity-60", className)} {...props} />
+  <span className={cn("ms-auto text-xs tracking-widest opacity-60", className)} {...props} />
 );
 DropdownMenuShortcut.displayName = "DropdownMenuShortcut";
 
@@ -98,11 +98,11 @@ const DropdownMenuSubTrigger = React.forwardRef<
 >(({ className, inset, children, ...props }, ref) => (
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
-    className={cn(itemCls, "data-[state=open]:bg-accent", inset && "pl-8", className)}
+    className={cn(itemCls, "data-[state=open]:bg-accent", inset && "ps-8", className)}
     {...props}
   >
     {children}
-    <ChevronRight className="ml-auto size-4" />
+    <ChevronRight className="ms-auto size-4 rtl:-scale-x-100" />
   </DropdownMenuPrimitive.SubTrigger>
 ));
 DropdownMenuSubTrigger.displayName = DropdownMenuPrimitive.SubTrigger.displayName;
