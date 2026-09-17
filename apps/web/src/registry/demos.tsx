@@ -709,6 +709,7 @@ import {
   TableOfContents,
   Kbd,
   KbdGroup,
+  JsonViewer,
   Empty,
   EmptyHeader,
   EmptyMedia,
@@ -1490,6 +1491,23 @@ add(
     </div>
   ),
   `<Kbd>⏎</Kbd>\n<KbdGroup>\n  <Kbd>⌘</Kbd>\n  <Kbd>K</Kbd>\n</KbdGroup>`,
+);
+add(
+  "json-viewer-demo",
+  () => (
+    <JsonViewer
+      className="w-full max-w-md"
+      data={{
+        name: "kinetixui",
+        version: "0.11.0",
+        platforms: ["react", "swiftui", "compose", "flutter"],
+        stable: false,
+        tokens: { spacing: 8, radius: { sm: 4, md: 8 } },
+        deprecated: null,
+      }}
+    />
+  ),
+  `<JsonViewer\n  data={{\n    name: "kinetixui",\n    version: "0.11.0",\n    platforms: ["react", "swiftui", "compose", "flutter"],\n    stable: false,\n  }}\n/>`,
 );
 add(
   "empty-demo",

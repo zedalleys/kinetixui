@@ -44,7 +44,7 @@ const GROUP = {
   collapsible: "Data Display", "scroll-area": "Data Display", resizable: "Data Display", list: "Data Display",
   quote: "Data Display", footer: "Data Display", "audio-player": "Data Display", "description-list": "Data Display",
   timeline: "Data Display", marquee: "Data Display", "message-bubble": "Data Display",
-  "virtual-list": "Data Display",
+  "virtual-list": "Data Display", "json-viewer": "Data Display",
 };
 
 const PADDED = new Set([

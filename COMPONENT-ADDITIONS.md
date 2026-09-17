@@ -3,7 +3,7 @@
 What to add next: **components**, **chart types**, and **infographic modules**.
 Written as a prioritised backlog — nothing here is built yet.
 
-**Baseline:** 92 components shipped, 13 chart recipes on `/charts`, `/blocks`
+**Baseline:** 93 components shipped, 13 chart recipes on `/charts`, `/blocks`
 compositions, `/infographic` is a "coming soon" preview.
 
 **The four-platform rule** (`/docs/contributing`): a component isn't "done"
@@ -52,7 +52,8 @@ Effort: **S** ≈ ½–1 day · **M** ≈ 2–4 days · **L** ≈ a week+.
 | **Rich Text / Markdown Editor** | Toolbar + contenteditable (Tiptap/Lexical) or a Markdown textarea with preview. | `Textarea` only. `contenteditable` doesn't port to native — scope as web-only or Markdown-mode. | **L** |
 | **Color Picker** | Saturation/value square, hue/alpha sliders, eyedropper, swatches. | `/theme-builder` hand-rolls parts of this. Canvas interaction — heavy native port. | **M–L** |
 | ~~**Tour / Coachmark**~~ | Sequenced spotlight popovers over real elements, dismiss/skip/next. | **Shipped** — `Tour`, a standing non-port (documented at `/docs/contributing`, same table as `Combobox`/`NativeSelect`): targeting an arbitrary already-rendered element by CSS selector has no native-platform equivalent — every native platform only offers opt-in position *reporting* (a target must wrap itself in a registry ahead of time), a materially different API shape than "point a selector at any element." | **M** |
-| **JSON / Tree Viewer** & **Diff Viewer** | Collapsible JSON; side-by-side / inline text diff with line markers. | Dev-tool surfaces (registry payloads, token diffs) — the site itself could use both. | **M** each |
+| ~~**JSON Viewer**~~ | Collapsible JSON tree. | **Shipped** — `JsonViewer`, all four platforms with the same feature set (no native scope-down — a recursive expand/collapse tree needs no gesture or layout primitive any platform lacks, unlike `DataGrid`). Value colors reuse the existing `--success`/`--info`/`--warning` semantic tokens rather than a separate syntax palette. | **M** |
+| **Diff Viewer** | Side-by-side / inline text diff with line markers. | Dev-tool surface (token diffs) — the site itself could use it. | **M** |
 | ~~**Virtualized List**~~ | Windowed rendering primitive (`react-virtual`). | **Shipped** — `VirtualList`, all four platforms. Web is fixed-row-height only (own scrollTop/ResizeObserver windowing math, no per-row measurement pass — that's `@tanstack/react-virtual`'s job); Compose (`LazyColumn`), SwiftUI (`List`), and Flutter (`ListView.builder`) each just wrap the platform's own already-windowed list, so none of the native ports carry the fixed-height restriction. | **M** |
 
 ### Also worth a doc page (already have the primitive)

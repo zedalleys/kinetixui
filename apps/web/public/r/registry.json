@@ -261,6 +261,12 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:13836."
     },
     {
+      "name": "json-viewer",
+      "type": "registry:ui",
+      "title": "Json Viewer",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "kbd",
       "type": "registry:ui",
       "title": "Kbd",

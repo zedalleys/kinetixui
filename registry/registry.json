@@ -1038,6 +1038,30 @@
       ]
     },
     {
+      "name": "json-viewer",
+      "type": "registry:ui",
+      "title": "Json Viewer",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/json-viewer.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/json-viewer.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "kbd",
       "type": "registry:ui",
       "title": "Kbd",
