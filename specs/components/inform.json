@@ -1,0 +1,15 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "inform",
+  "title": "Inform",
+  "variants": {
+    "variant": [
+      "information",
+      "warning",
+      "success",
+      "error",
+      "action"
+    ]
+  },
+  "source": "packages/ui/src/components/inform.tsx"
+}

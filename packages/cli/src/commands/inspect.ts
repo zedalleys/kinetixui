@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import pc from "picocolors";
 import { readConfig, resolveAliasDir } from "../lib/config.js";
-import { fetchRegistryItem } from "../lib/registry.js";
+import { fetchComponentSpec, fetchRegistryItem } from "../lib/registry.js";
 
 export interface InspectOptions {
   registry: string;
@@ -37,6 +37,15 @@ export async function inspect(name: string, options: InspectOptions): Promise<vo
   console.log(pc.dim("Files:"));
   for (const file of item.files) {
     console.log(`  ${file.path} ${pc.dim("→")} ${file.target}`);
+  }
+
+  const spec = await fetchComponentSpec(options.registry, name);
+  if (spec) {
+    console.log();
+    console.log(pc.dim("Variants:"));
+    for (const [axis, options_] of Object.entries(spec.variants)) {
+      console.log(`  ${pc.dim(axis)}   ${options_.join(", ")}`);
+    }
   }
 
   console.log();

@@ -52,8 +52,10 @@ jobs:
           if ! git diff --exit-code -- \
             packages/tokens/dist \
             apps/web/public/r \
+            apps/web/public/specs \
             registry/registry.json \
-            registry/kinetixui; then
+            registry/kinetixui \
+            specs/components; then
             echo "::error::Generated output is stale. Run 'pnpm build:tokens && pnpm build:registry' and commit the result."
             exit 1
           fi

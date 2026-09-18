@@ -1,0 +1,24 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec-index.json",
+  "generated": "scripts/gen-component-specs.mjs",
+  "components": [
+    "alert",
+    "badge",
+    "banner",
+    "button",
+    "empty",
+    "fab",
+    "field",
+    "inform",
+    "input-group",
+    "input",
+    "native-select",
+    "rating",
+    "sheet",
+    "sidebar",
+    "spinner",
+    "tag",
+    "textarea",
+    "toggle"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "input",
+  "title": "Input",
+  "variants": {
+    "state": [
+      "Default",
+      "Focus",
+      "Error",
+      "Disabled"
+    ],
+    "corners": [
+      "sharp",
+      "default",
+      "rounded",
+      "pill"
+    ]
+  },
+  "source": "packages/ui/src/components/input.tsx"
+}

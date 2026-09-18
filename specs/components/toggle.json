@@ -1,0 +1,17 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "toggle",
+  "title": "Toggle",
+  "variants": {
+    "variant": [
+      "default",
+      "outline"
+    ],
+    "size": [
+      "default",
+      "sm",
+      "lg"
+    ]
+  },
+  "source": "packages/ui/src/components/toggle.tsx"
+}

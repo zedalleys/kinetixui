@@ -1,0 +1,62 @@
+export const metadata = {
+  title: "Component specs",
+  description: "A generated, platform-independent contract manifest per component — variant axes and their option names, extracted from the real source.",
+};
+
+# Component specs
+
+A component spec is a small, platform-independent contract: the variant
+axes a component exposes and each axis's option names — `variant`:
+`Primary`/`Secondary`/`Outline`/…, `size`: `sm`/`md`/`lg`/…, and so on. Not
+the Tailwind classes those options resolve to (that's implementation), just
+the shape of the API surface every platform port is expected to match.
+
+```json
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "button",
+  "title": "Button",
+  "variants": {
+    "variant": ["Primary", "Secondary", "Outline", "Destructive", "Ghost", "Link"],
+    "size": ["sm", "md", "lg", "icon"],
+    "state": ["Default", "Hover", "Focus", "Active", "Disabled"],
+    "corners": ["sharp", "default", "pill"]
+  },
+  "source": "packages/ui/src/components/button.tsx"
+}
+```
+
+## Generated, not hand-written
+
+Specs are extracted from each component's own `cva()` (`class-variance-authority`)
+definition by `scripts/gen-component-specs.mjs`, run as part of `pnpm build:registry`,
+the same way the token CSS and the registry JSON are generated rather than
+maintained by hand — a hand-written manifest drifts from the real component
+within a few PRs. CI's "generated files in sync" gate covers `specs/components/**`
+too, so a component's variant matrix can't change without the spec changing
+with it in the same commit.
+
+## Coverage
+
+Only components with a real `cva()` variant matrix get a spec — composite
+or structural components (`Card`, `Dialog`, `List`, …) don't have one in
+this sense, and aren't covered yet. Today that's these components:
+
+`alert` · `badge` · `banner` · `button` · `empty` · `fab` · `field` ·
+`inform` · `input` · `input-group` · `native-select` · `rating` · `sheet` ·
+`sidebar` · `spinner` · `tag` · `textarea` · `toggle`
+
+Broader coverage (props/slots for non-`cva` components) is a documented
+follow-up, not attempted yet.
+
+## Where it's served, and who reads it
+
+Every generated file is served statically at `kinetixui.com/specs/<name>.json`
+(a sibling of the [registry](/docs/cli), `kinetixui.com/r/<name>.json`) plus
+a flat `kinetixui.com/specs/index.json` listing every covered component.
+The [CLI](/docs/cli)'s `inspect` command reads it today — `kinetixui inspect button`
+prints the variant axes alongside the registry metadata it already showed.
+Nothing else consumes it yet; the doc that originally called for this
+(design-system contract manifests powering docs/Figma/codegen/testing/changelogs)
+treats it as a foundation other tooling builds on over time, not a
+one-shot deliverable.
