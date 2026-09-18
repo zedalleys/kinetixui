@@ -38,6 +38,9 @@ jobs:
       - name: RTL logical-property guardrail
         run: pnpm check:rtl
 
+      - name: Icon mapping drift check
+        run: pnpm check:icons
+
       - name: Build @kinetixui/ui
         run: pnpm build:ui
 

@@ -207,6 +207,7 @@ export const docsNav: NavGroup[] = [
     title: "Styling",
     items: [
       { title: "Tokens", href: "/docs/tokens" },
+      { title: "Icons", href: "/docs/icons" },
       { title: "Theming", href: "/docs/theming" },
       { title: "Dark Mode", href: "/docs/dark-mode" },
       { title: "Accessibility", href: "/docs/accessibility" },
