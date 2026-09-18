@@ -40,6 +40,16 @@ export async function doctor(): Promise<void> {
       }
     }
 
+    // "utils" resolves to a file base path (e.g. `@/lib/utils` -> `lib/utils.ts`), not a
+    // directory like the other three aliases, so it needs its own existence check.
+    const utilsBase = resolveAliasDir(cwd, config, "utils");
+    const utilsFile = [".ts", ".tsx", ".js", ".jsx"].map((ext) => `${utilsBase}${ext}`).find((f) => existsSync(f));
+    if (utilsFile) {
+      levels.push(report("pass", `"utils" alias resolves to ${path.relative(cwd, utilsFile)}`));
+    } else {
+      levels.push(report("warn", `"utils" alias points to ${path.relative(cwd, utilsBase)}, which doesn't exist yet.`));
+    }
+
     const cssPath = path.join(cwd, config.srcDir ? "src" : "", config.tailwind.css);
     if (existsSync(cssPath)) {
       levels.push(report("pass", `Tailwind CSS file found at ${path.relative(cwd, cssPath)}`));

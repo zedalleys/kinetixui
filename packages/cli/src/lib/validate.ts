@@ -16,6 +16,19 @@ export function assertComponentName(name: string): string {
   return name;
 }
 
+/** A local theme name (`theme create`/`theme build`). Interpolated into a
+ *  filesystem path (`kinetixui-themes/<name>.csv`), so — like a component
+ *  name — it's kept to a safe charset with no `/`, `\`, or `..` that could
+ *  walk the path outside that directory. */
+export function assertThemeName(name: string): string {
+  if (typeof name !== "string" || !/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i.test(name)) {
+    throw new Error(
+      `Invalid theme name ${JSON.stringify(name)} — expected letters, digits and dashes.`,
+    );
+  }
+  return name;
+}
+
 /** The registry base URL. Must be http(s) so a descriptor can't redirect the
  *  CLI at `file:`, `data:` … */
 export function assertRegistryUrl(url: string): string {
