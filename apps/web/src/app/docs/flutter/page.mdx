@@ -1,15 +1,16 @@
 export const metadata = {
   title: "Flutter",
-  description: "The Flutter component library — a Dart port on the KinetixUI token contract, the full React surface (83 Kinetix* widgets).",
+  description: "The Flutter component library — a Dart port on the KinetixUI token contract, the full React surface (89 Kinetix* widgets).",
 };
 
 # Flutter
 
 `packages/ui-flutter` is the **Flutter** port of KinetixUI — the fourth
 platform alongside React (`@kinetixui/ui`),
-[Jetpack Compose](/docs/compose) and [SwiftUI](/docs/swiftui). **82
-`Kinetix*` widgets — the full React component surface** bar three
-deliberate non-ports, built in batches on a CI `flutter analyze` path;
+[Jetpack Compose](/docs/compose) and [SwiftUI](/docs/swiftui). **89
+`Kinetix*` widgets — the full React component surface** bar seven
+deliberate non-ports (plus `Sidebar`, a Flutter-specific gap — see
+Known gaps below), built in batches on a CI `flutter analyze` path;
 each mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with
 a doc comment stating anything not carried over.
 
@@ -90,7 +91,7 @@ pnpm build:tokens && pnpm vendor:flutter
 
 ## What's covered
 
-`KinetixTheme` plus 82 `Kinetix*` widgets:
+`KinetixTheme` plus 89 `Kinetix*` widgets:
 
 - **Controls** — `KinetixButton` (`buttonVariants` CVA 1:1),
   `KinetixCheckbox`, `KinetixSwitch`, `KinetixToggle` /
@@ -136,9 +137,25 @@ overlays and disclosures. Overlay widgets (`KinetixDialog`,
 - **`Combobox`** — a recipe (Popover + Command) on the web, not a
   component; compose `KinetixPopover` + a filtered list, or reach for
   `KinetixSelect`.
+- **`NativeSelect`** — wraps the browser's own `<select>`, a web-only
+  escape hatch from `Select`'s custom popover; `KinetixSelect` already
+  wraps Flutter's own `MenuAnchor`.
+- **`AvatarGroup`** — re-wraps its children, not an idiomatic Flutter
+  pattern; compose a `Stack` of `KinetixAvatar`s shifted with `Transform`.
+- **`Tour`** — targets an arbitrary already-rendered element by CSS
+  selector; Flutter has no equivalent live-tree query. Compose a
+  sequence of `KinetixPopover` steps, each anchored to the widget it
+  explains.
+- **`KanbanBoard`** — built on `@dnd-kit`'s accessible multi-container
+  drag-and-drop; hand-rolling that from scratch is a much bigger lift
+  than porting the component. Use `Draggable` / `DragTarget` directly
+  for the specific board.
 
 ## Known gaps
 
+- **`KinetixSidebar` isn't ported** — a Flutter-specific gap (SwiftUI
+  and Compose both carry it). Reach for a `Drawer` / `NavigationRail`
+  directly.
 - **No remote publishing.** `flutter analyze` on `ubuntu-latest`
   (`subosito/flutter-action`) is the sole compiler feedback on every push
   that touches `packages/ui-flutter`, `tokens/`, or `style-dictionary/`.

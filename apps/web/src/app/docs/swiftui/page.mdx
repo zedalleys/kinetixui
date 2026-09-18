@@ -1,13 +1,13 @@
 export const metadata = {
   title: "SwiftUI",
-  description: "The native iOS component library — a SwiftUI port on the KinetixUI token contract, the full React surface (84 Kinetix* views).",
+  description: "The native iOS component library — a SwiftUI port on the KinetixUI token contract, the full React surface (90 Kinetix* views).",
 };
 
 # SwiftUI
 
 `packages/ui-swiftui` is the native **SwiftUI** port of KinetixUI — the
-iOS counterpart to the [Jetpack Compose](/docs/compose) library. **83
-`Kinetix*` views — the full React component surface** bar three
+iOS counterpart to the [Jetpack Compose](/docs/compose) library. **90
+`Kinetix*` views — the full React component surface** bar seven
 deliberate non-ports, built in batches on a macOS `swift build` CI path;
 each mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with
 a doc comment stating anything not carried over.
@@ -84,8 +84,8 @@ pnpm build:tokens && pnpm vendor:swiftui
 
 ## What's covered
 
-`KinetixTheme` plus 83 `Kinetix*` views — everything in
-`packages/ui/src/components` except the three non-ports below.
+`KinetixTheme` plus 90 `Kinetix*` views — everything in
+`packages/ui/src/components` except the seven non-ports below.
 
 - **Controls** — `KinetixButton` (`buttonVariants` CVA 1:1: variant ×
   size × corners), `KinetixCheckbox`, `KinetixSwitch`, `KinetixToggle` /
@@ -137,6 +137,20 @@ are placed in an `.overlay { }` or a top-level `ZStack` and driven by an
 - **`Combobox`** — a recipe (Popover + Command) on the web, not a
   standalone component; compose `KinetixPopover` + a filtered list, or
   reach for `KinetixSelect`.
+- **`NativeSelect`** — wraps the browser's own `<select>`, a web-only
+  escape hatch from `Select`'s custom popover; `KinetixSelect` already
+  wraps SwiftUI's own `Menu`.
+- **`AvatarGroup`** — re-wraps its children (`React.Children.toArray`),
+  not an idiomatic SwiftUI pattern; compose an `HStack` of
+  `KinetixAvatar`s with negative spacing (`spacing: -8`).
+- **`Tour`** — targets an arbitrary already-rendered element by CSS
+  selector; SwiftUI has no equivalent live-tree query. Compose a
+  sequence of `KinetixPopover` steps, each anchored to the view it
+  explains.
+- **`KanbanBoard`** — built on `@dnd-kit`'s accessible multi-container
+  drag-and-drop; hand-rolling that from scratch is a much bigger lift
+  than porting the component. Use `.draggable` / `.dropDestination`
+  directly for the specific board.
 
 ## Known gaps
 

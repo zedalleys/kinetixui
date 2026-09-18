@@ -1,12 +1,12 @@
 export const metadata = {
   title: "Jetpack Compose",
-  description: "The native Android component library — 83 Kotlin composables on the KinetixUI token contract.",
+  description: "The native Android component library — 89 Kotlin composables on the KinetixUI token contract.",
 };
 
 # Jetpack Compose
 
 `packages/ui-compose` is a native **Jetpack Compose** port of KinetixUI —
-**83 `Kinetix*` composables** on the same token contract as the web
+**89 `Kinetix*` composables** on the same token contract as the web
 library, one for every React component (or a documented reason it isn't).
 
 It's a **standalone Gradle project** inside this monorepo, not a
@@ -72,7 +72,7 @@ a comment).
 
 ## What's covered
 
-All 83, one per React component — Button, Input, Dialog, Popover, Sheet,
+All 89, one per React component — Button, Input, Dialog, Popover, Sheet,
 DropdownMenu, DataTable, Calendar, Carousel, Sidebar, and the rest. The
 [components gallery](/components) is the master list; each Compose file
 mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with a
@@ -96,6 +96,17 @@ different name.
   equivalent — Compose has no RHF-shaped context to wrap.
 - **`NavigationMenu` isn't ported** — a hover-triggered desktop mega-menu
   with no Android idiom.
+- **`NativeSelect`, `AvatarGroup`, `Tour`, and `KanbanBoard` aren't
+  ported either.** `NativeSelect` wraps the browser's own `<select>`;
+  `KinetixSelect` already wraps Compose's own `DropdownMenu`.
+  `AvatarGroup` re-wraps its children, not an idiomatic Compose pattern —
+  compose a `Row` of `KinetixAvatar`s with `spacedBy((-8).dp)` instead.
+  `Tour` targets an arbitrary already-rendered element by CSS selector,
+  which Compose has no equivalent live-tree query for — compose a
+  sequence of `KinetixPopover` steps instead. `KanbanBoard` is built on
+  `@dnd-kit`'s accessible multi-container drag-and-drop, with no
+  equivalent dependency in this repo's native packages — use Compose's
+  own drag gestures + `LazyColumn` for the specific board.
 - **Scoped ports:** `KinetixSheet` is bottom-only. `KinetixSidebar` drops
   rail/icon-collapse mode, `SidebarInset`, the cookie and the shortcut.
   `KinetixAppBar` drops the mobile menu-toggle collapse — the nav stays
@@ -111,9 +122,10 @@ different name.
   touches it or the token source.
 
 The [SwiftUI](/docs/swiftui) and [Flutter](/docs/flutter) ports cover the
-full React surface too (SwiftUI carries 83 `Kinetix*` views, Flutter 82;
-alongside `Form`, `NavigationMenu` and `Combobox`, Compose skips `Chart`,
-SwiftUI/Flutter skip `Inform`, and Flutter skips `Sidebar`). All four
-platforms are at parity — see [Contributing](/docs/contributing) for the
-rule that keeps
-them there.
+full React surface too (SwiftUI carries 90 `Kinetix*` views, Flutter 89).
+All three native platforms skip the same [seven standing
+non-ports](/docs/contributing) (`Form`, `NavigationMenu`, `Combobox`,
+`NativeSelect`, `AvatarGroup`, `Tour`, `KanbanBoard`); Compose additionally
+skips `Chart`, and Flutter additionally skips `Sidebar`. All four
+platforms are at parity otherwise — see [Contributing](/docs/contributing)
+for the rule that keeps them there.

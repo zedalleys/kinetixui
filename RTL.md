@@ -59,11 +59,13 @@ Logical-property classes, verified against the Radix direction provider:
 - `alert.tsx`
 - `app-bar.tsx`
 
-Docs site (`apps/web`): `layout.tsx` and `site-header.tsx` carry a dev/QA
-`DirProvider` + toggle button (the ⇄ icon in the header) that flips
-`dir` on `<html>` and wraps the tree in `KinetixDirectionProvider`, backed by
-`localStorage` — not a production i18n solution (no locale detection), just a
-way to visually verify the conversion.
+Docs site (`apps/web`): English-only, always `dir="ltr"` — it does not carry
+a live RTL toggle (an earlier dev/QA `DirProvider` + header toggle was
+removed; flipping the whole site's layout without translated content just
+looked broken, and it wasn't a real i18n solution anyway — no locale
+detection, no persistence across domains). RTL support is documented for
+consumers instead, at `/docs/rtl` — the two-piece pattern above (logical
+classes + `KinetixDirectionProvider`) is what an app wires up itself.
 
 ## Not yet converted
 

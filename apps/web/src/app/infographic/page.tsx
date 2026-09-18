@@ -82,7 +82,7 @@ const COVERAGE: { row: string; cells: Cell[] }[] = [
   { row: "Light + dark", cells: ["full", "full", "full", "full"] },
   { row: "Type scale wired", cells: ["full", "full", "full", "full"] },
   { row: "CI build check", cells: ["full", "full", "full", "full"] },
-  { row: "Published package", cells: ["full", "full", "full", "partial"] },
+  { row: "Published package", cells: ["full", "partial", "partial", "partial"] },
 ];
 
 const MARK: Record<Cell, { glyph: string; cls: string; label: string }> = {

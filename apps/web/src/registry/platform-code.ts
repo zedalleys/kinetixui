@@ -60,6 +60,71 @@ export const platformCode: Record<string, Entry> = {
 )`,
   },
 
+  "button-variants": {
+    html: `<button class="kx-btn kx-btn--primary kx-btn--md">Primary</button>
+<button class="kx-btn kx-btn--secondary kx-btn--md">Secondary</button>
+<button class="kx-btn kx-btn--outline kx-btn--md">Outline</button>
+<button class="kx-btn kx-btn--destructive kx-btn--md">Destructive</button>
+<button class="kx-btn kx-btn--ghost kx-btn--md">Ghost</button>
+<button class="kx-btn kx-btn--link kx-btn--md">Link</button>`,
+    swift: `HStack(spacing: 12) {
+  KinetixButton(variant: .primary, action: {}) { Text("Primary") }
+  KinetixButton(variant: .secondary, action: {}) { Text("Secondary") }
+  KinetixButton(variant: .outline, action: {}) { Text("Outline") }
+  KinetixButton(variant: .destructive, action: {}) { Text("Destructive") }
+  KinetixButton(variant: .ghost, action: {}) { Text("Ghost") }
+  KinetixButton(variant: .link, action: {}) { Text("Link") }
+}`,
+    kotlin: `Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+  KinetixButton(onClick = {}, variant = KinetixButtonVariant.Primary) { Text("Primary") }
+  KinetixButton(onClick = {}, variant = KinetixButtonVariant.Secondary) { Text("Secondary") }
+  KinetixButton(onClick = {}, variant = KinetixButtonVariant.Outline) { Text("Outline") }
+  KinetixButton(onClick = {}, variant = KinetixButtonVariant.Destructive) { Text("Destructive") }
+  KinetixButton(onClick = {}, variant = KinetixButtonVariant.Ghost) { Text("Ghost") }
+  KinetixButton(onClick = {}, variant = KinetixButtonVariant.Link) { Text("Link") }
+}`,
+    dart: `Row(
+  children: [
+    KinetixButton(onPressed: () {}, variant: KinetixButtonVariant.primary, child: const Text('Primary')),
+    const SizedBox(width: 12),
+    KinetixButton(onPressed: () {}, variant: KinetixButtonVariant.secondary, child: const Text('Secondary')),
+    const SizedBox(width: 12),
+    KinetixButton(onPressed: () {}, variant: KinetixButtonVariant.outline, child: const Text('Outline')),
+    const SizedBox(width: 12),
+    KinetixButton(onPressed: () {}, variant: KinetixButtonVariant.destructive, child: const Text('Destructive')),
+    const SizedBox(width: 12),
+    KinetixButton(onPressed: () {}, variant: KinetixButtonVariant.ghost, child: const Text('Ghost')),
+    const SizedBox(width: 12),
+    KinetixButton(onPressed: () {}, variant: KinetixButtonVariant.link, child: const Text('Link')),
+  ],
+)`,
+  },
+
+  "button-sizes": {
+    html: `<button class="kx-btn kx-btn--primary kx-btn--sm">Small</button>
+<button class="kx-btn kx-btn--primary kx-btn--md">Medium</button>
+<button class="kx-btn kx-btn--primary kx-btn--lg">Large</button>`,
+    swift: `HStack(spacing: 12) {
+  KinetixButton(size: .sm, action: {}) { Text("Small") }
+  KinetixButton(size: .md, action: {}) { Text("Medium") }
+  KinetixButton(size: .lg, action: {}) { Text("Large") }
+}`,
+    kotlin: `Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+  KinetixButton(onClick = {}, size = KinetixButtonSize.Sm) { Text("Small") }
+  KinetixButton(onClick = {}, size = KinetixButtonSize.Md) { Text("Medium") }
+  KinetixButton(onClick = {}, size = KinetixButtonSize.Lg) { Text("Large") }
+}`,
+    dart: `Row(
+  children: [
+    KinetixButton(onPressed: () {}, size: KinetixButtonSize.sm, child: const Text('Small')),
+    const SizedBox(width: 12),
+    KinetixButton(onPressed: () {}, size: KinetixButtonSize.md, child: const Text('Medium')),
+    const SizedBox(width: 12),
+    KinetixButton(onPressed: () {}, size: KinetixButtonSize.lg, child: const Text('Large')),
+  ],
+)`,
+  },
+
   "badge-demo": {
     html: `<span class="kx-badge">Default</span>
 <span class="kx-badge kx-badge--secondary">Secondary</span>
@@ -157,6 +222,32 @@ export const platformCode: Record<string, Entry> = {
     dart: `KinetixInput(
   controller: emailController,
   placeholder: 'you@example.com',
+)`,
+  },
+
+  "input-states": {
+    html: `<input class="kx-input" placeholder="Default" />
+<input class="kx-input" data-state="error" value="Not quite right" />
+<input class="kx-input" placeholder="Disabled" disabled />`,
+    swift: `VStack(spacing: 12) {
+  KinetixInput(text: $defaultValue, placeholder: "Default")
+  KinetixInput(text: $errorValue, isError: true)
+  KinetixInput(text: .constant(""), placeholder: "Disabled")
+    .disabled(true)
+}`,
+    kotlin: `Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+  KinetixInput(value = default, onValueChange = { default = it }, placeholder = "Default")
+  KinetixInput(value = error, onValueChange = { error = it }, isError = true)
+  KinetixInput(value = "", onValueChange = {}, placeholder = "Disabled", enabled = false)
+}`,
+    dart: `Column(
+  children: [
+    KinetixInput(controller: defaultController, placeholder: 'Default'),
+    const SizedBox(height: 12),
+    KinetixInput(controller: errorController, isError: true),
+    const SizedBox(height: 12),
+    const KinetixInput(placeholder: 'Disabled', enabled: false),
+  ],
 )`,
   },
 
@@ -679,6 +770,44 @@ KinetixTabsContent {
     KinetixBreadcrumbLink('Docs', onTap: () => navigate('/docs')),
     const KinetixBreadcrumbSeparator(),
     const KinetixBreadcrumbPage('Breadcrumb'),
+  ],
+)`,
+  },
+
+  "app-bar-demo": {
+    html: `<header class="kx-app-bar">
+  <span class="kx-app-bar__brand">Acme</span>
+  <nav class="kx-app-bar__nav" aria-label="Primary">
+    <a href="/" class="kx-app-bar__link kx-app-bar__link--active">Overview</a>
+    <a href="/reports" class="kx-app-bar__link">Reports</a>
+  </nav>
+  <div class="kx-app-bar__actions"><button class="kx-btn kx-btn--primary kx-btn--sm">New</button></div>
+</header>
+<!-- bg: var(--background) · border-bottom: var(--border) · active link bg: var(--accent) -->`,
+    swift: `KinetixAppBar {
+  Text("Acme")
+} nav: {
+  KinetixAppBarLink("Overview", active: true) { navigate("/") }
+  KinetixAppBarLink("Reports") { navigate("/reports") }
+} actions: {
+  KinetixButton(action: create) { Text("New") }
+}`,
+    kotlin: `KinetixAppBar(
+  brand = { Text("Acme") },
+  nav = {
+    KinetixAppBarLink("Overview", onClick = { navigate("/") }, active = true)
+    KinetixAppBarLink("Reports", onClick = { navigate("/reports") })
+  },
+  actions = { KinetixButton(onClick = ::create) { Text("New") } },
+)`,
+    dart: `KinetixAppBar(
+  brand: const Text('Acme'),
+  nav: [
+    KinetixAppBarLink('Overview', onTap: () => navigate('/'), active: true),
+    KinetixAppBarLink('Reports', onTap: () => navigate('/reports')),
+  ],
+  actions: [
+    KinetixButton(onPressed: create, child: const Text('New')),
   ],
 )`,
   },
