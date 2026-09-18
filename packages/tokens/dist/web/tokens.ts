@@ -219,6 +219,22 @@ export const tokens = {
     "default": "1px",
     "focus": "2px"
   },
+  "interaction": {
+    "target": {
+      "minimum": "44px",
+      "default": "40px"
+    },
+    "focus": {
+      "width": "1px",
+      "offset": "2px"
+    },
+    "press": {
+      "opacity": 0.8
+    },
+    "drag": {
+      "threshold": 4
+    }
+  },
   "duration": {
     "fast": "200ms",
     "base": "300ms",
@@ -364,7 +380,7 @@ export const tokens = {
         "offsetX": "0",
         "offsetY": "0",
         "blur": "0",
-        "spread": "1"
+        "spread": "1px"
       },
       {
         "color": "#1d4ed833",
@@ -380,7 +396,7 @@ export const tokens = {
         "offsetX": "0",
         "offsetY": "0",
         "blur": "0",
-        "spread": "1"
+        "spread": "1px"
       },
       {
         "color": "#ec504733",
@@ -396,7 +412,7 @@ export const tokens = {
         "offsetX": "0",
         "offsetY": "0",
         "blur": "0",
-        "spread": "1"
+        "spread": "1px"
       },
       {
         "color": "#5d6d5c33",
@@ -412,7 +428,7 @@ export const tokens = {
         "offsetX": "0",
         "offsetY": "0",
         "blur": "0",
-        "spread": "1"
+        "spread": "1px"
       },
       {
         "color": "#f9790733",
