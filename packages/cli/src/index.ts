@@ -2,13 +2,14 @@
 import { Command } from "commander";
 import pc from "picocolors";
 import { add } from "./commands/add.js";
+import { doctor } from "./commands/doctor.js";
 import { init } from "./commands/init.js";
+import { inspect } from "./commands/inspect.js";
 import { list } from "./commands/list.js";
+import { DEFAULT_REGISTRY } from "./lib/config.js";
 // Bundled at build time (esbuild inlines JSON imports), not read at runtime —
 // so `kinetixui --version` can never drift from the published package again.
 import pkg from "../package.json" with { type: "json" };
-
-const DEFAULT_REGISTRY = "https://kinetixui.com/r";
 
 const program = new Command();
 
@@ -51,6 +52,32 @@ program
   .action(async (opts: { registry: string }) => {
     try {
       await list({ registry: opts.registry });
+    } catch (err) {
+      console.error(pc.red("✖"), (err as Error).message);
+      process.exitCode = 1;
+    }
+  });
+
+program
+  .command("inspect")
+  .description("Show everything the registry knows about one component.")
+  .argument("<name>", "component name, e.g. button")
+  .option("-r, --registry <url>", "registry base URL", DEFAULT_REGISTRY)
+  .action(async (name: string, opts: { registry: string }) => {
+    try {
+      await inspect(name, { registry: opts.registry });
+    } catch (err) {
+      console.error(pc.red("✖"), (err as Error).message);
+      process.exitCode = 1;
+    }
+  });
+
+program
+  .command("doctor")
+  .description("Check kinetixui.json, its aliases, and the registry connection.")
+  .action(async () => {
+    try {
+      await doctor();
     } catch (err) {
       console.error(pc.red("✖"), (err as Error).message);
       process.exitCode = 1;
