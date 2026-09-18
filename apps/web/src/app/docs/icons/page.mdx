@@ -62,7 +62,7 @@ themselves. That's future scope, not silently skipped.
 
 | Icon | Used in | Flutter | SwiftUI | Compose |
 | --- | --- | --- | --- | --- |
-| `ChevronDown` | Accordion, Select | `Icons.keyboard_arrow_down` | `chevron.down` | glyph `▾` / `⌄` (differs per component) |
+| `ChevronDown` | Accordion, Select | `Icons.keyboard_arrow_down` | `chevron.down` | glyph `▾` |
 | `ChevronLeft` | NavigationBar, Pagination | `Icons.chevron_left` | `chevron.left` | glyph `‹` (NavigationBar only) |
 | `ChevronRight` | Breadcrumb, JsonViewer, Pagination, TreeView | `Icons.chevron_right` | `chevron.right` | not hardcoded |
 | `Check` | Checkbox, CodeBlock, Select, Stepper | `Icons.check` | `checkmark` | glyph `✓` (Checkbox, Select only) |
@@ -95,9 +95,9 @@ its own affordance), is in
   ["seven standing non-ports"](/docs/contributing) list, and no architectural
   reason for the omission). It's since been closed: `Inform.dart`/
   `Inform.swift` now exist, so this finding is fixed, not open.
-- **`Select`'s Compose glyph (`⌄`) differs from `Accordion`'s (`▾`)** for the
-  same semantic "chevron pointing down" — a small, real inconsistency inside
-  Compose itself, independent of any cross-platform question.
+- **`Select`'s Compose glyph used to differ from `Accordion`'s** (`⌄` vs.
+  `▾`) for the same semantic "chevron pointing down" — fixed; `Select.kt` now
+  renders `▾` too, and `icons/mapping.json` reflects it.
 
 None of these are contradictions in the mapping — they're exactly the kind
 of thing a checked contract is supposed to surface.
