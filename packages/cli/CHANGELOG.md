@@ -1,5 +1,12 @@
 # @kinetixui/cli
 
+## 0.13.0
+
+### Minor Changes
+
+- d839098: Add `kinetixui inspect <name>` (show a registry item's description, dependencies, files, and whether it's installed in the current project) and `kinetixui doctor` (check `kinetixui.json`, its aliases, the Tailwind CSS target, registry reachability, and whether anything in your `ui` directory still matches a registry name — exits non-zero on failure, so it's CI-safe).
+- 8ceb0aa: `kinetixui inspect <name>` now also prints a component's variant axes and their option names (e.g. `variant`: `Primary`/`Secondary`/`Outline`/…, `size`: `sm`/`md`/`lg`/…) for the ~20 components with a real variant matrix, sourced from a new generated `specs/components/<name>.json` contract manifest served alongside the registry.
+
 ## 0.12.0
 
 No changes in this release.
