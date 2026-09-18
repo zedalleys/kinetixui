@@ -4,8 +4,8 @@
 // Mirrors packages/ui/src/components/banner.tsx: a full-bleed, page-level
 // notice, optionally dismissible. Distinct from KinetixAlert (in-flow,
 // static) and KinetixToaster (transient): persistent, edge-to-edge, no
-// rounded corners (compare KinetixInform's rounded inline card — not yet
-// ported to SwiftUI). No icon library wired in yet, same gap as
+// rounded corners (compare KinetixInform's rounded inline card). No icon
+// library wired in yet, same gap as
 // KinetixAlert. The web version's `sticky` prop has no SwiftUI component-
 // level equivalent — pin it to the top by placement instead (outside a
 // ScrollView, or via `.safeAreaInset(edge: .top)`), same as KinetixAppBar.

@@ -49,6 +49,7 @@ export 'src/file_upload.dart';
 export 'src/footer.dart';
 export 'src/hover_card.dart';
 export 'src/image.dart';
+export 'src/inform.dart';
 export 'src/input.dart';
 export 'src/input_group.dart';
 export 'src/input_otp.dart';
