@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { componentDocs } from "@/lib/site";
 import { CATEGORY_ORDER, PRIMITIVE, categoryOf } from "@/lib/component-registry";
 import { NATIVE_PLATFORMS, isOnPlatform, countOnPlatform } from "@/lib/platform-parity";
+import { STATUS } from "@/lib/component-status";
 import { PlatformBadges } from "@/components/platform-badges";
 import { SectionHead } from "@/components/section-head";
 import { demoRegistry } from "@/registry/demos";
@@ -40,12 +41,19 @@ const NO_LIVE_THUMBNAIL = new Set([
   "table-of-contents",
 ]);
 
-type Item = (typeof componentDocs)[number] & { slug: string; category: string; primitive?: string };
+type Item = (typeof componentDocs)[number] & {
+  slug: string;
+  category: string;
+  primitive?: string;
+  status?: "beta" | "deprecated";
+};
 
 const ITEMS: Item[] = componentDocs.map((item) => {
   const slug = slugOf(item.href);
-  return { ...item, slug, category: categoryOf(slug), primitive: PRIMITIVE[slug] };
+  return { ...item, slug, category: categoryOf(slug), primitive: PRIMITIVE[slug], status: STATUS[slug] };
 });
+
+const BETA_COUNT = ITEMS.filter((it) => it.status === "beta").length;
 
 const CATEGORY_COUNT: Record<string, number> = ITEMS.reduce(
   (acc, it) => ((acc[it.category] = (acc[it.category] ?? 0) + 1), acc),
@@ -122,7 +130,21 @@ function Card({ item }: { item: Item }) {
       <Thumbnail item={item} />
       <div className="flex items-center justify-between gap-3 p-4">
         <span className="min-w-0">
-          <span className="block truncate font-medium">{item.title}</span>
+          <span className="flex items-center gap-1.5">
+            <span className="block truncate font-medium">{item.title}</span>
+            {item.status && (
+              <span
+                className={cn(
+                  "shrink-0 rounded border px-1 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em]",
+                  item.status === "deprecated"
+                    ? "border-destructive/40 text-destructive"
+                    : "border-info/40 text-info",
+                )}
+              >
+                {item.status}
+              </span>
+            )}
+          </span>
           <span className="mt-1 inline-block max-w-full truncate rounded border border-border/70 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
             {item.primitive ?? item.category}
           </span>
@@ -159,6 +181,7 @@ export function ComponentGallery() {
   const [query, setQuery] = React.useState(params.get("q") ?? "");
   const activeCat = params.get("cat");
   const activePlatform = NATIVE_PLATFORMS.find((p) => p === params.get("platform")) ?? null;
+  const activeStatus = params.get("status") === "beta" ? "beta" : null;
 
   // debounce the search term into the URL so a filtered view is shareable and
   // Back/Forward restore it, without a history entry per keystroke.
@@ -196,6 +219,7 @@ export function ComponentGallery() {
   };
   const setCat = (cat: string | null) => setParam("cat", cat);
   const setPlatform = (p: string | null) => setParam("platform", p);
+  const setStatus = (s: "beta" | null) => setParam("status", s);
 
   const clearAll = () => {
     setQuery("");
@@ -206,6 +230,7 @@ export function ComponentGallery() {
   const filtered = ITEMS.filter((it) => {
     if (activeCat && it.category !== activeCat) return false;
     if (activePlatform && !isOnPlatform(it.slug, activePlatform)) return false;
+    if (activeStatus && it.status !== activeStatus) return false;
     if (!q) return true;
     return (
       it.title.toLowerCase().includes(q) ||
@@ -215,8 +240,8 @@ export function ComponentGallery() {
     );
   });
 
-  const grouped = !q && !activeCat && !activePlatform;
-  const isFiltered = Boolean(q || activeCat || activePlatform);
+  const grouped = !q && !activeCat && !activePlatform && !activeStatus;
+  const isFiltered = Boolean(q || activeCat || activePlatform || activeStatus);
 
   return (
     <>
@@ -325,6 +350,17 @@ export function ComponentGallery() {
                 </button>
               );
             })}
+            {BETA_COUNT > 0 && (
+              <button
+                type="button"
+                aria-pressed={activeStatus === "beta"}
+                onClick={() => setStatus(activeStatus === "beta" ? null : "beta")}
+                className={catButton(activeStatus === "beta")}
+                title="Components new this release"
+              >
+                Beta <span className="tabular-nums opacity-80">{BETA_COUNT}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -335,6 +371,7 @@ export function ComponentGallery() {
           : `${filtered.length} of ${ITEMS.length} components`}
         {activeCat ? ` · ${activeCat}` : ""}
         {activePlatform ? ` · ${activePlatform}` : ""}
+        {activeStatus ? ` · ${activeStatus}` : ""}
         {q ? ` · “${query.trim()}”` : ""}
       </p>
 

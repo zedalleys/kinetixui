@@ -51,6 +51,22 @@ Anything else that can't be ported cleanly is **scoped down and
 documented**, not silently skipped — e.g. `KinetixSheet` is bottom-only,
 `KinetixSidebar` drops rail mode, `KinetixChart` is bar-only on Flutter.
 
+## Component status
+
+Every component is `stable` by default. A component ships `beta` for the
+release cycle it lands in — still required to be on all four platforms
+(or a documented non-port) and CI-verified like everything else; `beta`
+here means "new," not "incomplete." It drops back to `stable` once it's
+shipped a full cycle with no reported issues. `deprecated` is reserved for
+a component being phased out; nothing has been deprecated yet.
+
+The status list lives in one place, `apps/web/src/lib/component-status.ts`
+(absent slug ⇒ `stable`, same "exceptions only" convention as `PRIMITIVE`
+and platform-parity's `EXCEPTIONS`) and drives both the `/components`
+gallery badges/filter and the `<ComponentMeta>` spec strip on each doc
+page. When you cut a release, move the previous cycle's `beta` entries out
+of the map (falling through to `stable`) before adding the new one's.
+
 ## Workflow for a new component
 
 1. **Design tokens first.** If the component needs a token that doesn't
