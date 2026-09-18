@@ -64,6 +64,16 @@ whether it's already installed in the current project:
 npx @kinetixui/cli inspect button
 ```
 
+For components built on a variant matrix (`Button`, `Badge`, `Sheet`, …),
+`inspect` also prints their variant axes and each axis's option names —
+`Primary`/`Secondary`/`Outline`/… for `variant`, `sm`/`md`/`lg`/… for
+`size`, and so on — pulled from a generated `specs/components/<name>.json`
+contract manifest (source: the component's own `cva()` definition, so it
+can't drift from the real prop surface). Not every component has one yet —
+today it covers the ~20 components with a real variant-axis matrix; the
+rest (composite/structural components like `Card` or `Dialog`) don't print
+a Variants section. See [Component specs](/docs/component-specs).
+
 ## doctor
 
 Sanity-check a project that's already run `init`: is `kinetixui.json`

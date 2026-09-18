@@ -24,6 +24,14 @@ export interface RegistryIndexItem {
   description?: string;
 }
 
+export interface ComponentSpec {
+  name: string;
+  title: string;
+  /** variant axis name -> its option names (e.g. `variant: ["Primary", ...]`) */
+  variants: Record<string, string[]>;
+  source: string;
+}
+
 /** Every installable item, per `apps/web/public/r/registry.json` (written by
  *  `scripts/gen-registry-index.mjs` as part of `pnpm build:registry` — the
  *  per-item `{name}.json` files `shadcn build` emits have no index of their
@@ -53,6 +61,23 @@ export async function fetchRegistryItem(registryUrl: string, name: string): Prom
     throw new Error(`Could not find "${name}" in the registry (${res.status} at ${url}).`);
   }
   return (await res.json()) as RegistryItem;
+}
+
+/** `apps/web/public/specs/<name>.json` — served alongside (a sibling of)
+ *  the registry root, not under it, e.g. `https://kinetixui.com/r` ->
+ *  `https://kinetixui.com/specs`. Only the ~20 `cva`-based components
+ *  (variant-axis components) have one; a missing spec is normal, not an
+ *  error, so this returns `null` on 404 instead of throwing. */
+export async function fetchComponentSpec(registryUrl: string, name: string): Promise<ComponentSpec | null> {
+  const base = assertRegistryUrl(registryUrl).replace(/\/$/, "");
+  const specsBase = base.endsWith("/r") ? `${base.slice(0, -2)}/specs` : `${base}/specs`;
+  const url = `${specsBase}/${assertComponentName(name)}.json`;
+  const res = await fetch(url);
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    throw new Error(`Could not load the component spec for "${name}" (${res.status} at ${url}).`);
+  }
+  return (await res.json()) as ComponentSpec;
 }
 
 /** Fetch a set of items and everything they transitively depend on. */

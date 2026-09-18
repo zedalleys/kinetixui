@@ -1,0 +1,18 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "spinner",
+  "title": "Spinner",
+  "variants": {
+    "size": [
+      "sm",
+      "md",
+      "lg"
+    ],
+    "variant": [
+      "default",
+      "muted",
+      "onColor"
+    ]
+  },
+  "source": "packages/ui/src/components/spinner.tsx"
+}

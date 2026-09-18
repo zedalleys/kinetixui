@@ -1,0 +1,19 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "banner",
+  "title": "Banner",
+  "variants": {
+    "variant": [
+      "information",
+      "warning",
+      "success",
+      "error",
+      "action"
+    ],
+    "sticky": [
+      "true",
+      "false"
+    ]
+  },
+  "source": "packages/ui/src/components/banner.tsx"
+}

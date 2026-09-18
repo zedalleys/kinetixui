@@ -200,6 +200,7 @@ export const docsNav: NavGroup[] = [
       { title: "Installation", href: "/docs/installation" },
       { title: "CLI", href: "/docs/cli" },
       { title: "kinetixui.json", href: "/docs/kinetixui-json" },
+      { title: "Component specs", href: "/docs/component-specs" },
     ],
   },
   {

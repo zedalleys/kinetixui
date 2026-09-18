@@ -1,0 +1,12 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "empty",
+  "title": "Empty",
+  "variants": {
+    "variant": [
+      "default",
+      "icon"
+    ]
+  },
+  "source": "packages/ui/src/components/empty.tsx"
+}
