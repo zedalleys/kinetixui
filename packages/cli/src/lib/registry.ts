@@ -22,6 +22,10 @@ export interface RegistryIndexItem {
   type: string;
   title?: string;
   description?: string;
+  /** native libraries that carry this component — `registry:ui` items only, absent on `registry:style` (e.g. `tokens`) */
+  platforms?: string[];
+  /** maturity status — omitted entirely when "stable" (the default), same "exceptions only" convention as `platforms` */
+  status?: "beta" | "deprecated";
 }
 
 export interface ComponentSpec {

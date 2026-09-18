@@ -12,577 +12,1148 @@
       "name": "accordion",
       "type": "registry:ui",
       "title": "Accordion",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "alert-dialog",
       "type": "registry:ui",
       "title": "Alert Dialog",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "alert",
       "type": "registry:ui",
       "title": "Alert",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "app-bar",
       "type": "registry:ui",
       "title": "App Bar",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "aspect-ratio",
       "type": "registry:ui",
       "title": "Aspect Ratio",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "audio-player",
       "type": "registry:ui",
       "title": "Audio Player",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "avatar",
       "type": "registry:ui",
       "title": "Avatar",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "badge",
       "type": "registry:ui",
       "title": "Badge",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13995."
+      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13995.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "banner",
       "type": "registry:ui",
       "title": "Banner",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "breadcrumb",
       "type": "registry:ui",
       "title": "Breadcrumb",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "button-group",
       "type": "registry:ui",
       "title": "Button Group",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "button",
       "type": "registry:ui",
       "title": "Button",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54863:351."
+      "description": "Generated 1:1 from the KinetixUI design source, node 54863:351.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "calendar",
       "type": "registry:ui",
       "title": "Calendar",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "card",
       "type": "registry:ui",
       "title": "Card",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "carousel",
       "type": "registry:ui",
       "title": "Carousel",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "chart",
       "type": "registry:ui",
       "title": "Chart",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Flutter"
+      ]
     },
     {
       "name": "checkbox",
       "type": "registry:ui",
       "title": "Checkbox",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54863:483."
+      "description": "Generated 1:1 from the KinetixUI design source, node 54863:483.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "circular-progress",
       "type": "registry:ui",
       "title": "Circular Progress",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "code-block",
       "type": "registry:ui",
       "title": "Code Block",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "collapsible",
       "type": "registry:ui",
       "title": "Collapsible",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "color-picker",
       "type": "registry:ui",
       "title": "Color Picker",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ],
+      "status": "beta"
     },
     {
       "name": "command",
       "type": "registry:ui",
       "title": "Command",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "comparison-slider",
       "type": "registry:ui",
       "title": "Comparison Slider",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "context-menu",
       "type": "registry:ui",
       "title": "Context Menu",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "data-grid",
       "type": "registry:ui",
       "title": "Data Grid",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ],
+      "status": "beta"
     },
     {
       "name": "data-table",
       "type": "registry:ui",
       "title": "Data Table",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "date-picker",
       "type": "registry:ui",
       "title": "Date Picker",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "description-list",
       "type": "registry:ui",
       "title": "Description List",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "dialog",
       "type": "registry:ui",
       "title": "Dialog",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "diff-viewer",
       "type": "registry:ui",
       "title": "Diff Viewer",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ],
+      "status": "beta"
     },
     {
       "name": "direction-provider",
       "type": "registry:ui",
       "title": "Direction Provider",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "drawer",
       "type": "registry:ui",
       "title": "Drawer",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "dropdown-menu",
       "type": "registry:ui",
       "title": "Dropdown Menu",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "empty",
       "type": "registry:ui",
       "title": "Empty",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "fab",
       "type": "registry:ui",
       "title": "Fab",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "field",
       "type": "registry:ui",
       "title": "Field",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "file-upload",
       "type": "registry:ui",
       "title": "File Upload",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "footer",
       "type": "registry:ui",
       "title": "Footer",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "form",
       "type": "registry:ui",
       "title": "Form",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ]
     },
     {
       "name": "hover-card",
       "type": "registry:ui",
       "title": "Hover Card",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "image",
       "type": "registry:ui",
       "title": "Image",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "inform",
       "type": "registry:ui",
       "title": "Inform",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "input-group",
       "type": "registry:ui",
       "title": "Input Group",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "input-otp",
       "type": "registry:ui",
       "title": "Input Otp",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "input",
       "type": "registry:ui",
       "title": "Input",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13836."
+      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13836.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "json-viewer",
       "type": "registry:ui",
       "title": "Json Viewer",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ],
+      "status": "beta"
     },
     {
       "name": "kanban-board",
       "type": "registry:ui",
       "title": "Kanban Board",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
     },
     {
       "name": "kbd",
       "type": "registry:ui",
       "title": "Kbd",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "label",
       "type": "registry:ui",
       "title": "Label",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "list",
       "type": "registry:ui",
       "title": "List",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "markdown-editor",
       "type": "registry:ui",
       "title": "Markdown Editor",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ],
+      "status": "beta"
     },
     {
       "name": "marquee",
       "type": "registry:ui",
       "title": "Marquee",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "menubar",
       "type": "registry:ui",
       "title": "Menubar",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "message-bubble",
       "type": "registry:ui",
       "title": "Message Bubble",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ],
+      "status": "beta"
     },
     {
       "name": "metric",
       "type": "registry:ui",
       "title": "Metric",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "modal",
       "type": "registry:ui",
       "title": "Modal",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54857:1322."
+      "description": "Generated 1:1 from the KinetixUI design source, node 54857:1322.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "multi-select",
       "type": "registry:ui",
       "title": "Multi Select",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ],
+      "status": "beta"
     },
     {
       "name": "native-select",
       "type": "registry:ui",
       "title": "Native Select",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ]
     },
     {
       "name": "navigation-bar",
       "type": "registry:ui",
       "title": "Navigation Bar",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "navigation-menu",
       "type": "registry:ui",
       "title": "Navigation Menu",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ]
     },
     {
       "name": "notification-center",
       "type": "registry:ui",
       "title": "Notification Center",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ],
+      "status": "beta"
     },
     {
       "name": "number-input",
       "type": "registry:ui",
       "title": "Number Input",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "page-header",
       "type": "registry:ui",
       "title": "Page Header",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "pagination",
       "type": "registry:ui",
       "title": "Pagination",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "password-input",
       "type": "registry:ui",
       "title": "Password Input",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "popover",
       "type": "registry:ui",
       "title": "Popover",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "progress",
       "type": "registry:ui",
       "title": "Progress",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "quote",
       "type": "registry:ui",
       "title": "Quote",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "radio-group",
       "type": "registry:ui",
       "title": "Radio Group",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54863:536."
+      "description": "Generated 1:1 from the KinetixUI design source, node 54863:536.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "rating",
       "type": "registry:ui",
       "title": "Rating",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "resizable",
       "type": "registry:ui",
       "title": "Resizable",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "scroll-area",
       "type": "registry:ui",
       "title": "Scroll Area",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "segmented-control",
       "type": "registry:ui",
       "title": "Segmented Control",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "select",
       "type": "registry:ui",
       "title": "Select",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13882."
+      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13882.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "separator",
       "type": "registry:ui",
       "title": "Separator",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "sheet",
       "type": "registry:ui",
       "title": "Sheet",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "sidebar",
       "type": "registry:ui",
       "title": "Sidebar",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose"
+      ]
     },
     {
       "name": "skeleton",
       "type": "registry:ui",
       "title": "Skeleton",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "slider",
       "type": "registry:ui",
       "title": "Slider",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "sonner",
       "type": "registry:ui",
       "title": "Sonner",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "spinner",
       "type": "registry:ui",
       "title": "Spinner",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "stepper",
       "type": "registry:ui",
       "title": "Stepper",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "switch",
       "type": "registry:ui",
       "title": "Switch",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13984."
+      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13984.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "tab-bar",
       "type": "registry:ui",
       "title": "Tab Bar",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "table-of-contents",
       "type": "registry:ui",
       "title": "Table Of Contents",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "table",
       "type": "registry:ui",
       "title": "Table",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "tabs",
       "type": "registry:ui",
       "title": "Tabs",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "tag",
       "type": "registry:ui",
       "title": "Tag",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54855:14021."
+      "description": "Generated 1:1 from the KinetixUI design source, node 54855:14021.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "textarea",
       "type": "registry:ui",
       "title": "Textarea",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13857."
+      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13857.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "timeline",
       "type": "registry:ui",
       "title": "Timeline",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "toggle-group",
       "type": "registry:ui",
       "title": "Toggle Group",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "toggle",
       "type": "registry:ui",
       "title": "Toggle",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "tooltip",
       "type": "registry:ui",
       "title": "Tooltip",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
     },
     {
       "name": "tour",
       "type": "registry:ui",
       "title": "Tour",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
     },
     {
       "name": "tree-view",
       "type": "registry:ui",
       "title": "Tree View",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ],
+      "status": "beta"
     },
     {
       "name": "virtual-list",
       "type": "registry:ui",
       "title": "Virtual List",
-      "description": "Ported onto the KinetixUI token contract."
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ],
+      "status": "beta"
     }
   ]
 }

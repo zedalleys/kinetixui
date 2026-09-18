@@ -6,6 +6,7 @@ import { doctor } from "./commands/doctor.js";
 import { init } from "./commands/init.js";
 import { inspect } from "./commands/inspect.js";
 import { list } from "./commands/list.js";
+import { parity } from "./commands/parity.js";
 import { DEFAULT_REGISTRY } from "./lib/config.js";
 // Bundled at build time (esbuild inlines JSON imports), not read at runtime —
 // so `kinetixui --version` can never drift from the published package again.
@@ -66,6 +67,20 @@ program
   .action(async (name: string, opts: { registry: string }) => {
     try {
       await inspect(name, { registry: opts.registry });
+    } catch (err) {
+      console.error(pc.red("✖"), (err as Error).message);
+      process.exitCode = 1;
+    }
+  });
+
+program
+  .command("parity")
+  .description("Show which platforms carry each component (or one, by name).")
+  .argument("[components...]", "component names, e.g. button card — omit for the full matrix")
+  .option("-r, --registry <url>", "registry base URL", DEFAULT_REGISTRY)
+  .action(async (components: string[], opts: { registry: string }) => {
+    try {
+      await parity(components, { registry: opts.registry });
     } catch (err) {
       console.error(pc.red("✖"), (err as Error).message);
       process.exitCode = 1;
