@@ -90,11 +90,11 @@ its own affordance), is in
   gap** — `banner.dart`'s own doc comment already says "not yet ported to
   Flutter... No icon library wired in yet." This page didn't discover that;
   it's confirming what the source already says.
-- **`Inform` isn't ported to Flutter or SwiftUI at all** (no
-  `Inform.dart`/`Inform.swift`) — the only platform with a port is Compose.
-  This component isn't on the ["seven standing non-ports"](/docs/contributing)
-  list, so this is a real, previously-undocumented gap worth a follow-up:
-  either port it, or add it to that list with a reason.
+- **`Inform` was missing on Flutter and SwiftUI** when this page first
+  shipped — flagged here as a real, previously-undocumented gap (not on the
+  ["seven standing non-ports"](/docs/contributing) list, and no architectural
+  reason for the omission). It's since been closed: `Inform.dart`/
+  `Inform.swift` now exist, so this finding is fixed, not open.
 - **`Select`'s Compose glyph (`⌄`) differs from `Accordion`'s (`▾`)** for the
   same semantic "chevron pointing down" — a small, real inconsistency inside
   Compose itself, independent of any cross-platform question.
