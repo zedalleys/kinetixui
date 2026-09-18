@@ -1,5 +1,11 @@
 # @kinetixui/ui
 
+## 0.14.0
+
+### Patch Changes
+
+- @kinetixui/tokens@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes
