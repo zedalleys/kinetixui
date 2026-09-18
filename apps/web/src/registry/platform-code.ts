@@ -683,6 +683,44 @@ KinetixTabsContent {
 )`,
   },
 
+  "app-bar-demo": {
+    html: `<header class="kx-app-bar">
+  <span class="kx-app-bar__brand">Acme</span>
+  <nav class="kx-app-bar__nav" aria-label="Primary">
+    <a href="/" class="kx-app-bar__link kx-app-bar__link--active">Overview</a>
+    <a href="/reports" class="kx-app-bar__link">Reports</a>
+  </nav>
+  <div class="kx-app-bar__actions"><button class="kx-btn kx-btn--primary kx-btn--sm">New</button></div>
+</header>
+<!-- bg: var(--background) · border-bottom: var(--border) · active link bg: var(--accent) -->`,
+    swift: `KinetixAppBar {
+  Text("Acme")
+} nav: {
+  KinetixAppBarLink("Overview", active: true) { navigate("/") }
+  KinetixAppBarLink("Reports") { navigate("/reports") }
+} actions: {
+  KinetixButton(action: create) { Text("New") }
+}`,
+    kotlin: `KinetixAppBar(
+  brand = { Text("Acme") },
+  nav = {
+    KinetixAppBarLink("Overview", onClick = { navigate("/") }, active = true)
+    KinetixAppBarLink("Reports", onClick = { navigate("/reports") })
+  },
+  actions = { KinetixButton(onClick = ::create) { Text("New") } },
+)`,
+    dart: `KinetixAppBar(
+  brand: const Text('Acme'),
+  nav: [
+    KinetixAppBarLink('Overview', onTap: () => navigate('/'), active: true),
+    KinetixAppBarLink('Reports', onTap: () => navigate('/reports')),
+  ],
+  actions: [
+    KinetixButton(onPressed: create, child: const Text('New')),
+  ],
+)`,
+  },
+
   "tag-demo": {
     html: `<span class="kx-tag">design <button aria-label="Remove">×</button></span>
 <!-- bg: var(--secondary) · text: var(--secondary-foreground) · pill -->`,
