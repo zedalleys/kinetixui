@@ -41,9 +41,13 @@ import androidx.compose.ui.unit.dp
  * `KinetixNumberInput`'s `min`/`max` uses. `w-3`/`h-4` (the grip handle)
  * are on the shared `spacing_*` scale; the handle's own hit-target width
  * isn't (`w-px` visually, wider here for a touch target) — hardcoded,
- * same reasoning as `KinetixToggle`'s off-scale sizes. The grip glyph is
- * a plain "⋮⋮" stand-in for lucide's `GripVertical` — no icon library
- * wired in yet, same gap noted for `KinetixBreadcrumbSeparator`.
+ * same reasoning as `KinetixToggle`'s off-scale sizes. The handle itself is
+ * a plain solid-fill bar (`colors.border`, rounded), not a rendering of
+ * lucide's `GripVertical` dots — no icon library wired in yet, same gap
+ * noted for `KinetixBreadcrumbSeparator`. Flutter/SwiftUI render an
+ * ellipsis glyph here instead, a separate, tracked divergence (see
+ * `icons/mapping.json`) — neither is this file's "⋮⋮" stand-in this
+ * comment used to (incorrectly) claim.
  */
 @Composable
 fun KinetixResizablePanels(

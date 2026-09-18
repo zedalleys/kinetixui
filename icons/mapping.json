@@ -24,7 +24,7 @@
           "react": { "file": "packages/ui/src/components/select.tsx" },
           "flutter": { "type": "icon-ref", "value": "Icons.keyboard_arrow_down", "file": "packages/ui-flutter/lib/src/select.dart" },
           "swiftui": { "type": "icon-ref", "value": "chevron.down", "file": "packages/ui-swiftui/Sources/KinetixUI/Select.swift" },
-          "compose": { "type": "glyph", "value": "⌄", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Select.kt", "note": "a DIFFERENT glyph than Accordion's ▾ for the same semantic chevron-down — a real, minor cross-component inconsistency within Compose itself, not a mapping error" }
+          "compose": { "type": "glyph", "value": "▾", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Select.kt", "note": "now matches Accordion's glyph — was a different ⌄ before, fixed for consistency" }
         }
       ]
     },

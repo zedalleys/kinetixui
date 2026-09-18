@@ -70,7 +70,7 @@ fun KinetixSelectTrigger(
             color = if (text != null) colors.foreground else colors.mutedForeground,
             fontSize = dimensionResource(R.dimen.font_size_body_md).value.sp,
         )
-        Text(text = "⌄", color = colors.mutedForeground)
+        Text(text = "▾", color = colors.mutedForeground) // matches KinetixAccordion's chevron glyph
     }
 }
 
