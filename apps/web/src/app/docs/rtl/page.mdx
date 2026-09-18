@@ -1,0 +1,66 @@
+export const metadata = {
+  title: "RTL",
+  description: "Right-to-left support in KinetixUI components and layout — the two pieces a consuming app needs.",
+};
+
+# RTL
+
+KinetixUI components mirror correctly under `dir="rtl"` — this is a
+CSS-and-context concern in the component library itself, not something
+this docs site (English-only, always `dir="ltr"`) demonstrates live.
+
+<Callout>
+  **In progress.** RTL is being converted incrementally, one component at a
+  time. 67 of 96 `packages/ui/src/components` files already use
+  direction-relative (logical) classes; the remainder still use
+  physical-direction ones (`pl-`, `right-`, …) and haven't been converted
+  yet. `pnpm check:rtl` in CI locks in every conversion already done and
+  blocks regressions — see `RTL.md` at the repo root for the current,
+  authoritative per-file list.
+</Callout>
+
+## The two pieces
+
+A component mirroring under RTL needs **both** of these — either alone
+isn't enough:
+
+1. **CSS logical properties.** Component source uses direction-relative
+   Tailwind utilities (`ps-`/`pe-`, `ms-`/`me-`, `start-`/`end-`,
+   `border-s`/`border-e`, `text-start`/`text-end`) instead of physical
+   ones (`pl-`/`pr-`, `left-`/`right-`, `text-left`/`text-right`).
+2. **Radix direction context.** Every Radix primitive KinetixUI builds on
+   (`Select`, `DropdownMenu`, `Popover`, `Tooltip`, `ContextMenu`,
+   `Menubar`, `NavigationMenu`, `HoverCard`, …) reads direction from
+   Radix's own `DirectionContext`, not from the ambient `dir` attribute.
+   With no provider in the tree it defaults hard to `"ltr"` and stamps
+   that onto its own portaled content — so a `Select`'s checkmark, a
+   `DropdownMenu`'s items, a `Popover`'s offset math stay LTR even under
+   `<html dir="rtl">` unless the app is wrapped in
+   `KinetixDirectionProvider`.
+
+## Usage
+
+A consuming app needs both `dir` on `<html>` and the provider around its
+tree:
+
+```tsx
+import { KinetixDirectionProvider } from "@kinetixui/ui";
+
+<html dir={dir}>
+  <body>
+    <KinetixDirectionProvider dir={dir}>{children}</KinetixDirectionProvider>
+  </body>
+</html>
+```
+
+`dir` is whatever your app derives it from (a locale, a user setting) —
+KinetixUI doesn't ship locale detection or persistence; it just mirrors
+correctly once told which direction to render.
+
+## Native platforms
+
+Each native port has its own, separate direction mechanism, independent
+of this conversion: Jetpack Compose's `LocalLayoutDirection`, SwiftUI's
+`layoutDirection` environment value, and Flutter's `Directionality`. Wire
+each through your app the way you would any other platform-native RTL
+setting.

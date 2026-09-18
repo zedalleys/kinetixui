@@ -210,6 +210,7 @@ export const docsNav: NavGroup[] = [
       { title: "Icons", href: "/docs/icons" },
       { title: "Theming", href: "/docs/theming" },
       { title: "Dark Mode", href: "/docs/dark-mode" },
+      { title: "RTL", href: "/docs/rtl" },
       { title: "Accessibility", href: "/docs/accessibility" },
     ],
   },
