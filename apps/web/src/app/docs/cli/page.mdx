@@ -54,6 +54,29 @@ Not sure what's available? List every component in the registry:
 npx @kinetixui/cli list
 ```
 
+## inspect
+
+Look at one component before (or after) adding it — description, npm
+dependencies, other registry items it needs, the files it writes, and
+whether it's already installed in the current project:
+
+```bash
+npx @kinetixui/cli inspect button
+```
+
+## doctor
+
+Sanity-check a project that's already run `init`: is `kinetixui.json`
+valid, do its aliases resolve to real directories, does the Tailwind CSS
+target exist, is the registry reachable, and does everything sitting in
+your `ui` directory still match a name the registry knows about. Each
+check prints pass / warn / fail; `doctor` exits non-zero if anything
+failed outright (not just warned), so it's safe to run in CI:
+
+```bash
+npx @kinetixui/cli doctor
+```
+
 ## Options
 
 | Flag | Applies to | Does |
@@ -61,6 +84,10 @@ npx @kinetixui/cli list
 | `-y, --yes` | `init` | skip prompts, use defaults |
 | `-a, --all` | `add` | install every component in the registry |
 | `-o, --overwrite` | `add` | replace files that already exist |
-| `-r, --registry <url>` | all | point at a different registry (defaults to `https://kinetixui.com/r`) |
+| `-r, --registry <url>` | `init`, `add`, `list`, `inspect` | point at a different registry (defaults to `https://kinetixui.com/r`) |
+
+`doctor` always checks against the default registry — it doesn't take
+`--registry` yet, since `kinetixui.json` doesn't record which registry a
+project was set up against.
 
 See [kinetixui.json](/docs/kinetixui-json) for what the config file controls.

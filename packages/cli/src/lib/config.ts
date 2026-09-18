@@ -3,6 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export const CONFIG_FILE = "kinetixui.json";
+export const DEFAULT_REGISTRY = "https://kinetixui.com/r";
 
 export interface KinetixConfig {
   $schema?: string;
