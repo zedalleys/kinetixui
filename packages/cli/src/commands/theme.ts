@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import pc from "picocolors";
 import { checkContrast, deriveForegrounds, parseThemeFile, scaffoldThemeFile, toCssBlock } from "../lib/theme.js";
+import { assertThemeName } from "../lib/validate.js";
 
 const THEME_DIR = "kinetixui-themes";
 
@@ -19,6 +20,7 @@ export interface ThemeCreateOptions {
 }
 
 export async function themeCreate(name: string, options: ThemeCreateOptions): Promise<void> {
+  assertThemeName(name);
   const cwd = process.cwd();
   const file = csvPath(cwd, name);
 
@@ -39,6 +41,7 @@ export interface ThemeBuildOptions {
 }
 
 export async function themeBuild(name: string, options: ThemeBuildOptions): Promise<void> {
+  assertThemeName(name);
   const cwd = process.cwd();
   const src = csvPath(cwd, name);
 

@@ -17,7 +17,12 @@ export async function inspect(name: string, options: InspectOptions): Promise<vo
   console.log(`${pc.dim("Type")}         ${item.type}`);
 
   const cwd = process.cwd();
-  const config = await readConfig(cwd);
+  let config: Awaited<ReturnType<typeof readConfig>> = null;
+  try {
+    config = await readConfig(cwd);
+  } catch {
+    console.log(`${pc.dim("Installed")}    ${pc.yellow("? (kinetixui.json exists but isn't valid JSON)")}`);
+  }
   if (config) {
     const uiDir = resolveAliasDir(cwd, config, "ui");
     const installed = item.files.some(

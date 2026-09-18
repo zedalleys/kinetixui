@@ -48,9 +48,12 @@ export const COLOR_PATTERNS: RegExp[] = [
   new RegExp(`:\\s*["']?#${HEX}["']?`, "g"),
 ];
 
-/** Box-model spacing utilities that accept an arbitrary value — not `w-`/`h-` sizing. */
+/** Box-model spacing utilities that accept an arbitrary value — not `w-`/`h-` sizing.
+ *  The leading `-?` wraps the whole alternation (not just the first branch) so
+ *  negative arbitrary values apply uniformly, e.g. `-top-[10px]`/`-inset-[6px]`,
+ *  not just `-mt-[10px]`. */
 const SPACING_UTILITY_PATTERN =
-  "-?(?:p|m)[trblxy]?|gap(?:-[xy])?|space-[xy]|inset(?:-[xy])?|top|right|bottom|left";
+  "-?(?:(?:p|m)[trblxy]?|gap(?:-[xy])?|space-[xy]|inset(?:-[xy])?|top|right|bottom|left)";
 const SPACING_VALUE = "-?[\\d.]+(?:px|rem|em|%)?";
 
 export const SPACING_PATTERNS: RegExp[] = [

@@ -14,6 +14,21 @@ const SUGGESTION: Record<LintViolation["kind"], string> = {
   spacing: "consider a token-backed spacing utility instead (e.g. p-4, gap-2)",
 };
 
+/** Drop any directory that's nested inside another one already in the list —
+ *  with the default aliases, "ui" (`@/components/ui`) sits inside
+ *  "components" (`@/components`), so walking both independently would
+ *  recurse the "ui" subtree twice before the per-file dedup below discards
+ *  the duplicates. Keeping only the shallowest, non-overlapping roots avoids
+ *  that redundant I/O while still walking unrelated custom alias paths. */
+function dedupeNestedDirs(dirs: string[]): string[] {
+  const sorted = [...new Set(dirs)].sort((a, b) => a.length - b.length);
+  const kept: string[] = [];
+  for (const dir of sorted) {
+    if (!kept.some((k) => dir === k || dir.startsWith(k + path.sep))) kept.push(dir);
+  }
+  return kept;
+}
+
 async function collectFiles(dir: string): Promise<string[]> {
   if (!existsSync(dir)) return [];
   const files: string[] = [];
@@ -45,7 +60,7 @@ export async function lint(targetArg: string | undefined, options: LintOptions):
     }
     const config = await readConfig(cwd);
     if (!config) throw new Error(`${CONFIG_FILE} exists but isn't valid JSON.`);
-    dirs = [resolveAliasDir(cwd, config, "components"), resolveAliasDir(cwd, config, "ui")];
+    dirs = dedupeNestedDirs([resolveAliasDir(cwd, config, "components"), resolveAliasDir(cwd, config, "ui")]);
   }
 
   const seenFiles = new Set<string>();
