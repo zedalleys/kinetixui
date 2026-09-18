@@ -742,6 +742,25 @@
       ]
     },
     {
+      "name": "direction-provider",
+      "type": "registry:ui",
+      "title": "Direction Provider",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "@radix-ui/react-direction"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/direction-provider.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/direction-provider.tsx"
+        }
+      ]
+    },
+    {
       "name": "drawer",
       "type": "registry:ui",
       "title": "Drawer",

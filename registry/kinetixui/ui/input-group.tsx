@@ -52,7 +52,7 @@ const InputGroupInput = React.forwardRef<
 InputGroupInput.displayName = "InputGroupInput";
 
 const addonVariants = cva("flex shrink-0 items-center gap-2 text-muted-foreground [&_svg]:size-4 [&_svg]:shrink-0", {
-  variants: { align: { start: "pl-3", end: "pr-3" } },
+  variants: { align: { start: "ps-3", end: "pe-3" } },
   defaultVariants: { align: "start" },
 });
 
@@ -83,7 +83,7 @@ const InputGroupButton = React.forwardRef<
     ref={ref}
     type={type}
     className={cn(
-      "flex h-full shrink-0 items-center gap-1.5 self-stretch border-l border-input bg-muted px-3 text-label-md text-foreground",
+      "flex h-full shrink-0 items-center gap-1.5 self-stretch border-s border-input bg-muted px-3 text-label-md text-foreground",
       // base is bg-muted and muted==accent on dark, so the fill is a no-op there — the ring carries it
       "outline-none transition-colors hover:bg-accent hover:ring-1 hover:ring-inset hover:ring-ring focus-visible:bg-accent focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-disabled",
       "[&_svg]:size-4 [&_svg]:shrink-0",

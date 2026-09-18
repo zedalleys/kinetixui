@@ -8,6 +8,7 @@ import { mainNav, siteConfig } from "@/lib/site";
 import { CommandMenu } from "./command-menu";
 import { GitHubButton } from "./github-button";
 import { ModeToggle } from "./mode-toggle";
+import { DirToggle } from "./dir-toggle";
 import { MobileNav } from "./mobile-nav";
 
 export function SiteHeader() {
@@ -35,6 +36,7 @@ export function SiteHeader() {
             <CommandMenu />
           </div>
           <GitHubButton />
+          <DirToggle />
           <ModeToggle />
           <MobileNav />
         </div>

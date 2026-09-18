@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
  */
 const nativeSelectVariants = cva(
   [
-    "flex w-full appearance-none border border-input bg-background px-3 py-3 pr-9",
+    "flex w-full appearance-none border border-input bg-background px-3 py-3 pe-9",
     "font-sans text-[14px] leading-5 tracking-[0.25px] text-foreground",
     "outline-none transition-colors",
     "focus-visible:border-primary focus-visible:shadow-focus",
@@ -59,7 +59,7 @@ const NativeSelect = React.forwardRef<HTMLSelectElement, NativeSelectProps>(
       >
         {children}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      <ChevronDown className="pointer-events-none absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
     </div>
   ),
 );

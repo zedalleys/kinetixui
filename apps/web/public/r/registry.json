@@ -189,6 +189,12 @@
       "description": "Ported onto the KinetixUI token contract."
     },
     {
+      "name": "direction-provider",
+      "type": "registry:ui",
+      "title": "Direction Provider",
+      "description": "Ported onto the KinetixUI token contract."
+    },
+    {
       "name": "drawer",
       "type": "registry:ui",
       "title": "Drawer",
