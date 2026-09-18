@@ -7,6 +7,7 @@ import { init } from "./commands/init.js";
 import { inspect } from "./commands/inspect.js";
 import { list } from "./commands/list.js";
 import { parity } from "./commands/parity.js";
+import { themeBuild, themeCreate } from "./commands/theme.js";
 import { DEFAULT_REGISTRY } from "./lib/config.js";
 // Bundled at build time (esbuild inlines JSON imports), not read at runtime —
 // so `kinetixui --version` can never drift from the published package again.
@@ -93,6 +94,38 @@ program
   .action(async () => {
     try {
       await doctor();
+    } catch (err) {
+      console.error(pc.red("✖"), (err as Error).message);
+      process.exitCode = 1;
+    }
+  });
+
+const theme = program
+  .command("theme")
+  .description("Scaffold and compile a local token override (CSS only — see 'theme build --help').");
+
+theme
+  .command("create")
+  .description("Scaffold kinetixui-themes/<name>.csv with every overridable token, commented out.")
+  .argument("<name>", "theme name, e.g. acme")
+  .option("-f, --force", "overwrite an existing theme file", false)
+  .action(async (name: string, opts: { force: boolean }) => {
+    try {
+      await themeCreate(name, { force: opts.force });
+    } catch (err) {
+      console.error(pc.red("✖"), (err as Error).message);
+      process.exitCode = 1;
+    }
+  });
+
+theme
+  .command("build")
+  .description("Compile kinetixui-themes/<name>.csv to CSS and print a WCAG AA contrast report. CSS only — no native (SwiftUI/Compose/Flutter) output yet.")
+  .argument("<name>", "theme name, e.g. acme")
+  .option("--no-fail-on-contrast", "exit 0 even if a pair fails WCAG AA")
+  .action(async (name: string, opts: { failOnContrast: boolean }) => {
+    try {
+      await themeBuild(name, { failOnContrast: opts.failOnContrast });
     } catch (err) {
       console.error(pc.red("✖"), (err as Error).message);
       process.exitCode = 1;
