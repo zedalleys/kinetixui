@@ -5,6 +5,7 @@ import { add } from "./commands/add.js";
 import { doctor } from "./commands/doctor.js";
 import { init } from "./commands/init.js";
 import { inspect } from "./commands/inspect.js";
+import { lint } from "./commands/lint.js";
 import { list } from "./commands/list.js";
 import { parity } from "./commands/parity.js";
 import { themeBuild, themeCreate } from "./commands/theme.js";
@@ -82,6 +83,20 @@ program
   .action(async (components: string[], opts: { registry: string }) => {
     try {
       await parity(components, { registry: opts.registry });
+    } catch (err) {
+      console.error(pc.red("✖"), (err as Error).message);
+      process.exitCode = 1;
+    }
+  });
+
+program
+  .command("lint")
+  .description("Scan for hardcoded colors and spacing that should be semantic tokens.")
+  .argument("[path]", "directory to scan — defaults to the components/ui aliases from kinetixui.json")
+  .option("--no-fail", "exit 0 even if violations are found")
+  .action(async (target: string | undefined, opts: { fail: boolean }) => {
+    try {
+      await lint(target, { fail: opts.fail });
     } catch (err) {
       console.error(pc.red("✖"), (err as Error).message);
       process.exitCode = 1;

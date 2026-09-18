@@ -134,6 +134,42 @@ that properly means porting meaningful parts of
 token-transform logic to three more target languages — a real, separate
 undertaking, not attempted here. `theme build` only ever writes CSS.
 
+## lint
+
+Scans your project for hardcoded values that should probably be semantic
+tokens instead — a raw hex color in a Tailwind arbitrary-value utility
+(`bg-[#1a2b3c]`) or an inline style, and an arbitrary spacing value
+(`p-[13px]`, `gap-[10px]`, …) on a box-model utility. With no argument it
+scans the `components`/`ui` aliases from `kinetixui.json`; pass a path to
+scan anywhere else:
+
+```bash
+npx @kinetixui/cli lint
+npx @kinetixui/cli lint src/app
+```
+
+Each hit prints as `file:line` with the offending line and a suggestion.
+Comments are skipped (a hex mentioned in a `//` or `/* */` comment won't
+fire), and the checks are anchored to real Tailwind/style contexts, not any
+bare `#xxxxxx`-looking substring — an `href="#section"` anchor link won't
+trigger it. `lint` exits non-zero if it finds anything, so it's safe to run
+in CI; pass `--no-fail` to see the report without failing the run.
+
+**Not covered by this check** — each needs infrastructure this is deliberately
+not building yet:
+
+- **Unknown/deprecated tokens** — would need a live, version-matched list of
+  every current token name fetched over the network; fragile without real
+  support for it.
+- **Accessibility violations** — needs a real engine (axe-core or similar),
+  a separate undertaking on its own.
+- **Cross-platform inconsistencies** — doesn't apply to a single consumer's
+  single-platform project; that check only makes sense inside this
+  monorepo, where `scripts/check-rtl.mjs`/`check-icon-mapping.mjs` already
+  do the equivalent.
+- **Unsupported components** — already covered by [`doctor`](#doctor)'s
+  "files that don't match the registry" check.
+
 ## Options
 
 | Flag | Applies to | Does |
