@@ -20,6 +20,7 @@
     "gen:specs": "node scripts/gen-component-specs.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
     "check:rtl": "node scripts/check-rtl.mjs",
+    "check:icons": "node scripts/check-icon-mapping.mjs",
     "build:registry": "node scripts/gen-registry.mjs && shadcn build registry/registry.json --output apps/web/public/r && node scripts/rewrite-schema.mjs && node scripts/gen-registry-index.mjs && node scripts/gen-component-specs.mjs",
     "build:ui": "pnpm --filter @kinetixui/ui build",
     "build:cli": "pnpm --filter @kinetixui/cli build",

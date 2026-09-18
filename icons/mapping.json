@@ -1,0 +1,349 @@
+{
+  "$schema": "https://kinetixui.com/schema/icon-mapping.json",
+  "description": "Cross-platform mapping for icons KinetixUI COMPONENTS render internally (their own expand chevron, checkmark, close button, etc.) — not icons a caller passes in as a prop/children, which stay free-form per platform by design and are out of scope here. lucide-react remains the single React icon source; native ports each use their own platform-native icon mechanism (Material Icons on Flutter, SF Symbols on SwiftUI) or, on Jetpack Compose, plain Unicode glyphs — Compose uses ZERO `Icons.*` (Material Icons) references anywhere in this codebase today, confirmed by exhaustive grep across every port file. This file only covers icon names reused across two or more components; single-component icons (e.g. Rating's Star, ColorPicker's Pipette) aren't covered by this slice — see /docs/icons for the full list of what's not yet mapped.",
+  "types": {
+    "icon-ref": "a named icon reference from the platform's own built-in icon set (Flutter Icons.*, SwiftUI SF Symbol systemName)",
+    "glyph": "a literal Unicode character rendered as plain text (e.g. Compose's Text(text = \"▾\")), not a named icon asset",
+    "shape": "a custom-drawn shape (Circle(), CircleShape, BoxShape.circle, Canvas), not an icon or a text glyph",
+    "absent": "no hardcoded icon-like element found in this platform's port of this component — verified by grep, not assumed. Usually means the platform's own built-in widget draws its own affordance (e.g. a native context-menu's checkmark), or the element genuinely isn't rendered on that platform."
+  },
+  "icons": [
+    {
+      "name": "ChevronDown",
+      "reactImport": "lucide-react",
+      "components": [
+        {
+          "component": "accordion",
+          "react": { "file": "packages/ui/src/components/accordion.tsx" },
+          "flutter": { "type": "icon-ref", "value": "Icons.keyboard_arrow_down", "file": "packages/ui-flutter/lib/src/accordion.dart" },
+          "swiftui": { "type": "icon-ref", "value": "chevron.down", "file": "packages/ui-swiftui/Sources/KinetixUI/Accordion.swift" },
+          "compose": { "type": "glyph", "value": "▾", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Accordion.kt", "note": "rotated 180° when open" }
+        },
+        {
+          "component": "select",
+          "react": { "file": "packages/ui/src/components/select.tsx" },
+          "flutter": { "type": "icon-ref", "value": "Icons.keyboard_arrow_down", "file": "packages/ui-flutter/lib/src/select.dart" },
+          "swiftui": { "type": "icon-ref", "value": "chevron.down", "file": "packages/ui-swiftui/Sources/KinetixUI/Select.swift" },
+          "compose": { "type": "glyph", "value": "⌄", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Select.kt", "note": "a DIFFERENT glyph than Accordion's ▾ for the same semantic chevron-down — a real, minor cross-component inconsistency within Compose itself, not a mapping error" }
+        }
+      ]
+    },
+    {
+      "name": "ChevronLeft",
+      "reactImport": "lucide-react",
+      "components": [
+        {
+          "component": "calendar",
+          "flutter": { "type": "absent", "note": "no Icons.* found in calendar.dart" },
+          "swiftui": { "type": "absent", "note": "no systemName found in Calendar.swift" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "navigation-bar",
+          "flutter": { "type": "icon-ref", "value": "Icons.chevron_left", "file": "packages/ui-flutter/lib/src/navigation_bar.dart" },
+          "swiftui": { "type": "icon-ref", "value": "chevron.left", "file": "packages/ui-swiftui/Sources/KinetixUI/NavigationBar.swift" },
+          "compose": { "type": "glyph", "value": "‹", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/NavigationBar.kt" }
+        },
+        {
+          "component": "pagination",
+          "flutter": { "type": "icon-ref", "value": "Icons.chevron_left", "file": "packages/ui-flutter/lib/src/pagination.dart" },
+          "swiftui": { "type": "icon-ref", "value": "chevron.left", "file": "packages/ui-swiftui/Sources/KinetixUI/Pagination.swift" },
+          "compose": { "type": "absent" }
+        }
+      ]
+    },
+    {
+      "name": "ChevronRight",
+      "reactImport": "lucide-react",
+      "components": [
+        {
+          "component": "breadcrumb",
+          "flutter": { "type": "icon-ref", "value": "Icons.chevron_right", "file": "packages/ui-flutter/lib/src/breadcrumb.dart" },
+          "swiftui": { "type": "absent", "note": "no systemName found in Breadcrumb.swift" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "calendar",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "context-menu",
+          "flutter": { "type": "absent", "note": "context menu submenu indicator relies on the platform's own menu widget, not our own icon" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "dropdown-menu",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "json-viewer",
+          "flutter": { "type": "icon-ref", "value": "Icons.chevron_right", "file": "packages/ui-flutter/lib/src/json_viewer.dart" },
+          "swiftui": { "type": "icon-ref", "value": "chevron.right", "file": "packages/ui-swiftui/Sources/KinetixUI/JsonViewer.swift" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "menubar",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "pagination",
+          "flutter": { "type": "icon-ref", "value": "Icons.chevron_right", "file": "packages/ui-flutter/lib/src/pagination.dart" },
+          "swiftui": { "type": "icon-ref", "value": "chevron.right", "file": "packages/ui-swiftui/Sources/KinetixUI/Pagination.swift" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "tree-view",
+          "flutter": { "type": "icon-ref", "value": "Icons.chevron_right", "file": "packages/ui-flutter/lib/src/tree_view.dart" },
+          "swiftui": { "type": "icon-ref", "value": "chevron.right", "file": "packages/ui-swiftui/Sources/KinetixUI/TreeView.swift" },
+          "compose": { "type": "absent" }
+        }
+      ]
+    },
+    {
+      "name": "Check",
+      "reactImport": "lucide-react",
+      "components": [
+        {
+          "component": "checkbox",
+          "flutter": { "type": "icon-ref", "value": "Icons.check", "file": "packages/ui-flutter/lib/src/checkbox.dart" },
+          "swiftui": { "type": "icon-ref", "value": "checkmark", "file": "packages/ui-swiftui/Sources/KinetixUI/Checkbox.swift" },
+          "compose": { "type": "glyph", "value": "✓", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Checkbox.kt" }
+        },
+        {
+          "component": "code-block",
+          "flutter": { "type": "icon-ref", "value": "Icons.check", "file": "packages/ui-flutter/lib/src/code_block.dart", "note": "copied-to-clipboard confirmation state" },
+          "swiftui": { "type": "icon-ref", "value": "checkmark", "file": "packages/ui-swiftui/Sources/KinetixUI/CodeBlock.swift" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "context-menu",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "dropdown-menu",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "json-viewer",
+          "flutter": { "type": "absent", "note": "json-viewer's Check import is for its copy-confirmation state, same pattern as code-block, but not present in json_viewer.dart's Icons.* set (only chevron_right found)" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "menubar",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "message-bubble",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "multi-select",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "select",
+          "flutter": { "type": "icon-ref", "value": "Icons.check", "file": "packages/ui-flutter/lib/src/select.dart" },
+          "swiftui": { "type": "absent", "note": "Select.swift only has chevron.down in this scan — the selected-item checkmark wasn't found as a systemName literal" },
+          "compose": { "type": "glyph", "value": "✓", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Select.kt" }
+        },
+        {
+          "component": "stepper",
+          "flutter": { "type": "icon-ref", "value": "Icons.check", "file": "packages/ui-flutter/lib/src/stepper.dart" },
+          "swiftui": { "type": "icon-ref", "value": "checkmark", "file": "packages/ui-swiftui/Sources/KinetixUI/Stepper.swift" },
+          "compose": { "type": "absent" }
+        }
+      ]
+    },
+    {
+      "name": "X",
+      "reactImport": "lucide-react",
+      "components": [
+        {
+          "component": "app-bar",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "banner",
+          "flutter": { "type": "icon-ref", "value": "Icons.close", "file": "packages/ui-flutter/lib/src/banner.dart" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "glyph", "value": "×", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Banner.kt" }
+        },
+        {
+          "component": "dialog",
+          "flutter": { "type": "icon-ref", "value": "Icons.close", "file": "packages/ui-flutter/lib/src/dialog.dart" },
+          "swiftui": { "type": "icon-ref", "value": "xmark", "file": "packages/ui-swiftui/Sources/KinetixUI/Dialog.swift" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "file-upload",
+          "flutter": { "type": "icon-ref", "value": "Icons.close", "file": "packages/ui-flutter/lib/src/file_upload.dart" },
+          "swiftui": { "type": "icon-ref", "value": "xmark", "file": "packages/ui-swiftui/Sources/KinetixUI/FileUpload.swift" },
+          "compose": { "type": "glyph", "value": "×", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/FileUpload.kt" }
+        },
+        {
+          "component": "inform",
+          "flutter": { "type": "absent", "note": "packages/ui-flutter/lib/src/inform.dart does not exist — Inform is not ported to Flutter. Not on the documented \"seven standing non-ports\" list at /docs/contributing; worth a follow-up to either port it or add it to that list." },
+          "swiftui": { "type": "absent", "note": "packages/ui-swiftui/Sources/KinetixUI/Inform.swift does not exist — same gap as Flutter." },
+          "compose": { "type": "glyph", "value": "×", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Inform.kt", "note": "Compose is the ONLY native platform with an Inform port" }
+        },
+        {
+          "component": "modal",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "sheet",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "tag",
+          "flutter": { "type": "icon-ref", "value": "Icons.close", "file": "packages/ui-flutter/lib/src/tag.dart" },
+          "swiftui": { "type": "icon-ref", "value": "xmark", "file": "packages/ui-swiftui/Sources/KinetixUI/Tag.swift" },
+          "compose": { "type": "absent" }
+        }
+      ]
+    },
+    {
+      "name": "Circle",
+      "reactImport": "lucide-react",
+      "components": [
+        {
+          "component": "radio-group",
+          "flutter": { "type": "shape", "value": "BoxShape.circle", "file": "packages/ui-flutter/lib/src/radio_group.dart" },
+          "swiftui": { "type": "shape", "value": "Circle()", "file": "packages/ui-swiftui/Sources/KinetixUI/RadioGroup.swift" },
+          "compose": { "type": "shape", "value": "CircleShape", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/RadioGroup.kt" }
+        },
+        {
+          "component": "context-menu",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "dropdown-menu",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "menubar",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        }
+      ]
+    },
+    {
+      "name": "Minus",
+      "reactImport": "lucide-react",
+      "components": [
+        {
+          "component": "checkbox",
+          "flutter": { "type": "icon-ref", "value": "Icons.remove", "file": "packages/ui-flutter/lib/src/checkbox.dart", "note": "indeterminate state" },
+          "swiftui": { "type": "icon-ref", "value": "minus", "file": "packages/ui-swiftui/Sources/KinetixUI/Checkbox.swift" },
+          "compose": { "type": "glyph", "value": "−", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Checkbox.kt" }
+        },
+        {
+          "component": "input-otp",
+          "flutter": { "type": "absent" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "number-input",
+          "flutter": { "type": "icon-ref", "value": "Icons.remove", "file": "packages/ui-flutter/lib/src/number_input.dart" },
+          "swiftui": { "type": "icon-ref", "value": "minus", "file": "packages/ui-swiftui/Sources/KinetixUI/NumberInput.swift" },
+          "compose": { "type": "glyph", "value": "−", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/NumberInput.kt" }
+        }
+      ]
+    },
+    {
+      "name": "MoreHorizontal",
+      "reactImport": "lucide-react",
+      "components": [
+        {
+          "component": "breadcrumb",
+          "flutter": { "type": "absent", "note": "breadcrumb.dart only has Icons.chevron_right — the collapsed-items overflow indicator isn't a hardcoded native icon here" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "pagination",
+          "flutter": { "type": "icon-ref", "value": "Icons.more_horiz", "file": "packages/ui-flutter/lib/src/pagination.dart" },
+          "swiftui": { "type": "icon-ref", "value": "ellipsis", "file": "packages/ui-swiftui/Sources/KinetixUI/Pagination.swift" },
+          "compose": { "type": "absent" }
+        }
+      ]
+    },
+    {
+      "name": "GripVertical",
+      "reactImport": "lucide-react",
+      "components": [
+        {
+          "component": "comparison-slider",
+          "flutter": { "type": "absent", "note": "no Icons.* found in comparison_slider.dart — handle is drawn without a grip icon in this scan" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "resizable",
+          "flutter": { "type": "icon-ref", "value": "Icons.more_horiz", "file": "packages/ui-flutter/lib/src/resizable.dart", "note": "REAL DIVERGENCE: React's resizable.tsx uses a vertical grip-dots icon (GripVertical); Flutter and SwiftUI instead render a horizontal three-dot ellipsis — a genuinely different glyph shape, not just a different asset name for the same shape. Worth a follow-up to reconcile, not a mapping error." },
+          "swiftui": { "type": "icon-ref", "value": "ellipsis", "file": "packages/ui-swiftui/Sources/KinetixUI/Resizable.swift", "note": "same divergence as Flutter — ellipsis, not a grip icon" },
+          "compose": { "type": "absent" }
+        }
+      ]
+    },
+    {
+      "name": "CircleAlert / CircleCheck / Info / TriangleAlert",
+      "reactImport": "lucide-react",
+      "note": "This four-icon 'severity' cluster is always used together (error/success/info/warning) by the same component, so it's grouped as one entry rather than four repetitive ones. Component-level type/value pairs below list all four in Flutter's actual naming, which doesn't line up 1:1 with the lucide names (e.g. TriangleAlert -> warning_amber_outlined, CircleCheck -> check_circle_outline) — that's expected, not a mismatch, since each platform's icon set draws severity differently.",
+      "components": [
+        {
+          "component": "field",
+          "flutter": {
+            "type": "icon-ref",
+            "value": { "CircleAlert": "Icons.error_outline", "CircleCheck": "Icons.check_circle_outline", "Info": "Icons.info_outline", "TriangleAlert": "Icons.warning_amber_outlined" },
+            "file": "packages/ui-flutter/lib/src/field.dart"
+          },
+          "swiftui": { "type": "absent", "note": "no systemName severity icons found in Field.swift in this scan" },
+          "compose": { "type": "absent" }
+        },
+        {
+          "component": "banner",
+          "flutter": { "type": "absent", "note": "banner.dart's own doc comment explicitly says: \"not yet ported to Flutter... No icon library wired in yet\" — a documented, self-acknowledged gap, not something this mapping is newly discovering" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent", "note": "Banner.kt only has the close (×) glyph in this scan; severity iconography not found" }
+        },
+        {
+          "component": "inform",
+          "flutter": { "type": "absent", "note": "not ported (see the X-icon entry above for the same file-missing finding)" },
+          "swiftui": { "type": "absent" },
+          "compose": { "type": "absent", "note": "Inform.kt only has the close (×) glyph in this scan; severity iconography not found — likely color-only differentiation on this platform" }
+        }
+      ]
+    }
+  ]
+}

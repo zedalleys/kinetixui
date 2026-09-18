@@ -1,0 +1,103 @@
+export const metadata = {
+  title: "Icons",
+  description: "What KinetixUI's icon story actually is today — lucide-react on React, each native port's own icon mechanism, and a checked mapping for the icons components render internally.",
+};
+
+# Icons
+
+KinetixUI does **not** ship a canonical cross-platform icon compiler. This
+page documents the actual, current icon story — a deliberate choice, not a
+gap waiting to be filled — and the one piece of it that's a real, checked
+contract: the icons components render as part of their own implementation.
+
+## Two different kinds of icon
+
+**Caller-supplied icons** — an icon you pass into a component as a prop or
+`children` (a custom icon inside a `Button`, an `icon` prop on a `ListItem`)
+— are free-form on every platform, by design. React consumers reach for
+`lucide-react` (or anything else); native consumers reach for their
+platform's own icon set. There's nothing to standardize here: the component
+never inspects what you handed it, so there's no contract to keep in sync.
+
+**Component-owned icons** — an icon a component imports and renders
+*itself*, as part of its own implementation (`Accordion`'s expand chevron,
+`Checkbox`'s checkmark, `Dialog`'s close button) — are different: the same
+component needs to be recognizable as itself on all four platforms, so what
+each platform renders for these is worth tracking. This is the only part of
+"icons" this page, and `icons/mapping.json`, actually cover.
+
+## The source per platform
+
+- **React** — [`lucide-react`](https://lucide.dev). Stays the source; there's
+  no plan to replace it with a custom SVG set.
+- **Flutter** — Material's built-in `Icons.*` constants, used directly.
+- **SwiftUI** — SF Symbols (`Image(systemName:)`), used directly.
+- **Jetpack Compose** — **not** Compose Material Icons. A full grep across
+  every file in `packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/`
+  found **zero** uses of `Icons.*` anywhere. Every component-owned "icon" on
+  this platform is either a plain Unicode glyph rendered via `Text(text =
+  "▾")`, or a custom-drawn shape (`CircleShape`, `Canvas`) — never a named
+  icon asset. This wasn't previously written down anywhere; it's a real
+  finding, not a design decision this page is merely restating.
+
+Each of these is already free, maintained, and idiomatic on its own
+platform — building a shared compiler on top would mean maintaining a
+private icon set as good as three actively-maintained ones combined, for a
+component library that already ships without one. That's the reasoning for
+not building it, not a resource constraint.
+
+## The checked mapping
+
+`icons/mapping.json` records, for icon names reused across **two or more**
+components, exactly what each native port renders — verified against source,
+not assumed. `pnpm check:icons` (`scripts/check-icon-mapping.mjs`, wired
+into CI) re-checks every recorded value still appears in its file, so this
+table can't silently go stale the way a hand-written doc could.
+
+Single-component icons (`Rating`'s `Star`, `ColorPicker`'s `Pipette`,
+`AudioPlayer`'s transport controls, `MarkdownEditor`'s toolbar, and others)
+aren't covered — a contract matters most where a shape needs to agree with
+itself across components and platforms, and these only need to agree with
+themselves. That's future scope, not silently skipped.
+
+| Icon | Used in | Flutter | SwiftUI | Compose |
+| --- | --- | --- | --- | --- |
+| `ChevronDown` | Accordion, Select | `Icons.keyboard_arrow_down` | `chevron.down` | glyph `▾` / `⌄` (differs per component) |
+| `ChevronLeft` | NavigationBar, Pagination | `Icons.chevron_left` | `chevron.left` | glyph `‹` (NavigationBar only) |
+| `ChevronRight` | Breadcrumb, JsonViewer, Pagination, TreeView | `Icons.chevron_right` | `chevron.right` | not hardcoded |
+| `Check` | Checkbox, CodeBlock, Select, Stepper | `Icons.check` | `checkmark` | glyph `✓` (Checkbox, Select only) |
+| `X` | Banner, Dialog, FileUpload, Tag | `Icons.close` | `xmark` | glyph `×` (Banner, FileUpload only) |
+| `Circle` | RadioGroup | custom shape (`BoxShape.circle`) | custom shape (`Circle()`) | custom shape (`CircleShape`) |
+| `Minus` | Checkbox (indeterminate), NumberInput | `Icons.remove` | `minus` | glyph `−` |
+| `MoreHorizontal` | Pagination | `Icons.more_horiz` | `ellipsis` | not hardcoded |
+| `GripVertical` | Resizable | `Icons.more_horiz` ⚠️ | `ellipsis` ⚠️ | not hardcoded |
+| Severity cluster (`CircleAlert`/`CircleCheck`/`Info`/`TriangleAlert`) | Field | `error_outline` / `check_circle_outline` / `info_outline` / `warning_amber_outlined` | not hardcoded | not hardcoded |
+
+Full per-component detail, including every `context-menu`/`dropdown-menu`/
+`menubar` entry (their check/chevron/radio indicators aren't hardcoded on
+any native platform — they rely on each OS's own native menu widget drawing
+its own affordance), is in
+[`icons/mapping.json`](https://github.com/zedalleys/kinetixui/blob/main/icons/mapping.json).
+
+### Real findings worth flagging, not just table cells
+
+- **`Resizable`'s grip, mid-flight**: React's `resizable.tsx` renders a
+  vertical grip-dots icon (`GripVertical`); Flutter and SwiftUI both render
+  a horizontal three-dot ellipsis instead — a genuinely different shape, not
+  just a differently-named asset for the same one. Worth reconciling in a
+  follow-up.
+- **`Banner`'s severity icons are a documented, self-acknowledged Flutter
+  gap** — `banner.dart`'s own doc comment already says "not yet ported to
+  Flutter... No icon library wired in yet." This page didn't discover that;
+  it's confirming what the source already says.
+- **`Inform` isn't ported to Flutter or SwiftUI at all** (no
+  `Inform.dart`/`Inform.swift`) — the only platform with a port is Compose.
+  This component isn't on the ["seven standing non-ports"](/docs/contributing)
+  list, so this is a real, previously-undocumented gap worth a follow-up:
+  either port it, or add it to that list with a reason.
+- **`Select`'s Compose glyph (`⌄`) differs from `Accordion`'s (`▾`)** for the
+  same semantic "chevron pointing down" — a small, real inconsistency inside
+  Compose itself, independent of any cross-platform question.
+
+None of these are contradictions in the mapping — they're exactly the kind
+of thing a checked contract is supposed to surface.
