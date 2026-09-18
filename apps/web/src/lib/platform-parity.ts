@@ -38,7 +38,6 @@ const EXCEPTIONS: Record<string, Platform[]> = {
   "native-select": ["React"], // standing non-port — KinetixSelect already wraps each platform's own native picker
   tour: ["React"], // standing non-port — targeting an arbitrary already-rendered element needs a CSS-selector-equivalent live-tree query, which no native platform has
   "kanban-board": ["React"], // standing non-port — built on @dnd-kit; each native platform would need its own from-scratch accessible multi-container drag-and-drop implementation (no equivalent dependency exists in this repo's native packages)
-  inform: ["React", "Compose"],
   sidebar: ["React", "SwiftUI", "Compose"],
 };
 

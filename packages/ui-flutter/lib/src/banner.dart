@@ -8,8 +8,8 @@ enum KinetixBannerVariant { information, warning, success, error, action }
 /// Mirrors `packages/ui/src/components/banner.tsx`: a full-bleed,
 /// page-level notice, optionally dismissible. Distinct from [KinetixAlert]
 /// (in-flow, static) and the transient toast: persistent, edge-to-edge, no
-/// rounded corners (compare `KinetixInform`'s rounded inline card — not
-/// yet ported to Flutter). No icon library wired in yet, same gap as
+/// rounded corners (compare `KinetixInform`'s rounded inline card). No
+/// icon library wired in yet, same gap as
 /// [KinetixAlert]. The web version's `sticky` prop has no component-level
 /// Flutter equivalent — pin it to the top by placement instead (outside a
 /// scroll view, or as a `Scaffold`'s persistent header), same as
