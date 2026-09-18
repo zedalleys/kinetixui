@@ -102,6 +102,38 @@ failed outright (not just warned), so it's safe to run in CI:
 npx @kinetixui/cli doctor
 ```
 
+## theme
+
+Scaffold and compile a local token override — **CSS only**. `theme create`
+writes `kinetixui-themes/<name>.csv`, every overridable semantic token
+listed and commented out; uncomment and edit the ones you want to change.
+`theme build` compiles that into `kinetixui-themes/<name>.css` (a `:root`
+override block — paste it after `@import "@kinetixui/tokens/css";`) and
+prints a WCAG AA contrast report for every base/foreground pair you set:
+
+```bash
+npx @kinetixui/cli theme create acme
+# … edit kinetixui-themes/acme.csv …
+npx @kinetixui/cli theme build acme
+```
+
+Setting a base color (e.g. `primary`) without its `-foreground` pair
+auto-derives the foreground by contrast (best of white or black) — you
+don't have to specify both. `theme build` exits non-zero if any pair fails
+AA (4.5:1), so it's safe to run in CI; pass `--no-fail-on-contrast` to
+build anyway and just see the report.
+
+This is the same math as the [/theme-builder](/theme-builder) web tool
+(paste-a-palette, get a CSS block) — `theme` is the scriptable,
+version-controllable equivalent for a project that wants its override
+checked into source rather than pasted by hand each time.
+
+**Not yet built**: native (SwiftUI/Compose/Flutter) theme output. Doing
+that properly means porting meaningful parts of
+[`style-dictionary/hooks.mjs`](https://github.com/zedalleys/kinetixui/blob/main/style-dictionary/hooks.mjs)'s
+token-transform logic to three more target languages — a real, separate
+undertaking, not attempted here. `theme build` only ever writes CSS.
+
 ## Options
 
 | Flag | Applies to | Does |
@@ -110,6 +142,8 @@ npx @kinetixui/cli doctor
 | `-a, --all` | `add` | install every component in the registry |
 | `-o, --overwrite` | `add` | replace files that already exist |
 | `-r, --registry <url>` | `init`, `add`, `list`, `inspect`, `parity` | point at a different registry (defaults to `https://kinetixui.com/r`) |
+| `-f, --force` | `theme create` | overwrite an existing theme file |
+| `--no-fail-on-contrast` | `theme build` | exit 0 even if a pair fails WCAG AA |
 
 `doctor` always checks against the default registry — it doesn't take
 `--registry` yet, since `kinetixui.json` doesn't record which registry a
