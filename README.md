@@ -137,6 +137,12 @@ Release workflow opens a **Version Packages** PR, and merging that publishes
 `@kinetixui/{tokens,ui,cli}` to npm (they share one version line). `apps/web` and
 `apps/docs` are private and never published.
 
+## Governance
+
+Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md). Maintainer/decision-making
+structure, and what changes once more than one person is maintaining this:
+[`GOVERNANCE.md`](GOVERNANCE.md). Security issues: [`SECURITY.md`](SECURITY.md).
+
 ## License
 
 [MIT](LICENSE) © KinetixUI
