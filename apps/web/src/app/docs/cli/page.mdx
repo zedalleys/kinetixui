@@ -74,6 +74,21 @@ today it covers the ~20 components with a real variant-axis matrix; the
 rest (composite/structural components like `Card` or `Dialog`) don't print
 a Variants section. See [Component specs](/docs/component-specs).
 
+## parity
+
+See which native platforms carry a component — or every component at once:
+
+```bash
+npx @kinetixui/cli parity button card kanban-board
+npx @kinetixui/cli parity          # every component in the registry
+```
+
+Prints a matrix (`✓`/`—` per platform, plus a status tag for anything
+`beta`/`deprecated`) straight from the registry index, so it stays in
+step with [platform-parity.json](https://github.com/zedalleys/kinetixui/blob/main/platform-parity.json)
+and [component-status.json](https://github.com/zedalleys/kinetixui/blob/main/component-status.json)
+without a second copy of that data anywhere.
+
 ## doctor
 
 Sanity-check a project that's already run `init`: is `kinetixui.json`
@@ -94,7 +109,7 @@ npx @kinetixui/cli doctor
 | `-y, --yes` | `init` | skip prompts, use defaults |
 | `-a, --all` | `add` | install every component in the registry |
 | `-o, --overwrite` | `add` | replace files that already exist |
-| `-r, --registry <url>` | `init`, `add`, `list`, `inspect` | point at a different registry (defaults to `https://kinetixui.com/r`) |
+| `-r, --registry <url>` | `init`, `add`, `list`, `inspect`, `parity` | point at a different registry (defaults to `https://kinetixui.com/r`) |
 
 `doctor` always checks against the default registry — it doesn't take
 `--registry` yet, since `kinetixui.json` doesn't record which registry a

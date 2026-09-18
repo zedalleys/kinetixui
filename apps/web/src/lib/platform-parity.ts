@@ -1,45 +1,25 @@
 /**
  * Which native libraries carry each component.
  *
- * React (`@kinetixui/ui`) ships all {@link componentDocs} entries, and the
- * four-platform rule (`/docs/contributing`) means every *new* component lands on
- * SwiftUI, Jetpack Compose and Flutter too — so this only records the handful of
- * standing exceptions. Everything not listed is on all four.
- *
- * Re-derive the exception list by diffing the component slugs against the native
- * package sources (basenames map 1:1 to slugs):
- *   packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/*.kt  → PascalCase
- *   packages/ui-swiftui/Sources/KinetixUI/*.swift                 → PascalCase
- *   packages/ui-flutter/lib/src/*.dart                            → snake_case
- * (`sonner` resolves to Sonner / Toaster / toaster.)
+ * The data lives in `platform-parity.json` at the repo root (not here) so
+ * it's importable from plain Node scripts too (`scripts/gen-registry.mjs`,
+ * which embeds it into the CLI registry) without a Next.js dependency —
+ * this file is a typed wrapper over it for the web app. Edit
+ * `platform-parity.json`, not this file, to change the data itself.
  */
+import parityData from "../../../../platform-parity.json";
 
-export const PLATFORMS = ["React", "SwiftUI", "Compose", "Flutter"] as const;
-export type Platform = (typeof PLATFORMS)[number];
+export type Platform = "React" | "SwiftUI" | "Compose" | "Flutter";
+export const PLATFORMS = parityData.platforms as readonly Platform[];
 
 /** The native ports — every component has React, so it's not a useful filter. */
-export const NATIVE_PLATFORMS = ["SwiftUI", "Compose", "Flutter"] as const satisfies readonly Platform[];
+export const NATIVE_PLATFORMS = parityData.nativePlatforms as readonly Platform[];
 
 /** Short two-letter tags used on the gallery cards. */
-export const PLATFORM_ABBR: Record<Platform, string> = {
-  React: "RE",
-  SwiftUI: "SW",
-  Compose: "JC",
-  Flutter: "FL",
-};
+export const PLATFORM_ABBR: Record<Platform, string> = parityData.platformAbbr as Record<Platform, string>;
 
 /** slug → the platforms it *is* on. Absent slug ⇒ all four. */
-const EXCEPTIONS: Record<string, Platform[]> = {
-  chart: ["React", "SwiftUI", "Flutter"], // no Recharts equivalent wired for Compose yet
-  "avatar-group": ["React"], // standing non-port — re-wraps its children, not idiomatic on native platforms; compose an Avatar row directly
-  combobox: ["React"], // standing non-port
-  form: ["React"], // standing non-port
-  "navigation-menu": ["React"], // standing non-port
-  "native-select": ["React"], // standing non-port — KinetixSelect already wraps each platform's own native picker
-  tour: ["React"], // standing non-port — targeting an arbitrary already-rendered element needs a CSS-selector-equivalent live-tree query, which no native platform has
-  "kanban-board": ["React"], // standing non-port — built on @dnd-kit; each native platform would need its own from-scratch accessible multi-container drag-and-drop implementation (no equivalent dependency exists in this repo's native packages)
-  sidebar: ["React", "SwiftUI", "Compose"],
-};
+const EXCEPTIONS: Record<string, Platform[]> = parityData.exceptions as Record<string, Platform[]>;
 
 /** The native libraries that carry `slug`, in {@link PLATFORMS} order. */
 export function platformsFor(slug: string): Platform[] {
