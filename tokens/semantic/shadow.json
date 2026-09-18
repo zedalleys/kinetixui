@@ -16,19 +16,19 @@
       { "color": "#0000001f", "offsetX": "0", "offsetY": "4", "blur": "24", "spread": "0" }
     ]},
     "focus": { "$type": "shadow", "$value": [
-      { "color": "#1d4ed8", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1" },
+      { "color": "#1d4ed8", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "{interaction.focus.width}" },
       { "color": "#1d4ed833", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "4" }
     ]},
     "focus-destructive": { "$type": "shadow", "$value": [
-      { "color": "#ec5047", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1" },
+      { "color": "#ec5047", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "{interaction.focus.width}" },
       { "color": "#ec504733", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "4" }
     ]},
     "focus-success": { "$type": "shadow", "$value": [
-      { "color": "#5d6d5c", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1" },
+      { "color": "#5d6d5c", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "{interaction.focus.width}" },
       { "color": "#5d6d5c33", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "4" }
     ]},
     "focus-warning": { "$type": "shadow", "$value": [
-      { "color": "#f97907", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "1" },
+      { "color": "#f97907", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "{interaction.focus.width}" },
       { "color": "#f9790733", "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "4" }
     ]}
   }

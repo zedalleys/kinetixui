@@ -153,6 +153,12 @@
   --radius-full: 9999px;
   --border-width-default: 1px;
   --border-width-focus: 2px;
+  --interaction-target-minimum: 44px; /** Minimum hit-target size for a tappable/clickable control — WCAG 2.5.5 (AAA) / iOS HIG / Material accessibility guidance all converge on 44px. Not yet wired into any component in this slice; see /docs/tokens. */
+  --interaction-target-default: 40px; /** Default target size for a standalone control that isn't otherwise size-constrained — between `minimum` and typical dense-UI sizing (KinetixUI's own `md` button height). Not yet wired into any component in this slice; see /docs/tokens. */
+  --interaction-focus-width: 1px; /** Focus ring stroke width — the crisp inner edge of the box-shadow-based focus technique (tokens/semantic/shadow.json's `focus*` entries' first layer `spread`, which this token now backs). */
+  --interaction-focus-offset: 2px; /** Gap between a control's edge and its focus ring — matches the dominant `ring-offset-2` already used across packages/ui/src/components (4 of 6 current ring-offset call sites; the other 2 use `ring-offset-1` for tightly-bordered controls, an intentional per-component override, not a second default). Not yet wired as a token reference in component source in this slice (Tailwind's `ring-offset-*` utilities are static classes, not CSS-var-driven) — see /docs/tokens. */
+  --interaction-press-opacity: 0.8; /** Opacity for an active/pressed state on a control that signals press via dimming rather than a background-color shift (KinetixUI's own Button uses `active:bg-primary/90`, a color shift, not this token) — for components that reach for opacity-based press feedback instead. Not yet wired into any component in this slice; see /docs/tokens. */
+  --interaction-drag-threshold: 4; /** Pointer-movement distance (px) required before a drag gesture activates, so a click isn't hijacked by an accidental micro-drag. dnd-kit's own docs suggest 8 as a starting point, but KanbanBoard already shipped tuned at 4 (its `PointerSensor` `activationConstraint.distance`) — this token matches that existing, working value rather than silently changing drag feel. Wired into KanbanBoard's sensor config. */
   --duration-fast: 200ms; /** Quick UI transitions — icon rotation, chevrons, sidebar collapse. */
   --duration-base: 300ms; /** Default transition speed — fades, stroke/progress animations. */
   --duration-slow: 500ms; /** Entrance transitions for larger surfaces — sheet/drawer open. */

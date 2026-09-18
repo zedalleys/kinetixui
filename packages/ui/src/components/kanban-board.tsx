@@ -26,6 +26,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { tokens } from "@kinetixui/tokens";
 import { cn } from "../lib/utils";
 
 export interface KanbanCard {
@@ -78,7 +79,7 @@ export interface KanbanBoardProps extends Omit<React.HTMLAttributes<HTMLDivEleme
 const KanbanBoard = React.forwardRef<HTMLDivElement, KanbanBoardProps>(
   ({ columns, onColumnsChange, className, ...props }, ref) => {
     const sensors = useSensors(
-      useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+      useSensor(PointerSensor, { activationConstraint: { distance: tokens.interaction.drag.threshold } }),
       useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
     );
     const [activeCard, setActiveCard] = React.useState<KanbanCard | null>(null);

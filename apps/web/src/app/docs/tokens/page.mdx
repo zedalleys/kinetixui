@@ -15,6 +15,7 @@ tokens/
 │  ├─ typography.json   Material-3 scale, Montserrat
 │  ├─ motion.json       duration + easing (cubicBezier)
 │  ├─ opacity.json      hidden/disabled/muted/visible scale
+│  ├─ interaction.json  target size, focus ring, press, drag threshold
 │  └─ z-index.json      base/raised/docked/focus/sticky/overlay scale
 └─ semantic/
    ├─ color.light.json  aliases → semantic contract
@@ -64,6 +65,23 @@ source instead of the ad hoc `duration-200` / `z-50` literals components used
 to carry. A handful of pre-existing values that don't cleanly match a token
 step (e.g. a couple of `opacity-40`/`opacity-60` icon dimmings) are left as
 literals with a comment, rather than silently changed to the nearest token.
+
+## Interaction tokens
+
+Behavioral values, not visual ones — how big a target has to be, how far a
+focus ring sits, how a press or a drag reads. Theme-independent, like motion:
+
+| Token | Value | Wired up? |
+| --- | --- | --- |
+| `interaction.target.minimum` | `44px` | Not yet — WCAG 2.5.5 (AAA) / iOS HIG / Material's converged minimum hit-target size. No component in this package currently has an explicit hit-target smaller than 44px that would benefit without a bigger layout change (`Checkbox`/`Radio`/`Switch`'s ~18–20px visual controls rely on callers wrapping them in a `Label` for the larger click area, the same pattern their Radix primitives assume) — defined for app authors and future components to reach for, not retrofitted here. |
+| `interaction.target.default` | `40px` | Not yet — the default a standalone control should target when nothing else constrains its size. |
+| `interaction.focus.width` | `1px` | **Yes** — backs the `spread` of every `shadow.focus*` entry's inner layer (`tokens/semantic/shadow.json`), replacing a hardcoded literal. Compiled CSS output is unchanged (still `0 0 0 1px …`). |
+| `interaction.focus.offset` | `2px` | Not yet as a token reference — matches the dominant `ring-offset-2` already used across `packages/ui/src/components` (4 of 6 current call sites; the other 2 intentionally use `ring-offset-1` for tightly-bordered controls). Tailwind's `ring-offset-*` utilities are static classes, not CSS-var-driven, so wiring this one needs either a custom Tailwind token or a run of literal replacements — left for a follow-up slice. |
+| `interaction.press.opacity` | `0.8` | Not yet — `Button`'s own active state is a color shift (`active:bg-primary/90`), not opacity-based, so there's no current opacity-driven press consumer to point this at. Defined for components that do reach for opacity feedback. |
+| `interaction.drag.threshold` | `4` | **Yes** — `KanbanBoard`'s `PointerSensor` `activationConstraint.distance`, via `tokens.interaction.drag.threshold` imported from `@kinetixui/tokens`. Matches the value KanbanBoard already shipped tuned at, not dnd-kit's textbook default of 8 — this token records the deliberate existing value rather than silently changing drag feel. |
+
+Web-only in this slice — none of the native platform ports (`ui-compose`,
+`ui-swiftui`, `ui-flutter`) consume `interaction.*` yet.
 
 ## Semantic contract
 
