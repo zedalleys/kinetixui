@@ -26,7 +26,7 @@ contract that feeds all four component libraries.
    visibility, keyboard operability, names on icon-only controls, state exposed
    to AT (`aria-pressed` / `aria-expanded`), colour-only signalling, and
    `prefers-reduced-motion` coverage.
-3. **Rendered axe-core passes** — **done (2026-09-19).** Two layers, both in CI: a jsdom pass (`packages/ui/src/components-a11y.test.tsx`, with `KNOWN` baseline) and a real-browser pass (`scripts/a11y-browser.mjs`, `pnpm check:a11y-browser`, workflow `a11y-browser.yml`) that opens every Storybook story in headless Chromium in **light and dark** with every axe rule on, including colour contrast. Violations that pre-date the pass are listed in `a11y-baseline.json` (65); new ones fail the build and fixed ones must be removed, so the baseline only shrinks. **Still not covered:** keyboard interaction, focus trapping/return, forced-colors, and per-component ARIA interaction models (DataGrid, TreeView, Tour, Kanban, MultiSelect, ColorPicker).
+3. **Rendered axe-core passes** — **done (2026-09-19).** Two layers, both in CI: a jsdom pass (`packages/ui/src/components-a11y.test.tsx`, with `KNOWN` baseline) and a real-browser pass (`scripts/a11y-browser.mjs`, `pnpm check:a11y-browser`, workflow `a11y-browser.yml`) that opens every Storybook story in headless Chromium in **light and dark** with every axe rule on, including colour contrast. Violations that pre-date the pass are listed in `a11y-baseline.json` (64); new ones fail the build and fixed ones must be removed, so the baseline only shrinks. **Still not covered:** keyboard interaction, focus trapping/return, forced-colors, and per-component ARIA interaction models (DataGrid, TreeView, Tour, Kanban, MultiSelect, ColorPicker).
 
 ## Severity key
 
@@ -183,7 +183,7 @@ First run of the browser pass. Storybook's own canvas had no background in eithe
 | `aria-input-field-name` | 10 | sliders / comboboxes without names |
 | `aria-progressbar-name` | 8 | Progress / CircularProgress stories |
 | `scrollable-region-focusable` | 6 | scroll areas not keyboard-reachable — likely real |
-| `color-contrast` | 1 | **Real.** Button Primary/Secondary *pressed* states (`active:bg-primary/80`, `secondary/80`) composite to 4.08 / 3.92 in the matrix story. `check:contrast` can't see it — it doesn't model alpha-blended states. Fix by a lighter pressed alpha or a solid pressed token. (Banner/Inform `information` text was the other three — **fixed**: now `text-info-on-container`, `--semantic-on-info-container` #395a70, 4.15 → AA.) |
+| `color-contrast` | 0 | **All fixed.** Banner/Inform `information` text now uses `text-info-on-container`. Button Primary pressed is `bg-primary/85` (4.54:1; 80% was 4.11) and Secondary pressed is solid like hover (90% was 3.97). `check:contrast` now also models text on partially-transparent fills (`ALPHA_TEXT_PAIRS`), so this class of bug — a state that dims its fill toward the page — fails CI statically. |
 | other | 14 | `aria-required-children/parent`, `nested-interactive`, `select-name`, duplicate banner landmarks (two Banners in one story) |
 
 Dark mode has **no** contrast failures once the canvas background is correct.
