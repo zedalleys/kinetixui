@@ -21,6 +21,10 @@
   <dimen name="radius_full">9999dp</dimen>
   <dimen name="border_width_default">1dp</dimen>
   <dimen name="border_width_focus">2dp</dimen>
+  <dimen name="interaction_target_minimum">44dp</dimen>
+  <dimen name="interaction_target_default">40dp</dimen>
+  <dimen name="interaction_focus_width">1dp</dimen>
+  <dimen name="interaction_focus_offset">2dp</dimen>
   <dimen name="font_size_display_lg">57dp</dimen>
   <dimen name="font_size_display_md">45dp</dimen>
   <dimen name="font_size_display_sm">36dp</dimen>
