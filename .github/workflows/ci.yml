@@ -38,6 +38,12 @@ jobs:
       - name: RTL logical-property guardrail
         run: pnpm check:rtl
 
+      - name: Typography alias guardrail
+        run: pnpm check:typography
+
+      - name: Component lifecycle status check
+        run: pnpm check:status
+
       - name: Icon mapping drift check
         run: pnpm check:icons
 

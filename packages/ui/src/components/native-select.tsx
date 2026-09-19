@@ -16,7 +16,7 @@ import { cn } from "../lib/utils";
 const nativeSelectVariants = cva(
   [
     "flex w-full appearance-none border border-input bg-background px-3 py-3 pe-9",
-    "font-sans text-[14px] leading-5 tracking-[0.25px] text-foreground",
+    "font-sans text-body-md text-foreground",
     "outline-none transition-colors",
     "focus-visible:border-primary focus-visible:shadow-focus",
     "disabled:cursor-not-allowed disabled:opacity-disabled",

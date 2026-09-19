@@ -6,7 +6,8 @@
 
 KinetixUI compiles a single design source into living tokens and a component
 library for **React, SwiftUI, Jetpack Compose, and Flutter** — the same
-components, the same token contract, on all four platforms at parity. Copy a
+components and the same token contract on all four platforms — cross‑platform
+by default, with a small set of documented platform exceptions. Copy a
 component in via the CLI, own the code, and re‑theme with a token edit everywhere
 at once.
 
@@ -54,11 +55,13 @@ contract import, dark mode — is in [Installation](https://kinetixui.com/docs/i
   platform.
 - **72 React components** (`@kinetixui/ui`) — CVA + Radix + Tailwind, styled only
   against the semantic token layer, never a hex.
-- **Four‑platform parity.** [`ui-compose`](packages/ui-compose),
+- **Cross‑platform by default.** [`ui-compose`](packages/ui-compose),
   [`ui-swiftui`](packages/ui-swiftui) and [`ui-flutter`](packages/ui-flutter)
   each carry a 1:1 port of the React surface (~68 `Kinetix*` components) on the
-  same token contract, compiled in CI per platform. Standing non‑ports: `Form`,
-  `NavigationMenu`, `Combobox`.
+  same token contract, compiled in CI per platform. Documented exceptions (React‑only or partial) live
+  in [`platform-parity.json`](platform-parity.json): `Form`, `NavigationMenu`,
+  `Combobox`, `NativeSelect`, `AvatarGroup`, `Tour`, `KanbanBoard`, plus `Chart`
+  (no Compose) and `Sidebar` (no Flutter).
 - **A portable registry.** Every component serialised to a shadcn‑compatible JSON
   descriptor, served static from `kinetixui.com/r/`.
 - **A first‑party CLI** (`@kinetixui/cli`) — `init` scaffolds `kinetixui.json` +

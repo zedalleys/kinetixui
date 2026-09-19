@@ -26,10 +26,7 @@ contract that feeds all four component libraries.
    visibility, keyboard operability, names on icon-only controls, state exposed
    to AT (`aria-pressed` / `aria-expanded`), colour-only signalling, and
    `prefers-reduced-motion` coverage.
-3. **Live render pass (axe-core, light + dark)** — **pending.** The Claude
-   Chrome extension was not connected when this ran; the dev server
-   (`localhost:3100`) is up and ready. This pass adds automated DOM coverage and
-   visual confirmation; nothing below depends on it.
+3. **Rendered axe-core pass** — **partly done (2026-09-19).** `packages/ui/src/components-a11y.test.tsx` mounts every story in jsdom and runs axe-core in CI (`pnpm --filter @kinetixui/ui test`), failing on any violation not in its `KNOWN` baseline (21 pre-existing, mostly unlabeled demo controls; the list can only shrink). jsdom has no layout, so `color-contrast`, real focus-trap/portal behaviour and light/dark rendering are **still pending** a real-browser pass (Storybook + Playwright).
 
 ## Severity key
 
@@ -154,7 +151,7 @@ fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
 - **R2 — DONE.** Light `--warning` → `amber.800` `#7f5b21` (6.1 / 5.8:1). Chosen
   over adding a second `--warning-strong` token to keep the contract
   single-valued. Dark stays bright `amber.400`. `KNOWN_SUBAA` is now empty.
-- **R3 — run the axe-core light/dark pass** once the Chrome extension is
+- **R3 — real-browser axe light/dark pass** (the jsdom pass is done, see above) once the Chrome extension is
   connected (or add `@axe-core/playwright` as a dev dep and a
   `scripts/a11y.mjs` that walks the route list headless — better, since it can
   run in CI next to `check:contrast`).

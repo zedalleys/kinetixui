@@ -75,7 +75,7 @@ function Modal({
           )}
         >
           <header className="flex items-center justify-between px-6 pb-3 pt-5">
-            <DialogPrimitive.Title className="min-w-0 flex-1 text-[18px] font-semibold leading-6 text-foreground">
+            <DialogPrimitive.Title className="min-w-0 flex-1 text-title-dialog text-foreground">
               {title}
             </DialogPrimitive.Title>
             <DialogPrimitive.Close
@@ -90,7 +90,7 @@ function Modal({
 
           <div className="px-6 py-5">
             {description && (
-              <DialogPrimitive.Description className="text-[14px] leading-5 tracking-[0.25px] text-muted-foreground">
+              <DialogPrimitive.Description className="text-body-md text-muted-foreground">
                 {description}
               </DialogPrimitive.Description>
             )}

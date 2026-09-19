@@ -23,7 +23,7 @@ const parity = JSON.parse(readFileSync(`${ROOT}/platform-parity.json`, "utf8"));
 const status = JSON.parse(readFileSync(`${ROOT}/component-status.json`, "utf8"));
 
 const platformsFor = (slug) => parity.exceptions[slug] ?? parity.platforms;
-const statusFor = (slug) => status.status[slug]; // undefined ⇒ stable; omitted from output, same "exceptions only" convention
+const statusFor = (slug) => (status.status[slug] === "stable" ? undefined : status.status[slug]); // "stable" is omitted from the output (the CLI treats absent as stable)
 
 const items = registry.items.map(({ name, type, title, description }) => {
   const item = { name, type, title, description };

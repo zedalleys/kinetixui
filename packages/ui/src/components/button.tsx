@@ -58,11 +58,11 @@ const buttonVariants = cva(
       },
       size: {
         // padding = Figma spacing/3 + spacing/2 ; type = Label Small (11/16, +0.5 tracking)
-        sm: "px-3 py-2 text-[11px] leading-4 tracking-[0.5px]",
+        sm: "px-3 py-2 text-label-sm",
         // spacing/4 + spacing/3 ; Label Medium (12/16, +0.5)
-        md: "px-4 py-3 text-[12px] leading-4 tracking-[0.5px]",
+        md: "px-4 py-3 text-label-md",
         // spacing/6 + spacing/3 ; Label Large (14/20, +0.1)
-        lg: "px-6 py-3 text-[14px] leading-5 tracking-[0.1px]",
+        lg: "px-6 py-3 text-label-lg",
         // spacing/3 all round, square
         icon: "p-3 [&>*:not(svg)]:sr-only",
       },
