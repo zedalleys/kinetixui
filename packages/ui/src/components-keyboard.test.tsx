@@ -4,6 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { Checkbox } from "./components/checkbox";
 import { ColorPicker } from "./components/color-picker";
+import { FileUpload } from "./components/file-upload";
+import { List, ListItem } from "./components/list";
 import { DataGrid, type DataGridColumn } from "./components/data-grid";
 import { KinetixDirectionProvider } from "./components/direction-provider";
 import {
@@ -567,5 +569,65 @@ describe("Slider", () => {
     expect(onValueChange).toHaveBeenLastCalledWith([51]);
     await user.keyboard("{End}");
     expect(onValueChange).toHaveBeenLastCalledWith([100]);
+  });
+});
+
+describe("MultiSelect chips", () => {
+  it("Backspace in the empty search field removes the last chip", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(
+      <MultiSelect
+        aria-label="Fruit"
+        options={[
+          { value: "a", label: "Apple" },
+          { value: "b", label: "Banana" },
+        ]}
+        defaultValue={["a", "b"]}
+        onValueChange={onValueChange}
+      />,
+    );
+    await user.tab();
+    await user.keyboard("{Enter}");
+    await user.keyboard("{Backspace}");
+    expect(onValueChange).toHaveBeenLastCalledWith(["a"]);
+  });
+});
+
+describe("List", () => {
+  it("a pressable row is a listitem containing a button, and Enter / Space activate it", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <List>
+        <ListItem title="Profile" onSelect={onSelect} />
+        <ListItem title="Static" />
+      </List>,
+    );
+    const items = screen.getAllByRole("listitem");
+    expect(items).toHaveLength(2);
+    const button = within(items[0]!).getByRole("button", { name: "Profile" });
+    await user.tab();
+    expect(button).toHaveFocus();
+    await user.keyboard("{Enter}");
+    await user.keyboard(" ");
+    expect(onSelect).toHaveBeenCalledTimes(2);
+    expect(within(items[1]!).queryByRole("button")).not.toBeInTheDocument();
+  });
+});
+
+describe("FileUpload", () => {
+  it("has exactly one keyboard target — the Browse button — not a nested control or the hidden input", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <FileUpload />
+        <button>after</button>
+      </>,
+    );
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Browse files" })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("button", { name: "after" })).toHaveFocus();
   });
 });

@@ -136,16 +136,18 @@ function JsonNode({
       </div>
       {expanded && (
         <>
-          {entries.map(([key, val], i) => (
-            <JsonNode
-              key={key}
-              name={isArray ? undefined : key}
-              value={val}
-              depth={depth + 1}
-              expandDepth={expandDepth}
-              isLast={i === entries.length - 1}
-            />
-          ))}
+          <div role="group">
+            {entries.map(([key, val], i) => (
+              <JsonNode
+                key={key}
+                name={isArray ? undefined : key}
+                value={val}
+                depth={depth + 1}
+                expandDepth={expandDepth}
+                isLast={i === entries.length - 1}
+              />
+            ))}
+          </div>
           <div style={{ paddingLeft: depth * 16 }}>
             <span>{closeBracket}</span>
             {!isLast && <span className="text-muted-foreground">,</span>}

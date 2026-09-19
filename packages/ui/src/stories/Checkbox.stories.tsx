@@ -24,6 +24,6 @@ const meta = {
 
 export default meta;
 
-export const Playground: StoryObj<typeof meta> = { render: (args) => <Checkbox {...args} /> };
+export const Playground: StoryObj<typeof meta> = { render: (args) => <Checkbox aria-label="Accept terms" {...args} /> };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };

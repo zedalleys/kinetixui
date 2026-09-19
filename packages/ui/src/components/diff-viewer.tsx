@@ -103,13 +103,14 @@ function UnifiedDiff({ ops }: { ops: DiffOp[] }) {
           role="row"
           className={cn("flex", op.type === "add" && "bg-success/10", op.type === "remove" && "bg-destructive/10")}
         >
-          <span className="w-9 shrink-0 select-none border-r px-1.5 text-right text-muted-foreground">
+          <span role="cell" className="w-9 shrink-0 select-none border-r px-1.5 text-right text-muted-foreground">
             {op.type !== "add" ? op.oldLine : ""}
           </span>
-          <span className="w-9 shrink-0 select-none border-r px-1.5 text-right text-muted-foreground">
+          <span role="cell" className="w-9 shrink-0 select-none border-r px-1.5 text-right text-muted-foreground">
             {op.type !== "remove" ? op.newLine : ""}
           </span>
           <span
+            role="cell"
             className={cn(
               "w-4 shrink-0 select-none text-center",
               op.type === "add" && "text-success",
@@ -118,7 +119,7 @@ function UnifiedDiff({ ops }: { ops: DiffOp[] }) {
           >
             {op.type === "add" ? "+" : op.type === "remove" ? "−" : ""}
           </span>
-          <span className="min-w-0 flex-1 whitespace-pre px-1">{op.text}</span>
+          <span role="cell" className="min-w-0 flex-1 whitespace-pre px-1">{op.text}</span>
         </div>
       ))}
     </div>
@@ -128,19 +129,19 @@ function UnifiedDiff({ ops }: { ops: DiffOp[] }) {
 function SplitDiff({ ops, oldLabel, newLabel }: { ops: DiffOp[]; oldLabel: string; newLabel: string }) {
   return (
     <div role="table">
-      <div className="flex border-b bg-muted/40 text-muted-foreground">
-        <div className="flex-1 px-2 py-1">{oldLabel}</div>
-        <div className="flex-1 border-l px-2 py-1">{newLabel}</div>
+      <div role="row" className="flex border-b bg-muted/40 text-muted-foreground">
+        <div role="columnheader" className="flex-1 px-2 py-1">{oldLabel}</div>
+        <div role="columnheader" className="flex-1 border-l px-2 py-1">{newLabel}</div>
       </div>
       {ops.map((op, i) => (
         <div key={i} role="row" className="flex">
-          <div className={cn("flex flex-1 items-start", op.type === "remove" && "bg-destructive/10")}>
+          <div role="cell" className={cn("flex flex-1 items-start", op.type === "remove" && "bg-destructive/10")}>
             <span className="w-9 shrink-0 select-none px-1.5 text-right text-muted-foreground">
               {op.type !== "add" ? op.oldLine : ""}
             </span>
             <span className="min-w-0 flex-1 whitespace-pre px-1">{op.type !== "add" ? op.text : ""}</span>
           </div>
-          <div className={cn("flex flex-1 items-start border-l", op.type === "add" && "bg-success/10")}>
+          <div role="cell" className={cn("flex flex-1 items-start border-l", op.type === "add" && "bg-success/10")}>
             <span className="w-9 shrink-0 select-none px-1.5 text-right text-muted-foreground">
               {op.type !== "remove" ? op.newLine : ""}
             </span>

@@ -9,7 +9,7 @@ const Demo = () => {
     const [text, setText] = React.useState(
       "## Release notes\n\nShipped **MarkdownEditor** — a toolbar over a plain textarea, not `contenteditable`.\n\n- Bold, italic, links\n- Bulleted and numbered lists\n- An optional preview pane",
     );
-    return <MarkdownEditor className="w-full" value={text} onChange={setText} rows={8} />;
+    return <MarkdownEditor aria-label="Release notes" className="w-full" value={text} onChange={setText} rows={8} />;
   };
 
 const meta = {

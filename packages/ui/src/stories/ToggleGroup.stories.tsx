@@ -7,9 +7,9 @@ import { Bold, Italic, Underline } from "lucide-react";
 
 const Demo = () => (
     <ToggleGroup type="multiple">
-      <ToggleGroupItem value="bold"><Bold className="size-4" /></ToggleGroupItem>
-      <ToggleGroupItem value="italic"><Italic className="size-4" /></ToggleGroupItem>
-      <ToggleGroupItem value="underline"><Underline className="size-4" /></ToggleGroupItem>
+      <ToggleGroupItem value="bold" aria-label="Bold"><Bold className="size-4" /></ToggleGroupItem>
+      <ToggleGroupItem value="italic" aria-label="Italic"><Italic className="size-4" /></ToggleGroupItem>
+      <ToggleGroupItem value="underline" aria-label="Underline"><Underline className="size-4" /></ToggleGroupItem>
     </ToggleGroup>
   );
 
@@ -28,9 +28,9 @@ export default meta;
 
 export const Playground: StoryObj<typeof meta> = { render: (args) => (
     <ToggleGroup {...args}>
-      <ToggleGroupItem value="bold"><Bold className="size-4" /></ToggleGroupItem>
-      <ToggleGroupItem value="italic"><Italic className="size-4" /></ToggleGroupItem>
-      <ToggleGroupItem value="underline"><Underline className="size-4" /></ToggleGroupItem>
+      <ToggleGroupItem value="bold" aria-label="Bold"><Bold className="size-4" /></ToggleGroupItem>
+      <ToggleGroupItem value="italic" aria-label="Italic"><Italic className="size-4" /></ToggleGroupItem>
+      <ToggleGroupItem value="underline" aria-label="Underline"><Underline className="size-4" /></ToggleGroupItem>
     </ToggleGroup>
   ) };
 
