@@ -795,9 +795,9 @@
       "platforms": [
         "React",
         "SwiftUI",
-        "Compose"
-      ],
-      "platformNote": "not yet ported to Flutter — no widget in packages/ui-flutter; no design rationale for the omission was ever recorded, so treat it as a gap, not a deliberate non-port"
+        "Compose",
+        "Flutter"
+      ]
     },
     "skeleton": {
       "status": "stable",

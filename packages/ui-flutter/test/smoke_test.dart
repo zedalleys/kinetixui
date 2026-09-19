@@ -184,6 +184,15 @@ List<Widget> overlayWidgets() => [
       KinetixModal(visible: true, onDismiss: () {}, title: 'Modal', child: const Text('body')),
       KinetixSheet(visible: true, onDismiss: () {}, child: const Text('sheet')),
       KinetixDrawer(visible: true, onDismiss: () {}, child: const Text('drawer')),
+      KinetixSidebar(
+        visible: true,
+        onDismiss: () {},
+        header: const Text('Acme'),
+        child: KinetixSidebarGroup(title: 'Platform', children: [
+          KinetixSidebarMenuItem(label: 'Home', selected: true, icon: const Icon(Icons.home_outlined), onTap: () {}),
+          KinetixSidebarMenuItem(label: 'Projects', badge: '3', onTap: () {}),
+        ]),
+      ),
       const KinetixToaster(toast: KinetixToast('Saved', intent: KinetixToastIntent.success), onDismiss: _noop),
     ];
 
