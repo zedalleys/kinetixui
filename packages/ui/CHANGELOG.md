@@ -1,5 +1,16 @@
 # @kinetixui/ui
 
+## 0.17.0
+
+### Patch Changes
+
+- 01c0ab6: Fix Button pressed-state contrast: Primary `active` is now `bg-primary/85` (was `/80`, 4.11:1 → 4.54:1) and Secondary `active` is solid `bg-secondary-foreground`, same as hover (was `/90`, 3.97:1). Both now clear WCAG AA. `check:contrast` gained alpha-aware pairs so a dimmed state can't regress below AA unnoticed.
+- 683e0f8: Components now consume the type-scale aliases (`text-label-*`, `text-body-md`, `text-title-dialog`) instead of re-deriving them from Tailwind literals — Button, Badge, Tag, Kbd, Input, Select, NativeSelect, Textarea and Modal render identically. `cn()` now knows the type scale, so a `text-label-*` class no longer swallows a text colour class in `tailwind-merge`. Adds a rendered axe-core pass over every story.
+- 5b5b2d6: Fix low contrast on tinted info surfaces: Banner and Inform `information` text used `--info` (#57788e) on its own 10% tint, only 4.15:1. They now use a new `text-info-on-container` utility backed by `--semantic-on-info-container` (light #395a70; dark now defined too, matching `--info`). Adds the dark value for `semantic.on-info-container` to the token contract; SwiftUI, Compose and Flutter get `colorSemanticOnInfoContainer` in their compiled tokens. Found by the new real-browser axe pass.
+- 7d9864d: Keyboard and screen-reader fixes found by a new keyboard/focus/RTL test suite: `Tour` now has an accessible name, moves focus into its card, traps Tab and restores focus on close; `MultiSelect` can be operated from the keyboard (focus goes to the search field on open and back to the combobox on close); `DataGrid` sortable headers and editable cells are reachable with Tab and operable with Enter / Space / F2 / Esc; `Slider` and `ColorPicker` put their accessible name on the thumb (the `role="slider"` element) instead of the root. `DataGrid` still has no arrow-key cell navigation.
+- Updated dependencies [5b5b2d6]
+  - @kinetixui/tokens@0.17.0
+
 ## 0.16.1
 
 ### Patch Changes
