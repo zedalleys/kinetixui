@@ -43,6 +43,12 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
     const current = value ?? internal;
     const [open, setOpen] = React.useState(false);
     const [query, setQuery] = React.useState("");
+    const anchorRef = React.useRef<HTMLDivElement | null>(null);
+    const setRefs = (node: HTMLDivElement | null) => {
+      anchorRef.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    };
 
     const set = (next: string[]) => {
       setInternal(next);
@@ -62,7 +68,7 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverAnchor asChild>
           <div
-            ref={ref}
+            ref={setRefs}
             role="combobox"
             aria-expanded={open}
             aria-haspopup="listbox"
@@ -93,7 +99,13 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
         <PopoverContent
           align="start"
           className="w-[var(--radix-popover-trigger-width)] p-0"
-          onOpenAutoFocus={(e) => e.preventDefault()}
+          // Radix focuses the search input on open, so keys reach the option list (cmdk only
+          // listens from inside its own root) — and on close focus goes back to the combobox,
+          // which is only an anchor here, so Radix has no trigger to return it to.
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+            anchorRef.current?.focus();
+          }}
         >
           <Command shouldFilter={!creatable}>
             <CommandInput placeholder="Search…" value={query} onValueChange={setQuery} />

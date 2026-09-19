@@ -21,11 +21,9 @@ const stories = import.meta.glob("./stories/*.stories.tsx", { eager: true }) as 
 >;
 
 const KNOWN = new Set<string>([
-  "AudioPlayer:aria-input-field-name",
   "Banner:landmark-no-duplicate-banner",
   "Banner:landmark-unique",
   "CircularProgress:aria-progressbar-name",
-  "ColorPicker:aria-input-field-name",
   "ColorPicker:label",
   "DiffViewer:aria-required-children",
   "FileUpload:label",

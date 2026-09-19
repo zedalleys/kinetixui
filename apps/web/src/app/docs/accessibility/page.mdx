@@ -5,10 +5,13 @@ export const metadata = {
 
 # Accessibility
 
-Accessibility is a build constraint here, not a review step. Every interactive
-component is a [Radix Primitive](https://www.radix-ui.com/primitives) underneath,
+Accessibility is a build constraint here, not a review step. Most interactive
+components are a [Radix Primitive](https://www.radix-ui.com/primitives) underneath,
 so keyboard interaction, focus management, and ARIA roles come correct by
-default — KinetixUI only styles them against the token contract.
+default — KinetixUI only styles them against the token contract. A handful of
+widgets have no Radix equivalent and are hand-built; their keyboard models are
+written out under [Hand-built widgets](#hand-built-widgets) below, and all but
+`KanbanBoard` are covered by a keyboard test.
 
 ## What you get
 
@@ -38,6 +41,24 @@ default — KinetixUI only styles them against the token contract.
   matters.
 - **Reduced motion** — transitions are short and `transition-colors` only;
   nothing animates position or opacity on a loop.
+
+## Hand-built widgets
+
+Where there is no primitive to lean on, the interaction model is ours, so it is
+documented here and pinned by tests in `packages/ui/src/components-keyboard.test.tsx`
+(focus, Tab order, arrow keys, Escape, RTL). `—` means not supported yet.
+
+| Widget | Role | Keys | Known gaps |
+|---|---|---|---|
+| `TreeView` | `tree` / `treeitem` | `↓` `↑` move · `Home` `End` · `→` expands, then enters the first child · `←` collapses, then goes to the parent · `Enter` / `Space` selects | — |
+| `MultiSelect` | `combobox` (a `div`) opening a listbox | `Enter` / `Space` opens and moves focus to the search field · `↓` `↑` `Enter` choose · `Esc` closes and returns focus to the combobox | `Backspace` in the empty search field does not remove the last chip |
+| `ColorPicker` | 2D `slider` plus hue / alpha `slider`s and a hex field | Square: arrows change saturation / value, `Shift` = ×10 · rails: arrows, `Home` `End` · hex field: `Enter` commits | The square has no `aria-valuenow` (only `aria-valuetext`) |
+| `Tour` | `dialog`, `aria-modal` | Focus moves into the card on open and on every step · `Tab` is trapped in the card · `Esc` closes and returns focus to where it was | Focus is contained by script; the rest of the page is not made `inert` |
+| `DataGrid` | `grid` | Sortable header: `Tab` to it, `Enter` / `Space` sorts · editable cell: `Tab` to it, `Enter` / `F2` edits, `Enter` commits, `Esc` cancels, focus returns to the cell | **No arrow-key movement between cells** (every editable cell is a tab stop). **Column reorder (drag) and resize (pointer) have no keyboard equivalent** |
+| `KanbanBoard` | `group` of sortable lists | dnd-kit's keyboard sensor: `Space` / `Enter` picks up, arrows move, `Space` / `Enter` drops, `Esc` cancels | No automated keyboard test yet — dragging needs real layout, so it belongs in the browser pass |
+
+The known gaps are deliberate omissions, not oversights, and the `DataGrid` arrow-key
+gap is tracked by an expected-failure test so it cannot be closed or forgotten silently.
 
 ## The one trade-off
 
