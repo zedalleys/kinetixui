@@ -65,7 +65,7 @@ describe("Badge", () => {
     );
     const link = screen.getByRole("link", { name: "New" });
     expect(link).toHaveAttribute("href", "/new");
-    expect(link).toHaveClass("bg-primary"); // badge classes merged onto the <a>
+    expect(link).toHaveClass("bg-action"); // badge classes merged onto the <a>
   });
 });
 

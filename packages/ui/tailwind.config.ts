@@ -66,6 +66,20 @@ export default {
           "on-container": c("--semantic-on-info-container"),
         },
         tertiary: { DEFAULT: c("--tertiary"), foreground: c("--tertiary-foreground") },
+        // Role tokens layered over `primary` (which stays the shadcn-compatible source). `action`, `link`
+        // and `focus` default to it, so a theme that only sets `--primary` still works; override them
+        // individually to split the interactive colour, link colour and focus colour. `brand` is identity
+        // (logos, headers), not a control colour.
+        brand: { DEFAULT: c("--brand"), foreground: c("--brand-foreground") },
+        action: {
+          DEFAULT: c("--action"),
+          foreground: c("--action-foreground"),
+          // explicit states for native ports; on the web, hover/pressed derive from `action` (bg-action/90, /85)
+          hover: c("--action-hover"),
+          pressed: c("--action-pressed"),
+        },
+        link: c("--link"),
+        focus: c("--focus"),
         border: c("--border"),
         input: c("--input"),
         ring: c("--ring"),

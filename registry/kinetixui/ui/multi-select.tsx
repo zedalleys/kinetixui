@@ -82,8 +82,8 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
             }}
             className={cn(
               "flex min-h-11 w-full flex-wrap items-center gap-1.5 border border-input bg-background px-3 py-2 font-sans",
-              "outline-none focus-visible:border-primary focus-visible:shadow-focus",
-              "aria-expanded:border-primary aria-expanded:shadow-focus",
+              "outline-none focus-visible:border-action focus-visible:shadow-focus",
+              "aria-expanded:border-action aria-expanded:shadow-focus",
               className,
             )}
             {...props}

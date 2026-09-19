@@ -53,7 +53,7 @@ const CodeBlock = React.forwardRef<HTMLDivElement, CodeBlockProps>(
                   onClick={() => setActive(i)}
                   className={cn(
                     "border-b-2 px-3 py-2 text-body-sm transition-colors outline-none",
-                    i === active ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+                    i === active ? "border-action text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {t.name || "code"}

@@ -56,7 +56,7 @@ const NotificationCenterContent = React.forwardRef<HTMLDivElement, NotificationC
           <button
             type="button"
             onClick={onMarkAllRead}
-            className="text-label-md font-medium text-primary outline-none hover:underline focus-visible:underline"
+            className="text-label-md font-medium text-link outline-none hover:underline focus-visible:underline"
           >
             Mark all read
           </button>
@@ -102,7 +102,7 @@ const NotificationItem = React.forwardRef<HTMLDivElement, NotificationItemProps>
         )}
         {...props}
       >
-        <span className={cn("mt-1.5 size-2 shrink-0 rounded-full", unread ? "bg-primary" : "bg-transparent")} />
+        <span className={cn("mt-1.5 size-2 shrink-0 rounded-full", unread ? "bg-action" : "bg-transparent")} />
         <div className="min-w-0 flex-1">
           <p className={cn("truncate text-body-sm", unread ? "font-medium text-foreground" : "text-muted-foreground")}>
             {title}

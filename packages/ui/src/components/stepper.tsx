@@ -39,8 +39,8 @@ const Stepper = React.forwardRef<HTMLOListElement, StepperProps>(
                 <span
                   className={cn(
                     "flex size-7 shrink-0 items-center justify-center rounded-full text-label-md font-medium",
-                    status === "complete" && "bg-primary text-primary-foreground",
-                    status === "current" && "border-2 border-primary text-primary",
+                    status === "complete" && "bg-action text-action-foreground",
+                    status === "current" && "border-2 border-action text-action",
                     status === "upcoming" && "border border-input text-muted-foreground",
                   )}
                 >
@@ -52,7 +52,7 @@ const Stepper = React.forwardRef<HTMLOListElement, StepperProps>(
                     className={cn(
                       "bg-border",
                       vertical ? "my-1 min-h-6 w-px flex-1 self-stretch" : "mt-3.5 h-px flex-1",
-                      status === "complete" && "bg-primary",
+                      status === "complete" && "bg-action",
                     )}
                   />
                 )}

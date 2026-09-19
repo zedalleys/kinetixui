@@ -177,4 +177,12 @@
   <color name="color_tertiary_foreground">#fff0f7ff</color>
   <color name="color_info">#ff57778d</color>
   <color name="color_info_foreground">#fff0f7ff</color>
+  <color name="color_brand">#ff1b3c53</color>
+  <color name="color_brand_foreground">#fff0f7ff</color>
+  <color name="color_action">#ff1d4ed8</color>
+  <color name="color_action_foreground">#fff0f7ff</color>
+  <color name="color_action_hover">#ff3460dc</color>
+  <color name="color_action_pressed">#ff3f69de</color>
+  <color name="color_focus">#ff1d4ed8</color>
+  <color name="color_link">#ff1d4ed8</color>
 </resources>

@@ -181,6 +181,46 @@
         "$type": "color",
         "$description": "text on a tinted info surface (bg-info/10). Dark: same as --info, which already clears AA on the dark tint. Light counterpart is darker — see color.light.json."
       }
+    },
+    "brand": {
+      "$value": "{color.blue.200}",
+      "$type": "color",
+      "$description": "identity colour, lightened so it stays legible on the dark surface (the light navy would vanish). Independent of light, not a flip."
+    },
+    "brand-foreground": {
+      "$value": "{color.blue.900}",
+      "$type": "color",
+      "$description": "text/icons on `brand`"
+    },
+    "action": {
+      "$value": "{color.primary}",
+      "$type": "color",
+      "$description": "the interactive colour (buttons, selected controls). Defaults to `primary`; override `--action` on its own to split the interactive colour from `primary`."
+    },
+    "action-foreground": {
+      "$value": "{color.primary-foreground}",
+      "$type": "color",
+      "$description": "text/icons on `action`"
+    },
+    "action-hover": {
+      "$value": "#5796e3",
+      "$type": "color",
+      "$description": "explicit hover fill for native ports: `action` at 90% over `background` (#60a5fa over #050c11). The web renders this as `bg-action/90`; `check:contrast` asserts the two agree."
+    },
+    "action-pressed": {
+      "$value": "#528ed7",
+      "$type": "color",
+      "$description": "explicit pressed fill for native ports: `action` at 85% over `background`. The web renders this as `bg-action/85`; `check:contrast` asserts the two agree and that text on it clears AA."
+    },
+    "focus": {
+      "$value": "{color.ring}",
+      "$type": "color",
+      "$description": "focus indicator colour. Defaults to `ring`; override `--focus` to theme focus separately."
+    },
+    "link": {
+      "$value": "{color.primary}",
+      "$type": "color",
+      "$description": "inline link / Link-button text colour. Defaults to `primary`."
     }
   }
 }

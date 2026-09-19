@@ -52,7 +52,7 @@ const CircularProgress = React.forwardRef<HTMLDivElement, CircularProgressProps>
             strokeLinecap="round"
             strokeDasharray={c}
             strokeDashoffset={c - (v / 100) * c}
-            className="stroke-primary transition-[stroke-dashoffset] duration-base"
+            className="stroke-action transition-[stroke-dashoffset] duration-base"
           />
         </svg>
         {(showValue || label != null) && (

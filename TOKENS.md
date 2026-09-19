@@ -32,6 +32,17 @@
 | Primitives — opacity | `tokens/primitives/opacity.json` | not from Figma — grounded in the dominant `opacity-0/50/70/100` usages already in components |
 | Primitives — z-index | `tokens/primitives/z-index.json` | not from Figma — grounded in the `z-[1]/z-10/z-20/z-40/z-50` usages already in components |
 
+## Role tokens (added on top of `primary`)
+
+`brand`, `action` (+ `action-foreground`), `link` and `focus` are **repo-owned** — none exist in Figma. `action`,
+`action-foreground`, `link` and `focus` are aliases (`{color.primary}` / `{color.primary-foreground}` /
+`{color.ring}`) and are emitted as live `var()` references in **both** themes (`ALIAS_TOKENS` in
+`style-dictionary/sd.config.mjs`), so overriding `--primary` carries them along. `brand` is a real value
+(`blue.500` light, `blue.200` dark). `action-hover` / `action-pressed` are explicit hexes for the native
+ports: `action` at 90% / 85% over `background`. The web derives the same states with opacity, and
+`scripts/check-contrast.mjs` fails if the explicit values drift from that derivation. See
+[/docs/theming](apps/web/src/app/docs/theming/page.mdx).
+
 ## Semantic variable → Figma variable (light theme)
 
 Values are the **current resolved** hex. Several roles diverge from their Figma

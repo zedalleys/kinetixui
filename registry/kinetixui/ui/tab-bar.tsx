@@ -35,7 +35,7 @@ const TabBarItem = React.forwardRef<HTMLButtonElement, TabBarItemProps>(
       aria-current={active ? "page" : undefined}
       className={cn(
         "relative flex flex-1 flex-col items-center justify-center gap-1 py-2 text-label-sm outline-none transition-colors",
-        active ? "text-primary" : "text-muted-foreground hover:text-foreground",
+        active ? "text-action" : "text-muted-foreground hover:text-foreground",
         "focus-visible:bg-accent",
         className,
       )}

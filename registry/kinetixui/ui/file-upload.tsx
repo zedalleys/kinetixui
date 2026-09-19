@@ -83,7 +83,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
           className={cn(
             "flex flex-col items-center gap-2 rounded-md border border-dashed border-input p-6 text-center outline-none transition-colors",
             !disabled && "cursor-pointer hover:bg-accent/50 focus-visible:shadow-focus",
-            dragging && "border-primary bg-accent",
+            dragging && "border-action bg-accent",
             disabled && "pointer-events-none opacity-disabled",
           )}
         >
@@ -152,7 +152,7 @@ function FileUploadItem({ file, onRemove, onRetry }: FileUploadItemProps) {
         {isError && file.error ? <p className="text-destructive">{file.error}</p> : <p className="text-muted-foreground">{formatBytes(file.size)}</p>}
         {isLoading && typeof file.progress === "number" && (
           <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-muted">
-            <div className="h-full bg-primary transition-[width]" style={{ width: `${Math.max(0, Math.min(100, file.progress))}%` }} />
+            <div className="h-full bg-action transition-[width]" style={{ width: `${Math.max(0, Math.min(100, file.progress))}%` }} />
           </div>
         )}
       </div>
@@ -160,7 +160,7 @@ function FileUploadItem({ file, onRemove, onRetry }: FileUploadItemProps) {
         <button
           type="button"
           onClick={() => onRetry(file.id)}
-          className="shrink-0 text-label-md font-medium text-primary underline-offset-2 outline-none hover:underline focus-visible:underline"
+          className="shrink-0 text-label-md font-medium text-link underline-offset-2 outline-none hover:underline focus-visible:underline"
         >
           Retry
         </button>
