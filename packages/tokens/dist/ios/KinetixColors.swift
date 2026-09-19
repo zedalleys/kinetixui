@@ -145,7 +145,7 @@ public enum KinetixColor {
     public static let colorSemanticInfoContainer = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
     public static let colorSemanticOnError = UIColor(red: 0.996, green: 0.953, blue: 0.949, alpha: 1) /** figma: onError */
     public static let colorSemanticOnErrorContainer = UIColor(red: 0.925, green: 0.314, blue: 0.278, alpha: 1) /** figma: onErrorContainer */
-    public static let colorSemanticOnInfoContainer = UIColor(red: 0.224, green: 0.353, blue: 0.439, alpha: 1)
+    public static let colorSemanticOnInfoContainer = UIColor(red: 0.224, green: 0.353, blue: 0.439, alpha: 1) /** text on a tinted info surface (bg-info/10) — Banner/Inform information. --info itself is only 4.15:1 on its own 10% tint; this clears AA. Exposed as text-info-on-container. */
     public static let colorSemanticOnSuccessContainer = UIColor(red: 0.275, green: 0.322, blue: 0.271, alpha: 1)
     public static let colorSemanticOnWarningContainer = UIColor(red: 0.976, green: 0.475, blue: 0.027, alpha: 1) /** figma: onWarningContainer */
     public static let colorSemanticSuccessContainer = UIColor(red: 0.945, green: 0.953, blue: 0.945, alpha: 1)

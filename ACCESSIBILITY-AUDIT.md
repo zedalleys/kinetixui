@@ -26,7 +26,7 @@ contract that feeds all four component libraries.
    visibility, keyboard operability, names on icon-only controls, state exposed
    to AT (`aria-pressed` / `aria-expanded`), colour-only signalling, and
    `prefers-reduced-motion` coverage.
-3. **Rendered axe-core pass** — **partly done (2026-09-19).** `packages/ui/src/components-a11y.test.tsx` mounts every story in jsdom and runs axe-core in CI (`pnpm --filter @kinetixui/ui test`), failing on any violation not in its `KNOWN` baseline (21 pre-existing, mostly unlabeled demo controls; the list can only shrink). jsdom has no layout, so `color-contrast`, real focus-trap/portal behaviour and light/dark rendering are **still pending** a real-browser pass (Storybook + Playwright).
+3. **Rendered axe-core passes** — **done (2026-09-19).** Two layers, both in CI: a jsdom pass (`packages/ui/src/components-a11y.test.tsx`, with `KNOWN` baseline) and a real-browser pass (`scripts/a11y-browser.mjs`, `pnpm check:a11y-browser`, workflow `a11y-browser.yml`) that opens every Storybook story in headless Chromium in **light and dark** with every axe rule on, including colour contrast. Violations that pre-date the pass are listed in `a11y-baseline.json` (64); new ones fail the build and fixed ones must be removed, so the baseline only shrinks. **Still not covered:** keyboard interaction, focus trapping/return, forced-colors, and per-component ARIA interaction models (DataGrid, TreeView, Tour, Kanban, MultiSelect, ColorPicker).
 
 ## Severity key
 
@@ -151,7 +151,7 @@ fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
 - **R2 — DONE.** Light `--warning` → `amber.800` `#7f5b21` (6.1 / 5.8:1). Chosen
   over adding a second `--warning-strong` token to keep the contract
   single-valued. Dark stays bright `amber.400`. `KNOWN_SUBAA` is now empty.
-- **R3 — real-browser axe light/dark pass** (the jsdom pass is done, see above) once the Chrome extension is
+- **R3 — real-browser axe light/dark pass — done** (see above); originally: once the Chrome extension is
   connected (or add `@axe-core/playwright` as a dev dep and a
   `scripts/a11y.mjs` that walks the route list headless — better, since it can
   run in CI next to `check:contrast`).
@@ -171,3 +171,19 @@ Files changed for the fixes above:
 `apps/web/src/app/globals.css`, `packages/tokens/dist/**` (generated),
 `apps/web/src/app/layout.tsx`, `apps/web/src/components/{mobile-nav,mode-toggle,site-header,component-preview,component-meta,component-gallery}.tsx`,
 `apps/web/src/app/docs/accessibility/page.mdx`.
+
+## Browser pass findings (2026-09-19)
+
+First run of the browser pass. Storybook's own canvas had no background in either theme (`body { background: var(--background) }` — the tokens are bare HSL channels, so it needed `hsl()`); that produced ~55 false dark-mode contrast failures and is fixed. What remains in `a11y-baseline.json`:
+
+| Rule | Count | Notes |
+|---|---|---|
+| `button-name` | 14 | icon-only buttons in demo stories without an accessible name — story or component |
+| `label` | 12 | inputs without an associated label (mostly demo stories) |
+| `aria-input-field-name` | 10 | sliders / comboboxes without names |
+| `aria-progressbar-name` | 8 | Progress / CircularProgress stories |
+| `scrollable-region-focusable` | 6 | scroll areas not keyboard-reachable — likely real |
+| `color-contrast` | 0 | **All fixed.** Banner/Inform `information` text now uses `text-info-on-container`. Button Primary pressed is `bg-primary/85` (4.54:1; 80% was 4.11) and Secondary pressed is solid like hover (90% was 3.97). `check:contrast` now also models text on partially-transparent fills (`ALPHA_TEXT_PAIRS`), so this class of bug — a state that dims its fill toward the page — fails CI statically. |
+| other | 14 | `aria-required-children/parent`, `nested-interactive`, `select-name`, duplicate banner landmarks (two Banners in one story) |
+
+Dark mode has **no** contrast failures once the canvas background is correct.

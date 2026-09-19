@@ -174,6 +174,13 @@
     "info-foreground": {
       "$value": "{color.blue.900}",
       "$type": "color"
+    },
+    "semantic": {
+      "on-info-container": {
+        "$value": "{color.blue.100}",
+        "$type": "color",
+        "$description": "text on a tinted info surface (bg-info/10). Dark: same as --info, which already clears AA on the dark tint. Light counterpart is darker — see color.light.json."
+      }
     }
   }
 }
