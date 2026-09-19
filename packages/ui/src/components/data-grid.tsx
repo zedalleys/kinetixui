@@ -24,6 +24,14 @@ export interface DataGridColumn<TData> {
   onCellEdit?: (row: TData, rowIndex: number, value: string) => void;
 }
 
+/** A rectangular range of cells, in display order (after sorting and column reordering). */
+export interface DataGridSelection {
+  /** first and last selected row index, inclusive, into the *displayed* (sorted) rows */
+  rows: [number, number];
+  /** ids of the selected columns, in display order */
+  columns: string[];
+}
+
 export interface DataGridProps<TData> {
   columns: DataGridColumn<TData>[];
   data: TData[];
@@ -33,6 +41,14 @@ export interface DataGridProps<TData> {
   overscan?: number;
   getRowId?: (row: TData, index: number) => React.Key;
   className?: string;
+  /**
+   * Opt in to range selection: Shift+arrows / Shift+click extend a rectangle from the anchor cell,
+   * Ctrl/Cmd+A selects everything, Ctrl/Cmd+C copies the range as tab-separated text (each
+   * column's `value()`; empty where a column has none), Esc clears. Sets aria-multiselectable.
+   */
+  selectable?: boolean;
+  /** fires when the selected range changes; `null` when it is cleared */
+  onSelectionChange?: (selection: DataGridSelection | null) => void;
 }
 
 type SortState = { columnId: string; direction: "asc" | "desc" } | null;
@@ -61,6 +77,8 @@ function DataGrid<TData>({
   overscan = 6,
   getRowId,
   className,
+  selectable = false,
+  onSelectionChange,
 }: DataGridProps<TData>) {
   const columnById = React.useMemo(() => new Map(columns.map((c) => [c.id, c])), [columns]);
   const [order, setOrder] = React.useState(() => columns.map((c) => c.id));
@@ -203,6 +221,13 @@ function DataGrid<TData>({
   const pendingFocusRef = React.useRef<Pos | null>(null);
   const [announcement, setAnnouncement] = React.useState("");
 
+  // ── range selection (opt-in) ──────────────────────────────────────────────────────────────
+  type Anchor = { row: number; columnId: string };
+  const [sel, setSel] = React.useState<{ anchor: Anchor; end: Anchor } | null>(null);
+  const onSelectionChangeRef = React.useRef(onSelectionChange);
+  onSelectionChangeRef.current = onSelectionChange;
+  const lastEmittedRef = React.useRef("null");
+
   const rowCount = sortedData.length;
   const colIds = renderedColumns.map((c) => c.id);
   const activeCol = colIds.includes(active.columnId) ? active.columnId : (colIds[0] ?? "");
@@ -211,6 +236,57 @@ function DataGrid<TData>({
   // the grid stays reachable by Tab
   const activeRendered = activeRow < 0 || (activeRow >= startIndex && activeRow < endIndex);
   const tabStop: Pos = { row: activeRendered ? activeRow : -1, columnId: activeCol };
+  const colKey = colIds.join("|");
+  const range = React.useMemo(() => {
+    if (!selectable || !sel) return null;
+    const a = colIds.indexOf(sel.anchor.columnId);
+    const b = colIds.indexOf(sel.end.columnId);
+    if (a < 0 || b < 0) return null;
+    return { r0: Math.min(sel.anchor.row, sel.end.row), r1: Math.max(sel.anchor.row, sel.end.row), c0: Math.min(a, b), c1: Math.max(a, b) };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectable, sel, colKey]);
+
+  // Selection refers to displayed rows, so a re-sort or a different row count invalidates it.
+  React.useEffect(() => setSel(null), [sort, rowCount]);
+
+  React.useEffect(() => {
+    if (!selectable) return;
+    const value = range ? { rows: [range.r0, range.r1] as [number, number], columns: colIds.slice(range.c0, range.c1 + 1) } : null;
+    const key = JSON.stringify(value);
+    if (key === lastEmittedRef.current) return;
+    lastEmittedRef.current = key;
+    onSelectionChangeRef.current?.(value);
+    setAnnouncement(value ? `${(range!.r1 - range!.r0 + 1) * (range!.c1 - range!.c0 + 1)} cells selected` : "Selection cleared");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectable, range]);
+
+  function extendSelection(fromRow: number, fromCol: string, toRow: number, toCol: string) {
+    const anchor = sel?.anchor ?? { row: fromRow, columnId: fromCol };
+    const end = { row: Math.max(0, Math.min(toRow, rowCount - 1)), columnId: toCol };
+    setSel({ anchor, end });
+    moveTo(end.row, end.columnId);
+  }
+
+  function selectAll() {
+    if (rowCount === 0 || colIds.length === 0) return;
+    setSel({ anchor: { row: 0, columnId: colIds[0]! }, end: { row: rowCount - 1, columnId: colIds[colIds.length - 1]! } });
+  }
+
+  function copySelection() {
+    if (!range) return;
+    const ids = colIds.slice(range.c0, range.c1 + 1);
+    const text = sortedData
+      .slice(range.r0, range.r1 + 1)
+      .map((r) => ids.map((id) => { const c = columnById.get(id); return c?.value ? String(c.value(r)) : ""; }).join("\t"))
+      .join("\n");
+    try {
+      void navigator.clipboard?.writeText(text);
+      setAnnouncement(`Copied ${(range.r1 - range.r0 + 1) * ids.length} cells`);
+    } catch {
+      /* clipboard unavailable (insecure context / permission) — nothing to announce */
+    }
+  }
+
   const pageRows = Math.max(1, Math.floor((viewportHeight - HEADER_HEIGHT) / rowHeight) - 1);
   const labelOf = (c: DataGridColumn<TData>) => (typeof c.header === "string" ? c.header : c.id);
 
@@ -295,9 +371,28 @@ function DataGrid<TData>({
       return;
     }
 
+    const mod = e.ctrlKey || e.metaKey;
+    if (selectable && row >= 0) {
+      if (mod && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        return selectAll();
+      }
+      if (mod && e.key.toLowerCase() === "c" && range) {
+        e.preventDefault();
+        return copySelection();
+      }
+      if (e.key === "Escape" && sel) {
+        e.preventDefault();
+        return setSel(null);
+      }
+    }
+    const extend = selectable && e.shiftKey && row >= 0;
     const go = (r: number, i: number) => {
       e.preventDefault();
-      moveTo(r, colIds[Math.max(0, Math.min(i, colIds.length - 1))]!);
+      const target = colIds[Math.max(0, Math.min(i, colIds.length - 1))]!;
+      if (extend) return extendSelection(row, column.id, r, target);
+      if (sel) setSel(null); // a plain move collapses the range
+      moveTo(r, target);
     };
     switch (e.key) {
       case "ArrowRight":
@@ -341,6 +436,7 @@ function DataGrid<TData>({
       role="grid"
       aria-rowcount={rowCount + 1}
       aria-colcount={colIds.length}
+      aria-multiselectable={selectable || undefined}
       className={cn("relative overflow-auto rounded-md border font-sans text-sm", className)}
       style={{ height }}
       onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
@@ -434,12 +530,23 @@ function DataGrid<TData>({
                         ? { position: "sticky", right: rightOffsets[column.id], zIndex: 1 }
                         : {};
                   const isEditing = editing?.rowIndex === rowIndex && editing.columnId === column.id;
+                  const selected = selectable && !!range && rowIndex >= range.r0 && rowIndex <= range.r1 && colIdx >= range.c0 && colIdx <= range.c1;
                   return (
                     <div
                       key={column.id}
                       role="gridcell"
                       aria-colindex={colIdx + 1}
+                      aria-selected={selectable ? selected : undefined}
                       data-cell={`${rowIndex}:${column.id}`}
+                      onMouseDown={(e) => {
+                        if (!selectable || e.button !== 0) return;
+                        if (e.shiftKey) {
+                          // extend from the previously active cell (focus has not moved yet on mousedown) — even when it has
+                          // since scrolled out of the rendered window
+                          e.preventDefault();
+                          extendSelection(activeRow >= 0 ? activeRow : rowIndex, activeCol, rowIndex, column.id);
+                        } else if (sel) setSel(null);
+                      }}
                       onDoubleClick={() => column.editable && setEditing({ rowIndex, columnId: column.id })}
                       // roving tabindex; Enter or F2 edits an editable cell (the spreadsheet convention)
                       tabIndex={tabStop.row === rowIndex && tabStop.columnId === column.id ? 0 : -1}
@@ -448,6 +555,7 @@ function DataGrid<TData>({
                       className={cn(
                         "flex shrink-0 items-center px-2 outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
                         column.pinned && "bg-background",
+                        selected && "bg-accent",
                       )}
                       style={{ width, ...pinnedStyle }}
                     >

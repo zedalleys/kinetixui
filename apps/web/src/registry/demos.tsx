@@ -967,6 +967,7 @@ add(
     return (
       <DataGrid
         className="w-full"
+        selectable
         height={280}
         data={data}
         getRowId={(row) => row.id}
@@ -988,7 +989,7 @@ add(
       />
     );
   },
-  `<DataGrid\n  height={280}\n  data={data}\n  getRowId={(row) => row.id}\n  columns={[\n    { id: "id", header: "ID", cell: (row) => row.id, value: (row) => row.id, sortable: true, pinned: "left" },\n    { id: "name", header: "Name", cell: (row) => row.name, value: (row) => row.name, editable: true, onCellEdit: updateName },\n    { id: "qty", header: "Qty", cell: (row) => row.qty, value: (row) => row.qty, sortable: true },\n  ]}\n/>`,
+  `<DataGrid\n  selectable\n  height={280}\n  data={data}\n  getRowId={(row) => row.id}\n  columns={[\n    { id: "id", header: "ID", cell: (row) => row.id, value: (row) => row.id, sortable: true, pinned: "left" },\n    { id: "name", header: "Name", cell: (row) => row.name, value: (row) => row.name, editable: true, onCellEdit: updateName },\n    { id: "qty", header: "Qty", cell: (row) => row.qty, value: (row) => row.qty, sortable: true },\n  ]}\n/>`,
 );
 add(
   "data-table-demo",

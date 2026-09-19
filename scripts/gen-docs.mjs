@@ -54,7 +54,7 @@ const BUILT = {
   command: ["Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandDialog", "Fast, composable, unstyled command menu for React (cmdk)."],
   "context-menu": ["ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator", "Displays a menu located at the pointer, triggered by a right click."],
   "data-table": ["DataTable, Table", "Powerful table and datagrid built with TanStack Table."],
-  "data-grid": ["DataGrid", "Row-virtualized grid with column resize, drag-to-reorder, left/right pin, sort, and double-click-to-edit cells."],
+  "data-grid": ["DataGrid", "Row-virtualized grid with column resize, drag-to-reorder, left/right pin, sort, edit-in-place cells, and opt-in range selection with copy — fully keyboard-operable."],
   "date-picker": ["DatePicker", "A text-field trigger + calendar popover, with label / helper text / error states. Composes Popover + Calendar."],
   drawer: ["Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter", "A drawer component for React, built on Vaul."],
   form: ["Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage", "Building forms with React Hook Form and Zod."],
@@ -142,10 +142,12 @@ npx @kinetixui/cli add ${slug}
 import { ${exports} } from "@kinetixui/ui";
 \`\`\`
 
-Styled entirely from the KinetixUI token contract — \`bg-primary\`,
+Styled entirely from the KinetixUI token contract — \`bg-action\`,
 \`text-muted-foreground\`, \`border-input\`, \`ring-ring\`. Works in light and dark
-with no extra config, and keyboard + ARIA behaviour comes from Radix — see
-[Accessibility](/docs/accessibility).
+with no extra config. Keyboard and ARIA behaviour is inherited from Radix where the
+component is built on a primitive; the hand-built widgets (DataGrid, TreeView,
+ColorPicker, MultiSelect, Tour, KanbanBoard) have their own documented interaction
+models — see [Accessibility](/docs/accessibility).
 `;
   writeFileSync(`${dir}/page.mdx`, mdx);
   console.log("mdx  ", slug);
