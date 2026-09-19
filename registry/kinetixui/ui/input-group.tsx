@@ -22,7 +22,7 @@ const InputGroup = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
       data-slot="input-group"
       className={cn(
         "flex w-full items-center overflow-hidden rounded-sm border border-input bg-background font-sans transition-colors",
-        "focus-within:border-primary focus-within:shadow-focus",
+        "focus-within:border-action focus-within:shadow-focus",
         "has-[[aria-invalid=true]]:border-destructive has-[[aria-invalid=true]]:focus-within:shadow-focus-destructive",
         "has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-disabled",
         className,

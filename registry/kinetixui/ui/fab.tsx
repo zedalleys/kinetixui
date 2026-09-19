@@ -19,7 +19,7 @@ const fabVariants = cva(
   {
     variants: {
       variant: {
-        Primary: "bg-primary text-primary-foreground hover:bg-[--color-blue-600] active:bg-[--color-blue-700]",
+        Primary: "bg-action text-action-foreground hover:bg-action/90 active:bg-action/85",
         Secondary:
           "bg-secondary text-secondary-foreground hover:bg-[--color-green-500] hover:text-[--color-green-50] active:bg-[--color-green-600] active:text-[--color-green-50]",
       },

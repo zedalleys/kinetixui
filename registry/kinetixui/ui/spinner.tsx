@@ -17,9 +17,9 @@ const spinnerVariants = cva("inline-block animate-spin motion-reduce:animate-[sp
       lg: "size-8",
     },
     variant: {
-      default: "text-primary",
+      default: "text-action",
       muted: "text-muted-foreground",
-      onColor: "text-primary-foreground",
+      onColor: "text-action-foreground",
     },
   },
   defaultVariants: { size: "md", variant: "default" },

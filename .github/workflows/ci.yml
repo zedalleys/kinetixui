@@ -35,6 +35,9 @@ jobs:
       - name: Contrast audit (WCAG AA text pairs)
         run: pnpm check:contrast
 
+      - name: Token table matches the tokens
+        run: pnpm check:token-contract
+
       - name: Changelog page is current with the packages
         run: pnpm check:releases
 

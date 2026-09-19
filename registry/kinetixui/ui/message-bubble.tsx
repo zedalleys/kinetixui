@@ -34,7 +34,7 @@ const MessageBubble = React.forwardRef<HTMLDivElement, MessageBubbleProps>(
           <div
             className={cn(
               "min-w-0 rounded-2xl px-3.5 py-2 text-body-sm",
-              sent ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
+              sent ? "bg-action text-action-foreground" : "bg-muted text-foreground",
               sent && grouped && "rounded-tr-md",
               !sent && grouped && "rounded-tl-md",
             )}
@@ -45,7 +45,7 @@ const MessageBubble = React.forwardRef<HTMLDivElement, MessageBubbleProps>(
             <div className="flex items-center gap-1 px-1 text-label-sm text-muted-foreground">
               {timestamp}
               {sent && status && (
-                <span className={cn(status === "read" && "text-primary")}>
+                <span className={cn(status === "read" && "text-action")}>
                   {status === "sent" ? <Check className="size-3.5" /> : <CheckCheck className="size-3.5" />}
                 </span>
               )}

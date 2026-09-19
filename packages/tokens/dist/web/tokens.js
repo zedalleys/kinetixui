@@ -193,7 +193,15 @@ export const tokens = {
     "tertiary": "#b0b0b0",
     "tertiary-foreground": "#f0f7ff",
     "info": "#57778d",
-    "info-foreground": "#f0f7ff"
+    "info-foreground": "#f0f7ff",
+    "brand": "#1b3c53",
+    "brand-foreground": "#f0f7ff",
+    "action": "#1d4ed8",
+    "action-foreground": "#f0f7ff",
+    "action-hover": "#3460dc",
+    "action-pressed": "#3f69de",
+    "focus": "#1d4ed8",
+    "link": "#1d4ed8"
   },
   "spacing": {
     "0": "0",

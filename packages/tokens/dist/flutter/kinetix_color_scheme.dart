@@ -50,4 +50,12 @@ class KinetixColorScheme {
   static const tertiaryForeground = Color(0xFFF0F7FF);
   static const info = Color(0xFF57778D);
   static const infoForeground = Color(0xFFF0F7FF);
+  static const brand = Color(0xFF1B3C53);
+  static const brandForeground = Color(0xFFF0F7FF);
+  static const action = Color(0xFF1D4ED8);
+  static const actionForeground = Color(0xFFF0F7FF);
+  static const actionHover = Color(0xFF3460DC);
+  static const actionPressed = Color(0xFF3F69DE);
+  static const focus = Color(0xFF1D4ED8);
+  static const link = Color(0xFF1D4ED8);
 }

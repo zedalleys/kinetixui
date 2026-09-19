@@ -71,14 +71,19 @@ const TEXT_PAIRS = [
   ["sidebar-primary-foreground", "sidebar-primary"],
   ["sidebar-accent-foreground", "sidebar-accent"],
   ["primary", "background"],
+  // role tokens (default to primary / ring, but can be themed on their own — so they get their own rows)
+  ["action-foreground", "action"],
+  ["link", "background"], // Link button / inline links
+  ["brand-foreground", "brand"],
+  ["brand", "background"], // brand used as text or an icon on the page
 ];
 // Text on a fill that is drawn at partial opacity (`bg-primary/85`, `bg-info/10`). The fill
 // is blended over `surface` first, so these catch what a solid-colour check can't — e.g. a
 // pressed state that dims the fill toward the page until its text drops below AA.
 //   [text, fill, fillAlpha, surface, where]
 const ALPHA_TEXT_PAIRS = [
-  ["primary-foreground", "primary", 0.9, "background", "Button Primary hover"],
-  ["primary-foreground", "primary", 0.85, "background", "Button Primary pressed"],
+  ["action-foreground", "action", 0.9, "background", "Button Primary hover"],
+  ["action-foreground", "action", 0.85, "background", "Button Primary pressed"],
   ["secondary", "secondary-foreground", 1, "background", "Button Secondary hover"],
   ["secondary", "secondary-foreground", 1, "background", "Button Secondary pressed"],
   ["on-info-container", "info", 0.1, "background", "Banner/Inform information"],
@@ -87,6 +92,7 @@ const NON_TEXT_PAIRS = [
   ["accent", "background"], // hover fill on transparent controls
   ["border", "background"],
   ["ring", "background"], // focus ring
+  ["focus", "background"], // focus indicator role token (defaults to ring)
   ["input", "background"],
   ["tertiary", "background"], // Switch off-track (bg-tertiary) — boundary only, no text
   ["sidebar-border", "sidebar"],
@@ -193,6 +199,21 @@ for (const mode of ["light", "dark"]) {
     const r = ratio(S[fg], blended);
     if (r < 4.5) failures += 1;
     console.log(`  ${`${fg} / ${fill}@${alpha}`.padEnd(44)} ${r.toFixed(2)}:1  ${r >= 4.5 ? "AA" : "** FAIL **"}  (${where})`);
+  }
+
+  console.log(`--- ${mode} — explicit action states match the web's derivation ---`);
+  for (const [name, alpha] of [["action-hover", 0.9], ["action-pressed", 0.85]]) {
+    if (!S[name] || !S.action || !S.background) {
+      console.log(`  ${name.padEnd(44)} —      (token not defined in ${mode})`);
+      failures += 1;
+      continue;
+    }
+    const ch = (h, i) => parseInt(h.slice(1 + 2 * i, 3 + 2 * i), 16);
+    const derived = [0, 1, 2].map((i) => Math.round(ch(S.action, i) * alpha + ch(S.background, i) * (1 - alpha)));
+    const drift = Math.max(...[0, 1, 2].map((i) => Math.abs(derived[i] - ch(S[name], i))));
+    const ok = drift <= 2; // 8-bit rounding
+    if (!ok) failures += 1;
+    console.log(`  ${name.padEnd(44)} ${S[name]}  derived #${derived.map((v) => v.toString(16).padStart(2, "0")).join("")}  ${ok ? "ok" : "** DRIFT — regenerate the explicit value **"}`);
   }
 
   console.log(`--- ${mode} — non-text cues (SC 1.4.11 = 3:1) ---`);

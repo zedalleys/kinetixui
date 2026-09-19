@@ -41,7 +41,7 @@ const buttonVariants = cva(
         // (the old hover:bg-[--color-blue-600] was a hard-coded dark navy — on dark mode,
         //  where --primary is light, it inverted the button into the near-black background.)
         Primary:
-          "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/85 disabled:bg-border disabled:text-muted-foreground",
+          "bg-action text-action-foreground hover:bg-action/90 active:bg-action/85 disabled:bg-border disabled:text-muted-foreground",
         // rest = --secondary; hover/active promote to the --secondary-foreground fill with
         //  inverted text — theme-aware, unlike the previous hard-coded green primitives.
         //  Active is solid like hover: dimming it (90% was 3.97:1) drops the text under AA,
@@ -51,14 +51,14 @@ const buttonVariants = cva(
         // 1px outline; hover fills with accent + strengthens the edge to --ring so the
         // state stays visible on the darkest surfaces (WCAG 2.2 SC 1.4.11); active pins primary
         Outline:
-          "border border-input bg-transparent text-foreground hover:border-ring hover:bg-accent active:border-primary active:bg-accent active:text-primary disabled:border-input disabled:text-muted-foreground disabled:bg-transparent",
+          "border border-input bg-transparent text-foreground hover:border-ring hover:bg-accent active:border-action active:bg-accent active:text-action disabled:border-input disabled:text-muted-foreground disabled:bg-transparent",
         Destructive:
           "bg-destructive text-destructive-foreground hover:brightness-95 active:brightness-90 disabled:bg-border disabled:text-muted-foreground",
         // transparent rest; hover adds an inset --ring outline (the accent fill alone is
         // <3:1 against the page on dark) plus the accent fill; active pins primary text
         Ghost:
-          "bg-transparent text-foreground hover:bg-accent hover:ring-1 hover:ring-inset hover:ring-ring active:bg-accent active:text-primary active:ring-0 disabled:text-muted-foreground disabled:bg-transparent",
-        Link: "bg-transparent text-primary underline-offset-4 hover:underline hover:text-foreground rounded-none px-0 disabled:text-muted-foreground disabled:no-underline",
+          "bg-transparent text-foreground hover:bg-accent hover:ring-1 hover:ring-inset hover:ring-ring active:bg-accent active:text-action active:ring-0 disabled:text-muted-foreground disabled:bg-transparent",
+        Link: "bg-transparent text-link underline-offset-4 hover:underline hover:text-foreground rounded-none px-0 disabled:text-muted-foreground disabled:no-underline",
       },
       size: {
         // padding = Figma spacing/3 + spacing/2 ; type = Label Small (11/16, +0.5 tracking)
@@ -87,14 +87,14 @@ const buttonVariants = cva(
     },
     compoundVariants: [
       { variant: "Destructive", class: "focus-visible:shadow-focus-destructive" },
-      { variant: "Primary", state: "Hover", class: "bg-primary/90" },
-      { variant: "Primary", state: "Active", class: "bg-primary/85" },
+      { variant: "Primary", state: "Hover", class: "bg-action/90" },
+      { variant: "Primary", state: "Active", class: "bg-action/85" },
       { variant: "Secondary", state: "Hover", class: "bg-secondary-foreground text-secondary" },
       { variant: "Secondary", state: "Active", class: "bg-secondary-foreground text-secondary" },
       { variant: "Outline", state: "Hover", class: "border-ring bg-accent" },
-      { variant: "Outline", state: "Active", class: "border-primary bg-accent text-primary" },
+      { variant: "Outline", state: "Active", class: "border-action bg-accent text-action" },
       { variant: "Ghost", state: "Hover", class: "bg-accent ring-1 ring-inset ring-ring" },
-      { variant: "Ghost", state: "Active", class: "bg-accent text-primary" },
+      { variant: "Ghost", state: "Active", class: "bg-accent text-action" },
       { variant: "Link", state: "Hover", class: "underline text-foreground" },
       { variant: "Link", size: ["sm", "md", "lg"], class: "py-2 px-0 h-auto" },
     ],

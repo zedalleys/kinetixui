@@ -408,7 +408,7 @@ function DataGrid<TData>({
                     e.stopPropagation();
                     beginResize(column.id, column.minWidth ?? DEFAULT_MIN_WIDTH, e.clientX, width);
                   }}
-                  className="absolute right-0 top-0 h-full w-1 touch-none cursor-col-resize hover:bg-primary/50"
+                  className="absolute right-0 top-0 h-full w-1 touch-none cursor-col-resize hover:bg-action/50"
                 />
               </div>
             );

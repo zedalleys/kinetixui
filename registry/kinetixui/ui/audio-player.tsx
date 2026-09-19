@@ -66,7 +66,7 @@ const AudioPlayer = React.forwardRef<HTMLDivElement, AudioPlayerProps>(
         type="button"
         onClick={toggle}
         aria-label={playing ? "Pause" : "Play"}
-        className="grid shrink-0 place-items-center rounded-full bg-primary text-primary-foreground outline-none transition-transform hover:scale-105 focus-visible:shadow-focus"
+        className="grid shrink-0 place-items-center rounded-full bg-action text-action-foreground outline-none transition-transform hover:scale-105 focus-visible:shadow-focus"
         style={{ width: size, height: size }}
       >
         {playing ? <Pause className="size-1/3 fill-current" /> : <Play className="size-1/3 translate-x-px fill-current" />}
@@ -105,7 +105,7 @@ const AudioPlayer = React.forwardRef<HTMLDivElement, AudioPlayerProps>(
           </button>
           <PlayPause size={36} />
           <div className="absolute inset-x-0 bottom-0 h-1 bg-muted">
-            <div className="h-full bg-primary transition-[width]" style={{ width: `${pct}%` }} />
+            <div className="h-full bg-action transition-[width]" style={{ width: `${pct}%` }} />
           </div>
         </div>
       );
