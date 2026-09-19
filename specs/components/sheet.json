@@ -18,5 +18,53 @@
       "right"
     ]
   },
+  "components": [
+    {
+      "name": "Sheet",
+      "props": []
+    },
+    {
+      "name": "SheetPortal",
+      "props": []
+    },
+    {
+      "name": "SheetOverlay",
+      "props": []
+    },
+    {
+      "name": "SheetTrigger",
+      "props": []
+    },
+    {
+      "name": "SheetClose",
+      "props": []
+    },
+    {
+      "name": "SheetContent",
+      "props": [
+        {
+          "name": "side",
+          "type": "\"top\" | \"bottom\" | \"left\" | \"right\" | null",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "SheetHeader",
+      "props": []
+    },
+    {
+      "name": "SheetFooter",
+      "props": []
+    },
+    {
+      "name": "SheetTitle",
+      "props": []
+    },
+    {
+      "name": "SheetDescription",
+      "props": []
+    }
+  ],
   "source": "packages/ui/src/components/sheet.tsx"
 }

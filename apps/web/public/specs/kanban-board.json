@@ -1,0 +1,29 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "kanban-board",
+  "title": "Kanban Board",
+  "status": "beta",
+  "since": "0.12.0",
+  "platforms": [
+    "React"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "KanbanBoard",
+      "props": [
+        {
+          "name": "columns",
+          "type": "KanbanColumn[]",
+          "required": true
+        },
+        {
+          "name": "onColumnsChange",
+          "type": "(columns: KanbanColumn[]) => void",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/kanban-board.tsx"
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "pagination",
+  "title": "Pagination",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Pagination",
+      "props": []
+    },
+    {
+      "name": "PaginationContent",
+      "props": []
+    },
+    {
+      "name": "PaginationItem",
+      "props": []
+    },
+    {
+      "name": "PaginationLink",
+      "props": [
+        {
+          "name": "isActive",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "PaginationPrevious",
+      "props": [
+        {
+          "name": "isActive",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "PaginationNext",
+      "props": [
+        {
+          "name": "isActive",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "PaginationEllipsis",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/pagination.tsx"
+}

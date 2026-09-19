@@ -1,0 +1,46 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "tab-bar",
+  "title": "Tab Bar",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "TabBar",
+      "props": []
+    },
+    {
+      "name": "TabBarItem",
+      "props": [
+        {
+          "name": "icon",
+          "type": "React.ReactNode",
+          "required": true
+        },
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": true
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "badge",
+          "type": "React.ReactNode",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/tab-bar.tsx"
+}

@@ -46,10 +46,29 @@ export async function inspect(name: string, options: InspectOptions): Promise<vo
 
   const spec = await fetchComponentSpec(options.registry, name);
   if (spec) {
-    console.log();
-    console.log(pc.dim("Variants:"));
-    for (const [axis, options_] of Object.entries(spec.variants)) {
-      console.log(`  ${pc.dim(axis)}   ${options_.join(", ")}`);
+    if (spec.since || spec.status) {
+      console.log();
+      console.log(`${pc.dim("Since:")}  ${spec.since ?? "—"}  ${pc.dim(spec.status ? `(${spec.status})` : "")}`);
+    }
+
+    const axes = Object.entries(spec.variants ?? {});
+    if (axes.length) {
+      console.log();
+      console.log(pc.dim("Variants:"));
+      for (const [axis, options_] of axes) {
+        console.log(`  ${pc.dim(axis)}   ${options_.join(", ")}`);
+      }
+    }
+
+    // Each part with the props it declares itself; a part with none only takes the
+    // props of the element or primitive it wraps.
+    if (spec.components?.length) {
+      console.log();
+      console.log(pc.dim("Parts:"));
+      for (const part of spec.components) {
+        const own = part.props.map((p) => (p.required ? p.name : `${p.name}?`));
+        console.log(`  ${part.name}${own.length ? `   ${pc.dim(own.join(", "))}` : ""}`);
+      }
     }
   }
 

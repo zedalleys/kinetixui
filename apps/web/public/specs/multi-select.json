@@ -1,0 +1,53 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "multi-select",
+  "title": "Multi Select",
+  "status": "beta",
+  "since": "0.12.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "MultiSelect",
+      "props": [
+        {
+          "name": "options",
+          "type": "MultiSelectOption[]",
+          "required": true
+        },
+        {
+          "name": "value",
+          "type": "string[]",
+          "required": false
+        },
+        {
+          "name": "defaultValue",
+          "type": "string[]",
+          "required": false
+        },
+        {
+          "name": "onValueChange",
+          "type": "((value: string[]) => void)",
+          "required": false
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "creatable",
+          "type": "boolean",
+          "required": false,
+          "description": "allow adding free-entry tags that aren't in `options`"
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/multi-select.tsx"
+}

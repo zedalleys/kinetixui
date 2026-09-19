@@ -1,0 +1,58 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "data-grid",
+  "title": "Data Grid",
+  "status": "beta",
+  "since": "0.12.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "DataGrid",
+      "props": [
+        {
+          "name": "columns",
+          "type": "DataGridColumn<TData>[]",
+          "required": true
+        },
+        {
+          "name": "data",
+          "type": "TData[]",
+          "required": true
+        },
+        {
+          "name": "height",
+          "type": "string | number",
+          "required": true,
+          "description": "viewport height — a number (px) or any CSS height value; enables row virtualization"
+        },
+        {
+          "name": "rowHeight",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "overscan",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "getRowId",
+          "type": "((row: TData, index: number) => React.Key)",
+          "required": false
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/data-grid.tsx"
+}

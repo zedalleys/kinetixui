@@ -1,0 +1,42 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "form",
+  "title": "Form",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Form",
+      "props": []
+    },
+    {
+      "name": "FormItem",
+      "props": []
+    },
+    {
+      "name": "FormLabel",
+      "props": []
+    },
+    {
+      "name": "FormControl",
+      "props": []
+    },
+    {
+      "name": "FormDescription",
+      "props": []
+    },
+    {
+      "name": "FormMessage",
+      "props": []
+    },
+    {
+      "name": "FormField",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/form.tsx"
+}

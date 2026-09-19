@@ -18,5 +18,45 @@
       "info"
     ]
   },
+  "components": [
+    {
+      "name": "Field",
+      "props": [
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "FieldLabel",
+      "props": []
+    },
+    {
+      "name": "FieldControl",
+      "props": []
+    },
+    {
+      "name": "FieldDescription",
+      "props": []
+    },
+    {
+      "name": "FieldMessage",
+      "props": [
+        {
+          "name": "hideIcon",
+          "type": "boolean",
+          "required": false,
+          "description": "hide the leading intent icon"
+        },
+        {
+          "name": "intent",
+          "type": "\"success\" | \"warning\" | \"info\" | \"error\" | null",
+          "required": false
+        }
+      ]
+    }
+  ],
   "source": "packages/ui/src/components/field.tsx"
 }

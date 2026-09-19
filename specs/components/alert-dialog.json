@@ -1,0 +1,61 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "alert-dialog",
+  "title": "Alert Dialog",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "AlertDialog",
+      "props": []
+    },
+    {
+      "name": "AlertDialogPortal",
+      "props": []
+    },
+    {
+      "name": "AlertDialogOverlay",
+      "props": []
+    },
+    {
+      "name": "AlertDialogTrigger",
+      "props": []
+    },
+    {
+      "name": "AlertDialogContent",
+      "props": []
+    },
+    {
+      "name": "AlertDialogHeader",
+      "props": []
+    },
+    {
+      "name": "AlertDialogFooter",
+      "props": []
+    },
+    {
+      "name": "AlertDialogTitle",
+      "props": []
+    },
+    {
+      "name": "AlertDialogDescription",
+      "props": []
+    },
+    {
+      "name": "AlertDialogAction",
+      "props": []
+    },
+    {
+      "name": "AlertDialogCancel",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/alert-dialog.tsx"
+}

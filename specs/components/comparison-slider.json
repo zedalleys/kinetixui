@@ -1,0 +1,57 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "comparison-slider",
+  "title": "Comparison Slider",
+  "status": "stable",
+  "since": "0.11.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "ComparisonSlider",
+      "props": [
+        {
+          "name": "before",
+          "type": "React.ReactNode",
+          "required": true
+        },
+        {
+          "name": "after",
+          "type": "React.ReactNode",
+          "required": true
+        },
+        {
+          "name": "beforeLabel",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "afterLabel",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "defaultValue",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "onValueChange",
+          "type": "((value: number) => void)",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/comparison-slider.tsx"
+}

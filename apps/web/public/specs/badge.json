@@ -19,5 +19,23 @@
       "subtle"
     ]
   },
+  "components": [
+    {
+      "name": "Badge",
+      "props": [
+        {
+          "name": "asChild",
+          "type": "boolean",
+          "required": false,
+          "description": "render as the single child element (Radix Slot) instead of <div> — e.g. `<Badge asChild><a href=\"/new\">New</a></Badge>` for a linked badge"
+        },
+        {
+          "name": "variant",
+          "type": "\"default\" | \"destructive\" | \"secondary\" | \"outline\" | \"subtle\" | null",
+          "required": false
+        }
+      ]
+    }
+  ],
   "source": "packages/ui/src/components/badge.tsx"
 }

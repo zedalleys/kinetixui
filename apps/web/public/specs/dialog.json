@@ -1,0 +1,57 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "dialog",
+  "title": "Dialog",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Dialog",
+      "props": []
+    },
+    {
+      "name": "DialogPortal",
+      "props": []
+    },
+    {
+      "name": "DialogOverlay",
+      "props": []
+    },
+    {
+      "name": "DialogClose",
+      "props": []
+    },
+    {
+      "name": "DialogTrigger",
+      "props": []
+    },
+    {
+      "name": "DialogContent",
+      "props": []
+    },
+    {
+      "name": "DialogHeader",
+      "props": []
+    },
+    {
+      "name": "DialogFooter",
+      "props": []
+    },
+    {
+      "name": "DialogTitle",
+      "props": []
+    },
+    {
+      "name": "DialogDescription",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/dialog.tsx"
+}

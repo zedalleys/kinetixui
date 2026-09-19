@@ -1,0 +1,57 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "list",
+  "title": "List",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "List",
+      "props": []
+    },
+    {
+      "name": "ListItem",
+      "props": [
+        {
+          "name": "leading",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "title",
+          "type": "React.ReactNode",
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "trailing",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "onSelect",
+          "type": "(() => void)",
+          "required": false,
+          "description": "render as a pressable row"
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/list.tsx"
+}

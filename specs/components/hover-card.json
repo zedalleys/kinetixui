@@ -1,0 +1,29 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "hover-card",
+  "title": "Hover Card",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "HoverCard",
+      "props": []
+    },
+    {
+      "name": "HoverCardTrigger",
+      "props": []
+    },
+    {
+      "name": "HoverCardContent",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/hover-card.tsx"
+}

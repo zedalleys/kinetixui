@@ -19,5 +19,33 @@
       "action"
     ]
   },
+  "components": [
+    {
+      "name": "Inform",
+      "props": [
+        {
+          "name": "hideIcon",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "onDismiss",
+          "type": "(() => void)",
+          "required": false
+        },
+        {
+          "name": "action",
+          "type": "{ label: React.ReactNode; onClick?: () => void; icon?: React.ReactNode; }",
+          "required": false,
+          "description": "optional CTA rendered below the message"
+        },
+        {
+          "name": "variant",
+          "type": "\"success\" | \"warning\" | \"information\" | \"error\" | \"action\" | null",
+          "required": false
+        }
+      ]
+    }
+  ],
   "source": "packages/ui/src/components/inform.tsx"
 }

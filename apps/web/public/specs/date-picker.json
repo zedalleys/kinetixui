@@ -1,0 +1,72 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "date-picker",
+  "title": "Date Picker",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "DatePicker",
+      "props": [
+        {
+          "name": "value",
+          "type": "Date",
+          "required": false
+        },
+        {
+          "name": "onChange",
+          "type": "((date: Date | undefined) => void)",
+          "required": false
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "helperText",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "error",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "formatStr",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "calendarProps",
+          "type": "Omit<DayPickerProps, \"onSelect\" | \"selected\" | \"mode\">",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/date-picker.tsx"
+}

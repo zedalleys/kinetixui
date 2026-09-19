@@ -16,5 +16,38 @@
       "icon"
     ]
   },
+  "components": [
+    {
+      "name": "Empty",
+      "props": []
+    },
+    {
+      "name": "EmptyHeader",
+      "props": []
+    },
+    {
+      "name": "EmptyMedia",
+      "props": [
+        {
+          "name": "variant",
+          "type": "\"default\" | \"icon\" | null",
+          "required": false,
+          "description": "`icon` gives a muted circular badge behind the icon; `default` renders the child as-is (an illustration, an avatar, …)"
+        }
+      ]
+    },
+    {
+      "name": "EmptyTitle",
+      "props": []
+    },
+    {
+      "name": "EmptyDescription",
+      "props": []
+    },
+    {
+      "name": "EmptyContent",
+      "props": []
+    }
+  ],
   "source": "packages/ui/src/components/empty.tsx"
 }

@@ -23,5 +23,38 @@
       "false"
     ]
   },
+  "components": [
+    {
+      "name": "Banner",
+      "props": [
+        {
+          "name": "hideIcon",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "onDismiss",
+          "type": "(() => void)",
+          "required": false
+        },
+        {
+          "name": "action",
+          "type": "{ label: React.ReactNode; onClick?: () => void; }",
+          "required": false,
+          "description": "optional CTA rendered inline after the message"
+        },
+        {
+          "name": "variant",
+          "type": "\"success\" | \"warning\" | \"information\" | \"error\" | \"action\" | null",
+          "required": false
+        },
+        {
+          "name": "sticky",
+          "type": "boolean | null",
+          "required": false
+        }
+      ]
+    }
+  ],
   "source": "packages/ui/src/components/banner.tsx"
 }

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "toggle-group",
+  "title": "Toggle Group",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "ToggleGroup",
+      "props": [
+        {
+          "name": "variant",
+          "type": "\"default\" | \"outline\" | null",
+          "required": false
+        },
+        {
+          "name": "size",
+          "type": "\"default\" | \"sm\" | \"lg\" | null",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "ToggleGroupItem",
+      "props": [
+        {
+          "name": "variant",
+          "type": "\"default\" | \"outline\" | null",
+          "required": false
+        },
+        {
+          "name": "size",
+          "type": "\"default\" | \"sm\" | \"lg\" | null",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/toggle-group.tsx"
+}

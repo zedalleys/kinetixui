@@ -21,5 +21,182 @@
       "lg"
     ]
   },
+  "components": [
+    {
+      "name": "Sidebar",
+      "props": [
+        {
+          "name": "collapsible",
+          "type": "\"none\" | \"icon\" | \"offcanvas\"",
+          "required": false
+        },
+        {
+          "name": "variant",
+          "type": "\"inset\" | \"sidebar\" | \"floating\"",
+          "required": false
+        },
+        {
+          "name": "side",
+          "type": "\"left\" | \"right\"",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "SidebarContent",
+      "props": []
+    },
+    {
+      "name": "SidebarFooter",
+      "props": []
+    },
+    {
+      "name": "SidebarGroup",
+      "props": []
+    },
+    {
+      "name": "SidebarGroupContent",
+      "props": []
+    },
+    {
+      "name": "SidebarGroupLabel",
+      "props": [
+        {
+          "name": "asChild",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "SidebarHeader",
+      "props": []
+    },
+    {
+      "name": "SidebarInput",
+      "props": [
+        {
+          "name": "state",
+          "type": "\"Default\" | \"Focus\" | \"Disabled\" | \"Error\" | null",
+          "required": false
+        },
+        {
+          "name": "corners",
+          "type": "\"default\" | \"sharp\" | \"pill\" | \"rounded\" | null",
+          "required": false,
+          "description": "corner style — matches the design source's Corners property"
+        }
+      ]
+    },
+    {
+      "name": "SidebarInset",
+      "props": []
+    },
+    {
+      "name": "SidebarMenu",
+      "props": []
+    },
+    {
+      "name": "SidebarMenuButton",
+      "props": [
+        {
+          "name": "tooltip",
+          "type": "string | (Omit<TooltipContentProps & React.RefAttributes<HTMLDivElement>, \"ref\"> & React.RefAttributes<HTMLDivElement>)",
+          "required": false
+        },
+        {
+          "name": "asChild",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "variant",
+          "type": "\"default\" | \"outline\" | null",
+          "required": false
+        },
+        {
+          "name": "size",
+          "type": "\"default\" | \"sm\" | \"lg\" | null",
+          "required": false
+        },
+        {
+          "name": "isActive",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "SidebarMenuItem",
+      "props": []
+    },
+    {
+      "name": "SidebarMenuSkeleton",
+      "props": [
+        {
+          "name": "showIcon",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "SidebarProvider",
+      "props": [
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "onOpenChange",
+          "type": "((open: boolean) => void)",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "SidebarSeparator",
+      "props": []
+    },
+    {
+      "name": "SidebarTrigger",
+      "props": [
+        {
+          "name": "asChild",
+          "type": "boolean",
+          "required": false,
+          "description": "render as the single child element (Radix Slot) instead of <button>"
+        },
+        {
+          "name": "variant",
+          "type": "\"Primary\" | \"Secondary\" | \"Outline\" | \"Destructive\" | \"Ghost\" | \"Link\" | null",
+          "required": false
+        },
+        {
+          "name": "size",
+          "type": "\"sm\" | \"md\" | \"lg\" | \"icon\" | null",
+          "required": false
+        },
+        {
+          "name": "state",
+          "type": "\"Default\" | \"Hover\" | \"Focus\" | \"Active\" | \"Disabled\" | null",
+          "required": false,
+          "description": "force a static visual state — leave undefined for real interaction"
+        },
+        {
+          "name": "corners",
+          "type": "\"default\" | \"sharp\" | \"pill\" | null",
+          "required": false,
+          "description": "corner style — matches the design source's Corners property"
+        }
+      ]
+    }
+  ],
   "source": "packages/ui/src/components/sidebar.tsx"
 }

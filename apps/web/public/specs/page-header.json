@@ -1,0 +1,47 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "page-header",
+  "title": "Page Header",
+  "status": "stable",
+  "since": "0.11.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "PageHeader",
+      "props": [
+        {
+          "name": "title",
+          "type": "React.ReactNode",
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "breadcrumb",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "actions",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "tabs",
+          "type": "React.ReactNode",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/page-header.tsx"
+}

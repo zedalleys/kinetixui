@@ -1,0 +1,21 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "checkbox",
+  "title": "Checkbox",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Checkbox",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/checkbox.tsx"
+}

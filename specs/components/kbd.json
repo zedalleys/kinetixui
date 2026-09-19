@@ -1,0 +1,32 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "kbd",
+  "title": "Kbd",
+  "status": "stable",
+  "since": "0.8.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Kbd",
+      "props": [
+        {
+          "name": "asChild",
+          "type": "boolean",
+          "required": false,
+          "description": "render as the single child element (Radix Slot) instead of <kbd>"
+        }
+      ]
+    },
+    {
+      "name": "KbdGroup",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/kbd.tsx"
+}

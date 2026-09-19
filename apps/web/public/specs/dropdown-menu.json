@@ -1,0 +1,95 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "dropdown-menu",
+  "title": "Dropdown Menu",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "DropdownMenu",
+      "props": []
+    },
+    {
+      "name": "DropdownMenuTrigger",
+      "props": []
+    },
+    {
+      "name": "DropdownMenuContent",
+      "props": []
+    },
+    {
+      "name": "DropdownMenuItem",
+      "props": [
+        {
+          "name": "inset",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "DropdownMenuCheckboxItem",
+      "props": []
+    },
+    {
+      "name": "DropdownMenuRadioItem",
+      "props": []
+    },
+    {
+      "name": "DropdownMenuLabel",
+      "props": [
+        {
+          "name": "inset",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "DropdownMenuSeparator",
+      "props": []
+    },
+    {
+      "name": "DropdownMenuShortcut",
+      "props": []
+    },
+    {
+      "name": "DropdownMenuGroup",
+      "props": []
+    },
+    {
+      "name": "DropdownMenuPortal",
+      "props": []
+    },
+    {
+      "name": "DropdownMenuSub",
+      "props": []
+    },
+    {
+      "name": "DropdownMenuSubContent",
+      "props": []
+    },
+    {
+      "name": "DropdownMenuSubTrigger",
+      "props": [
+        {
+          "name": "inset",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "DropdownMenuRadioGroup",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/dropdown-menu.tsx"
+}

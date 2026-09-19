@@ -1,0 +1,33 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "tabs",
+  "title": "Tabs",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Tabs",
+      "props": []
+    },
+    {
+      "name": "TabsList",
+      "props": []
+    },
+    {
+      "name": "TabsTrigger",
+      "props": []
+    },
+    {
+      "name": "TabsContent",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/tabs.tsx"
+}

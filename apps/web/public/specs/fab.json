@@ -24,5 +24,32 @@
       "false"
     ]
   },
+  "components": [
+    {
+      "name": "Fab",
+      "props": [
+        {
+          "name": "asChild",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "variant",
+          "type": "\"Primary\" | \"Secondary\" | null",
+          "required": false
+        },
+        {
+          "name": "size",
+          "type": "\"default\" | \"sm\" | null",
+          "required": false
+        },
+        {
+          "name": "extended",
+          "type": "boolean | null",
+          "required": false
+        }
+      ]
+    }
+  ],
   "source": "packages/ui/src/components/fab.tsx"
 }

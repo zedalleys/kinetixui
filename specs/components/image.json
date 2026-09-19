@@ -1,0 +1,37 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "image",
+  "title": "Image",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Image",
+      "props": [
+        {
+          "name": "ratio",
+          "type": "string | number",
+          "required": false
+        },
+        {
+          "name": "rounded",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "fallback",
+          "type": "React.ReactNode",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/image.tsx"
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "message-bubble",
+  "title": "Message Bubble",
+  "status": "beta",
+  "since": "0.12.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "MessageBubble",
+      "props": [
+        {
+          "name": "variant",
+          "type": "\"sent\" | \"received\"",
+          "required": false
+        },
+        {
+          "name": "timestamp",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "status",
+          "type": "\"sent\" | \"delivered\" | \"read\"",
+          "required": false
+        },
+        {
+          "name": "grouped",
+          "type": "boolean",
+          "required": false,
+          "description": "part of a consecutive run of bubbles from the same sender"
+        },
+        {
+          "name": "avatar",
+          "type": "React.ReactNode",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "TypingIndicator",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/message-bubble.tsx"
+}

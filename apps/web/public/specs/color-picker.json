@@ -1,0 +1,45 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "color-picker",
+  "title": "Color Picker",
+  "status": "beta",
+  "since": "0.12.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "ColorPicker",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "hex color, e.g. `#3b82f6` (or `#3b82f6ff` when `alpha` is on)"
+        },
+        {
+          "name": "onChange",
+          "type": "(hex: string) => void",
+          "required": true
+        },
+        {
+          "name": "alpha",
+          "type": "boolean",
+          "required": false,
+          "description": "show an alpha slider and read/emit 8-digit hex"
+        },
+        {
+          "name": "swatches",
+          "type": "string[]",
+          "required": false,
+          "description": "preset swatches row"
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/color-picker.tsx"
+}

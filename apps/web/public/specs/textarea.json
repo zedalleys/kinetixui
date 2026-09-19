@@ -18,5 +18,17 @@
       "Disabled"
     ]
   },
+  "components": [
+    {
+      "name": "Textarea",
+      "props": [
+        {
+          "name": "state",
+          "type": "\"Default\" | \"Focus\" | \"Disabled\" | \"Error\" | null",
+          "required": false
+        }
+      ]
+    }
+  ],
   "source": "packages/ui/src/components/textarea.tsx"
 }

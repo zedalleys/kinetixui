@@ -16,7 +16,8 @@
  *
  *   node scripts/gen-component-specs.mjs   (then: pnpm build:registry)
  */
-import { readFileSync, writeFileSync, readdirSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -160,26 +161,92 @@ function extractVariants(code) {
   return merged;
 }
 
-const files = readdirSync(SRC).filter((f) => f.endsWith(".tsx")).sort();
+// ── props / parts, extracted with the TypeScript compiler ────────────────
+// For every exported PascalCase callable (the component and its sub-parts), record the
+// props the component itself declares — not the HTML/Radix props it inherits from the
+// element or primitive it wraps (an empty `props` means "only inherited element props").
+const require = createRequire(`${ROOT}/packages/ui/package.json`);
+const ts = require("typescript");
+const tsconfig = ts.getParsedCommandLineOfConfigFile(`${ROOT}/packages/ui/tsconfig.json`, {}, {
+  ...ts.sys,
+  onUnRecoverableConfigFileDiagnostic: (d) => {
+    throw new Error(ts.flattenDiagnosticMessageText(d.messageText, "\n"));
+  },
+});
+const program = ts.createProgram(tsconfig.fileNames, tsconfig.options);
+const checker = program.getTypeChecker();
+
+// Props whose declaration lives in a library are inherited surface, not this component's own.
+const INHERITED = /[\/]node_modules[\/]/;
+const LIB_DTS = /[\/]typescript[\/]lib[\/]lib\.[\w.]*\.d\.ts$/;
+const oneLine = (s, max) => {
+  const t = s.replace(/\s+/g, " ").trim();
+  return t.length > max ? `${t.slice(0, max - 1)}…` : t;
+};
+
+/** Own props of one exported component symbol, or null if it isn't a component. */
+function componentOf(sf, exportSymbol) {
+  let sym = exportSymbol;
+  if (sym.flags & ts.SymbolFlags.Alias) sym = checker.getAliasedSymbol(sym);
+  if (!(sym.flags & ts.SymbolFlags.Value) || !/^[A-Z]/.test(exportSymbol.name)) return null;
+  const sigs = checker.getTypeOfSymbolAtLocation(sym, sf).getCallSignatures();
+  if (!sigs.length) return null;
+  const param = sigs[0].getParameters()[0];
+  const props = [];
+  if (param) {
+    const propsType = checker.getTypeOfSymbolAtLocation(param, sf);
+    for (const p of checker.getPropertiesOfType(propsType)) {
+      const decl = p.declarations?.[0];
+      if (decl) {
+        const file = decl.getSourceFile().fileName;
+        if (INHERITED.test(file) || LIB_DTS.test(file)) continue;
+      }
+      const type = checker.getTypeOfSymbolAtLocation(p, sf);
+      const required = !(p.flags & ts.SymbolFlags.Optional);
+      let typeText = checker.typeToString(type, sf, ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope);
+      // `required: false` already says "may be omitted" — don't repeat it as `| undefined`.
+      if (!required) typeText = typeText.replace(/ \| undefined$/, "");
+      const entry = { name: p.name, type: oneLine(typeText, 140), required };
+      const doc = ts.displayPartsToString(p.getDocumentationComment(checker));
+      if (doc) entry.description = oneLine(doc, 200);
+      props.push(entry);
+    }
+  }
+  return { name: exportSymbol.name, props };
+}
+
+function extractComponents(file) {
+  const sf = program.getSourceFile(`${SRC}/${file}`);
+  const mod = sf && checker.getSymbolAtLocation(sf);
+  if (!mod) return [];
+  return checker
+    .getExportsOfModule(mod)
+    .map((s) => componentOf(sf, s))
+    .filter(Boolean);
+}
+
+// ── one spec per registry component ───────────────────────────────────────
 const covered = [];
-
-for (const file of files) {
-  const name = file.replace(/\.tsx$/, "");
+const companions = [];
+for (const [name, meta] of Object.entries(manifest)) {
+  if (meta.registry === false) {
+    companions.push(name); // docs-page companion shipped inside another component's file
+    continue;
+  }
+  const file = `${name}.tsx`;
   const code = readFileSync(`${SRC}/${file}`, "utf8");
-  if (!/=\s*cva\(/.test(code)) continue;
-
-  const variants = extractVariants(code);
-  if (Object.keys(variants).length === 0) continue;
+  const variants = /=\s*cva\(/.test(code) ? extractVariants(code) : {};
 
   const spec = {
     $schema: "https://kinetixui.com/schema/component-spec.json",
     name,
     title: title(name),
     // lifecycle + coverage come from components.manifest.json, not the source
-    status: manifest[name]?.status,
-    since: manifest[name]?.since,
-    platforms: manifest[name]?.platforms,
+    status: meta.status,
+    since: meta.since,
+    platforms: meta.platforms,
     variants,
+    components: extractComponents(file),
     source: `packages/ui/src/components/${file}`,
   };
   const text = JSON.stringify(spec, null, 2) + "\n";
@@ -188,15 +255,16 @@ for (const file of files) {
   covered.push(name);
 }
 
+const total = Object.values(manifest).filter((m) => m.registry !== false).length;
 const indexText =
   JSON.stringify(
     {
       $schema: "https://kinetixui.com/schema/component-spec-index.json",
       generated: "scripts/gen-component-specs.mjs",
       components: covered,
-      // every manifest component with no spec yet (composite/structural, no cva variant matrix)
-      uncovered: Object.keys(manifest).filter((n) => !covered.includes(n)).sort(),
-      coverage: { covered: covered.length, total: Object.keys(manifest).length },
+      // docs-page components with no file of their own (avatar-group ships in avatar.tsx, combobox is a documented composition)
+      companions,
+      coverage: { covered: covered.length, total },
     },
     null,
     2,
@@ -204,4 +272,4 @@ const indexText =
 writeFileSync(`${OUT}/index.json`, indexText);
 writeFileSync(`${PUBLIC_OUT}/index.json`, indexText);
 
-console.log(`component-specs — ${covered.length} of ${Object.keys(manifest).length} components covered (cva-based only)`);
+console.log(`component-specs — ${covered.length} of ${total} components covered`);
