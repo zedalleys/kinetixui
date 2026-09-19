@@ -40,8 +40,8 @@ fun KinetixTooltip(
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
         tooltip = {
             PlainTooltip(
-                containerColor = colors.primary,
-                contentColor = colors.primaryForeground,
+                containerColor = colors.action,
+                contentColor = colors.actionForeground,
                 shape = RoundedCornerShape(dimensionResource(R.dimen.radius_md)),
             ) {
                 Text(text = text, fontSize = dimensionResource(R.dimen.font_size_body_sm).value.sp)

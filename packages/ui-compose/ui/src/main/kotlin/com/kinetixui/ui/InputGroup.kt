@@ -89,7 +89,7 @@ fun RowScope.KinetixInputGroupInput(
             enabled = enabled,
             singleLine = true,
             textStyle = textStyle,
-            cursorBrush = SolidColor(colors.primary),
+            cursorBrush = SolidColor(colors.action),
         )
     }
 }

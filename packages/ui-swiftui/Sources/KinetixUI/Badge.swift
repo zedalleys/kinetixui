@@ -48,7 +48,7 @@ public struct KinetixBadge: View {
 
     private var palette: (bg: Color, fg: Color, border: Color?) {
         switch variant {
-        case .default:     return (colors.primary, colors.primaryForeground, nil)
+        case .default:     return (colors.action, colors.actionForeground, nil)
         case .secondary:   return (colors.secondaryForeground, colors.secondary, nil)
         case .destructive: return (colors.destructive, colors.destructiveForeground, nil)
         case .outline:     return (.clear, colors.foreground, colors.border)

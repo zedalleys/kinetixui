@@ -31,8 +31,8 @@ class KinetixFab extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
     final double d = size == KinetixFabSize.standard ? 56 : 44;
-    final Color bg = variant == KinetixFabVariant.primary ? c.primary : c.secondary;
-    final Color fg = variant == KinetixFabVariant.primary ? c.primaryForeground : c.secondaryForeground;
+    final Color bg = variant == KinetixFabVariant.primary ? c.action : c.secondary;
+    final Color fg = variant == KinetixFabVariant.primary ? c.actionForeground : c.secondaryForeground;
 
     final Widget label = DefaultTextStyle.merge(
       style: (size == KinetixFabSize.standard ? AppText.titleMd : AppText.labelLg).copyWith(color: fg),

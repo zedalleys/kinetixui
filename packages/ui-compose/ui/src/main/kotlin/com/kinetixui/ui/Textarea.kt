@@ -42,7 +42,7 @@ fun KinetixTextarea(
 
     val borderColor = when {
         isError -> colors.destructive
-        isFocused -> colors.primary
+        isFocused -> colors.action
         else -> colors.border
     }
     val textStyle = TextStyle(
@@ -71,7 +71,7 @@ fun KinetixTextarea(
             singleLine = false,
             textStyle = textStyle,
             interactionSource = interactionSource,
-            cursorBrush = SolidColor(colors.primary),
+            cursorBrush = SolidColor(colors.action),
         )
     }
 }

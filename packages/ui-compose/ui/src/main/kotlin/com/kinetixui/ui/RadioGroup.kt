@@ -53,10 +53,10 @@ fun KinetixRadioButton(
     val colors = KinetixColorScheme.current
     val borderColor = when {
         isError -> colors.destructive
-        selected -> colors.primary
+        selected -> colors.action
         else -> colors.border
     }
-    val dotColor = if (isError) colors.destructive else colors.primary
+    val dotColor = if (isError) colors.destructive else colors.action
 
     Box(
         modifier = modifier

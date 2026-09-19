@@ -105,7 +105,7 @@ fun KinetixMarkdownEditor(
                     value = field,
                     onValueChange = { commit(it) },
                     textStyle = androidx.compose.ui.text.TextStyle(color = colors.foreground, fontSize = 13.sp),
-                    cursorBrush = SolidColor(colors.primary),
+                    cursorBrush = SolidColor(colors.action),
                     modifier = Modifier.weight(1f).padding(dimensionResource(R.dimen.spacing_2)),
                 )
                 Column(
@@ -122,7 +122,7 @@ fun KinetixMarkdownEditor(
                 value = field,
                 onValueChange = { commit(it) },
                 textStyle = androidx.compose.ui.text.TextStyle(color = colors.foreground, fontSize = 13.sp),
-                cursorBrush = SolidColor(colors.primary),
+                cursorBrush = SolidColor(colors.action),
                 modifier = Modifier.fillMaxWidth().padding(dimensionResource(R.dimen.spacing_2)),
             )
         }

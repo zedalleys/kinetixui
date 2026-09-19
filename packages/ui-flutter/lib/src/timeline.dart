@@ -28,7 +28,7 @@ class KinetixTimeline extends StatelessWidget {
     final c = KinetixTheme.of(context);
     return Column(
       children: [
-        Container(width: 10, height: 10, decoration: BoxDecoration(shape: BoxShape.circle, color: c.primary)),
+        Container(width: 10, height: 10, decoration: BoxDecoration(shape: BoxShape.circle, color: c.action)),
         if (!isLast)
           Expanded(
             child: Container(

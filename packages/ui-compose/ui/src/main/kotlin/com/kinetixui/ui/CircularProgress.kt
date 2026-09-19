@@ -51,7 +51,7 @@ fun KinetixCircularProgress(
                 style = stroke,
             )
             drawArc(
-                color = colors.primary,
+                color = colors.action,
                 startAngle = -90f,
                 sweepAngle = fraction * 360f,
                 useCenter = false,

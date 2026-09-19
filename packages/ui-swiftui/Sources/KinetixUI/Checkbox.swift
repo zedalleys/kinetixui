@@ -34,12 +34,12 @@ public struct KinetixCheckbox: View {
 
     private var borderColor: Color {
         if isError { return colors.destructive }
-        return checkedLike ? colors.primary : colors.input
+        return checkedLike ? colors.action : colors.input
     }
 
     private var fillColor: Color {
         guard checkedLike else { return .clear }
-        return isError ? colors.destructive : colors.primary
+        return isError ? colors.destructive : colors.action
     }
 
     public var body: some View {
@@ -56,7 +56,7 @@ public struct KinetixCheckbox: View {
                     if checkedLike {
                         Image(systemName: indeterminate ? "minus" : "checkmark")
                             .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(colors.primaryForeground)
+                            .foregroundStyle(colors.actionForeground)
                     }
                 }
                 .frame(width: 18, height: 18)

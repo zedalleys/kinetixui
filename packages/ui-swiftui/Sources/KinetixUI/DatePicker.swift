@@ -36,7 +36,7 @@ public struct KinetixDatePicker: View {
 
     private var base: some View {
         DatePicker(label, selection: $selection, displayedComponents: displayedComponents)
-            .tint(colors.primary)
+            .tint(colors.action)
     }
 
     public var body: some View {

@@ -62,7 +62,7 @@ fun KinetixInput(
 
     val borderColor = when {
         isError -> colors.destructive
-        isFocused -> colors.primary
+        isFocused -> colors.action
         else -> colors.border
     }
     val textStyle = TextStyle(
@@ -93,7 +93,7 @@ fun KinetixInput(
                 keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
                 visualTransformation = visualTransformation,
                 interactionSource = interactionSource,
-                cursorBrush = SolidColor(colors.primary),
+                cursorBrush = SolidColor(colors.action),
             )
         }
         if (trailing != null) {

@@ -76,7 +76,7 @@ fun KinetixCommandDialog(
                     color = colors.foreground,
                     fontSize = dimensionResource(R.dimen.font_size_body_md).value.sp,
                 ),
-                cursorBrush = SolidColor(colors.primary),
+                cursorBrush = SolidColor(colors.action),
                 interactionSource = remember { MutableInteractionSource() },
                 decorationBox = { inner ->
                     Box {

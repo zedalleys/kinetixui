@@ -230,7 +230,7 @@ fun KinetixColorPicker(
                 onValueChange = { hexDraft = it.filter { c -> c.isDigit() || c in 'a'..'f' || c in 'A'..'F' }.take(if (alpha) 8 else 6) },
                 textStyle = TextStyle(color = colors.foreground, fontSize = 12.sp),
                 singleLine = true,
-                cursorBrush = SolidColor(colors.primary),
+                cursorBrush = SolidColor(colors.action),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = {
                     val pattern = if (alpha) Regex("^[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$") else Regex("^[0-9a-fA-F]{6}$")

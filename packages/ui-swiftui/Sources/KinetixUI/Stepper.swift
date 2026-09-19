@@ -66,15 +66,15 @@ public struct KinetixStepper: View {
         ZStack {
             switch st {
             case .complete:
-                Circle().fill(colors.primary)
+                Circle().fill(colors.action)
                 Image(systemName: "checkmark")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(colors.primaryForeground)
+                    .foregroundStyle(colors.actionForeground)
             case .current:
-                Circle().strokeBorder(colors.primary, lineWidth: 2)
+                Circle().strokeBorder(colors.action, lineWidth: 2)
                 Text("\(number)")
                     .font(.kinetixLabelMd)
-                    .foregroundStyle(colors.primary)
+                    .foregroundStyle(colors.action)
             case .upcoming:
                 Circle().strokeBorder(colors.input, lineWidth: 1)
                 Text("\(number)")
@@ -106,7 +106,7 @@ public struct KinetixStepper: View {
                 indicator(status(idx), number: idx + 1)
                 if !isLast {
                     Rectangle()
-                        .fill(status(idx) == .complete ? colors.primary : colors.border)
+                        .fill(status(idx) == .complete ? colors.action : colors.border)
                         .frame(height: 1)
                         .frame(maxWidth: .infinity)
                 }
@@ -125,7 +125,7 @@ public struct KinetixStepper: View {
                 indicator(status(idx), number: idx + 1)
                 if !isLast {
                     Rectangle()
-                        .fill(status(idx) == .complete ? colors.primary : colors.border)
+                        .fill(status(idx) == .complete ? colors.action : colors.border)
                         .frame(width: 1)
                         .frame(minHeight: 24) // min-h-6
                 }

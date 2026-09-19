@@ -46,7 +46,7 @@ fun KinetixProgress(
             modifier = Modifier
                 .fillMaxWidth(fraction)
                 .fillMaxHeight()
-                .background(colors.primary),
+                .background(colors.action),
         )
     }
 }

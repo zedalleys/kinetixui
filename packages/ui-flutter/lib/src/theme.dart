@@ -17,6 +17,14 @@ class KinetixColors {
   const KinetixColors({
     required this.primary,
     required this.primaryForeground,
+    required this.action,
+    required this.actionForeground,
+    required this.actionHover,
+    required this.actionPressed,
+    required this.link,
+    required this.focus,
+    required this.brand,
+    required this.brandForeground,
     required this.secondary,
     required this.secondaryForeground,
     required this.destructive,
@@ -47,6 +55,14 @@ class KinetixColors {
 
   final Color primary;
   final Color primaryForeground;
+  final Color action;
+  final Color actionForeground;
+  final Color actionHover;
+  final Color actionPressed;
+  final Color link;
+  final Color focus;
+  final Color brand;
+  final Color brandForeground;
   final Color secondary;
   final Color secondaryForeground;
   final Color destructive;
@@ -80,6 +96,14 @@ class KinetixColors {
   static const KinetixColors light = KinetixColors(
     primary: KinetixColorScheme.primary,
     primaryForeground: KinetixColorScheme.primaryForeground,
+    action: KinetixColorScheme.action,
+    actionForeground: KinetixColorScheme.actionForeground,
+    actionHover: KinetixColorScheme.actionHover,
+    actionPressed: KinetixColorScheme.actionPressed,
+    link: KinetixColorScheme.link,
+    focus: KinetixColorScheme.focus,
+    brand: KinetixColorScheme.brand,
+    brandForeground: KinetixColorScheme.brandForeground,
     secondary: KinetixColorScheme.secondary,
     secondaryForeground: KinetixColorScheme.secondaryForeground,
     destructive: KinetixColorScheme.destructive,
@@ -119,6 +143,14 @@ class KinetixColors {
   static const KinetixColors dark = KinetixColors(
     primary: KinetixColorSchemeDark.primary,
     primaryForeground: KinetixColorSchemeDark.primaryForeground,
+    action: KinetixColorSchemeDark.action,
+    actionForeground: KinetixColorSchemeDark.actionForeground,
+    actionHover: KinetixColorSchemeDark.actionHover,
+    actionPressed: KinetixColorSchemeDark.actionPressed,
+    link: KinetixColorSchemeDark.link,
+    focus: KinetixColorSchemeDark.focus,
+    brand: KinetixColorSchemeDark.brand,
+    brandForeground: KinetixColorSchemeDark.brandForeground,
     secondary: KinetixColorSchemeDark.secondary,
     secondaryForeground: KinetixColorSchemeDark.secondaryForeground,
     destructive: KinetixColorSchemeDark.destructive,

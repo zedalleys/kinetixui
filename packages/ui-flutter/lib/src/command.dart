@@ -49,7 +49,7 @@ class KinetixCommandDialog extends StatelessWidget {
                     controller: controller,
                     onChanged: onQueryChanged,
                     autofocus: true,
-                    cursorColor: c.primary,
+                    cursorColor: c.action,
                     style: AppText.bodyMd.copyWith(color: c.foreground),
                     decoration: InputDecoration(
                       isCollapsed: true,

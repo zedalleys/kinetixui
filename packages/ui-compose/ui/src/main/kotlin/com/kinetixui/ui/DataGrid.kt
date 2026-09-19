@@ -171,7 +171,7 @@ fun <T> KinetixDataGrid(
                                     onValueChange = { text = it },
                                     textStyle = cellTextStyle,
                                     singleLine = true,
-                                    cursorBrush = SolidColor(colors.primary),
+                                    cursorBrush = SolidColor(colors.action),
                                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                                     keyboardActions = KeyboardActions(onDone = {
                                         column.onCellEdit?.invoke(row, rowIndex, text)

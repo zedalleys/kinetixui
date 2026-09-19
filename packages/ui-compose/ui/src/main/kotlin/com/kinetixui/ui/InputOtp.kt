@@ -72,7 +72,7 @@ fun KinetixInputOtp(
         Row(horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_2))) {
             for (i in 0 until length) {
                 val active = isFocused && i == value.length
-                val borderColor = if (active) colors.primary else colors.border
+                val borderColor = if (active) colors.action else colors.border
                 val borderWidth = if (active) dimensionResource(R.dimen.border_width_focus) else dimensionResource(R.dimen.border_width_default)
                 Box(
                     modifier = Modifier

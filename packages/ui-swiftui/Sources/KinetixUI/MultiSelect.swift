@@ -120,7 +120,7 @@ public struct KinetixMultiSelect: View {
                             Button(action: { toggle(option.value) }) {
                                 HStack(spacing: 8) { // spacing/2
                                     Text(selected.contains(option.value) ? "✓" : "")
-                                        .foregroundStyle(colors.primary)
+                                        .foregroundStyle(colors.action)
                                         .frame(width: 16)
                                     Text(option.label)
                                         .font(.kinetixBodySm)

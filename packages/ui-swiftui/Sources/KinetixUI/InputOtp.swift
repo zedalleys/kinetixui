@@ -52,7 +52,7 @@ public struct KinetixInputOtp: View {
                         .overlay {
                             RoundedRectangle(cornerRadius: 6, style: .continuous)
                                 .strokeBorder(
-                                    isCursor ? colors.primary : colors.input,
+                                    isCursor ? colors.action : colors.input,
                                     lineWidth: isCursor ? 2 : 1
                                 )
                         }

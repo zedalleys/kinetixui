@@ -32,6 +32,6 @@ public struct KinetixCalendar: View {
         }
         .datePickerStyle(.graphical)
         .labelsHidden()
-        .tint(colors.primary)
+        .tint(colors.action)
     }
 }

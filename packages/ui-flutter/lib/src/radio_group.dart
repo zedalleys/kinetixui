@@ -37,7 +37,7 @@ class KinetixRadioButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
     final bool enabled = onTap != null;
-    final Color borderColor = isError ? c.destructive : (selected ? c.primary : c.input);
+    final Color borderColor = isError ? c.destructive : (selected ? c.action : c.input);
 
     return Opacity(
       opacity: enabled ? 1 : 0.5,
@@ -57,7 +57,7 @@ class KinetixRadioButton extends StatelessWidget {
                   height: 10,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isError ? c.destructive : c.primary,
+                    color: isError ? c.destructive : c.action,
                   ),
                 )
               : null,

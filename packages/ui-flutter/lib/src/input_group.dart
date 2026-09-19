@@ -59,7 +59,7 @@ class KinetixInputGroupField extends StatelessWidget {
             controller: controller,
             onChanged: onChanged,
             obscureText: obscureText,
-            cursorColor: c.primary,
+            cursorColor: c.action,
             style: AppText.bodyMd.copyWith(color: c.foreground),
             decoration: InputDecoration(
               isCollapsed: true,

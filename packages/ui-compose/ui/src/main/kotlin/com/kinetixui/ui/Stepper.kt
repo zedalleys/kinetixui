@@ -115,8 +115,8 @@ private data class StepBadgeSpec(val container: Color?, val content: Color, val 
 private fun stepBadgeSpec(status: StepStatus): StepBadgeSpec {
     val colors = KinetixColorScheme.current
     return when (status) {
-        StepStatus.Complete -> StepBadgeSpec(colors.primary, colors.primaryForeground, null, 0.dp)
-        StepStatus.Current -> StepBadgeSpec(null, colors.primary, colors.primary, dimensionResource(R.dimen.border_width_focus))
+        StepStatus.Complete -> StepBadgeSpec(colors.action, colors.actionForeground, null, 0.dp)
+        StepStatus.Current -> StepBadgeSpec(null, colors.action, colors.action, dimensionResource(R.dimen.border_width_focus))
         StepStatus.Upcoming -> StepBadgeSpec(null, colors.mutedForeground, colors.border, dimensionResource(R.dimen.border_width_default))
     }
 }
@@ -143,7 +143,7 @@ private fun StepBadge(index: Int, status: StepStatus) {
 @Composable
 private fun StepConnector(complete: Boolean, modifier: Modifier) {
     val colors = KinetixColorScheme.current
-    Box(modifier = modifier.background(if (complete) colors.primary else colors.border))
+    Box(modifier = modifier.background(if (complete) colors.action else colors.border))
 }
 
 @Composable

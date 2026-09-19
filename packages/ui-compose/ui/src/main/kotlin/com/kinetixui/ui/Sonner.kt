@@ -35,7 +35,7 @@ fun KinetixToaster(
             shape = RoundedCornerShape(dimensionResource(R.dimen.radius_md)),
             containerColor = colors.background,
             contentColor = colors.foreground,
-            actionColor = colors.primary,
+            actionColor = colors.action,
         )
     }
 }

@@ -125,12 +125,12 @@ public struct KinetixButton<Label: View>: View {
             return colors.mutedForeground
         }
         switch variant {
-        case .primary:     return colors.primaryForeground
+        case .primary:     return colors.actionForeground
         case .secondary:   return colors.secondaryForeground
         case .outline:     return colors.foreground
         case .destructive: return colors.destructiveForeground
         case .ghost:       return colors.foreground
-        case .link:        return colors.primary
+        case .link:        return colors.link
         }
     }
 
@@ -142,7 +142,7 @@ public struct KinetixButton<Label: View>: View {
             }
         }
         switch variant {
-        case .primary:     return colors.primary
+        case .primary:     return colors.action
         case .secondary:   return colors.secondary
         case .destructive: return colors.destructive
         case .outline, .ghost, .link: return .clear

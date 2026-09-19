@@ -28,7 +28,7 @@ class KinetixCalendar extends StatelessWidget {
     final base = Theme.of(context);
     return Theme(
       data: base.copyWith(
-        colorScheme: base.colorScheme.copyWith(primary: c.primary, onPrimary: c.primaryForeground),
+        colorScheme: base.colorScheme.copyWith(primary: c.action, onPrimary: c.actionForeground),
       ),
       child: CalendarDatePicker(
         initialDate: selectedDate,

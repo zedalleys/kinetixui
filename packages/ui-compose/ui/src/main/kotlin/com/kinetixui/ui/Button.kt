@@ -116,8 +116,8 @@ fun KinetixButton(
         KinetixButtonVariant.Primary -> Material3Button(
             onClick = onClick, modifier = modifier, enabled = enabled, shape = shape, contentPadding = contentPadding,
             colors = ButtonDefaults.buttonColors(
-                containerColor = colors.primary,
-                contentColor = colors.primaryForeground,
+                containerColor = colors.action,
+                contentColor = colors.actionForeground,
                 disabledContainerColor = colors.border,
                 disabledContentColor = colors.mutedForeground,
             ),
@@ -172,7 +172,7 @@ fun KinetixButton(
         KinetixButtonVariant.Link -> TextButton(
             onClick = onClick, modifier = modifier, enabled = enabled, contentPadding = PaddingValues(0.dp),
             colors = ButtonDefaults.textButtonColors(
-                contentColor = colors.primary,
+                contentColor = colors.link,
                 disabledContentColor = colors.mutedForeground,
             ),
             content = label,

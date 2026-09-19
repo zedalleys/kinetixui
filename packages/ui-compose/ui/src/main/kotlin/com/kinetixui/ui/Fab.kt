@@ -49,11 +49,11 @@ fun KinetixFab(
         KinetixFabSize.Sm -> 44.dp // size-11, not on the shared scale
     }
     val containerColor = when (variant) {
-        KinetixFabVariant.Primary -> colors.primary
+        KinetixFabVariant.Primary -> colors.action
         KinetixFabVariant.Secondary -> colors.secondary
     }
     val contentColor = when (variant) {
-        KinetixFabVariant.Primary -> colors.primaryForeground
+        KinetixFabVariant.Primary -> colors.actionForeground
         KinetixFabVariant.Secondary -> colors.secondaryForeground
     }
     val alpha = if (enabled) 1f else 0.5f

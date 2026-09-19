@@ -51,7 +51,7 @@ class KinetixToggle extends StatelessWidget {
           decoration: BoxDecoration(
             color: pressed ? c.accent : const Color(0x00000000),
             borderRadius: BorderRadius.circular(8),
-            border: showBorder ? Border.all(color: pressed ? c.ring : c.input, width: 1) : null,
+            border: showBorder ? Border.all(color: pressed ? c.focus : c.input, width: 1) : null,
           ),
           child: DefaultTextStyle.merge(
             style: AppText.labelLg.copyWith(color: contentColor),

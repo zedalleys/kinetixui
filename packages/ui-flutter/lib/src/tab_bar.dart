@@ -43,7 +43,7 @@ class KinetixTabBarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
-    final Color color = isActive ? c.primary : c.mutedForeground;
+    final Color color = isActive ? c.action : c.mutedForeground;
 
     return GestureDetector(
       onTap: onTap,

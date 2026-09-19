@@ -68,12 +68,12 @@ fun KinetixMessageBubble(
             )
             Text(
                 text = text,
-                color = if (sent) colors.primaryForeground else colors.foreground,
+                color = if (sent) colors.actionForeground else colors.foreground,
                 fontSize = dimensionResource(R.dimen.font_size_body_sm).value.sp,
                 modifier = Modifier
                     .widthIn(max = 280.dp)
                     .clip(shape)
-                    .background(if (sent) colors.primary else colors.muted, shape)
+                    .background(if (sent) colors.action else colors.muted, shape)
                     .padding(
                         horizontal = dimensionResource(R.dimen.spacing_3),
                         vertical = dimensionResource(R.dimen.spacing_2),
@@ -93,7 +93,7 @@ fun KinetixMessageBubble(
                         )
                     }
                     if (sent && status != null) {
-                        val tickColor = if (status == KinetixMessageStatus.Read) colors.primary else colors.mutedForeground
+                        val tickColor = if (status == KinetixMessageStatus.Read) colors.action else colors.mutedForeground
                         Text(
                             text = if (status == KinetixMessageStatus.Sent) "✓" else "✓✓",
                             color = tickColor,

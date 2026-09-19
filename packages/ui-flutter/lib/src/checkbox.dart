@@ -25,8 +25,8 @@ class KinetixCheckbox extends StatelessWidget {
     final c = KinetixTheme.of(context);
     final bool enabled = onChanged != null;
     final bool checkedLike = value || indeterminate;
-    final Color borderColor = isError ? c.destructive : (checkedLike ? c.primary : c.input);
-    final Color fill = checkedLike ? (isError ? c.destructive : c.primary) : Colors.transparent;
+    final Color borderColor = isError ? c.destructive : (checkedLike ? c.action : c.input);
+    final Color fill = checkedLike ? (isError ? c.destructive : c.action) : Colors.transparent;
 
     return Opacity(
       opacity: enabled ? 1 : 0.5,
@@ -42,7 +42,7 @@ class KinetixCheckbox extends StatelessWidget {
             border: Border.all(color: borderColor, width: 2),
           ),
           child: checkedLike
-              ? Icon(indeterminate ? Icons.remove : Icons.check, size: 12, color: c.primaryForeground)
+              ? Icon(indeterminate ? Icons.remove : Icons.check, size: 12, color: c.actionForeground)
               : null,
         ),
       ),

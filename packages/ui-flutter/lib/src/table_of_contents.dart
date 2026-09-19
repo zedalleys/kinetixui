@@ -41,7 +41,7 @@ class KinetixTableOfContents extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border(
                   left: BorderSide(
-                    color: item.id == active ? c.primary : const Color(0x00000000),
+                    color: item.id == active ? c.action : const Color(0x00000000),
                     width: 1,
                   ),
                 ),
@@ -52,7 +52,7 @@ class KinetixTableOfContents extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: item.id == active ? FontWeight.w500 : FontWeight.w400,
-                  color: item.id == active ? c.primary : c.mutedForeground,
+                  color: item.id == active ? c.action : c.mutedForeground,
                 ),
               ),
             ),

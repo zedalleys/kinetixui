@@ -33,10 +33,10 @@ fun KinetixSlider(
         valueRange = valueRange,
         colors = SliderDefaults.colors(
             thumbColor = colors.background,
-            activeTrackColor = colors.primary,
+            activeTrackColor = colors.action,
             inactiveTrackColor = colors.muted,
             disabledThumbColor = colors.background.copy(alpha = 0.5f),
-            disabledActiveTrackColor = colors.primary.copy(alpha = 0.5f),
+            disabledActiveTrackColor = colors.action.copy(alpha = 0.5f),
             disabledInactiveTrackColor = colors.muted.copy(alpha = 0.5f),
         ),
     )

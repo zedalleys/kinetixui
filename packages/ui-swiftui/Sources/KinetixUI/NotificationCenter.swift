@@ -72,7 +72,7 @@ public struct KinetixNotificationCenter<Anchor: View, Content: View>: View {
                         if let onMarkAllRead {
                             Button("Mark all read", action: onMarkAllRead)
                                 .font(.kinetixLabelMd.weight(.medium))
-                                .foregroundStyle(colors.primary)
+                                .foregroundStyle(colors.action)
                                 .buttonStyle(.plain)
                         }
                     }
@@ -116,7 +116,7 @@ public struct KinetixNotificationItem: View {
         Button(action: { onSelect?() }) {
             HStack(alignment: .top, spacing: 12) { // spacing/3
                 Circle()
-                    .fill(unread ? colors.primary : .clear)
+                    .fill(unread ? colors.action : .clear)
                     .frame(width: 8, height: 8)
                     .padding(.top, 6)
 

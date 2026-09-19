@@ -44,9 +44,9 @@ private fun ComponentGallery15() {
                 modifier = Modifier
                     .size(24.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(colors.primary),
+                    .background(colors.action),
                 contentAlignment = Alignment.Center,
-            ) { Text("A", color = colors.primaryForeground, fontSize = 11.sp) }
+            ) { Text("A", color = colors.actionForeground, fontSize = 11.sp) }
         },
         nav = {
             KinetixAppBarLink("Overview", active = active == "overview", onClick = { active = "overview" })
