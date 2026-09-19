@@ -38,6 +38,9 @@ jobs:
       - name: Token table matches the tokens
         run: pnpm check:token-contract
 
+      - name: Changelog page is current with the packages
+        run: pnpm check:releases
+
       - name: RTL logical-property guardrail
         run: pnpm check:rtl
 

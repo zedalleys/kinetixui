@@ -5,7 +5,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@kinetixui/ui";
 
 const Demo = () => (
-    <InputOTP maxLength={6}>
+    <InputOTP maxLength={6} aria-label="One-time code">
       <InputOTPGroup>
         {Array.from({ length: 6 }).map((_, i) => (
           <InputOTPSlot key={i} index={i} />
@@ -18,7 +18,7 @@ const meta = {
   title: "Form Inputs/InputOTP",
   parameters: {
     layout: "centered",
-    docs: { source: { code: "<InputOTP maxLength={6}>\\n  <InputOTPGroup>\\n    <InputOTPSlot index={0} />\\n    ...\\n    <InputOTPSlot index={5} />\\n  </InputOTPGroup>\\n</InputOTP>", language: "tsx" } },
+    docs: { source: { code: "<InputOTP maxLength={6} aria-label=\\\"One-time code\\\">\\n  <InputOTPGroup>\\n    <InputOTPSlot index={0} />\\n    ...\\n    <InputOTPSlot index={5} />\\n  </InputOTPGroup>\\n</InputOTP>", language: "tsx" } },
   },
 } satisfies Meta;
 

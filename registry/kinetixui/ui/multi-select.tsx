@@ -108,7 +108,18 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
           }}
         >
           <Command shouldFilter={!creatable}>
-            <CommandInput placeholder="Search…" value={query} onValueChange={setQuery} />
+            <CommandInput
+              placeholder="Search…"
+              value={query}
+              onValueChange={setQuery}
+              onKeyDown={(e) => {
+                // Backspace in an empty search field removes the last chip, as in every tag input
+                if (e.key === "Backspace" && query === "" && current.length > 0) {
+                  e.preventDefault();
+                  remove(current[current.length - 1]!);
+                }
+              }}
+            />
             <CommandList>
               <CommandEmpty>
                 {canCreate ? (

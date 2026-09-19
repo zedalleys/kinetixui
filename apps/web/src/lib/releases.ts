@@ -1,29 +1,365 @@
 /**
- * Curated release history — the single source for /docs/changelog and the
- * infographic's timeline. Distilled from packages/{cli,tokens,ui}/CHANGELOG.md
- * (Changesets-generated, commit-level) into a few readable highlights per
- * version. Newest first.
+ * Curated release history — the source for /docs/changelog and the infographic's timeline.
+ * Distilled from packages/{cli,tokens,ui}/CHANGELOG.md (Changesets-generated, commit-level) into
+ * readable highlights per version. Newest first.
  *
- * When you cut a release: add an entry at the top of RELEASES. The per-package
- * CHANGELOG.md files stay the exhaustive record (linked from the page footer).
+ * When you cut a release, add an entry at the top of RELEASES. `pnpm check:releases` (CI) fails if
+ * the top entry isn't the version the packages published, if a version in the package changelogs has
+ * no entry, or if an entry after 0.6.0 leaves `breaking` out. Which packages actually changed is
+ * generated (release-packages.json), not written here. The per-package CHANGELOG.md files stay the
+ * exhaustive record, linked from the page footer.
  */
+import uiPackage from "../../../../packages/ui/package.json";
+import packageMeta from "./release-packages.json";
+
+/** Which of the three (version-locked) packages actually changed in a release — generated, see scripts/gen-release-meta.mjs. */
+export function packagesChanged(version: string): { cli: boolean; tokens: boolean; ui: boolean } | undefined {
+  return (packageMeta.versions as Record<string, { cli: boolean; tokens: boolean; ui: boolean }>)[version];
+}
+
+/** What kind of change this is — drives the tag on each line and the page's filters. */
+export type ChangeKind = "new" | "improved" | "fixed" | "security" | "accessibility" | "breaking" | "deprecated";
+
+/** Which part of the system it touches. `platforms` = SwiftUI / Compose / Flutter; `release` = publishing plumbing. */
+export type ChangeArea = "components" | "tokens" | "cli" | "platforms" | "release";
+
 export type ReleaseChange = {
   /** short bold lead */
   title: string;
   /** optional one- or two-sentence detail */
   body?: string;
+  /** omitted on the oldest entries (before 0.6.1), which predate this classification */
+  kind?: ChangeKind;
+  /** one area, or several when a change is both (e.g. a CLI command that reports platform coverage) */
+  area?: ChangeArea | ChangeArea[];
+  /** where to read more — a docs route, e.g. "/docs/cli#inspect" */
+  href?: string;
 };
 
 export type Release = {
   version: string;
-  /** ISO date, YYYY-MM-DD */
+  /** ISO date, YYYY-MM-DD (the release tag's date) */
   date: string;
   /** one line — what this release is about */
   summary: string;
   changes: ReleaseChange[];
+  /**
+   * Explicit breaking changes. `[]` means "none, and I checked". Required from 0.6.1 on; the older
+   * entries were not audited for it, so they leave it out rather than claim "none".
+   */
+  breaking?: string[];
+  /** what to do about a breaking or behaviour change */
+  migration?: string;
+  /** what this release deliberately does NOT do — as visible as the features */
+  limitations?: string[];
+  /** new components, grouped for scanning; the page adds platform badges from platform-parity.json */
+  newComponents?: { group: string; slugs: string[] }[];
 };
 
 export const RELEASES: Release[] = [
+  {
+    version: "0.17.0",
+    date: "2026-09-19",
+    summary: "Accessibility hardening for the hand-built widgets, contrast fixes, and a richer `inspect`.",
+    breaking: [],
+    limitations: [
+      "DataGrid still has no arrow-key movement between cells, and its column reorder and resize are pointer-only.",
+    ],
+    changes: [
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "Tour, MultiSelect, DataGrid and sliders work from the keyboard",
+        body: "Tour now has an accessible name, moves focus into its card, traps Tab and restores focus on close. MultiSelect can be opened and an option chosen without a mouse. DataGrid sortable headers and editable cells are reachable with Tab (Enter / Space / F2 / Esc). Slider and ColorPicker put their accessible name on the thumb — the element that actually has role=\"slider\".",
+        href: "/docs/accessibility",
+      },
+      {
+        kind: "accessibility",
+        area: "tokens",
+        title: "Contrast fixes on tinted and pressed surfaces",
+        body: "Banner and Inform information text was 4.15:1 on its own tint; it now uses a new text-info-on-container utility (--semantic-on-info-container). Button Primary pressed is 4.54:1 (was 4.11) and Secondary pressed is a solid fill (was 3.97). All clear WCAG AA in both themes.",
+        href: "/colors",
+      },
+      {
+        kind: "new",
+        area: "cli",
+        title: "`kinetixui inspect` shows parts and props",
+        body: "It now prints a component's first release and status, and each part (the component and its sub-components) with the props it declares itself. Specs exist for every component — previously only the 18 that define a cva() variant matrix.",
+        href: "/docs/cli#inspect",
+      },
+      {
+        kind: "improved",
+        area: "components",
+        title: "Components use the type-scale aliases",
+        body: "Button, Badge, Tag, Kbd, Input, Select, NativeSelect, Textarea and Modal use text-label-* / text-body-md / text-title-dialog instead of re-deriving them from Tailwind literals. No visual change. cn() now knows the type scale so a text-label-* class no longer swallows a text colour.",
+        href: "/docs/tokens",
+      },
+    ],
+  },
+  {
+    version: "0.16.1",
+    date: "2026-09-18",
+    summary: "CLI reliability and security hardening for the commands added since 0.13.",
+    breaking: [],
+    changes: [
+      {
+        kind: "security",
+        area: "cli",
+        title: "Theme names are validated before they touch the filesystem",
+        body: "`kinetixui theme create ../../../tmp/evil` could read or write outside kinetixui-themes/. Theme names now go through the same charset validation as every other user-supplied identifier. Upgrade if you run the CLI on untrusted input.",
+      },
+      {
+        kind: "fixed",
+        area: "cli",
+        title: "`inspect` survives a malformed kinetixui.json",
+        body: "It prints a warning on the Installed line and carries on, instead of aborting with a raw JSON.parse error — matching how `doctor` already behaved.",
+      },
+      {
+        kind: "fixed",
+        area: "cli",
+        title: "`doctor` checks the utils alias",
+        body: "The alias points at a file, not a directory like the other three, so it was silently skipped. It now gets its own extension-aware existence check.",
+      },
+      {
+        kind: "fixed",
+        area: "cli",
+        title: "`lint` no longer scans a nested ui directory twice",
+        body: "Directories are de-duplicated by containment before any recursive walk starts.",
+      },
+      {
+        kind: "improved",
+        area: "cli",
+        title: "`lint` spacing pattern hardened",
+        body: "Negative arbitrary values (-top-[10px], -inset-[6px]) are now an explicit part of the pattern. The old pattern already caught them, so this is a hardening, not a fix for a missed case.",
+      },
+    ],
+  },
+  {
+    version: "0.16.0",
+    date: "2026-09-18",
+    summary: "Design-system linting: `kinetixui lint`.",
+    breaking: [],
+    limitations: [
+      "Does not detect unknown or deprecated tokens (needs a live token list).",
+      "Does not check accessibility (needs a real a11y engine) or cross-platform inconsistencies (doesn't apply to a single-platform project).",
+    ],
+    changes: [
+      {
+        kind: "new",
+        area: "cli",
+        title: "`kinetixui lint [path]`",
+        body: "Scans for hardcoded hex colours and arbitrary spacing values in Tailwind utilities and inline styles that should be semantic tokens. With no path it scans your components and ui aliases. Reports file:line with a suggestion, skips comments, and only fires in real Tailwind/style contexts (not anchor links or URL fragments). Exits non-zero on any hit unless --no-fail is passed, so it is CI-safe.",
+        href: "/docs/cli",
+      },
+    ],
+  },
+  {
+    version: "0.15.0",
+    date: "2026-09-18",
+    summary: "Theme tooling: `theme create` and `theme build`.",
+    breaking: [],
+    limitations: [
+      "CSS output only. Native (SwiftUI / Compose / Flutter) theme compilation is not included.",
+    ],
+    changes: [
+      {
+        kind: "new",
+        area: "cli",
+        title: "`kinetixui theme create <name>` and `theme build <name>`",
+        body: "Scaffold a token override file (kinetixui-themes/<name>.csv) and compile it to a drop-in CSS :root override block plus a WCAG AA contrast report. It ports the same hex / HSL / contrast maths as the /theme-builder web tool, so both produce identical output for the same input.",
+        href: "/theme-builder",
+      },
+    ],
+  },
+  {
+    version: "0.14.0",
+    date: "2026-09-18",
+    summary: "Cross-platform inspection from the CLI: `kinetixui parity`.",
+    breaking: [],
+    changes: [
+      {
+        kind: "new",
+        area: ["cli", "platforms"],
+        title: "`kinetixui parity [components...]`",
+        body: "A table of which native platforms carry each component, with a status tag for anything beta or deprecated. It reads the same registry index (platform-parity.json / component-status.json) that powers the docs site, so the two cannot drift.",
+        href: "/docs/cli#parity",
+      },
+    ],
+  },
+  {
+    version: "0.13.0",
+    date: "2026-09-18",
+    summary: "Inspect, Doctor, interaction tokens and the first RTL support.",
+    breaking: [],
+    limitations: [
+      "RTL is slice 1: most components are not yet converted. scripts/check-rtl.mjs tracks the rest and fails CI if a converted file regresses or a new component ships with physical-direction classes.",
+      "Only two interaction tokens are wired to a component so far (focus.width and drag.threshold).",
+    ],
+    changes: [
+      {
+        kind: "new",
+        area: "cli",
+        title: "`kinetixui inspect` and `kinetixui doctor`",
+        body: "`inspect <name>` shows a registry item's description, dependencies, files, whether it is installed, and — for the ~20 components with a variant matrix — its variant axes. `doctor` checks kinetixui.json, its aliases, the Tailwind CSS target and registry reachability, and exits non-zero on failure so it is CI-safe.",
+        href: "/docs/cli#inspect",
+      },
+      {
+        kind: "new",
+        area: "tokens",
+        title: "Interaction tokens",
+        body: "target.minimum (44px), target.default (40px), focus.width (1px), focus.offset (2px), press.opacity (0.8) and drag.threshold (4): behavioural values alongside motion and opacity. focus.width now backs every shadow.focus* token (compiled CSS unchanged) and drag.threshold drives KanbanBoard's activation distance — which gives @kinetixui/ui a new runtime dependency on @kinetixui/tokens.",
+        href: "/docs/tokens",
+      },
+      {
+        kind: "new",
+        area: "components",
+        title: "RTL support: KinetixDirectionProvider",
+        body: "A thin wrapper over @radix-ui/react-direction, plus logical-property CSS in InputGroup, Select, NativeSelect, Dialog, Sheet, Drawer, DropdownMenu, Alert and AppBar. Radix portals default to ltr regardless of the page's dir, so converting classes alone left every portaled component mispositioned under dir=\"rtl\"; wrap your app in the provider to fix that.",
+        href: "/docs/rtl",
+      },
+    ],
+    newComponents: [{ group: "Internationalisation", slugs: ["direction-provider"] }],
+  },
+  {
+    version: "0.12.0",
+    date: "2026-09-17",
+    summary: "Twelve advanced components, the largest component release so far.",
+    breaking: [],
+    limitations: [
+      "All twelve are currently marked beta. Platform badges show today's coverage: KanbanBoard and Tour are React-only by design.",
+    ],
+    changes: [
+      {
+        kind: "new",
+        area: "components",
+        title: "Twelve new components",
+        body: "Grouped below. Where Radix has no primitive the widget is hand-built: ColorPicker's 2D square, TreeView, and KanbanBoard's drag and drop (on @dnd-kit).",
+      },
+    ],
+    newComponents: [
+      { group: "Data & developer tools", slugs: ["data-grid", "json-viewer", "diff-viewer", "virtual-list"] },
+      { group: "Productivity", slugs: ["kanban-board", "markdown-editor"] },
+      { group: "Communication", slugs: ["message-bubble", "notification-center"] },
+      { group: "Selection & input", slugs: ["color-picker", "multi-select"] },
+      { group: "Navigation & guidance", slugs: ["tree-view", "tour"] },
+    ],
+  },
+  {
+    version: "0.11.0",
+    date: "2026-09-16",
+    summary: "ComparisonSlider, Marquee and PageHeader.",
+    breaking: [],
+    changes: [
+      { kind: "new", area: "components", title: "ComparisonSlider", body: "A drag handle wiping between two stacked layers (before/after image, a redesign preview), built on Radix Slider for the drag, keyboard and ARIA behaviour." },
+      { kind: "new", area: "components", title: "Marquee", body: "An auto-scrolling horizontal ticker that pauses on hover and respects prefers-reduced-motion." },
+      { kind: "new", area: "components", title: "PageHeader", body: "Title, optional breadcrumb, description, action cluster and optional tabs row, closed off with a bottom border." },
+    ],
+    newComponents: [{ group: "Layout & display", slugs: ["comparison-slider", "marquee", "page-header"] }],
+  },
+  {
+    version: "0.10.0",
+    date: "2026-09-16",
+    summary: "Banner, DescriptionList, SegmentedControl and Timeline.",
+    breaking: [],
+    changes: [
+      { kind: "new", area: "components", title: "Banner", body: "A full-bleed, page-level notice (info / promo / maintenance), optionally dismissible with an action. Distinct from Alert (in-flow, static)." },
+      { kind: "new", area: "components", title: "DescriptionList", body: "<dl> term / detail rows in the site's spec-sheet skin." },
+      { kind: "new", area: "components", title: "SegmentedControl", body: "An iOS-style single-select strip — a documented preset over ToggleGroup type=\"single\"." },
+      { kind: "new", area: "components", title: "Timeline", body: "Ordered events down a rail; `alternating` lays content either side of a centred rail." },
+    ],
+    newComponents: [{ group: "Layout & display", slugs: ["banner", "description-list", "segmented-control", "timeline"] }],
+  },
+  {
+    version: "0.9.0",
+    date: "2026-09-16",
+    summary: "ButtonGroup and NativeSelect.",
+    breaking: [],
+    changes: [
+      { kind: "new", area: "components", title: "ButtonGroup and NativeSelect", body: "ButtonGroup / ButtonGroupSeparator / ButtonGroupText, and NativeSelect / NativeSelectOption / NativeSelectOptGroup — closing gaps flagged in an audit against shadcn/ui's component matrix. NativeSelect is React-only by design (KinetixSelect already wraps each platform's own native picker)." },
+    ],
+    newComponents: [{ group: "Actions & input", slugs: ["button-group", "native-select"] }],
+  },
+  {
+    version: "0.8.0",
+    date: "2026-09-16",
+    summary: "Empty and Kbd.",
+    breaking: [],
+    changes: [
+      { kind: "new", area: "components", title: "Empty", body: "A composable placeholder for zero-result states (empty table, empty search, fresh workspace)." },
+      { kind: "new", area: "components", title: "Kbd and KbdGroup", body: "A single keyboard key glyph, plus a wrapper for shortcut combos. Ships on all four platforms." },
+    ],
+    newComponents: [{ group: "Feedback & display", slugs: ["empty", "kbd"] }],
+  },
+  {
+    version: "0.7.0",
+    date: "2026-09-16",
+    summary: "Motion, opacity and z-index tokens; asChild on Badge and Tag.",
+    breaking: [],
+    changes: [
+      {
+        kind: "new",
+        area: "tokens",
+        title: "Motion, opacity and z-index tokens",
+        body: "Three new DTCG primitives — duration / easing, opacity and z-index — grounded in the values already hard-coded across the component library (duration-200/300/500/1000, ease-linear / ease-in-out, the opacity-0/50/70/100 usages, the z-10…z-50 layers).",
+        href: "/docs/tokens",
+      },
+      {
+        kind: "improved",
+        area: "components",
+        title: "Badge and Tag support asChild",
+        body: "Both can render as a single wrapped element (<Badge asChild><a href=\"/new\">New</a></Badge>) instead of always forcing a <div> / <span>.",
+      },
+    ],
+  },
+  {
+    version: "0.6.5",
+    date: "2026-09-15",
+    summary: "CLI reports its real version.",
+    breaking: [],
+    changes: [
+      { kind: "fixed", area: "cli", title: "`kinetixui --version` printed a stale \"0.3.0\"", body: "The version is now read from package.json and inlined at build time, so it can't drift from a release again." },
+    ],
+  },
+  {
+    version: "0.6.4",
+    date: "2026-09-15",
+    summary: "React 19 toolchain and dependency upgrade.",
+    breaking: [
+      "Public props are unchanged, but Calendar, Chart, DataTable and ResizablePanel* were ported to react-day-picker v10, recharts v3, @tanstack/react-table v9 and react-resizable-panels v4. Anything that reaches past them into the underlying library's DOM, class names or data attributes (e.g. .day-range-start, data-panel-group-direction) may change.",
+    ],
+    migration:
+      "If you style or query Calendar, Chart, DataTable or the Resizable components by the underlying library's class names or data attributes, re-check those selectors against the new libraries' output. Nothing changes if you only use the components' own props.",
+    changes: [
+      { kind: "improved", area: "components", title: "Upgrade to React 19 and current Radix, recharts, react-day-picker, @tanstack/react-table, react-resizable-panels and zod", body: "The peer range is still react >=18." },
+    ],
+  },
+  {
+    version: "0.6.3",
+    date: "2026-09-09",
+    summary: "Release plumbing: npm trusted publishing.",
+    breaking: [],
+    changes: [
+      { kind: "improved", area: "release", title: "Publish via npm trusted publishing (OIDC)", body: "Each package has a trusted publisher configured on npmjs.com, replacing a long-lived NPM_TOKEN." },
+    ],
+  },
+  {
+    version: "0.6.2",
+    date: "2026-09-09",
+    summary: "Release plumbing: provenance-preserving publish.",
+    breaking: [],
+    changes: [
+      { kind: "fixed", area: "release", title: "Provenance was being dropped", body: "Releases now publish with `pnpm -r publish --provenance` (a directory publish) instead of `changeset publish`, whose tarball step drops the attestation. Git tags come from `changeset git-tag`." },
+    ],
+  },
+  {
+    version: "0.6.1",
+    date: "2026-09-09",
+    summary: "Publishes carry npm provenance.",
+    breaking: [],
+    changes: [
+      { kind: "security", area: "release", title: "npm provenance attestation on every publish", body: "You can verify each package was built from this repository by the release workflow." },
+    ],
+  },
   {
     version: "0.6.0",
     date: "2026-09-08",
@@ -211,7 +547,37 @@ export const RELEASES: Release[] = [
   },
 ];
 
-export const LATEST_VERSION = RELEASES[0].version;
+export type ReleaseType = "Major" | "Minor" | "Patch" | "Initial";
+
+/** Major / Minor / Patch, by comparing a release with the one before it (the oldest is the "Initial" release). */
+export function releaseTypeAt(index: number): ReleaseType {
+  const cur = RELEASES[index]!.version.split(".").map(Number);
+  const prev = RELEASES[index + 1]?.version.split(".").map(Number);
+  if (!prev) return "Initial";
+  if (cur[0] !== prev[0]) return "Major";
+  if (cur[1] !== prev[1]) return "Minor";
+  return "Patch";
+}
+
+/**
+ * Feature releases and any patch that carries something users must know (security, accessibility or a
+ * breaking change) get a full entry; other patches render compactly, and are left off the infographic.
+ */
+export function isNotable(index: number): boolean {
+  const r = RELEASES[index]!;
+  return (
+    releaseTypeAt(index) !== "Patch" ||
+    (r.breaking?.length ?? 0) > 0 ||
+    r.changes.some((c) => c.kind === "security" || c.kind === "accessibility" || c.kind === "breaking")
+  );
+}
+
+/**
+ * The version the packages actually published — read from packages/ui/package.json, never from
+ * RELEASES[0]. This is what froze the page at 0.6.0 for eleven releases. `scripts/check-releases.mjs`
+ * (CI) fails if the top entry above doesn't match it.
+ */
+export const LATEST_VERSION: string = uiPackage.version;
 
 /** GitHub links to the exhaustive, commit-level per-package changelogs. */
 export const PACKAGE_CHANGELOGS: { name: string; href: string }[] = [

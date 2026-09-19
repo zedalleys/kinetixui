@@ -56,7 +56,7 @@ const Banner = React.forwardRef<HTMLDivElement, BannerProps>(
   ({ className, variant = "information", sticky, hideIcon, onDismiss, action, children, ...props }, ref) => {
     const Icon = ICON[variant ?? "information"];
     return (
-      <div ref={ref} role="banner" className={cn(bannerVariants({ variant, sticky }), className)} {...props}>
+      <div ref={ref} className={cn(bannerVariants({ variant, sticky }), className)} {...props}>
         {!hideIcon && <Icon />}
         <div className="mx-auto flex min-w-0 max-w-4xl flex-1 flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
           <span>{children}</span>

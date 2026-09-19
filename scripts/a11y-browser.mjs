@@ -14,6 +14,13 @@
  * longer occurs also fails (stale entry) so the baseline only shrinks. Use
  * --update to regenerate it deliberately, e.g. right after fixing things.
  *
+ * Beyond axe it also runs three behaviour checks that only make sense in a real browser. They have
+ * no baseline — any failure fails the run:
+ *   - reduced motion: with prefers-reduced-motion, no story may run a looping animation faster than 3s
+ *   - forced colors:  with forced-colors active, every focus stop in every story keeps a visible
+ *                     indicator (box-shadow rings are stripped in that mode; an outline survives)
+ *   - keyboard drag:  KanbanBoard cards can be picked up, moved and dropped with Space / arrows
+ *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary (local
  * runs where Playwright's own download isn't installed). CI uses
  * `playwright install chromium`.
@@ -60,6 +67,7 @@ const stories = Object.values(index.entries).filter((e) => e.type === "story");
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 const found = new Map(); // key -> sample message
 const failedToLoad = [];
+const behaviourFailures = [];
 
 async function scan(context, story, theme) {
   const page = await context.newPage();
@@ -67,6 +75,19 @@ async function scan(context, story, theme) {
     await page.goto(`${base}/iframe.html?id=${story.id}&viewMode=story&globals=theme:${theme}`, { waitUntil: "load" });
     await page.waitForFunction(() => document.body.classList.contains("sb-show-main") || document.body.classList.contains("sb-show-errordisplay"), null, { timeout: 20000 });
     if (await page.evaluate(() => document.body.classList.contains("sb-show-errordisplay"))) throw new Error("story threw while rendering");
+    // Reduced motion: anything still looping faster than 3s after settling ignores the preference.
+    await page.waitForTimeout(300);
+    const fastLoops = await page.evaluate(() =>
+      document
+        .getAnimations()
+        .filter((a) => {
+          const timing = a.effect && a.effect.getComputedTiming();
+          return timing && timing.iterations === Infinity && Number(timing.duration) < 3000 && a.playState === "running";
+        })
+        .map((a) => (a.effect && a.effect.target && a.effect.target.tagName.toLowerCase()) + ":" + (a.animationName || a.transitionProperty || "animation")),
+    );
+    if (fastLoops.length) behaviourFailures.push(`${story.id}|${theme} reduced-motion: still looping: ${[...new Set(fastLoops)].join(", ")}`);
+
     // Colour transitions (components use transition-colors) would otherwise be measured
     // mid-flight after the theme class flips, giving flaky contrast results.
     await page.addStyleTag({ content: "*,*::before,*::after{transition:none!important;animation:none!important;caret-color:transparent!important}" });
@@ -106,11 +127,110 @@ await Promise.all(
     }
   }),
 );
+// ── forced colors: every focus stop must keep a visible indicator ────────────────────────────
+{
+  const forced = await browser.newContext({ viewport: { width: 1024, height: 768 }, forcedColors: "active", reducedMotion: "reduce" });
+  let nextStory = 0;
+  await Promise.all(
+    Array.from({ length: CONCURRENCY }, async () => {
+      while (nextStory < stories.length) {
+        const story = stories[nextStory++];
+        const page = await forced.newPage();
+        try {
+          await page.goto(`${base}/iframe.html?id=${story.id}&viewMode=story&globals=theme:light`, { waitUntil: "load" });
+          await page.waitForFunction(() => document.body.classList.contains("sb-show-main"), null, { timeout: 20000 });
+          await page.addStyleTag({ content: "*,*::before,*::after{transition:none!important;animation:none!important}" });
+          await page.waitForTimeout(150);
+          for (let i = 0; i < 12; i++) {
+            await page.keyboard.press("Tab");
+            const stop = await page.evaluate(() => {
+              const el = document.activeElement;
+              if (!el || el === document.body || !el.closest("#storybook-root")) return null;
+              // The real input behind InputOTP is transparent; focus is drawn on its active slot, so check that instead.
+              const target = el.hasAttribute("data-input-otp") ? document.querySelector('#storybook-root [class*="z-docked"][class*="ring-ring"]') || el : el;
+              const cs = getComputedStyle(target);
+              const visible = cs.outlineStyle !== "none" && parseFloat(cs.outlineWidth) > 0 && cs.outlineColor !== "rgba(0, 0, 0, 0)";
+              return { visible, name: el.tagName.toLowerCase() + (el.getAttribute("role") ? "[" + el.getAttribute("role") + "]" : "") };
+            });
+            if (stop && !stop.visible) behaviourFailures.push(`${story.id} forced-colors: no visible focus indicator on ${stop.name}`);
+          }
+        } catch (err) {
+          behaviourFailures.push(`${story.id} forced-colors: ${String(err.message).split("\n")[0]}`);
+        } finally {
+          await page.close();
+        }
+      }
+    }),
+  );
+  await forced.close();
+}
+
+// ── KanbanBoard: keyboard drag (needs real layout, so it can't live in the jsdom suite) ───────
+{
+  const kanban = stories.find((s) => /kanban/i.test(s.id) && /default/i.test(s.id));
+  if (!kanban) behaviourFailures.push("kanban: no default KanbanBoard story found");
+  else {
+    const ctx = await browser.newContext({ viewport: { width: 1100, height: 800 }, reducedMotion: "reduce" });
+    const page = await ctx.newPage();
+    try {
+      await page.goto(`${base}/iframe.html?id=${kanban.id}&viewMode=story&globals=theme:light`, { waitUntil: "load" });
+      await page.waitForFunction(() => document.body.classList.contains("sb-show-main"), null, { timeout: 20000 });
+      await page.waitForTimeout(400);
+      const columns = () =>
+        page.evaluate(() => {
+          const cards = [...document.querySelectorAll('#storybook-root [aria-roledescription="sortable"]')];
+          const groups = new Map();
+          for (const c of cards) {
+            const key = c.parentElement;
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(c.textContent.trim());
+          }
+          return [...groups.values()];
+        });
+      const drag = async (keys) => {
+        await page.locator('#storybook-root [aria-roledescription="sortable"]').first().focus();
+        await page.keyboard.press("Space"); // pick up
+        await page.waitForTimeout(150);
+        for (const k of keys) {
+          await page.keyboard.press(k);
+          await page.waitForTimeout(150);
+        }
+        await page.keyboard.press("Space"); // drop
+        await page.waitForTimeout(250);
+      };
+      const before = await columns();
+      await drag(["ArrowDown"]);
+      const reordered = await columns();
+      if (JSON.stringify(reordered[0]) === JSON.stringify(before[0]) || reordered[0][0] !== before[0][1])
+        behaviourFailures.push(`kanban: Space + ArrowDown + Space did not reorder within a column (${JSON.stringify(before[0])} -> ${JSON.stringify(reordered[0])})`);
+
+      await page.reload({ waitUntil: "load" });
+      await page.waitForFunction(() => document.body.classList.contains("sb-show-main"), null, { timeout: 20000 });
+      await page.waitForTimeout(400);
+      const start = await columns();
+      await drag(["ArrowRight"]);
+      const moved = await columns();
+      if (!moved[1] || moved[1].length !== start[1].length + 1 || moved[0].length !== start[0].length - 1)
+        behaviourFailures.push(`kanban: Space + ArrowRight + Space did not move the card to the next column (${JSON.stringify(start.map((c) => c.length))} -> ${JSON.stringify(moved.map((c) => c.length))})`);
+    } catch (err) {
+      behaviourFailures.push(`kanban: ${String(err.message).split("\n")[0]}`);
+    } finally {
+      await ctx.close();
+    }
+  }
+}
+
 await browser.close();
 server.close();
 
 if (failedToLoad.length) {
   console.error(`✗ ${failedToLoad.length} story render(s) failed:\n` + failedToLoad.map((f) => `  ${f}`).join("\n"));
+  process.exit(1);
+}
+
+if (behaviourFailures.length) {
+  const unique = [...new Set(behaviourFailures)].sort();
+  console.error(`✗ ${unique.length} behaviour check failure(s):\n` + unique.map((f) => `  ${f}`).join("\n"));
   process.exit(1);
 }
 

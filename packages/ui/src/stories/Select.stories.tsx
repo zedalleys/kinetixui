@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const Demo = () => (
     <Select>
-      <SelectTrigger className="w-[220px]">
+      <SelectTrigger className="w-[220px]" aria-label="Fruit">
         <SelectValue placeholder="Select a fruit" />
       </SelectTrigger>
       <SelectContent>
@@ -32,7 +32,7 @@ export default meta;
 
 export const Playground: StoryObj<typeof meta> = { render: (args) => (
     <Select {...args}>
-      <SelectTrigger className="w-[220px]">
+      <SelectTrigger className="w-[220px]" aria-label="Fruit">
         <SelectValue placeholder="Select a fruit" />
       </SelectTrigger>
       <SelectContent>

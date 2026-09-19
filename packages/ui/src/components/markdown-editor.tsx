@@ -163,7 +163,7 @@ function renderMarkdown(source: string): string {
  * this ports cleanly to all four platforms instead.
  */
 const MarkdownEditor = React.forwardRef<HTMLDivElement, MarkdownEditorProps>(
-  ({ value, onChange, placeholder, rows = 10, className, ...props }, ref) => {
+  ({ value, onChange, placeholder, rows = 10, className, "aria-label": ariaLabel = "Markdown", ...props }, ref) => {
     const textareaRef = React.useRef<HTMLTextAreaElement>(null);
     const [showPreview, setShowPreview] = React.useState(false);
     const pendingSelection = React.useRef<{ start: number; end: number } | null>(null);
@@ -236,6 +236,7 @@ const MarkdownEditor = React.forwardRef<HTMLDivElement, MarkdownEditorProps>(
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             rows={rows}
+            aria-label={ariaLabel}
             className="resize-none rounded-none border-0 font-mono text-[13px] focus-visible:border-transparent focus-visible:shadow-none"
           />
           {showPreview && (

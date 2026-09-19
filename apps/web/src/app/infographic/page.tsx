@@ -8,7 +8,7 @@ import { WorldMap } from "@/components/infographic/world-map";
 import { RegistryTreemap } from "@/components/infographic/registry-treemap";
 import { DepsBar } from "@/components/infographic/deps-bar";
 import { componentDocs, CATEGORY_ORDER } from "@/lib/site";
-import { RELEASES } from "@/lib/releases";
+import { RELEASES, isNotable } from "@/lib/releases";
 import { countOnPlatform, type Platform } from "@/lib/platform-parity";
 
 export const metadata: Metadata = {
@@ -53,8 +53,8 @@ const STATS = [
   { n: PLATFORMS.length, label: "component libraries", sub: PLATFORMS.join(" · ") },
 ];
 
-/* oldest → newest, straight from the changelog source so the two never drift */
-const TIMELINE = [...RELEASES]
+/* oldest → newest, feature releases and notable patches, straight from the changelog source so the two never drift */
+const TIMELINE = RELEASES.filter((_, i) => isNotable(i))
   .reverse()
   .map((r) => ({ v: r.version, note: r.summary }));
 

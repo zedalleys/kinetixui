@@ -4,7 +4,7 @@ import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Slider } from "@kinetixui/ui";
 
-const Demo = () => <Slider defaultValue={[50]} max={100} step={1} className="w-[60%]" />;
+const Demo = () => <Slider aria-label="Volume" defaultValue={[50]} max={100} step={1} className="w-[60%]" />;
 
 const meta = {
   title: "Form Inputs/Slider",
@@ -13,12 +13,12 @@ const meta = {
   argTypes: { disabled: { control: "boolean" } },
   parameters: {
     layout: "centered",
-    docs: { source: { code: "<Slider defaultValue={[50]} max={100} step={1} />", language: "tsx" } },
+    docs: { source: { code: "<Slider aria-label=\"Volume\" defaultValue={[50]} max={100} step={1} />", language: "tsx" } },
   },
 } satisfies Meta;
 
 export default meta;
 
-export const Playground: StoryObj<typeof meta> = { render: (args) => <Slider {...args} defaultValue={[50]} max={100} step={1} className="w-60" /> };
+export const Playground: StoryObj<typeof meta> = { render: (args) => <Slider aria-label="Volume" {...args} defaultValue={[50]} max={100} step={1} className="w-60" /> };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };

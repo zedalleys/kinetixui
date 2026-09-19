@@ -193,17 +193,161 @@ function DataGrid<TData>({
     endEdit(restoreFocus);
   }
 
+  // ── keyboard model (ARIA grid pattern) ─────────────────────────────────────────────────────
+  // The grid is ONE tab stop (roving tabindex). Arrows, Home/End (Ctrl = grid corners) and
+  // PageUp/PageDown move the active cell; the header row is row -1. Rows are virtualized, so a move
+  // first scrolls the target row into the rendered window and focus lands after the next render.
+  const HEADER_HEIGHT = 40; // h-10
+  type Pos = { row: number; columnId: string };
+  const [active, setActive] = React.useState<Pos>({ row: -1, columnId: columns[0]?.id ?? "" });
+  const pendingFocusRef = React.useRef<Pos | null>(null);
+  const [announcement, setAnnouncement] = React.useState("");
+
+  const rowCount = sortedData.length;
+  const colIds = renderedColumns.map((c) => c.id);
+  const activeCol = colIds.includes(active.columnId) ? active.columnId : (colIds[0] ?? "");
+  const activeRow = Math.min(active.row, rowCount - 1);
+  // if the active row has scrolled out of the rendered window, the header takes the tab stop so
+  // the grid stays reachable by Tab
+  const activeRendered = activeRow < 0 || (activeRow >= startIndex && activeRow < endIndex);
+  const tabStop: Pos = { row: activeRendered ? activeRow : -1, columnId: activeCol };
+  const pageRows = Math.max(1, Math.floor((viewportHeight - HEADER_HEIGHT) / rowHeight) - 1);
+  const labelOf = (c: DataGridColumn<TData>) => (typeof c.header === "string" ? c.header : c.id);
+
+  function ensureRowVisible(row: number) {
+    const el = containerRef.current;
+    if (!el) return;
+    if (row < 0) {
+      // the header is sticky and always visible, but moving to it means "back to the top"
+      if (scrollTop !== 0) {
+        el.scrollTop = 0;
+        setScrollTop(0);
+      }
+      return;
+    }
+    const top = HEADER_HEIGHT + row * rowHeight;
+    const bottom = top + rowHeight;
+    let next = scrollTop;
+    if (top < scrollTop + HEADER_HEIGHT) next = row * rowHeight; // under the sticky header
+    else if (bottom > scrollTop + viewportHeight) next = bottom - viewportHeight;
+    if (next !== scrollTop) {
+      el.scrollTop = next;
+      setScrollTop(next);
+    }
+  }
+
+  function moveTo(row: number, columnId: string) {
+    const r = Math.max(-1, Math.min(row, rowCount - 1));
+    ensureRowVisible(r);
+    pendingFocusRef.current = { row: r, columnId };
+    setActive({ row: r, columnId });
+  }
+
+  // Runs after every render until the pending target exists in the DOM (it may need a scroll first).
+  React.useEffect(() => {
+    const p = pendingFocusRef.current;
+    if (!p) return;
+    const selector = p.row < 0 ? `[data-header="${p.columnId}"]` : `[data-cell="${p.row}:${p.columnId}"]`;
+    const el = containerRef.current?.querySelector<HTMLElement>(selector);
+    if (el) {
+      pendingFocusRef.current = null;
+      el.focus();
+    }
+  });
+
+  function moveColumn(column: DataGridColumn<TData>, dir: 1 | -1) {
+    if (column.pinned) return;
+    const ids = unpinnedOrdered.map((c) => c.id);
+    const from = ids.indexOf(column.id);
+    const to = from + dir;
+    if (to < 0 || to >= ids.length) {
+      setAnnouncement(`${labelOf(column)} is already the ${dir < 0 ? "first" : "last"} movable column`);
+      return;
+    }
+    const targetId = ids[to]!;
+    setOrder((prev) => {
+      const next = prev.filter((id) => id !== column.id);
+      next.splice(next.indexOf(targetId) + (dir > 0 ? 1 : 0), 0, column.id);
+      return next;
+    });
+    pendingFocusRef.current = { row: -1, columnId: column.id }; // a reordered node loses focus; give it back
+    setAnnouncement(`${labelOf(column)} moved to position ${leftPinned.length + to + 1} of ${colIds.length}`);
+  }
+
+  function resizeColumn(column: DataGridColumn<TData>, delta: number) {
+    const current = widths[column.id] ?? column.width ?? DEFAULT_WIDTH;
+    const next = Math.max(column.minWidth ?? DEFAULT_MIN_WIDTH, current + delta);
+    setWidths((prev) => ({ ...prev, [column.id]: next }));
+    setAnnouncement(`${labelOf(column)} column width ${next} pixels`);
+  }
+
+  function onNavKeyDown(e: React.KeyboardEvent<HTMLElement>, row: number, column: DataGridColumn<TData>) {
+    if (e.target !== e.currentTarget) return; // keys inside an editing input are the input's own
+    const rtl = getComputedStyle(e.currentTarget).direction === "rtl";
+    const idx = colIds.indexOf(column.id);
+    const horizontal = e.key === "ArrowRight" ? (rtl ? -1 : 1) : e.key === "ArrowLeft" ? (rtl ? 1 : -1) : 0;
+
+    // header chords: Alt+Left/Right reorders the column, Shift+Left/Right resizes it (10px)
+    if (row < 0 && horizontal !== 0 && (e.altKey || e.shiftKey)) {
+      e.preventDefault();
+      if (e.altKey) moveColumn(column, horizontal as 1 | -1);
+      else resizeColumn(column, horizontal * 10);
+      return;
+    }
+
+    const go = (r: number, i: number) => {
+      e.preventDefault();
+      moveTo(r, colIds[Math.max(0, Math.min(i, colIds.length - 1))]!);
+    };
+    switch (e.key) {
+      case "ArrowRight":
+      case "ArrowLeft":
+        return go(row, idx + horizontal);
+      case "ArrowDown":
+        return go(row + 1, idx);
+      case "ArrowUp":
+        return go(row - 1, idx);
+      case "Home":
+        return go(e.ctrlKey ? -1 : row, 0);
+      case "End":
+        return go(e.ctrlKey ? rowCount - 1 : row, colIds.length - 1);
+      case "PageDown":
+        return go(row + pageRows, idx);
+      case "PageUp":
+        return go(Math.max(row - pageRows, row >= 0 ? 0 : -1), idx);
+      case "Enter":
+      case " ":
+        if (row < 0 && column.sortable) {
+          e.preventDefault();
+          toggleSort(column.id);
+        } else if (row >= 0 && column.editable && e.key === "Enter") {
+          e.preventDefault();
+          setEditing({ rowIndex: row, columnId: column.id });
+        }
+        return;
+      case "F2":
+        if (row >= 0 && column.editable) {
+          e.preventDefault();
+          setEditing({ rowIndex: row, columnId: column.id });
+        }
+        return;
+    }
+  }
+
   return (
+    <>
     <div
       ref={containerRef}
       role="grid"
+      aria-rowcount={rowCount + 1}
+      aria-colcount={colIds.length}
       className={cn("relative overflow-auto rounded-md border font-sans text-sm", className)}
       style={{ height }}
       onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
     >
       <div style={{ width: totalWidth, minWidth: "100%" }}>
-        <div role="row" className="sticky top-0 z-[2] flex border-b bg-background">
-          {renderedColumns.map((column) => {
+        <div role="row" aria-rowindex={1} className="sticky top-0 z-[2] flex border-b bg-background">
+          {renderedColumns.map((column, colIdx) => {
             const width = widths[column.id] ?? column.width ?? DEFAULT_WIDTH;
             const pinnedStyle: React.CSSProperties =
               column.pinned === "left"
@@ -216,6 +360,9 @@ function DataGrid<TData>({
               <div
                 key={column.id}
                 role="columnheader"
+                data-header={column.id}
+                aria-colindex={colIdx + 1}
+                aria-keyshortcuts={`Shift+ArrowLeft Shift+ArrowRight${column.pinned ? "" : " Alt+ArrowLeft Alt+ArrowRight"}`}
                 {...(column.sortable
                   ? { "aria-sort": isSorted ? (sort!.direction === "asc" ? "ascending" : "descending") : "none" }
                   : {})}
@@ -239,18 +386,13 @@ function DataGrid<TData>({
                   });
                 }}
                 onClick={() => column.sortable && toggleSort(column.id)}
-                // a sortable header is a control: reachable with Tab, operated with Enter / Space
-                tabIndex={column.sortable ? 0 : undefined}
-                onKeyDown={(e) => {
-                  if (column.sortable && e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
-                    e.preventDefault();
-                    toggleSort(column.id);
-                  }
-                }}
+                // roving tabindex: the grid is one tab stop; arrows move between cells (see onNavKeyDown)
+                tabIndex={tabStop.row === -1 && tabStop.columnId === column.id ? 0 : -1}
+                onFocus={() => setActive({ row: -1, columnId: column.id })}
+                onKeyDown={(e) => onNavKeyDown(e, -1, column)}
                 className={cn(
-                  "relative flex h-10 shrink-0 select-none items-center gap-1 px-2 font-medium text-muted-foreground",
-                  column.sortable &&
-                    "cursor-pointer outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
+                  "relative flex h-10 shrink-0 select-none items-center gap-1 px-2 font-medium text-muted-foreground outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
+                  column.sortable && "cursor-pointer hover:text-foreground",
                   column.pinned && "bg-background",
                 )}
                 style={{ width, ...pinnedStyle }}
@@ -279,10 +421,11 @@ function DataGrid<TData>({
               <div
                 key={getRowId ? getRowId(row, rowIndex) : rowIndex}
                 role="row"
+                aria-rowindex={rowIndex + 2}
                 className="absolute flex w-full border-b hover:bg-muted/50"
                 style={{ top: rowIndex * rowHeight, height: rowHeight }}
               >
-                {renderedColumns.map((column) => {
+                {renderedColumns.map((column, colIdx) => {
                   const width = widths[column.id] ?? column.width ?? DEFAULT_WIDTH;
                   const pinnedStyle: React.CSSProperties =
                     column.pinned === "left"
@@ -295,19 +438,15 @@ function DataGrid<TData>({
                     <div
                       key={column.id}
                       role="gridcell"
+                      aria-colindex={colIdx + 1}
                       data-cell={`${rowIndex}:${column.id}`}
                       onDoubleClick={() => column.editable && setEditing({ rowIndex, columnId: column.id })}
-                      // an editable cell is reachable with Tab and entered with Enter or F2 (the spreadsheet convention)
-                      tabIndex={column.editable ? 0 : undefined}
-                      onKeyDown={(e) => {
-                        if (column.editable && e.target === e.currentTarget && (e.key === "Enter" || e.key === "F2")) {
-                          e.preventDefault();
-                          setEditing({ rowIndex, columnId: column.id });
-                        }
-                      }}
+                      // roving tabindex; Enter or F2 edits an editable cell (the spreadsheet convention)
+                      tabIndex={tabStop.row === rowIndex && tabStop.columnId === column.id ? 0 : -1}
+                      onFocus={() => setActive({ row: rowIndex, columnId: column.id })}
+                      onKeyDown={(e) => onNavKeyDown(e, rowIndex, column)}
                       className={cn(
-                        "flex shrink-0 items-center px-2",
-                        column.editable && "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
+                        "flex shrink-0 items-center px-2 outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
                         column.pinned && "bg-background",
                       )}
                       style={{ width, ...pinnedStyle }}
@@ -335,6 +474,11 @@ function DataGrid<TData>({
         </div>
       </div>
     </div>
+    {/* reorder / resize results, spoken politely; outside the grid because a grid's children must be rows */}
+    <div role="status" aria-live="polite" className="sr-only">
+      {announcement}
+    </div>
+    </>
   );
 }
 
