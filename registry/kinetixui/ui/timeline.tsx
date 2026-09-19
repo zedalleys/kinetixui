@@ -35,7 +35,7 @@ const Body = ({ item, align }: { item: TimelineItem; align: "left" | "right" }) 
 
 const Rail = ({ item, isLast }: { item: TimelineItem; isLast: boolean }) => (
   <div className="flex flex-col items-center">
-    <span className="flex size-2.5 shrink-0 items-center justify-center rounded-full bg-primary">{item.icon}</span>
+    <span className="flex size-2.5 shrink-0 items-center justify-center rounded-full bg-action">{item.icon}</span>
     {!isLast && <span aria-hidden className="my-1 w-px flex-1 bg-border" />}
   </div>
 );

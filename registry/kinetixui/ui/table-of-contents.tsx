@@ -31,7 +31,7 @@ const TableOfContents = React.forwardRef<HTMLElement, TableOfContentsProps>(
             style={{ paddingInlineStart: `${((item.level ?? 1) - 1) * 12 + 12}px` }}
             className={cn(
               "-ms-px border-s py-1.5 text-body-sm outline-none transition-colors",
-              isActive ? "border-primary font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground",
+              isActive ? "border-action font-medium text-action" : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             {item.label}

@@ -52,6 +52,47 @@ put; only the mapping changes:
 }
 ```
 
+## Role tokens: brand, action, link, focus
+
+`primary` is doing several jobs in a shadcn-style contract: the fill of a button, the colour of a link,
+the focus ring, and — in a lot of brands — the brand colour itself. Those diverge as soon as your brand
+colour isn't a good button colour (KinetixUI's own navy wasn't, which is why `primary` is azure). Four
+role tokens sit on top of it so you can split them:
+
+| Token | Meaning | Default |
+|---|---|---|
+| `--action` / `--action-foreground` | the interactive fill: buttons, checkboxes, selected states, spinners | `var(--primary)` / `var(--primary-foreground)` |
+| `--link` | Link button, inline links | `var(--primary)` |
+| `--focus` | focus indicator | `var(--ring)` |
+| `--brand` / `--brand-foreground` | identity: logos, headers, brand surfaces — not a control colour | the navy `blue.500` |
+
+Because `action`, `link` and `focus` **default to `primary` / `ring`**, a theme that only sets
+`--primary` (everything above, and everything the CLI's `theme` command writes) keeps working unchanged.
+Override a role on its own to split it off:
+
+```css
+:root {
+  --primary: var(--green-500);        /* everything follows… */
+  --action: var(--azure-700);         /* …except buttons and controls, which stay azure */
+  --brand: var(--green-700);
+}
+```
+
+Components read the role tokens (`bg-action`, `text-link`), not `primary`, so overriding `--primary`
+still recolours them via the default and overriding `--action` recolours only the interactive layer.
+Contrast is on you when you split them: `kinetixui theme build` reports `action` / `action-foreground`
+and `brand` / `brand-foreground` when you set them.
+
+**Hover and pressed.** On the web the Button derives its states from `action` (`bg-action/90`,
+`bg-action/85`), so they follow whatever you set. The contract also carries explicit
+`--action-hover` / `--action-pressed` values — the same two colours, precomputed over the page
+background — for the SwiftUI, Compose and Flutter ports, which have no alpha-derivation to lean on.
+`pnpm check:contrast` asserts the explicit values equal the derivation and that text on them clears AA.
+
+**Upgrading:** components that use `bg-action` / `text-link` need the matching
+`@kinetixui/ui/tailwind.config` preset (it defines the new colours) — update the package when you
+re-add components with the CLI.
+
 ## Primitive ramps
 
 Six ramps (`blue`, `green`, `taupe`, `cream`, `amber`, `red`) plus a synthesized

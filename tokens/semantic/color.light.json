@@ -253,6 +253,46 @@
     "info-foreground": {
       "$value": "{color.blue.50}",
       "$type": "color"
+    },
+    "brand": {
+      "$value": "{color.blue.500}",
+      "$type": "color",
+      "$description": "identity colour — the original Figma navy that `primary` was swapped away from for interactive use. Use it for logos, headers and brand surfaces, not for controls."
+    },
+    "brand-foreground": {
+      "$value": "{color.blue.50}",
+      "$type": "color",
+      "$description": "text/icons on `brand`"
+    },
+    "action": {
+      "$value": "{color.primary}",
+      "$type": "color",
+      "$description": "the interactive colour (buttons, selected controls). Defaults to `primary`; override `--action` on its own to split the interactive colour from `primary`."
+    },
+    "action-foreground": {
+      "$value": "{color.primary-foreground}",
+      "$type": "color",
+      "$description": "text/icons on `action`"
+    },
+    "action-hover": {
+      "$value": "#3460dc",
+      "$type": "color",
+      "$description": "explicit hover fill for native ports: `action` at 90% over `background` (#1d4ed8 over #ffffff). The web renders this as `bg-action/90`; `check:contrast` asserts the two agree."
+    },
+    "action-pressed": {
+      "$value": "#3f69de",
+      "$type": "color",
+      "$description": "explicit pressed fill for native ports: `action` at 85% over `background`. The web renders this as `bg-action/85`; `check:contrast` asserts the two agree and that text on it clears AA."
+    },
+    "focus": {
+      "$value": "{color.ring}",
+      "$type": "color",
+      "$description": "focus indicator colour. Defaults to `ring`; override `--focus` to theme focus separately."
+    },
+    "link": {
+      "$value": "{color.primary}",
+      "$type": "color",
+      "$description": "inline link / Link-button text colour. Defaults to `primary`."
     }
   }
 }

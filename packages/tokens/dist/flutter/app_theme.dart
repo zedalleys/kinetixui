@@ -14,8 +14,14 @@ class KinetixTheme {
 
     static const colorAccent = Color(0xFFF0F7FF); /** figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons) */
     static const colorAccentForeground = Color(0xFF1D4ED8); /** synth: = primary for readable text on accent (#1d4ed8 on accent #f0f7ff ~5.7:1) */
+    static const colorAction = Color(0xFF1D4ED8); /** the interactive colour (buttons, selected controls). Defaults to `primary`; override `--action` on its own to split the interactive colour from `primary`. */
+    static const colorActionForeground = Color(0xFFF0F7FF); /** text/icons on `action` */
+    static const colorActionHover = Color(0xFF3460DC); /** explicit hover fill for native ports: `action` at 90% over `background` (#1d4ed8 over #ffffff). The web renders this as `bg-action/90`; `check:contrast` asserts the two agree. */
+    static const colorActionPressed = Color(0xFF3F69DE); /** explicit pressed fill for native ports: `action` at 85% over `background`. The web renders this as `bg-action/85`; `check:contrast` asserts the two agree and that text on it clears AA. */
     static const colorBackground = Color(0xFFFFFFFF); /** figma: surfaceContainerLowest #ffffff */
     static const colorBorder = Color(0xFF92B2C8); /** figma: outline #92b2c8 */
+    static const colorBrand = Color(0xFF1B3C53); /** identity colour — the original Figma navy that `primary` was swapped away from for interactive use. Use it for logos, headers and brand surfaces, not for controls. */
+    static const colorBrandForeground = Color(0xFFF0F7FF); /** text/icons on `brand` */
     static const colorCard = Color(0xFFFFFFFF); /** synth: no Figma card token; = background */
     static const colorCardForeground = Color(0xFF050C11); /** synth: = foreground */
     static const colorChart1 = Color(0xFF1B3C53); /** synth: brand ramps for data viz */
@@ -28,10 +34,12 @@ class KinetixTheme {
     static const colorChart8 = Color(0xFF465245); /** synth: 8th data-viz hue — deep green, distinct from chart-2 */
     static const colorDestructive = Color(0xFFC60A0A); /** a11y: figma error #ec5047 is 3.33:1 under on-error / 3.62:1 as text on the page — fails WCAG AA. red.500 #c60a0a clears 5.6:1 / 6.1:1. See ACCESSIBILITY-AUDIT.md. */
     static const colorDestructiveForeground = Color(0xFFFEF3F2); /** figma: onError #fef3f2 */
+    static const colorFocus = Color(0xFF1D4ED8); /** focus indicator colour. Defaults to `ring`; override `--focus` to theme focus separately. */
     static const colorForeground = Color(0xFF050C11); /** figma: onSurface #050c11 */
     static const colorInfo = Color(0xFF57778D); /** synth: steel blue, distinct from navy primary */
     static const colorInfoForeground = Color(0xFFF0F7FF);
     static const colorInput = Color(0xFF92B2C8); /** figma: outline #92b2c8 (same as border) */
+    static const colorLink = Color(0xFF1D4ED8); /** inline link / Link-button text colour. Defaults to `primary`. */
     static const colorMuted = Color(0xFFF6F6F6); /** figma: surfaceContainer #f6f6f6 */
     static const colorMutedForeground = Color(0xFF6D6D6D); /** figma: onSurfaceVariant #6d6d6d */
     static const colorPopover = Color(0xFFFFFFFF); /** synth: no Figma popover token; = background */

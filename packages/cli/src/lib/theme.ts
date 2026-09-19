@@ -30,6 +30,13 @@ export const ACCEPTED_TOKENS = [
   "border",
   "input",
   "ring",
+  // role tokens layered over primary/ring — optional; when unset they resolve to primary / ring
+  "action",
+  "action-foreground",
+  "link",
+  "focus",
+  "brand",
+  "brand-foreground",
 ] as const;
 export type AcceptedToken = (typeof ACCEPTED_TOKENS)[number];
 
@@ -54,6 +61,12 @@ export const EXAMPLE_VALUES: Record<AcceptedToken, string> = {
   border: "#e2e8f0",
   input: "#e2e8f0",
   ring: "#2563eb",
+  action: "#2563eb",
+  "action-foreground": "#ffffff",
+  link: "#2563eb",
+  focus: "#2563eb",
+  brand: "#0f172a",
+  "brand-foreground": "#ffffff",
 };
 
 /** base -> its foreground, auto-derived by contrast when the base is set but the foreground isn't. */
@@ -66,6 +79,8 @@ const FOREGROUND_OF: Partial<Record<AcceptedToken, AcceptedToken>> = {
   muted: "muted-foreground",
   accent: "accent-foreground",
   destructive: "destructive-foreground",
+  action: "action-foreground",
+  brand: "brand-foreground",
 };
 
 /** pairs worth a contrast check in the build report. */
@@ -78,6 +93,8 @@ export const CONTRAST_PAIRS: [AcceptedToken, AcceptedToken][] = [
   ["muted", "muted-foreground"],
   ["accent", "accent-foreground"],
   ["destructive", "destructive-foreground"],
+  ["action", "action-foreground"],
+  ["brand", "brand-foreground"],
 ];
 
 export type ParsedTheme = {

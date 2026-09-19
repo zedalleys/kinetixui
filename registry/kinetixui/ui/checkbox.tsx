@@ -21,8 +21,8 @@ const Checkbox = React.forwardRef<
       "peer size-[18px] shrink-0 rounded-sm border-2 border-input outline-none transition-colors",
       "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
       "disabled:cursor-not-allowed disabled:opacity-disabled",
-      "data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
-      "data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground",
+      "data-[state=checked]:border-action data-[state=checked]:bg-action data-[state=checked]:text-action-foreground",
+      "data-[state=indeterminate]:border-action data-[state=indeterminate]:bg-action data-[state=indeterminate]:text-action-foreground",
       "aria-invalid:border-destructive aria-invalid:data-[state=checked]:border-destructive aria-invalid:data-[state=checked]:bg-destructive",
       className,
     )}

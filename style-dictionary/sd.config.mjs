@@ -66,6 +66,9 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = `${ROOT}/packages/tokens/dist`;
 
 const isColor = (t) => t.$type === 'color';
+/** semantic tokens that default to another semantic token and must stay a live `var()` reference in
+ *  both themes, so a theme that overrides the source token carries the alias with it. */
+const ALIAS_TOKENS = new Set(['color.action', 'color.action-foreground', 'color.focus', 'color.link']);
 const isSemantic = (t) => t.filePath.includes(`${'/'}semantic${'/'}`);
 const isSimpleForCss = (t) => t.$type !== 'shadow' && t.$type !== 'typography';
 
@@ -96,7 +99,10 @@ export function getConfig(theme) {
           'kinetix/css-easing',
         ],
         buildPath: `${DIST}/web/`,
-        options: { outputReferences: light },
+        // Light keeps references (`--action: var(--primary)`). Dark writes resolved values everywhere
+        // EXCEPT the alias tokens below: they must stay live references so overriding `--primary` /
+        // `--ring` in a theme also moves `action` / `focus` / `link` (see ALIAS_TOKENS).
+        options: { outputReferences: (token) => light || ALIAS_TOKENS.has(token.path.join('.')) },
         files: [
           {
             destination: light ? 'globals.css' : 'globals.dark.css',

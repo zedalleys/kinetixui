@@ -29,4 +29,14 @@ export const TOKEN_CONTRACT: TokenRow[] = [
   { token: "warning", light: "#f97907", dark: "#ffc975" },
   { token: "border", light: "#92b2c8", dark: "#395a70" },
   { token: "ring", light: "#1d4ed8", dark: "#60a5fa", note: "synthesized" },
+  // Role tokens layered over primary / ring (added after the shadcn-compatible set on purpose: the
+  // first row for a given hex names it in tokenNameForHex, so `primary` stays the label).
+  { token: "brand", light: "#1b3c53", dark: "#7495ab", note: "identity — the Figma navy" },
+  { token: "brand-foreground", light: "#f0f7ff", dark: "#050c11" },
+  { token: "action", light: "#1d4ed8", dark: "#60a5fa", note: "defaults to primary" },
+  { token: "action-foreground", light: "#f0f7ff", dark: "#050c11", note: "defaults to primary-foreground" },
+  { token: "action-hover", light: "#3460dc", dark: "#5796e3", note: "action @ 90% — native" },
+  { token: "action-pressed", light: "#3f69de", dark: "#528ed7", note: "action @ 85% — native" },
+  { token: "link", light: "#1d4ed8", dark: "#60a5fa", note: "defaults to primary" },
+  { token: "focus", light: "#1d4ed8", dark: "#60a5fa", note: "defaults to ring" },
 ];

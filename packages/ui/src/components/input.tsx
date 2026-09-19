@@ -25,7 +25,7 @@ const inputVariants = cva(
     "font-sans text-body-md text-foreground",
     "placeholder:text-muted-foreground",
     "outline-none transition-colors",
-    "focus-visible:border-primary focus-visible:shadow-focus",
+    "focus-visible:border-action focus-visible:shadow-focus",
     "disabled:cursor-not-allowed disabled:opacity-disabled",
     "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:border-destructive aria-[invalid=true]:focus-visible:shadow-focus-destructive",
   ],
@@ -33,7 +33,7 @@ const inputVariants = cva(
     variants: {
       state: {
         Default: "",
-        Focus: "border-primary shadow-focus",
+        Focus: "border-action shadow-focus",
         Error: "border-destructive",
         Disabled: "opacity-disabled pointer-events-none",
       },

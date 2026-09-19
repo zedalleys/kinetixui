@@ -21,6 +21,13 @@ export const ACCEPTED_TOKENS = [
   "border",
   "input",
   "ring",
+  // role tokens layered over primary/ring — optional; when unset they resolve to primary / ring
+  "action",
+  "action-foreground",
+  "link",
+  "focus",
+  "brand",
+  "brand-foreground",
 ] as const;
 export type AcceptedToken = (typeof ACCEPTED_TOKENS)[number];
 
@@ -34,6 +41,8 @@ const FOREGROUND_OF: Partial<Record<AcceptedToken, AcceptedToken>> = {
   muted: "muted-foreground",
   accent: "accent-foreground",
   destructive: "destructive-foreground",
+  action: "action-foreground",
+  brand: "brand-foreground",
 };
 
 /** pairs worth a contrast check in the preview. */
@@ -46,6 +55,8 @@ export const CONTRAST_PAIRS: [AcceptedToken, AcceptedToken][] = [
   ["muted", "muted-foreground"],
   ["accent", "accent-foreground"],
   ["destructive", "destructive-foreground"],
+  ["action", "action-foreground"],
+  ["brand", "brand-foreground"],
 ];
 
 export type ParsedPalette = {

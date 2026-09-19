@@ -134,6 +134,8 @@
   --semantic-info-container: 212 100% 97%;
   --semantic-on-info-container: 204 33% 33%; /** text on a tinted info surface (bg-info/10) — Banner/Inform information. --info itself is only 4.15:1 on its own 10% tint; this clears AA. Exposed as text-info-on-container. */
   --tertiary: 0 0% 69%; /** figma: tertiary — switch off-track */
+  --action-hover: 224 71% 53%; /** explicit hover fill for native ports: `action` at 90% over `background` (#1d4ed8 over #ffffff). The web renders this as `bg-action/90`; `check:contrast` asserts the two agree. */
+  --action-pressed: 224 71% 56%; /** explicit pressed fill for native ports: `action` at 85% over `background`. The web renders this as `bg-action/85`; `check:contrast` asserts the two agree and that text on it clears AA. */
   --spacing-0: 0;
   --spacing-1: 4px;
   --spacing-2: 8px;
@@ -257,4 +259,10 @@
   --tertiary-foreground: var(--blue-50);
   --info: var(--blue-300); /** synth: steel blue, distinct from navy primary */
   --info-foreground: var(--blue-50);
+  --brand: var(--blue-500); /** identity colour — the original Figma navy that `primary` was swapped away from for interactive use. Use it for logos, headers and brand surfaces, not for controls. */
+  --brand-foreground: var(--blue-50); /** text/icons on `brand` */
+  --action: var(--primary); /** the interactive colour (buttons, selected controls). Defaults to `primary`; override `--action` on its own to split the interactive colour from `primary`. */
+  --action-foreground: var(--primary-foreground); /** text/icons on `action` */
+  --focus: var(--ring); /** focus indicator colour. Defaults to `ring`; override `--focus` to theme focus separately. */
+  --link: var(--primary); /** inline link / Link-button text colour. Defaults to `primary`. */
 }
