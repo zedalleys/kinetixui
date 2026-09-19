@@ -1,8 +1,17 @@
 {
   "$schema": "https://kinetixui.com/schema/platform-parity.json",
-  "$description": "Which native libraries carry each component. React (@kinetixui/ui) ships every component; the four-platform rule (/docs/contributing) means every *new* component lands on SwiftUI, Jetpack Compose and Flutter too — so `exceptions` only records the standing exceptions. A slug absent from `exceptions` is on all four platforms. Re-derive this list by diffing component slugs against the native package sources: packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/*.kt (PascalCase), packages/ui-swiftui/Sources/KinetixUI/*.swift (PascalCase), packages/ui-flutter/lib/src/*.dart (snake_case) — `sonner` resolves to Sonner/Toaster/toaster. Single source of truth, consumed by apps/web/src/lib/platform-parity.ts (web app) and scripts/gen-registry.mjs (CLI registry) — edit this file, not either of those.",
-  "platforms": ["React", "SwiftUI", "Compose", "Flutter"],
-  "nativePlatforms": ["SwiftUI", "Compose", "Flutter"],
+  "$description": "Which platforms carry each component; `exceptions` lists only those not on all four (an absent slug is on all four). GENERATED from components.manifest.json by `pnpm gen:manifest` — edit the manifest, not this file. Consumed by apps/web/src/lib/platform-parity.ts and scripts/gen-registry-index.mjs.",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "nativePlatforms": [
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
   "platformAbbr": {
     "React": "RE",
     "SwiftUI": "SW",
@@ -10,24 +19,47 @@
     "Flutter": "FL"
   },
   "exceptions": {
-    "chart": ["React", "SwiftUI", "Flutter"],
-    "avatar-group": ["React"],
-    "combobox": ["React"],
-    "form": ["React"],
-    "navigation-menu": ["React"],
-    "native-select": ["React"],
-    "tour": ["React"],
-    "kanban-board": ["React"],
-    "sidebar": ["React", "SwiftUI", "Compose"]
+    "avatar-group": [
+      "React"
+    ],
+    "chart": [
+      "React",
+      "SwiftUI",
+      "Flutter"
+    ],
+    "combobox": [
+      "React"
+    ],
+    "form": [
+      "React"
+    ],
+    "kanban-board": [
+      "React"
+    ],
+    "native-select": [
+      "React"
+    ],
+    "navigation-menu": [
+      "React"
+    ],
+    "sidebar": [
+      "React",
+      "SwiftUI",
+      "Compose"
+    ],
+    "tour": [
+      "React"
+    ]
   },
   "notes": {
-    "chart": "no Recharts equivalent wired for Compose yet",
     "avatar-group": "standing non-port — re-wraps its children, not idiomatic on native platforms; compose an Avatar row directly",
+    "chart": "no Recharts equivalent wired for Compose yet",
     "combobox": "standing non-port",
     "form": "standing non-port",
-    "navigation-menu": "standing non-port",
+    "kanban-board": "standing non-port — built on @dnd-kit; each native platform would need its own from-scratch accessible multi-container drag-and-drop implementation (no equivalent dependency exists in this repo's native packages)",
     "native-select": "standing non-port — KinetixSelect already wraps each platform's own native picker",
-    "tour": "standing non-port — targeting an arbitrary already-rendered element needs a CSS-selector-equivalent live-tree query, which no native platform has",
-    "kanban-board": "standing non-port — built on @dnd-kit; each native platform would need its own from-scratch accessible multi-container drag-and-drop implementation (no equivalent dependency exists in this repo's native packages)"
+    "navigation-menu": "standing non-port",
+    "sidebar": "not yet ported to Flutter — no widget in packages/ui-flutter; no design rationale for the omission was ever recorded, so treat it as a gap, not a deliberate non-port",
+    "tour": "standing non-port — targeting an arbitrary already-rendered element needs a CSS-selector-equivalent live-tree query, which no native platform has"
   }
 }

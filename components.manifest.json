@@ -1,0 +1,893 @@
+{
+  "$schema": "https://kinetixui.com/schema/components-manifest.json",
+  "$description": "The single source of truth for per-component metadata. `pnpm gen:manifest` derives component-status.json and platform-parity.json from this file — edit HERE, never those. Every component in packages/ui has an entry (enforced by `pnpm check:manifest`). status: \"beta\" | \"stable\" | \"deprecated\" — a new component ships \"beta\" for the release cycle it lands in (\"beta\" means new, not incomplete), then flips to \"stable\"; nothing is deprecated yet. platforms: every platform the component ships on, explicitly. Where a component is intentionally not on a platform, `platformNote` says why (visual parity is not the goal — token parity plus behavioural-intent parity plus a platform-native implementation is). Regenerate the platform port list by diffing slugs against packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/*.kt (PascalCase), packages/ui-swiftui/Sources/KinetixUI/*.swift (PascalCase) and packages/ui-flutter/lib/src/*.dart (snake_case); `sonner` resolves to Sonner/Toaster/toaster. `registry: false` marks a docs-page component that ships inside another component's registry item (avatar-group in avatar, combobox in multi-select) rather than as its own.",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "nativePlatforms": [
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "platformAbbr": {
+    "React": "RE",
+    "SwiftUI": "SW",
+    "Compose": "JC",
+    "Flutter": "FL"
+  },
+  "components": {
+    "accordion": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "alert": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "alert-dialog": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "app-bar": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "aspect-ratio": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "audio-player": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "avatar": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "avatar-group": {
+      "status": "stable",
+      "registry": false,
+      "platforms": [
+        "React"
+      ],
+      "platformNote": "standing non-port — re-wraps its children, not idiomatic on native platforms; compose an Avatar row directly"
+    },
+    "badge": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "banner": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "breadcrumb": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "button": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "button-group": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "calendar": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "card": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "carousel": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "chart": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Flutter"
+      ],
+      "platformNote": "no Recharts equivalent wired for Compose yet"
+    },
+    "checkbox": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "circular-progress": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "code-block": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "collapsible": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "color-picker": {
+      "status": "beta",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "combobox": {
+      "status": "stable",
+      "registry": false,
+      "platforms": [
+        "React"
+      ],
+      "platformNote": "standing non-port"
+    },
+    "command": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "comparison-slider": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "context-menu": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "data-grid": {
+      "status": "beta",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "data-table": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "date-picker": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "description-list": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "dialog": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "diff-viewer": {
+      "status": "beta",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "direction-provider": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "drawer": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "dropdown-menu": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "empty": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "fab": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "field": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "file-upload": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "footer": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "form": {
+      "status": "stable",
+      "platforms": [
+        "React"
+      ],
+      "platformNote": "standing non-port"
+    },
+    "hover-card": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "image": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "inform": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "input": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "input-group": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "input-otp": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "json-viewer": {
+      "status": "beta",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "kanban-board": {
+      "status": "beta",
+      "platforms": [
+        "React"
+      ],
+      "platformNote": "standing non-port — built on @dnd-kit; each native platform would need its own from-scratch accessible multi-container drag-and-drop implementation (no equivalent dependency exists in this repo's native packages)"
+    },
+    "kbd": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "label": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "list": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "markdown-editor": {
+      "status": "beta",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "marquee": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "menubar": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "message-bubble": {
+      "status": "beta",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "metric": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "modal": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "multi-select": {
+      "status": "beta",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "native-select": {
+      "status": "stable",
+      "platforms": [
+        "React"
+      ],
+      "platformNote": "standing non-port — KinetixSelect already wraps each platform's own native picker"
+    },
+    "navigation-bar": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "navigation-menu": {
+      "status": "stable",
+      "platforms": [
+        "React"
+      ],
+      "platformNote": "standing non-port"
+    },
+    "notification-center": {
+      "status": "beta",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "number-input": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "page-header": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "pagination": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "password-input": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "popover": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "progress": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "quote": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "radio-group": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "rating": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "resizable": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "scroll-area": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "segmented-control": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "select": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "separator": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "sheet": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "sidebar": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose"
+      ],
+      "platformNote": "not yet ported to Flutter — no widget in packages/ui-flutter; no design rationale for the omission was ever recorded, so treat it as a gap, not a deliberate non-port"
+    },
+    "skeleton": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "slider": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "sonner": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "spinner": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "stepper": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "switch": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "tab-bar": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "table": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "table-of-contents": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "tabs": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "tag": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "textarea": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "timeline": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "toggle": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "toggle-group": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "tooltip": {
+      "status": "stable",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "tour": {
+      "status": "beta",
+      "platforms": [
+        "React"
+      ],
+      "platformNote": "standing non-port — targeting an arbitrary already-rendered element needs a CSS-selector-equivalent live-tree query, which no native platform has"
+    },
+    "tree-view": {
+      "status": "beta",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    },
+    "virtual-list": {
+      "status": "beta",
+      "platforms": [
+        "React",
+        "SwiftUI",
+        "Compose",
+        "Flutter"
+      ]
+    }
+  }
+}

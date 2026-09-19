@@ -4,8 +4,9 @@
  * The data lives in `platform-parity.json` at the repo root (not here) so
  * it's importable from plain Node scripts too (`scripts/gen-registry.mjs`,
  * which embeds it into the CLI registry) without a Next.js dependency —
- * this file is a typed wrapper over it for the web app. Edit
- * `platform-parity.json`, not this file, to change the data itself.
+ * this file is a typed wrapper over it for the web app. The data is
+ * generated from `components.manifest.json` — edit that and run
+ * `pnpm gen:manifest`, never this file or `platform-parity.json`.
  */
 import parityData from "../../../../platform-parity.json";
 

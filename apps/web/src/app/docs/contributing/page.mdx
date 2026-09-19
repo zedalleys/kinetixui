@@ -53,19 +53,23 @@ documented**, not silently skipped — e.g. `KinetixSheet` is bottom-only,
 
 ## Component status
 
-Every component is `stable` by default. A component ships `beta` for the
-release cycle it lands in — still required to be on all four platforms
-(or a documented non-port) and CI-verified like everything else; `beta`
-here means "new," not "incomplete." It drops back to `stable` once it's
-shipped a full cycle with no reported issues. `deprecated` is reserved for
-a component being phased out; nothing has been deprecated yet.
+Every component has an explicit lifecycle status — nothing is `stable` by
+omission. A component ships `beta` for the release cycle it lands in — still
+required to be on all four platforms (or a documented non-port) and
+CI-verified like everything else; `beta` here means "new," not "incomplete."
+It moves to `stable` once it's shipped a full cycle with no reported issues.
+`deprecated` is reserved for a component being phased out; nothing has been
+deprecated yet.
 
-The status list lives in one place, `apps/web/src/lib/component-status.ts`
-(absent slug ⇒ `stable`, same "exceptions only" convention as `PRIMITIVE`
-and platform-parity's `EXCEPTIONS`) and drives both the `/components`
-gallery badges/filter and the `<ComponentMeta>` spec strip on each doc
-page. When you cut a release, move the previous cycle's `beta` entries out
-of the map (falling through to `stable`) before adding the new one's.
+Status and platform coverage live in one place, `components.manifest.json` at
+the repo root. `pnpm gen:manifest` derives `component-status.json` and
+`platform-parity.json` from it (the web app, the CLI registry and `kinetixui
+parity` read those), and `pnpm check:manifest` in CI fails if a component is
+missing, a status is invalid, a platform gap has no `platformNote`, or the
+generated files are stale. The data drives the `/components` gallery
+badges/filter and the `<ComponentMeta>` spec strip on each doc page. When you
+cut a release, flip the previous cycle's `beta` entries to `stable` before
+adding the new one's.
 
 ## Workflow for a new component
 
@@ -79,6 +83,8 @@ of the map (falling through to `stable`) before adding the new one's.
 2. **React** — build it in `packages/ui/src/components/<name>.tsx`, add a
    Storybook story and a demo. `pnpm build:registry` picks it up for the
    CLI automatically.
+   Add the component to `components.manifest.json` (status `beta`, its
+   `platforms`) and run `pnpm gen:manifest` — CI fails without it.
 3. **Jetpack Compose** — `packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/<Name>.kt`.
    Vendored tokens: `pnpm build:tokens && pnpm vendor:compose`.
 4. **SwiftUI** — `packages/ui-swiftui/Sources/KinetixUI/<Name>.swift`.

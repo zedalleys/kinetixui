@@ -7,8 +7,8 @@ export type ComponentStatus = "stable" | "beta" | "deprecated";
  * repo root (not here) so it's importable from plain Node scripts too
  * (`scripts/gen-registry-index.mjs`, which embeds it into the CLI registry)
  * without a Next.js dependency — this file is a typed wrapper over it for
- * the web app. Edit `component-status.json`, not this file, to change the
- * data itself. `pnpm check:status` guarantees every component has an entry.
+ * the web app. The data is generated from `components.manifest.json` — edit that and
+ * run `pnpm gen:manifest`, never this file or `component-status.json`. `pnpm check:manifest` guarantees every component has an entry.
  */
 const ALL = statusData.status as Record<string, ComponentStatus>;
 
