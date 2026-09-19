@@ -24,5 +24,23 @@
       "pill"
     ]
   },
+  "components": [
+    {
+      "name": "Input",
+      "props": [
+        {
+          "name": "state",
+          "type": "\"Default\" | \"Focus\" | \"Disabled\" | \"Error\" | null",
+          "required": false
+        },
+        {
+          "name": "corners",
+          "type": "\"default\" | \"sharp\" | \"pill\" | \"rounded\" | null",
+          "required": false,
+          "description": "corner style — matches the design source's Corners property"
+        }
+      ]
+    }
+  ],
   "source": "packages/ui/src/components/input.tsx"
 }

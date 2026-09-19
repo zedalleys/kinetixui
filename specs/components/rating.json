@@ -17,5 +17,42 @@
       "lg"
     ]
   },
+  "components": [
+    {
+      "name": "Rating",
+      "props": [
+        {
+          "name": "value",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "defaultValue",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "readOnly",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "onChange",
+          "type": "((value: number) => void)",
+          "required": false
+        },
+        {
+          "name": "size",
+          "type": "\"sm\" | \"md\" | \"lg\" | null",
+          "required": false
+        }
+      ]
+    }
+  ],
   "source": "packages/ui/src/components/rating.tsx"
 }

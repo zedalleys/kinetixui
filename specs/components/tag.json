@@ -19,5 +19,29 @@
       "outline"
     ]
   },
+  "components": [
+    {
+      "name": "Tag",
+      "props": [
+        {
+          "name": "onRemove",
+          "type": "(() => void)",
+          "required": false,
+          "description": "show a dismiss button; called when it's clicked"
+        },
+        {
+          "name": "asChild",
+          "type": "boolean",
+          "required": false,
+          "description": "render as the single child element (Radix Slot) instead of <span> — e.g. `<Tag asChild><a href=\"/filter\">Active</a></Tag>` for a linked tag. Combined with `onRemove`, the remove button nests inside t…"
+        },
+        {
+          "name": "variant",
+          "type": "\"default\" | \"destructive\" | \"warning\" | \"secondary\" | \"outline\" | null",
+          "required": false
+        }
+      ]
+    }
+  ],
   "source": "packages/ui/src/components/tag.tsx"
 }

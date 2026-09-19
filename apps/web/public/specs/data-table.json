@@ -1,0 +1,42 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "data-table",
+  "title": "Data Table",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "DataTable",
+      "props": [
+        {
+          "name": "columns",
+          "type": "ColumnDef<{ rowSortingFeature: TableFeature; rowPaginationFeature: TableFeature; sortedRowModel: (table: Table<any, any>) => () => RowModel…",
+          "required": true
+        },
+        {
+          "name": "data",
+          "type": "TData[]",
+          "required": true
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "pageSize",
+          "type": "number",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/data-table.tsx"
+}

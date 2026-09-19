@@ -21,5 +21,22 @@
       "lg"
     ]
   },
+  "components": [
+    {
+      "name": "Toggle",
+      "props": [
+        {
+          "name": "variant",
+          "type": "\"default\" | \"outline\" | null",
+          "required": false
+        },
+        {
+          "name": "size",
+          "type": "\"default\" | \"sm\" | \"lg\" | null",
+          "required": false
+        }
+      ]
+    }
+  ],
   "source": "packages/ui/src/components/toggle.tsx"
 }

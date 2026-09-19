@@ -1,0 +1,41 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "resizable",
+  "title": "Resizable",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "ResizablePanelGroup",
+      "props": [
+        {
+          "name": "direction",
+          "type": "\"horizontal\" | \"vertical\"",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "ResizablePanel",
+      "props": []
+    },
+    {
+      "name": "ResizableHandle",
+      "props": [
+        {
+          "name": "withHandle",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/resizable.tsx"
+}

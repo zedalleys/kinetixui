@@ -1,0 +1,49 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "select",
+  "title": "Select",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Select",
+      "props": []
+    },
+    {
+      "name": "SelectGroup",
+      "props": []
+    },
+    {
+      "name": "SelectValue",
+      "props": []
+    },
+    {
+      "name": "SelectTrigger",
+      "props": []
+    },
+    {
+      "name": "SelectContent",
+      "props": []
+    },
+    {
+      "name": "SelectLabel",
+      "props": []
+    },
+    {
+      "name": "SelectItem",
+      "props": []
+    },
+    {
+      "name": "SelectSeparator",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/select.tsx"
+}

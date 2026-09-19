@@ -1,0 +1,57 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "drawer",
+  "title": "Drawer",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Drawer",
+      "props": []
+    },
+    {
+      "name": "DrawerPortal",
+      "props": []
+    },
+    {
+      "name": "DrawerOverlay",
+      "props": []
+    },
+    {
+      "name": "DrawerTrigger",
+      "props": []
+    },
+    {
+      "name": "DrawerClose",
+      "props": []
+    },
+    {
+      "name": "DrawerContent",
+      "props": []
+    },
+    {
+      "name": "DrawerHeader",
+      "props": []
+    },
+    {
+      "name": "DrawerFooter",
+      "props": []
+    },
+    {
+      "name": "DrawerTitle",
+      "props": []
+    },
+    {
+      "name": "DrawerDescription",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/drawer.tsx"
+}

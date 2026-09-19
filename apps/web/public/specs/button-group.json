@@ -1,0 +1,41 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "button-group",
+  "title": "Button Group",
+  "status": "stable",
+  "since": "0.9.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "ButtonGroup",
+      "props": [
+        {
+          "name": "orientation",
+          "type": "\"horizontal\" | \"vertical\"",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "ButtonGroupSeparator",
+      "props": [
+        {
+          "name": "orientation",
+          "type": "\"horizontal\" | \"vertical\"",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "ButtonGroupText",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/button-group.tsx"
+}

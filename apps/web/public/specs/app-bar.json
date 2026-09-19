@@ -1,0 +1,50 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "app-bar",
+  "title": "App Bar",
+  "status": "stable",
+  "since": "0.6.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "AppBar",
+      "props": []
+    },
+    {
+      "name": "AppBarBrand",
+      "props": []
+    },
+    {
+      "name": "AppBarNav",
+      "props": []
+    },
+    {
+      "name": "AppBarLink",
+      "props": [
+        {
+          "name": "active",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks the current destination — sets `aria-current=\"page\"` and the active style."
+        },
+        {
+          "name": "asChild",
+          "type": "boolean",
+          "required": false,
+          "description": "Render as the child element (e.g. a framework `<Link>`), forwarding props."
+        }
+      ]
+    },
+    {
+      "name": "AppBarActions",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/app-bar.tsx"
+}

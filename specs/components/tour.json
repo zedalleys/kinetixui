@@ -1,0 +1,64 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "tour",
+  "title": "Tour",
+  "status": "beta",
+  "since": "0.12.0",
+  "platforms": [
+    "React"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Tour",
+      "props": [
+        {
+          "name": "steps",
+          "type": "TourStep[]",
+          "required": true
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "stepIndex",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "onStepIndexChange",
+          "type": "(index: number) => void",
+          "required": true
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean) => void",
+          "required": true
+        },
+        {
+          "name": "nextLabel",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "backLabel",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "skipLabel",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "doneLabel",
+          "type": "React.ReactNode",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/tour.tsx"
+}

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "tree-view",
+  "title": "Tree View",
+  "status": "beta",
+  "since": "0.12.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "TreeView",
+      "props": [
+        {
+          "name": "checkable",
+          "type": "boolean",
+          "required": false,
+          "description": "show a checkbox on every item"
+        },
+        {
+          "name": "expanded",
+          "type": "string[]",
+          "required": false
+        },
+        {
+          "name": "defaultExpanded",
+          "type": "string[]",
+          "required": false
+        },
+        {
+          "name": "onExpandedChange",
+          "type": "((expanded: string[]) => void)",
+          "required": false
+        },
+        {
+          "name": "selected",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "onSelectedChange",
+          "type": "((value: string) => void)",
+          "required": false
+        },
+        {
+          "name": "checkedValues",
+          "type": "string[]",
+          "required": false
+        },
+        {
+          "name": "defaultCheckedValues",
+          "type": "string[]",
+          "required": false
+        },
+        {
+          "name": "onCheckedChange",
+          "type": "((checkedValues: string[]) => void)",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "TreeItem",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": true
+        },
+        {
+          "name": "icon",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/tree-view.tsx"
+}

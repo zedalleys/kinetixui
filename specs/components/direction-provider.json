@@ -1,0 +1,32 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "direction-provider",
+  "title": "Direction Provider",
+  "status": "stable",
+  "since": "0.13.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "KinetixDirectionProvider",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "dir",
+          "type": "\"ltr\" | \"rtl\"",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/direction-provider.tsx"
+}

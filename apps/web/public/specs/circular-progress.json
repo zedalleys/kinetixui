@@ -1,0 +1,49 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "circular-progress",
+  "title": "Circular Progress",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "CircularProgress",
+      "props": [
+        {
+          "name": "value",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "size",
+          "type": "number",
+          "required": false,
+          "description": "diameter in px"
+        },
+        {
+          "name": "strokeWidth",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "showValue",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "override the visible label (defaults to `${value}%`)"
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/circular-progress.tsx"
+}

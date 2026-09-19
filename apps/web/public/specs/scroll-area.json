@@ -1,0 +1,25 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "scroll-area",
+  "title": "Scroll Area",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "ScrollArea",
+      "props": []
+    },
+    {
+      "name": "ScrollBar",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/scroll-area.tsx"
+}

@@ -1,15 +1,17 @@
 export const metadata = {
   title: "Component specs",
-  description: "A generated, platform-independent contract manifest per component — variant axes and their option names, extracted from the real source.",
+  description: "A generated, platform-independent contract per component — variant axes, exported parts and the props each declares, extracted from the real source.",
 };
 
 # Component specs
 
-A component spec is a small, platform-independent contract: the variant
-axes a component exposes and each axis's option names — `variant`:
-`Primary`/`Secondary`/`Outline`/…, `size`: `sm`/`md`/`lg`/…, and so on. Not
-the Tailwind classes those options resolve to (that's implementation), just
-the shape of the API surface every platform port is expected to match.
+A component spec is a small, platform-independent contract for one component:
+its **variant axes** and each axis's option names (`variant`:
+`Primary`/`Secondary`/`Outline`/…, `size`: `sm`/`md`/`lg`/…), and its
+**parts** — the component and every sub-component it exports — with the props
+each one declares itself. Not the Tailwind classes an option resolves to
+(that's implementation), just the shape of the API surface every platform
+port is expected to match.
 
 ```json
 {
@@ -25,6 +27,20 @@ the shape of the API surface every platform port is expected to match.
     "state": ["Default", "Hover", "Focus", "Active", "Disabled"],
     "corners": ["sharp", "default", "pill"]
   },
+  "components": [
+    {
+      "name": "Button",
+      "props": [
+        {
+          "name": "asChild",
+          "type": "boolean",
+          "required": false,
+          "description": "render as the single child element (Radix Slot) instead of <button>"
+        },
+        { "name": "variant", "type": "\"Primary\" | \"Secondary\" | … | null", "required": false }
+      ]
+    }
+  ],
   "source": "packages/ui/src/components/button.tsx"
 }
 ```
@@ -36,38 +52,41 @@ tagged release that contained the component.
 
 ## Generated, not hand-written
 
-Specs are extracted from each component's own `cva()` (`class-variance-authority`)
-definition by `scripts/gen-component-specs.mjs`, run as part of `pnpm build:registry`,
-the same way the token CSS and the registry JSON are generated rather than
-maintained by hand — a hand-written manifest drifts from the real component
-within a few PRs. CI's "generated files in sync" gate covers `specs/components/**`
-too, so a component's variant matrix can't change without the spec changing
-with it in the same commit.
+`scripts/gen-component-specs.mjs`, run as part of `pnpm build:registry`, builds
+every spec from the source itself, the same way the token CSS and the registry
+JSON are generated rather than maintained by hand — a hand-written manifest
+drifts from the real component within a few PRs:
+
+- **`variants`** come from the component's own `cva()`
+  (`class-variance-authority`) definition. Components without one get `{}`.
+- **`components`** come from the TypeScript compiler: every exported PascalCase
+  callable, with the props its type declares. Props inherited from the HTML
+  element or Radix primitive it wraps are left out, so a part with an empty
+  `props` list simply accepts that element's own props (`CardHeader` is a `div`).
+  `required` and the JSDoc `description` are carried over.
+
+CI's "generated files in sync" gate covers `specs/components/**` too, so a
+component's API can't change without its spec changing in the same commit.
 
 ## Coverage
 
-Only components with a real `cva()` variant matrix get a spec — composite
-or structural components (`Card`, `Dialog`, `List`, …) don't have one in
-this sense, and aren't covered yet. Today that's these components:
+Every registry component has a spec. `avatar-group` (shipped inside `avatar`) and
+`combobox` (a documented composition of `Popover` and `Command`) have no file of
+their own; `index.json` lists them under `companions`, and its `coverage`
+(`{ covered, total }`) counts registry components only.
 
-`alert` · `badge` · `banner` · `button` · `empty` · `fab` · `field` ·
-`inform` · `input` · `input-group` · `native-select` · `rating` · `sheet` ·
-`sidebar` · `spinner` · `tag` · `textarea` · `toggle`
-
-Broader coverage (props/slots for non-`cva` components) is a documented
-follow-up, not attempted yet. The gap is machine-readable: `index.json` carries
-`coverage` (`{ covered, total }`) and an `uncovered` list of every component
-without a spec, so the number can't quietly drift.
+What a spec does **not** capture yet: inherited element props, event and slot
+semantics, keyboard behaviour, and per-platform API differences. Those are
+follow-ups the manifest is the natural home for.
 
 ## Where it's served, and who reads it
 
 Every generated file is served statically at `kinetixui.com/specs/<name>.json`
-(a sibling of the [registry](/docs/cli), `kinetixui.com/r/<name>.json`) plus
-a flat `kinetixui.com/specs/index.json` listing every covered component and
-every uncovered one.
-The [CLI](/docs/cli)'s `inspect` command reads it today — `kinetixui inspect button`
-prints the variant axes alongside the registry metadata it already showed.
-Nothing else consumes it yet; the doc that originally called for this
-(design-system contract manifests powering docs/Figma/codegen/testing/changelogs)
-treats it as a foundation other tooling builds on over time, not a
-one-shot deliverable.
+(a sibling of the [registry](/docs/cli), `kinetixui.com/r/<name>.json`) plus a
+flat `kinetixui.com/specs/index.json`. The [CLI](/docs/cli)'s `inspect` command
+reads it — `kinetixui inspect button` prints the first release and status, the
+variant axes, and each part with the props it declares (`?` marks optional)
+alongside the registry metadata it already showed. Nothing else consumes it yet;
+the doc that originally called for this (design-system contract manifests
+powering docs/Figma/codegen/testing/changelogs) treats it as a foundation other
+tooling builds on over time, not a one-shot deliverable.

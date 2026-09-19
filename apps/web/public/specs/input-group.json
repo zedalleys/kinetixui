@@ -16,5 +16,33 @@
       "end"
     ]
   },
+  "components": [
+    {
+      "name": "InputGroup",
+      "props": []
+    },
+    {
+      "name": "InputGroupInput",
+      "props": []
+    },
+    {
+      "name": "InputGroupAddon",
+      "props": [
+        {
+          "name": "align",
+          "type": "\"start\" | \"end\" | null",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "InputGroupText",
+      "props": []
+    },
+    {
+      "name": "InputGroupButton",
+      "props": []
+    }
+  ],
   "source": "packages/ui/src/components/input-group.tsx"
 }

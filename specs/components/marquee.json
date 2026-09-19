@@ -1,0 +1,33 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "marquee",
+  "title": "Marquee",
+  "status": "stable",
+  "since": "0.11.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Marquee",
+      "props": [
+        {
+          "name": "durationSeconds",
+          "type": "number",
+          "required": false,
+          "description": "seconds for one full loop"
+        },
+        {
+          "name": "pauseOnHover",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/marquee.tsx"
+}

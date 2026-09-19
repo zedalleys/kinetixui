@@ -1,0 +1,25 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "segmented-control",
+  "title": "Segmented Control",
+  "status": "stable",
+  "since": "0.10.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "SegmentedControl",
+      "props": []
+    },
+    {
+      "name": "SegmentedControlItem",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/segmented-control.tsx"
+}

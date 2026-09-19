@@ -1,0 +1,127 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "chart",
+  "title": "Chart",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "ChartContainer",
+      "props": [
+        {
+          "name": "label",
+          "type": "string",
+          "required": false,
+          "description": "Text alternative for the chart (WCAG 1.1.1). A chart conveys its data by colour + position, which a screen reader can't relay — pass a one-line summary of what it shows and the trend. Falls back to \"…"
+        },
+        {
+          "name": "state",
+          "type": "\"loading\" | \"error\" | \"empty\"",
+          "required": false,
+          "description": "Render a placeholder in place of the chart. `\"loading\"` shows a shimmer, `\"empty\"` / `\"error\"` show a message (override with `stateMessage`)."
+        },
+        {
+          "name": "config",
+          "type": "ChartConfig",
+          "required": true
+        },
+        {
+          "name": "stateMessage",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "srTable",
+          "type": "{ columns: React.ReactNode[]; rows: React.ReactNode[][]; }",
+          "required": false,
+          "description": "Visually-hidden `<table>` rendered after the chart so a screen reader can read the underlying numbers. Pair with a concise `label`."
+        }
+      ]
+    },
+    {
+      "name": "ChartTooltip",
+      "props": []
+    },
+    {
+      "name": "ChartTooltipContent",
+      "props": [
+        {
+          "name": "hideLabel",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "hideIndicator",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "indicator",
+          "type": "\"line\" | \"dot\" | \"dashed\"",
+          "required": false
+        },
+        {
+          "name": "nameKey",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "labelKey",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "ChartLegend",
+      "props": []
+    },
+    {
+      "name": "ChartLegendContent",
+      "props": [
+        {
+          "name": "hideIcon",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "payload",
+          "type": "readonly RechartsPrimitive.LegendPayload[]",
+          "required": false
+        },
+        {
+          "name": "nameKey",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "verticalAlign",
+          "type": "VerticalAlignmentType",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "ChartStyle",
+      "props": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "config",
+          "type": "ChartConfig",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/chart.tsx"
+}

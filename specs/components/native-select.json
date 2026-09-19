@@ -21,5 +21,30 @@
       "pill"
     ]
   },
+  "components": [
+    {
+      "name": "NativeSelect",
+      "props": [
+        {
+          "name": "state",
+          "type": "\"Default\" | \"Focus\" | \"Disabled\" | \"Error\" | null",
+          "required": false
+        },
+        {
+          "name": "corners",
+          "type": "\"default\" | \"sharp\" | \"pill\" | \"rounded\" | null",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "NativeSelectOption",
+      "props": []
+    },
+    {
+      "name": "NativeSelectOptGroup",
+      "props": []
+    }
+  ],
   "source": "packages/ui/src/components/native-select.tsx"
 }

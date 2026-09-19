@@ -22,5 +22,27 @@
       "onColor"
     ]
   },
+  "components": [
+    {
+      "name": "Spinner",
+      "props": [
+        {
+          "name": "label",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "variant",
+          "type": "\"default\" | \"muted\" | \"onColor\" | null",
+          "required": false
+        },
+        {
+          "name": "size",
+          "type": "\"sm\" | \"md\" | \"lg\" | null",
+          "required": false
+        }
+      ]
+    }
+  ],
   "source": "packages/ui/src/components/spinner.tsx"
 }

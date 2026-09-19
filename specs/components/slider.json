@@ -1,0 +1,21 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "slider",
+  "title": "Slider",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Slider",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/slider.tsx"
+}

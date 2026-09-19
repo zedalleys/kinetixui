@@ -1,0 +1,38 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "json-viewer",
+  "title": "Json Viewer",
+  "status": "beta",
+  "since": "0.12.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "JsonViewer",
+      "props": [
+        {
+          "name": "data",
+          "type": "unknown",
+          "required": true
+        },
+        {
+          "name": "expandDepth",
+          "type": "number",
+          "required": false,
+          "description": "tree depth (root = 0) to auto-expand; deeper nodes start collapsed. Default 1."
+        },
+        {
+          "name": "hideCopy",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/json-viewer.tsx"
+}

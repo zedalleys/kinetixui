@@ -1,0 +1,55 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "virtual-list",
+  "title": "Virtual List",
+  "status": "beta",
+  "since": "0.12.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "VirtualList",
+      "props": [
+        {
+          "name": "items",
+          "type": "T[]",
+          "required": true
+        },
+        {
+          "name": "itemHeight",
+          "type": "number",
+          "required": true,
+          "description": "row height in px — every row is this tall"
+        },
+        {
+          "name": "height",
+          "type": "string | number",
+          "required": true,
+          "description": "viewport height — a number (px) or any CSS height value"
+        },
+        {
+          "name": "renderItem",
+          "type": "(item: T, index: number) => React.ReactNode",
+          "required": true
+        },
+        {
+          "name": "overscan",
+          "type": "number",
+          "required": false,
+          "description": "extra rows rendered above/below the viewport, to reduce blank flashes on fast scroll"
+        },
+        {
+          "name": "getItemKey",
+          "type": "((item: T, index: number) => React.Key)",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/virtual-list.tsx"
+}

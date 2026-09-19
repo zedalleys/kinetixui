@@ -1,0 +1,88 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "modal",
+  "title": "Modal",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Modal",
+      "props": [
+        {
+          "name": "type",
+          "type": "ModalType",
+          "required": false
+        },
+        {
+          "name": "title",
+          "type": "React.ReactNode",
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "actionLabel",
+          "type": "string",
+          "required": false,
+          "description": "overrides the type's default action label"
+        },
+        {
+          "name": "cancelLabel",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "onAction",
+          "type": "(() => void)",
+          "required": false
+        },
+        {
+          "name": "onCancel",
+          "type": "(() => void)",
+          "required": false
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "onOpenChange",
+          "type": "((open: boolean) => void)",
+          "required": false
+        },
+        {
+          "name": "trigger",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/modal.tsx"
+}

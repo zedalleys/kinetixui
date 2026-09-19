@@ -1,0 +1,49 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "table",
+  "title": "Table",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Table",
+      "props": []
+    },
+    {
+      "name": "TableHeader",
+      "props": []
+    },
+    {
+      "name": "TableBody",
+      "props": []
+    },
+    {
+      "name": "TableFooter",
+      "props": []
+    },
+    {
+      "name": "TableHead",
+      "props": []
+    },
+    {
+      "name": "TableRow",
+      "props": []
+    },
+    {
+      "name": "TableCell",
+      "props": []
+    },
+    {
+      "name": "TableCaption",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/table.tsx"
+}

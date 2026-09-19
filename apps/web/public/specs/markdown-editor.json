@@ -1,0 +1,42 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "markdown-editor",
+  "title": "Markdown Editor",
+  "status": "beta",
+  "since": "0.12.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "MarkdownEditor",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "onChange",
+          "type": "(value: string) => void",
+          "required": true
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "rows",
+          "type": "number",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/markdown-editor.tsx"
+}

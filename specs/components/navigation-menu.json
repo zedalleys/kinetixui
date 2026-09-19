@@ -1,0 +1,46 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "navigation-menu",
+  "title": "Navigation Menu",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "NavigationMenu",
+      "props": []
+    },
+    {
+      "name": "NavigationMenuList",
+      "props": []
+    },
+    {
+      "name": "NavigationMenuItem",
+      "props": []
+    },
+    {
+      "name": "NavigationMenuContent",
+      "props": []
+    },
+    {
+      "name": "NavigationMenuTrigger",
+      "props": []
+    },
+    {
+      "name": "NavigationMenuLink",
+      "props": []
+    },
+    {
+      "name": "NavigationMenuIndicator",
+      "props": []
+    },
+    {
+      "name": "NavigationMenuViewport",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/navigation-menu.tsx"
+}

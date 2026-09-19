@@ -1,0 +1,21 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "separator",
+  "title": "Separator",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "Separator",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/separator.tsx"
+}

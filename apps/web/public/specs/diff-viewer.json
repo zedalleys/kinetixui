@@ -1,0 +1,49 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "diff-viewer",
+  "title": "Diff Viewer",
+  "status": "beta",
+  "since": "0.12.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "DiffViewer",
+      "props": [
+        {
+          "name": "oldText",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "newText",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "mode",
+          "type": "\"split\" | \"unified\"",
+          "required": false,
+          "description": "\"unified\" (one interleaved column, like `git diff`) or \"split\" (two columns, side by side). Default \"unified\"."
+        },
+        {
+          "name": "oldLabel",
+          "type": "string",
+          "required": false,
+          "description": "column headers, `mode=\"split\"` only"
+        },
+        {
+          "name": "newLabel",
+          "type": "string",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/diff-viewer.tsx"
+}

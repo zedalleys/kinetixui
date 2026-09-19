@@ -31,8 +31,13 @@ export interface RegistryIndexItem {
 export interface ComponentSpec {
   name: string;
   title: string;
-  /** variant axis name -> its option names (e.g. `variant: ["Primary", ...]`) */
+  /** lifecycle status and first release, from components.manifest.json */
+  status?: string;
+  since?: string;
+  /** variant axis name -> its option names (e.g. `variant: ["Primary", ...]`); empty for components with no cva matrix */
   variants: Record<string, string[]>;
+  /** every exported part (the component and its sub-components) with the props it declares itself */
+  components?: { name: string; props: { name: string; type: string; required: boolean; description?: string }[] }[];
   source: string;
 }
 

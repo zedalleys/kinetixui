@@ -19,5 +19,25 @@
       "info"
     ]
   },
+  "components": [
+    {
+      "name": "Alert",
+      "props": [
+        {
+          "name": "variant",
+          "type": "\"default\" | \"destructive\" | \"success\" | \"warning\" | \"info\" | null",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "AlertTitle",
+      "props": []
+    },
+    {
+      "name": "AlertDescription",
+      "props": []
+    }
+  ],
   "source": "packages/ui/src/components/alert.tsx"
 }

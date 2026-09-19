@@ -1,0 +1,99 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "notification-center",
+  "title": "Notification Center",
+  "status": "beta",
+  "since": "0.12.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "NotificationCenter",
+      "props": []
+    },
+    {
+      "name": "NotificationCenterTrigger",
+      "props": [
+        {
+          "name": "unreadCount",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "asChild",
+          "type": "boolean",
+          "required": false,
+          "description": "render as the single child element (Radix Slot) instead of <button>"
+        },
+        {
+          "name": "variant",
+          "type": "\"Primary\" | \"Secondary\" | \"Outline\" | \"Destructive\" | \"Ghost\" | \"Link\" | null",
+          "required": false
+        },
+        {
+          "name": "size",
+          "type": "\"sm\" | \"md\" | \"lg\" | \"icon\" | null",
+          "required": false
+        },
+        {
+          "name": "state",
+          "type": "\"Default\" | \"Hover\" | \"Focus\" | \"Active\" | \"Disabled\" | null",
+          "required": false,
+          "description": "force a static visual state — leave undefined for real interaction"
+        },
+        {
+          "name": "corners",
+          "type": "\"default\" | \"sharp\" | \"pill\" | null",
+          "required": false,
+          "description": "corner style — matches the design source's Corners property"
+        }
+      ]
+    },
+    {
+      "name": "NotificationCenterContent",
+      "props": [
+        {
+          "name": "onMarkAllRead",
+          "type": "(() => void)",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "NotificationItem",
+      "props": [
+        {
+          "name": "title",
+          "type": "React.ReactNode",
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "time",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "unread",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "onSelect",
+          "type": "(() => void)",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/notification-center.tsx"
+}

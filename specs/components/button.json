@@ -38,5 +38,40 @@
       "pill"
     ]
   },
+  "components": [
+    {
+      "name": "Button",
+      "props": [
+        {
+          "name": "asChild",
+          "type": "boolean",
+          "required": false,
+          "description": "render as the single child element (Radix Slot) instead of <button>"
+        },
+        {
+          "name": "variant",
+          "type": "\"Primary\" | \"Secondary\" | \"Outline\" | \"Destructive\" | \"Ghost\" | \"Link\" | null",
+          "required": false
+        },
+        {
+          "name": "size",
+          "type": "\"sm\" | \"md\" | \"lg\" | \"icon\" | null",
+          "required": false
+        },
+        {
+          "name": "state",
+          "type": "\"Default\" | \"Hover\" | \"Focus\" | \"Active\" | \"Disabled\" | null",
+          "required": false,
+          "description": "force a static visual state — leave undefined for real interaction"
+        },
+        {
+          "name": "corners",
+          "type": "\"default\" | \"sharp\" | \"pill\" | null",
+          "required": false,
+          "description": "corner style — matches the design source's Corners property"
+        }
+      ]
+    }
+  ],
   "source": "packages/ui/src/components/button.tsx"
 }

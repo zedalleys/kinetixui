@@ -1,0 +1,95 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "context-menu",
+  "title": "Context Menu",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "ContextMenu",
+      "props": []
+    },
+    {
+      "name": "ContextMenuTrigger",
+      "props": []
+    },
+    {
+      "name": "ContextMenuContent",
+      "props": []
+    },
+    {
+      "name": "ContextMenuItem",
+      "props": [
+        {
+          "name": "inset",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "ContextMenuCheckboxItem",
+      "props": []
+    },
+    {
+      "name": "ContextMenuRadioItem",
+      "props": []
+    },
+    {
+      "name": "ContextMenuLabel",
+      "props": [
+        {
+          "name": "inset",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "ContextMenuSeparator",
+      "props": []
+    },
+    {
+      "name": "ContextMenuShortcut",
+      "props": []
+    },
+    {
+      "name": "ContextMenuGroup",
+      "props": []
+    },
+    {
+      "name": "ContextMenuPortal",
+      "props": []
+    },
+    {
+      "name": "ContextMenuSub",
+      "props": []
+    },
+    {
+      "name": "ContextMenuSubContent",
+      "props": []
+    },
+    {
+      "name": "ContextMenuSubTrigger",
+      "props": [
+        {
+          "name": "inset",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "ContextMenuRadioGroup",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/context-menu.tsx"
+}
