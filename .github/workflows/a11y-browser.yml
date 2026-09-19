@@ -1,0 +1,61 @@
+name: Accessibility (browser)
+
+# Real-browser axe pass over every Storybook story, light + dark. Complements the
+# jsdom axe test in `ci.yml` (which can't see layout, so it skips colour contrast).
+# Path-filtered so it only runs when something that can change rendering does.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/ui/**"
+      - "packages/tokens/**"
+      - "tokens/**"
+      - "apps/docs/**"
+      - "scripts/a11y-browser.mjs"
+      - "a11y-baseline.json"
+      - ".github/workflows/a11y-browser.yml"
+  pull_request:
+    paths:
+      - "packages/ui/**"
+      - "packages/tokens/**"
+      - "tokens/**"
+      - "apps/docs/**"
+      - "scripts/a11y-browser.mjs"
+      - "a11y-baseline.json"
+      - ".github/workflows/a11y-browser.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: a11y-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  axe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build tokens and UI
+        run: pnpm build:tokens && pnpm build:ui
+
+      - name: Build Storybook
+        run: pnpm build-storybook
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Axe pass (every story, light + dark)
+        run: pnpm check:a11y-browser
