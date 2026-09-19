@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 const inputVariants = cva(
   [
     "flex w-full border border-input bg-background px-3 py-3",
-    "font-sans text-[14px] leading-5 tracking-[0.25px] text-foreground",
+    "font-sans text-body-md text-foreground",
     "placeholder:text-muted-foreground",
     "outline-none transition-colors",
     "focus-visible:border-primary focus-visible:shadow-focus",

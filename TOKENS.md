@@ -1,8 +1,20 @@
 # KinetixUI token engine — design source → code mapping
 
-Source of truth: the KinetixUI design file in Figma, node `3877-10388`
-(file `GQXTKKJAPbawd4wcuE77Pf`). Extracted via Figma MCP `get_variable_defs` +
-`get_design_context`. Compiled by Style Dictionary v4 (`style-dictionary/build.mjs`).
+**Authority.** Design source → canonical token contract → platform output.
+
+1. **Design source** — the KinetixUI design file in Figma, node `3877-10388`
+   (file `GQXTKKJAPbawd4wcuE77Pf`), extracted via Figma MCP `get_variable_defs` +
+   `get_design_context`. It is where the palette, spacing, radius and type scale
+   *originate*; it is **not** the sole authority.
+2. **Canonical token contract** — `tokens/**/*.json` in this repo. Once a value
+   is approved into these files it is authoritative, even where it departs from
+   Figma: the entire dark theme, the `azure` action ramp, neutral interpolation,
+   success colours, motion, opacity, z-index and several WCAG-driven overrides
+   are repo-owned (see the Origin / notes columns below). Change the contract
+   here, not by re-syncing Figma.
+3. **Platform output** — compiled by Style Dictionary v4
+   (`style-dictionary/build.mjs`) to CSS, TypeScript, SwiftUI, Compose and Flutter.
+   Never hand-edit.
 
 ## Layers
 

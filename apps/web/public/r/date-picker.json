@@ -22,7 +22,7 @@
     },
     {
       "path": "registry/kinetixui/lib/utils.ts",
-      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { extendTailwindMerge } from \"tailwind-merge\";\n\n// The Material type-scale utilities (`text-label-md`, `text-body-sm`, …) come\n// from `fontSize` in tailwind.config.ts. Without this, tailwind-merge reads them\n// as text *colours* and drops a real colour class (`text-primary-foreground`).\nconst twMerge = extendTailwindMerge({\n  extend: {\n    classGroups: {\n      \"font-size\": [\n        {\n          text: [\n            \"display-lg\", \"display-md\", \"display-sm\",\n            \"headline-lg\", \"headline-md\", \"headline-sm\",\n            \"title-lg\", \"title-md\", \"title-sm\", \"title-dialog\",\n            \"label-lg\", \"label-md\", \"label-sm\",\n            \"body-lg\", \"body-md\", \"body-sm\",\n          ],\n        },\n      ],\n    },\n  },\n});\n\n/** Merges Tailwind class names, resolving conflicts (clsx + tailwind-merge). */\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
       "type": "registry:lib",
       "target": "lib/utils.ts"
     }

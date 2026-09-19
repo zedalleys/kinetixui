@@ -13,7 +13,7 @@ import { cn } from "../lib/utils";
  * optional close button. Variants: default | secondary | destructive | warning | outline.
  */
 const tagVariants = cva(
-  "inline-flex items-center gap-1 rounded-sm px-2 py-1 text-xs font-medium font-sans tracking-[0.5px]",
+  "inline-flex items-center gap-1 rounded-sm px-2 py-1 text-label-md font-sans",
   {
     variants: {
       variant: {
