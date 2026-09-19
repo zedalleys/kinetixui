@@ -19,6 +19,7 @@
     "gen:stories": "node scripts/gen-stories.mjs",
     "gen:specs": "node scripts/gen-component-specs.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
+    "check:token-contract": "node scripts/check-token-contract.mjs",
     "check:rtl": "node scripts/check-rtl.mjs",
     "check:icons": "node scripts/check-icon-mapping.mjs",
     "gen:manifest": "node scripts/gen-manifest.mjs",
