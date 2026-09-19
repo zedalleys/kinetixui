@@ -2,6 +2,14 @@
   "$schema": "https://kinetixui.com/schema/component-spec.json",
   "name": "badge",
   "title": "Badge",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
   "variants": {
     "variant": [
       "default",

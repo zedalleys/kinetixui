@@ -2,6 +2,11 @@
   "$schema": "https://kinetixui.com/schema/component-spec.json",
   "name": "native-select",
   "title": "Native Select",
+  "status": "stable",
+  "since": "0.9.0",
+  "platforms": [
+    "React"
+  ],
   "variants": {
     "state": [
       "Default",
