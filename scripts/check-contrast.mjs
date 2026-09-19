@@ -72,6 +72,17 @@ const TEXT_PAIRS = [
   ["sidebar-accent-foreground", "sidebar-accent"],
   ["primary", "background"],
 ];
+// Text on a fill that is drawn at partial opacity (`bg-primary/85`, `bg-info/10`). The fill
+// is blended over `surface` first, so these catch what a solid-colour check can't — e.g. a
+// pressed state that dims the fill toward the page until its text drops below AA.
+//   [text, fill, fillAlpha, surface, where]
+const ALPHA_TEXT_PAIRS = [
+  ["primary-foreground", "primary", 0.9, "background", "Button Primary hover"],
+  ["primary-foreground", "primary", 0.85, "background", "Button Primary pressed"],
+  ["secondary", "secondary-foreground", 1, "background", "Button Secondary hover"],
+  ["secondary", "secondary-foreground", 1, "background", "Button Secondary pressed"],
+  ["on-info-container", "info", 0.1, "background", "Banner/Inform information"],
+];
 const NON_TEXT_PAIRS = [
   ["accent", "background"], // hover fill on transparent controls
   ["border", "background"],
@@ -146,6 +157,11 @@ for (const mode of ["light", "dark"]) {
     const hex = resolve(val(sem[k]));
     if (hex) S[k] = hex;
   }
+  // Roles that only exist in the nested `semantic` block (e.g. on-info-container).
+  for (const k of Object.keys(semLocal)) {
+    const hex = resolve(semLocal[k]);
+    if (hex && !S[k]) S[k] = hex;
+  }
 
   console.log(`\n=== ${mode.toUpperCase()} — text (AA = 4.5:1) ===`);
   for (const [fg, bg] of TEXT_PAIRS) {
@@ -163,6 +179,20 @@ for (const mode of ["light", "dark"]) {
       failures += 1;
     }
     console.log(`  ${`${fg} / ${bg}`.padEnd(44)} ${r.toFixed(2)}:1  ${tag}`);
+  }
+
+  console.log(`--- ${mode} — text on partially-transparent fills ---`);
+  for (const [fg, fill, alpha, surface, where] of ALPHA_TEXT_PAIRS) {
+    if (!S[fg] || !S[fill] || !S[surface]) {
+      console.log(`  ${`${fg} / ${fill}@${alpha}`.padEnd(44)} —      (token not defined in ${mode})`);
+      failures += 1;
+      continue;
+    }
+    const bl = (i) => Math.round(parseInt(S[fill].slice(1 + 2 * i, 3 + 2 * i), 16) * alpha + parseInt(S[surface].slice(1 + 2 * i, 3 + 2 * i), 16) * (1 - alpha));
+    const blended = `#${[0, 1, 2].map((i) => bl(i).toString(16).padStart(2, "0")).join("")}`;
+    const r = ratio(S[fg], blended);
+    if (r < 4.5) failures += 1;
+    console.log(`  ${`${fg} / ${fill}@${alpha}`.padEnd(44)} ${r.toFixed(2)}:1  ${r >= 4.5 ? "AA" : "** FAIL **"}  (${where})`);
   }
 
   console.log(`--- ${mode} — non-text cues (SC 1.4.11 = 3:1) ---`);
