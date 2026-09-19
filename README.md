@@ -61,7 +61,7 @@ contract import, dark mode — is in [Installation](https://kinetixui.com/docs/i
   same token contract, compiled in CI per platform. Documented exceptions (React‑only or partial) live
   in [`components.manifest.json`](components.manifest.json): `Form`, `NavigationMenu`,
   `Combobox`, `NativeSelect`, `AvatarGroup`, `Tour`, `KanbanBoard`, plus `Chart`
-  (no Compose) and `Sidebar` (no Flutter).
+  (no Compose).
 - **A portable registry.** Every component serialised to a shadcn‑compatible JSON
   descriptor, served static from `kinetixui.com/r/`.
 - **A first‑party CLI** (`@kinetixui/cli`) — `init` scaffolds `kinetixui.json` +

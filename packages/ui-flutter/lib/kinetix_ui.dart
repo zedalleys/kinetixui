@@ -81,6 +81,7 @@ export 'src/segmented_control.dart';
 export 'src/select.dart';
 export 'src/separator.dart';
 export 'src/sheet.dart';
+export 'src/sidebar.dart';
 export 'src/skeleton.dart';
 export 'src/slider.dart';
 export 'src/spinner.dart';

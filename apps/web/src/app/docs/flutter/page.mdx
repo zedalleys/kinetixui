@@ -1,16 +1,15 @@
 export const metadata = {
   title: "Flutter",
-  description: "The Flutter component library — a Dart port on the KinetixUI token contract, the full React surface (89 Kinetix* widgets).",
+  description: "The Flutter component library — a Dart port on the KinetixUI token contract, the full React surface (90 Kinetix* widgets).",
 };
 
 # Flutter
 
 `packages/ui-flutter` is the **Flutter** port of KinetixUI — the fourth
 platform alongside React (`@kinetixui/ui`),
-[Jetpack Compose](/docs/compose) and [SwiftUI](/docs/swiftui). **89
+[Jetpack Compose](/docs/compose) and [SwiftUI](/docs/swiftui). **90
 `Kinetix*` widgets — the full React component surface** bar seven
-deliberate non-ports (plus `Sidebar`, a Flutter-specific gap — see
-Known gaps below), built in batches on a CI `flutter analyze` path;
+deliberate non-ports, built in batches on a CI `flutter analyze` path;
 each mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with
 a doc comment stating anything not carried over.
 
@@ -91,7 +90,7 @@ pnpm build:tokens && pnpm vendor:flutter
 
 ## What's covered
 
-`KinetixTheme` plus 89 `Kinetix*` widgets:
+`KinetixTheme` plus 90 `Kinetix*` widgets:
 
 - **Controls** — `KinetixButton` (`buttonVariants` CVA 1:1),
   `KinetixCheckbox`, `KinetixSwitch`, `KinetixToggle` /
@@ -153,9 +152,11 @@ overlays and disclosures. Overlay widgets (`KinetixDialog`,
 
 ## Known gaps
 
-- **`KinetixSidebar` isn't ported** — a Flutter-specific gap (SwiftUI
-  and Compose both carry it). Reach for a `Drawer` / `NavigationRail`
-  directly.
+- **`KinetixSidebar` is a scoped port** — like SwiftUI and Compose it is the
+  slide-in nav drawer (scrim, `visible` / `onDismiss`, `KinetixSidebarGroup`,
+  `KinetixSidebarMenuItem`) and drops the desktop shell: rail / icon-collapse
+  mode, `SidebarInset`, the cookie and the keyboard shortcut. For a persistent
+  desktop rail, use `NavigationRail` directly.
 - **No remote publishing.** `flutter analyze` on `ubuntu-latest`
   (`subosito/flutter-action`) is the sole compiler feedback on every push
   that touches `packages/ui-flutter`, `tokens/`, or `style-dictionary/`.

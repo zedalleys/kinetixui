@@ -1347,22 +1347,27 @@ KinetixSidebar(
 ) {
   // main content
 }`,
-    dart: `// Flutter has no KinetixSidebar (desktop/web split-nav pattern).
-// Compose it from NavigationRail themed off the --sidebar-* tokens:
-Row(
-  children: [
-    NavigationRail(
-      backgroundColor: KinetixTheme.of(context).background,
-      selectedIndex: index,
-      onDestinationSelected: (i) => setState(() => index = i),
-      destinations: const [
-        NavigationRailDestination(icon: Icon(Icons.home_outlined), label: Text('Home')),
-        NavigationRailDestination(icon: Icon(Icons.folder_outlined), label: Text('Projects')),
-      ],
-    ),
-    const KinetixSeparator(axis: KinetixSeparatorAxis.vertical),
-    const Expanded(child: SizedBox()),
-  ],
+    dart: `KinetixSidebar(
+  visible: open,
+  onDismiss: () => setState(() => open = false),
+  header: const Text('Acme'),
+  child: KinetixSidebarGroup(
+    title: 'Platform',
+    children: [
+      KinetixSidebarMenuItem(
+        label: 'Home',
+        icon: const Icon(Icons.home_outlined),
+        selected: screen == Screen.home,
+        onTap: () => setState(() => screen = Screen.home),
+      ),
+      KinetixSidebarMenuItem(
+        label: 'Projects',
+        icon: const Icon(Icons.folder_outlined),
+        selected: screen == Screen.projects,
+        onTap: () => setState(() => screen = Screen.projects),
+      ),
+    ],
+  ),
 )`,
   },
 
