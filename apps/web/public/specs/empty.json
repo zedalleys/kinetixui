@@ -2,6 +2,14 @@
   "$schema": "https://kinetixui.com/schema/component-spec.json",
   "name": "empty",
   "title": "Empty",
+  "status": "stable",
+  "since": "0.8.0",
+  "platforms": [
+    "React",
+    "SwiftUI",
+    "Compose",
+    "Flutter"
+  ],
   "variants": {
     "variant": [
       "default",

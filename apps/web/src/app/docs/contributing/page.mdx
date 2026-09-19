@@ -83,8 +83,8 @@ adding the new one's.
 2. **React** — build it in `packages/ui/src/components/<name>.tsx`, add a
    Storybook story and a demo. `pnpm build:registry` picks it up for the
    CLI automatically.
-   Add the component to `components.manifest.json` (status `beta`, its
-   `platforms`) and run `pnpm gen:manifest` — CI fails without it.
+   Add the component to `components.manifest.json` (status `beta`, `since` = the
+   version it will ship in, its `platforms`) and run `pnpm gen:manifest` — CI fails without it.
 3. **Jetpack Compose** — `packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/<Name>.kt`.
    Vendored tokens: `pnpm build:tokens && pnpm vendor:compose`.
 4. **SwiftUI** — `packages/ui-swiftui/Sources/KinetixUI/<Name>.swift`.

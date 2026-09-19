@@ -16,6 +16,9 @@ the shape of the API surface every platform port is expected to match.
   "$schema": "https://kinetixui.com/schema/component-spec.json",
   "name": "button",
   "title": "Button",
+  "status": "stable",
+  "since": "0.4.1",
+  "platforms": ["React", "SwiftUI", "Compose", "Flutter"],
   "variants": {
     "variant": ["Primary", "Secondary", "Outline", "Destructive", "Ghost", "Link"],
     "size": ["sm", "md", "lg", "icon"],
@@ -25,6 +28,11 @@ the shape of the API surface every platform port is expected to match.
   "source": "packages/ui/src/components/button.tsx"
 }
 ```
+
+`status`, `since` and `platforms` are not extracted from source — they come from
+`components.manifest.json`, the single place per-component lifecycle and platform
+coverage are edited (see [Contributing](/docs/contributing)). `since` is the first
+tagged release that contained the component.
 
 ## Generated, not hand-written
 
@@ -47,13 +55,16 @@ this sense, and aren't covered yet. Today that's these components:
 `sidebar` · `spinner` · `tag` · `textarea` · `toggle`
 
 Broader coverage (props/slots for non-`cva` components) is a documented
-follow-up, not attempted yet.
+follow-up, not attempted yet. The gap is machine-readable: `index.json` carries
+`coverage` (`{ covered, total }`) and an `uncovered` list of every component
+without a spec, so the number can't quietly drift.
 
 ## Where it's served, and who reads it
 
 Every generated file is served statically at `kinetixui.com/specs/<name>.json`
 (a sibling of the [registry](/docs/cli), `kinetixui.com/r/<name>.json`) plus
-a flat `kinetixui.com/specs/index.json` listing every covered component.
+a flat `kinetixui.com/specs/index.json` listing every covered component and
+every uncovered one.
 The [CLI](/docs/cli)'s `inspect` command reads it today — `kinetixui inspect button`
 prints the variant axes alongside the registry metadata it already showed.
 Nothing else consumes it yet; the doc that originally called for this

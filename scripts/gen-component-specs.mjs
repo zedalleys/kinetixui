@@ -27,6 +27,7 @@ const PUBLIC_OUT = `${ROOT}/apps/web/public/specs`;
 mkdirSync(OUT, { recursive: true });
 mkdirSync(PUBLIC_OUT, { recursive: true });
 
+const manifest = JSON.parse(readFileSync(`${ROOT}/components.manifest.json`, "utf8")).components;
 const title = (name) => name.split("-").map((s) => s[0].toUpperCase() + s.slice(1)).join(" ");
 
 /** Replace string-literal and line-comment contents with filler so brace/
@@ -174,6 +175,10 @@ for (const file of files) {
     $schema: "https://kinetixui.com/schema/component-spec.json",
     name,
     title: title(name),
+    // lifecycle + coverage come from components.manifest.json, not the source
+    status: manifest[name]?.status,
+    since: manifest[name]?.since,
+    platforms: manifest[name]?.platforms,
     variants,
     source: `packages/ui/src/components/${file}`,
   };
@@ -189,6 +194,9 @@ const indexText =
       $schema: "https://kinetixui.com/schema/component-spec-index.json",
       generated: "scripts/gen-component-specs.mjs",
       components: covered,
+      // every manifest component with no spec yet (composite/structural, no cva variant matrix)
+      uncovered: Object.keys(manifest).filter((n) => !covered.includes(n)).sort(),
+      coverage: { covered: covered.length, total: Object.keys(manifest).length },
     },
     null,
     2,
@@ -196,4 +204,4 @@ const indexText =
 writeFileSync(`${OUT}/index.json`, indexText);
 writeFileSync(`${PUBLIC_OUT}/index.json`, indexText);
 
-console.log(`component-specs — ${covered.length} of ${files.length} components covered (cva-based only)`);
+console.log(`component-specs — ${covered.length} of ${Object.keys(manifest).length} components covered (cva-based only)`);

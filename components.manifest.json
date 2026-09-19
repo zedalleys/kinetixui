@@ -1,6 +1,6 @@
 {
   "$schema": "https://kinetixui.com/schema/components-manifest.json",
-  "$description": "The single source of truth for per-component metadata. `pnpm gen:manifest` derives component-status.json and platform-parity.json from this file — edit HERE, never those. Every component in packages/ui has an entry (enforced by `pnpm check:manifest`). status: \"beta\" | \"stable\" | \"deprecated\" — a new component ships \"beta\" for the release cycle it lands in (\"beta\" means new, not incomplete), then flips to \"stable\"; nothing is deprecated yet. platforms: every platform the component ships on, explicitly. Where a component is intentionally not on a platform, `platformNote` says why (visual parity is not the goal — token parity plus behavioural-intent parity plus a platform-native implementation is). Regenerate the platform port list by diffing slugs against packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/*.kt (PascalCase), packages/ui-swiftui/Sources/KinetixUI/*.swift (PascalCase) and packages/ui-flutter/lib/src/*.dart (snake_case); `sonner` resolves to Sonner/Toaster/toaster. `registry: false` marks a docs-page component that ships inside another component's registry item (avatar-group in avatar, combobox in multi-select) rather than as its own.",
+  "$description": "The single source of truth for per-component metadata. `pnpm gen:manifest` derives component-status.json and platform-parity.json from this file — edit HERE, never those. Every component in packages/ui has an entry (enforced by `pnpm check:manifest`). status: \"beta\" | \"stable\" | \"deprecated\" — a new component ships \"beta\" for the release cycle it lands in (\"beta\" means new, not incomplete), then flips to \"stable\"; nothing is deprecated yet. platforms: every platform the component ships on, explicitly. Where a component is intentionally not on a platform, `platformNote` says why (visual parity is not the goal — token parity plus behavioural-intent parity plus a platform-native implementation is). Regenerate the platform port list by diffing slugs against packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/*.kt (PascalCase), packages/ui-swiftui/Sources/KinetixUI/*.swift (PascalCase) and packages/ui-flutter/lib/src/*.dart (snake_case); `sonner` resolves to Sonner/Toaster/toaster. `registry: false` marks a docs-page component that ships inside another component's registry item (avatar-group in avatar, combobox in multi-select) rather than as its own. `since` is the first tagged release that contained the component (derived from git history; 0.4.1 means \"shipped by the first tagged release\"). New components set it to the version they will ship in.",
   "platforms": [
     "React",
     "SwiftUI",
@@ -21,6 +21,7 @@
   "components": {
     "accordion": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -30,6 +31,7 @@
     },
     "alert": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -39,6 +41,7 @@
     },
     "alert-dialog": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -48,6 +51,7 @@
     },
     "app-bar": {
       "status": "stable",
+      "since": "0.6.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -57,6 +61,7 @@
     },
     "aspect-ratio": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -66,6 +71,7 @@
     },
     "audio-player": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -75,6 +81,7 @@
     },
     "avatar": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -84,6 +91,7 @@
     },
     "avatar-group": {
       "status": "stable",
+      "since": "0.10.0",
       "registry": false,
       "platforms": [
         "React"
@@ -92,6 +100,7 @@
     },
     "badge": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -101,6 +110,7 @@
     },
     "banner": {
       "status": "stable",
+      "since": "0.10.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -110,6 +120,7 @@
     },
     "breadcrumb": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -119,6 +130,7 @@
     },
     "button": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -128,6 +140,7 @@
     },
     "button-group": {
       "status": "stable",
+      "since": "0.9.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -137,6 +150,7 @@
     },
     "calendar": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -146,6 +160,7 @@
     },
     "card": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -155,6 +170,7 @@
     },
     "carousel": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -164,6 +180,7 @@
     },
     "chart": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -173,6 +190,7 @@
     },
     "checkbox": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -182,6 +200,7 @@
     },
     "circular-progress": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -191,6 +210,7 @@
     },
     "code-block": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -200,6 +220,7 @@
     },
     "collapsible": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -209,6 +230,7 @@
     },
     "color-picker": {
       "status": "beta",
+      "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -218,6 +240,7 @@
     },
     "combobox": {
       "status": "stable",
+      "since": "0.4.1",
       "registry": false,
       "platforms": [
         "React"
@@ -226,6 +249,7 @@
     },
     "command": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -235,6 +259,7 @@
     },
     "comparison-slider": {
       "status": "stable",
+      "since": "0.11.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -244,6 +269,7 @@
     },
     "context-menu": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -253,6 +279,7 @@
     },
     "data-grid": {
       "status": "beta",
+      "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -262,6 +289,7 @@
     },
     "data-table": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -271,6 +299,7 @@
     },
     "date-picker": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -280,6 +309,7 @@
     },
     "description-list": {
       "status": "stable",
+      "since": "0.10.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -289,6 +319,7 @@
     },
     "dialog": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -298,6 +329,7 @@
     },
     "diff-viewer": {
       "status": "beta",
+      "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -307,6 +339,7 @@
     },
     "direction-provider": {
       "status": "stable",
+      "since": "0.13.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -316,6 +349,7 @@
     },
     "drawer": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -325,6 +359,7 @@
     },
     "dropdown-menu": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -334,6 +369,7 @@
     },
     "empty": {
       "status": "stable",
+      "since": "0.8.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -343,6 +379,7 @@
     },
     "fab": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -352,6 +389,7 @@
     },
     "field": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -361,6 +399,7 @@
     },
     "file-upload": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -370,6 +409,7 @@
     },
     "footer": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -379,6 +419,7 @@
     },
     "form": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React"
       ],
@@ -386,6 +427,7 @@
     },
     "hover-card": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -395,6 +437,7 @@
     },
     "image": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -404,6 +447,7 @@
     },
     "inform": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -413,6 +457,7 @@
     },
     "input": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -422,6 +467,7 @@
     },
     "input-group": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -431,6 +477,7 @@
     },
     "input-otp": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -440,6 +487,7 @@
     },
     "json-viewer": {
       "status": "beta",
+      "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -449,6 +497,7 @@
     },
     "kanban-board": {
       "status": "beta",
+      "since": "0.12.0",
       "platforms": [
         "React"
       ],
@@ -456,6 +505,7 @@
     },
     "kbd": {
       "status": "stable",
+      "since": "0.8.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -465,6 +515,7 @@
     },
     "label": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -474,6 +525,7 @@
     },
     "list": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -483,6 +535,7 @@
     },
     "markdown-editor": {
       "status": "beta",
+      "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -492,6 +545,7 @@
     },
     "marquee": {
       "status": "stable",
+      "since": "0.11.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -501,6 +555,7 @@
     },
     "menubar": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -510,6 +565,7 @@
     },
     "message-bubble": {
       "status": "beta",
+      "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -519,6 +575,7 @@
     },
     "metric": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -528,6 +585,7 @@
     },
     "modal": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -537,6 +595,7 @@
     },
     "multi-select": {
       "status": "beta",
+      "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -546,6 +605,7 @@
     },
     "native-select": {
       "status": "stable",
+      "since": "0.9.0",
       "platforms": [
         "React"
       ],
@@ -553,6 +613,7 @@
     },
     "navigation-bar": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -562,6 +623,7 @@
     },
     "navigation-menu": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React"
       ],
@@ -569,6 +631,7 @@
     },
     "notification-center": {
       "status": "beta",
+      "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -578,6 +641,7 @@
     },
     "number-input": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -587,6 +651,7 @@
     },
     "page-header": {
       "status": "stable",
+      "since": "0.11.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -596,6 +661,7 @@
     },
     "pagination": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -605,6 +671,7 @@
     },
     "password-input": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -614,6 +681,7 @@
     },
     "popover": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -623,6 +691,7 @@
     },
     "progress": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -632,6 +701,7 @@
     },
     "quote": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -641,6 +711,7 @@
     },
     "radio-group": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -650,6 +721,7 @@
     },
     "rating": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -659,6 +731,7 @@
     },
     "resizable": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -668,6 +741,7 @@
     },
     "scroll-area": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -677,6 +751,7 @@
     },
     "segmented-control": {
       "status": "stable",
+      "since": "0.10.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -686,6 +761,7 @@
     },
     "select": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -695,6 +771,7 @@
     },
     "separator": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -704,6 +781,7 @@
     },
     "sheet": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -713,6 +791,7 @@
     },
     "sidebar": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -722,6 +801,7 @@
     },
     "skeleton": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -731,6 +811,7 @@
     },
     "slider": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -740,6 +821,7 @@
     },
     "sonner": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -749,6 +831,7 @@
     },
     "spinner": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -758,6 +841,7 @@
     },
     "stepper": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -767,6 +851,7 @@
     },
     "switch": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -776,6 +861,7 @@
     },
     "tab-bar": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -785,6 +871,7 @@
     },
     "table": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -794,6 +881,7 @@
     },
     "table-of-contents": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -803,6 +891,7 @@
     },
     "tabs": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -812,6 +901,7 @@
     },
     "tag": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -821,6 +911,7 @@
     },
     "textarea": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -830,6 +921,7 @@
     },
     "timeline": {
       "status": "stable",
+      "since": "0.10.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -839,6 +931,7 @@
     },
     "toggle": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -848,6 +941,7 @@
     },
     "toggle-group": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -857,6 +951,7 @@
     },
     "tooltip": {
       "status": "stable",
+      "since": "0.4.1",
       "platforms": [
         "React",
         "SwiftUI",
@@ -866,6 +961,7 @@
     },
     "tour": {
       "status": "beta",
+      "since": "0.12.0",
       "platforms": [
         "React"
       ],
@@ -873,6 +969,7 @@
     },
     "tree-view": {
       "status": "beta",
+      "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
@@ -882,6 +979,7 @@
     },
     "virtual-list": {
       "status": "beta",
+      "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",

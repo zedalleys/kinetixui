@@ -33,6 +33,7 @@ for (const [s, c] of Object.entries(manifest.components)) {
     if (slugs.includes(s)) errors.push(`${s}: marked registry:false but is a registry item`);
   } else if (!slugs.includes(s)) errors.push(`${s}: in manifest but not a registry component (set registry:false for a docs-only companion)`);
   if (!STATUSES.has(c.status)) errors.push(`${s}: invalid status "${c.status}"`);
+  if (!/^\d+\.\d+\.\d+$/.test(c.since ?? "")) errors.push(`${s}: since must be a semver like "0.4.1" (the release it first shipped in)`);
   if (!Array.isArray(c.platforms) || !c.platforms.includes("React")) errors.push(`${s}: platforms must be a list including React`);
   else for (const p of c.platforms) if (!known.has(p)) errors.push(`${s}: unknown platform "${p}"`);
   const partial = c.platforms.length < manifest.platforms.length;
