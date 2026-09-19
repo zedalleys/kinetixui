@@ -100,7 +100,7 @@ const ChartContainer = React.forwardRef<
         role={role ?? "img"}
         aria-label={name}
         className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
+          "flex aspect-video justify-center text-xs [&_.recharts-surface:focus-visible]:[outline:2px_solid_hsl(var(--ring))] [&_.recharts-surface:focus-visible]:rounded-sm [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
           className,
         )}
         {...props}
@@ -144,7 +144,7 @@ function ChartState({
           {[40, 72, 56, 88, 48, 64, 80].map((h, i) => (
             <span
               key={i}
-              className="w-full animate-pulse rounded-sm bg-muted"
+              className="w-full animate-pulse rounded-sm bg-muted motion-reduce:animate-none"
               style={{ height: `${h}px`, animationDelay: `${i * 90}ms` }}
             />
           ))}

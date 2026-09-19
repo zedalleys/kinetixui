@@ -35,7 +35,8 @@ const InputOTPSlot = React.forwardRef<
       ref={ref}
       className={cn(
         "relative flex size-9 items-center justify-center border-y border-r border-input text-sm shadow-sm transition-all first:rounded-l-md first:border-l last:rounded-r-md",
-        isActive && "z-docked ring-1 ring-ring",
+        // ring is a box-shadow, which forced-colors mode strips; the outline survives it
+        isActive && "z-docked ring-1 ring-ring forced-colors:[outline:2px_solid] forced-colors:[outline-offset:-2px]",
         className,
       )}
       {...props}
