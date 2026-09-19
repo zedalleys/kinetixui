@@ -113,6 +113,25 @@ All four are path-filtered to the platform's package **plus** `tokens/**`
 and `style-dictionary/**`, so a token change re-checks every native
 library.
 
+## Cutting a release (the changelog page)
+
+Changesets opens a "version packages" PR that bumps the three npm packages together. **That PR cannot
+merge until `/docs/changelog` has an entry for the new version** — `pnpm check:releases` (in `ci.yml`)
+fails when the top entry in `apps/web/src/lib/releases.ts` isn't the version the packages are at. This
+exists because the page once sat at 0.6.0 for eleven releases while the packages went to 0.17.0.
+
+1. On the release PR's branch, add an entry at the top of `RELEASES`: `version`, `date`, a one-line
+   `summary`, the typed `changes` (`new` / `improved` / `fixed` / `security` / `accessibility` /
+   `breaking`, each with an `area`), and `limitations` for anything the release deliberately doesn't do.
+2. Set `breaking` explicitly — `[]` means "none, and I checked"; the check fails if it's missing. Add a
+   `migration` note when a change needs action from users.
+3. List new components under `newComponents`; the page adds platform badges from
+   `platform-parity.json`, so don't write coverage by hand.
+4. The per-package "changed / unchanged" indicators are generated from the package changelogs
+   (`node scripts/gen-release-meta.mjs`) — run it if the check says they're stale.
+
+There are no GitHub Releases after v0.5.0, only per-package tags, so the page links to the tag.
+
 ## Publishing the native ports
 
 React (`@kinetixui/tokens` / `@kinetixui/ui` / `@kinetixui/cli`) publishes

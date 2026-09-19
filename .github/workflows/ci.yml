@@ -35,6 +35,9 @@ jobs:
       - name: Contrast audit (WCAG AA text pairs)
         run: pnpm check:contrast
 
+      - name: Changelog page is current with the packages
+        run: pnpm check:releases
+
       - name: RTL logical-property guardrail
         run: pnpm check:rtl
 
