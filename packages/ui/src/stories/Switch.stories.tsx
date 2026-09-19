@@ -24,6 +24,6 @@ const meta = {
 
 export default meta;
 
-export const Playground: StoryObj<typeof meta> = { render: (args) => <Switch {...args} /> };
+export const Playground: StoryObj<typeof meta> = { render: (args) => <Switch aria-label="Airplane mode" {...args} /> };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };

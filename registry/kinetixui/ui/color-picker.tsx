@@ -197,6 +197,9 @@ const ColorPicker = React.forwardRef<HTMLDivElement, ColorPickerProps>(
           role="slider"
           tabIndex={0}
           aria-label="Saturation and value"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(s)}
           aria-valuetext={`saturation ${Math.round(s)}%, value ${Math.round(v)}%`}
           onPointerDown={handleSquarePointerDown}
           onPointerMove={handleSquarePointerMove}
@@ -333,6 +336,7 @@ function HexField({
 
   return (
     <Input
+      aria-label="Hex color"
       value={draft}
       onChange={(e) => setDraft(e.target.value.replace(/[^0-9a-fA-F]/g, "").slice(0, alpha ? 8 : 6))}
       onBlur={commit}

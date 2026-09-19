@@ -418,9 +418,9 @@ add(
       const t = setTimeout(() => setV(66), 600);
       return () => clearTimeout(t);
     }, []);
-    return <Progress value={v} className="w-[60%]" />;
+    return <Progress value={v} aria-label="Upload progress" className="w-[60%]" />;
   },
-  `const [value, setValue] = React.useState(13)\n// ...\n<Progress value={value} />`,
+  `const [value, setValue] = React.useState(13)\n// ...\n<Progress value={value} aria-label=\"Upload progress\" />`,
 );
 add(
   "radio-group-demo",
@@ -451,7 +451,7 @@ add(
   "select-demo",
   () => (
     <Select>
-      <SelectTrigger className="w-[220px]">
+      <SelectTrigger className="w-[220px]" aria-label="Fruit">
         <SelectValue placeholder="Select a fruit" />
       </SelectTrigger>
       <SelectContent>
@@ -513,8 +513,8 @@ add(
 );
 add(
   "slider-demo",
-  () => <Slider defaultValue={[50]} max={100} step={1} className="w-[60%]" />,
-  `<Slider defaultValue={[50]} max={100} step={1} />`,
+  () => <Slider aria-label="Volume" defaultValue={[50]} max={100} step={1} className="w-[60%]" />,
+  `<Slider aria-label="Volume" defaultValue={[50]} max={100} step={1} />`,
 );
 add(
   "sonner-demo",
@@ -597,9 +597,9 @@ add(
   "toggle-group-demo",
   () => (
     <ToggleGroup type="multiple">
-      <ToggleGroupItem value="bold"><Bold className="size-4" /></ToggleGroupItem>
-      <ToggleGroupItem value="italic"><Italic className="size-4" /></ToggleGroupItem>
-      <ToggleGroupItem value="underline"><Underline className="size-4" /></ToggleGroupItem>
+      <ToggleGroupItem value="bold" aria-label="Bold"><Bold className="size-4" /></ToggleGroupItem>
+      <ToggleGroupItem value="italic" aria-label="Italic"><Italic className="size-4" /></ToggleGroupItem>
+      <ToggleGroupItem value="underline" aria-label="Underline"><Underline className="size-4" /></ToggleGroupItem>
     </ToggleGroup>
   ),
   `<ToggleGroup type="multiple">\n  <ToggleGroupItem value="bold"><Bold /></ToggleGroupItem>\n  <ToggleGroupItem value="italic"><Italic /></ToggleGroupItem>\n</ToggleGroup>`,
@@ -1065,7 +1065,7 @@ add(
 add(
   "input-otp-demo",
   () => (
-    <InputOTP maxLength={6}>
+    <InputOTP maxLength={6} aria-label="One-time code">
       <InputOTPGroup>
         {Array.from({ length: 6 }).map((_, i) => (
           <InputOTPSlot key={i} index={i} />
@@ -1073,7 +1073,7 @@ add(
       </InputOTPGroup>
     </InputOTP>
   ),
-  `<InputOTP maxLength={6}>\n  <InputOTPGroup>\n    <InputOTPSlot index={0} />\n    ...\n    <InputOTPSlot index={5} />\n  </InputOTPGroup>\n</InputOTP>`,
+  `<InputOTP maxLength={6} aria-label=\"One-time code\">\n  <InputOTPGroup>\n    <InputOTPSlot index={0} />\n    ...\n    <InputOTPSlot index={5} />\n  </InputOTPGroup>\n</InputOTP>`,
 );
 add(
   "menubar-demo",
@@ -1169,9 +1169,9 @@ add(
     }, []);
     return (
       <div className="flex items-center gap-6">
-        <CircularProgress value={v} showValue />
-        <CircularProgress value={v} size={64} strokeWidth={6} showValue />
-        <CircularProgress value={v} />
+        <CircularProgress value={v} showValue aria-label="Upload progress" />
+        <CircularProgress value={v} size={64} strokeWidth={6} showValue aria-label="Upload progress" />
+        <CircularProgress value={v} aria-label="Upload progress" />
       </div>
     );
   },
@@ -1235,11 +1235,11 @@ add(
   () => (
     <List className="w-full max-w-sm rounded-md border">
       <ListItem leading={<User className="size-5 text-muted-foreground" />} title="Profile" description="Name, photo, and personal details" trailing={<Badge variant="outline">2</Badge>} onSelect={() => {}} />
-      <ListItem leading={<Bell className="size-5 text-muted-foreground" />} title="Notifications" description="Push, email and SMS preferences" trailing={<Switch />} />
+      <ListItem leading={<Bell className="size-5 text-muted-foreground" />} title="Notifications" description="Push, email and SMS preferences" trailing={<Switch aria-label="Notifications" />} />
       <ListItem leading={<Settings className="size-5 text-muted-foreground" />} title="Settings" onSelect={() => {}} />
     </List>
   ),
-  `<List>\n  <ListItem\n    leading={<User />}\n    title="Profile"\n    description="Name, photo, and personal details"\n    onSelect={() => router.push("/profile")}\n  />\n  <ListItem leading={<Bell />} title="Notifications" trailing={<Switch />} />\n</List>`,
+  `<List>\n  <ListItem\n    leading={<User />}\n    title="Profile"\n    description="Name, photo, and personal details"\n    onSelect={() => router.push("/profile")}\n  />\n  <ListItem leading={<Bell />} title="Notifications" trailing={<Switch aria-label="Notifications" />} />\n</List>`,
 );
 add(
   "stepper-demo",
@@ -1420,9 +1420,9 @@ add(
   "number-input-demo",
   () => {
     const [v, setV] = React.useState(2);
-    return <NumberInput value={v} onChange={setV} min={0} max={10} className="w-32" />;
+    return <NumberInput aria-label="Quantity" value={v} onChange={setV} min={0} max={10} className="w-32" />;
   },
-  `<NumberInput value={qty} onChange={setQty} min={0} max={10} />`,
+  `<NumberInput aria-label=\"Quantity\" value={qty} onChange={setQty} min={0} max={10} />`,
 );
 add(
   "quote-demo",
@@ -1576,7 +1576,7 @@ add(
     const [text, setText] = React.useState(
       "## Release notes\n\nShipped **MarkdownEditor** — a toolbar over a plain textarea, not `contenteditable`.\n\n- Bold, italic, links\n- Bulleted and numbered lists\n- An optional preview pane",
     );
-    return <MarkdownEditor className="w-full" value={text} onChange={setText} rows={8} />;
+    return <MarkdownEditor aria-label="Release notes" className="w-full" value={text} onChange={setText} rows={8} />;
   },
   `<MarkdownEditor\n  value={text}\n  onChange={setText}\n  rows={8}\n/>`,
 );
@@ -1621,7 +1621,7 @@ add(
 add(
   "native-select-demo",
   () => (
-    <NativeSelect className="max-w-xs" defaultValue="">
+    <NativeSelect aria-label="Fruit" className="max-w-xs" defaultValue="">
       <NativeSelectOption value="" disabled>
         Select a fruit…
       </NativeSelectOption>
@@ -1814,6 +1814,7 @@ add(
     const [value, setValue] = React.useState(["react", "swiftui"]);
     return (
       <MultiSelect
+        aria-label="Platforms"
         className="w-full max-w-sm"
         value={value}
         onValueChange={setValue}

@@ -6,7 +6,7 @@ import { NumberInput } from "@kinetixui/ui";
 
 const Demo = () => {
     const [v, setV] = React.useState(2);
-    return <NumberInput value={v} onChange={setV} min={0} max={10} className="w-32" />;
+    return <NumberInput aria-label="Quantity" value={v} onChange={setV} min={0} max={10} className="w-32" />;
   };
 
 const meta = {
@@ -18,12 +18,12 @@ const meta = {
   },
   parameters: {
     layout: "centered",
-    docs: { source: { code: "<NumberInput value={qty} onChange={setQty} min={0} max={10} />", language: "tsx" } },
+    docs: { source: { code: "<NumberInput aria-label=\\\"Quantity\\\" value={qty} onChange={setQty} min={0} max={10} />", language: "tsx" } },
   },
 } satisfies Meta;
 
 export default meta;
 
-export const Playground: StoryObj<typeof meta> = { render: (args) => <NumberInput {...args} className="w-32" /> };
+export const Playground: StoryObj<typeof meta> = { render: (args) => <NumberInput aria-label="Quantity" {...args} className="w-32" /> };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };

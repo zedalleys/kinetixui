@@ -10,7 +10,7 @@ const Demo = () => {
       const t = setTimeout(() => setV(66), 600);
       return () => clearTimeout(t);
     }, []);
-    return <Progress value={v} className="w-[60%]" />;
+    return <Progress value={v} aria-label="Upload progress" className="w-[60%]" />;
   };
 
 const meta = {
@@ -20,12 +20,12 @@ const meta = {
   argTypes: { value: { control: { type: "range", min: 0, max: 100 } } },
   parameters: {
     layout: "centered",
-    docs: { source: { code: "const [value, setValue] = React.useState(13)\\n// ...\\n<Progress value={value} />", language: "tsx" } },
+    docs: { source: { code: "const [value, setValue] = React.useState(13)\\n// ...\\n<Progress value={value} aria-label=\\\"Upload progress\\\" />", language: "tsx" } },
   },
 } satisfies Meta;
 
 export default meta;
 
-export const Playground: StoryObj<typeof meta> = { render: (args) => <Progress {...args} className="w-60" /> };
+export const Playground: StoryObj<typeof meta> = { render: (args) => <Progress aria-label="Upload progress" {...args} className="w-60" /> };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
