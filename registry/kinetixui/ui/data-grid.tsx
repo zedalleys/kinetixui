@@ -19,7 +19,7 @@ export interface DataGridColumn<TData> {
   /** fixed to this side, not draggable, and excluded from the reorder sequence */
   pinned?: "left" | "right";
   sortable?: boolean;
-  /** double-click swaps the cell for a text input; commit fires on Enter/blur, Escape cancels */
+  /** double-click — or Enter / F2 on the focused cell — swaps it for a text input; commit fires on Enter/blur, Escape cancels */
   editable?: boolean;
   onCellEdit?: (row: TData, rowIndex: number, value: string) => void;
 }
@@ -173,9 +173,24 @@ function DataGrid<TData>({
     window.addEventListener("pointerup", handleUp);
   }
 
-  function commitEdit(column: DataGridColumn<TData>, row: TData, rowIndex: number, value: string) {
-    column.onCellEdit?.(row, rowIndex, value);
+  // After a keyboard commit/cancel, hand focus back to the cell that was being edited (a blur
+  // commit — the user clicked or tabbed elsewhere — must not pull focus back).
+  const restoreFocusRef = React.useRef<{ rowIndex: number; columnId: string } | null>(null);
+  React.useEffect(() => {
+    const target = restoreFocusRef.current;
+    if (editing || !target) return;
+    restoreFocusRef.current = null;
+    containerRef.current?.querySelector<HTMLElement>(`[data-cell="${target.rowIndex}:${target.columnId}"]`)?.focus();
+  }, [editing]);
+
+  function endEdit(restoreFocus: boolean) {
+    if (restoreFocus && editing) restoreFocusRef.current = { rowIndex: editing.rowIndex, columnId: editing.columnId };
     setEditing(null);
+  }
+
+  function commitEdit(column: DataGridColumn<TData>, row: TData, rowIndex: number, value: string, restoreFocus = false) {
+    column.onCellEdit?.(row, rowIndex, value);
+    endEdit(restoreFocus);
   }
 
   return (
@@ -224,9 +239,18 @@ function DataGrid<TData>({
                   });
                 }}
                 onClick={() => column.sortable && toggleSort(column.id)}
+                // a sortable header is a control: reachable with Tab, operated with Enter / Space
+                tabIndex={column.sortable ? 0 : undefined}
+                onKeyDown={(e) => {
+                  if (column.sortable && e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault();
+                    toggleSort(column.id);
+                  }
+                }}
                 className={cn(
                   "relative flex h-10 shrink-0 select-none items-center gap-1 px-2 font-medium text-muted-foreground",
-                  column.sortable && "cursor-pointer hover:text-foreground",
+                  column.sortable &&
+                    "cursor-pointer outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
                   column.pinned && "bg-background",
                 )}
                 style={{ width, ...pinnedStyle }}
@@ -271,8 +295,21 @@ function DataGrid<TData>({
                     <div
                       key={column.id}
                       role="gridcell"
+                      data-cell={`${rowIndex}:${column.id}`}
                       onDoubleClick={() => column.editable && setEditing({ rowIndex, columnId: column.id })}
-                      className={cn("flex shrink-0 items-center px-2", column.pinned && "bg-background")}
+                      // an editable cell is reachable with Tab and entered with Enter or F2 (the spreadsheet convention)
+                      tabIndex={column.editable ? 0 : undefined}
+                      onKeyDown={(e) => {
+                        if (column.editable && e.target === e.currentTarget && (e.key === "Enter" || e.key === "F2")) {
+                          e.preventDefault();
+                          setEditing({ rowIndex, columnId: column.id });
+                        }
+                      }}
+                      className={cn(
+                        "flex shrink-0 items-center px-2",
+                        column.editable && "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
+                        column.pinned && "bg-background",
+                      )}
                       style={{ width, ...pinnedStyle }}
                     >
                       {isEditing ? (
@@ -281,8 +318,8 @@ function DataGrid<TData>({
                           defaultValue={column.value ? String(column.value(row)) : ""}
                           className="h-7 w-full rounded-sm border-0 bg-transparent px-1 text-sm outline-none ring-1 ring-inset ring-ring"
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") commitEdit(column, row, rowIndex, e.currentTarget.value);
-                            else if (e.key === "Escape") setEditing(null);
+                            if (e.key === "Enter") commitEdit(column, row, rowIndex, e.currentTarget.value, true);
+                            else if (e.key === "Escape") endEdit(true);
                           }}
                           onBlur={(e) => commitEdit(column, row, rowIndex, e.currentTarget.value)}
                         />

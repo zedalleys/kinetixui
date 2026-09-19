@@ -220,7 +220,6 @@ const ColorPicker = React.forwardRef<HTMLDivElement, ColorPickerProps>(
           max={360}
           step={1}
           onValueChange={([nh]) => commit(nh ?? h, s, v, a)}
-          aria-label="Hue"
           className="relative flex h-4 w-full touch-none select-none items-center"
         >
           <SliderPrimitive.Track
@@ -230,7 +229,7 @@ const ColorPicker = React.forwardRef<HTMLDivElement, ColorPickerProps>(
                 "linear-gradient(to right, hsl(0 100% 50%), hsl(60 100% 50%), hsl(120 100% 50%), hsl(180 100% 50%), hsl(240 100% 50%), hsl(300 100% 50%), hsl(360 100% 50%))",
             }}
           />
-          <SliderPrimitive.Thumb className="block size-4 rounded-full border-2 border-white bg-background shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+          <SliderPrimitive.Thumb aria-label="Hue" className="block size-4 rounded-full border-2 border-white bg-background shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
         </SliderPrimitive.Root>
 
         {alpha && (
@@ -240,7 +239,6 @@ const ColorPicker = React.forwardRef<HTMLDivElement, ColorPickerProps>(
             max={100}
             step={1}
             onValueChange={([na]) => commit(h, s, v, (na ?? a * 100) / 100)}
-            aria-label="Alpha"
             className="relative flex h-4 w-full touch-none select-none items-center"
           >
             <SliderPrimitive.Track
@@ -256,7 +254,7 @@ const ColorPicker = React.forwardRef<HTMLDivElement, ColorPickerProps>(
                 style={{ backgroundImage: `linear-gradient(to right, transparent, hsl(${h} ${s}% ${v}%))` }}
               />
             </SliderPrimitive.Track>
-            <SliderPrimitive.Thumb className="block size-4 rounded-full border-2 border-white bg-background shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+            <SliderPrimitive.Thumb aria-label="Alpha" className="block size-4 rounded-full border-2 border-white bg-background shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
           </SliderPrimitive.Root>
         )}
 

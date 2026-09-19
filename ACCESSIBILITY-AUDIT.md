@@ -26,7 +26,7 @@ contract that feeds all four component libraries.
    visibility, keyboard operability, names on icon-only controls, state exposed
    to AT (`aria-pressed` / `aria-expanded`), colour-only signalling, and
    `prefers-reduced-motion` coverage.
-3. **Rendered axe-core passes** — **done (2026-09-19).** Two layers, both in CI: a jsdom pass (`packages/ui/src/components-a11y.test.tsx`, with `KNOWN` baseline) and a real-browser pass (`scripts/a11y-browser.mjs`, `pnpm check:a11y-browser`, workflow `a11y-browser.yml`) that opens every Storybook story in headless Chromium in **light and dark** with every axe rule on, including colour contrast. Violations that pre-date the pass are listed in `a11y-baseline.json` (64); new ones fail the build and fixed ones must be removed, so the baseline only shrinks. **Still not covered:** keyboard interaction, focus trapping/return, forced-colors, and per-component ARIA interaction models (DataGrid, TreeView, Tour, Kanban, MultiSelect, ColorPicker).
+3. **Rendered axe-core passes** — **done (2026-09-19).** Two layers, both in CI: a jsdom pass (`packages/ui/src/components-a11y.test.tsx`, with `KNOWN` baseline) and a real-browser pass (`scripts/a11y-browser.mjs`, `pnpm check:a11y-browser`, workflow `a11y-browser.yml`) that opens every Storybook story in headless Chromium in **light and dark** with every axe rule on, including colour contrast. Violations that pre-date the pass are listed in `a11y-baseline.json` (58); new ones fail the build and fixed ones must be removed, so the baseline only shrinks. **Still not covered:** keyboard interaction, focus trapping/return, forced-colors, and per-component ARIA interaction models (DataGrid, TreeView, Tour, Kanban, MultiSelect, ColorPicker).
 
 ## Severity key
 
@@ -187,3 +187,18 @@ First run of the browser pass. Storybook's own canvas had no background in eithe
 | other | 14 | `aria-required-children/parent`, `nested-interactive`, `select-name`, duplicate banner landmarks (two Banners in one story) |
 
 Dark mode has **no** contrast failures once the canvas background is correct.
+
+## Keyboard pass findings (2026-09-19)
+
+`packages/ui/src/components-keyboard.test.tsx` (29 tests) exercises focus, Tab order, arrow keys, Escape and RTL. The Radix-based components (Dialog, DropdownMenu, Popover, Tabs, RadioGroup, Checkbox, Switch, Slider) passed without changes, including focus trap/return and RTL arrow mirroring. The hand-built widgets did not:
+
+| Component | Finding | Status |
+|---|---|---|
+| `Tour` | `role="dialog" aria-modal` with no accessible name, no focus move on open, no Tab trap, no focus restore | **Fixed** |
+| `MultiSelect` | opened by keyboard but focus stayed on the combobox, so arrow keys never reached the option list — could not choose an option without a mouse | **Fixed** (search field is focused on open; focus returns to the combobox on close) |
+| `DataGrid` | sortable headers and editable cells were not focusable; editing was double-click only | **Fixed** (Tab, Enter / Space, Enter / F2, Esc) |
+| `DataGrid` | no arrow-key movement between cells; column reorder / resize pointer-only | **Open** — expected-failure test |
+| `ColorPicker`, `Slider` | `aria-label` was on the Radix slider root, but the element with `role="slider"` is the thumb, so every slider was unnamed | **Fixed** |
+| `TreeView` | none — follows the WAI-ARIA tree pattern | — |
+
+Also corrected the accessibility docs page, which claimed every interactive component is a Radix primitive with correct keyboard behaviour by default. Not yet covered: forced-colors and reduced-motion in a real browser, and any automated keyboard test for `KanbanBoard` (dragging needs real layout, so it belongs in the browser pass).

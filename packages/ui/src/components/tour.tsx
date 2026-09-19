@@ -55,6 +55,43 @@ const Tour: React.FC<TourProps> = ({
 
   React.useEffect(() => setMounted(true), []);
 
+  const titleId = React.useId();
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  const returnFocusRef = React.useRef<HTMLElement | null>(null);
+
+  // Remember what had focus when the tour opened and give it back when it closes.
+  React.useEffect(() => {
+    if (!open) return;
+    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    return () => returnFocusRef.current?.focus();
+  }, [open]);
+
+  // Move focus into the dialog on open and on every step, so a screen reader announces the new title.
+  React.useEffect(() => {
+    if (open && mounted) dialogRef.current?.focus();
+  }, [open, mounted, stepIndex]);
+
+  // aria-modal only *tells* assistive tech the page is inert; keep Tab inside the card ourselves.
+  const trapTab = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "Tab") return;
+    const dialog = e.currentTarget;
+    const focusable = Array.from(dialog.querySelectorAll<HTMLElement>("button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex='-1'])"));
+    if (focusable.length === 0) {
+      e.preventDefault();
+      return;
+    }
+    const first = focusable[0]!;
+    const last = focusable[focusable.length - 1]!;
+    const active = document.activeElement;
+    if (e.shiftKey && (active === first || active === dialog)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+
   React.useEffect(() => {
     if (!open || !step) return;
     const update = () => {
@@ -114,12 +151,18 @@ const Tour: React.FC<TourProps> = ({
         style={spotlightStyle}
       />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        className="fixed z-overlay w-80 rounded-lg border border-border bg-popover p-4 font-sans text-popover-foreground shadow-lg transition-all duration-fast"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        onKeyDown={trapTab}
+        className="fixed z-overlay w-80 rounded-lg border border-border bg-popover p-4 font-sans text-popover-foreground shadow-lg outline-none transition-all duration-fast"
         style={cardStyle}
       >
-        <p className="text-title-sm font-medium text-foreground">{step.title}</p>
+        <p id={titleId} className="text-title-sm font-medium text-foreground">
+          {step.title}
+        </p>
         <div className="mt-1.5 text-body-sm text-muted-foreground">{step.content}</div>
         <div className="mt-4 flex items-center justify-between">
           <span className="text-label-sm text-muted-foreground">
