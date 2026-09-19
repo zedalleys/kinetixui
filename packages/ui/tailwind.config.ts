@@ -59,7 +59,12 @@ export default {
         destructive: { DEFAULT: c("--destructive"), foreground: c("--destructive-foreground") },
         success: { DEFAULT: c("--success"), foreground: c("--success-foreground") },
         warning: { DEFAULT: c("--warning"), foreground: c("--warning-foreground") },
-        info: { DEFAULT: c("--info"), foreground: c("--info-foreground") },
+        info: {
+          DEFAULT: c("--info"),
+          foreground: c("--info-foreground"),
+          // text on a tinted info surface (bg-info/10) — --info alone is 4.15:1 there
+          "on-container": c("--semantic-on-info-container"),
+        },
         tertiary: { DEFAULT: c("--tertiary"), foreground: c("--tertiary-foreground") },
         border: c("--border"),
         input: c("--input"),
