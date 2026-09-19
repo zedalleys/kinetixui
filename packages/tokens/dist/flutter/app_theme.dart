@@ -46,7 +46,7 @@ class KinetixTheme {
     static const colorSemanticInfoContainer = Color(0xFFF0F7FF);
     static const colorSemanticOnError = Color(0xFFFEF3F2); /** figma: onError */
     static const colorSemanticOnErrorContainer = Color(0xFFEC5047); /** figma: onErrorContainer */
-    static const colorSemanticOnInfoContainer = Color(0xFF395A70);
+    static const colorSemanticOnInfoContainer = Color(0xFF395A70); /** text on a tinted info surface (bg-info/10) — Banner/Inform information. --info itself is only 4.15:1 on its own 10% tint; this clears AA. Exposed as text-info-on-container. */
     static const colorSemanticOnSuccessContainer = Color(0xFF465245);
     static const colorSemanticOnWarningContainer = Color(0xFFF97907); /** figma: onWarningContainer */
     static const colorSemanticSuccessContainer = Color(0xFFF1F3F1);

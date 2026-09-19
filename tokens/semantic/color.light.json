@@ -164,7 +164,8 @@
       },
       "on-info-container": {
         "$value": "#395a70",
-        "$type": "color"
+        "$type": "color",
+        "$description": "text on a tinted info surface (bg-info/10) — Banner/Inform information. --info itself is only 4.15:1 on its own 10% tint; this clears AA. Exposed as text-info-on-container."
       }
     },
     "chart-1": {

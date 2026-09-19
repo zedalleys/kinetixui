@@ -20,7 +20,7 @@ const bannerVariants = cva(
   {
     variants: {
       variant: {
-        information: "border-info/20 bg-info/10 text-info",
+        information: "border-info/20 bg-info/10 text-info-on-container",
         warning: "border-warning/25 bg-warning/15 text-warning",
         success: "border-success/25 bg-success/15 text-success",
         error: "border-destructive/20 bg-destructive/10 text-destructive",

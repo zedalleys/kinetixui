@@ -39,6 +39,7 @@ object KinetixThemeDark {
   val colorRing = Color(0xff60a5fa)
   val colorSecondary = Color(0xff2e362e)
   val colorSecondaryForeground = Color(0xffe3e7e3)
+  val colorSemanticOnInfoContainer = Color(0xff92b2c8)
   val colorSidebar = Color(0xff0b1821)
   val colorSidebarAccent = Color(0xff102432)
   val colorSidebarAccentForeground = Color(0xfff0f7ff)

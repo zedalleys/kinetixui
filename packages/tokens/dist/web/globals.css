@@ -132,7 +132,7 @@
   --semantic-on-success-container: 115 9% 30%;
   --semantic-warning: 28 95% 50%;
   --semantic-info-container: 212 100% 97%;
-  --semantic-on-info-container: 204 33% 33%;
+  --semantic-on-info-container: 204 33% 33%; /** text on a tinted info surface (bg-info/10) — Banner/Inform information. --info itself is only 4.15:1 on its own 10% tint; this clears AA. Exposed as text-info-on-container. */
   --tertiary: 0 0% 69%; /** figma: tertiary — switch off-track */
   --spacing-0: 0;
   --spacing-1: 4px;
