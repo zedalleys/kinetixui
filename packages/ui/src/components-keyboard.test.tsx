@@ -434,84 +434,225 @@ describe("DataGrid", () => {
     { id: 2, name: "Abe" },
     { id: 3, name: "Bea" },
   ];
-  function setup(onCellEdit = vi.fn()) {
+  function setup(opts: { onCellEdit?: ReturnType<typeof vi.fn>; data?: Row[]; wrapper?: (n: React.ReactNode) => React.ReactNode } = {}) {
+    const onCellEdit = opts.onCellEdit ?? vi.fn();
     const columns: DataGridColumn<Row>[] = [
       { id: "name", header: "Name", cell: (r) => r.name, value: (r) => r.name, sortable: true, editable: true, onCellEdit },
-      { id: "id", header: "ID", cell: (r) => r.id, value: (r) => r.id },
+      { id: "id", header: "ID", cell: (r) => r.id, value: (r) => r.id, minWidth: 60, width: 100 },
     ];
-    render(<DataGrid columns={columns} data={rows} height={200} getRowId={(r) => r.id} />);
+    const grid = <DataGrid columns={columns} data={opts.data ?? rows} height={200} getRowId={(r) => r.id} />;
+    render(
+      <>
+        {opts.wrapper ? opts.wrapper(grid) : grid}
+        <button>after</button>
+      </>,
+    );
     return onCellEdit;
   }
+  const header = (name: string) => screen.getByRole("columnheader", { name });
+  const cell = (r: number, c: number) => screen.getAllByRole("row")[r + 1]!.querySelectorAll<HTMLElement>('[role="gridcell"]')[c]!;
   const names = () => screen.getAllByRole("gridcell").filter((c) => /^(Cara|Abe|Bea)$/.test(c.textContent ?? "")).map((c) => c.textContent);
 
-  it("sorts from the keyboard: a sortable header is focusable and Enter / Space toggle it", async () => {
+  it("is a single tab stop: Tab enters on the first header, the next Tab leaves the grid", async () => {
     const user = userEvent.setup();
     setup();
-    const header = screen.getByRole("columnheader", { name: "Name" });
-    expect(header).toHaveAttribute("aria-sort", "none");
     await user.tab();
-    expect(header).toHaveFocus();
-
-    await user.keyboard("{Enter}");
-    expect(header).toHaveAttribute("aria-sort", "ascending");
-    expect(names()).toEqual(["Abe", "Bea", "Cara"]);
-    await user.keyboard(" ");
-    expect(header).toHaveAttribute("aria-sort", "descending");
-    expect(names()).toEqual(["Cara", "Bea", "Abe"]);
+    expect(header("Name")).toHaveFocus();
+    expect(header("ID")).toHaveAttribute("tabindex", "-1");
+    expect(cell(0, 0)).toHaveAttribute("tabindex", "-1");
+    await user.tab();
+    expect(screen.getByRole("button", { name: "after" })).toHaveFocus();
   });
 
-  it("a header that is not sortable is not a tab stop", async () => {
+  it("exposes grid dimensions and row / column indexes (rows are virtualized, so they must be explicit)", () => {
+    setup();
+    const grid = screen.getByRole("grid");
+    expect(grid).toHaveAttribute("aria-rowcount", "4"); // header + 3
+    expect(grid).toHaveAttribute("aria-colcount", "2");
+    expect(screen.getAllByRole("row")[0]).toHaveAttribute("aria-rowindex", "1");
+    expect(screen.getAllByRole("row")[3]).toHaveAttribute("aria-rowindex", "4");
+    expect(cell(0, 1)).toHaveAttribute("aria-colindex", "2");
+  });
+
+  it("moves between cells with the arrow keys, header row included, and stops at the edges", async () => {
     const user = userEvent.setup();
     setup();
-    expect(screen.getByRole("columnheader", { name: "ID" })).not.toHaveAttribute("tabindex");
     await user.tab(); // Name header
-    await user.tab(); // first editable cell — the ID header was skipped
-    expect(screen.getAllByRole("gridcell")[0]).toHaveFocus();
+    await user.keyboard("{ArrowRight}");
+    expect(header("ID")).toHaveFocus();
+    await user.keyboard("{ArrowRight}"); // last column: stays
+    expect(header("ID")).toHaveFocus();
+    await user.keyboard("{ArrowDown}");
+    expect(cell(0, 1)).toHaveFocus();
+    await user.keyboard("{ArrowLeft}");
+    expect(cell(0, 0)).toHaveFocus();
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}"); // past the last row: stays
+    expect(cell(2, 0)).toHaveFocus();
+    await user.keyboard("{ArrowUp}{ArrowUp}{ArrowUp}");
+    expect(header("Name")).toHaveFocus();
+  });
+
+  it("Home / End go to the row ends; Ctrl+Home / Ctrl+End to the grid corners", async () => {
+    const user = userEvent.setup();
+    setup();
+    await user.tab();
+    await user.keyboard("{ArrowDown}{ArrowDown}"); // row 1, Name
+    await user.keyboard("{End}");
+    expect(cell(1, 1)).toHaveFocus();
+    await user.keyboard("{Home}");
+    expect(cell(1, 0)).toHaveFocus();
+    await user.keyboard("{Control>}{End}{/Control}");
+    expect(cell(2, 1)).toHaveFocus();
+    await user.keyboard("{Control>}{Home}{/Control}");
+    expect(header("Name")).toHaveFocus();
+  });
+
+  it("remembers the active cell: leaving and re-entering the grid returns to it", async () => {
+    const user = userEvent.setup();
+    setup();
+    await user.tab();
+    await user.keyboard("{ArrowDown}{ArrowRight}");
+    expect(cell(0, 1)).toHaveFocus();
+    await user.tab(); // out
+    expect(screen.getByRole("button", { name: "after" })).toHaveFocus();
+    await user.tab({ shift: true }); // back in
+    expect(cell(0, 1)).toHaveFocus();
+  });
+
+  it("sorts from the keyboard: Enter / Space on a sortable header", async () => {
+    const user = userEvent.setup();
+    setup();
+    await user.tab();
+    expect(header("Name")).toHaveAttribute("aria-sort", "none");
+    await user.keyboard("{Enter}");
+    expect(header("Name")).toHaveAttribute("aria-sort", "ascending");
+    expect(names()).toEqual(["Abe", "Bea", "Cara"]);
+    await user.keyboard(" ");
+    expect(header("Name")).toHaveAttribute("aria-sort", "descending");
+    expect(names()).toEqual(["Cara", "Bea", "Abe"]);
   });
 
   it("edits a cell from the keyboard: Enter to edit, Enter to commit, focus returns to the cell", async () => {
     const user = userEvent.setup();
     const onCellEdit = setup();
-    await user.tab(); // sortable Name header
-    await user.tab(); // first editable cell
-    const cell = screen.getAllByRole("gridcell")[0]!;
-    expect(cell).toHaveFocus();
+    await user.tab();
+    await user.keyboard("{ArrowDown}");
+    const target = cell(0, 0);
+    expect(target).toHaveFocus();
 
     await user.keyboard("{Enter}");
-    const input = within(cell).getByRole("textbox");
+    const input = within(target).getByRole("textbox");
     expect(input).toHaveFocus();
     await user.clear(input);
     await user.type(input, "Zed{Enter}");
 
     expect(onCellEdit).toHaveBeenCalledTimes(1);
     expect(onCellEdit).toHaveBeenCalledWith(rows[0], 0, "Zed");
-    await waitFor(() => expect(within(cell).queryByRole("textbox")).not.toBeInTheDocument());
-    expect(cell).toHaveFocus();
+    await waitFor(() => expect(within(target).queryByRole("textbox")).not.toBeInTheDocument());
+    expect(target).toHaveFocus();
+    await user.keyboard("{ArrowDown}"); // navigation still works after an edit
+    expect(cell(1, 0)).toHaveFocus();
   });
 
   it("Escape cancels an edit without committing and returns focus to the cell", async () => {
     const user = userEvent.setup();
     const onCellEdit = setup();
     await user.tab();
-    await user.tab();
-    const cell = screen.getAllByRole("gridcell")[0]!;
+    await user.keyboard("{ArrowDown}");
+    const target = cell(0, 0);
     await user.keyboard("{F2}");
-    await user.type(within(cell).getByRole("textbox"), "x{Escape}");
+    await user.type(within(target).getByRole("textbox"), "x{Escape}");
 
     expect(onCellEdit).not.toHaveBeenCalled();
-    expect(cell).toHaveFocus();
+    expect(target).toHaveFocus();
   });
 
-  // KNOWN GAP — the ARIA grid pattern also wants arrow-key movement between cells (roving tabindex),
-  // plus keyboard equivalents for column reorder and resize. Not implemented yet; `it.fails` turns
-  // this into an error the day it starts passing, so the gap can't be forgotten or silently closed.
-  it.fails("moves between cells with the arrow keys", async () => {
+  it("Alt+Arrow reorders a column from its header, keeps focus on it, and announces the move", async () => {
+    const user = userEvent.setup();
+    setup();
+    await user.tab(); // Name header
+    const headersBefore = screen.getAllByRole("columnheader").map((h) => h.textContent);
+    expect(headersBefore).toEqual(["Name", "ID"]);
+
+    await user.keyboard("{Alt>}{ArrowRight}{/Alt}");
+    await waitFor(() => expect(screen.getAllByRole("columnheader").map((h) => h.textContent)).toEqual(["ID", "Name"]));
+    expect(header("Name")).toHaveFocus();
+    expect(screen.getByRole("status")).toHaveTextContent("Name moved to position 2 of 2");
+
+    await user.keyboard("{Alt>}{ArrowRight}{/Alt}"); // already last
+    expect(screen.getByRole("status")).toHaveTextContent("already the last movable column");
+  });
+
+  it("Shift+Arrow resizes a column from its header and announces the width", async () => {
     const user = userEvent.setup();
     setup();
     await user.tab();
+    await user.keyboard("{ArrowRight}"); // ID header, width 100, min 60
+    expect(header("ID")).toHaveStyle({ width: "100px" });
+    await user.keyboard("{Shift>}{ArrowRight}{/Shift}");
+    expect(header("ID")).toHaveStyle({ width: "110px" });
+    expect(screen.getByRole("status")).toHaveTextContent("ID column width 110 pixels");
+    await user.keyboard("{Shift>}{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}{/Shift}");
+    expect(header("ID")).toHaveStyle({ width: "60px" }); // clamped to minWidth
+  });
+
+  it("advertises the header chords with aria-keyshortcuts", () => {
+    setup();
+    expect(header("Name")).toHaveAttribute("aria-keyshortcuts", expect.stringContaining("Alt+ArrowLeft"));
+  });
+
+  it("mirrors the arrow keys under RTL", async () => {
+    const user = userEvent.setup();
+    setup({ wrapper: (n) => <div dir="rtl" style={{ direction: "rtl" }}>{n}</div> });
     await user.tab();
+    expect(header("Name")).toHaveFocus();
+    await user.keyboard("{ArrowLeft}"); // in RTL the next column is to the left
+    expect(header("ID")).toHaveFocus();
     await user.keyboard("{ArrowRight}");
-    expect(screen.getAllByRole("gridcell")[1]).toHaveFocus();
+    expect(header("Name")).toHaveFocus();
+  });
+
+  describe("with many rows (virtualized)", () => {
+    const many: Row[] = Array.from({ length: 200 }, (_, i) => ({ id: i + 1, name: `Person ${i + 1}` }));
+
+    it("scrolls the target row into the rendered window and focuses it", async () => {
+      const user = userEvent.setup();
+      setup({ data: many });
+      await user.tab();
+      await user.keyboard("{ArrowDown}");
+      for (let i = 0; i < 30; i++) await user.keyboard("{ArrowDown}");
+      await waitFor(() => expect(document.activeElement).toHaveTextContent("Person 31"));
+      expect(document.activeElement).toHaveAttribute("data-cell", "30:name");
+    });
+
+    it("PageDown / Ctrl+End jump by a page and to the last row", async () => {
+      const user = userEvent.setup();
+      setup({ data: many });
+      await user.tab();
+      await user.keyboard("{ArrowDown}");
+      await user.keyboard("{PageDown}");
+      await waitFor(() => expect(document.activeElement?.getAttribute("data-cell")).toMatch(/^(\d+):name$/));
+      const jumped = Number(document.activeElement!.getAttribute("data-cell")!.split(":")[0]);
+      expect(jumped).toBeGreaterThan(2);
+
+      await user.keyboard("{Control>}{End}{/Control}");
+      await waitFor(() => expect(document.activeElement).toHaveAttribute("data-cell", "199:id"));
+    });
+
+    it("stays reachable by Tab even after the active row scrolls out of the rendered window", async () => {
+      const user = userEvent.setup();
+      setup({ data: many });
+      await user.tab();
+      await user.keyboard("{ArrowDown}");
+      await user.keyboard("{Control>}{End}{/Control}");
+      await waitFor(() => expect(document.activeElement).toHaveAttribute("data-cell", "199:id"));
+      await user.tab(); // out
+      const grid = screen.getByRole("grid");
+      grid.scrollTop = 0;
+      grid.dispatchEvent(new Event("scroll"));
+      await user.tab({ shift: true });
+      expect(grid.contains(document.activeElement)).toBe(true);
+    });
   });
 });
 

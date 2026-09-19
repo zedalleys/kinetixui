@@ -197,7 +197,7 @@ Dark mode has **no** contrast failures once the canvas background is correct.
 | `Tour` | `role="dialog" aria-modal` with no accessible name, no focus move on open, no Tab trap, no focus restore | **Fixed** |
 | `MultiSelect` | opened by keyboard but focus stayed on the combobox, so arrow keys never reached the option list — could not choose an option without a mouse | **Fixed** (search field is focused on open; focus returns to the combobox on close) |
 | `DataGrid` | sortable headers and editable cells were not focusable; editing was double-click only | **Fixed** (Tab, Enter / Space, Enter / F2, Esc) |
-| `DataGrid` | no arrow-key movement between cells; column reorder / resize pointer-only | **Open** — expected-failure test |
+| `DataGrid` | no arrow-key movement between cells; column reorder / resize pointer-only | **Fixed** — roving-tabindex ARIA grid model (arrows, Home/End, Ctrl corners, PageUp/Down, RTL-aware, virtualization-aware), `aria-rowindex` / `aria-colindex` / `aria-rowcount`, Alt+arrows reorder and Shift+arrows resize with a live-region announcement |
 | `ColorPicker`, `Slider` | `aria-label` was on the Radix slider root, but the element with `role="slider"` is the thumb, so every slider was unnamed | **Fixed** |
 | `TreeView` | none — follows the WAI-ARIA tree pattern | — |
 
