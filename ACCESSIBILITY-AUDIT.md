@@ -216,3 +216,15 @@ The browser baseline went 58 → **0** and the jsdom `KNOWN` list to empty. Two 
 - `ColorPicker` hex field had no label and its 2D square had no `aria-valuenow`; `MarkdownEditor` put its label on the wrapper instead of the textarea; `MultiSelect` gained Backspace-removes-last-chip.
 
 **Demos** (Storybook stories are generated from `apps/web/src/registry/demos.tsx`, which also drives the live previews on the site, so the site's own demos are fixed too): icon-only ToggleGroup items, Checkbox/Switch/Select/Slider/Progress/CircularProgress/NumberInput/InputOTP/NativeSelect/MultiSelect/MarkdownEditor demos now carry accessible names, and the code snippets shown on the docs pages teach the same pattern.
+
+## Forced colors, reduced motion, Kanban (2026-09-19)
+
+The browser pass (`scripts/a11y-browser.mjs`) gained three checks with no baseline, run on every story where relevant:
+
+| Check | Finding | Status |
+|---|---|---|
+| Forced colors: every focus stop keeps a visible outline (798 stops) | `InputOTP`'s active slot and the `Chart` SVG had no indicator (ring / transparent outline only) | **Fixed** |
+| Reduced motion: no loop faster than 3s | `MessageBubble` typing dots; `Spinner`, `FileUpload` spinner, `Skeleton` and the chart placeholder had no `motion-reduce` handling | **Fixed** (skeleton/placeholder/dots stop; spinners slow to 3s per turn) |
+| `KanbanBoard` keyboard drag (Space / arrows) within and across columns | passes | — |
+
+Gotcha found along the way: `tailwind-merge` treats a bare `outline` and `outline-2` in one class list as conflicting and drops one, so a forced-colors outline written that way silently vanished. Use one arbitrary property (`forced-colors:[outline:2px_solid]`).

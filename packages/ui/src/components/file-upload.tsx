@@ -139,7 +139,7 @@ function FileUploadItem({ file, onRemove, onRetry }: FileUploadItemProps) {
   return (
     <li className={cn("flex items-center gap-2.5 rounded-md border p-2.5 text-body-sm", isError ? "border-destructive bg-destructive/5" : "border-input")}>
       {isLoading ? (
-        <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" aria-hidden />
+        <Loader2 className="size-4 shrink-0 animate-spin motion-reduce:animate-[spin_3s_linear_infinite] text-muted-foreground" aria-hidden />
       ) : isError ? (
         <TriangleAlert className="size-4 shrink-0 text-destructive" aria-hidden />
       ) : (
