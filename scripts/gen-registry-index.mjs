@@ -6,7 +6,8 @@
  * files (apps/web/public/r/<name>.json), never an index of all of them.
  *
  * Also embeds `platforms`/`status` on each `registry:ui` item, straight
- * from platform-parity.json / component-status.json (the same data
+ * from platform-parity.json / component-status.json (generated from
+ * components.manifest.json; the same data
  * apps/web/src/lib/{platform-parity,component-status}.ts read) — so the
  * CLI can show platform/maturity info without a second source of truth.
  *

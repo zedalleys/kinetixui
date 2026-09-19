@@ -59,7 +59,7 @@ contract import, dark mode — is in [Installation](https://kinetixui.com/docs/i
   [`ui-swiftui`](packages/ui-swiftui) and [`ui-flutter`](packages/ui-flutter)
   each carry a 1:1 port of the React surface (~68 `Kinetix*` components) on the
   same token contract, compiled in CI per platform. Documented exceptions (React‑only or partial) live
-  in [`platform-parity.json`](platform-parity.json): `Form`, `NavigationMenu`,
+  in [`components.manifest.json`](components.manifest.json): `Form`, `NavigationMenu`,
   `Combobox`, `NativeSelect`, `AvatarGroup`, `Tour`, `KanbanBoard`, plus `Chart`
   (no Compose) and `Sidebar` (no Flutter).
 - **A portable registry.** Every component serialised to a shadcn‑compatible JSON

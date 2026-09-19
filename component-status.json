@@ -1,6 +1,6 @@
 {
   "$schema": "https://kinetixui.com/schema/component-status.json",
-  "$description": "slug → lifecycle status (\"beta\" | \"stable\" | \"deprecated\"). EVERY component in packages/ui must have an explicit entry — an omission is a CI failure (`pnpm check:status`), never an implicit \"stable\". A new component ships \"beta\" for the release cycle it lands in (still on all required platforms, still CI-verified — \"beta\" means \"new\", not \"incomplete\"); flip it to \"stable\" once it has shipped a full cycle with no reported issues. \"deprecated\" has no members yet; nothing has been removed from the library so far. Single source of truth, consumed by apps/web/src/lib/component-status.ts (web app) and scripts/gen-registry-index.mjs (CLI registry index, which omits \"stable\") — edit this file, not either of those.",
+  "$description": "slug → lifecycle status (\"beta\" | \"stable\" | \"deprecated\"), one entry per component. GENERATED from components.manifest.json by `pnpm gen:manifest` — edit the manifest, not this file. Consumed by apps/web/src/lib/component-status.ts and scripts/gen-registry-index.mjs (which omits \"stable\").",
   "status": {
     "accordion": "stable",
     "alert": "stable",
@@ -9,6 +9,7 @@
     "aspect-ratio": "stable",
     "audio-player": "stable",
     "avatar": "stable",
+    "avatar-group": "stable",
     "badge": "stable",
     "banner": "stable",
     "breadcrumb": "stable",
@@ -23,6 +24,7 @@
     "code-block": "stable",
     "collapsible": "stable",
     "color-picker": "beta",
+    "combobox": "stable",
     "command": "stable",
     "comparison-slider": "stable",
     "context-menu": "stable",

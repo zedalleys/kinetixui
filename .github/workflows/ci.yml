@@ -41,8 +41,8 @@ jobs:
       - name: Typography alias guardrail
         run: pnpm check:typography
 
-      - name: Component lifecycle status check
-        run: pnpm check:status
+      - name: Component manifest check (status + platforms)
+        run: pnpm check:manifest
 
       - name: Icon mapping drift check
         run: pnpm check:icons
@@ -64,8 +64,10 @@ jobs:
             apps/web/public/specs \
             registry/registry.json \
             registry/kinetixui \
-            specs/components; then
-            echo "::error::Generated output is stale. Run 'pnpm build:tokens && pnpm build:registry' and commit the result."
+            specs/components \
+            component-status.json \
+            platform-parity.json; then
+            echo "::error::Generated output is stale. Run 'pnpm gen:manifest && pnpm build:tokens && pnpm build:registry' and commit the result."
             exit 1
           fi
 
