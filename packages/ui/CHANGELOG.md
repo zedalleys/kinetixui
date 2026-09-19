@@ -1,5 +1,19 @@
 # @kinetixui/ui
 
+## 0.18.0
+
+### Minor Changes
+
+- cb33179: `DataGrid` now follows the ARIA grid keyboard pattern. The grid is a single tab stop with roving focus: arrow keys move between cells (the header row included, mirrored under RTL), `Home` / `End` go to the row ends and `Ctrl`+`Home` / `Ctrl`+`End` to the grid corners, `PageUp` / `PageDown` move by a page, and focus scrolls virtualized rows into view. Column reorder and resize now work from the keyboard (`Alt`+`←/→` and `Shift`+`←/→` on a header, announced in a live region), and rows and cells carry `aria-rowindex` / `aria-colindex` with `aria-rowcount` / `aria-colcount` so screen readers report the right position in a virtualized grid. Behaviour change: every editable cell and sortable header used to be its own tab stop; the grid is now one tab stop.
+- 5d5fdcf: Add role tokens on top of `primary`: `action` (+ `action-foreground`), `link`, `focus` and `brand` (+ `brand-foreground`), plus explicit `action-hover` / `action-pressed` for the native ports. `action`, `link` and `focus` default to `primary` / `ring` as live `var()` references in both themes, so an existing theme that only sets `--primary` keeps working, while `--action` can now be overridden on its own to split the interactive colour from `primary`. Components now read the role tokens (`bg-action`, `text-link`) instead of `primary` — no visual change with the default theme — and `Fab` no longer uses a hard-coded blue hover that inverted in dark mode. `kinetixui theme create/build` and the web theme-builder accept the new tokens (optional overrides). SwiftUI, Compose and Flutter get `action`, `actionHover`, `actionPressed`, `brand`, `link` and `focus` colours in their compiled tokens. **Upgrade note:** components using `bg-action` / `text-link` need the matching `@kinetixui/ui/tailwind.config` preset, so update the package when re-adding components.
+
+### Patch Changes
+
+- 6f30f5c: Accessibility fixes found by the real-browser pass, closing its baseline: `Banner` no longer uses the `banner` landmark role; a pressable `ListItem` is now a `listitem` containing a `button` (was a `button` in place of the listitem); `DiffViewer` rows have cells and `JsonViewer` nested items sit in a `group`; `FileUpload`'s dropzone is a plain drop surface with the Browse button as the single control (was a nested-interactive `role="button"`); `ScrollArea` and `VirtualList` scroll regions are keyboard-focusable; `ColorPicker` labels its hex field and gives its 2D square `aria-valuenow`; `MarkdownEditor` names its textarea (via `aria-label`, default "Markdown"); `MultiSelect` removes the last chip on Backspace in an empty search field.
+- 90f49dc: Forced-colors and reduced-motion fixes found by new real-browser checks: `InputOTP`'s active slot and the `Chart` SVG now keep a visible focus outline in forced-colors mode (box-shadow rings are stripped there); `Skeleton`, the chart loading placeholder and `MessageBubble`'s typing dots stop under `prefers-reduced-motion`, and `Spinner` / the `FileUpload` spinner slow to one turn per three seconds instead of spinning at full speed.
+- Updated dependencies [5d5fdcf]
+  - @kinetixui/tokens@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

@@ -58,6 +58,71 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.18.0",
+    date: "2026-09-19",
+    summary: "Role tokens (action, link, focus, brand), a keyboard-navigable DataGrid, and the accessibility baseline closed out.",
+    breaking: [
+      "Components now use bg-action / text-action-foreground / text-link instead of primary, so components copied into your project need the matching @kinetixui/ui/tailwind.config preset — it defines the new colours. Update the package when you re-add components with the CLI. With the default theme nothing looks different.",
+      "DataGrid: every editable cell and sortable header used to be its own tab stop. The grid is now one tab stop; move between cells with the arrow keys.",
+      "Markup changes that can affect tests or selectors: a pressable ListItem is now a listitem containing a button (was a button in place of the listitem); FileUpload's dropzone is a plain drop surface (the Browse button is the one control, and it is no longer a role=\"button\" containing a button); Banner no longer has role=\"banner\"; Slider and ColorPicker put aria-label on the thumb rather than the root; MarkdownEditor puts aria-label on its textarea.",
+    ],
+    migration:
+      "Update @kinetixui/ui (and @kinetixui/tokens) together, and re-add any component you copied so its classes match the new preset. If your theme sets --primary, nothing else changes: action, link and focus default to primary and ring. To split them, override --action, --link, --focus or --brand on their own. If a test or selector targets one of the markup changes above (the role on a pressable ListItem, the FileUpload dropzone, a Banner, or the label on a Slider), update it to the new element.",
+    limitations: [
+      "SwiftUI, Compose and Flutter receive the new colours as tokens (action, actionHover, actionPressed, brand, link, focus), but their components do not read action yet.",
+      "DataGrid has no multi-cell selection.",
+    ],
+    changes: [
+      {
+        kind: "new",
+        area: "tokens",
+        title: "Role tokens: action, link, focus and brand",
+        body: "primary was doing four jobs: the button fill, the link colour, the focus ring and, for many brands, the brand colour. action (+ action-foreground), link and focus now default to primary / ring, and brand is a separate identity colour. A theme that only sets --primary keeps working; override a role on its own to split it off. Explicit action-hover and action-pressed values are included for the native ports, and a CI check asserts they equal the web's 90% / 85% derivation.",
+        href: "/docs/theming",
+      },
+      {
+        kind: "improved",
+        area: "cli",
+        title: "`theme create` / `theme build` and the web theme-builder accept the new tokens",
+        body: "They are optional overrides: unset, they resolve to primary and ring. action and brand get contrast reporting and an auto-derived foreground.",
+        href: "/docs/cli",
+      },
+      {
+        kind: "new",
+        area: "platforms",
+        title: "New colours in the SwiftUI, Compose and Flutter tokens",
+        body: "action, actionHover, actionPressed, brand, link and focus are in the compiled colour sets of all three native libraries.",
+      },
+      {
+        kind: "fixed",
+        area: "components",
+        title: "Fab's Primary hover no longer inverts in dark mode",
+        body: "It used the same hard-coded hover (--color-blue-600) that Button dropped earlier because it does not follow the theme and inverts in dark mode; it now uses the same action-derived states as Button.",
+      },
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "DataGrid follows the ARIA grid keyboard pattern",
+        body: "One tab stop; arrow keys move between cells (the header row included, mirrored under RTL); Home / End, Ctrl+Home / Ctrl+End and PageUp / PageDown; virtualized rows scroll into view. Alt+←/→ reorders a column and Shift+←/→ resizes it from its header, announced in a live region. Rows and cells carry aria-rowindex / aria-colindex, and the grid aria-rowcount / aria-colcount, so screen readers report the right position in a virtualized grid.",
+        href: "/docs/accessibility",
+      },
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "Every story is axe-clean, in light and dark, in a real browser",
+        body: "Fixed: Banner used the site-header landmark role; a pressable List row was a button standing in for a listitem; DiffViewer rows had no cells and JsonViewer's nested items no group; FileUpload's dropzone was a role=\"button\" containing a real button; ScrollArea and VirtualList scroll regions were not keyboard-focusable; ColorPicker's hex field was unlabeled; MultiSelect now removes the last chip on Backspace.",
+        href: "/docs/accessibility",
+      },
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "Forced colors and reduced motion",
+        body: "InputOTP's active slot and the Chart SVG kept no focus outline in forced-colors mode (a box-shadow ring is stripped there). Skeleton, the chart loading placeholder and MessageBubble's typing dots now stop under prefers-reduced-motion, and Spinner slows to one turn per three seconds instead of stopping, so it still reads as \"working\".",
+        href: "/docs/accessibility",
+      },
+    ],
+  },
+  {
     version: "0.17.0",
     date: "2026-09-19",
     summary: "Accessibility hardening for the hand-built widgets, contrast fixes, and a richer `inspect`.",
