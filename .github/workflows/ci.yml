@@ -58,8 +58,17 @@ jobs:
 
       - name: Generated files in sync
         run: |
+          # The native packages carry vendored copies of packages/tokens/dist/{android,ios,flutter};
+          # re-vendor so a token change that wasn't copied across shows up in the diff below.
+          node scripts/vendor-compose-tokens.mjs
+          node scripts/vendor-swiftui-tokens.mjs
+          node scripts/vendor-flutter-tokens.mjs
+          git add -N packages/ui-compose packages/ui-swiftui packages/ui-flutter
           if ! git diff --exit-code -- \
             packages/tokens/dist \
+            packages/ui-compose \
+            packages/ui-swiftui \
+            packages/ui-flutter \
             apps/web/public/r \
             apps/web/public/specs \
             registry/registry.json \
@@ -67,7 +76,7 @@ jobs:
             specs/components \
             component-status.json \
             platform-parity.json; then
-            echo "::error::Generated output is stale. Run 'pnpm gen:manifest && pnpm build:tokens && pnpm build:registry' and commit the result."
+            echo "::error::Generated output is stale. Run 'pnpm gen:manifest && pnpm build:tokens && pnpm vendor:compose && pnpm vendor:swiftui && pnpm vendor:flutter && pnpm build:registry' and commit the result."
             exit 1
           fi
 
