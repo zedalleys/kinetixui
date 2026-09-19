@@ -1,85 +1,101 @@
 import type { Metadata } from "next";
-import { RELEASES, PACKAGE_CHANGELOGS } from "@/lib/releases";
+import { LATEST_VERSION, PACKAGE_CHANGELOGS, RELEASES, isNotable, packagesChanged, releaseTypeAt } from "@/lib/releases";
+import { PLATFORMS, PLATFORM_ABBR, platformsFor } from "@/lib/platform-parity";
+import { componentDocs } from "@/lib/site";
+import { ChangelogView, type ViewComponent, type ViewRelease } from "@/components/changelog-view";
 
 export const metadata: Metadata = {
   title: "Changelog",
-  description: "Every KinetixUI release, newest first — distilled from the per-package changelogs.",
+  description:
+    "New components, platform support, token updates, CLI improvements, accessibility fixes, and breaking changes across KinetixUI.",
 };
 
-const MONTHS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /** "2026-09-06" → "Sep 6, 2026" without touching the runtime locale/timezone. */
 function formatDate(iso: string) {
   const [y, m, d] = iso.split("-").map(Number);
-  return `${MONTHS[m - 1]} ${d}, ${y}`;
+  return `${MONTHS[m! - 1]} ${d}, ${y}`;
 }
 
+/** slug → docs page + title, from the same list that powers /components */
+const DOCS = new Map(componentDocs.map((c) => [c.href.split("/").pop() ?? "", c]));
+const titleCase = (slug: string) => slug.split("-").map((s) => s[0]!.toUpperCase() + s.slice(1)).join(" ");
+
+function componentFor(slug: string): ViewComponent {
+  const doc = DOCS.get(slug);
+  const on = new Set(platformsFor(slug));
+  return {
+    slug,
+    name: doc?.title ?? titleCase(slug),
+    href: doc?.href,
+    platforms: PLATFORMS.map((p) => ({ abbr: PLATFORM_ABBR[p], name: p, on: on.has(p) })),
+  };
+}
+
+const releases: ViewRelease[] = RELEASES.map((r, i) => ({
+  version: r.version,
+  date: r.date,
+  dateLabel: formatDate(r.date),
+  type: releaseTypeAt(i),
+  summary: r.summary,
+  isLatest: r.version === LATEST_VERSION,
+  notable: isNotable(i),
+  packages: packagesChanged(r.version),
+  changes: r.changes,
+  breaking: r.breaking,
+  migration: r.migration,
+  limitations: r.limitations,
+  groups: r.newComponents?.map((g) => ({ group: g.group, items: g.slugs.map(componentFor) })),
+  // a Changesets fixed group tags all three packages; the UI tag is the canonical one (there are no GitHub Releases after v0.5.0)
+  tagHref: `https://github.com/zedalleys/kinetixui/tree/@kinetixui/ui@${r.version}`,
+}));
+
 export default function ChangelogPage() {
+  const latest = releases.find((r) => r.isLatest) ?? releases[0]!;
   return (
     <div>
-      <h1 className="mb-3 mt-2 scroll-mt-28 font-display text-4xl font-bold tracking-[-0.02em]">
-        Changelog
-      </h1>
+      <h1 className="mb-3 mt-2 scroll-mt-28 font-display text-4xl font-bold tracking-[-0.02em]">Changelog</h1>
       <p className="leading-relaxed text-muted-foreground">
-        Every release, newest first. Each entry is distilled from the Changesets-generated
-        per-package changelogs; the exhaustive, commit-level record is linked at the bottom.
+        New components, platform support, token updates, CLI improvements, accessibility fixes, and breaking changes
+        across KinetixUI. Each entry is distilled from the Changesets-generated per-package changelogs; the exhaustive,
+        commit-level record is linked at the bottom.
       </p>
 
-      <div className="mt-12 space-y-14">
-        {RELEASES.map((release, i) => (
-          <section key={release.version} id={release.version} className="scroll-mt-28">
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border pb-2">
-              <h2 className="font-display text-2xl font-semibold">{release.version}</h2>
-              {i === 0 && (
-                <span
-                  data-cp
-                  className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-primary"
-                >
-                  Latest
-                </span>
-              )}
-              <time
-                dateTime={release.date}
-                className="ml-auto font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground"
-              >
-                {formatDate(release.date)}
-              </time>
-            </div>
+      <p className="mt-5 text-sm">
+        <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Latest </span>
+        <a href={`#${latest.version}`} className="font-semibold text-primary underline-offset-4 hover:underline">
+          v{latest.version}
+        </a>
+        <span className="text-muted-foreground">
+          {" "}
+          · {latest.type} · {latest.dateLabel}
+        </span>
+      </p>
 
-            <p className="mt-3 leading-relaxed text-muted-foreground">{release.summary}</p>
+      <p className="mt-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm leading-relaxed text-muted-foreground">
+        KinetixUI is pre-1.0. A minor version may change an API while the component and token contracts stabilise. Any
+        change that needs action from you is listed under <strong className="font-medium text-foreground">Breaking
+        changes</strong>, with a migration note where there is one. The three npm packages always share a version;
+        the indicators on each release show which ones actually changed.
+      </p>
 
-            <ul className="mt-4 space-y-3 border-l border-border">
-              {release.changes.map((change) => (
-                <li key={change.title} className="pl-4 text-sm leading-relaxed">
-                  <span className="font-medium text-foreground">{change.title}</span>
-                  {change.body ? (
-                    <span className="text-muted-foreground"> — {change.body}</span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
+      <ChangelogView releases={releases} />
 
       <div className="mt-16 border-t border-border pt-6 text-sm text-muted-foreground">
         Full commit-level history:{" "}
         {PACKAGE_CHANGELOGS.map((pkg, i) => (
           <span key={pkg.name}>
             {i > 0 && " · "}
-            <a
-              href={pkg.href}
-              className="font-medium text-primary underline underline-offset-4"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href={pkg.href} className="font-medium text-primary underline underline-offset-4" target="_blank" rel="noreferrer">
               {pkg.name}
             </a>
           </span>
         ))}
+        <p className="mt-2">
+          The SwiftUI, Compose and Flutter libraries are not versioned with the npm packages; the platform badges show
+          today&apos;s coverage from the same data as <a href="/components" className="text-primary underline underline-offset-4">/components</a>.
+        </p>
       </div>
     </div>
   );
