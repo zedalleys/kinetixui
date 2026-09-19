@@ -59,17 +59,11 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
 
     return (
       <div ref={ref} className={cn("flex w-full flex-col gap-3 font-sans", className)} {...props}>
+        {/* A drag-and-drop surface, not a control: the Button inside is the one keyboard/AT target
+            (a role="button" containing a Button is nested-interactive). Clicking the surface stays a
+            mouse convenience. */}
         <div
-          role="button"
-          tabIndex={disabled ? -1 : 0}
-          aria-disabled={disabled}
           onClick={() => !disabled && inputRef.current?.click()}
-          onKeyDown={(e) => {
-            if (!disabled && (e.key === "Enter" || e.key === " ")) {
-              e.preventDefault();
-              inputRef.current?.click();
-            }
-          }}
           onDragOver={(e) => {
             e.preventDefault();
             if (!disabled) setDragging(true);
@@ -81,8 +75,8 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
             if (!disabled) pick(e.dataTransfer.files);
           }}
           className={cn(
-            "flex flex-col items-center gap-2 rounded-md border border-dashed border-input p-6 text-center outline-none transition-colors",
-            !disabled && "cursor-pointer hover:bg-accent/50 focus-visible:shadow-focus",
+            "flex flex-col items-center gap-2 rounded-md border border-dashed border-input p-6 text-center transition-colors",
+            !disabled && "cursor-pointer hover:bg-accent/50",
             dragging && "border-primary bg-accent",
             disabled && "pointer-events-none opacity-disabled",
           )}
@@ -108,6 +102,10 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
             multiple={multiple}
             accept={accept}
             disabled={disabled}
+            // driven by the dropzone button above; a second focusable control inside a role=button
+            // (and an unlabeled one) is invalid, so keep it out of the tab order and the a11y tree
+            tabIndex={-1}
+            aria-hidden="true"
             className="sr-only"
             onChange={(e) => {
               pick(e.target.files);
@@ -141,7 +139,7 @@ function FileUploadItem({ file, onRemove, onRetry }: FileUploadItemProps) {
   return (
     <li className={cn("flex items-center gap-2.5 rounded-md border p-2.5 text-body-sm", isError ? "border-destructive bg-destructive/5" : "border-input")}>
       {isLoading ? (
-        <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" aria-hidden />
+        <Loader2 className="size-4 shrink-0 animate-spin motion-reduce:animate-[spin_3s_linear_infinite] text-muted-foreground" aria-hidden />
       ) : isError ? (
         <TriangleAlert className="size-4 shrink-0 text-destructive" aria-hidden />
       ) : (

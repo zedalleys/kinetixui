@@ -157,19 +157,19 @@ const CONTROLS = {
     strokeWidth: { control: { type: "range", min: 2, max: 12 } },
     showValue: { control: "boolean" },
   }`,
-    render: `(args) => <CircularProgress {...args} />`,
+    render: `(args) => <CircularProgress aria-label="Upload progress" {...args} />`,
   },
   progress: {
     comp: "Progress",
     args: `{ value: 66 }`,
     argTypes: `{ value: { control: { type: "range", min: 0, max: 100 } } }`,
-    render: `(args) => <Progress {...args} className="w-60" />`,
+    render: `(args) => <Progress aria-label="Upload progress" {...args} className="w-60" />`,
   },
   slider: {
     comp: "Slider",
     args: `{ disabled: false }`,
     argTypes: `{ disabled: { control: "boolean" } }`,
-    render: `(args) => <Slider {...args} defaultValue={[50]} max={100} step={1} className="w-60" />`,
+    render: `(args) => <Slider aria-label="Volume" {...args} defaultValue={[50]} max={100} step={1} className="w-60" />`,
   },
   separator: {
     comp: "Separator",
@@ -185,13 +185,13 @@ const CONTROLS = {
     comp: "Switch",
     args: `{ disabled: false, defaultChecked: false }`,
     argTypes: `{ disabled: { control: "boolean" }, defaultChecked: { control: "boolean" } }`,
-    render: `(args) => <Switch {...args} />`,
+    render: `(args) => <Switch aria-label="Airplane mode" {...args} />`,
   },
   checkbox: {
     comp: "Checkbox",
     args: `{ disabled: false, defaultChecked: false }`,
     argTypes: `{ disabled: { control: "boolean" }, defaultChecked: { control: "boolean" } }`,
-    render: `(args) => <Checkbox {...args} />`,
+    render: `(args) => <Checkbox aria-label="Accept terms" {...args} />`,
   },
   "number-input": {
     comp: "NumberInput",
@@ -199,7 +199,7 @@ const CONTROLS = {
     argTypes: `{
     min: { control: "number" }, max: { control: "number" }, step: { control: "number" },
   }`,
-    render: `(args) => <NumberInput {...args} className="w-32" />`,
+    render: `(args) => <NumberInput aria-label="Quantity" {...args} className="w-32" />`,
   },
   metric: {
     comp: "Metric",
@@ -276,9 +276,9 @@ const CONTROLS = {
     argTypes: `{ type: { control: "inline-radio", options: ["single", "multiple"] } }`,
     render: `(args) => (
     <ToggleGroup {...args}>
-      <ToggleGroupItem value="bold"><Bold className="size-4" /></ToggleGroupItem>
-      <ToggleGroupItem value="italic"><Italic className="size-4" /></ToggleGroupItem>
-      <ToggleGroupItem value="underline"><Underline className="size-4" /></ToggleGroupItem>
+      <ToggleGroupItem value="bold" aria-label="Bold"><Bold className="size-4" /></ToggleGroupItem>
+      <ToggleGroupItem value="italic" aria-label="Italic"><Italic className="size-4" /></ToggleGroupItem>
+      <ToggleGroupItem value="underline" aria-label="Underline"><Underline className="size-4" /></ToggleGroupItem>
     </ToggleGroup>
   )`,
   },
@@ -375,7 +375,7 @@ const CONTROLS = {
     argTypes: `{ disabled: { control: "boolean" } }`,
     render: `(args) => (
     <Select {...args}>
-      <SelectTrigger className="w-[220px]">
+      <SelectTrigger className="w-[220px]" aria-label="Fruit">
         <SelectValue placeholder="Select a fruit" />
       </SelectTrigger>
       <SelectContent>

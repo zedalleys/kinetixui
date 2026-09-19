@@ -26,7 +26,7 @@ contract that feeds all four component libraries.
    visibility, keyboard operability, names on icon-only controls, state exposed
    to AT (`aria-pressed` / `aria-expanded`), colour-only signalling, and
    `prefers-reduced-motion` coverage.
-3. **Rendered axe-core passes** — **done (2026-09-19).** Two layers, both in CI: a jsdom pass (`packages/ui/src/components-a11y.test.tsx`, with `KNOWN` baseline) and a real-browser pass (`scripts/a11y-browser.mjs`, `pnpm check:a11y-browser`, workflow `a11y-browser.yml`) that opens every Storybook story in headless Chromium in **light and dark** with every axe rule on, including colour contrast. Violations that pre-date the pass are listed in `a11y-baseline.json` (58); new ones fail the build and fixed ones must be removed, so the baseline only shrinks. **Still not covered:** keyboard interaction, focus trapping/return, forced-colors, and per-component ARIA interaction models (DataGrid, TreeView, Tour, Kanban, MultiSelect, ColorPicker).
+3. **Rendered axe-core passes** — **done (2026-09-19).** Two layers, both in CI: a jsdom pass (`packages/ui/src/components-a11y.test.tsx`, with `KNOWN` baseline) and a real-browser pass (`scripts/a11y-browser.mjs`, `pnpm check:a11y-browser`, workflow `a11y-browser.yml`) that opens every Storybook story in headless Chromium in **light and dark** with every axe rule on, including colour contrast. `a11y-baseline.json` is **empty**: every story is clean in light and dark. A new violation fails the build. **Still not covered:** keyboard interaction, focus trapping/return, forced-colors, and per-component ARIA interaction models (DataGrid, TreeView, Tour, Kanban, MultiSelect, ColorPicker).
 
 ## Severity key
 
@@ -197,8 +197,34 @@ Dark mode has **no** contrast failures once the canvas background is correct.
 | `Tour` | `role="dialog" aria-modal` with no accessible name, no focus move on open, no Tab trap, no focus restore | **Fixed** |
 | `MultiSelect` | opened by keyboard but focus stayed on the combobox, so arrow keys never reached the option list — could not choose an option without a mouse | **Fixed** (search field is focused on open; focus returns to the combobox on close) |
 | `DataGrid` | sortable headers and editable cells were not focusable; editing was double-click only | **Fixed** (Tab, Enter / Space, Enter / F2, Esc) |
-| `DataGrid` | no arrow-key movement between cells; column reorder / resize pointer-only | **Open** — expected-failure test |
+| `DataGrid` | no arrow-key movement between cells; column reorder / resize pointer-only | **Fixed** — roving-tabindex ARIA grid model (arrows, Home/End, Ctrl corners, PageUp/Down, RTL-aware, virtualization-aware), `aria-rowindex` / `aria-colindex` / `aria-rowcount`, Alt+arrows reorder and Shift+arrows resize with a live-region announcement |
 | `ColorPicker`, `Slider` | `aria-label` was on the Radix slider root, but the element with `role="slider"` is the thumb, so every slider was unnamed | **Fixed** |
 | `TreeView` | none — follows the WAI-ARIA tree pattern | — |
 
 Also corrected the accessibility docs page, which claimed every interactive component is a Radix primitive with correct keyboard behaviour by default. Not yet covered: forced-colors and reduced-motion in a real browser, and any automated keyboard test for `KanbanBoard` (dragging needs real layout, so it belongs in the browser pass).
+
+## Baseline closed out (2026-09-19)
+
+The browser baseline went 58 → **0** and the jsdom `KNOWN` list to empty. Two kinds of fix:
+
+**Component defects**
+- `Banner` used `role="banner"` (the page's site-header landmark) for a notice strip — two banners on one page is invalid. Removed the role.
+- `List`: a pressable row was `role="button"` standing in for `role="listitem"`, so a list's children weren't all listitems. Now a listitem containing the button.
+- `DiffViewer`: rows had no cells (`role="cell"` / `columnheader` added). `JsonViewer`: nested `treeitem`s weren't in a `role="group"`.
+- `FileUpload`: the dropzone was a `role="button"` containing a real Button (nested-interactive) and an unlabeled hidden input. It is now a plain drop surface; the Browse button is the single keyboard/AT target.
+- `ScrollArea` viewport and `VirtualList` were scrollable but not keyboard-focusable.
+- `ColorPicker` hex field had no label and its 2D square had no `aria-valuenow`; `MarkdownEditor` put its label on the wrapper instead of the textarea; `MultiSelect` gained Backspace-removes-last-chip.
+
+**Demos** (Storybook stories are generated from `apps/web/src/registry/demos.tsx`, which also drives the live previews on the site, so the site's own demos are fixed too): icon-only ToggleGroup items, Checkbox/Switch/Select/Slider/Progress/CircularProgress/NumberInput/InputOTP/NativeSelect/MultiSelect/MarkdownEditor demos now carry accessible names, and the code snippets shown on the docs pages teach the same pattern.
+
+## Forced colors, reduced motion, Kanban (2026-09-19)
+
+The browser pass (`scripts/a11y-browser.mjs`) gained three checks with no baseline, run on every story where relevant:
+
+| Check | Finding | Status |
+|---|---|---|
+| Forced colors: every focus stop keeps a visible outline (798 stops) | `InputOTP`'s active slot and the `Chart` SVG had no indicator (ring / transparent outline only) | **Fixed** |
+| Reduced motion: no loop faster than 3s | `MessageBubble` typing dots; `Spinner`, `FileUpload` spinner, `Skeleton` and the chart placeholder had no `motion-reduce` handling | **Fixed** (skeleton/placeholder/dots stop; spinners slow to 3s per turn) |
+| `KanbanBoard` keyboard drag (Space / arrows) within and across columns | passes | — |
+
+Gotcha found along the way: `tailwind-merge` treats a bare `outline` and `outline-2` in one class list as conflicting and drops one, so a forced-colors outline written that way silently vanished. Use one arbitrary property (`forced-colors:[outline:2px_solid]`).

@@ -29,39 +29,53 @@ export interface ListItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>
 const ListItem = React.forwardRef<HTMLDivElement, ListItemProps>(
   ({ className, leading, title, description, trailing, disabled, onSelect, ...props }, ref) => {
     const interactive = !!onSelect && !disabled;
-    return (
-      <div
-        ref={ref}
-        role={interactive ? "button" : "listitem"}
-        tabIndex={interactive ? 0 : undefined}
-        aria-disabled={disabled}
-        onClick={disabled ? undefined : onSelect}
-        onKeyDown={
-          interactive
-            ? (e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onSelect?.();
-                }
-              }
-            : undefined
-        }
-        className={cn(
-          "flex items-center gap-3 px-3 py-3 font-sans outline-none",
-          // ring keeps the highlighted row perceptible where the accent fill is <3:1 (dark)
-          interactive &&
-            "cursor-pointer hover:bg-accent hover:ring-1 hover:ring-inset hover:ring-ring focus-visible:bg-accent focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
-          disabled && "pointer-events-none opacity-disabled",
-          className,
-        )}
-        {...props}
-      >
+    const rowClass = cn(
+      "flex items-center gap-3 px-3 py-3 font-sans outline-none",
+      // ring keeps the highlighted row perceptible where the accent fill is <3:1 (dark)
+      interactive &&
+        "cursor-pointer hover:bg-accent hover:ring-1 hover:ring-inset hover:ring-ring focus-visible:bg-accent focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
+      disabled && "pointer-events-none opacity-disabled",
+      className,
+    );
+    const content = (
+      <>
         {leading && <div className="flex shrink-0 items-center justify-center">{leading}</div>}
         <div className="min-w-0 flex-1">
           <div className="truncate text-body-md text-foreground">{title}</div>
           {description && <div className="truncate text-body-sm text-muted-foreground">{description}</div>}
         </div>
         {trailing && <div className="flex shrink-0 items-center gap-2">{trailing}</div>}
+      </>
+    );
+
+    if (!interactive) {
+      return (
+        <div ref={ref} role="listitem" aria-disabled={disabled} className={rowClass} {...props}>
+          {content}
+        </div>
+      );
+    }
+
+    // A list's only valid children are listitems, so a pressable row is a listitem that
+    // contains the button — not a button standing in for the listitem.
+    return (
+      <div role="listitem">
+        <div
+          ref={ref}
+          role="button"
+          tabIndex={0}
+          onClick={onSelect}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onSelect?.();
+            }
+          }}
+          className={rowClass}
+          {...props}
+        >
+          {content}
+        </div>
       </div>
     );
   },

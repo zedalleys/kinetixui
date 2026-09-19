@@ -12,9 +12,9 @@ const Demo = () => {
     }, []);
     return (
       <div className="flex items-center gap-6">
-        <CircularProgress value={v} showValue />
-        <CircularProgress value={v} size={64} strokeWidth={6} showValue />
-        <CircularProgress value={v} />
+        <CircularProgress value={v} showValue aria-label="Upload progress" />
+        <CircularProgress value={v} size={64} strokeWidth={6} showValue aria-label="Upload progress" />
+        <CircularProgress value={v} aria-label="Upload progress" />
       </div>
     );
   };
@@ -37,6 +37,6 @@ const meta = {
 
 export default meta;
 
-export const Playground: StoryObj<typeof meta> = { render: (args) => <CircularProgress {...args} /> };
+export const Playground: StoryObj<typeof meta> = { render: (args) => <CircularProgress aria-label="Upload progress" {...args} /> };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };

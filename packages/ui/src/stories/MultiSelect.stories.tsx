@@ -8,6 +8,7 @@ const Demo = () => {
     const [value, setValue] = React.useState(["react", "swiftui"]);
     return (
       <MultiSelect
+        aria-label="Platforms"
         className="w-full max-w-sm"
         value={value}
         onValueChange={setValue}

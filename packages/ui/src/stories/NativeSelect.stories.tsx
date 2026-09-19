@@ -5,7 +5,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { NativeSelect, NativeSelectOptGroup, NativeSelectOption, Select } from "@kinetixui/ui";
 
 const Demo = () => (
-    <NativeSelect className="max-w-xs" defaultValue="">
+    <NativeSelect aria-label="Fruit" className="max-w-xs" defaultValue="">
       <NativeSelectOption value="" disabled>
         Select a fruit…
       </NativeSelectOption>

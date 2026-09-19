@@ -10,37 +10,16 @@ import { afterEach, describe, expect, it } from "vitest";
  * association. jsdom has no layout or stylesheet, so `color-contrast` (covered
  * by `pnpm check:contrast`) and page-level rules are off.
  *
- * KNOWN lists violations that already existed when this pass was added
- * (mostly demo stories with unlabeled controls — fix the story or the component), keyed
- * `story:rule`. A new violation fails; fixing a known one fails too (stale
- * entry) until it is deleted from the list, so the baseline only shrinks.
+ * KNOWN lists violations that are tolerated, keyed `story:rule`. It is empty: every story
+ * is clean. A new violation fails; if you must baseline one, a later fix fails until the
+ * entry is deleted, so the list can only shrink.
  */
 const stories = import.meta.glob("./stories/*.stories.tsx", { eager: true }) as Record<
   string,
   Record<string, unknown>
 >;
 
-const KNOWN = new Set<string>([
-  "Banner:landmark-no-duplicate-banner",
-  "Banner:landmark-unique",
-  "CircularProgress:aria-progressbar-name",
-  "ColorPicker:label",
-  "DiffViewer:aria-required-children",
-  "FileUpload:label",
-  "FileUpload:nested-interactive",
-  "InputOTP:label",
-  "JsonViewer:aria-required-parent",
-  "List:aria-required-children",
-  "List:button-name",
-  "MarkdownEditor:label",
-  "MultiSelect:aria-input-field-name",
-  "NativeSelect:select-name",
-  "NumberInput:label",
-  "Progress:aria-progressbar-name",
-  "Select:button-name",
-  "Slider:aria-input-field-name",
-  "ToggleGroup:button-name",
-]);
+const KNOWN = new Set<string>([]);
 
 afterEach(cleanup);
 

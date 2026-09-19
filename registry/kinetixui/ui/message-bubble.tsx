@@ -71,7 +71,7 @@ const TypingIndicator = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HT
         <span
           key={i}
           aria-hidden
-          className="size-1.5 animate-typing-dot rounded-full bg-muted-foreground"
+          className="size-1.5 animate-typing-dot motion-reduce:animate-none motion-reduce:opacity-70 rounded-full bg-muted-foreground"
           style={{ animationDelay: `${i * 150}ms` }}
         />
       ))}

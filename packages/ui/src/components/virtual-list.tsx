@@ -63,7 +63,8 @@ function VirtualList<T>({
     <div
       ref={containerRef}
       role="list"
-      className={cn("overflow-y-auto font-sans", className)}
+      tabIndex={0}
+      className={cn("overflow-y-auto font-sans outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring", className)}
       style={{ height, ...style }}
       onScroll={(e) => {
         onScroll?.(e);
