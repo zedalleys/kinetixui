@@ -6,7 +6,7 @@ import { Checkbox } from "./components/checkbox";
 import { ColorPicker } from "./components/color-picker";
 import { FileUpload } from "./components/file-upload";
 import { List, ListItem } from "./components/list";
-import { DataGrid, type DataGridColumn } from "./components/data-grid";
+import { DataGrid, type DataGridColumn, type DataGridSelection } from "./components/data-grid";
 import { KinetixDirectionProvider } from "./components/direction-provider";
 import {
   Dialog,
@@ -434,13 +434,30 @@ describe("DataGrid", () => {
     { id: 2, name: "Abe" },
     { id: 3, name: "Bea" },
   ];
-  function setup(opts: { onCellEdit?: ReturnType<typeof vi.fn>; data?: Row[]; wrapper?: (n: React.ReactNode) => React.ReactNode } = {}) {
+  function setup(
+    opts: {
+      onCellEdit?: ReturnType<typeof vi.fn>;
+      data?: Row[];
+      wrapper?: (n: React.ReactNode) => React.ReactNode;
+      selectable?: boolean;
+      onSelectionChange?: (s: DataGridSelection | null) => void;
+    } = {},
+  ) {
     const onCellEdit = opts.onCellEdit ?? vi.fn();
     const columns: DataGridColumn<Row>[] = [
       { id: "name", header: "Name", cell: (r) => r.name, value: (r) => r.name, sortable: true, editable: true, onCellEdit },
       { id: "id", header: "ID", cell: (r) => r.id, value: (r) => r.id, minWidth: 60, width: 100 },
     ];
-    const grid = <DataGrid columns={columns} data={opts.data ?? rows} height={200} getRowId={(r) => r.id} />;
+    const grid = (
+      <DataGrid
+        columns={columns}
+        data={opts.data ?? rows}
+        height={200}
+        getRowId={(r) => r.id}
+        selectable={opts.selectable}
+        onSelectionChange={opts.onSelectionChange}
+      />
+    );
     render(
       <>
         {opts.wrapper ? opts.wrapper(grid) : grid}
@@ -610,6 +627,140 @@ describe("DataGrid", () => {
     expect(header("ID")).toHaveFocus();
     await user.keyboard("{ArrowRight}");
     expect(header("Name")).toHaveFocus();
+  });
+
+  describe("range selection (opt-in)", () => {
+    const selectedCells = () => screen.getAllByRole("gridcell").filter((c) => c.getAttribute("aria-selected") === "true");
+
+    it("is off by default: no aria-multiselectable, no aria-selected, Shift+Arrow just moves", async () => {
+      const user = userEvent.setup();
+      setup();
+      expect(screen.getByRole("grid")).not.toHaveAttribute("aria-multiselectable");
+      expect(cell(0, 0)).not.toHaveAttribute("aria-selected");
+      await user.tab();
+      await user.keyboard("{ArrowDown}{Shift>}{ArrowDown}{/Shift}");
+      expect(cell(1, 0)).toHaveFocus();
+      expect(cell(0, 0)).not.toHaveAttribute("aria-selected");
+    });
+
+    it("declares the grid multi-selectable and marks every cell selected=false until something is selected", async () => {
+      setup({ selectable: true });
+      expect(screen.getByRole("grid")).toHaveAttribute("aria-multiselectable", "true");
+      expect(cell(0, 0)).toHaveAttribute("aria-selected", "false");
+      expect(selectedCells()).toHaveLength(0);
+    });
+
+    it("Shift+Arrow extends a rectangle from the anchor and reports it", async () => {
+      const user = userEvent.setup();
+      const onSelectionChange = vi.fn();
+      setup({ selectable: true, onSelectionChange });
+      await user.tab();
+      await user.keyboard("{ArrowDown}"); // Name, row 0 (anchor)
+      await user.keyboard("{Shift>}{ArrowDown}{ArrowRight}{/Shift}");
+
+      expect(selectedCells()).toHaveLength(4); // rows 0-1 x Name, ID
+      expect(cell(1, 1)).toHaveFocus();
+      expect(onSelectionChange).toHaveBeenLastCalledWith({ rows: [0, 1], columns: ["name", "id"] });
+      expect(screen.getByRole("status")).toHaveTextContent("4 cells selected");
+    });
+
+    it("shrinks when Shift moves back toward the anchor", async () => {
+      const user = userEvent.setup();
+      setup({ selectable: true });
+      await user.tab();
+      await user.keyboard("{ArrowDown}{Shift>}{ArrowDown}{ArrowDown}{/Shift}");
+      expect(selectedCells()).toHaveLength(3);
+      await user.keyboard("{Shift>}{ArrowUp}{/Shift}");
+      expect(selectedCells()).toHaveLength(2);
+    });
+
+    it("a plain arrow key collapses the selection", async () => {
+      const user = userEvent.setup();
+      const onSelectionChange = vi.fn();
+      setup({ selectable: true, onSelectionChange });
+      await user.tab();
+      await user.keyboard("{ArrowDown}{Shift>}{ArrowDown}{/Shift}");
+      expect(selectedCells().length).toBeGreaterThan(0);
+      await user.keyboard("{ArrowDown}");
+      expect(selectedCells()).toHaveLength(0);
+      expect(onSelectionChange).toHaveBeenLastCalledWith(null);
+    });
+
+    it("Ctrl+A selects every cell; Escape clears it", async () => {
+      const user = userEvent.setup();
+      setup({ selectable: true });
+      await user.tab();
+      await user.keyboard("{ArrowDown}");
+      await user.keyboard("{Control>}a{/Control}");
+      expect(selectedCells()).toHaveLength(6); // 3 rows x 2 columns
+      await user.keyboard("{Escape}");
+      expect(selectedCells()).toHaveLength(0);
+    });
+
+    it("Shift+click extends from the previously active cell", async () => {
+      const user = userEvent.setup();
+      setup({ selectable: true });
+      await user.tab();
+      await user.keyboard("{ArrowDown}"); // active: row 0, Name
+      await user.keyboard("{Shift>}");
+      await user.click(cell(2, 1));
+      await user.keyboard("{/Shift}");
+      expect(selectedCells()).toHaveLength(6);
+    });
+
+    it("a plain click clears the selection", async () => {
+      const user = userEvent.setup();
+      setup({ selectable: true });
+      await user.tab();
+      await user.keyboard("{ArrowDown}{Shift>}{ArrowDown}{/Shift}");
+      expect(selectedCells().length).toBeGreaterThan(0);
+      await user.click(cell(2, 0));
+      expect(selectedCells()).toHaveLength(0);
+    });
+
+    it("Ctrl+C copies the range as tab-separated values", async () => {
+      const user = userEvent.setup();
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+      setup({ selectable: true });
+      await user.tab();
+      await user.keyboard("{ArrowDown}{Shift>}{ArrowDown}{ArrowRight}{/Shift}");
+      await user.keyboard("{Control>}c{/Control}");
+      expect(writeText).toHaveBeenCalledWith("Cara\t1\nAbe\t2");
+      expect(screen.getByRole("status")).toHaveTextContent("Copied 4 cells");
+    });
+
+    it("Shift+click extends from the anchor even after it has scrolled out of the rendered window", async () => {
+      const user = userEvent.setup();
+      const onSelectionChange = vi.fn();
+      const many = Array.from({ length: 300 }, (_, i) => ({ id: i + 1, name: `Person ${i + 1}` }));
+      setup({ selectable: true, data: many, onSelectionChange });
+      await user.tab();
+      await user.keyboard("{ArrowDown}"); // active + anchor: row 0
+      const grid = screen.getByRole("grid");
+      grid.scrollTop = 4000;
+      grid.dispatchEvent(new Event("scroll"));
+      await waitFor(() => expect(screen.queryByText("Person 1")).not.toBeInTheDocument());
+
+      const target = screen.getAllByRole("gridcell").find((c) => c.getAttribute("data-cell")?.endsWith(":name"))!;
+      const targetRow = Number(target.getAttribute("data-cell")!.split(":")[0]);
+      expect(targetRow).toBeGreaterThan(50);
+
+      await user.keyboard("{Shift>}");
+      await user.click(target);
+      await user.keyboard("{/Shift}");
+      expect(onSelectionChange).toHaveBeenLastCalledWith({ rows: [0, targetRow], columns: ["name"] });
+    });
+
+    it("re-sorting clears the selection (it refers to displayed rows)", async () => {
+      const user = userEvent.setup();
+      setup({ selectable: true });
+      await user.tab();
+      await user.keyboard("{ArrowDown}{Shift>}{ArrowDown}{/Shift}");
+      expect(selectedCells().length).toBeGreaterThan(0);
+      await user.keyboard("{ArrowUp}{ArrowUp}{Enter}"); // Name header, sort
+      expect(selectedCells()).toHaveLength(0);
+    });
   });
 
   describe("with many rows (virtualized)", () => {
