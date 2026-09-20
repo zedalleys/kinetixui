@@ -708,6 +708,84 @@ describe("DataGrid", () => {
       expect(selectedCells()).toHaveLength(6);
     });
 
+    describe("whole columns and rows", () => {
+      it("Ctrl+click on a header selects that whole column; a plain click still sorts", async () => {
+        const user = userEvent.setup();
+        const onSelectionChange = vi.fn();
+        setup({ selectable: true, onSelectionChange });
+        await user.keyboard("{Control>}");
+        await user.click(header("Name"));
+        await user.keyboard("{/Control}");
+        expect(selectedCells()).toHaveLength(3);
+        expect(header("Name")).toHaveAttribute("aria-selected", "true");
+        expect(header("ID")).toHaveAttribute("aria-selected", "false");
+        expect(header("Name")).toHaveAttribute("aria-sort", "none"); // selecting did not sort
+        expect(onSelectionChange).toHaveBeenLastCalledWith({ rows: [0, 2], columns: ["name"], ranges: [{ rows: [0, 2], columns: ["name"] }] });
+
+        await user.click(header("Name")); // plain click: sort
+        expect(header("Name")).toHaveAttribute("aria-sort", "ascending");
+      });
+
+      it("Ctrl+click on a second header keeps the first column; Shift+click extends across columns", async () => {
+        const user = userEvent.setup();
+        const onSelectionChange = vi.fn();
+        setup({ selectable: true, onSelectionChange });
+        await user.keyboard("{Control>}");
+        await user.click(header("Name"));
+        await user.click(header("ID"));
+        await user.keyboard("{/Control}");
+        expect(onSelectionChange).toHaveBeenLastCalledWith({
+          rows: [0, 2],
+          columns: ["id"],
+          ranges: [
+            { rows: [0, 2], columns: ["name"] },
+            { rows: [0, 2], columns: ["id"] },
+          ],
+        });
+
+        await user.click(cell(0, 0)); // clears
+        await user.keyboard("{Control>}");
+        await user.click(header("Name"));
+        await user.keyboard("{/Control}{Shift>}");
+        await user.click(header("ID"));
+        await user.keyboard("{/Shift}");
+        expect(selectedCells()).toHaveLength(6);
+        expect(header("Name")).toHaveAttribute("aria-selected", "true");
+        expect(header("ID")).toHaveAttribute("aria-selected", "true");
+      });
+
+      it("Ctrl+Space on a focused header selects its column", async () => {
+        const user = userEvent.setup();
+        setup({ selectable: true });
+        await user.tab();
+        expect(header("Name")).toHaveFocus();
+        await user.keyboard("{Control>} {/Control}");
+        expect(selectedCells()).toHaveLength(3);
+        expect(header("Name")).toHaveAttribute("aria-selected", "true");
+        expect(screen.getByRole("status")).toHaveTextContent("3 cells selected");
+      });
+
+      it("Shift+Space on a cell selects its whole row", async () => {
+        const user = userEvent.setup();
+        const onSelectionChange = vi.fn();
+        setup({ selectable: true, onSelectionChange });
+        await user.tab();
+        await user.keyboard("{ArrowDown}{ArrowDown}"); // row 1
+        await user.keyboard("{Shift>} {/Shift}");
+        expect(selectedCells()).toHaveLength(2);
+        expect(onSelectionChange).toHaveBeenLastCalledWith({ rows: [1, 1], columns: ["name", "id"], ranges: [{ rows: [1, 1], columns: ["name", "id"] }] });
+      });
+
+      it("headers are not selectable without `selectable`: Ctrl+click just sorts nothing, no aria-selected", async () => {
+        const user = userEvent.setup();
+        setup();
+        await user.keyboard("{Control>}");
+        await user.click(header("Name"));
+        await user.keyboard("{/Control}");
+        expect(header("Name")).not.toHaveAttribute("aria-selected");
+      });
+    });
+
     it("a plain click clears the selection", async () => {
       const user = userEvent.setup();
       setup({ selectable: true });
