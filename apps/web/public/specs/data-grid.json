@@ -50,6 +50,18 @@
           "name": "className",
           "type": "string",
           "required": false
+        },
+        {
+          "name": "selectable",
+          "type": "boolean",
+          "required": false,
+          "description": "Opt in to range selection: Shift+arrows / Shift+click extend a rectangle from the anchor cell, Ctrl/Cmd+A selects everything, Ctrl/Cmd+C copies the range as tab-separated text (each column's `value()…"
+        },
+        {
+          "name": "onSelectionChange",
+          "type": "((selection: DataGridSelection | null) => void)",
+          "required": false,
+          "description": "fires when the selected range changes; `null` when it is cleared"
         }
       ]
     }
