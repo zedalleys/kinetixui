@@ -21,8 +21,9 @@
  *                     indicator (box-shadow rings are stripped in that mode; an outline survives)
  *   - keyboard drag:  KanbanBoard cards can be picked up, moved and dropped with Space / arrows
  *   - grid selection: a DataGrid with `selectable` selects a rectangle by mouse drag and adds a
- *                     separate range with Ctrl+click, and dragging past the grid's edge scrolls it
- *                     and keeps extending the range (real layout + real pointer events)
+ *                     separate range with Ctrl+click, a whole column with Ctrl+click on its
+ *                     header, and dragging past the grid's edge scrolls it and keeps extending
+ *                     the range (real layout + real pointer events)
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary (local
  * runs where Playwright's own download isn't installed). CI uses
@@ -252,6 +253,19 @@ await Promise.all(
       const both = await selected();
       const kept = await cell(1, "name").getAttribute("aria-selected");
       if (both !== 7 || kept !== "true") behaviourFailures.push(`datagrid: Ctrl+click should add a separate range and keep the first (selected ${both}, expected 7; first range kept: ${kept})`);
+      // Ctrl+click on a column header selects the whole column (and must not sort it)
+      const head = page.locator('#storybook-root [data-header="name"]');
+      await page.keyboard.down("Control");
+      await head.click();
+      await page.keyboard.up("Control");
+      const headSelected = await head.getAttribute("aria-selected");
+      const sortAfter = await head.getAttribute("aria-sort");
+      const colCells = page.locator('#storybook-root [data-cell$=":name"]');
+      const colTotal = await colCells.count();
+      const colSelected = await page.locator('#storybook-root [data-cell$=":name"][aria-selected="true"]').count();
+      if (headSelected !== "true" || colSelected !== colTotal || sortAfter === "ascending" || sortAfter === "descending") {
+        behaviourFailures.push(`datagrid: Ctrl+click on a header should select the whole column without sorting (header selected: ${headSelected}, cells ${colSelected}/${colTotal}, aria-sort: ${sortAfter})`);
+      }
       // Dragging past the bottom edge scrolls the grid and keeps extending the range; releasing stops it
       const gridEl = page.locator('#storybook-root [role="grid"]');
       const box = await gridEl.boundingBox();

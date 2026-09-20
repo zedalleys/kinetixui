@@ -107,8 +107,9 @@ regression later.
 |---|-----|------|---------|----------------|
 | B14 | Minor | `theme-provider` / first paint | `defaultTheme="system"` with `enableSystem` is correct, but verify the pre-hydration theme script doesn't cause a flash that could disorient (it uses `disableTransitionOnChange`, so likely fine — confirm in the live pass). | **Confirmed fine (2026-09-20)** — see below. |
 
-Cross-cutting chart items (loading/empty/error states, legend toggle, pattern
-fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
+The cross-cutting chart items (loading/empty/error states, legend toggle, pattern
+fills, brush/zoom, reference lines) have all shipped — see `COMPONENT-ADDITIONS.md` §2,
+which lists each as a `/charts` recipe. (This paragraph used to call them outstanding; it was stale.)
 
 ### Fixed in a follow-up pass (`a11y/focus-and-audit-followups`)
 
@@ -119,7 +120,7 @@ fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
 | B13 | Minor | `/colors` `page.tsx` | Ramp jump-list `<nav>` had no accessible name; its links had no focus ring. | `aria-label="Jump to a ramp"` + `focus-visible:ring-2`. |
 | B10 | Moderate | `@kinetixui/ui` `chart.tsx` + `/charts` | No text alternative for charts (SC 1.1.1) — colour + position only. (`/charts` Cartesian recipes already passed `accessibilityLayer`.) | `ChartContainer` now renders `role="img"` + `aria-label`, driven by a new `label` prop (falls back to `"Chart"`); `/charts` intro + the Bar recipe show the pattern. |
 | B11 | Minor | `Showcase` (`/charts`, `/blocks`) | Heading order skipped h2 — page `<h1>` then `Showcase` `<h3>`. | `Showcase` now renders `<h2>`. |
-| B12 | Minor | `mobile-nav.tsx` | Open menu had no `Esc` to close and no focus movement. | `Esc` closes and returns focus to the trigger; opening moves focus to the first link. (Full `inert`-background trap deferred — a `Sheet` swap is the cleaner long-term fix.) |
+| B12 | Minor | `mobile-nav.tsx` | Open menu had no `Esc` to close and no focus movement. | `Esc` closes and returns focus to the trigger; opening moves focus to the first link. **Superseded (2026-09-20):** the menu is now a modal Radix `Dialog` — Tab is trapped, the background is `aria-hidden`/inert, Esc closes, focus returns to the trigger, and the panel has its own "Close menu" button. Verified in a production build (40 real Tab presses stayed inside). |
 
 ### Confirmed good (no action)
 
@@ -164,9 +165,10 @@ fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
   `scripts/a11y.mjs` that walks the route list headless — better, since it can
   run in CI next to `check:contrast`).
 - **R4 — DONE.** B8 (number-input focus) shipped with a changeset.
-- **R5 — partly done.** The chart text alternative (B10) shipped; the remaining chart
-  items (loading/empty/error states, legend toggle, pattern fills, brush/zoom) are
-  tracked in `COMPONENT-ADDITIONS.md` §2.
+- **R5 — DONE.** The chart text alternative (B10) shipped, and so did the other chart
+  items (loading/empty/error states, legend toggle, pattern fills, brush/zoom) —
+  `COMPONENT-ADDITIONS.md` §2 lists each as a `/charts` recipe. An earlier revision of
+  this line called them outstanding; that was wrong.
 
 ## Verification
 
@@ -240,4 +242,4 @@ Gotcha found along the way: `tailwind-merge` treats a bare `outline` and `outlin
 
 ## DataGrid range selection (2026-09-20)
 
-`selectable` adds ARIA multi-selection to the grid: Shift+arrows / Shift+click extend a rectangle from the anchor cell, Ctrl/Cmd+A selects all, Ctrl/Cmd+C copies it as tab-separated text, Esc clears; `aria-multiselectable` on the grid, `aria-selected` on every cell, a live region announcing the count, and `onSelectionChange`. Opt-in, so nothing changes for existing grids. Re-sorting or changing the row count clears the selection (it refers to displayed rows). Follow-up (same day): drag-select and disjoint ranges — Ctrl/Cmd+click, or Ctrl+Space from the keyboard, keeps the current range and starts another; Ctrl/Cmd+C copies all of them (blank line between), and `onSelectionChange` reports every range. Verified with a real-pointer drag and Ctrl+click in the browser pass. Follow-up (2026-09-20): auto-scroll while dragging — holding the button at or past a grid edge scrolls toward the pointer and keeps extending the range (the cell is computed from geometry, since the virtualized row under the pointer may not be rendered yet; the sticky header and pinned columns are excluded from the growable area; horizontal is skipped under RTL). Verified in a production build and by a real-pointer check in the browser pass. Not included: header (whole row/column) selection.
+`selectable` adds ARIA multi-selection to the grid: Shift+arrows / Shift+click extend a rectangle from the anchor cell, Ctrl/Cmd+A selects all, Ctrl/Cmd+C copies it as tab-separated text, Esc clears; `aria-multiselectable` on the grid, `aria-selected` on every cell, a live region announcing the count, and `onSelectionChange`. Opt-in, so nothing changes for existing grids. Re-sorting or changing the row count clears the selection (it refers to displayed rows). Follow-up (same day): drag-select and disjoint ranges — Ctrl/Cmd+click, or Ctrl+Space from the keyboard, keeps the current range and starts another; Ctrl/Cmd+C copies all of them (blank line between), and `onSelectionChange` reports every range. Verified with a real-pointer drag and Ctrl+click in the browser pass. Follow-up (2026-09-20): whole columns and rows — Ctrl/Cmd+click a header (or Ctrl+Space on it) selects the column and keeps other ranges, Shift+click extends across columns, and Shift+Space on a cell selects its row; a plain header click still sorts, and fully selected headers set `aria-selected`. Verified with real pointer clicks in a production build and covered by the browser pass. Follow-up (2026-09-20): auto-scroll while dragging — holding the button at or past a grid edge scrolls toward the pointer and keeps extending the range (the cell is computed from geometry, since the virtualized row under the pointer may not be rendered yet; the sticky header and pinned columns are excluded from the growable area; horizontal is skipped under RTL). Verified in a production build and by a real-pointer check in the browser pass. Not included: a row-header gutter for pointer row selection.
