@@ -8,6 +8,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kinetix_ui/kinetix_ui.dart';
 
@@ -48,7 +49,8 @@ void main() {
       final node = tester.getSemantics(declared(find.byType(KinetixButton), (p) => p.button == true).first);
       expect(
         node,
-        containsSemantics(label: 'Save', isButton: true, hasEnabledState: true, isEnabled: true, hasTapAction: true),
+        // isSemantics checks only what is named (containsSemantics is deprecated since Flutter 3.40; CI tracks stable)
+        isSemantics(label: 'Save', isButton: true, hasEnabledState: true, isEnabled: true, hasTapAction: true),
       );
     });
   });
