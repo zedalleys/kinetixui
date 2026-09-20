@@ -29,6 +29,17 @@ class KinetixToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A pressable toggle button: announce button role, pressed state and disabled.
+    return Semantics(
+      container: true,
+      button: true,
+      toggled: pressed,
+      enabled: onChanged != null,
+      child: _buildControl(context),
+    );
+  }
+
+  Widget _buildControl(BuildContext context) {
     final c = KinetixTheme.of(context);
     final bool enabled = onChanged != null;
     final (double dim, double hPad) = switch (size) {
