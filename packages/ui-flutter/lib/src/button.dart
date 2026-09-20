@@ -20,7 +20,7 @@ enum KinetixButtonSize { sm, md, lg, icon }
 /// (`rounded-md`).
 enum KinetixCorners { sharp, standard, pill }
 
-class KinetixButton extends StatelessWidget {
+class KinetixButton extends StatefulWidget {
   const KinetixButton({
     super.key,
     required this.onPressed,
@@ -38,8 +38,21 @@ class KinetixButton extends StatelessWidget {
   final KinetixCorners corners;
 
   @override
+  State<KinetixButton> createState() => _KinetixButtonState();
+}
+
+class _KinetixButtonState extends State<KinetixButton> {
+  bool _hovered = false;
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
     final KinetixColors c = KinetixTheme.of(context);
+    final VoidCallback? onPressed = widget.onPressed;
+    final KinetixButtonVariant variant = widget.variant;
+    final KinetixButtonSize size = widget.size;
+    final KinetixCorners corners = widget.corners;
+    final Widget child = widget.child;
     final bool enabled = onPressed != null;
     final bool isLink = variant == KinetixButtonVariant.link;
 
@@ -74,7 +87,8 @@ class KinetixButton extends StatelessWidget {
     } else {
       switch (variant) {
         case KinetixButtonVariant.primary:
-          bg = c.action;
+          // hover:bg-action/90 and active:bg-action/85 in React → explicit tokens
+          bg = _pressed ? c.actionPressed : (_hovered ? c.actionHover : c.action);
           fg = c.actionForeground;
         case KinetixButtonVariant.secondary:
           bg = c.secondary;
@@ -102,6 +116,8 @@ class KinetixButton extends StatelessWidget {
       borderRadius: borderRadius,
       child: InkWell(
         onTap: onPressed,
+        onHover: (bool v) => setState(() => _hovered = v),
+        onHighlightChanged: (bool v) => setState(() => _pressed = v),
         borderRadius: borderRadius,
         child: Container(
           padding: EdgeInsets.symmetric(

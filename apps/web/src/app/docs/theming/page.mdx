@@ -92,7 +92,7 @@ background — for the SwiftUI, Compose and Flutter ports, which have no alpha-d
 **Native.** The SwiftUI, Compose and Flutter components read the same role tokens: `KinetixColors` has
 `action`, `actionForeground`, `actionHover`, `actionPressed`, `link`, `focus`, `brand` and
 `brandForeground` alongside `primary` / `ring`, and the components use the role fields (the Button's
-Link variant reads `link`; focus rings read `focus`). `primary` remains as the source they default to.
+Link variant reads `link`; focus rings read `focus`). The primary Button uses `actionHover` on pointer hover and `actionPressed` while pressed; other components keep the platform's own interaction feedback. `primary` remains as the source they default to.
 
 **Upgrading:** components that use `bg-action` / `text-link` need the matching
 `@kinetixui/ui/tailwind.config` preset (it defines the new colours) — update the package when you

@@ -1,6 +1,9 @@
 package com.kinetixui.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.Button as Material3Button
@@ -9,6 +12,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
@@ -113,16 +118,27 @@ fun KinetixButton(
     }
 
     when (variant) {
-        KinetixButtonVariant.Primary -> Material3Button(
-            onClick = onClick, modifier = modifier, enabled = enabled, shape = shape, contentPadding = contentPadding,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colors.action,
-                contentColor = colors.actionForeground,
-                disabledContainerColor = colors.border,
-                disabledContentColor = colors.mutedForeground,
-            ),
-            content = label,
-        )
+        KinetixButtonVariant.Primary -> {
+            // hover:bg-action/90 and active:bg-action/85 in React, as the explicit actionHover / actionPressed tokens
+            val interaction = remember { MutableInteractionSource() }
+            val pressed by interaction.collectIsPressedAsState()
+            val hovered by interaction.collectIsHoveredAsState()
+            Material3Button(
+                onClick = onClick, modifier = modifier, enabled = enabled, shape = shape, contentPadding = contentPadding,
+                interactionSource = interaction,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = when {
+                        pressed -> colors.actionPressed
+                        hovered -> colors.actionHover
+                        else -> colors.action
+                    },
+                    contentColor = colors.actionForeground,
+                    disabledContainerColor = colors.border,
+                    disabledContentColor = colors.mutedForeground,
+                ),
+                content = label,
+            )
+        }
 
         KinetixButtonVariant.Secondary -> Material3Button(
             onClick = onClick, modifier = modifier, enabled = enabled, shape = shape, contentPadding = contentPadding,

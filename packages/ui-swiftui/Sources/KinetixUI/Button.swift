@@ -6,9 +6,10 @@
 // 02. Controls & Actions › Button (node 54863:351). Same contract as
 // `KinetixButton` in packages/ui-compose.
 //
-// Not ported from the React source: the `state` CVA axis (Hover/Focus/Active
-// are docs/snapshot-only there — SwiftUI gives real press feedback for
-// free) and the `sr-only` text treatment on the `icon` size (pass an
+// The primary variant follows the React `hover:bg-action/90` / `active:bg-action/85`
+// states through the explicit `actionHover` / `actionPressed` tokens (hover is pointer-only:
+// macOS and iPadOS). Not ported from the React source: the `state` CVA axis (Hover/Focus/Active
+// are docs/snapshot-only there) and the `sr-only` text treatment on the `icon` size (pass an
 // icon-only `label` yourself; nothing is auto-hidden).
 //
 // Numbers (padding, radii, type) are hardcoded from the Figma spacing /
@@ -75,6 +76,7 @@ private func kinetixCornerRadius(_ corners: KinetixCorners) -> CGFloat {
 public struct KinetixButton<Label: View>: View {
     @Environment(\.kinetixColors) private var colors
     @Environment(\.isEnabled) private var isEnabled
+    @State private var isHovering = false
 
     private let variant: KinetixButtonVariant
     private let size: KinetixButtonSize
@@ -110,11 +112,9 @@ public struct KinetixButton<Label: View>: View {
                 // icon size renders square — floor the width to the button height
                 .frame(minWidth: s.square ? (s.fontSize + s.vertical * 2) : nil)
                 .foregroundStyle(foreground)
-                .background(background)
-                .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
-                .overlay(alignment: .center) { borderOverlay(radius: radius) }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(KinetixButtonStyle(radius: radius, resting: background, hover: hoverBackground, pressed: pressedBackground, showsBorder: variant == .outline, border: colors.input))
+        .onHover { isHovering = $0 }
     }
 
     // MARK: - per-variant colour resolution (matches button.tsx resting state)
@@ -149,11 +149,34 @@ public struct KinetixButton<Label: View>: View {
         }
     }
 
-    @ViewBuilder
-    private func borderOverlay(radius: CGFloat) -> some View {
-        if variant == .outline {
-            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .strokeBorder(colors.input, lineWidth: 1) // border/width/default
-        }
+    /// Only the enabled primary variant has explicit hover / pressed fills; the rest keep their resting fill.
+    private var hoverBackground: Color {
+        isEnabled && variant == .primary && isHovering ? colors.actionHover : background
+    }
+
+    private var pressedBackground: Color {
+        isEnabled && variant == .primary ? colors.actionPressed : background
+    }
+}
+
+/// Draws the fill (resting, hovered or pressed), the clip and the outline border.
+private struct KinetixButtonStyle: ButtonStyle {
+    let radius: CGFloat
+    let resting: Color
+    let hover: Color
+    let pressed: Color
+    let showsBorder: Bool
+    let border: Color
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(configuration.isPressed ? pressed : hover)
+            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay(alignment: .center) {
+                if showsBorder {
+                    RoundedRectangle(cornerRadius: radius, style: .continuous)
+                        .strokeBorder(border, lineWidth: 1) // border/width/default
+                }
+            }
     }
 }
