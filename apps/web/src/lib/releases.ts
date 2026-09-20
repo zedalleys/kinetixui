@@ -58,6 +58,27 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.20.1",
+    date: "2026-09-20",
+    summary: "The light warning focus ring now clears WCAG 1.4.11, and CI checks every focus ring.",
+    breaking: [],
+    changes: [
+      {
+        kind: "accessibility",
+        area: "tokens",
+        title: "Light warning focus ring meets 3:1",
+        body: "--shadow-focus-warning used the Figma orange #f97907 (2.70:1 against the page), which failed WCAG 1.4.11 as a focus indicator. It now uses amber.800 (#7f5b21, 5.8:1), matching the light --warning colour. Dark is unchanged.",
+        href: "/docs/accessibility",
+      },
+      {
+        kind: "improved",
+        area: "release",
+        title: "check:contrast covers every focus ring",
+        body: "The edge of every --shadow-focus* ring is now checked against the page in both themes, so a regression fails CI.",
+      },
+    ],
+  },
+  {
     version: "0.20.0",
     date: "2026-09-20",
     summary: "DataGrid drag-select and separate selection ranges; the native Buttons show hover and pressed states.",
