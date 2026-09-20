@@ -1,8 +1,9 @@
+import * as React from "react";
 import type { Metadata } from "next";
 import { LATEST_VERSION, PACKAGE_CHANGELOGS, RELEASES, isNotable, packagesChanged, releaseTypeAt } from "@/lib/releases";
 import { PLATFORMS, PLATFORM_ABBR, platformsFor } from "@/lib/platform-parity";
 import { componentDocs } from "@/lib/site";
-import { ChangelogView, type ViewComponent, type ViewRelease } from "@/components/changelog-view";
+import { ChangelogView, ReleaseList, type ViewComponent, type ViewRelease } from "@/components/changelog-view";
 
 export const metadata: Metadata = {
   title: "Changelog",
@@ -49,6 +50,7 @@ const releases: ViewRelease[] = RELEASES.map((r, i) => ({
   groups: r.newComponents?.map((g) => ({ group: g.group, items: g.slugs.map(componentFor) })),
   // a Changesets fixed group tags all three packages; the UI tag is the canonical one (there are no GitHub Releases after v0.5.0)
   tagHref: `https://github.com/zedalleys/kinetixui/tree/@kinetixui/ui@${r.version}`,
+  githubReleaseUrl: r.githubReleaseUrl,
 }));
 
 export default function ChangelogPage() {
@@ -80,7 +82,12 @@ export default function ChangelogPage() {
         the indicators on each release show which ones actually changed.
       </p>
 
-      <ChangelogView releases={releases} />
+      {/* ChangelogView reads the URL (?filter=…&q=…) with useSearchParams, which needs a Suspense boundary on a
+          statically rendered page. The fallback is the full, unfiltered list, so the prerendered HTML (and
+          no-JS readers) still get every release. */}
+      <React.Suspense fallback={<ReleaseList releases={releases} filter="all" query="" />}>
+        <ChangelogView releases={releases} />
+      </React.Suspense>
 
       <div className="mt-16 border-t border-border pt-6 text-sm text-muted-foreground">
         Full commit-level history:{" "}

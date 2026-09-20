@@ -62,6 +62,9 @@ jobs:
       - name: Test (@kinetixui/ui)
         run: pnpm --filter @kinetixui/ui test
 
+      - name: Test (@kinetixui/web - changelog search, URL state, release notes)
+        run: pnpm --filter @kinetixui/web test
+
       - name: Generated files in sync
         run: |
           # The native packages carry vendored copies of packages/tokens/dist/{android,ios,flutter};
