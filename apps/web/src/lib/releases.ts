@@ -58,6 +58,40 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.21.0",
+    date: "2026-09-20",
+    summary: "DataGrid selects whole columns and rows, and scrolls while you drag-select.",
+    breaking: [],
+    limitations: [
+      "DataGrid has no row-header gutter, so whole rows are selected from the keyboard (Shift+Space) rather than by clicking a row header. After Shift+Space, Shift+arrows shrinks the selection back to the focused column instead of growing whole rows.",
+      "Drag auto-scroll is skipped horizontally under RTL; vertical auto-scroll works in both directions of reading.",
+      "The SwiftUI, Compose and Flutter DataGrid selection behaviour is unchanged; these are web (@kinetixui/ui) changes.",
+    ],
+    changes: [
+      {
+        kind: "new",
+        area: "components",
+        title: "DataGrid: select whole columns and rows",
+        body: "With selectable, Ctrl/Cmd+click a column header (or press Ctrl+Space on it) to select the whole column while keeping any other ranges; Shift+click a second header extends across columns. A plain header click still sorts. Shift+Space on a cell selects its row. Fully selected column headers set aria-selected and take the accent fill, and onSelectionChange reports these like any other range.",
+        href: "/docs/components/data-grid",
+      },
+      {
+        kind: "new",
+        area: "components",
+        title: "DataGrid: auto-scroll while drag-selecting",
+        body: "Hold the button at or past the top, bottom, left or right edge of the grid and it scrolls toward the pointer (faster the further out you go) and keeps extending the range. Releasing stops it, and the last cell reached becomes the active one so Shift+arrows continue from it. The growable area excludes the sticky header and pinned columns.",
+        href: "/docs/components/data-grid",
+      },
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "The mobile menu on this site is a real modal dialog",
+        body: "The site's mobile navigation now traps Tab, makes the page behind it inert, closes on Esc and returns focus to its button. It is the documentation site, not a package change.",
+        href: "/docs/accessibility",
+      },
+    ],
+  },
+  {
     version: "0.20.1",
     date: "2026-09-20",
     summary: "The light warning focus ring now clears WCAG 1.4.11, and CI checks every focus ring.",
