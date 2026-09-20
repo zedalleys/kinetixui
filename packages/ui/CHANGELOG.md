@@ -1,5 +1,16 @@
 # @kinetixui/ui
 
+## 0.21.0
+
+### Minor Changes
+
+- 15ca0fb: `DataGrid` with `selectable` now scrolls while you drag-select. Hold the button at or past the top, bottom, left or right edge of the grid and it scrolls toward the pointer (faster the further out you go) and keeps extending the range; releasing stops it, and the last cell reached becomes the active one so Shift+arrows continue from it. The growable area excludes the sticky header and pinned columns. Horizontal auto-scroll is skipped under RTL. Nothing changes for grids without `selectable`.
+- f64516d: `DataGrid` `selectable` can now select whole columns and rows. Ctrl/Cmd+click a column header (or press Ctrl+Space on it) to select the column and keep any other ranges; Shift+click a second header to extend across columns. A plain header click still sorts. Shift+Space on a cell selects its row. Fully selected columns set `aria-selected` on their `columnheader` and pick up the accent fill. Nothing changes for grids without `selectable`; `onSelectionChange` reports these like any other range.
+
+### Patch Changes
+
+- @kinetixui/tokens@0.21.0
+
 ## 0.20.1
 
 ### Patch Changes
