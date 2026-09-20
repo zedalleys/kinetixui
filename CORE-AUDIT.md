@@ -179,17 +179,23 @@ until then the site says what each platform verifies rather than assigning a lab
   `/docs/tokens` motion section corrected.
 - **Repo:** PR template and issue templates.
 
-## 6. Owner decisions needed
+## 6. Owner decisions
 
-1. **`DataGrid` and the Core/Pro boundary.** The brief says not to accidentally build an enterprise DataGrid, and
-   `DataGrid` already exists in Core (virtualized, column resize/reorder/pin, sort, edit, range selection, copy, Ctrl+click
-   ranges, header selection, drag auto-scroll — shipped through 0.21.0). Whether that stays in Core, and where the line is
-   drawn for future Pro, is a product decision. Nothing was removed.
-2. **Code of Conduct.** Needs an adoption decision and an enforcement contact. Not added.
-3. **Radius rename** (`xs/sm/md/lg/xl` as in the brief) — breaking; recommend for 1.0 with a codemod.
-4. **Per-platform maturity criteria** — what makes a native port Beta or Stable (for example: interaction tests +
-   accessibility tests + published package).
-5. **Wearables.** Whether to build them at all, and if so as a separate design track rather than small phones.
+Decided 2026-09-21:
+
+1. **`DataGrid` stays in Core.** It already ships (virtualized, column resize/reorder/pin, sort, edit, range selection,
+   copy, Ctrl+click ranges, header selection, drag auto-scroll — through 0.21.0). **Decided: keep it.** The future Pro
+   boundary is then drawn *above* it (advanced features such as grouping, pivoting, tree data, server-side models,
+   export), not by removing what shipped.
+2. **Code of Conduct — open.** Not added; needs an adoption decision and a private contact for reports.
+3. **Radius naming — approved in principle, conditional** ("if it is better and works with all platforms"). The
+   sizes-shift rename (`xs/sm/md/lg/xl`) is churn on every platform for a cosmetic gain. Recommended instead: add
+   **role-based aliases** (for example `radius.control`, `radius.surface`, `radius.overlay`) that point at the existing
+   values. That gives the naming benefit, is non-breaking, and generates identically for every platform. Do the size rename
+   only if it is still wanted in the 1.0 window, with a codemod.
+4. **Maturity — criteria proposed, awaiting approval.** See section 8.
+5. **Wearables — approved.** To be built as a separate design track that derives from Core tokens, not as small phones.
+   Prerequisite: the native test harness (section 8, step 1), so new platforms are not born unverified.
 
 ## 7. Recommended path to 1.0, in order
 
@@ -201,3 +207,37 @@ until then the site says what each platform verifies rather than assigning a lab
 6. Publish the native ports (credentials + registry accounts are owner actions).
 7. Radius/type naming decisions, with codemods, in the 1.0 window.
 8. Site dogfooding pass (header/footer and content pages replaced with KinetixUI components).
+
+## 8. Maturity and sustainability
+
+### A maturity ladder with testable criteria (proposed — needs owner approval)
+
+Per platform and per component, so "Stable" can be earned and checked rather than asserted.
+
+| Level | Criteria |
+|---|---|
+| **Experimental** | Compiles. May be undocumented. API can change without notice. |
+| **Beta** | Token-driven (no hardcoded color or spacing outside the token constants) · every state implemented · dark mode · documented on the site with the real API · built in light and dark by a smoke test · accessible name / semantics reviewed. |
+| **Stable** | Beta **plus**: interaction tests for its states · an automated accessibility check (Compose semantics tests, SwiftUI/XCTest accessibility audit, Flutter `Semantics` + `meetsGuideline`) · RTL verified · large-text scaling verified · a screenshot/golden test · installable from a published package · changes recorded in the changelog and covered by the deprecation policy. |
+
+**Where things stand:** React meets Stable for most components. The native ports sit between Experimental and Beta on
+*verification* (they compile and, for Flutter, smoke-build), even though their API surface is broad. That gap — not the
+component count — is what to close.
+
+### What makes it sustainable
+
+1. **Native test harnesses first.** Compose (`ComposeTestRule` + semantics + Paparazzi/Roborazzi screenshots), SwiftUI
+   (XCTest + accessibility audit + snapshot tests), Flutter (widget tests + `meetsGuideline` + goldens). Highest return:
+   it turns every later native change from "compiles" into "verified", and it must exist before wearables.
+2. **One source of truth, generated everywhere.** Already true for tokens, the manifest, the registry and the site tables;
+   extend it to per-platform maturity.
+3. **Guardrails that fail CI** instead of docs that ask nicely: contrast, RTL, typography, grid, manifest, releases, icons
+   exist. Add one that checks every native snippet on the site names a component that exists in that platform's source
+   (the class of bug that produced the invented Angular/HTML examples).
+4. **Publish and version the native ports** so consumers can depend on a version. (Registry accounts and credentials are
+   owner actions; the workflows already exist.)
+5. **A written deprecation and support policy:** SemVer; deprecate for one minor release before removal; the OS / SDK
+   versions each platform supports. Needed before 1.0.
+6. **Contribution and governance:** `GOVERNANCE.md`, `CONTRIBUTING.md`, `SECURITY.md`, and now PR/issue templates exist; a
+   Code of Conduct is open; write down who reviews what so the project does not depend on one person's memory.
+7. **Keep dependencies current:** Dependabot is on; keep the lockfile-supply-chain policies that CI already enforces.
