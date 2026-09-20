@@ -432,14 +432,14 @@ export const tokens = {
     ],
     "focus-warning": [
       {
-        "color": "#f97907",
+        "color": "#7f5b21",
         "offsetX": "0",
         "offsetY": "0",
         "blur": "0",
         "spread": "1px"
       },
       {
-        "color": "#f9790733",
+        "color": "#7f5b2133",
         "offsetX": "0",
         "offsetY": "0",
         "blur": "0",

@@ -216,6 +216,23 @@ for (const mode of ["light", "dark"]) {
     console.log(`  ${name.padEnd(44)} ${S[name]}  derived #${derived.map((v) => v.toString(16).padStart(2, "0")).join("")}  ${ok ? "ok" : "** DRIFT — regenerate the explicit value **"}`);
   }
 
+  // The baked focus-ring composites (--shadow-focus*): the crisp 1px edge is the
+  // indicator, so its colour must clear 3:1 against the page. Light rings live in
+  // shadow.json; the dark build pass overrides them from shadow.dark.json.
+  const shadows = read(mode === "dark" ? "tokens/semantic/shadow.dark.json" : "tokens/semantic/shadow.json").shadow;
+  console.log(`--- ${mode} — focus-ring composites (SC 1.4.11 = 3:1) ---`);
+  for (const name of Object.keys(shadows).filter((k) => k.startsWith("focus"))) {
+    const edge = val(shadows[name])?.[0]?.color?.slice(0, 7);
+    if (!edge || !S.background) {
+      console.log(`  ${`shadow-${name}`.padEnd(44)} —      (not defined in ${mode})`);
+      failures += 1;
+      continue;
+    }
+    const r = ratio(edge, S.background);
+    if (r < 3) failures += 1;
+    console.log(`  ${`shadow-${name} / background`.padEnd(44)} ${r.toFixed(2)}:1  ${r >= 3 ? "ok" : "** FAIL **"}`);
+  }
+
   console.log(`--- ${mode} — non-text cues (SC 1.4.11 = 3:1) ---`);
   for (const [fg, bg] of NON_TEXT_PAIRS) {
     if (!S[fg] || !S[bg]) continue;
