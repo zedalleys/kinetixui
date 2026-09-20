@@ -58,6 +58,38 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.20.0",
+    date: "2026-09-20",
+    summary: "DataGrid drag-select and separate selection ranges; the native Buttons show hover and pressed states.",
+    breaking: [],
+    limitations: [
+      "DataGrid does not auto-scroll while you drag past the edge (scroll with the wheel while dragging, or extend with Shift+click), and it has no whole-row or whole-column header selection.",
+      "Native hover and pressed states are wired for the primary Button only; other native components keep the platform's own interaction feedback.",
+    ],
+    changes: [
+      {
+        kind: "new",
+        area: "components",
+        title: "DataGrid: drag-select and separate ranges",
+        body: "With selectable, drag across cells to select a rectangle. Ctrl/Cmd+click (or Ctrl+Space from the keyboard) keeps the current range and starts another; Shift+click and Shift+arrows extend the newest one. Ctrl/Cmd+C copies every range as tab-separated text with a blank line between ranges. onSelectionChange now also reports ranges (all of them); rows and columns still describe the newest.",
+        href: "/docs/components/data-grid",
+      },
+      {
+        kind: "fixed",
+        area: "components",
+        title: "DataGridSelection is exported from the package",
+        body: "The type behind onSelectionChange shipped in 0.19.0 but was not exported, so consumers could not name it. It is now exported along with the new DataGridRange.",
+      },
+      {
+        kind: "improved",
+        area: "platforms",
+        title: "SwiftUI, Compose and Flutter: the primary Button shows hover and pressed states",
+        body: "It uses the explicit actionHover and actionPressed tokens, mirroring React's hover and active fills. The SwiftUI Button used a plain style with no press feedback at all. This is in the native libraries, which are not versioned with these npm packages, and it supersedes the 0.19.0 note that native hover and pressed states were not done.",
+        href: "/docs/theming",
+      },
+    ],
+  },
+  {
     version: "0.19.0",
     date: "2026-09-20",
     summary: "DataGrid range selection with copy, opt-in.",
