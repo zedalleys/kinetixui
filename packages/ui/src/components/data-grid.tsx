@@ -403,7 +403,7 @@ function DataGrid<TData>({
     const el = containerRef.current;
     const p = pointerRef.current;
     const start = dragRef.current;
-    if (!el || !p || !start || rowCount === 0) return false;
+    if (!el || !p || !start || rowCount === 0 || el.clientHeight === 0) return false; // no layout (hidden grid): nothing to scroll
     const rect = el.getBoundingClientRect();
     const rtl = getComputedStyle(el).direction === "rtl";
     const widthOf = (c: DataGridColumn<TData>) => widths[c.id] ?? c.width ?? DEFAULT_WIDTH;
