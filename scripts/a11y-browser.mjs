@@ -21,7 +21,8 @@
  *                     indicator (box-shadow rings are stripped in that mode; an outline survives)
  *   - keyboard drag:  KanbanBoard cards can be picked up, moved and dropped with Space / arrows
  *   - grid selection: a DataGrid with `selectable` selects a rectangle by mouse drag and adds a
- *                     separate range with Ctrl+click (real layout + real pointer events)
+ *                     separate range with Ctrl+click, and dragging past the grid's edge scrolls it
+ *                     and keeps extending the range (real layout + real pointer events)
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary (local
  * runs where Playwright's own download isn't installed). CI uses
@@ -251,6 +252,27 @@ await Promise.all(
       const both = await selected();
       const kept = await cell(1, "name").getAttribute("aria-selected");
       if (both !== 7 || kept !== "true") behaviourFailures.push(`datagrid: Ctrl+click should add a separate range and keep the first (selected ${both}, expected 7; first range kept: ${kept})`);
+      // Dragging past the bottom edge scrolls the grid and keeps extending the range; releasing stops it
+      const gridEl = page.locator('#storybook-root [role="grid"]');
+      const box = await gridEl.boundingBox();
+      const from = await cell(1, "name").boundingBox();
+      if (!box || !from) throw new Error("grid geometry not found for the auto-scroll check");
+      const topBefore = await gridEl.evaluate((el) => el.scrollTop);
+      await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(from.x + from.width / 2, box.y + box.height + 60, { steps: 5 });
+      await page.waitForTimeout(700);
+      const topDuring = await gridEl.evaluate((el) => el.scrollTop);
+      const lastRow = await page.evaluate(() => Math.max(...[...document.querySelectorAll('#storybook-root [role="gridcell"][aria-selected="true"]')].map((c) => Number(c.getAttribute("data-cell").split(":")[0]))));
+      await page.mouse.up();
+      await page.waitForTimeout(150);
+      const topStop = await gridEl.evaluate((el) => el.scrollTop);
+      await page.waitForTimeout(300);
+      const topLater = await gridEl.evaluate((el) => el.scrollTop);
+      if (!(topDuring > topBefore) || !(lastRow > 8)) {
+        behaviourFailures.push(`datagrid: dragging past the bottom edge should scroll and extend the selection (scrollTop ${topBefore} -> ${topDuring}, last selected row ${lastRow})`);
+      }
+      if (topLater !== topStop) behaviourFailures.push("datagrid: auto-scroll kept running after the mouse button was released");
     } catch (err) {
       behaviourFailures.push(`datagrid: ${String(err.message).split("\n")[0]}`);
     } finally {

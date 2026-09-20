@@ -51,7 +51,7 @@ export interface DataGridProps<TData> {
    * Opt in to range selection: drag, or Shift+arrows / Shift+click, to extend a rectangle from the
    * anchor cell; Ctrl/Cmd+click or Ctrl+Space starts an additional, separate range; Ctrl/Cmd+A selects
    * everything; Ctrl/Cmd+C copies the ranges as tab-separated text (each column's `value()`; empty where
-   * a column has none; ranges separated by a blank line); Esc clears. Sets aria-multiselectable.
+   * a column has none; ranges separated by a blank line); Esc clears; dragging past the grid's edge scrolls it. Sets aria-multiselectable.
    */
   selectable?: boolean;
   /** fires when the selected range changes; `null` when it is cleared */
@@ -235,13 +235,45 @@ function DataGrid<TData>({
   /** ranges committed before the current one (Ctrl/Cmd+click, Ctrl+Space) */
   const [extra, setExtra] = React.useState<Sel[]>([]);
   const dragRef = React.useRef<Anchor | null>(null);
+  // Auto-scroll while drag-selecting: the pointer position is tracked on the window (it leaves the
+  // grid, so cell mouseenter events stop), and a frame loop scrolls the grid and extends the range
+  // to the cell under the pointer while the pointer is at or past an edge.
+  const pointerRef = React.useRef<{ x: number; y: number } | null>(null);
+  const frameRef = React.useRef(0);
+  const autoScrollStepRef = React.useRef<() => boolean>(() => false);
+  const dragEndedRef = React.useRef<() => void>(() => {});
   React.useEffect(() => {
-    const end = () => {
-      dragRef.current = null;
+    const tick = () => {
+      frameRef.current = 0;
+      if (dragRef.current && autoScrollStepRef.current()) frameRef.current = requestAnimationFrame(tick);
     };
+    const move = (e: MouseEvent) => {
+      if (!dragRef.current) return;
+      if (e.buttons !== 1) {
+        dragRef.current = null; // the button was released outside the window
+        dragEndedRef.current();
+        return;
+      }
+      pointerRef.current = { x: e.clientX, y: e.clientY };
+      if (!frameRef.current) frameRef.current = requestAnimationFrame(tick);
+    };
+    const end = () => {
+      const wasDragging = dragRef.current !== null;
+      dragRef.current = null;
+      pointerRef.current = null;
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+      frameRef.current = 0;
+      if (wasDragging) dragEndedRef.current();
+    };
+    window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", end);
-    return () => window.removeEventListener("mouseup", end);
+    return () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", end);
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
   }, []);
+  const lastAutoCellRef = React.useRef<Pos | null>(null);
   const clearSel = () => {
     setSel(null);
     setExtra([]);
@@ -363,6 +395,63 @@ function DataGrid<TData>({
     pendingFocusRef.current = { row: r, columnId };
     setActive({ row: r, columnId });
   }
+
+  const AUTOSCROLL_EDGE = 12; // px inside the edge where scrolling starts
+  const AUTOSCROLL_MAX = 40; // px per frame
+  /** One frame of drag auto-scroll: scroll toward the pointer and extend the range to the cell it points at. */
+  autoScrollStepRef.current = () => {
+    const el = containerRef.current;
+    const p = pointerRef.current;
+    const start = dragRef.current;
+    if (!el || !p || !start || rowCount === 0) return false;
+    const rect = el.getBoundingClientRect();
+    const rtl = getComputedStyle(el).direction === "rtl";
+    const widthOf = (c: DataGridColumn<TData>) => widths[c.id] ?? c.width ?? DEFAULT_WIDTH;
+    const leftPinnedWidth = renderedColumns.filter((c) => c.pinned === "left").reduce((n, c) => n + widthOf(c), 0);
+    const rightPinnedWidth = renderedColumns.filter((c) => c.pinned === "right").reduce((n, c) => n + widthOf(c), 0);
+    // the area the range can grow into: under the sticky header, between the pinned columns
+    const top = rect.top + HEADER_HEIGHT;
+    const bottom = rect.top + el.clientHeight;
+    const left = rect.left + leftPinnedWidth;
+    const right = rect.left + el.clientWidth - rightPinnedWidth;
+    const push = (over: number) => Math.min(AUTOSCROLL_MAX, 2 + Math.abs(over) / 2) * Math.sign(over);
+    const dy = p.y < top + AUTOSCROLL_EDGE ? push(p.y - (top + AUTOSCROLL_EDGE)) : p.y > bottom - AUTOSCROLL_EDGE ? push(p.y - (bottom - AUTOSCROLL_EDGE)) : 0;
+    const dx = rtl ? 0 : p.x < left + AUTOSCROLL_EDGE ? push(p.x - (left + AUTOSCROLL_EDGE)) : p.x > right - AUTOSCROLL_EDGE ? push(p.x - (right - AUTOSCROLL_EDGE)) : 0;
+    if (dx === 0 && dy === 0) return false;
+    el.scrollTop += dy;
+    el.scrollLeft += dx;
+
+    // the cell under the pointer, clamped into the growable area — from geometry, not the DOM, since the
+    // virtualized row under the pointer may not have rendered yet
+    const cy = Math.max(top + 1, Math.min(p.y, bottom - 1));
+    const row = Math.max(0, Math.min(rowCount - 1, Math.floor((cy - top + el.scrollTop) / rowHeight)));
+    let columnId: string | undefined;
+    if (!rtl) {
+      const cx = Math.max(left + 1, Math.min(p.x, right - 1)) - rect.left + el.scrollLeft;
+      let acc = 0;
+      for (const c of renderedColumns) {
+        acc += widthOf(c);
+        if (cx < acc) {
+          columnId = c.id;
+          break;
+        }
+      }
+      columnId ??= renderedColumns[renderedColumns.length - 1]?.id;
+    }
+    setSel((prev) => {
+      const col = columnId ?? prev?.end.columnId ?? start.columnId;
+      if (prev && prev.end.row === row && prev.end.columnId === col) return prev;
+      return { anchor: start, end: { row, columnId: col } };
+    });
+    lastAutoCellRef.current = { row, columnId: columnId ?? lastAutoCellRef.current?.columnId ?? start.columnId };
+    return true;
+  };
+  // After an auto-scrolled drag, the last cell reached becomes the active one so Shift+arrows continue from it.
+  dragEndedRef.current = () => {
+    const cell = lastAutoCellRef.current;
+    lastAutoCellRef.current = null;
+    if (cell) moveTo(cell.row, cell.columnId);
+  };
 
   // Runs after every render until the pending target exists in the DOM (it may need a scroll first).
   React.useEffect(() => {
