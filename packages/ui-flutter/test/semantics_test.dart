@@ -44,7 +44,6 @@ void main() {
 
     testWidgets('the merged semantics node has the role, the state, a tap action and the label', (tester) async {
       final handle = tester.ensureSemantics();
-      addTearDown(handle.dispose);
       await tester.pumpWidget(host(KinetixButton(onPressed: () {}, child: const Text('Save'))));
       final node = tester.getSemantics(declared(find.byType(KinetixButton), (p) => p.button == true).first);
       expect(
@@ -52,6 +51,8 @@ void main() {
         // isSemantics checks only what is named (containsSemantics is deprecated since Flutter 3.40; CI tracks stable)
         isSemantics(label: 'Save', isButton: true, hasEnabledState: true, isEnabled: true, hasTapAction: true),
       );
+      // must be disposed inside the test: flutter_test verifies this before tearDowns run
+      handle.dispose();
     });
   });
 
