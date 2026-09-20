@@ -62,7 +62,7 @@ jobs:
       - name: Test (@kinetixui/ui)
         run: pnpm --filter @kinetixui/ui test
 
-      - name: Test (site: changelog search, URL state, release notes)
+      - name: Test (@kinetixui/web - changelog search, URL state, release notes)
         run: pnpm --filter @kinetixui/web test
 
       - name: Generated files in sync
