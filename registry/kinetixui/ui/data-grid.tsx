@@ -50,7 +50,8 @@ export interface DataGridProps<TData> {
   /**
    * Opt in to range selection: drag, or Shift+arrows / Shift+click, to extend a rectangle from the
    * anchor cell; Ctrl/Cmd+click or Ctrl+Space starts an additional, separate range; Ctrl/Cmd+A selects
-   * everything; Ctrl/Cmd+C copies the ranges as tab-separated text (each column's `value()`; empty where
+   * everything; Ctrl/Cmd+click (or Ctrl+Space) on a column header selects the whole column and Shift+click extends it
+   * (a plain header click still sorts); Shift+Space on a cell selects its whole row; Ctrl/Cmd+C copies the ranges as tab-separated text (each column's `value()`; empty where
    * a column has none; ranges separated by a blank line); Esc clears. Sets aria-multiselectable.
    */
   selectable?: boolean;
@@ -275,6 +276,9 @@ function DataGrid<TData>({
   const cellCount = rects.reduce((n, r) => n + (r.r1 - r.r0 + 1) * (r.c1 - r.c0 + 1), 0);
   const isSelectedCell = (row: number, colIdx: number) => rects.some((r) => row >= r.r0 && row <= r.r1 && colIdx >= r.c0 && colIdx <= r.c1);
 
+  /** a column header reads as selected when a range covers every row of that column */
+  const isColumnSelected = (colIdx: number) => rowCount > 0 && rects.some((r) => r.r0 === 0 && r.r1 === rowCount - 1 && colIdx >= r.c0 && colIdx <= r.c1);
+
   // Selection refers to displayed rows, so a re-sort or a different row count invalidates it.
   React.useEffect(() => {
     setSel(null);
@@ -305,6 +309,27 @@ function DataGrid<TData>({
     const previous = sel ?? (prev ? { anchor: prev, end: prev } : null);
     if (previous) setExtra((x) => [...x, previous]);
     setSel({ anchor: { row, columnId }, end: { row, columnId } });
+  }
+
+  /** Select a whole column (Ctrl/Cmd+click, Ctrl+Space on its header), keeping other ranges; or, with `extend`, span from the anchor column. */
+  function selectColumn(columnId: string, mode: "replace" | "add" | "extend") {
+    if (rowCount === 0) return;
+    const last = rowCount - 1;
+    if (mode === "extend") {
+      const from = sel?.anchor.columnId ?? columnId;
+      setSel({ anchor: { row: 0, columnId: from }, end: { row: last, columnId } });
+      return;
+    }
+    if (mode === "add" && sel) setExtra((x) => [...x, sel]);
+    else if (mode === "replace") setExtra([]);
+    setSel({ anchor: { row: 0, columnId }, end: { row: last, columnId } });
+  }
+
+  /** Select a whole row (Shift+Space on one of its cells). */
+  function selectRow(row: number) {
+    if (colIds.length === 0) return;
+    setExtra([]);
+    setSel({ anchor: { row, columnId: colIds[0]! }, end: { row, columnId: colIds[colIds.length - 1]! } });
   }
 
   function selectAll() {
@@ -417,6 +442,15 @@ function DataGrid<TData>({
     }
 
     const mod = e.ctrlKey || e.metaKey;
+    if (selectable && row < 0 && mod && e.key === " ") {
+      // header: select this column, keeping what is selected (the keyboard twin of Ctrl/Cmd+click)
+      e.preventDefault();
+      return selectColumn(column.id, "add");
+    }
+    if (selectable && row >= 0 && e.shiftKey && !mod && e.key === " ") {
+      e.preventDefault();
+      return selectRow(row);
+    }
     if (selectable && row >= 0) {
       if (mod && e.key.toLowerCase() === "a") {
         e.preventDefault();
@@ -509,6 +543,7 @@ function DataGrid<TData>({
                 data-header={column.id}
                 aria-colindex={colIdx + 1}
                 aria-keyshortcuts={`Shift+ArrowLeft Shift+ArrowRight${column.pinned ? "" : " Alt+ArrowLeft Alt+ArrowRight"}`}
+                aria-selected={selectable ? isColumnSelected(colIdx) : undefined}
                 {...(column.sortable
                   ? { "aria-sort": isSorted ? (sort!.direction === "asc" ? "ascending" : "descending") : "none" }
                   : {})}
@@ -531,7 +566,12 @@ function DataGrid<TData>({
                     return next;
                   });
                 }}
-                onClick={() => column.sortable && toggleSort(column.id)}
+                onClick={(e) => {
+                  // with selection on, Ctrl/Cmd+click and Shift+click select the column instead of sorting
+                  if (selectable && (e.ctrlKey || e.metaKey)) return selectColumn(column.id, "add");
+                  if (selectable && e.shiftKey) return selectColumn(column.id, "extend");
+                  if (column.sortable) toggleSort(column.id);
+                }}
                 // roving tabindex: the grid is one tab stop; arrows move between cells (see onNavKeyDown)
                 tabIndex={tabStop.row === -1 && tabStop.columnId === column.id ? 0 : -1}
                 onFocus={() => setActive({ row: -1, columnId: column.id })}
@@ -540,6 +580,7 @@ function DataGrid<TData>({
                   "relative flex h-10 shrink-0 select-none items-center gap-1 px-2 font-medium text-muted-foreground outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
                   column.sortable && "cursor-pointer hover:text-foreground",
                   column.pinned && "bg-background",
+                  selectable && isColumnSelected(colIdx) && "bg-accent text-accent-foreground",
                 )}
                 style={{ width, ...pinnedStyle }}
               >
