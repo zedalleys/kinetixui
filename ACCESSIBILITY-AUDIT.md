@@ -107,8 +107,9 @@ regression later.
 |---|-----|------|---------|----------------|
 | B14 | Minor | `theme-provider` / first paint | `defaultTheme="system"` with `enableSystem` is correct, but verify the pre-hydration theme script doesn't cause a flash that could disorient (it uses `disableTransitionOnChange`, so likely fine — confirm in the live pass). | **Confirmed fine (2026-09-20)** — see below. |
 
-Cross-cutting chart items (loading/empty/error states, legend toggle, pattern
-fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
+The cross-cutting chart items (loading/empty/error states, legend toggle, pattern
+fills, brush/zoom, reference lines) have all shipped — see `COMPONENT-ADDITIONS.md` §2,
+which lists each as a `/charts` recipe. (This paragraph used to call them outstanding; it was stale.)
 
 ### Fixed in a follow-up pass (`a11y/focus-and-audit-followups`)
 
@@ -164,9 +165,10 @@ fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
   `scripts/a11y.mjs` that walks the route list headless — better, since it can
   run in CI next to `check:contrast`).
 - **R4 — DONE.** B8 (number-input focus) shipped with a changeset.
-- **R5 — partly done.** The chart text alternative (B10) shipped; the remaining chart
-  items (loading/empty/error states, legend toggle, pattern fills, brush/zoom) are
-  tracked in `COMPONENT-ADDITIONS.md` §2.
+- **R5 — DONE.** The chart text alternative (B10) shipped, and so did the other chart
+  items (loading/empty/error states, legend toggle, pattern fills, brush/zoom) —
+  `COMPONENT-ADDITIONS.md` §2 lists each as a `/charts` recipe. An earlier revision of
+  this line called them outstanding; that was wrong.
 
 ## Verification
 
