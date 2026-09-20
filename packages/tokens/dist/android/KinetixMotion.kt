@@ -5,6 +5,7 @@ package com.kinetixui.tokens
 import androidx.compose.animation.core.CubicBezierEasing
 
 object KinetixDuration {
+  const val instant = 100
   const val fast = 200
   const val base = 300
   const val slow = 500
@@ -14,6 +15,9 @@ object KinetixDuration {
 object KinetixEasing {
   val linear = CubicBezierEasing(0f, 0f, 1f, 1f)
   val standard = CubicBezierEasing(0.4f, 0f, 0.2f, 1f)
+  val enter = CubicBezierEasing(0f, 0f, 0.2f, 1f)
+  val exit = CubicBezierEasing(0.4f, 0f, 1f, 1f)
+  val emphasized = CubicBezierEasing(0.2f, 0f, 0f, 1f)
 }
 
 object KinetixOpacity {
@@ -30,4 +34,33 @@ object KinetixZIndex {
   const val focus = 20f
   const val sticky = 40f
   const val overlay = 50f
+}
+
+/** Spatial scale in dp (use `.dp`) — an 8-unit grid with a 4-unit half-step. */
+object KinetixSpacing {
+  const val space0 = 0f
+  const val space1 = 4f
+  const val space2 = 8f
+  const val space3 = 12f
+  const val space4 = 16f
+  const val space5 = 20f
+  const val space6 = 24f
+  const val space7 = 28f
+  const val space8 = 32f
+  const val space10 = 40f
+  const val space12 = 48f
+  const val space16 = 64f
+  const val space20 = 80f
+  const val space24 = 96f
+  const val space32 = 128f
+}
+
+object KinetixRadius {
+  const val none = 0f
+  const val sm = 4f
+  const val md = 8f
+  const val lg = 12f
+  const val xl = 16f
+  const val xxl = 24f
+  const val full = 9999f
 }

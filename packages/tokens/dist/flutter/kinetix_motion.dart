@@ -5,6 +5,7 @@ import 'package:flutter/animation.dart';
 class KinetixDuration {
   KinetixDuration._();
 
+  static const Duration instant = Duration(milliseconds: 100);
   static const Duration fast = Duration(milliseconds: 200);
   static const Duration base = Duration(milliseconds: 300);
   static const Duration slow = Duration(milliseconds: 500);
@@ -16,6 +17,9 @@ class KinetixEasing {
 
   static const Curve linear = Cubic(0, 0, 1, 1);
   static const Curve standard = Cubic(0.4, 0, 0.2, 1);
+  static const Curve enter = Cubic(0, 0, 0.2, 1);
+  static const Curve exit = Cubic(0.4, 0, 1, 1);
+  static const Curve emphasized = Cubic(0.2, 0, 0, 1);
 }
 
 class KinetixOpacity {
@@ -36,4 +40,37 @@ class KinetixZIndex {
   static const double focus = 20;
   static const double sticky = 40;
   static const double overlay = 50;
+}
+
+/// Spatial scale in logical pixels — an 8-unit grid with a 4-unit half-step.
+class KinetixSpacing {
+  KinetixSpacing._();
+
+  static const double space0 = 0;
+  static const double space1 = 4;
+  static const double space2 = 8;
+  static const double space3 = 12;
+  static const double space4 = 16;
+  static const double space5 = 20;
+  static const double space6 = 24;
+  static const double space7 = 28;
+  static const double space8 = 32;
+  static const double space10 = 40;
+  static const double space12 = 48;
+  static const double space16 = 64;
+  static const double space20 = 80;
+  static const double space24 = 96;
+  static const double space32 = 128;
+}
+
+class KinetixRadius {
+  KinetixRadius._();
+
+  static const double none = 0;
+  static const double sm = 4;
+  static const double md = 8;
+  static const double lg = 12;
+  static const double xl = 16;
+  static const double xxl = 24;
+  static const double full = 9999;
 }

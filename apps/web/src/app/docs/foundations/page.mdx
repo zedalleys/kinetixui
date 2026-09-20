@@ -1,0 +1,100 @@
+export const metadata = {
+  title: "Foundations",
+  description: "KinetixUI's spatial grid, radius, elevation and motion — one source, compiled to every supported platform.",
+};
+
+# Foundations
+
+KinetixUI has one set of design foundations — tokens for color, type, space, shape, elevation and
+motion — defined once in `tokens/` and compiled by Style Dictionary to CSS, TypeScript, SwiftUI, Compose
+and Flutter. The components on every platform read those tokens; they don't restate values.
+
+This page covers the foundations that shape layout. Color and type live on [Tokens](/docs/tokens) and
+[Theming](/docs/theming); [Dark mode](/docs/dark-mode), [RTL](/docs/rtl) and [Accessibility](/docs/accessibility)
+have their own pages.
+
+## The 8-unit grid
+
+KinetixUI uses an **8-unit base spatial grid with an optional 4-unit half-step** for compact and
+fine-grained interface needs.
+
+Space is measured in *units*, not pixels, because KinetixUI is multi-platform: a unit is a CSS pixel on the web,
+a point on iOS, a dp on Android and a logical pixel in Flutter. Every value on the scale is a multiple of 4.
+A multiple of 8 is a **base step**; any other multiple of 4 is a **half-step**.
+
+<SpacingTable />
+
+The token number is the value divided by 4 (`--spacing-4` is 16), the same numbering Tailwind uses, so a
+utility like `p-4` and the token `--spacing-4` agree. Steps 1–8 are for component internals — padding,
+gaps, control sizing. Steps 10–32 (40–128) are the layout scale: section spacing, containers, page gutters.
+
+<PlatformUnitsTable />
+
+### What the grid governs — and what it doesn't
+
+The grid governs **spacing, padding, margins, gaps, layout, control sizing and touch layout**. It does not
+govern:
+
+- **Typography.** Type is sized for readability, hierarchy and each platform's text scaling (Dynamic Type,
+  Android font scale, Flutter's text scaler), not for a multiple of 8. See [Tokens](/docs/tokens).
+- **Hairlines and optical nudges.** A 1px border or a 2px offset isn't a spacing decision.
+- **The `.5` steps.** Tailwind's `0.5`, `1.5`, `2.5` and `3.5` (2, 6, 10 and 14px) are the optical gap between
+  an icon and its label and similar fine alignment. They are used deliberately and are not policed.
+
+### Keeping it on the grid
+
+`pnpm check:grid` runs in CI. It checks that every spacing token is a multiple of 4, and that the component
+library does not gain a new arbitrary pixel value (`p-[13px]`, `gap-[22px]`) that is off the grid. Three
+exist today, all `18px` — the checkbox and radio boxes and the button icon — because the design source
+specifies them; they are listed by name in the script, with the reason. It is a guardrail against new drift,
+not a rewrite: the components already sit on the grid the large majority of the time.
+
+## Radius
+
+Radius follows the same philosophy: multiples of 4, with `full` for pills and circles. Components take their
+radius from these tokens rather than inventing one.
+
+<RadiusTable />
+
+<Callout>
+  **Naming.** The public names `sm` (4) and `md` (8) are older than the grid and are in use across the
+  library and consuming apps, so they are kept. A scale named `xs 4 / sm 8 / md 12 / lg 16 / xl 24` would
+  shift every existing name by one step — a breaking visual change — so it is a recommendation for 1.0 with a
+  migration path, not something done silently. What was added is `xxl` (24), the missing step on the grid.
+</Callout>
+
+## Elevation
+
+Elevation is the shadow that separates a surface from what's behind it. The table shows the levels as the
+components use them today, measured from the source. The level names are documentation for now — the
+values themselves are the `--shadow-*` tokens — and each platform draws shadow with its own mechanism, so
+values need not be identical everywhere.
+
+<ElevationTable />
+
+## Motion
+
+Two duration and easing scales, shared by every platform. Native ports expose them as `KinetixDuration` and
+`KinetixEasing`.
+
+<MotionTable />
+
+**Reduced motion.** On the web, components honor `prefers-reduced-motion`: the browser accessibility pass
+fails any story that still runs a looping animation faster than three seconds under it. Native platforms
+have their own Reduce Motion settings; honoring them in the native components has not been audited yet.
+
+## On every platform
+
+The spatial and shape scales reach each platform from the same source:
+
+| Platform | Where the tokens live |
+|---|---|
+| Web | CSS custom properties (`--spacing-n`, `--radius-name`) in `globals.css`; typed in `@kinetixui/tokens` |
+| SwiftUI | `KinetixSpacing`, `KinetixRadius`, `KinetixDuration`, `KinetixEasing` (generated `KinetixMotion.swift`) |
+| Jetpack Compose | the same enums in `KinetixMotion.kt`, plus `spacing_n` / `radius_name` in `dimens.xml` |
+| Flutter | the same classes in `kinetix_motion.dart` |
+
+Existing native components still contain literal numbers (with a `// spacing/4` comment); moving them onto the
+generated constants is incremental work, done component by component so nothing shifts visually.
+
+See [Supported platforms](/docs/platforms) for what each platform covers today.

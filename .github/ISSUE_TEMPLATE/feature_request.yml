@@ -1,0 +1,32 @@
+name: Feature or component request
+description: Propose a component, token or capability.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that KinetixUI does not support well today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What should it look like? Prefer describing behavior and accessibility over an API.
+    validations:
+      required: true
+  - type: checkboxes
+    id: platforms
+    attributes:
+      label: Platforms it should exist on
+      description: Not every component belongs on every platform — say which make sense and why.
+      options:
+        - label: Web · React
+        - label: iOS · SwiftUI
+        - label: Android · Jetpack Compose
+        - label: Flutter
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

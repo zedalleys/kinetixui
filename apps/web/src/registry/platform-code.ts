@@ -14,18 +14,19 @@
  * (SwiftUI / Compose) or `KinetixTheme(child: …)` (Flutter) once; these
  * snippets assume that and show just the component. State the component
  * owns (a `@State` / `remember` / a `TextEditingController`) is elided.
- * `html` stays a hand-rolled token-driven rendition — there is no HTML
- * component package.
+ * There is deliberately no "HTML" tab: there is no HTML component package or
+ * `kx-*` class API, so an HTML example would document something that does not
+ * exist. On the web, use React (`@kinetixui/ui`) or the registry
+ * (`npx @kinetixui/cli add <component>`).
  *
  * The three standing non-ports (`Form`, `NavigationMenu`, `Combobox`) are
  * shown as the composition the native libraries expect instead.
  */
 
-export type Platform = "react" | "html" | "swift" | "kotlin" | "dart";
+export type Platform = "react" | "swift" | "kotlin" | "dart";
 
 export const PLATFORM_LABEL: Record<Platform, string> = {
   react: "React",
-  html: "HTML",
   swift: "iOS", // SwiftUI
   kotlin: "Android", // Jetpack Compose
   dart: "Flutter",
@@ -33,21 +34,18 @@ export const PLATFORM_LABEL: Record<Platform, string> = {
 
 export const PLATFORM_LANG: Record<Platform, string> = {
   react: "tsx",
-  html: "html",
   swift: "swift",
   kotlin: "kotlin",
   dart: "dart",
 };
 
 /** Ordered — React first, then the rest as tabs. */
-export const PLATFORM_ORDER: Platform[] = ["react", "html", "swift", "kotlin", "dart"];
+export const PLATFORM_ORDER: Platform[] = ["react", "swift", "kotlin", "dart"];
 
 type Entry = Partial<Record<Exclude<Platform, "react">, string>>;
 
 export const platformCode: Record<string, Entry> = {
   "button-demo": {
-    html: `<button class="kx-btn kx-btn--primary kx-btn--md">Button</button>
-<!-- bg: var(--primary) · fg: var(--primary-foreground) · radius: var(--radius) -->`,
     swift: `KinetixButton(action: save) {
   Text("Button")
 }`,
@@ -61,12 +59,6 @@ export const platformCode: Record<string, Entry> = {
   },
 
   "button-variants": {
-    html: `<button class="kx-btn kx-btn--primary kx-btn--md">Primary</button>
-<button class="kx-btn kx-btn--secondary kx-btn--md">Secondary</button>
-<button class="kx-btn kx-btn--outline kx-btn--md">Outline</button>
-<button class="kx-btn kx-btn--destructive kx-btn--md">Destructive</button>
-<button class="kx-btn kx-btn--ghost kx-btn--md">Ghost</button>
-<button class="kx-btn kx-btn--link kx-btn--md">Link</button>`,
     swift: `HStack(spacing: 12) {
   KinetixButton(variant: .primary, action: {}) { Text("Primary") }
   KinetixButton(variant: .secondary, action: {}) { Text("Secondary") }
@@ -101,9 +93,6 @@ export const platformCode: Record<string, Entry> = {
   },
 
   "button-sizes": {
-    html: `<button class="kx-btn kx-btn--primary kx-btn--sm">Small</button>
-<button class="kx-btn kx-btn--primary kx-btn--md">Medium</button>
-<button class="kx-btn kx-btn--primary kx-btn--lg">Large</button>`,
     swift: `HStack(spacing: 12) {
   KinetixButton(size: .sm, action: {}) { Text("Small") }
   KinetixButton(size: .md, action: {}) { Text("Medium") }
@@ -126,9 +115,6 @@ export const platformCode: Record<string, Entry> = {
   },
 
   "badge-demo": {
-    html: `<span class="kx-badge">Default</span>
-<span class="kx-badge kx-badge--secondary">Secondary</span>
-<!-- bg: var(--primary) / var(--secondary) · pill: var(--radius-full) -->`,
     swift: `HStack(spacing: 8) {
   KinetixBadge("Default")
   KinetixBadge("Secondary", variant: .secondary)
@@ -147,11 +133,6 @@ export const platformCode: Record<string, Entry> = {
   },
 
   "alert-demo": {
-    html: `<div class="kx-alert" role="alert">
-  <strong>Heads up!</strong>
-  <p>You can add components to your app using the CLI.</p>
-</div>
-<!-- border: var(--border) · text: var(--foreground) · radius: var(--radius-lg) -->`,
     swift: `KinetixAlert {
   KinetixAlertTitle("Heads up!")
   KinetixAlertDescription("You can add components to your app using the CLI.")
@@ -169,14 +150,6 @@ export const platformCode: Record<string, Entry> = {
   },
 
   "card-demo": {
-    html: `<div class="kx-card">
-  <div class="kx-card__header">
-    <h3>Create project</h3>
-    <p>Deploy your new project in one click.</p>
-  </div>
-  <div class="kx-card__content">…</div>
-</div>
-<!-- bg: var(--card) · fg: var(--card-foreground) · border: var(--border) -->`,
     swift: `KinetixCard {
   KinetixCardHeader {
     KinetixCardTitle("Create project")
@@ -210,8 +183,6 @@ export const platformCode: Record<string, Entry> = {
   },
 
   "input-demo": {
-    html: `<input type="email" class="kx-input" placeholder="you@example.com" />
-<!-- border: var(--input) · ring: var(--ring) · radius: var(--radius) -->`,
     swift: `KinetixInput(text: $email, placeholder: "you@example.com")`,
     kotlin: `KinetixInput(
   value = email,
@@ -226,9 +197,6 @@ export const platformCode: Record<string, Entry> = {
   },
 
   "input-states": {
-    html: `<input class="kx-input" placeholder="Default" />
-<input class="kx-input" data-state="error" value="Not quite right" />
-<input class="kx-input" placeholder="Disabled" disabled />`,
     swift: `VStack(spacing: 12) {
   KinetixInput(text: $defaultValue, placeholder: "Default")
   KinetixInput(text: $errorValue, isError: true)
@@ -252,8 +220,6 @@ export const platformCode: Record<string, Entry> = {
   },
 
   "textarea-demo": {
-    html: `<textarea class="kx-textarea" rows="4" placeholder="Type your message…"></textarea>
-<!-- border: var(--input) · min-height: 100px · radius: var(--radius) -->`,
     swift: `KinetixTextarea(text: $message, placeholder: "Type your message…")`,
     kotlin: `KinetixTextarea(
   value = message,
@@ -267,11 +233,6 @@ export const platformCode: Record<string, Entry> = {
   },
 
   "switch-demo": {
-    html: `<label class="kx-switch">
-  <input type="checkbox" role="switch" />
-  <span>Airplane mode</span>
-</label>
-<!-- track (on): var(--primary) · thumb: var(--background) -->`,
     swift: `HStack {
   KinetixSwitch(isOn: $airplane)
   Text("Airplane mode")
@@ -293,11 +254,6 @@ export const platformCode: Record<string, Entry> = {
   },
 
   "checkbox-demo": {
-    html: `<label class="kx-checkbox">
-  <input type="checkbox" checked />
-  <span>Accept terms and conditions</span>
-</label>
-<!-- checked bg: var(--primary) · check: var(--primary-foreground) -->`,
     swift: `HStack {
   KinetixCheckbox(isOn: $accepted)
   Text("Accept terms and conditions")
@@ -319,16 +275,12 @@ export const platformCode: Record<string, Entry> = {
   },
 
   "separator-demo": {
-    html: `<hr class="kx-separator" />
-<!-- color: var(--border) · 1px -->`,
     swift: `KinetixSeparator()`,
     kotlin: `KinetixSeparator()`,
     dart: `const KinetixSeparator()`,
   },
 
   "avatar-demo": {
-    html: `<span class="kx-avatar"><span class="kx-avatar__fallback">KX</span></span>
-<!-- fallback bg: var(--muted) · text: var(--muted-foreground) · circle -->`,
     swift: `KinetixAvatar {
   KinetixAvatarFallback("KX")
 }`,
@@ -341,12 +293,6 @@ export const platformCode: Record<string, Entry> = {
   },
 
   "avatar-group-demo": {
-    html: `<div class="kx-avatar-group">
-  <span class="kx-avatar"><span class="kx-avatar__fallback">JD</span></span>
-  <span class="kx-avatar"><span class="kx-avatar__fallback">AK</span></span>
-  <span class="kx-avatar"><span class="kx-avatar__fallback">+2</span></span>
-</div>
-<!-- -space-x-2 overlap · each avatar ring-2 ring-background -->`,
     swift: `// AvatarGroup re-wraps its children — not idiomatic in SwiftUI.
 // Compose it directly with negative HStack spacing:
 HStack(spacing: -8) {
@@ -375,16 +321,12 @@ Row(
   },
 
   "label-demo": {
-    html: `<label for="email" class="kx-label">Your email address</label>
-<!-- text: var(--foreground) · 14px / medium -->`,
     swift: `KinetixLabel("Your email address")`,
     kotlin: `KinetixLabel("Your email address")`,
     dart: `const KinetixLabel('Your email address')`,
   },
 
   "aspect-ratio-demo": {
-    html: `<div class="kx-aspect" style="aspect-ratio: 16 / 9"></div>
-<!-- bg: var(--muted) · radius: var(--radius) -->`,
     swift: `KinetixAspectRatio(16.0 / 9.0) {
   Color(.gray)
 }`,
@@ -398,8 +340,6 @@ Row(
   },
 
   "skeleton-demo": {
-    html: `<div class="kx-skeleton" style="width: 200px; height: 16px"></div>
-<!-- bg: var(--muted) · pulse animation · radius: var(--radius) -->`,
     swift: `KinetixSkeleton()
   .frame(width: 200, height: 16)`,
     kotlin: `KinetixSkeleton(Modifier.size(width = 200.dp, height = 16.dp))`,
@@ -407,36 +347,24 @@ Row(
   },
 
   "spinner-demo": {
-    html: `<span class="kx-spinner" role="status" aria-label="Loading"></span>
-<!-- border-color: var(--primary) · spin animation -->`,
     swift: `KinetixSpinner()`,
     kotlin: `KinetixSpinner()`,
     dart: `const KinetixSpinner()`,
   },
 
   "progress-demo": {
-    html: `<div class="kx-progress" role="progressbar" aria-valuenow="66">
-  <div class="kx-progress__bar" style="width: 66%"></div>
-</div>
-<!-- track: var(--muted) · bar: var(--primary) -->`,
     swift: `KinetixProgress(value: 0.66)`,
     kotlin: `KinetixProgress(value = 0.66f)`,
     dart: `const KinetixProgress(value: 0.66)`,
   },
 
   "circular-progress-demo": {
-    html: `<svg class="kx-circular-progress" viewBox="0 0 48 48" role="progressbar" aria-valuenow="66">
-  <circle cx="24" cy="24" r="20" /><circle cx="24" cy="24" r="20" pathLength="100" />
-</svg>
-<!-- track: var(--muted) · arc: var(--primary) -->`,
     swift: `KinetixCircularProgress(value: 0.66, showValue: true)`,
     kotlin: `KinetixCircularProgress(value = 0.66f, showValue = true)`,
     dart: `const KinetixCircularProgress(value: 0.66, showValue: true)`,
   },
 
   "slider-demo": {
-    html: `<input type="range" class="kx-slider" min="0" max="100" step="1" value="50" />
-<!-- track: var(--muted) · range + thumb: var(--primary) -->`,
     swift: `KinetixSlider(value: $value, in: 0...100, step: 1)`,
     kotlin: `KinetixSlider(
   value = value,
@@ -452,14 +380,6 @@ Row(
   },
 
   "tabs-demo": {
-    html: `<div class="kx-tabs">
-  <div role="tablist">
-    <button role="tab" aria-selected="true">Account</button>
-    <button role="tab">Password</button>
-  </div>
-  <div role="tabpanel">Make changes to your account here.</div>
-</div>
-<!-- active indicator: var(--primary) -->`,
     swift: `KinetixTabsList {
   KinetixTabsTrigger("Account", isSelected: tab == 0) { tab = 0 }
   KinetixTabsTrigger("Password", isSelected: tab == 1) { tab = 1 }
@@ -487,9 +407,6 @@ KinetixTabsContent {
   },
 
   "tooltip-demo": {
-    html: `<button aria-describedby="tt">Hover</button>
-<div id="tt" role="tooltip" class="kx-tooltip">Add to library</div>
-<!-- bg: var(--primary) · text: var(--primary-foreground) -->`,
     swift: `KinetixTooltip("Add to library") {
   KinetixButton(variant: .outline, action: {}) { Text("Hover") }
 }`,
@@ -507,11 +424,6 @@ KinetixTabsContent {
   },
 
   "radio-group-demo": {
-    html: `<fieldset class="kx-radio-group">
-  <label><input type="radio" name="density" value="comfortable" checked /> Comfortable</label>
-  <label><input type="radio" name="density" value="compact" /> Compact</label>
-</fieldset>
-<!-- selected dot: var(--primary) -->`,
     swift: `KinetixRadioGroup {
   ForEach(["default", "comfortable", "compact"], id: \\.self) { value in
     HStack {
@@ -544,11 +456,6 @@ KinetixTabsContent {
   },
 
   "select-demo": {
-    html: `<select class="kx-select">
-  <option value="apple">Apple</option>
-  <option value="banana">Banana</option>
-</select>
-<!-- border: var(--input) · focus ring: var(--ring) -->`,
     swift: `KinetixSelect(
   selection: $fruit,
   options: [
@@ -578,12 +485,6 @@ KinetixTabsContent {
   },
 
   "dialog-demo": {
-    html: `<dialog class="kx-dialog">
-  <h2>Edit profile</h2>
-  <p>Make changes to your profile here.</p>
-  <button>Save changes</button>
-</dialog>
-<!-- surface: var(--popover) · overlay: black/50 -->`,
     swift: `KinetixDialog(isPresented: $open) {
   KinetixDialogHeader {
     KinetixDialogTitle("Edit profile")
@@ -621,11 +522,6 @@ KinetixTabsContent {
   },
 
   "sheet-demo": {
-    html: `<div class="kx-sheet" data-side="right">
-  <h2>Edit profile</h2>
-  <p>Make changes to your profile here.</p>
-</div>
-<!-- surface: var(--background) · slides from the edge -->`,
     swift: `KinetixSheet(isPresented: $open) {
   KinetixSheetHeader {
     KinetixSheetTitle("Edit profile")
@@ -651,11 +547,6 @@ KinetixTabsContent {
   },
 
   "accordion-demo": {
-    html: `<details class="kx-accordion__item">
-  <summary>Is it accessible?</summary>
-  <div>Yes. It follows the WAI-ARIA design pattern.</div>
-</details>
-<!-- border: var(--border) · chevron rotates on open -->`,
     swift: `KinetixAccordion {
   KinetixAccordionItem {
     KinetixAccordionTrigger("Is it accessible?", isExpanded: open) { open.toggle() }
@@ -692,10 +583,6 @@ KinetixTabsContent {
   },
 
   "collapsible-demo": {
-    html: `<div class="kx-collapsible">
-  <button aria-expanded="false">Toggle</button>
-  <div hidden>@radix-ui/primitives</div>
-</div>`,
     swift: `VStack(alignment: .leading) {
   HStack {
     Text("@kinetixui starred 3 repositories")
@@ -743,12 +630,6 @@ KinetixTabsContent {
   },
 
   "breadcrumb-demo": {
-    html: `<nav class="kx-breadcrumb" aria-label="Breadcrumb">
-  <a href="/">Home</a> <span>/</span>
-  <a href="/docs">Docs</a> <span>/</span>
-  <span aria-current="page">Breadcrumb</span>
-</nav>
-<!-- links: var(--muted-foreground) · current: var(--foreground) -->`,
     swift: `KinetixBreadcrumb {
   KinetixBreadcrumbLink("Home") { navigate("/") }
   KinetixBreadcrumbSeparator()
@@ -775,15 +656,6 @@ KinetixTabsContent {
   },
 
   "app-bar-demo": {
-    html: `<header class="kx-app-bar">
-  <span class="kx-app-bar__brand">Acme</span>
-  <nav class="kx-app-bar__nav" aria-label="Primary">
-    <a href="/" class="kx-app-bar__link kx-app-bar__link--active">Overview</a>
-    <a href="/reports" class="kx-app-bar__link">Reports</a>
-  </nav>
-  <div class="kx-app-bar__actions"><button class="kx-btn kx-btn--primary kx-btn--sm">New</button></div>
-</header>
-<!-- bg: var(--background) · border-bottom: var(--border) · active link bg: var(--accent) -->`,
     swift: `KinetixAppBar {
   Text("Acme")
 } nav: {
@@ -813,8 +685,6 @@ KinetixTabsContent {
   },
 
   "tag-demo": {
-    html: `<span class="kx-tag">design <button aria-label="Remove">×</button></span>
-<!-- bg: var(--secondary) · text: var(--secondary-foreground) · pill -->`,
     swift: `KinetixTag("design", variant: .secondary, onRemove: { remove() })`,
     kotlin: `KinetixTag("design", variant = KinetixTagVariant.Secondary, onRemove = ::remove)`,
     dart: `KinetixTag(
@@ -825,10 +695,6 @@ KinetixTabsContent {
   },
 
   "toggle-demo": {
-    html: `<button class="kx-toggle" aria-pressed="false" aria-label="Toggle italic">
-  <svg><!-- italic icon --></svg>
-</button>
-<!-- pressed bg: var(--accent) · pressed text: var(--accent-foreground) -->`,
     swift: `KinetixToggle(isOn: $italic) {
   Image(systemName: "italic")
 }`,
@@ -843,12 +709,6 @@ KinetixTabsContent {
   },
 
   "alert-dialog-demo": {
-    html: `<div role="alertdialog" class="kx-alert-dialog" aria-labelledby="t" aria-describedby="d">
-  <h2 id="t">Are you absolutely sure?</h2>
-  <p id="d">This action cannot be undone.</p>
-  <button>Cancel</button>
-  <button class="kx-btn--destructive">Continue</button>
-</div>`,
     swift: `KinetixAlertDialog(isPresented: $open) {
   KinetixDialogTitle("Are you absolutely sure?")
   KinetixDialogDescription("This action cannot be undone.")
@@ -879,12 +739,6 @@ KinetixTabsContent {
   },
 
   "modal-demo": {
-    html: `<div role="dialog" class="kx-modal" aria-modal="true">
-  <header><h2>Confirmation dialog</h2></header>
-  <div class="kx-modal__body">Dialog description text.</div>
-  <footer><button>Cancel</button><button class="kx-btn--primary">Confirm</button></footer>
-</div>
-<!-- surface: var(--popover) · header/footer divided by var(--border) -->`,
     swift: `KinetixModal(isPresented: $open, title: "Confirmation dialog") {
   Text("Dialog description text.")
 }`,
@@ -905,12 +759,6 @@ KinetixTabsContent {
   },
 
   "drawer-demo": {
-    html: `<div class="kx-drawer" data-side="bottom">
-  <div class="kx-drawer__handle"></div>
-  <h2>Move goal</h2>
-  <p>Set your daily activity goal.</p>
-</div>
-<!-- surface: var(--background) · drags from the bottom edge -->`,
     swift: `KinetixDrawer(isPresented: $open) {
   KinetixDrawerHeader {
     KinetixDrawerTitle("Move goal")
@@ -936,11 +784,6 @@ KinetixTabsContent {
   },
 
   "popover-demo": {
-    html: `<div class="kx-popover" role="dialog">
-  <p class="font-medium">Dimensions</p>
-  <p>Set the dimensions for the layer.</p>
-</div>
-<!-- surface: var(--popover) · border: var(--border) -->`,
     swift: `KinetixPopover(isPresented: $open) {
   KinetixButton(variant: .outline, action: { open = true }) { Text("Open popover") }
 } content: {
@@ -983,9 +826,6 @@ KinetixTabsContent {
   },
 
   "hover-card-demo": {
-    html: `<a href="#" class="kx-hover-card__trigger">@kinetixui</a>
-<div class="kx-hover-card" role="dialog">One token architecture, in motion across every platform.</div>
-<!-- opens on hover (pointer); on touch it is a tap/long-press -->`,
     swift: `KinetixHoverCard(isPresented: $open) {
   Text("@kinetixui").foregroundStyle(Color.kinetixPrimary)
 } content: {
@@ -1010,12 +850,6 @@ KinetixTabsContent {
   },
 
   "dropdown-menu-demo": {
-    html: `<div class="kx-dropdown-menu" role="menu">
-  <span class="kx-dropdown-menu__label">My Account</span>
-  <button role="menuitem">Profile</button>
-  <button role="menuitem">Billing</button>
-  <button role="menuitem">Team</button>
-</div>`,
     swift: `KinetixDropdownMenu {
   KinetixMenuLabel("My Account")
   KinetixMenuItem("Profile") {}
@@ -1052,12 +886,6 @@ KinetixTabsContent {
   },
 
   "context-menu-demo": {
-    html: `<div class="kx-context-menu__trigger">Right-click here</div>
-<div class="kx-context-menu" role="menu">
-  <button role="menuitem">Back</button>
-  <button role="menuitem">Forward</button>
-  <button role="menuitem">Reload</button>
-</div>`,
     swift: `KinetixContextMenu {
   Text("Right-click here")
 } menu: {
@@ -1088,10 +916,6 @@ KinetixTabsContent {
   },
 
   "menubar-demo": {
-    html: `<div class="kx-menubar" role="menubar">
-  <button role="menuitem" aria-haspopup="true">File</button>
-  <button role="menuitem" aria-haspopup="true">Edit</button>
-</div>`,
     swift: `KinetixMenubar {
   KinetixMenubarMenu("File") {
     KinetixMenuItem("New Tab") {}
@@ -1133,11 +957,6 @@ KinetixTabsContent {
   },
 
   "list-demo": {
-    html: `<ul class="kx-list">
-  <li><span class="kx-list__title">Profile</span><span>Name, photo, and personal details</span></li>
-  <li><span class="kx-list__title">Notifications</span></li>
-</ul>
-<!-- rows divided by var(--border) · icons var(--muted-foreground) -->`,
     swift: `KinetixList {
   KinetixListItem(title: "Profile", description: "Name, photo, and personal details") {
     Image(systemName: "person")
@@ -1175,9 +994,6 @@ KinetixTabsContent {
   },
 
   "scroll-area-demo": {
-    html: `<div class="kx-scroll-area" style="height: 10rem; width: 14rem">
-  <!-- content taller than the box; styled scrollbar -->
-</div>`,
     swift: `KinetixScrollArea {
   VStack(alignment: .leading) {
     ForEach(1...20, id: \\.self) { Text("Tag \\($0)") }
@@ -1202,12 +1018,6 @@ KinetixTabsContent {
   },
 
   "tab-bar-demo": {
-    html: `<nav class="kx-tab-bar" role="tablist">
-  <button role="tab" aria-selected="true">Home</button>
-  <button role="tab">Search</button>
-  <button role="tab">Mail<span class="kx-badge">3</span></button>
-</nav>
-<!-- active tint: var(--primary) -->`,
     swift: `KinetixTabBar {
   KinetixTabBarItem(label: "Home", isActive: tab == 0) { tab = 0 } icon: {
     Image(systemName: "house")
@@ -1249,12 +1059,6 @@ KinetixTabsContent {
   },
 
   "navigation-bar-demo": {
-    html: `<header class="kx-navigation-bar">
-  <button aria-label="Back">‹</button>
-  <h1>Appointments</h1><span>3 upcoming</span>
-  <button aria-label="Search">🔍</button>
-</header>
-<!-- surface: var(--background) · title: var(--foreground) -->`,
     swift: `KinetixNavigationBar(title: "Appointments", infoText: "3 upcoming") {
   KinetixNavigationBackButton(action: back)
 } actions: {
@@ -1277,12 +1081,6 @@ KinetixTabsContent {
   },
 
   "navigation-menu-demo": {
-    html: `<nav class="kx-navigation-menu">
-  <button aria-haspopup="true">Getting started</button>
-  <div class="kx-navigation-menu__content" role="menu">
-    <a href="#">Introduction</a><a href="#">Installation</a><a href="#">Theming</a>
-  </div>
-</nav>`,
     swift: `// NavigationMenu is a pointer-hover mega-menu — no touch idiom, so it
 // isn't ported. Reach for KinetixDropdownMenu:
 KinetixDropdownMenu {
@@ -1323,11 +1121,6 @@ KinetixDropdownMenu(
   },
 
   "sidebar-demo": {
-    html: `<div class="kx-sidebar-provider">
-  <aside class="kx-sidebar"><!-- SidebarHeader / SidebarContent / SidebarMenu --></aside>
-  <main class="kx-sidebar-inset"><button class="kx-sidebar-trigger">☰</button></main>
-</div>
-<!-- themed from the --sidebar-* tokens -->`,
     swift: `KinetixSidebar(isOpen: $open) {
   KinetixSidebarItem("Home", systemImage: "house", isActive: screen == .home) { screen = .home }
   KinetixSidebarItem("Projects", systemImage: "folder", isActive: screen == .projects) {
@@ -1372,12 +1165,6 @@ KinetixSidebar(
   },
 
   "toggle-group-demo": {
-    html: `<div class="kx-toggle-group" role="group">
-  <button aria-pressed="false" aria-label="Bold">B</button>
-  <button aria-pressed="false" aria-label="Italic">I</button>
-  <button aria-pressed="false" aria-label="Underline">U</button>
-</div>
-<!-- pressed bg: var(--accent) -->`,
     swift: `KinetixToggleGroup {
   KinetixToggleGroupItem(isOn: $bold) { Image(systemName: "bold") }
   KinetixToggleGroupItem(isOn: $italic) { Image(systemName: "italic") }
@@ -1413,11 +1200,6 @@ KinetixSidebar(
   },
 
   "table-demo": {
-    html: `<table class="kx-table">
-  <thead><tr><th>Invoice</th><th>Status</th><th>Amount</th></tr></thead>
-  <tbody><tr><td>INV001</td><td>Paid</td><td>$250.00</td></tr></tbody>
-</table>
-<!-- header text: var(--muted-foreground) · rows divided by var(--border) -->`,
     swift: `KinetixTable {
   KinetixTableHeader {
     KinetixTableRow(isHeader: true) {
@@ -1464,11 +1246,6 @@ KinetixSidebar(
   },
 
   "data-grid-demo": {
-    html: `<div role="grid" style="overflow: auto; height: 280px;">
-  <div role="row" style="position: sticky; top: 0; display: flex;"><!-- draggable, resizable, optionally sticky-pinned headers --></div>
-  <div style="height: 80000px; position: relative;"><!-- only rows in view, plus overscan, are mounted --></div>
-</div>
-<!-- resize handle: pointerdown on a header's right edge; reorder: native HTML5 drag-and-drop on unpinned headers -->`,
     swift: `// Column resize/reorder/pin are web-only — no drag-a-column-border
 // convention on iOS, and pinning needs a custom layout ScrollView doesn't
 // give for free. Virtualization, tap-to-sort, and tap-to-edit all map
@@ -1513,9 +1290,6 @@ KinetixDataGrid<Item>(
   },
 
   "data-table-demo": {
-    html: `<div class="kx-data-table">
-  <table><!-- sortable headers, pagination controls --></table>
-</div>`,
     swift: `KinetixDataTable(
   columns: [
     .init(header: "Invoice", sortKey: { $0.invoice }) { $0.invoice },
@@ -1546,12 +1320,6 @@ KinetixDataGrid<Item>(
   },
 
   "stepper-demo": {
-    html: `<ol class="kx-stepper">
-  <li aria-current="step">Account</li>
-  <li>Profile</li>
-  <li>Review</li>
-</ol>
-<!-- current dot: var(--primary) · done: var(--primary) · todo: var(--muted) -->`,
     swift: `KinetixStepper(
   steps: [
     .init(label: "Account"),
@@ -1579,13 +1347,6 @@ KinetixDataGrid<Item>(
   },
 
   "pagination-demo": {
-    html: `<nav class="kx-pagination" aria-label="Pagination">
-  <a href="#">Previous</a>
-  <a href="#">1</a><a href="#" aria-current="page">2</a><a href="#">3</a>
-  <span>…</span>
-  <a href="#">Next</a>
-</nav>
-<!-- current bg: var(--accent) -->`,
     swift: `KinetixPagination {
   KinetixPaginationPrevious { page -= 1 }
   ForEach(1...totalPages, id: \\.self) { p in
@@ -1615,11 +1376,6 @@ KinetixDataGrid<Item>(
   },
 
   "table-of-contents-demo": {
-    html: `<nav class="kx-toc" aria-label="On this page">
-  <a href="#overview">Overview</a>
-  <a href="#props" aria-current="true" style="padding-left: 1rem">Props</a>
-</nav>
-<!-- active link: var(--foreground) · rest: var(--muted-foreground) -->`,
     swift: `KinetixTableOfContents(
   items: [
     .init(id: "overview", label: "Overview"),
@@ -1647,11 +1403,6 @@ KinetixDataGrid<Item>(
   },
 
   "footer-demo": {
-    html: `<footer class="kx-footer">
-  <div class="kx-footer__col"><h3>Product</h3><a href="#">Overview</a><a href="#">Pricing</a></div>
-  <div class="kx-footer__bottom"><span>© 2026 Acme Inc.</span></div>
-</footer>
-<!-- surface: var(--muted) · links: var(--muted-foreground) -->`,
     swift: `KinetixFooter {
   KinetixFooterColumn("Product") {
     KinetixFooterLink("Overview") {}
@@ -1682,11 +1433,6 @@ KinetixDataGrid<Item>(
   },
 
   "inform-demo": {
-    html: `<div class="kx-inform" data-variant="success" role="status">
-  Your changes have been saved.
-  <button aria-label="Dismiss">×</button>
-</div>
-<!-- success: var(--success) · warning: var(--warning) · error: var(--destructive) -->`,
     swift: `KinetixInform(
   "Your changes have been saved.",
   variant: .success,
@@ -1705,8 +1451,6 @@ KinetixDataGrid<Item>(
   },
 
   "image-demo": {
-    html: `<img class="kx-image" src="/photo.jpg" alt="" style="aspect-ratio: 1 / 1" />
-<!-- radius: var(--radius) · object-fit: cover · skeleton while loading -->`,
     swift: `KinetixImage(url: URL(string: src), ratio: .square)`,
     kotlin: `KinetixImage(ratio = KinetixImageRatio.Square) {
   AsyncImage(model = src, contentDescription = null, contentScale = ContentScale.Crop)
@@ -1715,11 +1459,6 @@ KinetixDataGrid<Item>(
   },
 
   "quote-demo": {
-    html: `<figure class="kx-quote">
-  <blockquote>This is exactly the token workflow our team needed.</blockquote>
-  <figcaption><img src="/amira.jpg" alt="" /> Amira K. · Product Designer</figcaption>
-</figure>
-<!-- accent bar: var(--border) · caption: var(--muted-foreground) -->`,
     swift: `KinetixQuote(
   "This is exactly the token workflow our team needed.",
   author: "Amira K.",
@@ -1742,12 +1481,6 @@ KinetixDataGrid<Item>(
   },
 
   "metric-demo": {
-    html: `<div class="kx-metric">
-  <span class="kx-metric__label">Active users</span>
-  <span class="kx-metric__value">2,420</span>
-  <span class="kx-metric__trend" data-trend="up">▲ 12%</span>
-</div>
-<!-- up: var(--success) · down: var(--destructive) -->`,
     swift: `KinetixMetric(label: "Active users", value: "2,420", trend: .up, change: "12%") {
   Image(systemName: "person.2")
 }`,
@@ -1768,12 +1501,6 @@ KinetixDataGrid<Item>(
   },
 
   "code-block-demo": {
-    html: `<figure class="kx-code-block">
-  <figcaption>button.tsx</figcaption>
-  <pre><code>export function Button() { … }</code></pre>
-  <button class="kx-code-block__copy" aria-label="Copy"></button>
-</figure>
-<!-- surface: var(--muted) · filename bar divided by var(--border) -->`,
     swift: `KinetixCodeBlock(
   code: "export function Button() { … }",
   filename: "button.tsx",
@@ -1789,10 +1516,6 @@ KinetixDataGrid<Item>(
   },
 
   "password-input-demo": {
-    html: `<div class="kx-password-input">
-  <input type="password" placeholder="••••••••" />
-  <button type="button" aria-label="Show password"></button>
-</div>`,
     swift: `KinetixPasswordInput(text: $password, placeholder: "Password")`,
     kotlin: `KinetixPasswordInput(
   value = password,
@@ -1806,12 +1529,6 @@ KinetixDataGrid<Item>(
   },
 
   "number-input-demo": {
-    html: `<div class="kx-number-input" role="spinbutton" aria-valuenow="2">
-  <button aria-label="Decrement">−</button>
-  <input type="text" inputmode="numeric" value="2" />
-  <button aria-label="Increment">+</button>
-</div>
-<!-- border: var(--input) -->`,
     swift: `KinetixNumberInput(value: $quantity, in: 0...10)`,
     kotlin: `KinetixNumberInput(
   value = quantity,
@@ -1828,9 +1545,6 @@ KinetixDataGrid<Item>(
   },
 
   "fab-demo": {
-    html: `<button class="kx-fab" aria-label="Add">＋</button>
-<button class="kx-fab kx-fab--extended">＋ New item</button>
-<!-- bg: var(--primary) · fg: var(--primary-foreground) · elevated -->`,
     swift: `KinetixFab(action: addItem) {
   Image(systemName: "plus")
 }
@@ -1861,11 +1575,6 @@ KinetixFab(
   },
 
   "date-picker-demo": {
-    html: `<div class="kx-date-picker">
-  <label>Appointment date</label>
-  <button aria-haspopup="dialog">Pick a date</button>
-  <p class="kx-date-picker__helper">Choose a weekday</p>
-</div>`,
     swift: `KinetixDatePicker("Appointment date", selection: $date)`,
     kotlin: `KinetixDatePicker(
   state = rememberDatePickerState(),
@@ -1879,9 +1588,6 @@ KinetixFab(
   },
 
   "calendar-demo": {
-    html: `<div class="kx-calendar" role="grid">
-  <!-- month header + 7-column day grid; selected day bg: var(--primary) -->
-</div>`,
     swift: `KinetixCalendar(selection: $date)`,
     kotlin: `KinetixCalendar(state = rememberDatePickerState())`,
     dart: `KinetixCalendar(
@@ -1891,10 +1597,6 @@ KinetixFab(
   },
 
   "carousel-demo": {
-    html: `<div class="kx-carousel" role="region" aria-roledescription="carousel">
-  <div class="kx-carousel__content"><div class="kx-carousel__item">1</div>…</div>
-  <button aria-label="Previous"></button><button aria-label="Next"></button>
-</div>`,
     swift: `KinetixCarousel(selection: $page, count: 5) { i in
   Text("\\(i + 1)")
     .font(.largeTitle.bold())
@@ -1916,10 +1618,6 @@ KinetixCarousel(pagerState = pager) { page ->
   },
 
   "chart-demo": {
-    html: `<figure class="kx-chart" style="--color-desktop: var(--chart-1); --color-mobile: var(--chart-2)">
-  <svg><!-- bars --></svg>
-</figure>
-<!-- series colors: var(--chart-1) … var(--chart-5) -->`,
     swift: `// KinetixChart wraps the system Charts framework.
 KinetixChart(
   [
@@ -1949,10 +1647,6 @@ const KinetixChart([
   },
 
   "combobox-demo": {
-    html: `<div class="kx-combobox">
-  <input role="combobox" aria-expanded="false" placeholder="Search framework…" />
-  <ul role="listbox"><li role="option">Next.js</li>…</ul>
-</div>`,
     swift: `// Combobox is a recipe, not a component — compose KinetixPopover + a
 // filtered list, or reach for KinetixSelect for a fixed set.
 KinetixPopover(isPresented: $open) {
@@ -1992,14 +1686,6 @@ KinetixPopover(
   },
 
   "command-demo": {
-    html: `<div class="kx-command" role="dialog">
-  <input placeholder="Type a command or search…" />
-  <ul role="listbox">
-    <li class="kx-command__group">Suggestions</li>
-    <li role="option">Calendar</li>
-  </ul>
-</div>
-<!-- ⌘K palette; there is no native equivalent — compose a searchable sheet -->`,
     swift: `KinetixCommandDialog(isPresented: $open, query: $query) {
   KinetixCommandGroup("Suggestions") {
     KinetixCommandItem("Calendar", systemImage: "calendar") { run(.calendar) }
@@ -2031,12 +1717,6 @@ KinetixPopover(
   },
 
   "field-demo": {
-    html: `<div class="kx-field" data-invalid="true">
-  <label>Email</label>
-  <input type="email" aria-invalid="true" />
-  <p class="kx-field__description">We'll only use it to send receipts.</p>
-  <p class="kx-field__message" data-intent="error">Enter a valid email address.</p>
-</div>`,
     swift: `KinetixField(invalid: invalid) {
   KinetixFieldLabel("Email")
   KinetixInput(text: $email, isError: invalid, placeholder: "you@example.com")
@@ -2065,12 +1745,6 @@ KinetixPopover(
   },
 
   "form-demo": {
-    html: `<form class="kx-form">
-  <label for="username">Username</label>
-  <input id="username" />
-  <p class="kx-form__description">This is your public display name.</p>
-  <button type="submit" class="kx-btn--primary">Submit</button>
-</form>`,
     swift: `// There is no Form context port — KinetixField is the equivalent.
 VStack(spacing: 16) {
   KinetixField {
@@ -2105,11 +1779,6 @@ Column(
   },
 
   "input-group-demo": {
-    html: `<div class="kx-input-group">
-  <span class="kx-input-group__text">https://</span>
-  <input placeholder="kinetixui.com" />
-</div>
-<!-- addon bg: var(--muted) · border: var(--input) -->`,
     swift: `KinetixInputGroup {
   KinetixInputGroupText("https://")
   KinetixInputGroupInput(text: $url, placeholder: "kinetixui.com")
@@ -2130,11 +1799,6 @@ Column(
   },
 
   "input-otp-demo": {
-    html: `<div class="kx-input-otp" role="group" aria-label="One-time code">
-  <input maxlength="1" /><input maxlength="1" /><input maxlength="1" />
-  <input maxlength="1" /><input maxlength="1" /><input maxlength="1" />
-</div>
-<!-- active slot ring: var(--ring) -->`,
     swift: `KinetixInputOtp(text: $code, length: 6)`,
     kotlin: `KinetixInputOtp(
   value = code,
@@ -2149,10 +1813,6 @@ Column(
   },
 
   "file-upload-demo": {
-    html: `<div class="kx-file-upload">
-  <button>Choose files</button><span>PDF, PNG up to 5 MB</span>
-  <ul class="kx-file-upload__list"><li>passport-scan.pdf<button aria-label="Remove"></button></li></ul>
-</div>`,
     swift: `KinetixFileUpload(
   files: files,
   onBrowse: { showImporter = true },
@@ -2173,12 +1833,6 @@ Column(
   },
 
   "resizable-demo": {
-    html: `<div class="kx-resizable" data-direction="horizontal">
-  <div class="kx-resizable__panel">One</div>
-  <div class="kx-resizable__handle" role="separator" aria-orientation="vertical"></div>
-  <div class="kx-resizable__panel">Two</div>
-</div>
-<!-- desktop / web split-pane pattern -->`,
     swift: `KinetixResizablePanels {
   Text("One")
 } second: {
@@ -2195,12 +1849,6 @@ Column(
   },
 
   "sonner-demo": {
-    html: `<div class="kx-toaster" aria-live="polite">
-  <div class="kx-toast">
-    <strong>Event created</strong>
-    <span>Sunday, December 03 at 9:00 AM</span>
-  </div>
-</div>`,
     swift: `// Place once near the root, driven by an optional binding:
 KinetixToaster(toast: $toast)
 
@@ -2223,11 +1871,6 @@ setState(() => toast = const KinetixToast('Event created — Sunday, December 03
   },
 
   "rating-demo": {
-    html: `<div class="kx-rating" role="radiogroup" aria-label="Rating">
-  <button role="radio" aria-checked="true" aria-label="1 star">★</button>
-  <button role="radio" aria-label="2 stars">★</button>
-</div>
-<!-- filled star: var(--primary) · empty: var(--muted) -->`,
     swift: `KinetixRating(value: rating, onChange: { rating = $0 })`,
     kotlin: `KinetixRating(
   value = rating,
@@ -2240,12 +1883,6 @@ setState(() => toast = const KinetixToast('Event created — Sunday, December 03
   },
 
   "audio-player-demo": {
-    html: `<figure class="kx-audio-player">
-  <audio src="/audio/song.mp3"></audio>
-  <button aria-label="Play"></button>
-  <input type="range" class="kx-audio-player__seek" />
-  <span>SoundHelix Song 1 · Artist</span>
-</figure>`,
     swift: `KinetixAudioPlayer(
   title: "SoundHelix Song 1",
   subtitle: "Artist",
@@ -2276,12 +1913,6 @@ setState(() => toast = const KinetixToast('Event created — Sunday, December 03
   },
 
   "kbd-demo": {
-    html: `<kbd class="kx-kbd">⏎</kbd>
-<span class="kx-kbd-group">
-  <kbd class="kx-kbd">⌘</kbd>
-  <kbd class="kx-kbd">K</kbd>
-</span>
-<!-- border: var(--input) · bg: var(--muted) · text: var(--muted-foreground) -->`,
     swift: `HStack(spacing: 16) {
   KinetixKbd("⏎")
   KinetixKbdGroup {
@@ -2306,11 +1937,6 @@ setState(() => toast = const KinetixToast('Event created — Sunday, December 03
   },
 
   "json-viewer-demo": {
-    html: `<div role="tree" class="kx-json-viewer">
-  <div>{ <span class="text-muted-foreground">2 keys</span> }</div>
-  <!-- expanded: each key/value row, string green (--success), number blue (--info), boolean amber (--warning) -->
-</div>
-<!-- copy button top-right writes JSON.stringify(data, null, 2) to the clipboard -->`,
     swift: `KinetixJsonViewer(value: .object([
   ("name", .string("kinetixui")),
   ("version", .string("0.11.0")),
@@ -2336,11 +1962,6 @@ setState(() => toast = const KinetixToast('Event created — Sunday, December 03
   },
 
   "diff-viewer-demo": {
-    html: `<div class="kx-diff-viewer" role="table">
-  <div role="row" class="bg-destructive/10"><span>12</span><span></span><span>−</span><span>"version": "0.10.0",</span></div>
-  <div role="row" class="bg-success/10"><span></span><span>12</span><span>+</span><span>"version": "0.11.0",</span></div>
-</div>
-<!-- hand-rolled LCS line diff — no package dependency, same DP table on every platform -->`,
     swift: `KinetixDiffViewer(
   oldText: before,
   newText: after,
@@ -2359,13 +1980,6 @@ setState(() => toast = const KinetixToast('Event created — Sunday, December 03
   },
 
   "color-picker-demo": {
-    html: `<div class="kx-color-picker">
-  <div role="slider" aria-label="Saturation and value" class="kx-sv-square"></div>
-  <div role="slider" aria-label="Hue" class="kx-hue-rail"></div>
-  <div class="kx-hex-field">#<input value="3B82F6" /></div>
-  <div class="kx-swatches"><!-- one button per swatch --></div>
-</div>
-<!-- hand-rolled 2D drag on the square; hue/alpha rails reuse @radix-ui/react-slider directly (not <Slider>, whose track styling is fixed) -->`,
     swift: `@State private var color = "#3b82f6"
 
 KinetixColorPicker(
@@ -2390,12 +2004,6 @@ KinetixColorPicker(
   },
 
   "kanban-board-demo": {
-    html: `<div role="group" class="kx-kanban-board">
-  <div class="kx-kanban-column"><!-- droppable + sortable list of cards --></div>
-  <div class="kx-kanban-column"></div>
-  <div class="kx-kanban-column"></div>
-</div>
-<!-- built on @dnd-kit's "multiple containers" sortable pattern: onDragOver re-parents a card into the hovered column live, onDragEnd commits the within-column reorder -->`,
     swift: `// KanbanBoard is a standing non-port — built on @dnd-kit, which has no
 // equivalent dependency in this package. Hand-rolling accessible pointer +
 // touch + keyboard drag-and-drop with collision detection and live
@@ -2413,14 +2021,6 @@ KinetixColorPicker(
   },
 
   "markdown-editor-demo": {
-    html: `<div class="kx-markdown-editor" role="toolbar" aria-label="Formatting">
-  <button aria-label="Bold">B</button>
-  <button aria-label="Italic">I</button>
-  <!-- … Heading, Link, lists, code, quote … -->
-  <button aria-label="Show preview"><svg><!-- eye icon --></svg></button>
-</div>
-<textarea class="kx-markdown-editor-textarea"></textarea>
-<!-- never contenteditable — toolbar buttons wrap/insert markdown syntax at the textarea's selectionStart/selectionEnd -->`,
     swift: `@State private var text = "## Release notes\\n\\nShipped **MarkdownEditor**."
 
 // SwiftUI's TextEditor has no selection API before iOS 17, so toolbar
@@ -2443,13 +2043,6 @@ KinetixMarkdownEditor(
   },
 
   "empty-demo": {
-    html: `<div class="kx-empty">
-  <div class="kx-empty-media"><svg><!-- search icon --></svg></div>
-  <p class="kx-empty-title">No results found</p>
-  <p class="kx-empty-description">Try adjusting your search or filters.</p>
-  <button class="kx-button kx-button--outline">Clear filters</button>
-</div>
-<!-- title: var(--foreground) · description: var(--muted-foreground) -->`,
     swift: `KinetixEmpty {
   KinetixEmptyHeader {
     KinetixEmptyMedia(variant: .icon) { Image(systemName: "magnifyingglass") }
@@ -2499,12 +2092,6 @@ KinetixMarkdownEditor(
   },
 
   "button-group-demo": {
-    html: `<div class="kx-button-group" role="group" data-orientation="horizontal">
-  <button class="kx-btn--outline kx-btn--icon" aria-label="Bold"><svg><!-- bold --></svg></button>
-  <button class="kx-btn--outline kx-btn--icon" aria-label="Italic"><svg><!-- italic --></svg></button>
-  <button class="kx-btn--outline kx-btn--icon" aria-label="Underline"><svg><!-- underline --></svg></button>
-</div>
-<!-- inner borders overlap 1px, inner corners squared off -->`,
     swift: `KinetixButtonGroup {
   KinetixButton(variant: .outline, size: .icon, action: {}) { Image(systemName: "bold") }
   KinetixButton(variant: .outline, size: .icon, action: {}) { Image(systemName: "italic") }
@@ -2531,18 +2118,6 @@ KinetixMarkdownEditor(
   },
 
   "native-select-demo": {
-    html: `<select class="kx-native-select">
-  <option value="" disabled selected>Select a fruit…</option>
-  <optgroup label="Citrus">
-    <option value="orange">Orange</option>
-    <option value="lemon">Lemon</option>
-  </optgroup>
-  <optgroup label="Stone fruit">
-    <option value="peach">Peach</option>
-    <option value="plum">Plum</option>
-  </optgroup>
-</select>
-<!-- the browser's own <select> — for the OS-native picker instead of KinetixSelect's custom popover -->`,
     swift: `// NativeSelect is a web-only escape hatch to the browser's own <select>.
 // KinetixSelect already wraps the platform's native picker (SwiftUI Menu) —
 // use that instead.
@@ -2558,17 +2133,6 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   },
 
   "description-list-demo": {
-    html: `<dl class="kx-description-list">
-  <div class="kx-description-list__row">
-    <dt>Category</dt>
-    <dd>Data Display</dd>
-  </div>
-  <div class="kx-description-list__row">
-    <dt>Built on</dt>
-    <dd>Radix Avatar</dd>
-  </div>
-</dl>
-<!-- shell: bg-muted/20 · border · divide-y · term: font-mono text-[10px] uppercase -->`,
     swift: `KinetixDescriptionList {
   KinetixDescriptionListItem(term: "Category") { Text("Data Display") }
   KinetixDescriptionListItem(term: "Built on") { Text("Radix Avatar") }
@@ -2586,12 +2150,6 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   },
 
   "banner-demo": {
-    html: `<div class="kx-banner kx-banner--information" role="banner">
-  <svg><!-- info icon --></svg>
-  <span>A new version of KinetixUI is available.</span>
-  <button>Learn more</button>
-</div>
-<!-- full-bleed, no border-radius · border-b · bg-info/10 text-info -->`,
     swift: `KinetixBanner(
   "A new version of KinetixUI is available.",
   variant: .information,
@@ -2613,12 +2171,6 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   },
 
   "segmented-control-demo": {
-    html: `<div class="kx-segmented-control" role="radiogroup">
-  <button role="radio" aria-checked="false">List</button>
-  <button role="radio" aria-checked="true">Grid</button>
-  <button role="radio" aria-checked="false">Board</button>
-</div>
-<!-- track: bg-muted rounded-lg p-1 · selected: bg-background shadow-sm -->`,
     swift: `KinetixSegmentedControl {
   KinetixSegmentedControlItem("List", isSelected: view == .list) { view = .list }
   KinetixSegmentedControlItem("Grid", isSelected: view == .grid) { view = .grid }
@@ -2639,20 +2191,6 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   },
 
   "timeline-demo": {
-    html: `<ol class="kx-timeline">
-  <li>
-    <span class="kx-timeline__dot"></span>
-    <span class="kx-timeline__connector"></span>
-    <time>2 hours ago</time>
-    <p>Deployed to production</p>
-  </li>
-  <li>
-    <span class="kx-timeline__dot"></span>
-    <time>Yesterday</time>
-    <p>Opened PR #100</p>
-  </li>
-</ol>
-<!-- dot: bg-primary · connector: bg-border w-px -->`,
     swift: `KinetixTimeline(items: [
   KinetixTimelineItem(title: "Deployed to production", time: "2 hours ago", content: "v0.9.0 shipped."),
   KinetixTimelineItem(title: "Opened PR #100", time: "Yesterday"),
@@ -2668,13 +2206,6 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   },
 
   "marquee-demo": {
-    html: `<div class="kx-marquee" role="marquee">
-  <div class="kx-marquee__track">
-    <div class="kx-marquee__copy">React · SwiftUI · Jetpack Compose · Flutter</div>
-    <div class="kx-marquee__copy" aria-hidden="true">React · SwiftUI · Jetpack Compose · Flutter</div>
-  </div>
-</div>
-<!-- animate-marquee (Tailwind keyframe) · mask-image fade at both edges · motion-reduce:animate-none -->`,
     swift: `KinetixMarquee(durationSeconds: 18) {
   HStack(spacing: 16) {
     ForEach(platforms, id: \\.self) { p in
@@ -2700,12 +2231,6 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   },
 
   "comparison-slider-demo": {
-    html: `<div class="kx-comparison-slider" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
-  <img class="kx-comparison-slider__before" src="/before.jpg" alt="" />
-  <img class="kx-comparison-slider__after" src="/after.jpg" alt="" style="clip-path: inset(0 0 0 50%)" />
-  <span class="kx-comparison-slider__handle"></span>
-</div>
-<!-- clip-path driven by a Radix Slider value · divider drawn separately, not Radix's own Range fill -->`,
     swift: `KinetixComparisonSlider(beforeLabel: "Before", afterLabel: "After") {
   Image("before").resizable().scaledToFill()
 } after: {
@@ -2726,20 +2251,6 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   },
 
   "page-header-demo": {
-    html: `<header class="kx-page-header">
-  <nav class="kx-breadcrumb" aria-label="Breadcrumb">Projects / KinetixUI</nav>
-  <div class="kx-page-header__row">
-    <div>
-      <h1>KinetixUI</h1>
-      <p>One token architecture, in motion across every platform.</p>
-    </div>
-    <div class="kx-page-header__actions">
-      <button class="kx-btn--outline">Settings</button>
-      <button class="kx-btn--primary">Deploy</button>
-    </div>
-  </div>
-</header>
-<!-- border-b pb-6 · title: text-headline-sm · description: text-muted-foreground -->`,
     swift: `KinetixPageHeader(
   "KinetixUI",
   description: "One token architecture, in motion across every platform.",
@@ -2770,17 +2281,6 @@ KinetixSelect<String>(value: fruit, options: fruitOptions, onChanged: (v) => set
   },
 
   "notification-center-demo": {
-    html: `<button class="kx-notification-trigger" aria-label="Notifications, 2 unread">
-  <svg><!-- bell --></svg>
-  <span class="kx-notification-trigger__dot"></span>
-</button>
-<div class="kx-popover" role="dialog">
-  <header>Notifications <button>Mark all read</button></header>
-  <div class="kx-notification-item kx-notification-item--unread">PR #106 merged · 2m ago</div>
-  <div class="kx-notification-item kx-notification-item--unread">Deploy succeeded · 1h ago</div>
-  <div class="kx-notification-item">Welcome to KinetixUI · 2d ago</div>
-</div>
-<!-- built directly on Popover — no new open-state logic -->`,
     swift: `@State private var open = false
 @State private var unread = 2
 
@@ -2824,23 +2324,6 @@ KinetixNotificationCenter(
   },
 
   "tree-view-demo": {
-    html: `<div role="tree">
-  <div role="treeitem" aria-expanded="true" tabindex="0">
-    <div>▾ src</div>
-    <div role="group">
-      <div role="treeitem" aria-expanded="true">
-        <div>▾ components</div>
-        <div role="group">
-          <div role="treeitem" aria-selected="true">button.tsx</div>
-          <div role="treeitem">badge.tsx</div>
-        </div>
-      </div>
-      <div role="treeitem">index.ts</div>
-    </div>
-  </div>
-  <div role="treeitem">README.md</div>
-</div>
-<!-- role=treeitem on each node's own container, not a separate row — keyboard nav walks the live DOM -->`,
     swift: `@State private var expanded: Set<String> = ["src", "src/components"]
 @State private var selected: String? = "button.tsx"
 
@@ -2899,11 +2382,6 @@ KinetixTreeView(
   },
 
   "multi-select-demo": {
-    html: `<div class="kx-multi-select" role="combobox" aria-expanded="false">
-  <span class="kx-tag kx-tag--secondary">React <button aria-label="Remove React">×</button></span>
-  <span class="kx-tag kx-tag--secondary">SwiftUI <button aria-label="Remove SwiftUI">×</button></span>
-</div>
-<!-- Popover + Command recipe, wrapped as a real component — role=combobox on a div, not a button -->`,
     swift: `@State private var selected: Set<String> = ["react", "swiftui"]
 
 KinetixMultiSelect(
@@ -2945,16 +2423,6 @@ KinetixMultiSelect(
   },
 
   "message-bubble-demo": {
-    html: `<div class="kx-message-bubble kx-message-bubble--received">
-  Hey, are we still on for tomorrow?
-  <time>10:42 AM</time>
-</div>
-<div class="kx-message-bubble kx-message-bubble--sent">
-  Yep! See you at 3.
-  <time>10:43 AM</time> <span class="kx-status kx-status--read">✓✓</span>
-</div>
-<div class="kx-typing-indicator"><span></span><span></span><span></span></div>
-<!-- grouped reduces the outer top corner's radius (rounded-tr-md / rounded-tl-md) -->`,
     swift: `KinetixMessageBubble("Hey, are we still on for tomorrow?", timestamp: "10:42 AM")
 KinetixMessageBubble("Yep! See you at 3.", variant: .sent, timestamp: "10:43 AM", status: .read)
 KinetixTypingIndicator()`,
@@ -2977,13 +2445,6 @@ const KinetixTypingIndicator()`,
   },
 
   "tour-demo": {
-    html: `<div class="kx-tour-spotlight" style="top: 40px; left: 120px; width: 96px; height: 32px; box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.6)"></div>
-<div class="kx-tour-card" role="dialog" aria-modal="true">
-  <p>Save your work</p>
-  <p>Changes save automatically, but you can force a save here.</p>
-  <button>Skip</button> <button>Next</button>
-</div>
-<!-- spotlight is one positioned div with a 9999px box-shadow "hole" — no SVG mask needed -->`,
     swift: `// Tour is a standing non-port — a web-only escape hatch. Targeting an
 // already-rendered arbitrary element needs a CSS-selector equivalent to
 // query the live tree; SwiftUI has no such query, only ancestor-to-
@@ -3003,14 +2464,6 @@ const KinetixTypingIndicator()`,
   },
 
   "virtual-list-demo": {
-    html: `<div role="list" style="overflow-y: auto; height: 280px;">
-  <div style="height: 360000px; position: relative;">
-    <!-- only the rows within the visible 280px, plus overscan, are ever in the DOM -->
-    <div role="listitem" style="position: absolute; top: 0; height: 36px;">Row 1</div>
-    <div role="listitem" style="position: absolute; top: 36px; height: 36px;">Row 2</div>
-  </div>
-</div>
-<!-- itemHeight * items.length reserves scrollbar space; rows are absolutely positioned within it -->`,
     swift: `// SwiftUI's List already only instantiates rows near the viewport —
 // no manual scroll-offset math to port.
 KinetixVirtualList(rows, id: \\.id) { row in

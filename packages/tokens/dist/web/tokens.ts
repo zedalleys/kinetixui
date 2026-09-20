@@ -213,7 +213,13 @@ export const tokens = {
     "5": "20px",
     "6": "24px",
     "7": "28px",
-    "8": "32px"
+    "8": "32px",
+    "10": "40px",
+    "12": "48px",
+    "16": "64px",
+    "20": "80px",
+    "24": "96px",
+    "32": "128px"
   },
   "radius": {
     "none": "0",
@@ -221,6 +227,7 @@ export const tokens = {
     "md": "8px",
     "lg": "12px",
     "xl": "16px",
+    "xxl": "24px",
     "full": "9999px"
   },
   "borderWidth": {
@@ -244,6 +251,7 @@ export const tokens = {
     }
   },
   "duration": {
+    "instant": "100ms",
     "fast": "200ms",
     "base": "300ms",
     "slow": "500ms",
@@ -260,6 +268,24 @@ export const tokens = {
       0.4,
       0,
       0.2,
+      1
+    ],
+    "enter": [
+      0,
+      0,
+      0.2,
+      1
+    ],
+    "exit": [
+      0.4,
+      0,
+      1,
+      1
+    ],
+    "emphasized": [
+      0.2,
+      0,
+      0,
       1
     ]
   },

@@ -9,6 +9,18 @@ import { Steps, Step } from "@/components/steps";
 import { CodePre } from "@/components/code-pre";
 import { TokenTable } from "@/components/token-table";
 import { ThemePreview } from "@/components/theme-preview";
+import {
+  ComponentGapsTable,
+  ComponentTotalInline,
+  ElevationTable,
+  MotionTable,
+  NotSupportedTable,
+  PlatformSupportTable,
+  PlatformUnitsTable,
+  RadiusTable,
+  SpacingTable,
+  StatusSummary,
+} from "@/components/foundations-tables";
 
 /**
  * Heading with a hover-revealed `#` permalink (id from rehype-slug).
@@ -67,6 +79,16 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Step,
     TokenTable,
     ThemePreview,
+    ComponentGapsTable,
+    ComponentTotalInline,
+    ElevationTable,
+    MotionTable,
+    NotSupportedTable,
+    PlatformSupportTable,
+    PlatformUnitsTable,
+    RadiusTable,
+    SpacingTable,
+    StatusSummary,
     ...components,
   };
 }

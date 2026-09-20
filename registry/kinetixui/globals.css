@@ -147,11 +147,18 @@
   --spacing-6: 24px;
   --spacing-7: 28px; /** SYNTHESIZED */
   --spacing-8: 32px;
+  --spacing-10: 40px; /** Layout scale — control heights, section padding. Steps are n × 4 (the 8-unit grid with a 4-unit half-step). */
+  --spacing-12: 48px; /** Layout scale. */
+  --spacing-16: 64px; /** Layout scale. */
+  --spacing-20: 80px; /** Layout scale. */
+  --spacing-24: 96px; /** Layout scale. */
+  --spacing-32: 128px; /** Layout scale — the largest step. */
   --radius-none: 0;
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px; /** SYNTHESIZED */
   --radius-xl: 16px;
+  --radius-xxl: 24px; /** Large surfaces — sheets, hero cards. The 8-unit-grid step above xl. */
   --radius-full: 9999px;
   --border-width-default: 1px;
   --border-width-focus: 2px;
@@ -161,12 +168,16 @@
   --interaction-focus-offset: 2px; /** Gap between a control's edge and its focus ring — matches the dominant `ring-offset-2` already used across packages/ui/src/components (4 of 6 current ring-offset call sites; the other 2 use `ring-offset-1` for tightly-bordered controls, an intentional per-component override, not a second default). Not yet wired as a token reference in component source in this slice (Tailwind's `ring-offset-*` utilities are static classes, not CSS-var-driven) — see /docs/tokens. */
   --interaction-press-opacity: 0.8; /** Opacity for an active/pressed state on a control that signals press via dimming rather than a background-color shift (KinetixUI's own Button uses `active:bg-primary/90`, a color shift, not this token) — for components that reach for opacity-based press feedback instead. Not yet wired into any component in this slice; see /docs/tokens. */
   --interaction-drag-threshold: 4; /** Pointer-movement distance (px) required before a drag gesture activates, so a click isn't hijacked by an accidental micro-drag. dnd-kit's own docs suggest 8 as a starting point, but KanbanBoard already shipped tuned at 4 (its `PointerSensor` `activationConstraint.distance`) — this token matches that existing, working value rather than silently changing drag feel. Wired into KanbanBoard's sensor config. */
+  --duration-instant: 100ms; /** Near-immediate feedback — press states, toggles. Below this a change reads as a jump. */
   --duration-fast: 200ms; /** Quick UI transitions — icon rotation, chevrons, sidebar collapse. */
   --duration-base: 300ms; /** Default transition speed — fades, stroke/progress animations. */
   --duration-slow: 500ms; /** Entrance transitions for larger surfaces — sheet/drawer open. */
   --duration-slower: 1000ms; /** Looping animations — caret blink. */
   --easing-linear: cubic-bezier(0, 0, 1, 1); /** Constant-speed motion — panel slides (Sidebar). */
   --easing-standard: cubic-bezier(0.4, 0, 0.2, 1); /** Default ease-in-out — dialogs, sheets, overlays. */
+  --easing-enter: cubic-bezier(0, 0, 0.2, 1); /** Decelerate — an element entering the screen or a surface opening. */
+  --easing-exit: cubic-bezier(0.4, 0, 1, 1); /** Accelerate — an element leaving the screen or a surface closing. */
+  --easing-emphasized: cubic-bezier(0.2, 0, 0, 1); /** Expressive — large or attention-drawing transitions. Use sparingly. */
   --opacity-hidden: 0; /** Fully transparent. */
   --opacity-disabled: 0.5; /** Disabled-state dimming for interactive controls. */
   --opacity-muted: 0.7; /** De-emphasized icon/text dimming — e.g. a hover-to-reveal action. */

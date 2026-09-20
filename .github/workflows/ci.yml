@@ -47,6 +47,9 @@ jobs:
       - name: Typography alias guardrail
         run: pnpm check:typography
 
+      - name: Spatial grid guardrail (8-unit grid, 4-unit half-step)
+        run: pnpm check:grid
+
       - name: Component manifest check (status + platforms)
         run: pnpm check:manifest
 

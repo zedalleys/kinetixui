@@ -1,5 +1,10 @@
 {
   "duration": {
+    "instant": {
+      "$type": "duration",
+      "$value": "100ms",
+      "$description": "Near-immediate feedback — press states, toggles. Below this a change reads as a jump."
+    },
     "fast": {
       "$type": "duration",
       "$value": "200ms",
@@ -31,6 +36,21 @@
       "$type": "cubicBezier",
       "$value": [0.4, 0, 0.2, 1],
       "$description": "Default ease-in-out — dialogs, sheets, overlays."
+    },
+    "enter": {
+      "$type": "cubicBezier",
+      "$value": [0, 0, 0.2, 1],
+      "$description": "Decelerate — an element entering the screen or a surface opening."
+    },
+    "exit": {
+      "$type": "cubicBezier",
+      "$value": [0.4, 0, 1, 1],
+      "$description": "Accelerate — an element leaving the screen or a surface closing."
+    },
+    "emphasized": {
+      "$type": "cubicBezier",
+      "$value": [0.2, 0, 0, 1],
+      "$description": "Expressive — large or attention-drawing transitions. Use sparingly."
     }
   }
 }

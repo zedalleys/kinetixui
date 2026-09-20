@@ -198,6 +198,7 @@ export const docsNav: NavGroup[] = [
     items: [
       { title: "Introduction", href: "/docs" },
       { title: "Installation", href: "/docs/installation" },
+      { title: "Supported platforms", href: "/docs/platforms" },
       { title: "CLI", href: "/docs/cli" },
       { title: "kinetixui.json", href: "/docs/kinetixui-json" },
       { title: "Component specs", href: "/docs/component-specs" },
@@ -206,6 +207,7 @@ export const docsNav: NavGroup[] = [
   {
     title: "Styling",
     items: [
+      { title: "Foundations", href: "/docs/foundations" },
       { title: "Tokens", href: "/docs/tokens" },
       { title: "Icons", href: "/docs/icons" },
       { title: "Theming", href: "/docs/theming" },

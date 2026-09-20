@@ -1,0 +1,225 @@
+import * as React from "react";
+import { durations, easings, elevation, platformUnits, radiusScale, spacingScale } from "@/lib/foundations";
+import { componentTotal, gaps, notSupported, platforms, statusCounts } from "@/lib/platform-support";
+
+/** Same look as the token table on /docs/tokens: a bordered, horizontally scrollable table. */
+function Table({ head, children, label }: { head: string[]; children: React.ReactNode; label: string }) {
+  return (
+    // a scrollable region must be keyboard-focusable and named (WCAG 2.1.1 / axe scrollable-region-focusable)
+    <div
+      role="region"
+      aria-label={label}
+      tabIndex={0}
+      className="my-6 overflow-x-auto rounded-lg border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <table className="w-full border-collapse text-sm">
+        <caption className="sr-only">{label}</caption>
+        <thead>
+          <tr className="border-b border-border bg-muted/30 text-left">
+            {head.map((h) => (
+              <th key={h} scope="col" className="px-4 py-2 font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border align-top">{children}</tbody>
+      </table>
+    </div>
+  );
+}
+
+const Code = ({ children }: { children: React.ReactNode }) => (
+  <code className="rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.85em] text-foreground">{children}</code>
+);
+const td = "px-4 py-2";
+
+/** Inline `code` spans in the data strings. */
+function Inline({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(`[^`]+`)/g).map((part, i) =>
+        part.startsWith("`") && part.endsWith("`") && part.length > 2 ? <Code key={i}>{part.slice(1, -1)}</Code> : <React.Fragment key={i}>{part}</React.Fragment>,
+      )}
+    </>
+  );
+}
+
+export function SpacingTable() {
+  return (
+    <Table label="Spacing scale" head={["Token", "Value", "Grid", "Size", "Native constant"]}>
+      {spacingScale.map((s) => (
+        <tr key={s.step}>
+          <td className={td}>
+            <Code>--spacing-{s.step}</Code>
+          </td>
+          <td className={`${td} font-mono tabular-nums`}>{s.px}</td>
+          <td className={td}>{s.px === 0 ? "—" : s.role === "base" ? "Base (× 8)" : "Half-step (× 4)"}</td>
+          <td className={`${td} w-40`} aria-hidden>
+            <span className="block h-2 rounded-full bg-primary" style={{ width: s.px }} />
+          </td>
+          <td className={td}>
+            <Code>space{s.step}</Code>
+          </td>
+        </tr>
+      ))}
+    </Table>
+  );
+}
+
+export function PlatformUnitsTable() {
+  return (
+    <Table label="What a unit means on each platform" head={["Platform", "Unit", "How"]}>
+      {platformUnits.map((p) => (
+        <tr key={p.platform}>
+          <th scope="row" className={`${td} text-left font-medium`}>
+            {p.platform}
+          </th>
+          <td className={td}>{p.unit}</td>
+          <td className={td}>
+            <Inline text={p.how} />
+          </td>
+        </tr>
+      ))}
+    </Table>
+  );
+}
+
+export function RadiusTable() {
+  return (
+    <Table label="Radius scale" head={["Token", "Value", "Native constant", "Use"]}>
+      {radiusScale.map((r) => (
+        <tr key={r.name}>
+          <td className={td}>
+            <Code>--radius-{r.name}</Code>
+          </td>
+          <td className={`${td} font-mono tabular-nums`}>{r.px === 9999 ? "9999 (pill)" : r.px}</td>
+          <td className={td}>
+            <Code>KinetixRadius.{r.name}</Code>
+          </td>
+          <td className={`${td} text-muted-foreground`}>{r.description ?? ""}</td>
+        </tr>
+      ))}
+    </Table>
+  );
+}
+
+export function MotionTable() {
+  return (
+    <>
+      <Table label="Motion durations" head={["Token", "Duration", "Use"]}>
+        {durations.map((d) => (
+          <tr key={d.name}>
+            <td className={td}>
+              <Code>--duration-{d.name}</Code>
+            </td>
+            <td className={`${td} font-mono tabular-nums`}>{d.ms}ms</td>
+            <td className={`${td} text-muted-foreground`}>{d.description}</td>
+          </tr>
+        ))}
+      </Table>
+      <Table label="Motion easings" head={["Token", "Curve", "Use"]}>
+        {easings.map((e) => (
+          <tr key={e.name}>
+            <td className={td}>
+              <Code>--easing-{e.name}</Code>
+            </td>
+            <td className={`${td} font-mono text-xs`}>{e.curve}</td>
+            <td className={`${td} text-muted-foreground`}>{e.description}</td>
+          </tr>
+        ))}
+      </Table>
+    </>
+  );
+}
+
+export function ElevationTable() {
+  return (
+    <Table label="Elevation as used by the components" head={["Level", "Token", "Used by"]}>
+      {elevation.map((e) => (
+        <tr key={e.level}>
+          <th scope="row" className={`${td} text-left font-medium`}>
+            {e.level}
+          </th>
+          <td className={td}>{e.token === "none" ? "—" : <Code>{e.token}</Code>}</td>
+          <td className={`${td} text-muted-foreground`}>{e.used}</td>
+        </tr>
+      ))}
+    </Table>
+  );
+}
+
+export function PlatformSupportTable() {
+  return (
+    <Table label="Supported platforms" head={["Platform", "Package · distribution", "Components", "Tokens", "Dark mode", "RTL", "Automated verification"]}>
+      {platforms.map((p) => (
+        <tr key={p.id}>
+          <th scope="row" className={`${td} text-left font-medium`}>
+            {p.name}
+            <span className="mt-0.5 block text-xs font-normal text-muted-foreground">{p.technology}</span>
+          </th>
+          <td className={td}>
+            <Code>{p.package}</Code>
+            <span className="mt-1 block text-xs text-muted-foreground">
+              <Inline text={p.distribution} />
+            </span>
+          </td>
+          <td className={`${td} tabular-nums`}>
+            {p.components} of {componentTotal}
+          </td>
+          <td className={td}>{p.tokens}</td>
+          <td className={td}>{p.darkMode}</td>
+          <td className={td}>{p.rtl}</td>
+          <td className={td}>
+            <Inline text={p.verification} />
+            <span className="mt-1 block font-mono text-[11px] text-muted-foreground">{p.workflow}</span>
+          </td>
+        </tr>
+      ))}
+    </Table>
+  );
+}
+
+export function ComponentGapsTable() {
+  return (
+    <Table label="Components not on every platform" head={["Component", "Missing on", "Why"]}>
+      {gaps.map((g) => (
+        <tr key={g.slug}>
+          <th scope="row" className={`${td} text-left font-medium`}>
+            <Code>{g.slug}</Code>
+          </th>
+          <td className={td}>{g.missing.join(", ")}</td>
+          <td className={`${td} text-muted-foreground`}>{g.note ?? ""}</td>
+        </tr>
+      ))}
+    </Table>
+  );
+}
+
+export function NotSupportedTable() {
+  return (
+    <Table label="Not supported" head={["Platform", "Status"]}>
+      {notSupported.map((n) => (
+        <tr key={n.name}>
+          <th scope="row" className={`${td} text-left font-medium`}>
+            {n.name}
+          </th>
+          <td className={td}>
+            <span className="font-medium">Not supported.</span> <span className="text-muted-foreground"><Inline text={n.note} /></span>
+          </td>
+        </tr>
+      ))}
+    </Table>
+  );
+}
+
+/** "86 stable, 12 beta" — from the manifest. */
+export function StatusSummary() {
+  const parts = Object.entries(statusCounts).sort((a, b) => b[1] - a[1]).map(([s, n]) => `${n} ${s}`);
+  return <>{parts.join(", ")}</>;
+}
+
+/** "98" — from the manifest, for use inside a sentence. */
+export function ComponentTotalInline() {
+  return <>{componentTotal}</>;
+}

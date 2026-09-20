@@ -23,7 +23,7 @@
 | Shadows | `tokens/semantic/shadow.json` | `--shadow-sm/md/lg/xl` + `--shadow-focus*` (focus ring as colour glow) → `extras.css` |
 | Text styles | `tokens/semantic/typography.json` | composites → `--text-<style>` (web) + `KinetixType.swift` / `KinetixType.kt` / `app_text.dart` (native `TextStyle`) |
 | Primitives — 7 brand ramps + neutral | `tokens/primitives/color.json` | 6 from the Figma *Brand Colors* frame (step labels `0…10` remapped to a `0–1000` integer scale) + a synthesized `azure` action-blue ramp (Tailwind-blue-derived) added for the interactive tokens |
-| Primitives — spacing / radius | `tokens/primitives/dimension.json` | Figma `spacing/*`, `Small`/`Button`/`Popup`/`Full` |
+| Primitives — spacing / radius | `tokens/primitives/dimension.json` | Figma `spacing/*`, `Small`/`Button`/`Popup`/`Full` (steps 1–8) — extended additively to 128 (`spacing.10`…`32`, n × 4) and `radius.xxl`; an **8-unit grid with a 4-unit half-step**, guarded by `pnpm check:grid`; native ports get `KinetixSpacing` / `KinetixRadius` |
 | Primitives — type | `tokens/primitives/typography.json` | Figma `fontSize/*`, `lineHeight/*` (Material 3 scale) |
 | Semantic — light | `tokens/semantic/color.light.json` | aliases to primitives, named to the **semantic token** contract |
 | Semantic — dark | `tokens/semantic/color.dark.json` | **synthesized** (no dark mode in Figma) |
