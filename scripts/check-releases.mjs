@@ -14,6 +14,8 @@
  *     someone made, not the absence of one
  *   - every newComponents slug is a real component in components.manifest.json
  *   - release-packages.json (which packages changed) is generated, so it must be current
+ *   - an optional `githubReleaseUrl` is a GitHub Release link naming that same version (it is never
+ *     inferred; the page falls back to the git tag when it is absent)
  */
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -42,6 +44,7 @@ const entries = blocks.map((b) => ({
   version: b.match(/version: "(\d+\.\d+\.\d+)"/)?.[1],
   date: b.match(/date: "([^"]+)"/)?.[1],
   hasBreaking: /\n    breaking:/.test(b),
+  releaseUrl: b.match(/\n    githubReleaseUrl: "([^"]*)"/)?.[1],
   slugs: [...(b.match(/newComponents:[\s\S]*?\n    \],/)?.[0] ?? "").matchAll(/"([a-z][a-z0-9-]*)"/g)].map((m) => m[1]).filter((s) => s !== "group"),
 }));
 if (entries.length < 5 || entries.some((e) => !e.version || !e.date)) errors.push("could not parse RELEASES in apps/web/src/lib/releases.ts");
@@ -71,7 +74,16 @@ for (const e of entries) if (cmp(e.version ?? "0.0.0", "0.6.0") > 0 && !e.hasBre
 const known = new Set(Object.keys(json("components.manifest.json").components));
 for (const e of entries) for (const s of e.slugs) if (!known.has(s)) errors.push(`${e.version}: newComponents slug "${s}" is not in components.manifest.json`);
 
-// 7. generated package indicators are current
+// 7. githubReleaseUrl, when present, points at this version's GitHub Release page
+const RELEASE_URL = "https://github.com/zedalleys/kinetixui/releases/tag/";
+for (const e of entries) {
+  if (e.releaseUrl === undefined) continue;
+  if (!e.releaseUrl.startsWith(RELEASE_URL) || !e.releaseUrl.includes(e.version)) {
+    errors.push(`${e.version}: githubReleaseUrl must start with ${RELEASE_URL} and name the version (got "${e.releaseUrl}")`);
+  }
+}
+
+// 8. generated package indicators are current
 const gen = spawnSync(process.execPath, [`${root}/scripts/gen-release-meta.mjs`, "--check"], { encoding: "utf8" });
 if (gen.status !== 0) errors.push((gen.stderr || gen.stdout).trim());
 

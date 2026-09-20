@@ -130,7 +130,22 @@ exists because the page once sat at 0.6.0 for eleven releases while the packages
 4. The per-package "changed / unchanged" indicators are generated from the package changelogs
    (`node scripts/gen-release-meta.mjs`) — run it if the check says they're stale.
 
-There are no GitHub Releases after v0.5.0, only per-package tags, so the page links to the tag.
+There are no GitHub Releases after v0.5.0, only per-package tags, so by default the page links to the tag.
+If you do publish a GitHub Release for a version, generate its notes from the same curated entry — nothing
+is written twice:
+
+```bash
+pnpm release:notes 0.21.0            # prints Markdown to paste into the GitHub Release
+pnpm release:notes 0.21.0 --out notes.md
+```
+
+Then add `githubReleaseUrl` to that entry (never guess it — `check:releases` requires it to be a
+`github.com/zedalleys/kinetixui/releases/tag/…` link naming the same version) and the changelog shows
+"View release on GitHub" instead of "Tag on GitHub". The script only reads `releases.ts` and the generated
+package metadata; it never talks to GitHub.
+
+The changelog page itself is searchable and its filter and search live in the URL, so any view can be
+shared: `/docs/changelog?filter=accessibility`, `?q=DataGrid`, `?filter=components&q=grid`.
 
 ## Publishing the native ports
 

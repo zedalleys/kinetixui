@@ -1,63 +1,22 @@
 "use client";
 
 import * as React from "react";
-import type { ChangeArea, ChangeKind, ReleaseChange, ReleaseType } from "@/lib/releases";
+import { useSearchParams } from "next/navigation";
+import type { ChangeKind, ReleaseChange } from "@/lib/releases";
+import {
+  FILTERS,
+  buildChangelogUrl,
+  changeMatches,
+  filterReleases,
+  normalizeQuery,
+  parseFilter,
+  resultSummary,
+  type FilterId,
+  type ViewComponent,
+  type ViewRelease,
+} from "@/lib/changelog-filter";
 
-export type ViewComponent = {
-  slug: string;
-  name: string;
-  /** docs page, when there is one */
-  href?: string;
-  platforms: { abbr: string; name: string; on: boolean }[];
-};
-
-export type ViewRelease = {
-  version: string;
-  date: string;
-  dateLabel: string;
-  type: ReleaseType;
-  summary: string;
-  isLatest: boolean;
-  /** feature releases and patches with security / accessibility / breaking changes get a full entry */
-  notable: boolean;
-  /** which of the version-locked packages actually changed (generated from the package changelogs) */
-  packages?: { ui: boolean; tokens: boolean; cli: boolean };
-  changes: ReleaseChange[];
-  breaking?: string[];
-  migration?: string;
-  limitations?: string[];
-  groups?: { group: string; items: ViewComponent[] }[];
-  tagHref: string;
-};
-
-type FilterId = "all" | "components" | "tokens" | "cli" | "accessibility" | "platforms" | "breaking";
-
-const FILTERS: { id: FilterId; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "components", label: "Components" },
-  { id: "tokens", label: "Tokens" },
-  { id: "cli", label: "CLI" },
-  { id: "accessibility", label: "Accessibility" },
-  { id: "platforms", label: "Platforms" },
-  { id: "breaking", label: "Breaking" },
-];
-
-const AREA_OF: Partial<Record<FilterId, ChangeArea>> = { components: "components", tokens: "tokens", cli: "cli", platforms: "platforms" };
-
-function changeMatches(filter: FilterId, c: ReleaseChange) {
-  if (filter === "all") return true;
-  if (filter === "accessibility") return c.kind === "accessibility";
-  if (filter === "breaking") return c.kind === "breaking";
-  const want = AREA_OF[filter];
-  return want !== undefined && (Array.isArray(c.area) ? c.area.includes(want) : c.area === want);
-}
-
-function releaseMatches(filter: FilterId, r: ViewRelease) {
-  if (filter === "all") return true;
-  if (filter === "breaking") return (r.breaking?.length ?? 0) > 0;
-  if (filter === "components" && r.groups?.length) return true;
-  return r.changes.some((c) => changeMatches(filter, c));
-}
+export type { ViewComponent, ViewRelease };
 
 const KIND_ORDER: ChangeKind[] = ["breaking", "security", "accessibility", "new", "improved", "fixed", "deprecated"];
 const KIND_LABEL: Record<ChangeKind, string> = {
@@ -245,9 +204,17 @@ function FullEntry({ release, changes }: { release: ViewRelease; changes: Releas
       ) : null}
 
       <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-        <a href={release.tagHref} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-4">
-          Tag on GitHub
-        </a>
+        {/* A GitHub Release page exists only for some versions, so it is linked only when the data says so
+            (`githubReleaseUrl`); every other version falls back to its git tag, which always exists. */}
+        {release.githubReleaseUrl ? (
+          <a href={release.githubReleaseUrl} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-4">
+            View release on GitHub
+          </a>
+        ) : (
+          <a href={release.tagHref} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-4">
+            Tag on GitHub
+          </a>
+        )}
       </p>
     </>
   );
@@ -267,33 +234,31 @@ function CompactEntry({ release, changes }: { release: ViewRelease; changes: Rel
   );
 }
 
-export function ChangelogView({ releases }: { releases: ViewRelease[] }) {
-  const [filter, setFilter] = React.useState<FilterId>("all");
-  const counts = Object.fromEntries(FILTERS.map((f) => [f.id, releases.filter((r) => releaseMatches(f.id, r)).length])) as Record<FilterId, number>;
-  const visible = releases.filter((r) => releaseMatches(filter, r));
+/**
+ * The jump list and the release sections for a given filter + search. Presentational only (no URL or
+ * router access), so the page can also render it as the static Suspense fallback before hydration.
+ */
+export function ReleaseList({
+  releases,
+  filter,
+  query,
+  onClear,
+}: {
+  releases: ViewRelease[];
+  filter: FilterId;
+  query: string;
+  onClear?: () => void;
+}) {
+  const visible = filterReleases(releases, filter, query);
+  const searching = normalizeQuery(query) !== "";
+  const filterLabel = FILTERS.find((f) => f.id === filter)?.label;
 
-  // jump list, grouped by year
+  // jump list, grouped by year — only when everything is listed, so every link has a target
   const years = [...new Set(releases.map((r) => r.date.slice(0, 4)))];
 
   return (
-    <div>
-      <div role="group" aria-label="Filter releases" className="mt-6 flex flex-wrap gap-2">
-        {FILTERS.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            aria-pressed={filter === f.id}
-            onClick={() => setFilter(f.id)}
-            className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-              filter === f.id ? "border-primary bg-primary text-primary-foreground" : "border-border text-foreground hover:bg-accent"
-            }`}
-          >
-            {f.label} <span className={filter === f.id ? "opacity-80" : "text-muted-foreground"}>{counts[f.id]}</span>
-          </button>
-        ))}
-      </div>
-
-      {filter === "all" ? (
+    <>
+      {filter === "all" && !searching ? (
         <nav aria-label="Jump to a version" className="mt-6 space-y-2">
           {years.map((y) => (
             <div key={y} className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -301,7 +266,7 @@ export function ChangelogView({ releases }: { releases: ViewRelease[] }) {
               {releases
                 .filter((r) => r.date.startsWith(y))
                 .map((r) => (
-                  <a key={r.version} href={`#${r.version}`} className="rounded-sm px-1.5 py-0.5 font-mono text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+                  <a key={r.version} href={`#${r.version}`} className="rounded-sm px-1.5 py-0.5 font-mono text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     {r.version}
                   </a>
                 ))}
@@ -310,12 +275,30 @@ export function ChangelogView({ releases }: { releases: ViewRelease[] }) {
         </nav>
       ) : null}
 
-      {visible.length === 0 ? <p className="mt-12 text-muted-foreground">No releases match this filter.</p> : null}
+      {visible.length === 0 ? (
+        <div className="mt-12 text-muted-foreground">
+          <p>
+            No releases match
+            {searching ? <> “{normalizeQuery(query)}”</> : null}
+            {filter !== "all" && filterLabel ? <> in {filterLabel}</> : null}.
+          </p>
+          {onClear ? (
+            <button
+              type="button"
+              onClick={onClear}
+              className="mt-3 rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              Clear search and filters
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="mt-12 space-y-12">
         {visible.map((release) => {
           const changes = release.changes.filter((c) => filter === "all" || changeMatches(filter, c));
-          const compact = !release.notable && filter === "all";
+          // a search shows full entries so the text that matched is visible
+          const compact = !release.notable && filter === "all" && !searching;
           return (
             <section key={release.version} id={release.version} className="scroll-mt-28">
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border pb-2">
@@ -335,6 +318,145 @@ export function ChangelogView({ releases }: { releases: ViewRelease[] }) {
           );
         })}
       </div>
+    </>
+  );
+}
+
+/** Wait this long after the last keystroke before filtering, announcing and updating the URL. */
+const SEARCH_DEBOUNCE_MS = 250;
+
+/**
+ * The interactive changelog: a search box and category filters whose state lives in the URL
+ * (`?filter=accessibility&q=grid`), so any view is shareable. The filter is read straight from the URL
+ * (so Back/Forward just work); the search is typed into local state and written to the URL once typing
+ * settles. URL writes use the native History API, which the App Router syncs into `useSearchParams` —
+ * no reload and no server round-trip. The hash is preserved, so `?filter=accessibility#0.18.0` works.
+ *
+ * Must render inside a <Suspense> boundary (it reads `useSearchParams`).
+ */
+export function ChangelogView({ releases }: { releases: ViewRelease[] }) {
+  const params = useSearchParams();
+  const filter = parseFilter(params.get("filter"));
+  const urlQuery = normalizeQuery(params.get("q"));
+
+  const [draft, setDraft] = React.useState(urlQuery); // what is in the box
+  const [query, setQuery] = React.useState(urlQuery); // what the results (and the announcement) reflect
+  const committed = React.useRef(urlQuery); // the search last written to, or read from, the URL
+  const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const filterRef = React.useRef(filter);
+  filterRef.current = filter;
+
+  // URL → UI: Back/Forward, or arriving on a shared link, changes the search from outside
+  React.useEffect(() => {
+    if (urlQuery === committed.current) return;
+    clearTimeout(timer.current);
+    committed.current = urlQuery;
+    setDraft(urlQuery);
+    setQuery(urlQuery);
+  }, [urlQuery]);
+
+  React.useEffect(() => () => clearTimeout(timer.current), []);
+
+  // A link like `?filter=accessibility#0.18.0` first scrolls to the anchor in the full prerendered list;
+  // once this view mounts and the list is filtered, that position is wrong. Scroll to the anchor again
+  // (once) if it is still on the page.
+  React.useEffect(() => {
+    const id = decodeURIComponent(window.location.hash.slice(1));
+    if (id) document.getElementById(id)?.scrollIntoView?.();
+  }, []);
+
+  function writeUrl(state: { filter: FilterId; q: string }, mode: "push" | "replace") {
+    const { pathname, search, hash } = window.location;
+    const url = buildChangelogUrl({ pathname, search, hash }, state);
+    if (url === `${pathname}${search}${hash}`) return;
+    if (mode === "push") window.history.pushState(null, "", url);
+    else window.history.replaceState(null, "", url);
+  }
+
+  function commitSearch(value: string) {
+    clearTimeout(timer.current);
+    const q = normalizeQuery(value);
+    setQuery(q);
+    committed.current = q;
+    writeUrl({ filter: filterRef.current, q }, "replace"); // typing shouldn't fill the history
+  }
+
+  function onSearchChange(value: string) {
+    setDraft(value);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => commitSearch(value), SEARCH_DEBOUNCE_MS);
+  }
+
+  function selectFilter(id: FilterId) {
+    if (id === filter) return;
+    clearTimeout(timer.current);
+    const q = normalizeQuery(draft);
+    setQuery(q);
+    committed.current = q;
+    writeUrl({ filter: id, q }, "push"); // a filter is a view worth going Back to
+  }
+
+  function clearAll() {
+    clearTimeout(timer.current);
+    setDraft("");
+    setQuery("");
+    committed.current = "";
+    writeUrl({ filter: "all", q: "" }, "push");
+  }
+
+  const visibleCount = filterReleases(releases, filter, query).length;
+  const summary = resultSummary(visibleCount, filter, query);
+
+  return (
+    <div>
+      <div className="mt-6 space-y-3">
+        <div className="w-full sm:max-w-sm">
+          <label htmlFor="changelog-search" className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+            Search releases
+          </label>
+          <input
+            id="changelog-search"
+            type="search"
+            value={draft}
+            onChange={(e) => onSearchChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitSearch(draft);
+            }}
+            placeholder="Version, component, keyword…"
+            autoComplete="off"
+            spellCheck={false}
+            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-action focus-visible:shadow-focus"
+          />
+        </div>
+
+        <div role="group" aria-label="Filter releases" className="flex flex-wrap gap-2">
+          {FILTERS.map((f) => {
+            const active = filter === f.id;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => selectFilter(f.id)}
+                className={`rounded-full border px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                  active ? "border-primary bg-primary font-medium text-primary-foreground" : "border-border text-foreground hover:bg-accent"
+                }`}
+              >
+                {active ? <span aria-hidden>✓ </span> : null}
+                {f.label}{" "}
+                <span className={active ? "opacity-80" : "text-muted-foreground"}>{filterReleases(releases, f.id, query).length}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* announced politely after typing settles or a filter changes; empty when nothing is active */}
+        <p role="status" aria-live="polite" aria-atomic="true" className="min-h-5 text-sm text-muted-foreground">
+          {summary}
+        </p>
+      </div>
+
+      <ReleaseList releases={releases} filter={filter} query={query} onClear={clearAll} />
     </div>
   );
 }

@@ -22,6 +22,7 @@
     "check:token-contract": "node scripts/check-token-contract.mjs",
     "gen:release-meta": "node scripts/gen-release-meta.mjs",
     "check:releases": "node scripts/check-releases.mjs",
+    "release:notes": "node scripts/release-notes.mjs",
     "check:rtl": "node scripts/check-rtl.mjs",
     "check:icons": "node scripts/check-icon-mapping.mjs",
     "gen:manifest": "node scripts/gen-manifest.mjs",
