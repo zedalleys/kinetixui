@@ -73,11 +73,11 @@ export function SiteFooter() {
           ))}
         </div>
 
-        {/* oversized specimen wordmark */}
+        {/* oversized specimen wordmark — pure decoration (a 15%-tint watermark), so it is generated content, not text:
+            WCAG exempts decorative text from contrast, and this keeps it out of the DOM, the accessibility tree,
+            text selection and contrast audits, which cannot tell a watermark from copy. */}
         <div aria-hidden className="select-none overflow-hidden border-t border-border pt-6">
-          <span className="block font-display text-[13vw] font-bold uppercase leading-[0.82] tracking-[-0.045em] text-muted-foreground/15">
-            Kinetixui
-          </span>
+          <span className="block font-display text-[13vw] font-bold uppercase leading-[0.82] tracking-[-0.045em] text-muted-foreground/15 before:content-['Kinetixui']" />
         </div>
 
         <div className="flex flex-col gap-2 border-t border-border py-6 font-mono text-[11px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">

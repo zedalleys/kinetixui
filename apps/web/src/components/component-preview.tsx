@@ -32,6 +32,8 @@ export function ComponentPreview({
   align?: "center" | "start";
   className?: string;
 }) {
+  // hooks first: an early return below must not change how many hooks run
+  const [platform, setPlatform] = React.useState<Platform>("react");
   const entry = demoRegistry[name];
 
   if (!entry) {
@@ -48,7 +50,6 @@ export function ComponentPreview({
   const native = platformCode[name] ?? {};
   const byPlatform: Partial<Record<Platform, string>> = { react: entry.source, ...native };
   const platforms = PLATFORM_ORDER.filter((p) => byPlatform[p]);
-  const [platform, setPlatform] = React.useState<Platform>("react");
 
   return (
     <div

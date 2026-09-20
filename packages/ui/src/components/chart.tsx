@@ -201,7 +201,7 @@ function ChartSrTable({
 const cssIdent = (s: string) => String(s).replace(/[^\w-]/g, "");
 // keep parens (hsl(), var(), color-mix()…); reject only what can end the
 // declaration, close the rule, open an at-rule, a comment, or the <style>.
-const cssValue = (s: string) => (/[<>{}\[\];@]|\/\*|\*\//.test(s) ? "" : s.trim());
+const cssValue = (s: string) => (/[<>{}[\];@]|\/\*|\*\//.test(s) ? "" : s.trim());
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(([, c]) => c.theme || c.color);
