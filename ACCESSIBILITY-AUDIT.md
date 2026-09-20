@@ -26,7 +26,7 @@ contract that feeds all four component libraries.
    visibility, keyboard operability, names on icon-only controls, state exposed
    to AT (`aria-pressed` / `aria-expanded`), colour-only signalling, and
    `prefers-reduced-motion` coverage.
-3. **Rendered axe-core passes** — **done (2026-09-19).** Two layers, both in CI: a jsdom pass (`packages/ui/src/components-a11y.test.tsx`, with `KNOWN` baseline) and a real-browser pass (`scripts/a11y-browser.mjs`, `pnpm check:a11y-browser`, workflow `a11y-browser.yml`) that opens every Storybook story in headless Chromium in **light and dark** with every axe rule on, including colour contrast. `a11y-baseline.json` is **empty**: every story is clean in light and dark. A new violation fails the build. **Still not covered:** keyboard interaction, focus trapping/return, forced-colors, and per-component ARIA interaction models (DataGrid, TreeView, Tour, Kanban, MultiSelect, ColorPicker).
+3. **Rendered axe-core passes** — **done (2026-09-19).** Two layers, both in CI: a jsdom pass (`packages/ui/src/components-a11y.test.tsx`, with `KNOWN` baseline) and a real-browser pass (`scripts/a11y-browser.mjs`, `pnpm check:a11y-browser`, workflow `a11y-browser.yml`) that opens every Storybook story in headless Chromium in **light and dark** with every axe rule on, including colour contrast. `a11y-baseline.json` is **empty**: every story is clean in light and dark. A new violation fails the build. Keyboard interaction, focus trapping/return, forced-colors, reduced motion and the per-component ARIA models (DataGrid, TreeView, Tour, Kanban, MultiSelect, ColorPicker) were covered in follow-up passes the same day — see "Keyboard pass", "Baseline closed out" and "Forced colors, reduced motion, Kanban" below.
 
 ## Severity key
 
@@ -105,10 +105,11 @@ regression later.
 
 | # | Sev | Area | Finding | Recommendation |
 |---|-----|------|---------|----------------|
-| B14 | Minor | `theme-provider` / first paint | `defaultTheme="system"` with `enableSystem` is correct, but verify the pre-hydration theme script doesn't cause a flash that could disorient (it uses `disableTransitionOnChange`, so likely fine — confirm in the live pass). | Confirm in axe/visual pass B (pending). |
+| B14 | Minor | `theme-provider` / first paint | `defaultTheme="system"` with `enableSystem` is correct, but verify the pre-hydration theme script doesn't cause a flash that could disorient (it uses `disableTransitionOnChange`, so likely fine — confirm in the live pass). | **Confirmed fine (2026-09-20)** — see below. |
 
-Cross-cutting chart items (loading/empty/error states, legend toggle, pattern
-fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
+The cross-cutting chart items (loading/empty/error states, legend toggle, pattern
+fills, brush/zoom, reference lines) have all shipped — see `COMPONENT-ADDITIONS.md` §2,
+which lists each as a `/charts` recipe. (This paragraph used to call them outstanding; it was stale.)
 
 ### Fixed in a follow-up pass (`a11y/focus-and-audit-followups`)
 
@@ -134,6 +135,12 @@ fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
   `aria-label`.
 - **Radix under everything interactive** — menus, dialogs, tabs, combobox,
   disclosures inherit correct roles, focus trapping, type-ahead, `Esc`.
+- **First-paint theme (B14, checked 2026-09-20)** — in a production build the `next-themes`
+  script is a blocking inline script emitted before any page content, and the CSP
+  (`script-src 'unsafe-inline'`) allows it. With no stored choice the page loads
+  already dark under a dark system preference and light under a light one, and a
+  stored `light` override beats a dark system preference — `<html>` has the right class
+  and background on first load in all three cases, so there is no wrong-theme flash.
 - **Dark-mode text contrast** — every text pair 5.8:1 or better.
 - **`lang="en"`**, `metadataBase`, per-page `<title>` templates.
 
@@ -146,8 +153,10 @@ fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
   `hooks.mjs` takes a `selector`; `extras.dark.css` is emitted, bundled into
   `registry/kinetixui/globals.css`, and exported as
   `@kinetixui/tokens/css/extras/dark`. Dark focus ring: 1.70 → **8.83:1**.
-  Still open: add the four `shadow-focus*` composites to `check-contrast.mjs`'s
-  non-text pass so a future regression is caught automatically.
+  **Follow-up done (2026-09-20):** `check-contrast.mjs` now checks the 1px edge of
+  every `--shadow-focus*` ring against the page in both themes. It immediately
+  caught the light `focus-warning` ring still on the old orange `#f97907`
+  (**2.70:1**); it is now `amber.800` `#7f5b21` (5.8:1), matching light `--warning`.
 - **R2 — DONE.** Light `--warning` → `amber.800` `#7f5b21` (6.1 / 5.8:1). Chosen
   over adding a second `--warning-strong` token to keep the contract
   single-valued. Dark stays bright `amber.400`. `KNOWN_SUBAA` is now empty.
@@ -155,9 +164,11 @@ fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
   connected (or add `@axe-core/playwright` as a dev dep and a
   `scripts/a11y.mjs` that walks the route list headless — better, since it can
   run in CI next to `check:contrast`).
-- **R4 — apply B8** (number-input focus) with a changeset; it's the only
-  `@kinetixui/ui` code change and it's a one-liner per button.
-- **R5 — chart accessibility** (B10) — see `COMPONENT-ADDITIONS.md` §2.
+- **R4 — DONE.** B8 (number-input focus) shipped with a changeset.
+- **R5 — DONE.** The chart text alternative (B10) shipped, and so did the other chart
+  items (loading/empty/error states, legend toggle, pattern fills, brush/zoom) —
+  `COMPONENT-ADDITIONS.md` §2 lists each as a `/charts` recipe. An earlier revision of
+  this line called them outstanding; that was wrong.
 
 ## Verification
 
@@ -201,7 +212,7 @@ Dark mode has **no** contrast failures once the canvas background is correct.
 | `ColorPicker`, `Slider` | `aria-label` was on the Radix slider root, but the element with `role="slider"` is the thumb, so every slider was unnamed | **Fixed** |
 | `TreeView` | none — follows the WAI-ARIA tree pattern | — |
 
-Also corrected the accessibility docs page, which claimed every interactive component is a Radix primitive with correct keyboard behaviour by default. Not yet covered: forced-colors and reduced-motion in a real browser, and any automated keyboard test for `KanbanBoard` (dragging needs real layout, so it belongs in the browser pass).
+Also corrected the accessibility docs page, which claimed every interactive component is a Radix primitive with correct keyboard behaviour by default. Forced-colors, reduced-motion and `KanbanBoard` keyboard drag were then covered in the browser pass — see the next sections.
 
 ## Baseline closed out (2026-09-19)
 

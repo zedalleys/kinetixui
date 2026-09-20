@@ -58,6 +58,27 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.20.1",
+    date: "2026-09-20",
+    summary: "The light warning focus ring now clears WCAG 1.4.11, and CI checks every focus ring.",
+    breaking: [],
+    changes: [
+      {
+        kind: "accessibility",
+        area: "tokens",
+        title: "Light warning focus ring meets 3:1",
+        body: "--shadow-focus-warning used the Figma orange #f97907 (2.70:1 against the page), which failed WCAG 1.4.11 as a focus indicator. It now uses amber.800 (#7f5b21, 5.8:1), matching the light --warning colour. Dark is unchanged.",
+        href: "/docs/accessibility",
+      },
+      {
+        kind: "improved",
+        area: "release",
+        title: "check:contrast covers every focus ring",
+        body: "The edge of every --shadow-focus* ring is now checked against the page in both themes, so a regression fails CI.",
+      },
+    ],
+  },
+  {
     version: "0.20.0",
     date: "2026-09-20",
     summary: "DataGrid drag-select and separate selection ranges; the native Buttons show hover and pressed states.",
@@ -79,6 +100,7 @@ export const RELEASES: Release[] = [
         area: "components",
         title: "DataGridSelection is exported from the package",
         body: "The type behind onSelectionChange shipped in 0.19.0 but was not exported, so consumers could not name it. It is now exported along with the new DataGridRange.",
+        href: "/docs/components/data-grid",
       },
       {
         kind: "improved",
@@ -158,12 +180,14 @@ export const RELEASES: Release[] = [
         area: "platforms",
         title: "New colours in the SwiftUI, Compose and Flutter tokens",
         body: "action, actionHover, actionPressed, brand, link and focus are in the compiled colour sets of all three native libraries.",
+        href: "/docs/tokens",
       },
       {
         kind: "fixed",
         area: "components",
         title: "Fab's Primary hover no longer inverts in dark mode",
         body: "It used the same hard-coded hover (--color-blue-600) that Button dropped earlier because it does not follow the theme and inverts in dark mode; it now uses the same action-derived states as Button.",
+        href: "/docs/components/fab",
       },
       {
         kind: "accessibility",
@@ -238,30 +262,35 @@ export const RELEASES: Release[] = [
         area: "cli",
         title: "Theme names are validated before they touch the filesystem",
         body: "`kinetixui theme create ../../../tmp/evil` could read or write outside kinetixui-themes/. Theme names now go through the same charset validation as every other user-supplied identifier. Upgrade if you run the CLI on untrusted input.",
+        href: "/docs/cli#theme",
       },
       {
         kind: "fixed",
         area: "cli",
         title: "`inspect` survives a malformed kinetixui.json",
         body: "It prints a warning on the Installed line and carries on, instead of aborting with a raw JSON.parse error — matching how `doctor` already behaved.",
+        href: "/docs/cli#inspect",
       },
       {
         kind: "fixed",
         area: "cli",
         title: "`doctor` checks the utils alias",
         body: "The alias points at a file, not a directory like the other three, so it was silently skipped. It now gets its own extension-aware existence check.",
+        href: "/docs/cli#doctor",
       },
       {
         kind: "fixed",
         area: "cli",
         title: "`lint` no longer scans a nested ui directory twice",
         body: "Directories are de-duplicated by containment before any recursive walk starts.",
+        href: "/docs/cli#lint",
       },
       {
         kind: "improved",
         area: "cli",
         title: "`lint` spacing pattern hardened",
         body: "Negative arbitrary values (-top-[10px], -inset-[6px]) are now an explicit part of the pattern. The old pattern already caught them, so this is a hardening, not a fix for a missed case.",
+        href: "/docs/cli#lint",
       },
     ],
   },
