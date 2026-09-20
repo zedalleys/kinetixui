@@ -58,6 +58,40 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.19.0",
+    date: "2026-09-20",
+    summary: "DataGrid range selection with copy, opt-in.",
+    breaking: [],
+    limitations: [
+      "DataGrid selection is a single rectangle: no disjoint Ctrl+click selection and no drag-select.",
+      "Copy uses each column's value() and writes tab-separated text.",
+      "The SwiftUI, Compose and Flutter components now read action, link and focus, but their hover and pressed states still use platform defaults rather than actionHover / actionPressed.",
+    ],
+    changes: [
+      {
+        kind: "new",
+        area: "components",
+        title: "DataGrid: opt-in range selection and copy",
+        body: "Set selectable. Shift+arrows or Shift+click extend a rectangle from the anchor cell (even after it has scrolled out of the virtualized window), Ctrl/Cmd+A selects all, Ctrl/Cmd+C copies it as tab-separated text and Esc clears it. The grid gets aria-multiselectable, every cell aria-selected, a live region announces the count, and onSelectionChange reports the rows and columns. Re-sorting clears the selection. Grids without selectable are unchanged.",
+        href: "/docs/components/data-grid",
+      },
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "Component docs no longer claim Radix provides all keyboard behaviour",
+        body: "The generated component pages now say that hand-built widgets (DataGrid, TreeView, ColorPicker, MultiSelect, Tour, KanbanBoard) have their own documented interaction models, and show bg-action.",
+        href: "/docs/accessibility",
+      },
+      {
+        kind: "improved",
+        area: "platforms",
+        title: "SwiftUI, Compose and Flutter components read the role tokens",
+        body: "About 80 native component files use action / actionForeground for fills and focus for rings, and the Button Link variant uses link. Nothing changes by default. This is in the native libraries (not versioned with these npm packages), and supersedes the 0.18.0 note that native components did not read action yet.",
+        href: "/docs/theming",
+      },
+    ],
+  },
+  {
     version: "0.18.0",
     date: "2026-09-19",
     summary: "Role tokens (action, link, focus, brand), a keyboard-navigable DataGrid, and the accessibility baseline closed out.",
