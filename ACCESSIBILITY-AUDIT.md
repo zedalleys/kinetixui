@@ -107,8 +107,9 @@ regression later.
 |---|-----|------|---------|----------------|
 | B14 | Minor | `theme-provider` / first paint | `defaultTheme="system"` with `enableSystem` is correct, but verify the pre-hydration theme script doesn't cause a flash that could disorient (it uses `disableTransitionOnChange`, so likely fine — confirm in the live pass). | **Confirmed fine (2026-09-20)** — see below. |
 
-Cross-cutting chart items (loading/empty/error states, legend toggle, pattern
-fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
+The cross-cutting chart items (loading/empty/error states, legend toggle, pattern
+fills, brush/zoom, reference lines) have all shipped — see `COMPONENT-ADDITIONS.md` §2,
+which lists each as a `/charts` recipe. (This paragraph used to call them outstanding; it was stale.)
 
 ### Fixed in a follow-up pass (`a11y/focus-and-audit-followups`)
 
@@ -119,7 +120,7 @@ fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
 | B13 | Minor | `/colors` `page.tsx` | Ramp jump-list `<nav>` had no accessible name; its links had no focus ring. | `aria-label="Jump to a ramp"` + `focus-visible:ring-2`. |
 | B10 | Moderate | `@kinetixui/ui` `chart.tsx` + `/charts` | No text alternative for charts (SC 1.1.1) — colour + position only. (`/charts` Cartesian recipes already passed `accessibilityLayer`.) | `ChartContainer` now renders `role="img"` + `aria-label`, driven by a new `label` prop (falls back to `"Chart"`); `/charts` intro + the Bar recipe show the pattern. |
 | B11 | Minor | `Showcase` (`/charts`, `/blocks`) | Heading order skipped h2 — page `<h1>` then `Showcase` `<h3>`. | `Showcase` now renders `<h2>`. |
-| B12 | Minor | `mobile-nav.tsx` | Open menu had no `Esc` to close and no focus movement. | `Esc` closes and returns focus to the trigger; opening moves focus to the first link. (Full `inert`-background trap deferred — a `Sheet` swap is the cleaner long-term fix.) |
+| B12 | Minor | `mobile-nav.tsx` | Open menu had no `Esc` to close and no focus movement. | `Esc` closes and returns focus to the trigger; opening moves focus to the first link. **Superseded (2026-09-20):** the menu is now a modal Radix `Dialog` — Tab is trapped, the background is `aria-hidden`/inert, Esc closes, focus returns to the trigger, and the panel has its own "Close menu" button. Verified in a production build (40 real Tab presses stayed inside). |
 
 ### Confirmed good (no action)
 
@@ -164,9 +165,10 @@ fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
   `scripts/a11y.mjs` that walks the route list headless — better, since it can
   run in CI next to `check:contrast`).
 - **R4 — DONE.** B8 (number-input focus) shipped with a changeset.
-- **R5 — partly done.** The chart text alternative (B10) shipped; the remaining chart
-  items (loading/empty/error states, legend toggle, pattern fills, brush/zoom) are
-  tracked in `COMPONENT-ADDITIONS.md` §2.
+- **R5 — DONE.** The chart text alternative (B10) shipped, and so did the other chart
+  items (loading/empty/error states, legend toggle, pattern fills, brush/zoom) —
+  `COMPONENT-ADDITIONS.md` §2 lists each as a `/charts` recipe. An earlier revision of
+  this line called them outstanding; that was wrong.
 
 ## Verification
 
