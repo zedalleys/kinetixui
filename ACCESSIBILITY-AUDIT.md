@@ -146,8 +146,10 @@ fills, brush/zoom) remain in `COMPONENT-ADDITIONS.md` §2.
   `hooks.mjs` takes a `selector`; `extras.dark.css` is emitted, bundled into
   `registry/kinetixui/globals.css`, and exported as
   `@kinetixui/tokens/css/extras/dark`. Dark focus ring: 1.70 → **8.83:1**.
-  Still open: add the four `shadow-focus*` composites to `check-contrast.mjs`'s
-  non-text pass so a future regression is caught automatically.
+  **Follow-up done (2026-09-20):** `check-contrast.mjs` now checks the 1px edge of
+  every `--shadow-focus*` ring against the page in both themes. It immediately
+  caught the light `focus-warning` ring still on the old orange `#f97907`
+  (**2.70:1**); it is now `amber.800` `#7f5b21` (5.8:1), matching light `--warning`.
 - **R2 — DONE.** Light `--warning` → `amber.800` `#7f5b21` (6.1 / 5.8:1). Chosen
   over adding a second `--warning-strong` token to keep the contract
   single-valued. Dark stays bright `amber.400`. `KNOWN_SUBAA` is now empty.
