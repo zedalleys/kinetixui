@@ -228,3 +228,7 @@ The browser pass (`scripts/a11y-browser.mjs`) gained three checks with no baseli
 | `KanbanBoard` keyboard drag (Space / arrows) within and across columns | passes | — |
 
 Gotcha found along the way: `tailwind-merge` treats a bare `outline` and `outline-2` in one class list as conflicting and drops one, so a forced-colors outline written that way silently vanished. Use one arbitrary property (`forced-colors:[outline:2px_solid]`).
+
+## DataGrid range selection (2026-09-20)
+
+`selectable` adds ARIA multi-selection to the grid: Shift+arrows / Shift+click extend a rectangle from the anchor cell, Ctrl/Cmd+A selects all, Ctrl/Cmd+C copies it as tab-separated text, Esc clears; `aria-multiselectable` on the grid, `aria-selected` on every cell, a live region announcing the count, and `onSelectionChange`. Opt-in, so nothing changes for existing grids. Re-sorting or changing the row count clears the selection (it refers to displayed rows). Not included: disjoint (Ctrl+click) selection and drag-select.
