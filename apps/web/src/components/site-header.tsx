@@ -16,7 +16,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       {/* row 1 — identity + tools */}
-      <div className="mx-auto flex h-12 max-w-screen-2xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-12 max-w-screen-2xl items-center gap-3 px-4 sm:gap-4 sm:px-6 lg:px-8">
         <Link href="/" className="group flex items-center gap-2.5">
           <span className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:rotate-6">
             <Layers className="size-[18px]" />
@@ -53,11 +53,11 @@ export function SiteHeader() {
               key={item.href}
               href={item.href}
               className={cn(
-                "group relative flex items-center gap-2 px-4 font-medium transition-colors",
+                "group relative flex items-center gap-2 px-3 font-medium transition-colors lg:px-4",
                 active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <span className="font-mono text-[10px] text-muted-foreground/70 transition-colors group-hover:text-primary">
+              <span className="font-mono text-[10px] text-muted-foreground transition-colors group-hover:text-primary">
                 {String(i + 1).padStart(2, "0")}
               </span>
               {item.title}
@@ -68,7 +68,7 @@ export function SiteHeader() {
               )}
               <span
                 className={cn(
-                  "absolute inset-x-4 -bottom-px h-0.5 bg-primary transition-transform duration-300",
+                  "absolute inset-x-3 -bottom-px h-0.5 bg-primary transition-transform duration-300 lg:inset-x-4",
                   active ? "scale-x-100" : "scale-x-0",
                 )}
               />
