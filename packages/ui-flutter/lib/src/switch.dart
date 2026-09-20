@@ -28,7 +28,7 @@ class KinetixSwitch extends StatelessWidget {
           padding: const EdgeInsets.all(2),
           alignment: value ? Alignment.centerRight : Alignment.centerLeft,
           decoration: BoxDecoration(
-            color: value ? c.primary : c.tertiary,
+            color: value ? c.action : c.tertiary,
             borderRadius: BorderRadius.circular(9999),
           ),
           child: Container(

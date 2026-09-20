@@ -41,9 +41,9 @@ public struct KinetixSpinner: View {
 
     private var color: Color {
         switch variant {
-        case .default: return colors.primary
+        case .default: return colors.action
         case .muted:   return colors.mutedForeground
-        case .onColor: return colors.primaryForeground
+        case .onColor: return colors.actionForeground
         }
     }
 

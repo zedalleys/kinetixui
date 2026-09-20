@@ -39,7 +39,7 @@ class KinetixCircularProgress extends StatelessWidget {
             size: Size.square(size),
             painter: _RingPainter(
               track: c.muted,
-              indicator: c.primary,
+              indicator: c.action,
               fraction: fraction,
               strokeWidth: strokeWidth,
             ),

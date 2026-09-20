@@ -33,9 +33,9 @@ fun KinetixSpinner(
 ) {
     val colors = KinetixColorScheme.current
     val color = when (variant) {
-        KinetixSpinnerVariant.Default -> colors.primary
+        KinetixSpinnerVariant.Default -> colors.action
         KinetixSpinnerVariant.Muted -> colors.mutedForeground
-        KinetixSpinnerVariant.OnColor -> colors.primaryForeground
+        KinetixSpinnerVariant.OnColor -> colors.actionForeground
     }
     val diameter: Dp = when (size) {
         KinetixSpinnerSize.Sm -> dimensionResource(R.dimen.spacing_4) // 16dp

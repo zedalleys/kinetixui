@@ -40,7 +40,7 @@ public struct KinetixCircularProgress: View {
             Circle()
                 .trim(from: 0, to: fraction)
                 .stroke(style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
-                .fill(colors.primary)
+                .fill(colors.action)
                 .rotationEffect(.degrees(-90))
                 .animation(.easeOut(duration: 0.3), value: fraction)
             if showValue || label != nil {

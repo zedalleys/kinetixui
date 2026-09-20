@@ -135,7 +135,7 @@ fun KinetixMultiSelect(
                     ) {
                         Text(
                             text = if (option.value in selected) "✓" else "",
-                            color = colors.primary,
+                            color = colors.action,
                             modifier = Modifier.width(16.dp),
                         )
                         Text(text = option.label, color = colors.foreground)

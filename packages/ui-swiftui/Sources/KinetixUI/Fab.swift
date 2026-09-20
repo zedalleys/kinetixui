@@ -46,11 +46,11 @@ public struct KinetixFab<Content: View>: View {
     private var diameter: CGFloat { size == .default ? 56 : 44 }
 
     private var background: Color {
-        variant == .primary ? colors.primary : colors.secondary
+        variant == .primary ? colors.action : colors.secondary
     }
 
     private var foreground: Color {
-        variant == .primary ? colors.primaryForeground : colors.secondaryForeground
+        variant == .primary ? colors.actionForeground : colors.secondaryForeground
     }
 
     public var body: some View {

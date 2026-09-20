@@ -26,7 +26,7 @@ public struct KinetixProgress: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(colors.muted)
                 Capsule()
-                    .fill(colors.primary)
+                    .fill(colors.action)
                     .frame(width: geo.size.width * fraction)
             }
         }

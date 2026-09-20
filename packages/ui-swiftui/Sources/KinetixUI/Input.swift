@@ -61,7 +61,7 @@ public struct KinetixInput<Trailing: View>: View {
 
     private var borderColor: Color {
         if isError { return colors.destructive }
-        return focused ? colors.primary : colors.input
+        return focused ? colors.action : colors.input
     }
 
     @ViewBuilder

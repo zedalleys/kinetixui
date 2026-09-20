@@ -187,7 +187,7 @@ fun KinetixFileUploadItem(
                         modifier = Modifier
                             .fillMaxWidth(min(1f, file.progress / 100f).coerceAtLeast(0f))
                             .height(4.dp)
-                            .background(colors.primary),
+                            .background(colors.action),
                     )
                 }
             }
@@ -195,7 +195,7 @@ fun KinetixFileUploadItem(
         if (isError && onRetry != null) {
             Text(
                 text = "Retry",
-                color = colors.primary,
+                color = colors.action,
                 fontWeight = FontWeight.Medium,
                 fontSize = dimensionResource(R.dimen.font_size_label_md).value.sp,
                 modifier = Modifier.clickable { onRetry(file.id) },

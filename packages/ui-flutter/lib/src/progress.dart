@@ -30,7 +30,7 @@ class KinetixProgress extends StatelessWidget {
                 child: FractionallySizedBox(
                   widthFactor: fraction,
                   heightFactor: 1,
-                  child: ColoredBox(color: c.primary),
+                  child: ColoredBox(color: c.action),
                 ),
               ),
             ),

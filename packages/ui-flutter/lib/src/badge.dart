@@ -19,7 +19,7 @@ class KinetixBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
     final (Color bg, Color fg, Color? border) = switch (variant) {
-      KinetixBadgeVariant.primary => (c.primary, c.primaryForeground, null),
+      KinetixBadgeVariant.primary => (c.action, c.actionForeground, null),
       KinetixBadgeVariant.secondary => (c.secondaryForeground, c.secondary, null),
       KinetixBadgeVariant.destructive => (c.destructive, c.destructiveForeground, null),
       KinetixBadgeVariant.outline => (const Color(0x00000000), c.foreground, c.border),

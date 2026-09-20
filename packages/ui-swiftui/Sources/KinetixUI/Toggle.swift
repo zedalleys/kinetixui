@@ -73,7 +73,7 @@ public struct KinetixToggle<Label: View>: View {
                 .overlay {
                     if isOn || variant == .outline {
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .strokeBorder(isOn ? colors.ring : colors.input, lineWidth: 1)
+                            .strokeBorder(isOn ? colors.focus : colors.input, lineWidth: 1)
                     }
                 }
         }

@@ -37,21 +37,21 @@ class KinetixStepper extends StatelessWidget {
   Widget _indicator(BuildContext context, int i) {
     final c = KinetixTheme.of(context);
     final status = _statusOf(i);
-    final Color border = status == _StepStatus.upcoming ? c.input : c.primary;
+    final Color border = status == _StepStatus.upcoming ? c.input : c.action;
     return Container(
       width: 28,
       height: 28,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: status == _StepStatus.complete ? c.primary : const Color(0x00000000),
+        color: status == _StepStatus.complete ? c.action : const Color(0x00000000),
         border: Border.all(color: border, width: status == _StepStatus.current ? 2 : 1),
       ),
       child: status == _StepStatus.complete
-          ? Icon(Icons.check, size: 14, color: c.primaryForeground)
+          ? Icon(Icons.check, size: 14, color: c.actionForeground)
           : Text(
               '${i + 1}',
-              style: AppText.labelMd.copyWith(color: status == _StepStatus.current ? c.primary : c.mutedForeground),
+              style: AppText.labelMd.copyWith(color: status == _StepStatus.current ? c.action : c.mutedForeground),
             ),
     );
   }
@@ -94,7 +94,7 @@ class KinetixStepper extends StatelessWidget {
                         Expanded(
                           child: Container(
                             height: 1,
-                            color: _statusOf(i) == _StepStatus.complete ? c.primary : c.border,
+                            color: _statusOf(i) == _StepStatus.complete ? c.action : c.border,
                           ),
                         ),
                     ],
@@ -125,7 +125,7 @@ class KinetixStepper extends StatelessWidget {
                         child: Container(
                           width: 1,
                           constraints: const BoxConstraints(minHeight: 24), // min-h-6
-                          color: _statusOf(i) == _StepStatus.complete ? c.primary : c.border,
+                          color: _statusOf(i) == _StepStatus.complete ? c.action : c.border,
                         ),
                       ),
                   ],

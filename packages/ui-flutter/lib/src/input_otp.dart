@@ -68,7 +68,7 @@ class _KinetixInputOtpState extends State<KinetixInputOtp> {
       decoration: BoxDecoration(
         color: c.background,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: isCursor ? c.primary : c.input, width: isCursor ? 2 : 1),
+        border: Border.all(color: isCursor ? c.action : c.input, width: isCursor ? 2 : 1),
       ),
       child: Text(
         i < chars.length ? chars[i] : '',

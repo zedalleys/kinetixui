@@ -74,7 +74,7 @@ public struct KinetixCodeBlock: View {
                                 .padding(.vertical, 8)
                                 .overlay(alignment: .bottom) {
                                     Rectangle()
-                                        .fill(idx == activeTab ? colors.primary : Color.clear)
+                                        .fill(idx == activeTab ? colors.action : Color.clear)
                                         .frame(height: 2)
                                 }
                                 .contentShape(Rectangle())

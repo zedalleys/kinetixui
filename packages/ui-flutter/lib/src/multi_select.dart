@@ -152,7 +152,7 @@ class _KinetixMultiSelectState extends State<KinetixMultiSelect> {
                                 width: 16,
                                 child: Text(
                                   widget.selected.contains(option.value) ? '✓' : '',
-                                  style: TextStyle(color: c.primary),
+                                  style: TextStyle(color: c.action),
                                 ),
                               ),
                               const SizedBox(width: 8),

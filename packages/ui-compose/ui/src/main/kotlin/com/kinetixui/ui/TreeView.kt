@@ -124,7 +124,7 @@ private fun KinetixTreeItemRow(
                     onCheckedChange = {
                         onCheckedChange?.invoke(if (it) checkedValues + node.value else checkedValues - node.value)
                     },
-                    colors = CheckboxDefaults.colors(checkedColor = colors.primary, checkmarkColor = colors.primaryForeground),
+                    colors = CheckboxDefaults.colors(checkedColor = colors.action, checkmarkColor = colors.actionForeground),
                     modifier = Modifier.size(20.dp),
                 )
             }

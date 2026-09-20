@@ -67,7 +67,7 @@ class _KinetixInputState extends State<KinetixInput> {
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
     final Color borderColor =
-        widget.isError ? c.destructive : (_focus.hasFocus ? c.primary : c.input);
+        widget.isError ? c.destructive : (_focus.hasFocus ? c.action : c.input);
 
     return Opacity(
       opacity: widget.enabled ? 1 : 0.5,
@@ -92,7 +92,7 @@ class _KinetixInputState extends State<KinetixInput> {
                   onChanged: widget.onChanged,
                   enabled: widget.enabled,
                   obscureText: widget.obscureText,
-                  cursorColor: c.primary,
+                  cursorColor: c.action,
                   style: AppText.bodyMd.copyWith(color: c.foreground),
                   decoration: InputDecoration(
                     isCollapsed: true,

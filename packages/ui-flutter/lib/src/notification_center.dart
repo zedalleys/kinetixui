@@ -89,7 +89,7 @@ class KinetixNotificationCenter extends StatelessWidget {
                       onTap: onMarkAllRead,
                       child: Text(
                         'Mark all read',
-                        style: AppText.labelMd.copyWith(color: c.primary, fontWeight: FontWeight.w500),
+                        style: AppText.labelMd.copyWith(color: c.action, fontWeight: FontWeight.w500),
                       ),
                     ),
                 ],
@@ -140,7 +140,7 @@ class KinetixNotificationItem extends StatelessWidget {
                 height: 8,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: unread ? c.primary : Colors.transparent,
+                  color: unread ? c.action : Colors.transparent,
                 ),
               ),
             ),

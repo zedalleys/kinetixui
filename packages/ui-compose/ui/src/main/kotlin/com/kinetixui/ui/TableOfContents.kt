@@ -52,11 +52,11 @@ fun KinetixTableOfContents(
                     modifier = Modifier
                         .width(dimensionResource(R.dimen.border_width_default))
                         .fillMaxHeight()
-                        .background(if (active) colors.primary else Color.Transparent),
+                        .background(if (active) colors.action else Color.Transparent),
                 )
                 Text(
                     text = item.label,
-                    color = if (active) colors.primary else colors.mutedForeground,
+                    color = if (active) colors.action else colors.mutedForeground,
                     fontWeight = if (active) FontWeight.Medium else FontWeight.Normal,
                     fontSize = dimensionResource(R.dimen.font_size_body_sm).value.sp,
                     lineHeight = dimensionResource(R.dimen.line_height_body_sm).value.sp,

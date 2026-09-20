@@ -107,7 +107,7 @@ fun KinetixAudioPlayer(
                     .height(4.dp)
                     .background(colors.muted),
             ) {
-                Box(modifier = Modifier.fillMaxWidth(fraction).height(4.dp).background(colors.primary))
+                Box(modifier = Modifier.fillMaxWidth(fraction).height(4.dp).background(colors.action))
             }
         }
         return
@@ -144,11 +144,11 @@ private fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit, diameter: D
         modifier = Modifier
             .size(diameter)
             .clip(CircleShape)
-            .background(colors.primary)
+            .background(colors.action)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text = if (isPlaying) "⏸" else "▶", color = colors.primaryForeground)
+        Text(text = if (isPlaying) "⏸" else "▶", color = colors.actionForeground)
     }
 }
 

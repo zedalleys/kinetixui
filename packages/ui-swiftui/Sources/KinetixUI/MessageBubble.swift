@@ -62,11 +62,11 @@ public struct KinetixMessageBubble<Avatar: View>: View {
             VStack(alignment: sent ? .trailing : .leading, spacing: 4) {
                 Text(text)
                     .font(.kinetixBodySm)
-                    .foregroundStyle(sent ? colors.primaryForeground : colors.foreground)
+                    .foregroundStyle(sent ? colors.actionForeground : colors.foreground)
                     .padding(.horizontal, 14) // px-3.5, off-scale — same call as KinetixBadge
                     .padding(.vertical, 8) // spacing/2
                     .background(
-                        sent ? colors.primary : colors.muted,
+                        sent ? colors.action : colors.muted,
                         in: RoundedRectangle(cornerRadius: grouped ? 10 : 16, style: .continuous)
                     )
                     .frame(maxWidth: 280, alignment: sent ? .trailing : .leading)
@@ -79,7 +79,7 @@ public struct KinetixMessageBubble<Avatar: View>: View {
                         if sent, let status {
                             Text(status == .sent ? "✓" : "✓✓")
                                 .font(.kinetixLabelSm)
-                                .foregroundStyle(status == .read ? colors.primary : colors.mutedForeground)
+                                .foregroundStyle(status == .read ? colors.action : colors.mutedForeground)
                         }
                     }
                     .padding(.horizontal, 4)

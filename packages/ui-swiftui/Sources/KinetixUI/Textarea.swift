@@ -30,7 +30,7 @@ public struct KinetixTextarea: View {
 
     private var borderColor: Color {
         if isError { return colors.destructive }
-        return focused ? colors.primary : colors.input
+        return focused ? colors.action : colors.input
     }
 
     public var body: some View {

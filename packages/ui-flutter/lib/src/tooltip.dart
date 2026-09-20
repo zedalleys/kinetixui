@@ -19,10 +19,10 @@ class KinetixTooltip extends StatelessWidget {
       message: message,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: c.primary,
+        color: c.action,
         borderRadius: BorderRadius.circular(8),
       ),
-      textStyle: TextStyle(fontSize: 13, color: c.primaryForeground),
+      textStyle: TextStyle(fontSize: 13, color: c.actionForeground),
       child: child,
     );
   }

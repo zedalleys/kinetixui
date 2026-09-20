@@ -73,7 +73,7 @@ fun RowScope.KinetixTabBarItem(
     badge: String? = null,
 ) {
     val colors = KinetixColorScheme.current
-    val contentColor = if (active) colors.primary else colors.mutedForeground
+    val contentColor = if (active) colors.action else colors.mutedForeground
 
     Column(
         modifier = modifier

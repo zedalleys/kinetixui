@@ -25,7 +25,7 @@ public struct KinetixSwitch: View {
         } label: {
             ZStack(alignment: isOn ? .trailing : .leading) {
                 Capsule()
-                    .fill(isOn ? colors.primary : colors.tertiary)
+                    .fill(isOn ? colors.action : colors.tertiary)
                     .frame(width: 48, height: 24)
                 Circle()
                     .fill(colors.background)

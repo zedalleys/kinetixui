@@ -86,7 +86,7 @@ class _KinetixCodeBlockState extends State<KinetixCodeBlock> {
                           decoration: BoxDecoration(
                             border: Border(
                               bottom: BorderSide(
-                                color: i == _active ? c.primary : const Color(0x00000000),
+                                color: i == _active ? c.action : const Color(0x00000000),
                                 width: 2,
                               ),
                             ),

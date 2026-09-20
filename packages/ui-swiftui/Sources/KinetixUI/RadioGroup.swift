@@ -39,7 +39,7 @@ public struct KinetixRadioButton: View {
 
     private var borderColor: Color {
         if isError { return colors.destructive }
-        return isSelected ? colors.primary : colors.input
+        return isSelected ? colors.action : colors.input
     }
 
     public var body: some View {
@@ -50,7 +50,7 @@ public struct KinetixRadioButton: View {
                 .overlay {
                     if isSelected {
                         Circle()
-                            .fill(isError ? colors.destructive : colors.primary)
+                            .fill(isError ? colors.destructive : colors.action)
                             .frame(width: 10, height: 10)
                     }
                 }

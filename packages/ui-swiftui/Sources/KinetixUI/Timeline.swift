@@ -50,7 +50,7 @@ public struct KinetixTimeline: View {
     @ViewBuilder
     private func rail(isLast: Bool) -> some View {
         VStack(spacing: 4) {
-            Circle().fill(colors.primary).frame(width: 10, height: 10)
+            Circle().fill(colors.action).frame(width: 10, height: 10)
             if !isLast {
                 Rectangle()
                     .fill(colors.border)

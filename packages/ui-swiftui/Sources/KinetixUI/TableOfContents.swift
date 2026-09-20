@@ -43,11 +43,11 @@ public struct KinetixTableOfContents: View {
                 } label: {
                     HStack(spacing: 0) {
                         Rectangle()
-                            .fill(isActive ? colors.primary : Color.clear)
+                            .fill(isActive ? colors.action : Color.clear)
                             .frame(width: 1)
                         Text(item.label)
                             .font(.system(size: 13, weight: isActive ? .medium : .regular))
-                            .foregroundStyle(isActive ? colors.primary : colors.mutedForeground)
+                            .foregroundStyle(isActive ? colors.action : colors.mutedForeground)
                             .padding(.leading, CGFloat((item.level - 1) * 12 + 12))
                             .padding(.vertical, 6)
                         Spacer(minLength: 0)

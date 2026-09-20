@@ -25,6 +25,14 @@ import SwiftUI
 public struct KinetixColors {
     public let primary: Color
     public let primaryForeground: Color
+    public let action: Color
+    public let actionForeground: Color
+    public let actionHover: Color
+    public let actionPressed: Color
+    public let link: Color
+    public let focus: Color
+    public let brand: Color
+    public let brandForeground: Color
     public let secondary: Color
     public let secondaryForeground: Color
     public let destructive: Color
@@ -56,6 +64,14 @@ public struct KinetixColors {
     public init(
         primary: Color,
         primaryForeground: Color,
+        action: Color,
+        actionForeground: Color,
+        actionHover: Color,
+        actionPressed: Color,
+        link: Color,
+        focus: Color,
+        brand: Color,
+        brandForeground: Color,
         secondary: Color,
         secondaryForeground: Color,
         destructive: Color,
@@ -85,6 +101,14 @@ public struct KinetixColors {
     ) {
         self.primary = primary
         self.primaryForeground = primaryForeground
+        self.action = action
+        self.actionForeground = actionForeground
+        self.actionHover = actionHover
+        self.actionPressed = actionPressed
+        self.link = link
+        self.focus = focus
+        self.brand = brand
+        self.brandForeground = brandForeground
         self.secondary = secondary
         self.secondaryForeground = secondaryForeground
         self.destructive = destructive
@@ -119,6 +143,14 @@ public extension KinetixColors {
     static let light = KinetixColors(
         primary: KinetixColorsSwiftUI.primary,
         primaryForeground: KinetixColorsSwiftUI.primaryForeground,
+        action: KinetixColorsSwiftUI.action,
+        actionForeground: KinetixColorsSwiftUI.actionForeground,
+        actionHover: KinetixColorsSwiftUI.actionHover,
+        actionPressed: KinetixColorsSwiftUI.actionPressed,
+        link: KinetixColorsSwiftUI.link,
+        focus: KinetixColorsSwiftUI.focus,
+        brand: KinetixColorsSwiftUI.brand,
+        brandForeground: KinetixColorsSwiftUI.brandForeground,
         secondary: KinetixColorsSwiftUI.secondary,
         secondaryForeground: KinetixColorsSwiftUI.secondaryForeground,
         destructive: KinetixColorsSwiftUI.destructive,
@@ -158,6 +190,14 @@ public extension KinetixColors {
     static let dark = KinetixColors(
         primary: KinetixColorsSwiftUIDark.primary,
         primaryForeground: KinetixColorsSwiftUIDark.primaryForeground,
+        action: KinetixColorsSwiftUIDark.action,
+        actionForeground: KinetixColorsSwiftUIDark.actionForeground,
+        actionHover: KinetixColorsSwiftUIDark.actionHover,
+        actionPressed: KinetixColorsSwiftUIDark.actionPressed,
+        link: KinetixColorsSwiftUIDark.link,
+        focus: KinetixColorsSwiftUIDark.focus,
+        brand: KinetixColorsSwiftUIDark.brand,
+        brandForeground: KinetixColorsSwiftUIDark.brandForeground,
         secondary: KinetixColorsSwiftUIDark.secondary,
         secondaryForeground: KinetixColorsSwiftUIDark.secondaryForeground,
         destructive: KinetixColorsSwiftUIDark.destructive,

@@ -86,7 +86,7 @@ fun KinetixNotificationCenter(
                 if (onMarkAllRead != null) {
                     Text(
                         text = "Mark all read",
-                        color = colors.primary,
+                        color = colors.action,
                         fontWeight = FontWeight.Medium,
                         fontSize = dimensionResource(R.dimen.font_size_label_md).value.sp,
                         modifier = Modifier.clickable(onClick = onMarkAllRead),
@@ -118,7 +118,7 @@ fun KinetixNotificationItem(
             modifier = Modifier
                 .padding(top = 6.dp)
                 .size(8.dp)
-                .background(if (unread) colors.primary else Color.Transparent, CircleShape),
+                .background(if (unread) colors.action else Color.Transparent, CircleShape),
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(

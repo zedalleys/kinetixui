@@ -46,11 +46,11 @@ fun KinetixCheckbox(
     val checkedLike = state != ToggleableState.Off
     val borderColor = when {
         isError -> colors.destructive
-        checkedLike -> colors.primary
+        checkedLike -> colors.action
         else -> colors.border
     }
-    val fillColor = if (checkedLike) (if (isError) colors.destructive else colors.primary) else colors.background
-    val glyphColor = colors.primaryForeground
+    val fillColor = if (checkedLike) (if (isError) colors.destructive else colors.action) else colors.background
+    val glyphColor = colors.actionForeground
     val shape = RoundedCornerShape(dimensionResource(R.dimen.radius_sm))
 
     Box(

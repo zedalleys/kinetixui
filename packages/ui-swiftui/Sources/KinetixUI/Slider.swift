@@ -33,6 +33,6 @@ public struct KinetixSlider: View {
                 Slider(value: $value, in: range)
             }
         }
-        .tint(colors.primary)
+        .tint(colors.action)
     }
 }

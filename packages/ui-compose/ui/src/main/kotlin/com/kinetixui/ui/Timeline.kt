@@ -80,7 +80,7 @@ private fun TimelineRail(isLast: Boolean) {
     val colors = KinetixColorScheme.current
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         // dot size (10dp) isn't on the shared spacing scale — same call as KinetixBadge.
-        Box(modifier = Modifier.size(10.dp).background(colors.primary, CircleShape))
+        Box(modifier = Modifier.size(10.dp).background(colors.action, CircleShape))
         if (!isLast) {
             Box(
                 modifier = Modifier

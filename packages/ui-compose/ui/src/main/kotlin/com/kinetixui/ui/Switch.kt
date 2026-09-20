@@ -33,7 +33,7 @@ fun KinetixSwitch(
     enabled: Boolean = true,
 ) {
     val colors = KinetixColorScheme.current
-    val trackColor = if (checked) colors.primary else colors.tertiary
+    val trackColor = if (checked) colors.action else colors.tertiary
     val thumbOffset by animateDpAsState(targetValue = if (checked) 24.dp else 0.dp, label = "KinetixSwitchThumb")
 
     Box(

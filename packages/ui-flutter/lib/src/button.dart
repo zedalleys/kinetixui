@@ -74,8 +74,8 @@ class KinetixButton extends StatelessWidget {
     } else {
       switch (variant) {
         case KinetixButtonVariant.primary:
-          bg = c.primary;
-          fg = c.primaryForeground;
+          bg = c.action;
+          fg = c.actionForeground;
         case KinetixButtonVariant.secondary:
           bg = c.secondary;
           fg = c.secondaryForeground;
@@ -91,7 +91,7 @@ class KinetixButton extends StatelessWidget {
           fg = c.foreground;
         case KinetixButtonVariant.link:
           bg = Colors.transparent;
-          fg = c.primary;
+          fg = c.link;
       }
     }
 

@@ -51,8 +51,8 @@ class KinetixMessageBubble extends StatelessWidget {
     final bubble = Container(
       constraints: const BoxConstraints(maxWidth: 280),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), // px-3.5/spacing-2, off-scale
-      decoration: BoxDecoration(color: sent ? c.primary : c.muted, borderRadius: borderRadius),
-      child: Text(text, style: AppText.bodySm.copyWith(color: sent ? c.primaryForeground : c.foreground)),
+      decoration: BoxDecoration(color: sent ? c.action : c.muted, borderRadius: borderRadius),
+      child: Text(text, style: AppText.bodySm.copyWith(color: sent ? c.actionForeground : c.foreground)),
     );
 
     final Widget? meta = (timestamp != null || (sent && status != null))
@@ -67,7 +67,7 @@ class KinetixMessageBubble extends StatelessWidget {
                   Text(
                     status == KinetixMessageStatus.sent ? '✓' : '✓✓',
                     style: AppText.labelSm.copyWith(
-                      color: status == KinetixMessageStatus.read ? c.primary : c.mutedForeground,
+                      color: status == KinetixMessageStatus.read ? c.action : c.mutedForeground,
                     ),
                   ),
                 ],

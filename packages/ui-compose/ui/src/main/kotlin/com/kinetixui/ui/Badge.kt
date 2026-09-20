@@ -34,7 +34,7 @@ fun KinetixBadge(
 ) {
     val colors = KinetixColorScheme.current
     val (container, content, borderColor) = when (variant) {
-        KinetixBadgeVariant.Default -> Triple(colors.primary, colors.primaryForeground, null)
+        KinetixBadgeVariant.Default -> Triple(colors.action, colors.actionForeground, null)
         KinetixBadgeVariant.Secondary -> Triple(colors.secondaryForeground, colors.secondary, null)
         KinetixBadgeVariant.Destructive -> Triple(colors.destructive, colors.destructiveForeground, null)
         KinetixBadgeVariant.Outline -> Triple(Color.Transparent, colors.foreground, colors.border)

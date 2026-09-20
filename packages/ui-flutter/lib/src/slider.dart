@@ -26,10 +26,10 @@ class KinetixSlider extends StatelessWidget {
     final c = KinetixTheme.of(context);
     return SliderTheme(
       data: SliderThemeData(
-        activeTrackColor: c.primary,
+        activeTrackColor: c.action,
         inactiveTrackColor: c.muted,
         thumbColor: c.background,
-        overlayColor: c.primary.withValues(alpha: 0.12),
+        overlayColor: c.action.withValues(alpha: 0.12),
       ),
       child: Slider(
         value: value.clamp(min, max),

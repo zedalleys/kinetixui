@@ -45,9 +45,9 @@ class _KinetixSpinnerState extends State<KinetixSpinner> with SingleTickerProvid
       KinetixSpinnerSize.lg => 32,
     };
     final Color color = switch (widget.variant) {
-      KinetixSpinnerVariant.primary => c.primary,
+      KinetixSpinnerVariant.primary => c.action,
       KinetixSpinnerVariant.muted => c.mutedForeground,
-      KinetixSpinnerVariant.onColor => c.primaryForeground,
+      KinetixSpinnerVariant.onColor => c.actionForeground,
     };
 
     return SizedBox(
