@@ -57,7 +57,8 @@ for why.
 `duration`, `easing`, `opacity`, and `z-index` are theme-independent, like
 typography — defined once, the same in light and dark. Each platform's output
 groups them into `KinetixDuration` / `KinetixEasing` / `KinetixOpacity` /
-`KinetixZIndex` (native) or `--duration-*` / `--easing-*` / `--opacity-*` /
+`KinetixZIndex` (native — which also get the spatial scale as `KinetixSpacing`
+and `KinetixRadius`, see [Foundations](/docs/foundations)) or `--duration-*` / `--easing-*` / `--opacity-*` /
 `--z-index-*` custom properties (web), and `packages/ui`'s `tailwind.config.ts`
 wires the web ones into real Tailwind utilities — `duration-fast`,
 `ease-standard`, `opacity-disabled`, `z-overlay` — used directly in component
@@ -65,6 +66,12 @@ source instead of the ad hoc `duration-200` / `z-50` literals components used
 to carry. A handful of pre-existing values that don't cleanly match a token
 step (e.g. a couple of `opacity-40`/`opacity-60` icon dimmings) are left as
 literals with a comment, rather than silently changed to the nearest token.
+
+**Newly defined, not yet consumed by components:** `duration.instant` (100ms) and the `easing.enter`,
+`easing.exit` and `easing.emphasized` curves (standard decelerate / accelerate / expressive), plus the
+larger spacing steps (`spacing.10`–`spacing.32`, 40–128) and `radius.xxl` (24). They are part of the contract
+and generated for every platform, but no component reads them yet and there are no Tailwind utilities for
+the new curves — adopting them is incremental, component by component.
 
 ## Interaction tokens
 

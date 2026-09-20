@@ -1,0 +1,55 @@
+export const metadata = {
+  title: "Supported platforms",
+  description: "What KinetixUI implements today on each platform, and how each one is verified — no more, no less.",
+};
+
+# Supported platforms
+
+KinetixUI is a shared design language — one token contract, one set of component contracts — with a
+native implementation per platform. It is **not** one framework's code ported everywhere: the
+SwiftUI, Compose and Flutter libraries are idiomatic to their platforms and are not wrappers around the web
+components.
+
+This page states what exists and how it is checked, and it does not list anything that isn't implemented.
+Component counts and the gaps below are generated from `components.manifest.json`; the verification column is
+written by hand from each platform's CI workflow, which is named in the row so it can be checked.
+
+<PlatformSupportTable />
+
+## Reading the table
+
+- **Components** counts the components each platform implements, out of <ComponentTotalInline /> in the
+  manifest. React is the reference implementation; the native ports mirror its API where it makes sense on
+  the platform.
+- **Automated verification** is what the platform's CI actually runs. It is the honest measure of how proven a
+  platform is: React has behavioural, keyboard and accessibility tests; the native libraries are compiled and
+  linted in CI, and Flutter additionally builds its widgets in light and dark. None of the native ports has
+  interaction, accessibility or screenshot tests yet, so read them as less proven than React.
+- **RTL** — "not audited yet" means exactly that: each native platform has its own layout-direction
+  mechanism (`LocalLayoutDirection`, the `layoutDirection` environment value, `Directionality`) and it hasn't
+  been checked. See [RTL](/docs/rtl).
+- **Maturity.** Each component is marked <StatusSummary /> in the manifest, but per component, not per
+  platform. Given the verification gap above, that label describes the React implementation. Per-platform
+  maturity is a 1.0 task.
+
+## Not on every platform, on purpose
+
+Not every component belongs on every platform, and parity isn't a goal. These are the deliberate gaps, with
+the repository's reason:
+
+<ComponentGapsTable />
+
+## Not supported
+
+These are platforms people reasonably ask about. The repository has no implementation of any of them, so
+none is given a status:
+
+<NotSupportedTable />
+
+## Where to go next
+
+- [Foundations](/docs/foundations) — the grid, radius, elevation and motion behind every platform.
+- [SwiftUI](/docs/swiftui), [Jetpack Compose](/docs/compose), [Flutter](/docs/flutter) — installation and
+  usage for each native library.
+- [Tokens](/docs/tokens) and [Theming](/docs/theming) — the color and type contract.
+- [Contributing](/docs/contributing) — the four-platform rule for new components.

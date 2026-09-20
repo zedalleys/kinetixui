@@ -61,6 +61,9 @@ const isType = (t) => t.$type === 'typography';
 /** duration / cubicBezier / number — the motion + scale primitive categories
  *  (tokens/primitives/{motion,opacity,z-index}.json). Theme-independent. */
 const isMotionOrScale = (t) => ['duration', 'cubicBezier', 'number'].includes(t.$type);
+/** motion + scale primitives, plus the spatial scale (spacing + radius) that the native ports also get as
+ *  KinetixSpacing / KinetixRadius. Web has --spacing-* / --radius-* from globals.css already. */
+const isNativeFoundation = (t) => isMotionOrScale(t) || (t.$type === 'dimension' && ['spacing', 'radius'].includes(t.path[0]));
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = `${ROOT}/packages/tokens/dist`;
@@ -228,7 +231,7 @@ export function getConfig(theme) {
               buildPath: `${DIST}/ios/`,
               files: [
                 { destination: 'KinetixType.swift', format: 'kinetix/type-swift', filter: isType },
-                { destination: 'KinetixMotion.swift', format: 'kinetix/motion-swift', filter: isMotionOrScale },
+                { destination: 'KinetixMotion.swift', format: 'kinetix/motion-swift', filter: isNativeFoundation },
               ],
             },
             'android-compose': {
@@ -251,7 +254,7 @@ export function getConfig(theme) {
               options: { packageName: 'com.kinetixui.tokens' },
               files: [
                 { destination: 'KinetixType.kt', format: 'kinetix/type-compose', filter: isType },
-                { destination: 'KinetixMotion.kt', format: 'kinetix/motion-compose', filter: isMotionOrScale },
+                { destination: 'KinetixMotion.kt', format: 'kinetix/motion-compose', filter: isNativeFoundation },
               ],
             },
             'android-xml': {
@@ -285,7 +288,7 @@ export function getConfig(theme) {
               buildPath: `${DIST}/flutter/`,
               files: [
                 { destination: 'app_text.dart', format: 'kinetix/type-dart', filter: isType },
-                { destination: 'kinetix_motion.dart', format: 'kinetix/motion-dart', filter: isMotionOrScale },
+                { destination: 'kinetix_motion.dart', format: 'kinetix/motion-dart', filter: isNativeFoundation },
               ],
             },
           }

@@ -1,0 +1,54 @@
+name: Bug report
+description: Something in KinetixUI does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. For a security problem, do **not** open an issue — use
+        [private vulnerability reporting](https://github.com/zedalleys/kinetixui/security/advisories/new).
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Which implementation is affected?
+      options:
+        - Web · React (@kinetixui/ui)
+        - iOS · SwiftUI
+        - Android · Jetpack Compose
+        - Flutter
+        - Tokens (@kinetixui/tokens)
+        - CLI (@kinetixui/cli)
+        - Documentation site
+    validations:
+      required: true
+  - type: input
+    id: component
+    attributes:
+      label: Component (if any)
+      placeholder: Button, Select, DataGrid…
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Package version, or the commit for the native libraries.
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: A minimal snippet or repository is ideal. Use only real KinetixUI APIs.
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Browser and OS, Xcode / Android Studio / Flutter version, light or dark, LTR or RTL, screen reader if relevant.

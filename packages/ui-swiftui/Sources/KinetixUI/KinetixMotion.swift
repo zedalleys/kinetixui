@@ -3,6 +3,7 @@
 //
 
 public enum KinetixDuration {
+    public static let instant = Duration.milliseconds(100)
     public static let fast = Duration.milliseconds(200)
     public static let base = Duration.milliseconds(300)
     public static let slow = Duration.milliseconds(500)
@@ -13,6 +14,9 @@ public enum KinetixDuration {
 public enum KinetixEasing {
     public static let linear: (Double, Double, Double, Double) = (0, 0, 1, 1)
     public static let standard: (Double, Double, Double, Double) = (0.4, 0, 0.2, 1)
+    public static let enter: (Double, Double, Double, Double) = (0, 0, 0.2, 1)
+    public static let exit: (Double, Double, Double, Double) = (0.4, 0, 1, 1)
+    public static let emphasized: (Double, Double, Double, Double) = (0.2, 0, 0, 1)
 }
 
 public enum KinetixOpacity {
@@ -29,4 +33,33 @@ public enum KinetixZIndex {
     public static let focus = 20
     public static let sticky = 40
     public static let overlay = 50
+}
+
+/// Spatial scale in points — an 8-unit grid with a 4-unit half-step (see /docs/foundations).
+public enum KinetixSpacing {
+    public static let space0: Double = 0
+    public static let space1: Double = 4
+    public static let space2: Double = 8
+    public static let space3: Double = 12
+    public static let space4: Double = 16
+    public static let space5: Double = 20
+    public static let space6: Double = 24
+    public static let space7: Double = 28
+    public static let space8: Double = 32
+    public static let space10: Double = 40
+    public static let space12: Double = 48
+    public static let space16: Double = 64
+    public static let space20: Double = 80
+    public static let space24: Double = 96
+    public static let space32: Double = 128
+}
+
+public enum KinetixRadius {
+    public static let none: Double = 0
+    public static let sm: Double = 4
+    public static let md: Double = 8
+    public static let lg: Double = 12
+    public static let xl: Double = 16
+    public static let xxl: Double = 24
+    public static let full: Double = 9999
 }

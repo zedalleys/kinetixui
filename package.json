@@ -29,6 +29,7 @@
     "check:manifest": "node scripts/gen-manifest.mjs --check",
     "check:a11y-browser": "node scripts/a11y-browser.mjs",
     "check:typography": "node scripts/check-typography.mjs",
+    "check:grid": "node scripts/check-grid.mjs",
     "build:registry": "node scripts/gen-registry.mjs && shadcn build registry/registry.json --output apps/web/public/r && node scripts/rewrite-schema.mjs && node scripts/gen-registry-index.mjs && node scripts/gen-component-specs.mjs",
     "build:ui": "pnpm --filter @kinetixui/ui build",
     "build:cli": "pnpm --filter @kinetixui/cli build",
