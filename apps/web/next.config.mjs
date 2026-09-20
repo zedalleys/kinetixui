@@ -24,7 +24,13 @@ const withMDX = createMDX({
  * `style-src` keeps it for Recharts' inline <style> and rehype-pretty-code.
  * Everything else is locked to same-origin; the only third parties are
  * api.github.com (the star-count fetch) and remote <img> hosts.
+ *
+ * Development only: `next dev` compiles with eval-based source maps and hot-reloads over a
+ * WebSocket, so with the production policy NO client JavaScript runs under `next dev` (the
+ * page renders, nothing hydrates). Dev therefore adds `'unsafe-eval'` and `ws:`. The production
+ * policy is unchanged — a build never emits either.
  */
+const isDev = process.env.NODE_ENV !== "production";
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -34,11 +40,11 @@ const csp = [
   "img-src 'self' data: blob: https:",
   "font-src 'self'",
   "style-src 'self' 'unsafe-inline'",
-  "script-src 'self' 'unsafe-inline'",
-  "connect-src 'self' https://api.github.com",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `connect-src 'self' https://api.github.com${isDev ? " ws: wss:" : ""}`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
-  "upgrade-insecure-requests",
+  ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
 const securityHeaders = [
