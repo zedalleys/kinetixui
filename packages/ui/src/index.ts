@@ -372,7 +372,7 @@ export { MultiSelect, type MultiSelectOption, type MultiSelectProps } from "./co
 export { MessageBubble, TypingIndicator, type MessageBubbleProps } from "./components/message-bubble";
 export { Tour, type TourStep, type TourProps } from "./components/tour";
 export { VirtualList, type VirtualListProps } from "./components/virtual-list";
-export { DataGrid, type DataGridColumn, type DataGridProps } from "./components/data-grid";
+export { DataGrid, type DataGridColumn, type DataGridProps, type DataGridRange, type DataGridSelection } from "./components/data-grid";
 export { JsonViewer, type JsonViewerProps } from "./components/json-viewer";
 export { DiffViewer, type DiffViewerProps } from "./components/diff-viewer";
 export { ColorPicker, type ColorPickerProps } from "./components/color-picker";

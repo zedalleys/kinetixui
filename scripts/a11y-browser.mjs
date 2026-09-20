@@ -14,12 +14,14 @@
  * longer occurs also fails (stale entry) so the baseline only shrinks. Use
  * --update to regenerate it deliberately, e.g. right after fixing things.
  *
- * Beyond axe it also runs three behaviour checks that only make sense in a real browser. They have
+ * Beyond axe it also runs four behaviour checks that only make sense in a real browser. They have
  * no baseline — any failure fails the run:
  *   - reduced motion: with prefers-reduced-motion, no story may run a looping animation faster than 3s
  *   - forced colors:  with forced-colors active, every focus stop in every story keeps a visible
  *                     indicator (box-shadow rings are stripped in that mode; an outline survives)
  *   - keyboard drag:  KanbanBoard cards can be picked up, moved and dropped with Space / arrows
+ *   - grid selection: a DataGrid with `selectable` selects a rectangle by mouse drag and adds a
+ *                     separate range with Ctrl+click (real layout + real pointer events)
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary (local
  * runs where Playwright's own download isn't installed). CI uses
@@ -214,6 +216,43 @@ await Promise.all(
         behaviourFailures.push(`kanban: Space + ArrowRight + Space did not move the card to the next column (${JSON.stringify(start.map((c) => c.length))} -> ${JSON.stringify(moved.map((c) => c.length))})`);
     } catch (err) {
       behaviourFailures.push(`kanban: ${String(err.message).split("\n")[0]}`);
+    } finally {
+      await ctx.close();
+    }
+  }
+}
+
+// ── DataGrid: drag selection and Ctrl+click ranges (real pointer events + virtualized layout) ───
+{
+  const grid = stories.find((s) => /data-?grid/i.test(s.id) && /default/i.test(s.id));
+  if (!grid) behaviourFailures.push("datagrid: no default DataGrid story found");
+  else {
+    const ctx = await browser.newContext({ viewport: { width: 1100, height: 800 }, reducedMotion: "reduce" });
+    const page = await ctx.newPage();
+    try {
+      await page.goto(`${base}/iframe.html?id=${grid.id}&viewMode=story&globals=theme:light`, { waitUntil: "load" });
+      await page.waitForFunction(() => document.body.classList.contains("sb-show-main"), null, { timeout: 20000 });
+      await page.waitForTimeout(400);
+      const cell = (r, col) => page.locator(`#storybook-root [data-cell="${r}:${col}"]`);
+      const selected = () => page.locator('#storybook-root [role="gridcell"][aria-selected="true"]').count();
+      const a = await cell(1, "name").boundingBox();
+      const b = await cell(3, "category").boundingBox();
+      if (!a || !b) throw new Error("grid cells not found (is the DataGrid story selectable?)");
+      await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 6 });
+      await page.mouse.up();
+      const dragged = await selected();
+      if (dragged !== 3 * 2) behaviourFailures.push(`datagrid: dragging from row 1 Name to row 3 Category selected ${dragged} cells, expected 6`);
+      const c = await cell(4, "qty").boundingBox();
+      await page.keyboard.down("Control");
+      await page.mouse.click(c.x + c.width / 2, c.y + c.height / 2);
+      await page.keyboard.up("Control");
+      const both = await selected();
+      const kept = await cell(1, "name").getAttribute("aria-selected");
+      if (both !== 7 || kept !== "true") behaviourFailures.push(`datagrid: Ctrl+click should add a separate range and keep the first (selected ${both}, expected 7; first range kept: ${kept})`);
+    } catch (err) {
+      behaviourFailures.push(`datagrid: ${String(err.message).split("\n")[0]}`);
     } finally {
       await ctx.close();
     }

@@ -660,7 +660,7 @@ describe("DataGrid", () => {
 
       expect(selectedCells()).toHaveLength(4); // rows 0-1 x Name, ID
       expect(cell(1, 1)).toHaveFocus();
-      expect(onSelectionChange).toHaveBeenLastCalledWith({ rows: [0, 1], columns: ["name", "id"] });
+      expect(onSelectionChange).toHaveBeenLastCalledWith({ rows: [0, 1], columns: ["name", "id"], ranges: [{ rows: [0, 1], columns: ["name", "id"] }] });
       expect(screen.getByRole("status")).toHaveTextContent("4 cells selected");
     });
 
@@ -749,7 +749,106 @@ describe("DataGrid", () => {
       await user.keyboard("{Shift>}");
       await user.click(target);
       await user.keyboard("{/Shift}");
-      expect(onSelectionChange).toHaveBeenLastCalledWith({ rows: [0, targetRow], columns: ["name"] });
+      expect(onSelectionChange).toHaveBeenLastCalledWith({ rows: [0, targetRow], columns: ["name"], ranges: [{ rows: [0, targetRow], columns: ["name"] }] });
+    });
+
+    it("Ctrl+click adds a separate range and keeps the first, reporting both", async () => {
+      const user = userEvent.setup();
+      const onSelectionChange = vi.fn();
+      setup({ selectable: true, onSelectionChange });
+      await user.tab();
+      await user.keyboard("{ArrowDown}{Shift>}{ArrowDown}{/Shift}"); // Name, rows 0-1
+      await user.keyboard("{Control>}");
+      await user.click(cell(2, 1)); // ID, row 2
+      await user.keyboard("{/Control}");
+      expect(selectedCells()).toHaveLength(3);
+      expect(cell(0, 0)).toHaveAttribute("aria-selected", "true");
+      expect(cell(2, 1)).toHaveAttribute("aria-selected", "true");
+      expect(cell(2, 0)).toHaveAttribute("aria-selected", "false");
+      expect(onSelectionChange).toHaveBeenLastCalledWith({
+        rows: [2, 2],
+        columns: ["id"],
+        ranges: [
+          { rows: [0, 1], columns: ["name"] },
+          { rows: [2, 2], columns: ["id"] },
+        ],
+      });
+      expect(screen.getByRole("status")).toHaveTextContent("3 cells selected");
+    });
+
+    it("Ctrl+click with nothing selected keeps the active cell as the first range", async () => {
+      const user = userEvent.setup();
+      setup({ selectable: true });
+      await user.tab();
+      await user.keyboard("{ArrowDown}"); // active: row 0, Name — not selected yet
+      await user.keyboard("{Control>}");
+      await user.click(cell(2, 1));
+      await user.keyboard("{/Control}");
+      expect(selectedCells()).toHaveLength(2);
+      expect(cell(0, 0)).toHaveAttribute("aria-selected", "true");
+    });
+
+    it("Ctrl+Space is the keyboard way to add a range; Shift+arrows then extends the new one", async () => {
+      const user = userEvent.setup();
+      const onSelectionChange = vi.fn();
+      setup({ selectable: true, onSelectionChange });
+      await user.tab();
+      await user.keyboard("{ArrowDown}"); // row 0, Name
+      await user.keyboard("{Control>} {/Control}"); // range 1 = this cell
+      await user.keyboard("{ArrowDown}{ArrowDown}"); // plain arrows collapse everything...
+      expect(selectedCells()).toHaveLength(0);
+      await user.keyboard("{Control>} {/Control}"); // ...so start over at row 2
+      await user.keyboard("{ArrowUp}");
+      expect(selectedCells()).toHaveLength(0);
+      // build two ranges without collapsing: Shift+arrows extends, Ctrl+Space branches
+      await user.keyboard("{ArrowUp}{Shift>}{ArrowDown}{/Shift}"); // rows 0-1
+      await user.keyboard("{Control>} {/Control}"); // second range starts at the active cell (row 1)
+      await user.keyboard("{Shift>}{ArrowDown}{ArrowRight}{/Shift}"); // rows 1-2, Name+ID
+      expect(onSelectionChange).toHaveBeenLastCalledWith({
+        rows: [1, 2],
+        columns: ["name", "id"],
+        ranges: [
+          { rows: [0, 1], columns: ["name"] },
+          { rows: [1, 2], columns: ["name", "id"] },
+        ],
+      });
+    });
+
+    it("Ctrl+C copies every range, separated by a blank line", async () => {
+      const user = userEvent.setup();
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+      setup({ selectable: true });
+      await user.tab();
+      await user.keyboard("{ArrowDown}"); // Cara
+      await user.keyboard("{Control>}");
+      await user.click(cell(2, 1)); // 3
+      await user.keyboard("{/Control}");
+      await user.keyboard("{Control>}c{/Control}");
+      expect(writeText).toHaveBeenCalledWith("Cara\n\n3");
+      expect(screen.getByRole("status")).toHaveTextContent("Copied 2 cells");
+    });
+
+    it("dragging across cells selects the rectangle; a plain click selects nothing", async () => {
+      const user = userEvent.setup();
+      const onSelectionChange = vi.fn();
+      setup({ selectable: true, onSelectionChange });
+      await user.pointer({ keys: "[MouseLeft>]", target: cell(0, 0) });
+      expect(selectedCells()).toHaveLength(0); // pressed but not moved
+      await user.pointer({ target: cell(1, 1) });
+      await user.pointer({ keys: "[/MouseLeft]" });
+      expect(selectedCells()).toHaveLength(4);
+      expect(onSelectionChange).toHaveBeenLastCalledWith({ rows: [0, 1], columns: ["name", "id"], ranges: [{ rows: [0, 1], columns: ["name", "id"] }] });
+      expect(cell(1, 1)).toHaveFocus(); // Shift+arrows continue from the end
+    });
+
+    it("moving over cells with no button held does not select", async () => {
+      const user = userEvent.setup();
+      setup({ selectable: true });
+      await user.pointer({ keys: "[MouseLeft>]", target: cell(0, 0) });
+      await user.pointer({ keys: "[/MouseLeft]" });
+      await user.pointer({ target: cell(2, 1) });
+      expect(selectedCells()).toHaveLength(0);
     });
 
     it("re-sorting clears the selection (it refers to displayed rows)", async () => {

@@ -25,11 +25,17 @@ export interface DataGridColumn<TData> {
 }
 
 /** A rectangular range of cells, in display order (after sorting and column reordering). */
-export interface DataGridSelection {
+export interface DataGridRange {
   /** first and last selected row index, inclusive, into the *displayed* (sorted) rows */
   rows: [number, number];
   /** ids of the selected columns, in display order */
   columns: string[];
+}
+
+/** The selection: the range being edited (`rows` / `columns`, the last one) plus every range in `ranges`. */
+export interface DataGridSelection extends DataGridRange {
+  /** every selected range, in the order they were added — more than one after Ctrl/Cmd+click or Ctrl+Space */
+  ranges: DataGridRange[];
 }
 
 export interface DataGridProps<TData> {
@@ -42,9 +48,10 @@ export interface DataGridProps<TData> {
   getRowId?: (row: TData, index: number) => React.Key;
   className?: string;
   /**
-   * Opt in to range selection: Shift+arrows / Shift+click extend a rectangle from the anchor cell,
-   * Ctrl/Cmd+A selects everything, Ctrl/Cmd+C copies the range as tab-separated text (each
-   * column's `value()`; empty where a column has none), Esc clears. Sets aria-multiselectable.
+   * Opt in to range selection: drag, or Shift+arrows / Shift+click, to extend a rectangle from the
+   * anchor cell; Ctrl/Cmd+click or Ctrl+Space starts an additional, separate range; Ctrl/Cmd+A selects
+   * everything; Ctrl/Cmd+C copies the ranges as tab-separated text (each column's `value()`; empty where
+   * a column has none; ranges separated by a blank line); Esc clears. Sets aria-multiselectable.
    */
   selectable?: boolean;
   /** fires when the selected range changes; `null` when it is cleared */
@@ -223,7 +230,22 @@ function DataGrid<TData>({
 
   // ── range selection (opt-in) ──────────────────────────────────────────────────────────────
   type Anchor = { row: number; columnId: string };
-  const [sel, setSel] = React.useState<{ anchor: Anchor; end: Anchor } | null>(null);
+  type Sel = { anchor: Anchor; end: Anchor };
+  const [sel, setSel] = React.useState<Sel | null>(null);
+  /** ranges committed before the current one (Ctrl/Cmd+click, Ctrl+Space) */
+  const [extra, setExtra] = React.useState<Sel[]>([]);
+  const dragRef = React.useRef<Anchor | null>(null);
+  React.useEffect(() => {
+    const end = () => {
+      dragRef.current = null;
+    };
+    window.addEventListener("mouseup", end);
+    return () => window.removeEventListener("mouseup", end);
+  }, []);
+  const clearSel = () => {
+    setSel(null);
+    setExtra([]);
+  };
   const onSelectionChangeRef = React.useRef(onSelectionChange);
   onSelectionChangeRef.current = onSelectionChange;
   const lastEmittedRef = React.useRef("null");
@@ -237,28 +259,39 @@ function DataGrid<TData>({
   const activeRendered = activeRow < 0 || (activeRow >= startIndex && activeRow < endIndex);
   const tabStop: Pos = { row: activeRendered ? activeRow : -1, columnId: activeCol };
   const colKey = colIds.join("|");
-  const range = React.useMemo(() => {
-    if (!selectable || !sel) return null;
-    const a = colIds.indexOf(sel.anchor.columnId);
-    const b = colIds.indexOf(sel.end.columnId);
-    if (a < 0 || b < 0) return null;
-    return { r0: Math.min(sel.anchor.row, sel.end.row), r1: Math.max(sel.anchor.row, sel.end.row), c0: Math.min(a, b), c1: Math.max(a, b) };
+  const rects = React.useMemo(() => {
+    if (!selectable) return [];
+    const out: { r0: number; r1: number; c0: number; c1: number }[] = [];
+    for (const s of sel ? [...extra, sel] : extra) {
+      const a = colIds.indexOf(s.anchor.columnId);
+      const b = colIds.indexOf(s.end.columnId);
+      if (a < 0 || b < 0) continue;
+      out.push({ r0: Math.min(s.anchor.row, s.end.row), r1: Math.max(s.anchor.row, s.end.row), c0: Math.min(a, b), c1: Math.max(a, b) });
+    }
+    return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectable, sel, colKey]);
+  }, [selectable, sel, extra, colKey]);
+  const hasSelection = rects.length > 0;
+  const cellCount = rects.reduce((n, r) => n + (r.r1 - r.r0 + 1) * (r.c1 - r.c0 + 1), 0);
+  const isSelectedCell = (row: number, colIdx: number) => rects.some((r) => row >= r.r0 && row <= r.r1 && colIdx >= r.c0 && colIdx <= r.c1);
 
   // Selection refers to displayed rows, so a re-sort or a different row count invalidates it.
-  React.useEffect(() => setSel(null), [sort, rowCount]);
+  React.useEffect(() => {
+    setSel(null);
+    setExtra([]);
+  }, [sort, rowCount]);
 
   React.useEffect(() => {
     if (!selectable) return;
-    const value = range ? { rows: [range.r0, range.r1] as [number, number], columns: colIds.slice(range.c0, range.c1 + 1) } : null;
+    const ranges: DataGridRange[] = rects.map((r) => ({ rows: [r.r0, r.r1] as [number, number], columns: colIds.slice(r.c0, r.c1 + 1) }));
+    const value: DataGridSelection | null = ranges.length ? { ...ranges[ranges.length - 1]!, ranges } : null;
     const key = JSON.stringify(value);
     if (key === lastEmittedRef.current) return;
     lastEmittedRef.current = key;
     onSelectionChangeRef.current?.(value);
-    setAnnouncement(value ? `${(range!.r1 - range!.r0 + 1) * (range!.c1 - range!.c0 + 1)} cells selected` : "Selection cleared");
+    setAnnouncement(value ? `${cellCount} cells selected` : "Selection cleared");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectable, range]);
+  }, [selectable, rects]);
 
   function extendSelection(fromRow: number, fromCol: string, toRow: number, toCol: string) {
     const anchor = sel?.anchor ?? { row: fromRow, columnId: fromCol };
@@ -267,21 +300,33 @@ function DataGrid<TData>({
     moveTo(end.row, end.columnId);
   }
 
+  /** Start a new range at a cell, keeping the current one (the active cell counts when nothing is selected yet). */
+  function addRange(row: number, columnId: string, prev?: Anchor) {
+    const previous = sel ?? (prev ? { anchor: prev, end: prev } : null);
+    if (previous) setExtra((x) => [...x, previous]);
+    setSel({ anchor: { row, columnId }, end: { row, columnId } });
+  }
+
   function selectAll() {
     if (rowCount === 0 || colIds.length === 0) return;
+    setExtra([]);
     setSel({ anchor: { row: 0, columnId: colIds[0]! }, end: { row: rowCount - 1, columnId: colIds[colIds.length - 1]! } });
   }
 
   function copySelection() {
-    if (!range) return;
-    const ids = colIds.slice(range.c0, range.c1 + 1);
-    const text = sortedData
-      .slice(range.r0, range.r1 + 1)
-      .map((r) => ids.map((id) => { const c = columnById.get(id); return c?.value ? String(c.value(r)) : ""; }).join("\t"))
-      .join("\n");
+    if (!hasSelection) return;
+    const text = rects
+      .map((r) => {
+        const ids = colIds.slice(r.c0, r.c1 + 1);
+        return sortedData
+          .slice(r.r0, r.r1 + 1)
+          .map((row) => ids.map((id) => { const c = columnById.get(id); return c?.value ? String(c.value(row)) : ""; }).join("\t"))
+          .join("\n");
+      })
+      .join("\n\n");
     try {
       void navigator.clipboard?.writeText(text);
-      setAnnouncement(`Copied ${(range.r1 - range.r0 + 1) * ids.length} cells`);
+      setAnnouncement(`Copied ${cellCount} cells`);
     } catch {
       /* clipboard unavailable (insecure context / permission) — nothing to announce */
     }
@@ -377,13 +422,18 @@ function DataGrid<TData>({
         e.preventDefault();
         return selectAll();
       }
-      if (mod && e.key.toLowerCase() === "c" && range) {
+      if (mod && e.key.toLowerCase() === "c" && hasSelection) {
         e.preventDefault();
         return copySelection();
       }
-      if (e.key === "Escape" && sel) {
+      if (mod && e.key === " ") {
+        // keyboard equivalent of Ctrl/Cmd+click: keep what is selected and start another range here
         e.preventDefault();
-        return setSel(null);
+        return addRange(row, column.id, { row, columnId: column.id });
+      }
+      if (e.key === "Escape" && hasSelection) {
+        e.preventDefault();
+        return clearSel();
       }
     }
     const extend = selectable && e.shiftKey && row >= 0;
@@ -391,7 +441,7 @@ function DataGrid<TData>({
       e.preventDefault();
       const target = colIds[Math.max(0, Math.min(i, colIds.length - 1))]!;
       if (extend) return extendSelection(row, column.id, r, target);
-      if (sel) setSel(null); // a plain move collapses the range
+      if (hasSelection) clearSel(); // a plain move collapses the selection
       moveTo(r, target);
     };
     switch (e.key) {
@@ -530,7 +580,7 @@ function DataGrid<TData>({
                         ? { position: "sticky", right: rightOffsets[column.id], zIndex: 1 }
                         : {};
                   const isEditing = editing?.rowIndex === rowIndex && editing.columnId === column.id;
-                  const selected = selectable && !!range && rowIndex >= range.r0 && rowIndex <= range.r1 && colIdx >= range.c0 && colIdx <= range.c1;
+                  const selected = selectable && isSelectedCell(rowIndex, colIdx);
                   return (
                     <div
                       key={column.id}
@@ -539,13 +589,31 @@ function DataGrid<TData>({
                       aria-selected={selectable ? selected : undefined}
                       data-cell={`${rowIndex}:${column.id}`}
                       onMouseDown={(e) => {
-                        if (!selectable || e.button !== 0) return;
+                        if (!selectable || e.button !== 0 || isEditing) return;
+                        const here = { row: rowIndex, columnId: column.id };
                         if (e.shiftKey) {
                           // extend from the previously active cell (focus has not moved yet on mousedown) — even when it has
                           // since scrolled out of the rendered window
                           e.preventDefault();
                           extendSelection(activeRow >= 0 ? activeRow : rowIndex, activeCol, rowIndex, column.id);
-                        } else if (sel) setSel(null);
+                        } else if (e.ctrlKey || e.metaKey) {
+                          addRange(rowIndex, column.id, activeRow >= 0 ? { row: activeRow, columnId: activeCol } : undefined);
+                          dragRef.current = here; // Ctrl+drag sizes the new range
+                        } else {
+                          if (hasSelection) clearSel();
+                          dragRef.current = here; // a plain click selects nothing until the pointer reaches another cell
+                        }
+                      }}
+                      onMouseEnter={(e) => {
+                        const start = dragRef.current;
+                        if (!selectable || !start) return;
+                        if (e.buttons !== 1) {
+                          dragRef.current = null; // the button was released outside the grid
+                          return;
+                        }
+                        if (start.row === rowIndex && start.columnId === column.id) return;
+                        setSel({ anchor: start, end: { row: rowIndex, columnId: column.id } });
+                        moveTo(rowIndex, column.id); // the dragged-to cell becomes the active one, so Shift+arrows continue from it
                       }}
                       onDoubleClick={() => column.editable && setEditing({ rowIndex, columnId: column.id })}
                       // roving tabindex; Enter or F2 edits an editable cell (the spreadsheet convention)
@@ -555,6 +623,7 @@ function DataGrid<TData>({
                       className={cn(
                         "flex shrink-0 items-center px-2 outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
                         column.pinned && "bg-background",
+                        selectable && "select-none",
                         selected && "bg-accent",
                       )}
                       style={{ width, ...pinnedStyle }}
