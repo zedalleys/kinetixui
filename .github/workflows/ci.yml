@@ -32,6 +32,9 @@ jobs:
       - name: Build tokens
         run: pnpm build:tokens
 
+      - name: Lint
+        run: pnpm lint
+
       - name: Contrast audit (WCAG AA text pairs)
         run: pnpm check:contrast
 
