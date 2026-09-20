@@ -55,7 +55,7 @@
           "name": "selectable",
           "type": "boolean",
           "required": false,
-          "description": "Opt in to range selection: Shift+arrows / Shift+click extend a rectangle from the anchor cell, Ctrl/Cmd+A selects everything, Ctrl/Cmd+C copies the range as tab-separated text (each column's `value()…"
+          "description": "Opt in to range selection: drag, or Shift+arrows / Shift+click, to extend a rectangle from the anchor cell; Ctrl/Cmd+click or Ctrl+Space starts an additional, separate range; Ctrl/Cmd+A selects every…"
         },
         {
           "name": "onSelectionChange",
