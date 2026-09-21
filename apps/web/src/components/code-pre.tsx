@@ -2,11 +2,14 @@
 
 import * as React from "react";
 import { Check, Copy } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { trackFenceCopy } from "@/lib/analytics-surfaces";
 
 /** MDX <pre> with a hover-revealed copy button. Used for fenced code blocks. */
 export function CodePre({ className, children, ...props }: React.ComponentPropsWithoutRef<"pre">) {
   const ref = React.useRef<HTMLPreElement>(null);
+  const pathname = usePathname();
   const [copied, setCopied] = React.useState(false);
 
   const copy = () => {
@@ -20,6 +23,8 @@ export function CodePre({ className, children, ...props }: React.ComponentPropsW
       : (el.textContent ?? "");
     navigator.clipboard.writeText(text.replace(/\n$/, "")).then(
       () => {
+        // rehype-pretty-code sets data-language on the <pre>; the copied text is inspected, never sent
+        trackFenceCopy(text, (props as { "data-language"?: string })["data-language"], pathname);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       },

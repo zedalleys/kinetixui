@@ -2,8 +2,11 @@
 
 import * as React from "react";
 import * as Tabs from "@radix-ui/react-tabs";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { CopyButton } from "./copy-button";
+import { analytics } from "@/lib/analytics";
+import { PLATFORM_FROM_CODE_TAB, componentSlugFor } from "@/lib/analytics-surfaces";
 import { demoRegistry } from "@/registry/demos";
 import { PLATFORM_LABEL, PLATFORM_ORDER, platformCode, type Platform } from "@/registry/platform-code";
 
@@ -12,10 +15,10 @@ const tabTrigger = cn(
   "hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground",
 );
 
-function CodePane({ code }: { code: string }) {
+function CodePane({ code, onCopy }: { code: string; onCopy?: () => void }) {
   return (
     <div className="relative">
-      <CopyButton value={code} className="absolute right-3 top-3 z-10" />
+      <CopyButton value={code} onCopy={onCopy} className="absolute right-3 top-3 z-10" />
       <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed">
         <code>{code}</code>
       </pre>
@@ -34,7 +37,11 @@ export function ComponentPreview({
 }) {
   // hooks first: an early return below must not change how many hooks run
   const [platform, setPlatform] = React.useState<Platform>("react");
+  const pathname = usePathname();
   const entry = demoRegistry[name];
+  // the component whose page this is — from the route, validated against the docs' own component list. A demo
+  // shown anywhere else (no component page) has no known component, so it reports nothing.
+  const component = componentSlugFor(pathname);
 
   if (!entry) {
     return (
@@ -50,6 +57,10 @@ export function ComponentPreview({
   const native = platformCode[name] ?? {};
   const byPlatform: Partial<Record<Platform, string>> = { react: entry.source, ...native };
   const platforms = PLATFORM_ORDER.filter((p) => byPlatform[p]);
+  // the code itself is never reported — only which component and which platform's snippet was copied
+  const copied = (p: Platform) => {
+    if (component) analytics.track("component_code_copied", { component, platform: PLATFORM_FROM_CODE_TAB[p], source: "component_page" });
+  };
 
   return (
     <div
@@ -79,7 +90,18 @@ export function ComponentPreview({
         <Tabs.Content value="code">
           <div className="border-t border-border bg-muted/40">
             {platforms.length > 1 ? (
-              <Tabs.Root value={platform} onValueChange={(v) => setPlatform(v as Platform)}>
+              <Tabs.Root
+                value={platform}
+                onValueChange={(v) => {
+                  const next = v as Platform;
+                  // only an explicit change of platform; the default React tab rendering is not a selection
+                  if (next === platform) return;
+                  setPlatform(next);
+                  if (component) {
+                    analytics.track("platform_selected", { platform: PLATFORM_FROM_CODE_TAB[next], component, source: "component_page", location: "platform_tabs" });
+                  }
+                }}
+              >
                 <Tabs.List aria-label="Platform" className="flex items-center gap-1 border-b border-border px-2">
                   {platforms.map((p) => (
                     <Tabs.Trigger
@@ -96,12 +118,12 @@ export function ComponentPreview({
                 </Tabs.List>
                 {platforms.map((p) => (
                   <Tabs.Content key={p} value={p}>
-                    <CodePane code={byPlatform[p]!} />
+                    <CodePane code={byPlatform[p]!} onCopy={() => copied(p)} />
                   </Tabs.Content>
                 ))}
               </Tabs.Root>
             ) : (
-              <CodePane code={entry.source} />
+              <CodePane code={entry.source} onCopy={() => copied("react")} />
             )}
           </div>
         </Tabs.Content>

@@ -199,7 +199,7 @@ describe("the event contract, at compile time", () => {
     analytics.track("install_command_copied", { source: "installation_page", platform: "flutter" });
     analytics.track("component_viewed", { component: "button" });
     analytics.track("component_code_copied", { component: "button", platform: "compose" });
-    analytics.track("platform_selected", { platform: "react", location: "code_tab" });
+    analytics.track("platform_selected", { platform: "react", location: "platform_tabs" });
     analytics.track("github_clicked", { source: "footer" });
     analytics.track("npm_clicked", { source: "footer", package: "@kinetixui/ui" });
     analytics.track("changelog_viewed", { version: "0.22.0" });
