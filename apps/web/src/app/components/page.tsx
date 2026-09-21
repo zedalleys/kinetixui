@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ComponentGallery } from "@/components/component-gallery";
+import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Components",
-  description: "Every component in the KinetixUI registry.",
+  description:
+    "Browse every component in the KinetixUI registry — live previews, which of React, SwiftUI, Jetpack Compose and Flutter each one ships on, and the CLI command to add it.",
+  // the category / platform filters write query parameters into the URL
+  ...canonical("/components"),
 };
 
 export default function ComponentsPage() {
