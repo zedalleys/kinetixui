@@ -13,6 +13,7 @@ overrides:
   "esbuild@<0.28.1": "^0.28.2"
 allowBuilds:
   '@bundled-es-modules/glob': true
+  core-js: false
   esbuild: true
   msw: true
   style-dictionary: true
