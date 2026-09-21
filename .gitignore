@@ -4,6 +4,11 @@ node_modules/
 dist/
 .next/
 next-env.d.ts
+
+# local env files hold real keys — never commit them (`.env.example` files are the documented template)
+.env
+.env.local
+.env.*.local
 storybook-static/
 *.tsbuildinfo
 *.log

@@ -23,7 +23,7 @@ const withMDX = createMDX({
  * therefore keeps `'unsafe-inline'` for Next's hydration bootstrap and
  * `style-src` keeps it for Recharts' inline <style> and rehype-pretty-code.
  * Everything else is locked to same-origin; the only third parties are
- * api.github.com (the star-count fetch) and remote <img> hosts.
+ * api.github.com (the star-count fetch), remote <img> hosts and — when configured — the analytics ingest origin.
  *
  * Development only: `next dev` compiles with eval-based source maps and hot-reloads over a
  * WebSocket, so with the production policy NO client JavaScript runs under `next dev` (the
@@ -31,6 +31,22 @@ const withMDX = createMDX({
  * policy is unchanged — a build never emits either.
  */
 const isDev = process.env.NODE_ENV !== "production";
+
+/**
+ * The PostHog ingest origin, allowed in `connect-src` only when NEXT_PUBLIC_POSTHOG_HOST is set for the build
+ * (analytics is off otherwise, so there is nothing to allow). Only an https origin is accepted — never a path,
+ * never a wildcard. The SDK's external script loading is disabled (see lib/analytics-posthog.ts), so this is
+ * the only CSP change analytics needs.
+ */
+const posthogOrigin = (() => {
+  try {
+    const url = new URL(process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "");
+    return url.protocol === "https:" ? url.origin : "";
+  } catch {
+    return "";
+  }
+})();
+
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -41,7 +57,7 @@ const csp = [
   "font-src 'self'",
   "style-src 'self' 'unsafe-inline'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-  `connect-src 'self' https://api.github.com${isDev ? " ws: wss:" : ""}`,
+  `connect-src 'self' https://api.github.com${posthogOrigin ? ` ${posthogOrigin}` : ""}${isDev ? " ws: wss:" : ""}`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
   ...(isDev ? [] : ["upgrade-insecure-requests"]),
