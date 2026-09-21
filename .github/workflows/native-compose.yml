@@ -54,5 +54,9 @@ jobs:
       - name: Assemble
         run: gradle :ui:assembleDebug
 
+      # Compose UI tests on Robolectric (JVM, no emulator): interaction, accessibility semantics, RTL.
+      - name: Test
+        run: gradle :ui:testDebugUnitTest
+
       - name: Lint
         run: gradle :ui:lintDebug

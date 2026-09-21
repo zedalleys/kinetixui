@@ -227,7 +227,11 @@ export const tokens = {
     "lg": "12px",
     "xl": "16px",
     "xxl": "24px",
-    "full": "9999px"
+    "full": "9999px",
+    "field": "4px",
+    "control": "8px",
+    "container": "12px",
+    "surface": "16px"
   },
   "borderWidth": {
     "default": "1px",

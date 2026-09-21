@@ -26,6 +26,10 @@
   <dimen name="radius_xl">16dp</dimen>
   <dimen name="radius_xxl">24dp</dimen>
   <dimen name="radius_full">9999dp</dimen>
+  <dimen name="radius_field">4dp</dimen>
+  <dimen name="radius_control">8dp</dimen>
+  <dimen name="radius_container">12dp</dimen>
+  <dimen name="radius_surface">16dp</dimen>
   <dimen name="border_width_default">1dp</dimen>
   <dimen name="border_width_focus">2dp</dimen>
   <dimen name="interaction_target_minimum">44dp</dimen>

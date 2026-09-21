@@ -63,4 +63,8 @@ object KinetixRadius {
   const val xl = 16f
   const val xxl = 24f
   const val full = 9999f
+  const val field = 4f
+  const val control = 8f
+  const val container = 12f
+  const val surface = 16f
 }

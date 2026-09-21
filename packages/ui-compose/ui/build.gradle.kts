@@ -34,6 +34,14 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // Robolectric runs the Compose UI tests on the JVM (no emulator needed), and needs the merged
+    // Android resources (dimens.xml, …) on the test classpath.
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
+
     // AGP 8's built-in way to expose the release variant as a maven-publish
     // component (`components["release"]` below) without a manual variant config.
     // Central requires a sources jar *and* a javadoc jar alongside the AAR.
@@ -51,6 +59,13 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
+
+    // Interaction / semantics / adaptivity tests (src/test) — Compose UI test on Robolectric.
+    testImplementation(platform("androidx.compose:compose-bom:2026.08.00"))
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.17")
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
 
 // ---------------------------------------------------------------------------

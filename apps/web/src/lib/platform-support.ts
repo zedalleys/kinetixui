@@ -51,7 +51,7 @@ export const platforms: PlatformRow[] = [
     tokens: "Swift enums: colors (light + dark), type styles, spacing, radius, motion",
     darkMode: "Yes — follows the system color scheme",
     rtl: "Not audited yet",
-    verification: "`swift build` on macOS (compiles). No unit or snapshot tests yet",
+    verification: "`swift build` and `swift test` on macOS: WCAG contrast of the light and dark colour sets, and the spacing / radius scale. No view-level interaction or accessibility tests yet",
     workflow: "native-swiftui.yml",
   },
   {
@@ -63,8 +63,8 @@ export const platforms: PlatformRow[] = [
     components: count("Compose"),
     tokens: "Kotlin objects and `dimens.xml`: colors (light + dark), type styles, spacing, radius, motion",
     darkMode: "Yes — follows `isSystemInDarkTheme()`",
-    rtl: "Not audited yet",
-    verification: "`gradle assembleDebug` and `lintDebug` (compiles, lints). No unit or screenshot tests yet",
+    rtl: "Core controls tested (Tabs mirror); the rest not audited",
+    verification: "`gradle assembleDebug`, `lintDebug` and Compose UI tests (Robolectric) for the core controls: interaction, accessibility semantics, RTL. No screenshot tests yet",
     workflow: "native-compose.yml",
   },
   {
@@ -76,8 +76,8 @@ export const platforms: PlatformRow[] = [
     components: count("Flutter"),
     tokens: "Dart classes: color scheme (light + dark), type styles, spacing, radius, motion",
     darkMode: "Yes — follows the platform brightness",
-    rtl: "Not audited yet",
-    verification: "`flutter analyze` plus widget smoke tests that build ~55 widgets in light and dark",
+    rtl: "Core controls tested (Switch mirrors, RTL build); the rest not audited",
+    verification: "`flutter analyze`, widget smoke tests (~55 widgets, light and dark), and interaction, accessibility-semantics, RTL and large-text tests for the core controls. No golden tests yet",
     workflow: "native-flutter.yml",
   },
 ];
@@ -94,8 +94,8 @@ export const gaps = all
 /** Platforms people ask about that have NO implementation in the repository. */
 export const notSupported = [
   { name: "Angular", note: "No package, directive or component." },
-  { name: "Wear OS", note: "No implementation. Wearables are a distinct design problem (glanceability, circular screens, large targets), not small phones." },
-  { name: "watchOS", note: "No implementation. Follows watchOS conventions if it is ever built — not Wear OS's." },
+  { name: "Wear OS", note: "No implementation yet. Approved as a separate track that derives from Core tokens rather than shrinking the phone components (design spec: `WEARABLES.md`)." },
+  { name: "watchOS", note: "No implementation yet. Approved on the same track, following watchOS conventions rather than Wear OS's (design spec: `WEARABLES.md`)." },
   { name: "Plain HTML / CSS package", note: "There is no `kx-*` class API. On the web, use React or the registry (`npx @kinetixui/cli add`)." },
 ] as const;
 

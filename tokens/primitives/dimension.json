@@ -98,6 +98,26 @@
     "full": {
       "$value": "9999",
       "$type": "dimension"
+    },
+    "field": {
+      "$value": "{radius.sm}",
+      "$type": "dimension",
+      "$description": "Role alias — text-entry and small selection surfaces: Input, Textarea, Select, Checkbox, Tag, Kbd. A theme can round or square every field by overriding this one token."
+    },
+    "control": {
+      "$value": "{radius.md}",
+      "$type": "dimension",
+      "$description": "Role alias — pressable controls and menus: Button, Toggle, ButtonGroup, dropdown / context / menubar menus, Select popup, Popover."
+    },
+    "container": {
+      "$value": "{radius.lg}",
+      "$type": "dimension",
+      "$description": "Role alias — inline containers: Alert, Tabs list, SegmentedControl, Sidebar, Tour."
+    },
+    "surface": {
+      "$value": "{radius.xl}",
+      "$type": "dimension",
+      "$description": "Role alias — large elevated surfaces: Card, Dialog, AlertDialog, Modal."
     }
   },
   "borderWidth": {

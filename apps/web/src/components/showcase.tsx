@@ -42,7 +42,9 @@ export function Showcase({
   const multi = langs.length > 1;
 
   return (
-    <section className={cn("scroll-mt-28", className)}>
+    // min-w-0: this is a grid item, and grid items default to min-width:auto — a wide demo would otherwise stretch
+    // its track past the viewport and make the whole page scroll sideways on a phone
+    <section className={cn("min-w-0 scroll-mt-28", className)}>
       <h2 className="font-display text-lg font-semibold tracking-[-0.01em]">{title}</h2>
       {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
 
@@ -66,7 +68,9 @@ export function Showcase({
           <Tabs.Content value="preview">
             <div
               className={cn(
-                "flex min-h-[280px] w-full items-center justify-center border-t border-border bg-background p-8",
+                // wide demos scroll inside their frame; `safe center` keeps overflowing content reachable (plain center
+                // would clip its start edge), with `center` as the fallback for browsers without it
+                "flex min-h-[280px] w-full items-center justify-center overflow-x-auto border-t border-border bg-background p-8 supports-[justify-content:safe_center]:[justify-content:safe_center]",
                 contentClassName,
               )}
             >

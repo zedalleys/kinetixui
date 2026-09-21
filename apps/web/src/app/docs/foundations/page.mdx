@@ -56,11 +56,29 @@ radius from these tokens rather than inventing one.
 
 <RadiusTable />
 
+### Role aliases
+
+Sizes tell you *how round*; roles tell you *what is round*. A role alias is a token that points at a size step,
+so a theme can reshape one kind of thing — every field, say, or every card — without disturbing the rest:
+
+<RadiusRolesTable />
+
+The mapping is measured from how the components use radius today (every component named above uses a class of
+that size). On the web each alias is a live reference — `--radius-control: var(--radius-md)` — so overriding a
+step carries through to its roles, and the Tailwind preset has matching `rounded-field`, `rounded-control`,
+`rounded-container` and `rounded-surface` utilities. On SwiftUI, Compose and Flutter the same names are on
+`KinetixRadius`.
+
+The aliases are **additive**: components still use the size steps, and move to the roles one at a time. A
+component can use more than one size (a menu's container is `control`, its items are `field`-sized), so a role
+names the component's outer shape.
+
 <Callout>
-  **Naming.** The public names `sm` (4) and `md` (8) are older than the grid and are in use across the
-  library and consuming apps, so they are kept. A scale named `xs 4 / sm 8 / md 12 / lg 16 / xl 24` would
-  shift every existing name by one step — a breaking visual change — so it is a recommendation for 1.0 with a
-  migration path, not something done silently. What was added is `xxl` (24), the missing step on the grid.
+  **Why not rename the sizes?** The public names `sm` (4) and `md` (8) predate the grid and are used across the
+  library and consuming apps. Renaming to `xs 4 / sm 8 / md 12 / lg 16 / xl 24` would shift every name by one
+  step — a breaking visual change on every platform. Roles give the same benefit without breaking anything. The
+  one addition to the steps is `xxl` (24), the missing step on the grid. (Tailwind's `rounded-2xl` is a separate,
+  older value — 20px — and is not `xxl`.)
 </Callout>
 
 ## Elevation

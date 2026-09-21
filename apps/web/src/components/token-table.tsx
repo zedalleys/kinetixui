@@ -12,7 +12,13 @@ function Swatch({ hex }: { hex: string }) {
 /** The semantic contract as a live table — swatch + hex for both themes. */
 export function TokenTable() {
   return (
-    <div className="my-6 overflow-x-auto rounded-lg border border-border">
+    // scrolls sideways on a phone, so it must be keyboard-focusable and named (axe scrollable-region-focusable)
+    <div
+      role="group"
+      aria-label="Token table"
+      tabIndex={0}
+      className="my-6 overflow-x-auto rounded-lg border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b border-border bg-muted/30 text-left">

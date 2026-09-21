@@ -420,6 +420,7 @@
     border-left-color: hsl(var(--primary)) !important;
   }
   :not(pre) > code {
+    overflow-wrap: anywhere; /* a long path or command wraps instead of pushing the page sideways on a phone */
     background: hsl(var(--muted));
     padding: 0.15rem 0.35rem;
     border-radius: var(--radius-sm);

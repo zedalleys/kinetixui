@@ -62,4 +62,8 @@ public enum KinetixRadius {
     public static let xl: Double = 16
     public static let xxl: Double = 24
     public static let full: Double = 9999
+    public static let field: Double = 4
+    public static let control: Double = 8
+    public static let container: Double = 12
+    public static let surface: Double = 16
 }

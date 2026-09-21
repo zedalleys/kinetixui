@@ -1,6 +1,11 @@
 {
   "$generated": "scripts/gen-release-meta.mjs — from packages/*/CHANGELOG.md; do not edit",
   "versions": {
+    "0.22.0": {
+      "cli": false,
+      "tokens": true,
+      "ui": true
+    },
     "0.21.0": {
       "cli": false,
       "tokens": false,
