@@ -43,4 +43,14 @@ export async function parity(names: string[], options: ParityOptions): Promise<v
 
   console.log();
   console.log(`${rows.length} of ${components.length} component(s) shown.`);
+
+  // This is the registry, not the full component list: a few components ship inside another item or are
+  // documented compositions, so they have no entry here. The CLI can't count them (it only reads the registry
+  // JSON), so the note carries no number that could go stale.
+  if (!names.length) {
+    console.log(
+      pc.dim("Registry items only — components that ship inside another item, or are documented compositions, have no entry of their own."),
+    );
+    console.log(pc.dim("Full coverage: https://kinetixui.com/docs/platforms"));
+  }
 }
