@@ -17,6 +17,7 @@ import {
   NotSupportedTable,
   PlatformSupportTable,
   PlatformUnitsTable,
+  RadiusRolesTable,
   RadiusTable,
   SpacingTable,
   StatusSummary,
@@ -65,7 +66,13 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ),
     hr: (p) => <hr className="my-8 border-border" {...p} />,
     table: (p) => (
-      <div className="my-6 w-full overflow-x-auto">
+      // scrolls sideways on a phone, so it must be keyboard-focusable and named (axe scrollable-region-focusable)
+      <div
+        role="group"
+        aria-label="Scrollable table"
+        tabIndex={0}
+        className="my-6 w-full overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
         <table className="w-full border-collapse text-sm" {...p} />
       </div>
     ),
@@ -86,6 +93,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     NotSupportedTable,
     PlatformSupportTable,
     PlatformUnitsTable,
+    RadiusRolesTable,
     RadiusTable,
     SpacingTable,
     StatusSummary,

@@ -1,7 +1,7 @@
 package com.kinetixui.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,7 +70,8 @@ fun KinetixTabsTrigger(
         modifier = modifier
             .clip(shape)
             .background(containerColor, shape)
-            .clickable(enabled = enabled, onClick = onClick)
+            // selectable (not clickable): announces the Tab role and the selected state to TalkBack
+            .selectable(selected = selected, enabled = enabled, role = Role.Tab, onClick = onClick)
             .padding(
                 horizontal = dimensionResource(R.dimen.spacing_3),
                 vertical = dimensionResource(R.dimen.spacing_1),

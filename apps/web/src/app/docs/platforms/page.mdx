@@ -22,9 +22,11 @@ written by hand from each platform's CI workflow, which is named in the row so i
   manifest. React is the reference implementation; the native ports mirror its API where it makes sense on
   the platform.
 - **Automated verification** is what the platform's CI actually runs. It is the honest measure of how proven a
-  platform is: React has behavioural, keyboard and accessibility tests; the native libraries are compiled and
-  linted in CI, and Flutter additionally builds its widgets in light and dark. None of the native ports has
-  interaction, accessibility or screenshot tests yet, so read them as less proven than React.
+  platform is: React has behavioural, keyboard and accessibility tests across the whole library. The native
+  libraries are compiled in CI, and Flutter and Compose now also test their five core controls (Button,
+  Checkbox, Switch, Toggle, Tabs) for interaction, accessibility semantics and RTL; SwiftUI tests its colour
+  contrast and spacing scale but not yet its views. No native port has screenshot tests, and the other ~90
+  components on each are compile-checked only — so read them as less proven than React.
 - **RTL** — "not audited yet" means exactly that: each native platform has its own layout-direction
   mechanism (`LocalLayoutDirection`, the `layoutDirection` environment value, `Directionality`) and it hasn't
   been checked. See [RTL](/docs/rtl).

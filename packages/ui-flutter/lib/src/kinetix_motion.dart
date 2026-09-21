@@ -73,4 +73,8 @@ class KinetixRadius {
   static const double xl = 16;
   static const double xxl = 24;
   static const double full = 9999;
+  static const double field = 4;
+  static const double control = 8;
+  static const double container = 12;
+  static const double surface = 16;
 }

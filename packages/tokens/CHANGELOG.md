@@ -1,5 +1,14 @@
 # @kinetixui/tokens
 
+## 0.22.0
+
+### Minor Changes
+
+- cf25de2: Foundations: the spatial scale is now documented as an **8-unit grid with a 4-unit half-step**, and extended additively. New tokens: `spacing.10`, `12`, `16`, `20`, `24`, `32` (40, 48, 64, 80, 96, 128 — the layout scale; the numbering stays n × 4, matching Tailwind), `radius.xxl` (24), `duration.instant` (100ms) and the `easing.enter`, `easing.exit` and `easing.emphasized` curves. Nothing existing was renamed or changed.
+  
+  The SwiftUI, Compose and Flutter outputs now also include `KinetixSpacing` (`space0`…`space32`) and `KinetixRadius` (`none`…`full`) alongside `KinetixDuration` / `KinetixEasing` — spacing and radius previously reached only web and Android. `pnpm check:grid` (new, in CI) keeps every spacing token a multiple of 4 and stops the component library gaining new off-grid arbitrary pixel values. See `/docs/foundations`.
+- c2f491f: Radius **role aliases**: `radius.field` (→ `sm`, 4), `radius.control` (→ `md`, 8), `radius.container` (→ `lg`, 12) and `radius.surface` (→ `xl`, 16). Sizes say how round; roles say what is round, so a theme can reshape every field or every card by overriding one token without disturbing the size steps. On the web each is a live reference (`--radius-control: var(--radius-md)`), the Tailwind preset gains `rounded-field`, `rounded-control`, `rounded-container` and `rounded-surface`, and the SwiftUI, Compose and Flutter `KinetixRadius` gain `field`, `control`, `container` and `surface`. The mapping is measured from how the components use radius today. Additive: no existing token, utility or component changed, and components move to the roles incrementally. See `/docs/foundations`.
+
 ## 0.21.0
 
 No changes in this release.

@@ -27,6 +27,10 @@ let package = Package(
     ],
     targets: [
         .target(name: "KinetixUI"),
+        // Dependency-free XCTest: token / contrast checks on the shipped colour sets and spatial scale.
+        // View-level interaction and accessibility tests are a separate decision (they need a library such as
+        // ViewInspector, or an XCUITest host app) — see CORE-AUDIT.md §8.
+        .testTarget(name: "KinetixUITests", dependencies: ["KinetixUI"]),
     ],
     swiftLanguageModes: [.v5]
 )

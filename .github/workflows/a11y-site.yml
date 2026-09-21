@@ -1,0 +1,74 @@
+name: Accessibility (site)
+
+# Real-browser axe + horizontal-overflow pass over the docs site's OWN pages, light + dark, at phone / tablet /
+# desktop width. Complements a11y-browser.yml, which covers the components in Storybook but not the pages built
+# from them. Path-filtered so it only runs when something that can change the site's rendering does.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "packages/ui/**"
+      - "packages/tokens/**"
+      - "tokens/**"
+      - "registry/**"
+      - "scripts/a11y-site.mjs"
+      - ".github/workflows/a11y-site.yml"
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - "packages/ui/**"
+      - "packages/tokens/**"
+      - "tokens/**"
+      - "registry/**"
+      - "scripts/a11y-site.mjs"
+      - ".github/workflows/a11y-site.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: a11y-site-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  axe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build tokens and UI
+        run: pnpm build:tokens && pnpm build:ui
+
+      - name: Build site
+        run: pnpm build:web
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # `next start` serves the production build. The dev server can't be used here: the site's CSP has no
+      # unsafe-eval, so client JavaScript would not run under `next dev`.
+      - name: Start the site
+        run: |
+          nohup pnpm --filter @kinetixui/web start > site.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:3000/ >/dev/null && exit 0
+            sleep 2
+          done
+          echo "site did not start; log:" >&2
+          cat site.log >&2
+          exit 1
+
+      - name: Axe + overflow pass (every page, light + dark, phone / tablet / desktop)
+        run: pnpm check:a11y-site

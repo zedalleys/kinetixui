@@ -22,6 +22,17 @@ class KinetixCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A bare GestureDetector exposes no checked state; announce checked / mixed / disabled.
+    return Semantics(
+      container: true,
+      checked: !indeterminate && value,
+      mixed: indeterminate,
+      enabled: onChanged != null,
+      child: _buildControl(context),
+    );
+  }
+
+  Widget _buildControl(BuildContext context) {
     final c = KinetixTheme.of(context);
     final bool enabled = onChanged != null;
     final bool checkedLike = value || indeterminate;

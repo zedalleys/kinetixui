@@ -274,6 +274,10 @@
   --info-foreground: var(--blue-50);
   --brand: var(--blue-500); /** identity colour — the original Figma navy that `primary` was swapped away from for interactive use. Use it for logos, headers and brand surfaces, not for controls. */
   --brand-foreground: var(--blue-50); /** text/icons on `brand` */
+  --radius-field: var(--radius-sm); /** Role alias — text-entry and small selection surfaces: Input, Textarea, Select, Checkbox, Tag, Kbd. A theme can round or square every field by overriding this one token. */
+  --radius-control: var(--radius-md); /** Role alias — pressable controls and menus: Button, Toggle, ButtonGroup, dropdown / context / menubar menus, Select popup, Popover. */
+  --radius-container: var(--radius-lg); /** Role alias — inline containers: Alert, Tabs list, SegmentedControl, Sidebar, Tour. */
+  --radius-surface: var(--radius-xl); /** Role alias — large elevated surfaces: Card, Dialog, AlertDialog, Modal. */
   --action: var(--primary); /** the interactive colour (buttons, selected controls). Defaults to `primary`; override `--action` on its own to split the interactive colour from `primary`. */
   --action-foreground: var(--primary-foreground); /** text/icons on `action` */
   --focus: var(--ring); /** focus indicator colour. Defaults to `ring`; override `--focus` to theme focus separately. */
