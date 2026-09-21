@@ -209,3 +209,21 @@ Developer Activation Rate
 ```
 
 Break it down by `kx_source`, `kx_medium`, `kx_campaign`, or `kx_first_source` to compare channels.
+
+## Page leave, session duration and bounce rate
+
+`capture_pageleave` is **on**. Without `$pageleave`, PostHog cannot tell how long the last page of a session was
+viewed, so session duration and bounce rate come out too low. (The SDK's default, `'if_capture_pageview'`, is *off*
+for us because our page views are manual, so it has to be set explicitly.)
+
+- **When it fires:** when the page is hidden (`pagehide`), once per page. Between pages of a client-side visit there is
+  no `$pageleave`: the next `$pageview` carries `$prev_pageview_duration` and the scroll-depth of the page just left.
+- **What it carries:** the clean `$current_url`, the `kx_*` attribution, and only measurements — duration, scroll and
+  content depth, the previous page-view id and the previous page's clean pathname. Nothing the visitor typed or
+  clicked. Everything else in this document about URLs, referrers and campaigns still applies to it.
+- **Attribution reaches it because it is attached in `before_send`**, for every event, not at the call sites. The SDK
+  creates `$pageleave` itself and it never passes through our `capture` wrapper, so enrichment there would have missed it.
+- **Volume:** roughly one extra event per page view. Keep that in mind against your PostHog event quota.
+- **Activation is unaffected:** `$pageleave` is not one of the three activation events, and it is not a product event.
+  Exclude it from any breakdown that counts "events per visitor".
+- Do Not Track still applies: with it on, nothing is captured, `$pageleave` included.

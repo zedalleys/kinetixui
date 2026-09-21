@@ -22,11 +22,18 @@
  * URLs are stripped of query and hash in `before_send`, so a filter (`?filter=…`) or search (`?q=…`) can never
  * reach PostHog even from an event we didn't think of.
  *
+ * PAGE LEAVE is ON (`capture_pageleave: true`). Without `$pageleave` PostHog cannot tell how long the last page of a
+ * session was viewed, so session duration and bounce rate come out too low. The SDK's default is
+ * `'if_capture_pageview'`, which means OFF here because our page views are manual, so it must be set to `true`. The SDK
+ * creates `$pageleave` itself (it never goes through our `capture` wrapper), which is why attribution is attached in
+ * `before_send` and not at the call sites: every event, including this one, gets it. `$pageleave` carries only a
+ * clean URL and numeric duration / scroll-depth measurements; nothing the visitor typed or clicked.
+ *
  * ATTRIBUTION is owned by `analytics-attribution.ts`, not by the SDK. The SDK's own campaign parsing stays off
  * (`save_campaign_params: false`) and anything it derives anyway — `utm_*`, `$session_entry_utm_*`, click ids,
  * `$referrer`, `$referring_domain` and their initial / session-entry twins — is deleted in `before_send`. What
- * replaces them is the normalised `kx_*` / `kx_first_*` context, added HERE at capture time so no component ever
- * touches acquisition data, and re-validated in `before_send` so nothing else can carry a `kx_*` value out.
+ * replaces them is the normalised `kx_*` / `kx_first_*` context, added HERE in `before_send` (so every event carries it and
+ * no component ever touches acquisition data) and validated right after, so nothing else can carry a `kx_*` value out.
  *
  * NOT DONE HERE: client IP capture cannot be turned off from the browser (PostHog's `ip` option is deprecated
  * and has no effect). Enable "Discard client IP data" in the PostHog project settings.
@@ -77,7 +84,18 @@ const bareParamName = (key: string) => key.replace(/^\$?(session_entry_|initial_
 const REFERRER_KEY = /^\$?(?:initial_|session_entry_)?(?:referrer|referring_domain|search_engine|ph_keyword)$/;
 
 /**
- * PostHog `before_send`: before anything is sent, delete the SDK's referrer and campaign properties, remove the
+ * PostHog `before_send`, first step: give EVERY event the trusted attribution context. It runs for events the SDK
+ * creates on its own (`$pageleave`) as well as for ours, which is why enrichment lives here and not in `capture`.
+ * The context comes only from analytics-attribution.ts, and `sanitizeCapture` validates it straight after.
+ */
+export function attachAttribution(result: CaptureResult | null): CaptureResult | null {
+  if (!result) return result;
+  Object.assign(result.properties, getAttributionContext());
+  return result;
+}
+
+/**
+ * PostHog `before_send`, second step: before anything is sent, delete the SDK's referrer and campaign properties, remove the
  * query string and hash from every remaining URL-valued property, and drop any `kx_*` value that is not valid
  * attribution.
  */
@@ -100,7 +118,8 @@ export function posthogOptions(host: string): Partial<PostHogConfig> {
 
     // pageviews: manual, see the header
     capture_pageview: false,
-    capture_pageleave: false,
+    // on: needed for accurate session duration and bounce rate — see the header
+    capture_pageleave: true,
 
     // no broad capture
     autocapture: false,
@@ -126,7 +145,8 @@ export function posthogOptions(host: string): Partial<PostHogConfig> {
     // the SDK does not parse campaigns: attribution is ours (analytics-attribution.ts)
     save_campaign_params: false,
 
-    before_send: sanitizeCapture,
+    // order matters: attach the context, then validate and clean everything
+    before_send: [attachAttribution, sanitizeCapture],
   };
 }
 
@@ -135,12 +155,12 @@ export async function createPostHogClient(config: AnalyticsConfig): Promise<Anal
   if (!posthog.__loaded) posthog.init(config.key, posthogOptions(config.host));
 
   return {
-    // `props` were allowlisted by analytics.ts; the attribution context comes only from analytics-attribution.ts
+    // `props` were allowlisted by analytics.ts; attribution is attached in `before_send`, for every event
     capture: (event, props) => {
-      posthog.capture(event, { ...props, ...getAttributionContext() });
+      posthog.capture(event, props);
     },
     pageview: (path) => {
-      posthog.capture("$pageview", { $current_url: window.location.origin + path, ...getAttributionContext() });
+      posthog.capture("$pageview", { $current_url: window.location.origin + path });
     },
   };
 }

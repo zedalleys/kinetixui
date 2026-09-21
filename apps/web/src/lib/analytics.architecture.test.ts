@@ -131,9 +131,14 @@ describe("analytics architecture", () => {
       expect(callers).toEqual(["src/lib/analytics.ts"]);
     });
 
-    it("enriches at the adapter: both capture paths add the trusted context, and before_send re-validates it", () => {
+    it("enriches in before_send, once, so events the SDK creates itself ($pageleave) get attribution too", () => {
       const adapter = code(ADAPTER);
-      expect(adapter.match(/getAttributionContext\(\)/g)?.length).toBe(2);
+      // exactly one place reads the trusted context: the first before_send step, not the capture wrappers
+      expect(adapter.match(/getAttributionContext\(\)/g)?.length).toBe(1);
+      expect(adapter).toMatch(/before_send:\s*\[attachAttribution,\s*sanitizeCapture\]/);
+      // ...and the wrappers add nothing themselves
+      expect(adapter).not.toMatch(/\.\.\.getAttributionContext/);
+      // validation follows enrichment
       expect(adapter).toMatch(/sanitizeAttributionProps\(bag\)/);
     });
 

@@ -11,6 +11,8 @@ import { createPostHogClient, posthogOptions, sanitizeCapture } from "./analytic
  * anything about acquisition.
  */
 const HOST = "https://posthog.invalid";
+/** Exactly the `before_send` steps `posthogOptions` ships, so this test cannot drift from production. */
+const productionChain = () => [posthogOptions(HOST).before_send].flat() as never[];
 const seen: CaptureResult[] = [];
 const wire = () => JSON.stringify(seen);
 const byEvent = (name: string) => seen.filter((e) => e.event === name);
@@ -23,8 +25,9 @@ beforeAll(() => {
   vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("no network in tests"))));
   posthog.init(config.key, {
     ...posthogOptions(HOST),
+    // the PRODUCTION chain (attach attribution, then sanitise), followed by a recorder that swallows the event
     before_send: [
-      sanitizeCapture,
+      ...productionChain(),
       (result) => {
         if (result) seen.push(JSON.parse(JSON.stringify(result)) as CaptureResult);
         return null;
@@ -130,6 +133,86 @@ describe("attribution at the analytics/adapter boundary (real SDK)", () => {
       properties: { kx_source: "hello@example.com", kx_medium: "social", kx_campaign: "not ours", kx_extra: "1" },
     } as CaptureResult)!;
     expect(out.properties).toEqual({ kx_medium: "social" });
+  });
+
+  describe("$pageleave (session duration and bounce rate)", () => {
+    const leave = () => window.dispatchEvent(new Event("pagehide"));
+
+    it("is captured when the page is hidden, once, with the attribution and a clean URL", async () => {
+      await visit(LANDING, "https://www.google.com/search?q=kinetixui&email=a@b.co");
+      analytics.pageview("/");
+      seen.length = 0;
+      leave();
+
+      expect(byEvent("$pageleave")).toHaveLength(1);
+      expect(byEvent("$pageleave")[0]!.properties).toMatchObject({
+        $current_url: `${window.location.origin}/`,
+        kx_source: "linkedin",
+        kx_medium: "social",
+        kx_campaign: "kx_launch_2026",
+        kx_content: "hero_a",
+        kx_referrer: "google",
+        kx_first_source: "linkedin",
+      });
+    });
+
+    it("carries nothing raw: no query, click id, referrer or search text — and no property names that would hold them", async () => {
+      await visit(LANDING, "https://www.google.com/search?q=kinetixui&email=a@b.co");
+      analytics.pageview("/");
+      seen.length = 0;
+      leave();
+      const props = byEvent("$pageleave")[0]!.properties;
+
+      for (const leakedText of ["DO_NOT_SEND", "ALSO_NO", "gclid", "fbclid", "secret-term", "private-search", "utm_", "a@b.co", "google.com", "search?q", "?", "#"]) {
+        expect(wire(), `leaked "${leakedText}"`).not.toContain(leakedText);
+      }
+      for (const key of Object.keys(props)) expect(key).not.toMatch(/(^|_)utm|gclid|fbclid|^\$.*referrer|referring_domain|ph_keyword|search_engine/i);
+    });
+
+    it("adds only measurements, an id and the previous page's clean path: every $prev_pageview_* value", async () => {
+      await visit(LANDING);
+      analytics.pageview("/");
+      seen.length = 0;
+      leave();
+      const measured = Object.entries(byEvent("$pageleave")[0]!.properties).filter(([k]) => k.startsWith("$prev_pageview_"));
+      expect(measured.length).toBeGreaterThan(0);
+      for (const [key, value] of measured) {
+        if (key === "$prev_pageview_id") expect(typeof value).toBe("string");
+        else if (key === "$prev_pageview_pathname") expect(value, key).toBe("/"); // a pathname, never a URL with a query
+        else expect(typeof value, key).toBe("number"); // duration and scroll / content depth
+      }
+    });
+
+    it("measures the page you navigated away from on the next $pageview, with a clean URL", async () => {
+      await visit(LANDING);
+      analytics.pageview("/");
+      window.history.pushState({}, "", "/docs/installation");
+      analytics.pageview("/docs/installation");
+      const second = byEvent("$pageview")[1]!.properties;
+      expect(second.$current_url).toBe(`${window.location.origin}/docs/installation`);
+      expect(typeof second.$prev_pageview_duration).toBe("number");
+      expect(second).toMatchObject({ kx_source: "linkedin", kx_landing_page: "/" });
+    });
+
+    it("does not add a second copy of page views: exactly one $pageview per call", async () => {
+      await visit(LANDING);
+      analytics.pageview("/");
+      analytics.pageview("/docs");
+      expect(byEvent("$pageview")).toHaveLength(2);
+    });
+
+    it("still carries no attribution when there is none (dev-like state), and still sends nothing raw", async () => {
+      window.history.replaceState({}, "", "/?utm_source=linkedin&gclid=NOPE");
+      referrer("");
+      resetAttributionForTests(); // attribution never initialised: analytics off for attribution
+      attachAnalytics(await createPostHogClient(config));
+      analytics.pageview("/");
+      seen.length = 0;
+      leave();
+      const props = byEvent("$pageleave")[0]!.properties;
+      expect(Object.keys(props).some((k) => k.startsWith("kx_"))).toBe(false);
+      expect(wire()).not.toMatch(/NOPE|gclid|utm_/);
+    });
   });
 
   it("internal client-side navigation keeps the session's attribution on later events", async () => {
