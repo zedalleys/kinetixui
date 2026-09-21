@@ -6,9 +6,10 @@ export const metadata = {
 # SwiftUI
 
 `packages/ui-swiftui` is the native **SwiftUI** port of KinetixUI — the
-iOS counterpart to the [Jetpack Compose](/docs/compose) library. **90
-`Kinetix*` views — the full React component surface** bar seven
-deliberate non-ports, built in batches on a macOS `swift build` CI path;
+iOS counterpart to the [Jetpack Compose](/docs/compose) library.
+`Kinetix*` views for <PlatformCountInline platform="SwiftUI" /> of the
+<ComponentTotalInline /> React components — **the full React component
+surface** bar the <NonPortCountInline /> deliberate non-ports, built in batches on a macOS `swift build` CI path;
 each mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with
 a doc comment stating anything not carried over.
 
@@ -84,8 +85,8 @@ pnpm build:tokens && pnpm vendor:swiftui
 
 ## What's covered
 
-`KinetixTheme` plus 90 `Kinetix*` views — everything in
-`packages/ui/src/components` except the seven non-ports below.
+`KinetixTheme` plus `Kinetix*` views for everything in
+`packages/ui/src/components` except the <NonPortCountInline /> non-ports below.
 
 - **Controls** — `KinetixButton` (`buttonVariants` CVA 1:1: variant ×
   size × corners), `KinetixCheckbox`, `KinetixSwitch`, `KinetixToggle` /

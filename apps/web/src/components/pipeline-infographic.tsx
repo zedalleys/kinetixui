@@ -1,4 +1,6 @@
 import * as React from "react";
+import { PLATFORMS } from "@/lib/platform-parity";
+import { componentTotal } from "@/lib/platform-support";
 
 /**
  * The token pipeline as a measured drawing: source → compile → platform
@@ -41,7 +43,7 @@ export function PipelineInfographic() {
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
         <span>one source</span>
         <span className="text-foreground">
-          97 components · 4 platform libraries · light + dark
+          {componentTotal} components · {PLATFORMS.length} platform libraries · light + dark
         </span>
       </div>
     </div>

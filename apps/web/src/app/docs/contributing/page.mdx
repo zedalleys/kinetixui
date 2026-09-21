@@ -31,11 +31,11 @@ has no native idiom). Each port:
 4. **Compiles in CI** — see the per-platform workflow below. A port that
    only exists locally doesn't count.
 
-### The seven standing non-ports
+### The standing non-ports
 
-`Form`, `NavigationMenu`, `Combobox`, `NativeSelect`, `AvatarGroup`,
-`Tour`, and `KanbanBoard` are **not** ported to any native platform, by
-design:
+These components are **not** ported to any native platform, by design.
+The list is checked against `components.manifest.json` in CI, so it can't
+drift from what actually ships:
 
 | Component | Why | Use instead |
 | --- | --- | --- |
