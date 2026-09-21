@@ -432,7 +432,7 @@ Container(
       <Input placeholder="Search invoices…" className="pl-8" />
     </div>
     <Select defaultValue="all">
-      <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+      <SelectTrigger className="w-36" aria-label="Filter by status"><SelectValue /></SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All statuses</SelectItem>
         <SelectItem value="paid">Paid</SelectItem>
@@ -517,7 +517,7 @@ Container(
               <Input placeholder="Search invoices…" className="pl-8" />
             </div>
             <Select defaultValue="all">
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="w-36" aria-label="Filter by status">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -563,9 +563,9 @@ Container(
   <CardHeader><CardTitle>Notifications</CardTitle></CardHeader>
   <CardContent className="p-0">
     <List>
-      <ListItem title="Email" description="Product news and receipts" trailing={<Switch defaultChecked />} />
-      <ListItem title="Push" description="Activity on your projects" trailing={<Switch defaultChecked />} />
-      <ListItem title="SMS" description="Only critical alerts" trailing={<Switch />} />
+      <ListItem title="Email" description="Product news and receipts" trailing={<Switch aria-label="Email notifications" defaultChecked />} />
+      <ListItem title="Push" description="Activity on your projects" trailing={<Switch aria-label="Push notifications" defaultChecked />} />
+      <ListItem title="SMS" description="Only critical alerts" trailing={<Switch aria-label="SMS notifications" />} />
     </List>
   </CardContent>
 </Card>`}
@@ -608,14 +608,14 @@ Container(
               <ListItem
                 title="Email"
                 description="Product news and receipts"
-                trailing={<Switch defaultChecked />}
+                trailing={<Switch aria-label="Email notifications" defaultChecked />}
               />
               <ListItem
                 title="Push"
                 description="Activity on your projects"
-                trailing={<Switch defaultChecked />}
+                trailing={<Switch aria-label="Push notifications" defaultChecked />}
               />
-              <ListItem title="SMS" description="Only critical alerts" trailing={<Switch />} />
+              <ListItem title="SMS" description="Only critical alerts" trailing={<Switch aria-label="SMS notifications" />} />
             </List>
           </CardContent>
         </Card>

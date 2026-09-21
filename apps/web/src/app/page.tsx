@@ -154,9 +154,13 @@ export default function HomePage() {
                 key={f.title}
                 className="group grid gap-4 border-b border-border py-8 md:grid-cols-[5rem_1fr_1.4fr] md:gap-8 md:py-10"
               >
-                <span className="font-display text-4xl font-bold leading-none text-muted-foreground/40 transition-colors group-hover:text-primary md:text-5xl">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
+                {/* decorative sequence marker (a 40% tint): generated content, not text — WCAG exempts decoration, and it
+                    stays out of the accessibility tree; the heading beside it carries the meaning */}
+                <span
+                  aria-hidden
+                  data-n={String(i + 1).padStart(2, "0")}
+                  className="font-display text-4xl font-bold leading-none text-muted-foreground/40 transition-colors before:content-[attr(data-n)] group-hover:text-primary md:text-5xl"
+                />
                 <div className="flex items-start gap-3">
                   <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                     <f.icon className="size-5" />

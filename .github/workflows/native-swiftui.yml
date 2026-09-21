@@ -40,3 +40,7 @@ jobs:
       # the dev box has no Swift toolchain.
       - name: Build
         run: swift build
+
+      # XCTest on the macOS runner: WCAG contrast of the shipped colour sets (light + dark) and the spatial scale.
+      - name: Test
+        run: swift test

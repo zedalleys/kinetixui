@@ -112,6 +112,12 @@ export default {
         xl: "var(--radius-xl)",
         "2xl": "calc(var(--radius-lg) + 8px)",
         full: "var(--radius-full)",
+        // Role aliases (tokens/primitives/dimension.json) — theme one role without touching the size steps.
+        // Additive: components still use the size utilities above and move to these incrementally.
+        field: "var(--radius-field)",
+        control: "var(--radius-control)",
+        container: "var(--radius-container)",
+        surface: "var(--radius-surface)",
       },
       // Motion + scale — tokens/primitives/{motion,opacity,z-index}.json.
       // Added alongside Tailwind's own numeric scales (z-10, opacity-50, …),

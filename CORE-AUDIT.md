@@ -114,7 +114,7 @@ so nothing moves visually).
 |---|---|---|
 | Dark mode | Existing, all platforms | real light + dark token sets on web and each native port; browser axe pass runs every story in both |
 | RTL | **Partial** | web: 67 of 96 component files use logical properties, 29 tracked in `check:rtl`'s allow-list, plus `KinetixDirectionProvider`. Native: **not audited** (`RTL.md` says so) |
-| Accessibility | Strong on web, unproven on native | 271 unit tests incl. keyboard suite; axe in jsdom and a real browser (baseline empty); forced-colors, reduced-motion and Kanban keyboard checks; `check:contrast`. Native: compile-checked only |
+| Accessibility | Strong on web, unproven on native | 271 unit tests incl. keyboard suite; axe in jsdom and a real browser (baseline empty); forced-colors, reduced-motion and Kanban keyboard checks; `check:contrast`. Native: core controls only (see below); the rest compile-checked |
 | Reduced motion | Web enforced; native unaudited | browser pass fails any story looping faster than 3s under `prefers-reduced-motion` |
 | Responsive/adaptive | Web only | native ports use platform layout |
 | Theming | Existing | `/docs/theming`, `/theme-builder`, CLI `theme create/build` (web CSS only; native compilation of custom themes is not implemented) |
@@ -124,9 +124,9 @@ so nothing moves visually).
 | Platform | What CI runs | Behavioural / a11y tests |
 |---|---|---|
 | React | build, 271 tests, jsdom axe, real-browser axe (light+dark), contrast/RTL/typography/grid/manifest/releases/icons checks | yes |
-| Flutter | `flutter analyze`, `flutter test` smoke (~55 widgets, light + dark) | smoke only |
-| Compose | `assembleDebug`, `lintDebug` | none |
-| SwiftUI | `swift build` | none |
+| Flutter | `flutter analyze`; smoke (~55 widgets, light + dark); interaction, semantics, RTL and 2x-text tests for the 5 core controls (33 tests) | core controls only |
+| Compose | `assembleDebug`, `lintDebug`; Robolectric UI tests for the 5 core controls: interaction, semantics, RTL (17 tests) | core controls only |
+| SwiftUI | `swift build`, `swift test`: contrast of the light + dark colour sets, spatial scale (8 tests) | tokens only — no view-level tests |
 
 **Consequence:** the manifest's `stable` describes the React implementation. Calling a native port "Stable" on this
 evidence would overstate it. Per-platform maturity is a 1.0 task and needs the owner's decision on the criteria;
@@ -195,7 +195,8 @@ Decided 2026-09-21:
    only if it is still wanted in the 1.0 window, with a codemod.
 4. **Maturity — criteria proposed, awaiting approval.** See section 8.
 5. **Wearables — approved.** To be built as a separate design track that derives from Core tokens, not as small phones.
-   Prerequisite: the native test harness (section 8, step 1), so new platforms are not born unverified.
+   Prerequisite: the native test harness (section 8, step 1), so new platforms are not born unverified. The architecture
+   and phased plan are in [`WEARABLES.md`](WEARABLES.md); its open questions need your input before phase 1.
 
 ## 7. Recommended path to 1.0, in order
 
@@ -241,3 +242,19 @@ component count — is what to close.
 6. **Contribution and governance:** `GOVERNANCE.md`, `CONTRIBUTING.md`, `SECURITY.md`, and now PR/issue templates exist; a
    Code of Conduct is open; write down who reviews what so the project does not depend on one person's memory.
 7. **Keep dependencies current:** Dependabot is on; keep the lockfile-supply-chain policies that CI already enforces.
+
+## 9. Progress log
+
+**2026-09-21 — native test harnesses (#177 Flutter, #178 Compose, #179 SwiftUI).**
+
+- Flutter had `Semantics` in only 2 of 97 widget files. Fixed for the core controls; the Switch thumb was not RTL-safe
+  (`Alignment.centerRight` → `AlignmentDirectional`); `KinetixNavigationBar` overflowed at 2x text (fixed height → minHeight).
+- Compose was already close (Material3 Button; `toggleable` roles). Found and fixed: Tabs had no `Role.Tab` or selected state.
+- SwiftUI's colour sets pass WCAG AA on all 22 pairs, light and dark.
+- **Suspected, unverified:** Compose `KinetixButton` text did not grow under 2x font scale in a Robolectric probe, but the
+  probe's absolute numbers did not add up. Verify on a device before treating it as a defect.
+- **Not fixed (design decision):** tap targets below 44/48 on Flutter and Compose — Checkbox 18, Switch 48×24, Toggle, Tabs.
+- **Open owner decision:** how to test SwiftUI views — ViewInspector (third-party) or an XCUITest host app. Until then SwiftUI
+  cannot meet the "Stable" criteria in §8.
+
+Coverage is five core controls per platform; the remaining ~90 components per platform are compile-checked only.
