@@ -145,7 +145,7 @@ export default function InfographicPage() {
       {/* 04 — platform coverage */}
       <section className="mt-14">
         <SectionHead index="04" label="Platform coverage" meta="● full · ◐ partial · ○ none" />
-        <div className="mt-5 overflow-x-auto">
+        <div role="group" aria-label="Platform coverage table" tabIndex={0} className="mt-5 overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <table className="w-full min-w-[34rem] border-collapse text-sm">
             <thead>
               <tr className="border-b border-border">
@@ -218,7 +218,7 @@ export default function InfographicPage() {
       {/* 07 — vs alternatives */}
       <section className="mt-14">
         <SectionHead index="07" label="Against the alternatives" meta="honest matrix" />
-        <div className="mt-5 overflow-x-auto">
+        <div role="group" aria-label="Comparison with the alternatives" tabIndex={0} className="mt-5 overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <table className="w-full min-w-[38rem] border-collapse text-sm">
             <thead>
               <tr className="border-b border-border">

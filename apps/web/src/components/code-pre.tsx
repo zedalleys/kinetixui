@@ -41,7 +41,9 @@ export function CodePre({ className, children, ...props }: React.ComponentPropsW
       </button>
       <pre
         ref={ref}
-        className={cn("my-4 rounded-lg border border-border bg-muted/40 text-[13px]", className)}
+        // a code block scrolls sideways when a line is long, so the keyboard must be able to reach it
+        tabIndex={0}
+        className={cn("my-4 overflow-x-auto rounded-lg border border-border bg-muted/40 text-[13px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", className)}
         {...props}
       >
         {children}
