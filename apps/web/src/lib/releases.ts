@@ -65,6 +65,63 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.22.0",
+    date: "2026-09-21",
+    summary: "The spatial grid is documented and extended, radius gets role aliases, and the native ports gain the same spacing and radius constants.",
+    breaking: [
+      "`AlertTitle` is now a `div` and its ref type is `HTMLDivElement` (it was `HTMLParagraphElement`). This is a TypeScript-only change for code that typed a ref to it; the rendered output changes from `<h5>` to `<div>`.",
+    ],
+    migration:
+      "If you typed a ref to `AlertTitle`, change `useRef<HTMLParagraphElement>` to `useRef<HTMLDivElement>`. If you relied on it being a heading, pass `role=\"heading\"` and `aria-level={n}` to `AlertTitle`.",
+    limitations: [
+      "The new tokens (spacing 10–32, `radius.xxl`, `duration.instant`, `easing.enter` / `exit` / `emphasized`, and the radius roles) are defined and generated for every platform, but components do not use them yet — they adopt them one at a time.",
+      "The native libraries are not versioned with these npm packages; their accessibility fixes in this period cover the five core controls only. The other components on each platform are still compile-checked only.",
+    ],
+    changes: [
+      {
+        kind: "new",
+        area: "tokens",
+        title: "The spatial scale is an 8-unit grid with a 4-unit half-step, and reaches 128",
+        body: "New `spacing.10`, `12`, `16`, `20`, `24` and `32` (40, 48, 64, 80, 96, 128 — the numbering stays n × 4), `radius.xxl` (24), `duration.instant` and the `easing.enter`, `easing.exit` and `easing.emphasized` curves. Nothing existing was renamed or changed.",
+        href: "/docs/foundations",
+      },
+      {
+        kind: "new",
+        area: ["tokens", "platforms"],
+        title: "Radius role aliases: field, control, container, surface",
+        body: "Sizes say how round; roles say what is round, so a theme can reshape every field or every card by overriding one token. On the web each is a live reference (`--radius-control: var(--radius-md)`) and the Tailwind preset gains `rounded-field`, `rounded-control`, `rounded-container` and `rounded-surface`. Additive; components move to the roles incrementally.",
+        href: "/docs/foundations",
+      },
+      {
+        kind: "new",
+        area: "platforms",
+        title: "SwiftUI, Compose and Flutter get KinetixSpacing and KinetixRadius",
+        body: "Spacing and radius previously reached only the web and Android; the SwiftUI and Flutter components hardcoded their numbers. Both scales are now generated for all three native libraries from the same source.",
+        href: "/docs/foundations",
+      },
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "AlertTitle no longer hardcodes an h5",
+        body: "A component cannot know where it sits in the page's outline, so the fixed level skipped heading levels under any `h2` (WCAG 1.3.1). `role=\"alert\"` on Alert still carries the semantics.",
+        href: "/docs/components/alert",
+      },
+      {
+        kind: "accessibility",
+        area: "platforms",
+        title: "Native accessibility fixes for the core controls",
+        body: "Flutter's Button, Checkbox, Switch, Toggle and Tabs now announce their role and state (only 2 of its 97 widget files declared any semantics), its Switch mirrors under RTL, and its NavigationBar no longer overflows at large text. Compose's Tabs now announce the Tab role and the selected state. Both are covered by new interaction, semantics and RTL tests.",
+        href: "/docs/platforms",
+      },
+      {
+        kind: "improved",
+        area: "release",
+        title: "Guardrails: the grid and the site's own pages",
+        body: "`pnpm check:grid` keeps the spacing tokens on the 4-unit grid and stops the component library gaining new off-grid arbitrary pixel values. A new CI scan runs axe and a horizontal-overflow check over 18 site pages in light and dark at phone, tablet and desktop width, and the findings it surfaced (a phone-width overflow on `/blocks`, `/charts`, `/docs` and `/docs/tokens`, plus contrast and naming issues) are fixed.",
+      },
+    ],
+  },
+  {
     version: "0.21.0",
     date: "2026-09-20",
     summary: "DataGrid selects whole columns and rows, and scrolls while you drag-select.",
