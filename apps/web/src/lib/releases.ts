@@ -65,6 +65,21 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.22.1",
+    date: "2026-09-21",
+    summary: "`kinetixui parity` now explains why its list is shorter than the component total on the site.",
+    breaking: [],
+    changes: [
+      {
+        kind: "improved",
+        area: "cli",
+        title: "`parity` says its list is registry items only",
+        body: "A few components ship inside another registry item, or are documented compositions, so they have no entry of their own and the count is smaller than the total on kinetixui.com. The full listing now ends with a note saying so and linking /docs/platforms. `parity <name>` is unchanged.",
+        href: "/docs/cli",
+      },
+    ],
+  },
+  {
     version: "0.22.0",
     date: "2026-09-21",
     summary: "The spatial grid is documented and extended, radius gets role aliases, and the native ports gain the same spacing and radius constants.",
