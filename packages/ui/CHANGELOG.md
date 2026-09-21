@@ -1,5 +1,18 @@
 # @kinetixui/ui
 
+## 0.22.0
+
+### Minor Changes
+
+- c2f491f: Radius **role aliases**: `radius.field` (→ `sm`, 4), `radius.control` (→ `md`, 8), `radius.container` (→ `lg`, 12) and `radius.surface` (→ `xl`, 16). Sizes say how round; roles say what is round, so a theme can reshape every field or every card by overriding one token without disturbing the size steps. On the web each is a live reference (`--radius-control: var(--radius-md)`), the Tailwind preset gains `rounded-field`, `rounded-control`, `rounded-container` and `rounded-surface`, and the SwiftUI, Compose and Flutter `KinetixRadius` gain `field`, `control`, `container` and `surface`. The mapping is measured from how the components use radius today. Additive: no existing token, utility or component changed, and components move to the roles incrementally. See `/docs/foundations`.
+
+### Patch Changes
+
+- 901bfa2: `AlertTitle` now renders a `div` instead of a hardcoded `<h5>`. A component can't know where it sits in the page's outline, so the fixed level skipped heading levels under any `<h2>` (WCAG 1.3.1 / axe `heading-order`). The alert's `role="alert"` still carries the semantics; pass `role="heading"` and `aria-level={n}` to `AlertTitle` if you want a specific heading level. Its ref type is now `HTMLDivElement` (it was `HTMLParagraphElement`).
+- Updated dependencies [cf25de2]
+- Updated dependencies [c2f491f]
+  - @kinetixui/tokens@0.22.0
+
 ## 0.21.0
 
 ### Minor Changes
