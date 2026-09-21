@@ -20,14 +20,20 @@
  * has no login and no reason to know who a visitor is. The identifier lives in localStorage (no cookie).
  *
  * URLs are stripped of query and hash in `before_send`, so a filter (`?filter=…`) or search (`?q=…`) can never
- * reach PostHog even from an event we didn't think of. Campaign parameters (`utm_*`, `gclid`, …) are not saved
- * either: UTM attribution is a separate, deliberate task.
+ * reach PostHog even from an event we didn't think of.
+ *
+ * ATTRIBUTION is owned by `analytics-attribution.ts`, not by the SDK. The SDK's own campaign parsing stays off
+ * (`save_campaign_params: false`) and anything it derives anyway — `utm_*`, `$session_entry_utm_*`, click ids,
+ * `$referrer`, `$referring_domain` and their initial / session-entry twins — is deleted in `before_send`. What
+ * replaces them is the normalised `kx_*` / `kx_first_*` context, added HERE at capture time so no component ever
+ * touches acquisition data, and re-validated in `before_send` so nothing else can carry a `kx_*` value out.
  *
  * NOT DONE HERE: client IP capture cannot be turned off from the browser (PostHog's `ip` option is deprecated
  * and has no effect). Enable "Discard client IP data" in the PostHog project settings.
  */
 import type { CaptureResult, PostHogConfig } from "posthog-js";
 import type { AnalyticsClient, AnalyticsConfig } from "./analytics";
+import { getAttributionContext, sanitizeAttributionProps } from "./analytics-attribution";
 
 /**
  * Properties PostHog fills in with a full URL or referrer: `$current_url`, `$referrer`, `$initial_current_url`,
@@ -48,28 +54,42 @@ export function stripQueryAndHash(value: unknown): unknown {
 }
 
 /**
- * Marketing / click-id parameters. `save_campaign_params: false` stops the SDK saving them as event properties,
- * but it still copies them into session-entry properties (`$session_entry_utm_source`, `$session_entry_gclid`) —
- * found by the real-SDK test in analytics-posthog.integration.test.ts. UTM attribution is a separate, deliberate
- * task; until it lands they are removed here. That task deletes this list and the `campaign` step below.
+ * Marketing / click-id parameters the SDK may derive. `save_campaign_params: false` stops it saving them as event
+ * properties, but it still copies them into session-entry properties (`$session_entry_utm_source`,
+ * `$session_entry_gclid`) — found by the real-SDK test in analytics-posthog.integration.test.ts. We do not use the
+ * SDK's campaign properties (attribution is the `kx_*` contract) and never want ad-platform click ids, so they are
+ * always removed. This list deliberately stays.
  */
-const CAMPAIGN_PARAM = /^(utm_[a-z0-9_]+|gclid|gbraid|wbraid|gad_source|gad_campaignid|fbclid|msclkid|dclid|twclid|ttclid|li_fat_id|mc_cid|mc_eid|igshid|rdt_cid|epik|qclid|sccid|irclid|_kx)$/;
+const CAMPAIGN_PARAM = /^(utm_[a-z0-9_]+|gclid|gclsrc|gbraid|wbraid|gad_source|gad_campaignid|fbclid|msclkid|dclid|twclid|ttclid|li_fat_id|mc_cid|mc_eid|igshid|rdt_cid|epik|qclid|sccid|irclid|_kx)$/;
 
 /** `$session_entry_utm_source` / `$initial_gclid` / `utm_source` → the bare parameter name. */
 const bareParamName = (key: string) => key.replace(/^\$?(session_entry_|initial_)?/, "");
 
 /**
- * PostHog `before_send`: before anything is sent, remove the query string and hash from every URL-valued
- * property, and drop every campaign parameter.
+ * Everything the SDK derives from the referrer, plus their `$initial_` and `$session_entry_` twins:
+ *  - `$referrer` — a full URL, path included;
+ *  - `$referring_domain` — a raw hostname;
+ *  - `$search_engine` and `ph_keyword` — the SDK reads the search KEYWORD out of a search-engine referrer's query
+ *    string (`$session_entry_ph_keyword`). That is the visitor's search text. Found by the real-SDK test in
+ *    analytics-posthog.attribution.test.ts, not by reasoning: it only appears with a real referrer.
+ * All are deleted; `kx_referrer` (a closed category) replaces them.
+ */
+const REFERRER_KEY = /^\$?(?:initial_|session_entry_)?(?:referrer|referring_domain|search_engine|ph_keyword)$/;
+
+/**
+ * PostHog `before_send`: before anything is sent, delete the SDK's referrer and campaign properties, remove the
+ * query string and hash from every remaining URL-valued property, and drop any `kx_*` value that is not valid
+ * attribution.
  */
 export function sanitizeCapture(result: CaptureResult | null): CaptureResult | null {
   if (!result) return result;
   for (const bag of [result.properties, result.$set, result.$set_once] as Array<Record<string, unknown> | undefined>) {
     if (!bag) continue;
     for (const key of Object.keys(bag)) {
-      if (URL_KEY.test(key)) bag[key] = stripQueryAndHash(bag[key]);
-      else if (CAMPAIGN_PARAM.test(bareParamName(key))) delete bag[key];
+      if (REFERRER_KEY.test(key) || CAMPAIGN_PARAM.test(bareParamName(key))) delete bag[key];
+      else if (URL_KEY.test(key)) bag[key] = stripQueryAndHash(bag[key]);
     }
+    sanitizeAttributionProps(bag);
   }
   return result;
 }
@@ -103,7 +123,7 @@ export function posthogOptions(host: string): Partial<PostHogConfig> {
     persistence: "localStorage",
     respect_dnt: true,
 
-    // no campaign / query capture
+    // the SDK does not parse campaigns: attribution is ours (analytics-attribution.ts)
     save_campaign_params: false,
 
     before_send: sanitizeCapture,
@@ -115,11 +135,12 @@ export async function createPostHogClient(config: AnalyticsConfig): Promise<Anal
   if (!posthog.__loaded) posthog.init(config.key, posthogOptions(config.host));
 
   return {
+    // `props` were allowlisted by analytics.ts; the attribution context comes only from analytics-attribution.ts
     capture: (event, props) => {
-      posthog.capture(event, props);
+      posthog.capture(event, { ...props, ...getAttributionContext() });
     },
     pageview: (path) => {
-      posthog.capture("$pageview", { $current_url: window.location.origin + path });
+      posthog.capture("$pageview", { $current_url: window.location.origin + path, ...getAttributionContext() });
     },
   };
 }
