@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { CopyButton } from "./copy-button";
+import { analytics } from "@/lib/analytics";
+import { PACKAGES } from "@/lib/packages";
 
 const PREFIX = "npx @kinetixui/cli add ";
 const NAMES = ["button", "card", "dialog", "input", "tabs", "chart", "calendar", "command"];
@@ -60,7 +62,11 @@ export function HeroCommand() {
     <div className="group relative overflow-hidden rounded-lg border border-border bg-muted/40">
       <div className="flex items-center justify-between border-b border-border px-4 py-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
         <span>bash</span>
-        <CopyButton value={PREFIX + current} />
+        <CopyButton
+          value={PREFIX + current}
+          // which component is currently typed is not reported — only that the CLI command was copied
+          onCopy={() => analytics.track("cli_command_copied", { source: "homepage_hero", package: PACKAGES.cli })}
+        />
       </div>
       <pre className="overflow-x-auto p-4 text-[13px] leading-relaxed">
         <code>

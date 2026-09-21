@@ -6,6 +6,7 @@ import { HeroTokenFan } from "@/components/hero-token-fan";
 import { Marquee, Reveal } from "@/components/reveal";
 import { SectionHead } from "@/components/section-head";
 import { StructuredData } from "@/components/structured-data";
+import { ctaAttrs } from "@/lib/analytics-surfaces";
 
 const PLATFORMS = ["React", "SwiftUI", "Jetpack Compose", "Flutter", "HTML + CSS"];
 
@@ -53,6 +54,7 @@ export default function HomePage() {
             <div className="kx-hero-enter max-w-3xl">
               <Link
                 href="/docs/changelog"
+                {...ctaAttrs("homepage_hero", "view_changelog")}
                 className="eyebrow group inline-flex items-center gap-2 transition-colors hover:text-foreground"
               >
                 <span className="text-primary">[00]</span> Free while in beta
@@ -76,12 +78,14 @@ export default function HomePage() {
 
               <div className="mt-9 flex flex-wrap items-center gap-3">
                 <Button asChild size="lg">
-                  <Link href="/docs">
+                  <Link href="/docs" {...ctaAttrs("homepage_hero", "get_started")}>
                     Get started <ArrowUpRight className="size-4" />
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="Outline">
-                  <Link href="/components">Browse components</Link>
+                  <Link href="/components" {...ctaAttrs("homepage_hero", "browse_components")}>
+                    Browse components
+                  </Link>
                 </Button>
               </div>
 
@@ -89,7 +93,11 @@ export default function HomePage() {
                 <HeroCommand />
                 <p className="mt-2 text-[13px] text-muted-foreground sm:whitespace-nowrap">
                   Example — adds one component.{" "}
-                  <Link href="/docs/installation" className="text-primary underline-offset-4 hover:underline">
+                  <Link
+                    href="/docs/installation"
+                    {...ctaAttrs("homepage_hero", "installation")}
+                    className="text-primary underline-offset-4 hover:underline"
+                  >
                     Installation
                   </Link>{" "}
                   covers the full library.
@@ -211,7 +219,7 @@ export default function HomePage() {
             </p>
             <div className="mt-8">
               <Button asChild size="lg">
-                <Link href="/docs">
+                <Link href="/docs" {...ctaAttrs("homepage", "read_docs")}>
                   Read the docs <ArrowUpRight className="size-4" />
                 </Link>
               </Button>

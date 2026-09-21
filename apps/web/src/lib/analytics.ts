@@ -11,24 +11,36 @@ import { siteConfig } from "./site";
 
 /* ------------------------------------------------------------------ event contract */
 
-export type AnalyticsPlatform = "react" | "swiftui" | "compose" | "flutter";
+/** The implementation platforms the site can attribute an event to. Not package managers — those are not platforms. */
+export const ANALYTICS_PLATFORMS = ["react", "swiftui", "compose", "flutter"] as const;
+export type AnalyticsPlatform = (typeof ANALYTICS_PLATFORMS)[number];
 
 /**
  * Where on the site something happened. A closed union on purpose: a free-text `source` is how a label, a
- * search string or a name ends up in analytics. Step 2 adds members here as it instruments each surface.
+ * search string or a name ends up in analytics. Add a member here when a real new surface is instrumented.
  */
-export type AnalyticsSource =
-  | "header"
-  | "footer"
-  | "homepage_hero"
-  | "homepage"
-  | "docs_sidebar"
-  | "docs_page"
-  | "component_page"
-  | "components_gallery"
-  | "installation_page"
-  | "changelog_page"
-  | "not_found";
+export const ANALYTICS_SOURCES = [
+  "header",
+  "footer",
+  "homepage_hero",
+  "homepage",
+  "docs_sidebar",
+  "docs_page",
+  "component_page",
+  "components_gallery",
+  "installation_page",
+  "changelog_page",
+  "not_found",
+] as const;
+export type AnalyticsSource = (typeof ANALYTICS_SOURCES)[number];
+
+/** The position inside a surface. Stable identifiers, never visible text. */
+export const ANALYTICS_LOCATIONS = ["hero", "primary_nav", "sidebar", "installation", "code_example", "platform_tabs", "component_header", "footer", "content"] as const;
+export type AnalyticsLocation = (typeof ANALYTICS_LOCATIONS)[number];
+
+/** What a product call-to-action is FOR — never its visible label and never its destination URL. */
+export const ANALYTICS_CTA_TARGETS = ["get_started", "browse_components", "read_docs", "installation", "view_changelog"] as const;
+export type AnalyticsCtaTarget = (typeof ANALYTICS_CTA_TARGETS)[number];
 
 /**
  * Properties an event may carry. Every value is a short identifier — a slug, a package name, a hostname, a
@@ -37,8 +49,8 @@ export type AnalyticsSource =
 interface EventProps {
   /** which surface produced the event */
   source?: AnalyticsSource;
-  /** finer position inside the surface, as an identifier ("hero", "sidebar"), never visible text */
-  location?: string;
+  /** finer position inside the surface */
+  location?: AnalyticsLocation;
   /** a site path WITHOUT query string or hash: "/docs/installation" */
   page?: string;
   /** a component slug: "button", "data-grid" */
@@ -63,7 +75,7 @@ type Shape<Required extends keyof EventProps, Optional extends keyof EventProps 
  * compile error.
  */
 export interface AnalyticsEvents {
-  cta_clicked: Shape<"source" | "target">;
+  cta_clicked: { source: AnalyticsSource; target: AnalyticsCtaTarget };
   docs_viewed: Shape<"page", "source">;
   installation_viewed: Shape<never, "source" | "platform">;
   cli_command_copied: Shape<"source", "package">;
