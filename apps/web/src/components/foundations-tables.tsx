@@ -1,5 +1,5 @@
 import * as React from "react";
-import { durations, easings, elevation, platformUnits, radiusScale, spacingScale } from "@/lib/foundations";
+import { durations, easings, elevation, platformUnits, radiusRoles, radiusScale, spacingScale } from "@/lib/foundations";
 import { componentTotal, gaps, notSupported, platforms, statusCounts } from "@/lib/platform-support";
 
 /** Same look as the token table on /docs/tokens: a bordered, horizontally scrollable table. */
@@ -98,6 +98,28 @@ export function RadiusTable() {
             <Code>KinetixRadius.{r.name}</Code>
           </td>
           <td className={`${td} text-muted-foreground`}>{r.description ?? ""}</td>
+        </tr>
+      ))}
+    </Table>
+  );
+}
+
+export function RadiusRolesTable() {
+  return (
+    <Table label="Radius role aliases" head={["Role token", "Resolves to", "Value", "Native constant", "Used by"]}>
+      {radiusRoles.map((r) => (
+        <tr key={r.role}>
+          <td className={td}>
+            <Code>--radius-{r.role}</Code>
+          </td>
+          <td className={td}>
+            <Code>--radius-{r.target}</Code>
+          </td>
+          <td className={`${td} font-mono tabular-nums`}>{r.px}</td>
+          <td className={td}>
+            <Code>KinetixRadius.{r.role}</Code>
+          </td>
+          <td className={`${td} text-muted-foreground`}>{r.description?.replace(/^Role alias — /, "")}</td>
         </tr>
       ))}
     </Table>
