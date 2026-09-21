@@ -10,6 +10,7 @@ import { DepsBar } from "@/components/infographic/deps-bar";
 import { componentDocs, CATEGORY_ORDER } from "@/lib/site";
 import { RELEASES, isNotable } from "@/lib/releases";
 import { countOnPlatform, type Platform } from "@/lib/platform-parity";
+import { componentTotal } from "@/lib/platform-support";
 
 export const metadata: Metadata = {
   title: "Infographic",
@@ -46,7 +47,8 @@ const PLATFORM_OUTPUTS = ["Web CSS", "tokens.ts", "SwiftUI", "Compose", "Flutter
 
 const STATS = [
   { n: TOKEN_COUNT, label: "design tokens", sub: "primitives + semantic, DTCG" },
-  { n: componentDocs.length, label: "React components", sub: `${CATEGORY_ORDER.length} categories` },
+  // the manifest total, not componentDocs.length: avatar-group ships inside avatar and has no page of its own
+  { n: componentTotal, label: "React components", sub: `${CATEGORY_ORDER.length} categories` },
   { n: CHART_RECIPES, label: "chart recipes", sub: "Recharts, token-driven" },
   { n: PLATFORM_OUTPUTS.length, label: "platform outputs", sub: PLATFORM_OUTPUTS.join(" · ") },
   { n: "100%", label: "WCAG AA", sub: "text pairs, light + dark, CI-gated" },

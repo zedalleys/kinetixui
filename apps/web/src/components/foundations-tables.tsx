@@ -1,6 +1,6 @@
 import * as React from "react";
 import { durations, easings, elevation, platformUnits, radiusRoles, radiusScale, spacingScale } from "@/lib/foundations";
-import { componentTotal, gaps, notSupported, platforms, statusCounts } from "@/lib/platform-support";
+import { componentTotal, gaps, nonPorts, notSupported, platformCount, platforms, statusCounts } from "@/lib/platform-support";
 
 /** Same look as the token table on /docs/tokens: a bordered, horizontally scrollable table. */
 function Table({ head, children, label }: { head: string[]; children: React.ReactNode; label: string }) {
@@ -245,3 +245,34 @@ export function StatusSummary() {
 export function ComponentTotalInline() {
   return <>{componentTotal}</>;
 }
+
+/** "91" — how many components ship on one platform, from the manifest. */
+export function PlatformCountInline({ platform }: { platform: "React" | "SwiftUI" | "Compose" | "Flutter" }) {
+  return <>{platformCount(platform)}</>;
+}
+
+const WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+
+/** "seven" — how many standing non-ports the manifest has (see `nonPorts`). */
+export function NonPortCountInline() {
+  return <>{WORDS[nonPorts.length] ?? nonPorts.length}</>;
+}
+
+/** `Form`, `NavigationMenu`, … — the standing non-ports by their component names, from the manifest. */
+export function NonPortNamesInline() {
+  const names = nonPorts.map(componentName);
+  return (
+    <>
+      {names.map((n, i) => (
+        <React.Fragment key={n}>
+          {i > 0 ? (i === names.length - 1 ? ", and " : ", ") : null}
+          <Code>{n}</Code>
+        </React.Fragment>
+      ))}
+    </>
+  );
+}
+
+/** "navigation-menu" → "NavigationMenu". */
+export const componentName = (slug: string) =>
+  slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("");

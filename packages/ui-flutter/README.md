@@ -6,8 +6,8 @@ Flutter port of KinetixUI — the fourth platform alongside React
 path; each widget mirrors its `packages/ui/src/components/*.tsx`
 counterpart 1:1, with a doc comment stating anything not carried over.
 
-**68 components — the full React component surface** bar three deliberate
-non-ports. Controls, the full input + field set, display primitives,
+**The full React component surface** bar the documented non-ports (see
+[`components.manifest.json`](../../components.manifest.json)). Controls, the full input + field set, display primitives,
 data (Table / DataTable / Carousel), disclosure/navigation, the overlay &
 menu classes (Dialog, Sheet, Popover, Dropdown/Context menus, Command,
 Tooltip, Toaster), plus `KinetixCalendar` (over `CalendarDatePicker`) and

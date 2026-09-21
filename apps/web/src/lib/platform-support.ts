@@ -13,6 +13,18 @@ const all = Object.keys(components);
 const count = (platform: string) => all.filter((n) => components[n]!.platforms.includes(platform)).length;
 export const componentTotal = all.length;
 
+/** How many components ship on `platform` — the one place prose and tables get a coverage number from. */
+export const platformCount = count;
+
+const NATIVE = ["SwiftUI", "Compose", "Flutter"];
+
+/**
+ * The standing non-ports: components with no native implementation on ANY native platform. Derived, so adding
+ * one to the manifest (or porting one) changes every sentence and list that mentions them. A component missing
+ * from only some platforms (`chart` on Compose) is a gap, not a standing non-port.
+ */
+export const nonPorts = all.filter((n) => NATIVE.every((p) => !components[n]!.platforms.includes(p)));
+
 export type PlatformRow = {
   id: string;
   name: string;

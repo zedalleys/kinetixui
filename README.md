@@ -53,15 +53,14 @@ contract import, dark mode — is in [Installation](https://kinetixui.com/docs/i
   properties (light + dark, HSL channels), a typed `tokens` object, and native
   colour + type sets for SwiftUI / Compose / Flutter. One edit re‑skins every
   platform.
-- **72 React components** (`@kinetixui/ui`) — CVA + Radix + Tailwind, styled only
+- **React components** (`@kinetixui/ui`) — CVA + Radix + Tailwind, styled only
   against the semantic token layer, never a hex.
 - **Cross‑platform by default.** [`ui-compose`](packages/ui-compose),
   [`ui-swiftui`](packages/ui-swiftui) and [`ui-flutter`](packages/ui-flutter)
-  each carry a 1:1 port of the React surface (~68 `Kinetix*` components) on the
-  same token contract, compiled in CI per platform. Documented exceptions (React‑only or partial) live
-  in [`components.manifest.json`](components.manifest.json): `Form`, `NavigationMenu`,
-  `Combobox`, `NativeSelect`, `AvatarGroup`, `Tour`, `KanbanBoard`, plus `Chart`
-  (no Compose).
+  each carry a 1:1 port of the React surface on the
+  same token contract, compiled in CI per platform. Per-platform coverage and the documented exceptions (React‑only or partial) live
+  in [`components.manifest.json`](components.manifest.json) and are listed, with the
+  reason for each, at [kinetixui.com/docs/platforms](https://kinetixui.com/docs/platforms).
 - **A portable registry.** Every component serialised to a shadcn‑compatible JSON
   descriptor, served static from `kinetixui.com/r/`.
 - **A first‑party CLI** (`@kinetixui/cli`) — `init` scaffolds `kinetixui.json` +

@@ -1,7 +1,8 @@
 # @kinetixui/ui-compose
 
-Jetpack Compose port of KinetixUI. First of the native platforms — SwiftUI
-and Flutter aren't started yet. Sixty-nine components so far:
+Jetpack Compose port of KinetixUI. One of the four platforms, alongside React, SwiftUI and Flutter. The React
+component surface bar the documented non-ports (see
+[`components.manifest.json`](../../components.manifest.json)). Includes:
 `KinetixButton`, `KinetixBadge`, `KinetixSwitch`, `KinetixInput`,
 `KinetixSeparator`, `KinetixLabel`, `KinetixSpinner`, `KinetixSkeleton`,
 `KinetixTag`, `KinetixProgress`, `KinetixAvatar`, `KinetixAlert`,

@@ -2,8 +2,9 @@
 
 SwiftUI port of KinetixUI — the iOS counterpart to
 [`packages/ui-compose`](../ui-compose) (Jetpack Compose). Built in
-batches the same way the Compose library was. **69 components** — the
-full React component surface bar three deliberate non-ports:
+batches the same way the Compose library was. **The full React component
+surface** bar the documented non-ports (see
+[`components.manifest.json`](../../components.manifest.json)). Includes:
 `KinetixButton`, `KinetixBadge`, `KinetixTag`, `KinetixLabel`,
 `KinetixSeparator`, `KinetixSkeleton`, `KinetixSpinner`,
 `KinetixProgress`, `KinetixCircularProgress`, `KinetixCard` (+ `Header` /

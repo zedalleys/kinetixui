@@ -11,11 +11,11 @@ this docs site (English-only, always `dir="ltr"`) demonstrates live.
 
 <Callout>
   **In progress.** RTL is being converted incrementally, one component at a
-  time. 67 of 96 `packages/ui/src/components` files already use
-  direction-relative (logical) classes; the remainder still use
-  physical-direction ones (`pl-`, `right-`, …) and haven't been converted
-  yet. `pnpm check:rtl` in CI locks in every conversion already done and
-  blocks regressions — see `RTL.md` at the repo root for the current,
+  time. Files in `packages/ui/src/components` that already use
+  direction-relative (logical) classes are locked in by `pnpm check:rtl` in
+  CI, which blocks regressions and reports how many files still use
+  physical-direction classes (`pl-`, `right-`, …) and haven't been converted
+  yet — see `RTL.md` at the repo root for the current,
   authoritative per-file list.
 </Callout>
 

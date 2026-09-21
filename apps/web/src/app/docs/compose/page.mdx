@@ -6,8 +6,9 @@ export const metadata = {
 # Jetpack Compose
 
 `packages/ui-compose` is a native **Jetpack Compose** port of KinetixUI —
-**90 `Kinetix*` composables** on the same token contract as the web
-library, one for every React component (or a documented reason it isn't).
+`Kinetix*` composables for <PlatformCountInline platform="Compose" /> of the
+<ComponentTotalInline /> React components, on the same token contract as the
+web library: one for every React component (or a documented reason it isn't).
 
 It's a **standalone Gradle project** inside this monorepo, not a
 pnpm/npm workspace package — there's no `package.json`, so it's invisible
@@ -72,7 +73,7 @@ a comment).
 
 ## What's covered
 
-All 89, one per React component — Button, Input, Dialog, Popover, Sheet,
+One per ported React component — Button, Input, Dialog, Popover, Sheet,
 DropdownMenu, DataTable, Calendar, Carousel, Sidebar, and the rest. The
 [components gallery](/components) is the master list; each Compose file
 mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with a
@@ -121,11 +122,11 @@ different name.
   whole package (`assembleDebug` + `lintDebug`) on every push that
   touches it or the token source.
 
-The [SwiftUI](/docs/swiftui) and [Flutter](/docs/flutter) ports cover the
-full React surface too (SwiftUI carries 90 `Kinetix*` views, Flutter 90).
-All three native platforms skip the same [seven standing
-non-ports](/docs/contributing) (`Form`, `NavigationMenu`, `Combobox`,
-`NativeSelect`, `AvatarGroup`, `Tour`, `KanbanBoard`); Compose additionally
-skips `Chart`. All four
-platforms are at parity otherwise — see [Contributing](/docs/contributing)
-for the rule that keeps them there.
+The [SwiftUI](/docs/swiftui) and [Flutter](/docs/flutter) ports carry the
+same React surface, and all three native platforms skip the same
+<NonPortCountInline /> [standing non-ports](/docs/contributing)
+(<NonPortNamesInline />). Components missing from only some platforms are
+listed, with the reason, under [Not on every platform](/docs/platforms#not-on-every-platform-on-purpose).
+Being on a platform doesn't mean carrying every React feature: a port that
+drops something says so in its own doc comment — see
+[Contributing](/docs/contributing) for the rule that governs this.

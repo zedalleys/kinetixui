@@ -19,8 +19,8 @@
  * exist. On the web, use React (`@kinetixui/ui`) or the registry
  * (`npx @kinetixui/cli add <component>`).
  *
- * The three standing non-ports (`Form`, `NavigationMenu`, `Combobox`) are
- * shown as the composition the native libraries expect instead.
+ * The standing non-ports (`components.manifest.json` lists them; `/docs/contributing` gives the
+ * reason for each) are shown as the composition the native libraries expect instead.
  */
 
 export type Platform = "react" | "swift" | "kotlin" | "dart";
