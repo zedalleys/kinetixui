@@ -27,12 +27,22 @@ const errors = [];
 
 // ── 1. tokens ───────────────────────────────────────────────────────────────────────────────────
 const dim = JSON.parse(readFileSync(join(root, "tokens/primitives/dimension.json"), "utf8"));
-const value = (t) => Number(t.$value);
+// a token value, following a `{radius.md}`-style alias to the step it points at
+const resolve = (t, group, seen = 0) => {
+  const ref = typeof t.$value === "string" && t.$value.match(/^\{([\w-]+)\.([\w-]+)\}$/);
+  if (!ref) return Number(t.$value);
+  if (seen > 3 || ref[1] !== group || !dim[group][ref[2]]) {
+    errors.push(`${group} alias "${t.$value}" does not point at a step in ${group}`);
+    return NaN;
+  }
+  return resolve(dim[group][ref[2]], group, seen + 1);
+};
+const value = (t, group = "spacing") => resolve(t, group);
 const spacing = Object.entries(dim.spacing).map(([k, t]) => [k, value(t)]);
 for (const [k, v] of spacing) if (v % 4 !== 0) errors.push(`spacing.${k} = ${v} is not a multiple of 4`);
 for (const [k, t] of Object.entries(dim.radius)) {
   if (k === "none" || k === "full") continue;
-  if (value(t) % 4 !== 0) errors.push(`radius.${k} = ${value(t)} is not a multiple of 4`);
+  if (value(t, "radius") % 4 !== 0) errors.push(`radius.${k} = ${value(t, "radius")} is not a multiple of 4`);
 }
 const base = spacing.filter(([, v]) => v % 8 === 0).length;
 const half = spacing.length - base;

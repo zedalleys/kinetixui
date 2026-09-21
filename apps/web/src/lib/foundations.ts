@@ -19,7 +19,19 @@ export const spacingScale: SpacingStep[] = entries(dimension.spacing).map(([step
   return { step, px, role: px % 8 === 0 ? "base" : "half", description: t.$description };
 });
 
-export const radiusScale = entries(dimension.radius).map(([name, t]) => ({ name, px: Number(t.$value), description: t.$description }));
+/** Role aliases point at a size step (`{radius.md}`); everything else in `radius` is a step. */
+const RADIUS_ROLES = ["field", "control", "container", "surface"];
+
+export const radiusScale = entries(dimension.radius)
+  .filter(([name]) => !RADIUS_ROLES.includes(name))
+  .map(([name, t]) => ({ name, px: Number(t.$value), description: t.$description }));
+
+/** Each role and the step it currently resolves to — read from the token file, never re-typed. */
+export const radiusRoles = RADIUS_ROLES.map((role) => {
+  const t = (dimension.radius as unknown as Record<string, Token>)[role]!;
+  const target = String(t.$value).replace(/[{}]/g, "").split(".")[1]!;
+  return { role, target, px: radiusScale.find((s) => s.name === target)?.px ?? NaN, description: t.$description };
+});
 
 export const durations = entries(motion.duration).map(([name, t]) => ({ name, ms: parseInt(String(t.$value), 10), description: t.$description }));
 

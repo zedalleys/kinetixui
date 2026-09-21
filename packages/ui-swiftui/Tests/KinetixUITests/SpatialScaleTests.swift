@@ -45,6 +45,13 @@ final class SpatialScaleTests: XCTestCase {
         XCTAssertGreaterThan(KinetixRadius.full, KinetixRadius.xxl, "full is a pill / circle")
     }
 
+    func testRadiusRoleAliasesPointAtTheirSteps() {
+        XCTAssertEqual(KinetixRadius.field, KinetixRadius.sm)
+        XCTAssertEqual(KinetixRadius.control, KinetixRadius.md)
+        XCTAssertEqual(KinetixRadius.container, KinetixRadius.lg)
+        XCTAssertEqual(KinetixRadius.surface, KinetixRadius.xl)
+    }
+
     func testMotionDurationsAreOrdered() {
         XCTAssertTrue(KinetixDuration.instant < KinetixDuration.fast)
         XCTAssertTrue(KinetixDuration.fast < KinetixDuration.base)
