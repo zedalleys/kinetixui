@@ -30,6 +30,21 @@ export const metadata: Metadata = {
   title: { default: `${siteConfig.name} — ${siteConfig.tagline}`, template: `%s — ${siteConfig.name}` },
   description: siteConfig.description,
   metadataBase: new URL(siteConfig.url),
+  applicationName: siteConfig.name,
+  // Every page inherits these; a page only overrides what differs (title/description do, via its own
+  // `metadata` export, and Open Graph picks those up automatically from the resolved title/description).
+  openGraph: {
+    type: "website",
+    siteName: siteConfig.name,
+    url: siteConfig.url,
+    locale: "en",
+  },
+  twitter: {
+    // summary_large_image, with no site/creator handle: KinetixUI has no X account, and inventing one
+    // would point people at someone else's profile.
+    card: "summary_large_image",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

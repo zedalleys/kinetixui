@@ -5,6 +5,7 @@ import { HeroCommand } from "@/components/hero-command";
 import { HeroTokenFan } from "@/components/hero-token-fan";
 import { Marquee, Reveal } from "@/components/reveal";
 import { SectionHead } from "@/components/section-head";
+import { StructuredData } from "@/components/structured-data";
 
 const PLATFORMS = ["React", "SwiftUI", "Jetpack Compose", "Flutter", "HTML + CSS"];
 
@@ -42,6 +43,7 @@ const FEATURES = [
 export default function HomePage() {
   return (
     <div>
+      <StructuredData />
       {/* ─── hero ─────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-border">
         <div className="pointer-events-none absolute inset-0 kx-grid-bg" />
