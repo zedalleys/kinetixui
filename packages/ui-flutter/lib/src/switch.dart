@@ -13,6 +13,16 @@ class KinetixSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A bare GestureDetector exposes no on/off state; announce toggled / disabled.
+    return Semantics(
+      container: true,
+      toggled: value,
+      enabled: onChanged != null,
+      child: _buildControl(context),
+    );
+  }
+
+  Widget _buildControl(BuildContext context) {
     final c = KinetixTheme.of(context);
     final bool enabled = onChanged != null;
 
@@ -26,7 +36,8 @@ class KinetixSwitch extends StatelessWidget {
           width: 48,
           height: 24,
           padding: const EdgeInsets.all(2),
-          alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+          // "end" mirrors under RTL; centerRight/centerLeft would not
+          alignment: value ? AlignmentDirectional.centerEnd : AlignmentDirectional.centerStart,
           decoration: BoxDecoration(
             color: value ? c.action : c.tertiary,
             borderRadius: BorderRadius.circular(9999),

@@ -25,7 +25,9 @@ class KinetixNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
     return Container(
-      height: 56, // h-14
+      // h-14 at normal text; a minimum, not a fixed height, so large system text grows the bar instead of overflowing
+      constraints: const BoxConstraints(minHeight: 56),
+      alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: c.background,

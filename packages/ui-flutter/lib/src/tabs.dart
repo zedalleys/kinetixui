@@ -32,6 +32,16 @@ class KinetixTabsTrigger extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // announce which tab is selected
+    return Semantics(
+      container: true,
+      button: true,
+      selected: selected,
+      child: _buildControl(context),
+    );
+  }
+
+  Widget _buildControl(BuildContext context) {
     final c = KinetixTheme.of(context);
     return GestureDetector(
       onTap: onTap,

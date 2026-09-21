@@ -47,6 +47,16 @@ class _KinetixButtonState extends State<KinetixButton> {
 
   @override
   Widget build(BuildContext context) {
+    // InkWell alone gives a screen reader the label but no "button" role and no enabled/disabled state.
+    return Semantics(
+      container: true,
+      button: true,
+      enabled: widget.onPressed != null,
+      child: _buildControl(context),
+    );
+  }
+
+  Widget _buildControl(BuildContext context) {
     final KinetixColors c = KinetixTheme.of(context);
     final VoidCallback? onPressed = widget.onPressed;
     final KinetixButtonVariant variant = widget.variant;
