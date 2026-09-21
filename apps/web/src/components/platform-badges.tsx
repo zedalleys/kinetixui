@@ -21,9 +21,11 @@ export function PlatformBadges({ slug, className }: { slug: string; className?: 
             title={has ? p : `${p} — not yet`}
             className={cn(
               "rounded border px-1 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em]",
+              // both states stay legible (AA): available = foreground text in a bordered tag; unavailable = muted,
+              // struck through, no border. Not faded with opacity, which pushed the text far below 4.5:1.
               has
-                ? "border-border/70 text-muted-foreground"
-                : "border-transparent text-muted-foreground/35 line-through",
+                ? "border-border text-foreground"
+                : "border-transparent text-muted-foreground line-through",
             )}
           >
             {PLATFORM_ABBR[p]}

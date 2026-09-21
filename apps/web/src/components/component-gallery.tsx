@@ -316,7 +316,7 @@ export function ComponentGallery() {
               onClick={() => setCat(null)}
               className={catButton(!activeCat)}
             >
-              All <span className="tabular-nums opacity-80">{ITEMS.length}</span>
+              All <span className="tabular-nums">{ITEMS.length}</span>
             </button>
             {CATEGORY_ORDER.map((cat) => (
               <button
@@ -326,13 +326,13 @@ export function ComponentGallery() {
                 onClick={() => setCat(activeCat === cat ? null : cat)}
                 className={catButton(activeCat === cat)}
               >
-                {cat} <span className="tabular-nums opacity-80">{CATEGORY_COUNT[cat] ?? 0}</span>
+                {cat} <span className="tabular-nums">{CATEGORY_COUNT[cat] ?? 0}</span>
               </button>
             ))}
           </div>
 
           <div role="group" aria-label="Filter by platform" className="flex flex-wrap items-center gap-1.5">
-            <span className="mr-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+            <span className="mr-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
               Platform
             </span>
             {NATIVE_PLATFORMS.map((p) => {
@@ -346,7 +346,7 @@ export function ComponentGallery() {
                   className={catButton(on)}
                   title={`Components shipping in the ${p} library`}
                 >
-                  {p} <span className="tabular-nums opacity-80">{PLATFORM_COUNT[p] ?? 0}</span>
+                  {p} <span className="tabular-nums">{PLATFORM_COUNT[p] ?? 0}</span>
                 </button>
               );
             })}
@@ -358,7 +358,7 @@ export function ComponentGallery() {
                 className={catButton(activeStatus === "beta")}
                 title="Components new this release"
               >
-                Beta <span className="tabular-nums opacity-80">{BETA_COUNT}</span>
+                Beta <span className="tabular-nums">{BETA_COUNT}</span>
               </button>
             )}
           </div>

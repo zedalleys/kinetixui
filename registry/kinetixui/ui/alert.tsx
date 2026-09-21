@@ -29,9 +29,12 @@ const Alert = React.forwardRef<
 ));
 Alert.displayName = "Alert";
 
-const AlertTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
+// A plain block, not a heading: the component does not know where it sits in the page's outline, so a hardcoded
+// <h5> skipped heading levels under any <h2> (WCAG 1.3.1 / axe heading-order). `role="alert"` on Alert carries the
+// semantics. Pass `role="heading" aria-level={n}` if a specific level is wanted.
+const AlertTitle = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <h5 ref={ref} className={cn("mb-1 font-medium leading-none tracking-tight", className)} {...props} />
+    <div ref={ref} className={cn("mb-1 font-medium leading-none tracking-tight", className)} {...props} />
   ),
 );
 AlertTitle.displayName = "AlertTitle";
