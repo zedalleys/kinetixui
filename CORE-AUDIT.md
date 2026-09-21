@@ -195,7 +195,8 @@ Decided 2026-09-21:
    only if it is still wanted in the 1.0 window, with a codemod.
 4. **Maturity — criteria proposed, awaiting approval.** See section 8.
 5. **Wearables — approved.** To be built as a separate design track that derives from Core tokens, not as small phones.
-   Prerequisite: the native test harness (section 8, step 1), so new platforms are not born unverified.
+   Prerequisite: the native test harness (section 8, step 1), so new platforms are not born unverified. The architecture
+   and phased plan are in [`WEARABLES.md`](WEARABLES.md); its open questions need your input before phase 1.
 
 ## 7. Recommended path to 1.0, in order
 

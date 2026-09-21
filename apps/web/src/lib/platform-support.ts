@@ -94,8 +94,8 @@ export const gaps = all
 /** Platforms people ask about that have NO implementation in the repository. */
 export const notSupported = [
   { name: "Angular", note: "No package, directive or component." },
-  { name: "Wear OS", note: "No implementation. Wearables are a distinct design problem (glanceability, circular screens, large targets), not small phones." },
-  { name: "watchOS", note: "No implementation. Follows watchOS conventions if it is ever built — not Wear OS's." },
+  { name: "Wear OS", note: "No implementation yet. Approved as a separate track that derives from Core tokens rather than shrinking the phone components (design spec: `WEARABLES.md`)." },
+  { name: "watchOS", note: "No implementation yet. Approved on the same track, following watchOS conventions rather than Wear OS's (design spec: `WEARABLES.md`)." },
   { name: "Plain HTML / CSS package", note: "There is no `kx-*` class API. On the web, use React or the registry (`npx @kinetixui/cli add`)." },
 ] as const;
 
