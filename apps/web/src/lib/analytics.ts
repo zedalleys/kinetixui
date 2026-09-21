@@ -7,7 +7,11 @@
  * This file is deliberately small and has no runtime dependency: it holds the event contract, the config gate,
  * a property allowlist, and a tiny dispatcher that queues calls until a client is attached.
  */
+import { initAttribution, resetAttributionForTests } from "./analytics-attribution";
+import { SAFE_VALUE, cleanPath } from "./analytics-safe";
 import { siteConfig } from "./site";
+
+export { cleanPath };
 
 /* ------------------------------------------------------------------ event contract */
 
@@ -109,13 +113,6 @@ const ALLOWED_KEYS: ReadonlySet<string> = new Set([
   "version",
 ]);
 
-/**
- * A value must look like an identifier: letters, digits and `_ . @ : / -`, at most 100 characters. That admits
- * slugs, paths, package names, hostnames and versions, and rejects whitespace, `?`, `=`, `#`, `&`, quotes and
- * anything else that free text, an email address or a query string needs.
- */
-const SAFE_VALUE = /^[A-Za-z0-9_.@:/-]{1,100}$/;
-
 /** Keep only allowlisted keys with identifier-shaped string values. Everything else is dropped, never sent. */
 export function sanitizeProps(props: object | undefined): Record<string, string> {
   const out: Record<string, string> = {};
@@ -128,11 +125,6 @@ export function sanitizeProps(props: object | undefined): Record<string, string>
   return out;
 }
 
-/** "/components?filter=data" → "/components". Query and hash never reach analytics. */
-export function cleanPath(path: string): string | null {
-  const bare = path.split(/[?#]/)[0] ?? "";
-  return bare.startsWith("/") && SAFE_VALUE.test(bare) ? bare : null;
-}
 
 /* ------------------------------------------------------------------ the config gate */
 
@@ -251,6 +243,13 @@ export function startAnalytics(
     disableAnalytics();
     return (starting = Promise.resolve());
   }
+  // Attribution is derived HERE, synchronously, while location still is the landing page (a fast client-side
+  // navigation must not beat the lazy SDK import to it), and only now that the gate says analytics is on.
+  try {
+    initAttribution();
+  } catch {
+    /* attribution is best-effort and must never stop product analytics */
+  }
   starting = loadAdapter()
     .then((adapter) => adapter.createPostHogClient(config))
     .then(attachAnalytics)
@@ -261,6 +260,7 @@ export function startAnalytics(
 
 /** Test-only: forget all module state. */
 export function resetAnalyticsForTests() {
+  resetAttributionForTests();
   client = null;
   state = "pending";
   queue = [];

@@ -97,4 +97,75 @@ describe("analytics architecture", () => {
       }
     }
   });
+
+  describe("attribution", () => {
+    const ATTRIBUTION = "src/lib/analytics-attribution.ts";
+    const ADAPTER = "src/lib/analytics-posthog.ts";
+    /** Non-test analytics modules: the only files that may touch the query string, the referrer or storage keys. */
+    const analyticsFiles = files.filter((f) => !f.includes(".test.") && /^src\/(lib\/analytics|components\/analytics-)/.test(f));
+
+    it("finds the analytics modules", () => {
+      expect(analyticsFiles).toEqual(expect.arrayContaining([ATTRIBUTION, ADAPTER, "src/lib/analytics.ts", "src/components/analytics-provider.tsx"]));
+    });
+
+    it("keeps the kx_* attribution vocabulary inside the attribution module and the adapter — UI code cannot name it", () => {
+      // a property name written out, or the "kx_" / "kx_first_" prefix it is built from
+      const KX = /\bkx_(first_)?(source|medium|campaign|content|referrer|landing_page)\b|["']kx_(first_)?["']/;
+      const offenders = files.filter((f) => !f.includes(".test.") && ![ATTRIBUTION, ADAPTER].includes(f) && KX.test(code(f)));
+      expect(offenders).toEqual([]);
+      expect(code(ATTRIBUTION)).toMatch(/"kx_first_"/);
+    });
+
+    it("reads the query string and the referrer in exactly one place", () => {
+      const readers = analyticsFiles.filter((f) => /URLSearchParams|location\.search|document\.referrer|location\.href/.test(code(f)));
+      expect(readers).toEqual([ATTRIBUTION]);
+    });
+
+    it("mentions utm_* and click ids only where they are read or deleted", () => {
+      const offenders = analyticsFiles.filter((f) => ![ATTRIBUTION, ADAPTER].includes(f) && /utm_|gclid|fbclid|msclkid/.test(code(f)));
+      expect(offenders).toEqual([]);
+    });
+
+    it("establishes attribution from one caller, startAnalytics, and nowhere in UI code", () => {
+      const callers = files.filter((f) => !f.includes(".test.") && f !== ATTRIBUTION && /\binitAttribution\(/.test(code(f)));
+      expect(callers).toEqual(["src/lib/analytics.ts"]);
+    });
+
+    it("enriches at the adapter: both capture paths add the trusted context, and before_send re-validates it", () => {
+      const adapter = code(ADAPTER);
+      expect(adapter.match(/getAttributionContext\(\)/g)?.length).toBe(2);
+      expect(adapter).toMatch(/sanitizeAttributionProps\(bag\)/);
+    });
+
+    it("does not give the UI-facing property allowlist a way to carry attribution", () => {
+      const analytics = code("src/lib/analytics.ts");
+      expect(analytics).not.toMatch(/\bkx_/);
+      expect(analytics).not.toMatch(/ALLOWED_KEYS[^;]*(kx_|utm|campaign|referrer)/s);
+    });
+
+    it("reuses the shared path sanitiser instead of defining its own", () => {
+      const attribution = code(ATTRIBUTION);
+      expect(attribution).toMatch(/from "\.\/analytics-safe"/);
+      expect(attribution).not.toMatch(/function cleanPath|const cleanPath/);
+    });
+
+    it("uses no cookies anywhere in analytics, and only versioned storage keys", () => {
+      for (const f of analyticsFiles) expect(code(f), f).not.toMatch(/document\.cookie/);
+      expect(code(ATTRIBUTION)).toMatch(/"kx_analytics_session_v1"/);
+      expect(code(ATTRIBUTION)).toMatch(/"kx_analytics_first_touch_v1"/);
+    });
+
+    it("adds no 'activated' or 'conversion' event: activation stays derived from the three copy events", () => {
+      expect(code("src/lib/analytics.ts")).not.toMatch(/developer_activated|["']activated["']|["']conversion["']/);
+    });
+
+    it("keeps PostHog's own campaign parsing and person profiles off", () => {
+      const adapter = code(ADAPTER);
+      expect(adapter).toMatch(/save_campaign_params:\s*false/);
+      expect(adapter).toMatch(/person_profiles:\s*"identified_only"/);
+      expect(adapter).toMatch(/persistence:\s*"localStorage"/);
+      expect(adapter).toMatch(/respect_dnt:\s*true/);
+      expect(adapter).toMatch(/disable_external_dependency_loading:\s*true/);
+    });
+  });
 });

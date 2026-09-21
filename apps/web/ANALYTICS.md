@@ -37,7 +37,9 @@ Analytics sends only when **all** of these hold; otherwise every call is a silen
 ## What is deliberately off
 
 Session recording, autocapture, heatmaps, dead/rage-click capture, surveys, exception capture, web vitals,
-feature-flag requests, person profiles and `identify()`. Campaign parameters (`utm_*`, `gclid`, …) are not saved.
+feature-flag requests, person profiles and `identify()`. The SDK's own campaign parsing is off and everything it
+derives from a URL or referrer (`utm_*`, click ids, `$referrer`, `$referring_domain`, the search keyword) is deleted
+before sending; acquisition is reported only through the `kx_*` properties below.
 Change these in `analytics-posthog.ts` only, with a reason.
 
 ## One thing only the PostHog project can do
@@ -100,3 +102,110 @@ platform to attribute, or not code); ordinary navigation, the docs search palett
 (their text must never be sent); attribution links (Radix, Lucide, Recharts); `platform_selected` on the
 homepage (there is no platform selector there). `npm_clicked` has no surface yet — the site links to no npm page —
 but any link to one of our packages on npmjs.com is reported the moment it is added.
+
+## Acquisition attribution
+
+Where did a developer come from, what did they do, and did they activate? Attribution answers the first part
+with a deliberately simple, inspectable model. **It is directional evidence, not causal truth**: referrers are
+stripped by many apps and privacy tools, a link can be shared beyond the audience it was made for, and a visit is
+credited to a channel, not to the effect of a post. Use it to compare channels, not to prove one caused an install.
+
+It lives in [`src/lib/analytics-attribution.ts`](src/lib/analytics-attribution.ts). No cookies, no server, no
+dependency, no identification — the anonymous PostHog id is unchanged. UI code knows nothing about it: the adapter
+adds the attribution to **every** event (including `$pageview`) centrally.
+
+### Session entry vs first touch
+
+| | Answers | Stored in | Lifetime | Rule |
+| --- | --- | --- | --- | --- |
+| `kx_*` (session entry) | How did *this browsing session* begin? | `sessionStorage` (`kx_analytics_session_v1`) | the tab | derived on the first page of the session, then reused. A later page, a later UTM in the same tab, and every client-side navigation leave it alone |
+| `kx_first_*` (first touch) | How was this *browser* first acquired? | `localStorage` (`kx_analytics_first_touch_v1`) | until cleared | **write-once**. Never overwritten, and never replaced by `direct` |
+
+Properties (each present only when known): `kx_source`, `kx_medium`, `kx_campaign`, `kx_content`, `kx_referrer`,
+`kx_landing_page`, and the same six as `kx_first_*`. Only normalised values are ever stored or sent — never a query
+string, a referrer, a click id or a full URL. Storage is re-validated when read (it is user-editable).
+
+### Source taxonomy (closed)
+
+`direct`, `google`, `bing`, `duckduckgo`, `github`, `linkedin`, `x`, `reddit`, `devto`, `hashnode`, `producthunt`,
+`youtube`, `newsletter`, `other`.
+
+`utm_source` is normalised, never forwarded: `twitter` / `x.com` / `t.co` → `x`; `dev.to` / `dev_to` → `devto`;
+`google`, `google.com`, `google_search` → `google`; **anything unrecognised → `other`**, and the raw value is
+discarded. `kx_referrer` uses the same list without `newsletter`, classified from the referrer's *hostname only*.
+
+### Medium taxonomy (closed)
+
+`organic`, `social`, `community`, `referral`, `email`, `launch`, `video`, `direct`, `other`.
+
+A known `utm_medium` is used. An unknown one is ignored (never forwarded), and the medium is inferred from the
+source: google / bing / duckduckgo → `organic`; linkedin / x → `social`; reddit / devto / hashnode → `community`;
+producthunt → `launch`; youtube → `video`; newsletter → `email`; github → `referral`; direct → `direct`; an
+unrecognised external site → `referral`; otherwise `other`.
+
+### Campaign and content
+
+`utm_campaign` is kept **only** if it matches `kx_[a-z0-9][a-z0-9_-]{0,62}` — a KinetixUI campaign. `utm_content`
+is kept only if it is a slug `[a-z0-9][a-z0-9_-]{0,63}` **and** a valid campaign is present. Anything else is
+omitted, never "cleaned" into a different value. A campaign is never inferred.
+
+### Precedence
+
+- **Source:** (1) a `utm_source` that maps to a known source; (2) a recognised external referrer; (3) `other` if a
+  tag or an unrecognised external site existed; (4) `direct`.
+- **Medium:** (1) a known `utm_medium`; (2) inferred from the source.
+- **Referrer:** our own site (or a subdomain), no referrer, or a non-web referrer is `direct`. An internal referrer
+  never creates or overwrites acquisition.
+- **Landing page:** the clean pathname of the session's first page.
+
+### Campaign links
+
+Use `utm_*` on **external** links only, never on links inside kinetixui.com. Campaigns must use the `kx_` prefix.
+
+```
+LinkedIn      ?utm_source=linkedin&utm_medium=social&utm_campaign=kx_launch_2026&utm_content=component_demo
+Reddit        ?utm_source=reddit&utm_medium=community&utm_campaign=kx_launch_2026&utm_content=designsystems_post
+DEV           ?utm_source=devto&utm_medium=community&utm_campaign=kx_design_tokens_article
+Product Hunt  ?utm_source=producthunt&utm_medium=launch&utm_campaign=kx_producthunt_launch
+```
+
+Spaces, `@`, dots, slashes, colons, uppercase or any URL characters in a campaign or content value cause it to be
+omitted (the source and medium still count).
+
+### Privacy rules
+
+- The query string is read in one place (`analytics-attribution.ts`); each value is normalised at once and the raw
+  text discarded. Click ids (`gclid`, `fbclid`, `msclkid`, `li_fat_id`, …) are never read, stored or sent.
+- `document.referrer` is never sent or stored: it becomes a category (`kx_referrer`), and an unknown hostname
+  becomes `other` without being kept.
+- The SDK derives its own `$referrer`, `$referring_domain`, `$search_engine` and search keyword
+  (`$session_entry_ph_keyword` is the visitor's search text) and its own `utm_*` copies. All are deleted in
+  `before_send`, and every `kx_*` value is re-validated there, so nothing can carry acquisition out except the
+  validated `kx_*` set. `$current_url` remains origin + clean pathname.
+- Attribution starts only after analytics is enabled (production, real hostname, valid config) and Do Not Track
+  is off; otherwise nothing is written to storage.
+- **Storage blocked?** Nothing throws and no console noise. The session's attribution is kept in memory for the
+  page's life; first touch is omitted (it could not be persisted, so claiming it would be wrong). Product events
+  are unaffected.
+
+### Limitations
+
+- A tab that stays open keeps its session attribution however long it lives, and a first visit that arrives with
+  no referrer (typed URL, a privacy-stripped click) locks first touch as `direct` — write-once means it is never
+  upgraded.
+- Referrers are often absent or trimmed to an origin; `direct` overstates typed visits.
+- Clearing site data, private windows and another browser or device all start a new "first touch".
+- Only KinetixUI-tagged campaigns are named. Untagged shares appear as their referrer or as `other`/`direct`.
+
+### Developer Activation Rate
+
+Derived in PostHog — never in application code, and there is deliberately no `activated` event:
+
+```
+Developer Activation Rate
+  = unique anonymous visitors with at least one of
+      cli_command_copied, install_command_copied, component_code_copied
+  ÷ unique anonymous visitors
+```
+
+Break it down by `kx_source`, `kx_medium`, `kx_campaign`, or `kx_first_source` to compare channels.

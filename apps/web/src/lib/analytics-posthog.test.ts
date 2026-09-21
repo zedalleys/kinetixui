@@ -74,24 +74,64 @@ describe("sanitizeCapture (before_send)", () => {
       capture(
         {
           $current_url: "https://kinetixui.com/docs/changelog?q=private#0.22.0",
-          $referrer: "https://www.google.com/search?q=design+system",
+          $session_entry_url: "https://kinetixui.com/components?filter=data",
           $pathname: "/docs/changelog",
           keep: "me",
         },
         {
           $set: { $current_url: "https://kinetixui.com/x?a=1" },
-          $set_once: { $initial_current_url: "https://kinetixui.com/?utm_source=x", $initial_referrer: "$direct" },
+          $set_once: { $initial_current_url: "https://kinetixui.com/?utm_source=x" },
         },
       ),
     )!;
     expect(out.properties).toMatchObject({
       $current_url: "https://kinetixui.com/docs/changelog",
-      $referrer: "https://www.google.com/search",
+      $session_entry_url: "https://kinetixui.com/components",
       $pathname: "/docs/changelog",
       keep: "me",
     });
     expect(out.$set).toEqual({ $current_url: "https://kinetixui.com/x" });
-    expect(out.$set_once).toEqual({ $initial_current_url: "https://kinetixui.com/", $initial_referrer: "$direct" });
+    expect(out.$set_once).toEqual({ $initial_current_url: "https://kinetixui.com/" });
+  });
+
+  it("deletes the SDK's referrer properties outright: no URL, path or hostname of the referring site survives", () => {
+    const out = sanitizeCapture(
+      capture(
+        {
+          $referrer: "https://reddit.com/r/private-sub/comments/abc?utm_source=x",
+          $referring_domain: "example-secret-domain.com",
+          $session_entry_referrer: "https://www.google.com/search?q=kinetixui",
+          $session_entry_referring_domain: "www.google.com",
+          // the SDK reads the visitor's search keyword out of a search-engine referrer's query string
+          $search_engine: "google",
+          ph_keyword: "email@example.com",
+          $session_entry_search_engine: "google",
+          $session_entry_ph_keyword: "email@example.com",
+          $pathname: "/",
+        },
+        {
+          $set_once: {
+            $initial_referrer: "https://a.example/private",
+            $initial_referring_domain: "a.example",
+            $initial_ph_keyword: "private search",
+            $initial_search_engine: "bing",
+          },
+        },
+      ),
+    )!;
+    expect(out.properties).toEqual({ $pathname: "/" });
+    expect(out.$set_once).toEqual({});
+    expect(JSON.stringify(out)).not.toMatch(/reddit|google|example|private|keyword|search/);
+  });
+
+  it("drops Google's click-source parameter along with the other click ids", () => {
+    const out = sanitizeCapture(capture({ gclsrc: "aw.ds", $session_entry_gclsrc: "aw.ds", $pathname: "/" }))!;
+    expect(out.properties).toEqual({ $pathname: "/" });
+  });
+
+  it("keeps the kx_ attribution properties — the campaign filter must not mistake them for SDK campaign data", () => {
+    const out = sanitizeCapture(capture({ kx_source: "linkedin", kx_medium: "social", kx_campaign: "kx_launch_2026", kx_first_source: "reddit", $pathname: "/" }))!;
+    expect(out.properties).toEqual({ kx_source: "linkedin", kx_medium: "social", kx_campaign: "kx_launch_2026", kx_first_source: "reddit", $pathname: "/" });
   });
 
   it("drops campaign parameters, including the session-entry copies the SDK makes, and keeps unrelated properties", () => {
