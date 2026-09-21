@@ -1095,7 +1095,7 @@ export function ChartsContent() {
         title="Brush + zoom"
         description="A long series with a draggable range selector underneath."
         contentClassName="block p-4"
-        code={`<ChartContainer config={config} className="min-h-[280px] w-full">
+        code={`<ChartContainer config={config} role="group" label="Request volume; drag the range selector to zoom" className="min-h-[280px] w-full">
   <LineChart accessibilityLayer data={long} margin={{ left: 8, right: 8 }}>
     <CartesianGrid vertical={false} />
     <XAxis dataKey="d" tickLine={false} axisLine={false} minTickGap={24} />
@@ -1109,6 +1109,7 @@ export function ChartsContent() {
       >
         <ChartContainer
           config={{ v: { label: "Requests", color: "hsl(var(--chart-1))" } } satisfies ChartConfig}
+          role="group" // the Brush handles are focusable, so this is not a role="img"
           className="h-[300px] w-full"
           label="40 days of request volume; drag the range selector below the chart to zoom the axis."
         >
