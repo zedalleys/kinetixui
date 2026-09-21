@@ -177,14 +177,14 @@ export default function ColorsPage() {
                           {aaTag && (
                             <span
                               className="rounded px-1 py-0.5 font-mono text-[9px] uppercase leading-none"
-                              style={{ background: `${textHex}22` }}
+                              style={{ boxShadow: `inset 0 0 0 1px ${textHex}66` }}
                             >
                               {aaTag}
                             </span>
                           )}
                         </span>
                         {tokenName && (
-                          <span className="self-start rounded px-1.5 py-0.5 font-mono text-[9px] uppercase leading-none" style={{ background: `${textHex}22` }}>
+                          <span className="self-start rounded px-1.5 py-0.5 font-mono text-[9px] uppercase leading-none" style={{ boxShadow: `inset 0 0 0 1px ${textHex}66` }}>
                             --{tokenName}
                           </span>
                         )}
