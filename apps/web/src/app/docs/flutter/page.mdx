@@ -28,7 +28,7 @@ to the token source it depends on.
 
 ## Setup
 
-`pubspec.yaml` targets `sdk: ">=3.3.0 <4.0.0"` / `flutter: ">=3.19.0"`.
+`pubspec.yaml` targets `sdk: ">=3.6.0 <4.0.0"` / `flutter: ">=3.27.0"`.
 Add it via a path dependency:
 
 ```yaml
@@ -88,6 +88,104 @@ After any token change:
 ```bash
 pnpm build:tokens && pnpm vendor:flutter
 ```
+
+## Using KinetixUI without Kinetix widgets
+
+You don't have to adopt the widgets to get the design language. The token
+families and the theme adapters are first-class, and all three approaches below
+read exactly the same generated tokens.
+
+### Foundation tokens
+
+Every family is a plain constant — no widget, no `KinetixTheme`, no
+`BuildContext`:
+
+| Family | API | Example |
+| --- | --- | --- |
+| Colours | `KinetixColors.light` / `.dark` | `KinetixColors.light.action` |
+| Typography | `KinetixType` | `KinetixType.bodyMd` |
+| Spacing | `KinetixSpacing` | `KinetixSpacing.space4` → `16` |
+| Radius | `KinetixRadius` | `KinetixRadius.container` → `12` |
+| Shadows | `KinetixShadow` / `KinetixShadows` | `KinetixShadow.md` |
+| Motion | `KinetixDuration`, `KinetixEasing` | `KinetixDuration.fast` |
+| Opacity | `KinetixOpacity` | `KinetixOpacity.disabled` |
+| Z-index | `KinetixZIndex` | `KinetixZIndex.overlay` |
+
+```dart
+Container(
+  padding: const EdgeInsets.all(KinetixSpacing.space4),
+  decoration: BoxDecoration(
+    color: KinetixColors.light.card,
+    borderRadius: BorderRadius.circular(KinetixRadius.container),
+    boxShadow: KinetixShadow.md,
+  ),
+  child: Text('No Kinetix widget here', style: KinetixType.bodyMd),
+)
+```
+
+Spacing and radius are generated into `kinetix_motion.dart` alongside the motion
+scale — one generator emits the whole theme-independent foundation — and both
+are exported from `package:kinetix_ui/kinetix_ui.dart` like everything else.
+
+`KinetixShadow` carries the `sm` / `md` / `lg` / `xl` elevation scale and the
+`focus*` rings as `List<BoxShadow>`, so multi-layer tokens stay multi-layer.
+Only the focus rings change with brightness — the elevation scale is
+theme-independent black-alpha — so reach for `KinetixShadows.forBrightness(…)`
+or `KinetixShadows.of(context)` when you need the theme-correct ring.
+
+### Material
+
+```dart
+MaterialApp(
+  theme: KinetixMaterialTheme.light(),
+  darkTheme: KinetixMaterialTheme.dark(),
+)
+```
+
+`primary` / `onPrimary` come from `action` / `actionForeground` (the interactive
+fill is the role Material's `primary` actually plays), `primaryContainer` from
+`primary`, `secondaryContainer` from `accent`, `tertiary` from `brand`, `error`
+from `destructive`, `surface` / `onSurface` from `background` / `foreground`,
+`outline` from `border`. The Kinetix palette is larger than Material's role set,
+so `link`, `focus`, `ring`, `actionHover`, `actionPressed`, `muted*`,
+`tertiary*`, `warning*`, `success*`, `info*`, `card*`, `popover*` and `chart`
+have no Material slot and stay on `KinetixColors`. The type scale maps 1:1 onto
+Material 3's 15 `TextTheme` slots.
+
+`ThemeData` has no global spacing scale, so padding stays explicit via
+`KinetixSpacing` — that's a deliberate split, not a gap. `cardTheme`,
+`dialogTheme`, `inputDecorationTheme` and `appBarTheme` are deliberately not
+themed: Flutter renamed those slots' types in 3.32+ (`CardTheme` →
+`CardThemeData`, …) and `flutter analyze` fails on deprecations, so there's no
+spelling correct across supported versions. Style those with `KinetixRadius`.
+
+### Cupertino
+
+```dart
+CupertinoApp(
+  theme: KinetixCupertinoTheme.light(),
+)
+```
+
+Maps what Cupertino has — `brightness`, `primaryColor`,
+`primaryContrastingColor`, `scaffoldBackgroundColor`, `barBackgroundColor` and
+the text theme. Cupertino widgets keep their native behaviour; the adapter
+changes colour and type, it doesn't make them look like Material.
+
+### Mixed
+
+```dart
+MaterialApp(
+  theme: KinetixMaterialTheme.light(),
+  darkTheme: KinetixMaterialTheme.dark(),
+  home: KinetixTheme(child: /* Kinetix + native widgets together */),
+)
+```
+
+`KinetixTheme` resolves brightness from `MediaQuery.platformBrightness`, so it
+follows the system automatically. If you drive brightness yourself with
+`themeMode`, pass it through — `KinetixTheme(brightness: Theme.of(context).brightness, …)`
+— so both systems agree.
 
 ## What's covered
 
@@ -153,6 +251,12 @@ overlays and disclosures. Overlay widgets (`KinetixDialog`,
 
 ## Known gaps
 
+- **Shadow tokens are Flutter-first.** `KinetixShadow` / `KinetixShadowDark` are
+  generated for Flutter and for the web (`--shadow-*` in `extras.css`). SwiftUI
+  and Jetpack Compose still have **no** generated shadow output — their ports
+  hand-write the few shadows they use. That's a gap in the token engine, not in
+  Flutter; porting the same generator to `KinetixShadow.swift` / `.kt` is a
+  follow-up.
 - **`KinetixSidebar` is a scoped port** — like SwiftUI and Compose it is the
   slide-in nav drawer (scrim, `visible` / `onDismiss`, `KinetixSidebarGroup`,
   `KinetixSidebarMenuItem`) and drops the desktop shell: rail / icon-collapse

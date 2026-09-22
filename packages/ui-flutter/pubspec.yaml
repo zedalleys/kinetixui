@@ -8,8 +8,13 @@ repository: https://github.com/zedalleys/kinetixui
 issue_tracker: https://github.com/zedalleys/kinetixui/issues
 
 environment:
-  sdk: ">=3.3.0 <4.0.0"
-  flutter: ">=3.19.0"
+  sdk: ">=3.6.0 <4.0.0"
+  # Corrected from ">=3.19.0", which was already inaccurate: the widgets have used
+  # `Color.withValues(alpha:)` (Flutter 3.27 / Dart 3.6, the wide-gamut Color API) since before this
+  # change, so 3.19 could never have compiled the package. KinetixMaterialTheme also needs >=3.22,
+  # where `ColorScheme.background` / `onBackground` stopped being required constructor arguments.
+  # This declares the floor the code actually has, rather than lowering the code to an older one.
+  flutter: ">=3.27.0"
 
 dependencies:
   flutter:
