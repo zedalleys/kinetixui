@@ -13,8 +13,8 @@
     "React": 11,
     "Angular": 0,
     "SwiftUI": 0,
-    "Compose": 5,
-    "Flutter": 5
+    "Compose": 7,
+    "Flutter": 7
   },
   "onEveryPlatform": 0,
   "blocks": {
@@ -43,10 +43,14 @@
       "Flutter"
     ],
     "team-members": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "comment-box": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "empty-state": [
       "React"
