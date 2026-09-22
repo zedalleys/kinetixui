@@ -28,6 +28,7 @@ export const ANALYTICS_SOURCES = [
   "footer",
   "homepage_hero",
   "homepage",
+  "homepage_flagship",
   "docs_sidebar",
   "docs_page",
   "component_page",

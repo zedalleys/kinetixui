@@ -56,6 +56,9 @@ jobs:
       - name: Component manifest check (status + platforms)
         run: pnpm check:manifest
 
+      - name: Flagship example drift check (homepage source vs. the four CI-compiled example files)
+        run: pnpm check:flagship-examples
+
       - name: Icon mapping drift check
         run: pnpm check:icons
 

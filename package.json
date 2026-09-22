@@ -27,6 +27,8 @@
     "check:icons": "node scripts/check-icon-mapping.mjs",
     "gen:manifest": "node scripts/gen-manifest.mjs",
     "check:manifest": "node scripts/gen-manifest.mjs --check",
+    "gen:flagship": "node scripts/gen-flagship-examples.mjs",
+    "check:flagship-examples": "node scripts/gen-flagship-examples.mjs --check",
     "check:a11y-browser": "node scripts/a11y-browser.mjs",
     "check:a11y-site": "node scripts/a11y-site.mjs --base http://127.0.0.1:3000",
     "check:typography": "node scripts/check-typography.mjs",
