@@ -13,16 +13,20 @@
     "React": 11,
     "Angular": 0,
     "SwiftUI": 0,
-    "Compose": 2,
-    "Flutter": 2
+    "Compose": 5,
+    "Flutter": 5
   },
   "onEveryPlatform": 0,
   "blocks": {
     "sign-in": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "stat-cards": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "pricing-tier": [
       "React"
@@ -34,7 +38,9 @@
       "React"
     ],
     "settings-list": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "team-members": [
       "React"
