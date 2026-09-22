@@ -13,37 +13,55 @@
     "React": 11,
     "Angular": 0,
     "SwiftUI": 0,
-    "Compose": 2,
-    "Flutter": 2
+    "Compose": 11,
+    "Flutter": 11
   },
   "onEveryPlatform": 0,
   "blocks": {
     "sign-in": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "stat-cards": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "pricing-tier": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "cta-banner": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "table-toolbar": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "settings-list": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "team-members": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "comment-box": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "empty-state": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "alert-stack": [
       "React",
