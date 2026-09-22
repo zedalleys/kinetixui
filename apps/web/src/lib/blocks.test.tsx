@@ -6,7 +6,7 @@ import blocksManifest from "../../../../blocks.manifest.json";
 import componentsManifest from "../../../../components.manifest.json";
 import { BlocksContent } from "../app/blocks/blocks-content";
 import { blockCoverage, blockTotal, blocks } from "./blocks";
-import { PLATFORMS } from "./platform-parity";
+import { PLATFORMS, PLATFORM_DEFINITIONS } from "./platform-parity";
 import { blockExampleSource } from "../registry/block-examples.generated";
 import { blockPreviews } from "../registry/block-previews";
 
@@ -93,10 +93,13 @@ describe("the /blocks page", () => {
   it("shows a platform tab for exactly the platforms a block implements — no undeclared tab", async () => {
     const user = userEvent.setup();
     const { container } = render(<BlocksContent />);
-    await user.click(screen.getAllByRole("tab", { name: "code" })[0]!);
 
     for (const block of blocks) {
       const section = container.querySelector(`section#${block.slug}`)!;
+      // each Showcase owns its own tabs, and Radix keeps an unselected panel unmounted — so the code tab has
+      // to be opened per block rather than once for the page
+      const codeTab = [...section.querySelectorAll('[role="tab"]')].find((t) => t.textContent === "code");
+      await user.click(codeTab as HTMLElement);
       const list = section.querySelector('[role="tablist"][aria-label$="implementation platform"]');
       if (block.platforms.length < 2) {
         // one implementation needs no switcher — a lone tab would imply there is something to switch to
@@ -104,9 +107,13 @@ describe("the /blocks page", () => {
         continue;
       }
       const tabs = [...list!.querySelectorAll('[role="tab"]')].map((t) => t.textContent);
-      expect(tabs).toEqual(block.platforms.map(String));
+      // tabs carry the platform's display label ("Jetpack Compose"), not its manifest key ("Compose"),
+      // and appear in the central platform order
+      expect(tabs).toEqual(block.platforms.map((p) => PLATFORM_DEFINITIONS[p].label));
       // a platform the block does NOT implement must be absent, never a disabled or empty tab
-      for (const p of PLATFORMS.filter((x) => !block.platforms.includes(x))) expect(tabs).not.toContain(p);
+      for (const p of PLATFORMS.filter((x) => !block.platforms.includes(x))) {
+        expect(tabs).not.toContain(PLATFORM_DEFINITIONS[p].label);
+      }
     }
   });
 
