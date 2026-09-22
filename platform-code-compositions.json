@@ -1,0 +1,34 @@
+{
+  "$schema": "https://kinetixui.com/schema/platform-code-compositions.json",
+  "$description": "Demo snippets that show a COMPOSITION rather than a port. A handful of components are deliberately not on the native platforms (components.manifest.json lists them, with the reason for each). Their component pages still carry a native tab, because the useful answer to 'how do I do this on Android?' is the composition those libraries expect — not an empty tab. That is legitimate, but a reader has to be told, because an undeclared native tab is indistinguishable from a claim that the component was ported. Declaring it here is what lets scripts/check-platform-code.mjs tell the two apart, and what lets the component page label the tab honestly. Every symbol in these snippets is still checked against the real package.",
+  "compositions": {
+    "avatar-group-demo": {
+      "platforms": ["SwiftUI", "Compose", "Flutter"],
+      "reason": "AvatarGroup re-wraps its children, which no native layout system does idiomatically. The snippet shows the overlapping row of KinetixAvatars to build instead."
+    },
+    "combobox-demo": {
+      "platforms": ["SwiftUI", "Compose", "Flutter"],
+      "reason": "Combobox is a recipe over Command on the web, not a component anywhere. The snippet shows the native equivalent: a filtered list in a popover, or the platform's own picker."
+    },
+    "form-demo": {
+      "platforms": ["SwiftUI", "Compose", "Flutter"],
+      "reason": "Form is react-hook-form glue with no native analogue. KinetixField and its Label/Description/Message slots already are the equivalent, which is what the snippet shows."
+    },
+    "kanban-board-demo": {
+      "platforms": ["SwiftUI", "Compose", "Flutter"],
+      "reason": "KanbanBoard is built on @dnd-kit's accessible multi-container drag and drop, which has no equivalent dependency natively. The snippet shows each platform's own drag primitive."
+    },
+    "native-select-demo": {
+      "platforms": ["SwiftUI", "Compose", "Flutter"],
+      "reason": "NativeSelect wraps the browser's own <select>, a web-only escape hatch. KinetixSelect already wraps each native platform's own picker, which is what the snippet shows."
+    },
+    "navigation-menu-demo": {
+      "platforms": ["SwiftUI", "Compose", "Flutter"],
+      "reason": "NavigationMenu is a hover-triggered desktop mega-menu with no touch idiom. The snippet shows the platform's own navigation container instead."
+    },
+    "tour-demo": {
+      "platforms": ["SwiftUI", "Compose", "Flutter"],
+      "reason": "Tour targets an arbitrary rendered element by CSS selector; no native platform has an equivalent live-tree query. The snippet shows a sequence of anchored popovers instead."
+    }
+  }
+}
