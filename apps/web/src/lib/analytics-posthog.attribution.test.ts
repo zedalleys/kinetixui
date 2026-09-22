@@ -28,7 +28,9 @@ beforeAll(() => {
     // the PRODUCTION chain (attach attribution, then sanitise), followed by a recorder that swallows the event
     before_send: [
       ...productionChain(),
-      (result) => {
+      // annotated because the `as never[]` spread above erases the array's contextual type, so the recorder's
+      // parameter would otherwise be an implicit any. This is `BeforeSendFn`'s own parameter type.
+      (result: CaptureResult | null) => {
         if (result) seen.push(JSON.parse(JSON.stringify(result)) as CaptureResult);
         return null;
       },

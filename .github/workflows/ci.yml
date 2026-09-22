@@ -101,6 +101,7 @@ jobs:
       - name: Build site
         run: pnpm build:web
 
-      - name: Typecheck (@kinetixui/ui)
-        run: pnpm --filter @kinetixui/ui typecheck
-        continue-on-error: true
+      # Every workspace with a `typecheck` script (@kinetixui/ui, @kinetixui/cli, @kinetixui/web) via turbo.
+      # Was `--filter @kinetixui/ui` + `continue-on-error`, which let real apps/web type errors through unseen.
+      - name: Typecheck (all workspaces)
+        run: pnpm typecheck
