@@ -9,7 +9,9 @@
       "category": "Forms",
       "status": "stable",
       "sources": {
-        "React": "apps/web/src/examples/blocks/sign-in.tsx"
+        "React": "apps/web/src/examples/blocks/sign-in.tsx",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/SignInBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/sign_in_block_test.dart"
       }
     },
     "stat-cards": {
@@ -19,7 +21,9 @@
       "status": "stable",
       "contentClassName": "items-stretch",
       "sources": {
-        "React": "apps/web/src/examples/blocks/stat-cards.tsx"
+        "React": "apps/web/src/examples/blocks/stat-cards.tsx",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/StatCardsBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/stat_cards_block_test.dart"
       }
     },
     "pricing-tier": {
@@ -57,7 +61,9 @@
       "category": "Application",
       "status": "stable",
       "sources": {
-        "React": "apps/web/src/examples/blocks/settings-list.tsx"
+        "React": "apps/web/src/examples/blocks/settings-list.tsx",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/SettingsListBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/settings_list_block_test.dart"
       }
     },
     "team-members": {
