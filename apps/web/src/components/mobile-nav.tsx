@@ -62,6 +62,7 @@ export function MobileNav() {
                       className="block rounded px-2 py-1.5 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       {i.title}
+                      {i.badge && <span className="ml-2 rounded-[3px] border border-border px-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">{i.badge}</span>}
                     </Link>
                   ))}
                 </div>

@@ -1,6 +1,10 @@
 import * as React from "react";
 import { durations, easings, elevation, platformUnits, radiusRoles, radiusScale, spacingScale } from "@/lib/foundations";
+import manifest from "../../../../components.manifest.json";
+import { PLATFORM_DEFINITIONS, type Platform } from "@/lib/platform-parity";
 import { componentTotal, gaps, nonPorts, notSupported, platformCount, platforms, statusCounts } from "@/lib/platform-support";
+
+const manifestComponents = manifest.components as Record<string, { platforms: string[] }>;
 
 /** Same look as the token table on /docs/tokens: a bordered, horizontally scrollable table. */
 function Table({ head, children, label }: { head: string[]; children: React.ReactNode; label: string }) {
@@ -174,10 +178,19 @@ export function ElevationTable() {
 export function PlatformSupportTable() {
   return (
     <Table label="Supported platforms" head={["Platform", "Package · distribution", "Components", "Tokens", "Dark mode", "RTL", "Automated verification"]}>
-      {platforms.map((p) => (
+      {platforms.map((p) => {
+        // maturity comes from platformDefinitions, keyed by the row's platform id — never a second label here
+        const key = (Object.keys(PLATFORM_DEFINITIONS) as Platform[]).find((k) => k.toLowerCase() === p.id);
+        const maturity = key ? PLATFORM_DEFINITIONS[key].maturity : undefined;
+        return (
         <tr key={p.id}>
           <th scope="row" className={`${td} text-left font-medium`}>
             {p.name}
+            {maturity && maturity !== "stable" && (
+              <span className="ml-2 rounded-[3px] border border-border px-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                {maturity}
+              </span>
+            )}
             <span className="mt-0.5 block text-xs font-normal text-muted-foreground">{p.technology}</span>
           </th>
           <td className={td}>
@@ -197,7 +210,8 @@ export function PlatformSupportTable() {
             <span className="mt-1 block font-mono text-[11px] text-muted-foreground">{p.workflow}</span>
           </td>
         </tr>
-      ))}
+        );
+      })}
     </Table>
   );
 }
@@ -247,8 +261,39 @@ export function ComponentTotalInline() {
 }
 
 /** "91" — how many components ship on one platform, from the manifest. */
-export function PlatformCountInline({ platform }: { platform: "React" | "SwiftUI" | "Compose" | "Flutter" }) {
+export function PlatformCountInline({ platform }: { platform: Platform }) {
   return <>{platformCount(platform)}</>;
+}
+
+/** "Preview" — a platform's maturity, read from `platformDefinitions` rather than typed into the prose. */
+export function PlatformMaturityInline({ platform }: { platform: Platform }) {
+  const m = PLATFORM_DEFINITIONS[platform].maturity;
+  return <>{m.charAt(0).toUpperCase() + m.slice(1)}</>;
+}
+
+/**
+ * The components a platform actually ships, as links to their docs — derived from the manifest, so a page that
+ * lists "what Angular has today" cannot drift from what Angular has today.
+ */
+export function PlatformComponentList({ platform }: { platform: Platform }) {
+  const slugs = Object.entries(manifestComponents)
+    .filter(([, c]) => c.platforms.includes(platform))
+    .map(([slug]) => slug)
+    .sort();
+  return (
+    <ul className="my-4 flex flex-wrap gap-2 p-0" aria-label={`Components available for ${platform}`}>
+      {slugs.map((slug) => (
+        <li key={slug} className="list-none">
+          <a
+            href={`/docs/components/${slug}`}
+            className="inline-block rounded-md border border-border px-2 py-1 font-mono text-xs text-foreground no-underline hover:bg-muted"
+          >
+            {componentName(slug)}
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 const WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];

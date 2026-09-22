@@ -38,6 +38,7 @@ const PAGES = [
   "/docs/accessibility",
   "/docs/cli",
   "/docs/changelog",
+  "/docs/angular",
   "/docs/components/button",
   "/docs/components/data-grid",
 ];

@@ -4,7 +4,7 @@ import uiPackage from "../../../../packages/ui/package.json";
 import {
   componentPlatformCount,
   documentedExceptionCount,
-  fullFourPlatformCount,
+  fullCoverageCount,
   projectLicense,
   projectVersion,
 } from "./project-stats";
@@ -16,28 +16,37 @@ import {
  */
 const components = manifest.components as Record<string, { platforms: string[] }>;
 const slugs = Object.keys(components);
-const PLATFORMS = ["React", "SwiftUI", "Compose", "Flutter"];
+/**
+ * Read straight from the manifest rather than re-listed here. That keeps the check independent of the app's
+ * derived modules — which is the point of this file — without planting a second hard-coded platform array,
+ * which is the drift the whole architecture is meant to make impossible.
+ */
+const defs = manifest.platformDefinitions as Record<string, { catalogComplete: boolean }>;
+const PLATFORMS = Object.keys(defs);
+const CATALOG_PLATFORMS = PLATFORMS.filter((p) => defs[p]!.catalogComplete);
 
 describe("project-stats: every value traces to a repository source", () => {
-  it("componentPlatformCount is exactly the four component implementation platforms, not a web/token output count", () => {
-    expect(componentPlatformCount).toBe(4);
+  it("componentPlatformCount is every component implementation platform, not a web/token output count", () => {
+    // deliberately NOT a literal: the whole point of platformDefinitions is that adding a platform moves this
     expect(componentPlatformCount).toBe(PLATFORMS.length);
+    // the token outputs (CSS, TypeScript, Swift, Kotlin, Dart) must never be counted as platforms
+    for (const p of PLATFORMS) expect(["CSS", "HTML", "HTML/CSS", "TypeScript", "Tailwind"]).not.toContain(p);
   });
 
-  it("fullFourPlatformCount is exactly how many manifest components carry all four platforms", () => {
-    const expected = slugs.filter((s) => PLATFORMS.every((p) => components[s]!.platforms.includes(p))).length;
-    expect(fullFourPlatformCount).toBe(expected);
-    expect(fullFourPlatformCount).toBeGreaterThan(0);
-    expect(fullFourPlatformCount).toBeLessThanOrEqual(slugs.length);
+  it("fullCoverageCount is exactly how many manifest components carry every complete-catalogue platform", () => {
+    const expected = slugs.filter((s) => CATALOG_PLATFORMS.every((p) => components[s]!.platforms.includes(p))).length;
+    expect(fullCoverageCount).toBe(expected);
+    expect(fullCoverageCount).toBeGreaterThan(0);
+    expect(fullCoverageCount).toBeLessThanOrEqual(slugs.length);
   });
 
   it("documentedExceptionCount is exactly how many manifest components are missing at least one platform", () => {
-    const expected = slugs.filter((s) => !PLATFORMS.every((p) => components[s]!.platforms.includes(p))).length;
+    const expected = slugs.filter((s) => !CATALOG_PLATFORMS.every((p) => components[s]!.platforms.includes(p))).length;
     expect(documentedExceptionCount).toBe(expected);
   });
 
   it("full-platform count and exception count add up to the manifest total", () => {
-    expect(fullFourPlatformCount + documentedExceptionCount).toBe(slugs.length);
+    expect(fullCoverageCount + documentedExceptionCount).toBe(slugs.length);
   });
 
   it("projectVersion is read from @kinetixui/ui's own package.json, not typed by hand", () => {

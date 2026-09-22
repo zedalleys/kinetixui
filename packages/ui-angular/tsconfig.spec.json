@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.lib.json",
+  "compilerOptions": { "types": ["vitest/globals", "node"] },
+  "files": [],
+  "include": ["src/**/*.ts"],
+  "exclude": []
+}

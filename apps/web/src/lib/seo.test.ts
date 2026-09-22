@@ -50,6 +50,7 @@ describe("sitemap", () => {
       "/docs/rtl",
       "/docs/cli",
       "/docs/changelog",
+      "/docs/angular",
       "/docs/compose",
       "/docs/swiftui",
       "/docs/flutter",

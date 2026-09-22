@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { loadReleaseData, renderReleaseNotes } from "../../../../scripts/release-notes.mjs";
 import { buildChangelogUrl } from "./changelog-filter";
+import { platformsFor } from "./platform-parity";
 
 const script = fileURLToPath(new URL("../../../../scripts/release-notes.mjs", import.meta.url));
 const run = (...args: string[]) => spawnSync(process.execPath, [script, ...args], { encoding: "utf8" });
@@ -69,7 +70,10 @@ describe("renderReleaseNotes", () => {
   });
 
   it("renders new components with their docs link and platforms", () => {
-    expect(notes).toMatch(/### New components\n\n- \*\*Actions\*\* — \[Button\]\(https:\/\/kinetixui\.com\/docs\/components\/button\) \(React, SwiftUI, Compose, Flutter\)/);
+    // the platform list is derived, not spelled out: adding a platform to the manifest must not fail this test
+    const platforms = platformsFor("button").join(", ");
+    expect(notes).toContain(`### New components\n\n- **Actions** — [Button](https://kinetixui.com/docs/components/button) (${platforms})`);
+    expect(platforms).toContain("React"); // …but it must still be a real, non-empty list
   });
 
   it("ends with links to the changelog, npm and the tag", () => {

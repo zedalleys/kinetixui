@@ -1,22 +1,52 @@
 {
   "$schema": "https://kinetixui.com/schema/components-manifest.json",
-  "$description": "The single source of truth for per-component metadata. `pnpm gen:manifest` derives component-status.json and platform-parity.json from this file — edit HERE, never those. Every component in packages/ui has an entry (enforced by `pnpm check:manifest`). status: \"beta\" | \"stable\" | \"deprecated\" — a new component ships \"beta\" for the release cycle it lands in (\"beta\" means new, not incomplete), then flips to \"stable\"; nothing is deprecated yet. platforms: every platform the component ships on, explicitly. Where a component is intentionally not on a platform, `platformNote` says why (visual parity is not the goal — token parity plus behavioural-intent parity plus a platform-native implementation is). Regenerate the platform port list by diffing slugs against packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/*.kt (PascalCase), packages/ui-swiftui/Sources/KinetixUI/*.swift (PascalCase) and packages/ui-flutter/lib/src/*.dart (snake_case); `sonner` resolves to Sonner/Toaster/toaster. `registry: false` marks a docs-page component that ships inside another component's registry item (avatar-group in avatar, combobox in multi-select) rather than as its own. `since` is the first tagged release that contained the component (derived from git history; 0.4.1 means \"shipped by the first tagged release\"). New components set it to the version they will ship in.",
-  "platforms": [
-    "React",
-    "SwiftUI",
-    "Compose",
-    "Flutter"
-  ],
-  "nativePlatforms": [
-    "SwiftUI",
-    "Compose",
-    "Flutter"
-  ],
-  "platformAbbr": {
-    "React": "RE",
-    "SwiftUI": "SW",
-    "Compose": "JC",
-    "Flutter": "FL"
+  "$description": "Every KinetixUI component and where it is really implemented. platformDefinitions is the ONE place a platform is declared — its family (web/native), label, abbreviation and whether its catalogue is complete. Everything downstream (platform-parity.json, component-status.json, the website, CI guardrails) derives from this file; nothing re-declares the platform list. A component lists only platforms whose source actually exists — scripts/check-platform-source.mjs verifies that against the packages.",
+  "platformDefinitions": {
+    "React": {
+      "family": "web",
+      "label": "React",
+      "abbr": "RE",
+      "maturity": "stable",
+      "catalogComplete": true,
+      "package": "@kinetixui/ui",
+      "dir": "packages/ui"
+    },
+    "Angular": {
+      "family": "web",
+      "label": "Angular",
+      "abbr": "NG",
+      "maturity": "preview",
+      "catalogComplete": false,
+      "package": "@kinetixui/angular",
+      "dir": "packages/ui-angular"
+    },
+    "SwiftUI": {
+      "family": "native",
+      "label": "SwiftUI",
+      "abbr": "SW",
+      "maturity": "stable",
+      "catalogComplete": true,
+      "package": "KinetixUI",
+      "dir": "packages/ui-swiftui"
+    },
+    "Compose": {
+      "family": "native",
+      "label": "Jetpack Compose",
+      "abbr": "JC",
+      "maturity": "stable",
+      "catalogComplete": true,
+      "package": "com.kinetixui:ui-compose",
+      "dir": "packages/ui-compose"
+    },
+    "Flutter": {
+      "family": "native",
+      "label": "Flutter",
+      "abbr": "FL",
+      "maturity": "stable",
+      "catalogComplete": true,
+      "package": "kinetix_ui",
+      "dir": "packages/ui-flutter"
+    }
   },
   "components": {
     "accordion": {
@@ -34,6 +64,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -103,6 +134,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -133,6 +165,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -163,6 +196,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -193,6 +227,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -245,7 +280,8 @@
       "platforms": [
         "React"
       ],
-      "platformNote": "standing non-port"
+      "platformNote": "not a component — a documented composition of Command (CommandInput/CommandList/CommandItem). There is no Combobox export on any platform; the recipe is React-only because Command is.",
+      "composition": "command"
     },
     "command": {
       "status": "stable",
@@ -341,11 +377,9 @@
       "status": "stable",
       "since": "0.13.0",
       "platforms": [
-        "React",
-        "SwiftUI",
-        "Compose",
-        "Flutter"
-      ]
+        "React"
+      ],
+      "platformNote": "React-only by design: the web needs a provider to thread direction through Radix, while SwiftUI (environment .layoutDirection), Compose (LocalLayoutDirection) and Flutter (Directionality) already carry layout direction in the framework itself. Nothing to port."
     },
     "drawer": {
       "status": "stable",
@@ -460,6 +494,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -518,6 +553,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -694,6 +730,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -774,6 +811,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -827,7 +865,11 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "sourceNames": {
+        "SwiftUI": "Toaster",
+        "Flutter": "toaster"
+      }
     },
     "spinner": {
       "status": "stable",
@@ -854,6 +896,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -894,6 +937,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"

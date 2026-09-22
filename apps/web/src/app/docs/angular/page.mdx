@@ -1,0 +1,117 @@
+export const metadata = {
+  title: "Angular",
+  description: "KinetixUI for Angular — standalone components and directives on the shared KinetixUI token contract. Preview.",
+};
+
+# Angular
+
+`packages/ui-angular` is KinetixUI's **Angular** implementation, packaged as
+`@kinetixui/angular`. Its maturity is
+**<PlatformMaturityInline platform="Angular" />**: it covers
+<PlatformCountInline platform="Angular" /> of the <ComponentTotalInline />
+KinetixUI components today — a foundation subset, not the full catalogue —
+and grows incrementally.
+
+<Callout>
+  **Not published yet.** `@kinetixui/angular` lives in this monorepo and is
+  built and tested in CI, but it is not on npm, so there is no install
+  command to give you yet. Installation will be documented here when the
+  package is distributed.
+</Callout>
+
+## What's available
+
+Every component below is a real export of `@kinetixui/angular`. This list is
+read from `components.manifest.json`, and CI checks every entry against the
+package's public API — it can't claim a component the package doesn't ship.
+
+<PlatformComponentList platform="Angular" />
+
+For every platform side by side, see [Platforms](/docs/platforms).
+
+## How it's built
+
+Angular shares KinetixUI's **design and token contract** with React,
+SwiftUI, Jetpack Compose and Flutter — not their source. These are not
+React components wrapped for Angular: each one is written as a standalone
+Angular component or directive.
+
+Styling comes from the same pipeline as every other platform:
+
+1. **DTCG token source** — the JSON files in `tokens/`.
+2. **Style Dictionary** — `pnpm build:tokens` generates every platform's output.
+3. **CSS custom properties** — the web output, shipped as `@kinetixui/tokens/css`.
+4. **Angular styles** — `@kinetixui/angular/styles.css`, plain CSS that only
+   *spends* those custom properties (`hsl(var(--action))`, `var(--spacing-3)`).
+
+There is no Angular-specific token set and no copied value, so a token change
+reaches Angular exactly as it reaches React. Tailwind is not required: the
+React package is a Tailwind consumer, but an Angular app can use KinetixUI
+without adopting it. Dark mode is the same `.dark` class contract.
+
+## Conventions
+
+- **Standalone** components and directives — import the ones a template uses.
+  No NgModule.
+- **`OnPush`** change detection throughout.
+- **Signal APIs**: `input()`, `model()` for two-way values, `output()` for events.
+- **Directives where the native element should stay the semantic element**:
+  `<button kxButton>`, `<input kxInput>`, `<label kxLabel>`.
+- **Components where KinetixUI generates the markup**: `<kx-card>`,
+  `<kx-badge>`, `<kx-tabs>`.
+- **`ControlValueAccessor`** on form controls, so `[(ngModel)]`,
+  `formControl` and `formControlName` work — including `disabled` set by the
+  form model.
+- The **variant and size names are the shared contract**: `variant="Outline"`,
+  `size="lg"` mean the same thing on every platform.
+
+## Example
+
+```ts
+import { Component, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { KxButton, KxSwitch } from '@kinetixui/angular';
+
+@Component({
+  selector: 'app-preferences',
+  imports: [FormsModule, KxButton, KxSwitch],
+  template: `
+    <kx-switch [(ngModel)]="notifications" aria-label="Email notifications" />
+    <button kxButton variant="Outline" (click)="save()">Save</button>
+  `,
+})
+export class PreferencesComponent {
+  notifications = signal(true);
+  save() {}
+}
+```
+
+This exact template is compiled and exercised by the package's own test
+suite, so it can't drift from the real API.
+
+## Accessibility
+
+- **Native semantics first.** Buttons, inputs and labels stay real
+  `<button>`, `<input>` and `<label>` elements, keeping their built-in
+  focus, keyboard activation and form behaviour.
+- **States map to real semantics**: `disabled` is the native attribute,
+  checkboxes report `aria-checked` (including `mixed`), switches use
+  `role="switch"`, and the error state follows `aria-invalid`.
+- **Tabs** implement the APG keyboard pattern — arrow keys, Home and End,
+  one tab stop — with arrow direction reversed in right-to-left documents.
+
+These behaviours are covered by unit tests. That is not an accessibility
+certification, and there is no browser-level axe suite for Angular yet.
+
+## Current scope
+
+- **Preview subset.** Angular covers part of the catalogue, and full parity
+  with the other platforms is not claimed. Because its catalogue is not yet
+  complete, Angular is left out of the "on every platform" figure on
+  [Platforms](/docs/platforms) rather than counted against it.
+- **Overlays are deliberately deferred.** Dialog, Select, Popover, Tooltip,
+  DropdownMenu and Sheet will share one overlay architecture, so they will
+  arrive together rather than one at a time.
+- **Not published** to npm yet (see above).
+- **No Angular browser axe suite** yet — accessibility is covered by unit
+  tests only for now.

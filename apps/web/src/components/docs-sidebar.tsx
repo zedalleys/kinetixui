@@ -67,6 +67,7 @@ export function DocsSidebar() {
                         )}
                       >
                         {item.title}
+                        {item.badge && <span className="ml-2 rounded-[3px] border border-border px-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">{item.badge}</span>}
                       </Link>
                     </li>
                   );
