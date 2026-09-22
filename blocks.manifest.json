@@ -72,7 +72,9 @@
       "category": "Application",
       "status": "stable",
       "sources": {
-        "React": "apps/web/src/examples/blocks/team-members.tsx"
+        "React": "apps/web/src/examples/blocks/team-members.tsx",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/TeamMembersBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/team_members_block_test.dart"
       }
     },
     "comment-box": {
@@ -81,7 +83,9 @@
       "category": "Application",
       "status": "stable",
       "sources": {
-        "React": "apps/web/src/examples/blocks/comment-box.tsx"
+        "React": "apps/web/src/examples/blocks/comment-box.tsx",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/CommentBoxBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/comment_box_block_test.dart"
       }
     },
     "empty-state": {
