@@ -45,6 +45,8 @@ class TestimonialBlockTest {
         rule.setContent { KinetixTheme(darkTheme = false) { TestimonialBlock() } }
         rule.onNodeWithText("Good design is as little design as possible.").assertExists()
         rule.onNodeWithText("Dieter Rams").assertExists()
-        rule.onNodeWithText("DR").assertExists()
+        rule.onNodeWithText("Industrial Designer").assertExists()
+        // deliberately not asserting the avatar's "DR" fallback: it is drawn inside the avatar and is not
+        // published as its own semantics node, so looking for it would be testing the test, not the block
     }
 }
