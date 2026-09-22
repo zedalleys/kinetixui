@@ -57,11 +57,12 @@ import 'theme.dart';
 ///
 /// `cardTheme`, `dialogTheme`, `inputDecorationTheme` and `appBarTheme` are not
 /// set. Flutter renamed those slots' types (`CardTheme` -> `CardThemeData`, and
-/// the same for Dialog / InputDecoration / AppBar) in 3.32+, so there is no
-/// spelling that is both non-deprecated on current stable and valid on this
-/// package's declared floor of Flutter 3.19 — and `flutter analyze` treats a
-/// deprecation as a failure. Rather than pin the whole package to a newer
-/// Flutter for cosmetic defaults, style those surfaces directly:
+/// the same for Dialog / InputDecoration / AppBar) in 3.32, which splits this
+/// package's supported range (Flutter >= 3.27, see `pubspec.yaml`) in two: the
+/// new `*ThemeData` names do not exist on 3.27-3.31, and the old ones are
+/// deprecated from 3.32 on — where `flutter analyze` treats a deprecation as a
+/// failure. No single spelling is valid across the whole range. Rather than
+/// raise the floor again for cosmetic defaults, style those surfaces directly:
 ///
 /// ```dart
 /// Card(
@@ -111,11 +112,12 @@ class KinetixMaterialTheme {
         ),
       ),
 
-      // `styleFrom` is used rather than a raw ButtonStyle so no
-      // WidgetStateProperty / MaterialStateProperty spelling is needed — those
-      // were renamed in 3.22 and would break either the 3.19 floor or analyze
-      // on current stable. Colours are left to the colorScheme so each button
-      // variant keeps its own Material semantics.
+      // `styleFrom` rather than a raw ButtonStyle: these values are the same in
+      // every widget state, so wrapping each one in a WidgetStateProperty would
+      // add noise without adding meaning. (`WidgetState*` would be available —
+      // it landed in 3.22, below this package's 3.27 floor — this is a
+      // readability choice, not a compatibility one.) Colours are left to the
+      // colorScheme so each button variant keeps its own Material semantics.
       filledButtonTheme: FilledButtonThemeData(style: shared),
       elevatedButtonTheme: ElevatedButtonThemeData(style: shared),
       textButtonTheme: TextButtonThemeData(style: shared),

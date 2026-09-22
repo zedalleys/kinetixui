@@ -64,8 +64,9 @@ void main() {
         expect(ring, hasLength(2));
         expect(ring.first.spreadRadius, lessThan(ring.last.spreadRadius)); // inner edge, then glow
         // the edge is the opaque colour, the glow the same hue at lower alpha — so the two differ.
-        // Compared as whole Colors rather than via an alpha accessor: `Color.opacity` is deprecated on
-        // current stable and `Color.a` does not exist on this package's declared Flutter floor.
+        // Compared as whole Colors rather than through an alpha accessor: that avoids depending on
+        // either spelling (`Color.opacity` is deprecated, `Color.a` needs >= 3.27) and asserts more —
+        // the layers differ as colours, not merely in one channel.
         expect(ring.first.color, isNot(ring.last.color));
       }
     });

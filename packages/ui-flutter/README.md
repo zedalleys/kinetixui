@@ -243,10 +243,11 @@ expose: use `KinetixShadow.*` in a `BoxDecoration` rather than inventing
 elevation integers that don't correspond to the tokens.
 
 **Not themed on purpose:** `cardTheme`, `dialogTheme`, `inputDecorationTheme`
-and `appBarTheme`. Flutter renamed those slots' types in 3.32+ (`CardTheme` →
-`CardThemeData`, and so on) and `flutter analyze` treats a deprecation as a
-failure, so there is no single spelling that is correct across the versions this
-package supports. Style those surfaces directly with `KinetixRadius`.
+and `appBarTheme`. Flutter renamed those slots' types in 3.32 (`CardTheme` →
+`CardThemeData`, and so on), which splits this package's supported range: the
+new names don't exist on 3.27–3.31, the old ones are deprecated from 3.32 on,
+and `flutter analyze` treats a deprecation as a failure. No single spelling is
+valid across the range. Style those surfaces directly with `KinetixRadius`.
 
 **Mixing.** Kinetix widgets and native widgets coexist — theme the app with the
 adapter and scope the Kinetix widgets with `KinetixTheme`:
