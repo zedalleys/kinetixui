@@ -1,0 +1,111 @@
+{
+  "$schema": "https://kinetixui.com/schema/blocks.manifest.json",
+  "$description": "Every published Block and the REAL source file behind each platform it claims. Platform names are validated against components.manifest.json -> platformDefinitions; this file deliberately does not redeclare them, so there is still exactly one authoritative platform-definition site. Coverage is explicit: a platform absent from a block's `sources` is not supported, and nothing is ever inferred. Source paths are written out rather than guessed from the slug, because a block's file naming differs per platform and a wrong guess would silently drop a real implementation. scripts/check-block-source.mjs verifies every path exists and carries the extraction markers; scripts/gen-block-examples.mjs turns them into the snippets the website shows.",
+  "$blockCatalogue": "Unlike the component catalogue, the Block catalogue is NOT expected to exist on every platform: a block is an example of composition, not part of the library's surface. A platform with no source for a block is simply not offered for it — that is not an exception needing a documented reason, and no `catalogComplete` model applies here.",
+  "blocks": {
+    "sign-in": {
+      "title": "Sign in",
+      "description": "Card + inputs + a primary and a provider button.",
+      "category": "Forms",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/sign-in.tsx"
+      }
+    },
+    "stat-cards": {
+      "title": "Stat cards",
+      "description": "A row of Metric cards for a dashboard header.",
+      "category": "Data",
+      "status": "stable",
+      "contentClassName": "items-stretch",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/stat-cards.tsx"
+      }
+    },
+    "pricing-tier": {
+      "title": "Pricing tier",
+      "description": "Card with a feature list and a CTA.",
+      "category": "Marketing",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/pricing-tier.tsx"
+      }
+    },
+    "cta-banner": {
+      "title": "CTA banner",
+      "description": "Heading, sub-copy, and a primary / secondary action.",
+      "category": "Marketing",
+      "status": "stable",
+      "contentClassName": "items-stretch",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/cta-banner.tsx"
+      }
+    },
+    "table-toolbar": {
+      "title": "Table + toolbar",
+      "description": "Search, a filter Select, an action, and a Table.",
+      "category": "Data",
+      "status": "stable",
+      "contentClassName": "items-stretch",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/table-toolbar.tsx"
+      }
+    },
+    "settings-list": {
+      "title": "Settings list",
+      "description": "List rows with a Switch per item.",
+      "category": "Application",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/settings-list.tsx"
+      }
+    },
+    "team-members": {
+      "title": "Team members",
+      "description": "Avatar, name/role, and a per-row action.",
+      "category": "Application",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/team-members.tsx"
+      }
+    },
+    "comment-box": {
+      "title": "Comment box",
+      "description": "Avatar, Textarea, and a submit action.",
+      "category": "Application",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/comment-box.tsx"
+      }
+    },
+    "empty-state": {
+      "title": "Empty state",
+      "description": "Centered icon, heading, description, and a CTA.",
+      "category": "Application",
+      "status": "stable",
+      "contentClassName": "items-stretch",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/empty-state.tsx"
+      }
+    },
+    "alert-stack": {
+      "title": "Alert stack",
+      "description": "Default, destructive, and success variants.",
+      "category": "Feedback",
+      "status": "stable",
+      "contentClassName": "items-stretch",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/alert-stack.tsx"
+      }
+    },
+    "testimonial": {
+      "title": "Testimonial",
+      "description": "Quote with an attributed author.",
+      "category": "Marketing",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/testimonial.tsx"
+      }
+    }
+  }
+}
