@@ -2,10 +2,6 @@ package com.kinetixui.ui.blocks
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.TrendingDown
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -22,6 +18,10 @@ import org.robolectric.annotation.Config
 
 // The "Stat cards" block — see TestimonialBlockTest.kt for how block fixtures work.
 //
+// No `icon` slot here, unlike the React block: KinetixMetric draws the trend arrow itself, and the decorative
+// icons the web version uses (TrendingUp, Users) live in material-icons-extended, which this package
+// deliberately does not depend on. Idiomatic per platform beats a matching prop list.
+//
 // kx-block:start
 @Composable
 fun StatCardsBlock() {
@@ -32,7 +32,6 @@ fun StatCardsBlock() {
             modifier = Modifier.weight(1f),
             trend = KinetixMetricTrend.Up,
             change = "12.5%",
-            icon = { Icon(Icons.Default.TrendingUp, contentDescription = null) },
         )
         KinetixMetric(
             label = "Active users",
@@ -40,7 +39,6 @@ fun StatCardsBlock() {
             modifier = Modifier.weight(1f),
             trend = KinetixMetricTrend.Up,
             change = "8.1%",
-            icon = { Icon(Icons.Default.TrendingUp, contentDescription = null) },
         )
         KinetixMetric(
             label = "Churn",
@@ -48,7 +46,6 @@ fun StatCardsBlock() {
             modifier = Modifier.weight(1f),
             trend = KinetixMetricTrend.Down,
             change = "0.3%",
-            icon = { Icon(Icons.Default.TrendingDown, contentDescription = null) },
         )
     }
 }
@@ -61,11 +58,12 @@ class StatCardsBlockTest {
     val rule = createComposeRule()
 
     @Test
-    fun renders_every_metric_with_its_value_and_change() {
+    fun renders_every_metric_with_its_value_and_trend() {
         rule.setContent { KinetixTheme(darkTheme = false) { StatCardsBlock() } }
         rule.onNodeWithText("Revenue").assertExists()
         rule.onNodeWithText("2,420").assertExists()
         rule.onNodeWithText("Churn").assertExists()
-        rule.onNodeWithText("0.3%").assertExists()
+        // the change is rendered with the trend arrow prepended ("↓ 0.3%"), so match on a substring
+        rule.onNodeWithText("0.3%", substring = true).assertExists()
     }
 }

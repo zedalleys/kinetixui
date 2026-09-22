@@ -13,8 +13,8 @@
     "React": 11,
     "Angular": 0,
     "SwiftUI": 0,
-    "Compose": 7,
-    "Flutter": 7
+    "Compose": 11,
+    "Flutter": 11
   },
   "onEveryPlatform": 0,
   "blocks": {
@@ -29,13 +29,19 @@
       "Flutter"
     ],
     "pricing-tier": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "cta-banner": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "table-toolbar": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "settings-list": [
       "React",
@@ -53,7 +59,9 @@
       "Flutter"
     ],
     "empty-state": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "alert-stack": [
       "React",

@@ -32,7 +32,9 @@
       "category": "Marketing",
       "status": "stable",
       "sources": {
-        "React": "apps/web/src/examples/blocks/pricing-tier.tsx"
+        "React": "apps/web/src/examples/blocks/pricing-tier.tsx",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/PricingTierBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/pricing_tier_block_test.dart"
       }
     },
     "cta-banner": {
@@ -42,7 +44,9 @@
       "status": "stable",
       "contentClassName": "items-stretch",
       "sources": {
-        "React": "apps/web/src/examples/blocks/cta-banner.tsx"
+        "React": "apps/web/src/examples/blocks/cta-banner.tsx",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/CtaBannerBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/cta_banner_block_test.dart"
       }
     },
     "table-toolbar": {
@@ -52,7 +56,9 @@
       "status": "stable",
       "contentClassName": "items-stretch",
       "sources": {
-        "React": "apps/web/src/examples/blocks/table-toolbar.tsx"
+        "React": "apps/web/src/examples/blocks/table-toolbar.tsx",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/TableToolbarBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/table_toolbar_block_test.dart"
       }
     },
     "settings-list": {
@@ -95,7 +101,9 @@
       "status": "stable",
       "contentClassName": "items-stretch",
       "sources": {
-        "React": "apps/web/src/examples/blocks/empty-state.tsx"
+        "React": "apps/web/src/examples/blocks/empty-state.tsx",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/EmptyStateBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/empty_state_block_test.dart"
       }
     },
     "alert-stack": {
