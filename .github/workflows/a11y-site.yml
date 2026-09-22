@@ -62,7 +62,7 @@ jobs:
       - name: Start the site
         run: |
           nohup pnpm --filter @kinetixui/web start > site.log 2>&1 &
-          for i in $(seq 1 60); do
+          for _ in $(seq 1 60); do
             curl -sf http://127.0.0.1:3000/ >/dev/null && exit 0
             sleep 2
           done
