@@ -12,12 +12,19 @@ overrides:
   # vite's use. Drop once vite bumps its esbuild floor.
   "esbuild@<0.28.1": "^0.28.2"
 allowBuilds:
+  # ng-packagr pulls this in for `--watch`; the library is only ever built one-shot, so its native
+  # binary is dead weight and its install script is declined rather than approved.
+  '@parcel/watcher': false
   '@bundled-es-modules/glob': true
   core-js: false
   esbuild: true
   msw: true
   style-dictionary: true
   unrs-resolver: false
+  # ng-packagr's build cache (lmdb) and its msgpack codec ship native binaries. The library build does not
+  # need the cache, so their install scripts are declined rather than approved.
+  lmdb: false
+  msgpackr-extract: false
 minimumReleaseAgeExclude:
   - '@turbo/darwin-arm64@2.10.13'
   - '@turbo/linux-64@2.10.13'

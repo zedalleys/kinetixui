@@ -2,10 +2,20 @@
   "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [["@kinetixui/cli", "@kinetixui/tokens", "@kinetixui/ui"]],
+  "fixed": [
+    [
+      "@kinetixui/cli",
+      "@kinetixui/tokens",
+      "@kinetixui/ui",
+      "@kinetixui/angular"
+    ]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@kinetixui/web", "@kinetixui/docs"]
+  "ignore": [
+    "@kinetixui/web",
+    "@kinetixui/docs"
+  ]
 }

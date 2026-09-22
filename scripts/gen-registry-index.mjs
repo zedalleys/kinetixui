@@ -23,7 +23,8 @@ const registry = JSON.parse(readFileSync(`${ROOT}/registry/registry.json`, "utf8
 const parity = JSON.parse(readFileSync(`${ROOT}/platform-parity.json`, "utf8"));
 const status = JSON.parse(readFileSync(`${ROOT}/component-status.json`, "utf8"));
 
-const platformsFor = (slug) => parity.exceptions[slug] ?? parity.platforms;
+// explicit per slug — never "absent means every platform", or adding a platform would retroactively claim it
+const platformsFor = (slug) => parity.components[slug] ?? [];
 const statusFor = (slug) => (status.status[slug] === "stable" ? undefined : status.status[slug]); // "stable" is omitted from the output (the CLI treats absent as stable)
 
 const items = registry.items.map(({ name, type, title, description }) => {

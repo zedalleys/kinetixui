@@ -8,7 +8,7 @@ import { PreferencesPanel } from "@/examples/flagship-preferences";
 import { flagshipExampleSource } from "@/registry/flagship-example.generated";
 import { analytics } from "@/lib/analytics";
 import { PLATFORM_FROM_CODE_TAB } from "@/lib/analytics-surfaces";
-import { documentedExceptionCount, fullFourPlatformCount } from "@/lib/project-stats";
+import { catalogPlatformCount, documentedExceptionCount, fullCoverageCount } from "@/lib/project-stats";
 import { componentTotal } from "@/lib/platform-support";
 import { PLATFORM_ORDER, type Platform } from "@/registry/platform-code";
 import { CopyButton } from "./copy-button";
@@ -120,7 +120,7 @@ export function CrossPlatformFlagship() {
 
       <p className="mt-4 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
         <Link href="/docs/platforms" className="underline-offset-4 hover:text-foreground hover:underline">
-          {fullFourPlatformCount}/{componentTotal} components on all four platforms · {documentedExceptionCount} documented
+          {fullCoverageCount}/{componentTotal} components on all {catalogPlatformCount} platforms · {documentedExceptionCount} documented
           exceptions
         </Link>
       </p>

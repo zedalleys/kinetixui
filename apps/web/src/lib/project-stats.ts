@@ -8,20 +8,32 @@
  * `platform-support.ts` (built from `components.manifest.json`), and `PLATFORMS` already exists in
  * `platform-parity.ts` (built from the generated `platform-parity.json`). This module only combines them.
  */
-import { PLATFORMS } from "./platform-parity";
+import { CATALOG_PLATFORMS, PLATFORMS } from "./platform-parity";
 import { componentTotal, gaps } from "./platform-support";
 import { siteConfig } from "./site";
 
-/** The four component IMPLEMENTATION platforms — React, SwiftUI, Compose, Flutter. Not a web/token output. */
+/**
+ * The component IMPLEMENTATION platforms — React and Angular on the web, SwiftUI, Compose and Flutter native.
+ * Never a token output: CSS, TypeScript, Swift, Kotlin and Dart token files are generated artefacts, not
+ * platforms, and counting them here is the mistake this module exists to prevent.
+ */
 export const componentPlatformCount = PLATFORMS.length;
 
 /**
- * How many of the manifest's components ship on all four implementation platforms. `gaps` (platform-support.ts)
- * lists every component missing at least one platform, so this is the total minus that list's length.
+ * How many platforms the "on every platform" claim is actually about. Angular is excluded while its catalogue
+ * is still rolling out — its gaps are "not ported yet", not decisions, and folding them into the exception
+ * count would misreport both numbers at once. Derived from the manifest's `catalogComplete` flag, so the day
+ * Angular's catalogue is declared complete this number moves on its own.
  */
-export const fullFourPlatformCount = componentTotal - gaps.length;
+export const catalogPlatformCount = CATALOG_PLATFORMS.length;
 
-/** Components with a documented exception — missing at least one implementation platform, with a reason why. */
+/**
+ * How many of the manifest's components ship on every complete-catalogue platform. `gaps`
+ * (platform-support.ts) lists every component missing at least one of those, so this is the total minus it.
+ */
+export const fullCoverageCount = componentTotal - gaps.length;
+
+/** Components with a documented exception — missing at least one complete-catalogue platform, with a reason. */
 export const documentedExceptionCount = gaps.length;
 
 /** `0.22.1` — the version the three lockstep npm packages currently publish. */

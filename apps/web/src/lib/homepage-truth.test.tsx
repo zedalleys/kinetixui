@@ -17,7 +17,7 @@ vi.stubGlobal(
 // animation static, which is irrelevant to what this file asserts.
 window.matchMedia = vi.fn().mockReturnValue({ matches: true, addEventListener() {}, removeEventListener() {} }) as never;
 import { componentTotal } from "./platform-support";
-import { documentedExceptionCount, fullFourPlatformCount, projectLicense, projectVersion } from "./project-stats";
+import { documentedExceptionCount, fullCoverageCount, projectLicense, projectVersion } from "./project-stats";
 
 /**
  * The homepage is marketing copy read by prospective adopters — it is exactly the surface that drifted before
@@ -99,7 +99,7 @@ describe("homepage rendering: matches the repository's current truth", () => {
   });
 
   it("shows the derived platform-parity trust line, not a hand-typed one", () => {
-    expect(text()).toContain(`${fullFourPlatformCount}/${componentTotal}`);
+    expect(text()).toContain(`${fullCoverageCount}/${componentTotal}`);
     expect(text()).toContain(`${documentedExceptionCount} documented`);
   });
 

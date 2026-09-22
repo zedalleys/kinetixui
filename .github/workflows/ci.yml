@@ -56,6 +56,14 @@ jobs:
       - name: Component manifest check (status + platforms)
         run: pnpm check:manifest
 
+      # A manifest claim is not evidence. This checks the other direction: that source exists behind every
+      # declared platform, and that source which exists is declared. React and Angular are checked
+      # structurally (the symbol must be exported from the package's entry point); the three native platforms
+      # are checked at file level, because their symbols live behind compilers this step cannot run — their
+      # real gate is native-*.yml.
+      - name: Declared platforms are backed by real source
+        run: pnpm check:platform-source
+
       - name: Flagship example drift check (homepage source vs. the four CI-compiled example files)
         run: pnpm check:flagship-examples
 
@@ -67,6 +75,15 @@ jobs:
 
       - name: Build registry
         run: pnpm build:registry
+
+      # ng-packagr runs the full Angular compiler with strictTemplates, so this is the package's typecheck as
+      # well as its build — every template is compiled, not just the TypeScript around it. A regression here
+      # fails CI like any other.
+      - name: Build @kinetixui/angular (AOT + strict template typecheck)
+        run: pnpm build:angular
+
+      - name: Test (@kinetixui/angular)
+        run: pnpm test:angular
 
       - name: Test (@kinetixui/ui)
         run: pnpm --filter @kinetixui/ui test

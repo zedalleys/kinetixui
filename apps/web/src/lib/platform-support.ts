@@ -5,6 +5,7 @@
  * repository does not implement is listed under `notSupported`, not given a status.
  */
 import manifest from "../../../../components.manifest.json";
+import { CATALOG_PLATFORMS, NATIVE_PLATFORMS } from "./platform-parity";
 
 type ManifestComponent = { status: string; platforms: string[]; platformNote?: string };
 const components = manifest.components as Record<string, ManifestComponent>;
@@ -16,7 +17,8 @@ export const componentTotal = all.length;
 /** How many components ship on `platform` — the one place prose and tables get a coverage number from. */
 export const platformCount = count;
 
-const NATIVE = ["SwiftUI", "Compose", "Flutter"];
+/** Derived from the manifest's platform families — never a second hard-coded list. */
+const NATIVE: readonly string[] = NATIVE_PLATFORMS;
 
 /**
  * The standing non-ports: components with no native implementation on ANY native platform. Derived, so adding
@@ -52,6 +54,20 @@ export const platforms: PlatformRow[] = [
     rtl: "In progress — logical properties plus `KinetixDirectionProvider`",
     verification: "Unit, interaction and keyboard tests; axe in jsdom and in a real browser (light + dark); contrast, RTL, typography and grid guardrails",
     workflow: "ci.yml, a11y-browser.yml",
+  },
+  {
+    id: "angular",
+    name: "Web · Angular",
+    technology: "Angular (standalone components, signal inputs)",
+    package: "@kinetixui/angular",
+    distribution: "From a repository checkout — not published to npm yet",
+    components: count("Angular"),
+    tokens: "The same generated CSS custom properties as React — one stylesheet, no Angular-specific token set",
+    darkMode: "Yes — the same `.dark` class contract",
+    rtl: "Tabs resolve arrow-key direction from the document; the rest not audited",
+    verification:
+      "`ng-packagr` AOT build with strictTemplates (every template compiled), plus Vitest behaviour tests for roles, keyboard, disabled state, forms integration and RTL. No browser-level axe pass yet",
+    workflow: "ci.yml",
   },
   {
     id: "swiftui",
@@ -98,14 +114,13 @@ export const platforms: PlatformRow[] = [
 export const gaps = all
   .map((slug) => {
     const c = components[slug]!;
-    const missing = ["React", "SwiftUI", "Compose", "Flutter"].filter((p) => !c.platforms.includes(p));
+    const missing = CATALOG_PLATFORMS.filter((p) => !c.platforms.includes(p));
     return { slug, missing, note: c.platformNote };
   })
   .filter((g) => g.missing.length > 0);
 
 /** Platforms people ask about that have NO implementation in the repository. */
 export const notSupported = [
-  { name: "Angular", note: "No package, directive or component." },
   { name: "Wear OS", note: "No implementation yet. Approved as a separate track that derives from Core tokens rather than shrinking the phone components (design spec: `WEARABLES.md`)." },
   { name: "watchOS", note: "No implementation yet. Approved on the same track, following watchOS conventions rather than Wear OS's (design spec: `WEARABLES.md`)." },
   { name: "Plain HTML / CSS package", note: "There is no `kx-*` class API. On the web, use React or the registry (`npx @kinetixui/cli add`)." },

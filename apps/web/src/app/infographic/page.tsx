@@ -9,7 +9,7 @@ import { RegistryTreemap } from "@/components/infographic/registry-treemap";
 import { DepsBar } from "@/components/infographic/deps-bar";
 import { componentDocs, CATEGORY_ORDER } from "@/lib/site";
 import { RELEASES, isNotable } from "@/lib/releases";
-import { countOnPlatform, type Platform } from "@/lib/platform-parity";
+import { PLATFORMS as ALL_PLATFORMS, countOnPlatform, type Platform } from "@/lib/platform-parity";
 import { componentTotal } from "@/lib/platform-support";
 
 export const metadata: Metadata = {
@@ -41,8 +41,8 @@ function chartRecipeCount(): number {
 }
 const CHART_RECIPES = chartRecipeCount();
 
-/* the four component libraries and the five compiled outputs of the token engine */
-const PLATFORMS = ["React", "SwiftUI", "Compose", "Flutter"] as const;
+/* the component libraries (derived — never a second hard-coded list) and the compiled outputs of the token engine */
+const PLATFORMS = ALL_PLATFORMS;
 const PLATFORM_OUTPUTS = ["Web CSS", "tokens.ts", "SwiftUI", "Compose", "Flutter"] as const;
 
 const STATS = [
@@ -62,11 +62,9 @@ const TIMELINE = RELEASES.filter((_, i) => isNotable(i))
 
 /* per-platform component counts, straight from the parity table */
 const REACT_SLUGS = componentDocs.map((c) => c.href.split("/").pop() ?? "");
-const NATIVE_COUNT: Record<Exclude<Platform, "React">, number> = {
-  SwiftUI: countOnPlatform(REACT_SLUGS, "SwiftUI"),
-  Compose: countOnPlatform(REACT_SLUGS, "Compose"),
-  Flutter: countOnPlatform(REACT_SLUGS, "Flutter"),
-};
+const NATIVE_COUNT = Object.fromEntries(
+  ALL_PLATFORMS.filter((p) => p !== "React").map((p) => [p, countOnPlatform(REACT_SLUGS, p)]),
+) as Record<Exclude<Platform, "React">, number>;
 
 type Cell = "full" | "partial" | "none";
 const surfaceCell = (n: number): Cell => (n >= REACT_SLUGS.length ? "full" : "partial");

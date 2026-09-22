@@ -235,6 +235,9 @@ overlays and disclosures. Overlay widgets (`KinetixDialog`,
 - **`Combobox`** — a recipe (Popover + Command) on the web, not a
   component; compose `KinetixPopover` + a filtered list, or reach for
   `KinetixSelect`.
+- **`DirectionProvider`** — the web needs a provider to thread direction
+  through Radix; this platform already carries layout direction in the
+  framework itself, so there is nothing to wrap.
 - **`NativeSelect`** — wraps the browser's own `<select>`, a web-only
   escape hatch from `Select`'s custom popover; `KinetixSelect` already
   wraps Flutter's own `MenuAnchor`.
