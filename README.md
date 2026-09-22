@@ -32,6 +32,11 @@ Free while in beta.
   </a>
 </div>
 
+**[See one interface, four native implementations →](https://kinetixui.com/#flagship)** — a real
+"Notification preferences" panel, rendered live in React, with the actual SwiftUI, Jetpack Compose
+and Flutter source alongside it — each compiled by that platform's own CI, not typed by hand for
+the page.
+
 ## Quick start
 
 ```bash

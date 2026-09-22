@@ -1,21 +1,29 @@
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Boxes, Palette, Smartphone, Zap } from "lucide-react";
-import { Button, Input } from "@kinetixui/ui";
+import { Button } from "@kinetixui/ui";
+import { CrossPlatformFlagship } from "@/components/cross-platform-flagship";
 import { HeroCommand } from "@/components/hero-command";
 import { HeroTokenFan } from "@/components/hero-token-fan";
 import { Marquee, Reveal } from "@/components/reveal";
 import { SectionHead } from "@/components/section-head";
 import { StructuredData } from "@/components/structured-data";
 import { ctaAttrs } from "@/lib/analytics-surfaces";
+import { componentTotal } from "@/lib/platform-support";
+import { PLATFORMS as COMPONENT_PLATFORMS } from "@/lib/platform-parity";
+import { componentPlatformCount, projectLicense, projectVersion } from "@/lib/project-stats";
 
-const PLATFORMS = ["React", "SwiftUI", "Jetpack Compose", "Flutter", "HTML + CSS"];
+// "Compose" is the manifest's short platform name; the marketing ticker uses the fuller, more recognisable name.
+// Any OTHER platform in PLATFORMS renders under its own name — nothing here can silently misname a real platform.
+const PLATFORM_DISPLAY_NAME: Partial<Record<string, string>> = { Compose: "Jetpack Compose" };
+const PLATFORM_TICKER = COMPONENT_PLATFORMS.map((p) => PLATFORM_DISPLAY_NAME[p] ?? p);
 
 const SPEC: [string, string][] = [
-  ["Targets", "05"],
+  ["Platforms", String(componentPlatformCount)],
+  ["Components", String(componentTotal)],
   ["Source", "DTCG"],
   ["Runtime deps", "0"],
-  ["Components", "72"],
-  ["License", "Beta"],
+  ["Version", `v${projectVersion}`],
+  ["License", projectLicense],
 ];
 
 const FEATURES = [
@@ -26,8 +34,8 @@ const FEATURES = [
   },
   {
     icon: Smartphone,
-    title: "Every platform",
-    body: "CSS variables, TypeScript, SwiftUI, Jetpack Compose and Flutter emitted from the same file. The Code tab on every component shows all five.",
+    title: "Native on four platforms",
+    body: "Two different things, deliberately. Tokens are generated — one DTCG source becomes CSS variables and TypeScript for the web, plus Swift, Kotlin and Dart constants. Components are hand-built: React, SwiftUI, Jetpack Compose and Flutter each implement the same component contract natively, never web code wrapped or converted into a native app.",
   },
   {
     icon: Boxes,
@@ -71,9 +79,9 @@ export default function HomePage() {
               </h1>
 
               <p className="mt-7 max-w-xl text-muted-foreground md:text-lg">
-                KinetixUI compiles one design source into living tokens and components for React,
-                SwiftUI, Jetpack Compose and Flutter. Copy a component, own the code, stay in sync as
-                the design moves.
+                One token source, generated for every platform. React, SwiftUI, Jetpack Compose and
+                Flutter each implement the same component contract natively. Copy a component, own
+                the code, stay in sync as the design moves.
               </p>
 
               <div className="mt-9 flex flex-wrap items-center gap-3">
@@ -134,7 +142,7 @@ export default function HomePage() {
               Targets&nbsp;→
             </span>
             <Marquee durationSeconds={26} className="flex-1 py-4">
-              {PLATFORMS.map((p) => (
+              {PLATFORM_TICKER.map((p) => (
                 <span
                   key={p}
                   className="flex items-center gap-3 px-6 font-display text-sm text-muted-foreground"
@@ -148,11 +156,31 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── flagship cross-platform proof ──────────────────────────────── */}
+      <section id="flagship" className="border-b border-border bg-muted/20 scroll-mt-24">
+        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 lg:px-8">
+          <Reveal>
+            <SectionHead index="01" label="One interface, four native implementations" meta="live" />
+            <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
+              The tokens and component contract stay shared. The implementation stays native.
+            </h2>
+            <p className="mt-4 max-w-2xl text-muted-foreground">
+              One real interface, built from <code className="text-foreground">Card</code>,{" "}
+              <code className="text-foreground">Badge</code>, <code className="text-foreground">Switch</code> and{" "}
+              <code className="text-foreground">Button</code> — rendered here with the live React implementation, and
+              backed by real, CI-compiled source for SwiftUI, Jetpack Compose and Flutter. Switch tabs to read the
+              actual platform code, not a mock-up.
+            </p>
+            <CrossPlatformFlagship />
+          </Reveal>
+        </div>
+      </section>
+
       {/* ─── features ledger ──────────────────────────────────────────── */}
       <section className="border-b border-border">
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
           <Reveal>
-            <SectionHead index="01" label="Why KinetixUI" meta="04 principles" />
+            <SectionHead index="02" label="Why KinetixUI" meta="04 principles" />
             <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
               A design system that moves with your design, not after it.
             </h2>
@@ -184,26 +212,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── live strip ───────────────────────────────────────────────── */}
-      <section className="border-b border-border bg-muted/20">
-        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 lg:px-8">
-          <Reveal>
-            <SectionHead index="02" label="Rendered by @kinetixui/ui" meta="live" />
-            <div className="kx-frame mt-10 flex flex-wrap items-center gap-4 border border-border bg-background p-8">
-              <Button>Primary</Button>
-              <Button variant="Secondary">Secondary</Button>
-              <Button variant="Outline">Outline</Button>
-              <Button variant="Destructive">Destructive</Button>
-              <Button variant="Ghost">Ghost</Button>
-              <Button variant="Link">Link</Button>
-              <div className="w-56">
-                <Input placeholder="you@example.com" type="email" />
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
       {/* ─── closer ───────────────────────────────────────────────────── */}
       <section>
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 md:py-28 lg:px-8">
@@ -213,8 +221,9 @@ export default function HomePage() {
               Built for teams that ship on more than one platform.
             </h2>
             <p className="mt-5 max-w-xl text-muted-foreground md:text-lg">
-              Agencies and product teams that want their design system to be identical everywhere.
-              Free today; advanced tooling arrives as{" "}
+              Agencies and product teams shipping a consistent design across React, SwiftUI, Jetpack Compose and
+              Flutter — one token contract, native on every platform, with documented exceptions where a
+              platform-native pattern serves better than a forced port. Free today; advanced tooling arrives as{" "}
               <span className="text-foreground">KinetixUI Pro</span>.
             </p>
             <div className="mt-8">

@@ -11,6 +11,7 @@ export const siteConfig = {
   // Read from @kinetixui/ui at build time — @kinetixui/{ui,cli,tokens} are a
   // changesets `fixed` group, so this one number tracks all three.
   version: uiPkg.version,
+  license: uiPkg.license,
 };
 
 export type NavItem = {
