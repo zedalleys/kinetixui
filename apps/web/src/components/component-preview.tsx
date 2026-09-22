@@ -9,6 +9,8 @@ import { analytics } from "@/lib/analytics";
 import { PLATFORM_FROM_CODE_TAB, componentSlugFor } from "@/lib/analytics-surfaces";
 import { demoRegistry } from "@/registry/demos";
 import { PLATFORM_LABEL, PLATFORM_ORDER, platformCode, type Platform } from "@/registry/platform-code";
+import { compositionReason } from "@/lib/platform-code-compositions";
+import { usageExamples } from "@/registry/usage-examples.generated";
 
 const tabTrigger = cn(
   "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
@@ -53,8 +55,11 @@ export function ComponentPreview({
 
   const Demo = entry.component;
 
-  // React snippet is canonical (from the demo); other platforms come from platformCode.
-  const native = platformCode[name] ?? {};
+  // React snippet is canonical (from the demo). The native ones come from a compiled example where one has
+  // been written (usage-examples.generated.ts, extracted from source the native CI builds), and otherwise
+  // from the hand-written platformCode entry. A key never appears in both: check:platform-code fails on that,
+  // so migrating a snippet means moving it, not copying it.
+  const native = { ...(platformCode[name] ?? {}), ...(usageExamples[name] ?? {}) };
   const byPlatform: Partial<Record<Platform, string>> = { react: entry.source, ...native };
   const platforms = PLATFORM_ORDER.filter((p) => byPlatform[p]);
   // the code itself is never reported — only which component and which platform's snippet was copied
@@ -116,11 +121,22 @@ export function ComponentPreview({
                     </Tabs.Trigger>
                   ))}
                 </Tabs.List>
-                {platforms.map((p) => (
-                  <Tabs.Content key={p} value={p}>
-                    <CodePane code={byPlatform[p]!} onCopy={() => copied(p)} />
-                  </Tabs.Content>
-                ))}
+                {platforms.map((p) => {
+                  // A few components are deliberately not ported. Their native tab shows the composition to
+                  // use instead, which is genuinely useful — but it has to say so, or the tab reads as a claim
+                  // that the component exists on that platform.
+                  const reason = compositionReason(name, p);
+                  return (
+                    <Tabs.Content key={p} value={p}>
+                      {reason && (
+                        <p className="border-b border-border bg-background/60 px-4 py-2.5 text-[13px] text-muted-foreground">
+                          <span className="font-medium text-foreground">Not a {PLATFORM_LABEL[p]} port.</span> {reason}
+                        </p>
+                      )}
+                      <CodePane code={byPlatform[p]!} onCopy={() => copied(p)} />
+                    </Tabs.Content>
+                  );
+                })}
               </Tabs.Root>
             ) : (
               <CodePane code={entry.source} onCopy={() => copied("react")} />

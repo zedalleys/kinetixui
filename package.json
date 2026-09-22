@@ -52,7 +52,10 @@
     "test:angular": "pnpm --filter @kinetixui/angular test",
     "gen:blocks": "node scripts/gen-block-examples.mjs",
     "check:blocks": "node scripts/gen-block-examples.mjs --check",
-    "check:block-source": "node scripts/check-block-source.mjs"
+    "check:block-source": "node scripts/check-block-source.mjs",
+    "gen:usage": "node scripts/gen-usage-examples.mjs",
+    "check:usage": "node scripts/gen-usage-examples.mjs --check",
+    "check:platform-code": "node scripts/check-platform-code.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

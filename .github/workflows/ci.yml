@@ -67,6 +67,15 @@ jobs:
       # A block may only advertise a platform it has real source for, and the snippets the site shows must
       # be the current contents of those files. React is structural (the same fixture renders the live
       # preview); the native sources are compiled by native-*.yml, not here.
+      # Every native snippet a component page shows must be real: matched against a compiled example where
+      # one exists, and otherwise symbol-checked against that platform's package. A snippet for a platform
+      # the component is not on must be declared as a composition, with a reason.
+      - name: Component snippet verification (no invented native APIs)
+        run: pnpm check:platform-code
+
+      - name: Usage example drift check (generated vs. the compiled native sources)
+        run: pnpm check:usage
+
       - name: Block source verification (every declared platform has a real file)
         run: pnpm check:block-source
 
@@ -121,7 +130,7 @@ jobs:
             component-status.json \
             platform-parity.json \
             block-parity.json \
-            apps/web/src/registry/block-examples.generated.ts; then
+            apps/web/src/registry/block-examples.generated.ts \n            apps/web/src/registry/usage-examples.generated.ts; then
             echo "::error::Generated output is stale. Run 'pnpm gen:manifest && pnpm build:tokens && pnpm vendor:compose && pnpm vendor:swiftui && pnpm vendor:flutter && pnpm build:registry' and commit the result."
             exit 1
           fi

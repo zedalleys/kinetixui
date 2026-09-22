@@ -45,18 +45,6 @@ export const PLATFORM_ORDER: Platform[] = ["react", "swift", "kotlin", "dart"];
 type Entry = Partial<Record<Exclude<Platform, "react">, string>>;
 
 export const platformCode: Record<string, Entry> = {
-  "button-demo": {
-    swift: `KinetixButton(action: save) {
-  Text("Button")
-}`,
-    kotlin: `KinetixButton(onClick = ::save) {
-  Text("Button")
-}`,
-    dart: `KinetixButton(
-  onPressed: save,
-  child: const Text('Button'),
-)`,
-  },
 
   "button-variants": {
     swift: `HStack(spacing: 12) {
@@ -114,23 +102,6 @@ export const platformCode: Record<string, Entry> = {
 )`,
   },
 
-  "badge-demo": {
-    swift: `HStack(spacing: 8) {
-  KinetixBadge("Default")
-  KinetixBadge("Secondary", variant: .secondary)
-}`,
-    kotlin: `Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-  KinetixBadge("Default")
-  KinetixBadge("Secondary", variant = KinetixBadgeVariant.Secondary)
-}`,
-    dart: `Row(
-  children: const [
-    KinetixBadge('Default'),
-    SizedBox(width: 8),
-    KinetixBadge('Secondary', variant: KinetixBadgeVariant.secondary),
-  ],
-)`,
-  },
 
   "alert-demo": {
     swift: `KinetixAlert {
@@ -232,26 +203,6 @@ export const platformCode: Record<string, Entry> = {
 )`,
   },
 
-  "switch-demo": {
-    swift: `HStack {
-  KinetixSwitch(isOn: $airplane)
-  Text("Airplane mode")
-}`,
-    kotlin: `Row(verticalAlignment = Alignment.CenterVertically) {
-  KinetixSwitch(checked = airplane, onCheckedChange = { airplane = it })
-  Text("  Airplane mode")
-}`,
-    dart: `Row(
-  children: [
-    KinetixSwitch(
-      value: airplane,
-      onChanged: (v) => setState(() => airplane = v),
-    ),
-    const SizedBox(width: 8),
-    const Text('Airplane mode'),
-  ],
-)`,
-  },
 
   "checkbox-demo": {
     swift: `HStack {
@@ -1301,11 +1252,11 @@ KinetixDataGrid<Item>(
 )`,
     kotlin: `KinetixDataTable(
   columns = listOf(
-    KinetixDataColumn("Invoice", sortKey = { it.invoice }) { it.invoice },
-    KinetixDataColumn("Status") { it.status },
-    KinetixDataColumn("Amount") { it.amount },
+    KinetixColumn("Invoice", cell = { it.invoice }, sortKey = { it.invoice }),
+    KinetixColumn("Status", cell = { it.status }),
+    KinetixColumn("Amount", cell = { it.amount }),
   ),
-  rows = invoices,
+  data = invoices,
   pageSize = 5,
 )`,
     dart: `KinetixDataTable<Invoice>(
@@ -1627,15 +1578,6 @@ KinetixChart(
   ],
   kind: .bar,
   showLegend: true,
-)`,
-    kotlin: `// KinetixChart is a hand-drawn CustomPaint bar chart over the
-// --chart-1…5 palette (no charting dependency). Line/area are a follow-up.
-KinetixChart(
-  points = listOf(
-    KinetixChartPoint("Jan", 186f, seriesIndex = 0),
-    KinetixChartPoint("Jan", 80f, seriesIndex = 1),
-    // …
-  ),
 )`,
     dart: `// KinetixChart is a hand-drawn CustomPaint bar chart over the
 // --chart-1…5 palette (the package takes no charting dependency).
