@@ -1,6 +1,6 @@
 import posthog, { type CaptureResult } from "posthog-js";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { posthogOptions, sanitizeCapture } from "./analytics-posthog";
+import { posthogOptions } from "./analytics-posthog";
 
 /**
  * The unit tests check our options and sanitiser in isolation. This one runs the REAL SDK with our exact options,
@@ -16,10 +16,12 @@ beforeAll(() => {
 
   posthog.init("phc_integrationtest0000", {
     ...posthogOptions("https://posthog.invalid"),
-    // the real sanitiser first, then a recorder that swallows the event so nothing is sent
+    // the PRODUCTION chain, then a recorder that swallows the event so nothing is sent
     before_send: [
-      sanitizeCapture,
-      (result) => {
+      ...([posthogOptions("https://posthog.invalid").before_send].flat() as never[]),
+      // annotated because the `as never[]` spread above erases the array's contextual type, so the recorder's
+      // parameter would otherwise be an implicit any. This is `BeforeSendFn`'s own parameter type.
+      (result: CaptureResult | null) => {
         if (result) seen.push(JSON.parse(JSON.stringify(result)) as CaptureResult);
         return null;
       },

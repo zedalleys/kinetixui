@@ -8,7 +8,8 @@ const posthog = vi.hoisted(() => ({
 }));
 vi.mock("posthog-js", () => ({ default: posthog }));
 
-import { createPostHogClient, posthogOptions, sanitizeCapture, stripQueryAndHash } from "./analytics-posthog";
+import { initAttribution, resetAttributionForTests } from "./analytics-attribution";
+import { attachAttribution, createPostHogClient, posthogOptions, sanitizeCapture, stripQueryAndHash } from "./analytics-posthog";
 
 const HOST = "https://us.i.posthog.com";
 const capture = (properties: Record<string, unknown>, extra: Partial<CaptureResult> = {}) =>
@@ -31,7 +32,14 @@ describe("PostHog options: the conservative configuration", () => {
 
   it("uses manual pageviews only, so PostHog can't double-count ours", () => {
     expect(o.capture_pageview).toBe(false);
-    expect(o.capture_pageleave).toBe(false);
+  });
+
+  it("captures $pageleave. The SDK default ('if_capture_pageview') is OFF with manual pageviews, so it must be explicit", () => {
+    expect(o.capture_pageleave).toBe(true);
+  });
+
+  it("runs attribution first and sanitising second — the order is what makes every event both enriched and clean", () => {
+    expect(o.before_send).toEqual([attachAttribution, sanitizeCapture]);
   });
 
   it("turns off autocapture and its relatives", () => {
@@ -65,6 +73,42 @@ describe("stripQueryAndHash", () => {
     expect(stripQueryAndHash("$direct")).toBe("$direct");
     expect(stripQueryAndHash(undefined)).toBeUndefined();
     expect(stripQueryAndHash(3)).toBe(3);
+  });
+});
+
+describe("attachAttribution (before_send, first step)", () => {
+  const input = { search: "?utm_source=linkedin&utm_medium=social&utm_campaign=kx_launch_2026", referrer: "", pathname: "/docs", ownHostname: "kinetixui.com" };
+
+  beforeEach(() => {
+    resetAttributionForTests();
+    window.sessionStorage.clear();
+    window.localStorage.clear();
+  });
+
+  it("gives an event the SDK created on its own — like $pageleave — the trusted attribution context", () => {
+    initAttribution(input, false);
+    const out = attachAttribution(capture({ $current_url: "https://kinetixui.com/docs", $prev_pageview_duration: 12 }, { event: "$pageleave" } as never))!;
+    expect(out.properties).toMatchObject({ kx_source: "linkedin", kx_medium: "social", kx_campaign: "kx_launch_2026", kx_first_source: "linkedin", $prev_pageview_duration: 12 });
+  });
+
+  it("adds nothing when attribution was not initialised (analytics off, Do Not Track)", () => {
+    const out = attachAttribution(capture({ $pathname: "/" }))!;
+    expect(out.properties).toEqual({ $pathname: "/" });
+  });
+
+  it("passes null through", () => {
+    expect(attachAttribution(null)).toBeNull();
+  });
+
+  it("overwrites a same-named property with the trusted value rather than trusting whatever was there", () => {
+    initAttribution(input, false);
+    const out = attachAttribution(capture({ kx_source: "evil" }))!;
+    expect(out.properties.kx_source).toBe("linkedin");
+  });
+
+  it("combined with sanitizeCapture, a forged value is removed when there is no trusted context to replace it", () => {
+    const out = sanitizeCapture(attachAttribution(capture({ kx_source: "hello@example.com", kx_campaign: "not ours" })))!;
+    expect(out.properties).toEqual({});
   });
 });
 
