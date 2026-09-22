@@ -43,7 +43,8 @@ class TestimonialBlockTest {
     @Test
     fun renders_quote_author_and_avatar_fallback() {
         rule.setContent { KinetixTheme(darkTheme = false) { TestimonialBlock() } }
-        rule.onNodeWithText("Good design is as little design as possible.").assertExists()
+        // substring: KinetixQuote wraps the text in typographic quotation marks, so an exact match finds nothing
+        rule.onNodeWithText("Good design is as little design as possible.", substring = true).assertExists()
         rule.onNodeWithText("Dieter Rams").assertExists()
         rule.onNodeWithText("Industrial Designer").assertExists()
         // deliberately not asserting the avatar's "DR" fallback: it is drawn inside the avatar and is not

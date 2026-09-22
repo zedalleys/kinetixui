@@ -34,7 +34,8 @@ void main() {
       ),
     );
 
-    expect(find.text('Good design is as little design as possible.'), findsOneWidget);
+    // textContaining: KinetixQuote wraps the text in typographic quotation marks, so find.text finds nothing
+    expect(find.textContaining('Good design is as little design as possible.'), findsOneWidget);
     expect(find.text('Dieter Rams'), findsOneWidget);
     expect(find.text('DR'), findsOneWidget);
   });
