@@ -13,8 +13,8 @@
     "React": 11,
     "Angular": 0,
     "SwiftUI": 0,
-    "Compose": 0,
-    "Flutter": 0
+    "Compose": 2,
+    "Flutter": 2
   },
   "onEveryPlatform": 0,
   "blocks": {
@@ -46,10 +46,14 @@
       "React"
     ],
     "alert-stack": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ],
     "testimonial": [
-      "React"
+      "React",
+      "Compose",
+      "Flutter"
     ]
   }
 }

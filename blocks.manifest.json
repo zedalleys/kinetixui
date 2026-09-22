@@ -95,7 +95,9 @@
       "status": "stable",
       "contentClassName": "items-stretch",
       "sources": {
-        "React": "apps/web/src/examples/blocks/alert-stack.tsx"
+        "React": "apps/web/src/examples/blocks/alert-stack.tsx",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AlertStackBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/alert_stack_block_test.dart"
       }
     },
     "testimonial": {
@@ -104,7 +106,9 @@
       "category": "Marketing",
       "status": "stable",
       "sources": {
-        "React": "apps/web/src/examples/blocks/testimonial.tsx"
+        "React": "apps/web/src/examples/blocks/testimonial.tsx",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/TestimonialBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/testimonial_block_test.dart"
       }
     }
   }
