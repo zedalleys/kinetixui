@@ -64,6 +64,15 @@ jobs:
       - name: Declared platforms are backed by real source
         run: pnpm check:platform-source
 
+      # A block may only advertise a platform it has real source for, and the snippets the site shows must
+      # be the current contents of those files. React is structural (the same fixture renders the live
+      # preview); the native sources are compiled by native-*.yml, not here.
+      - name: Block source verification (every declared platform has a real file)
+        run: pnpm check:block-source
+
+      - name: Block snippet drift check (generated vs. the real source files)
+        run: pnpm check:blocks
+
       - name: Flagship example drift check (homepage source vs. the four CI-compiled example files)
         run: pnpm check:flagship-examples
 
@@ -110,7 +119,9 @@ jobs:
             registry/kinetixui \
             specs/components \
             component-status.json \
-            platform-parity.json; then
+            platform-parity.json \
+            block-parity.json \
+            apps/web/src/registry/block-examples.generated.ts; then
             echo "::error::Generated output is stale. Run 'pnpm gen:manifest && pnpm build:tokens && pnpm vendor:compose && pnpm vendor:swiftui && pnpm vendor:flutter && pnpm build:registry' and commit the result."
             exit 1
           fi

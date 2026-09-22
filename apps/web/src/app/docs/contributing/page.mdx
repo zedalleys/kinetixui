@@ -170,9 +170,47 @@ works on the web should be expressible on each native platform from that
 platform's primitives. Where a block leans on a web-only primitive, note
 it.
 
-Each `<Showcase>` on `/blocks` takes an optional `native={{ compose, flutter }}`
-prop — the code tab then shows **React / Compose / Flutter** sub-tabs.
-These snippets are illustrative (they compose the real `Kinetix*`
-composables / widgets but aren't compiled in CI, same status as the
-per-component `platform-code.ts` entries); keep them in step with the
-React version when a block changes.
+Block code is **not** written into the website. Every snippet the site
+shows is extracted from a real source file, and a block may only
+advertise a platform it has one for.
+
+### Adding a block implementation
+
+1. **Write the real source.** One file, in that platform's home:
+
+   | Platform | Where |
+   | --- | --- |
+   | React | `apps/web/src/examples/blocks/<slug>.tsx` |
+   | Angular | `packages/ui-angular/src/examples/blocks/<slug>.ts` |
+   | SwiftUI | `packages/ui-swiftui/Tests/KinetixUITests/Blocks/<Name>Block.swift` |
+   | Compose | `packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/<Name>BlockTest.kt` |
+   | Flutter | `packages/ui-flutter/test/blocks/<name>_block_test.dart` |
+
+   Wrap the part a reader should copy in `// kx-block:start` /
+   `// kx-block:end`. Imports and any test around it stay outside the
+   markers — one file, so the example and the thing the compiler checks
+   can never be two different pieces of code.
+
+2. **Declare it** in `blocks.manifest.json` under that block's
+   `sources`, with the explicit path. Platform names are validated
+   against `components.manifest.json`'s `platformDefinitions`; there is
+   no second platform list.
+
+3. **Regenerate**: `pnpm gen:blocks`.
+
+4. **Check**: `pnpm check:block-source` (every claim has a file) and
+   `pnpm check:blocks` (the generated snippets match the files).
+
+5. CI runs both, and the native workflows compile the native sources —
+   the file paths above sit inside `packages/ui-*`, which is what those
+   workflows watch.
+
+A React block is also its own live preview: `blockPreviews` imports the
+fixture, so the code on the page and the thing rendered above it are the
+same component.
+
+Coverage is explicit. A platform missing from a block's `sources` is not
+supported for that block, and nothing infers otherwise. Unlike the
+component catalogue, blocks are **not** expected on every platform — a
+block is an example of composition, not part of the library surface — so
+a gap needs no documented exception.
