@@ -33,6 +33,7 @@ import {
   motionComposeFormat,
   motionDartFormat,
   motionSwiftFormat,
+  shadowDartFormat,
   swiftUIColorFormat,
   dartColorClassFormat,
   tsNestedFormat,
@@ -56,6 +57,7 @@ StyleDictionary.registerFormat(dartColorClassFormat);
 StyleDictionary.registerFormat(motionSwiftFormat);
 StyleDictionary.registerFormat(motionComposeFormat);
 StyleDictionary.registerFormat(motionDartFormat);
+StyleDictionary.registerFormat(shadowDartFormat);
 
 const isType = (t) => t.$type === 'typography';
 /** duration / cubicBezier / number — the motion + scale primitive categories
@@ -195,6 +197,32 @@ export function getConfig(theme) {
             // top-level semantic colours only — see the ios-swiftui-theme note
             filter: (t) => isColor(t) && isSemantic(t) && t.path.length === 2,
             options: { className: light ? 'KinetixColorScheme' : 'KinetixColorSchemeDark' },
+          },
+        ],
+      },
+
+      /* Flutter shadow scale — BOTH passes, mirroring the css-extras split.
+         Light emits the whole set (sm/md/lg/xl elevation + the focus* rings)
+         as `KinetixShadow`; dark emits ONLY the focus* rings as
+         `KinetixShadowDark`, because those are the only shadows
+         shadow.dark.json overrides. The elevation scale is theme-independent
+         black-alpha, so it is deliberately not duplicated into the dark class.
+         No other native platform consumes shadows yet — SwiftUI and Compose
+         still have no shadow output (see the PR notes). */
+      'flutter-shadow': {
+        transforms: ['attribute/cti'],
+        buildPath: `${DIST}/flutter/`,
+        files: [
+          {
+            destination: light ? 'kinetix_shadow.dart' : 'kinetix_shadow.dark.dart',
+            format: 'kinetix/shadow-dart',
+            filter: light
+              ? (t) => t.$type === 'shadow'
+              : (t) => t.$type === 'shadow' && t.path.at(-1).startsWith('focus'),
+            options: {
+              className: light ? 'KinetixShadow' : 'KinetixShadowDark',
+              fileName: light ? 'kinetix_shadow.dart' : 'kinetix_shadow.dark.dart',
+            },
           },
         ],
       },

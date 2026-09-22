@@ -1,14 +1,26 @@
-/// KinetixUI — Flutter port. `Kinetix*` widgets on the shared design-token
-/// contract (the same tokens the React, Jetpack Compose and SwiftUI
-/// libraries resolve to).
+/// KinetixUI — Flutter port. The shared design-token contract (the same tokens
+/// the React, Jetpack Compose and SwiftUI libraries resolve to), usable three
+/// ways:
 ///
-/// Wrap your app (or a screen) in [KinetixTheme], then read colours with
-/// `KinetixTheme.of(context)`.
+/// 1. **Kinetix widgets.** Wrap a screen in [KinetixTheme], then use
+///    `KinetixButton`, `KinetixCard`, … and read colours with
+///    `KinetixTheme.of(context)`.
+/// 2. **Raw tokens, no widgets.** [KinetixSpacing], [KinetixRadius],
+///    `KinetixShadow`, [KinetixType] and [KinetixColors] are plain constants —
+///    see `src/kinetix_foundation.dart` for the full family list.
+/// 3. **Native Flutter widgets, Kinetix theming.** [KinetixMaterialTheme] and
+///    [KinetixCupertinoTheme] build a [ThemeData] / [CupertinoThemeData] from
+///    the same tokens, so `Card`, `FilledButton` and friends inherit the design
+///    language without a single `Kinetix*` widget.
 library;
 
 export 'src/theme.dart';
 export 'src/kinetix_type.dart';
 export 'src/kinetix_motion.dart';
+export 'src/kinetix_shadows.dart';
+export 'src/kinetix_foundation.dart';
+export 'src/kinetix_material_theme.dart';
+export 'src/kinetix_cupertino_theme.dart';
 
 export 'src/accordion.dart';
 export 'src/alert.dart';

@@ -22,7 +22,9 @@ const files = [
   "kinetix_color_scheme.dart",
   "kinetix_color_scheme.dark.dart",
   "app_text.dart", // class AppText — the type scale (aliased as KinetixType)
-  "kinetix_motion.dart", // KinetixDuration/Easing/Opacity/ZIndex
+  "kinetix_motion.dart", // KinetixDuration/Easing/Opacity/ZIndex + KinetixSpacing/KinetixRadius
+  "kinetix_shadow.dart", // KinetixShadow — elevation scale + focus rings (light)
+  "kinetix_shadow.dark.dart", // KinetixShadowDark — the focus rings dark overrides
 ];
 for (const f of files) {
   copyFileSync(`${SRC}/${f}`, `${DEST}/${f}`);
