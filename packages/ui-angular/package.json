@@ -16,9 +16,11 @@
     "design-tokens",
     "accessibility"
   ],
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "scripts": {
-    "build": "ng-packagr -p ng-package.json",
+    "build": "ng-packagr -p ng-package.json && node scripts/check-dist.mjs",
     "test": "vitest run"
   },
   "peerDependencies": {
@@ -43,5 +45,10 @@
     "typescript": "5.9.3",
     "vitest": "5.0.1",
     "zone.js": "^0.15.0"
+  },
+  "exports": {
+    "./styles.css": {
+      "default": "./styles.css"
+    }
   }
 }

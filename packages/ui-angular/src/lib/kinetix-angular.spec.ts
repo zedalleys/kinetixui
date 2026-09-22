@@ -258,6 +258,50 @@ describe('KxSwitch', () => {
   });
 });
 
+/**
+ * The example on kinetixui.com/docs/angular, verbatim. If the public API changes, this fails before the docs
+ * can show code that no longer compiles — `apps/web/src/lib/angular-docs.test.ts` checks the page still
+ * contains this exact template.
+ */
+export const DOCS_EXAMPLE_TEMPLATE = `
+    <kx-switch [(ngModel)]="notifications" aria-label="Email notifications" />
+    <button kxButton variant="Outline" (click)="save()">Save</button>
+  `;
+
+describe('the /docs/angular example', () => {
+  it('compiles against the real exports and behaves as the page describes', async () => {
+    @Component({
+      selector: 'app-preferences',
+      imports: [FormsModule, KxButton, KxSwitch],
+      template: DOCS_EXAMPLE_TEMPLATE,
+    })
+    class PreferencesComponent {
+      notifications = signal(true);
+      saved = 0;
+      save() {
+        this.saved++;
+      }
+    }
+    const fixture = mount(PreferencesComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const sw = fixture.nativeElement.querySelector('[role="switch"]') as HTMLButtonElement;
+    expect(sw.getAttribute('aria-label')).toBe('Email notifications');
+    expect(sw.getAttribute('aria-checked')).toBe('true'); // the signal's initial value reached the control
+
+    sw.click();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.notifications()).toBe(false);
+
+    const save = fixture.nativeElement.querySelector('button[kxButton]') as HTMLButtonElement;
+    expect(save.className).toContain('kx-btn--outline');
+    save.click();
+    expect(fixture.componentInstance.saved).toBe(1);
+  });
+});
+
 describe('KxTabs', () => {
   const TABS = `
     <kx-tabs>

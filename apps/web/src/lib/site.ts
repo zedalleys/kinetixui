@@ -1,4 +1,14 @@
 import uiPkg from "@kinetixui/ui/package.json";
+import { PLATFORM_DEFINITIONS, type Platform } from "./platform-parity";
+
+/**
+ * A platform's maturity as a nav tag, read from `platformDefinitions` in components.manifest.json. Stable
+ * platforms get no tag — the tag exists to flag the exception, and a nav full of "stable" labels is noise.
+ */
+function maturityBadge(platform: Platform): string | undefined {
+  const m = PLATFORM_DEFINITIONS[platform].maturity;
+  return m === "stable" ? undefined : m;
+}
 
 export const siteConfig = {
   name: "KinetixUI",
@@ -19,6 +29,8 @@ export type NavItem = {
   href: string;
   /** show a "soon" marker in the nav; the route is a coming-soon page */
   soon?: boolean;
+  /** a short status tag shown beside the title (e.g. a platform's maturity) — derive it, never type it */
+  badge?: string;
 };
 
 export type NavGroup = { title: string; items: NavItem[] };
@@ -218,8 +230,10 @@ export const docsNav: NavGroup[] = [
     ],
   },
   {
-    title: "Native Platforms",
+    // web and native implementation libraries together — "Native Platforms" stopped being true when Angular arrived
+    title: "Platform libraries",
     items: [
+      { title: "Angular", href: "/docs/angular", badge: maturityBadge("Angular") },
       { title: "Jetpack Compose", href: "/docs/compose" },
       { title: "SwiftUI", href: "/docs/swiftui" },
       { title: "Flutter", href: "/docs/flutter" },
