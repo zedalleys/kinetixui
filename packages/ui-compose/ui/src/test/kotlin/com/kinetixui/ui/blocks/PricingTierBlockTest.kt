@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,6 +34,10 @@ import org.robolectric.annotation.Config
 
 // The "Pricing tier" block — see TestimonialBlockTest.kt for how block fixtures work.
 //
+// The tick is a text glyph, not an Icon: androidx.compose.material.icons is not on this package's classpath
+// (material3 stopped bringing icons-core transitively), and pulling in material-icons-extended to draw one
+// check mark would be a real dependency added for an example.
+//
 // kx-block:start
 @Composable
 fun PricingTierBlock(onUpgrade: () -> Unit = {}) {
@@ -54,7 +55,7 @@ fun PricingTierBlock(onUpgrade: () -> Unit = {}) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 features.forEach { feature ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Check, contentDescription = null, tint = colors.primary)
+                        Text("✓", color = colors.primary)
                         Spacer(Modifier.width(8.dp))
                         Text(feature, color = colors.foreground)
                     }

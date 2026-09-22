@@ -5,11 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MailOutline
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,6 +26,9 @@ import org.robolectric.annotation.Config
 
 // The "Empty state" block — see TestimonialBlockTest.kt for how block fixtures work.
 //
+// No illustration glyph: androidx.compose.material.icons is not on this package's classpath, and an empty
+// state reads perfectly well from its heading and explanation. The web version's inbox icon is decorative.
+//
 // The web version draws a dashed rule; Compose has no dashed-border modifier, so this uses a solid one. A
 // dashed edge needs drawBehind { drawRoundRect(pathEffect = dashPathEffect(...)) }, which is a lot of drawing
 // code for an example about layout — named here rather than silently omitted.
@@ -47,12 +46,6 @@ fun EmptyStateBlock(onStart: () -> Unit = {}) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Icon(
-            Icons.Default.MailOutline,
-            contentDescription = null,
-            modifier = Modifier.size(32.dp),
-            tint = colors.mutedForeground,
-        )
         Text("No messages yet", fontWeight = FontWeight.Medium, color = colors.foreground)
         Text(
             "When someone messages you, it'll show up here.",

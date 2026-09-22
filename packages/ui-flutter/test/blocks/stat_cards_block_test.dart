@@ -49,6 +49,13 @@ class StatCardsBlock extends StatelessWidget {
 
 void main() {
   testWidgets('renders every metric with its value and change', (WidgetTester tester) async {
+    // A row of three stat cards is a wide-layout pattern — the web version drops to two columns and then one
+    // as the viewport narrows. The default 800px test surface is narrower than the layout is meant for and
+    // overflows inside KinetixMetric's own value/trend row, so the surface is sized to where this block lives.
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
     await tester.pumpWidget(
       MaterialApp(
         home: KinetixTheme(
