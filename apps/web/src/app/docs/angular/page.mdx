@@ -103,15 +103,58 @@ suite, so it can't drift from the real API.
 These behaviours are covered by unit tests. That is not an accessibility
 certification, and there is no browser-level axe suite for Angular yet.
 
+## What is left, by wave
+
+Angular ships in waves rather than alphabetically, so each release is a usable
+group rather than a scattering. The counts below are read from
+`components.manifest.json` — every component with no Angular implementation
+carries the wave it is in, so this table cannot drift from the plan.
+
+<PlatformWaveTable platform="Angular" />
+
+Every component page already has an Angular tab. Where the port has not been
+written, the tab says so and names the wave; it does not show an invented
+example. Where Angular or the DOM already provides the concept — Direction
+Provider, Form — the tab shows that idiom, labelled **Native equivalent**,
+and it is not counted as Angular coverage.
+
+**Overlays are deliberately one wave.** Dialog, Alert Dialog, Select, Popover,
+Tooltip, Dropdown Menu, Context Menu, Hover Card, Sheet and Drawer need one
+shared overlay and focus-management architecture. Implementing them
+individually would mean building that architecture five times and getting it
+subtly different each time, so they arrive together.
+
+## What Stable would require
+
+Angular's maturity is <PlatformMaturityInline platform="Angular" />, and it
+stays there until all of the following are true. Adding more components does
+not by itself change the label, and nothing here is graded on a curve:
+
+1. **Catalogue target reached** — the waves above complete, or every remaining
+   gap reclassified as a native equivalent or a composition with a reason.
+2. **Overlays complete**, on one shared architecture with focus trapping,
+   scroll locking, dismissal and return-focus behaviour.
+3. **Forms complete** — every control a `ControlValueAccessor`, validation
+   states wired to `aria-invalid`, and error messaging tested.
+4. **Documentation complete** — every shipped component reachable from its own
+   page with a compiled example.
+5. **Accessibility suite** — an automated axe pass over the Angular
+   components, not unit tests alone.
+6. **Browser tests** — real-browser keyboard and focus coverage, matching what
+   `@kinetixui/ui` already has.
+7. **Distribution ready** — the built package verified by
+   `scripts/check-dist.mjs`, including the stylesheet.
+8. **Published** to npm, so the install instructions on this page are
+   something a reader can run.
+9. **API stability reviewed** — a deliberate pass over the public surface, with
+   any breaking change made *before* the label changes rather than after.
+
 ## Current scope
 
 - **Preview subset.** Angular covers part of the catalogue, and full parity
   with the other platforms is not claimed. Because its catalogue is not yet
   complete, Angular is left out of the "on every platform" figure on
   [Platforms](/docs/platforms) rather than counted against it.
-- **Overlays are deliberately deferred.** Dialog, Select, Popover, Tooltip,
-  DropdownMenu and Sheet will share one overlay architecture, so they will
-  arrive together rather than one at a time.
 - **Not published** to npm yet (see above).
 - **No Angular browser axe suite** yet — accessibility is covered by unit
   tests only for now.

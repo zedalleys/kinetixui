@@ -2,6 +2,7 @@
  * check-platform-source.mjs — a manifest claim is not evidence.
  *
  *   node scripts/check-platform-source.mjs
+ *   node scripts/check-platform-source.mjs --matrix   also print the component x platform state matrix
  *
  * `components.manifest.json` saying a component ships on a platform has, until now, been taken on trust: the
  * only checks were that the platform name was spelled correctly and that gaps had a note. This verifies the
@@ -77,6 +78,54 @@ const RESOLVERS = {
   Flutter: () => fileResolver("packages/ui-flutter/lib/src", ".dart", "Flutter"),
 };
 
+const MATRIX = process.argv.includes("--matrix");
+
+/**
+ * The component x platform matrix, printed on demand.
+ *
+ * Four states, and they are not interchangeable: an implementation is parity, the other three are guidance.
+ * The verification column says what actually proves each cell, because "React" and "SwiftUI" are not backed by
+ * the same kind of evidence and a matrix that implied they were would be the most misleading artefact in the
+ * repository.
+ */
+const VERIFICATION = {
+  React: "exports",
+  Angular: "exports+ngc",
+  SwiftUI: "file",
+  Compose: "file",
+  Flutter: "file",
+};
+const CELL = {
+  implementation: "impl",
+  "native-equivalent": "native-eq",
+  composition: "composition",
+  planned: "planned",
+};
+
+function printMatrix() {
+  const names = Object.keys(components).sort();
+  const platforms = Object.keys(defs);
+  const width = Math.max(...names.map((n) => n.length));
+  const col = Math.max(...Object.values(CELL).map((c) => c.length), ...Object.values(VERIFICATION).map((v) => v.length)) + 1;
+  console.log("\nComponent x platform — 'impl' is the only state that counts as parity.\n");
+  console.log(`${"component".padEnd(width)}  ${platforms.map((p) => p.padEnd(col)).join("")}`);
+  console.log(`${"verified by".padEnd(width)}  ${platforms.map((p) => VERIFICATION[p].padEnd(col)).join("")}`);
+  console.log("-".repeat(width + 2 + platforms.length * col));
+  const totals = {};
+  for (const name of names) {
+    const c = components[name];
+    const cells = platforms.map((p) => {
+      const state = c.platforms.includes(p) ? "implementation" : c.platformGuidance?.[p]?.type ?? "MISSING";
+      totals[state] = (totals[state] ?? 0) + 1;
+      return (CELL[state] ?? state).padEnd(col);
+    });
+    console.log(`${name.padEnd(width)}  ${cells.join("")}`);
+  }
+  console.log("-".repeat(width + 2 + platforms.length * col));
+  console.log(Object.entries(totals).map(([k, v]) => `${CELL[k] ?? k} ${v}`).join("  ·  "));
+  console.log(`${names.length} components x ${platforms.length} platforms = ${names.length * platforms.length} cells\n`);
+}
+
 const errors = [];
 const warnings = [];
 const summary = [];
@@ -131,6 +180,7 @@ for (const p of Object.keys(defs)) {
   if (BANNED.includes(p)) errors.push(`platformDefinitions.${p}: ${p} is a token output, not a component implementation platform`);
 }
 
+if (MATRIX) printMatrix();
 console.log(summary.map((s) => `  ${s}`).join("\n"));
 if (warnings.length) console.warn(`\n${warnings.map((w) => `  ! ${w}`).join("\n")}`);
 if (errors.length) {

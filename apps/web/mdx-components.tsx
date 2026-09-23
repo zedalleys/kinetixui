@@ -12,6 +12,7 @@ import { ThemePreview } from "@/components/theme-preview";
 import {
   ComponentGapsTable,
   ComponentTotalInline,
+  PlatformWaveTable,
   ElevationTable,
   MotionTable,
   NonPortCountInline,
@@ -93,6 +94,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ThemePreview,
     ComponentGapsTable,
     ComponentTotalInline,
+    PlatformWaveTable,
     ElevationTable,
     MotionTable,
     NonPortCountInline,

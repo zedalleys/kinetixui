@@ -1,21 +1,24 @@
 export const metadata = {
   title: "Contributing",
-  description: "The four-platform rule — every new component or block ships React, Jetpack Compose, SwiftUI and Flutter code, each CI-verified.",
+  description: "The platform rule — every new component ships React, Jetpack Compose, SwiftUI and Flutter code, each CI-verified, and declares what its Angular tab shows.",
 };
 
 # Contributing
 
-KinetixUI is **one design source, four platforms**. React
+KinetixUI is **one design source, one implementation per platform**. React
 (`@kinetixui/ui`) is the source of truth; Jetpack Compose
 (`packages/ui-compose`), SwiftUI (`packages/ui-swiftui`) and Flutter
 (`packages/ui-flutter`) each carry a 1:1 port of the same component
-surface on the same token contract.
+surface on the same token contract. Angular (`packages/ui-angular`) is a
+fifth implementation, still in preview and rolling out in waves — see
+[Angular](/docs/angular).
 
-## The four-platform rule
+## The platform rule
 
 **A new component or block is not "done" until it exists on all four
-platforms** (or is a documented, deliberate non-port on the ones where it
-has no native idiom). Each port:
+catalogue-complete platforms** — React, SwiftUI, Jetpack Compose and Flutter —
+or is a documented, deliberate non-port on the ones where it has no native
+idiom. Each port:
 
 1. **Mirrors the React source 1:1** — the same variants, sizes, states
    and prop names, adjusted only for platform idiom (`onPressed` /
@@ -31,11 +34,36 @@ has no native idiom). Each port:
 4. **Compiles in CI** — see the per-platform workflow below. A port that
    only exists locally doesn't count.
 
+### Every platform tab must have an answer
+
+A component page shows a tab for all five platforms, and a tab is never left
+blank or filled with something invented. Where a component is not implemented
+on a platform, `components.manifest.json` carries a `platformGuidance` entry
+saying what the tab shows instead:
+
+| Kind | What the tab shows | Counts as parity? |
+| --- | --- | --- |
+| *(implemented)* | the component's own example | **Yes** — this is what `platforms` means |
+| `native-equivalent` | the platform's own idiom, compiled | No |
+| `composition` | other KinetixUI components, composed | No |
+| `planned` | nothing — a statement and the delivery wave | No |
+
+`pnpm check:manifest` fails if any (component, platform) pair has neither an
+implementation nor guidance, if a guidance entry names a platform the component
+is actually on, or if a non-`planned` entry has no reason.
+`pnpm check:platform-code` fails in the other direction: guidance that promises
+a snippet and has none, and a snippet sitting under a `planned` gap.
+
+Guidance is deliberately never counted as coverage. The per-platform numbers on
+this site mean one thing — a real implementation — and that is the only reason
+they are worth printing.
+
 ### The standing non-ports
 
-These components are **not** ported to any native platform, by design.
-The list is checked against `components.manifest.json` in CI, so it can't
-drift from what actually ships:
+These components are **not** ported to any native platform, by design. Each one
+carries `composition` or `native-equivalent` guidance per platform in
+`components.manifest.json`, so this table cannot drift from what actually
+ships:
 
 | Component | Why | Use instead |
 | --- | --- | --- |
@@ -56,8 +84,8 @@ documented**, not silently skipped — e.g. `KinetixSheet` is bottom-only,
 
 Every component has an explicit lifecycle status — nothing is `stable` by
 omission. A component ships `beta` for the release cycle it lands in — still
-required to be on all four platforms (or a documented non-port) and
-CI-verified like everything else; `beta` here means "new," not "incomplete."
+required to be on all four catalogue-complete platforms (or a documented
+non-port) and CI-verified like everything else; `beta` here means "new," not "incomplete."
 It moves to `stable` once it's shipped a full cycle with no reported issues.
 `deprecated` is reserved for a component being phased out; nothing has been
 deprecated yet.
@@ -66,8 +94,8 @@ Status and platform coverage live in one place, `components.manifest.json` at
 the repo root. `pnpm gen:manifest` derives `component-status.json` and
 `platform-parity.json` from it (the web app, the CLI registry and `kinetixui
 parity` read those), and `pnpm check:manifest` in CI fails if a component is
-missing, a status is invalid, a platform gap has no `platformNote`, or the
-generated files are stale. The data drives the `/components` gallery
+missing, a status is invalid, a platform gap has no `platformNote` or no
+`platformGuidance`, or the generated files are stale. The data drives the `/components` gallery
 badges/filter and the `<ComponentMeta>` spec strip on each doc page. When you
 cut a release, flip the previous cycle's `beta` entries to `stable` before
 adding the new one's.

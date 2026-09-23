@@ -4,7 +4,10 @@ import manifest from "../../../../components.manifest.json";
 import { PLATFORM_DEFINITIONS, type Platform } from "@/lib/platform-parity";
 import { componentTotal, gaps, nonPorts, notSupported, platformCount, platforms, statusCounts } from "@/lib/platform-support";
 
-const manifestComponents = manifest.components as Record<string, { platforms: string[] }>;
+const manifestComponents = manifest.components as Record<
+  string,
+  { platforms: string[]; platformGuidance?: Record<string, { type: string; wave?: string; reason?: string }> }
+>;
 
 /** Same look as the token table on /docs/tokens: a bordered, horizontally scrollable table. */
 function Table({ head, children, label }: { head: string[]; children: React.ReactNode; label: string }) {
@@ -216,15 +219,23 @@ export function PlatformSupportTable() {
   );
 }
 
+/** How a gap is filled on the component page. Neither counts as platform coverage. */
+const GAP_KIND_LABEL: Record<string, string> = {
+  "native-equivalent": "The platform's own idiom",
+  composition: "A composition of other components",
+  planned: "Nothing — a port is planned",
+};
+
 export function ComponentGapsTable() {
   return (
-    <Table label="Components not on every platform" head={["Component", "Missing on", "Why"]}>
+    <Table label="Components not on every platform" head={["Component", "Missing on", "What the page shows instead", "Why"]}>
       {gaps.map((g) => (
         <tr key={g.slug}>
           <th scope="row" className={`${td} text-left font-medium`}>
             <Code>{g.slug}</Code>
           </th>
           <td className={td}>{g.missing.join(", ")}</td>
+          <td className={td}>{g.kind ? GAP_KIND_LABEL[g.kind] : "—"}</td>
           <td className={`${td} text-muted-foreground`}>{g.note ?? ""}</td>
         </tr>
       ))}
@@ -270,6 +281,62 @@ export function PlatformMaturityInline({ platform }: { platform: Platform }) {
   const m = PLATFORM_DEFINITIONS[platform].maturity;
   return <>{m.charAt(0).toUpperCase() + m.slice(1)}</>;
 }
+
+/**
+ * What is left for a rolling-out platform, by delivery wave — counted from the manifest's `platformGuidance`,
+ * never typed in. A component classified as a native equivalent or a composition is not "remaining": there is
+ * nothing to build, so it is reported separately rather than folded into a backlog number that then never
+ * reaches zero.
+ */
+export function PlatformWaveTable({ platform }: { platform: Platform }) {
+  const byWave = new Map<string, string[]>();
+  let settled = 0;
+  for (const [slug, c] of Object.entries(manifestComponents)) {
+    const g = c.platformGuidance?.[platform];
+    if (!g) continue;
+    if (g.type !== "planned") { settled++; continue; }
+    const wave = g.wave ?? "unassigned";
+    byWave.set(wave, [...(byWave.get(wave) ?? []), slug]);
+  }
+  const ORDER = ["primitives", "inputs", "layout", "navigation", "overlays", "data", "advanced"];
+  const rows = ORDER.filter((w) => byWave.has(w));
+  const shipped = Object.values(manifestComponents).filter((c) => c.platforms.includes(platform)).length;
+
+  return (
+    <div className="my-6">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-border text-left">
+            <th className="py-2 font-medium">Wave</th>
+            <th className="py-2 font-medium">Remaining</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((wave) => (
+            <tr key={wave} className="border-b border-border/60">
+              <td className="py-2 capitalize">{WAVE_TITLE[wave] ?? wave}</td>
+              <td className="py-2 font-mono text-muted-foreground">{byWave.get(wave)!.length}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-3 text-sm text-muted-foreground">
+        {shipped} shipped. {settled} more need no port at all — they are a native equivalent or a composition
+        on {PLATFORM_DEFINITIONS[platform].label}, and each says so on its own page.
+      </p>
+    </div>
+  );
+}
+
+const WAVE_TITLE: Record<string, string> = {
+  primitives: "Primitives",
+  inputs: "Inputs and forms",
+  layout: "Layout",
+  navigation: "Navigation",
+  overlays: "Overlays",
+  data: "Data display",
+  advanced: "Advanced interaction",
+};
 
 /**
  * The components a platform actually ships, as links to their docs — derived from the manifest, so a page that

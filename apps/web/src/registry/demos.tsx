@@ -52,6 +52,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DropdownMenu,
+  KinetixDirectionProvider,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -462,6 +463,48 @@ add(
     </Select>
   ),
   `<Select>\n  <SelectTrigger><SelectValue placeholder="Select a fruit" /></SelectTrigger>\n  <SelectContent>\n    <SelectItem value="apple">Apple</SelectItem>\n  </SelectContent>\n</Select>`,
+);
+add(
+  "direction-provider-demo",
+  () => {
+    const [dir, setDir] = React.useState<"ltr" | "rtl">("rtl");
+    return (
+      <div className="flex w-full max-w-sm flex-col items-center gap-4">
+        <div className="flex gap-2">
+          {(["ltr", "rtl"] as const).map((d) => (
+            <Button key={d} size="sm" variant={dir === d ? "Primary" : "Outline"} onClick={() => setDir(d)}>
+              {d.toUpperCase()}
+            </Button>
+          ))}
+        </div>
+        {/* `dir` on the element mirrors the layout; the provider is what makes Radix's own portaled
+            content agree with it — without it the menu would open left-aligned in an RTL page. */}
+        <KinetixDirectionProvider dir={dir}>
+          <div dir={dir} className="flex w-full justify-start rounded-md border border-border p-4">
+            <Select>
+              <SelectTrigger className="w-[220px]" aria-label="Fruit">
+                <SelectValue placeholder="Select a fruit" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="apple">Apple</SelectItem>
+                <SelectItem value="banana">Banana</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </KinetixDirectionProvider>
+      </div>
+    );
+  },
+  `<html dir={dir}>
+  <KinetixDirectionProvider dir={dir}>
+    <Select>
+      <SelectTrigger><SelectValue placeholder="Select a fruit" /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="apple">Apple</SelectItem>
+      </SelectContent>
+    </Select>
+  </KinetixDirectionProvider>
+</html>`,
 );
 add(
   "separator-demo",

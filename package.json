@@ -48,6 +48,7 @@
     "version-packages": "changeset version",
     "release": "pnpm build:tokens && pnpm --filter @kinetixui/ui build && pnpm --filter @kinetixui/cli build && pnpm -r publish --no-git-checks --provenance && changeset git-tag && git push --tags",
     "check:platform-source": "node scripts/check-platform-source.mjs",
+    "platform:matrix": "node scripts/check-platform-source.mjs --matrix",
     "build:angular": "pnpm --filter @kinetixui/angular build",
     "test:angular": "pnpm --filter @kinetixui/angular test",
     "gen:blocks": "node scripts/gen-block-examples.mjs",

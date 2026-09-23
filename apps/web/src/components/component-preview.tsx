@@ -126,8 +126,8 @@ export function ComponentPreview({
         {state && state !== "implementation" && (
           <GuidanceNote kind={state.type} label={GUIDANCE_LABEL[state.type]}>
             {state.type === "native-equivalent"
-              ? `Not a KinetixUI ${label} component — ${label} already provides this. `
-              : `Not a KinetixUI ${label} component — compose it from the ones that are. `}
+              ? `${label} already provides this, so KinetixUI ships no component for it. `
+              : `KinetixUI ships no ${label} component for this — compose it from the ones it does ship. `}
             {state.reason}
           </GuidanceNote>
         )}
