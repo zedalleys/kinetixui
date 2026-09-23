@@ -10,6 +10,7 @@ import { StructuredData } from "@/components/structured-data";
 import { ctaAttrs } from "@/lib/analytics-surfaces";
 import { componentTotal } from "@/lib/platform-support";
 import { PLATFORMS as COMPONENT_PLATFORMS } from "@/lib/platform-parity";
+import { platformSentence } from "@/lib/platform-prose";
 import { componentPlatformCount, projectLicense, projectVersion } from "@/lib/project-stats";
 
 // "Compose" is the manifest's short platform name; the marketing ticker uses the fuller, more recognisable name.
@@ -34,8 +35,10 @@ const FEATURES = [
   },
   {
     icon: Smartphone,
-    title: "Native on four platforms",
-    body: "Two different things, deliberately. Tokens are generated — one DTCG source becomes CSS variables and TypeScript for the web, plus Swift, Kotlin and Dart constants. Components are hand-built: React, SwiftUI, Jetpack Compose and Flutter each implement the same component contract natively, never web code wrapped or converted into a native app.",
+    // no count in the title: the body already names the platforms from the manifest, and a hand-typed
+    // number here is exactly what went stale when Angular arrived
+    title: "Implemented per platform",
+    body: `Two different things, deliberately. Tokens are generated — one DTCG source becomes CSS variables and TypeScript for the web, plus Swift, Kotlin and Dart constants. Components are hand-built: ${platformSentence} each implement the same component contract natively, never web code wrapped or converted into a native app.`,
   },
   {
     icon: Boxes,
@@ -79,9 +82,9 @@ export default function HomePage() {
               </h1>
 
               <p className="mt-7 max-w-xl text-muted-foreground md:text-lg">
-                One token source, generated for every platform. React, SwiftUI, Jetpack Compose and
-                Flutter each implement the same component contract natively. Copy a component, own
-                the code, stay in sync as the design moves.
+                One token source, generated for every platform. {platformSentence} each implement the
+                same component contract natively. Copy a component, own the code, stay in sync as the
+                design moves.
               </p>
 
               <div className="mt-9 flex flex-wrap items-center gap-3">
@@ -221,8 +224,8 @@ export default function HomePage() {
               Built for teams that ship on more than one platform.
             </h2>
             <p className="mt-5 max-w-xl text-muted-foreground md:text-lg">
-              Agencies and product teams shipping a consistent design across React, SwiftUI, Jetpack Compose and
-              Flutter — one token contract, native on every platform, with documented exceptions where a
+              Agencies and product teams shipping a consistent design across {platformSentence} — one token
+              contract, a native implementation per platform, with documented exceptions where a
               platform-native pattern serves better than a forced port. Free today; advanced tooling arrives as{" "}
               <span className="text-foreground">KinetixUI Pro</span>.
             </p>

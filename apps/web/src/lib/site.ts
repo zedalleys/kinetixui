@@ -1,5 +1,6 @@
 import uiPkg from "@kinetixui/ui/package.json";
 import { PLATFORM_DEFINITIONS, type Platform } from "./platform-parity";
+import { platformSentence } from "./platform-prose";
 
 /**
  * A platform's maturity as a nav tag, read from `platformDefinitions` in components.manifest.json. Stable
@@ -13,8 +14,10 @@ function maturityBadge(platform: Platform): string | undefined {
 export const siteConfig = {
   name: "KinetixUI",
   tagline: "One token architecture, in motion across every platform.",
-  description:
-    "KinetixUI turns a single design source into living tokens and components for React, SwiftUI, Jetpack Compose and Flutter.",
+  // Derived, not typed: this is the OpenGraph and search snippet, and it named four platforms for weeks
+  // after Angular shipped. It also used to say one source becomes "tokens and components", which implies the
+  // component code is generated too — it is not, and the homepage stopped saying so in #199.
+  description: `KinetixUI compiles one DTCG token source into every platform's own token output, and ships native component implementations for ${platformSentence}.`,
   url: "https://kinetixui.com",
   repo: "https://github.com/zedalleys/kinetixui",
   figma: "https://www.figma.com/design/GQXTKKJAPbawd4wcuE77Pf/KinetixUI?node-id=3877-10388",

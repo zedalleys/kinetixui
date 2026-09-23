@@ -4,12 +4,14 @@
 
 **One token architecture, in motion across every platform.**
 
-KinetixUI compiles a single design source into living tokens and a component
-library for **React, SwiftUI, Jetpack Compose, and Flutter** — the same
-components and the same token contract on all four platforms — cross‑platform
-by default, with a small set of documented platform exceptions. Copy a
-component in via the CLI, own the code, and re‑theme with a token edit everywhere
-at once.
+KinetixUI compiles one DTCG token source into every platform's own token
+output, and ships a **native component implementation per platform** —
+**React, SwiftUI, Jetpack Compose and Flutter**, with **Angular in preview**.
+The token contract is shared; the component code is written natively for each
+platform, not generated from one another. Coverage is verified against source
+in CI and published on [/docs/platforms](https://kinetixui.com/docs/platforms)
+rather than asserted here. Copy a component in via the CLI, own the code, and
+re‑theme with a token edit everywhere at once.
 
 Free while in beta.
 
