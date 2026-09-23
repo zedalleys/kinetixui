@@ -29,6 +29,8 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const read = (p) => readFileSync(`${root}/${p}`, "utf8");
 const manifest = JSON.parse(read("components.manifest.json"));
+const parity = existsSync(`${root}/platform-parity.json`) ? JSON.parse(read("platform-parity.json")) : {};
+const evidence = existsSync(`${root}/verification.json`) ? JSON.parse(read("verification.json")) : {};
 const defs = manifest.platformDefinitions;
 const components = manifest.components;
 
@@ -79,16 +81,18 @@ const RESOLVERS = {
 };
 
 const MATRIX = process.argv.includes("--matrix");
+const DETAIL = process.argv.find((a) => a.startsWith("--verification"));
+/** `--verification` for every component, or `--verification=button` for one. */
+const DETAIL_SLUG = DETAIL?.includes("=") ? DETAIL.split("=")[1] : null;
 
 /**
  * The component x platform matrix, printed on demand.
  *
- * Four states, and they are not interchangeable: an implementation is parity, the other three are guidance.
- * The verification column says what actually proves each cell, because "React" and "SwiftUI" are not backed by
- * the same kind of evidence and a matrix that implied they were would be the most misleading artefact in the
- * repository.
+ * Four support states, and they are not interchangeable: an implementation is parity, the other three are
+ * guidance. The "source proof" row says what proves the PRESENCE of each platform's source — a much weaker
+ * thing than how well the implementation is verified, which `--verification` prints from the evidence.
  */
-const VERIFICATION = {
+const SOURCE_PROOF = {
   React: "exports",
   Angular: "exports+ngc",
   SwiftUI: "file",
@@ -102,20 +106,26 @@ const CELL = {
   planned: "planned",
 };
 
+const stateOf = (slug, platform) =>
+  components[slug].platforms.includes(platform)
+    ? "implementation"
+    : components[slug].platformGuidance?.[platform]?.type ?? "MISSING";
+
 function printMatrix() {
   const names = Object.keys(components).sort();
   const platforms = Object.keys(defs);
   const width = Math.max(...names.map((n) => n.length));
-  const col = Math.max(...Object.values(CELL).map((c) => c.length), ...Object.values(VERIFICATION).map((v) => v.length)) + 1;
+  const col = Math.max(...Object.values(CELL).map((c) => c.length), ...Object.values(SOURCE_PROOF).map((v) => v.length)) + 1;
   console.log("\nComponent x platform — 'impl' is the only state that counts as parity.\n");
   console.log(`${"component".padEnd(width)}  ${platforms.map((p) => p.padEnd(col)).join("")}`);
-  console.log(`${"verified by".padEnd(width)}  ${platforms.map((p) => VERIFICATION[p].padEnd(col)).join("")}`);
+  console.log(`${"source proof".padEnd(width)}  ${platforms.map((p) => SOURCE_PROOF[p].padEnd(col)).join("")}`);
+  console.log(`${"package".padEnd(width)}  ${platforms.map((p) => defs[p].maturity.padEnd(col)).join("")}`);
+  console.log(`${"verification".padEnd(width)}  ${platforms.map((p) => String(parity.catalogueVerification?.[p] ?? "-").padEnd(col)).join("")}`);
   console.log("-".repeat(width + 2 + platforms.length * col));
   const totals = {};
   for (const name of names) {
-    const c = components[name];
     const cells = platforms.map((p) => {
-      const state = c.platforms.includes(p) ? "implementation" : c.platformGuidance?.[p]?.type ?? "MISSING";
+      const state = stateOf(name, p);
       totals[state] = (totals[state] ?? 0) + 1;
       return (CELL[state] ?? state).padEnd(col);
     });
@@ -124,6 +134,39 @@ function printMatrix() {
   console.log("-".repeat(width + 2 + platforms.length * col));
   console.log(Object.entries(totals).map(([k, v]) => `${CELL[k] ?? k} ${v}`).join("  ·  "));
   console.log(`${names.length} components x ${platforms.length} platforms = ${names.length * platforms.length} cells\n`);
+}
+
+/**
+ * Per-component detail: what each platform tab is, what the package promises, and exactly which evidence
+ * stands behind the implementation — with the file and line range that proves each one.
+ *
+ * Three separate lines because they are three separate statements. A reader who sees "package: stable" and
+ * "verification: experimental" on adjacent lines has learned something true that one word could not say.
+ */
+function printVerification() {
+  const names = DETAIL_SLUG ? [DETAIL_SLUG] : Object.keys(components).sort();
+  for (const slug of names) {
+    if (!components[slug]) {
+      console.error(`  x no component "${slug}" in the manifest`);
+      process.exitCode = 1;
+      return;
+    }
+    console.log(`\n${slug}  —  lifecycle: ${components[slug].status}`);
+    for (const platform of Object.keys(defs)) {
+      const state = stateOf(slug, platform);
+      const bits = [`  ${platform.padEnd(9)} ${(CELL[state] ?? state).padEnd(12)}`];
+      if (state === "implementation") {
+        bits.push(`package: ${defs[platform].maturity.padEnd(12)}`, `verification: ${parity.verification?.[slug]?.[platform] ?? "?"}`);
+      }
+      console.log(bits.join(" "));
+      if (state !== "implementation") continue;
+      const ev = evidence.components?.[slug]?.[platform] ?? {};
+      for (const kind of evidence.kinds ?? []) {
+        console.log(`      ${kind.padEnd(14)} ${ev[kind] ? `yes   ${ev[kind].join(", ")}` : "—"}`);
+      }
+    }
+  }
+  console.log("");
 }
 
 const errors = [];
@@ -181,6 +224,7 @@ for (const p of Object.keys(defs)) {
 }
 
 if (MATRIX) printMatrix();
+if (DETAIL) printVerification();
 console.log(summary.map((s) => `  ${s}`).join("\n"));
 if (warnings.length) console.warn(`\n${warnings.map((w) => `  ! ${w}`).join("\n")}`);
 if (errors.length) {

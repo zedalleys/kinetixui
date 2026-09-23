@@ -237,6 +237,25 @@ const parity = {
   ),
   /** The floor: the weakest verification level in each platform's declared catalogue. Never an average. */
   catalogueVerification,
+  /**
+   * slug → platform → the evidence kinds that hold, WITHOUT the source references.
+   *
+   * verification.json carries the file-and-line proof behind every one of these, and it stays out of the
+   * browser: the component page only needs to render six ticks and a dash, not 98 KB of paths. Scripts and
+   * server-rendered pages read the full file; this is the client-safe projection of it.
+   */
+  verificationEvidence: Object.fromEntries(
+    entries
+      .filter(([s]) => verification.components?.[s])
+      .map(([s]) => [
+        s,
+        Object.fromEntries(
+          Object.entries(verification.components[s]).map(([p, kinds]) => [p, Object.keys(kinds).sort()]),
+        ),
+      ]),
+  ),
+  /** How many components hold each kind, per platform. Printed as "21 / 98", never as a tick. */
+  evidenceCounts: verification.totals,
 };
 
 let stale = false;

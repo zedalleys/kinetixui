@@ -1,7 +1,17 @@
 import * as React from "react";
 import { durations, easings, elevation, platformUnits, radiusRoles, radiusScale, spacingScale } from "@/lib/foundations";
 import manifest from "../../../../components.manifest.json";
-import { PLATFORM_DEFINITIONS, type Platform } from "@/lib/platform-parity";
+import {
+  CATALOGUE_VERIFICATION,
+  EVIDENCE_COUNTS,
+  EVIDENCE_KINDS,
+  PLATFORMS,
+  PLATFORM_DEFINITIONS,
+  VERIFICATION_COUNTS,
+  VERIFICATION_REQUIRES,
+  type EvidenceKind,
+  type Platform,
+} from "@/lib/platform-parity";
 import { componentTotal, gaps, nonPorts, notSupported, platformCount, platforms, statusCounts } from "@/lib/platform-support";
 
 const manifestComponents = manifest.components as Record<
@@ -215,6 +225,97 @@ export function PlatformSupportTable() {
         </tr>
         );
       })}
+    </Table>
+  );
+}
+
+const EVIDENCE_LABEL: Record<EvidenceKind, string> = {
+  build: "Build",
+  interaction: "Interaction",
+  accessibility: "Accessibility",
+  rtl: "RTL",
+  largeText: "Large text",
+  visual: "Visual",
+  published: "Published",
+};
+
+/**
+ * Per-platform verification summary: what the package promises, and separately what the tests prove.
+ *
+ * Every evidence row is a fraction, never a tick. "Interaction 21 / 98" and a green check are different
+ * claims, and only one of them is true — a tick beside a partially covered catalogue is the single most
+ * misleading thing this page could print.
+ */
+export function PlatformVerificationTable() {
+  return (
+    <div className="my-6 grid gap-4 sm:grid-cols-2">
+      {PLATFORMS.map((platform) => {
+        const def = PLATFORM_DEFINITIONS[platform];
+        const total = platformCount(platform);
+        const counts = EVIDENCE_COUNTS[platform];
+        const rungs = VERIFICATION_COUNTS[platform] ?? {};
+        return (
+          <section key={platform} className="rounded-lg border border-border p-4">
+            <h3 className="font-mono text-sm text-foreground">{def.label}</h3>
+            <dl className="mt-2 space-y-1 font-mono text-[11px]">
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">Implementations</dt>
+                <dd className="tabular-nums">
+                  {total} of {componentTotal}
+                  {def.catalogComplete ? " · catalogue complete" : " · catalogue incomplete"}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">Package maturity</dt>
+                <dd className="capitalize">{def.maturity}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">Distribution</dt>
+                <dd>{def.distribution.published ? def.distribution.channel : `${def.distribution.channel} — not published`}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">Catalogue verification</dt>
+                <dd className="capitalize text-foreground">{CATALOGUE_VERIFICATION[platform] ?? "—"}</dd>
+              </div>
+            </dl>
+            <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Evidence</p>
+            <dl className="mt-1 grid gap-x-5 gap-y-0.5 font-mono text-[11px] sm:grid-cols-2">
+              {EVIDENCE_KINDS.map((kind) => (
+                <div key={kind} className="flex justify-between gap-3">
+                  <dt className="text-muted-foreground">{EVIDENCE_LABEL[kind]}</dt>
+                  <dd className="tabular-nums">
+                    {counts?.[kind] ?? 0} / {total}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              {Object.entries(rungs)
+                .map(([level, n]) => `${n} ${level}`)
+                .join(" · ")}
+              . The catalogue figure above is the weakest of these, not an average.
+            </p>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+/** What each verification rung costs, read from the generator so this cannot describe a different ladder. */
+export function VerificationLadderTable() {
+  return (
+    <Table label="Verification levels" head={["Level", "Evidence required"]}>
+      {(Object.keys(VERIFICATION_REQUIRES) as (keyof typeof VERIFICATION_REQUIRES)[]).map((level) => (
+        <tr key={level}>
+          <th scope="row" className={`${td} text-left font-medium capitalize`}>
+            {level}
+          </th>
+          <td className={td}>
+            {VERIFICATION_REQUIRES[level].map((k) => EVIDENCE_LABEL[k]).join(" · ")}
+          </td>
+        </tr>
+      ))}
     </Table>
   );
 }

@@ -1872,5 +1872,1867 @@
     "SwiftUI": "experimental",
     "Compose": "experimental",
     "Flutter": "experimental"
+  },
+  "verificationEvidence": {
+    "accordion": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "alert": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "alert-dialog": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "app-bar": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "aspect-ratio": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "audio-player": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "avatar": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "avatar-group": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ]
+    },
+    "badge": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "banner": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "breadcrumb": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "button": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "Flutter": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "button-group": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "calendar": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "card": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "carousel": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "chart": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "checkbox": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "Flutter": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "circular-progress": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "code-block": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "collapsible": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "color-picker": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "combobox": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ]
+    },
+    "command": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "comparison-slider": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "context-menu": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "data-grid": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published",
+        "rtl"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "data-table": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "date-picker": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "description-list": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "dialog": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "diff-viewer": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "direction-provider": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published",
+        "rtl"
+      ]
+    },
+    "drawer": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "dropdown-menu": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "empty": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "fab": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "field": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "file-upload": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "footer": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "form": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ]
+    },
+    "hover-card": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "image": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "inform": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "input": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "interaction",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "input-group": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "input-otp": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "json-viewer": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "kanban-board": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ]
+    },
+    "kbd": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "label": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "list": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "markdown-editor": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "marquee": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "menubar": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "message-bubble": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "metric": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "modal": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "multi-select": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "native-select": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ]
+    },
+    "navigation-bar": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "navigation-menu": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ]
+    },
+    "notification-center": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "number-input": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "page-header": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "pagination": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "password-input": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "popover": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "progress": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "quote": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "radio-group": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "rating": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "resizable": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "scroll-area": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "segmented-control": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "select": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "separator": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "sheet": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "sidebar": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "skeleton": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "slider": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "sonner": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "spinner": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "stepper": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "switch": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "Flutter": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "tab-bar": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "table": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "table-of-contents": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "tabs": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published",
+        "rtl"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "rtl"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "accessibility",
+        "build",
+        "interaction",
+        "rtl"
+      ],
+      "Flutter": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "tag": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "textarea": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "timeline": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "toggle": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build",
+        "interaction"
+      ],
+      "Flutter": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "toggle-group": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "tooltip": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "tour": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ]
+    },
+    "tree-view": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "virtual-list": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    }
+  },
+  "evidenceCounts": {
+    "React": {
+      "build": 98,
+      "interaction": 21,
+      "accessibility": 98,
+      "rtl": 3,
+      "largeText": 0,
+      "visual": 0,
+      "published": 98
+    },
+    "Angular": {
+      "build": 31,
+      "interaction": 31,
+      "accessibility": 31,
+      "rtl": 1,
+      "largeText": 0,
+      "visual": 0,
+      "published": 0
+    },
+    "SwiftUI": {
+      "build": 90,
+      "interaction": 0,
+      "accessibility": 0,
+      "rtl": 0,
+      "largeText": 0,
+      "visual": 0,
+      "published": 0
+    },
+    "Compose": {
+      "build": 90,
+      "interaction": 5,
+      "accessibility": 4,
+      "rtl": 1,
+      "largeText": 0,
+      "visual": 0,
+      "published": 0
+    },
+    "Flutter": {
+      "build": 90,
+      "interaction": 6,
+      "accessibility": 5,
+      "rtl": 58,
+      "largeText": 58,
+      "visual": 0,
+      "published": 0
+    }
   }
 }
