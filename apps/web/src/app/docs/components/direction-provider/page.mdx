@@ -1,0 +1,54 @@
+export const metadata = {
+  title: "Direction Provider",
+  description: "Threads text direction through the primitives that do not read it from the DOM.",
+};
+
+# Direction Provider
+
+<ComponentMeta />
+
+Threads text direction through the primitives that do not read it from the DOM.
+
+<ComponentPreview name="direction-provider-demo" />
+
+## Installation
+
+```bash
+npx @kinetixui/cli add direction-provider
+```
+
+## Usage
+
+```tsx
+import { KinetixDirectionProvider } from "@kinetixui/ui";
+```
+
+Setting `dir` on `<html>` is what mirrors layout — every KinetixUI component is
+written with logical CSS properties, so that alone flips padding, borders and
+alignment. See [RTL](/docs/rtl).
+
+What it does **not** flip is Radix's own positioning. Select, Dropdown Menu,
+Popover, Tooltip, Context Menu, Menubar, Navigation Menu and Hover Card read
+direction from a React context rather than from the ambient `dir` attribute,
+and with no provider in the tree they default to `ltr` and stamp that onto
+their portaled content — which renders outside your `dir="rtl"` subtree. The
+result is a right-to-left page whose menus open on the wrong side.
+
+Wrap the app root alongside the attribute:
+
+```tsx
+<html dir={dir}>
+  <KinetixDirectionProvider dir={dir}>{children}</KinetixDirectionProvider>
+</html>
+```
+
+## Why there is no port of this
+
+This is the one component in the catalogue that exists because of a gap in a
+web dependency, not because of a gap in a platform. Angular, SwiftUI, Jetpack
+Compose and Flutter each carry layout direction in the framework itself — the
+`dir` attribute, an environment value, a `CompositionLocal`, an inherited
+widget — so there is no context to thread and nothing to port. The platform
+tabs above show each one's own idiom, labelled **Native equivalent**, and none
+of them counts towards platform parity. `components.manifest.json` records that
+decision; `pnpm check:platform-source` enforces it.

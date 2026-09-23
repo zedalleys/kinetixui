@@ -110,14 +110,16 @@ export class KxLabel {}
 
 /**
  *   <input kxInput type="email" [(ngModel)]="email" />
- *   <textarea kxInput rows="4"></textarea>
  *
  * A directive, so `type`, `required`, `disabled`, autofill, the browser's own validation and every Angular
  * forms directive keep working untouched. The error state is read from `aria-invalid`, which means the
  * semantics drive the styling rather than a parallel `invalid` input that could disagree with them.
+ *
+ * Multi-line fields are `kxTextarea`, not this: a textarea has its own minimum height and resize affordance,
+ * and the React package splits them for the same reason.
  */
 @Directive({
-  selector: 'input[kxInput], textarea[kxInput]',
+  selector: 'input[kxInput]',
   host: { class: 'kx-input' },
 })
 export class KxInput {}

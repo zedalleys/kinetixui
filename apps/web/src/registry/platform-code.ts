@@ -6,6 +6,10 @@
  * so there is one source of truth per language. A component with no entry here
  * shows only the React tab.
  *
+ * There are no Angular entries here and there never will be: every Angular example comes from a template in
+ * `packages/ui-angular/src/usage` that the Angular compiler type-checks, extracted by `pnpm gen:usage`.
+ * `check:platform-code` rejects a hand-written Angular snippet outright.
+ *
  * `swift` / `kotlin` / `dart` call the real native component libraries:
  *   - iOS     · `KinetixUI` (SwiftUI) — `packages/ui-swiftui`, see /docs/swiftui
  *   - Android · `com.kinetixui:ui-compose` (Jetpack Compose) — see /docs/compose
@@ -19,30 +23,14 @@
  * exist. On the web, use React (`@kinetixui/ui`) or the registry
  * (`npx @kinetixui/cli add <component>`).
  *
- * The standing non-ports (`components.manifest.json` lists them; `/docs/contributing` gives the
- * reason for each) are shown as the composition the native libraries expect instead.
+ * The standing non-ports are shown as the composition the native libraries expect instead. Which ones those
+ * are, and why, is `platformGuidance` in `components.manifest.json` — the page reads it to label the tab, and
+ * `check:platform-code` fails on a snippet for an unsupported platform that has no declaration.
  */
 
-export type Platform = "react" | "swift" | "kotlin" | "dart";
+import type { CodeTab } from "@/lib/platform-tabs";
 
-export const PLATFORM_LABEL: Record<Platform, string> = {
-  react: "React",
-  swift: "iOS", // SwiftUI
-  kotlin: "Android", // Jetpack Compose
-  dart: "Flutter",
-};
-
-export const PLATFORM_LANG: Record<Platform, string> = {
-  react: "tsx",
-  swift: "swift",
-  kotlin: "kotlin",
-  dart: "dart",
-};
-
-/** Ordered — React first, then the rest as tabs. */
-export const PLATFORM_ORDER: Platform[] = ["react", "swift", "kotlin", "dart"];
-
-type Entry = Partial<Record<Exclude<Platform, "react">, string>>;
+type Entry = Partial<Record<Exclude<CodeTab, "react" | "angular">, string>>;
 
 export const platformCode: Record<string, Entry> = {
 

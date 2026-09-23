@@ -216,8 +216,8 @@ describe("the event contract, at compile time", () => {
     analytics.track("cta_clicked", { source: "header" });
     // @ts-expect-error — `source` is a closed union, not free text
     analytics.track("cta_clicked", { source: "my own label", target: "x" });
-    // @ts-expect-error — `platform` is a closed union
-    analytics.track("component_code_copied", { component: "button", platform: "angular" });
+    // @ts-expect-error — `platform` is a closed union, and HTML is a token OUTPUT, never a platform
+    analytics.track("component_code_copied", { component: "button", platform: "html" });
     // @ts-expect-error — required props cannot be omitted entirely
     analytics.track("cta_clicked");
   });

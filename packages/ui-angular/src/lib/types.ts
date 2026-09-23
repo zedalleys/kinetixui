@@ -16,3 +16,19 @@ export type KxCorners = 'sharp' | 'default' | 'pill';
 export type KxBadgeVariant = 'default' | 'secondary' | 'outline' | 'destructive' | 'success' | 'warning';
 export type KxAlertVariant = 'default' | 'destructive' | 'success' | 'warning' | 'info';
 export type KxOrientation = 'horizontal' | 'vertical';
+
+/* ── display ────────────────────────────────────────────────────────────── */
+
+export type KxSpinnerSize = 'sm' | 'md' | 'lg';
+export type KxSpinnerVariant = 'default' | 'muted' | 'onColor';
+export type KxTagVariant = 'default' | 'secondary' | 'destructive' | 'warning' | 'outline';
+/** Direction of change on a metric. `neutral` is "measured, and flat" — not "unknown". */
+export type KxTrend = 'up' | 'down' | 'neutral';
+export type KxEmptyMediaVariant = 'default' | 'icon';
+
+/* ── forms ──────────────────────────────────────────────────────────────── */
+
+export type KxToggleVariant = 'default' | 'outline';
+export type KxToggleSize = 'sm' | 'md' | 'lg';
+/** Tone of the text under a field. `error` is the only one that also sets `aria-invalid` on the control. */
+export type KxFieldMessageVariant = 'error' | 'success' | 'warning' | 'info';

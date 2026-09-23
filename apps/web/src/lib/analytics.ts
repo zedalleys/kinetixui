@@ -16,7 +16,7 @@ export { cleanPath };
 /* ------------------------------------------------------------------ event contract */
 
 /** The implementation platforms the site can attribute an event to. Not package managers — those are not platforms. */
-export const ANALYTICS_PLATFORMS = ["react", "swiftui", "compose", "flutter"] as const;
+export const ANALYTICS_PLATFORMS = ["react", "angular", "swiftui", "compose", "flutter"] as const;
 export type AnalyticsPlatform = (typeof ANALYTICS_PLATFORMS)[number];
 
 /**
