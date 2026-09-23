@@ -190,7 +190,7 @@ export function ComponentPreview({
                       {/* a preview platform says so on the tab itself — the tab sitting beside four stable
                           ones would otherwise imply the same maturity */}
                       {t.maturity !== "stable" && (
-                        <span className="ml-1.5 normal-case tracking-normal text-muted-foreground/70">· {t.maturity}</span>
+                        <span className="ml-1.5 normal-case tracking-normal text-muted-foreground">· {t.maturity}</span>
                       )}
                     </Tabs.Trigger>
                   ))}

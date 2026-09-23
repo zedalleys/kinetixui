@@ -101,8 +101,13 @@ export function PlatformVerification({ slug }: { slug: string }) {
                   )}
                 </span>
               )}
+              {/*
+                Full `text-muted-foreground`, never an opacity modifier. `/80` reads as a softer secondary
+                note and fails WCAG AA contrast in light mode — the rendered axe pass caught it, and
+                platform-badges.tsx carries the same lesson from the last time.
+              */}
               {def.maturity !== "stable" && (
-                <span className="text-muted-foreground/80">· package {def.maturity}</span>
+                <span className="text-muted-foreground">· package {def.maturity}</span>
               )}
             </li>
           );
