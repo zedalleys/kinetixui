@@ -13,6 +13,8 @@ import {
   AccordionTrigger,
 } from "./components/accordion";
 
+// kx-verify: interaction
+
 describe("Button", () => {
   it("renders the label and forwards clicks", async () => {
     const onClick = vi.fn();

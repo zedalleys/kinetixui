@@ -35,6 +35,7 @@ const CHECK = process.argv.includes("--check");
 
 const manifest = read("components.manifest.json");
 const registry = read("registry/registry.json");
+const verification = read("verification.json");
 const STATUSES = new Set(["beta", "stable", "deprecated"]);
 const FAMILIES = new Set(["web", "native"]);
 /**
@@ -49,6 +50,45 @@ const FAMILIES = new Set(["web", "native"]);
  * None of these is parity. `platforms` is parity.
  */
 const GUIDANCE_TYPES = new Set(["native-equivalent", "composition", "planned"]);
+
+/**
+ * The implementation-maturity ladder, and the evidence each rung costs.
+ *
+ * This is the whole point of the model, so it is written once, here, and everything downstream reads the
+ * result. Two things it deliberately does NOT do:
+ *
+ *   - It does not accept "the source file exists" as maturity. That was the previous state of affairs:
+ *     `platformDefinitions` said SwiftUI was stable, and the only thing behind that was a filename.
+ *   - It does not let a platform declare a level its own components have not reached. The declared maturity
+ *     in platformDefinitions is a FLOOR the whole catalogue meets, checked below against the evidence, not a
+ *     claim in its own right. A single component may sit above it; none may sit below.
+ *
+ * `preview` is not an evidence rung. It is a package-level statement — "this catalogue is knowingly
+ * incomplete" — and it is the one declared value that caps rather than floors, because a reader must not be
+ * told a component of an incomplete package is ready.
+ */
+const LADDER = ["experimental", "preview", "beta", "stable"];
+const REQUIRES = {
+  // compiles in its platform's CI, and nothing more is claimed
+  experimental: ["build"],
+  // the semantics assistive technology receives have been checked — the bar for "usable and reviewed"
+  beta: ["build", "accessibility"],
+  // everything the support policy implies: it behaves, it survives direction and text scaling, its
+  // rendering is pinned, and a consumer can actually install it
+  stable: ["build", "accessibility", "interaction", "rtl", "largeText", "visual"],
+};
+const rank = (level) => LADDER.indexOf(level);
+
+/** The highest rung this component's evidence pays for on this platform. */
+function earned(evidence, published) {
+  let best = "experimental";
+  for (const level of ["beta", "stable"]) {
+    if (!REQUIRES[level].every((k) => evidence?.[k])) continue;
+    if (level === "stable" && !published) continue; // nobody can depend on what they cannot install
+    best = level;
+  }
+  return best;
+}
 const WAVES = new Set(["primitives", "inputs", "layout", "navigation", "overlays", "data", "advanced"]);
 
 const defs = manifest.platformDefinitions;
@@ -67,6 +107,10 @@ for (const [p, d] of Object.entries(defs)) {
   if (!FAMILIES.has(d.family)) errors.push(`platformDefinitions.${p}: family must be "web" or "native", not "${d.family}"`);
   for (const k of ["label", "abbr", "package", "dir"]) if (!d[k]) errors.push(`platformDefinitions.${p}: missing "${k}"`);
   if (typeof d.catalogComplete !== "boolean") errors.push(`platformDefinitions.${p}: catalogComplete must be a boolean`);
+  if (rank(d.maturity) === -1) errors.push(`platformDefinitions.${p}: maturity must be one of ${LADDER.join(", ")}`);
+  if (!d.distribution || typeof d.distribution.published !== "boolean" || !d.distribution.channel) {
+    errors.push(`platformDefinitions.${p}: needs a distribution block with a channel and a boolean "published"`);
+  }
 }
 
 const slugs = registry.items.filter((i) => i.type === "registry:ui").map((i) => i.name);
@@ -103,6 +147,50 @@ for (const [s, c] of Object.entries(manifest.components)) {
     errors.push(`${s}: not on ${missing.join(", ")} — add a platformNote (or platformNotes per platform) saying why`);
   }
 }
+/* ── implementation maturity, computed from the evidence ──────────────────── */
+
+const evidenceOf = (slug, platform) => verification.components?.[slug]?.[platform];
+
+/** slug → platform → the rung this implementation has actually earned, capped by its platform's ceiling. */
+const maturity = {};
+for (const [slug, c] of Object.entries(manifest.components)) {
+  const per = {};
+  for (const platform of c.platforms) {
+    const level = earned(evidenceOf(slug, platform), defs[platform].distribution?.published);
+    // `preview` is a package-level statement — the catalogue is knowingly incomplete — so it caps everything
+    // inside it. Any other declared maturity is a FLOOR the platform guarantees, not a lid: a Compose button
+    // with interaction and semantics tests reads as beta even while the platform overall is experimental,
+    // because hiding that would make the per-component data useless and the progress invisible.
+    per[platform] = defs[platform].maturity === "preview" ? "preview" : level;
+    if (!evidenceOf(slug, platform)) {
+      errors.push(`${slug}: declared on ${platform} but verification.json has no evidence for it — run \`pnpm gen:verification\``);
+    }
+  }
+  maturity[slug] = per;
+}
+
+/**
+ * A platform may not advertise a rung one of its own components has not reached.
+ *
+ * The minimum, not an average: "SwiftUI is stable" is a statement a reader applies to whichever component
+ * they are about to use, so it has to be true of the weakest one. This is the check that would have caught
+ * the state this whole model was built to fix — a filename standing in for evidence.
+ */
+for (const [platform, d] of Object.entries(defs)) {
+  const declared = d.maturity;
+  if (declared === "preview") continue; // a deliberate "this catalogue is incomplete" statement, not an evidence claim
+  const shortfall = Object.entries(maturity)
+    .filter(([, per]) => per[platform] && rank(per[platform]) < rank(declared))
+    .map(([slug]) => slug);
+  if (shortfall.length) {
+    const worst = shortfall.slice(0, 3).join(", ");
+    errors.push(
+      `platformDefinitions.${platform}: declares "${declared}", but ${shortfall.length} of its components reach only a lower rung ` +
+        `(${worst}${shortfall.length > 3 ? ", …" : ""}). Lower the declared maturity, or add the verification that earns it.`,
+    );
+  }
+}
+
 if (errors.length) {
   console.error(errors.map((e) => `  ✗ ${e}`).join("\n"));
   process.exit(1);
@@ -132,6 +220,18 @@ const parity = {
   notes: Object.fromEntries(entries.filter(([, c]) => c.platformNote).map(([s, c]) => [s, c.platformNote])),
   platformNotes: Object.fromEntries(entries.filter(([, c]) => c.platformNotes).map(([s, c]) => [s, c.platformNotes])),
   guidance: Object.fromEntries(entries.filter(([, c]) => c.platformGuidance).map(([s, c]) => [s, c.platformGuidance])),
+  /** The ladder itself, so the website explains the same rules this file enforces rather than its own copy. */
+  maturityLadder: LADDER,
+  maturityRequires: REQUIRES,
+  /** slug → platform → rung. Computed from verification.json; never hand-written. */
+  maturity: Object.fromEntries(entries.map(([s]) => [s, maturity[s]])),
+  /** How many components sit on each rung, per platform — the honest shape of a platform's catalogue. */
+  maturityCounts: Object.fromEntries(
+    platforms.map((p) => [
+      p,
+      Object.fromEntries(LADDER.map((level) => [level, entries.filter(([s]) => maturity[s][p] === level).length]).filter(([, n]) => n > 0)),
+    ]),
+  ),
 };
 
 let stale = false;

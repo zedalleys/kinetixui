@@ -15,6 +15,7 @@ Widget host(Widget child) => MaterialApp(
       ),
     );
 
+// kx-verify: interaction
 void main() {
   group('KinetixButton', () {
     testWidgets('a tap calls onPressed once', (tester) async {

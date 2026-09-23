@@ -53,7 +53,13 @@ jobs:
       - name: Spatial grid guardrail (8-unit grid, 4-unit half-step)
         run: pnpm check:grid
 
-      - name: Component manifest check (status + platforms)
+      # What each platform implementation has actually been verified to do, derived from the test files
+      # themselves. check:manifest below refuses a declared platform maturity this evidence does not support,
+      # which is the gate that stops "the source file exists" from being printed as "stable".
+      - name: Verification evidence is current with the tests
+        run: pnpm check:verification
+
+      - name: Component manifest check (status, platforms, guidance, maturity)
         run: pnpm check:manifest
 
       # A manifest claim is not evidence. This checks the other direction: that source exists behind every
@@ -130,8 +136,10 @@ jobs:
             component-status.json \
             platform-parity.json \
             block-parity.json \
-            apps/web/src/registry/block-examples.generated.ts \n            apps/web/src/registry/usage-examples.generated.ts; then
-            echo "::error::Generated output is stale. Run 'pnpm gen:manifest && pnpm build:tokens && pnpm vendor:compose && pnpm vendor:swiftui && pnpm vendor:flutter && pnpm build:registry' and commit the result."
+            verification.json \
+            apps/web/src/registry/block-examples.generated.ts \
+            apps/web/src/registry/usage-examples.generated.ts; then
+            echo "::error::Generated output is stale. Run 'pnpm gen:verification && pnpm gen:manifest && pnpm build:tokens && pnpm vendor:compose && pnpm vendor:swiftui && pnpm vendor:flutter && pnpm gen:stories && pnpm build:registry' and commit the result."
             exit 1
           fi
 

@@ -25,6 +25,12 @@
  *                     header, and dragging past the grid's edge scrolls it and keeps extending
  *                     the range (real layout + real pointer events)
  *
+ * kx-verify: accessibility
+ * kx-verify-covers: packages/ui/src/stories/*.stories.tsx
+ * This is the strongest accessibility evidence in the repository, and `verification.json` records it as such:
+ * every story, in a real browser, in light and dark, with every axe rule on. The subjects come from the story
+ * directory rather than from anything named here, so a component with no story gets no credit from it.
+ *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary (local
  * runs where Playwright's own download isn't installed). CI uses
  * `playwright install chromium`.

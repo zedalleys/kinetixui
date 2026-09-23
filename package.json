@@ -25,6 +25,8 @@
     "release:notes": "node scripts/release-notes.mjs",
     "check:rtl": "node scripts/check-rtl.mjs",
     "check:icons": "node scripts/check-icon-mapping.mjs",
+    "gen:verification": "node scripts/gen-verification.mjs",
+    "check:verification": "node scripts/gen-verification.mjs --check",
     "gen:manifest": "node scripts/gen-manifest.mjs",
     "check:manifest": "node scripts/gen-manifest.mjs --check",
     "gen:flagship": "node scripts/gen-flagship-examples.mjs",

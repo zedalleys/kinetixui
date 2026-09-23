@@ -38,6 +38,8 @@ function mount<T>(type: new () => T) {
   return TestBed.createComponent(type);
 }
 
+// kx-verify: interaction, accessibility
+
 describe('KxButton', () => {
   it('stays a real <button>, keeping its native type and disabled behaviour', () => {
     const { el } = host('<button kxButton [disabled]="true">Save</button>', [KxButton]);
@@ -301,6 +303,8 @@ describe('the /docs/angular example', () => {
     expect(fixture.componentInstance.saved).toBe(1);
   });
 });
+
+// kx-verify: interaction, accessibility, rtl
 
 describe('KxTabs', () => {
   const TABS = `

@@ -1,15 +1,21 @@
 {
   "$schema": "https://kinetixui.com/schema/components-manifest.json",
-  "$description": "Every KinetixUI component and where it is really implemented. platformDefinitions is the ONE place a platform is declared — its family (web/native), label, abbreviation and whether its catalogue is complete. Everything downstream (platform-parity.json, component-status.json, the website, CI guardrails) derives from this file; nothing re-declares the platform list. A component lists only platforms whose source actually exists (that is what parity counts), and platformGuidance says what to show for every platform it is NOT on — a native equivalent, a composition, or a planned Angular wave — so no platform tab is ever blank or invented — scripts/check-platform-source.mjs verifies that against the packages.",
+  "$description": "Every KinetixUI component and where it is really implemented. platformDefinitions is the ONE place a platform is declared — its family (web/native), label, abbreviation, whether its catalogue is complete, its declared maturity and how it is distributed. The declared maturity is a CEILING, not a claim: `pnpm check:manifest` refuses one that the evidence in verification.json does not support. Everything downstream (platform-parity.json, component-status.json, the website, CI guardrails) derives from this file; nothing re-declares the platform list. A component lists only platforms whose source actually exists (that is what parity counts), and platformGuidance says what to show for every platform it is NOT on — a native equivalent, a composition, or a planned Angular wave — so no platform tab is ever blank or invented — scripts/check-platform-source.mjs verifies that against the packages.",
   "platformDefinitions": {
     "React": {
       "family": "web",
       "label": "React",
       "abbr": "RE",
-      "maturity": "stable",
+      "maturity": "beta",
       "catalogComplete": true,
       "package": "@kinetixui/ui",
-      "dir": "packages/ui"
+      "dir": "packages/ui",
+      "distribution": {
+        "channel": "npm",
+        "coordinate": "@kinetixui/ui",
+        "published": true,
+        "note": "Also installable as source with `npx @kinetixui/cli add`."
+      }
     },
     "Angular": {
       "family": "web",
@@ -18,34 +24,58 @@
       "maturity": "preview",
       "catalogComplete": false,
       "package": "@kinetixui/angular",
-      "dir": "packages/ui-angular"
+      "dir": "packages/ui-angular",
+      "distribution": {
+        "channel": "npm",
+        "coordinate": "@kinetixui/angular",
+        "published": false,
+        "note": "Built and tested in CI, not yet published. publish is part of the Angular Stable gate."
+      }
     },
     "SwiftUI": {
       "family": "native",
       "label": "SwiftUI",
       "abbr": "SW",
-      "maturity": "stable",
+      "maturity": "experimental",
       "catalogComplete": true,
       "package": "KinetixUI",
-      "dir": "packages/ui-swiftui"
+      "dir": "packages/ui-swiftui",
+      "distribution": {
+        "channel": "Swift Package Manager",
+        "coordinate": "kinetix-ui-swift mirror",
+        "published": false,
+        "note": "publish-swiftui.yml splits packages/ui-swiftui to a mirror repo; it needs SWIFTUI_MIRROR_REPO and has never been run for real."
+      }
     },
     "Compose": {
       "family": "native",
       "label": "Jetpack Compose",
       "abbr": "JC",
-      "maturity": "stable",
+      "maturity": "experimental",
       "catalogComplete": true,
       "package": "com.kinetixui:ui-compose",
-      "dir": "packages/ui-compose"
+      "dir": "packages/ui-compose",
+      "distribution": {
+        "channel": "Maven Central",
+        "coordinate": "com.kinetixui:ui-compose",
+        "published": false,
+        "note": "publish-compose.yml stages to the Central Portal; it needs four signing/credential secrets and defaults to a dry run."
+      }
     },
     "Flutter": {
       "family": "native",
       "label": "Flutter",
       "abbr": "FL",
-      "maturity": "stable",
+      "maturity": "experimental",
       "catalogComplete": true,
       "package": "kinetix_ui",
-      "dir": "packages/ui-flutter"
+      "dir": "packages/ui-flutter",
+      "distribution": {
+        "channel": "pub.dev",
+        "coordinate": "kinetix_ui",
+        "published": false,
+        "note": "publish-flutter.yml publishes to pub.dev; it needs PUB_DEV_CREDENTIALS and defaults to a dry run."
+      }
     }
   },
   "components": {
