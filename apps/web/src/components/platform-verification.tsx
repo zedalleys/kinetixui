@@ -125,7 +125,7 @@ export function PlatformVerification({ slug }: { slug: string }) {
           <p className="text-[12px] text-muted-foreground">
             What automated tests prove about each implementation — separate from whether the package itself is
             a finished product. Derived from the test files;{" "}
-            <Link href="/docs/platforms#verification" className="text-primary underline underline-offset-2">
+            <Link href="/docs/platforms#how-a-verification-level-is-earned" className="text-primary underline underline-offset-2">
               how the levels are earned
             </Link>
             .

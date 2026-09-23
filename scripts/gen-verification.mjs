@@ -51,7 +51,13 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-const root = fileURLToPath(new URL("..", import.meta.url));
+/**
+ * `--root=<dir>` points the scanner at a different tree. Only the guardrail tests use it: they build a tiny
+ * fixture repository and assert this script REJECTS it, which is the only way to prove the checks are not
+ * vacuous. Nothing in CI passes it.
+ */
+const ROOT_ARG = process.argv.find((a) => a.startsWith("--root="));
+const root = ROOT_ARG ? ROOT_ARG.slice("--root=".length).replace(/\/?$/, "/") : fileURLToPath(new URL("..", import.meta.url));
 const read = (p) => readFileSync(`${root}/${p}`, "utf8");
 const CHECK = process.argv.includes("--check");
 const OUT = "verification.json";
