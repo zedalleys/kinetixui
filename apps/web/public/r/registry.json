@@ -265,8 +265,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "command",
@@ -314,8 +313,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "data-table",
@@ -375,8 +373,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "direction-provider",
@@ -565,8 +562,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "kanban-board",
@@ -575,8 +571,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "kbd",
@@ -626,8 +621,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "marquee",
@@ -663,8 +657,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "metric",
@@ -701,8 +694,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "native-select",
@@ -1155,8 +1147,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "tree-view",
@@ -1168,8 +1159,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "virtual-list",
@@ -1181,8 +1171,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     }
   ]
 }

@@ -998,7 +998,7 @@ describe("ColorPicker", () => {
   it("adjusts the saturation/value square with the arrow keys (Shift = bigger step)", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(<ColorPicker value="#3b82f6" onChange={onChange} />);
+    render(<ColorPicker value="#3b82f6" onValueChange={onChange} />);
     const square = screen.getByRole("slider", { name: "Saturation and value" });
     square.focus();
 
@@ -1016,7 +1016,7 @@ describe("ColorPicker", () => {
   it("the hue rail is a named, keyboard-operable slider", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(<ColorPicker value="#3b82f6" onChange={onChange} />);
+    render(<ColorPicker value="#3b82f6" onValueChange={onChange} />);
     const hue = screen.getByRole("slider", { name: "Hue" });
     hue.focus();
     await user.keyboard("{ArrowRight}");
@@ -1026,7 +1026,7 @@ describe("ColorPicker", () => {
   it("commits the hex field on Enter", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(<ColorPicker value="#3b82f6" onChange={onChange} />);
+    render(<ColorPicker value="#3b82f6" onValueChange={onChange} />);
     const hex = screen.getByRole("textbox");
     await user.clear(hex);
     await user.type(hex, "ff0000{Enter}");

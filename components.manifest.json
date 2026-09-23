@@ -389,7 +389,7 @@
       }
     },
     "color-picker": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
@@ -481,7 +481,7 @@
       }
     },
     "data-grid": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
@@ -561,7 +561,7 @@
       }
     },
     "diff-viewer": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
@@ -822,7 +822,7 @@
       }
     },
     "json-viewer": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
@@ -838,7 +838,7 @@
       }
     },
     "kanban-board": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React"
@@ -902,7 +902,7 @@
       }
     },
     "markdown-editor": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
@@ -950,7 +950,7 @@
       }
     },
     "message-bubble": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
@@ -993,7 +993,7 @@
       }
     },
     "multi-select": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
@@ -1082,6 +1082,7 @@
         "Compose",
         "Flutter"
       ],
+      "lifecycleReason": "Product boundary unresolved. `unread` is a per-item flag with nothing owning the transition: `onMarkAllRead` has no item-level counterpart, so marking one notification read has no API. There is also no empty-state contract, and whether this belongs as a component or as a Block over Popover + List is an open question — see the PR C handoff.",
       "platformGuidance": {
         "Angular": {
           "type": "planned",
@@ -1526,7 +1527,7 @@
       }
     },
     "tour": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React"
@@ -1552,7 +1553,7 @@
       }
     },
     "tree-view": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
@@ -1568,7 +1569,7 @@
       }
     },
     "virtual-list": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",

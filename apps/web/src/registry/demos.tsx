@@ -1575,12 +1575,12 @@ add(
     return (
       <ColorPicker
         value={color}
-        onChange={setColor}
+        onValueChange={setColor}
         swatches={["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899"]}
       />
     );
   },
-  `<ColorPicker\n  value={color}\n  onChange={setColor}\n  swatches={["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6"]}\n/>`,
+  `<ColorPicker\n  value={color}\n  onValueChange={setColor}\n  swatches={["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6"]}\n/>`,
 );
 add(
   "kanban-board-demo",
@@ -1618,9 +1618,9 @@ add(
     const [text, setText] = React.useState(
       "## Release notes\n\nShipped **MarkdownEditor** — a toolbar over a plain textarea, not `contenteditable`.\n\n- Bold, italic, links\n- Bulleted and numbered lists\n- An optional preview pane",
     );
-    return <MarkdownEditor aria-label="Release notes" className="w-full" value={text} onChange={setText} rows={8} />;
+    return <MarkdownEditor aria-label="Release notes" className="w-full" value={text} onValueChange={setText} rows={8} />;
   },
-  `<MarkdownEditor\n  value={text}\n  onChange={setText}\n  rows={8}\n/>`,
+  `<MarkdownEditor\n  value={text}\n  onValueChange={setText}\n  rows={8}\n/>`,
 );
 add(
   "empty-demo",

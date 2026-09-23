@@ -2,7 +2,7 @@
   "$schema": "https://kinetixui.com/schema/component-spec.json",
   "name": "markdown-editor",
   "title": "Markdown Editor",
-  "status": "beta",
+  "status": "stable",
   "since": "0.12.0",
   "platforms": [
     "React",
@@ -18,12 +18,20 @@
         {
           "name": "value",
           "type": "string",
-          "required": true
+          "required": false,
+          "description": "the markdown source. Controlled: pass `onValueChange` with it."
         },
         {
-          "name": "onChange",
-          "type": "(value: string) => void",
-          "required": true
+          "name": "defaultValue",
+          "type": "string",
+          "required": false,
+          "description": "starting markdown when the editor manages its own buffer. Ignored once `value` is passed."
+        },
+        {
+          "name": "onValueChange",
+          "type": "((value: string) => void)",
+          "required": false,
+          "description": "called with the full markdown after every edit — the name every other KinetixUI value control uses"
         },
         {
           "name": "placeholder",

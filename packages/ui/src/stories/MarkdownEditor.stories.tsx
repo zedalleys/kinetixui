@@ -9,14 +9,14 @@ const Demo = () => {
     const [text, setText] = React.useState(
       "## Release notes\n\nShipped **MarkdownEditor** — a toolbar over a plain textarea, not `contenteditable`.\n\n- Bold, italic, links\n- Bulleted and numbered lists\n- An optional preview pane",
     );
-    return <MarkdownEditor aria-label="Release notes" className="w-full" value={text} onChange={setText} rows={8} />;
+    return <MarkdownEditor aria-label="Release notes" className="w-full" value={text} onValueChange={setText} rows={8} />;
   };
 
 const meta = {
   title: "Form Inputs/MarkdownEditor",
   parameters: {
     layout: "padded",
-    docs: { source: { code: "<MarkdownEditor\\n  value={text}\\n  onChange={setText}\\n  rows={8}\\n/>", language: "tsx" } },
+    docs: { source: { code: "<MarkdownEditor\\n  value={text}\\n  onValueChange={setText}\\n  rows={8}\\n/>", language: "tsx" } },
   },
 } satisfies Meta;
 

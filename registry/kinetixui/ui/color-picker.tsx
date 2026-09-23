@@ -79,10 +79,13 @@ function rgbToHsv(r: number, g: number, b: number): [number, number, number] {
 const HEX_PATTERN_ALPHA = /^[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
 const HEX_PATTERN = /^[0-9a-fA-F]{6}$/;
 
-export interface ColorPickerProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "children" | "onChange"> {
-  /** hex color, e.g. `#3b82f6` (or `#3b82f6ff` when `alpha` is on) */
-  value: string;
-  onChange: (hex: string) => void;
+export interface ColorPickerProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "children" | "onChange" | "defaultValue"> {
+  /** hex color, e.g. `#3b82f6` (or `#3b82f6ff` when `alpha` is on). Controlled: pass `onValueChange` with it. */
+  value?: string;
+  /** starting hex color when the picker manages its own value. Ignored once `value` is passed. */
+  defaultValue?: string;
+  /** called with the new hex on every change — the name every other KinetixUI value control uses */
+  onValueChange?: (hex: string) => void;
   /** show an alpha slider and read/emit 8-digit hex */
   alpha?: boolean;
   /** preset swatches row */
@@ -110,17 +113,25 @@ export interface ColorPickerProps extends Omit<React.HTMLAttributes<HTMLDivEleme
  * on some browsers) — no polyfill, it just disappears elsewhere.
  */
 const ColorPicker = React.forwardRef<HTMLDivElement, ColorPickerProps>(
-  ({ value, onChange, alpha = false, swatches, className, ...props }, ref) => {
+  ({ value, defaultValue = "#3b82f6", onValueChange, alpha = false, swatches, className, ...props }, ref) => {
+    /**
+     * The hex the picker is showing. `value` wins when it is passed; otherwise this is the source of truth.
+     *
+     * There is deliberately no second copy of the colour: `hex` below is what the HSV state renders to, and
+     * the uncontrolled value is read back out of that same HSV state rather than stored twice.
+     */
+    const current = value ?? defaultValue;
     const [hsv, setHsv] = React.useState<[number, number, number]>(() => {
-      const [r, g, b] = hexToRgba(value);
+      const [r, g, b] = hexToRgba(current);
       return rgbToHsv(r, g, b);
     });
-    const [a, setA] = React.useState(() => hexToRgba(value)[3]);
-    const lastEmitted = React.useRef(value);
+    const [a, setA] = React.useState(() => hexToRgba(current)[3]);
+    const lastEmitted = React.useRef(current);
     const [h, s, v] = hsv;
 
     React.useEffect(() => {
-      if (value === lastEmitted.current) return;
+      // Only a controlled `value` can move the picker from outside; an uncontrolled one is set once.
+      if (value === undefined || value === lastEmitted.current) return;
       const [r, g, b, na] = hexToRgba(value);
       setHsv(rgbToHsv(r, g, b));
       setA(na);
@@ -134,9 +145,28 @@ const ColorPicker = React.forwardRef<HTMLDivElement, ColorPickerProps>(
         const [r, g, b] = hsvToRgb(nh, ns, nv);
         const hex = rgbaToHex(r, g, b, na, alpha);
         lastEmitted.current = hex;
-        onChange(hex);
+        onValueChange?.(hex);
       },
-      [alpha, onChange],
+      [alpha, onValueChange],
+    );
+
+    /**
+     * The hex the swatch preview and the hex field show — derived from the HSV state, not from the `value`
+     * prop, so an uncontrolled picker displays what the user just dragged rather than the initial colour.
+     */
+    const currentHex = React.useMemo(() => {
+      const [r, g, b] = hsvToRgb(h, s, v);
+      return rgbaToHex(r, g, b, a, alpha);
+    }, [h, s, v, a, alpha]);
+
+    /** The hex field hands back a full hex; route it through the same HSV path every other control uses. */
+    const commitHex = React.useCallback(
+      (hex: string) => {
+        const [r, g, b, na] = hexToRgba(hex);
+        const [nh, ns, nv] = rgbToHsv(r, g, b);
+        commit(nh, ns, nv, na);
+      },
+      [commit],
     );
 
     const squareRef = React.useRef<HTMLDivElement>(null);
@@ -270,11 +300,11 @@ const ColorPicker = React.forwardRef<HTMLDivElement, ColorPickerProps>(
               backgroundSize: "8px 8px",
             }}
           >
-            <div className="size-full rounded-md" style={{ backgroundColor: value }} />
+            <div className="size-full rounded-md" style={{ backgroundColor: currentHex }} />
           </div>
           <div className="flex flex-1 items-center gap-1">
             <span className="text-muted-foreground">#</span>
-            <HexField value={value} alpha={alpha} onCommit={onChange} />
+            <HexField value={currentHex} alpha={alpha} onCommit={(hex) => commitHex(hex)} />
           </div>
           {supportsEyeDropper && (
             <Button
