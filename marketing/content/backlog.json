@@ -1,0 +1,687 @@
+{
+  "$schema": "https://kinetixui.com/schema/marketing-backlog.json",
+  "$description": "Content backlog. One row per planned piece. `status` moves idea -> drafted -> scheduled -> published. `sourceFeature` must name real repository work; a row without one is an opinion post, and there should be almost none. Read by scripts/marketing-backlog.mjs for reporting. Nothing here publishes anything.",
+  "pillars": {
+    "A": "Cross-platform design systems",
+    "B": "Design tokens",
+    "C": "Engineering a design system",
+    "D": "Accessibility & RTL",
+    "E": "Build in public",
+    "F": "Platform-specific implementation"
+  },
+  "statuses": [
+    "idea",
+    "drafted",
+    "scheduled",
+    "published",
+    "dropped"
+  ],
+  "items": [
+    {
+      "id": "a01",
+      "title": "Your cross-platform design system is probably lying about parity",
+      "pillar": "A",
+      "audience": [
+        "design-system-engineer",
+        "frontend-lead"
+      ],
+      "channel": [
+        "dev.to",
+        "linkedin"
+      ],
+      "format": "article",
+      "intent": "awareness",
+      "status": "idea",
+      "sourceFeature": "check-platform-source",
+      "insight": "Parity is a claim with no source behind it until something verifies it against the packages.",
+      "cta": "/docs/platforms",
+      "publishWindow": null
+    },
+    {
+      "id": "a02",
+      "title": "98 components is not the interesting number",
+      "pillar": "A",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "x",
+        "linkedin"
+      ],
+      "format": "post",
+      "intent": "awareness",
+      "status": "idea",
+      "sourceFeature": "platform-parity.json",
+      "insight": "Coverage you can verify beats catalogue size you cannot.",
+      "cta": "/docs/platforms",
+      "publishWindow": null
+    },
+    {
+      "id": "a03",
+      "title": "One design language is not one codebase",
+      "pillar": "A",
+      "audience": [
+        "frontend-lead",
+        "team-web-and-mobile"
+      ],
+      "channel": [
+        "linkedin"
+      ],
+      "format": "post",
+      "intent": "awareness",
+      "status": "idea",
+      "sourceFeature": "platformDefinitions",
+      "insight": "Sharing a contract and sharing an implementation are different products.",
+      "cta": "/",
+      "publishWindow": null
+    },
+    {
+      "id": "a04",
+      "title": "What cross-platform actually means in five different libraries",
+      "pillar": "A",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "awareness",
+      "status": "idea",
+      "sourceFeature": "platform families",
+      "insight": "The word covers at least three incompatible architectures.",
+      "cta": "/docs/platforms",
+      "publishWindow": null
+    },
+    {
+      "id": "a05",
+      "title": "The design system tax nobody budgets for",
+      "pillar": "A",
+      "audience": [
+        "frontend-lead"
+      ],
+      "channel": [
+        "linkedin"
+      ],
+      "format": "post",
+      "intent": "awareness",
+      "status": "idea",
+      "sourceFeature": "documented exceptions",
+      "insight": "Every new platform multiplies maintenance unless the contract is shared.",
+      "cta": "/docs",
+      "publishWindow": null
+    },
+    {
+      "id": "c01",
+      "title": "Tokens, components, or both: choosing your design-system layer",
+      "pillar": "A",
+      "audience": [
+        "design-system-designer",
+        "frontend-lead"
+      ],
+      "channel": [
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "comparison",
+      "status": "idea",
+      "sourceFeature": "tokens package",
+      "insight": "Most teams need the token layer years before they need the component layer.",
+      "cta": "/docs/tokens",
+      "publishWindow": null
+    },
+    {
+      "id": "c02",
+      "title": "Adopting a design system one layer at a time",
+      "pillar": "B",
+      "audience": [
+        "team-web-and-mobile"
+      ],
+      "channel": [
+        "linkedin",
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "comparison",
+      "status": "idea",
+      "sourceFeature": "KinetixMaterialTheme",
+      "insight": "Token-only adoption is a real entry path, not a lesser one.",
+      "cta": "/docs/flutter",
+      "publishWindow": null
+    },
+    {
+      "id": "c03",
+      "title": "Wrappers vs native implementations: what you give up",
+      "pillar": "F",
+      "audience": [
+        "frontend-lead"
+      ],
+      "channel": [
+        "x"
+      ],
+      "format": "thread",
+      "intent": "comparison",
+      "status": "idea",
+      "sourceFeature": "ui-swiftui/ui-compose/ui-flutter",
+      "insight": "A wrapper inherits the host platform's bugs and none of its idioms.",
+      "cta": "/",
+      "publishWindow": null
+    },
+    {
+      "id": "c04",
+      "title": "When you should not use a cross-platform design system",
+      "pillar": "A",
+      "audience": [
+        "frontend-lead"
+      ],
+      "channel": [
+        "linkedin"
+      ],
+      "format": "post",
+      "intent": "comparison",
+      "status": "idea",
+      "sourceFeature": "positioning.md",
+      "insight": "Single-platform teams are better served by a single-platform library.",
+      "cta": "/docs",
+      "publishWindow": null
+    },
+    {
+      "id": "c05",
+      "title": "Build vs adopt for an internal design system",
+      "pillar": "A",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "comparison",
+      "status": "idea",
+      "sourceFeature": "CI guardrails",
+      "insight": "The build cost is not the components; it is the verification you never write.",
+      "cta": "/docs/contributing",
+      "publishWindow": null
+    },
+    {
+      "id": "p01",
+      "title": "Tokens without widgets: using a design system's values only",
+      "pillar": "B",
+      "audience": [
+        "team-web-and-mobile"
+      ],
+      "channel": [
+        "dev.to",
+        "linkedin"
+      ],
+      "format": "article",
+      "intent": "problem-solving",
+      "status": "idea",
+      "sourceFeature": "flutter foundation tokens",
+      "insight": "A design system should be adoptable without buying its component set.",
+      "cta": "/docs/flutter",
+      "publishWindow": null
+    },
+    {
+      "id": "p02",
+      "title": "Design tokens in Flutter: ThemeData, Cupertino, and raw values",
+      "pillar": "F",
+      "audience": [
+        "team-web-and-mobile"
+      ],
+      "channel": [
+        "dev.to",
+        "reddit"
+      ],
+      "format": "article",
+      "intent": "problem-solving",
+      "status": "idea",
+      "sourceFeature": "KinetixMaterialTheme / KinetixCupertinoTheme",
+      "insight": "Theme adapters let stock widgets inherit a design language with no rewrite.",
+      "cta": "/docs/flutter",
+      "publishWindow": null
+    },
+    {
+      "id": "p03",
+      "title": "Design tokens in SwiftUI without fighting the environment",
+      "pillar": "F",
+      "audience": [
+        "team-web-and-mobile"
+      ],
+      "channel": [
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "problem-solving",
+      "status": "idea",
+      "sourceFeature": "ui-swiftui tokens",
+      "insight": "SwiftUI already has the environment; tokens should feed it, not replace it.",
+      "cta": "/docs/swiftui",
+      "publishWindow": null
+    },
+    {
+      "id": "p04",
+      "title": "Design tokens in Jetpack Compose: dimens.xml or CompositionLocal?",
+      "pillar": "F",
+      "audience": [
+        "team-web-and-mobile"
+      ],
+      "channel": [
+        "dev.to",
+        "reddit"
+      ],
+      "format": "article",
+      "intent": "problem-solving",
+      "status": "idea",
+      "sourceFeature": "R.dimen.spacing_*",
+      "insight": "Generated resources and composition locals solve different halves.",
+      "cta": "/docs/compose",
+      "publishWindow": null
+    },
+    {
+      "id": "p05",
+      "title": "RTL across React, SwiftUI, Compose and Flutter",
+      "pillar": "D",
+      "audience": [
+        "rtl-team"
+      ],
+      "channel": [
+        "dev.to",
+        "linkedin"
+      ],
+      "format": "article",
+      "intent": "problem-solving",
+      "status": "idea",
+      "sourceFeature": "check:rtl",
+      "insight": "RTL is an architecture decision, and logical properties are the cheapest one.",
+      "cta": "/docs/rtl",
+      "publishWindow": null
+    },
+    {
+      "id": "p06",
+      "title": "Making contrast a build failure instead of a review comment",
+      "pillar": "D",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "linkedin",
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "problem-solving",
+      "status": "idea",
+      "sourceFeature": "check:contrast",
+      "insight": "Accessibility holds when it is a gate, not a guideline.",
+      "cta": "/docs/accessibility",
+      "publishWindow": null
+    },
+    {
+      "id": "p07",
+      "title": "Keeping light and dark as one contract",
+      "pillar": "B",
+      "audience": [
+        "design-system-designer"
+      ],
+      "channel": [
+        "x"
+      ],
+      "format": "thread",
+      "intent": "problem-solving",
+      "status": "idea",
+      "sourceFeature": "globals.css light/dark",
+      "insight": "Two value sets, one semantic contract, no component-level branching.",
+      "cta": "/docs/dark-mode",
+      "publishWindow": null
+    },
+    {
+      "id": "p08",
+      "title": "Why your design system's docs go stale, and the fix",
+      "pillar": "C",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "problem-solving",
+      "status": "idea",
+      "sourceFeature": "gen-block-examples",
+      "insight": "Generate documentation from the source a compiler checks.",
+      "cta": "/blocks",
+      "publishWindow": null
+    },
+    {
+      "id": "p09",
+      "title": "Component APIs that survive four platforms",
+      "pillar": "A",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "problem-solving",
+      "status": "idea",
+      "sourceFeature": "shared variant contract",
+      "insight": "Share the contract - variant and size names - not the implementation.",
+      "cta": "/components",
+      "publishWindow": null
+    },
+    {
+      "id": "p10",
+      "title": "Migrating a design system to a second platform",
+      "pillar": "A",
+      "audience": [
+        "team-web-and-mobile"
+      ],
+      "channel": [
+        "linkedin"
+      ],
+      "format": "post",
+      "intent": "problem-solving",
+      "status": "idea",
+      "sourceFeature": "ui-angular",
+      "insight": "Start with tokens, then the contract, then the components.",
+      "cta": "/docs/angular",
+      "publishWindow": null
+    },
+    {
+      "id": "e01",
+      "title": "A manifest as the single source of platform truth",
+      "pillar": "C",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "dev.to",
+        "hn"
+      ],
+      "format": "article",
+      "intent": "advanced",
+      "status": "idea",
+      "sourceFeature": "components.manifest.json",
+      "insight": "One declaration site turns a stale string into a compile error.",
+      "cta": "/docs/contributing",
+      "publishWindow": null
+    },
+    {
+      "id": "e02",
+      "title": "Generating documentation from code that compiles",
+      "pillar": "C",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "advanced",
+      "status": "idea",
+      "sourceFeature": "kx-block / kx-usage markers",
+      "insight": "Extraction markers keep the example and the compiled thing in one file.",
+      "cta": "/blocks",
+      "publishWindow": null
+    },
+    {
+      "id": "e03",
+      "title": "CI guardrails for a design system: what each one caught",
+      "pillar": "C",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "dev.to",
+        "hn"
+      ],
+      "format": "article",
+      "intent": "advanced",
+      "status": "idea",
+      "sourceFeature": "check:* scripts",
+      "insight": "Each guardrail should be born from a real bug, not a hypothetical.",
+      "cta": "/docs/contributing",
+      "publishWindow": null
+    },
+    {
+      "id": "e04",
+      "title": "Style Dictionary v4 and DTCG: a real multi-platform pipeline",
+      "pillar": "B",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "advanced",
+      "status": "idea",
+      "sourceFeature": "style-dictionary/sd.config.mjs",
+      "insight": "The pipeline is where semantic meaning survives or is lost.",
+      "cta": "/docs/tokens",
+      "publishWindow": null
+    },
+    {
+      "id": "e05",
+      "title": "Angular standalone components with signal inputs and CVA",
+      "pillar": "F",
+      "audience": [
+        "frontend-lead"
+      ],
+      "channel": [
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "advanced",
+      "status": "idea",
+      "sourceFeature": "ui-angular",
+      "insight": "Directives on native elements beat wrapper components for accessibility.",
+      "cta": "/docs/angular",
+      "publishWindow": null
+    },
+    {
+      "id": "e06",
+      "title": "Designing an overlay architecture once, for seven components",
+      "pillar": "F",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "advanced",
+      "status": "idea",
+      "sourceFeature": "deferred overlays",
+      "insight": "Portal design is one decision; making it seven times is the mistake.",
+      "cta": "/docs/angular",
+      "publishWindow": null
+    },
+    {
+      "id": "e07",
+      "title": "Mutation-testing your guardrails",
+      "pillar": "C",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "dev.to",
+        "x"
+      ],
+      "format": "thread",
+      "intent": "advanced",
+      "status": "idea",
+      "sourceFeature": "mutation tests",
+      "insight": "A guardrail you have never seen fail is a guardrail you do not have.",
+      "cta": "/docs/contributing",
+      "publishWindow": null
+    },
+    {
+      "id": "e08",
+      "title": "Analytics for a developer tool without invading privacy",
+      "pillar": "C",
+      "audience": [
+        "frontend-lead"
+      ],
+      "channel": [
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "advanced",
+      "status": "idea",
+      "sourceFeature": "kx_* attribution",
+      "insight": "Activation can be measured with three events and no personal data.",
+      "cta": "/",
+      "publishWindow": null
+    },
+    {
+      "id": "e09",
+      "title": "Versioning five packages across four languages",
+      "pillar": "C",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "advanced",
+      "status": "idea",
+      "sourceFeature": "changesets fixed group",
+      "insight": "Lockstep versions make which-version-am-I-on answerable.",
+      "cta": "/docs/changelog",
+      "publishWindow": null
+    },
+    {
+      "id": "e10",
+      "title": "Testing components you cannot run locally",
+      "pillar": "C",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "dev.to"
+      ],
+      "format": "article",
+      "intent": "advanced",
+      "status": "idea",
+      "sourceFeature": "native-*.yml",
+      "insight": "When CI is the only compiler you have, design the loop around it.",
+      "cta": "/docs/contributing",
+      "publishWindow": null
+    },
+    {
+      "id": "b01",
+      "title": "We found our platform counts were wrong",
+      "pillar": "E",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "x",
+        "linkedin"
+      ],
+      "format": "post",
+      "intent": "build-in-public",
+      "status": "idea",
+      "sourceFeature": "direction-provider correction",
+      "insight": "A guardrail's first run should embarrass you. Ours did.",
+      "cta": "/docs/platforms",
+      "publishWindow": null
+    },
+    {
+      "id": "b02",
+      "title": "The Chart page advertised an API that did not exist",
+      "pillar": "E",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "x",
+        "linkedin"
+      ],
+      "format": "post",
+      "intent": "build-in-public",
+      "status": "idea",
+      "sourceFeature": "chart-demo fix",
+      "insight": "Hand-written docs drift into fiction without a check.",
+      "cta": "/components",
+      "publishWindow": null
+    },
+    {
+      "id": "b03",
+      "title": "Every block on our site now compiles",
+      "pillar": "E",
+      "audience": [
+        "frontend-lead"
+      ],
+      "channel": [
+        "linkedin",
+        "x"
+      ],
+      "format": "post",
+      "intent": "build-in-public",
+      "status": "idea",
+      "sourceFeature": "blocks migration",
+      "insight": "We deleted 33 unverified snippets rather than re-home them.",
+      "cta": "/blocks",
+      "publishWindow": null
+    },
+    {
+      "id": "b04",
+      "title": "A bug our CI caught that three humans missed",
+      "pillar": "E",
+      "audience": [
+        "design-system-engineer"
+      ],
+      "channel": [
+        "x"
+      ],
+      "format": "thread",
+      "intent": "build-in-public",
+      "status": "idea",
+      "sourceFeature": "material-icons classpath",
+      "insight": "material3 stopped bringing icons transitively; nothing local told us.",
+      "cta": "/docs/compose",
+      "publishWindow": null
+    },
+    {
+      "id": "b05",
+      "title": "What a Flutter user asked for, and what it changed",
+      "pillar": "E",
+      "audience": [
+        "team-web-and-mobile"
+      ],
+      "channel": [
+        "linkedin"
+      ],
+      "format": "post",
+      "intent": "build-in-public",
+      "status": "idea",
+      "sourceFeature": "tokens-without-widgets",
+      "insight": "One request exposed a whole missing adoption path.",
+      "cta": "/docs/flutter",
+      "publishWindow": null
+    },
+    {
+      "id": "b06",
+      "title": "Shipping Angular as preview, honestly",
+      "pillar": "E",
+      "audience": [
+        "frontend-lead"
+      ],
+      "channel": [
+        "linkedin",
+        "x"
+      ],
+      "format": "post",
+      "intent": "build-in-public",
+      "status": "idea",
+      "sourceFeature": "Angular preview",
+      "insight": "11 of 98 is the real number, and saying so costs nothing.",
+      "cta": "/docs/angular",
+      "publishWindow": null
+    }
+  ]
+}

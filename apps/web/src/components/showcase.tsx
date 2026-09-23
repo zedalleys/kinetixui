@@ -2,62 +2,88 @@
 
 import * as React from "react";
 import * as Tabs from "@radix-ui/react-tabs";
+import { PLATFORMS, PLATFORM_DEFINITIONS, type Platform } from "@/lib/platform-parity";
 import { cn } from "@/lib/utils";
 import { CopyButton } from "./copy-button";
 
-/** Optional native ports of the same block, shown as sub-tabs of "code". */
-export type NativeCode = { compose?: string; flutter?: string };
+/**
+ * The real source for the same example on each platform that implements it, keyed by platform name. Only
+ * platforms with a verified source file appear — there is no placeholder tab and no inferred support.
+ */
+export type PlatformSources = Partial<Record<Platform, string>>;
 
 /**
  * Live example + copyable source, used by /blocks and /charts.
- * Simpler than <ComponentPreview> — one code string, no demo registry.
- * Pass `native` to add Compose / Flutter columns to the code tab.
+ * Simpler than <ComponentPreview> — no demo registry.
+ *
+ * `sources` adds a tab per platform that really implements the example; tab order comes from the central
+ * platform definition rather than a list kept here, so a new platform slots into place everywhere at once. A
+ * platform with no source gets no tab, because an empty or "coming soon" tab is a claim of its own.
+ * `code` is the single-snippet form for pages that only have React.
  */
 export function Showcase({
+  id,
   title,
   description,
   code,
-  native,
+  sources,
+  platforms,
   children,
   className,
   contentClassName,
 }: {
+  /** Anchor target, so a single block can be linked to directly. */
+  id?: string;
   title: string;
   description?: string;
-  code: string;
-  native?: NativeCode;
+  code?: string;
+  sources?: PlatformSources;
+  /** Platform labels to show as a coverage line — derived by the caller, never counted here. */
+  platforms?: string[];
   children: React.ReactNode;
   className?: string;
   contentClassName?: string;
 }) {
   const langs = React.useMemo(() => {
-    const out = [{ key: "react", label: "React", value: code }];
-    if (native?.compose) out.push({ key: "compose", label: "Compose", value: native.compose });
-    if (native?.flutter) out.push({ key: "flutter", label: "Flutter", value: native.flutter });
-    return out;
-  }, [code, native]);
+    if (sources) {
+      return PLATFORMS.filter((p) => sources[p]).map((p) => ({ key: p as string, label: PLATFORM_DEFINITIONS[p].label, value: sources[p]! }));
+    }
+    return code ? [{ key: "React", label: PLATFORM_DEFINITIONS.React.label, value: code }] : [];
+  }, [code, sources]);
 
-  const [lang, setLang] = React.useState("react");
+  const [lang, setLang] = React.useState<string>(langs[0]?.key ?? "React");
   const active = langs.find((l) => l.key === lang) ?? langs[0];
   const multi = langs.length > 1;
 
   return (
     // min-w-0: this is a grid item, and grid items default to min-width:auto — a wide demo would otherwise stretch
     // its track past the viewport and make the whole page scroll sideways on a phone
-    <section className={cn("min-w-0 scroll-mt-28", className)}>
+    <section id={id} className={cn("min-w-0 scroll-mt-28", className)}>
       <h2 className="font-display text-lg font-semibold tracking-[-0.01em]">{title}</h2>
       {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+      {/*
+        The platforms this example really has source for, named one by one. Deliberately not "all platforms":
+        KinetixUI has five, and a block with three of them is not on all of them — the precise list is both
+        more useful and the only honest phrasing.
+      */}
+      {platforms && platforms.length > 0 && (
+        <p className="mt-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+          <span className="sr-only">Available for: </span>
+          {platforms.join(" · ")}
+        </p>
+      )}
 
       <div className="mt-3 overflow-hidden rounded-xl border border-border">
         <Tabs.Root defaultValue="preview">
-          <Tabs.List className="flex items-center gap-1 bg-muted/30 px-2">
+          <Tabs.List className="flex items-center gap-1 bg-muted/30 px-2" aria-label={`${title} — preview or source`}>
             {["preview", "code"].map((v) => (
               <Tabs.Trigger
                 key={v}
                 value={v}
                 className={cn(
                   "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
-                  "hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground",
+                  "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                  "data-[state=active]:border-primary data-[state=active]:text-foreground",
                 )}
               >
                 {v}
@@ -80,31 +106,44 @@ export function Showcase({
 
           <Tabs.Content value="code">
             <div className="relative border-t border-border bg-muted/40">
+              {/*
+                A real nested tablist, not a row of plain buttons. The platform switcher used to be bare
+                <button>s: no role, no selected state for assistive technology, no arrow-key movement. Radix
+                gives all three, and the code panel below is labelled by the selected tab.
+              */}
               {multi && (
-                <div className="flex items-center gap-1 border-b border-border/60 px-3 pt-1.5">
-                  {langs.map((l) => (
-                    <button
-                      key={l.key}
-                      type="button"
-                      onClick={() => setLang(l.key)}
-                      className={cn(
-                        "-mb-px border-b-2 border-transparent px-2 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
-                        "hover:text-foreground",
-                        l.key === active.key && "border-primary text-foreground",
-                      )}
-                    >
-                      {l.label}
-                    </button>
-                  ))}
-                </div>
+                <Tabs.Root value={lang} onValueChange={setLang}>
+                  <Tabs.List className="flex items-center gap-1 border-b border-border/60 px-3 pt-1.5" aria-label={`${title} — implementation platform`}>
+                    {langs.map((l) => (
+                      <Tabs.Trigger
+                        key={l.key}
+                        value={l.key}
+                        className={cn(
+                          "-mb-px border-b-2 border-transparent px-2 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
+                          "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                          "data-[state=active]:border-primary data-[state=active]:text-foreground",
+                        )}
+                      >
+                        {l.label}
+                      </Tabs.Trigger>
+                    ))}
+                  </Tabs.List>
+                </Tabs.Root>
               )}
-              <CopyButton
-                value={active.value}
-                className={cn("absolute right-3 z-10", multi ? "top-11" : "top-3")}
-              />
-              <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed">
-                <code>{active.value}</code>
-              </pre>
+              {active && (
+                <>
+                  <CopyButton value={active.value} className={cn("absolute right-3 z-10", multi ? "top-11" : "top-3")} />
+                  <pre
+                    // a code block scrolls sideways when a long Kotlin or Dart line overflows, so the keyboard
+                    // must be able to reach it (WCAG 2.1.1 / axe scrollable-region-focusable)
+                    tabIndex={0}
+                    aria-label={`${title} — ${active.label} source`}
+                    className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                  >
+                    <code>{active.value}</code>
+                  </pre>
+                </>
+              )}
             </div>
           </Tabs.Content>
         </Tabs.Root>

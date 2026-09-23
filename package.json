@@ -49,7 +49,15 @@
     "release": "pnpm build:tokens && pnpm --filter @kinetixui/ui build && pnpm --filter @kinetixui/cli build && pnpm -r publish --no-git-checks --provenance && changeset git-tag && git push --tags",
     "check:platform-source": "node scripts/check-platform-source.mjs",
     "build:angular": "pnpm --filter @kinetixui/angular build",
-    "test:angular": "pnpm --filter @kinetixui/angular test"
+    "test:angular": "pnpm --filter @kinetixui/angular test",
+    "gen:blocks": "node scripts/gen-block-examples.mjs",
+    "check:blocks": "node scripts/gen-block-examples.mjs --check",
+    "check:block-source": "node scripts/check-block-source.mjs",
+    "gen:usage": "node scripts/gen-usage-examples.mjs",
+    "check:usage": "node scripts/gen-usage-examples.mjs --check",
+    "check:platform-code": "node scripts/check-platform-code.mjs",
+    "marketing:stats": "node scripts/marketing-stats.mjs",
+    "marketing:release-notes": "node scripts/release-to-content.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

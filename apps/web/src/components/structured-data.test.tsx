@@ -33,10 +33,22 @@ describe("StructuredData", () => {
   });
 
   it("claims nothing it cannot prove", () => {
-    const json = JSON.stringify(graph());
-    for (const field of ["aggregateRating", "review", "ratingValue", "downloadCount", "price", "offers", "foundingDate", "sameAs"]) {
-      expect(json).not.toContain(field);
-    }
+    // Checks KEYS, not raw text. The substring version of this failed the day the description honestly said
+    // "Angular in preview" — which contains "review" — so a truthful sentence broke a guardrail aimed at fake
+    // rating markup. A claim lives in a field name; prose that happens to share letters with one does not.
+    const FORBIDDEN = ["aggregateRating", "review", "reviews", "ratingValue", "downloadCount", "price", "offers", "foundingDate", "sameAs"];
+    const keys = new Set<string>();
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) return void node.forEach(walk);
+      if (node && typeof node === "object") {
+        for (const [k, v] of Object.entries(node)) {
+          keys.add(k);
+          walk(v);
+        }
+      }
+    };
+    walk(graph());
+    for (const field of FORBIDDEN) expect([...keys], `structured data must not claim "${field}"`).not.toContain(field);
   });
 });
 
