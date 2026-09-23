@@ -7,130 +7,101 @@ status: drafted
 
 # a01 — visual brief
 
-Five assets. Each makes **one** point. None is a product screenshot dressed up
-as a diagram, and none shows a UI state that does not exist.
-
-**Shared constraints**
-
-- Real values only. Numbers come from `pnpm marketing:stats` on the day, not from
-  this file.
-- Light and dark variants for anything posted to X (dark-mode users are most of
-  the developer audience there).
-- Legible at 400px wide — LinkedIn and X both compress aggressively.
-- Code images: the site's own token palette and mono stack, so the assets look
-  like the product without pretending to be a screenshot of it.
+**One primary asset.** The others are optional derivatives, built only if the
+first earns attention. Shipping five at once spreads the effort and none of them
+lands.
 
 ---
 
-## Asset 1 — Before / after coverage table *(priority: required)*
+## PRIMARY — "What has to be true before a platform appears on our site"
 
-**Point:** correcting a false claim moves numbers *down*, and that is the
-healthy direction.
+**The point:** a platform claim passes through four gates before it reaches a
+reader, and the last two are machines. One image, one idea.
 
-**Used by:** LinkedIn variant A, article body.
+### Spec
 
-| Platform | Claimed | Verified |
-| --- | --- | --- |
-| React | 98 | 98 |
-| SwiftUI | 91 | **90** |
-| Jetpack Compose | 90 | **89** |
-| Flutter | 91 | **90** |
-| On all four | 90 | **89** |
+| | |
+| --- | --- |
+| **Dimensions** | 1200 × 675 (16:9). Also export 1200 × 1200 for the LinkedIn feed. |
+| **Headline** | *What has to be true before a platform appears on our site* |
+| **Orientation** | Horizontal flow, left → right, four gates then an outcome |
+| **Legibility floor** | Every label readable at 400px wide |
+| **Themes** | Light and dark. Dark is the default for X. |
+| **Palette** | The site's own tokens — `--foreground`, `--muted-foreground`, `--border`, `--primary` for the pass state, `--destructive` for the failure callout |
 
-**Treatment:** the four changed cells in the destructive token colour, with a
-small down-arrow. Caption: *"Corrected, not improved."* Do **not** style the
-drop as negative-bad — the whole point is that it is positive.
-
-**Do not include Angular in this table.** It did not exist at the time of the
-before-state, and adding it invites a false comparison.
-
----
-
-## Asset 2 — The three levels of verification *(priority: required)*
-
-**Point:** most projects stop at Level 0 without noticing.
-
-Three stacked bars, increasing width:
-
-| Level | Checks | Catches | Cost |
-| --- | --- | --- | --- |
-| 0 — Spelling | the platform name is known | nothing real | free |
-| 1 — Source exists | a file is there | "we never built this" | one script |
-| 2 — It compiles | symbols and arguments resolve | wrong APIs | platform CI |
-
-Annotate Level 0 with *"feels like validation — runs in CI, goes green"*.
-
----
-
-## Asset 3 — The Chart snippet *(priority: high)*
-
-**Point:** documentation is the one place code is written by hand and never
-compiled.
-
-A code card of the real snippet, with two callouts:
-
-- `KinetixChart` → **no such symbol; no Chart.kt exists**
-- `CustomPaint` → **this is a Flutter API**
-
-Plus a small browser-chrome fragment showing the tab labelled **"Android"** —
-drawn, not a screenshot, since the tab no longer exists.
-
-**Caption:** *"Nobody lied. There was just no compiler between that sentence and
-the reader."*
-
----
-
-## Asset 4 — One file, two consumers *(priority: medium)*
-
-**Point:** the fix is structural — the example and the compiled thing are the
-same bytes.
+### Content
 
 ```
-        ┌──────────────────────────────┐
-        │  UsageExamples.kt            │
-        │                              │
-        │  // kx-usage:button-demo     │
-        │  KinetixButton(onClick =…) { │ ──┬──► Gradle compiles it
-        │    Text("Button")            │   │
-        │  }                           │   └──► the website quotes it
-        │  // kx-usage:end             │
-        └──────────────────────────────┘
-                  drift check fails if they disagree
+  ①  CLAIM              ②  SOURCE            ③  API              ④  COMPILER
+  components            a file exists        every Kinetix*      the platform's
+  .manifest.json        in that platform's   symbol is really    own CI builds
+  lists the platform    package              exported            the example
+       │                     │                    │                   │
+       └── check:manifest    └── check:platform-  └── check:platform-  └── native-*.yml
+                                 source               code
+                                        ↓
+                            PUBLISHED COVERAGE
+                     /docs/platforms — generated, not typed
 ```
 
-Single source file, two arrows. No transpilation arrow anywhere — that is the
-claim we specifically do not make.
+**Failure callout**, offset below gate ②, in the destructive colour:
+
+> `direction-provider` claimed three platforms here.
+> Gate ② found no file. Coverage corrected 91/90/91 → 90/89/90.
+
+### Factual vs conceptual — label honestly
+
+- **Factual:** the four script names, the file names, the before/after numbers,
+  "generated, not typed". All verifiable in the repo.
+- **Conceptual:** the left-to-right gate metaphor. The checks do not literally
+  run in a pipeline in that order — `check:manifest`, `check:platform-source` and
+  `check:platform-code` are separate CI steps, and the native workflows run in
+  parallel jobs. Do **not** caption it "our pipeline". Caption it *"what has to
+  be true"*.
+
+### Mobile / LinkedIn
+
+At 1200 × 1200, stack the four gates vertically and keep the failure callout
+attached to gate ②. Do not shrink the gate labels below the headline's size
+ratio — on a phone feed the labels are the only thing read.
 
 ---
 
-## Asset 5 — 30-second demo clip *(priority: medium; reusable)*
+## Optional derivatives
 
-**Point:** the guardrail is real and it fails loudly.
+Build only if the primary performs. In priority order.
 
-**Script (no voiceover, terminal only):**
+**B — Before / after coverage table.** Two columns, four changed cells in the
+destructive colour, caption *"Corrected, not improved."* Do not style the drop
+as bad; that is the point. **Exclude Angular** — it did not exist in the
+before-state and including it invites a false comparison.
 
-1. Open `components.manifest.json`, add `"Compose"` to a component that has no
-   Compose source. *(3s)*
-2. `pnpm check:platform-source` *(2s)*
-3. Terminal prints:
-   `✗ dialog: manifest says Compose, but no matching source in packages/ui-compose`
-   *(hold 3s)*
-4. Undo. Re-run. `check:platform-source ok — every declared platform is backed by
-   real source.` *(hold 2s)*
-5. End card: *"A claim with nothing behind it should fail the build."* + URL.
+**C — The three verification levels.** Three stacked bars: spelling → source
+exists → it compiles. Annotate Level 0 with *"feels like validation — has a
+script, runs in CI, goes green"*.
 
-Record at 1280×720, large terminal font, the site's dark palette. Under 30s so it
-autoplays fully on X and LinkedIn.
+**D — The Chart snippet.** Code card of the real snippet with two callouts:
+`KinetixChart` → *no such symbol*, `CustomPaint` → *this is a Flutter API*.
+Referenced by X post 6. Draw the "Android" tab rather than screenshotting it —
+the tab no longer exists.
 
-**This is the highest-reuse asset in the set** — it also serves campaign 1 and
-the Product Hunt gallery.
+**E — 30-second demo clip.** Terminal only, no voiceover: add a platform to a
+component with no source → `pnpm check:platform-source` → it fails by name →
+undo → it passes. End card: *"A claim with nothing behind it should fail the
+build."* Highest reuse in the set; also serves Product Hunt.
 
 ---
 
-## Not to be made
+## Never make
 
-- A "platform parity ✅✅✅✅" grid. We do not have uniform parity and the
-  checkmark grid is the visual form of the lie this piece is about.
+- A parity grid of ✅ across platforms. Coverage varies per component — 89 of 98
+  on four platforms, and Angular at 11. A row of checkmarks is the visual form
+  of exactly the claim this campaign is about.
 - Any chart of stars, downloads or users. None are known.
-- A screenshot showing Angular alongside the other four without its preview
-  label.
+- Angular shown alongside the other four without its preview label.
+- A screenshot presented as a diagram, or a diagram presented as a screenshot.
+
+## Numbers in any asset
+
+Re-read from `pnpm marketing:stats` on the day the asset is made. Do not copy
+them from this file.

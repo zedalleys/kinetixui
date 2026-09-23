@@ -178,3 +178,80 @@ showed no change at all. Using `~1` fixed it.
 A check that quietly compares something to itself reports success. That is the
 same failure the article is about, one layer up, so it is worth remembering
 before trusting any tooling that "found nothing".
+
+---
+
+# Editorial freeze — 2026-09-23
+
+## Current repository state (use for the "ours, today" paragraph)
+
+`main` @ `e29184c`, v0.22.1 MIT. From `pnpm marketing:stats`:
+
+| | |
+| --- | --- |
+| Components | 98 |
+| React | 98 / 98 |
+| Angular | 11 / 98 — **preview**, `catalogComplete: false` |
+| SwiftUI | 90 / 98 |
+| Jetpack Compose | 89 / 98 |
+| Flutter | 90 / 98 |
+| On all four catalogue-complete platforms | **89 / 98** |
+| Documented exceptions | 9 |
+| npm | `ui`, `cli`, `tokens` at 0.22.1; **`angular` unpublished** |
+
+Snippet migration, counted directly (not covered by `marketing:stats`):
+
+| | |
+| --- | --- |
+| Total demo keys | 100 |
+| Backed by compiled source | **3** (`button-demo`, `badge-demo`, `switch-demo`) |
+| Still hand-written in `platform-code.ts` | 97 keys / **290 snippets** |
+| Declared compositions (non-ports shown deliberately) | 21 |
+
+The article's "three of a hundred demo examples have moved so far" is **current**
+at freeze. It is the fastest-ageing line in the piece.
+
+## Historical vs current — never mix these
+
+The article quotes the audit *as it stood*, in past tense, tied to commits.
+Current figures appear only in the "ours, today" paragraph.
+
+| Figure | Historical (commit) | Current |
+| --- | --- | --- |
+| SwiftUI · Compose · Flutter | 91 · 90 · 91 (`34e5b06~1`) | 90 · 89 · 90 |
+| On all four | 90 (`34e5b06~1`) | 89 |
+| Snippets in `platform-code.ts` | 300 (`c3de388~1`) | 290 |
+| Symbols used SwiftUI/Compose/Flutter | 164 / 182 / 175 (`c3de388~1`) | not re-counted; 0 unknown |
+| Unknown Compose symbols | 3 (`c3de388~1`) | 0 |
+| Demo keys from compiled source | 0 | 3 |
+
+**Do not refresh the historical column.** Replacing 91/90/91 with today's
+numbers would destroy the before/after that the article rests on.
+
+## Re-verification, 2026-09-23
+
+All 27 commit-derived claims re-checked programmatically against git.
+Result: **27/27 verified.** Refs use `~1` throughout.
+
+Covered: coverage before/after (`34e5b06~1` vs `34e5b06`); the
+`direction-provider`, `combobox` and `sonner` entries in both states;
+`platform-code.ts` key/snippet/symbol counts at `c3de388~1`; the `chart-demo`
+and `data-table-demo` diff lines in `c3de388`; `blocks-content.tsx` line count,
+the `id="email"` / `id="bl-email"` drift and the four "from a single source"
+occurrences at `41fe16b~1`; and the commits that introduced
+`check-platform-source.mjs` (`34e5b06`), `check-platform-code.mjs` (`c3de388`)
+and `check-block-source.mjs` (`41fe16b`).
+
+### The `^` mistake — keep this
+
+The first attempt at the table reported **no change at all** between before and
+after. `git show 34e5b06^:…` was run through `execSync`, which uses `cmd.exe` on
+Windows, where `^` is the escape character. The ref silently became `34e5b06`,
+so "before" and "after" were the same commit. Using `~1` fixed it.
+
+A check that quietly compares something to itself reports success. That is the
+article's own thesis one layer up, and the reason every ref in the verification
+script is `~1`.
+
+**Internal only.** The public article does not mention it — it is a shell quirk,
+and the piece is about design-system verification, not Windows escaping.
