@@ -13,7 +13,7 @@
       "family": "web",
       "label": "React",
       "abbr": "RE",
-      "maturity": "beta",
+      "maturity": "stable",
       "catalogComplete": true,
       "package": "@kinetixui/ui",
       "dir": "packages/ui",
@@ -43,7 +43,7 @@
       "family": "native",
       "label": "SwiftUI",
       "abbr": "SW",
-      "maturity": "experimental",
+      "maturity": "stable",
       "catalogComplete": true,
       "package": "KinetixUI",
       "dir": "packages/ui-swiftui",
@@ -58,7 +58,7 @@
       "family": "native",
       "label": "Jetpack Compose",
       "abbr": "JC",
-      "maturity": "experimental",
+      "maturity": "stable",
       "catalogComplete": true,
       "package": "com.kinetixui:ui-compose",
       "dir": "packages/ui-compose",
@@ -73,7 +73,7 @@
       "family": "native",
       "label": "Flutter",
       "abbr": "FL",
-      "maturity": "experimental",
+      "maturity": "stable",
       "catalogComplete": true,
       "package": "kinetix_ui",
       "dir": "packages/ui-flutter",
@@ -1226,13 +1226,13 @@
       }
     }
   },
-  "maturityLadder": [
+  "verificationLadder": [
     "experimental",
     "preview",
     "beta",
     "stable"
   ],
-  "maturityRequires": {
+  "verificationRequires": {
     "experimental": [
       "build"
     ],
@@ -1246,10 +1246,11 @@
       "interaction",
       "rtl",
       "largeText",
-      "visual"
+      "visual",
+      "published"
     ]
   },
-  "maturity": {
+  "verification": {
     "accordion": {
       "React": "beta",
       "SwiftUI": "experimental",
@@ -1846,7 +1847,7 @@
       "Flutter": "experimental"
     }
   },
-  "maturityCounts": {
+  "verificationCounts": {
     "React": {
       "beta": 98
     },
@@ -1864,5 +1865,12 @@
       "experimental": 85,
       "beta": 5
     }
+  },
+  "catalogueVerification": {
+    "React": "beta",
+    "Angular": "preview",
+    "SwiftUI": "experimental",
+    "Compose": "experimental",
+    "Flutter": "experimental"
   }
 }

@@ -56,6 +56,14 @@ jobs:
       # What each platform implementation has actually been verified to do, derived from the test files
       # themselves. check:manifest below refuses a declared platform maturity this evidence does not support,
       # which is the gate that stops "the source file exists" from being printed as "stable".
+      # Two accessibility suites take their SUBJECTS from the story directory, so a component with no story
+      # is a component nothing checks — silently. That is how direction-provider went unchecked. This fails
+      # on a missing, drifted or orphaned story, and on any manifest component with no story at all.
+      - name: Storybook story coverage (the accessibility suites' subject set)
+        run: pnpm check:stories
+
+      # What each platform implementation has actually been verified to do, derived from the test files
+      # themselves. This is verification maturity, which is NOT package maturity and NOT component lifecycle.
       - name: Verification evidence is current with the tests
         run: pnpm check:verification
 
@@ -137,6 +145,7 @@ jobs:
             platform-parity.json \
             block-parity.json \
             verification.json \
+            packages/ui/src/stories \
             apps/web/src/registry/block-examples.generated.ts \
             apps/web/src/registry/usage-examples.generated.ts; then
             echo "::error::Generated output is stale. Run 'pnpm gen:verification && pnpm gen:manifest && pnpm build:tokens && pnpm vendor:compose && pnpm vendor:swiftui && pnpm vendor:flutter && pnpm gen:stories && pnpm build:registry' and commit the result."

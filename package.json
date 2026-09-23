@@ -17,6 +17,7 @@
     "gen:registry": "node scripts/gen-registry.mjs",
     "gen:docs": "node scripts/gen-docs.mjs",
     "gen:stories": "node scripts/gen-stories.mjs",
+    "check:stories": "node scripts/gen-stories.mjs --check",
     "gen:specs": "node scripts/gen-component-specs.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
     "check:token-contract": "node scripts/check-token-contract.mjs",

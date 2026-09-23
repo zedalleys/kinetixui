@@ -74,6 +74,36 @@ const base = `http://127.0.0.1:${server.address().port}`;
 const index = JSON.parse(readFileSync(join(staticDir, "index.json"), "utf8"));
 const stories = Object.values(index.entries).filter((e) => e.type === "story");
 
+/**
+ * "axe passed every story" is not the same claim as "axe covered every component", and the difference is how
+ * `direction-provider` went unchecked for a year: it had no story, so this suite had nothing to mount, and
+ * nothing anywhere said so. The subject set is therefore reconciled against the manifest before any browser
+ * opens — if a component is missing from the built index, that is a coverage hole and this run fails.
+ *
+ * `pnpm check:stories` catches the same thing from the source side. This catches it from the BUILT side,
+ * where a story can exist on disk and still be absent from the index.
+ */
+const manifest = JSON.parse(readFileSync(new URL("../components.manifest.json", import.meta.url), "utf8"));
+const slugOfTitle = (title) =>
+  title
+    .split("/")
+    .pop()
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replace(/\s+/g, "-")
+    .toLowerCase();
+const indexed = new Set(stories.map((e) => slugOfTitle(e.title)));
+const uncovered = Object.keys(manifest.components).filter((slug) => !indexed.has(slug));
+if (uncovered.length) {
+  console.error(
+    `  x ${uncovered.length} component(s) have no story in the built Storybook, so this accessibility pass does not cover them:\n` +
+      uncovered.map((s) => `      ${s}`).join("\n") +
+      `\n    Run \`pnpm gen:stories\`, rebuild Storybook, and commit the result.`,
+  );
+  server.close(); // nothing has been launched yet — this runs before the browser starts
+  process.exit(1);
+}
+console.log(`subjects reconciled — ${indexed.size} story titles cover ${Object.keys(manifest.components).length} manifest components`);
+
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 const found = new Map(); // key -> sample message
 const failedToLoad = [];
