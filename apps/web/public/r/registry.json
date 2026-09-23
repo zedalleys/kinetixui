@@ -64,6 +64,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -88,6 +89,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -200,6 +202,7 @@
       "platforms": [
         "React",
         "SwiftUI",
+        "Compose",
         "Flutter"
       ]
     },
@@ -415,6 +418,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -439,6 +443,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -580,6 +585,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -667,6 +673,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -703,7 +710,8 @@
       "title": "Native Select",
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
-        "React"
+        "React",
+        "Angular"
       ]
     },
     {
@@ -747,6 +755,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -783,6 +792,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -820,6 +830,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -832,6 +843,7 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54863:536.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -880,6 +892,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -941,6 +954,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -953,6 +967,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -977,6 +992,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -1063,6 +1079,7 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:14021.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -1075,6 +1092,7 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:13857.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -1099,6 +1117,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -1111,6 +1130,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
