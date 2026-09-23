@@ -22,7 +22,7 @@ reader, and the last two are machines. One image, one idea.
 
 | | |
 | --- | --- |
-| **Dimensions** | 1200 × 675 (16:9). Also export 1200 × 1200 for the LinkedIn feed. |
+| **Dimensions** | **1200 × 627** (LinkedIn/general landscape). Optional square **1080 × 1080**. |
 | **Headline** | *What has to be true before a platform appears on our site* |
 | **Orientation** | Horizontal flow, left → right, four gates then an outcome |
 | **Legibility floor** | Every label readable at 400px wide |
@@ -61,7 +61,7 @@ reader, and the last two are machines. One image, one idea.
 
 ### Mobile / LinkedIn
 
-At 1200 × 1200, stack the four gates vertically and keep the failure callout
+At 1080 × 1080, stack the four gates vertically and keep the failure callout
 attached to gate ②. Do not shrink the gate labels below the headline's size
 ratio — on a phone feed the labels are the only thing read.
 
@@ -91,6 +91,30 @@ undo → it passes. End card: *"A claim with nothing behind it should fail the
 build."* Highest reuse in the set; also serves Product Hunt.
 
 ---
+
+## Tooling — why this brief is the deliverable, not a PNG
+
+The repository has exactly one image generator: `apps/web/src/app/opengraph-image.tsx`,
+which uses `next/og` (Satori) to render the site's social card **at Next build
+time**. No Satori, sharp, puppeteer or canvas dependency exists outside it, and
+`.github/assets/` holds one hand-made screenshot.
+
+I tried to reuse it for this asset from a standalone script. `new ImageResponse(...)`
+outside a Next runtime hung with no output and produced no file — it wants a
+runtime and font loading that only exist inside the framework's build.
+
+The two ways to force it were both out of scope:
+
+- add a public route to the product site so Next renders a marketing image, or
+- add a rendering dependency and build a small image pipeline.
+
+So: KinetixUI has an OG-card generator, **not** a marketing-graphics system. The
+asset is produced in a design tool from the spec above. If campaign visuals
+become routine, that is the moment to decide whether a pipeline earns its
+maintenance — not on the first one.
+
+**Export targets** (whatever tool is used): `1200 × 627` for LinkedIn and the
+general landscape slot, optional `1080 × 1080` square. PNG. Light and dark.
 
 ## Never make
 

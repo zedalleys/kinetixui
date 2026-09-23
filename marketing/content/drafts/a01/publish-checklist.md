@@ -59,13 +59,26 @@ past tense. See `sources.md`.
 - [ ] `<DEV_ARTICLE_URL>` → the real URL in `linkedin.md` (A and B) and
       `x-thread.md` (post 9)
 - [ ] Append the campaign parameters from `measurement.md` per channel
+      (LinkedIn/X: `utm_medium=social`; DEV CTA: `utm_medium=community` —
+      `article` is not an accepted medium and is silently replaced)
+- [ ] Do **not** add campaign parameters to the DEV article URL itself — it is
+      not our property and our parser never sees those hits
 - [ ] Click every link once, from a phone
+
+### STOP GATE — attribution must be working
+
+- [ ] Open **one** real tagged link in a fresh browser session, after deploy
+- [ ] Confirm PostHog receives `kx_campaign = kx_parity_proof`, plus the
+      expected `kx_source` and `kx_medium`
+- [ ] If `kx_campaign` is **absent**, the tag is wrong. **Stop.** Do not publish
+      any social derivative until it arrives — every post made before this works
+      is unattributable, and the campaign cannot be evaluated afterwards.
 
 ## 5. Visual
 
 - [ ] Primary asset built to `visual-brief.md` spec
 - [ ] Numbers on it re-read from `marketing:stats`, not copied from the brief
-- [ ] Light + dark exports; 1200×675 and 1200×1200
+- [ ] Light + dark exports; 1200×627 (landscape) and optionally 1080×1080
 - [ ] Legible at 400px wide
 - [ ] Caption says "what has to be true", not "our pipeline"
 
@@ -79,11 +92,24 @@ past tense. See `sources.md`.
 | Day 2–3 | One standalone post or derivative visual | thread has settled |
 
 Do not schedule. Do not post two channels in the same hour — it makes the
-response impossible to attribute.
+response impossible to attribute. On Day 2–3 publish **one** derivative, not all
+of them; having made five assets is not a reason to post five.
+
+**Published by hand.** No Buffer, Hootsuite, LinkedIn API, X API, DEV API or any
+other automation service is connected, and none should be for this campaign. The
+first one is worth watching in real time.
 
 ## 7. After
 
-- [ ] Set `a01.status` → `published` in `backlog.json`, with the URL
+- [ ] Update `a01` in `backlog.json` — the schema already has `status` and
+      `publishWindow`; add `publishedAt` (ISO date) and `url` (the real DEV URL):
+      ```json
+      "status": "published",
+      "publishedAt": "<ISO date>",
+      "url": "<real DEV URL>"
+      ```
+      Do not set `scheduled` — there is no confirmed publication time, and a
+      state nobody chose is worse than none.
 - [ ] Start the 14-day window in `measurement.md`
 - [ ] Note anything that surprised you in `marketing/research/`
 
