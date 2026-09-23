@@ -19,6 +19,12 @@
  * with an allowed status and a platform list that includes React and only
  * known platforms. Whether the *source* behind each declared platform really
  * exists is a separate check — scripts/check-platform-source.mjs.
+ *
+ * It also enforces the rule that makes five-platform guidance possible without
+ * five-platform fiction: every (component, platform) pair the component is NOT
+ * implemented on must carry a `platformGuidance` entry saying what to show
+ * there instead. `platforms` keeps its single meaning — a real KinetixUI
+ * implementation exists — and guidance never counts towards it.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -31,6 +37,19 @@ const manifest = read("components.manifest.json");
 const registry = read("registry/registry.json");
 const STATUSES = new Set(["beta", "stable", "deprecated"]);
 const FAMILIES = new Set(["web", "native"]);
+/**
+ * What a platform tab shows when the component is not implemented on that platform.
+ *
+ *   native-equivalent  the platform already provides the concept (SwiftUI's layoutDirection environment).
+ *                      Show its own idiom. There is nothing to port and nothing is planned.
+ *   composition        the concept is assembled from other KinetixUI components on that platform.
+ *   planned            it should exist and does not yet. Requires a `wave`, so "planned" cannot become a
+ *                      permanent parking space for an undecided gap.
+ *
+ * None of these is parity. `platforms` is parity.
+ */
+const GUIDANCE_TYPES = new Set(["native-equivalent", "composition", "planned"]);
+const WAVES = new Set(["primitives", "inputs", "layout", "navigation", "overlays", "data", "advanced"]);
 
 const defs = manifest.platformDefinitions;
 const platforms = Object.keys(defs);
@@ -61,6 +80,23 @@ for (const [s, c] of Object.entries(manifest.components)) {
   if (!Array.isArray(c.platforms) || !c.platforms.includes("React")) errors.push(`${s}: platforms must be a list including React`);
   else for (const p of c.platforms) if (!known.has(p)) errors.push(`${s}: unknown platform "${p}" (known: ${platforms.join(", ")})`);
   for (const p of Object.keys(c.platformNotes ?? {})) if (!known.has(p)) errors.push(`${s}: platformNotes has unknown platform "${p}"`);
+
+  // every platform the component is NOT on needs guidance, and every guidance entry needs a platform it is
+  // really absent from — a stale entry for a platform that has since been ported reads as "no port exists"
+  const guidance = c.platformGuidance ?? {};
+  for (const [p, g] of Object.entries(guidance)) {
+    if (!known.has(p)) { errors.push(`${s}: platformGuidance has unknown platform "${p}"`); continue; }
+    if (c.platforms.includes(p)) errors.push(`${s}: platformGuidance names ${p}, but ${s} IS implemented on ${p} — delete the stale entry`);
+    if (!GUIDANCE_TYPES.has(g.type)) errors.push(`${s}: platformGuidance.${p}.type must be one of ${[...GUIDANCE_TYPES].join(", ")}`);
+    if (g.type === "planned") {
+      if (!WAVES.has(g.wave)) errors.push(`${s}: platformGuidance.${p} is planned, so it needs a wave (${[...WAVES].join(", ")})`);
+      if (g.reason) errors.push(`${s}: platformGuidance.${p} is planned — the wave is the reason, drop the prose`);
+    } else if (!g.reason || g.reason.length < 40) {
+      errors.push(`${s}: platformGuidance.${p} is "${g.type}" and needs a real reason, not "${g.reason ?? ""}"`);
+    }
+  }
+  const uncovered = platforms.filter((p) => !c.platforms.includes(p) && !guidance[p]);
+  if (uncovered.length) errors.push(`${s}: no platformGuidance for ${uncovered.join(", ")} — every platform tab must have something truthful to show`);
   // a gap on a complete-catalogue platform is a decision, and a decision has to be written down
   const missing = catalogPlatforms.filter((p) => !c.platforms.includes(p));
   if (missing.length && !c.platformNote && !missing.every((p) => c.platformNotes?.[p])) {
@@ -95,6 +131,7 @@ const parity = {
   components: Object.fromEntries(entries.map(([s, c]) => [s, inOrder(c.platforms)])),
   notes: Object.fromEntries(entries.filter(([, c]) => c.platformNote).map(([s, c]) => [s, c.platformNote])),
   platformNotes: Object.fromEntries(entries.filter(([, c]) => c.platformNotes).map(([s, c]) => [s, c.platformNotes])),
+  guidance: Object.fromEntries(entries.filter(([, c]) => c.platformGuidance).map(([s, c]) => [s, c.platformGuidance])),
 };
 
 let stale = false;
@@ -110,7 +147,10 @@ for (const [file, data] of [["component-status.json", status], ["platform-parity
 if (stale) process.exit(1);
 const coverage = platforms.map((p) => `${p} ${parity.coverage[p]}`).join(", ");
 const full = entries.filter(([, c]) => catalogPlatforms.every((p) => c.platforms.includes(p))).length;
+const guidanceCounts = {};
+for (const [, c] of entries) for (const g of Object.values(c.platformGuidance ?? {})) guidanceCounts[g.type] = (guidanceCounts[g.type] ?? 0) + 1;
 console.log(
   `${CHECK ? "check:manifest ok" : "gen:manifest"} — ${entries.length} components (${coverage}); ` +
-    `${full} on all ${catalogPlatforms.length} complete-catalogue platforms.`,
+    `${full} on all ${catalogPlatforms.length} complete-catalogue platforms; ` +
+    `guidance ${Object.entries(guidanceCounts).map(([t, n]) => `${t} ${n}`).join(", ")}.`,
 );

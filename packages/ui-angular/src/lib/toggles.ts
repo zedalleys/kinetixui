@@ -1,5 +1,14 @@
-import { ChangeDetectionStrategy, Component, Directive, forwardRef, input, model, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, booleanAttribute, forwardRef, input, model, output, signal } from '@angular/core';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
+import type { KxToggleSize, KxToggleVariant } from './types';
+
+/**
+ * Per-element ids for the `<input>`/`<label>` pairs below. A module counter rather than a static on each
+ * class: a static field cannot be read by an instance initialiser declared above it, and the id only has to
+ * be unique within the document.
+ */
+let seq = 0;
+const uid = () => ++seq;
 
 /**
  * Checkbox and Switch — the two binary controls, and the package's forms architecture in miniature.
@@ -26,7 +35,7 @@ import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 @Directive()
 abstract class KxToggleBase implements ControlValueAccessor {
   readonly checked = model(false);
-  readonly disabled = input(false);
+  readonly disabled = input(false, { transform: booleanAttribute });
   /**
    * Emits only on real user interaction. `checkedChange` (from the model) also fires when a form or a parent
    * writes the value in, which is usually not what a caller reacting to "the user flipped this" wants.
@@ -100,7 +109,7 @@ abstract class KxToggleBase implements ControlValueAccessor {
   `,
 })
 export class KxCheckbox extends KxToggleBase {
-  readonly indeterminate = input(false);
+  readonly indeterminate = input(false, { transform: booleanAttribute });
   /** One of these is required when no visible `<label for>` points at the control. */
   readonly ariaLabel = input<string | null>(null, { alias: 'aria-label' });
   readonly ariaLabelledby = input<string | null>(null, { alias: 'aria-labelledby' });
@@ -134,4 +143,178 @@ export class KxCheckbox extends KxToggleBase {
 export class KxSwitch extends KxToggleBase {
   readonly ariaLabel = input<string | null>(null, { alias: 'aria-label' });
   readonly ariaLabelledby = input<string | null>(null, { alias: 'aria-labelledby' });
+}
+
+/* ── toggle ─────────────────────────────────────────────────────────────── */
+
+/**
+ *   <button kxToggle [(pressed)]="bold" aria-label="Bold">B</button>
+ *
+ * A directive on a real `<button>` that carries `aria-pressed` — the ARIA pattern for a two-state button,
+ * and the one thing ARIA has to add to a button that already has focus, activation and disabled handling.
+ */
+@Directive({
+  selector: 'button[kxToggle]',
+  host: {
+    '[class]': '"kx-toggle kx-toggle--" + variant() + " kx-toggle--" + size()',
+    '[attr.aria-pressed]': 'pressed()',
+    '(click)': 'press()',
+  },
+})
+export class KxToggle {
+  readonly pressed = model(false);
+  readonly variant = input<KxToggleVariant>('default');
+  readonly size = input<KxToggleSize>('md');
+  readonly toggled = output<boolean>();
+
+  protected press(): void {
+    const next = !this.pressed();
+    this.pressed.set(next);
+    this.toggled.emit(next);
+  }
+}
+
+/* ── toggle group ───────────────────────────────────────────────────────── */
+
+/**
+ *   <kx-toggle-group [(value)]="marks" aria-label="Text style">
+ *     <kx-toggle-group-item value="bold">B</kx-toggle-group-item>
+ *   </kx-toggle-group>
+ *
+ * Multiple-select by default: each item is an independent `aria-pressed` button inside a `role="group"`, so
+ * every one is its own tab stop and its own announcement — which is what a formatting toolbar is.
+ *
+ * `type="single"` is a different control, and is rendered as one: a `radiogroup` of real `<input
+ * type="radio">` elements, so arrow-key selection and the single tab stop come from the browser. Sharing a
+ * template between the two would mean re-implementing radio behaviour with ARIA, which is exactly the
+ * trade this package refuses elsewhere.
+ */
+@Component({
+  selector: 'kx-toggle-group',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: '<ng-content />',
+  host: {
+    class: 'kx-toggle-group',
+    '[attr.role]': "type() === 'single' ? 'radiogroup' : 'group'",
+  },
+})
+export class KxToggleGroup {
+  readonly type = input<'single' | 'multiple'>('multiple');
+  /** A string for `single`, an array for `multiple`. */
+  readonly value = model<string | string[] | null>(null);
+  readonly disabled = input(false, { transform: booleanAttribute });
+  readonly name = input(`kx-toggle-group-${uid()}`);
+
+  isOn(value: string): boolean {
+    const v = this.value();
+    return Array.isArray(v) ? v.includes(value) : v === value;
+  }
+
+  toggle(value: string): void {
+    if (this.disabled()) return;
+    if (this.type() === 'single') {
+      this.value.set(this.value() === value ? null : value);
+      return;
+    }
+    const current = Array.isArray(this.value()) ? (this.value() as string[]) : [];
+    this.value.set(current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
+  }
+}
+
+@Component({
+  selector: 'kx-toggle-group-item',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    @if (group.type() === 'single') {
+      <input
+        type="radio"
+        class="kx-toggle-group__radio"
+        [id]="id()"
+        [name]="group.name()"
+        [value]="value()"
+        [checked]="group.isOn(value())"
+        [disabled]="disabled() || group.disabled()"
+        (change)="group.toggle(value())"
+      />
+      <label class="kx-toggle kx-toggle--group" [for]="id()"><ng-content /></label>
+    } @else {
+      <button
+        type="button"
+        class="kx-toggle kx-toggle--group"
+        [attr.aria-pressed]="group.isOn(value())"
+        [disabled]="disabled() || group.disabled()"
+        (click)="group.toggle(value())"
+      >
+        <ng-content />
+      </button>
+    }
+  `,
+  host: { class: 'kx-toggle-group__item' },
+})
+export class KxToggleGroupItem {
+  readonly value = input.required<string>();
+  readonly disabled = input(false, { transform: booleanAttribute });
+  readonly id = input(`kx-toggle-group-item-${uid()}`);
+
+  constructor(protected readonly group: KxToggleGroup) {}
+}
+
+/* ── segmented control ──────────────────────────────────────────────────── */
+
+/**
+ *   <kx-segmented-control [(value)]="range" aria-label="Range">
+ *     <kx-segment value="7d">7 days</kx-segment>
+ *     <kx-segment value="30d">30 days</kx-segment>
+ *   </kx-segmented-control>
+ *
+ * A single-choice control shown as one connected track — iOS's segmented control, on the web. It is a real
+ * `radiogroup` of real radio inputs for the same reason the radio group is: arrow keys, one tab stop and the
+ * "exactly one is chosen" semantics are the browser's.
+ *
+ * Unlike a toggle group, a segment cannot be turned off by clicking it again: a segmented control with
+ * nothing selected has no meaning.
+ */
+@Component({
+  selector: 'kx-segmented-control',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: '<ng-content />',
+  host: { class: 'kx-segmented', role: 'radiogroup' },
+})
+export class KxSegmentedControl {
+  readonly value = model<string | null>(null);
+  readonly disabled = input(false, { transform: booleanAttribute });
+  readonly name = input(`kx-segmented-${uid()}`);
+  readonly selected = output<string>();
+
+  select(next: string): void {
+    if (this.disabled()) return;
+    this.value.set(next);
+    this.selected.emit(next);
+  }
+}
+
+@Component({
+  selector: 'kx-segment',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <input
+      type="radio"
+      class="kx-segmented__radio"
+      [id]="id()"
+      [name]="control.name()"
+      [value]="value()"
+      [checked]="control.value() === value()"
+      [disabled]="disabled() || control.disabled()"
+      (change)="control.select(value())"
+    />
+    <label class="kx-segmented__label" [for]="id()"><ng-content /></label>
+  `,
+  host: { class: 'kx-segmented__item' },
+})
+export class KxSegment {
+  readonly value = input.required<string>();
+  readonly disabled = input(false, { transform: booleanAttribute });
+  readonly id = input(`kx-segment-${uid()}`);
+
+  constructor(protected readonly control: KxSegmentedControl) {}
 }

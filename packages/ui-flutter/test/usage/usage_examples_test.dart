@@ -56,6 +56,22 @@ class _UsageExamplesState extends State<UsageExamples> {
           ],
         ),
         // kx-usage:end
+
+        const SizedBox(height: 16),
+
+        // kx-usage:direction-provider-demo
+        // No provider to port: Directionality is inherited by every widget below it.
+        Directionality(
+          textDirection: TextDirection.rtl,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const KinetixInput(placeholder: 'Search'),
+              KinetixButton(onPressed: save, child: const Text('Save')),
+            ],
+          ),
+        ),
+        // kx-usage:end
       ],
     );
   }
@@ -77,5 +93,6 @@ void main() {
     expect(find.text('Button'), findsOneWidget);
     expect(find.text('Default'), findsOneWidget);
     expect(find.text('Airplane mode'), findsOneWidget);
+    expect(find.text('Save'), findsOneWidget);
   });
 }

@@ -11,6 +11,7 @@ import KinetixUI
 /// Compose `KinetixChart` with no source behind it at all.
 struct UsageExamplesView: View {
     @State private var airplane = true
+    @State private var query = ""
 
     func save() {}
 
@@ -34,6 +35,15 @@ struct UsageExamplesView: View {
                 KinetixSwitch(isOn: $airplane)
                 Text("Airplane mode")
             }
+            // kx-usage:end
+
+            // kx-usage:direction-provider-demo
+            // No provider to port: layout direction is an environment value, and every view below reads it.
+            VStack {
+                KinetixInput(text: $query, placeholder: "Search")
+                KinetixButton(action: save) { Text("Save") }
+            }
+            .environment(\.layoutDirection, .rightToLeft)
             // kx-usage:end
         }
     }

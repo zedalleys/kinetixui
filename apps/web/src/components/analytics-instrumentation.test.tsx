@@ -150,16 +150,16 @@ describe("ComponentPreview (component page: code tabs and platform switcher)", (
 
   it("reports an explicit platform switch once, with component, platform and where", async () => {
     const user = await open();
-    await user.click(screen.getByRole("tab", { name: "Android" }));
+    await user.click(screen.getByRole("tab", { name: "Jetpack Compose" }));
     expect(track.mock.calls).toEqual([["platform_selected", { platform: "compose", component: "button", source: "component_page", location: "platform_tabs" }]]);
     expectSanitary();
   });
 
   it("does not fire again when the already-selected platform is clicked", async () => {
     const user = await open();
-    await user.click(screen.getByRole("tab", { name: "Android" }));
-    await user.click(screen.getByRole("tab", { name: "Android" }));
-    await user.click(screen.getByRole("tab", { name: "Android" }));
+    await user.click(screen.getByRole("tab", { name: "Jetpack Compose" }));
+    await user.click(screen.getByRole("tab", { name: "Jetpack Compose" }));
+    await user.click(screen.getByRole("tab", { name: "Jetpack Compose" }));
     expect(track).toHaveBeenCalledOnce();
   });
 
@@ -171,7 +171,7 @@ describe("ComponentPreview (component page: code tabs and platform switcher)", (
 
   it("reports each switch between platforms as its own selection", async () => {
     const user = await open();
-    await user.click(screen.getByRole("tab", { name: "iOS" }));
+    await user.click(screen.getByRole("tab", { name: "SwiftUI" }));
     await user.click(screen.getByRole("tab", { name: "Flutter" }));
     await user.click(screen.getByRole("tab", { name: "React" }));
     expect(track.mock.calls.map((c) => (c[1] as { platform: string }).platform)).toEqual(["swiftui", "flutter", "react"]);
@@ -184,7 +184,7 @@ describe("ComponentPreview (component page: code tabs and platform switcher)", (
     expect(track.mock.calls).toEqual([["component_code_copied", { component: "button", platform: "react", source: "component_page" }]]);
 
     track.mockClear();
-    await user.click(screen.getByRole("tab", { name: "iOS" }));
+    await user.click(screen.getByRole("tab", { name: "SwiftUI" }));
     track.mockClear(); // drop platform_selected; this assertion is about the copy
     await user.click(screen.getByRole("button", { name: "Copy" }));
     await waitFor(() => expect(track).toHaveBeenCalledOnce());
@@ -201,7 +201,7 @@ describe("ComponentPreview (component page: code tabs and platform switcher)", (
     nav.pathname = "/some/other/page";
     render(<ComponentPreview name="button-demo" />);
     await user.click(screen.getByRole("tab", { name: "code" }));
-    await user.click(screen.getByRole("tab", { name: "iOS" }));
+    await user.click(screen.getByRole("tab", { name: "SwiftUI" }));
     await user.click(screen.getByRole("button", { name: "Copy" }));
     await new Promise((r) => setTimeout(r, 20));
     expect(track).not.toHaveBeenCalled();

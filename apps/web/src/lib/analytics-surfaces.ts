@@ -22,6 +22,7 @@ import {
   type AnalyticsSource,
 } from "./analytics";
 import { PACKAGE_NAMES, PACKAGES } from "./packages";
+import type { CodeTab } from "./platform-tabs";
 import { publicRoutes } from "./seo";
 import { componentDocs, siteConfig } from "./site";
 
@@ -207,7 +208,7 @@ export function platformForLanguage(language: string | undefined): AnalyticsPlat
 }
 
 /** The docs code-block ids used by `platform-code.ts` mapped to analytics platforms. */
-export const PLATFORM_FROM_CODE_TAB = { react: "react", swift: "swiftui", kotlin: "compose", dart: "flutter" } as const satisfies Record<string, AnalyticsPlatform>;
+export const PLATFORM_FROM_CODE_TAB = { react: "react", angular: "angular", swift: "swiftui", kotlin: "compose", dart: "flutter" } as const satisfies Record<CodeTab, AnalyticsPlatform>;
 
 /**
  * A fenced code block in the docs was copied. A KinetixUI command → the matching command event. Otherwise, on a
