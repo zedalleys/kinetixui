@@ -31,11 +31,12 @@
       ],
       "format": "article",
       "intent": "awareness",
-      "status": "idea",
+      "status": "drafted",
       "sourceFeature": "check-platform-source",
       "insight": "Parity is a claim with no source behind it until something verifies it against the packages.",
       "cta": "/docs/platforms",
-      "publishWindow": null
+      "publishWindow": null,
+      "draftPath": "marketing/content/drafts/a01/"
     },
     {
       "id": "a02",
