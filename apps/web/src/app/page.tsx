@@ -117,7 +117,13 @@ export default function HomePage() {
             </div>
 
             {/* right rail: token fan-out + spec panel */}
-            <aside className="flex flex-col gap-4 self-start">
+            {/*
+              Capped below `lg`, where this column is still full width: the fan is a `w-full` SVG, so at
+              tablet widths it was rendering ~690px across with 36px labels — a decorative diagram louder
+              than the headline above it. From `lg` the grid's 16rem track constrains it and the cap is
+              released. 24rem keeps the tablet fan close to the size it settles at on desktop.
+            */}
+            <aside className="flex max-w-sm flex-col gap-4 self-start lg:max-w-none">
               <HeroTokenFan />
               <div className="kx-frame hidden border border-border bg-background/60 lg:block">
                 <p className="border-b border-border px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">

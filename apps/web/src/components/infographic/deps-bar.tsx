@@ -18,12 +18,18 @@ const ROWS: Row[] = [
 
 const MAX = Math.max(...ROWS.map((r) => r.kb));
 
+/**
+ * The name column is fixed-width, so at 320px a 9rem column took half the row and left 132px for the bar and
+ * its figure — less than the 145px the longest figure ("copy-in — 0 to install") needs. That span is
+ * `shrink-0` by design, so the shortfall pushed the whole page 5px wider than the viewport rather than being
+ * absorbed. 7rem (112px, still on the 8px grid) fits the longest library name and leaves the figure room.
+ */
 export function DepsBar() {
   return (
     <figure className="mt-5">
       <div className="space-y-2.5">
         {ROWS.map((r) => (
-          <div key={r.name} className="grid grid-cols-[9rem_1fr] items-center gap-3 sm:grid-cols-[11rem_1fr]">
+          <div key={r.name} className="grid grid-cols-[7rem_1fr] items-center gap-3 sm:grid-cols-[11rem_1fr]">
             <span
               className={
                 "truncate text-right font-mono text-[11px] " +

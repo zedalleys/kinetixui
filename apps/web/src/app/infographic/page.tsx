@@ -12,10 +12,13 @@ import { RELEASES, isNotable } from "@/lib/releases";
 import { PLATFORMS as ALL_PLATFORMS, countOnPlatform, type Platform } from "@/lib/platform-parity";
 import { componentTotal } from "@/lib/platform-support";
 
+/* the component libraries (derived — never a second hard-coded list) and the compiled outputs of the token engine */
+const PLATFORMS = ALL_PLATFORMS;
+const PLATFORM_OUTPUTS = ["Web CSS", "tokens.ts", "SwiftUI", "Compose", "Flutter"] as const;
+
 export const metadata: Metadata = {
   title: "Infographic",
-  description:
-    "The KinetixUI system drawn to scale — one design source, five outputs, four component libraries, measured.",
+  description: `The KinetixUI system drawn to scale — one design source, ${PLATFORM_OUTPUTS.length} outputs, ${PLATFORMS.length} component libraries, measured.`,
 };
 
 /* -------- build-time counts: every figure below is derived, not typed -------- */
@@ -41,9 +44,6 @@ function chartRecipeCount(): number {
 }
 const CHART_RECIPES = chartRecipeCount();
 
-/* the component libraries (derived — never a second hard-coded list) and the compiled outputs of the token engine */
-const PLATFORMS = ALL_PLATFORMS;
-const PLATFORM_OUTPUTS = ["Web CSS", "tokens.ts", "SwiftUI", "Compose", "Flutter"] as const;
 
 const STATS = [
   { n: TOKEN_COUNT, label: "design tokens", sub: "primitives + semantic, DTCG" },
@@ -109,9 +109,10 @@ export default function InfographicPage() {
       <p className="eyebrow">System map</p>
       <h1 className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] md:text-4xl">Infographic</h1>
       <p className="mt-3 max-w-2xl text-muted-foreground">
-        One measured drawing of the whole system: a single design source, the compile step, five
-        platform outputs, and the four component libraries that resolve to them. Numbers are read
-        from the build, not hand-typed.
+        One measured drawing of the whole system: a single design source, the compile step,{" "}
+        {PLATFORM_OUTPUTS.length} platform outputs, and the {PLATFORMS.length} component libraries that
+        resolve to them. Numbers are read from the build, not hand-typed — including these two, which said
+        &ldquo;four component libraries&rdquo; for as long as Angular had existed.
       </p>
 
       {/* 01 — counters */}
