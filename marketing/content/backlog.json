@@ -62,11 +62,22 @@
       ],
       "format": "post",
       "intent": "awareness",
-      "status": "idea",
+      "status": "drafted",
       "sourceFeature": "platform-parity.json",
       "insight": "Coverage you can verify beats catalogue size you cannot.",
       "cta": "/docs/platforms",
-      "publishWindow": null
+      "publishWindow": null,
+      "campaign": "kx_count_isnt_coverage",
+      "draftPath": "marketing/content/drafts/a02/",
+      "files": [
+        "linkedin.md",
+        "x-thread.md",
+        "visual-brief.md",
+        "sources.md",
+        "publish-checklist.md",
+        "measurement.md",
+        "verify-package.mjs"
+      ]
     },
     {
       "id": "a03",
@@ -691,7 +702,7 @@
       "intent": "build-in-public",
       "status": "idea",
       "sourceFeature": "Angular preview",
-      "insight": "11 of 98 is the real number, and saying so costs nothing.",
+      "insight": "31 of 98 is the real number, and saying so costs nothing.",
       "cta": "/docs/angular",
       "publishWindow": null
     }
