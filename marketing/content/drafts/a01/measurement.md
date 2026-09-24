@@ -188,13 +188,19 @@ Append to `marketing/research/` with the date, and answer plainly:
 
 ## After a01
 
-Next intended campaign: **"Tokens without widgets"** (`p01` in the backlog).
+Next campaign: **a02 — "98 components is not the interesting number"**, drafted
+and sequenced. See `marketing/content/campaign-sequence-a01-a02.md` for the
+interval, the attribution split and the running order.
 
-The sequence is deliberate. a01 establishes credibility and the category
-position — *we verify what we claim*. Campaign 2 converts that into a concrete
-adoption path — *and here is how you can adopt one layer of it today*. Running
-them in the other order asks people to adopt something they have no reason to
-trust yet.
+The sequence is deliberate. a01 establishes the category position — *we verify
+what we claim*. a02 turns that method on our own headline number, which is the
+natural second move: having argued that claims need proof, the next thing to do
+is apply it to the most quotable claim we make.
 
-**Not drafted, and its backlog status is untouched.** Campaign 2 starts only
-after the Day-14 decision.
+`p01` — "Tokens without widgets" — remains the intended **third** campaign and
+is still `idea` in the backlog. It converts position into an adoption path.
+Running it before a01 and a02 would ask people to adopt something they have no
+reason to trust yet.
+
+**a02 is drafted, not scheduled.** Its publication date follows the a01 Day-14
+decision, per the sequence document.

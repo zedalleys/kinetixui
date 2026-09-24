@@ -84,7 +84,7 @@ Level 2 found this on our Chart page:
 
 > `KinetixChart` is a hand-drawn CustomPaint bar chart…
 
-`KinetixChart` doesn't exist. There's no Chart in our Compose package.
+`KinetixChart` didn't exist. There was no Chart in our Compose package.
 
 `CustomPaint` is Flutter. The Flutter rationale had been pasted onto an invented
 Compose API.
@@ -129,7 +129,7 @@ Mine found five more problems on its first run.
 **9/**
 
 Examples are migrating into files CI compiles, with the site quoting the
-extracted region. Three of a hundred so far.
+extracted region. Five of a hundred-odd so far.
 
 Current coverage is generated from the manifest — edit it by hand and the build
 fails.

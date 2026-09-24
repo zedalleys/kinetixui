@@ -10,7 +10,12 @@ Work top to bottom on publication day. Nothing here is automated, and nothing
 should be: every step is a human deciding the claim still holds.
 
 **Editorial freeze:** 2026-09-23, against `main` @ `e29184c`, v0.22.1.
+**Current-state figures re-derived:** 2026-09-24, `main` @ `dfd0d81`.
 Anything below marked ⏱ ages and must be re-derived.
+
+Run `node marketing/content/drafts/a01/verify-package.mjs` first — it now reads
+`components.manifest.json` and fails on exactly the numbers this section asks you
+to eyeball. `verify-evidence.mjs` covers the historical claims against git.
 
 ## 1. Refresh the facts ⏱
 
@@ -19,9 +24,9 @@ Anything below marked ⏱ ages and must be re-derived.
 - [ ] Re-run the snippet audit (`sources.md` → "Current state") for migrated vs
       hand-written counts
 - [ ] Compare each against the article. **Most likely to have moved:**
-  - [ ] "Three of a hundred demo examples have moved so far" — article + X 9 + LinkedIn B
-  - [ ] "98 components. React 98, SwiftUI 90, Compose 89, Flutter 90, Angular 11"
-  - [ ] "89 of 98 … 9 documented exceptions"
+  - [ ] "Five of a hundred-odd demo examples" — article + X 9 + LinkedIn B
+  - [ ] "98 components. React 98, SwiftUI 90, Compose 90, Flutter 90, Angular 31"
+  - [ ] "90 of 98 … 8 documented exceptions"
 - [ ] Angular still `maturity: "preview"` and `catalogComplete: false`
 - [ ] `@kinetixui/angular` still unpublished — if it has shipped, the article
       does not change, but check nothing elsewhere implies it was installable
@@ -34,7 +39,7 @@ past tense. See `sources.md`.
 
 - [ ] Title matches across `article.md` front matter, the DEV file and
       `backlog.json`
-- [ ] No "all platforms" anywhere the 89/98 figure appears — must read
+- [ ] No "all platforms" anywhere the 90/98 figure appears — must read
       "all four catalogue-complete platforms"
 - [ ] Angular appears only with "preview"
 - [ ] No competitor named

@@ -19,9 +19,10 @@ documentation said a thing that was not true, and nothing in the repository
 could tell.
 
 We publish component implementations for React, SwiftUI, Jetpack Compose and
-Flutter. Every component page listed its supported platforms. Every listing was
-a string in a JSON file that a human typed, and nothing checked whether the
-implementation it claimed actually existed.
+Flutter — the four this story is about. Every component page listed its
+supported platforms. Every listing was a string in a JSON file that a human
+typed, and nothing checked whether the implementation it claimed actually
+existed.
 
 Then I wrote a script that checked. On its first run it reported that
 `direction-provider` — advertised on SwiftUI, Compose and Flutter — had no
@@ -130,11 +131,19 @@ KinetixChart(
 )
 ```
 
-Neither symbol exists. There is no Chart implementation in our Compose package,
-and the manifest already said so correctly. And `CustomPaint` is a **Flutter**
-API — the Flutter implementation's rationale had been pasted onto an invented
-Compose one. The website rendered this under a tab labelled **"Android"**, beside
-real examples, with nothing marking it as different.
+Neither symbol existed. There was no Chart implementation in our Compose package
+at all, and the manifest already said so correctly. And `CustomPaint` is a
+**Flutter** API — the Flutter implementation's rationale had been pasted onto an
+invented Compose one. The website rendered this under a tab labelled
+**"Android"**, beside real examples, with nothing marking it as different.
+
+A Compose chart has since been written, and the API it landed with is close
+enough to the invented one to be uncomfortable — `KinetixChart`,
+`KinetixChartPoint`, the same `label` / `value` / `seriesIndex` shape. It still
+would not accept the snippet above: the real signature requires a `description`,
+because a chart that a screen reader cannot narrate is not finished. Guessing an
+API correctly is not the same as having one, and for as long as that snippet was
+published it named something no reader could call.
 
 Nobody lied. Someone wrote a plausible snippet for a component they expected to
 build, and there was no compiler between that sentence and the reader.
@@ -172,8 +181,8 @@ KinetixButton(onClick = save) {
 ```
 
 One file. The compiler sees it, the website quotes it, a drift check fails if
-they disagree. Three of a hundred demo examples have moved so far. Saying
-"three" is more useful than saying "we're migrating."
+they disagree. Five of a hundred-odd demo examples now take their native code
+that way. Saying "five" is more useful than saying "we're migrating."
 
 ## The same failure, one layer up
 
@@ -210,13 +219,18 @@ Whether you are evaluating a design system or maintaining one:
 5. **What are the real numbers?** Not catalogue size. The count per platform, and
    what the denominator excludes.
 
-Ours, today: 98 components. React 98, SwiftUI 90, Jetpack Compose 89, Flutter
-90, and Angular 11 — explicitly in preview. 89 of 98 on all four
-catalogue-complete platforms, with 9 documented exceptions that each carry a
+Ours, today: 98 components. React 98, SwiftUI 90, Jetpack Compose 90, Flutter
+90, and Angular 31 — explicitly in preview. 90 of 98 on all four
+catalogue-complete platforms, with 8 documented exceptions that each carry a
 written reason. Angular sits outside that denominator because its catalogue is
 deliberately incomplete; folding it in would flatter the number.
 
-Those are generated. Edit them by hand and the build fails.
+Those are generated. Edit them by hand and the build fails — which is also why
+two of them no longer match the numbers earlier in this piece. The correction
+described above took Compose to 89, and the all-four figure with it; a Compose
+chart written since has taken both back to 90, by building something rather than
+by claiming it. A generated number moves on its own. That is the property you
+want.
 
 ## The part that matters
 

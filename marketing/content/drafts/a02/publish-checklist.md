@@ -82,6 +82,10 @@ between drafting and posting.
 
 - [ ] Backlog `a02` → `published`, with the real date (not before).
 - [ ] Day 7 early read, day 14 decision, per `measurement.md`.
-- [ ] a01 is untouched by all of this — it remains `drafted` and its numbers are
-      its own. **Re-baseline a01 before it publishes**: its package still says
-      89/98, Angular 11, Compose 89, all of which have since moved.
+- [ ] a01 remains `drafted`. Its current-state figures were re-baselined on
+      2026-09-24 and now agree with this package; its historical before/after is
+      pinned to `34e5b06` and must stay in past tense. Both are enforced —
+      `a01/verify-package.mjs` (current) and `a01/verify-evidence.mjs`
+      (historical). Run both if a01 is edited.
+- [ ] a01 publishes **first**. See `marketing/content/campaign-sequence-a01-a02.md`
+      for the interval and the running order.

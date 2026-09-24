@@ -79,8 +79,10 @@ chart".
 
 Two problems.
 
-`KinetixChart` doesn't exist — there's no Chart implementation in our Compose
-package at all, and our own manifest said so correctly.
+`KinetixChart` didn't exist — there was no Chart implementation in our Compose
+package at all, and our own manifest said so correctly. One has been written
+since, and it still wouldn't accept that snippet: the real signature requires a
+`description`.
 
 And `CustomPaint` is a Flutter API. The Flutter implementation's rationale had
 been pasted onto an invented Compose one.
@@ -97,7 +99,7 @@ three fictional.
 About 1% fiction — enough to publish an API that had never existed.
 
 Those examples are moving into files our CI compiles, with the site quoting the
-extracted region. Three of a hundred so far.
+extracted region. Five of a hundred-odd so far.
 
 Writeup: <DEV_ARTICLE_URL>
 
@@ -107,6 +109,6 @@ Writeup: <DEV_ARTICLE_URL>
 
 - Do not open with "Excited to share…".
 - Do not name another library as the bad example.
-- Do not claim this is solved — it is 89/98 with 9 documented exceptions.
+- Do not claim this is solved — it is 90/98 with 8 documented exceptions.
 - Do not make the CTA installation-focused. This is an awareness piece.
 - Do not post before `<DEV_ARTICLE_URL>` is a real URL.
