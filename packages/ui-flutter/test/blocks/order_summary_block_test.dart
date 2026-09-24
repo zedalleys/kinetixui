@@ -55,20 +55,32 @@ class _OrderSummaryBlockState extends State<OrderSummaryBlock> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(item.name),
-                              KinetixFieldDescription('${money(item.unit)} each'),
-                            ],
+                          // Expanded, so a long product name wraps instead of overflowing the row.
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(item.name),
+                                KinetixFieldDescription('${money(item.unit)} each'),
+                              ],
+                            ),
                           ),
-                          Semantics(
-                            label: 'Quantity, ${item.name}',
+                          const SizedBox(width: 12),
+                          // A bounded width is required, not cosmetic: the stepper's value cell is
+                          // Expanded, and a Row hands its non-flex children an unbounded width — the
+                          // combination throws, the subtree is never laid out, and the control's
+                          // semantics never exist for a screen reader (or a test) to find.
+                          //
+                          // semanticsLabel rather than a Semantics wrapper: the control owns its own
+                          // node — name, value and the two named step buttons.
+                          SizedBox(
+                            width: 128,
                             child: KinetixNumberInput(
                               value: _quantities[item.id] ?? 0,
                               onChanged: (int v) => setState(() => _quantities[item.id] = v),
                               min: 0,
                               max: 99,
+                              semanticsLabel: 'Quantity, ${item.name}',
                             ),
                           ),
                         ],
@@ -150,8 +162,19 @@ void main() {
       ),
     );
 
-    expect(find.bySemanticsLabel('Quantity, Kinetix T-shirt'), findsOneWidget);
-    expect(find.bySemanticsLabel('Quantity, Sticker pack'), findsOneWidget);
+    // Name AND value AND enabled state on one node — a stepper that announces "2" with no name tells a
+    // screen-reader user what the number is but never what it counts.
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('Quantity, Kinetix T-shirt')),
+      isSemantics(label: 'Quantity, Kinetix T-shirt', value: '2', hasEnabledState: true, isEnabled: true),
+    );
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('Quantity, Sticker pack')),
+      isSemantics(label: 'Quantity, Sticker pack', value: '1', hasEnabledState: true, isEnabled: true),
+    );
+    // The step buttons are named and have a button role, one pair per line item.
+    expect(find.bySemanticsLabel('Decrease'), findsNWidgets(2));
+    expect(find.bySemanticsLabel('Increase'), findsNWidgets(2));
     // 2 x $28 + 1 x $6 = $62, which is over the $50 threshold.
     expect(find.text('Free'), findsOneWidget);
 

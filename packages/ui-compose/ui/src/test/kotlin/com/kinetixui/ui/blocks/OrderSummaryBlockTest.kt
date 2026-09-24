@@ -16,7 +16,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
@@ -151,5 +153,8 @@ class OrderSummaryBlockTest {
         rule.onNodeWithContentDescription("Quantity, Sticker pack").assertExists()
         // 2 x $28 + 1 x $6 = $62, which is over the $50 threshold.
         rule.onNodeWithText("Free").assertExists()
+        // The step buttons carry a name and a button role, one pair per line item.
+        rule.onAllNodesWithContentDescription("Decrease").assertCountEquals(2)
+        rule.onAllNodesWithContentDescription("Increase").assertCountEquals(2)
     }
 }
