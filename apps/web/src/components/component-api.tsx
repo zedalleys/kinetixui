@@ -78,8 +78,37 @@ export function ComponentApi({ slug }: { slug: string }) {
       {parts.map((part) => (
         <div key={part.name} className="mt-5">
           <h3 className="font-mono text-sm text-foreground">{part.name}</h3>
-          <div className="mt-2 overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
+          {/*
+            No horizontal scroll container, deliberately.
+
+            One used to be here, and the rendered accessibility pass caught what it cost: a region that
+            scrolls sideways is operable with a mouse or a swipe but not with a keyboard, so axe flags
+            `scrollable-region-focusable`. The usual remedy is `tabIndex={0}` plus a name — but that is a
+            fix for the symptom, and it puts a tab stop on every one of these tables at every width,
+            including the desktop ones that never scroll.
+
+            The cause is a long type string forcing the table wider than the page, so that is what gives:
+            the TYPE cell alone may break mid-token. A type is read, not scanned, so a wrapped
+            `((row: TData) => React.ReactNode)` costs nothing.
+
+            `table-fixed` with declared column widths is what makes that a guarantee rather than a hope:
+            an auto-laid-out table takes its min-content width from its longest unbreakable token and can
+            exceed its container however narrow the page gets. With fixed columns it cannot, so the layout
+            holds at 320 as well as it does at 1280.
+
+            Three different wrapping rules, because the columns hold three different kinds of text. The type
+            may break anywhere — it is read, not scanned. The prop name and the note use `break-words`,
+            which breaks a long word only when it cannot fit at all, so "columns" stays "columns" instead
+            of becoming "colu mns".
+          */}
+          <div className="mt-2">
+            <table className="w-full table-fixed border-collapse text-sm">
+              <colgroup>
+                <col className="w-[38%] sm:w-[26%]" />
+                <col className="w-[62%] sm:w-[32%]" />
+                {/* the notes column only earns its own space once there is room for prose in it */}
+                <col className="hidden sm:table-column sm:w-[42%]" />
+              </colgroup>
               <caption className="sr-only">{part.name} props</caption>
               <thead>
                 <tr className="border-b border-border bg-muted/30 text-left">
@@ -89,7 +118,7 @@ export function ComponentApi({ slug }: { slug: string }) {
                   <th scope="col" className="px-3 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                     Type
                   </th>
-                  <th scope="col" className="px-3 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                  <th scope="col" className="hidden px-3 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground sm:table-cell">
                     Notes
                   </th>
                 </tr>
@@ -97,7 +126,7 @@ export function ComponentApi({ slug }: { slug: string }) {
               <tbody>
                 {part.props!.map((p) => (
                   <tr key={p.name} className="border-b border-border/60 align-top">
-                    <th scope="row" className="px-3 py-2 text-left font-mono text-[12px] font-medium">
+                    <th scope="row" className="px-2 py-2 text-left font-mono text-[12px] font-medium [overflow-wrap:break-word] sm:px-3">
                       {p.name}
                       {p.required && (
                         <span className="ml-1.5 font-sans text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -105,8 +134,19 @@ export function ComponentApi({ slug }: { slug: string }) {
                         </span>
                       )}
                     </th>
-                    <td className="px-3 py-2 font-mono text-[12px] text-muted-foreground">{p.type}</td>
-                    <td className="px-3 py-2 text-[13px] text-muted-foreground">{p.description ?? ""}</td>
+                    <td className="px-2 py-2 font-mono text-[12px] text-muted-foreground [overflow-wrap:anywhere] sm:px-3">
+                      {p.type}
+                      {/* below `sm` the notes column is dropped, so the note rides under the type rather
+                          than being lost — the information stays, the column does not */}
+                      {p.description && (
+                        <span className="mt-1 block font-sans text-[12px] text-muted-foreground [overflow-wrap:break-word] sm:hidden">
+                          {p.description}
+                        </span>
+                      )}
+                    </td>
+                    <td className="hidden px-3 py-2 text-[13px] text-muted-foreground [overflow-wrap:break-word] sm:table-cell">
+                      {p.description ?? ""}
+                    </td>
                   </tr>
                 ))}
               </tbody>
