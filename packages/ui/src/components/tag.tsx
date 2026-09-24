@@ -33,6 +33,11 @@ export interface TagProps
     VariantProps<typeof tagVariants> {
   /** show a dismiss button; called when it's clicked */
   onRemove?: () => void;
+  /** Accessible name for the dismiss button. Defaults to `Remove <tag text>`
+   * when the tag's children are a plain string, so a row of tags does not
+   * become a row of identical "Remove" buttons. Pass this when the children
+   * are not a string, or when the text is not the right name. */
+  removeLabel?: string;
   /** render as the single child element (Radix Slot) instead of <span> —
    * e.g. `<Tag asChild><a href="/filter">Active</a></Tag>` for a linked tag.
    * Combined with `onRemove`, the remove button nests inside the slotted
@@ -43,13 +48,14 @@ export interface TagProps
 }
 
 const Tag = React.forwardRef<HTMLSpanElement, TagProps>(
-  ({ className, variant, onRemove, children, asChild = false, ...props }, ref) => {
+  ({ className, variant, onRemove, removeLabel, children, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "span";
+    const name = removeLabel ?? (typeof children === "string" ? `Remove ${children}` : "Remove");
     const removeButton = onRemove && (
       <button
         type="button"
         onClick={onRemove}
-        aria-label="Remove"
+        aria-label={name}
         className="-mr-0.5 ml-0.5 rounded-[2px] opacity-muted outline-none transition-opacity hover:opacity-visible focus-visible:ring-1 focus-visible:ring-current"
       >
         <X className="size-3.5" />

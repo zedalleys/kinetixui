@@ -250,15 +250,32 @@ you add the secret:
 
 ## Blocks
 
-Blocks (the composed examples on [/blocks](/blocks)) follow the same
-rule: a block is a composition of `Kinetix*` primitives, so a block that
-works on the web should be expressible on each native platform from that
-platform's primitives. Where a block leans on a web-only primitive, note
-it.
+Blocks (the composed examples on [/blocks](/blocks)) go further than the
+component rule: **a published block must exist on all five platforms** —
+React, Angular, SwiftUI, Jetpack Compose and Flutter. A block is a
+composition of `Kinetix*` primitives, so a block that works on the web is
+expressible from each platform's own primitives; and a reader who copies
+the React tab has no way to tell that the Compose tab was never written.
+A block on two platforms is not a smaller version of the idea, it is a
+different claim.
+
+`pnpm check:block-source` enforces this: a block with status `beta`,
+`stable` or `deprecated` must list every platform. The one escape hatch
+is **status `draft`**, which may be missing platforms and which the
+website never publishes — `gen-block-examples.mjs` leaves drafts out of
+the generated snippets entirely, so work in progress can live in the
+manifest without the catalogue advertising a hole.
 
 Block code is **not** written into the website. Every snippet the site
 shows is extracted from a real source file, and a block may only
 advertise a platform it has one for.
+
+Composition, not translation. Where a platform has a better idiom, the
+block uses it and the file says why: the table toolbar is a list on
+SwiftUI because three columns on a phone stop being readable at larger
+text sizes, and the settings list is a semantic `<ul>` on Angular because
+the list component is in a later wave and inventing a `kx-list` is the
+one thing this architecture forbids.
 
 ### Adding a block implementation
 
@@ -268,7 +285,7 @@ advertise a platform it has one for.
    | --- | --- |
    | React | `apps/web/src/examples/blocks/<slug>.tsx` |
    | Angular | `packages/ui-angular/src/examples/blocks/<slug>.ts` |
-   | SwiftUI | `packages/ui-swiftui/Tests/KinetixUITests/Blocks/<Name>Block.swift` |
+   | SwiftUI | `packages/ui-swiftui/Tests/KinetixUITests/Blocks/<Name>BlockTests.swift` |
    | Compose | `packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/<Name>BlockTest.kt` |
    | Flutter | `packages/ui-flutter/test/blocks/<name>_block_test.dart` |
 
@@ -295,8 +312,8 @@ A React block is also its own live preview: `blockPreviews` imports the
 fixture, so the code on the page and the thing rendered above it are the
 same component.
 
-Coverage is explicit. A platform missing from a block's `sources` is not
-supported for that block, and nothing infers otherwise. Unlike the
-component catalogue, blocks are **not** expected on every platform — a
-block is an example of composition, not part of the library surface — so
-a gap needs no documented exception.
+Coverage is explicit: a platform missing from a block's `sources` is not
+supported for that block, and nothing infers otherwise. For a published
+block that is a failure rather than a fact — see the five-platform rule
+above. `block-parity.json` carries the derived counts, and the /blocks
+page reads them rather than printing a number anyone typed.

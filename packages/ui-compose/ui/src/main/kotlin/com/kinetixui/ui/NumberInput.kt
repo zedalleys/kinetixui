@@ -18,6 +18,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -67,7 +70,10 @@ fun KinetixNumberInput(
             modifier = Modifier
                 .width(36.dp) // w-9, not on the shared scale
                 .fillMaxHeight()
-                .clickable(enabled = canDecrement) { onValueChange(clamp(value - step)) },
+                // role + contentDescription, as on React (`aria-label="Decrease"`). A bare clickable Box
+                // is a tap target TalkBack can neither name nor find by role.
+                .clickable(enabled = canDecrement, role = Role.Button) { onValueChange(clamp(value - step)) }
+                .semantics { contentDescription = "Decrease" },
             contentAlignment = Alignment.Center,
         ) {
             Text(text = "−", color = colors.mutedForeground)
@@ -100,7 +106,8 @@ fun KinetixNumberInput(
             modifier = Modifier
                 .width(36.dp) // w-9, not on the shared scale
                 .fillMaxHeight()
-                .clickable(enabled = canIncrement) { onValueChange(clamp(value + step)) },
+                .clickable(enabled = canIncrement, role = Role.Button) { onValueChange(clamp(value + step)) }
+                .semantics { contentDescription = "Increase" },
             contentAlignment = Alignment.Center,
         ) {
             Text(text = "+", color = colors.mutedForeground)

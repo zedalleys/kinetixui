@@ -14,6 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
@@ -37,6 +40,9 @@ fun KinetixTag(
     modifier: Modifier = Modifier,
     variant: KinetixTagVariant = KinetixTagVariant.Default,
     onRemove: (() -> Unit)? = null,
+    /** Accessible name for the dismiss control. Defaults to `Remove <text>`, so a row of tags does not
+     *  become a row of identically-named controls. */
+    removeLabel: String? = null,
 ) {
     val colors = KinetixColorScheme.current
     val container: Color
@@ -96,11 +102,15 @@ fun KinetixTag(
             letterSpacing = letterSpacing,
         )
         if (onRemove != null) {
+            // role + contentDescription, not a bare clickable: without them TalkBack announces the glyph
+            // itself and gives it no button role, so the control is unreachable by role and unnamed.
             Text(
                 text = "×",
                 color = content,
                 fontSize = fontSize,
-                modifier = Modifier.clickable(onClick = onRemove),
+                modifier = Modifier
+                    .clickable(role = Role.Button, onClick = onRemove)
+                    .semantics { contentDescription = removeLabel ?: "Remove $text" },
             )
         }
     }

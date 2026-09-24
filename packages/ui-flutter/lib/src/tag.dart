@@ -10,11 +10,21 @@ import 'theme.dart';
 enum KinetixTagVariant { primary, secondary, destructive, warning, outline }
 
 class KinetixTag extends StatelessWidget {
-  const KinetixTag(this.label, {super.key, this.variant = KinetixTagVariant.primary, this.onRemove});
+  const KinetixTag(
+    this.label, {
+    super.key,
+    this.variant = KinetixTagVariant.primary,
+    this.onRemove,
+    this.removeLabel,
+  });
 
   final String label;
   final KinetixTagVariant variant;
   final VoidCallback? onRemove;
+
+  /// Accessible name for the dismiss control. Defaults to `Remove <label>`, so a row of tags does not become
+  /// a row of identically-named controls.
+  final String? removeLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -43,9 +53,16 @@ class KinetixTag extends StatelessWidget {
           ),
           if (onRemove != null) ...[
             const SizedBox(width: 4),
-            GestureDetector(
-              onTap: onRemove,
-              child: Icon(Icons.close, size: 14, color: fg),
+            // Semantics, not a bare GestureDetector: without it the control has no name and no button
+            // role, so a screen reader cannot find it or say what it does.
+            Semantics(
+              label: removeLabel ?? 'Remove $label',
+              button: true,
+              excludeSemantics: true,
+              child: GestureDetector(
+                onTap: onRemove,
+                child: Icon(Icons.close, size: 14, color: fg),
+              ),
             ),
           ],
         ],
