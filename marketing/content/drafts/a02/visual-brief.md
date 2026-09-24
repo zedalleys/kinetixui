@@ -55,15 +55,24 @@ red crosses. Platforms are not competing.
 
 ## Treatment
 
-Site tokens, dark surface, mono type — same family as `/docs/platforms`, so the
-image and the page a reader lands on look like the same system. `98` in the
-display face at the top; the rows in mono so the numeric column aligns. Generous
-whitespace; this should be legible as a 400px-wide thumbnail.
+Site tokens and mono type — same family as `/docs/platforms`, so the image and
+the page a reader lands on look like the same system. `98` in the display face
+at the top; the rows in mono so the numeric column aligns. Generous whitespace;
+this should be legible as a 400px-wide thumbnail.
+
+**Both a light and a dark surface are required.** An earlier version of this
+brief specified dark only, which is right for X and wrong for the pair: a01
+exports light and dark, and two posts from the same account a fortnight apart,
+one light and one dark, do not read as one campaign. Dark stays the default on
+X. See `marketing/content/visual-production-a01-a02.md` for what the two assets
+share.
 
 ## Variants
 
 - **LinkedIn** — 1200×1200. The square gives the numeric column room.
 - **X** — 1600×900. Same content, the breakdown set to the right of the `98`.
+
+Each variant is exported on both surfaces. Four files, not two.
 
 ## Alt text
 
