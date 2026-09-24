@@ -86,7 +86,11 @@ for (const slug of slugs) {
 for (const [platform, { dir, ext }] of Object.entries(EXPECTED)) {
   if (!existsSync(`${root}/${dir}`)) continue;
   const declared = new Set(slugs.map((s) => manifest.blocks[s].sources[platform]).filter(Boolean));
-  for (const file of readdirSync(`${root}/${dir}`).filter((f) => f.endsWith(ext))) {
+  // On the native platforms the fixture IS the test, so every file in the directory is a block source. On
+  // Angular the fixtures are components and one separate spec renders them all, so that spec is not an
+  // orphaned block — it is the thing that proves the others work.
+  const isHarness = (file) => file.endsWith(".spec.ts");
+  for (const file of readdirSync(`${root}/${dir}`).filter((f) => f.endsWith(ext) && !isHarness(f))) {
     if (!declared.has(`${dir}${file}`)) errors.push(`${dir}${file} exists but no block declares it — add it to blocks.manifest.json or delete it`);
   }
 }

@@ -10,6 +10,8 @@
       "status": "stable",
       "sources": {
         "React": "apps/web/src/examples/blocks/sign-in.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/sign-in.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/SignInBlockTests.swift",
         "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/SignInBlockTest.kt",
         "Flutter": "packages/ui-flutter/test/blocks/sign_in_block_test.dart"
       }
@@ -22,6 +24,8 @@
       "contentClassName": "items-stretch",
       "sources": {
         "React": "apps/web/src/examples/blocks/stat-cards.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/stat-cards.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/StatCardsBlockTests.swift",
         "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/StatCardsBlockTest.kt",
         "Flutter": "packages/ui-flutter/test/blocks/stat_cards_block_test.dart"
       }
@@ -33,6 +37,8 @@
       "status": "stable",
       "sources": {
         "React": "apps/web/src/examples/blocks/pricing-tier.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/pricing-tier.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/PricingTierBlockTests.swift",
         "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/PricingTierBlockTest.kt",
         "Flutter": "packages/ui-flutter/test/blocks/pricing_tier_block_test.dart"
       }
@@ -45,6 +51,8 @@
       "contentClassName": "items-stretch",
       "sources": {
         "React": "apps/web/src/examples/blocks/cta-banner.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/cta-banner.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/CtaBannerBlockTests.swift",
         "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/CtaBannerBlockTest.kt",
         "Flutter": "packages/ui-flutter/test/blocks/cta_banner_block_test.dart"
       }
@@ -57,6 +65,8 @@
       "contentClassName": "items-stretch",
       "sources": {
         "React": "apps/web/src/examples/blocks/table-toolbar.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/table-toolbar.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/TableToolbarBlockTests.swift",
         "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/TableToolbarBlockTest.kt",
         "Flutter": "packages/ui-flutter/test/blocks/table_toolbar_block_test.dart"
       }
@@ -68,6 +78,8 @@
       "status": "stable",
       "sources": {
         "React": "apps/web/src/examples/blocks/settings-list.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/settings-list.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/SettingsListBlockTests.swift",
         "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/SettingsListBlockTest.kt",
         "Flutter": "packages/ui-flutter/test/blocks/settings_list_block_test.dart"
       }
@@ -79,6 +91,8 @@
       "status": "stable",
       "sources": {
         "React": "apps/web/src/examples/blocks/team-members.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/team-members.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/TeamMembersBlockTests.swift",
         "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/TeamMembersBlockTest.kt",
         "Flutter": "packages/ui-flutter/test/blocks/team_members_block_test.dart"
       }
@@ -90,6 +104,8 @@
       "status": "stable",
       "sources": {
         "React": "apps/web/src/examples/blocks/comment-box.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/comment-box.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/CommentBoxBlockTests.swift",
         "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/CommentBoxBlockTest.kt",
         "Flutter": "packages/ui-flutter/test/blocks/comment_box_block_test.dart"
       }
@@ -102,6 +118,8 @@
       "contentClassName": "items-stretch",
       "sources": {
         "React": "apps/web/src/examples/blocks/empty-state.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/empty-state.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/EmptyStateBlockTests.swift",
         "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/EmptyStateBlockTest.kt",
         "Flutter": "packages/ui-flutter/test/blocks/empty_state_block_test.dart"
       }
@@ -114,6 +132,8 @@
       "contentClassName": "items-stretch",
       "sources": {
         "React": "apps/web/src/examples/blocks/alert-stack.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/alert-stack.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/AlertStackBlockTests.swift",
         "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AlertStackBlockTest.kt",
         "Flutter": "packages/ui-flutter/test/blocks/alert_stack_block_test.dart"
       }
@@ -125,6 +145,8 @@
       "status": "stable",
       "sources": {
         "React": "apps/web/src/examples/blocks/testimonial.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/testimonial.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/TestimonialBlockTests.swift",
         "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/TestimonialBlockTest.kt",
         "Flutter": "packages/ui-flutter/test/blocks/testimonial_block_test.dart"
       }

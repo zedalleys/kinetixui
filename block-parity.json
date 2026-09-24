@@ -11,65 +11,87 @@
   ],
   "coverage": {
     "React": 11,
-    "Angular": 0,
-    "SwiftUI": 0,
+    "Angular": 11,
+    "SwiftUI": 11,
     "Compose": 11,
     "Flutter": 11
   },
-  "onEveryPlatform": 0,
+  "onEveryPlatform": 11,
   "blocks": {
     "sign-in": [
       "React",
+      "Angular",
+      "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "stat-cards": [
       "React",
+      "Angular",
+      "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "pricing-tier": [
       "React",
+      "Angular",
+      "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "cta-banner": [
       "React",
+      "Angular",
+      "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "table-toolbar": [
       "React",
+      "Angular",
+      "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "settings-list": [
       "React",
+      "Angular",
+      "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "team-members": [
       "React",
+      "Angular",
+      "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "comment-box": [
       "React",
+      "Angular",
+      "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "empty-state": [
       "React",
+      "Angular",
+      "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "alert-stack": [
       "React",
+      "Angular",
+      "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "testimonial": [
       "React",
+      "Angular",
+      "SwiftUI",
       "Compose",
       "Flutter"
     ]
