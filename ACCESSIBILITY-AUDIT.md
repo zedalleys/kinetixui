@@ -243,3 +243,34 @@ Gotcha found along the way: `tailwind-merge` treats a bare `outline` and `outlin
 ## DataGrid range selection (2026-09-20)
 
 `selectable` adds ARIA multi-selection to the grid: Shift+arrows / Shift+click extend a rectangle from the anchor cell, Ctrl/Cmd+A selects all, Ctrl/Cmd+C copies it as tab-separated text, Esc clears; `aria-multiselectable` on the grid, `aria-selected` on every cell, a live region announcing the count, and `onSelectionChange`. Opt-in, so nothing changes for existing grids. Re-sorting or changing the row count clears the selection (it refers to displayed rows). Follow-up (same day): drag-select and disjoint ranges — Ctrl/Cmd+click, or Ctrl+Space from the keyboard, keeps the current range and starts another; Ctrl/Cmd+C copies all of them (blank line between), and `onSelectionChange` reports every range. Verified with a real-pointer drag and Ctrl+click in the browser pass. Follow-up (2026-09-20): whole columns and rows — Ctrl/Cmd+click a header (or Ctrl+Space on it) selects the column and keeps other ranges, Shift+click extends across columns, and Shift+Space on a cell selects its row; a plain header click still sorts, and fully selected headers set `aria-selected`. Verified with real pointer clicks in a production build and covered by the browser pass. Follow-up (2026-09-20): auto-scroll while dragging — holding the button at or past a grid edge scrolls toward the pointer and keeps extending the range (the cell is computed from geometry, since the virtualized row under the pointer may not be rendered yet; the sticky header and pinned columns are excluded from the growable area; horizontal is skipped under RTL). Verified in a production build and by a real-pointer check in the browser pass. Not included: a row-header gutter for pointer row selection.
+
+## Open: native interactive primitives built from raw gestures (logged 2026-09-24)
+
+**Not done. This is a backlog entry, not a finding list.**
+
+Two component defects turned up while writing Blocks in #212, and they were the same defect twice:
+
+- **`Tag`'s dismiss control** — React and SwiftUI hard-coded the name `"Remove"`, so a row of filter chips
+  announced "Remove, Remove, Remove"; **Compose and Flutter gave it no accessible name and no button role at
+  all**, making it neither findable by role nor readable. Angular had been right the whole time.
+- **`NumberInput`'s steppers** — **Flutter had no semantics whatsoever**: two bare `GestureDetector`s around
+  icons, the value as loose `Text`, and the disabled state expressed only as `Opacity`. Compose's were bare
+  `clickable` boxes; SwiftUI's were unlabelled SF Symbol buttons. React and Angular were right.
+
+Both were fixed in #212. Neither was found by a test — both were found by *using* the component in a block.
+That is the part worth acting on: the pattern is a native control assembled from a raw tap surface, where the
+platform gives no role or name for free and nothing in the suites asks for one. The two we happened to
+compose with are unlikely to be the only two.
+
+**The pass to run:** every interactive primitive in `packages/ui-swiftui`, `packages/ui-compose` and
+`packages/ui-flutter` implemented with a gesture recogniser, a raw click/tap handler, an icon-only surface,
+or a hand-rolled toggle/stepper. Find them mechanically first — `GestureDetector` / `InkWell` (Flutter),
+`Modifier.clickable` / `pointerInput` (Compose), `onTapGesture` / unlabelled `Button { Image(...) }`
+(SwiftUI) — then check each for: accessible **name**, **role**, **state** (pressed / selected / expanded /
+value), **enabled vs disabled** as announced rather than merely drawn, **touch-target size**, and focus or
+interaction order.
+
+The contract to check against is React's, which has been correct in both cases so far, with Angular as the
+second reference. Where a platform's idiom differs, the *information* must still match.
+
+Deliberately out of scope for #213, which is a homepage and responsive-layout PR.
