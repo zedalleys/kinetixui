@@ -53,7 +53,7 @@ export function ColorsContent() {
   const color = tokens.color as unknown as Record<string, Record<string, string>>;
 
   return (
-    <div className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8">
+    <div>
       <p className="eyebrow">Color system</p>
       <h1 className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] md:text-4xl">Colors</h1>
       <p aria-live="polite" className="sr-only">
@@ -70,17 +70,17 @@ export function ColorsContent() {
       </p>
 
       <Link
-        href="/theme-builder"
+        href="/create"
         className="group mt-6 flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/20 px-4 py-3 transition-colors hover:border-primary/40"
       >
         <span>
-          <span className="font-medium">Have your own palette?</span>{" "}
+          <span className="font-medium">Want your own palette?</span>{" "}
           <span className="text-sm text-muted-foreground">
-            Paste it into the Theme Builder and preview it on real components.
+            Customize the theme in Create and preview it on real components.
           </span>
         </span>
         <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-primary transition-transform group-hover:translate-x-0.5">
-          Try it →
+          Customize in Create →
         </span>
       </Link>
 

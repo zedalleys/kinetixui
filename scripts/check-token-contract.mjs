@@ -1,5 +1,5 @@
 /**
- * check-token-contract.mjs — the token table shown on /docs/theming and /colors
+ * check-token-contract.mjs — the token table shown on /docs/theming and /docs/colors
  * (apps/web/src/lib/token-contract.ts) must match the real tokens.
  *
  *   node scripts/check-token-contract.mjs

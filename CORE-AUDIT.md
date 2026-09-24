@@ -117,7 +117,7 @@ so nothing moves visually).
 | Accessibility | Strong on web, unproven on native | 271 unit tests incl. keyboard suite; axe in jsdom and a real browser (baseline empty); forced-colors, reduced-motion and Kanban keyboard checks; `check:contrast`. Native: core controls only (see below); the rest compile-checked |
 | Reduced motion | Web enforced; native unaudited | browser pass fails any story looping faster than 3s under `prefers-reduced-motion` |
 | Responsive/adaptive | Web only | native ports use platform layout |
-| Theming | Existing | `/docs/theming`, `/theme-builder`, CLI `theme create/build` (web CSS only; native compilation of custom themes is not implemented) |
+| Theming | Existing | `/docs/theming`, `/create`, CLI `theme create/build` (web CSS only; native compilation of custom themes is not implemented) |
 
 ### Verification per platform (the honest maturity signal)
 

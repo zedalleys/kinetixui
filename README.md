@@ -17,7 +17,7 @@ Free while in beta.
 
 [**Docs**](https://kinetixui.com/docs) ·
 [Components](https://kinetixui.com/components) ·
-[Colors](https://kinetixui.com/colors) ·
+[Create](https://kinetixui.com/create) ·
 [Changelog](https://kinetixui.com/docs/changelog)
 
 [![CI](https://github.com/zedalleys/kinetixui/actions/workflows/ci.yml/badge.svg)](https://github.com/zedalleys/kinetixui/actions/workflows/ci.yml)

@@ -18,7 +18,7 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "Components", href: "/components" },
       { label: "Blocks", href: "/blocks" },
       { label: "Charts", href: "/charts" },
-      { label: "Colors", href: "/colors" },
+      { label: "Create", href: "/create" },
     ],
   },
   {

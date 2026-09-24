@@ -133,7 +133,7 @@ describe("sourceForPath / componentSlugFor", () => {
     ["/docs/components/button", "component_page"],
     ["/components", "components_gallery"],
     ["/charts", null],
-    ["/theme-builder", null],
+    ["/create", null],
   ])("%s → %s", (path, source) => {
     expect(sourceForPath(path)).toBe(source);
   });
@@ -186,7 +186,7 @@ describe("trackRouteView: one semantic view event per route", () => {
     expect(events()).toEqual(["changelog_viewed"]);
   });
 
-  it.each(["/", "/components", "/blocks", "/charts", "/docs/nope", "/docs/components/not-a-real-component", "/docs/components", "/theme-builder"])(
+  it.each(["/", "/components", "/blocks", "/charts", "/docs/nope", "/docs/components/not-a-real-component", "/docs/components", "/create"])(
     "fires nothing for %s (no semantic view event applies, or the page doesn't exist)",
     (path) => {
       trackRouteView(path);

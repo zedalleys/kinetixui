@@ -24,11 +24,11 @@ const base = (process.argv.includes("--base") ? process.argv[process.argv.indexO
 const PAGES = [
   "/",
   "/components",
-  "/colors",
+  "/create",
   "/blocks",
   "/charts",
   "/themes",
-  "/theme-builder",
+  "/docs/colors",
   "/infographic",
   "/docs",
   "/docs/installation",

@@ -45,7 +45,7 @@ export const mainNav: NavItem[] = [
   { title: "Charts", href: "/charts" },
   { title: "Infographic", href: "/infographic" },
   { title: "Themes", href: "/themes" },
-  { title: "Colors", href: "/colors" },
+  { title: "Create", href: "/create" },
 ];
 
 const built = (title: string, slug: string): NavItem => ({ title, href: `/docs/components/${slug}` });
@@ -226,6 +226,7 @@ export const docsNav: NavGroup[] = [
     items: [
       { title: "Foundations", href: "/docs/foundations" },
       { title: "Tokens", href: "/docs/tokens" },
+      { title: "Colors", href: "/docs/colors" },
       { title: "Icons", href: "/docs/icons" },
       { title: "Theming", href: "/docs/theming" },
       { title: "Dark Mode", href: "/docs/dark-mode" },

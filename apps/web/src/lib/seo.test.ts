@@ -58,9 +58,9 @@ describe("sitemap", () => {
       "/blocks",
       "/charts",
       "/themes",
-      "/colors",
+      "/create",
+      "/docs/colors",
       "/infographic",
-      "/theme-builder",
     ]) {
       expect(urls).toContain(absoluteUrl(path));
     }
