@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-06
 **Scope:** `apps/web` (kinetixui.com) in **light and dark**, plus the token
-contract that feeds all four component libraries.
+contract that feeds every component library.
 **Standard:** WCAG 2.2 AA.
 
 > **Note (2026-09-06, post-audit):** the token contract has moved on since this

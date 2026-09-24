@@ -24,6 +24,7 @@ import org.robolectric.annotation.Config
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
+// kx-verify: interaction
 class InteractionTest {
     @get:Rule
     val rule = createComposeRule()

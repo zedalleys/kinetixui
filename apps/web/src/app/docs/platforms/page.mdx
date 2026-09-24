@@ -16,6 +16,43 @@ written by hand from each platform's CI workflow, which is named in the row so i
 
 <PlatformSupportTable />
 
+## Availability, package maturity and verification are three different things
+
+They were once one word, and the word being printed was the one nothing backed up. Keep them apart:
+
+- **Availability** — is there an implementation here? A component either has one on a platform, or has
+  guidance in its place (a native equivalent, a composition, or a planned port). Only an implementation
+  counts as coverage.
+- **Package maturity** — is this platform's package a finished product? A product decision about the
+  offering, not a measurement. `@kinetixui/angular` is Preview because its catalogue is knowingly
+  incomplete; the others are Stable packages.
+- **Verification** — what automated tests actually prove about an implementation. Measured, from the test
+  files, and never inferred from either of the other two. A file called `Button.swift` existing proves that
+  the file exists.
+
+`@kinetixui/ui` is a Stable, published package whose catalogue is verified to Beta. Both are true, and one
+word cannot say both.
+
+<PlatformVerificationTable />
+
+Evidence is shown as a fraction, never a tick, because a check mark beside a partially covered catalogue
+would be the most misleading thing on this page. **Catalogue verification is the weakest component on that
+platform, not an average** — a well-tested Button cannot compensate for an unverified Dialog, since you will
+apply the figure to whichever component you are about to use. Individual components often sit above their
+platform's floor; each component's page shows its own level.
+
+### How a verification level is earned
+
+<VerificationLadderTable />
+
+Every positive result traces to a source. The evidence is derived from the test files themselves — each
+marked passage declares what kind of verification it performs, and the components it covers are read from
+the KinetixUI symbols that passage calls — so a test that is deleted stops counting on the next run.
+`pnpm platform:matrix --verification=<component>` prints the file and line range behind every tick.
+
+Nothing is verified **Stable** today: that rung additionally requires RTL, large-text and visual-regression
+evidence per component, and a published package.
+
 ## Reading the table
 
 - **Components** counts the components each platform implements, out of <ComponentTotalInline /> in the

@@ -13,10 +13,11 @@ what this scales into once other maintainers show up.
 Two invariants hold regardless of who's contributing:
 
 1. **React (`@kinetixui/ui`) is the single source of truth.** Every other
-   platform (Jetpack Compose, SwiftUI, Flutter) is a 1:1 port of it, on the
-   same token contract. Nothing lands on a native platform first.
-2. **The four-platform rule.** A new component isn't "done" until it exists
-   on all four platforms, or is a documented, deliberate non-port with a
+   platform — Angular, Jetpack Compose, SwiftUI and Flutter — is a port of it
+   on the same token contract. Nothing lands on another platform first.
+2. **The platform rule.** A new component isn't "done" until it exists on all
+   four catalogue-complete platforms (React, SwiftUI, Jetpack Compose,
+   Flutter), or is a documented, deliberate non-port with a
    reason recorded (see [`/docs/contributing`](https://kinetixui.com/docs/contributing)'s
    "standing non-ports" table). This is the project's actual decision-record
    mechanism today: rather than a separate RFC doc, every non-obvious call —
@@ -45,17 +46,18 @@ Two invariants hold regardless of who's contributing:
 
 ## If/when more maintainers join
 
-The four-platform rule already implies the shape this grows into: a **core
+The platform rule already implies the shape this grows into: a **core
 maintainer** role (design language, tokens, cross-platform API conventions,
 the "is this a real gap or a documented scope-down" call) plus a
-**platform maintainer** per port (Web, Jetpack Compose, SwiftUI, Flutter),
-each responsible for their platform meeting the component contract before a
-component is marked stable there. A component doesn't move to fully
+**platform maintainer** per port (React, Angular, Jetpack Compose, SwiftUI,
+Flutter), each responsible for their platform meeting the component contract
+and accumulating the verification evidence before a component is called
+verified there. A component doesn't move to fully
 cross-platform `stable` status until every required platform's maintainer
 has signed off — mirroring how [component maturity status](https://kinetixui.com/docs/contributing#component-status)
 already separates "shipped" from "proven." Nothing about this needs
 inventing from scratch when the time comes; it's a formalization of the
-review discipline the four-platform rule already enforces on one person.
+review discipline the platform rule already enforces on one person.
 
 ## Becoming a maintainer
 

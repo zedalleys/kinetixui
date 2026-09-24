@@ -14,6 +14,10 @@ import { afterEach, describe, expect, it } from "vitest";
  * is clean. A new violation fails; if you must baseline one, a later fix fails until the
  * entry is deleted, so the list can only shrink.
  */
+// kx-verify: accessibility
+// kx-verify-covers: packages/ui/src/stories/*.stories.tsx
+// The subjects come from the story directory, not from imports: this suite names no component, it mounts
+// whatever has a story. A component with no story file therefore gets no credit from it.
 const stories = import.meta.glob("./stories/*.stories.tsx", { eager: true }) as Record<
   string,
   Record<string, unknown>

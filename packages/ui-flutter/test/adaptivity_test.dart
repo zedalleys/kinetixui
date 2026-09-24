@@ -29,6 +29,10 @@ Widget host(Widget child, {TextDirection direction = TextDirection.ltr, double t
 const Set<String> knownLargeTextOverflow = <String>{};
 
 void main() {
+  // kx-verify: rtl
+  // kx-verify-covers: packages/ui-flutter/test/smoke_test.dart
+  // The subject is inlineWidgets() from the smoke fixture, which this group pumps in full — so the
+  // coverage is that fixture's widgets, not the one widget named by hand below it.
   group('right-to-left', () {
     testWidgets('every inline widget builds under RTL', (tester) async {
       await tester.pumpWidget(
@@ -62,6 +66,8 @@ void main() {
     });
   });
 
+  // kx-verify: largeText
+  // kx-verify-covers: packages/ui-flutter/test/smoke_test.dart
   group('large text (2x)', () {
     testWidgets('inline widgets do not overflow, except the tracked ones', (tester) async {
       final failures = <String>{};

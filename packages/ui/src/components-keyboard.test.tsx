@@ -38,6 +38,8 @@ import { TreeItem, TreeView } from "./components/tree-view";
  * on focus and ARIA state, not on geometry.
  */
 
+// kx-verify: interaction
+
 describe("Dialog", () => {
   function Example() {
     return (
@@ -159,6 +161,8 @@ describe("Popover", () => {
   });
 });
 
+// kx-verify: interaction, rtl
+
 describe("Tabs", () => {
   function Example({ dir }: { dir?: "ltr" | "rtl" }) {
     const tabs = (
@@ -212,6 +216,8 @@ describe("Tabs", () => {
     expect(screen.getByRole("tab", { name: "One" })).toHaveFocus();
   });
 });
+
+// kx-verify: interaction
 
 describe("RadioGroup", () => {
   it("is one tab stop; arrows move and select; Tab leaves the group", async () => {
@@ -426,6 +432,8 @@ describe("Tour", () => {
     }
   });
 });
+
+// kx-verify: interaction, rtl
 
 describe("DataGrid", () => {
   type Row = { id: number; name: string };
@@ -983,6 +991,8 @@ describe("DataGrid", () => {
     });
   });
 });
+
+// kx-verify: interaction
 
 describe("ColorPicker", () => {
   it("adjusts the saturation/value square with the arrow keys (Shift = bigger step)", async () => {

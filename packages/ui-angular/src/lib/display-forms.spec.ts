@@ -73,6 +73,8 @@ function mount<T>(type: new () => T) {
   return fixture;
 }
 
+// kx-verify: interaction, accessibility
+
 /* ── display ────────────────────────────────────────────────────────────── */
 
 describe('KxAvatar', () => {

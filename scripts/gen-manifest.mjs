@@ -35,6 +35,7 @@ const CHECK = process.argv.includes("--check");
 
 const manifest = read("components.manifest.json");
 const registry = read("registry/registry.json");
+const verification = read("verification.json");
 const STATUSES = new Set(["beta", "stable", "deprecated"]);
 const FAMILIES = new Set(["web", "native"]);
 /**
@@ -49,6 +50,43 @@ const FAMILIES = new Set(["web", "native"]);
  * None of these is parity. `platforms` is parity.
  */
 const GUIDANCE_TYPES = new Set(["native-equivalent", "composition", "planned"]);
+
+/**
+ * The VERIFICATION ladder, and the evidence each rung costs.
+ *
+ * This is a statement about one implementation's automated evidence. It is not the component's lifecycle
+ * (`status` — is the API settled?) and it is not the package's maturity (`platformDefinitions[p].maturity` —
+ * is the offering a product?). All three were being said with one word, and the word being printed was the
+ * one nothing backed up: `platformDefinitions` called SwiftUI stable, and the only thing behind that was a
+ * filename. None of the three is derived from either of the others.
+ *
+ * `preview` is not an evidence rung. It is the package-level statement "this catalogue is knowingly
+ * incomplete", and it is the only declared value that caps a verification level — a reader must not be told
+ * a component of an incomplete package is verified beyond it.
+ *
+ * There is no N/A. A kind that does not apply to a component simply is not verified, and reads as a gap. A
+ * gap someone has to look at is safer than a gap someone can dismiss.
+ */
+const LADDER = ["experimental", "preview", "beta", "stable"];
+const REQUIRES = {
+  // compiles in its platform's CI, and nothing more is claimed
+  experimental: ["build"],
+  // the semantics assistive technology receives have been checked — the bar for "usable and reviewed"
+  beta: ["build", "accessibility"],
+  // everything a support promise implies: it behaves, it survives direction and text scaling, its rendering
+  // is pinned against a reference, and a consumer can actually install it
+  stable: ["build", "accessibility", "interaction", "rtl", "largeText", "visual", "published"],
+};
+const rank = (level) => LADDER.indexOf(level);
+
+/** The highest rung this implementation's evidence pays for. */
+function earned(evidence) {
+  let best = "experimental";
+  for (const level of ["beta", "stable"]) {
+    if (REQUIRES[level].every((k) => evidence?.[k])) best = level;
+  }
+  return best;
+}
 const WAVES = new Set(["primitives", "inputs", "layout", "navigation", "overlays", "data", "advanced"]);
 
 const defs = manifest.platformDefinitions;
@@ -67,6 +105,10 @@ for (const [p, d] of Object.entries(defs)) {
   if (!FAMILIES.has(d.family)) errors.push(`platformDefinitions.${p}: family must be "web" or "native", not "${d.family}"`);
   for (const k of ["label", "abbr", "package", "dir"]) if (!d[k]) errors.push(`platformDefinitions.${p}: missing "${k}"`);
   if (typeof d.catalogComplete !== "boolean") errors.push(`platformDefinitions.${p}: catalogComplete must be a boolean`);
+  if (rank(d.maturity) === -1) errors.push(`platformDefinitions.${p}: maturity must be one of ${LADDER.join(", ")}`);
+  if (!d.distribution || typeof d.distribution.published !== "boolean" || !d.distribution.channel) {
+    errors.push(`platformDefinitions.${p}: needs a distribution block with a channel and a boolean "published"`);
+  }
 }
 
 const slugs = registry.items.filter((i) => i.type === "registry:ui").map((i) => i.name);
@@ -103,6 +145,55 @@ for (const [s, c] of Object.entries(manifest.components)) {
     errors.push(`${s}: not on ${missing.join(", ")} — add a platformNote (or platformNotes per platform) saying why`);
   }
 }
+/* ── verification level, computed from the evidence ───────────────────────── */
+
+const evidenceOf = (slug, platform) => verification.components?.[slug]?.[platform];
+
+/** slug → platform → the verification rung this implementation's evidence pays for. */
+const verificationLevel = {};
+for (const [slug, c] of Object.entries(manifest.components)) {
+  const per = {};
+  for (const platform of c.platforms) {
+    const level = earned(evidenceOf(slug, platform));
+    // A `preview` PACKAGE caps the verification of everything inside it: a reader must not be told a
+    // component of a knowingly incomplete package is verified beyond preview. Every other package maturity
+    // leaves verification alone — a Compose button with interaction and semantics tests reads beta even
+    // though most of the Compose catalogue is experimental, because hiding that would make the per-component
+    // data useless and the progress invisible.
+    per[platform] = defs[platform].maturity === "preview" ? "preview" : level;
+    if (!evidenceOf(slug, platform)) {
+      errors.push(`${slug}: declared on ${platform} but verification.json has no evidence for it — run \`pnpm gen:verification\``);
+    }
+  }
+  verificationLevel[slug] = per;
+}
+
+/**
+ * The catalogue's verification level per platform: the MINIMUM across its declared components, never an
+ * average and never a percentage.
+ *
+ * A well-tested Button cannot compensate for an unverified Dialog, because a reader applies the platform's
+ * word to the component they are about to use. The per-component levels stay visible separately, so a
+ * platform whose floor is experimental can still show which of its components have climbed.
+ */
+const catalogueVerification = Object.fromEntries(
+  platforms.map((p) => {
+    const levels = Object.values(verificationLevel).map((per) => per[p]).filter(Boolean);
+    if (!levels.length) return [p, null];
+    return [p, levels.reduce((low, l) => (rank(l) < rank(low) ? l : low), "stable")];
+  }),
+);
+
+/** The ladder must stay self-consistent: a higher rung cannot ask for less than a lower one. */
+for (let i = 1; i < ["experimental", "beta", "stable"].length; i++) {
+  const [lower, higher] = [["experimental", "beta", "stable"][i - 1], ["experimental", "beta", "stable"][i]];
+  const missing = REQUIRES[lower].filter((k) => !REQUIRES[higher].includes(k));
+  if (missing.length) errors.push(`maturity ladder: "${higher}" drops ${missing.join(", ")}, which "${lower}" requires`);
+}
+if (!REQUIRES.stable.includes("published")) {
+  errors.push(`maturity ladder: "stable" must require "published" — nobody can depend on what they cannot install`);
+}
+
 if (errors.length) {
   console.error(errors.map((e) => `  ✗ ${e}`).join("\n"));
   process.exit(1);
@@ -132,6 +223,39 @@ const parity = {
   notes: Object.fromEntries(entries.filter(([, c]) => c.platformNote).map(([s, c]) => [s, c.platformNote])),
   platformNotes: Object.fromEntries(entries.filter(([, c]) => c.platformNotes).map(([s, c]) => [s, c.platformNotes])),
   guidance: Object.fromEntries(entries.filter(([, c]) => c.platformGuidance).map(([s, c]) => [s, c.platformGuidance])),
+  /** The ladder itself, so the website explains the same rules this file enforces rather than its own copy. */
+  verificationLadder: LADDER,
+  verificationRequires: REQUIRES,
+  /** slug → platform → verification rung. Computed from verification.json; never hand-written. */
+  verification: Object.fromEntries(entries.map(([s]) => [s, verificationLevel[s]])),
+  /** How many components sit on each rung, per platform — the honest shape of a platform's catalogue. */
+  verificationCounts: Object.fromEntries(
+    platforms.map((p) => [
+      p,
+      Object.fromEntries(LADDER.map((l) => [l, entries.filter(([s]) => verificationLevel[s][p] === l).length]).filter(([, n]) => n > 0)),
+    ]),
+  ),
+  /** The floor: the weakest verification level in each platform's declared catalogue. Never an average. */
+  catalogueVerification,
+  /**
+   * slug → platform → the evidence kinds that hold, WITHOUT the source references.
+   *
+   * verification.json carries the file-and-line proof behind every one of these, and it stays out of the
+   * browser: the component page only needs to render six ticks and a dash, not 98 KB of paths. Scripts and
+   * server-rendered pages read the full file; this is the client-safe projection of it.
+   */
+  verificationEvidence: Object.fromEntries(
+    entries
+      .filter(([s]) => verification.components?.[s])
+      .map(([s]) => [
+        s,
+        Object.fromEntries(
+          Object.entries(verification.components[s]).map(([p, kinds]) => [p, Object.keys(kinds).sort()]),
+        ),
+      ]),
+  ),
+  /** How many components hold each kind, per platform. Printed as "21 / 98", never as a tick. */
+  evidenceCounts: verification.totals,
 };
 
 let stale = false;

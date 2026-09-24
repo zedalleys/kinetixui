@@ -60,7 +60,20 @@ const stats = {
   platforms: Object.fromEntries(
     Object.entries(defs).map(([name, d]) => [
       name,
-      { label: d.label, family: d.family, maturity: d.maturity, catalogComplete: d.catalogComplete, components: parity.coverage[name] },
+      {
+        label: d.label,
+        family: d.family,
+        // PACKAGE maturity — a product decision. Not the same claim as verification below, and a campaign
+        // that prints one where it means the other is exactly the drift this script exists to prevent.
+        packageMaturity: d.maturity,
+        catalogComplete: d.catalogComplete,
+        components: parity.coverage[name],
+        published: d.distribution?.published ?? false,
+        /** The weakest verification level in this platform's catalogue — a floor, never an average. */
+        catalogueVerification: parity.catalogueVerification?.[name] ?? null,
+        /** How many components hold each evidence kind. Always a fraction of `components`, never a tick. */
+        evidence: parity.evidenceCounts?.[name] ?? {},
+      },
     ]),
   ),
   catalogPlatforms,
@@ -76,8 +89,24 @@ if (JSON_OUT) {
   console.log(`\nKinetixUI — verified numbers (v${stats.version}, ${stats.license})\n`);
   console.log(`Components: ${componentTotal}`);
   for (const [name, p] of Object.entries(stats.platforms)) {
-    const tag = p.maturity === "stable" ? "" : `  [${p.maturity}]`;
+    const tag = p.packageMaturity === "stable" ? "" : `  [package ${p.packageMaturity}]`;
     console.log(`  ${p.label.padEnd(16)} ${String(p.components).padStart(3)} / ${componentTotal}  (${p.family})${tag}`);
+  }
+  // Availability and verification are different claims. Marketing may say "KinetixUI verifies platform
+  // coverage against source"; it may NOT say "every implementation is fully verified".
+  console.log("\nPackage maturity vs. catalogue verification (never the same sentence):");
+  for (const [, p] of Object.entries(stats.platforms)) {
+    console.log(
+      `  ${p.label.padEnd(16)} package ${String(p.packageMaturity).padEnd(13)} verification ${String(p.catalogueVerification ?? "-").padEnd(13)}` +
+        `${p.published ? "published" : "NOT PUBLISHED"}`,
+    );
+  }
+  console.log("\nEvidence, as fractions of each platform's implementations — a partial count is not a tick:");
+  for (const [, p] of Object.entries(stats.platforms)) {
+    const line = Object.entries(p.evidence)
+      .map(([k, n]) => `${k} ${n}/${p.components}`)
+      .join("  ");
+    console.log(`  ${p.label.padEnd(16)} ${line}`);
   }
   console.log(`\n${fullCoverage} of ${componentTotal} on all ${catalogPlatforms.length} complete-catalogue platforms (${catalogPlatforms.join(", ")})`);
   console.log(`${exceptions} documented exceptions\n`);
