@@ -16,10 +16,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
 import com.kinetixui.ui.KinetixAvatar
 import com.kinetixui.ui.KinetixAvatarFallback
@@ -150,8 +151,10 @@ class ProfileFormBlockTest {
         rule.setContent { KinetixTheme(darkTheme = false) { ProfileFormBlock() } }
         rule.onNodeWithText("Only my team").assertIsSelected()
 
-        // The hint text is part of the row, so tapping it must select — proof the target is the row.
-        rule.onNodeWithText("Your profile stays hidden.").performClick()
+        // Driving the semantics action rather than tapping a coordinate: the third row sits below
+        // Robolectric's fixed window, and a clipped tap lands somewhere else. It also states the claim more
+        // directly — the node that OWNS the click action is the row, found by its hint text, not the dot.
+        rule.onNodeWithText("Your profile stays hidden.").performSemanticsAction(SemanticsActions.OnClick)
         rule.onNodeWithText("Nobody").assertIsSelected()
     }
 }

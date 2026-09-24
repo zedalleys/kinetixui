@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -146,9 +145,11 @@ class OrderSummaryBlockTest {
     @Test
     fun each_stepper_says_which_item_it_counts_and_free_shipping_is_a_word() {
         rule.setContent { KinetixTheme(darkTheme = false) { OrderSummaryBlock() } }
-        rule.onNodeWithContentDescription("Quantity, Kinetix T-shirt").assertIsDisplayed()
-        rule.onNodeWithContentDescription("Quantity, Sticker pack").assertIsDisplayed()
+        // assertExists, not assertIsDisplayed: Robolectric lays the card out in a fixed window and
+        // anything below the fold is clipped. Presence and semantics are what this test is about.
+        rule.onNodeWithContentDescription("Quantity, Kinetix T-shirt").assertExists()
+        rule.onNodeWithContentDescription("Quantity, Sticker pack").assertExists()
         // 2 x $28 + 1 x $6 = $62, which is over the $50 threshold.
-        rule.onNodeWithText("Free").assertIsDisplayed()
+        rule.onNodeWithText("Free").assertExists()
     }
 }

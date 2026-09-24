@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kinetix_ui/kinetix_ui.dart';
 
@@ -159,6 +158,10 @@ void main() {
     expect(tester.getSemantics(find.text('Only my team')), isSemantics(isSelected: true));
 
     // Tapping the HINT must select the option — proof the target is the row, not just the dot.
+    // ensureVisible first: the third row sits below the 800x600 test surface, and a tap on a widget that
+    // has been laid out but scrolled off cannot hit-test.
+    await tester.ensureVisible(find.text('Your profile stays hidden.'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Your profile stays hidden.'));
     await tester.pump();
     expect(tester.getSemantics(find.text('Nobody')), isSemantics(isSelected: true));

@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -126,7 +125,9 @@ class AccountSecurityBlockTest {
     @Test
     fun the_revoke_action_says_which_session_it_ends() {
         rule.setContent { KinetixTheme(darkTheme = false) { AccountSecurityBlock() } }
-        rule.onNodeWithText("Two-factor authentication").assertIsDisplayed()
-        rule.onNodeWithContentDescription("Revoke iPhone 15").assertIsDisplayed()
+        // assertExists, not assertIsDisplayed: Robolectric lays the card out in a fixed window and
+        // anything below the fold is clipped. Presence and semantics are what this test is about.
+        rule.onNodeWithText("Two-factor authentication").assertExists()
+        rule.onNodeWithContentDescription("Revoke iPhone 15").assertExists()
     }
 }

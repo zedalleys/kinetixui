@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kinetix_ui/kinetix_ui.dart';
 
@@ -140,6 +139,8 @@ void main() {
 
     expect(find.bySemanticsLabel('Remove In stock'), findsOneWidget);
 
+    await tester.ensureVisible(find.bySemanticsLabel('Remove In stock'));
+    await tester.pumpAndSettle();
     await tester.tap(find.bySemanticsLabel('Remove In stock'));
     await tester.pump();
 

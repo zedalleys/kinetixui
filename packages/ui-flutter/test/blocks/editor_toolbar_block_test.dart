@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kinetix_ui/kinetix_ui.dart';
 
@@ -123,6 +122,8 @@ void main() {
 
     expect(find.bySemanticsLabel('Bold'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Preview'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Preview'));
     await tester.pump();
     expect(tester.getSemantics(find.bySemanticsLabel('Bold')), isSemantics(hasEnabledState: true, isEnabled: false));
