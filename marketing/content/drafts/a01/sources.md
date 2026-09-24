@@ -5,6 +5,9 @@ here. Re-run `pnpm marketing:stats` on the day of publishing and re-check the
 numbers before posting — they move.
 
 **Numbers verified:** 2026-09-23, against `main` @ `e29184c`, KinetixUI v0.22.1.
+**Current-state figures re-derived:** 2026-09-24, against `main` @ `dfd0d81`, still
+v0.22.1. Only the *current* columns moved — every historical figure below is tied
+to a commit and is unchanged.
 
 ## Coverage figures used
 
@@ -15,14 +18,14 @@ From `pnpm marketing:stats` (reads `platform-parity.json` and
 | --- | --- | --- |
 | 98 components | 98 | `components.manifest.json` |
 | React | 98 / 98 | `platform-parity.json` → `coverage` |
-| Angular (preview) | 11 / 98 | same, `platformDefinitions.Angular.maturity = "preview"` |
+| Angular (preview) | 31 / 98 | same, `platformDefinitions.Angular.maturity = "preview"` |
 | SwiftUI | 90 / 98 | same |
-| Jetpack Compose | 89 / 98 | same |
+| Jetpack Compose | 90 / 98 | same |
 | Flutter | 90 / 98 | same |
-| On all four complete-catalogue platforms | 89 / 98 | `catalogPlatforms` = React, SwiftUI, Compose, Flutter |
-| Documented exceptions | 9 | 98 − 89 |
+| On all four complete-catalogue platforms | 90 / 98 | `catalogPlatforms` = React, SwiftUI, Compose, Flutter |
+| Documented exceptions | 8 | 98 − 90 |
 
-**Do not** write "all platforms" anywhere. There are five; 89/98 is across four,
+**Do not** write "all platforms" anywhere. There are five; 90/98 is across four,
 and Angular is excluded from that denominator because its catalogue is
 deliberately incomplete (`catalogComplete: false`).
 
@@ -61,12 +64,18 @@ Worth including in the piece: a verifier that only ever confirms your priors is
 not a verifier. This one produced a false positive on its first run and the fix
 belonged in the data.
 
-## Finding 4 — the Chart page advertised a Compose API that does not exist
+## Finding 4 — the Chart page advertised a Compose API that did not exist
 
 - `chart-demo`'s Compose snippet used `KinetixChart` and `KinetixChartPoint`.
-- Neither symbol exists. There is no `Chart.kt` in `packages/ui-compose`, and
-  the manifest already said `chart` is not on Compose
+- Neither symbol existed at `c3de388`. There was no `Chart.kt` in
+  `packages/ui-compose`, and the manifest already said `chart` was not on Compose
   (`platformNote: "no Recharts equivalent wired for Compose yet"`).
+- **Since then:** `Chart.kt` was written (`b604bbc`, 2026-09-23) and `chart` is
+  now on Compose. The real `KinetixChart` / `KinetixChartPoint` are close to the
+  invented ones — same `label` / `value` / `seriesIndex` shape — but `description`
+  is a **required** parameter, so the published snippet still would not compile.
+  The piece states this in past tense and says so explicitly; do not let it read
+  as though the API were fictional today.
 - The snippet's own comment read *"a hand-drawn CustomPaint bar chart"* —
   `CustomPaint` is **Flutter**. The Flutter rationale had been pasted onto an
   invented Compose API.
@@ -117,7 +126,7 @@ Flutter are checked at file level here and compiled by their own workflows
 ## Things the piece must NOT claim
 
 - No adoption, download, star or user numbers — none are known.
-- Not "we solved parity". Coverage is 89/98 with 9 documented exceptions.
+- Not "we solved parity". Coverage is 90/98 with 8 documented exceptions.
 - Not that symbol checking proves correctness. See Finding 5.
 - Angular must read as preview wherever it appears.
 - No competitor named as doing this badly. The category problem is the subject.
@@ -134,13 +143,14 @@ the other.
 | SwiftUI symbols used / unknown | 164 / 0 | 162 / 0 |
 | Compose symbols used / unknown | 182 / **3** | 177 / **0** |
 | Flutter symbols used / unknown | 175 / 0 | 172 / 0 |
-| SwiftUI · Compose · Flutter coverage | 91 · 90 · 91 | 90 · 89 · 90 |
-| On all four catalogue platforms | 90 | 89 |
-| Demo keys backed by compiled source | 0 | 3 (`button-demo`, `badge-demo`, `switch-demo`) |
+| SwiftUI · Compose · Flutter coverage | 91 · 90 · 91 | 90 · 90 · 90 |
+| On all four catalogue platforms | 90 | 90 |
+| Demo keys backed by compiled source | 0 | 5 (`button`, `badge`, `switch`, `chart`, `direction-provider`) |
 
-If the piece is published later than 2026-09-23, re-run `pnpm marketing:stats`
-and the symbol audit before posting. The "three migrated, ~100 to go" line ages
-fastest — it is the one number most likely to be wrong by publication.
+If the piece is published later than 2026-09-24, re-run `pnpm marketing:stats`
+and `node marketing/content/drafts/a01/verify-package.mjs` before posting. The
+migration line ages fastest — it is the one number most likely to be wrong by
+publication, and it has already moved once (3 → 5) between drafting and QA.
 
 ## Git verification — every claim traced to a commit
 
@@ -181,52 +191,63 @@ before trusting any tooling that "found nothing".
 
 ---
 
-# Editorial freeze — 2026-09-23
+# Current repository state — 2026-09-24
 
-## Current repository state (use for the "ours, today" paragraph)
-
-`main` @ `e29184c`, v0.22.1 MIT. From `pnpm marketing:stats`:
+Use this for the "ours, today" paragraph. `main` @ `dfd0d81`, v0.22.1 MIT. From
+`pnpm marketing:stats`:
 
 | | |
 | --- | --- |
 | Components | 98 |
+| Lifecycle | 97 stable, 1 beta |
 | React | 98 / 98 |
-| Angular | 11 / 98 — **preview**, `catalogComplete: false` |
+| Angular | 31 / 98 — **preview**, `catalogComplete: false` |
 | SwiftUI | 90 / 98 |
-| Jetpack Compose | 89 / 98 |
+| Jetpack Compose | 90 / 98 |
 | Flutter | 90 / 98 |
-| On all four catalogue-complete platforms | **89 / 98** |
-| Documented exceptions | 9 |
+| On all four catalogue-complete platforms | **90 / 98** |
+| Documented exceptions | 8 |
+| Blocks | 20, on all five platforms |
 | npm | `ui`, `cli`, `tokens` at 0.22.1; **`angular` unpublished** |
 
 Snippet migration, counted directly (not covered by `marketing:stats`):
 
 | | |
 | --- | --- |
-| Total demo keys | 100 |
-| Backed by compiled source | **3** (`button-demo`, `badge-demo`, `switch-demo`) |
+| Demo keys carrying native code | 101 |
+| With ≥1 native snippet from a compiled file | **5** (`button`, `badge`, `switch`, `chart`, `direction-provider`) |
+| Compiled native snippets | 13 |
 | Still hand-written in `platform-code.ts` | 97 keys / **290 snippets** |
-| Declared compositions (non-ports shown deliberately) | 21 |
+| Angular examples, all compiler-extracted | 33 |
 
-The article's "three of a hundred demo examples have moved so far" is **current**
-at freeze. It is the fastest-ageing line in the piece.
+The article's migration line is the fastest-ageing sentence in the piece. It read
+"three of a hundred" at the 2026-09-23 freeze and is **five** as of 2026-09-24 —
+one day, one change. `verify-package.mjs` now fails the package when it drifts
+again, so this does not have to be caught by eye.
 
 ## Historical vs current — never mix these
 
 The article quotes the audit *as it stood*, in past tense, tied to commits.
 Current figures appear only in the "ours, today" paragraph.
 
-| Figure | Historical (commit) | Current |
+| Figure | Historical (commit) | Current (`dfd0d81`) |
 | --- | --- | --- |
-| SwiftUI · Compose · Flutter | 91 · 90 · 91 (`34e5b06~1`) | 90 · 89 · 90 |
-| On all four | 90 (`34e5b06~1`) | 89 |
+| SwiftUI · Compose · Flutter | 91 · 90 · 91 (`34e5b06~1`) | 90 · 90 · 90 |
+| On all four | 90 (`34e5b06~1`) | 90 |
 | Snippets in `platform-code.ts` | 300 (`c3de388~1`) | 290 |
 | Symbols used SwiftUI/Compose/Flutter | 164 / 182 / 175 (`c3de388~1`) | not re-counted; 0 unknown |
 | Unknown Compose symbols | 3 (`c3de388~1`) | 0 |
-| Demo keys from compiled source | 0 | 3 |
+| Demo keys from compiled source | 0 | 5 |
+| `chart` on Compose | no (`c3de388`) | yes (`b604bbc`) |
 
 **Do not refresh the historical column.** Replacing 91/90/91 with today's
 numbers would destroy the before/after that the article rests on.
+
+**The all-four figure now reads 90 in both columns, and that is not an error.**
+The correction took it 90 → 89; a Compose chart written afterwards took it back
+to 90. The article says this explicitly rather than leaving a reader to notice
+that its "before" and its "today" agree. Same number, different reason — one was
+a claim, the other is an implementation.
 
 ## Re-verification, 2026-09-23
 

@@ -175,19 +175,23 @@ If 4 has no answer, 1–3 will drift.
 
 We shipped a fifth platform and the homepage diagram still said "four."
 
-Not a typo — a hard-coded array nothing checked. It had been wrong for weeks
-while the number right next to it was generated and correct.
+Not a typo — a hard-coded array nothing checked. It was wrong for two days. It
+had been unchecked for nineteen, and no build, test or check could have told
+you which of those it was on any given morning. The figure printed beside it
+was generated, and had already corrected itself.
 
-Now the diagram reads the same manifest as everything else. The lesson is
-boring and keeps being true: a number nothing regenerates is a number that is
-already drifting.
+Now the diagram reads the same manifest. A number nothing regenerates is not
+wrong yet — it is unverified. Those look identical right up until they don't.
 
 ---
 
 ## Notes
 
 - S4 is the only one that admits a mistake, and it is the most likely to travel.
-  It is also true: the fan hard-coded its platform list until #213.
+  The dates are exact and must stay that way: `0e59f5e` (2026-09-05) wrote the
+  hard-coded array, `34e5b06` (2026-09-22) made it wrong, `e071578` (2026-09-24,
+  #213) fixed it. An earlier draft said "wrong for weeks", which was false by a
+  factor of ten — in a campaign about unverified claims, of all places.
 - S1 is the most quotable and the least explanatory — pair it with the thread,
   not alone, if engagement is the goal.
 - None of the four repeat a01's parity-proof framing.

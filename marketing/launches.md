@@ -70,8 +70,8 @@ that does not convert wastes the one launch you get.
 - **Assets needed:** homepage screenshot (light + dark) · flagship demo GIF ·
   token pipeline diagram · platform coverage table · CLI install clip.
 - **FAQ:** Is this React Native? (No.) Do I have to use all of it? (No — tokens
-  only is a supported path.) Is Angular ready? (Preview, 11 of 98, stated
-  everywhere.) What is the licence? (MIT.) Is there a paid tier? (Not yet.)
+  only is a supported path.) Is Angular ready? (Preview, 31 of 98, stated
+  everywhere, and not published to npm.) What is the licence? (MIT.) Is there a paid tier? (Not yet.)
 
 **No testimonials.** None exist. Engineering proof only.
 

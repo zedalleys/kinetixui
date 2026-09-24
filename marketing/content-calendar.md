@@ -17,7 +17,7 @@ Everything below maps to work that has actually happened in this repository.
 | 1 (Mon) | DEV + LinkedIn | **Article 1:** "Your cross-platform design system is probably lying about parity" — the `direction-provider` and `chart-demo` findings, and the checks that caught them | A |
 | 2 | X | Thread: the three guardrails, what each one caught, with the real before/after counts | A |
 | 3 (Wed) | LinkedIn | Diagram: DTCG source → five token outputs → five separate implementations | B |
-| 4 | X | Short: "98 components is not the interesting number. 89/98 verified on four platforms is." | A |
+| 4 | X | Short: "98 components is not the interesting number. 90 of 98 on the four catalogue-complete platforms is." — a02 `x_numbers` | A |
 | 5 (Fri) | X + LinkedIn | Build-in-public: what shipped this week, what broke, what the CI caught | E |
 
 ## Week 2 — Tokens as the real product

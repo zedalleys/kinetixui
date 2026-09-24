@@ -80,10 +80,12 @@ before-state and including it invites a false comparison.
 exists → it compiles. Annotate Level 0 with *"feels like validation — has a
 script, runs in CI, goes green"*.
 
-**D — The Chart snippet.** Code card of the real snippet with two callouts:
-`KinetixChart` → *no such symbol*, `CustomPaint` → *this is a Flutter API*.
-Referenced by X post 6. Draw the "Android" tab rather than screenshotting it —
-the tab no longer exists.
+**D — The Chart snippet.** Code card of the *removed* snippet with two callouts:
+`KinetixChart` → *no such symbol at the time*, `CustomPaint` → *this is a Flutter
+API*. Referenced by X post 6. Draw the "Android" tab rather than screenshotting
+it: a Compose chart has since been written, so the page now has a real Android
+tab, and a screenshot would show working code beside a caption calling it
+fiction.
 
 **E — 30-second demo clip.** Terminal only, no voiceover: add a platform to a
 component with no source → `pnpm check:platform-source` → it fails by name →
@@ -118,8 +120,8 @@ general landscape slot, optional `1080 × 1080` square. PNG. Light and dark.
 
 ## Never make
 
-- A parity grid of ✅ across platforms. Coverage varies per component — 89 of 98
-  on four platforms, and Angular at 11. A row of checkmarks is the visual form
+- A parity grid of ✅ across platforms. Coverage varies per component — 90 of 98
+  on four platforms, and Angular at 31. A row of checkmarks is the visual form
   of exactly the claim this campaign is about.
 - Any chart of stars, downloads or users. None are known.
 - Angular shown alongside the other four without its preview label.

@@ -13,10 +13,13 @@ Every factual claim in the a02 package, mapped to the file that produces it.
 Regenerate with **`pnpm marketing:stats`**; it prints all of this from the
 generated sources in one pass.
 
-Nothing here was carried over from a previous campaign or from memory. a01's
-ledger records the state at *its* writing (89/98, Angular 11, Compose 89) — that
-is its historical evidence and it is correct for a01. **Do not reuse a01's
-numbers here**; several have moved.
+Nothing here was carried over from a previous campaign or from memory. a01 has
+since been re-baselined too, so the two packages now state the same *current*
+figures — but a01 additionally carries frozen before/after evidence (SwiftUI
+91 → 90, Compose 90 → 89, Flutter 91 → 90, all-four 90 → 89) that is pinned to
+commit `34e5b06` and is **not** a description of today. **Never quote an a01
+number here.** Re-derive from the sources below instead; the two packages agree
+because both read the manifest, not because either copied the other.
 
 ## Current-state facts — all volatile, all regenerate
 
@@ -75,8 +78,9 @@ Used only in the standalone post S4, and framed as past events:
 | --- | --- |
 | The homepage fan hard-coded four platforms while Angular was already shipping | PR #213, `apps/web/src/components/hero-token-fan.tsx` before/after; the list was `["React","SwiftUI","Compose","Flutter"]` and the eyebrow read "one token → four platforms" |
 
-Do not present a historical figure as a current one. a01's 89/98 and Angular 11
-belong to a01's moment and must not appear in a02 copy.
+Do not present a historical figure as a current one. a01's before/after numbers
+belong to the correction it describes, and must not appear in a02 copy at all —
+a02 has no historical column, and every figure it prints is current by default.
 
 ## Not claimed anywhere in this package
 

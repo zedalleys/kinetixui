@@ -88,9 +88,11 @@ These get collapsed into one word constantly. Our React package is stable; the
 evidence behind the React catalogue is at beta. Both are true, and they answer
 different questions.
 
-**4. What would fail if the claim became false?**
-This is the one that matters. If a platform count is a number someone typed,
-nothing catches it when it drifts. If it is generated, something does.
+**4. When this number goes stale, what notices?**
+This is the one that matters, and it is a question about time rather than
+truth. Every figure above is correct today. The one that will still be correct
+in six months is the one something regenerates; the rest are only correct for
+now, and nothing distinguishes the two from the outside.
 
 None of these are hostile questions. They are the questions a maintainer should
 already be able to answer about their own system — and the ones I now expect to
@@ -101,6 +103,9 @@ be asked about ours: kinetixui.com/docs/platforms
 ## Notes
 
 - Alternate link uses `utm_content=li_alt` so the two variants stay separable.
-- Question 4 is the bridge back to a01 without restating it: a01 argued parity
-  claims need proof, this asks what *breaks* when the claim goes stale.
+- Question 4 is the bridge back to a01 and must not become an echo of it. a01's
+  signature line is "what would fail if this claim were false?"; an earlier draft
+  here read "what would fail if the claim became false?", which is the same
+  sentence to anyone who saw both. It now asks a different question — not
+  whether a claim is true, but whether anything would notice it ageing.
 - Still no competitor named. The checklist points at us last, on purpose.
