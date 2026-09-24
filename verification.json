@@ -20,7 +20,7 @@
   "totals": {
     "React": {
       "build": 98,
-      "interaction": 21,
+      "interaction": 23,
       "accessibility": 98,
       "rtl": 3,
       "largeText": 0,
@@ -207,6 +207,18 @@
           "switch",
           "tabs",
           "tour",
+          "tree-view"
+        ]
+      },
+      {
+        "file": "packages/ui/src/components-lifecycle.test.tsx",
+        "kinds": [
+          "interaction"
+        ],
+        "components": [
+          "color-picker",
+          "json-viewer",
+          "markdown-editor",
           "tree-view"
         ]
       },
@@ -1330,7 +1342,8 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:995-1113"
+          "packages/ui/src/components-keyboard.test.tsx:995-1113",
+          "packages/ui/src/components-lifecycle.test.tsx:20-174"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -2161,6 +2174,9 @@
         "build": [
           "packages/ui (compiled by CI)"
         ],
+        "interaction": [
+          "packages/ui/src/components-lifecycle.test.tsx:20-174"
+        ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:28-362"
@@ -2327,6 +2343,9 @@
       "React": {
         "build": [
           "packages/ui (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui/src/components-lifecycle.test.tsx:20-174"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -3999,7 +4018,8 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:220-435"
+          "packages/ui/src/components-keyboard.test.tsx:220-435",
+          "packages/ui/src/components-lifecycle.test.tsx:20-174"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",

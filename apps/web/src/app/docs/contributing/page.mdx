@@ -82,11 +82,66 @@ documented**, not silently skipped — e.g. `KinetixSheet` is bottom-only,
 
 ## Component status
 
-Every component has an explicit lifecycle status — nothing is `stable` by
-omission. A component ships `beta` for the release cycle it lands in — still
-required to be on all four catalogue-complete platforms (or a documented
-non-port) and CI-verified like everything else; `beta` here means "new," not "incomplete."
-It moves to `stable` once it's shipped a full cycle with no reported issues.
+KinetixUI tracks three different things, and they are not the same. Printing one
+where a reader would take it for another is how `stable` came to mean nothing:
+
+| | Question it answers | Where it lives |
+| --- | --- | --- |
+| **Component lifecycle** | Is this component's API settled? | `status` in `components.manifest.json` |
+| **Package maturity** | Is this platform's package a finished product? | `platformDefinitions[].maturity` |
+| **Implementation verification** | What do automated tests prove about this implementation? | `verification.json`, derived from the tests |
+
+None is derived from another. `@kinetixui/ui` is a **stable, published package**
+whose catalogue's **verification is beta**, containing components whose
+**lifecycle is stable** — three true statements that one word cannot make. See
+[Supported platforms](/docs/platforms) for the other two; this section is about
+lifecycle only.
+
+### What lifecycle Beta means
+
+The component ships and is CI-compiled like everything else, but something about
+its **product or API** is unresolved — and that reason is recorded in the
+manifest as `lifecycleReason`. `pnpm check:manifest` fails on a beta component
+without one, and on a stable component that still carries one.
+
+Beta is **not** a waiting room. It used to be: the rule was "beta for the release
+cycle it lands in, stable once it's shipped a cycle with no reported issues,"
+which meant twelve components introduced in 0.12.0 were still beta at 0.22.1.
+That made the label a record of an unrun chore rather than a statement about the
+API. Time in beta is a reason to **review** a component; it is never the reason
+to promote one.
+
+### What lifecycle Stable means
+
+A component graduates when all of these hold:
+
+1. its purpose is clear and its anatomy is settled;
+2. its public API is coherent and follows the shared conventions — `value` /
+   `defaultValue` / `onValueChange`, `disabled`, `size`, `variant`;
+3. it works controlled **and** uncontrolled where it carries a value;
+4. the API is unlikely to need a redesign;
+5. keyboard behaviour is defined where applicable;
+6. the accessibility contract is intentional — roles, names, states, focus;
+7. RTL behaviour is understood where relevant;
+8. empty, error, loading and disabled states are defined where relevant;
+9. the docs let someone use it without reading the source;
+10. no known P0/P1 product or API defect remains;
+11. the cross-platform adaptation strategy is understood and documented honestly.
+
+Lifecycle Stable deliberately does **not** require verification Stable, visual
+regression on every platform, published native packages, or an Angular
+implementation. A component can be lifecycle stable while its SwiftUI port is
+verified only to `experimental`: one statement is about the API, the other about
+evidence.
+
+### Breaking changes before 1.0
+
+While a component is Beta, a bad API is corrected rather than preserved —
+directly, with a Changeset explaining why the old shape was unsuitable. That is
+what Beta is for. Carrying a compatibility alias to 1.0 to avoid a rename costs
+more than the rename. Once a component is Stable, a breaking change needs a
+deprecation path.
+
 `deprecated` is reserved for a component being phased out; nothing has been
 deprecated yet.
 
@@ -96,9 +151,12 @@ the repo root. `pnpm gen:manifest` derives `component-status.json` and
 parity` read those), and `pnpm check:manifest` in CI fails if a component is
 missing, a status is invalid, a platform gap has no `platformNote` or no
 `platformGuidance`, or the generated files are stale. The data drives the `/components` gallery
-badges/filter and the `<ComponentMeta>` spec strip on each doc page. When you
-cut a release, flip the previous cycle's `beta` entries to `stable` before
-adding the new one's.
+badges/filter and the `<ComponentMeta>` spec strip on each doc page.
+
+Promotion is a judgement against the gate above, made when the blocker in a
+component's `lifecycleReason` is actually resolved — not a release-day chore.
+`pnpm report:beta` lists every beta component with its lifecycle blocker and,
+separately, its verification gaps.
 
 ## Workflow for a new component
 

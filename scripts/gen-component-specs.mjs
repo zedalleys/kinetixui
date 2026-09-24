@@ -272,4 +272,21 @@ const indexText =
 writeFileSync(`${OUT}/index.json`, indexText);
 writeFileSync(`${PUBLIC_OUT}/index.json`, indexText);
 
-console.log(`component-specs — ${covered.length} of ${total} components covered`);
+/**
+ * Every registry component must end up with a spec, or be a declared companion that ships inside another
+ * component's file. Without this the generator would quietly skip a component whose source it could not
+ * parse, and its docs page would render no API table at all — which reads as "this component takes no
+ * props", the most confident way to be wrong.
+ *
+ * The spec files themselves are in CI's generated-output gate, so a prop added to the source without
+ * regenerating fails there. This covers the other direction: a component the generator never saw.
+ */
+const missing = Object.entries(manifest)
+  .filter(([name, m]) => m.registry !== false && !covered.includes(name) && !companions.includes(name))
+  .map(([name]) => name);
+if (missing.length) {
+  console.error(`  x no spec generated for ${missing.join(", ")} — the docs page would show an empty API.`);
+  process.exit(1);
+}
+
+console.log(`component-specs — ${covered.length} of ${total} components covered, ${companions.length} companions`);

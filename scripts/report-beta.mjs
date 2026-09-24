@@ -52,35 +52,44 @@ const beta = Object.entries(manifest.components)
         ];
       }),
     ),
-    /** A component with no docs page cannot be graduated: nothing documents the API being called settled. */
-    blockers: [
-      ...(c.platformGuidance?.Angular?.type === "planned" ? [] : []),
-    ],
+    /**
+     * Why this component's PRODUCT or API is still beta, in its own words, from the manifest.
+     *
+     * Verification gaps are reported separately below and are never listed here. A component can be
+     * lifecycle stable with an experimental SwiftUI implementation: one statement is about whether the API
+     * is settled, the other about how much automated evidence stands behind a port. Conflating them is how
+     * "beta" came to mean "nobody ran the release chore".
+     */
+    lifecycleBlocker: c.lifecycleReason ?? null,
   }));
-
-// The documentation blocker is a fact about the repository, so it is derived rather than asserted.
-for (const entry of beta) {
-  const uncovered = entry.implementations.filter((p) => (entry.perPlatform[p].verification ?? "") === "experimental");
-  if (uncovered.length) entry.blockers.push(`compile-only on ${uncovered.join(", ")}`);
-  const noA11y = entry.implementations.filter((p) => !entry.perPlatform[p].has.includes("accessibility"));
-  if (noA11y.length) entry.blockers.push(`no accessibility evidence on ${noA11y.join(", ")}`);
-}
 
 if (JSON_OUT) {
   console.log(JSON.stringify({ total: beta.length, stableNeeds: STABLE_NEEDS, components: beta }, null, 2));
+} else if (!beta.length) {
+  console.log("\nNo components are lifecycle beta.\n");
 } else {
-  console.log(`\n${beta.length} components have lifecycle "beta". Verification is a separate axis — both are shown.\n`);
+  console.log(`\n${beta.length} component(s) have lifecycle "beta".\n`);
+  console.log("Lifecycle blockers are about the product and the API. Verification gaps are about how much");
+  console.log("automated evidence stands behind each port — a verification gap is NOT a reason to stay beta.\n");
   for (const e of beta) {
-    console.log(`${e.slug}  (since ${e.since})`);
-    console.log(`  implementations: ${e.implementations.join(", ")}`);
-    const guidance = Object.entries(e.guidance);
-    if (guidance.length) console.log(`  guidance:        ${guidance.map(([p, t]) => `${p} ${t}`).join(", ")}`);
+    console.log(`${"=".repeat(70)}`);
+    console.log(`${e.slug}  —  lifecycle beta since ${e.since}\n`);
+    console.log("  Lifecycle blockers");
+    const reason = e.lifecycleBlocker ?? "none recorded — that is itself a gap";
+    for (const line of reason.split(". ")) {
+      if (line.trim()) console.log(`    - ${line.trim().replace(/\.$/, "")}`);
+    }
+    console.log("\n  Verification gaps (not lifecycle blockers)");
     for (const p of e.implementations) {
       const v = e.perPlatform[p];
-      console.log(`    ${p.padEnd(9)} package ${v.packageMaturity.padEnd(11)} verification ${String(v.verification).padEnd(13)} missing for stable: ${v.missingForStable.join(", ") || "nothing"}`);
+      const missing = v.missingForStable.filter((k) => k !== "published");
+      console.log(
+        `    ${p.padEnd(9)} verification ${String(v.verification).padEnd(13)} ${missing.length ? `missing: ${missing.join(", ")}` : "complete"}`,
+      );
     }
-    if (e.blockers.length) console.log(`  blockers:        ${e.blockers.join("; ")}`);
+    const guidance = Object.entries(e.guidance);
+    if (guidance.length) console.log(`\n  Platform guidance: ${guidance.map(([p, t]) => `${p} ${t}`).join(", ")}`);
     console.log("");
   }
-  console.log("Lifecycle statuses are unchanged by this report. Graduating one is the next PR's decision.\n");
+  console.log("Lifecycle statuses are unchanged by this report — graduating one is a deliberate decision.\n");
 }

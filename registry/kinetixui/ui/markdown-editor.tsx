@@ -5,9 +5,14 @@ import { Bold, Code, Eye, EyeOff, Heading2, Italic, Link as LinkIcon, List, List
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 
-export interface MarkdownEditorProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "children" | "onChange"> {
-  value: string;
-  onChange: (value: string) => void;
+export interface MarkdownEditorProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "children" | "onChange" | "defaultValue"> {
+  /** the markdown source. Controlled: pass `onValueChange` with it. */
+  value?: string;
+  /** starting markdown when the editor manages its own buffer. Ignored once `value` is passed. */
+  defaultValue?: string;
+  /** called with the full markdown after every edit — the name every other KinetixUI value control uses */
+  onValueChange?: (value: string) => void;
   placeholder?: string;
   rows?: number;
 }
@@ -163,10 +168,26 @@ function renderMarkdown(source: string): string {
  * this ports cleanly to all four platforms instead.
  */
 const MarkdownEditor = React.forwardRef<HTMLDivElement, MarkdownEditorProps>(
-  ({ value, onChange, placeholder, rows = 10, className, "aria-label": ariaLabel = "Markdown", ...props }, ref) => {
+  (
+    { value, defaultValue = "", onValueChange, placeholder, rows = 10, className, "aria-label": ariaLabel = "Markdown", ...props },
+    ref,
+  ) => {
     const textareaRef = React.useRef<HTMLTextAreaElement>(null);
     const [showPreview, setShowPreview] = React.useState(false);
     const pendingSelection = React.useRef<{ start: number; end: number } | null>(null);
+    /**
+     * One buffer. `value` wins when passed; otherwise `internal` is the source of truth, and every write
+     * goes through `setValue` so the toolbar, the textarea and the preview can never disagree.
+     */
+    const [internal, setInternal] = React.useState(defaultValue);
+    const text = value ?? internal;
+    const setValue = React.useCallback(
+      (next: string) => {
+        setInternal(next);
+        onValueChange?.(next);
+      },
+      [onValueChange],
+    );
 
     React.useEffect(() => {
       if (pendingSelection.current && textareaRef.current) {
@@ -175,22 +196,22 @@ const MarkdownEditor = React.forwardRef<HTMLDivElement, MarkdownEditorProps>(
         textareaRef.current.setSelectionRange(start, end);
         pendingSelection.current = null;
       }
-    }, [value]);
+    }, [text]);
 
     const applyInline = (before: string, after: string, placeholder: string) => {
       const el = textareaRef.current;
       if (!el) return;
-      const result = wrapSelection(value, el.selectionStart, el.selectionEnd, before, after, placeholder);
+      const result = wrapSelection(text, el.selectionStart, el.selectionEnd, before, after, placeholder);
       pendingSelection.current = { start: result.selectionStart, end: result.selectionEnd };
-      onChange(result.text);
+      setValue(result.text);
     };
 
     const applyLinePrefix = (prefix: (lineIndex: number) => string) => {
       const el = textareaRef.current;
       if (!el) return;
-      const result = prefixLines(value, el.selectionStart, el.selectionEnd, prefix);
+      const result = prefixLines(text, el.selectionStart, el.selectionEnd, prefix);
       pendingSelection.current = { start: result.selectionStart, end: result.selectionEnd };
-      onChange(result.text);
+      setValue(result.text);
     };
 
     return (
@@ -232,8 +253,8 @@ const MarkdownEditor = React.forwardRef<HTMLDivElement, MarkdownEditorProps>(
         <div className={cn("grid", showPreview && "grid-cols-2 divide-x")}>
           <Textarea
             ref={textareaRef}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
+            value={text}
+            onChange={(e) => setValue(e.target.value)}
             placeholder={placeholder}
             rows={rows}
             aria-label={ariaLabel}
@@ -246,7 +267,7 @@ const MarkdownEditor = React.forwardRef<HTMLDivElement, MarkdownEditorProps>(
               // source text before inserting any markup — safe from
               // injection, same trust boundary as any other self-generated
               // innerHTML (not raw user HTML).
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(value) }}
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(text) }}
             />
           )}
         </div>

@@ -53,10 +53,16 @@ function publishedVersion(pkg) {
 const packages = ["@kinetixui/ui", "@kinetixui/cli", "@kinetixui/tokens", "@kinetixui/angular"];
 const publication = Object.fromEntries(packages.map((p) => [p, publishedVersion(p)]));
 
+/** Component LIFECYCLE — is each component's API settled? Not verification, and not package maturity. */
+const status = read("component-status.json").status;
+const lifecycle = Object.values(status).reduce((acc, v) => ({ ...acc, [v]: (acc[v] ?? 0) + 1 }), {});
+for (const level of ["stable", "beta", "deprecated"]) lifecycle[level] ??= 0;
+
 const stats = {
   version: ui.version,
   license: ui.license,
   componentTotal,
+  lifecycle,
   platforms: Object.fromEntries(
     Object.entries(defs).map(([name, d]) => [
       name,
@@ -88,6 +94,10 @@ if (JSON_OUT) {
 } else {
   console.log(`\nKinetixUI — verified numbers (v${stats.version}, ${stats.license})\n`);
   console.log(`Components: ${componentTotal}`);
+  console.log(
+    `  lifecycle: ${lifecycle.stable} stable, ${lifecycle.beta} beta, ${lifecycle.deprecated} deprecated` +
+      `  (is the API settled — not the same question as verification below)`,
+  );
   for (const [name, p] of Object.entries(stats.platforms)) {
     const tag = p.packageMaturity === "stable" ? "" : `  [package ${p.packageMaturity}]`;
     console.log(`  ${p.label.padEnd(16)} ${String(p.components).padStart(3)} / ${componentTotal}  (${p.family})${tag}`);

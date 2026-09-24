@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ComponentPreview } from "@/components/component-preview";
+import { ComponentApi } from "@/components/component-api";
 import { ComponentMeta } from "@/components/component-meta";
 import { Callout } from "@/components/callout";
 import { Steps, Step } from "@/components/steps";
@@ -88,6 +89,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     td: (p) => <td className="border border-border px-4 py-2" {...p} />,
     pre: CodePre,
     ComponentPreview,
+    ComponentApi,
     ComponentMeta,
     Callout,
     Steps,

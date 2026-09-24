@@ -118,6 +118,19 @@ for (const [s, c] of Object.entries(manifest.components)) {
     if (slugs.includes(s)) errors.push(`${s}: marked registry:false but is a registry item`);
   } else if (!slugs.includes(s)) errors.push(`${s}: in manifest but not a registry component (set registry:false for a docs-only companion)`);
   if (!STATUSES.has(c.status)) errors.push(`${s}: invalid status "${c.status}"`);
+  /**
+   * A beta component must say why it is beta, and a stable one must not carry a stale reason.
+   *
+   * Until now `beta` meant "shipped this cycle, promote next one" — all twelve beta components landed in
+   * 0.12.0 and were still beta at 0.22.1, which made the label mean "nobody ran the chore" rather than
+   * anything about the API. A required reason is what stops that from being possible again.
+   */
+  if (c.status === "beta" && (c.lifecycleReason ?? "").length < 40) {
+    errors.push(`${s}: is lifecycle beta but has no lifecycleReason — say what about its product or API is unresolved, or promote it`);
+  }
+  if (c.status !== "beta" && c.lifecycleReason) {
+    errors.push(`${s}: is "${c.status}" but still carries a lifecycleReason — delete it`);
+  }
   if (!/^\d+\.\d+\.\d+$/.test(c.since ?? "")) errors.push(`${s}: since must be a semver like "0.4.1" (the release it first shipped in)`);
   if (!Array.isArray(c.platforms) || !c.platforms.includes("React")) errors.push(`${s}: platforms must be a list including React`);
   else for (const p of c.platforms) if (!known.has(p)) errors.push(`${s}: unknown platform "${p}" (known: ${platforms.join(", ")})`);
