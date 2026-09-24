@@ -9,7 +9,7 @@ const Demo = () => {
     return (
       <ColorPicker
         value={color}
-        onChange={setColor}
+        onValueChange={setColor}
         swatches={["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899"]}
       />
     );
@@ -19,7 +19,7 @@ const meta = {
   title: "Form Inputs/ColorPicker",
   parameters: {
     layout: "centered",
-    docs: { source: { code: "<ColorPicker\\n  value={color}\\n  onChange={setColor}\\n  swatches={[\"#ef4444\", \"#f97316\", \"#eab308\", \"#22c55e\", \"#3b82f6\"]}\\n/>", language: "tsx" } },
+    docs: { source: { code: "<ColorPicker\\n  value={color}\\n  onValueChange={setColor}\\n  swatches={[\"#ef4444\", \"#f97316\", \"#eab308\", \"#22c55e\", \"#3b82f6\"]}\\n/>", language: "tsx" } },
   },
 } satisfies Meta;
 

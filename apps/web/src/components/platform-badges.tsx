@@ -1,15 +1,22 @@
 import { cn } from "@/lib/utils";
-import { PLATFORMS, PLATFORM_ABBR, platformsFor } from "@/lib/platform-parity";
+import { CATALOG_PLATFORMS, PLATFORMS, PLATFORM_ABBR, PLATFORM_DEFINITIONS, platformsFor } from "@/lib/platform-parity";
 
 /**
- * Row of platform tags — solid where a native library carries the component,
- * dimmed + struck through where it doesn't. Decorative; the group carries one
- * summary label for assistive tech.
+ * Row of platform tags — solid where a library carries the component, dimmed + struck through where it
+ * doesn't. Decorative; the group carries one summary label for assistive tech.
+ *
+ * The summary used to read "On all four platforms" when a component was on every declared platform. That
+ * sentence was a hard-coded count AND a hard-coded meaning, and both broke when Angular was declared: the
+ * number was wrong, and "every platform" started requiring a preview platform still rolling out. It now says
+ * how many of the catalogue-complete platforms carry the component, and names the rest.
  */
 export function PlatformBadges({ slug, className }: { slug: string; className?: string }) {
   const on = new Set(platformsFor(slug));
-  const label =
-    on.size === PLATFORMS.length ? "On all four platforms" : `On ${[...on].join(", ")}`;
+  const complete = CATALOG_PLATFORMS.filter((p) => on.has(p)).length === CATALOG_PLATFORMS.length;
+  const extra = [...on].filter((p) => !CATALOG_PLATFORMS.includes(p));
+  const label = complete
+    ? `On all ${CATALOG_PLATFORMS.length} catalogue-complete platforms${extra.length ? `, and ${extra.map((p) => PLATFORM_DEFINITIONS[p].label).join(", ")}` : ""}`
+    : `On ${[...on].join(", ")}`;
   return (
     <span className={cn("flex flex-wrap gap-1", className)} role="img" aria-label={label}>
       {PLATFORMS.map((p) => {

@@ -86,6 +86,7 @@ export const componentDocs: NavItem[] = [
   built("Description List", "description-list"),
   built("Dialog", "dialog"),
   built("Diff Viewer", "diff-viewer"),
+  built("Direction Provider", "direction-provider"),
   built("Drawer", "drawer"),
   built("Dropdown Menu", "dropdown-menu"),
   built("Empty", "empty"),
@@ -157,7 +158,7 @@ export const componentDocs: NavItem[] = [
 export const COMPONENT_CATEGORY: Record<string, string> = {
   "aspect-ratio": "Foundations", separator: "Foundations", skeleton: "Foundations",
   spinner: "Foundations", label: "Foundations", image: "Foundations", "code-block": "Foundations",
-  kbd: "Foundations",
+  kbd: "Foundations", "direction-provider": "Foundations",
 
   input: "Form Inputs", textarea: "Form Inputs", checkbox: "Form Inputs", "radio-group": "Form Inputs",
   select: "Form Inputs", "native-select": "Form Inputs", "multi-select": "Form Inputs", slider: "Form Inputs", switch: "Form Inputs", "input-otp": "Form Inputs",

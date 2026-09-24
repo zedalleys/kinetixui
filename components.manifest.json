@@ -1,6 +1,6 @@
 {
   "$schema": "https://kinetixui.com/schema/components-manifest.json",
-  "$description": "Every KinetixUI component and where it is really implemented. platformDefinitions is the ONE place a platform is declared — its family (web/native), label, abbreviation and whether its catalogue is complete. Everything downstream (platform-parity.json, component-status.json, the website, CI guardrails) derives from this file; nothing re-declares the platform list. A component lists only platforms whose source actually exists — scripts/check-platform-source.mjs verifies that against the packages.",
+  "$description": "Every KinetixUI component and where it is really implemented. platformDefinitions is the ONE place a platform is declared — its family (web/native), label, abbreviation, whether its catalogue is complete, its declared PACKAGE maturity and how it is distributed. Package maturity is a product decision about the offering; how well each implementation is VERIFIED is a separate, derived value in verification.json, and the two must never be collapsed into one word. Everything downstream (platform-parity.json, component-status.json, the website, CI guardrails) derives from this file; nothing re-declares the platform list. A component lists only platforms whose source actually exists (that is what parity counts), and platformGuidance says what to show for every platform it is NOT on — a native equivalent, a composition, or a planned Angular wave — so no platform tab is ever blank or invented — scripts/check-platform-source.mjs verifies that against the packages.",
   "platformDefinitions": {
     "React": {
       "family": "web",
@@ -9,7 +9,13 @@
       "maturity": "stable",
       "catalogComplete": true,
       "package": "@kinetixui/ui",
-      "dir": "packages/ui"
+      "dir": "packages/ui",
+      "distribution": {
+        "channel": "npm",
+        "coordinate": "@kinetixui/ui",
+        "published": true,
+        "note": "Also installable as source with `npx @kinetixui/cli add`."
+      }
     },
     "Angular": {
       "family": "web",
@@ -18,7 +24,13 @@
       "maturity": "preview",
       "catalogComplete": false,
       "package": "@kinetixui/angular",
-      "dir": "packages/ui-angular"
+      "dir": "packages/ui-angular",
+      "distribution": {
+        "channel": "npm",
+        "coordinate": "@kinetixui/angular",
+        "published": false,
+        "note": "Built and tested in CI, not yet published. publish is part of the Angular Stable gate."
+      }
     },
     "SwiftUI": {
       "family": "native",
@@ -27,7 +39,13 @@
       "maturity": "stable",
       "catalogComplete": true,
       "package": "KinetixUI",
-      "dir": "packages/ui-swiftui"
+      "dir": "packages/ui-swiftui",
+      "distribution": {
+        "channel": "Swift Package Manager",
+        "coordinate": "kinetix-ui-swift mirror",
+        "published": false,
+        "note": "publish-swiftui.yml splits packages/ui-swiftui to a mirror repo; it needs SWIFTUI_MIRROR_REPO and has never been run for real."
+      }
     },
     "Compose": {
       "family": "native",
@@ -36,7 +54,13 @@
       "maturity": "stable",
       "catalogComplete": true,
       "package": "com.kinetixui:ui-compose",
-      "dir": "packages/ui-compose"
+      "dir": "packages/ui-compose",
+      "distribution": {
+        "channel": "Maven Central",
+        "coordinate": "com.kinetixui:ui-compose",
+        "published": false,
+        "note": "publish-compose.yml stages to the Central Portal; it needs four signing/credential secrets and defaults to a dry run."
+      }
     },
     "Flutter": {
       "family": "native",
@@ -45,7 +69,13 @@
       "maturity": "stable",
       "catalogComplete": true,
       "package": "kinetix_ui",
-      "dir": "packages/ui-flutter"
+      "dir": "packages/ui-flutter",
+      "distribution": {
+        "channel": "pub.dev",
+        "coordinate": "kinetix_ui",
+        "published": false,
+        "note": "publish-flutter.yml publishes to pub.dev; it needs PUB_DEV_CREDENTIALS and defaults to a dry run."
+      }
     }
   },
   "components": {
@@ -57,7 +87,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "layout"
+        }
+      }
     },
     "alert": {
       "status": "stable",
@@ -78,7 +114,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
+      }
     },
     "app-bar": {
       "status": "stable",
@@ -88,13 +130,20 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "layout"
+        }
+      }
     },
     "aspect-ratio": {
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -108,13 +157,20 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "advanced"
+        }
+      }
     },
     "avatar": {
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -123,11 +179,26 @@
     "avatar-group": {
       "status": "stable",
       "since": "0.10.0",
-      "registry": false,
       "platforms": [
-        "React"
+        "React",
+        "Angular"
       ],
-      "platformNote": "standing non-port — re-wraps its children, not idiomatic on native platforms; compose an Avatar row directly"
+      "registry": false,
+      "platformNote": "standing non-port — re-wraps its children, not idiomatic on native platforms; compose an Avatar row directly",
+      "platformGuidance": {
+        "SwiftUI": {
+          "type": "composition",
+          "reason": "AvatarGroup re-wraps its children, which no native layout system does — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset."
+        },
+        "Compose": {
+          "type": "composition",
+          "reason": "AvatarGroup re-wraps its children, which no native layout system does — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset."
+        },
+        "Flutter": {
+          "type": "composition",
+          "reason": "AvatarGroup re-wraps its children, which no native layout system does — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset."
+        }
+      }
     },
     "badge": {
       "status": "stable",
@@ -148,7 +219,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "primitives"
+        }
+      }
     },
     "breadcrumb": {
       "status": "stable",
@@ -158,7 +235,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "navigation"
+        }
+      }
     },
     "button": {
       "status": "stable",
@@ -179,7 +262,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "primitives"
+        }
+      }
     },
     "calendar": {
       "status": "stable",
@@ -189,7 +278,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "advanced"
+        }
+      }
     },
     "card": {
       "status": "stable",
@@ -210,7 +305,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "layout"
+        }
+      }
     },
     "chart": {
       "status": "stable",
@@ -218,9 +319,15 @@
       "platforms": [
         "React",
         "SwiftUI",
+        "Compose",
         "Flutter"
       ],
-      "platformNote": "no Recharts equivalent wired for Compose yet"
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "data"
+        }
+      }
     },
     "checkbox": {
       "status": "stable",
@@ -241,7 +348,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "primitives"
+        }
+      }
     },
     "code-block": {
       "status": "stable",
@@ -251,7 +364,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "primitives"
+        }
+      }
     },
     "collapsible": {
       "status": "stable",
@@ -261,27 +380,57 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "layout"
+        }
+      }
     },
     "color-picker": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "advanced"
+        }
+      }
     },
     "combobox": {
       "status": "stable",
       "since": "0.4.1",
-      "registry": false,
       "platforms": [
         "React"
       ],
+      "registry": false,
+      "composition": "command",
       "platformNote": "not a component — a documented composition of Command (CommandInput/CommandList/CommandItem). There is no Combobox export on any platform; the recipe is React-only because Command is.",
-      "composition": "command"
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        },
+        "SwiftUI": {
+          "type": "composition",
+          "reason": "Combobox is a recipe over Command on the web, not a component anywhere — compose a popover with a filtered list, or use KinetixSelect for a fixed set."
+        },
+        "Compose": {
+          "type": "composition",
+          "reason": "Combobox is a recipe over Command on the web, not a component anywhere — compose a popover with a filtered list, or use KinetixSelect for a fixed set."
+        },
+        "Flutter": {
+          "type": "composition",
+          "reason": "Combobox is a recipe over Command on the web, not a component anywhere — compose a popover with a filtered list, or use KinetixSelect for a fixed set."
+        }
+      }
     },
     "command": {
       "status": "stable",
@@ -291,7 +440,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
+      }
     },
     "comparison-slider": {
       "status": "stable",
@@ -301,7 +456,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "layout"
+        }
+      }
     },
     "context-menu": {
       "status": "stable",
@@ -311,17 +472,29 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
+      }
     },
     "data-grid": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "data"
+        }
+      }
     },
     "data-table": {
       "status": "stable",
@@ -331,7 +504,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "data"
+        }
+      }
     },
     "date-picker": {
       "status": "stable",
@@ -341,7 +520,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "advanced"
+        }
+      }
     },
     "description-list": {
       "status": "stable",
@@ -351,7 +536,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "primitives"
+        }
+      }
     },
     "dialog": {
       "status": "stable",
@@ -361,17 +552,29 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
+      }
     },
     "diff-viewer": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "data"
+        }
+      }
     },
     "direction-provider": {
       "status": "stable",
@@ -379,7 +582,25 @@
       "platforms": [
         "React"
       ],
-      "platformNote": "React-only by design: the web needs a provider to thread direction through Radix, while SwiftUI (environment .layoutDirection), Compose (LocalLayoutDirection) and Flutter (Directionality) already carry layout direction in the framework itself. Nothing to port."
+      "platformNote": "React-only by design: the web needs a provider to thread direction through Radix, while SwiftUI (environment .layoutDirection), Compose (LocalLayoutDirection) and Flutter (Directionality) already carry layout direction in the framework itself. Nothing to port.",
+      "platformGuidance": {
+        "Angular": {
+          "type": "native-equivalent",
+          "reason": "The web platform already threads direction: set dir on an element and every descendant inherits it, and Angular CDK's Directionality reads that same attribute. @kinetixui/angular has no Radix-style provider to thread it through, so there is nothing for a component to add."
+        },
+        "SwiftUI": {
+          "type": "native-equivalent",
+          "reason": "SwiftUI carries layout direction in the environment. Set .environment(\\.layoutDirection, .rightToLeft) and every view below reads it — there is no provider to port."
+        },
+        "Compose": {
+          "type": "native-equivalent",
+          "reason": "Compose carries layout direction in a CompositionLocal. Provide LocalLayoutDirection and every composable below reads it — there is no provider to port."
+        },
+        "Flutter": {
+          "type": "native-equivalent",
+          "reason": "Flutter carries layout direction in the widget tree. Wrap a subtree in Directionality and every widget below reads it — there is no provider to port."
+        }
+      }
     },
     "drawer": {
       "status": "stable",
@@ -389,7 +610,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
+      }
     },
     "dropdown-menu": {
       "status": "stable",
@@ -399,13 +626,20 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
+      }
     },
     "empty": {
       "status": "stable",
       "since": "0.8.0",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -419,13 +653,20 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "primitives"
+        }
+      }
     },
     "field": {
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -439,7 +680,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "advanced"
+        }
+      }
     },
     "footer": {
       "status": "stable",
@@ -449,7 +696,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "layout"
+        }
+      }
     },
     "form": {
       "status": "stable",
@@ -457,7 +710,25 @@
       "platforms": [
         "React"
       ],
-      "platformNote": "standing non-port"
+      "platformNote": "standing non-port",
+      "platformGuidance": {
+        "Angular": {
+          "type": "native-equivalent",
+          "reason": "Angular ships its own form layer. ReactiveFormsModule gives the validation, state and submission handling that Form exists to wire up on React, and every @kinetixui/angular control implements ControlValueAccessor, so they bind to it directly. A KinetixUI form wrapper would be a second, worse form system."
+        },
+        "SwiftUI": {
+          "type": "composition",
+          "reason": "Form is react-hook-form glue with no native analogue. KinetixField and the platform's own state hold the same job."
+        },
+        "Compose": {
+          "type": "composition",
+          "reason": "Form is react-hook-form glue with no native analogue. KinetixField and the platform's own state hold the same job."
+        },
+        "Flutter": {
+          "type": "composition",
+          "reason": "Form is react-hook-form glue with no native analogue. KinetixField and the platform's own state hold the same job."
+        }
+      }
     },
     "hover-card": {
       "status": "stable",
@@ -467,7 +738,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
+      }
     },
     "image": {
       "status": "stable",
@@ -477,7 +754,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "primitives"
+        }
+      }
     },
     "inform": {
       "status": "stable",
@@ -487,7 +770,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "primitives"
+        }
+      }
     },
     "input": {
       "status": "stable",
@@ -508,7 +797,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "inputs"
+        }
+      }
     },
     "input-otp": {
       "status": "stable",
@@ -518,31 +813,62 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "inputs"
+        }
+      }
     },
     "json-viewer": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "data"
+        }
+      }
     },
     "kanban-board": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React"
       ],
-      "platformNote": "standing non-port — built on @dnd-kit; each native platform would need its own from-scratch accessible multi-container drag-and-drop implementation (no equivalent dependency exists in this repo's native packages)"
+      "platformNote": "standing non-port — built on @dnd-kit; each native platform would need its own from-scratch accessible multi-container drag-and-drop implementation (no equivalent dependency exists in this repo's native packages)",
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "advanced"
+        },
+        "SwiftUI": {
+          "type": "composition",
+          "reason": "KanbanBoard is built on @dnd-kit's accessible multi-container drag and drop, which has no equivalent dependency in the native packages — compose columns of KinetixCard with the platform's own drag gesture."
+        },
+        "Compose": {
+          "type": "composition",
+          "reason": "KanbanBoard is built on @dnd-kit's accessible multi-container drag and drop, which has no equivalent dependency in the native packages — compose columns of KinetixCard with the platform's own drag gesture."
+        },
+        "Flutter": {
+          "type": "composition",
+          "reason": "KanbanBoard is built on @dnd-kit's accessible multi-container drag and drop, which has no equivalent dependency in the native packages — compose columns of KinetixCard with the platform's own drag gesture."
+        }
+      }
     },
     "kbd": {
       "status": "stable",
       "since": "0.8.0",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -567,17 +893,29 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "primitives"
+        }
+      }
     },
     "markdown-editor": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "advanced"
+        }
+      }
     },
     "marquee": {
       "status": "stable",
@@ -587,7 +925,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "primitives"
+        }
+      }
     },
     "menubar": {
       "status": "stable",
@@ -597,23 +941,36 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "navigation"
+        }
+      }
     },
     "message-bubble": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "data"
+        }
+      }
     },
     "metric": {
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -627,25 +984,52 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
+      }
     },
     "multi-select": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
+      }
     },
     "native-select": {
       "status": "stable",
       "since": "0.9.0",
       "platforms": [
-        "React"
+        "React",
+        "Angular"
       ],
-      "platformNote": "standing non-port — KinetixSelect already wraps each platform's own native picker"
+      "platformNote": "standing non-port — KinetixSelect already wraps each platform's own native picker",
+      "platformGuidance": {
+        "SwiftUI": {
+          "type": "composition",
+          "reason": "NativeSelect wraps the browser's own <select>, a web-only escape hatch — KinetixSelect already renders each platform's native picker."
+        },
+        "Compose": {
+          "type": "composition",
+          "reason": "NativeSelect wraps the browser's own <select>, a web-only escape hatch — KinetixSelect already renders each platform's native picker."
+        },
+        "Flutter": {
+          "type": "composition",
+          "reason": "NativeSelect wraps the browser's own <select>, a web-only escape hatch — KinetixSelect already renders each platform's native picker."
+        }
+      }
     },
     "navigation-bar": {
       "status": "stable",
@@ -655,7 +1039,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "navigation"
+        }
+      }
     },
     "navigation-menu": {
       "status": "stable",
@@ -663,7 +1053,25 @@
       "platforms": [
         "React"
       ],
-      "platformNote": "standing non-port"
+      "platformNote": "standing non-port",
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "navigation"
+        },
+        "SwiftUI": {
+          "type": "composition",
+          "reason": "NavigationMenu is a hover-triggered desktop mega-menu with no touch idiom — compose KinetixTabBar or a KinetixDropdownMenu for the same navigation."
+        },
+        "Compose": {
+          "type": "composition",
+          "reason": "NavigationMenu is a hover-triggered desktop mega-menu with no touch idiom — compose KinetixTabBar or a KinetixDropdownMenu for the same navigation."
+        },
+        "Flutter": {
+          "type": "composition",
+          "reason": "NavigationMenu is a hover-triggered desktop mega-menu with no touch idiom — compose KinetixTabBar or a KinetixDropdownMenu for the same navigation."
+        }
+      }
     },
     "notification-center": {
       "status": "beta",
@@ -673,13 +1081,21 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "lifecycleReason": "Product boundary unresolved. `unread` is a per-item flag with nothing owning the transition: `onMarkAllRead` has no item-level counterpart, so marking one notification read has no API. There is also no empty-state contract, and whether this belongs as a component or as a Block over Popover + List is an open question — see the PR C handoff.",
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
+      }
     },
     "number-input": {
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -693,7 +1109,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "primitives"
+        }
+      }
     },
     "pagination": {
       "status": "stable",
@@ -703,13 +1125,20 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "navigation"
+        }
+      }
     },
     "password-input": {
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -723,7 +1152,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
+      }
     },
     "progress": {
       "status": "stable",
@@ -741,6 +1176,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -751,6 +1187,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -764,7 +1201,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "inputs"
+        }
+      }
     },
     "resizable": {
       "status": "stable",
@@ -774,7 +1217,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "layout"
+        }
+      }
     },
     "scroll-area": {
       "status": "stable",
@@ -784,13 +1233,20 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "layout"
+        }
+      }
     },
     "segmented-control": {
       "status": "stable",
       "since": "0.10.0",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -804,7 +1260,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
+      }
     },
     "separator": {
       "status": "stable",
@@ -825,7 +1287,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
+      }
     },
     "sidebar": {
       "status": "stable",
@@ -835,13 +1303,20 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "layout"
+        }
+      }
     },
     "skeleton": {
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -852,6 +1327,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -869,6 +1345,12 @@
       "sourceNames": {
         "SwiftUI": "Toaster",
         "Flutter": "toaster"
+      },
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
       }
     },
     "spinner": {
@@ -876,6 +1358,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -889,7 +1372,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "navigation"
+        }
+      }
     },
     "switch": {
       "status": "stable",
@@ -910,7 +1399,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "navigation"
+        }
+      }
     },
     "table": {
       "status": "stable",
@@ -920,7 +1415,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "layout"
+        }
+      }
     },
     "table-of-contents": {
       "status": "stable",
@@ -930,7 +1431,13 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "navigation"
+        }
+      }
     },
     "tabs": {
       "status": "stable",
@@ -948,6 +1455,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -958,6 +1466,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -971,13 +1480,20 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "primitives"
+        }
+      }
     },
     "toggle": {
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -988,6 +1504,7 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -1001,35 +1518,71 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        }
+      }
     },
     "tour": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React"
       ],
-      "platformNote": "standing non-port — targeting an arbitrary already-rendered element needs a CSS-selector-equivalent live-tree query, which no native platform has"
+      "platformNote": "standing non-port — targeting an arbitrary already-rendered element needs a CSS-selector-equivalent live-tree query, which no native platform has",
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "overlays"
+        },
+        "SwiftUI": {
+          "type": "composition",
+          "reason": "Tour targets an arbitrary rendered element by CSS selector; no native platform has a live-tree query like it — compose KinetixPopover anchored to the view you already hold."
+        },
+        "Compose": {
+          "type": "composition",
+          "reason": "Tour targets an arbitrary rendered element by CSS selector; no native platform has a live-tree query like it — compose KinetixPopover anchored to the view you already hold."
+        },
+        "Flutter": {
+          "type": "composition",
+          "reason": "Tour targets an arbitrary rendered element by CSS selector; no native platform has a live-tree query like it — compose KinetixPopover anchored to the view you already hold."
+        }
+      }
     },
     "tree-view": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "data"
+        }
+      }
     },
     "virtual-list": {
-      "status": "beta",
+      "status": "stable",
       "since": "0.12.0",
       "platforms": [
         "React",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ]
+      ],
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "layout"
+        }
+      }
     }
   }
 }

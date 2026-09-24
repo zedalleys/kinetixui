@@ -27,15 +27,20 @@ public struct KinetixTag: View {
     private let text: String
     private let variant: KinetixTagVariant
     private let onRemove: (() -> Void)?
+    /// Accessible name for the dismiss button. Defaults to `Remove <text>`, so a row of tags does not become
+    /// a row of identical "Remove" buttons.
+    private let removeLabel: String?
 
     public init(
         _ text: String,
         variant: KinetixTagVariant = .default,
-        onRemove: (() -> Void)? = nil
+        onRemove: (() -> Void)? = nil,
+        removeLabel: String? = nil
     ) {
         self.text = text
         self.variant = variant
         self.onRemove = onRemove
+        self.removeLabel = removeLabel
     }
 
     public var body: some View {
@@ -50,7 +55,7 @@ public struct KinetixTag: View {
                         .font(.system(size: 10, weight: .semibold))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Remove")
+                .accessibilityLabel(removeLabel ?? "Remove \(text)")
             }
         }
         .foregroundStyle(fg)

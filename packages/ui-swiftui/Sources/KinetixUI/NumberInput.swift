@@ -38,7 +38,7 @@ public struct KinetixNumberInput: View {
 
     public var body: some View {
         HStack(spacing: 0) {
-            stepButton(symbol: "minus", enabled: canDecrement) { value = clamp(value - step) }
+            stepButton(symbol: "minus", label: "Decrease", enabled: canDecrement) { value = clamp(value - step) }
             Rectangle().fill(colors.input).frame(width: 1)
             Text("\(value)")
                 .font(.kinetixBody)
@@ -46,7 +46,7 @@ public struct KinetixNumberInput: View {
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 8)
             Rectangle().fill(colors.input).frame(width: 1)
-            stepButton(symbol: "plus", enabled: canIncrement) { value = clamp(value + step) }
+            stepButton(symbol: "plus", label: "Increase", enabled: canIncrement) { value = clamp(value + step) }
         }
         .frame(height: 40) // h-10
         .background(colors.background, in: RoundedRectangle(cornerRadius: 8, style: .continuous)) // radius/md
@@ -59,7 +59,9 @@ public struct KinetixNumberInput: View {
     }
 
     @ViewBuilder
-    private func stepButton(symbol: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+    /// `label` is the accessible name, as on React (`aria-label="Decrease"` / `"Increase"`). An SF Symbol
+    /// carries no name of its own, so without it VoiceOver reaches two unnamed buttons.
+    private func stepButton(symbol: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.kinetixBody)
@@ -70,5 +72,6 @@ public struct KinetixNumberInput: View {
         .buttonStyle(.plain)
         .disabled(!enabled)
         .opacity(enabled ? 1 : 0.4)
+        .accessibilityLabel(label)
     }
 }

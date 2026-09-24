@@ -21,6 +21,30 @@ export type PlatformSources = Partial<Record<Platform, string>>;
  * platform with no source gets no tab, because an empty or "coming soon" tab is a claim of its own.
  * `code` is the single-snippet form for pages that only have React.
  */
+/**
+ * True only while the element can actually scroll horizontally.
+ *
+ * The preview frame is `overflow-x-auto`, so a demo wider than the frame becomes a scrollable region — and a
+ * scrollable region with no keyboard access is unreachable without a pointer (axe: scrollable-region-focusable).
+ * Most demos never overflow, though, and giving every one of them an unconditional tab stop would add a focus
+ * stop to every showcase on the site that lands on nothing. So the tab stop appears exactly when there is
+ * something to scroll: at 320px the charts demo overflows and becomes focusable, at 1280px it does not.
+ */
+function useScrollable(ref: React.RefObject<HTMLElement | null>) {
+  const [scrollable, setScrollable] = React.useState(false);
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => setScrollable(el.scrollWidth > el.clientWidth + 1);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    for (const child of el.children) ro.observe(child);
+    return () => ro.disconnect();
+  }, [ref]);
+  return scrollable;
+}
+
 export function Showcase({
   id,
   title,
@@ -52,6 +76,8 @@ export function Showcase({
   }, [code, sources]);
 
   const [lang, setLang] = React.useState<string>(langs[0]?.key ?? "React");
+  const previewRef = React.useRef<HTMLDivElement>(null);
+  const previewScrollable = useScrollable(previewRef);
   const active = langs.find((l) => l.key === lang) ?? langs[0];
   const multi = langs.length > 1;
 
@@ -93,10 +119,13 @@ export function Showcase({
 
           <Tabs.Content value="preview">
             <div
+              ref={previewRef}
+              {...(previewScrollable ? { tabIndex: 0, role: "group", "aria-label": `${title} preview, scrollable` } : {})}
               className={cn(
                 // wide demos scroll inside their frame; `safe center` keeps overflowing content reachable (plain center
                 // would clip its start edge), with `center` as the fallback for browsers without it
                 "flex min-h-[280px] w-full items-center justify-center overflow-x-auto border-t border-border bg-background p-8 supports-[justify-content:safe_center]:[justify-content:safe_center]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                 contentClassName,
               )}
             >

@@ -83,3 +83,25 @@ content. The analytics story is itself a credibility asset with this audience.
 Existing PostHog dashboard covers acquisition, activation and the Top Components
 Copied breakdown. No changes needed — the guardrails above exist specifically to
 keep that breakdown meaningful.
+
+## Campaign tagging — the constraint that fails silently
+
+`analytics-attribution.ts` normalises incoming UTM values and **drops anything
+it does not recognise**. A mis-tagged link therefore produces *no* attribution
+rather than wrong attribution — which is the safe failure, but an invisible one.
+
+Two rules, both easy to get wrong:
+
+1. **`utm_campaign` must match `/^kx_[a-z0-9][a-z0-9_-]{0,62}$/`.**
+   `utm_campaign=parity-proof` is discarded. `kx_parity_proof` is kept.
+2. **`utm_source` must be a recognised alias.** `linkedin`, `lnkd.in`, `x`,
+   `twitter`, `t.co`, `reddit`, `devto`, `dev.to`, `github`, `hashnode`,
+   `producthunt`, `youtube` and the search engines all map. Anything else falls
+   back to referrer classification.
+
+`utm_content` must match `/^[a-z0-9][a-z0-9_-]{0,63}$/`.
+
+**Before any campaign goes out:** open one tagged link and confirm the event
+carries the expected `kx_campaign`. If it is missing, the tag is wrong and
+everything measured afterwards is unattributable. Click ids are never read; the
+referrer is classified and the hostname discarded.

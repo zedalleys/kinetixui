@@ -8,7 +8,14 @@ export interface JsonViewerProps extends Omit<React.HTMLAttributes<HTMLDivElemen
   data: unknown;
   /** tree depth (root = 0) to auto-expand; deeper nodes start collapsed. Default 1. */
   expandDepth?: number;
-  hideCopy?: boolean;
+  /**
+   * show the copy-to-clipboard button. Defaults to true.
+   *
+   * Replaces `hideCopy`, which was a negative boolean: `hideCopy={false}` read as a double negative, and the
+   * prop's default behaviour could not be stated without inverting it in your head. Corrected while the
+   * component is lifecycle-beta rather than carried to 1.0.
+   */
+  copyable?: boolean;
 }
 
 /**
@@ -25,7 +32,7 @@ export interface JsonViewerProps extends Omit<React.HTMLAttributes<HTMLDivElemen
  * addition (not in the original Figma source).
  */
 const JsonViewer = React.forwardRef<HTMLDivElement, JsonViewerProps>(
-  ({ data, expandDepth = 1, hideCopy, className, ...props }, ref) => {
+  ({ data, expandDepth = 1, copyable = true, className, ...props }, ref) => {
     const [copied, setCopied] = React.useState(false);
 
     const copy = async () => {
@@ -44,7 +51,7 @@ const JsonViewer = React.forwardRef<HTMLDivElement, JsonViewerProps>(
         className={cn("relative overflow-auto rounded-md border bg-muted/30 p-3 font-mono text-xs", className)}
         {...props}
       >
-        {!hideCopy && (
+        {copyable && (
           <button
             type="button"
             onClick={copy}

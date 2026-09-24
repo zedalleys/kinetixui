@@ -5,17 +5,24 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.kinetixui.ui.KinetixBadge
 import com.kinetixui.ui.KinetixBadgeVariant
 import com.kinetixui.ui.KinetixButton
+import com.kinetixui.ui.KinetixChart
+import com.kinetixui.ui.KinetixChartPoint
+import com.kinetixui.ui.KinetixInput
 import com.kinetixui.ui.KinetixSwitch
 import com.kinetixui.ui.KinetixTheme
 import org.junit.Rule
@@ -33,6 +40,7 @@ import org.robolectric.annotation.Config
 @Composable
 fun UsageExamples(save: () -> Unit = {}) {
     var airplane by remember { mutableStateOf(true) }
+    var query by remember { mutableStateOf("") }
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         // kx-usage:button-demo
@@ -54,6 +62,27 @@ fun UsageExamples(save: () -> Unit = {}) {
             Text("  Airplane mode")
         }
         // kx-usage:end
+
+        // kx-usage:chart-demo
+        KinetixChart(
+            points = listOf(
+                KinetixChartPoint("Jan", 186f),
+                KinetixChartPoint("Feb", 305f),
+                KinetixChartPoint("Mar", 237f),
+            ),
+            description = "Monthly visitors: January 186, February 305, March 237",
+        )
+        // kx-usage:end
+
+        // kx-usage:direction-provider-demo
+        // No provider to port: layout direction is a CompositionLocal, and every composable below reads it.
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            Column {
+                KinetixInput(value = query, onValueChange = { query = it }, placeholder = "Search")
+                KinetixButton(onClick = save) { Text("Save") }
+            }
+        }
+        // kx-usage:end
     }
 }
 
@@ -69,5 +98,9 @@ class UsageExamplesTest {
         rule.onNodeWithText("Button").assertExists()
         rule.onNodeWithText("Default").assertExists()
         rule.onNodeWithText("Airplane mode", substring = true).assertExists()
+        rule.onNodeWithText("Save").assertExists()
+        // the chart is a Canvas: its contentDescription is the only thing assistive technology can read, so
+        // that is what the test asserts rather than any drawn pixel
+        rule.onNodeWithContentDescription("Monthly visitors", substring = true).assertExists()
     }
 }

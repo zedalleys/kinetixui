@@ -16,7 +16,13 @@
       "maturity": "stable",
       "catalogComplete": true,
       "package": "@kinetixui/ui",
-      "dir": "packages/ui"
+      "dir": "packages/ui",
+      "distribution": {
+        "channel": "npm",
+        "coordinate": "@kinetixui/ui",
+        "published": true,
+        "note": "Also installable as source with `npx @kinetixui/cli add`."
+      }
     },
     "Angular": {
       "family": "web",
@@ -25,7 +31,13 @@
       "maturity": "preview",
       "catalogComplete": false,
       "package": "@kinetixui/angular",
-      "dir": "packages/ui-angular"
+      "dir": "packages/ui-angular",
+      "distribution": {
+        "channel": "npm",
+        "coordinate": "@kinetixui/angular",
+        "published": false,
+        "note": "Built and tested in CI, not yet published. publish is part of the Angular Stable gate."
+      }
     },
     "SwiftUI": {
       "family": "native",
@@ -34,7 +46,13 @@
       "maturity": "stable",
       "catalogComplete": true,
       "package": "KinetixUI",
-      "dir": "packages/ui-swiftui"
+      "dir": "packages/ui-swiftui",
+      "distribution": {
+        "channel": "Swift Package Manager",
+        "coordinate": "kinetix-ui-swift mirror",
+        "published": false,
+        "note": "publish-swiftui.yml splits packages/ui-swiftui to a mirror repo; it needs SWIFTUI_MIRROR_REPO and has never been run for real."
+      }
     },
     "Compose": {
       "family": "native",
@@ -43,7 +61,13 @@
       "maturity": "stable",
       "catalogComplete": true,
       "package": "com.kinetixui:ui-compose",
-      "dir": "packages/ui-compose"
+      "dir": "packages/ui-compose",
+      "distribution": {
+        "channel": "Maven Central",
+        "coordinate": "com.kinetixui:ui-compose",
+        "published": false,
+        "note": "publish-compose.yml stages to the Central Portal; it needs four signing/credential secrets and defaults to a dry run."
+      }
     },
     "Flutter": {
       "family": "native",
@@ -52,7 +76,13 @@
       "maturity": "stable",
       "catalogComplete": true,
       "package": "kinetix_ui",
-      "dir": "packages/ui-flutter"
+      "dir": "packages/ui-flutter",
+      "distribution": {
+        "channel": "pub.dev",
+        "coordinate": "kinetix_ui",
+        "published": false,
+        "note": "publish-flutter.yml publishes to pub.dev; it needs PUB_DEV_CREDENTIALS and defaults to a dry run."
+      }
     }
   },
   "webPlatforms": [
@@ -79,9 +109,9 @@
   },
   "coverage": {
     "React": 98,
-    "Angular": 11,
+    "Angular": 31,
     "SwiftUI": 90,
-    "Compose": 89,
+    "Compose": 90,
     "Flutter": 90
   },
   "components": {
@@ -112,6 +142,7 @@
     ],
     "aspect-ratio": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -124,12 +155,14 @@
     ],
     "avatar": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "avatar-group": [
-      "React"
+      "React",
+      "Angular"
     ],
     "badge": [
       "React",
@@ -185,6 +218,7 @@
     "chart": [
       "React",
       "SwiftUI",
+      "Compose",
       "Flutter"
     ],
     "checkbox": [
@@ -292,6 +326,7 @@
     ],
     "empty": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -304,6 +339,7 @@
     ],
     "field": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -371,6 +407,7 @@
     ],
     "kbd": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -414,6 +451,7 @@
     ],
     "metric": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -431,7 +469,8 @@
       "Flutter"
     ],
     "native-select": [
-      "React"
+      "React",
+      "Angular"
     ],
     "navigation-bar": [
       "React",
@@ -450,6 +489,7 @@
     ],
     "number-input": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -468,6 +508,7 @@
     ],
     "password-input": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -487,12 +528,14 @@
     ],
     "quote": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "radio-group": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -517,6 +560,7 @@
     ],
     "segmented-control": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -548,12 +592,14 @@
     ],
     "skeleton": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "slider": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -566,6 +612,7 @@
     ],
     "spinner": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -610,12 +657,14 @@
     ],
     "tag": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "textarea": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -628,12 +677,14 @@
     ],
     "toggle": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "toggle-group": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -662,7 +713,6 @@
   },
   "notes": {
     "avatar-group": "standing non-port — re-wraps its children, not idiomatic on native platforms; compose an Avatar row directly",
-    "chart": "no Recharts equivalent wired for Compose yet",
     "combobox": "not a component — a documented composition of Command (CommandInput/CommandList/CommandItem). There is no Combobox export on any platform; the recipe is React-only because Command is.",
     "direction-provider": "React-only by design: the web needs a provider to thread direction through Radix, while SwiftUI (environment .layoutDirection), Compose (LocalLayoutDirection) and Flutter (Directionality) already carry layout direction in the framework itself. Nothing to port.",
     "form": "standing non-port",
@@ -671,5 +721,3020 @@
     "navigation-menu": "standing non-port",
     "tour": "standing non-port — targeting an arbitrary already-rendered element needs a CSS-selector-equivalent live-tree query, which no native platform has"
   },
-  "platformNotes": {}
+  "platformNotes": {},
+  "guidance": {
+    "accordion": {
+      "Angular": {
+        "type": "planned",
+        "wave": "layout"
+      }
+    },
+    "alert-dialog": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "app-bar": {
+      "Angular": {
+        "type": "planned",
+        "wave": "layout"
+      }
+    },
+    "audio-player": {
+      "Angular": {
+        "type": "planned",
+        "wave": "advanced"
+      }
+    },
+    "avatar-group": {
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "AvatarGroup re-wraps its children, which no native layout system does — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "AvatarGroup re-wraps its children, which no native layout system does — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "AvatarGroup re-wraps its children, which no native layout system does — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset."
+      }
+    },
+    "banner": {
+      "Angular": {
+        "type": "planned",
+        "wave": "primitives"
+      }
+    },
+    "breadcrumb": {
+      "Angular": {
+        "type": "planned",
+        "wave": "navigation"
+      }
+    },
+    "button-group": {
+      "Angular": {
+        "type": "planned",
+        "wave": "primitives"
+      }
+    },
+    "calendar": {
+      "Angular": {
+        "type": "planned",
+        "wave": "advanced"
+      }
+    },
+    "carousel": {
+      "Angular": {
+        "type": "planned",
+        "wave": "layout"
+      }
+    },
+    "chart": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      }
+    },
+    "circular-progress": {
+      "Angular": {
+        "type": "planned",
+        "wave": "primitives"
+      }
+    },
+    "code-block": {
+      "Angular": {
+        "type": "planned",
+        "wave": "primitives"
+      }
+    },
+    "collapsible": {
+      "Angular": {
+        "type": "planned",
+        "wave": "layout"
+      }
+    },
+    "color-picker": {
+      "Angular": {
+        "type": "planned",
+        "wave": "advanced"
+      }
+    },
+    "combobox": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "Combobox is a recipe over Command on the web, not a component anywhere — compose a popover with a filtered list, or use KinetixSelect for a fixed set."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "Combobox is a recipe over Command on the web, not a component anywhere — compose a popover with a filtered list, or use KinetixSelect for a fixed set."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "Combobox is a recipe over Command on the web, not a component anywhere — compose a popover with a filtered list, or use KinetixSelect for a fixed set."
+      }
+    },
+    "command": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "comparison-slider": {
+      "Angular": {
+        "type": "planned",
+        "wave": "layout"
+      }
+    },
+    "context-menu": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "data-grid": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      }
+    },
+    "data-table": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      }
+    },
+    "date-picker": {
+      "Angular": {
+        "type": "planned",
+        "wave": "advanced"
+      }
+    },
+    "description-list": {
+      "Angular": {
+        "type": "planned",
+        "wave": "primitives"
+      }
+    },
+    "dialog": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "diff-viewer": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      }
+    },
+    "direction-provider": {
+      "Angular": {
+        "type": "native-equivalent",
+        "reason": "The web platform already threads direction: set dir on an element and every descendant inherits it, and Angular CDK's Directionality reads that same attribute. @kinetixui/angular has no Radix-style provider to thread it through, so there is nothing for a component to add."
+      },
+      "SwiftUI": {
+        "type": "native-equivalent",
+        "reason": "SwiftUI carries layout direction in the environment. Set .environment(\\.layoutDirection, .rightToLeft) and every view below reads it — there is no provider to port."
+      },
+      "Compose": {
+        "type": "native-equivalent",
+        "reason": "Compose carries layout direction in a CompositionLocal. Provide LocalLayoutDirection and every composable below reads it — there is no provider to port."
+      },
+      "Flutter": {
+        "type": "native-equivalent",
+        "reason": "Flutter carries layout direction in the widget tree. Wrap a subtree in Directionality and every widget below reads it — there is no provider to port."
+      }
+    },
+    "drawer": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "dropdown-menu": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "fab": {
+      "Angular": {
+        "type": "planned",
+        "wave": "primitives"
+      }
+    },
+    "file-upload": {
+      "Angular": {
+        "type": "planned",
+        "wave": "advanced"
+      }
+    },
+    "footer": {
+      "Angular": {
+        "type": "planned",
+        "wave": "layout"
+      }
+    },
+    "form": {
+      "Angular": {
+        "type": "native-equivalent",
+        "reason": "Angular ships its own form layer. ReactiveFormsModule gives the validation, state and submission handling that Form exists to wire up on React, and every @kinetixui/angular control implements ControlValueAccessor, so they bind to it directly. A KinetixUI form wrapper would be a second, worse form system."
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "Form is react-hook-form glue with no native analogue. KinetixField and the platform's own state hold the same job."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "Form is react-hook-form glue with no native analogue. KinetixField and the platform's own state hold the same job."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "Form is react-hook-form glue with no native analogue. KinetixField and the platform's own state hold the same job."
+      }
+    },
+    "hover-card": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "image": {
+      "Angular": {
+        "type": "planned",
+        "wave": "primitives"
+      }
+    },
+    "inform": {
+      "Angular": {
+        "type": "planned",
+        "wave": "primitives"
+      }
+    },
+    "input-group": {
+      "Angular": {
+        "type": "planned",
+        "wave": "inputs"
+      }
+    },
+    "input-otp": {
+      "Angular": {
+        "type": "planned",
+        "wave": "inputs"
+      }
+    },
+    "json-viewer": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      }
+    },
+    "kanban-board": {
+      "Angular": {
+        "type": "planned",
+        "wave": "advanced"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "KanbanBoard is built on @dnd-kit's accessible multi-container drag and drop, which has no equivalent dependency in the native packages — compose columns of KinetixCard with the platform's own drag gesture."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "KanbanBoard is built on @dnd-kit's accessible multi-container drag and drop, which has no equivalent dependency in the native packages — compose columns of KinetixCard with the platform's own drag gesture."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "KanbanBoard is built on @dnd-kit's accessible multi-container drag and drop, which has no equivalent dependency in the native packages — compose columns of KinetixCard with the platform's own drag gesture."
+      }
+    },
+    "list": {
+      "Angular": {
+        "type": "planned",
+        "wave": "primitives"
+      }
+    },
+    "markdown-editor": {
+      "Angular": {
+        "type": "planned",
+        "wave": "advanced"
+      }
+    },
+    "marquee": {
+      "Angular": {
+        "type": "planned",
+        "wave": "primitives"
+      }
+    },
+    "menubar": {
+      "Angular": {
+        "type": "planned",
+        "wave": "navigation"
+      }
+    },
+    "message-bubble": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      }
+    },
+    "modal": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "multi-select": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "native-select": {
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "NativeSelect wraps the browser's own <select>, a web-only escape hatch — KinetixSelect already renders each platform's native picker."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "NativeSelect wraps the browser's own <select>, a web-only escape hatch — KinetixSelect already renders each platform's native picker."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "NativeSelect wraps the browser's own <select>, a web-only escape hatch — KinetixSelect already renders each platform's native picker."
+      }
+    },
+    "navigation-bar": {
+      "Angular": {
+        "type": "planned",
+        "wave": "navigation"
+      }
+    },
+    "navigation-menu": {
+      "Angular": {
+        "type": "planned",
+        "wave": "navigation"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "NavigationMenu is a hover-triggered desktop mega-menu with no touch idiom — compose KinetixTabBar or a KinetixDropdownMenu for the same navigation."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "NavigationMenu is a hover-triggered desktop mega-menu with no touch idiom — compose KinetixTabBar or a KinetixDropdownMenu for the same navigation."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "NavigationMenu is a hover-triggered desktop mega-menu with no touch idiom — compose KinetixTabBar or a KinetixDropdownMenu for the same navigation."
+      }
+    },
+    "notification-center": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "page-header": {
+      "Angular": {
+        "type": "planned",
+        "wave": "primitives"
+      }
+    },
+    "pagination": {
+      "Angular": {
+        "type": "planned",
+        "wave": "navigation"
+      }
+    },
+    "popover": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "rating": {
+      "Angular": {
+        "type": "planned",
+        "wave": "inputs"
+      }
+    },
+    "resizable": {
+      "Angular": {
+        "type": "planned",
+        "wave": "layout"
+      }
+    },
+    "scroll-area": {
+      "Angular": {
+        "type": "planned",
+        "wave": "layout"
+      }
+    },
+    "select": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "sheet": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "sidebar": {
+      "Angular": {
+        "type": "planned",
+        "wave": "layout"
+      }
+    },
+    "sonner": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "stepper": {
+      "Angular": {
+        "type": "planned",
+        "wave": "navigation"
+      }
+    },
+    "tab-bar": {
+      "Angular": {
+        "type": "planned",
+        "wave": "navigation"
+      }
+    },
+    "table": {
+      "Angular": {
+        "type": "planned",
+        "wave": "layout"
+      }
+    },
+    "table-of-contents": {
+      "Angular": {
+        "type": "planned",
+        "wave": "navigation"
+      }
+    },
+    "timeline": {
+      "Angular": {
+        "type": "planned",
+        "wave": "primitives"
+      }
+    },
+    "tooltip": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      }
+    },
+    "tour": {
+      "Angular": {
+        "type": "planned",
+        "wave": "overlays"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "Tour targets an arbitrary rendered element by CSS selector; no native platform has a live-tree query like it — compose KinetixPopover anchored to the view you already hold."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "Tour targets an arbitrary rendered element by CSS selector; no native platform has a live-tree query like it — compose KinetixPopover anchored to the view you already hold."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "Tour targets an arbitrary rendered element by CSS selector; no native platform has a live-tree query like it — compose KinetixPopover anchored to the view you already hold."
+      }
+    },
+    "tree-view": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      }
+    },
+    "virtual-list": {
+      "Angular": {
+        "type": "planned",
+        "wave": "layout"
+      }
+    }
+  },
+  "verificationLadder": [
+    "experimental",
+    "preview",
+    "beta",
+    "stable"
+  ],
+  "verificationRequires": {
+    "experimental": [
+      "build"
+    ],
+    "beta": [
+      "build",
+      "accessibility"
+    ],
+    "stable": [
+      "build",
+      "accessibility",
+      "interaction",
+      "rtl",
+      "largeText",
+      "visual",
+      "published"
+    ]
+  },
+  "verification": {
+    "accordion": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "alert": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "alert-dialog": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "app-bar": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "aspect-ratio": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "audio-player": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "avatar": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "avatar-group": {
+      "React": "beta",
+      "Angular": "preview"
+    },
+    "badge": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "banner": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "breadcrumb": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "button": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "beta",
+      "Flutter": "beta"
+    },
+    "button-group": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "calendar": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "card": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "carousel": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "chart": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "checkbox": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "beta",
+      "Flutter": "beta"
+    },
+    "circular-progress": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "code-block": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "collapsible": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "color-picker": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "combobox": {
+      "React": "beta"
+    },
+    "command": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "comparison-slider": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "context-menu": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "data-grid": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "data-table": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "date-picker": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "description-list": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "dialog": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "diff-viewer": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "direction-provider": {
+      "React": "beta"
+    },
+    "drawer": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "dropdown-menu": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "empty": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "fab": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "field": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "file-upload": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "footer": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "form": {
+      "React": "beta"
+    },
+    "hover-card": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "image": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "inform": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "input": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "input-group": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "input-otp": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "json-viewer": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "kanban-board": {
+      "React": "beta"
+    },
+    "kbd": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "label": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "list": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "markdown-editor": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "marquee": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "menubar": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "message-bubble": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "metric": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "modal": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "multi-select": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "native-select": {
+      "React": "beta",
+      "Angular": "preview"
+    },
+    "navigation-bar": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "navigation-menu": {
+      "React": "beta"
+    },
+    "notification-center": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "number-input": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "page-header": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "pagination": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "password-input": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "popover": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "progress": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "quote": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "radio-group": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "rating": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "resizable": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "scroll-area": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "segmented-control": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "select": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "separator": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "sheet": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "sidebar": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "skeleton": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "slider": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "sonner": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "spinner": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "stepper": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "switch": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "beta",
+      "Flutter": "beta"
+    },
+    "tab-bar": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "table": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "table-of-contents": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "tabs": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "beta",
+      "Flutter": "beta"
+    },
+    "tag": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "textarea": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "timeline": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "toggle": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "beta"
+    },
+    "toggle-group": {
+      "React": "beta",
+      "Angular": "preview",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "tooltip": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "tour": {
+      "React": "beta"
+    },
+    "tree-view": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    },
+    "virtual-list": {
+      "React": "beta",
+      "SwiftUI": "experimental",
+      "Compose": "experimental",
+      "Flutter": "experimental"
+    }
+  },
+  "verificationCounts": {
+    "React": {
+      "beta": 98
+    },
+    "Angular": {
+      "preview": 31
+    },
+    "SwiftUI": {
+      "experimental": 90
+    },
+    "Compose": {
+      "experimental": 86,
+      "beta": 4
+    },
+    "Flutter": {
+      "experimental": 85,
+      "beta": 5
+    }
+  },
+  "catalogueVerification": {
+    "React": "beta",
+    "Angular": "preview",
+    "SwiftUI": "experimental",
+    "Compose": "experimental",
+    "Flutter": "experimental"
+  },
+  "verificationEvidence": {
+    "accordion": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "alert": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "alert-dialog": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "app-bar": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "aspect-ratio": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "audio-player": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "avatar": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "avatar-group": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ]
+    },
+    "badge": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "banner": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "breadcrumb": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "button": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "Flutter": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "button-group": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "calendar": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "card": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "carousel": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "chart": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "checkbox": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "Flutter": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "circular-progress": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "code-block": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "collapsible": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "color-picker": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "combobox": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ]
+    },
+    "command": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "comparison-slider": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "context-menu": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "data-grid": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published",
+        "rtl"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "data-table": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "date-picker": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "description-list": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "dialog": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "diff-viewer": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "direction-provider": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published",
+        "rtl"
+      ]
+    },
+    "drawer": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "dropdown-menu": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "empty": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "fab": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "field": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "file-upload": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "footer": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "form": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ]
+    },
+    "hover-card": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "image": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "inform": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "input": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "interaction",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "input-group": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "input-otp": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "json-viewer": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "kanban-board": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ]
+    },
+    "kbd": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "label": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "list": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "markdown-editor": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "marquee": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "menubar": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "message-bubble": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "metric": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "modal": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "multi-select": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "native-select": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ]
+    },
+    "navigation-bar": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "navigation-menu": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ]
+    },
+    "notification-center": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "number-input": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "page-header": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "pagination": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "password-input": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "popover": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "progress": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "quote": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "radio-group": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "rating": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "resizable": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "scroll-area": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "segmented-control": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "select": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "separator": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "sheet": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "sidebar": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "skeleton": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "slider": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "sonner": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "spinner": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "stepper": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "switch": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "Flutter": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "tab-bar": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "table": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "table-of-contents": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "tabs": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published",
+        "rtl"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "rtl"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "accessibility",
+        "build",
+        "interaction",
+        "rtl"
+      ],
+      "Flutter": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "tag": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "textarea": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "timeline": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "toggle": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build",
+        "interaction"
+      ],
+      "Flutter": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "toggle-group": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build",
+        "largeText",
+        "rtl"
+      ]
+    },
+    "tooltip": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "tour": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ]
+    },
+    "tree-view": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    },
+    "virtual-list": {
+      "React": [
+        "accessibility",
+        "build",
+        "published"
+      ],
+      "SwiftUI": [
+        "build"
+      ],
+      "Compose": [
+        "build"
+      ],
+      "Flutter": [
+        "build"
+      ]
+    }
+  },
+  "evidenceCounts": {
+    "React": {
+      "build": 98,
+      "interaction": 23,
+      "accessibility": 98,
+      "rtl": 3,
+      "largeText": 0,
+      "visual": 0,
+      "published": 98
+    },
+    "Angular": {
+      "build": 31,
+      "interaction": 31,
+      "accessibility": 31,
+      "rtl": 1,
+      "largeText": 0,
+      "visual": 0,
+      "published": 0
+    },
+    "SwiftUI": {
+      "build": 90,
+      "interaction": 0,
+      "accessibility": 0,
+      "rtl": 0,
+      "largeText": 0,
+      "visual": 0,
+      "published": 0
+    },
+    "Compose": {
+      "build": 90,
+      "interaction": 5,
+      "accessibility": 4,
+      "rtl": 1,
+      "largeText": 0,
+      "visual": 0,
+      "published": 0
+    },
+    "Flutter": {
+      "build": 90,
+      "interaction": 6,
+      "accessibility": 5,
+      "rtl": 58,
+      "largeText": 58,
+      "visual": 0,
+      "published": 0
+    }
+  }
 }

@@ -133,11 +133,18 @@ tests on every push/PR; it fails if generated output (`packages/tokens/dist`,
 `apps/web/public/r`) is stale. `native-{compose,swiftui,flutter}.yml` compile the
 ports.
 
-### Adding a component — the four‑platform rule
+### Adding a component — the platform rule
 
-A component isn't done until it ships on **all four** platforms (or is a
-documented non‑port), CI‑verified per platform. The full workflow is in
-[Contributing](https://kinetixui.com/docs/contributing).
+A component isn't done until it ships on all four **catalogue‑complete**
+platforms — React, SwiftUI, Jetpack Compose, Flutter — or is a documented
+non‑port, compiled in CI per platform. Angular is a fifth implementation,
+still Preview and rolling out in waves, so it is not required.
+
+Compiling is not the same as being verified. What automated tests actually
+prove about each implementation is tracked separately, per component and per
+platform, in `verification.json`; see
+[Supported platforms](https://kinetixui.com/docs/platforms). The full workflow
+is in [Contributing](https://kinetixui.com/docs/contributing).
 
 ### Releasing
 

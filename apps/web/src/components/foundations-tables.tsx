@@ -1,10 +1,23 @@
 import * as React from "react";
 import { durations, easings, elevation, platformUnits, radiusRoles, radiusScale, spacingScale } from "@/lib/foundations";
 import manifest from "../../../../components.manifest.json";
-import { PLATFORM_DEFINITIONS, type Platform } from "@/lib/platform-parity";
+import {
+  CATALOGUE_VERIFICATION,
+  EVIDENCE_COUNTS,
+  EVIDENCE_KINDS,
+  PLATFORMS,
+  PLATFORM_DEFINITIONS,
+  VERIFICATION_COUNTS,
+  VERIFICATION_REQUIRES,
+  type EvidenceKind,
+  type Platform,
+} from "@/lib/platform-parity";
 import { componentTotal, gaps, nonPorts, notSupported, platformCount, platforms, statusCounts } from "@/lib/platform-support";
 
-const manifestComponents = manifest.components as Record<string, { platforms: string[] }>;
+const manifestComponents = manifest.components as Record<
+  string,
+  { platforms: string[]; platformGuidance?: Record<string, { type: string; wave?: string; reason?: string }> }
+>;
 
 /** Same look as the token table on /docs/tokens: a bordered, horizontally scrollable table. */
 function Table({ head, children, label }: { head: string[]; children: React.ReactNode; label: string }) {
@@ -216,15 +229,114 @@ export function PlatformSupportTable() {
   );
 }
 
+const EVIDENCE_LABEL: Record<EvidenceKind, string> = {
+  build: "Build",
+  interaction: "Interaction",
+  accessibility: "Accessibility",
+  rtl: "RTL",
+  largeText: "Large text",
+  visual: "Visual",
+  published: "Published",
+};
+
+/**
+ * Per-platform verification summary: what the package promises, and separately what the tests prove.
+ *
+ * Every evidence row is a fraction, never a tick. "Interaction 21 / 98" and a green check are different
+ * claims, and only one of them is true — a tick beside a partially covered catalogue is the single most
+ * misleading thing this page could print.
+ */
+export function PlatformVerificationTable() {
+  return (
+    <div className="my-6 grid gap-4 sm:grid-cols-2">
+      {PLATFORMS.map((platform) => {
+        const def = PLATFORM_DEFINITIONS[platform];
+        const total = platformCount(platform);
+        const counts = EVIDENCE_COUNTS[platform];
+        const rungs = VERIFICATION_COUNTS[platform] ?? {};
+        return (
+          <section key={platform} className="rounded-lg border border-border p-4">
+            <h3 className="font-mono text-sm text-foreground">{def.label}</h3>
+            <dl className="mt-2 space-y-1 font-mono text-[11px]">
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">Implementations</dt>
+                <dd className="tabular-nums">
+                  {total} of {componentTotal}
+                  {def.catalogComplete ? " · catalogue complete" : " · catalogue incomplete"}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">Package maturity</dt>
+                <dd className="capitalize">{def.maturity}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">Distribution</dt>
+                <dd>{def.distribution.published ? def.distribution.channel : `${def.distribution.channel} — not published`}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">Catalogue verification</dt>
+                <dd className="capitalize text-foreground">{CATALOGUE_VERIFICATION[platform] ?? "—"}</dd>
+              </div>
+            </dl>
+            <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Evidence</p>
+            <dl className="mt-1 grid gap-x-5 gap-y-0.5 font-mono text-[11px] sm:grid-cols-2">
+              {EVIDENCE_KINDS.map((kind) => (
+                <div key={kind} className="flex justify-between gap-3">
+                  <dt className="text-muted-foreground">{EVIDENCE_LABEL[kind]}</dt>
+                  <dd className="tabular-nums">
+                    {counts?.[kind] ?? 0} / {total}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              {Object.entries(rungs)
+                .map(([level, n]) => `${n} ${level}`)
+                .join(" · ")}
+              . The catalogue figure above is the weakest of these, not an average.
+            </p>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+/** What each verification rung costs, read from the generator so this cannot describe a different ladder. */
+export function VerificationLadderTable() {
+  return (
+    <Table label="Verification levels" head={["Level", "Evidence required"]}>
+      {(Object.keys(VERIFICATION_REQUIRES) as (keyof typeof VERIFICATION_REQUIRES)[]).map((level) => (
+        <tr key={level}>
+          <th scope="row" className={`${td} text-left font-medium capitalize`}>
+            {level}
+          </th>
+          <td className={td}>
+            {VERIFICATION_REQUIRES[level].map((k) => EVIDENCE_LABEL[k]).join(" · ")}
+          </td>
+        </tr>
+      ))}
+    </Table>
+  );
+}
+
+/** How a gap is filled on the component page. Neither counts as platform coverage. */
+const GAP_KIND_LABEL: Record<string, string> = {
+  "native-equivalent": "The platform's own idiom",
+  composition: "A composition of other components",
+  planned: "Nothing — a port is planned",
+};
+
 export function ComponentGapsTable() {
   return (
-    <Table label="Components not on every platform" head={["Component", "Missing on", "Why"]}>
+    <Table label="Components not on every platform" head={["Component", "Missing on", "What the page shows instead", "Why"]}>
       {gaps.map((g) => (
         <tr key={g.slug}>
           <th scope="row" className={`${td} text-left font-medium`}>
             <Code>{g.slug}</Code>
           </th>
           <td className={td}>{g.missing.join(", ")}</td>
+          <td className={td}>{g.kind ? GAP_KIND_LABEL[g.kind] : "—"}</td>
           <td className={`${td} text-muted-foreground`}>{g.note ?? ""}</td>
         </tr>
       ))}
@@ -249,7 +361,7 @@ export function NotSupportedTable() {
   );
 }
 
-/** "86 stable, 12 beta" — from the manifest. */
+/** "97 stable, 1 beta" — from the manifest. The example in this comment is the only part that can go stale. */
 export function StatusSummary() {
   const parts = Object.entries(statusCounts).sort((a, b) => b[1] - a[1]).map(([s, n]) => `${n} ${s}`);
   return <>{parts.join(", ")}</>;
@@ -270,6 +382,62 @@ export function PlatformMaturityInline({ platform }: { platform: Platform }) {
   const m = PLATFORM_DEFINITIONS[platform].maturity;
   return <>{m.charAt(0).toUpperCase() + m.slice(1)}</>;
 }
+
+/**
+ * What is left for a rolling-out platform, by delivery wave — counted from the manifest's `platformGuidance`,
+ * never typed in. A component classified as a native equivalent or a composition is not "remaining": there is
+ * nothing to build, so it is reported separately rather than folded into a backlog number that then never
+ * reaches zero.
+ */
+export function PlatformWaveTable({ platform }: { platform: Platform }) {
+  const byWave = new Map<string, string[]>();
+  let settled = 0;
+  for (const [slug, c] of Object.entries(manifestComponents)) {
+    const g = c.platformGuidance?.[platform];
+    if (!g) continue;
+    if (g.type !== "planned") { settled++; continue; }
+    const wave = g.wave ?? "unassigned";
+    byWave.set(wave, [...(byWave.get(wave) ?? []), slug]);
+  }
+  const ORDER = ["primitives", "inputs", "layout", "navigation", "overlays", "data", "advanced"];
+  const rows = ORDER.filter((w) => byWave.has(w));
+  const shipped = Object.values(manifestComponents).filter((c) => c.platforms.includes(platform)).length;
+
+  return (
+    <div className="my-6">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-border text-left">
+            <th className="py-2 font-medium">Wave</th>
+            <th className="py-2 font-medium">Remaining</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((wave) => (
+            <tr key={wave} className="border-b border-border/60">
+              <td className="py-2 capitalize">{WAVE_TITLE[wave] ?? wave}</td>
+              <td className="py-2 font-mono text-muted-foreground">{byWave.get(wave)!.length}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-3 text-sm text-muted-foreground">
+        {shipped} shipped. {settled} more need no port at all — they are a native equivalent or a composition
+        on {PLATFORM_DEFINITIONS[platform].label}, and each says so on its own page.
+      </p>
+    </div>
+  );
+}
+
+const WAVE_TITLE: Record<string, string> = {
+  primitives: "Primitives",
+  inputs: "Inputs and forms",
+  layout: "Layout",
+  navigation: "Navigation",
+  overlays: "Overlays",
+  data: "Data display",
+  advanced: "Advanced interaction",
+};
 
 /**
  * The components a platform actually ships, as links to their docs — derived from the manifest, so a page that

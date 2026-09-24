@@ -3,18 +3,50 @@
  * canonical demo registry (apps/web/src/registry/demos.tsx).
  *
  *   node scripts/gen-stories.mjs
+ *   node scripts/gen-stories.mjs --check   fail if a story is missing, stale or orphaned (CI)
  *
  * Output: packages/ui/src/stories/<Pascal>.stories.tsx (one per `*-demo` entry).
  * Button / Input / Textarea keep their hand-written stories and are skipped.
+ *
+ * The story set is not decoration. Two suites take their SUBJECTS from this
+ * directory — the jsdom axe pass and the real-browser axe pass — so a component
+ * with no story is a component nothing checks for accessibility, silently.
+ * That is exactly what happened to `direction-provider`: it had no docs page,
+ * so it had no demo, so it had no story, so axe never saw it, and the site
+ * still reported accessibility coverage as though it had.
+ *
+ * `--check` closes that. It fails when a story is missing, when a generated one
+ * has drifted from what the generator would write, when one is orphaned, and —
+ * the part that matters most — when a component in the manifest has no story at
+ * all. The expected set is DERIVED from the manifest, never a list kept here.
  */
-import { readFileSync, writeFileSync, readdirSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const DEMOS = `${ROOT}/apps/web/src/registry/demos.tsx`;
 const OUT = `${ROOT}/packages/ui/src/stories`;
+const CHECK = process.argv.includes("--check");
+
+const manifest = JSON.parse(readFileSync(`${ROOT}/components.manifest.json`, "utf8"));
+
+/** "AlertDialog.stories.tsx" → "alert-dialog". */
+const slugOf = (file) =>
+  file
+    .replace(/\.stories\.tsx$/, "")
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .toLowerCase();
 
 const HANDWRITTEN = new Set(["button", "input", "textarea"]);
+
+/**
+ * Components that intentionally have no Storybook story, with the reason.
+ *
+ * Empty, and it should stay that way. An entry here removes a component from
+ * the accessibility suites' subject list, so adding one is a decision about
+ * coverage, not a convenience for making this check pass.
+ */
+const NO_STORY = {};
 
 const GROUP = {
   "aspect-ratio": "Foundations", separator: "Foundations", skeleton: "Foundations",
@@ -484,6 +516,7 @@ function importsFor(body) {
 mkdirSync(OUT, { recursive: true });
 let written = 0;
 const generated = [];
+const problems = [];
 for (const { key, component, source } of entries) {
   const slug = key.replace(/-demo$/, "");
   if (HANDWRITTEN.has(slug)) continue;
@@ -517,18 +550,49 @@ export default meta;
 ${ctrl ? `\nexport const Playground: StoryObj<typeof meta> = { render: ${ctrl.render} };\n` : ""}
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
 `;
-  writeFileSync(`${OUT}/${Name}.stories.tsx`, file);
+  const path = `${OUT}/${Name}.stories.tsx`;
+  if (CHECK) {
+    if (!existsSync(path)) problems.push(`${Name}.stories.tsx is missing — ${slug} would be invisible to the accessibility suites`);
+    else if (readFileSync(path, "utf8") !== file) problems.push(`${Name}.stories.tsx has drifted from what the generator writes`);
+  } else {
+    writeFileSync(path, file);
+  }
   generated.push(`${Name}.stories.tsx`);
   written++;
 }
 
-// prune stale generated files (component removed from demos)
-for (const f of readdirSync(OUT)) {
-  if (!f.endsWith(".stories.tsx")) continue;
-  const body = readFileSync(`${OUT}/${f}`, "utf8");
-  if (body.startsWith("/* AUTO-GENERATED") && !generated.includes(f)) {
-    console.log("stale (left in place, remove by hand):", f);
+/** slug → the story file on disk that covers it, generated or hand-written. */
+const onDisk = new Map(
+  readdirSync(OUT)
+    .filter((f) => f.endsWith(".stories.tsx"))
+    .map((f) => [slugOf(f), f]),
+);
+
+// A generated story whose component no longer exists is dead weight that the axe suites still mount.
+for (const [slug, file] of onDisk) {
+  if (!manifest.components[slug] && !NO_STORY[slug]) {
+    problems.push(`${file}: no component "${slug}" in components.manifest.json — orphaned story`);
   }
 }
 
-console.log(`generated ${written} stories → ${OUT}`);
+// The part PR #209 exposed: a component the manifest declares but nothing has a story for.
+const uncovered = Object.keys(manifest.components).filter((slug) => !onDisk.has(slug) && !NO_STORY[slug]);
+if (uncovered.length) {
+  problems.push(
+    `${uncovered.length} component(s) have no Storybook story, so no accessibility suite covers them: ${uncovered.join(", ")}. ` +
+      `Add a demo (which generates a story), or record an explicit exemption with a reason in NO_STORY.`,
+  );
+}
+
+if (problems.length) {
+  console.error(problems.map((p) => `  x ${p}`).join("\n"));
+  console.error(`\ncheck:stories failed — ${problems.length} problem(s). Run \`pnpm gen:stories\` and commit the result.`);
+  process.exit(1);
+}
+
+const covered = Object.keys(manifest.components).filter((slug) => onDisk.has(slug)).length;
+const total = Object.keys(manifest.components).length;
+console.log(
+  `${CHECK ? "check:stories ok" : "gen:stories"} — ${written} generated, ${covered}/${total} components covered by a story` +
+    `${Object.keys(NO_STORY).length ? ` (${Object.keys(NO_STORY).length} exempt)` : ""}`,
+);

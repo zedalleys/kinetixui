@@ -27,6 +27,7 @@ import org.robolectric.annotation.Config
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
+// kx-verify: accessibility
 class SemanticsTest {
     @get:Rule
     val rule = createComposeRule()

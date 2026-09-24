@@ -27,6 +27,7 @@ Finder declared(Finder owner, bool Function(SemanticsProperties p) has) => find.
 
 SemanticsProperties props(WidgetTester tester, Finder f) => tester.widget<Semantics>(f.first).properties;
 
+// kx-verify: accessibility
 void main() {
   group('KinetixButton', () {
     testWidgets('is announced as an enabled button', (tester) async {

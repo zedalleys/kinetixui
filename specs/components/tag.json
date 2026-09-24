@@ -6,6 +6,7 @@
   "since": "0.4.1",
   "platforms": [
     "React",
+    "Angular",
     "SwiftUI",
     "Compose",
     "Flutter"
@@ -28,6 +29,12 @@
           "type": "(() => void)",
           "required": false,
           "description": "show a dismiss button; called when it's clicked"
+        },
+        {
+          "name": "removeLabel",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name for the dismiss button. Defaults to `Remove <tag text>` when the tag's children are a plain string, so a row of tags does not become a row of identical \"Remove\" buttons. Pass this whe…"
         },
         {
           "name": "asChild",

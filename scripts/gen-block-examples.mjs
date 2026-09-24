@@ -46,7 +46,11 @@ function extract(relPath) {
   return body;
 }
 
-const slugs = Object.keys(manifest.blocks); // manifest order is the page order — deterministic, not sorted by accident
+// Manifest order is the page order — deterministic, not sorted by accident. Drafts are left out entirely:
+// a draft is a block whose five platforms do not all exist yet, and the website never shows a partial one.
+const PUBLISHED = new Set(["beta", "stable", "deprecated"]);
+const slugs = Object.keys(manifest.blocks).filter((s) => PUBLISHED.has(manifest.blocks[s].status));
+const drafts = Object.keys(manifest.blocks).filter((s) => !PUBLISHED.has(manifest.blocks[s].status));
 const snippets = {};
 const coverage = Object.fromEntries(PLATFORM_ORDER.map((p) => [p, 0]));
 
@@ -94,8 +98,14 @@ const parity = {
   total: slugs.length,
   platforms: PLATFORM_ORDER,
   coverage,
-  /** Blocks that carry every platform in PLATFORM_ORDER — today, realistically, none. */
+  /**
+   * Blocks carrying every platform in PLATFORM_ORDER. Published blocks are gated on this by
+   * check-block-source.mjs, so for a healthy catalogue this equals `total` — it is kept as a derived number
+   * rather than assumed, because a number that can only ever be right proves nothing.
+   */
   onEveryPlatform: slugs.filter((s) => PLATFORM_ORDER.every((p) => manifest.blocks[s].sources[p])).length,
+  /** Declared but not published: their five platforms do not all exist yet. */
+  drafts,
   blocks: Object.fromEntries(slugs.map((s) => [s, PLATFORM_ORDER.filter((p) => manifest.blocks[s].sources[p])])),
 };
 
@@ -114,4 +124,5 @@ for (const [file, out] of [
 if (stale) process.exit(1);
 
 const summary = PLATFORM_ORDER.map((p) => `${p} ${coverage[p]}`).join(", ");
-console.log(`${CHECK ? "check:blocks ok" : "gen:blocks"} — ${slugs.length} blocks (${summary}).`);
+const draftNote = drafts.length ? ` ${drafts.length} draft(s) withheld: ${drafts.join(", ")}.` : "";
+console.log(`${CHECK ? "check:blocks ok" : "gen:blocks"} — ${slugs.length} blocks (${summary}).${draftNote}`);

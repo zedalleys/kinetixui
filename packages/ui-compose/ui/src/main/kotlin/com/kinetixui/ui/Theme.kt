@@ -50,6 +50,12 @@ data class KinetixColors(
     val infoForeground: Color,
     val popover: Color,
     val popoverForeground: Color,
+    /**
+     * The categorical chart palette, in order. A list rather than five named fields because callers index
+     * into it by series — `chart[series % chart.size]` — which is what makes a chart with six series wrap
+     * instead of crashing. Same shape as SwiftUI's `KinetixColors.chart`.
+     */
+    val chart: List<Color>,
 )
 
 private val LightKinetixColors = KinetixColors(
@@ -77,6 +83,13 @@ private val LightKinetixColors = KinetixColors(
     tertiary = GeneratedLight.colorTertiary,
     warning = GeneratedLight.colorWarning,
     warningForeground = GeneratedLight.colorWarningForeground,
+    chart = listOf(
+        GeneratedLight.colorChart1,
+        GeneratedLight.colorChart2,
+        GeneratedLight.colorChart3,
+        GeneratedLight.colorChart4,
+        GeneratedLight.colorChart5,
+    ),
     card = GeneratedLight.colorCard,
     cardForeground = GeneratedLight.colorCardForeground,
     success = GeneratedLight.colorSuccess,
@@ -112,6 +125,13 @@ private val DarkKinetixColors = KinetixColors(
     tertiary = GeneratedDark.colorTertiary,
     warning = GeneratedDark.colorWarning,
     warningForeground = GeneratedDark.colorWarningForeground,
+    chart = listOf(
+        GeneratedDark.colorChart1,
+        GeneratedDark.colorChart2,
+        GeneratedDark.colorChart3,
+        GeneratedDark.colorChart4,
+        GeneratedDark.colorChart5,
+    ),
     card = GeneratedDark.colorCard,
     cardForeground = GeneratedDark.colorCardForeground,
     success = GeneratedDark.colorSuccess,

@@ -8,8 +8,15 @@ import { CopyButton } from "./copy-button";
 import { analytics } from "@/lib/analytics";
 import { PLATFORM_FROM_CODE_TAB, componentSlugFor } from "@/lib/analytics-surfaces";
 import { demoRegistry } from "@/registry/demos";
-import { PLATFORM_LABEL, PLATFORM_ORDER, platformCode, type Platform } from "@/registry/platform-code";
-import { compositionReason } from "@/lib/platform-code-compositions";
+import { platformCode } from "@/registry/platform-code";
+import {
+  GUIDANCE_LABEL,
+  PLATFORM_TABS,
+  WAVE_LABEL,
+  platformStateFor,
+  type CodeTab,
+  type PlatformTab,
+} from "@/lib/platform-tabs";
 import { usageExamples } from "@/registry/usage-examples.generated";
 
 const tabTrigger = cn(
@@ -28,6 +35,26 @@ function CodePane({ code, onCopy }: { code: string; onCopy?: () => void }) {
   );
 }
 
+/**
+ * The line above a snippet that is NOT a KinetixUI component on this platform.
+ *
+ * It is deliberately not a subtle footnote. An unlabelled native tab reads as "we ship this here", which is
+ * the claim the whole guidance model exists to stop being made by accident.
+ */
+function GuidanceNote({ kind, label, children }: { kind: string; label: string; children: React.ReactNode }) {
+  return (
+    <p className="border-b border-border bg-background/60 px-4 py-2.5 text-[13px] text-muted-foreground">
+      <span
+        className="mr-2 rounded-sm border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-foreground"
+        data-guidance={kind}
+      >
+        {label}
+      </span>
+      {children}
+    </p>
+  );
+}
+
 export function ComponentPreview({
   name,
   align = "center",
@@ -38,7 +65,7 @@ export function ComponentPreview({
   className?: string;
 }) {
   // hooks first: an early return below must not change how many hooks run
-  const [platform, setPlatform] = React.useState<Platform>("react");
+  const [platform, setPlatform] = React.useState<CodeTab>("react");
   const pathname = usePathname();
   const entry = demoRegistry[name];
   // the component whose page this is — from the route, validated against the docs' own component list. A demo
@@ -55,16 +82,58 @@ export function ComponentPreview({
 
   const Demo = entry.component;
 
-  // React snippet is canonical (from the demo). The native ones come from a compiled example where one has
-  // been written (usage-examples.generated.ts, extracted from source the native CI builds), and otherwise
-  // from the hand-written platformCode entry. A key never appears in both: check:platform-code fails on that,
-  // so migrating a snippet means moving it, not copying it.
-  const native = { ...(platformCode[name] ?? {}), ...(usageExamples[name] ?? {}) };
-  const byPlatform: Partial<Record<Platform, string>> = { react: entry.source, ...native };
-  const platforms = PLATFORM_ORDER.filter((p) => byPlatform[p]);
+  // React snippet is canonical (from the demo). The others come from a compiled example where one exists
+  // (usage-examples.generated.ts, extracted from source each platform's CI builds) and otherwise from the
+  // hand-written platformCode entry. A key never appears in both: check:platform-code fails on that, so
+  // migrating a snippet means moving it, not copying it.
+  const byTab: Partial<Record<CodeTab, string>> = {
+    react: entry.source,
+    ...(platformCode[name] ?? {}),
+    ...(usageExamples[name] ?? {}),
+  };
+
+  /**
+   * Which tabs this component shows. All five whenever the demo is on a component page, because a missing tab
+   * is itself a claim — "there is nothing to say about Angular here" — and there always is something. Outside
+   * a component page there is no slug to look guidance up by, so only the tabs that have code are shown.
+   */
+  const tabs = PLATFORM_TABS.filter((t) => byTab[t.tab] || (component && platformStateFor(component, t.platform)));
+
   // the code itself is never reported — only which component and which platform's snippet was copied
-  const copied = (p: Platform) => {
-    if (component) analytics.track("component_code_copied", { component, platform: PLATFORM_FROM_CODE_TAB[p], source: "component_page" });
+  const copied = (tab: CodeTab) => {
+    if (component) analytics.track("component_code_copied", { component, platform: PLATFORM_FROM_CODE_TAB[tab], source: "component_page" });
+  };
+
+  const renderTab = ({ tab, platform: manifestPlatform, label }: PlatformTab) => {
+    const code = byTab[tab];
+    const state = platformStateFor(component, manifestPlatform);
+
+    if (state && state !== "implementation" && state.type === "planned") {
+      return (
+        <p className="px-4 py-5 text-[13px] text-muted-foreground">
+          <span className="font-medium text-foreground">Not implemented in {label} yet.</span>{" "}
+          {label} is in preview and rolling out in waves; this component is in the{" "}
+          {WAVE_LABEL[state.wave ?? ""] ?? state.wave} wave. There is deliberately no example here — an
+          invented one would be worse than none.
+        </p>
+      );
+    }
+
+    if (!code) return null;
+
+    return (
+      <>
+        {state && state !== "implementation" && (
+          <GuidanceNote kind={state.type} label={GUIDANCE_LABEL[state.type]}>
+            {state.type === "native-equivalent"
+              ? `${label} already provides this, so KinetixUI ships no component for it. `
+              : `KinetixUI ships no ${label} component for this — compose it from the ones it does ship. `}
+            {state.reason}
+          </GuidanceNote>
+        )}
+        <CodePane code={code} onCopy={() => copied(tab)} />
+      </>
+    );
   };
 
   return (
@@ -94,11 +163,11 @@ export function ComponentPreview({
 
         <Tabs.Content value="code">
           <div className="border-t border-border bg-muted/40">
-            {platforms.length > 1 ? (
+            {tabs.length > 1 ? (
               <Tabs.Root
                 value={platform}
                 onValueChange={(v) => {
-                  const next = v as Platform;
+                  const next = v as CodeTab;
                   // only an explicit change of platform; the default React tab rendering is not a selection
                   if (next === platform) return;
                   setPlatform(next);
@@ -107,36 +176,30 @@ export function ComponentPreview({
                   }
                 }}
               >
-                <Tabs.List aria-label="Platform" className="flex items-center gap-1 border-b border-border px-2">
-                  {platforms.map((p) => (
+                <Tabs.List aria-label="Platform" className="flex flex-wrap items-center gap-1 border-b border-border px-2">
+                  {tabs.map((t) => (
                     <Tabs.Trigger
-                      key={p}
-                      value={p}
+                      key={t.tab}
+                      value={t.tab}
                       className={cn(
                         "-mb-px border-b-2 border-transparent px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground transition-colors",
                         "hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground",
                       )}
                     >
-                      {PLATFORM_LABEL[p]}
+                      {t.label}
+                      {/* a preview platform says so on the tab itself — the tab sitting beside four stable
+                          ones would otherwise imply the same maturity */}
+                      {t.maturity !== "stable" && (
+                        <span className="ml-1.5 normal-case tracking-normal text-muted-foreground">· {t.maturity}</span>
+                      )}
                     </Tabs.Trigger>
                   ))}
                 </Tabs.List>
-                {platforms.map((p) => {
-                  // A few components are deliberately not ported. Their native tab shows the composition to
-                  // use instead, which is genuinely useful — but it has to say so, or the tab reads as a claim
-                  // that the component exists on that platform.
-                  const reason = compositionReason(name, p);
-                  return (
-                    <Tabs.Content key={p} value={p}>
-                      {reason && (
-                        <p className="border-b border-border bg-background/60 px-4 py-2.5 text-[13px] text-muted-foreground">
-                          <span className="font-medium text-foreground">Not a {PLATFORM_LABEL[p]} port.</span> {reason}
-                        </p>
-                      )}
-                      <CodePane code={byPlatform[p]!} onCopy={() => copied(p)} />
-                    </Tabs.Content>
-                  );
-                })}
+                {tabs.map((t) => (
+                  <Tabs.Content key={t.tab} value={t.tab}>
+                    {renderTab(t)}
+                  </Tabs.Content>
+                ))}
               </Tabs.Root>
             ) : (
               <CodePane code={entry.source} onCopy={() => copied("react")} />

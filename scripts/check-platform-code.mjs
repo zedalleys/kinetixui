@@ -1,12 +1,14 @@
 /**
- * check-platform-code.mjs — every native snippet the component pages show must be real.
+ * check-platform-code.mjs — every snippet the component pages show must be real, and every platform tab must
+ * be honest about what kind of answer it is giving.
  *
  *   node scripts/check-platform-code.mjs
  *
- * `apps/web/src/registry/platform-code.ts` carries the SwiftUI / Compose / Flutter snippet for each demo on a
- * component page. Until this check existed, nothing verified any of it: the snippets were hand-typed, and an
- * API that never existed read exactly like one that did. It did happen — `chart-demo` advertised a Compose
- * `KinetixChart` that has no source file, under a comment describing Flutter's CustomPaint implementation.
+ * `apps/web/src/registry/platform-code.ts` carries the hand-written SwiftUI / Compose / Flutter snippet for
+ * each demo on a component page. Until this check existed, nothing verified any of it: the snippets were
+ * hand-typed, and an API that never existed read exactly like one that did. It did happen — `chart-demo`
+ * advertised a Compose `KinetixChart` that had no source file, under a comment describing Flutter's
+ * CustomPaint implementation.
  *
  * Two levels of proof, and this file is explicit about which each snippet gets rather than implying they are
  * equal:
@@ -18,9 +20,18 @@
  *              that platform's package. That cannot prove the arguments are right; it does prove the API
  *              exists, which is the failure that actually reached the website.
  *
- * It also enforces that a snippet for a platform the component is NOT on — a composition shown in place of a
- * port — is declared as such in `compositions`, with a reason. Those are legitimate and useful, but a reader
- * has to be told, and an undeclared one is indistinguishable from a false claim of support.
+ * Angular gets neither exception: it has no hand-written tier at all. Every Angular snippet comes from a
+ * template the Angular compiler type-checks, so a hand-written Angular entry in platform-code.ts is rejected
+ * outright rather than symbol-checked.
+ *
+ * The third job is the guidance contract. A component page shows a tab for all five platforms. Where the
+ * component is not implemented on one, `components.manifest.json` must declare `platformGuidance` for it:
+ *
+ *   native-equivalent / composition   there IS a snippet, and the page labels it as not a port.
+ *   planned                           there is NOT a snippet; the page says which wave it is in.
+ *
+ * Both directions are enforced. A snippet with no declaration is indistinguishable from a false claim of
+ * support; a declaration with no snippet is a tab that promises an answer and shows nothing.
  */
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -32,9 +43,16 @@ const src = read("apps/web/src/registry/platform-code.ts");
 const manifest = JSON.parse(read("components.manifest.json"));
 const components = manifest.components;
 
-/** platform-code.ts key → the manifest platform it documents. */
-const PLATFORM_OF = { swift: "SwiftUI", kotlin: "Compose", dart: "Flutter" };
-const SNIPPET_RE = { swift: /\n {4}swift: `([\s\S]*?)`,\n/, kotlin: /\n {4}kotlin: `([\s\S]*?)`,\n/, dart: /\n {4}dart: `([\s\S]*?)`,\n/ };
+/** platform-code.ts / usage-examples key → the manifest platform it documents. */
+const PLATFORM_OF = { angular: "Angular", swift: "SwiftUI", kotlin: "Compose", dart: "Flutter" };
+/** The ones platform-code.ts may still carry by hand. Angular is deliberately absent. */
+const HAND_WRITTEN = ["swift", "kotlin", "dart"];
+const SNIPPET_RE = {
+  angular: /\n {4}angular: `([\s\S]*?)`,\n/,
+  swift: /\n {4}swift: `([\s\S]*?)`,\n/,
+  kotlin: /\n {4}kotlin: `([\s\S]*?)`,\n/,
+  dart: /\n {4}dart: `([\s\S]*?)`,\n/,
+};
 /** A demo key is `<slug>` plus one of these variants. */
 const DEMO_SUFFIX = /-(demo|variants|sizes|states)$/;
 
@@ -58,12 +76,11 @@ const DECLARED = {
   dart: declaredSymbols("packages/ui-flutter/lib", ".dart"),
 };
 
-const compositions = JSON.parse(read("platform-code-compositions.json")).compositions;
 const generated = existsSync(`${root}/apps/web/src/registry/usage-examples.generated.ts`)
   ? read("apps/web/src/registry/usage-examples.generated.ts")
   : "";
 
-/** Whether the generated module already carries this demo key for this platform. */
+/** Whether the generated module carries this demo key for this platform. */
 const generatedHas = (key, platform) => {
   const at = generated.indexOf(`  "${key}": {`);
   if (at === -1) return false;
@@ -72,13 +89,19 @@ const generatedHas = (key, platform) => {
 };
 
 const errors = [];
-const stats = { generated: 0, symbols: 0, composition: 0 };
+const stats = { generated: 0, symbols: 0, guidance: 0 };
 
 const keyRe = /^ {2}"([^"]+)": \{$/gm;
 let m;
 const keys = [];
 while ((m = keyRe.exec(src))) keys.push({ key: m[1], at: m.index });
 if (keys.length === 0) errors.push("platform-code.ts: parsed no entries — has its shape changed?");
+
+/** The guidance entry that lets `key` show a snippet for `platform` without claiming a port, or null. */
+const guidanceFor = (slug, platform) => {
+  const g = components[slug]?.platformGuidance?.[platform];
+  return g && g.type !== "planned" ? g : null;
+};
 
 for (let i = 0; i < keys.length; i++) {
   const { key } = keys[i];
@@ -89,22 +112,22 @@ for (let i = 0; i < keys.length; i++) {
     continue;
   }
 
-  for (const p of Object.keys(PLATFORM_OF)) {
+  if (SNIPPET_RE.angular.test(body)) {
+    errors.push(`${key}: has a hand-written Angular snippet. Angular examples live in packages/ui-angular/src/usage and are extracted by \`pnpm gen:usage\`, so the compiler checks them.`);
+  }
+
+  for (const p of HAND_WRITTEN) {
     const mm = body.match(SNIPPET_RE[p]);
     if (!mm) continue;
     const snippet = mm[1];
     const platform = PLATFORM_OF[p];
     const supported = components[slug].platforms.includes(platform);
-    const composition = compositions[key];
-    const declaredComposition = composition?.platforms?.includes(platform) ? composition : null;
+    const guidance = guidanceFor(slug, platform);
 
-    if (!supported && !declaredComposition) {
+    if (!supported && !guidance) {
       errors.push(
-        `${key}: shows a ${platform} snippet, but ${slug} is not on ${platform}. If this is the composition to use instead of a port, declare it in platform-code-compositions.json with a reason; otherwise delete it.`,
+        `${key}: shows a ${platform} snippet, but ${slug} is not on ${platform}. Declare platformGuidance.${platform} in components.manifest.json (composition or native-equivalent, with a reason); otherwise delete it.`,
       );
-    }
-    if (supported && declaredComposition) {
-      errors.push(`${key}: declared as a ${platform} composition, but ${slug} IS on ${platform} — the declaration is stale`);
     }
 
     // A migrated key MOVES out of platform-code.ts rather than being copied: holding both a compiled
@@ -119,28 +142,62 @@ for (let i = 0; i < keys.length; i++) {
       errors.push(`${key}: ${platform} snippet uses ${unknown.join(", ")} — no such symbol in that package`);
       continue;
     }
-    if (declaredComposition) stats.composition++;
+    if (guidance) stats.guidance++;
     else stats.symbols++;
   }
 }
 
-// A declaration with no snippet left behind is dead weight that will mislead the next reader.
-for (const [key, entry] of Object.entries(compositions)) {
-  if (!keys.find((k) => k.key === key)) { errors.push(`platform-code-compositions.json: "${key}" is not a key in platform-code.ts`); continue; }
-  for (const platform of entry.platforms ?? []) {
-    if (!Object.values(PLATFORM_OF).includes(platform)) errors.push(`platform-code-compositions.json: "${key}" names unknown platform "${platform}"`);
+/**
+ * The other direction: a component that declares a native-equivalent or a composition has promised the page
+ * something to render. The demo key is the component's own `<slug>-demo`, which is what the component page
+ * mounts.
+ */
+const handWrittenKeys = new Set(keys.map((k) => k.key));
+const handWrittenHas = (key, p) => {
+  const entry = keys.find((k) => k.key === key);
+  if (!entry) return false;
+  const i = keys.indexOf(entry);
+  const body = src.slice(entry.at, i + 1 < keys.length ? keys[i + 1].at : src.length);
+  return SNIPPET_RE[p].test(body);
+};
+const TAB_OF = Object.fromEntries(Object.entries(PLATFORM_OF).map(([tab, platform]) => [platform, tab]));
+
+for (const [slug, c] of Object.entries(components)) {
+  for (const [platform, g] of Object.entries(c.platformGuidance ?? {})) {
+    if (g.type === "planned") continue;
+    const tab = TAB_OF[platform];
+    if (!tab) {
+      errors.push(`${slug}: platformGuidance names ${platform}, which has no code tab — guidance can only be shown where a tab exists`);
+      continue;
+    }
+    const key = `${slug}-demo`;
+    if (!generatedHas(key, tab) && !handWrittenHas(key, tab)) {
+      errors.push(
+        `${slug}: declares ${platform} guidance ("${g.type}") but there is no ${key} snippet for it — the tab would show a reason and no code. Add a kx-usage region, or a platform-code.ts entry.`,
+      );
+    }
+    stats.guidance += 0; // counted above for hand-written; generated ones are counted with the generated total
   }
-  if (!entry.reason || entry.reason.length < 30) errors.push(`platform-code-compositions.json: "${key}" needs a real reason, not "${entry.reason ?? ""}"`);
+}
+
+// Angular is fully generated, so every Angular implementation must have an example — there is no other tier
+// it could fall back to.
+for (const [slug, c] of Object.entries(components)) {
+  if (!c.platforms.includes("Angular")) continue;
+  if (!generatedHas(`${slug}-demo`, "angular")) {
+    errors.push(`${slug}: declared on Angular but has no ${slug}-demo example in packages/ui-angular/src/usage — the Angular tab would be empty`);
+  }
 }
 
 const generatedKeys = [...generated.matchAll(/^ {2}"([a-z0-9-]+)": {$/gm)].map((m) => m[1]);
+void handWrittenKeys;
 console.log(
-  `  ${keys.length + generatedKeys.length} demo keys — ${generatedKeys.length} from compiled source, ` +
-    `${stats.symbols} symbol-checked, ${stats.composition} declared compositions`,
+  `  ${new Set([...keys.map((k) => k.key), ...generatedKeys]).size} demo keys — ${generatedKeys.length} with compiled examples, ` +
+    `${stats.symbols} symbol-checked, ${stats.guidance} labelled as guidance rather than a port`,
 );
 if (errors.length) {
   console.error(`\n${errors.map((e) => `  x ${e}`).join("\n")}`);
   console.error(`\ncheck:platform-code failed — ${errors.length} problem(s).`);
   process.exit(1);
 }
-console.log("check:platform-code ok — every native snippet is backed by a real API.");
+console.log("check:platform-code ok — every snippet is backed by a real API, and every gap says what it is.");

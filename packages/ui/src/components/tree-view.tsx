@@ -50,7 +50,14 @@ export interface TreeViewProps extends React.HTMLAttributes<HTMLDivElement> {
   expanded?: string[];
   defaultExpanded?: string[];
   onExpandedChange?: (expanded: string[]) => void;
+  /** the selected node's value. Controlled: pass `onSelectedChange` with it. */
   selected?: string;
+  /**
+   * the node selected before the caller takes over. Without this the tree could not show a selection at all
+   * unless the caller stored one — `select` only called back, so an uncontrolled tree stayed permanently
+   * unselected. Expansion and checking already worked both ways; selection did not.
+   */
+  defaultSelected?: string;
   onSelectedChange?: (value: string) => void;
   checkedValues?: string[];
   defaultCheckedValues?: string[];
@@ -66,6 +73,7 @@ const TreeView = React.forwardRef<HTMLDivElement, TreeViewProps>(
       defaultExpanded = [],
       onExpandedChange,
       selected,
+      defaultSelected,
       onSelectedChange,
       checkedValues,
       defaultCheckedValues = [],
@@ -79,6 +87,8 @@ const TreeView = React.forwardRef<HTMLDivElement, TreeViewProps>(
     const currentExpanded = expanded ?? internalExpanded;
     const [internalChecked, setInternalChecked] = React.useState(defaultCheckedValues);
     const currentChecked = checkedValues ?? internalChecked;
+    const [internalSelected, setInternalSelected] = React.useState(defaultSelected);
+    const currentSelected = selected ?? internalSelected;
     const [tabbableValue, setTabbableValue] = React.useState<string | null>(null);
     const firstValueRef = React.useRef<string | null>(null);
 
@@ -107,8 +117,11 @@ const TreeView = React.forwardRef<HTMLDivElement, TreeViewProps>(
     const contextValue: TreeViewContextValue = {
       isExpanded: (value) => currentExpanded.includes(value),
       toggleExpanded,
-      selected,
-      select: (value) => onSelectedChange?.(value),
+      selected: currentSelected,
+      select: (value) => {
+        setInternalSelected(value);
+        onSelectedChange?.(value);
+      },
       checkable,
       isChecked: (value) => currentChecked.includes(value),
       toggleChecked,
@@ -146,6 +159,15 @@ const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
   ({ className, value, label, icon, disabled, children, onClick, onKeyDown, ...props }, ref) => {
     const ctx = useTreeViewContext();
     const level = React.useContext(TreeLevelContext);
+    /**
+     * The row's own label, so the treeitem is named by it alone.
+     *
+     * Without this the accessible name is computed from the element's contents, and an EXPANDED item's
+     * contents include its whole subtree — "src" announced as "src index.ts". `role="group"` on the children
+     * is required by the tree pattern but does not stop name-from-content walking into it; pointing
+     * `aria-labelledby` at the label span does.
+     */
+    const labelId = React.useId();
     const hasChildren = React.Children.count(children) > 0;
     const expanded = ctx.isExpanded(value);
     const isChecked = ctx.isChecked(value);
@@ -214,6 +236,7 @@ const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
       <div
         ref={setRefs}
         role="treeitem"
+        aria-labelledby={labelId}
         aria-expanded={hasChildren ? expanded : undefined}
         aria-selected={ctx.selected === value}
         aria-disabled={disabled || undefined}
@@ -257,7 +280,9 @@ const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
             />
           )}
           {icon}
-          <span className="truncate">{label}</span>
+          <span id={labelId} className="truncate">
+            {label}
+          </span>
         </div>
         {hasChildren && expanded && (
           <div role="group">

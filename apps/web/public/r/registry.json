@@ -64,6 +64,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -88,6 +89,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -200,6 +202,7 @@
       "platforms": [
         "React",
         "SwiftUI",
+        "Compose",
         "Flutter"
       ]
     },
@@ -262,8 +265,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "command",
@@ -311,8 +313,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "data-table",
@@ -372,8 +373,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "direction-provider",
@@ -415,6 +415,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -439,6 +440,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -560,8 +562,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "kanban-board",
@@ -570,8 +571,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "kbd",
@@ -580,6 +580,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -620,8 +621,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "marquee",
@@ -657,8 +657,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "metric",
@@ -667,6 +666,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -694,8 +694,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "native-select",
@@ -703,7 +702,8 @@
       "title": "Native Select",
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
-        "React"
+        "React",
+        "Angular"
       ]
     },
     {
@@ -747,6 +747,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -783,6 +784,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -820,6 +822,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -832,6 +835,7 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54863:536.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -880,6 +884,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -941,6 +946,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -953,6 +959,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -977,6 +984,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -1063,6 +1071,7 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:14021.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -1075,6 +1084,7 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:13857.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -1099,6 +1109,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -1111,6 +1122,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -1135,8 +1147,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "tree-view",
@@ -1148,8 +1159,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     },
     {
       "name": "virtual-list",
@@ -1161,8 +1171,7 @@
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "status": "beta"
+      ]
     }
   ]
 }

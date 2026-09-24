@@ -2,7 +2,7 @@
   "$schema": "https://kinetixui.com/schema/component-spec.json",
   "name": "tour",
   "title": "Tour",
-  "status": "beta",
+  "status": "stable",
   "since": "0.12.0",
   "platforms": [
     "React"

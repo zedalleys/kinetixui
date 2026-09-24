@@ -6,7 +6,7 @@
  *
  * The Storybook pass (a11y-browser.mjs) covers the components; nothing covered the pages built from them, which is
  * how ~60 contrast / naming / heading findings and two phone-width overflows accumulated. This keeps the site at zero:
- * for every page, in light AND dark, at phone / tablet / desktop width, it
+ * for every page, in light AND dark, at small-phone / phone / tablet / desktop width, it
  *
  *   - runs axe-core with every rule on (except `region`, which is a page-structure heuristic), and
  *   - fails on horizontal page overflow (`scrollWidth > clientWidth`).
@@ -43,6 +43,11 @@ const PAGES = [
   "/docs/components/data-grid",
 ];
 const WIDTHS = [
+  // 320 is the narrowest width the site claims to support, and it is not a rounding of 375: a fixed-width
+  // column that fits at 375 can still push the page wider at 320. /infographic did exactly that — its
+  // dependency chart overflowed by 5px at 320 only — and this gate did not see it, because it started at
+  // 375. Cheap to check, and the only width where that class of bug shows up.
+  ["small-phone", 320, 812],
   ["phone", 375, 812],
   ["tablet", 768, 1024],
   ["desktop", 1280, 900],

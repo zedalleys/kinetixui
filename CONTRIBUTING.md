@@ -1,6 +1,6 @@
 # Contributing
 
-The full guide — the four-platform rule, the standing non-ports, the
+The full guide — the platform rule, the standing non-ports, the
 per-platform workflow, CI, publishing, component status, and blocks — lives
 at **[kinetixui.com/docs/contributing](https://kinetixui.com/docs/contributing)**
 (source: `apps/web/src/app/docs/contributing/page.mdx`), so it stays one

@@ -10,25 +10,21 @@ import { analytics } from "@/lib/analytics";
 import { PLATFORM_FROM_CODE_TAB } from "@/lib/analytics-surfaces";
 import { catalogPlatformCount, documentedExceptionCount, fullCoverageCount } from "@/lib/project-stats";
 import { componentTotal } from "@/lib/platform-support";
-import { PLATFORM_ORDER, type Platform } from "@/registry/platform-code";
+import { PLATFORM_TABS, type CodeTab } from "@/lib/platform-tabs";
 import { CopyButton } from "./copy-button";
 import { cn } from "@/lib/utils";
 
 /** The recipe's identifier in analytics — not a real registry component, so it's not `componentSlugFor`-derived. */
 const FLAGSHIP_COMPONENT = "flagship-preferences";
 
-// Elsewhere on the site (ComponentPreview) these tabs read "iOS" / "Android", matching how a developer thinks
-// about the target device. Here the point IS the technology — SwiftUI and Jetpack Compose by name — so this
-// section spells them out rather than reusing the shorter device-oriented label.
-const FLAGSHIP_PLATFORM_LABEL: Record<Platform, string> = {
-  react: "React",
-  swift: "SwiftUI",
-  kotlin: "Jetpack Compose",
-  dart: "Flutter",
-};
-
-/** platform-code.ts tab key → the source this recipe actually ships and is CI-verified against. */
-const SOURCE_KEY: Record<Platform, keyof typeof flagshipExampleSource> = {
+/**
+ * Tab key → the source this recipe actually ships and is CI-verified against.
+ *
+ * Partial on purpose, and the tab list below is derived from it rather than from the platform list: this
+ * recipe exists in four languages, and a fifth tab would have to mean a fifth real, compiled file. When an
+ * Angular copy is written, adding it here is what makes the tab appear — not the other way round.
+ */
+const SOURCE_KEY: Partial<Record<CodeTab, keyof typeof flagshipExampleSource>> = {
   react: "react",
   swift: "swiftui",
   kotlin: "compose",
@@ -36,12 +32,15 @@ const SOURCE_KEY: Record<Platform, keyof typeof flagshipExampleSource> = {
 };
 
 /** What actually verifies each platform's copy of this recipe — stated precisely, not a uniform green check. */
-const VERIFICATION: Record<Platform, string> = {
+const VERIFICATION: Partial<Record<CodeTab, string>> = {
   react: "Typechecked, linted and built with this site",
   swift: "Compiled by swift build + swift test in CI",
   kotlin: "Compiled and behaviour-tested by Gradle in CI",
   dart: "Analyzed and widget-tested by flutter test in CI",
 };
+
+/** The tabs, in manifest order, restricted to the platforms this recipe really has a source file for. */
+const FLAGSHIP_TABS = PLATFORM_TABS.filter((t) => SOURCE_KEY[t.tab]);
 
 const tabTrigger = cn(
   "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
@@ -50,10 +49,10 @@ const tabTrigger = cn(
 );
 
 export function CrossPlatformFlagship() {
-  const [platform, setPlatform] = React.useState<Platform>("react");
+  const [platform, setPlatform] = React.useState<CodeTab>("react");
 
   const onPlatformChange = (value: string) => {
-    const next = value as Platform;
+    const next = value as CodeTab;
     if (next === platform) return; // an explicit change only — the default React tab rendering is not a selection
     setPlatform(next);
     analytics.track("platform_selected", {
@@ -81,11 +80,11 @@ export function CrossPlatformFlagship() {
             <PreferencesPanel />
           </div>
           <ul className="mt-6 space-y-2 border-t border-border pt-4">
-            {PLATFORM_ORDER.map((p) => (
-              <li key={p} className="flex items-start gap-2 text-[12px] text-muted-foreground">
+            {FLAGSHIP_TABS.map((t) => (
+              <li key={t.tab} className="flex items-start gap-2 text-[12px] text-muted-foreground">
                 <Check aria-hidden className="mt-0.5 size-3.5 shrink-0 text-primary" />
                 <span>
-                  <span className="font-medium text-foreground">{FLAGSHIP_PLATFORM_LABEL[p]}</span> — {VERIFICATION[p]}
+                  <span className="font-medium text-foreground">{t.label}</span> — {VERIFICATION[t.tab]}
                 </span>
               </li>
             ))}
@@ -95,26 +94,29 @@ export function CrossPlatformFlagship() {
         {/* platform tabs + real, CI-compiled source */}
         <Tabs.Root value={platform} onValueChange={onPlatformChange} className="flex flex-col bg-background">
           <Tabs.List aria-label="Implementation platform" className="flex items-center gap-1 border-b border-border px-4">
-            {PLATFORM_ORDER.map((p) => (
-              <Tabs.Trigger key={p} value={p} className={tabTrigger}>
-                {FLAGSHIP_PLATFORM_LABEL[p]}
+            {FLAGSHIP_TABS.map((t) => (
+              <Tabs.Trigger key={t.tab} value={t.tab} className={tabTrigger}>
+                {t.label}
               </Tabs.Trigger>
             ))}
           </Tabs.List>
-          {PLATFORM_ORDER.map((p) => (
-            <Tabs.Content key={p} value={p} className="relative flex-1">
-              {/* copies fine; intentionally reports nothing — see the note above */}
-              <CopyButton value={flagshipExampleSource[SOURCE_KEY[p]]} className="absolute right-3 top-3 z-10" />
-              <pre
-                // a code block scrolls sideways/vertically when it overflows, so the keyboard must be able to reach it
-                tabIndex={0}
-                aria-label={`${FLAGSHIP_PLATFORM_LABEL[p]} source`}
-                className="h-full max-h-[420px] overflow-auto p-4 font-mono text-[12.5px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-              >
-                <code>{flagshipExampleSource[SOURCE_KEY[p]]}</code>
-              </pre>
-            </Tabs.Content>
-          ))}
+          {FLAGSHIP_TABS.map((t) => {
+            const source = flagshipExampleSource[SOURCE_KEY[t.tab]!];
+            return (
+              <Tabs.Content key={t.tab} value={t.tab} className="relative flex-1">
+                {/* copies fine; intentionally reports nothing — see the note above */}
+                <CopyButton value={source} className="absolute right-3 top-3 z-10" />
+                <pre
+                  // a code block scrolls sideways/vertically when it overflows, so the keyboard must be able to reach it
+                  tabIndex={0}
+                  aria-label={`${t.label} source`}
+                  className="h-full max-h-[420px] overflow-auto p-4 font-mono text-[12.5px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                >
+                  <code>{source}</code>
+                </pre>
+              </Tabs.Content>
+            );
+          })}
         </Tabs.Root>
       </div>
 

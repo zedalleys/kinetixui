@@ -29,4 +29,5 @@ packages/ui-compose/.gradle/
 packages/ui-compose/local.properties
 packages/ui-compose/.idea/
 packages/ui-compose/**/*.iml
-marketing/content/drafts/
+# Generated release worksheets only — hand-written drafts under drafts/<id>/ ARE tracked.
+marketing/content/drafts/release-*.md

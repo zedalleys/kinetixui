@@ -13,6 +13,8 @@ import {
   AccordionTrigger,
 } from "./components/accordion";
 
+// kx-verify: interaction
+
 describe("Button", () => {
   it("renders the label and forwards clicks", async () => {
     const onClick = vi.fn();
@@ -79,6 +81,32 @@ describe("Tag", () => {
     const link = screen.getByRole("link", { name: "Active" });
     expect(link).toHaveAttribute("href", "/filter");
     expect(link).toHaveClass("bg-accent"); // tag classes merged onto the <a>
+  });
+
+  it("names the remove button after the tag, so a row of tags is not a row of identical buttons", () => {
+    render(
+      <>
+        <Tag onRemove={() => {}}>In stock</Tag>
+        <Tag onRemove={() => {}}>On sale</Tag>
+      </>,
+    );
+    expect(screen.getByRole("button", { name: "Remove In stock" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove On sale" })).toBeInTheDocument();
+  });
+
+  it("falls back to a plain Remove when the children are not text, and takes removeLabel over both", () => {
+    render(
+      <>
+        <Tag onRemove={() => {}}>
+          <span>Complex</span>
+        </Tag>
+        <Tag onRemove={() => {}} removeLabel="Clear the price filter">
+          Under $50
+        </Tag>
+      </>,
+    );
+    expect(screen.getByRole("button", { name: "Remove" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clear the price filter" })).toBeInTheDocument();
   });
 
   it("nests the remove button inside the slotted element when combined with onRemove", async () => {

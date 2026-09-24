@@ -19,7 +19,7 @@
   "items": [
     {
       "id": "a01",
-      "title": "Your cross-platform design system is probably lying about parity",
+      "title": "Your cross-platform design system may be lying about parity",
       "pillar": "A",
       "audience": [
         "design-system-engineer",
@@ -31,11 +31,23 @@
       ],
       "format": "article",
       "intent": "awareness",
-      "status": "idea",
+      "status": "drafted",
       "sourceFeature": "check-platform-source",
       "insight": "Parity is a claim with no source behind it until something verifies it against the packages.",
       "cta": "/docs/platforms",
-      "publishWindow": null
+      "publishWindow": null,
+      "draftPath": "marketing/content/drafts/a01/",
+      "campaign": "kx_parity_proof",
+      "files": [
+        "article.md",
+        "devto.md",
+        "linkedin.md",
+        "x-thread.md",
+        "visual-brief.md",
+        "sources.md",
+        "publish-checklist.md",
+        "measurement.md"
+      ]
     },
     {
       "id": "a02",

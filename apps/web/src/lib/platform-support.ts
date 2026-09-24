@@ -7,7 +7,13 @@
 import manifest from "../../../../components.manifest.json";
 import { CATALOG_PLATFORMS, NATIVE_PLATFORMS } from "./platform-parity";
 
-type ManifestComponent = { status: string; platforms: string[]; platformNote?: string };
+type Guidance = { type: "native-equivalent" | "composition" | "planned"; reason?: string; wave?: string };
+type ManifestComponent = {
+  status: string;
+  platforms: string[];
+  platformNote?: string;
+  platformGuidance?: Record<string, Guidance>;
+};
 const components = manifest.components as Record<string, ManifestComponent>;
 const all = Object.keys(components);
 
@@ -115,7 +121,11 @@ export const gaps = all
   .map((slug) => {
     const c = components[slug]!;
     const missing = CATALOG_PLATFORMS.filter((p) => !c.platforms.includes(p));
-    return { slug, missing, note: c.platformNote };
+    // What the gap IS, from the manifest's guidance — a composition, or a concept the platform already has.
+    // Only reported when every missing platform agrees; a mixed row would need a per-platform table, and
+    // there is currently no component whose exceptions disagree.
+    const kinds = new Set(missing.map((p) => c.platformGuidance?.[p]?.type).filter(Boolean));
+    return { slug, missing, note: c.platformNote, kind: kinds.size === 1 ? [...kinds][0]! : null };
   })
   .filter((g) => g.missing.length > 0);
 
