@@ -361,7 +361,7 @@ export function NotSupportedTable() {
   );
 }
 
-/** "86 stable, 12 beta" — from the manifest. */
+/** "97 stable, 1 beta" — from the manifest. The example in this comment is the only part that can go stale. */
 export function StatusSummary() {
   const parts = Object.entries(statusCounts).sort((a, b) => b[1] - a[1]).map(([s, n]) => `${n} ${s}`);
   return <>{parts.join(", ")}</>;
