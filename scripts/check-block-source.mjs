@@ -30,7 +30,15 @@ const read = (p) => readFileSync(`${root}/${p}`, "utf8");
 const manifest = JSON.parse(read("blocks.manifest.json"));
 const platformDefs = JSON.parse(read("components.manifest.json")).platformDefinitions;
 const KNOWN = new Set(Object.keys(platformDefs));
-const STATUSES = new Set(["beta", "stable", "deprecated"]);
+/**
+ * `draft` is the only status that may be missing a platform, and it is the only one the website does not
+ * publish. Everything else has shipped or is shipping, and a published Block claims to be a KinetixUI
+ * composition — which means all five platforms, not "the ones we got round to". Without this gate the
+ * catalogue drifts back into a React catalogue with four platforms sprinkled on it, which is exactly the
+ * state this PR exists to end.
+ */
+const PUBLISHED = new Set(["beta", "stable", "deprecated"]);
+const STATUSES = new Set([...PUBLISHED, "draft"]);
 
 /** Where a platform's block source is allowed to live, and what it must look like. */
 const EXPECTED = {
@@ -53,6 +61,16 @@ for (const slug of slugs) {
   if (!b.sources || typeof b.sources !== "object" || Object.keys(b.sources).length === 0) {
     errors.push(`${slug}: needs a "sources" map with at least one real platform implementation`);
     continue;
+  }
+
+  if (PUBLISHED.has(b.status)) {
+    const missing = [...KNOWN].filter((platform) => !b.sources[platform]);
+    if (missing.length) {
+      errors.push(
+        `${slug}: status "${b.status}" is published, so it must implement every platform — missing ${missing.join(", ")}. ` +
+          `Write the real source for each, or set status to "draft" until they exist.`,
+      );
+    }
   }
 
   for (const [platform, path] of Object.entries(b.sources)) {
@@ -104,5 +122,7 @@ if (errors.length) {
 const counts = Object.keys(platformDefs)
   .map((p) => `${p} ${slugs.filter((s) => manifest.blocks[s].sources[p]).length}`)
   .join(", ");
+const drafts = slugs.filter((s) => !PUBLISHED.has(manifest.blocks[s].status));
 console.log(`  ${slugs.length} blocks — ${counts}`);
-console.log("check:block-source ok — every declared platform is backed by a real source file.");
+if (drafts.length) console.log(`  ${drafts.length} draft(s), not published: ${drafts.join(", ")}`);
+console.log("check:block-source ok — every declared platform is backed by a real source file, and every published block carries all of them.");

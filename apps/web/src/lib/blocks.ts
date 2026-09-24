@@ -50,3 +50,13 @@ export const blockCoverage = parity.coverage as Record<Platform, number>;
 
 /** The platforms that carry at least one block — used to describe coverage without implying the rest failed. */
 export const platformsWithBlocks: Platform[] = PLATFORMS.filter((p) => (blockCoverage[p] ?? 0) > 0);
+
+/**
+ * How many published blocks carry every platform, derived by `pnpm gen:blocks` from the source files
+ * themselves. `check:block-source` refuses to publish a block that does not, so in a healthy catalogue this
+ * equals `blockTotal` — the page reads both and says so only when it is true, rather than printing a boast
+ * that no longer has anything checking it. The old copy promised "the Compose and Flutter equivalent" long
+ * after there were five platforms.
+ */
+export const blocksOnEveryPlatform: number = parity.onEveryPlatform;
+export const everyBlockIsFivePlatform: boolean = blockTotal > 0 && blocksOnEveryPlatform === blockTotal;

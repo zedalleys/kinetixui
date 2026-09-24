@@ -522,7 +522,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-behavior.test.tsx:16-114"
+          "packages/ui/src/components-behavior.test.tsx:16-140"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -828,7 +828,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-behavior.test.tsx:16-114"
+          "packages/ui/src/components-behavior.test.tsx:16-140"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -941,7 +941,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-behavior.test.tsx:16-114"
+          "packages/ui/src/components-behavior.test.tsx:16-140"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -2053,7 +2053,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-behavior.test.tsx:16-114"
+          "packages/ui/src/components-behavior.test.tsx:16-140"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -3747,7 +3747,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-behavior.test.tsx:16-114"
+          "packages/ui/src/components-behavior.test.tsx:16-140"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",

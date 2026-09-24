@@ -1,7 +1,7 @@
 {
   "$schema": "https://kinetixui.com/schema/blocks.manifest.json",
   "$description": "Every published Block and the REAL source file behind each platform it claims. Platform names are validated against components.manifest.json -> platformDefinitions; this file deliberately does not redeclare them, so there is still exactly one authoritative platform-definition site. Coverage is explicit: a platform absent from a block's `sources` is not supported, and nothing is ever inferred. Source paths are written out rather than guessed from the slug, because a block's file naming differs per platform and a wrong guess would silently drop a real implementation. scripts/check-block-source.mjs verifies every path exists and carries the extraction markers; scripts/gen-block-examples.mjs turns them into the snippets the website shows.",
-  "$blockCatalogue": "Unlike the component catalogue, the Block catalogue is NOT expected to exist on every platform: a block is an example of composition, not part of the library's surface. A platform with no source for a block is simply not offered for it — that is not an exception needing a documented reason, and no `catalogComplete` model applies here.",
+  "$blockCatalogue": "A PUBLISHED Block carries every platform in components.manifest.json -> platformDefinitions. A Block is a worked example of KinetixUI composition, so one that exists on two platforms is not a smaller version of the idea — it is a different claim, and a reader who copies the React tab has no way to know the Compose tab was never written. scripts/check-block-source.mjs enforces this: status beta / stable / deprecated all require the full set. The escape hatch is status \"draft\", which may be missing platforms and which the website never publishes — gen-block-examples.mjs leaves drafts out of the generated snippets entirely. That way work in progress can live in the manifest without the catalogue quietly advertising a hole.",
   "blocks": {
     "sign-in": {
       "title": "Sign in",
@@ -149,6 +149,123 @@
         "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/TestimonialBlockTests.swift",
         "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/TestimonialBlockTest.kt",
         "Flutter": "packages/ui-flutter/test/blocks/testimonial_block_test.dart"
+      }
+    },
+    "create-account": {
+      "title": "Create account",
+      "description": "Sign-up card with a password strength meter that names what is missing.",
+      "category": "Forms",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/create-account.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/create-account.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/CreateAccountBlockTests.swift",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/CreateAccountBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/create_account_block_test.dart"
+      }
+    },
+    "profile-form": {
+      "title": "Profile form",
+      "description": "Avatar, name, bio and a radio group for who can see it.",
+      "category": "Forms",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/profile-form.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/profile-form.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/ProfileFormBlockTests.swift",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/ProfileFormBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/profile_form_block_test.dart"
+      }
+    },
+    "account-security": {
+      "title": "Account security",
+      "description": "Two-factor, recovery codes and the sessions you can end.",
+      "category": "Application",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/account-security.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/account-security.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/AccountSecurityBlockTests.swift",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AccountSecurityBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/account_security_block_test.dart"
+      }
+    },
+    "onboarding-checklist": {
+      "title": "Onboarding checklist",
+      "description": "Setup steps with progress counted in steps, not percent.",
+      "category": "Application",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/onboarding-checklist.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/onboarding-checklist.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/OnboardingChecklistBlockTests.swift",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/OnboardingChecklistBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/onboarding_checklist_block_test.dart"
+      }
+    },
+    "editor-toolbar": {
+      "title": "Editor toolbar",
+      "description": "Mode, formatting marks and their keyboard shortcuts.",
+      "category": "Application",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/editor-toolbar.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/editor-toolbar.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/EditorToolbarBlockTests.swift",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/EditorToolbarBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/editor_toolbar_block_test.dart"
+      }
+    },
+    "filter-panel": {
+      "title": "Filter panel",
+      "description": "Removable tags, a price slider and the filters behind them.",
+      "category": "Data",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/filter-panel.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/filter-panel.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/FilterPanelBlockTests.swift",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/FilterPanelBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/filter_panel_block_test.dart"
+      }
+    },
+    "dashboard-tabs": {
+      "title": "Dashboard tabs",
+      "description": "Tabbed metrics with the chart box reserved before it loads.",
+      "category": "Data",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/dashboard-tabs.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/dashboard-tabs.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/DashboardTabsBlockTests.swift",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/DashboardTabsBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/dashboard_tabs_block_test.dart"
+      }
+    },
+    "loading-state": {
+      "title": "Loading state",
+      "description": "Skeletons shaped like the content, and a region that says so.",
+      "category": "Feedback",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/loading-state.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/loading-state.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/LoadingStateBlockTests.swift",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/LoadingStateBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/loading_state_block_test.dart"
+      }
+    },
+    "order-summary": {
+      "title": "Order summary",
+      "description": "Line items with steppers, a promo code and the totals.",
+      "category": "Commerce",
+      "status": "stable",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/order-summary.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/order-summary.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/OrderSummaryBlockTests.swift",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/OrderSummaryBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/order_summary_block_test.dart"
       }
     }
   }
