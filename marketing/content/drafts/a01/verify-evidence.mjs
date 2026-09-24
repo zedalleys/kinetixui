@@ -13,6 +13,7 @@
 // and is eaten silently; that once made a before/after diff compare a commit to itself and
 // report success.
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 
 const git = (args) => execFileSync("git", args, { encoding: "utf8", maxBuffer: 80e6 });
 const show = (ref, path) => git(["show", `${ref}:${path}`]);
@@ -90,6 +91,51 @@ const added = (path) => git(["log", "--diff-filter=A", "--format=%h", "--", path
 check("check-platform-source.mjs added in", added("scripts/check-platform-source.mjs"), "34e5b06");
 check("check-platform-code.mjs added in", added("scripts/check-platform-code.mjs"), "c3de388");
 check("check-block-source.mjs added in", added("scripts/check-block-source.mjs"), "41fe16b");
+
+// ── the copy must still STATE the numbers git reports ───────────────────────
+//
+// Everything above proves what the repository looked like. None of it proves the article still says
+// so. That gap is not hypothetical: the current-state figures in this package were refreshed on
+// 2026-09-24, and a careless sweep would have "corrected" 91 → 90 into 90 → 90 and passed both
+// scripts. So the expected strings below are BUILT from the git-derived coverage rather than typed,
+// and then looked for in the copy. Editing a historical sentence now fails here, while editing a
+// current-state figure fails verify-package.mjs. Neither script can absolve the other.
+const b = coverage(before);
+const a = coverage(after);
+const src = (f) => readFileSync(new URL(f, new URL("./", import.meta.url)), "utf8").replace(/\s+/g, " ");
+const art = src("article.md");
+const li = src("linkedin.md");
+const xt = src("x-thread.md");
+const so = src("sources.md");
+const vb = src("visual-brief.md");
+
+for (const p of ["SwiftUI", "Compose", "Flutter"]) {
+  const pair = `${p} ${b[p]} → ${a[p]}`;
+  for (const [name, body] of [["article.md", art], ["linkedin.md", li], ["x-thread.md", xt], ["sources.md", so]]) {
+    check(`${name} states the historical "${pair}"`, body.includes(pair), true);
+  }
+}
+const allFour = `${b.allFour} → ${a.allFour}`;
+for (const [name, body] of [["article.md", art], ["linkedin.md", li], ["x-thread.md", xt], ["sources.md", so]]) {
+  check(`${name} states the historical all-four ${allFour}`, body.includes(allFour), true);
+}
+check(
+  "visual-brief states the historical triple",
+  vb.includes(`${b.SwiftUI}/${b.Compose}/${b.Flutter} → ${a.SwiftUI}/${a.Compose}/${a.Flutter}`),
+  true,
+);
+check(
+  "sources.md git table states the before row",
+  so.includes(`SwiftUI **${b.SwiftUI}**, Compose **${b.Compose}**, Flutter **${b.Flutter}**, all-four **${b.allFour}**`),
+  true,
+);
+check(
+  "sources.md git table states the after row",
+  so.includes(`SwiftUI **${a.SwiftUI}**, Compose **${a.Compose}**, Flutter **${a.Flutter}**, all-four **${a.allFour}**`),
+  true,
+);
+check("sources.md pre-fix column states the audit triple", so.includes(`${b.SwiftUI} · ${b.Compose} · ${b.Flutter}`), true);
+check("article keeps the before/after in past tense", /Correcting those moved the published numbers down/.test(art), true);
 
 let bad = 0;
 for (const r of results) {
