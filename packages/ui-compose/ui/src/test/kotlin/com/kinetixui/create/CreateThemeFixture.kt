@@ -6,14 +6,20 @@
 //
 // Theme colour #c2410c · warm neutral · warm charts
 //
-// COLOURS ONLY. KinetixUI for Compose is themeable through `KinetixColors`; corner radius and
-// elevation are generated constants that components reference directly, with no runtime theme to
-// override, so this design's radius (default) and surface treatment (soft) are
-// NOT carried here. They apply on the web. Nothing is silently dropped; there is nowhere yet for
-// them to go.
+// COLOURS ONLY. KinetixUI for Compose is themeable through `KinetixColors`, and this file carries
+// every colour it has a field for. What this design can express and Compose cannot receive:
 //
-// `input` and `ring` are not carried either: Create resolves them and
-// `KinetixColors` has no field for either one.
+//   - radius (default) and surface treatment (soft). Compose reads these from
+//     generated constants, not from a runtime theme, so nothing written here could override them.
+//     Both apply on the web.
+//   - `input` and `ring`. Create resolves both, and a preset can override either by
+//     hand, but `KinetixColors` has no field for them.
+//
+// That is the complete list for this design. Nothing else was dropped.
+//
+// Separately, and not a Create limitation: `tertiary-foreground` is in the Kinetix
+// token contract and in the SwiftUI theme, but Compose's `KinetixColors` does not expose it. Create
+// does not model that token at all, so no preset can set it and nothing here is affected by it.
 //
 // A field written as `KinetixTokensLight.…` is one this design did not change, and it keeps
 // following the library.

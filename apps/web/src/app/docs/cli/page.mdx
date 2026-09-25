@@ -207,9 +207,11 @@ rule as `--name` for SwiftUI, with Kotlin's keyword list.
 
 **Colours only here too.** Compose's radius and elevation are generated constants
 that components reference directly — there is no runtime theme to override — so a
-design's radius and surface treatment do not travel. Two colours do not either:
-`input` and `ring` are real tokens on the web and in SwiftUI, and `KinetixColors`
-has no field for them. The generated file names all of this in its own header.
+design's radius and surface treatment do not travel. Two preset roles do not
+either: `input` and `ring` can be overridden by hand in a preset, and
+`KinetixColors` has no field for them. The generated file names all of this in
+its own header, and distinguishes it from `tertiary-foreground`, which is an
+older gap in the Compose theme rather than anything a preset can reach.
 
 Compose writes `Color(0xffRRGGBB)`, which is the resolved colour exactly, so
 nothing is lost between the engine and the platform.

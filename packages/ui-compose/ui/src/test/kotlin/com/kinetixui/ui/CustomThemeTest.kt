@@ -114,11 +114,20 @@ class CustomThemeTest {
 
     @Test
     fun one_role_can_be_changed_by_copying_the_shipped_set() {
+        // Both sets are named even though only the light one changes. `light` and `dark` are required on
+        // this overload — that is what stops the bare `KinetixTheme { … }` from being ambiguous — so
+        // customising one appearance means passing the shipped value for the other, explicitly.
         val branded = LightKinetixColors.copy(action = Color(0xffc2410c))
-        val colors = colorsUnder { body -> KinetixTheme(darkTheme = false, light = branded) { body() } }
+        val colors = colorsUnder { body ->
+            KinetixTheme(light = branded, dark = DarkKinetixColors, darkTheme = false) { body() }
+        }
 
         assertEquals(Color(0xffc2410c), colors.action)
         // Everything else still follows the library.
         assertEquals(LightKinetixColors.background, colors.background)
     }
+
+    // `KinetixTheme(light = …) { }` with no `dark` is deliberately a compile error — both are required so
+    // the bare `KinetixTheme { … }` cannot match this overload. There is no test for it here because the
+    // proof is that it does not compile; `ThemeBinaryCompatibilityTest` asserts the two shapes instead.
 }

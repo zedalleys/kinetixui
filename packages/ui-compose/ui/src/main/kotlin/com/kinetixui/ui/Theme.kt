@@ -158,9 +158,34 @@ private val LocalKinetixColors = compositionLocalOf { LightKinetixColors }
  * value set. Defaults to the system setting, same as the web `next-themes`
  * "system" mode.
  *
- * Pass [light] and [dark] to use a custom theme — a file exported from
- * kinetixui.com/create with `kinetixui preset compose`, or one written by hand —
- * and the light/dark switching still comes from the system:
+ * For a custom theme, see the [KinetixTheme] overload that takes `light` and
+ * `dark`.
+ *
+ * This signature is deliberately unchanged. Adding parameters to it — even with
+ * defaults, which keeps Kotlin *source* compatibility — would change the JVM
+ * method descriptor, and an app compiled against an earlier version of this
+ * artifact would fail at runtime with `NoSuchMethodError` rather than at build
+ * time. So the custom-theme parameters live on a second function and this one
+ * delegates.
+ */
+@Composable
+fun KinetixTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit,
+) {
+    KinetixTheme(
+        light = LightKinetixColors,
+        dark = DarkKinetixColors,
+        darkTheme = darkTheme,
+        content = content,
+    )
+}
+
+/**
+ * The same wrapper with your own colour sets — a file exported from
+ * kinetixui.com/create with `kinetixui preset compose`, or one written by hand.
+ * Light/dark switching still comes from the system unless [darkTheme] says
+ * otherwise.
  *
  * ```kotlin
  * KinetixTheme(light = AcmeTheme.light, dark = AcmeTheme.dark) {
@@ -168,17 +193,21 @@ private val LocalKinetixColors = compositionLocalOf { LightKinetixColors }
  * }
  * ```
  *
- * The two parameters are added to this function rather than to a second overload
- * on purpose: two overloads whose parameters all have defaults would make the
- * bare `KinetixTheme { … }` ambiguous, which is a compile error in every existing
- * call site. They sit after [darkTheme] so that a positional `KinetixTheme(true)`
- * still binds the way it always did.
+ * [light] and [dark] have no defaults, and that is what makes the two overloads
+ * unambiguous: a call that supplies neither — the bare `KinetixTheme { … }` in
+ * every preview and every existing consumer — cannot match this one, so it
+ * resolves to the delegating overload above with no ambiguity error. Giving them
+ * defaults would make both overloads applicable to that call and break every
+ * existing call site.
+ *
+ * Start from the shipped values with [LightKinetixColors] / [DarkKinetixColors]
+ * when only one role changes: `LightKinetixColors.copy(action = …)`.
  */
 @Composable
 fun KinetixTheme(
+    light: KinetixColors,
+    dark: KinetixColors,
     darkTheme: Boolean = isSystemInDarkTheme(),
-    light: KinetixColors = LightKinetixColors,
-    dark: KinetixColors = DarkKinetixColors,
     content: @Composable () -> Unit,
 ) {
     val colors = if (darkTheme) dark else light

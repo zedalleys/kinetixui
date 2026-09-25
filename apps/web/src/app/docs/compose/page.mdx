@@ -85,10 +85,17 @@ corner radius and elevation are generated constants that components
 reference directly (`KinetixRadius.md`), with no runtime theme to override.
 A Create design's radius and surface treatment therefore apply on the web
 and not in Compose, and the generated file says so in its own header. Two
-colours do not travel either — `input` and `ring` have no field on
-`KinetixColors`. A colour the design did not change is written as a
-reference to the shipped token rather than a copy of today's value, so it
-keeps following the library.
+preset roles do not travel either: `input` and `ring` are colours a preset
+can override by hand, and `KinetixColors` has no field for them.
+
+Separately — and not a Create limitation — `tertiary-foreground` is in the
+Kinetix token contract and in the SwiftUI theme, but `KinetixColors` has
+never exposed it. Create does not model that token at all, so no preset can
+set it.
+
+A colour the design did not change is written as a reference to the shipped
+token rather than a copy of today's value, so it keeps following the
+library.
 
 ## Tokens
 

@@ -364,9 +364,14 @@ describe("preset compose", () => {
   it("claims no platform it cannot deliver", async () => {
     await presetCompose(encodePreset(preset({ brand: "#c2410c", surface: "elevated" })), {});
     const text = stdout().toLowerCase();
-    for (const claim of ["swiftui", "flutter", "android xml", "every platform", "all five"]) {
+    for (const claim of ["flutter", "android xml", "every platform", "all five", "five-platform"]) {
       expect(text, claim).not.toContain(claim);
     }
+    // SwiftUI is named once, as a comparison: `tertiary-foreground` exists there and not on Compose's
+    // KinetixColors. That is information about a native-theme gap, not a claim to produce Swift — and
+    // the exporter's own tests assert no Swift syntax appears.
+    expect(text).toContain("in the swiftui theme, but compose's");
+    expect(text).not.toContain("color(red:");
   });
 });
 

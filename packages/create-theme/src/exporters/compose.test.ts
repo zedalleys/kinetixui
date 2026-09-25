@@ -1,13 +1,20 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_PRESET, decodePreset, encodePreset, type PresetConfig } from "@kinetixui/create-preset";
+import {
+  ACCEPTED_TOKENS,
+  DEFAULT_PRESET,
+  decodePreset,
+  encodePreset,
+  type PresetConfig,
+} from "@kinetixui/create-preset";
 import { contrastRatio, guaranteedContrast, hexToRgb } from "../color-math";
 import { oklchToHex } from "../oklch";
 import { resolveCreateTheme } from "../resolve";
 import {
   COMPOSE_CHART_STOPS,
   COMPOSE_COLOR_FIELDS,
-  COMPOSE_UNMAPPED_TOKENS,
+  COMPOSE_NATIVE_THEME_GAPS,
+  COMPOSE_UNMAPPED_PRESET_ROLES,
   DEFAULT_COMPOSE_SYMBOL,
   composeColor,
   exportCompose,
@@ -60,19 +67,27 @@ describe("it targets the real Compose API", () => {
 
   it("suggests a KinetixTheme signature that exists", () => {
     expect(kotlin()).toContain("KinetixTheme(light = light, dark = dark)");
-    expect(themeKt).toMatch(/fun KinetixTheme\(\s*darkTheme: Boolean = isSystemInDarkTheme\(\),\s*light: KinetixColors = LightKinetixColors,\s*dark: KinetixColors = DarkKinetixColors,/);
+    // The custom-theme overload takes light and dark as REQUIRED parameters. That is what keeps the bare
+    // `KinetixTheme { … }` unambiguous against the original overload, which is preserved untouched so
+    // that already-compiled consumers of the Maven artifact keep resolving their JVM entry point.
+    expect(themeKt).toMatch(
+      /fun KinetixTheme\(\s*light: KinetixColors,\s*dark: KinetixColors,\s*darkTheme: Boolean = isSystemInDarkTheme\(\),\s*content:/,
+    );
+    expect(themeKt).toMatch(
+      /fun KinetixTheme\(\s*darkTheme: Boolean = isSystemInDarkTheme\(\),\s*content: @Composable \(\) -> Unit,\s*\)/,
+    );
   });
 
   it("names every Create token Compose has no field for, and no more", () => {
     // If a field is added to the Kotlin data class, this list should shrink — and the header stops
     // telling users something that is no longer true.
     const body = themeKt.slice(themeKt.indexOf("data class KinetixColors("), themeKt.indexOf("private val LocalKinetixColors"));
-    for (const token of COMPOSE_UNMAPPED_TOKENS) {
+    for (const token of COMPOSE_UNMAPPED_PRESET_ROLES) {
       expect(body, token).not.toMatch(new RegExp(`^ {4}val ${kotlinFieldName(token)}:`, "m"));
     }
     // And they really are tokens Create resolves — otherwise the header names something imaginary.
     const resolved = resolveCreateTheme(design({ brand: "#c2410c" })).light.colors;
-    for (const token of COMPOSE_UNMAPPED_TOKENS) expect(resolved[token], token).toMatch(/^#[0-9a-f]{6}$/);
+    for (const token of COMPOSE_UNMAPPED_PRESET_ROLES) expect(resolved[token], token).toMatch(/^#[0-9a-f]{6}$/);
   });
 });
 
@@ -311,10 +326,18 @@ describe("what it refuses to be", () => {
   });
 
   it("claims no platform it cannot deliver", () => {
+    // The header names SwiftUI once, to say that `tertiary-foreground` exists there and not here — which
+    // is information, not a claim to produce Swift. So this checks for claim-shaped phrasing rather than
+    // bare platform names; the "no Swift or Dart syntax" test above is the blunt guard.
     const text = source.toLowerCase();
-    for (const claim of ["swiftui", "flutter", "every platform", "all five", "android xml"]) {
+    for (const claim of ["flutter", "every platform", "all five", "android xml", "five-platform"]) {
       expect(text, claim).not.toContain(claim);
     }
+    for (const claim of ["exports to swiftui", "swiftui theme file", "generates swiftui", "and swiftui"]) {
+      expect(text, claim).not.toContain(claim);
+    }
+    // The one permitted mention is the comparison, and it reads as one.
+    expect(text).toContain("in the swiftui theme, but compose's");
   });
 
   it("says plainly that radius and elevation do not travel", () => {
@@ -323,8 +346,25 @@ describe("what it refuses to be", () => {
     expect(source).not.toMatch(/KinetixRadius|\.shadow\(|elevation =/);
   });
 
-  it("names the two tokens it cannot carry", () => {
-    for (const token of COMPOSE_UNMAPPED_TOKENS) expect(source).toContain(`\`${token}\``);
+  it("names the preset roles it cannot carry", () => {
+    for (const token of COMPOSE_UNMAPPED_PRESET_ROLES) expect(source).toContain(`\`${token}\``);
+  });
+
+  it("keeps the preset gap and the older native gap apart", () => {
+    // `input` / `ring` are roles a KX1 preset can override and this exporter cannot deliver — a Create
+    // limitation. `tertiary-foreground` is a Compose field that never existed, and Create does not model
+    // the token at all. Calling both the same thing would overstate one and hide the other.
+    expect(source).toContain("a preset can override either by");
+    expect(source).toContain("not a Create limitation");
+    expect(source).toContain("no preset can set it");
+  });
+
+  it("does not claim the native gap is a preset role", () => {
+    for (const token of COMPOSE_NATIVE_THEME_GAPS) {
+      expect(ACCEPTED_TOKENS as readonly string[], token).not.toContain(token);
+      // And the resolver really does not produce it, so the header's claim holds.
+      expect(resolveCreateTheme(design({ brand: "#c2410c" })).light.colors[token], token).toBeUndefined();
+    }
   });
 });
 

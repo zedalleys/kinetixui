@@ -17,12 +17,26 @@
  * representation, no new contrast maths, no Compose-specific repair. `compose.test.ts` proves the round
  * trip rather than asserting it in prose, because the last exporter's prose was wrong about exactly this.
  *
- * ## Three tokens with nowhere to go
+ * ## Two roles that cannot travel, and one older gap underneath them
  *
- * Create resolves `input` and `ring`, and `KinetixColors` has no field for either — they are real fields
- * on the web and in SwiftUI. A design that overrides them gets that change everywhere except here. The
- * header names them; closing the gap means adding fields to a published Maven artifact's public data
- * class, which is a deliberate native-theming change rather than an exporter's business.
+ * These are different problems and the header keeps them apart, because conflating them would overstate
+ * one and hide the other.
+ *
+ * `input` and `ring` are **preset roles**: both are in the codec's `ACCEPTED_TOKENS`, so a KX1 preset can
+ * carry a manual override for either, and Create resolves them. `KinetixColors` has no field for either,
+ * so that override reaches the web and SwiftUI and stops here. That is the gap this exporter has to
+ * declare, because it is the one a Create user can walk into.
+ *
+ * `tertiary-foreground` is a **native-theme gap** that predates Create. It is in the semantic token
+ * contract, SwiftUI's `KinetixColors` has it, and Compose's own generated token object has
+ * `colorTertiaryForeground` — but Compose's `KinetixColors` never exposed it. Create does not model the
+ * token at all (it is not in `ACCEPTED_TOKENS` and the resolver does not produce it), so no preset can
+ * be affected by it. Saying otherwise would invent a Create limitation out of a Compose one.
+ *
+ * Closing either means adding fields to a published Maven artifact's public data class. `KinetixColors`
+ * is a `data class`, so a new field changes `copy`, `componentN` and the constructor descriptor — the
+ * same class of break this PR's `KinetixTheme` change was reverted to avoid. Deliberate native-theming
+ * work, not an exporter's business.
  *
  * Pure: no file system, no process, no CLI formatting, no React.
  */
@@ -149,12 +163,23 @@ export const COMPOSE_COLOR_FIELDS: readonly (readonly [field: string, token: str
 export const COMPOSE_CHART_STOPS = [1, 2, 3, 4, 5] as const;
 
 /**
- * Tokens Create resolves that `KinetixColors` has no field for.
+ * Preset roles that cannot travel: Create resolves them, a KX1 preset can override them by hand, and
+ * `KinetixColors` has no field for either.
  *
  * Exported so a test can assert the list is complete rather than aspirational — if a field is added to
  * the Kotlin data class, this shrinks, and the test that reads the data class notices.
  */
-export const COMPOSE_UNMAPPED_TOKENS = ["input", "ring"] as const;
+export const COMPOSE_UNMAPPED_PRESET_ROLES = ["input", "ring"] as const;
+
+/**
+ * A Compose native-theme gap that has nothing to do with Create.
+ *
+ * `tertiary-foreground` is in the semantic token contract and in SwiftUI's `KinetixColors`, and Compose's
+ * generated token object has `colorTertiaryForeground` — but Compose's `KinetixColors` never exposed it.
+ * Create does not model the token (not in `ACCEPTED_TOKENS`, not produced by the resolver), so no preset
+ * can be affected. Named separately from the list above so the header can say which is which.
+ */
+export const COMPOSE_NATIVE_THEME_GAPS = ["tertiary-foreground"] as const;
 
 /** The generated object holding the shipped values, per appearance, as this file aliases them. */
 const SHIPPED_OBJECT = { light: "KinetixTokensLight", dark: "KinetixTokensDark" } as const;
@@ -212,14 +237,20 @@ function header(symbol: string, theme: ResolvedCreateTheme): string {
     "//",
     `// Theme colour ${design.brand} · ${design.neutral} neutral · ${design.chartPalette} charts`,
     "//",
-    "// COLOURS ONLY. KinetixUI for Compose is themeable through `KinetixColors`; corner radius and",
-    "// elevation are generated constants that components reference directly, with no runtime theme to",
-    `// override, so this design's radius (${design.radius}) and surface treatment (${design.surface}) are`,
-    "// NOT carried here. They apply on the web. Nothing is silently dropped; there is nowhere yet for",
-    "// them to go.",
+    "// COLOURS ONLY. KinetixUI for Compose is themeable through `KinetixColors`, and this file carries",
+    "// every colour it has a field for. What this design can express and Compose cannot receive:",
     "//",
-    `// \`${COMPOSE_UNMAPPED_TOKENS.join("` and `")}\` are not carried either: Create resolves them and`,
-    "// `KinetixColors` has no field for either one.",
+    `//   - radius (${design.radius}) and surface treatment (${design.surface}). Compose reads these from`,
+    "//     generated constants, not from a runtime theme, so nothing written here could override them.",
+    "//     Both apply on the web.",
+    `//   - \`${COMPOSE_UNMAPPED_PRESET_ROLES.join("` and `")}\`. Create resolves both, and a preset can override either by`,
+    "//     hand, but `KinetixColors` has no field for them.",
+    "//",
+    "// That is the complete list for this design. Nothing else was dropped.",
+    "//",
+    `// Separately, and not a Create limitation: \`${COMPOSE_NATIVE_THEME_GAPS.join("`, `")}\` is in the Kinetix`,
+    "// token contract and in the SwiftUI theme, but Compose's `KinetixColors` does not expose it. Create",
+    "// does not model that token at all, so no preset can set it and nothing here is affected by it.",
     "//",
     "// A field written as `KinetixTokensLight.…` is one this design did not change, and it keeps",
     "// following the library.",
