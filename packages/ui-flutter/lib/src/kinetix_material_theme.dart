@@ -86,6 +86,24 @@ class KinetixMaterialTheme {
   static ThemeData fromBrightness(Brightness brightness) =>
       brightness == Brightness.dark ? dark() : light();
 
+  /// The same mapping over your own palette — a theme exported from
+  /// kinetixui.com/create with `kinetixui preset flutter`, or one written by
+  /// hand:
+  ///
+  /// ```dart
+  /// MaterialApp(
+  ///   theme: KinetixMaterialTheme.fromColors(Brightness.light, AcmeTheme.light),
+  ///   darkTheme: KinetixMaterialTheme.fromColors(Brightness.dark, AcmeTheme.dark),
+  /// )
+  /// ```
+  ///
+  /// Mapping unchanged, which means the caveat above applies here too: Material's
+  /// [ColorScheme] is smaller than the Kinetix contract, so this carries the
+  /// subset [colorSchemeFor] documents and no more. Wrap the app in
+  /// [KinetixTheme.custom] as well for `Kinetix*` widgets to see the full palette.
+  static ThemeData fromColors(Brightness brightness, KinetixColors colors) =>
+      _build(brightness, colors);
+
   static ThemeData _build(Brightness brightness, KinetixColors c) {
     final ColorScheme colorScheme = colorSchemeFor(brightness, c);
     final TextTheme textTheme = textThemeFor(c);

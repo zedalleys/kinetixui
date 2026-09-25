@@ -151,11 +151,11 @@ format is refused with an explanation rather than misread. A preset can only nam
 tokens from the contract above — it is structured configuration, never arbitrary
 CSS.
 
-**Presets reach web CSS, SwiftUI colours and Compose colours.**
-[`kinetixui preset swiftui`](/docs/cli) and
-[`kinetixui preset compose`](/docs/cli) resolve a preset into a `KinetixColors`
-pair for [SwiftUI](/docs/swiftui) and [Compose](/docs/compose) — colours only in
-both, because that is the one axis either package is themeable along; a design's
-radius and surface treatment apply on the web and have no token to land on
-natively. Flutter has no exporter yet. The preset format is platform-neutral so
-that it can, without a new code format.
+**Presets reach web CSS and all three native colour contracts.**
+[`preset swiftui`](/docs/cli), [`preset compose`](/docs/cli) and
+[`preset flutter`](/docs/cli) resolve a preset into a `KinetixColors` pair for
+[SwiftUI](/docs/swiftui), [Compose](/docs/compose) and [Flutter](/docs/flutter).
+Colours only in all three: a design's radius and surface treatment apply on the
+web and have no runtime token to land on natively. Flutter carries the whole
+semantic contract; Compose is missing fields for `input`, `ring` and
+`tertiary-foreground`, and its generated file says so.

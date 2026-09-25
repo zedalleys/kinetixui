@@ -68,6 +68,56 @@ class Demo extends StatelessWidget {
 }
 ```
 
+## A custom theme
+
+`KinetixTheme.custom` takes your own palettes and still selects between them on
+brightness:
+
+```dart
+KinetixTheme.custom(
+  light: AcmeTheme.light,
+  dark: AcmeTheme.dark,
+  child: App(),
+)
+```
+
+Material and Cupertino widgets get the same palette through the adapters:
+
+```dart
+MaterialApp(
+  theme: KinetixMaterialTheme.fromColors(Brightness.light, AcmeTheme.light),
+  darkTheme: KinetixMaterialTheme.fromColors(Brightness.dark, AcmeTheme.dark),
+)
+
+CupertinoApp(
+  theme: KinetixCupertinoTheme.fromColors(Brightness.light, AcmeTheme.light),
+)
+```
+
+Write that pair by hand, or export one from a [Create](/create) design:
+
+```bash
+kinetixui preset flutter KX1_… --name AcmeTheme --output lib/acme_theme.dart
+```
+
+That writes a Dart class with a `light` and a `dark` `KinetixColors`, built from
+the same resolved theme the workspace's Copy CSS renders — see
+[the CLI reference](/docs/cli).
+
+**Colours only, and the adapters map a subset.** `KinetixColors` carries the
+whole semantic contract, so `KinetixTheme.custom` gives `Kinetix*` widgets every
+role. Material's `ColorScheme` and `CupertinoThemeData` are smaller surfaces, so
+`fromColors` carries what they can honestly represent and no more — the mapping
+is unchanged from `light()` / `dark()`. Radius and elevation are not themeable at
+runtime at all: widgets read `KinetixRadius` constants directly, so a design's
+radius and surface treatment apply on the web only.
+
+The generated fields are `static final` rather than `static const`, because Dart
+constant expressions do not include instance field access and the file references
+`KinetixColors.light.…` for values the design left unchanged. It still works
+anywhere a const theme would; you just cannot write `const` in front of
+`KinetixTheme.custom(…)`.
+
 ## Tokens: a real dark pass, no name collision
 
 The pre-existing Flutter token output (`packages/tokens/dist/flutter/`:

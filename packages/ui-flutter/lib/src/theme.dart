@@ -192,13 +192,47 @@ class KinetixColors {
 /// brightness — pass [brightness] to force light or dark, the same as the
 /// Compose port's `KinetixTheme(darkTheme: …)`.
 class KinetixTheme extends InheritedWidget {
+  /// The shipped Kinetix palette, following [brightness] (or the platform's).
   const KinetixTheme({
     super.key,
     this.brightness,
     required super.child,
-  });
+  })  : lightColors = KinetixColors.light,
+        darkColors = KinetixColors.dark;
+
+  /// The same widget with your own palettes — a file exported from
+  /// kinetixui.com/create with `kinetixui preset flutter`, or one written by
+  /// hand. Brightness selection is unchanged: [brightness] if given, otherwise
+  /// the platform's.
+  ///
+  /// ```dart
+  /// KinetixTheme.custom(
+  ///   light: AcmeTheme.light,
+  ///   dark: AcmeTheme.dark,
+  ///   child: App(),
+  /// )
+  /// ```
+  ///
+  /// A separate named constructor rather than optional parameters on the
+  /// default one: both stay `const`, the existing constructor's signature is
+  /// untouched, and "custom theme" is explicit at the call site instead of
+  /// being inferred from which arguments happen to be present.
+  const KinetixTheme.custom({
+    super.key,
+    this.brightness,
+    required KinetixColors light,
+    required KinetixColors dark,
+    required super.child,
+  })  : lightColors = light,
+        darkColors = dark;
 
   final Brightness? brightness;
+
+  /// The palette used when the resolved brightness is light.
+  final KinetixColors lightColors;
+
+  /// The palette used when the resolved brightness is dark.
+  final KinetixColors darkColors;
 
   Brightness _brightnessFor(BuildContext context) =>
       brightness ??
@@ -206,7 +240,7 @@ class KinetixTheme extends InheritedWidget {
       WidgetsBinding.instance.platformDispatcher.platformBrightness;
 
   KinetixColors _colorsFor(BuildContext context) =>
-      _brightnessFor(context) == Brightness.dark ? KinetixColors.dark : KinetixColors.light;
+      _brightnessFor(context) == Brightness.dark ? darkColors : lightColors;
 
   /// The active semantic colour set for [context].
   static KinetixColors of(BuildContext context) {
@@ -218,6 +252,19 @@ class KinetixTheme extends InheritedWidget {
     return theme!._colorsFor(context);
   }
 
+  /// Dependents rebuild when the brightness changes — and now also when either
+  /// palette does, which a custom theme can do without [brightness] moving at
+  /// all. Comparing only [brightness] would leave every `Kinetix*` widget
+  /// showing the previous colours after a theme swap.
+  ///
+  /// [KinetixColors] has no `==`, so this is identity comparison. That is the
+  /// right trade here: the palettes are `static const` in practice, so equal
+  /// ones are canonicalised to the same instance and a swap is a genuinely
+  /// different object. A false negative is impossible; a false positive costs
+  /// one rebuild.
   @override
-  bool updateShouldNotify(KinetixTheme oldWidget) => oldWidget.brightness != brightness;
+  bool updateShouldNotify(KinetixTheme oldWidget) =>
+      oldWidget.brightness != brightness ||
+      !identical(oldWidget.lightColors, lightColors) ||
+      !identical(oldWidget.darkColors, darkColors);
 }

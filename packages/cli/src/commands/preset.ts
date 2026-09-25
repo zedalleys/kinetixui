@@ -19,6 +19,9 @@ import {
   type PresetConfig,
 } from "@kinetixui/create-preset";
 import {
+  DEFAULT_FLUTTER_SYMBOL,
+  dartSymbolError,
+  exportFlutter,
   DEFAULT_COMPOSE_SYMBOL,
   DEFAULT_SWIFT_SYMBOL,
   exportCompose,
@@ -88,7 +91,8 @@ export function presetDecode(input: string, opts: { json: boolean }): void {
       "  A preset describes a design, not a stylesheet.\n\n" +
         "    kinetixui preset css <code>       the same web CSS the workspace's Copy CSS produces\n" +
         "    kinetixui preset swiftui <code>   a SwiftUI colour theme\n" +
-        "    kinetixui preset compose <code>   a Jetpack Compose colour theme\n\n" +
+        "    kinetixui preset compose <code>   a Jetpack Compose colour theme\n" +
+        "    kinetixui preset flutter <code>   a Flutter colour theme\n\n" +
         "  For a file of literal colours, `kinetixui theme build` is unchanged.",
     ),
   );
@@ -181,6 +185,33 @@ export async function presetCompose(input: string, opts: { output?: string; name
     return;
   }
   process.stdout.write(kotlin);
+}
+
+/**
+ * `preset flutter <code|url>` — resolve a preset into a Dart theme file.
+ *
+ * Flutter, and only Flutter. The most complete native target of the three: `KinetixColors` there carries
+ * all 35 semantic colours plus the chart palette, including `input`, `ring` and `tertiaryForeground`,
+ * which Compose has no field for — so unlike `preset compose`, nothing this exporter produces has a role
+ * left behind. Radius and elevation still do not travel; the generated header says so.
+ *
+ * Like Compose and unlike SwiftUI, Flutter writes exact 8-bit ARGB, so nothing is lost between the engine
+ * and the platform and the shared contrast guarantee needs no term for it.
+ */
+export async function presetFlutter(input: string, opts: { output?: string; name?: string }): Promise<void> {
+  const symbol = opts.name ?? DEFAULT_FLUTTER_SYMBOL;
+  // Checked before the preset is decoded, so a bad `--name` reports the argument the user got wrong.
+  const reason = dartSymbolError(symbol);
+  if (reason) throw new Error(reason);
+
+  const dart = exportFlutter(resolveCreateTheme(read(input)), { symbol });
+
+  if (opts.output) {
+    await writeFile(opts.output, dart, "utf8");
+    console.log(pc.green("✔"), `Wrote ${opts.output} — apply it with KinetixTheme.custom(light: ${symbol}.light, dark: ${symbol}.dark, child: …)`);
+    return;
+  }
+  process.stdout.write(dart);
 }
 
 /**

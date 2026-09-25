@@ -216,8 +216,44 @@ older gap in the Compose theme rather than anything a preset can reach.
 Compose writes `Color(0xffRRGGBB)`, which is the resolved colour exactly, so
 nothing is lost between the engine and the platform.
 
-There is **no Flutter or Android XML exporter.** `preset swiftui` and
-`preset compose` are the only native targets that exist.
+```bash
+kinetixui preset flutter KX1_…
+kinetixui preset flutter KX1_… --name AcmeTheme --output acme_theme.dart
+```
+
+The same design as a Flutter theme: a Dart class holding a light and a dark
+[`KinetixColors`](/docs/flutter). Apply it to Kinetix widgets with
+
+```dart
+KinetixTheme.custom(
+  light: AcmeTheme.light,
+  dark: AcmeTheme.dark,
+  child: App(),
+)
+```
+
+and to Material or Cupertino widgets through the adapters:
+
+```dart
+MaterialApp(
+  theme: KinetixMaterialTheme.fromColors(Brightness.light, AcmeTheme.light),
+  darkTheme: KinetixMaterialTheme.fromColors(Brightness.dark, AcmeTheme.dark),
+)
+```
+
+**The most complete native target.** Flutter's `KinetixColors` has all 35
+semantic fields, including `input`, `ring` and `tertiaryForeground` — the three
+Compose lacks — so no colour role is left behind. Radius and elevation still do
+not travel: widgets read `KinetixRadius` constants directly and `KinetixTheme`
+carries no shadow model, so a design's radius and surface treatment apply on the
+web only.
+
+The Material and Cupertino adapters map the subset their own theme APIs can
+represent, which is smaller than the Kinetix contract — wrap the app in
+`KinetixTheme.custom` as well for `Kinetix*` widgets to see the full palette.
+
+There is **no Android XML exporter.** `preset swiftui`, `preset compose` and
+`preset flutter` are the native targets that exist.
 
 ```bash
 kinetixui preset url KX1_…
