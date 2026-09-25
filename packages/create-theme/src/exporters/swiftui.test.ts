@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_PRESET, type PresetConfig } from "@kinetixui/create-preset";
+import { contrastOfNormalized, guaranteedContrast, swiftUiChannels } from "../color-math";
+import { oklchToHex } from "../oklch";
 import { resolveCreateTheme } from "../resolve";
 import {
   DEFAULT_SWIFT_SYMBOL,
@@ -324,6 +326,84 @@ describe("colour formatting matches the generated token files", () => {
   it("returns null for anything that is not a six-digit hex", () => {
     for (const bad of ["", "nope", "#fff", "#1d4ed", "#1d4ed88", "rgb(1,2,3)"]) {
       expect(swiftColor(bad), bad).toBeNull();
+    }
+  });
+});
+
+/* ------------------------------------------------------------------ engine/exporter parity */
+
+/**
+ * The engine's model of this format IS this format.
+ *
+ * `guaranteedContrast` decides whether a generated pair clears AA, and one of the three representations
+ * it scores is "what SwiftUI receives". If that model and this exporter ever disagree, the engine
+ * approves a theme the exporter then emits differently — which is not hypothetical. It shipped: the
+ * engine scored a pair at 4.50 on the exact hex, called it safe, and the exporter wrote channels that
+ * rendered at 4.46.
+ *
+ * The two share `swiftUiChannels`, so they cannot drift. These assert that they still do, against the
+ * literal text of the output rather than against the function that produced it.
+ */
+describe("what the engine measures is what this exporter emits", () => {
+  it("formats exactly the channels guaranteedContrast scores", () => {
+    for (let h = 0; h < 360; h += 7) {
+      for (const l of [0.2, 0.45, 0.55, 0.75, 0.95]) {
+        const hex = oklchToHex({ l, c: 0.15, h });
+        const [r, g, b] = swiftUiChannels(hex);
+        expect(swiftColor(hex), hex).toBe(`Color(red: ${r}, green: ${g}, blue: ${b})`);
+      }
+    }
+  });
+
+  it("parses back out of a generated file to the same channels", () => {
+    // Through the real output, not the helper — if the template ever reformatted a number (extra
+    // precision, a trailing zero, a locale separator) this is what would notice.
+    const resolved = resolveCreateTheme(design(CUSTOM));
+    const source = swift(CUSTOM, "AcmeTheme");
+
+    for (const [name, hex] of Object.entries(resolved.light.colors)) {
+      const field = swiftFieldName(name);
+      const match = new RegExp(`^ {8}${field}: Color\\(red: ([\\d.]+), green: ([\\d.]+), blue: ([\\d.]+)\\),$`, "m").exec(source);
+      if (!match) continue; // a field written as a shipped reference — no literal to compare
+      expect([Number(match[1]), Number(match[2]), Number(match[3])], `${name} ${hex}`).toEqual(swiftUiChannels(hex));
+    }
+  });
+
+  it("every literal in a generated file clears AA where the engine promised it would", () => {
+    // The end-to-end version: read the numbers Swift will actually receive straight out of the file and
+    // run WCAG over them, with no hex anywhere in the measurement.
+    const source = swift(CUSTOM, "AcmeTheme");
+    const block = lightBlock(source);
+    const read = (field: string) => {
+      const m = new RegExp(`${field}: Color\\(red: ([\\d.]+), green: ([\\d.]+), blue: ([\\d.]+)\\)`).exec(block);
+      return m ? ([Number(m[1]), Number(m[2]), Number(m[3])] as [number, number, number]) : null;
+    };
+    const fg = read("actionForeground");
+    expect(fg).not.toBeNull();
+    for (const field of ["action", "actionHover", "actionPressed"]) {
+      const surface = read(field);
+      expect(surface, field).not.toBeNull();
+      expect(contrastOfNormalized(surface!, fg!), field).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  /**
+   * The pair that proved exact-plus-web was not a guarantee.
+   *
+   * With the bar at `min(exact, web)`, this design's light `action-foreground` / `action-pressed` reached
+   * 4.5 only because the CSS rounding happened to move it the helpful way. SwiftUI rounds differently, and
+   * the committed fixture came out at 4.46 — caught by the Swift-side contrast suite, not by any
+   * TypeScript test, because no TypeScript test modelled the format.
+   */
+  it("the #c2410c warm design, which fell to 4.46 in SwiftUI", () => {
+    const theme = resolveCreateTheme(design({ brand: "#c2410c", neutral: "warm", chartPalette: "warm" }));
+    const colors = theme.light.colors;
+    const fg = colors["action-foreground"]!;
+
+    for (const state of ["action", "action-hover", "action-pressed"] as const) {
+      const asSwift = contrastOfNormalized(swiftUiChannels(colors[state]!), swiftUiChannels(fg));
+      expect(asSwift, `${state} as SwiftUI receives it`).toBeGreaterThanOrEqual(4.5);
+      expect(guaranteedContrast(colors[state]!, fg), state).toBeGreaterThanOrEqual(4.5);
     }
   });
 });

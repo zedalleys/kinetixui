@@ -30,6 +30,7 @@
  *
  * Pure, like every exporter here: no file system, no process, no CLI formatting.
  */
+import { swiftUiChannels } from "../color-math";
 import { SHIPPED_COLORS, type ResolvedCreateTheme, type ResolvedThemeMode } from "../resolve";
 import type { ThemeExporter } from "./index";
 
@@ -105,11 +106,17 @@ export function swiftFieldName(token: string): string {
  * Three decimal places and `Number(...)`, not `toFixed(3)` as a string — `1`, never `1.000` — because
  * that is byte-for-byte what style-dictionary emits into the vendored token files. A generated theme
  * should be indistinguishable in style from the shipped one sitting beside it.
+ *
+ * The channel values come from `swiftUiChannels`, which is also what `guaranteedContrast` measures a
+ * colour by. That shared call is the point: this exporter rounds a colour in a way the engine has to
+ * know about when it decides whether a pair clears AA, and the engine knowing a stale version of that
+ * rule is not a hypothetical — it shipped, and a pair the engine scored at 4.50 arrived here at 4.46.
+ * One function, so the engine's model of this format cannot drift from the format.
  */
 export function swiftColor(hex: string): string | null {
   const h = hex.replace("#", "").trim();
   if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
-  const [r, g, b] = [0, 2, 4].map((i) => Number((parseInt(h.slice(i, i + 2), 16) / 255).toFixed(3)));
+  const [r, g, b] = swiftUiChannels(`#${h}`);
   return `Color(red: ${r}, green: ${g}, blue: ${b})`;
 }
 

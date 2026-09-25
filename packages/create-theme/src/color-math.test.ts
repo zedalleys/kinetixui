@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { contrastRatio, guaranteedContrast, hexToHslChannels, hslChannelsToHex } from "./color-math";
+import {
+  contrastOfNormalized,
+  contrastRatio,
+  guaranteedContrast,
+  hexToHslChannels,
+  hslChannelsToHex,
+  swiftUiChannels,
+} from "./color-math";
 import { oklchToHex } from "./oklch";
 
 /**
@@ -47,12 +54,63 @@ describe("guaranteedContrast", () => {
     }
   });
 
-  it("is the worse of the exact and the CSS-rounded ratio", () => {
+  it("is the worst of exact, web HSL and SwiftUI 3dp", () => {
     for (let h = 0; h < 360; h += 13) {
       const surface = oklchToHex({ l: 0.6, c: 0.14, h });
       const fg = oklchToHex({ l: 0.97, c: 0.02, h });
       const asCss = contrastRatio(hslChannelsToHex(hexToHslChannels(surface)), hslChannelsToHex(hexToHslChannels(fg)));
-      expect(guaranteedContrast(surface, fg)).toBe(Math.min(contrastRatio(surface, fg), asCss));
+      const asSwift = contrastOfNormalized(swiftUiChannels(surface), swiftUiChannels(fg));
+
+      expect(guaranteedContrast(surface, fg)).toBe(Math.min(contrastRatio(surface, fg), asCss, asSwift));
+    }
+  });
+
+  it("counts SwiftUI's rounding as its own representation, not a finer copy of the exact one", () => {
+    // The mistake this replaced: "3dp is finer than 8-bit, so a guarantee on the exact hex holds there".
+    // Three-decimal rounding is a DIFFERENT function, not a more precise one — 1/255 is 0.00392, so
+    // rounding to 0.001 moves a channel by up to 0.0005 in a direction the 8-bit value does not predict.
+    // These are the colours where SwiftUI is strictly the worst of the three.
+    const worseInSwift: string[] = [];
+    for (let h = 0; h < 360; h += 3) {
+      for (const l of [0.45, 0.55, 0.65]) {
+        const surface = oklchToHex({ l, c: 0.16, h });
+        const fg = "#ffffff";
+        const asSwift = contrastOfNormalized(swiftUiChannels(surface), swiftUiChannels(fg));
+        if (asSwift < contrastRatio(surface, fg) - 1e-12) worseInSwift.push(surface);
+      }
+    }
+    expect(worseInSwift.length).toBeGreaterThan(0);
+  });
+
+  it("never reports more than any single representation", () => {
+    for (let h = 0; h < 360; h += 17) {
+      const surface = oklchToHex({ l: 0.55, c: 0.18, h });
+      const guaranteed = guaranteedContrast(surface, "#ffffff");
+      expect(guaranteed).toBeLessThanOrEqual(contrastRatio(surface, "#ffffff") + 1e-9);
+      expect(guaranteed).toBeLessThanOrEqual(
+        contrastOfNormalized(swiftUiChannels(surface), swiftUiChannels("#ffffff")) + 1e-9,
+      );
+    }
+  });
+});
+
+describe("swiftUiChannels", () => {
+  it("is hex → /255 → three decimals, with no trip back through bytes", () => {
+    expect(swiftUiChannels("#1d4ed8")).toEqual([0.114, 0.306, 0.847]);
+    expect(swiftUiChannels("#ffffff")).toEqual([1, 1, 1]);
+    expect(swiftUiChannels("#000000")).toEqual([0, 0, 0]);
+    expect(swiftUiChannels("#050c11")).toEqual([0.02, 0.047, 0.067]);
+  });
+
+  it("stays in range for every byte", () => {
+    for (let v = 0; v <= 255; v++) {
+      const hex = `#${v.toString(16).padStart(2, "0").repeat(3)}`;
+      for (const channel of swiftUiChannels(hex)) {
+        expect(channel).toBeGreaterThanOrEqual(0);
+        expect(channel).toBeLessThanOrEqual(1);
+        // Three decimals exactly — an exporter writing 0.30600000000000005 would be a diff in every file.
+        expect(Number(channel.toFixed(3))).toBe(channel);
+      }
     }
   });
 
