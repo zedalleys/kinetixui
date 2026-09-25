@@ -56,7 +56,17 @@ Matching the Compose port's known-gaps stance:
 - `Sources/KinetixUI/Theme.swift` — `KinetixColors` (the semantic colour
   set), `@Environment(\.kinetixColors)`, and the `KinetixTheme { … }`
   wrapper that picks light/dark off the system `colorScheme`. The SwiftUI
-  analogue of Compose's `KinetixColorScheme` / `KinetixTheme`.
+  analogue of Compose's `KinetixColorScheme` / `KinetixTheme`. Pass
+  `KinetixTheme(light:dark:)` your own sets for a custom theme — including
+  one exported from kinetixui.com/create with
+  `kinetixui preset swiftui`.
+- `Tests/KinetixUITests/Generated/CreateThemeFixture.swift` — **generated,
+  committed.** A theme emitted by the `swiftui` exporter in
+  `packages/create-theme`, checked in so this target compiles it: that is
+  the only place the exporter's output is type-checked against
+  `KinetixColors`' real initializer, and `ContrastTests` runs WCAG AA over
+  it. `swiftui-fixture.test.ts` fails if it drifts and prints the command
+  to regenerate it.
 - One file per component, each mirroring its
   `packages/ui/src/components/*.tsx` counterpart 1:1, with a doc comment
   stating what wasn't carried over.

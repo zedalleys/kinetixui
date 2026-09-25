@@ -27,7 +27,7 @@ import {
   type SurfaceId,
 } from "@kinetixui/create-preset";
 import { SHIPPED_ELEVATION, type ElevationStep, type RadiusStep, type ShadowLayer } from "./contract";
-import { contrastRatio } from "./color-math";
+import { guaranteedContrast } from "./color-math";
 import { MAX_CHROMA, adjust, hexToOklch, oklchToHex, type Oklch } from "./oklch";
 import type { AcceptedToken } from "./palette";
 
@@ -99,16 +99,44 @@ function intoBand(colour: Oklch, mode: Mode): Oklch {
  * Deliberately not an optimizer. Two candidates, one comparison, same answer every time (§14).
  */
 export function foregroundFor(surfaceHex: string): string {
-  const s = hexToOklch(surfaceHex);
-  if (!s) return "#000000";
-  const tint = Math.min(s.c, 0.03);
-  const light = oklchToHex({ l: 0.97, c: tint, h: s.h });
-  const dark = oklchToHex({ l: 0.09, c: tint, h: s.h });
-
-  const best = contrastRatio(surfaceHex, light) >= contrastRatio(surfaceHex, dark) ? light : dark;
-  if (contrastRatio(surfaceHex, best) >= 4.5) return best;
-  return contrastRatio(surfaceHex, "#ffffff") >= contrastRatio(surfaceHex, "#000000") ? "#ffffff" : "#000000";
+  return foregroundForAll([surfaceHex]);
 }
+
+/**
+ * A foreground that has to read on SEVERAL surfaces, not one.
+ *
+ * A button's label sits on `action` at rest, on `action-hover` while the pointer is over it, and on
+ * `action-pressed` while it is held. All three are the same text; only the fill changes. Choosing the
+ * colour against the resting fill alone is how a label ends up at 3.37:1 the moment someone presses the
+ * button — which is exactly what happened, and what the SwiftUI exporter's contrast gate surfaced.
+ *
+ * Candidates are unchanged: a near-white and a near-black carrying a trace of the surface's own hue,
+ * because that is what the shipped tokens do (`primary-foreground` is #f0f7ff, a blue-tinted white, not
+ * plain white), falling back to pure white or black when neither tinted extreme is enough. What changed
+ * is the score — each candidate is judged by its WORST contrast across every surface it must sit on,
+ * so a foreground cannot be chosen for the state a user happens not to be in.
+ *
+ * Still not an optimizer: a fixed candidate list, one comparison, the same answer every time. The tint
+ * comes from the first surface, which is the resting one, so identity still follows the action colour
+ * rather than drifting with whichever state scored best.
+ */
+export function foregroundForAll(surfaces: string[]): string {
+  const primary = surfaces[0];
+  if (primary === undefined) return "#000000";
+  const s = hexToOklch(primary);
+  if (!s) return "#000000";
+
+  const tint = Math.min(s.c, 0.03);
+  const worst = (candidate: string) => Math.min(...surfaces.map((surface) => guaranteedContrast(surface, candidate)));
+
+  const tinted = [oklchToHex({ l: 0.97, c: tint, h: s.h }), oklchToHex({ l: 0.09, c: tint, h: s.h })];
+  const best = worst(tinted[0]!) >= worst(tinted[1]!) ? tinted[0]! : tinted[1]!;
+  if (worst(best) >= AA) return best;
+  return worst("#ffffff") >= worst("#000000") ? "#ffffff" : "#000000";
+}
+
+/** WCAG AA for body text. The bar every generated pair is held to. */
+const AA = 4.5;
 
 /**
  * Hover and pressed, as perceptual moves toward the background.
@@ -126,6 +154,51 @@ export const HOVER_FRACTION = 0.1;
 export const PRESSED_FRACTION = 0.16;
 
 /**
+ * The interaction states, moved as far as the label can follow.
+ *
+ * In light mode the states move toward white, and the label on a mid-lightness action colour is usually
+ * a near-white too — so the two converge, and past a point the text stops being readable. A colour at
+ * L 0.55 has only about 4.7:1 against near-white to begin with; spending 16% of the remaining distance
+ * to the backdrop spends most of that headroom. Seven of eight sample brands fell below AA while pressed,
+ * including the shipped blue passed through the generator.
+ *
+ * Choosing the foreground across all three surfaces (`foregroundForAll`) recovers most of it but not all:
+ * for part of the wheel NO foreground — tinted or pure, light or dark — clears AA against `action`,
+ * `action-hover` and `action-pressed` at the nominal fractions. So the movement itself gives way, and it
+ * is the movement that should: a hover fill is a hint about interactivity, and a label you cannot read is
+ * a failure. AA wins.
+ *
+ * It gives way by SCALING BOTH FRACTIONS TOGETHER, in fixed 5% steps, never by moving them independently
+ * and never by changing direction. That keeps the model intact — hover and pressed stay in their 10:16
+ * ratio, still travelling toward the backdrop, still uniform across hues for any given scale — so what a
+ * tight hue loses is amplitude, not behaviour. Scale 0 (the states equal the resting colour) always
+ * satisfies the bar, because the foreground clears AA on `action` by construction, so the search always
+ * terminates; in practice it never gets close.
+ */
+const STATE_SCALE_STEPS = 20;
+
+export function interactionStates(
+  action: Oklch,
+  mode: Mode,
+): { hover: string; pressed: string; foreground: string; scale: number } {
+  const actionHex = oklchToHex(action);
+
+  for (let step = STATE_SCALE_STEPS; step >= 0; step--) {
+    const scale = step / STATE_SCALE_STEPS;
+    const hover = oklchToHex(stateOf(action, mode, HOVER_FRACTION * scale));
+    const pressed = oklchToHex(stateOf(action, mode, PRESSED_FRACTION * scale));
+    const foreground = foregroundForAll([actionHex, hover, pressed]);
+
+    const readable = [actionHex, hover, pressed].every((surface) => guaranteedContrast(surface, foreground) >= AA);
+    if (readable) return { hover, pressed, foreground, scale };
+  }
+
+  // Unreachable: scale 0 makes all three surfaces the resting colour. Kept so the function is total.
+  const foreground = foregroundForAll([actionHex]);
+  return { hover: actionHex, pressed: actionHex, foreground, scale: 0 };
+}
+
+/**
  * A readable foreground that keeps a preferred colour's identity.
  *
  * The shipped theme puts the action blue on a pale blue accent, and reproducing that look is worth more
@@ -137,7 +210,7 @@ export const PRESSED_FRACTION = 0.16;
  * cannot get there at all, the ordinary tinted extreme takes over.
  */
 function readableOnSurface(surfaceHex: string, preferredHex: string): string {
-  if (contrastRatio(surfaceHex, preferredHex) >= 4.5) return preferredHex;
+  if (guaranteedContrast(surfaceHex, preferredHex) >= AA) return preferredHex;
 
   const surface = hexToOklch(surfaceHex);
   const preferred = hexToOklch(preferredHex);
@@ -148,7 +221,7 @@ function readableOnSurface(surfaceHex: string, preferredHex: string): string {
   const step = surface.l > 0.5 ? -0.02 : 0.02;
   for (let i = 1; i <= 50; i++) {
     const candidate = oklchToHex(adjust(preferred, { dl: step * i }));
-    if (contrastRatio(surfaceHex, candidate) >= 4.5) return candidate;
+    if (guaranteedContrast(surfaceHex, candidate) >= AA) return candidate;
   }
   return foregroundFor(surfaceHex);
 }
@@ -166,7 +239,10 @@ export function deriveBrandRoles(brandHex: string, mode: Mode): Tokens {
   const action = intoBand(brand, mode);
   const actionHex = oklchToHex(action);
   const brandOwn = oklchToHex(brand);
-  const actionFg = foregroundFor(actionHex);
+  // The label and the two interaction fills are decided together — see `interactionStates`. Deciding the
+  // label first and the fills afterwards is what let a pressed button fall to 3.37:1.
+  const states = interactionStates(action, mode);
+  const actionFg = states.foreground;
 
   // `accent` is a quiet surface that carries the brand hue — a selected row, a hover fill. It belongs to
   // the surface family, so it takes its lightness from the mode and only its hue from the brand.
@@ -181,8 +257,8 @@ export function deriveBrandRoles(brandHex: string, mode: Mode): Tokens {
     "brand-foreground": foregroundFor(brandOwn),
     action: actionHex,
     "action-foreground": actionFg,
-    "action-hover": oklchToHex(stateOf(action, mode, HOVER_FRACTION)),
-    "action-pressed": oklchToHex(stateOf(action, mode, PRESSED_FRACTION)),
+    "action-hover": states.hover,
+    "action-pressed": states.pressed,
     link: actionHex,
     focus: actionHex,
     // `primary` and `ring` are the pre-role names the contract says `action` and `focus` default to.
@@ -212,7 +288,15 @@ const NEUTRAL_TINT: Record<Exclude<NeutralId, "kinetix">, { h: number; c: number
   stone: { h: 40, c: 0.008 },
 };
 
-/** Lightness ladder per mode. Calibrated against the shipped contract so "Neutral" is a grey Kinetix. */
+/**
+ * Lightness ladder per mode. Calibrated against the shipped contract so "Neutral" is a grey Kinetix.
+ *
+ * `muted-foreground` sits at 0.535 in light mode rather than the 0.55 that matches the shipped grey most
+ * closely, because 0.55 leaves no margin: it lands between 4.45 and 4.56 against `muted` depending on the
+ * family's tint, and the web's integer-HSL output rounds some of those under AA. 0.535 clears 4.76 for
+ * every family. The shipped tokens do not need the same nudge — they are authored as HSL channels, so
+ * nothing rounds them afterwards.
+ */
 const NEUTRAL_LADDER: Record<Mode, Record<string, number>> = {
   light: {
     background: 1,
@@ -221,7 +305,7 @@ const NEUTRAL_LADDER: Record<Mode, Record<string, number>> = {
     muted: 0.975,
     border: 0.86,
     input: 0.86,
-    "muted-foreground": 0.55,
+    "muted-foreground": 0.535,
     foreground: 0.15,
   },
   dark: {

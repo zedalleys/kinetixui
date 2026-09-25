@@ -6,7 +6,7 @@
  * resolution so the CLI can validate a preset's overrides the same way the workspace does.
  */
 import { ACCEPTED_TOKENS, type AcceptedToken } from "@kinetixui/create-preset";
-import { isHex, normalizeHex, bestTextHex, hexToHslChannels, contrastRatio } from "./color-math";
+import { isHex, normalizeHex, bestTextHex, hexToHslChannels, guaranteedContrast } from "./color-math";
 
 /**
  * Tokens the builder accepts and previews — re-exported from the preset codec, which owns the list.
@@ -115,10 +115,17 @@ export function toCssBlock(values: Partial<Record<AcceptedToken, string>>): stri
 
 export type ContrastResult = { pair: [AcceptedToken, AcceptedToken]; ratio: number; pass: boolean };
 
-/** Only pairs where both sides were actually supplied (explicitly or derived). */
+/**
+ * Only pairs where both sides were actually supplied (explicitly or derived).
+ *
+ * Measured on the guaranteed value — see `guaranteedContrast`. The workspace renders through
+ * `hsl(var(--x))`, which rounds hue to whole degrees and saturation and lightness to whole percent, and
+ * that costs up to 0.37 of a ratio — enough to put a pair the panel called 4.52 at 4.43 on the screen
+ * beside it. A contrast panel that disagrees with its own preview is worse than none.
+ */
 export function checkContrast(values: Partial<Record<AcceptedToken, string>>): ContrastResult[] {
   return CONTRAST_PAIRS.filter(([bg, fg]) => values[bg] && values[fg]).map(([bg, fg]) => {
-    const ratio = contrastRatio(values[bg]!, values[fg]!);
+    const ratio = guaranteedContrast(values[bg]!, values[fg]!);
     return { pair: [bg, fg], ratio, pass: ratio >= 4.5 };
   });
 }

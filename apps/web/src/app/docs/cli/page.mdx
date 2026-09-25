@@ -156,9 +156,37 @@ runs behind Copy CSS, so for a given preset the two produce byte-identical outpu
 the CLI's tests assert that rather than assume it. A preset that changes nothing
 prints nothing, so `> theme.css` writes an empty file rather than a comment.
 
-**Web CSS only.** There is no SwiftUI, Compose or Flutter output behind this
-command, which is why it is named `preset css` rather than `preset apply` — the
-name says what comes out.
+**Web CSS only.** This command produces a stylesheet and nothing else, which is
+why it is named `preset css` rather than `preset apply` — the name says what
+comes out.
+
+```bash
+kinetixui preset swiftui KX1_…
+kinetixui preset swiftui KX1_… --name AcmeTheme --output Sources/AcmeTheme.swift
+```
+
+Resolves the same preset into a SwiftUI theme file: a `public enum` holding a
+light and a dark [`KinetixColors`](/docs/swiftui), built from the same resolved
+theme `preset css` renders as CSS. Apply it with
+
+```swift
+KinetixTheme(light: AcmeTheme.light, dark: AcmeTheme.dark) { … }
+```
+
+`--name` picks the Swift type (default `CreateTheme`). It must be a plain Swift
+identifier — letters, digits and underscores, not starting with a digit, and not
+a Swift keyword. Anything else is refused with the reason rather than quietly
+rewritten.
+
+**Colours only, and SwiftUI only.** KinetixUI for SwiftUI is themeable through
+`KinetixColors`; corner radius and elevation are literals inside each view, with
+no token an exported file could set. A design's radius and surface treatment
+therefore apply on the web and not here, and the generated file says so in its
+own header rather than only in these docs. A field the design did not change is
+written as a reference to the shipped token, so it keeps following the library.
+
+There is **no Compose, Flutter or Android XML exporter.** `preset swiftui` is the
+only native target that exists.
 
 ```bash
 kinetixui preset url KX1_…

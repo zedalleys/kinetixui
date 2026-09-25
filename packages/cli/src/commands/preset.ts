@@ -18,7 +18,13 @@ import {
   presetUrl,
   type PresetConfig,
 } from "@kinetixui/create-preset";
-import { exportCss, resolveCreateTheme } from "@kinetixui/create-theme";
+import {
+  DEFAULT_SWIFT_SYMBOL,
+  exportCss,
+  exportSwiftUi,
+  resolveCreateTheme,
+  swiftSymbolError,
+} from "@kinetixui/create-theme";
 
 const SITE = "https://kinetixui.com";
 
@@ -74,9 +80,9 @@ export function presetDecode(input: string, opts: { json: boolean }): void {
   console.log();
   console.log(
     pc.dim(
-      "  A preset describes a design, not a stylesheet. `kinetixui preset css <code>` resolves it\n" +
-        "  into the same web CSS the workspace's Copy CSS produces. For a file of literal colours,\n" +
-        "  `kinetixui theme build` is unchanged.",
+      "  A preset describes a design, not a stylesheet. `kinetixui preset css <code>` resolves it into\n" +
+        "  the same web CSS the workspace's Copy CSS produces, and `kinetixui preset swiftui <code>` into\n" +
+        "  a SwiftUI colour theme. For a file of literal colours, `kinetixui theme build` is unchanged.",
     ),
   );
   console.log();
@@ -108,6 +114,39 @@ export async function presetCss(input: string, opts: { output?: string }): Promi
     return;
   }
   console.log(css);
+}
+
+/**
+ * `preset swiftui <code|url>` — resolve a preset into a SwiftUI theme file.
+ *
+ * SwiftUI, and only SwiftUI. There is no Compose, Flutter or Android XML output behind this or any other
+ * command, and the command name is the platform rather than something like `preset native` for that
+ * reason. What it writes is colours: `packages/ui-swiftui` is themeable through `KinetixColors` and
+ * nothing else, so the design's radius and surface treatment do not travel — the generated file says so
+ * in its own header, not only in the docs.
+ *
+ * Unlike `preset css`, the default preset still produces a file. A Swift file is a complete artifact
+ * rather than an override block layered over one the consumer already has, so "nothing to override" is
+ * not an outcome it can express; what it produces instead is a theme whose every field references the
+ * shipped token.
+ */
+export async function presetSwiftUi(input: string, opts: { output?: string; name?: string }): Promise<void> {
+  const symbol = opts.name ?? DEFAULT_SWIFT_SYMBOL;
+  // Checked here as well as inside the exporter so a bad `--name` is refused before a preset is decoded:
+  // the name is the argument the user got wrong, and it should be the one the message is about.
+  const reason = swiftSymbolError(symbol);
+  if (reason) throw new Error(reason);
+
+  const swift = exportSwiftUi(resolveCreateTheme(read(input)), { symbol });
+
+  if (opts.output) {
+    await writeFile(opts.output, swift, "utf8");
+    console.log(pc.green("✔"), `Wrote ${opts.output} — apply it with KinetixTheme(light: ${symbol}.light, dark: ${symbol}.dark)`);
+    return;
+  }
+  // No trailing console.log: the exporter's output already ends in a newline, and a second one would
+  // show up in a redirected file.
+  process.stdout.write(swift);
 }
 
 /**
