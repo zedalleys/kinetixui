@@ -13,6 +13,7 @@
  * the hand-tuned shipped blue — which `theme-engine.test.ts` measures rather than leaves to be
  * discovered.
  */
+import tokens from "@kinetixui/tokens";
 import { contrastRatio } from "../color-math";
 import { MAX_CHROMA, adjust, hexToOklch, oklchToHex, type Oklch } from "../color/oklch";
 import type { AcceptedToken } from "../theme-builder";
@@ -293,12 +294,47 @@ export function deriveRadius(radius: RadiusId): Tokens {
 /* ------------------------------------------------------------------ surface */
 
 /**
+ * The shipped elevation ladder, as CSS, built from the DTCG token data `@kinetixui/tokens` exports.
+ *
+ * This is the same source `style-dictionary` generates `extras.css` from, so there is one place a shadow
+ * is defined and Create reads it rather than restating it. `shadow-tokens.test.ts` asserts these strings
+ * are byte-identical to the shipped stylesheet's, which is what keeps "one source" true rather than
+ * merely intended.
+ */
+type ShadowLayer = { color: string; offsetX: string; offsetY: string; blur: string; spread: string };
+
+const px = (v: string) => (Number(v) === 0 ? "0" : `${v}px`);
+
+export function shadowCss(layers: ShadowLayer[]): string {
+  return layers.map((l) => `${px(l.offsetX)} ${px(l.offsetY)} ${px(l.blur)} ${px(l.spread)} ${l.color}`).join(", ");
+}
+
+const SHADOWS = tokens.shadow as unknown as Record<"sm" | "md" | "lg" | "xl", ShadowLayer[]>;
+
+/** Literal values for the four size steps, resolved once. */
+export const SHADOW_LADDER: Record<"sm" | "md" | "lg" | "xl", string> = {
+  sm: shadowCss(SHADOWS.sm),
+  md: shadowCss(SHADOWS.md),
+  lg: shadowCss(SHADOWS.lg),
+  xl: shadowCss(SHADOWS.xl),
+};
+
+/**
  * Surface treatment, expressed by REMAPPING the shipped elevation ladder rather than inventing shadows.
  *
  * `soft` is the shipped behaviour and writes nothing. `elevated` shifts every step up one rung, so a card
- * using `shadow-sm` gets the `--shadow-md` value — the same tokenized shadows, redistributed. `flat` and
- * `bordered` remove them; `bordered` compensates by darkening the border, which is the only way a flat
- * surface keeps its edges (§29).
+ * using `shadow-sm` gets the `--shadow-md` value. `flat` and `bordered` remove them; `bordered`
+ * compensates by darkening the border, which is the only way a flat surface keeps its edges (§29).
+ *
+ * `elevated` emits LITERAL values, never `var(--shadow-md)`. Custom properties substitute at computed-value
+ * time, so a block that says
+ *
+ *     --shadow-sm: var(--shadow-md);  --shadow-md: var(--shadow-lg);  --shadow-lg: var(--shadow-xl);
+ *
+ * does not snapshot the ladder — each reference resolves against the *overridden* property beside it, and
+ * all three collapse onto the `xl` value. Verified in a browser: sm, md and lg all came back as xl. The
+ * ladder is therefore read from the token source and written out, which also means the copied CSS behaves
+ * the same in a consumer's stylesheet, where nothing else defines these names.
  */
 const SHADOW_STEPS = ["--shadow-sm", "--shadow-md", "--shadow-lg", "--shadow-xl"] as const;
 
@@ -306,11 +342,11 @@ export function deriveSurface(surface: SurfaceId, mode: Mode, borderHex: string)
   if (surface === "soft") return {};
 
   if (surface === "elevated") {
-    // Each step takes the next one's value; the top step keeps its own.
+    // Each step takes the next one's ORIGINAL value; the top step keeps its own and is not written.
     return {
-      "shadow-sm": "var(--shadow-md)",
-      "shadow-md": "var(--shadow-lg)",
-      "shadow-lg": "var(--shadow-xl)",
+      "shadow-sm": SHADOW_LADDER.md,
+      "shadow-md": SHADOW_LADDER.lg,
+      "shadow-lg": SHADOW_LADDER.xl,
     };
   }
 

@@ -8,6 +8,7 @@ import {
   NEUTRALS,
   RADII,
   STYLES,
+  SHADOW_LADDER,
   STYLE_VALUES,
   SURFACES,
   deriveBrandRoles,
@@ -295,11 +296,15 @@ describe("surface", () => {
   });
 
   it("remaps the shipped ladder rather than inventing shadows", () => {
-    // Every value is either `none` or a reference to a token that already exists (§29).
+    // Every value is either `none` or a rung of the shipped ladder — checked against the ladder itself,
+    // not against the SHAPE of a `var()` reference. The earlier version of this test matched the syntax,
+    // which the collapsing implementation satisfied perfectly while producing the wrong ladder.
+    // `shadow-ladder.test.ts` covers the effective values; this one covers "nothing was invented".
+    const rungs = new Set<string>([...Object.values(SHADOW_LADDER), "none"]);
     for (const surface of SURFACES) {
       for (const [token, value] of Object.entries(deriveSurface(surface, "light", "#92b2c8"))) {
         if (token === "border") continue;
-        expect(value === "none" || /^var\(--shadow-(sm|md|lg|xl)\)$/.test(value!), `${surface} ${token}=${value}`).toBe(true);
+        expect(rungs.has(value!), `${surface} ${token}=${value} is not a shipped shadow`).toBe(true);
       }
     }
   });
@@ -455,8 +460,10 @@ describe("generated CSS", () => {
       [{ brand: "#c2410c" }, /--action:/],
       [{ neutral: "warm" }, /--background:/],
       [{ radius: "rounded" }, /--radius-md:/],
-      [{ surface: "flat" }, /--shadow-sm:/],
-      [{ surface: "elevated" }, /--shadow-sm: var\(--shadow-md\)/],
+      [{ surface: "flat" }, /--shadow-sm: none/],
+      // Elevated emits the ORIGINAL md value, not a reference to `--shadow-md` — see shadow-ladder.test.ts
+      // for why a reference collapses the whole ladder onto xl.
+      [{ surface: "elevated" }, new RegExp(`--shadow-sm: ${SHADOW_LADDER.md.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`)],
       [{ chartPalette: "categorical" }, /--chart-1:/],
       [{ manualOverrides: { border: "#ff0000" } }, /--border:/],
     ];
