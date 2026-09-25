@@ -145,6 +145,22 @@ surface, chart palette and any manual overrides. It accepts a bare `KX1_` code o
 a full `/create?preset=…` URL, and `--json` prints the same thing for piping.
 
 ```bash
+kinetixui preset css KX1_…
+kinetixui preset css KX1_… --output src/theme.css
+```
+
+Resolves a preset into the web CSS override block — the `:root` and `.dark`
+declarations, including the radius and elevation variables that `theme build`
+cannot express. This is the same theme engine and the same exporter the workspace
+runs behind Copy CSS, so for a given preset the two produce byte-identical output;
+the CLI's tests assert that rather than assume it. A preset that changes nothing
+prints nothing, so `> theme.css` writes an empty file rather than a comment.
+
+**Web CSS only.** There is no SwiftUI, Compose or Flutter output behind this
+command, which is why it is named `preset css` rather than `preset apply` — the
+name says what comes out.
+
+```bash
 kinetixui preset url KX1_…
 ```
 
@@ -152,14 +168,9 @@ Prints the canonical share URL. It prints rather than launching a browser: pipin
 it to `open`, `xdg-open` or `start` is one character, and a command that spawns a
 browser is unusable over SSH and untestable in CI.
 
-Both commands use the same codec the website does, so a code means one thing in
-both places. Neither executes anything from a preset — a preset is enum names,
-hex colours and token names off a fixed list, and anything else is refused.
-
-**There is no `preset apply`.** Turning a preset into CSS needs the theme engine,
-which lives in the website today; `theme build` remains the way to compile a file
-of literal colours from the command line. To get CSS from a preset, open it in
-Create and use Copy CSS.
+All three commands use the same codec the website does, so a code means one thing
+in both places. None of them executes anything from a preset — a preset is enum
+names, hex colours and token names off a fixed list, and anything else is refused.
 
 **Not yet built**: native (SwiftUI/Compose/Flutter) theme output. Doing
 that properly means porting meaningful parts of

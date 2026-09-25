@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@kinetixui/create-preset": "workspace:*",
+    "@kinetixui/create-theme": "workspace:*",
     "@types/node": "^22.20.3",
     "@types/prompts": "^2.4.9",
     "tsup": "^8.5.1",

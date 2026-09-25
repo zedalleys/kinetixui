@@ -4,8 +4,7 @@ import * as React from "react";
 import { Button, Label, Textarea } from "@kinetixui/ui";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { hexToOklch } from "@/lib/color/oklch";
-import type { AcceptedToken } from "@/lib/theme-builder";
+import { hexToOklch, type AcceptedToken } from "@kinetixui/create-theme";
 import type { CreateAction, CreateConfig } from "@/lib/create/config";
 import { overridesToText, textToOverrides, type CreateTheme } from "@/lib/create/theme-adapter";
 

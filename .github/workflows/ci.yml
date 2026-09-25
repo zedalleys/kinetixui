@@ -117,6 +117,11 @@ jobs:
       - name: Test (@kinetixui/angular)
         run: pnpm test:angular
 
+      # The shared theme engine: colour maths, semantic derivation and the web CSS exporter, in isolation.
+      # It has no DOM and no React, and its vitest environment is `node` so it cannot quietly acquire one.
+      - name: Test (@kinetixui/create-theme)
+        run: pnpm --filter @kinetixui/create-theme test
+
       - name: Test (@kinetixui/ui)
         run: pnpm --filter @kinetixui/ui test
 

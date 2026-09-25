@@ -9,6 +9,7 @@
  * Nothing here executes anything from a preset. A preset is structured data — enum names, hex colours and
  * token names off a fixed list — and the decoder refuses everything else before this file sees it.
  */
+import { writeFile } from "node:fs/promises";
 import pc from "picocolors";
 import {
   ACCEPTED_TOKENS,
@@ -17,6 +18,7 @@ import {
   presetUrl,
   type PresetConfig,
 } from "@kinetixui/create-preset";
+import { exportCss, resolveCreateTheme } from "@kinetixui/create-theme";
 
 const SITE = "https://kinetixui.com";
 
@@ -72,12 +74,40 @@ export function presetDecode(input: string, opts: { json: boolean }): void {
   console.log();
   console.log(
     pc.dim(
-      "  A preset describes a design, not a stylesheet. For CSS, open it in the workspace —\n" +
-        "  `kinetixui preset url <code>` prints the link — and use Copy CSS there. For a file of\n" +
-        "  literal colours, `kinetixui theme build` is unchanged.",
+      "  A preset describes a design, not a stylesheet. `kinetixui preset css <code>` resolves it\n" +
+        "  into the same web CSS the workspace's Copy CSS produces. For a file of literal colours,\n" +
+        "  `kinetixui theme build` is unchanged.",
     ),
   );
   console.log();
+}
+
+/**
+ * `preset css <code|url>` — resolve a preset into the web CSS override block.
+ *
+ * Web CSS, and only web CSS. It is the same exporter the /create workspace's Copy CSS runs, over the same
+ * resolved theme, so the two cannot drift; `cli-preset.test.ts` asserts byte equality rather than trusting
+ * that. There is no SwiftUI, Compose or Flutter output behind this command and the command name says so —
+ * `preset apply` would not have, which is why it is not the name.
+ *
+ * A preset that changes nothing produces no CSS. That is printed to stderr as a note rather than stdout,
+ * so `kinetixui preset css X > theme.css` writes an empty file instead of a comment a stylesheet cannot
+ * use, and the exit code still says the command succeeded — the preset was valid, it simply says nothing.
+ */
+export async function presetCss(input: string, opts: { output?: string }): Promise<void> {
+  const css = exportCss(resolveCreateTheme(read(input)));
+
+  if (opts.output) {
+    await writeFile(opts.output, css ? `${css}\n` : "", "utf8");
+    console.log(pc.green("✔"), css ? `Wrote ${opts.output}` : `Wrote ${opts.output} (empty — the preset is the Kinetix default)`);
+    return;
+  }
+
+  if (!css) {
+    console.error(pc.dim("This preset is the shipped Kinetix default — there is nothing to override."));
+    return;
+  }
+  console.log(css);
 }
 
 /**

@@ -1,74 +1,23 @@
 /**
- * Hex <-> RGB/HSL conversion and WCAG contrast — no dependency.
- * Ported 1:1 from apps/web/src/lib/color-math.ts (the /create web
- * tool's math) so `kinetixui theme build` produces identical output to the
- * web tool for the same input. Keep the two in sync by hand if either
- * changes — there's no shared package boundary between a private Next.js
- * app and a published CLI to import across.
+ * Hex <-> RGB/HSL conversion and WCAG contrast.
+ *
+ * This file used to be a hand-maintained 1:1 port of the website's colour maths, with a comment asking
+ * the next person to remember to keep the two in step. It now re-exports the one implementation from
+ * `@kinetixui/create-theme`, so `kinetixui theme build`, `kinetixui preset css` and the /create workspace
+ * cannot disagree about what a contrast ratio is.
+ *
+ * The package is a devDependency: tsup inlines it into `dist/index.js`, so the published surface of
+ * @kinetixui/cli is unchanged — exactly as `@kinetixui/create-preset` is consumed.
+ *
+ * Kept as a file rather than deleted because `theme.ts` imports `./color-math.js`, and a re-export is a
+ * smaller, more obvious change than rewriting those call sites to reach across packages directly.
  */
-
-export function hexToRgb(hex: string): [number, number, number] {
-  const h = hex.replace("#", "");
-  const n = parseInt(h.length === 3 ? h.replace(/(.)/g, "$1$1") : h, 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-
-export function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
-  (r /= 255), (g /= 255), (b /= 255);
-  const max = Math.max(r, g, b),
-    min = Math.min(r, g, b);
-  let h = 0,
-    s = 0;
-  const l = (max + min) / 2;
-  const d = max - min;
-  if (d !== 0) {
-    s = d / (1 - Math.abs(2 * l - 1));
-    switch (max) {
-      case r:
-        h = ((g - b) / d) % 6;
-        break;
-      case g:
-        h = (b - r) / d + 2;
-        break;
-      default:
-        h = (r - g) / d + 4;
-    }
-    h *= 60;
-    if (h < 0) h += 360;
-  }
-  return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
-}
-
-/** "h s% l%" — the exact shape the token pipeline stores channels in (for hsl(var(--x))). */
-export function hexToHslChannels(hex: string): string {
-  const [h, s, l] = rgbToHsl(...hexToRgb(hex));
-  return `${h} ${s}% ${l}%`;
-}
-
-function relLuminance([r, g, b]: [number, number, number]) {
-  const [cr, cg, cb] = [r, g, b].map((v) => {
-    const s = v / 255;
-    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-  }) as [number, number, number];
-  return 0.2126 * cr + 0.7152 * cg + 0.0722 * cb;
-}
-
-export function contrastRatio(hexA: string, hexB: string): number {
-  const la = relLuminance(hexToRgb(hexA)) + 0.05;
-  const lb = relLuminance(hexToRgb(hexB)) + 0.05;
-  return la > lb ? la / lb : lb / la;
-}
-
-/** Whichever of white/black reads better on this background. */
-export function bestTextHex(bgHex: string): "#ffffff" | "#000000" {
-  return contrastRatio(bgHex, "#ffffff") >= contrastRatio(bgHex, "#000000") ? "#ffffff" : "#000000";
-}
-
-export function isHex(v: string): boolean {
-  return /^#?[0-9a-fA-F]{6}$/.test(v.trim());
-}
-
-export function normalizeHex(v: string): string {
-  const t = v.trim().replace(/^#/, "");
-  return `#${t.toLowerCase()}`;
-}
+export {
+  hexToRgb,
+  rgbToHsl,
+  hexToHslChannels,
+  contrastRatio,
+  bestTextHex,
+  isHex,
+  normalizeHex,
+} from "@kinetixui/create-theme";

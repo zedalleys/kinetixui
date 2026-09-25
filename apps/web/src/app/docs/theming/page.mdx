@@ -134,8 +134,10 @@ engine that produced them the first time.
 
 **Share** copies a `/create?preset=KX1_…` link that reopens the workspace with
 that design. **Copy preset** copies the bare code, which is what
-[`kinetixui preset decode`](/docs/cli) reads. **Copy CSS** is unchanged and
-remains a different artifact: a preset is a design, CSS is a stylesheet.
+[`kinetixui preset decode`](/docs/cli) reads and
+[`kinetixui preset css`](/docs/cli) resolves into this same stylesheet without a
+browser. **Copy CSS** remains a different artifact from the preset itself: a
+preset is a design, CSS is one rendering of it.
 
 The version is in the prefix, so a code made today stays readable, and a future
 format is refused with an explanation rather than misread. A preset can only name

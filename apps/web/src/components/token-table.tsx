@@ -1,4 +1,4 @@
-import { TOKEN_CONTRACT } from "@/lib/token-contract";
+import { TOKEN_CONTRACT } from "@kinetixui/create-theme";
 
 function Swatch({ hex }: { hex: string }) {
   return (

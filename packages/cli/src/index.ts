@@ -8,7 +8,7 @@ import { inspect } from "./commands/inspect.js";
 import { lint } from "./commands/lint.js";
 import { list } from "./commands/list.js";
 import { parity } from "./commands/parity.js";
-import { presetDecode, presetUrlCommand } from "./commands/preset.js";
+import { presetCss, presetDecode, presetUrlCommand } from "./commands/preset.js";
 import { themeBuild, themeCreate } from "./commands/theme.js";
 import { DEFAULT_REGISTRY } from "./lib/config.js";
 // Bundled at build time (esbuild inlines JSON imports), not read at runtime —
@@ -166,6 +166,20 @@ preset
   .action((input: string, opts: { json: boolean }) => {
     try {
       presetDecode(input, { json: opts.json });
+    } catch (err) {
+      console.error(pc.red("✖"), (err as Error).message);
+      process.exitCode = 1;
+    }
+  });
+
+preset
+  .command("css")
+  .description("Resolve a preset into its web CSS override block — the same output as Copy CSS in the workspace. Web CSS only; no native (SwiftUI/Compose/Flutter) output.")
+  .argument("<preset>", "a KX1_ code, or a share URL")
+  .option("-o, --output <file>", "write to a file instead of stdout")
+  .action(async (input: string, opts: { output?: string }) => {
+    try {
+      await presetCss(input, { output: opts.output });
     } catch (err) {
       console.error(pc.red("✖"), (err as Error).message);
       process.exitCode = 1;
