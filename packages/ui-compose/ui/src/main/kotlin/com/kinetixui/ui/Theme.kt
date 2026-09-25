@@ -58,7 +58,14 @@ data class KinetixColors(
     val chart: List<Color>,
 )
 
-private val LightKinetixColors = KinetixColors(
+/**
+ * The shipped light value set, generated from the Kinetix tokens.
+ *
+ * Public so that a custom theme can start from it — `LightKinetixColors.copy(action = …)` is the smallest
+ * way to change one role — and so that `KinetixTheme`'s default arguments can name it. A custom set built
+ * from scratch is equally fine; [com.kinetixui.ui.KinetixColors] is a plain data class.
+ */
+val LightKinetixColors = KinetixColors(
     primary = GeneratedLight.colorPrimary,
     primaryForeground = GeneratedLight.colorPrimaryForeground,
     action = GeneratedLight.colorAction,
@@ -100,7 +107,8 @@ private val LightKinetixColors = KinetixColors(
     popoverForeground = GeneratedLight.colorPopoverForeground,
 )
 
-private val DarkKinetixColors = KinetixColors(
+/** The shipped dark value set — the real dark pass, same as the web `.dark` selector. */
+val DarkKinetixColors = KinetixColors(
     primary = GeneratedDark.colorPrimary,
     primaryForeground = GeneratedDark.colorPrimaryForeground,
     action = GeneratedDark.colorAction,
@@ -149,13 +157,31 @@ private val LocalKinetixColors = compositionLocalOf { LightKinetixColors }
  * — and therefore every `Kinetix*` component — resolve to the right light/dark
  * value set. Defaults to the system setting, same as the web `next-themes`
  * "system" mode.
+ *
+ * Pass [light] and [dark] to use a custom theme — a file exported from
+ * kinetixui.com/create with `kinetixui preset compose`, or one written by hand —
+ * and the light/dark switching still comes from the system:
+ *
+ * ```kotlin
+ * KinetixTheme(light = AcmeTheme.light, dark = AcmeTheme.dark) {
+ *     App()
+ * }
+ * ```
+ *
+ * The two parameters are added to this function rather than to a second overload
+ * on purpose: two overloads whose parameters all have defaults would make the
+ * bare `KinetixTheme { … }` ambiguous, which is a compile error in every existing
+ * call site. They sit after [darkTheme] so that a positional `KinetixTheme(true)`
+ * still binds the way it always did.
  */
 @Composable
 fun KinetixTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    light: KinetixColors = LightKinetixColors,
+    dark: KinetixColors = DarkKinetixColors,
     content: @Composable () -> Unit,
 ) {
-    val colors = if (darkTheme) DarkKinetixColors else LightKinetixColors
+    val colors = if (darkTheme) dark else light
     CompositionLocalProvider(LocalKinetixColors provides colors) {
         // Layered on MaterialTheme (not replacing it) so Material ripple/elevation
         // defaults keep working; only KinetixColorScheme drives Kinetix component

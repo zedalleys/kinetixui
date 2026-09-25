@@ -185,8 +185,37 @@ therefore apply on the web and not here, and the generated file says so in its
 own header rather than only in these docs. A field the design did not change is
 written as a reference to the shipped token, so it keeps following the library.
 
-There is **no Compose, Flutter or Android XML exporter.** `preset swiftui` is the
-only native target that exists.
+```bash
+kinetixui preset compose KX1_…
+kinetixui preset compose KX1_… --name AcmeTheme --output AcmeTheme.kt
+```
+
+The same design as a Jetpack Compose theme: a Kotlin `object` holding a light and
+a dark [`KinetixColors`](/docs/compose). Apply it with
+
+```kotlin
+KinetixTheme(
+    light = AcmeTheme.light,
+    dark = AcmeTheme.dark,
+) {
+    App()
+}
+```
+
+`--name` picks the Kotlin object (default `CreateTheme`) and follows the same
+rule as `--name` for SwiftUI, with Kotlin's keyword list.
+
+**Colours only here too.** Compose's radius and elevation are generated constants
+that components reference directly — there is no runtime theme to override — so a
+design's radius and surface treatment do not travel. Two colours do not either:
+`input` and `ring` are real tokens on the web and in SwiftUI, and `KinetixColors`
+has no field for them. The generated file names all of this in its own header.
+
+Compose writes `Color(0xffRRGGBB)`, which is the resolved colour exactly, so
+nothing is lost between the engine and the platform.
+
+There is **no Flutter or Android XML exporter.** `preset swiftui` and
+`preset compose` are the only native targets that exist.
 
 ```bash
 kinetixui preset url KX1_…

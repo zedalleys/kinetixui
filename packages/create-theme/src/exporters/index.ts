@@ -5,16 +5,20 @@
  * registry, no lifecycle, no plugin loader, because nothing here needs one and every one of those would
  * have to be designed around exporters that do not exist yet.
  *
- * Two exporters exist: `web-css` and `swiftui`. The second one was the test of this shape, and it needed
- * no change to the preset schema, the engine or the first exporter — the resolved theme already carries
- * colours as hex, radii as numbers and elevation as layers, which is what a platform needs and none of
- * the CSS it does not. A Compose, Flutter or Android XML exporter is another file in this directory with
- * a `target` and an `export`; none of them exists yet.
+ * Three exporters exist: `web-css`, `swiftui` and `compose`. The second was the test of this shape and
+ * the third was the proof — neither needed a change to the preset schema, the engine or any existing
+ * exporter, because the resolved theme already carries colours as hex, radii as numbers and elevation as
+ * layers, which is what a platform needs and none of the CSS it does not. A Flutter or Android XML
+ * exporter is another file in this directory with a `target` and an `export`; neither exists yet.
  *
- * An exporter is also where a platform's limits get told truthfully. `swiftui` writes colours and says in
- * its own header that it writes nothing else, because the SwiftUI package has no radius or elevation
- * token to write to. That belongs in the exporter, not in the engine: the theme is complete, and what a
- * target can carry is the target's business.
+ * An exporter is also where a platform's limits get told truthfully. `swiftui` and `compose` both write
+ * colours and say in their own headers that they write nothing else, because neither native package has
+ * a runtime radius or elevation token to write to. That belongs in the exporter, not in the engine: the
+ * theme is complete, and what a target can carry is the target's business.
+ *
+ * What an exporter must NOT do is repair a theme. If a platform's colour format loses precision, that
+ * becomes a term in `guaranteedContrast` and generation adapts — see `swiftUiChannels`. Compose needs no
+ * such term: it writes `Color(0xffRRGGBB)`, which is the resolved value exactly.
  *
  * `options` exists so an exporter can be told *how* to write, never *what*: a CSS exporter takes a
  * selector, a Swift exporter would take a type name. If an option would change the theme rather than its
@@ -31,6 +35,18 @@ export type ThemeExporter<TOptions = void, TResult = string> = {
 };
 
 export { cssExporter, exportCss, cssVarOverrides, shadowCss, NOTHING_TO_OVERRIDE, type CssExportOptions } from "./css";
+export {
+  composeExporter,
+  exportCompose,
+  kotlinSymbolError,
+  kotlinFieldName,
+  composeColor,
+  DEFAULT_COMPOSE_SYMBOL,
+  COMPOSE_COLOR_FIELDS,
+  COMPOSE_CHART_STOPS,
+  COMPOSE_UNMAPPED_TOKENS,
+  type ComposeExportOptions,
+} from "./compose";
 export {
   swiftuiExporter,
   exportSwiftUi,
