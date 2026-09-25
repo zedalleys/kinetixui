@@ -8,10 +8,10 @@
  * `kinetixui preset css` prints from it, and a future SwiftUI/Compose/Flutter exporter will read the same
  * resolved theme rather than a second derivation that agrees by hand.
  *
- * Two exporters exist: web CSS, and SwiftUI colours. Neither is a general "native export" — the SwiftUI
- * one writes a `KinetixColors` pair because that is the only axis `packages/ui-swiftui` is themeable
- * along, and it says so in the file it generates. There is no Compose, Flutter or Android XML exporter,
- * and nothing here should be read as claiming otherwise.
+ * Three exporters exist: web CSS, SwiftUI colours and Jetpack Compose colours. None of them is a general
+ * "native export" — each native one writes a `KinetixColors` pair because colour is the only axis its
+ * package is themeable along, and each says so in the file it generates. There is no Flutter or Android
+ * XML exporter, and nothing here should be read as claiming otherwise.
  */
 export {
   hexToRgb,
@@ -122,6 +122,16 @@ export {
   cssVarOverrides,
   shadowCss,
   NOTHING_TO_OVERRIDE,
+  composeExporter,
+  exportCompose,
+  kotlinSymbolError,
+  kotlinFieldName,
+  composeColor,
+  DEFAULT_COMPOSE_SYMBOL,
+  COMPOSE_COLOR_FIELDS,
+  COMPOSE_CHART_STOPS,
+  COMPOSE_UNMAPPED_PRESET_ROLES,
+  COMPOSE_NATIVE_THEME_GAPS,
   swiftuiExporter,
   exportSwiftUi,
   swiftSymbolError,
@@ -130,6 +140,7 @@ export {
   DEFAULT_SWIFT_SYMBOL,
   SWIFT_COLOR_FIELDS,
   SWIFT_CHART_STOPS,
+  type ComposeExportOptions,
   type CssExportOptions,
   type SwiftUiExportOptions,
   type ThemeExporter,

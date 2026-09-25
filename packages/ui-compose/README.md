@@ -32,9 +32,23 @@ proximity to the token source it depends on.
 ## What's here
 
 - `ui/src/main/kotlin/com/kinetixui/ui/Theme.kt` — `KinetixTheme` composable
-  + `KinetixColorScheme`, the first real theme wrapper on any native
-  platform (iOS/Flutter still only have static token constants, no
-  framework-idiomatic wrapper).
+  + `KinetixColorScheme`. This was the first real theme wrapper on any
+  native platform; SwiftUI (`KinetixTheme` over `@Environment(\.kinetixColors)`)
+  and Flutter (`KinetixTheme`, an `InheritedWidget`) have since grown their
+  own, so the three are now peers rather than this one being ahead.
+  `KinetixTheme(light = …, dark = …)` takes custom colour sets —
+  `LightKinetixColors` / `DarkKinetixColors` are the shipped ones, and
+  `kinetixui preset compose` generates a pair from a
+  [Create](https://kinetixui.com/create) design. Colours only: radius and
+  elevation are generated constants components read directly, with no
+  runtime theme to override.
+- `ui/src/test/kotlin/com/kinetixui/create/CreateThemeFixture.kt` —
+  **generated, committed.** A theme emitted by the `compose` exporter in
+  `packages/create-theme`, checked in so this target compiles it: that is
+  the only place the exporter's output is type-checked against the real
+  `KinetixColors` constructor, and `CustomThemeTest` installs it and reads
+  it back through `KinetixColorScheme.current`. A TypeScript test fails if
+  it drifts and prints the command to regenerate it.
 - `ui/src/main/kotlin/com/kinetixui/ui/Button.kt` — `KinetixButton`, mirroring
   `packages/ui/src/components/button.tsx`'s variant × size matrix 1:1.
 - `Badge.kt` / `Switch.kt` / `Input.kt` / `Separator.kt` / `Label.kt` /

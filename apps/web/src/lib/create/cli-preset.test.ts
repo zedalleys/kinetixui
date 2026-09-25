@@ -5,8 +5,14 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ACCEPTED_TOKENS, encodePreset, presetUrl, type PresetConfig } from "@kinetixui/create-preset";
 import { DEFAULT_PRESET } from "@kinetixui/create-preset";
-import { exportCss, exportSwiftUi, resolveCreateTheme } from "@kinetixui/create-theme";
-import { presetCss, presetDecode, presetSwiftUi, presetUrlCommand } from "../../../../../packages/cli/src/commands/preset";
+import { exportCompose, exportCss, exportSwiftUi, resolveCreateTheme } from "@kinetixui/create-theme";
+import {
+  presetCompose,
+  presetCss,
+  presetDecode,
+  presetSwiftUi,
+  presetUrlCommand,
+} from "../../../../../packages/cli/src/commands/preset";
 
 /**
  * The CLI side of the preset contract.
@@ -84,13 +90,13 @@ describe("preset decode", () => {
   });
 
   it("names only the platforms that exist", () => {
-    // This used to forbid the word "swiftui" outright, because no SwiftUI exporter existed and mentioning
-    // one would have been a promise. `preset swiftui` exists now, so the guard narrows to what is still
-    // untrue rather than being deleted: there is no Compose or Flutter output behind any command, and
-    // nothing here may suggest a general "native" or five-platform export.
+    // This has narrowed twice, each time a real exporter landed — first "swiftui", now "compose". What
+    // it guards has not changed: a command must not name an output that does not exist. Flutter and
+    // Android XML have no exporter, and nothing here may suggest a general "native" or five-platform
+    // export, so those are what remain forbidden.
     presetDecode(encodePreset(preset({ brand: "#c2410c" })), { json: false });
     const text = plain().toLowerCase();
-    for (const claim of ["compose", "flutter", "android", "native", "every platform", "all five"]) {
+    for (const claim of ["flutter", "android", "native", "every platform", "all five"]) {
       expect(text, claim).not.toContain(claim);
     }
   });
@@ -100,6 +106,7 @@ describe("preset decode", () => {
     expect(plain()).toContain("theme build");
     expect(plain()).toContain("preset css");
     expect(plain()).toContain("preset swiftui");
+    expect(plain()).toContain("preset compose");
   });
 });
 
@@ -286,6 +293,110 @@ describe("preset swiftui", () => {
   });
 });
 
+describe("preset compose", () => {
+  it("prints a Kotlin theme, and nothing else", async () => {
+    await presetCompose(encodePreset(preset({ brand: "#c2410c" })), {});
+
+    expect(stdout()).toContain("object CreateTheme {");
+    expect(stdout()).toContain("import com.kinetixui.ui.KinetixColors");
+    expect(out).toEqual([]);
+  });
+
+  it("is byte-identical to the shared exporter", async () => {
+    // The same claim `preset css` and `preset swiftui` make: one resolve, one exporter, two front ends.
+    for (const over of [
+      {},
+      { brand: "#7e22ce" },
+      { neutral: "warm" as const, chartPalette: "cool" as const },
+      { manualOverrides: { border: "#ff0000" } },
+    ]) {
+      written = [];
+      await presetCompose(encodePreset(preset(over)), {});
+      expect(stdout(), JSON.stringify(over)).toBe(
+        exportCompose(resolveCreateTheme(preset(over)), { symbol: "CreateTheme" }),
+      );
+    }
+  });
+
+  it("accepts a share URL as readily as a bare code", async () => {
+    await presetCompose(presetUrl(preset({ neutral: "cool" }), "https://kinetixui.com"), {});
+    expect(stdout()).toBe(exportCompose(resolveCreateTheme(preset({ neutral: "cool" })), { symbol: "CreateTheme" }));
+  });
+
+  it("names the object after --name", async () => {
+    await presetCompose(encodePreset(preset({ brand: "#c2410c" })), { name: "AcmeTheme" });
+    expect(stdout()).toContain("object AcmeTheme {");
+  });
+
+  it("writes a file when asked, and says how to apply it", async () => {
+    const file = join(mkdtempSync(join(tmpdir(), "kx-compose-")), "AcmeTheme.kt");
+    await presetCompose(encodePreset(preset({ neutral: "warm" })), { output: file, name: "AcmeTheme" });
+
+    expect(readFileSync(file, "utf8")).toBe(
+      exportCompose(resolveCreateTheme(preset({ neutral: "warm" })), { symbol: "AcmeTheme" }),
+    );
+    expect(plain()).toContain(file);
+    expect(plain()).toContain("KinetixTheme(light = AcmeTheme.light, dark = AcmeTheme.dark)");
+  });
+
+  it("still produces a file for the default preset, unlike preset css", async () => {
+    await presetCompose(encodePreset(preset()), {});
+    expect(stdout()).toContain("object CreateTheme {");
+    expect(stdout()).not.toContain("Color(0x");
+  });
+
+  it.each([
+    ["a digit first", "123Theme"],
+    ["a statement", "Theme; import java.io.File"],
+    ["a Kotlin keyword", "object"],
+    ["a hyphen", "Theme-Name"],
+    ["emoji", "Theme\u{1F3A8}"],
+  ])("refuses %s as a name, before it decodes anything", async (_name, symbol) => {
+    await expect(presetCompose("KX1_!!!!", { name: symbol })).rejects.toThrow(/name|identifier|keyword|digit/i);
+    expect(written).toEqual([]);
+  });
+
+  it("refuses a bad preset with a message, not a stack trace", async () => {
+    await expect(presetCompose("KX1_!!!!", {})).rejects.toThrow(/^[A-Z].*\.$/);
+    expect(written).toEqual([]);
+  });
+
+  it("claims no platform it cannot deliver", async () => {
+    await presetCompose(encodePreset(preset({ brand: "#c2410c", surface: "elevated" })), {});
+    const text = stdout().toLowerCase();
+    for (const claim of ["flutter", "android xml", "every platform", "all five", "five-platform"]) {
+      expect(text, claim).not.toContain(claim);
+    }
+    // SwiftUI is named once, as a comparison: `tertiary-foreground` exists there and not on Compose's
+    // KinetixColors. That is information about a native-theme gap, not a claim to produce Swift — and
+    // the exporter's own tests assert no Swift syntax appears.
+    expect(text).toContain("in the swiftui theme, but compose's");
+    expect(text).not.toContain("color(red:");
+  });
+});
+
+describe("the three exporters agree on the design", () => {
+  it("all read the same resolved theme rather than deriving their own", async () => {
+    // Web, SwiftUI and Compose render one design three ways. The colours are the same colours; only the
+    // syntax differs. Compose writes the resolved hex verbatim, which is what makes it checkable here.
+    const over = { brand: "#c2410c", neutral: "warm" as const };
+    const theme = resolveCreateTheme(preset(over));
+    const action = theme.light.colors.action!;
+
+    written = [];
+    await presetCompose(encodePreset(preset(over)), {});
+    expect(stdout()).toContain(`action = Color(0xff${action.slice(1)}),`);
+
+    out = [];
+    await presetCss(encodePreset(preset(over)), {});
+    expect(printed()).toBe(exportCss(theme));
+
+    written = [];
+    await presetSwiftUi(encodePreset(preset(over)), {});
+    expect(stdout()).toBe(exportSwiftUi(theme, { symbol: "CreateTheme" }));
+  });
+});
+
 describe("the other preset commands still work", () => {
   it("decode, url and css are unchanged by the new target", async () => {
     presetDecode(encodePreset(preset({ brand: "#c2410c" })), { json: false });
@@ -300,10 +411,11 @@ describe("the other preset commands still work", () => {
     expect(printed()).toBe(exportCss(resolveCreateTheme(preset({ neutral: "warm" }))));
   });
 
-  it("decode points at both exporters", () => {
+  it("decode points at every exporter", () => {
     presetDecode(encodePreset(preset({ brand: "#c2410c" })), { json: false });
     expect(plain()).toContain("preset css");
     expect(plain()).toContain("preset swiftui");
+    expect(plain()).toContain("preset compose");
   });
 });
 

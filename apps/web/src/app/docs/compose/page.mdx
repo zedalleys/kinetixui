@@ -54,6 +54,49 @@ KinetixTheme {
 `KinetixColorScheme.current` exposes the active `KinetixColors` set if you
 need a token directly.
 
+## A custom theme
+
+`KinetixTheme` takes your own colour sets and still switches on the system
+setting:
+
+```kotlin
+KinetixTheme(
+    light = AcmeTheme.light,
+    dark = AcmeTheme.dark,
+) {
+    App()
+}
+```
+
+You can write that pair by hand, change one role with
+`LightKinetixColors.copy(action = …)`, or export one from a
+[Create](/create) design:
+
+```bash
+kinetixui preset compose KX1_… --name AcmeTheme --output AcmeTheme.kt
+```
+
+That writes a Kotlin `object` with a `light` and a `dark` `KinetixColors`,
+built from the same resolved theme the workspace's Copy CSS renders —
+see [the CLI reference](/docs/cli).
+
+**Colours only.** `KinetixColors` is the whole themeable surface here:
+corner radius and elevation are generated constants that components
+reference directly (`KinetixRadius.md`), with no runtime theme to override.
+A Create design's radius and surface treatment therefore apply on the web
+and not in Compose, and the generated file says so in its own header. Two
+preset roles do not travel either: `input` and `ring` are colours a preset
+can override by hand, and `KinetixColors` has no field for them.
+
+Separately — and not a Create limitation — `tertiary-foreground` is in the
+Kinetix token contract and in the SwiftUI theme, but `KinetixColors` has
+never exposed it. Create does not model that token at all, so no preset can
+set it.
+
+A colour the design did not change is written as a reference to the shipped
+token rather than a copy of today's value, so it keeps following the
+library.
+
 ## Tokens
 
 The Kotlin token objects and `res/values/{colors,dimens}.xml` under

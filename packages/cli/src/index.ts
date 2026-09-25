@@ -8,8 +8,8 @@ import { inspect } from "./commands/inspect.js";
 import { lint } from "./commands/lint.js";
 import { list } from "./commands/list.js";
 import { parity } from "./commands/parity.js";
-import { presetCss, presetDecode, presetSwiftUi, presetUrlCommand } from "./commands/preset.js";
-import { DEFAULT_SWIFT_SYMBOL } from "@kinetixui/create-theme";
+import { presetCompose, presetCss, presetDecode, presetSwiftUi, presetUrlCommand } from "./commands/preset.js";
+import { DEFAULT_COMPOSE_SYMBOL, DEFAULT_SWIFT_SYMBOL } from "@kinetixui/create-theme";
 import { themeBuild, themeCreate } from "./commands/theme.js";
 import { DEFAULT_REGISTRY } from "./lib/config.js";
 // Bundled at build time (esbuild inlines JSON imports), not read at runtime —
@@ -196,6 +196,21 @@ preset
   .action(async (input: string, opts: { output?: string; name?: string }) => {
     try {
       await presetSwiftUi(input, { output: opts.output, name: opts.name });
+    } catch (err) {
+      console.error(pc.red("✖"), (err as Error).message);
+      process.exitCode = 1;
+    }
+  });
+
+preset
+  .command("compose")
+  .description("Resolve a preset into a Jetpack Compose theme file (KinetixColors, light and dark). Colours only — Compose has no runtime radius or elevation token to carry. No Flutter or Android XML output.")
+  .argument("<preset>", "a KX1_ code, or a share URL")
+  .option("-o, --output <file>", "write to a file instead of stdout")
+  .option("-n, --name <symbol>", "the Kotlin object to generate", DEFAULT_COMPOSE_SYMBOL)
+  .action(async (input: string, opts: { output?: string; name?: string }) => {
+    try {
+      await presetCompose(input, { output: opts.output, name: opts.name });
     } catch (err) {
       console.error(pc.red("✖"), (err as Error).message);
       process.exitCode = 1;

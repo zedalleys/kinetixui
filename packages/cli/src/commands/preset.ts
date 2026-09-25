@@ -19,9 +19,12 @@ import {
   type PresetConfig,
 } from "@kinetixui/create-preset";
 import {
+  DEFAULT_COMPOSE_SYMBOL,
   DEFAULT_SWIFT_SYMBOL,
+  exportCompose,
   exportCss,
   exportSwiftUi,
+  kotlinSymbolError,
   resolveCreateTheme,
   swiftSymbolError,
 } from "@kinetixui/create-theme";
@@ -80,9 +83,13 @@ export function presetDecode(input: string, opts: { json: boolean }): void {
   console.log();
   console.log(
     pc.dim(
-      "  A preset describes a design, not a stylesheet. `kinetixui preset css <code>` resolves it into\n" +
-        "  the same web CSS the workspace's Copy CSS produces, and `kinetixui preset swiftui <code>` into\n" +
-        "  a SwiftUI colour theme. For a file of literal colours, `kinetixui theme build` is unchanged.",
+      // Wrapped so that no command name is split across lines — a reader scanning for `theme build`
+      // should find it, and so should a test.
+      "  A preset describes a design, not a stylesheet.\n\n" +
+        "    kinetixui preset css <code>       the same web CSS the workspace's Copy CSS produces\n" +
+        "    kinetixui preset swiftui <code>   a SwiftUI colour theme\n" +
+        "    kinetixui preset compose <code>   a Jetpack Compose colour theme\n\n" +
+        "  For a file of literal colours, `kinetixui theme build` is unchanged.",
     ),
   );
   console.log();
@@ -147,6 +154,33 @@ export async function presetSwiftUi(input: string, opts: { output?: string; name
   // No trailing console.log: the exporter's output already ends in a newline, and a second one would
   // show up in a redirected file.
   process.stdout.write(swift);
+}
+
+/**
+ * `preset compose <code|url>` — resolve a preset into a Jetpack Compose theme file.
+ *
+ * Compose, and only Compose. Like `preset swiftui`, what it writes is colours: `packages/ui-compose` is
+ * themeable through `KinetixColors` and nothing else, so the design's radius and surface treatment do not
+ * travel — the generated file says so in its own header.
+ *
+ * The one thing worth knowing beside `preset swiftui`: Compose writes `Color(0xffRRGGBB)`, which is the
+ * resolved colour exactly, so nothing is lost on the way to the platform. SwiftUI's three-decimal
+ * channels are their own term in the shared contrast guarantee; Compose needs none.
+ */
+export async function presetCompose(input: string, opts: { output?: string; name?: string }): Promise<void> {
+  const symbol = opts.name ?? DEFAULT_COMPOSE_SYMBOL;
+  // Checked before the preset is decoded, so a bad `--name` reports the argument the user got wrong.
+  const reason = kotlinSymbolError(symbol);
+  if (reason) throw new Error(reason);
+
+  const kotlin = exportCompose(resolveCreateTheme(read(input)), { symbol });
+
+  if (opts.output) {
+    await writeFile(opts.output, kotlin, "utf8");
+    console.log(pc.green("✔"), `Wrote ${opts.output} — apply it with KinetixTheme(light = ${symbol}.light, dark = ${symbol}.dark)`);
+    return;
+  }
+  process.stdout.write(kotlin);
 }
 
 /**
