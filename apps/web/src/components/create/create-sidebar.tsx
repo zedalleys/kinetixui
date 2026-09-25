@@ -4,25 +4,27 @@ import * as React from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SectionHead } from "@/components/section-head";
-import type { ContrastResult } from "@/lib/theme-builder";
 import type { CreateAction, CreateConfig, PreviewMode } from "@/lib/create/config";
 import { currentStyle } from "@/lib/create/config";
 import { SHIPPED_TOKENS, type CreateTheme } from "@/lib/create/theme-adapter";
 import {
-  CHART_LABELS,
   CHART_PALETTES,
   NEUTRALS,
-  NEUTRAL_LABELS,
   RADII,
-  RADIUS_LABELS,
   STYLES,
-  STYLE_LABELS,
   SURFACES,
-  SURFACE_LABELS,
   deriveChart,
   deriveNeutrals,
   deriveRadius,
-} from "@/lib/create/theme-engine";
+  type ContrastResult,
+} from "@kinetixui/create-theme";
+import {
+  CHART_LABELS,
+  NEUTRAL_LABELS,
+  RADIUS_LABELS,
+  STYLE_LABELS,
+  SURFACE_LABELS,
+} from "@/lib/create/labels";
 import { CreateAdvanced } from "./create-advanced";
 import { CreateColorPicker } from "./create-color-picker";
 import { CreateOutput } from "./create-output";
@@ -279,7 +281,7 @@ export function CreateSidebar({
         <p className="mt-3 text-sm font-medium">Radius</p>
         <p className="mb-2 mt-1 text-sm text-muted-foreground">
           Sets the four radius steps every component reads. {RADIUS_LABELS[config.radius]} puts controls at{" "}
-          <span className="font-mono">{deriveRadius(config.radius)["radius-md"]}</span>.
+          <span className="font-mono">{deriveRadius(config.radius).md}px</span>.
         </p>
         <OptionGroup
           legend="Radius"
@@ -373,7 +375,7 @@ function StyleSample({ style }: { style: (typeof STYLES)[number] }) {
 }
 
 function RadiusSample({ radius }: { radius: (typeof RADII)[number] }) {
-  const px = Number.parseInt(deriveRadius(radius)["radius-md"] ?? "0", 10);
+  const px = deriveRadius(radius).md;
   // Scaled to the swatch so the difference is visible at this size.
   return (
     <span

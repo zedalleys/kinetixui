@@ -1,17 +1,20 @@
 /**
  * Turning a handful of choices into a theme.
  *
- * Everything here is a pure function of the config and nothing else — no clock, no randomness, no module
- * state. That is not tidiness: PR 3 encodes a config into a shareable preset, and a preset that resolves
- * to a different theme on someone else's machine is worse than no preset.
+ * Everything here is a pure function of the design and nothing else — no clock, no randomness, no module
+ * state. That is not tidiness: a design travels as a shareable preset, and a preset that resolves to a
+ * different theme on someone else's machine is worse than no preset.
+ *
+ * Every function returns a value in the domain it is about: colours as hex, radii as numbers, elevation as
+ * shadow layers. None of them returns CSS. That is what lets one engine feed a stylesheet, a Swift file
+ * and a Dart file without any of them re-parsing another's output.
  *
  * Generation is OPT-IN BY CHANGE. At the default config nothing is generated and the shipped Kinetix
  * contract is used verbatim, so a fresh /create previews the real library rather than a close imitation
  * of it, and copying produces an empty override block because there is genuinely nothing to override.
  * Change the brand colour and the brand roles regenerate; change the neutral and the surfaces do. The
  * cost is a small discontinuity at the default value — generated(#1d4ed8) is near but not identical to
- * the hand-tuned shipped blue — which `theme-engine.test.ts` measures rather than leaves to be
- * discovered.
+ * the hand-tuned shipped blue — which `engine.test.ts` measures rather than leaves to be discovered.
  */
 import {
   CHART_PALETTES,
@@ -23,10 +26,10 @@ import {
   type RadiusId,
   type SurfaceId,
 } from "@kinetixui/create-preset";
-import tokens from "@kinetixui/tokens";
-import { contrastRatio } from "../color-math";
-import { MAX_CHROMA, adjust, hexToOklch, oklchToHex, type Oklch } from "../color/oklch";
-import type { AcceptedToken } from "../theme-builder";
+import { SHIPPED_ELEVATION, type ElevationStep, type RadiusStep, type ShadowLayer } from "./contract";
+import { contrastRatio } from "./color-math";
+import { MAX_CHROMA, adjust, hexToOklch, oklchToHex, type Oklch } from "./oklch";
+import type { AcceptedToken } from "./palette";
 
 export type Tokens = Partial<Record<string, string>>;
 
@@ -45,7 +48,7 @@ export {
   type SurfaceId,
 };
 
-//  is derived from radius + surface and never stored, so it is not part of the portable contract.
+// A style is derived from radius + surface and never stored, so it is not part of the portable contract.
 export const STYLES = ["default", "soft", "sharp"] as const;
 export type StyleId = (typeof STYLES)[number];
 export type Mode = "light" | "dark";
@@ -53,42 +56,12 @@ export type Mode = "light" | "dark";
 /** The shipped action blue. The default brand, and the value that means "generate nothing". */
 export { DEFAULT_BRAND as KINETIX_BRAND } from "@kinetixui/create-preset";
 
-export const NEUTRAL_LABELS: Record<NeutralId, string> = {
-  kinetix: "Kinetix",
-  neutral: "Neutral",
-  cool: "Cool",
-  warm: "Warm",
-  stone: "Stone",
-};
-
-export const RADIUS_LABELS: Record<RadiusId, string> = {
-  square: "Square",
-  small: "Small",
-  default: "Default",
-  rounded: "Rounded",
-  soft: "Soft",
-};
-
-export const SURFACE_LABELS: Record<SurfaceId, string> = {
-  flat: "Flat",
-  bordered: "Bordered",
-  soft: "Soft",
-  elevated: "Elevated",
-};
-
-export const CHART_LABELS: Record<ChartPaletteId, string> = {
-  kinetix: "Kinetix",
-  brand: "Brand",
-  categorical: "Categorical",
-  cool: "Cool",
-  warm: "Warm",
-};
-
-export const STYLE_LABELS: Record<StyleId, string> = {
-  default: "Default",
-  soft: "Soft",
-  sharp: "Sharp",
-};
+/**
+ * The labels a person reads ("Warm", "Elevated") are NOT here. They are UI copy — they get translated,
+ * shortened for a narrow sidebar, and rewritten when the marketing voice changes, none of which is a
+ * property of the theme. They live in `apps/web/src/lib/create/labels.ts`, and a `satisfies` there keeps
+ * every id in this file named exactly once.
+ */
 
 /* ------------------------------------------------------------------ brand roles */
 
@@ -280,101 +253,89 @@ export function deriveNeutrals(neutral: NeutralId, mode: Mode): Tokens {
 /* ------------------------------------------------------------------ radius */
 
 /**
- * Radius ladders, in the units the tokens already use. Every value is a multiple of 4, which is the grid
- * the design system is checked against — a builder that emitted 6px corners would put the system off its
- * own grid the moment someone pasted the output.
+ * Radius ladders, as NUMBERS rather than CSS.
  *
- * Only the four size steps are written: `--radius-field`, `-control`, `-container` and `-surface` are
- * defined as `var(--radius-sm|md|lg|xl)`, so the role aliases follow without Create knowing about them
- * (§70 — no create-specific radius tokens).
+ * Every value is a multiple of 4, which is the grid the design system is checked against — a builder that
+ * emitted 6px corners would put the system off its own grid the moment someone pasted the output.
+ *
+ * `4`, not `"4px"`: a radius is a length, and only the web spells one that way. The CSS exporter appends
+ * the unit; a SwiftUI exporter would write the same number as a CGFloat. Keeping the unit here would make
+ * every future exporter parse a string this one just built (§7).
+ *
+ * Only the four size steps exist: `--radius-field`, `-control`, `-container` and `-surface` are defined as
+ * `var(--radius-sm|md|lg|xl)`, so the role aliases follow without Create knowing about them.
  */
-const RADIUS_STEPS: Record<RadiusId, [number, number, number, number]> = {
-  square: [0, 0, 0, 0],
-  small: [4, 4, 8, 12],
-  default: [4, 8, 12, 16],
-  rounded: [8, 12, 16, 24],
-  soft: [12, 20, 28, 36],
+const RADIUS_STEPS: Record<RadiusId, Record<RadiusStep, number>> = {
+  square: { sm: 0, md: 0, lg: 0, xl: 0 },
+  small: { sm: 4, md: 4, lg: 8, xl: 12 },
+  default: { sm: 4, md: 8, lg: 12, xl: 16 },
+  rounded: { sm: 8, md: 12, lg: 16, xl: 24 },
+  soft: { sm: 12, md: 20, lg: 28, xl: 36 },
 };
 
-export function deriveRadius(radius: RadiusId): Tokens {
-  const [sm, md, lg, xl] = RADIUS_STEPS[radius];
-  return {
-    "radius-sm": `${sm}px`,
-    "radius-md": `${md}px`,
-    "radius-lg": `${lg}px`,
-    "radius-xl": `${xl}px`,
-  };
+/**
+ * The full ladder, always — including at `default`, where it equals the shipped values.
+ *
+ * The resolved theme describes a theme completely; it is the exporter that decides what is worth
+ * emitting, by diffing against the shipped ladder. Returning "nothing changed" from here instead would
+ * mean a SwiftUI exporter received a theme with no radius in it and had to know the defaults itself.
+ */
+export function deriveRadius(radius: RadiusId): Record<RadiusStep, number> {
+  return { ...RADIUS_STEPS[radius] };
 }
 
 /* ------------------------------------------------------------------ surface */
 
 /**
- * The shipped elevation ladder, as CSS, built from the DTCG token data `@kinetixui/tokens` exports.
- *
- * This is the same source `style-dictionary` generates `extras.css` from, so there is one place a shadow
- * is defined and Create reads it rather than restating it. `shadow-tokens.test.ts` asserts these strings
- * are byte-identical to the shipped stylesheet's, which is what keeps "one source" true rather than
- * merely intended.
- */
-type ShadowLayer = { color: string; offsetX: string; offsetY: string; blur: string; spread: string };
-
-const px = (v: string) => (Number(v) === 0 ? "0" : `${v}px`);
-
-export function shadowCss(layers: ShadowLayer[]): string {
-  return layers.map((l) => `${px(l.offsetX)} ${px(l.offsetY)} ${px(l.blur)} ${px(l.spread)} ${l.color}`).join(", ");
-}
-
-const SHADOWS = tokens.shadow as unknown as Record<"sm" | "md" | "lg" | "xl", ShadowLayer[]>;
-
-/** Literal values for the four size steps, resolved once. */
-export const SHADOW_LADDER: Record<"sm" | "md" | "lg" | "xl", string> = {
-  sm: shadowCss(SHADOWS.sm),
-  md: shadowCss(SHADOWS.md),
-  lg: shadowCss(SHADOWS.lg),
-  xl: shadowCss(SHADOWS.xl),
-};
-
-/**
  * Surface treatment, expressed by REMAPPING the shipped elevation ladder rather than inventing shadows.
  *
- * `soft` is the shipped behaviour and writes nothing. `elevated` shifts every step up one rung, so a card
- * using `shadow-sm` gets the `--shadow-md` value. `flat` and `bordered` remove them; `bordered`
- * compensates by darkening the border, which is the only way a flat surface keeps its edges (§29).
+ * `soft` is the shipped behaviour. `elevated` shifts every step up one rung, so a card using the `sm`
+ * elevation gets the `md` shadow. `flat` and `bordered` remove elevation entirely; `bordered` compensates
+ * by darkening the border, which is the only way a flat surface keeps its edges.
  *
- * `elevated` emits LITERAL values, never `var(--shadow-md)`. Custom properties substitute at computed-value
- * time, so a block that says
+ * `elevated` resolves to the LITERAL layers of the rung above, never to a reference. This is the bug #218
+ * shipped and #218's follow-up fixed: CSS custom properties substitute at computed-value time, so a block
+ * that says
  *
  *     --shadow-sm: var(--shadow-md);  --shadow-md: var(--shadow-lg);  --shadow-lg: var(--shadow-xl);
  *
  * does not snapshot the ladder — each reference resolves against the *overridden* property beside it, and
- * all three collapse onto the `xl` value. Verified in a browser: sm, md and lg all came back as xl. The
- * ladder is therefore read from the token source and written out, which also means the copied CSS behaves
- * the same in a consumer's stylesheet, where nothing else defines these names.
+ * all three collapse onto the `xl` value. Verified in a browser: sm, md and lg all came back as xl.
+ *
+ * Carrying layers rather than strings makes that failure unreachable by construction, and not only for
+ * CSS: there is no value in this type that could be a reference to another token.
  */
-const SHADOW_STEPS = ["--shadow-sm", "--shadow-md", "--shadow-lg", "--shadow-xl"] as const;
-
-export function deriveSurface(surface: SurfaceId, mode: Mode, borderHex: string): Tokens {
-  if (surface === "soft") return {};
-
-  if (surface === "elevated") {
-    // Each step takes the next one's ORIGINAL value; the top step keeps its own and is not written.
-    return {
-      "shadow-sm": SHADOW_LADDER.md,
-      "shadow-md": SHADOW_LADDER.lg,
-      "shadow-lg": SHADOW_LADDER.xl,
-    };
+export function deriveElevation(surface: SurfaceId): Record<ElevationStep, ShadowLayer[]> {
+  switch (surface) {
+    case "soft":
+      return { ...SHIPPED_ELEVATION };
+    case "elevated":
+      // Each step takes the next rung's own layers; the top step has nothing above it and keeps its own.
+      return {
+        sm: SHIPPED_ELEVATION.md,
+        md: SHIPPED_ELEVATION.lg,
+        lg: SHIPPED_ELEVATION.xl,
+        xl: SHIPPED_ELEVATION.xl,
+      };
+    case "flat":
+    case "bordered":
+      // An empty layer list is "no shadow" — `none` in CSS, no shadow modifier natively.
+      return { sm: [], md: [], lg: [], xl: [] };
   }
+}
 
-  const flat = Object.fromEntries(SHADOW_STEPS.map((s) => [s.slice(2), "none"])) as Tokens;
-  if (surface === "flat") return flat;
-
-  // bordered: no elevation, stronger edges. The border moves toward the foreground, not to an arbitrary
-  // colour, so it stays on whatever neutral family is selected.
+/**
+ * The border a surface treatment asks for, or null when it leaves the border alone.
+ *
+ * Split out from the elevation because it is a colour and elevation is not. Folding them into one return
+ * value meant every caller sorting one from the other by token name.
+ */
+export function deriveSurfaceBorder(surface: SurfaceId, mode: Mode, borderHex: string): string | null {
+  if (surface !== "bordered") return null;
+  // The border moves toward the foreground, not to an arbitrary colour, so it stays on whatever neutral
+  // family is selected.
   const border = hexToOklch(borderHex);
-  return {
-    ...flat,
-    ...(border ? { border: oklchToHex(adjust(border, { dl: mode === "light" ? -0.14 : 0.14 })) } : {}),
-  };
+  return border ? oklchToHex(adjust(border, { dl: mode === "light" ? -0.14 : 0.14 })) : null;
 }
 
 /* ------------------------------------------------------------------ charts */
@@ -416,7 +377,7 @@ export function deriveChart(palette: ChartPaletteId, brandHex: string, mode: Mod
   const ls = CHART_L[mode];
   const out: Tokens = {};
   hues.forEach((h, i) => {
-    out[`chart-${i + 1}`] = oklchToHex({ l: ls[i], c: Math.min(0.16, MAX_CHROMA), h });
+    out[`chart-${i + 1}`] = oklchToHex({ l: ls[i]!, c: Math.min(0.16, MAX_CHROMA), h });
   });
   return out;
 }

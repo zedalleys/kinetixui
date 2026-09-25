@@ -1,4 +1,10 @@
-/** Hex <-> RGB/HSL conversion and WCAG contrast — no dependency. */
+/**
+ * Hex <-> RGB/HSL conversion and WCAG contrast — no dependency.
+ *
+ * The one implementation. `packages/cli/src/lib/color-math.ts` used to be a hand-synced 1:1 port of this
+ * file, kept in step by a comment asking the next person to remember; it now re-exports from here, so
+ * `kinetixui theme build` and the /create workspace cannot disagree about what a contrast ratio is.
+ */
 
 export function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace("#", "");
@@ -41,11 +47,11 @@ export function hexToHslChannels(hex: string): string {
 }
 
 function relLuminance([r, g, b]: [number, number, number]) {
-  const c = [r, g, b].map((v) => {
+  const linear = (v: number) => {
     const s = v / 255;
     return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  };
+  return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
 }
 
 export function contrastRatio(hexA: string, hexB: string): number {

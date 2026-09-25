@@ -196,6 +196,9 @@ importers:
       '@kinetixui/create-preset':
         specifier: workspace:*
         version: link:../../packages/create-preset
+      '@kinetixui/create-theme':
+        specifier: workspace:*
+        version: link:../../packages/create-theme
       '@kinetixui/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens
@@ -435,6 +438,9 @@ importers:
       '@kinetixui/create-preset':
         specifier: workspace:*
         version: link:../create-preset
+      '@kinetixui/create-theme':
+        specifier: workspace:*
+        version: link:../create-theme
       '@types/node':
         specifier: ^22.20.3
         version: 22.20.3
@@ -453,6 +459,25 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  packages/create-theme:
+    dependencies:
+      '@kinetixui/create-preset':
+        specifier: workspace:*
+        version: link:../create-preset
+      '@kinetixui/tokens':
+        specifier: workspace:*
+        version: link:../tokens
+    devDependencies:
+      '@types/node':
+        specifier: ^22.20.3
+        version: 22.20.3
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^5.0.1
+        version: 5.0.1(@types/node@22.20.3)(jsdom@30.1.0)(msw@2.15.0(@types/node@22.20.3)(typescript@5.9.3))(vite@8.3.0(@types/node@22.20.3)(esbuild@0.28.2)(jiti@1.21.7)(less@4.9.1(supports-color@7.2.0))(sass@1.104.1)(yaml@2.9.0))
 
   packages/tokens:
     devDependencies:

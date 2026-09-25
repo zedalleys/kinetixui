@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { contrastRatio } from "../color-math";
+import { contrastRatio } from "./color-math";
 import {
   MAX_CHROMA,
   adjust,

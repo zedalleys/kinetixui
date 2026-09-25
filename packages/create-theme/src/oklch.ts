@@ -7,17 +7,16 @@
  * perceptual, which is what makes one derivation rule work across the wheel.
  *
  * This module is the only place that knows the OKLab matrices. It deliberately does NOT duplicate
- * hex↔RGB or contrast, which `../color-math` already owns and which `packages/cli/src/lib/color-math.ts`
- * is a 1:1 port of — adding to that file would silently break a port that claims to be exact.
+ * hex↔RGB or contrast, which `./color-math` owns.
  *
- * CLI parity: the CLI has no OKLCH. It compiles a CSV of literal hex values, so it needs none today. If
- * a future `theme` command ever generates colours rather than transcribing them, this module is what it
- * has to share; moving it into a package at that point is a mechanical lift, because nothing here touches
- * the DOM, React or the token pipeline.
+ * It used to live in `apps/web/src/lib/color/`, where its own header said that moving it into a package
+ * would be a mechanical lift the day the CLI needed to generate colours rather than transcribe them.
+ * That day is this PR: `kinetixui preset css` resolves a theme, so the derivation has to be one
+ * implementation rather than two ports that agree by hand.
  *
  * Conventions: L ∈ [0,1], C ≥ 0, H ∈ [0,360). Hue of an achromatic colour is 0, not NaN.
  */
-import { hexToRgb, isHex, normalizeHex } from "../color-math";
+import { hexToRgb, isHex, normalizeHex } from "./color-math";
 
 export type Oklch = { l: number; c: number; h: number };
 export type Rgb = [number, number, number];

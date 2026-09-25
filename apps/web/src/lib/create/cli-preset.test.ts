@@ -1,9 +1,12 @@
 // @vitest-environment node
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ACCEPTED_TOKENS, encodePreset, presetUrl, type PresetConfig } from "@kinetixui/create-preset";
 import { DEFAULT_PRESET } from "@kinetixui/create-preset";
-import { presetDecode, presetUrlCommand } from "../../../../../packages/cli/src/commands/preset";
+import { exportCss, resolveCreateTheme } from "@kinetixui/create-theme";
+import { presetCss, presetDecode, presetUrlCommand } from "../../../../../packages/cli/src/commands/preset";
 
 /**
  * The CLI side of the preset contract.
@@ -83,7 +86,65 @@ describe("preset decode", () => {
   it("points at the tools that do produce CSS", () => {
     presetDecode(encodePreset(preset({ brand: "#c2410c" })), { json: false });
     expect(plain()).toContain("theme build");
-    expect(plain()).toContain("preset url");
+    expect(plain()).toContain("preset css");
+  });
+});
+
+describe("preset css", () => {
+  it("prints the override block, and nothing else", async () => {
+    await presetCss(encodePreset(preset({ brand: "#c2410c" })), {});
+
+    expect(out).toHaveLength(1);
+    expect(printed()).toContain(":root {");
+    expect(printed()).toContain("--action:");
+  });
+
+  it("is byte-identical to what the workspace's Copy CSS produces", async () => {
+    // The claim the command makes. One resolve, one exporter, two front ends — asserted rather than
+    // assumed, because the last time two implementations were kept in step by hand they drifted.
+    for (const over of [
+      { brand: "#7e22ce" },
+      { neutral: "warm" as const, radius: "soft" as const },
+      { surface: "elevated" as const },
+      { chartPalette: "categorical" as const, manualOverrides: { border: "#ff0000" } },
+    ]) {
+      out = [];
+      await presetCss(encodePreset(preset(over)), {});
+      expect(printed(), JSON.stringify(over)).toBe(exportCss(resolveCreateTheme(preset(over))));
+    }
+  });
+
+  it("accepts a share URL as readily as a bare code", async () => {
+    await presetCss(presetUrl(preset({ neutral: "cool" }), "https://kinetixui.com"), {});
+    expect(printed()).toBe(exportCss(resolveCreateTheme(preset({ neutral: "cool" }))));
+  });
+
+  it("writes a file when asked, and says where", async () => {
+    const file = join(mkdtempSync(join(tmpdir(), "kx-preset-")), "theme.css");
+    await presetCss(encodePreset(preset({ radius: "soft" })), { output: file });
+
+    expect(readFileSync(file, "utf8")).toBe(`${exportCss(resolveCreateTheme(preset({ radius: "soft" })))}\n`);
+    expect(plain()).toContain(file);
+  });
+
+  it("prints nothing on stdout for a preset that changes nothing", async () => {
+    // `preset css X > theme.css` has to produce an empty file, not a comment a stylesheet cannot use.
+    await presetCss(encodePreset(preset()), {});
+    expect(out).toEqual([]);
+    expect(err.join(" ")).toContain("nothing to override");
+  });
+
+  it("does not imply it can produce native themes", async () => {
+    await presetCss(encodePreset(preset({ brand: "#c2410c", surface: "elevated" })), {});
+    const text = printed().toLowerCase();
+    for (const claim of ["swiftui", "compose", "flutter", "struct", "themedata"]) {
+      expect(text, claim).not.toContain(claim);
+    }
+  });
+
+  it("refuses a bad code with a message, not a stack trace", async () => {
+    await expect(presetCss("KX1_!!!!", {})).rejects.toThrow(/^[A-Z].*\.$/);
+    expect(out).toEqual([]);
   });
 });
 

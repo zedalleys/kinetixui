@@ -6,23 +6,25 @@
  * `manualOverrides` rather than a rival source of truth (§41). `resolveTheme` is the only thing that turns
  * this into colours, and it is a pure function, so two people with the same config see the same theme.
  *
- * Serializable by construction: strings, plain objects, no functions, no Map, no computed CSS. PR 3 will
- * version and encode this shape, and anything unserializable in here would have to be unpicked then.
+ * Serializable by construction: strings, plain objects, no functions, no Map, no computed CSS. The
+ * portable half of it is exactly what `@kinetixui/create-preset` encodes; `mode` and `previewScene` are
+ * the workspace's own presentation state and deliberately do not travel.
  *
  * `style` is deliberately NOT a field. It is derived from `radius` + `surface`, so selecting "Sharp" and
  * then changing the radius cannot leave a stale preset name behind — there is nothing to go stale (§20).
  */
 import {
+  ACCEPTED_TOKENS,
   KINETIX_BRAND,
   STYLE_VALUES,
   styleFor,
+  type AcceptedToken,
   type ChartPaletteId,
   type NeutralId,
   type RadiusId,
   type StyleId,
   type SurfaceId,
-} from "./theme-engine";
-import { ACCEPTED_TOKENS, type AcceptedToken } from "../theme-builder";
+} from "@kinetixui/create-theme";
 
 /** Which preview the canvas renders. Both exist to show controls the other cannot. */
 export const PREVIEW_SCENES = ["dashboard", "form"] as const;
@@ -135,7 +137,7 @@ export function isDefaultConfig(config: CreateConfig): boolean {
 /**
  * A stable string for a config — same config, same key, regardless of how the object was built.
  *
- * Used for memoization today and as the shape PR 3 will version and encode. Keys are sorted so two
+ * Used for memoization, and mirrors the canonical form the codec encodes. Keys are sorted so two
  * configs that differ only in insertion order produce one key.
  */
 export function configKey(config: CreateConfig): string {

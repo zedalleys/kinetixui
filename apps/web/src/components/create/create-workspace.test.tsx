@@ -1,8 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { hexToHslChannels } from "@/lib/color-math";
-import { hexToOklch } from "@/lib/color/oklch";
+import { hexToHslChannels, hexToOklch } from "@kinetixui/create-theme";
 import { SHIPPED_TOKENS } from "@/lib/create/theme-adapter";
 import { CreateWorkspace } from "./create-workspace";
 

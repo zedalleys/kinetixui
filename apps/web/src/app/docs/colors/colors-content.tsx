@@ -5,9 +5,8 @@ import tokens from "@kinetixui/tokens";
 import { Check, Copy } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { tokenNameForHex } from "@/lib/token-contract";
+import { tokenNameForHex, hexToRgb, rgbToHsl, contrastRatio } from "@kinetixui/create-theme";
 import { SectionHead } from "@/components/section-head";
-import { hexToRgb, rgbToHsl, contrastRatio } from "@/lib/color-math";
 
 const RAMPS = ["azure", "blue", "green", "taupe", "cream", "amber", "red", "neutral"] as const;
 const STEPS = ["0", "50", "100", "150", "200", "300", "400", "500", "600", "700", "800", "850", "900", "950", "1000"];

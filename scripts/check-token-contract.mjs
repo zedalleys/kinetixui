@@ -1,6 +1,7 @@
 /**
- * check-token-contract.mjs — the token table shown on /docs/theming and /docs/colors
- * (apps/web/src/lib/token-contract.ts) must match the real tokens.
+ * check-token-contract.mjs — the shipped light/dark colour table that @kinetixui/create-theme resolves
+ * every Create theme from, and that /docs/theming and /docs/colors render
+ * (packages/create-theme/src/contract.ts) must match the real tokens.
  *
  *   node scripts/check-token-contract.mjs
  *
@@ -42,7 +43,7 @@ function resolverFor(mode) {
 const light = resolverFor("light");
 const dark = resolverFor("dark");
 
-const src = readFileSync(`${root}/apps/web/src/lib/token-contract.ts`, "utf8");
+const src = readFileSync(`${root}/packages/create-theme/src/contract.ts`, "utf8");
 const rows = [...src.matchAll(/\{\s*token:\s*"([\w-]+)",\s*light:\s*"(#[0-9a-fA-F]{6})",\s*dark:\s*"(#[0-9a-fA-F]{6})"/g)];
 if (rows.length < 10) {
   console.error("check:token-contract — could not parse TOKEN_CONTRACT (found " + rows.length + " rows)");
@@ -60,7 +61,7 @@ for (const [, token, l, d] of rows) {
 }
 if (errors.length) {
   console.error(errors.map((e) => `  ✗ ${e}`).join("\n"));
-  console.error(`\ncheck:token-contract failed (${errors.length}) — update apps/web/src/lib/token-contract.ts.`);
+  console.error(`\ncheck:token-contract failed (${errors.length}) — update packages/create-theme/src/contract.ts.`);
   process.exit(1);
 }
 console.log(`check:token-contract ok — ${rows.length} rows match the tokens.`);

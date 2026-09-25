@@ -1,3 +1,10 @@
+/**
+ * The token vocabulary, the pairs worth a contrast check, and the `token,hex` parser.
+ *
+ * Was `apps/web/src/lib/theme-builder.ts`, named after the tool that became /create. Nothing in it is
+ * web-specific — it is text in, validated token/colour pairs out — so it moved here with the rest of the
+ * resolution so the CLI can validate a preset's overrides the same way the workspace does.
+ */
 import { ACCEPTED_TOKENS, type AcceptedToken } from "@kinetixui/create-preset";
 import { isHex, normalizeHex, bestTextHex, hexToHslChannels, contrastRatio } from "./color-math";
 
@@ -58,11 +65,11 @@ export function parsePaletteText(text: string): ParsedPalette {
 
   lines.forEach((line, i) => {
     const cells = line.split(/[,\t]/).map((c) => c.trim().replace(/^"|"$/g, ""));
-    if (cells.length < 2) {
+    const [rawToken, rawHex] = cells;
+    if (rawToken === undefined || rawHex === undefined) {
       if (lines.length > 1) errors.push(`Row ${i + 1}: expected "token, hex" — got "${line}"`);
       return;
     }
-    const [rawToken, rawHex] = cells;
     const token = rawToken.toLowerCase().replace(/^--/, "").replace(/\s+/g, "-");
 
     // header row: "token"/"name" in col 1, or col 2 isn't a hex — skip silently

@@ -11,7 +11,7 @@ import {
   oklchToHex,
   parseOklch,
   type Oklch,
-} from "@/lib/color/oklch";
+} from "@kinetixui/create-theme";
 
 /**
  * The theme colour control.

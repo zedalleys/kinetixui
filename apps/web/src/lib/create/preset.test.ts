@@ -17,8 +17,8 @@ import {
   validate,
   type PresetConfig,
 } from "@kinetixui/create-preset";
-import { ACCEPTED_TOKENS as WEB_TOKENS } from "../theme-builder";
-import { CHART_PALETTES as E_CHARTS, NEUTRALS as E_NEUTRALS, RADII as E_RADII, SURFACES as E_SURFACES } from "./theme-engine";
+import { ACCEPTED_TOKENS as WEB_TOKENS } from "@kinetixui/create-theme";
+import { CHART_PALETTES as E_CHARTS, NEUTRALS as E_NEUTRALS, RADII as E_RADII, SURFACES as E_SURFACES } from "@kinetixui/create-theme";
 
 /**
  * The codec, tested as what it is: a parser for untrusted input that also has to be perfectly stable for
