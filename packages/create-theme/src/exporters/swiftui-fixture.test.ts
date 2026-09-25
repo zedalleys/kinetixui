@@ -1,8 +1,32 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_PRESET, encodePreset, type PresetConfig } from "@kinetixui/create-preset";
+import { contrastRatio } from "../color-math";
 import { resolveCreateTheme } from "../resolve";
 import { exportSwiftUi } from "./swiftui";
+
+/**
+ * The pairs `ContrastTests.assertGeneratedAA` runs over the fixture, in its order.
+ *
+ * Narrower than `check:contrast`'s list on purpose: it is what the ENGINE guarantees for a theme
+ * generated from one user-chosen colour, rather than what the hand-tuned shipped theme meets. The two
+ * pairs left out — the action foreground on `action-hover` and `action-pressed` — are a real engine gap
+ * pinned in `engine.test.ts`, not an omission here; `brand / background` is excluded because `brand` is
+ * deliberately the user's colour unclamped.
+ */
+const SWIFT_ASSERTED_PAIRS: [fg: string, bg: string][] = [
+  ["foreground", "background"],
+  ["card-foreground", "card"],
+  ["popover-foreground", "popover"],
+  ["primary-foreground", "primary"],
+  ["secondary-foreground", "secondary"],
+  ["muted-foreground", "muted"],
+  ["muted-foreground", "background"],
+  ["accent-foreground", "accent"],
+  ["destructive-foreground", "destructive"],
+  ["action-foreground", "action"],
+  ["brand-foreground", "brand"],
+];
 
 /**
  * The only real proof that this exporter emits Swift.
@@ -53,6 +77,36 @@ describe("the committed Swift fixture", () => {
     expect(committed).toContain("tertiary: KinetixColorsSwiftUI.tertiary,");
     expect(committed).toContain("tertiary: KinetixColorsSwiftUIDark.tertiary,");
     expect(committed.match(/chart: \[/g)).toHaveLength(2);
+  });
+
+  it("clears every pair the Swift-side suite will check it against", () => {
+    // `ContrastTests.assertGeneratedAA` runs these on the macOS runner. Computing them here too means a
+    // fixture that would fail there fails in this repo's ordinary test run first, minutes rather than a
+    // CI round-trip earlier — and it keeps the two lists honest about being the same list.
+    const theme = resolveCreateTheme(FIXTURE_DESIGN);
+    const failures: string[] = [];
+    for (const mode of ["light", "dark"] as const) {
+      const colors = theme[mode].colors;
+      for (const [fg, bg] of SWIFT_ASSERTED_PAIRS) {
+        const ratio = contrastRatio(colors[bg]!, colors[fg]!);
+        if (ratio < 4.5) failures.push(`${mode} ${fg}/${bg} ${ratio.toFixed(2)}`);
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it("checks the same pairs the Swift file lists, and no more", () => {
+    // If someone widens the Swift list, this says so — the narrower set is a deliberate statement about
+    // what the engine guarantees, not an oversight, and the reasoning lives in ContrastTests.swift.
+    const source = readFileSync(
+      new URL("../../../ui-swiftui/Tests/KinetixUITests/ContrastTests.swift", import.meta.url),
+      "utf8",
+    );
+    const block = source.slice(source.indexOf("private let generatedPairs"), source.indexOf("private func assertGeneratedAA"));
+    const listed = [...block.matchAll(/\\\.([a-zA-Z]+), \\\.([a-zA-Z]+)\)/g)].map((m) => `${m[1]}/${m[2]}`);
+    const camel = (t: string) => t.replace(/[-_]([a-z0-9])/g, (_, c: string) => c.toUpperCase());
+
+    expect(listed).toEqual(SWIFT_ASSERTED_PAIRS.map(([fg, bg]) => `${camel(fg)}/${camel(bg)}`));
   });
 
   it("is checked for contrast on the Swift side, not only here", () => {

@@ -250,6 +250,118 @@ describe("every generated pair, on every hue", () => {
   });
 });
 
+/**
+ * A known gap, pinned with its real numbers.
+ *
+ * The engine guarantees AA for the pairs in `CONTRAST_PAIRS` — which is where `action-foreground` is
+ * checked against `action`, and nothing else. It is NOT checked against `action-hover` or
+ * `action-pressed`, and those surfaces are derived by moving `action` 10% and 16% toward the background,
+ * which costs contrast. So a button label can fall below AA while the button is hovered or pressed.
+ *
+ * `scripts/check-contrast.mjs` holds the SHIPPED theme to those two pairs, and the shipped values clear
+ * them — they were hand-tuned. Generated themes are not held to them anywhere, which is how this went
+ * unnoticed until the SwiftUI exporter's committed fixture was run through the Swift-side contrast
+ * suite, whose pair list mirrors `check:contrast` rather than the engine's own.
+ *
+ * It is not fixable by picking a different foreground: across the wheel, no candidate — tinted white,
+ * tinted black, pure white, pure black — clears 4.5:1 against `action`, `action-hover` and
+ * `action-pressed` at once; the best achievable floor is 3.93:1. The fix is to the state derivation
+ * itself (smaller or contrast-aware movement), which changes every generated theme including the web's,
+ * and is a visual design decision rather than a bug fix.
+ *
+ * These assertions therefore record the status quo rather than the goal. They fail if it gets worse, and
+ * they fail if someone fixes it — at which point the right move is to delete them and add these two
+ * pairs to `CONTRAST_PAIRS`, so the workspace's own panel shows them.
+ */
+describe("interaction states are not held to AA — a known gap", () => {
+  const SWEEP = [
+    ...Array.from({ length: 36 }, (_, i) => oklchToHex({ l: 0.55, c: 0.2, h: i * 10 })),
+    ...BRANDS,
+  ];
+
+  const floors = () => {
+    let action = Infinity;
+    let hover = Infinity;
+    let pressed = Infinity;
+    for (const brand of SWEEP) {
+      for (const mode of MODES) {
+        const r = deriveBrandRoles(brand, mode);
+        const fg = r["action-foreground"]!;
+        action = Math.min(action, contrastRatio(r.action!, fg));
+        hover = Math.min(hover, contrastRatio(r["action-hover"]!, fg));
+        pressed = Math.min(pressed, contrastRatio(r["action-pressed"]!, fg));
+      }
+    }
+    return { action, hover, pressed };
+  };
+
+  it("holds the guarantee it does make: the foreground clears AA on the action colour", () => {
+    expect(floors().action).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("does not hold it on hover or pressed, and this records how far short", () => {
+    const { hover, pressed } = floors();
+    // Delete this test and add the two pairs to CONTRAST_PAIRS when the state derivation is fixed.
+    expect(hover).toBeLessThan(4.5);
+    expect(pressed).toBeLessThan(4.5);
+    // Pinned so a regression is visible: today's floors are 3.75 and 3.37.
+    expect(hover).toBeGreaterThan(3.7);
+    expect(pressed).toBeGreaterThan(3.3);
+  });
+
+  it("cannot be fixed by choosing a different foreground", () => {
+    // Every candidate `foregroundFor` would consider, scored by its WORST contrast across the three
+    // surfaces. If any reached 4.5 the fix would be local; none does.
+    let best = 0;
+    for (const brand of SWEEP) {
+      for (const mode of MODES) {
+        const r = deriveBrandRoles(brand, mode);
+        const surfaces = [r.action!, r["action-hover"]!, r["action-pressed"]!];
+        const source = hexToOklch(r.action!)!;
+        const tint = Math.min(source.c, 0.03);
+        const candidates = [
+          oklchToHex({ l: 0.97, c: tint, h: source.h }),
+          oklchToHex({ l: 0.09, c: tint, h: source.h }),
+          "#ffffff",
+          "#000000",
+        ];
+        const reachable = Math.max(...candidates.map((c) => Math.min(...surfaces.map((s) => contrastRatio(s, c)))));
+        best = Math.max(best, Math.min(reachable, 4.5));
+        if (reachable < 4.5) {
+          expect(reachable, `${brand} ${mode}`).toBeLessThan(4.5);
+        }
+      }
+    }
+    // Some hues do reach 4.5; the point is that not all of them can.
+    expect(best).toBe(4.5);
+  });
+});
+
+/**
+ * `brand` is identity, not guaranteed-readable text.
+ *
+ * `brand / background` is in `check:contrast`'s pair list for the shipped theme and fails for some
+ * generated ones — a near-black brand on a dark background is 1.03:1. That is the design working: the
+ * engine keeps the user's colour exactly, which is what the test below this one asserts, and clamping it
+ * for contrast would mean Create silently refusing to use the brand it was given. `brand-foreground` is
+ * the pair that carries text, and that one IS guaranteed.
+ */
+describe("brand is preserved rather than made readable on the background", () => {
+  it("can fall below AA against the background, by design", () => {
+    const dark = theme({ brand: "#111111", neutral: "cool" }).dark.colors;
+    expect(contrastRatio(dark.brand!, dark.background!)).toBeLessThan(4.5);
+  });
+
+  it("but the text that sits ON it always clears AA", () => {
+    for (const brand of BRANDS) {
+      for (const mode of MODES) {
+        const colors = theme({ brand })[mode].colors;
+        expect(contrastRatio(colors.brand!, colors["brand-foreground"]!), `${brand} ${mode}`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+});
+
 /* ------------------------------------------------------------------ neutrals */
 
 const GENERATED_NEUTRALS = NEUTRALS.filter((n) => n !== "kinetix");

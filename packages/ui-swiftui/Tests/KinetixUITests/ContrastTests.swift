@@ -74,22 +74,72 @@ final class ContrastTests: XCTestCase {
 
     // MARK: a generated Create theme
 
-    /// `Generated/CreateThemeFixture.swift` is emitted by the `swiftui` exporter in
-    /// `packages/create-theme` and committed so this target compiles it — which is the only place the
-    /// repo actually type-checks that exporter's output against `KinetixColors`' initializer. Running
-    /// the same AA pairs over it takes the check one step further: a Create design that a person could
-    /// build in the workspace produces a SwiftUI theme that is still readable, on the platform, rather
-    /// than only in the TypeScript engine's own sweep.
+    /// The pairs a GENERATED theme is guaranteed to clear, which is a narrower set than `textPairs`.
     ///
-    /// The TS side keeps the fixture in step (`swiftui-fixture.test.ts` fails if it drifts) and asserts
-    /// that these two lines still exist, so the fixture cannot quietly become a file that compiles and
-    /// proves nothing.
+    /// `textPairs` above is the bar for the shipped theme: every value in it was hand-tuned, and
+    /// `pnpm check:contrast` holds it to AA. A Create theme is generated from one colour a user picked,
+    /// and the engine in `packages/create-theme` guarantees AA for exactly the pairs in its own
+    /// `CONTRAST_PAIRS` — the ten base/foreground pairs its contrast panel shows. Those are these.
+    ///
+    /// Three of `textPairs` are deliberately not here, and both reasons are worth stating because the
+    /// first time this ran it failed on them:
+    ///
+    /// - `actionForeground / actionHover` and `actionForeground / actionPressed`. The engine picks the
+    ///   action foreground against `action` and then moves the surface 10% / 16% toward the background
+    ///   for the states, which costs contrast the foreground was never re-checked against. Across a
+    ///   36-hue sweep the floors are 3.75:1 and 3.37:1. This is a real defect in the engine — not in the
+    ///   exporter, and not fixable by choosing a different foreground: no candidate clears 4.5:1 against
+    ///   all three surfaces for a large part of the wheel. `engine.test.ts` pins those floors so the
+    ///   gap cannot be forgotten, and fixing it means changing how interaction states are derived, which
+    ///   changes every generated theme on the web too.
+    ///
+    /// - `brand / background`. `brand` is deliberately the user's colour, unclamped, so that a dark
+    ///   brand keeps its identity (`engine.test.ts` asserts `#111111` stays `#111111`). A brand that is
+    ///   not readable as text on the background is therefore a possible outcome by design, not a bug.
+    ///
+    /// `Generated/CreateThemeFixture.swift` is emitted by the `swiftui` exporter and committed so this
+    /// target compiles it — the only place the repo type-checks that output against `KinetixColors`'
+    /// initializer. `swiftui-fixture.test.ts` fails if it drifts, and asserts these tests still exist,
+    /// so the fixture cannot quietly become a file that compiles and proves nothing.
+    private let generatedPairs: [Pair] = [
+        ("foreground / background", \.foreground, \.background),
+        ("cardForeground / card", \.cardForeground, \.card),
+        ("popoverForeground / popover", \.popoverForeground, \.popover),
+        ("primaryForeground / primary", \.primaryForeground, \.primary),
+        ("secondaryForeground / secondary", \.secondaryForeground, \.secondary),
+        ("mutedForeground / muted", \.mutedForeground, \.muted),
+        ("mutedForeground / background", \.mutedForeground, \.background),
+        ("accentForeground / accent", \.accentForeground, \.accent),
+        ("destructiveForeground / destructive", \.destructiveForeground, \.destructive),
+        ("actionForeground / action", \.actionForeground, \.action),
+        ("brandForeground / brand", \.brandForeground, \.brand),
+    ]
+
+    private func assertGeneratedAA(
+        _ colors: KinetixColors,
+        theme: String,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        var failures: [String] = []
+        for pair in generatedPairs {
+            let r = ratio(colors[keyPath: pair.fg], colors[keyPath: pair.bg])
+            if r < 4.5 { failures.append("\(pair.name) = \(String(format: "%.2f", r)):1") }
+        }
+        XCTAssertTrue(
+            failures.isEmpty,
+            "\(theme): pairs below WCAG AA 4.5:1 — \(failures.joined(separator: "; "))",
+            file: file,
+            line: line
+        )
+    }
+
     func testGeneratedCreateThemeMeetsAAInLight() {
-        assertAA(CreateThemeFixture.light, theme: "generated Create theme (light)")
+        assertGeneratedAA(CreateThemeFixture.light, theme: "generated Create theme (light)")
     }
 
     func testGeneratedCreateThemeMeetsAAInDark() {
-        assertAA(CreateThemeFixture.dark, theme: "generated Create theme (dark)")
+        assertGeneratedAA(CreateThemeFixture.dark, theme: "generated Create theme (dark)")
     }
 
     /// A sanity check on the maths itself, so a bug here can't silently pass everything.
