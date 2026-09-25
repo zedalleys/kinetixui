@@ -23,11 +23,11 @@ public enum CreateThemeFixture {
     /// `\.kinetixColors` directly to pin one appearance.
     public static let light = KinetixColors(
         primary: Color(red: 0.761, green: 0.255, blue: 0.047),
-        primaryForeground: Color(red: 1, green: 0.949, blue: 0.929),
+        primaryForeground: Color(red: 1, green: 1, blue: 1),
         action: Color(red: 0.761, green: 0.255, blue: 0.047),
-        actionForeground: Color(red: 1, green: 0.949, blue: 0.929),
-        actionHover: Color(red: 0.824, green: 0.314, blue: 0.133),
-        actionPressed: Color(red: 0.859, green: 0.345, blue: 0.173),
+        actionForeground: Color(red: 1, green: 1, blue: 1),
+        actionHover: Color(red: 0.784, green: 0.278, blue: 0.086),
+        actionPressed: Color(red: 0.8, green: 0.29, blue: 0.106),
         link: Color(red: 0.761, green: 0.255, blue: 0.047),
         focus: Color(red: 0.761, green: 0.255, blue: 0.047),
         brand: Color(red: 0.761, green: 0.255, blue: 0.047),
@@ -42,7 +42,7 @@ public enum CreateThemeFixture {
         input: Color(red: 0.839, green: 0.816, blue: 0.788),
         ring: Color(red: 0.761, green: 0.255, blue: 0.047),
         muted: Color(red: 0.988, green: 0.965, blue: 0.933),
-        mutedForeground: Color(red: 0.463, green: 0.439, blue: 0.416),
+        mutedForeground: Color(red: 0.447, green: 0.424, blue: 0.4),
         accent: Color(red: 1, green: 0.929, blue: 0.91),
         accentForeground: Color(red: 0.761, green: 0.255, blue: 0.047),
         tertiary: KinetixColorsSwiftUI.tertiary,
@@ -68,9 +68,9 @@ public enum CreateThemeFixture {
 
     public static let dark = KinetixColors(
         primary: Color(red: 0.906, green: 0.392, blue: 0.22),
-        primaryForeground: Color(red: 0.031, green: 0.004, blue: 0),
+        primaryForeground: Color(red: 0, green: 0, blue: 0),
         action: Color(red: 0.906, green: 0.392, blue: 0.22),
-        actionForeground: Color(red: 0.031, green: 0.004, blue: 0),
+        actionForeground: Color(red: 0, green: 0, blue: 0),
         actionHover: Color(red: 0.835, green: 0.325, blue: 0.149),
         actionPressed: Color(red: 0.796, green: 0.286, blue: 0.098),
         link: Color(red: 0.906, green: 0.392, blue: 0.22),

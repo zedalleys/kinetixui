@@ -89,6 +89,13 @@ and `brand` / `brand-foreground` when you set them.
 background — for the SwiftUI, Compose and Flutter ports, which have no alpha-derivation to lean on.
 `pnpm check:contrast` asserts the explicit values equal the derivation and that text on them clears AA.
 
+A theme generated in [Create](/create) derives the same two states the same way, with one constraint
+on top: the label has to stay readable on all three fills. `action-foreground` is chosen against
+`action`, `action-hover` and `action-pressed` together rather than the resting colour alone, and where
+no foreground can carry the full 90% / 85% move, both states scale back in step until it can. Some
+brand colours therefore get a slightly subtler hover than the shipped blue does — the alternative was a
+button label at 3.4:1 while pressed, which is what this used to do.
+
 **Native.** The SwiftUI, Compose and Flutter components read the same role tokens: `KinetixColors` has
 `action`, `actionForeground`, `actionHover`, `actionPressed`, `link`, `focus`, `brand` and
 `brandForeground` alongside `primary` / `ring`, and the components use the role fields (the Button's

@@ -21,4 +21,12 @@ radius and elevation are literals inside each view, with no token an exported fi
 design's radius and surface treatment apply on the web and not there — the generated file states that in
 its own header. There is no Compose, Flutter or Android XML exporter.
 
-`preset decode`, `preset url`, `preset css`, `theme create` and `theme build` are unchanged.
+`preset decode`, `preset url`, `theme create` and `theme build` are unchanged.
+
+`preset css` gains no options, but its OUTPUT changes for some designs. Building the SwiftUI exporter
+surfaced a contrast defect in the shared theme engine: `action-foreground` was chosen against `action`
+and never re-checked against `action-hover` / `action-pressed`, so a button label could sit at 3.37:1
+while pressed. 96 of 256 sampled designs were affected. The foreground is now scored across all three
+fills and the state movement scales back when the label cannot follow it, so those designs resolve to
+different — readable — values. `action` itself is unchanged, and designs that already cleared AA are
+byte-identical to before.

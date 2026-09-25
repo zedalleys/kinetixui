@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_PRESET, type PresetConfig } from "@kinetixui/create-preset";
-import { contrastRatio } from "./color-math";
-import { hexToOklch, oklchToHex } from "./oklch";
+import { contrastRatio, guaranteedContrast } from "./color-math";
+import { adjust, hexToOklch, oklchToHex } from "./oklch";
 import { SHIPPED_ELEVATION } from "./contract";
 import {
   CHART_PALETTES,
@@ -18,7 +18,10 @@ import {
   deriveRadius,
   deriveSurfaceBorder,
   foregroundFor,
+  interactionStates,
   styleFor,
+  HOVER_FRACTION,
+  PRESSED_FRACTION,
   type Mode,
 } from "./engine";
 import { SHIPPED_COLORS, contrastOf, resolveCreateTheme } from "./resolve";
@@ -139,7 +142,7 @@ describe("brand roles", () => {
   it.each(BRANDS)("%s produces an action that carries AA text in both modes", (hex) => {
     for (const mode of MODES) {
       const r = deriveBrandRoles(hex, mode);
-      expect(contrastRatio(r.action!, r["action-foreground"]!), `${hex} ${mode}`).toBeGreaterThanOrEqual(4.5);
+      expect(guaranteedContrast(r.action!, r["action-foreground"]!), `${hex} ${mode}`).toBeGreaterThanOrEqual(4.5);
     }
   });
 
@@ -176,13 +179,24 @@ describe("brand roles", () => {
     }
   });
 
-  it("moves hover by the same perceptual amount on every hue", () => {
+  it("moves hover the same FRACTION of the way to the backdrop on every hue", () => {
     // The reason states are not derived with opacity: an alpha blend moves yellow and blue differently.
-    const deltas = BRANDS.slice(0, 6).map((hex) => {
-      const r = deriveBrandRoles(hex, "light");
-      return hexToOklch(r["action-hover"]!)!.l - hexToOklch(r.action!)!.l;
+    // The invariant is the fraction travelled, not the absolute lightness delta — those differ because a
+    // darker action colour has further to go.
+    //
+    // It holds for every hue that keeps full amplitude. A hue whose label cannot follow the full move
+    // travels less, on purpose (see `interactionStates`), so those are measured separately below rather
+    // than folded into a spread that would hide both facts.
+    const travelled = BRANDS.map((hex) => {
+      const action = hexToOklch(deriveBrandRoles(hex, "light").action!)!;
+      const { hover, scale } = interactionStates(action, "light");
+      return { scale, fraction: (hexToOklch(hover)!.l - action.l) / (1 - action.l) };
     });
-    expect(Math.max(...deltas) - Math.min(...deltas)).toBeLessThan(0.03);
+
+    const full = travelled.filter((t) => t.scale === 1).map((t) => t.fraction);
+    expect(full.length).toBeGreaterThan(3);
+    expect(Math.max(...full) - Math.min(...full)).toBeLessThan(0.01);
+    for (const fraction of full) expect(fraction).toBeCloseTo(HOVER_FRACTION, 2);
   });
 
   it("separates brand from action, so a dark brand can keep its identity", () => {
@@ -214,7 +228,7 @@ describe("foreground generation", () => {
           "light",
         );
         if (!surface.action) continue;
-        expect(contrastRatio(surface.action, surface["action-foreground"]!)).toBeGreaterThanOrEqual(4.5);
+        expect(guaranteedContrast(surface.action, surface["action-foreground"]!)).toBeGreaterThanOrEqual(4.5);
       }
     }
   });
@@ -251,89 +265,164 @@ describe("every generated pair, on every hue", () => {
 });
 
 /**
- * A known gap, pinned with its real numbers.
+ * The label stays readable in every interaction state.
  *
- * The engine guarantees AA for the pairs in `CONTRAST_PAIRS` — which is where `action-foreground` is
- * checked against `action`, and nothing else. It is NOT checked against `action-hover` or
- * `action-pressed`, and those surfaces are derived by moving `action` 10% and 16% toward the background,
- * which costs contrast. So a button label can fall below AA while the button is hovered or pressed.
+ * A button's text sits on `action` at rest, on `action-hover` under the pointer and on `action-pressed`
+ * while held. The foreground used to be chosen against the resting fill alone, and the states are derived
+ * by moving that fill 10% and 16% toward the background — which, in light mode, moves it toward the same
+ * near-white the label is. 96 of 256 sampled themes fell below AA somewhere in that sequence, the worst
+ * at 3.37:1, including the shipped blue passed through the generator.
  *
- * `scripts/check-contrast.mjs` holds the SHIPPED theme to those two pairs, and the shipped values clear
- * them — they were hand-tuned. Generated themes are not held to them anywhere, which is how this went
- * unnoticed until the SwiftUI exporter's committed fixture was run through the Swift-side contrast
- * suite, whose pair list mirrors `check:contrast` rather than the engine's own.
+ * It surfaced from the SwiftUI exporter: its committed fixture is run through the Swift-side contrast
+ * suite, whose pair list mirrors `check:contrast` — which holds the hand-tuned SHIPPED theme to these
+ * pairs, and which generated themes had never been held to anywhere.
  *
- * It is not fixable by picking a different foreground: across the wheel, no candidate — tinted white,
- * tinted black, pure white, pure black — clears 4.5:1 against `action`, `action-hover` and
- * `action-pressed` at once; the best achievable floor is 3.93:1. The fix is to the state derivation
- * itself (smaller or contrast-aware movement), which changes every generated theme including the web's,
- * and is a visual design decision rather than a bug fix.
- *
- * These assertions therefore record the status quo rather than the goal. They fail if it gets worse, and
- * they fail if someone fixes it — at which point the right move is to delete them and add these two
- * pairs to `CONTRAST_PAIRS`, so the workspace's own panel shows them.
+ * Two changes fixed it, both in `engine.ts`: the foreground is scored by its worst contrast across all
+ * three surfaces rather than the resting one, and the state movement scales back in fixed steps when
+ * even the best foreground cannot follow it. See `interactionStates`.
  */
-describe("interaction states are not held to AA — a known gap", () => {
-  const SWEEP = [
-    ...Array.from({ length: 36 }, (_, i) => oklchToHex({ l: 0.55, c: 0.2, h: i * 10 })),
-    ...BRANDS,
-  ];
+const STATE_SWEEP = [
+  ...Array.from({ length: 72 }, (_, i) => oklchToHex({ l: 0.55, c: 0.2, h: i * 5 })),
+  ...Array.from({ length: 24 }, (_, i) => oklchToHex({ l: 0.8, c: 0.12, h: i * 15 })),
+  ...Array.from({ length: 24 }, (_, i) => oklchToHex({ l: 0.3, c: 0.12, h: i * 15 })),
+  ...BRANDS,
+];
 
-  const floors = () => {
-    let action = Infinity;
-    let hover = Infinity;
-    let pressed = Infinity;
-    for (const brand of SWEEP) {
-      for (const mode of MODES) {
-        const r = deriveBrandRoles(brand, mode);
-        const fg = r["action-foreground"]!;
-        action = Math.min(action, contrastRatio(r.action!, fg));
-        hover = Math.min(hover, contrastRatio(r["action-hover"]!, fg));
-        pressed = Math.min(pressed, contrastRatio(r["action-pressed"]!, fg));
+describe("the action label is readable in every state", () => {
+  it.each(MODES)("clears AA on action, hover and pressed for every hue in %s", (mode) => {
+    const failures: string[] = [];
+    for (const brand of STATE_SWEEP) {
+      const r = deriveBrandRoles(brand, mode);
+      const fg = r["action-foreground"]!;
+      for (const [state, surface] of [
+        ["action", r.action!],
+        ["hover", r["action-hover"]!],
+        ["pressed", r["action-pressed"]!],
+      ] as const) {
+        const ratio = guaranteedContrast(surface, fg);
+        if (ratio < 4.5) failures.push(`${brand} ${state} ${ratio.toFixed(2)}`);
       }
     }
-    return { action, hover, pressed };
-  };
-
-  it("holds the guarantee it does make: the foreground clears AA on the action colour", () => {
-    expect(floors().action).toBeGreaterThanOrEqual(4.5);
+    expect(failures).toEqual([]);
   });
 
-  it("does not hold it on hover or pressed, and this records how far short", () => {
-    const { hover, pressed } = floors();
-    // Delete this test and add the two pairs to CONTRAST_PAIRS when the state derivation is fixed.
-    expect(hover).toBeLessThan(4.5);
-    expect(pressed).toBeLessThan(4.5);
-    // Pinned so a regression is visible: today's floors are 3.75 and 3.37.
-    expect(hover).toBeGreaterThan(3.7);
-    expect(pressed).toBeGreaterThan(3.3);
-  });
-
-  it("cannot be fixed by choosing a different foreground", () => {
-    // Every candidate `foregroundFor` would consider, scored by its WORST contrast across the three
-    // surfaces. If any reached 4.5 the fix would be local; none does.
-    let best = 0;
-    for (const brand of SWEEP) {
-      for (const mode of MODES) {
-        const r = deriveBrandRoles(brand, mode);
-        const surfaces = [r.action!, r["action-hover"]!, r["action-pressed"]!];
-        const source = hexToOklch(r.action!)!;
-        const tint = Math.min(source.c, 0.03);
-        const candidates = [
-          oklchToHex({ l: 0.97, c: tint, h: source.h }),
-          oklchToHex({ l: 0.09, c: tint, h: source.h }),
-          "#ffffff",
-          "#000000",
-        ];
-        const reachable = Math.max(...candidates.map((c) => Math.min(...surfaces.map((s) => contrastRatio(s, c)))));
-        best = Math.max(best, Math.min(reachable, 4.5));
-        if (reachable < 4.5) {
-          expect(reachable, `${brand} ${mode}`).toBeLessThan(4.5);
+  it("holds across every neutral too, since a neutral does not touch these roles", () => {
+    const failures: string[] = [];
+    // The default brand is excluded because at the default brand nothing is generated — the resolve uses
+    // the shipped contract verbatim, so this would be asserting the hand-tuned tokens rather than the
+    // engine. Those have their own gate in `pnpm check:contrast`, which measures the HSL channels the
+    // pipeline actually stores instead of a hex the contract table rounds them to.
+    for (const brand of BRANDS.filter((b) => b !== KINETIX_BRAND)) {
+      for (const neutral of NEUTRALS) {
+        for (const mode of MODES) {
+          const c = theme({ brand, neutral })[mode].colors;
+          for (const state of ["action", "action-hover", "action-pressed"] as const) {
+            const ratio = guaranteedContrast(c[state]!, c["action-foreground"]!);
+            if (ratio < 4.5) failures.push(`${brand}/${neutral}/${mode} ${state} ${ratio.toFixed(2)}`);
+          }
         }
       }
     }
-    // Some hues do reach 4.5; the point is that not all of them can.
-    expect(best).toBe(4.5);
+    expect(failures).toEqual([]);
+  });
+
+  /**
+   * The exact colours that used to fail, kept as named cases.
+   *
+   * A sweep proves the rule holds; these prove the specific defect is gone, and name it in the output if
+   * it ever comes back. Ratios are the pre-fix worst-pair values.
+   */
+  it.each<[brand: string, mode: Mode, before: number]>([
+    ["#946900", "light", 3.37],
+    ["#c2410c", "light", 3.52],
+    ["#15803d", "light", 3.41],
+    ["#0f766e", "light", 3.64],
+    ["#c5256d", "light", 3.67],
+    ["#7e22ce", "dark", 4.32],
+    ["#c2410c", "dark", 4.44],
+    ["#1d4ed8", "light", 4.29],
+  ])("%s in %s was %s:1 at its worst and now clears AA", (brand, mode, before) => {
+    const r = deriveBrandRoles(brand, mode);
+    const fg = r["action-foreground"]!;
+    const worst = Math.min(
+      ...[r.action!, r["action-hover"]!, r["action-pressed"]!].map((s) => guaranteedContrast(s, fg)),
+    );
+    expect(before).toBeLessThan(4.5);
+    expect(worst).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe("the state model survives the fix", () => {
+  it("still moves toward the backdrop, and pressed still moves further than hover", () => {
+    for (const brand of STATE_SWEEP) {
+      for (const mode of MODES) {
+        const r = deriveBrandRoles(brand, mode);
+        const action = hexToOklch(r.action!)!.l;
+        const hover = hexToOklch(r["action-hover"]!)!.l;
+        const pressed = hexToOklch(r["action-pressed"]!)!.l;
+        const toward = mode === "light" ? 1 : -1;
+
+        // Direction is never inverted to buy contrast — a light-mode hover always lightens.
+        expect((hover - action) * toward, `${brand} ${mode} hover direction`).toBeGreaterThanOrEqual(0);
+        expect((pressed - action) * toward, `${brand} ${mode} pressed direction`).toBeGreaterThanOrEqual(
+          (hover - action) * toward,
+        );
+      }
+    }
+  });
+
+  it("keeps full movement wherever the label can follow it", () => {
+    // Scaling back is the last resort, not the normal case: most hues are untouched.
+    const scales = STATE_SWEEP.flatMap((brand) =>
+      MODES.map((mode) => interactionStates(hexToOklch(deriveBrandRoles(brand, mode).action!)!, mode).scale),
+    );
+    const full = scales.filter((s) => s === 1).length;
+    expect(full / scales.length).toBeGreaterThan(0.6);
+  });
+
+  it("almost never gives up the hover entirely", () => {
+    // Scale 0 means a button with no hover feedback — AA-correct and a real loss. It is reachable, for a
+    // mid-lightness teal whose label already sits within 0.2 of the bar at rest, and it must stay rare.
+    // If a change makes it common, the fix is the action band or the candidate set, not this threshold.
+    const scales = STATE_SWEEP.flatMap((brand) =>
+      MODES.map((mode) => interactionStates(hexToOklch(deriveBrandRoles(brand, mode).action!)!, mode).scale),
+    );
+    expect(scales.filter((s) => s === 0).length / scales.length).toBeLessThan(0.01);
+  });
+
+  it("scales hover and pressed by the same factor, never independently", () => {
+    // The 10:16 ratio is the model. A tight hue loses amplitude, not the shape of the behaviour.
+    //
+    // Asserted by recomputing both states from the scale the engine reports, and comparing exactly.
+    // Measuring the ratio back out of the two hex values instead would be fighting 8-bit output: at a
+    // small scale the whole hover step is a couple of channel steps, and quantisation dominates.
+    const BACKDROP = { light: 1, dark: 0.15 } as const;
+    for (const brand of STATE_SWEEP) {
+      for (const mode of MODES) {
+        const action = hexToOklch(deriveBrandRoles(brand, mode).action!)!;
+        const { hover, pressed, scale } = interactionStates(action, mode);
+        const at = (fraction: number) =>
+          oklchToHex(adjust(action, { dl: (BACKDROP[mode] - action.l) * fraction }));
+
+        expect(hover, `${brand} ${mode} hover`).toBe(at(HOVER_FRACTION * scale));
+        expect(pressed, `${brand} ${mode} pressed`).toBe(at(PRESSED_FRACTION * scale));
+      }
+    }
+  });
+});
+
+describe("the fix changed only what was broken", () => {
+  it("leaves the action colour itself untouched", () => {
+    // `action` is what the design picked, band-clamped. Readability is bought from the foreground and
+    // the state amplitude, never by moving the colour the user chose.
+    for (const brand of STATE_SWEEP) {
+      for (const mode of MODES) {
+        const source = hexToOklch(brand)!;
+        const [lo, hi] = mode === "light" ? [0.42, 0.62] : [0.66, 0.84];
+        const expected = oklchToHex(adjust(source, { dl: Math.min(Math.max(source.l, lo!), hi!) - source.l }));
+        expect(deriveBrandRoles(brand, mode).action, `${brand} ${mode}`).toBe(expected);
+      }
+    }
   });
 });
 
@@ -404,11 +493,25 @@ describe("neutrals", () => {
   it.each(GENERATED_NEUTRALS)("%s keeps body text readable in both modes", (neutral) => {
     for (const mode of MODES) {
       const n = deriveNeutrals(neutral, mode);
-      expect(contrastRatio(n.background!, n.foreground!), `${neutral} ${mode}`).toBeGreaterThanOrEqual(4.5);
+      expect(guaranteedContrast(n.background!, n.foreground!), `${neutral} ${mode}`).toBeGreaterThanOrEqual(4.5);
       expect(
-        contrastRatio(n.background!, n["muted-foreground"]!),
+        guaranteedContrast(n.background!, n["muted-foreground"]!),
         `${neutral} ${mode} muted`,
       ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it.each(GENERATED_NEUTRALS)("%s keeps muted text readable ON the muted surface, with margin", (neutral) => {
+    // The pair the ladder used to sit exactly on. At `muted-foreground` L 0.55 this ranged 4.45–4.56
+    // depending on the family's tint, so the web's rounding pushed some of it under; the ladder now
+    // asks for 0.535, which clears with room. The margin is the assertion — landing on 4.5 is what made
+    // this fragile in the first place.
+    for (const mode of MODES) {
+      const n = deriveNeutrals(neutral, mode);
+      expect(
+        guaranteedContrast(n.muted!, n["muted-foreground"]!),
+        `${neutral} ${mode}`,
+      ).toBeGreaterThan(4.6);
     }
   });
 

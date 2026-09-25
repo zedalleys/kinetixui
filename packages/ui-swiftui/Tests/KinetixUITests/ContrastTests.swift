@@ -81,26 +81,23 @@ final class ContrastTests: XCTestCase {
     /// and the engine in `packages/create-theme` guarantees AA for exactly the pairs in its own
     /// `CONTRAST_PAIRS` — the ten base/foreground pairs its contrast panel shows. Those are these.
     ///
-    /// Three of `textPairs` are deliberately not here, and both reasons are worth stating because the
-    /// first time this ran it failed on them:
+    /// This list found a real bug the first time it ran. `actionForeground / actionHover` and
+    /// `actionForeground / actionPressed` failed at 3.90:1 and 3.52:1, because the engine chose the
+    /// action foreground against the resting fill and then moved that fill toward the background for the
+    /// states. 96 of 256 sampled designs were affected. It was fixed in `@kinetixui/create-theme` — the
+    /// foreground is now scored across all three surfaces and the movement scales back when the label
+    /// cannot follow — so both pairs are asserted here, and on the web, rather than excused.
     ///
-    /// - `actionForeground / actionHover` and `actionForeground / actionPressed`. The engine picks the
-    ///   action foreground against `action` and then moves the surface 10% / 16% toward the background
-    ///   for the states, which costs contrast the foreground was never re-checked against. Across a
-    ///   36-hue sweep the floors are 3.75:1 and 3.37:1. This is a real defect in the engine — not in the
-    ///   exporter, and not fixable by choosing a different foreground: no candidate clears 4.5:1 against
-    ///   all three surfaces for a large part of the wheel. `engine.test.ts` pins those floors so the
-    ///   gap cannot be forgotten, and fixing it means changing how interaction states are derived, which
-    ///   changes every generated theme on the web too.
-    ///
-    /// - `brand / background`. `brand` is deliberately the user's colour, unclamped, so that a dark
-    ///   brand keeps its identity (`engine.test.ts` asserts `#111111` stays `#111111`). A brand that is
-    ///   not readable as text on the background is therefore a possible outcome by design, not a bug.
+    /// One pair from `textPairs` is still deliberately absent. `brand / background` is not a promise the
+    /// engine makes: `brand` is the user's colour, unclamped, so that a dark brand keeps its identity
+    /// (`engine.test.ts` asserts `#111111` stays `#111111`, and that `brand-foreground` — the pair that
+    /// actually carries text — always clears AA). A brand that is not readable as body text on the
+    /// background is an outcome of that decision, not a defect.
     ///
     /// `Generated/CreateThemeFixture.swift` is emitted by the `swiftui` exporter and committed so this
     /// target compiles it — the only place the repo type-checks that output against `KinetixColors`'
-    /// initializer. `swiftui-fixture.test.ts` fails if it drifts, and asserts these tests still exist,
-    /// so the fixture cannot quietly become a file that compiles and proves nothing.
+    /// initializer. `swiftui-fixture.test.ts` fails if it drifts, mirrors this list so the two cannot
+    /// diverge, and asserts these tests still exist.
     private let generatedPairs: [Pair] = [
         ("foreground / background", \.foreground, \.background),
         ("cardForeground / card", \.cardForeground, \.card),
@@ -112,6 +109,8 @@ final class ContrastTests: XCTestCase {
         ("accentForeground / accent", \.accentForeground, \.accent),
         ("destructiveForeground / destructive", \.destructiveForeground, \.destructive),
         ("actionForeground / action", \.actionForeground, \.action),
+        ("actionForeground / actionHover", \.actionForeground, \.actionHover),
+        ("actionForeground / actionPressed", \.actionForeground, \.actionPressed),
         ("brandForeground / brand", \.brandForeground, \.brand),
     ]
 

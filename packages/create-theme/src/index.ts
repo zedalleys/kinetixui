@@ -18,6 +18,8 @@ export {
   rgbToHsl,
   hexToHslChannels,
   contrastRatio,
+  guaranteedContrast,
+  hslChannelsToHex,
   bestTextHex,
   isHex,
   normalizeHex,

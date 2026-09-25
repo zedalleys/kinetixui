@@ -8,11 +8,10 @@ import { exportSwiftUi } from "./swiftui";
 /**
  * The pairs `ContrastTests.assertGeneratedAA` runs over the fixture, in its order.
  *
- * Narrower than `check:contrast`'s list on purpose: it is what the ENGINE guarantees for a theme
- * generated from one user-chosen colour, rather than what the hand-tuned shipped theme meets. The two
- * pairs left out — the action foreground on `action-hover` and `action-pressed` — are a real engine gap
- * pinned in `engine.test.ts`, not an omission here; `brand / background` is excluded because `brand` is
- * deliberately the user's colour unclamped.
+ * Everything `check:contrast` holds the shipped theme to, except `brand / background` — `brand` is the
+ * user's colour unclamped so a dark brand keeps its identity, and `brand-foreground` on `brand` is the
+ * pair that actually carries text. The action foreground on `action-hover` and `action-pressed` is in
+ * this list: it used to fail, the engine was fixed, and it is asserted rather than excused.
  */
 const SWIFT_ASSERTED_PAIRS: [fg: string, bg: string][] = [
   ["foreground", "background"],
@@ -25,6 +24,8 @@ const SWIFT_ASSERTED_PAIRS: [fg: string, bg: string][] = [
   ["accent-foreground", "accent"],
   ["destructive-foreground", "destructive"],
   ["action-foreground", "action"],
+  ["action-foreground", "action-hover"],
+  ["action-foreground", "action-pressed"],
   ["brand-foreground", "brand"],
 ];
 
