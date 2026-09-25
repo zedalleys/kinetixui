@@ -1,35 +1,13 @@
+import { ACCEPTED_TOKENS, type AcceptedToken } from "@kinetixui/create-preset";
 import { isHex, normalizeHex, bestTextHex, hexToHslChannels, contrastRatio } from "./color-math";
 
-/** Tokens the builder accepts and previews. */
-export const ACCEPTED_TOKENS = [
-  "background",
-  "foreground",
-  "card",
-  "card-foreground",
-  "popover",
-  "popover-foreground",
-  "primary",
-  "primary-foreground",
-  "secondary",
-  "secondary-foreground",
-  "muted",
-  "muted-foreground",
-  "accent",
-  "accent-foreground",
-  "destructive",
-  "destructive-foreground",
-  "border",
-  "input",
-  "ring",
-  // role tokens layered over primary/ring — optional; when unset they resolve to primary / ring
-  "action",
-  "action-foreground",
-  "link",
-  "focus",
-  "brand",
-  "brand-foreground",
-] as const;
-export type AcceptedToken = (typeof ACCEPTED_TOKENS)[number];
+/**
+ * Tokens the builder accepts and previews — re-exported from the preset codec, which owns the list.
+ * It has to: the codec validates a shared preset without the app loaded, and a second copy here would
+ * be a second answer to "is this a real token name", which is the check that keeps arbitrary CSS out.
+ */
+export { ACCEPTED_TOKENS, type AcceptedToken };
+
 
 /** base -> its foreground, auto-derived by contrast when the base is set but the foreground isn't. */
 const FOREGROUND_OF: Partial<Record<AcceptedToken, AcceptedToken>> = {

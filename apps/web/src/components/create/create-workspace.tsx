@@ -10,7 +10,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@kinetixui/ui";
-import { RotateCcw, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DEFAULT_CREATE_CONFIG,
@@ -21,7 +21,9 @@ import {
   type CreateConfig,
 } from "@/lib/create/config";
 import { resolveTheme } from "@/lib/create/theme-adapter";
-import { CopyCssButton } from "./create-output";
+import { PRESET_PARAM, decodeIntoConfig, randomizeConfig, type PresetError } from "@/lib/create/preset";
+import { analytics } from "@/lib/analytics";
+import { CreateActions } from "./create-actions";
 import { CreatePreview, SCENE_LABELS } from "./create-preview";
 import { CreateSidebar } from "./create-sidebar";
 
@@ -33,10 +35,52 @@ import { CreateSidebar } from "./create-sidebar";
  * config object on every pointer move and object identity would defeat the memo on the one interaction
  * that needs it most (§59, §60).
  */
+/**
+ * The URL is a share artifact, not live state.
+ *
+ * Writing the query string as the user drags a slider would put hundreds of entries in their history and
+ * make Back mean nothing. So the address bar is written in exactly two places — after Share, and cleared
+ * by Reset — and always with `replaceState`, which updates the link you would copy without adding a step
+ * to go back through. Editing after sharing leaves the old link in the bar, which is why the workspace
+ * says so rather than pretending the URL keeps up.
+ */
+function writeUrl(url: string) {
+  window.history.replaceState(window.history.state, "", url);
+}
+
+function clearPresetFromUrl() {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has(PRESET_PARAM)) return;
+  url.searchParams.delete(PRESET_PARAM);
+  window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
+/** Read `?preset=` once, on mount. Returns the decoded config, or the reason it could not be read. */
+function usePresetFromUrl(): { config?: CreateConfig; error?: PresetError; loaded: boolean } {
+  const [state] = React.useState(() => {
+    if (typeof window === "undefined") return { loaded: false };
+    const code = new URLSearchParams(window.location.search).getAll(PRESET_PARAM)[0];
+    if (!code) return { loaded: false };
+
+    const result = decodeIntoConfig(code);
+    return result.ok ? { config: result.config, loaded: true } : { error: result.error, loaded: false };
+  });
+  return state;
+}
+
 export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfig } = {}) {
-  const [config, dispatch] = React.useReducer(createReducer, initialConfig ?? DEFAULT_CREATE_CONFIG);
+  const fromUrl = usePresetFromUrl();
+  const [config, dispatch] = React.useReducer(
+    createReducer,
+    initialConfig ?? fromUrl.config ?? DEFAULT_CREATE_CONFIG,
+  );
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const [dragging, setDragging] = React.useState(false);
+
+  // Reported once, on the load that carried a preset — not on every render, and never with the payload.
+  React.useEffect(() => {
+    if (fromUrl.loaded) analytics.track("preset_loaded", { source: "create_workspace" });
+  }, [fromUrl.loaded]);
 
   const key = configKey(config);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- `key` is a complete, stable digest of `config`
@@ -60,16 +104,40 @@ export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfi
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" variant="Ghost" onClick={() => dispatch({ type: "reset" })} disabled={isDefault}>
-            <RotateCcw className="size-4" aria-hidden />
-            Reset
-          </Button>
-          <CopyCssButton css={theme.css} disabled={theme.cssIsEmpty} />
-        </div>
+        <CreateActions
+          config={config}
+          css={theme.css}
+          cssIsEmpty={theme.cssIsEmpty}
+          isDefault={isDefault}
+          onRandomize={() => dispatch({ type: "replace", config: randomizeConfig(config) })}
+          onReset={() => {
+            dispatch({ type: "reset" });
+            // A stale ?preset= would otherwise resurrect the old design on the next reload — Reset has to
+            // clear the address bar as well as the state.
+            clearPresetFromUrl();
+          }}
+          onShared={(url) => writeUrl(url)}
+        />
       </header>
 
       {/* ── mobile: configuration in a sheet, preview keeps the page ────── */}
+      {/* A shared preset says so, quietly. A modal would interrupt the thing the link was for; a status
+          line is announced by a screen reader and ignorable by everyone else. */}
+      {fromUrl.loaded && (
+        <p role="status" data-preset-status="loaded" className="mt-4 text-sm text-muted-foreground">
+          Loaded a shared preset. Everything below is editable, and Reset returns to the Kinetix default.
+        </p>
+      )}
+      {fromUrl.error && (
+        <div role="alert" data-preset-status="error" className="mt-4 flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
+          <span>
+            <span className="text-destructive">That preset link could not be read.</span>{" "}
+            {fromUrl.error.message} Create has opened with the Kinetix default instead.
+          </span>
+        </div>
+      )}
+
       <div className="mt-6 lg:hidden">
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>

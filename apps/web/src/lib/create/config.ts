@@ -66,6 +66,9 @@ export type CreateAction =
   | { type: "set-style"; style: StyleId }
   | { type: "set-override"; token: AcceptedToken; hex: string | null }
   | { type: "set-overrides"; values: Partial<Record<AcceptedToken, string>> }
+  // Swap the whole configuration at once — a decoded preset, or a randomized design. Still one reducer:
+  // the alternative is a second way to set state, and then two places that can disagree about it.
+  | { type: "replace"; config: CreateConfig }
   | { type: "reset" };
 
 export function createReducer(state: CreateConfig, action: CreateAction): CreateConfig {
@@ -96,6 +99,8 @@ export function createReducer(state: CreateConfig, action: CreateAction): Create
     }
     case "set-overrides":
       return { ...state, manualOverrides: { ...action.values } };
+    case "replace":
+      return action.config;
     case "reset":
       return DEFAULT_CREATE_CONFIG;
   }

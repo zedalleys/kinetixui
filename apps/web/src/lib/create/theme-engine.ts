@@ -13,6 +13,16 @@
  * the hand-tuned shipped blue — which `theme-engine.test.ts` measures rather than leaves to be
  * discovered.
  */
+import {
+  CHART_PALETTES,
+  NEUTRALS,
+  RADII,
+  SURFACES,
+  type ChartPaletteId,
+  type NeutralId,
+  type RadiusId,
+  type SurfaceId,
+} from "@kinetixui/create-preset";
 import tokens from "@kinetixui/tokens";
 import { contrastRatio } from "../color-math";
 import { MAX_CHROMA, adjust, hexToOklch, oklchToHex, type Oklch } from "../color/oklch";
@@ -22,21 +32,26 @@ export type Tokens = Partial<Record<string, string>>;
 
 /* ------------------------------------------------------------------ option sets */
 
-export const NEUTRALS = ["kinetix", "neutral", "cool", "warm", "stone"] as const;
-export const RADII = ["square", "small", "default", "rounded", "soft"] as const;
-export const SURFACES = ["flat", "bordered", "soft", "elevated"] as const;
-export const CHART_PALETTES = ["kinetix", "brand", "categorical", "cool", "warm"] as const;
-export const STYLES = ["default", "soft", "sharp"] as const;
+// The four portable dimensions are defined by the preset codec and re-exported here. A preset has to be
+// decodable without the app, so the codec owns the vocabulary; the engine owns what each value MEANS.
+export {
+  CHART_PALETTES,
+  NEUTRALS,
+  RADII,
+  SURFACES,
+  type ChartPaletteId,
+  type NeutralId,
+  type RadiusId,
+  type SurfaceId,
+};
 
-export type NeutralId = (typeof NEUTRALS)[number];
-export type RadiusId = (typeof RADII)[number];
-export type SurfaceId = (typeof SURFACES)[number];
-export type ChartPaletteId = (typeof CHART_PALETTES)[number];
+//  is derived from radius + surface and never stored, so it is not part of the portable contract.
+export const STYLES = ["default", "soft", "sharp"] as const;
 export type StyleId = (typeof STYLES)[number];
 export type Mode = "light" | "dark";
 
 /** The shipped action blue. The default brand, and the value that means "generate nothing". */
-export const KINETIX_BRAND = "#1d4ed8";
+export { DEFAULT_BRAND as KINETIX_BRAND } from "@kinetixui/create-preset";
 
 export const NEUTRAL_LABELS: Record<NeutralId, string> = {
   kinetix: "Kinetix",

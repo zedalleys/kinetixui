@@ -35,6 +35,7 @@ export const ANALYTICS_SOURCES = [
   "components_gallery",
   "installation_page",
   "changelog_page",
+  "create_workspace",
   "not_found",
 ] as const;
 export type AnalyticsSource = (typeof ANALYTICS_SOURCES)[number];
@@ -92,6 +93,12 @@ export interface AnalyticsEvents {
   npm_clicked: Shape<"source", "package">;
   changelog_viewed: Shape<never, "version" | "source">;
   external_link_clicked: Shape<"target", "source" | "location">;
+  // Create. Each carries a surface and nothing else: the preset code, the share URL and the generated
+  // CSS are all user-authored content, and none of them is any of analytics' business.
+  preset_shared: Shape<never, "source">;
+  preset_code_copied: Shape<never, "source">;
+  preset_loaded: Shape<never, "source">;
+  preset_randomized: Shape<never, "source">;
 }
 
 export type AnalyticsEventName = keyof AnalyticsEvents;
