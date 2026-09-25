@@ -437,3 +437,43 @@
     font-size: 0.85em;
   }
 }
+
+/*
+ * /create — the two things the workspace needs that Tailwind utilities cannot express.
+ *
+ * 1. The colour picker's channel sliders. A native <input type="range"> gives Create arrow keys,
+ *    Home/End, Page Up/Down and a spoken value for free, which is the whole reason it is used instead of
+ *    a hand-built slider — but a gradient track needs the thumb styled by hand, per engine.
+ * 2. Suppressing colour transitions inside the preview while a slider is being dragged. Components use
+ *    `transition-colors`, so without this every intermediate value animates and the preview appears to
+ *    lag the pointer. It is only in effect while a pointer is down on a channel.
+ */
+@layer components {
+  .kx-create-channel {
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+  }
+  .kx-create-channel::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    background: hsl(var(--background));
+    border: 2px solid hsl(var(--foreground));
+    box-shadow: 0 0 0 1px hsl(var(--background));
+    cursor: grab;
+  }
+  .kx-create-channel::-moz-range-thumb {
+    width: 16px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    background: hsl(var(--background));
+    border: 2px solid hsl(var(--foreground));
+    box-shadow: 0 0 0 1px hsl(var(--background));
+    cursor: grab;
+  }
+  [data-create-preview-root][data-dragging="true"],
+  [data-create-preview-root][data-dragging="true"] * {
+    transition: none !important;
+  }
+}

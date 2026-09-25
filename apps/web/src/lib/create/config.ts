@@ -1,67 +1,153 @@
 /**
- * Create's configuration state.
+ * Create's configuration state — the one authoritative model.
  *
- * One typed object for the whole workspace, so a control added in a later PR extends this type rather
- * than adding another `useState` somewhere in the tree. The rule the shape follows: a field exists here
- * only when something reads it today. Modelling `radius`, `density`, `typography` or `chartPalette` now
- * would put defaults in the state that nothing applies, and a default nothing applies is indistinguishable
- * from a bug until someone tries to use it.
+ * Every control writes here and nothing else holds design state: there is no separate picker state, no
+ * second copy of the theme in the preview, and the raw editor's text is UI draft state that commits into
+ * `manualOverrides` rather than a rival source of truth (§41). `resolveTheme` is the only thing that turns
+ * this into colours, and it is a pure function, so two people with the same config see the same theme.
  *
- * `themeInput` is the raw `token,hex` text the existing theme engine parses (lib/theme-builder.ts). It is
- * the customization method for this PR; the colour controls that will eventually write into the same
- * config are PR 2's work, and they replace how values are *entered*, not what is stored.
+ * Serializable by construction: strings, plain objects, no functions, no Map, no computed CSS. PR 3 will
+ * version and encode this shape, and anything unserializable in here would have to be unpicked then.
+ *
+ * `style` is deliberately NOT a field. It is derived from `radius` + `surface`, so selecting "Sharp" and
+ * then changing the radius cannot leave a stale preset name behind — there is nothing to go stale (§20).
  */
-import type { AcceptedToken } from "../theme-builder";
+import {
+  KINETIX_BRAND,
+  STYLE_VALUES,
+  styleFor,
+  type ChartPaletteId,
+  type NeutralId,
+  type RadiusId,
+  type StyleId,
+  type SurfaceId,
+} from "./theme-engine";
+import { ACCEPTED_TOKENS, type AcceptedToken } from "../theme-builder";
 
-/** Which preview the canvas renders. One today; the switch point exists so a second needs no new plumbing. */
-export const PREVIEW_SCENES = ["dashboard"] as const;
+/** Which preview the canvas renders. Both exist to show controls the other cannot. */
+export const PREVIEW_SCENES = ["dashboard", "form"] as const;
 export type PreviewScene = (typeof PREVIEW_SCENES)[number];
 
-/** The appearance the PREVIEW renders in — deliberately independent of the visitor's own site theme. */
+/** The appearance the PREVIEW renders in — independent of the visitor's own site theme. */
 export type PreviewMode = "light" | "dark";
 
 export type CreateConfig = {
   mode: PreviewMode;
-  /** Raw `token,hex` rows. Empty means "the Kinetix default, unmodified". */
-  themeInput: string;
   previewScene: PreviewScene;
+  /** The one colour Simple mode asks for. Seeds brand, action, link and focus. */
+  brand: string;
+  neutral: NeutralId;
+  radius: RadiusId;
+  surface: SurfaceId;
+  chartPalette: ChartPaletteId;
+  /** Advanced: exact values that beat everything generated. Empty in the default config. */
+  manualOverrides: Partial<Record<AcceptedToken, string>>;
 };
 
 export const DEFAULT_CREATE_CONFIG: CreateConfig = {
   mode: "light",
-  themeInput: "",
   previewScene: "dashboard",
+  brand: KINETIX_BRAND,
+  neutral: "kinetix",
+  radius: "default",
+  surface: "soft",
+  chartPalette: "kinetix",
+  manualOverrides: {},
 };
 
 export type CreateAction =
   | { type: "set-mode"; mode: PreviewMode }
-  | { type: "set-theme-input"; value: string }
   | { type: "set-scene"; scene: PreviewScene }
+  | { type: "set-brand"; hex: string }
+  | { type: "set-neutral"; neutral: NeutralId }
+  | { type: "set-radius"; radius: RadiusId }
+  | { type: "set-surface"; surface: SurfaceId }
+  | { type: "set-chart"; palette: ChartPaletteId }
+  | { type: "set-style"; style: StyleId }
+  | { type: "set-override"; token: AcceptedToken; hex: string | null }
+  | { type: "set-overrides"; values: Partial<Record<AcceptedToken, string>> }
   | { type: "reset" };
 
 export function createReducer(state: CreateConfig, action: CreateAction): CreateConfig {
   switch (action.type) {
     case "set-mode":
       return state.mode === action.mode ? state : { ...state, mode: action.mode };
-    case "set-theme-input":
-      return { ...state, themeInput: action.value };
     case "set-scene":
       return state.previewScene === action.scene ? state : { ...state, previewScene: action.scene };
+    case "set-brand":
+      return state.brand === action.hex ? state : { ...state, brand: action.hex };
+    case "set-neutral":
+      return state.neutral === action.neutral ? state : { ...state, neutral: action.neutral };
+    case "set-radius":
+      return state.radius === action.radius ? state : { ...state, radius: action.radius };
+    case "set-surface":
+      return state.surface === action.surface ? state : { ...state, surface: action.surface };
+    case "set-chart":
+      return state.chartPalette === action.palette ? state : { ...state, chartPalette: action.palette };
+    case "set-style":
+      // A style writes the dimensions it names and nothing else. Whatever the user changes afterwards
+      // simply wins, and `currentStyle` stops naming a preset.
+      return { ...state, ...STYLE_VALUES[action.style] };
+    case "set-override": {
+      const next = { ...state.manualOverrides };
+      if (action.hex === null) delete next[action.token];
+      else next[action.token] = action.hex;
+      return { ...state, manualOverrides: next };
+    }
+    case "set-overrides":
+      return { ...state, manualOverrides: { ...action.values } };
     case "reset":
-      // Back to the Kinetix default in full, appearance included: "Reset" that left the mode behind would
-      // leave the workspace in a state the defaults never describe.
       return DEFAULT_CREATE_CONFIG;
   }
 }
 
-/** True when nothing has been customized — the workspace is showing the shipped theme. */
+/** The named style this config sits on, or null once it is a combination no preset describes. */
+export function currentStyle(config: CreateConfig): StyleId | null {
+  return styleFor(config.radius, config.surface);
+}
+
+/**
+ * Whether anything has been customized.
+ *
+ * Field by field rather than `JSON.stringify` — key order is not guaranteed across engines, and an empty
+ * `manualOverrides` written two different ways would otherwise compare unequal and leave Reset looking
+ * enabled for nothing (§43).
+ */
 export function isDefaultConfig(config: CreateConfig): boolean {
+  const d = DEFAULT_CREATE_CONFIG;
   return (
-    config.themeInput.trim() === DEFAULT_CREATE_CONFIG.themeInput &&
-    config.mode === DEFAULT_CREATE_CONFIG.mode &&
-    config.previewScene === DEFAULT_CREATE_CONFIG.previewScene
+    config.mode === d.mode &&
+    config.previewScene === d.previewScene &&
+    config.brand.toLowerCase() === d.brand &&
+    config.neutral === d.neutral &&
+    config.radius === d.radius &&
+    config.surface === d.surface &&
+    config.chartPalette === d.chartPalette &&
+    Object.keys(config.manualOverrides).length === 0
   );
 }
 
-/** Re-exported so consumers of the config never reach past it into the parser's own module. */
+/**
+ * A stable string for a config — same config, same key, regardless of how the object was built.
+ *
+ * Used for memoization today and as the shape PR 3 will version and encode. Keys are sorted so two
+ * configs that differ only in insertion order produce one key.
+ */
+export function configKey(config: CreateConfig): string {
+  const overrides = (ACCEPTED_TOKENS as readonly AcceptedToken[])
+    .filter((t) => config.manualOverrides[t])
+    .map((t) => `${t}:${config.manualOverrides[t]}`)
+    .join(",");
+  return [
+    config.mode,
+    config.previewScene,
+    config.brand.toLowerCase(),
+    config.neutral,
+    config.radius,
+    config.surface,
+    config.chartPalette,
+    overrides,
+  ].join("|");
+}
+
 export type { AcceptedToken };

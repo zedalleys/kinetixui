@@ -86,12 +86,22 @@ export function DashboardScene() {
           {/* page header */}
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h3 className="text-base font-semibold">Overview</h3>
+              <h3 className="text-xl font-semibold tracking-tight">Overview</h3>
               <p className="text-sm text-muted-foreground">Last 30 days across all workspaces.</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              {/* Every action role side by side: this is where a theme change is judged. */}
+              <Button size="sm" variant="Ghost">
+                Cancel
+              </Button>
               <Button size="sm" variant="Outline">
                 Export
+              </Button>
+              <Button size="sm" variant="Secondary">
+                Duplicate
+              </Button>
+              <Button size="sm" variant="Destructive">
+                Delete
               </Button>
               <Button size="sm">New report</Button>
             </div>
@@ -121,6 +131,36 @@ export function DashboardScene() {
             <AlertTitle>Ingest lagging</AlertTitle>
             <AlertDescription>Two sources are behind by more than an hour.</AlertDescription>
           </Alert>
+
+          <Card>
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm">Traffic by source</CardTitle>
+              <CardDescription className="text-xs">Series colours, drawn from the chart tokens.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="flex h-24 items-end gap-2" role="img" aria-label="Five data series, shown as coloured bars">
+                {[
+                  { token: "bg-chart-1", height: "h-full", label: "Direct" },
+                  { token: "bg-chart-2", height: "h-4/5", label: "Search" },
+                  { token: "bg-chart-3", height: "h-3/5", label: "Social" },
+                  { token: "bg-chart-4", height: "h-2/5", label: "Email" },
+                  { token: "bg-chart-5", height: "h-1/4", label: "Referral" },
+                ].map((s) => (
+                  <div key={s.label} className="flex h-full flex-1 flex-col justify-end gap-2">
+                    <div className={`${s.token} ${s.height} w-full rounded-sm`} />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                {["Direct", "Search", "Social", "Email", "Referral"].map((label, i) => (
+                  <span key={label} className="inline-flex items-center gap-1.5">
+                    <span className={`bg-chart-${i + 1} size-2 rounded-sm`} aria-hidden />
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="grid gap-4 lg:grid-cols-2">
             {/* table — borders, muted header, status badges */}

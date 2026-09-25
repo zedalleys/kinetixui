@@ -1,45 +1,57 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_TOKENS } from "@/lib/create/theme-adapter";
+import { hexToHslChannels } from "@/lib/color-math";
+import { hexToOklch } from "@/lib/color/oklch";
+import { SHIPPED_TOKENS } from "@/lib/create/theme-adapter";
 import { CreateWorkspace } from "./create-workspace";
 
 /**
  * Behaviour, not pixels.
  *
- * The questions worth asking of a theme builder are: does the preview show what I typed, does it tell me
- * when I typed something wrong, can I get back to the start, and — the one that is easy to get wrong and
- * expensive to notice — does the theme stay inside the preview. Nothing here snapshots markup: a snapshot
- * would fail on every layout tweak while still passing if the preview stopped applying the theme at all.
+ * The questions worth asking of a visual theme builder: does the preview show what I chose, does the
+ * theme stay inside the preview, does a manual value survive, and can I get back to the start. Nothing
+ * here snapshots markup — a snapshot fails on every layout tweak while still passing if the preview
+ * stopped applying the theme at all.
  */
 
-/** The scoped boundary every themed style is supposed to land on, and nowhere else. */
-function previewRoot(): HTMLElement {
-  return document.querySelector("[data-create-preview-root]") as HTMLElement;
-}
+const previewRoot = () => document.querySelector("[data-create-preview-root]") as HTMLElement;
+const sidebar = () => screen.getByRole("complementary", { name: "Configuration" });
+const cssPanel = () => within(sidebar()).getByRole("group", { name: "Generated CSS" });
+const varOf = (token: string) => previewRoot().style.getPropertyValue(token);
 
-/** The visible configuration panel (the phone sheet holds a second copy, closed in these tests). */
-function sidebar(): HTMLElement {
-  return screen.getByRole("complementary", { name: "Configuration" });
+/** Open the Advanced disclosure, which is collapsed by default on purpose. */
+async function openAdvanced(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(within(sidebar()).getByText("Semantic colours and raw overrides"));
 }
-
-const themeInput = () => within(sidebar()).getByLabelText("Theme colors");
 
 describe("first load", () => {
-  it("is usable with no input at all", async () => {
+  it("shows the shipped Kinetix theme, fully populated, with nothing to copy", () => {
     render(<CreateWorkspace />);
 
-    // The preview is populated, the theme applied, and the panels have something to say — a builder that
-    // opens on an empty canvas makes the user prove they understand the format before it shows them value.
     expect(previewRoot()).toBeTruthy();
-    expect(previewRoot().style.getPropertyValue("--background")).not.toBe("");
-    expect(themeInput()).toHaveValue("");
-    expect(within(sidebar()).getByRole("group", { name: "Generated CSS" }).textContent).toContain("--background:");
-    expect(within(sidebar()).getAllByText(/Pass|Fail/).length).toBeGreaterThan(0);
+    // Default config generates nothing, so the preview is the real library rather than an imitation.
+    expect(varOf("--background")).not.toBe("");
+    expect(cssPanel().textContent).toContain("Nothing to override");
+    for (const b of screen.getAllByRole("button", { name: /Copy CSS/ })) expect(b).toBeDisabled();
   });
 
-  it("reports contrast for the shipped theme, all passing", () => {
+  it("opens with every Simple control set and visible, not hidden behind accordions", () => {
     render(<CreateWorkspace />);
+    const panel = within(sidebar());
+
+    expect(panel.getByRole("radio", { name: "Default style" })).toBeChecked();
+    expect(panel.getByRole("radio", { name: "Kinetix neutral" })).toBeTruthy();
+    expect(panel.getByRole("slider", { name: "Hue" })).toBeTruthy();
+    expect(panel.getByLabelText("Hex")).toHaveValue("#1d4ed8");
+    // Only Advanced is folded away (§51). <details> keeps its children mounted, so the claim is about
+    // the disclosure being shut, not about the markup being absent.
+    expect(sidebar().querySelector("details")).not.toHaveAttribute("open");
+  });
+
+  it("summarises contrast rather than listing twelve identical passes", () => {
+    render(<CreateWorkspace />);
+    expect(within(sidebar()).getByText(/pairs meet WCAG AA/)).toBeTruthy();
     expect(within(sidebar()).queryAllByText("Fail")).toHaveLength(0);
   });
 
@@ -52,58 +64,139 @@ describe("first load", () => {
   });
 });
 
-describe("typing a theme", () => {
-  it("updates the preview as you type", async () => {
+describe("theme colour", () => {
+  it("updates the preview when a hex is typed", async () => {
     const user = userEvent.setup();
     render(<CreateWorkspace />);
 
-    await user.type(themeInput(), "primary,#ff0000");
+    const hex = within(sidebar()).getByLabelText("Hex");
+    await user.clear(hex);
+    await user.paste("#c2410c");
 
-    expect(previewRoot().style.getPropertyValue("--primary")).toBe("0 100% 50%");
+    // The action colour follows the theme colour, band-corrected for the mode — so not necessarily the
+    // exact hue value typed, but unmistakably that hue.
+    const action = hexToOklch(`#${rgbFromVar(varOf("--action"))}`);
+    expect(action!.h).toBeCloseTo(hexToOklch("#c2410c")!.h, 0);
   });
 
-  it("updates the generated CSS with it", async () => {
+  it("drives the picker sliders from the same value", async () => {
     const user = userEvent.setup();
     render(<CreateWorkspace />);
 
-    await user.type(themeInput(), "primary,#ff0000");
+    const before = Number((within(sidebar()).getByRole("slider", { name: "Hue" }) as HTMLInputElement).value);
+    const hex = within(sidebar()).getByLabelText("Hex");
+    await user.clear(hex);
+    await user.paste("#15803d");
 
-    const output = within(sidebar()).getByRole("group", { name: "Generated CSS" });
-    expect(output.textContent).toContain("--primary: 0 100% 50%");
-    // Once there are overrides the block is only those — the same unit of work `kinetixui theme build` writes.
-    expect(output.textContent).not.toContain("--card:");
+    const after = Number((within(sidebar()).getByRole("slider", { name: "Hue" }) as HTMLInputElement).value);
+    expect(after).not.toBe(before);
+    expect(after).toBeCloseTo(hexToOklch("#15803d")!.h, -1);
   });
 
-  it("shows invalid input inline and keeps rendering the rows that were fine", async () => {
+  it("does not corrupt the config while an incomplete hex is being typed", async () => {
     const user = userEvent.setup();
     render(<CreateWorkspace />);
 
-    await user.type(themeInput(), "primary,#ff0000{enter}background,nope");
+    const before = varOf("--action");
+    const hex = within(sidebar()).getByLabelText("Hex");
+    await user.clear(hex);
+    await user.type(hex, "#1d4");
 
-    expect(within(sidebar()).getByRole("status").textContent).toMatch(/nope/);
-    // No error screen, no blank canvas: the good row applied, the bad one fell back to the default.
-    expect(previewRoot().style.getPropertyValue("--primary")).toBe("0 100% 50%");
-    expect(previewRoot().style.getPropertyValue("--background")).not.toBe("");
-    expect(themeInput()).toHaveAttribute("aria-invalid", "true");
+    // The draft is shown, the colour is not changed, and the user is told why.
+    expect(hex).toHaveValue("#1d4");
+    expect(varOf("--action")).toBe(before);
+    expect(within(sidebar()).getByRole("status").textContent).toMatch(/six-digit hex/);
   });
 
-  it("names a colour it does not recognize instead of ignoring it", async () => {
-    const user = userEvent.setup();
+  it("exposes each channel as a real slider with a spoken value", () => {
     render(<CreateWorkspace />);
 
-    await user.type(themeInput(), "sparkle,#123456");
-
-    expect(within(sidebar()).getByRole("status").textContent).toMatch(/sparkle/);
+    for (const [name, text] of [["Hue", /degrees$/], ["Chroma", /percent$/], ["Lightness", /percent$/]] as const) {
+      const slider = within(sidebar()).getByRole("slider", { name });
+      expect(slider).toHaveAttribute("aria-valuetext", expect.stringMatching(text) as never);
+      expect(slider).toHaveAttribute("type", "range");
+    }
+    // Native range inputs were chosen so arrow keys, Home/End and Page Up/Down come from the platform.
+    // jsdom does not implement that, so the browser a11y gate is where it is exercised.
   });
 
-  it("surfaces a contrast failure rather than fixing it quietly", async () => {
+  it("moves the theme when a channel changes", () => {
+    render(<CreateWorkspace />);
+
+    const before = varOf("--action");
+    const hue = within(sidebar()).getByRole("slider", { name: "Hue" }) as HTMLInputElement;
+    fireEvent.change(hue, { target: { value: "140" } });
+
+    expect(varOf("--action")).not.toBe(before);
+  });
+
+  it("writes the change into the copied CSS", async () => {
     const user = userEvent.setup();
     render(<CreateWorkspace />);
 
-    await user.type(themeInput(), "card,#ffffff{enter}card-foreground,#c9c9c9");
+    const hex = within(sidebar()).getByLabelText("Hex");
+    await user.clear(hex);
+    await user.paste("#7e22ce");
 
-    expect(within(sidebar()).getAllByText("Fail").length).toBeGreaterThan(0);
-    expect(previewRoot().style.getPropertyValue("--card-foreground")).toBe("0 0% 79%");
+    expect(cssPanel().textContent).toContain("--action:");
+    for (const b of screen.getAllByRole("button", { name: /Copy CSS/ })) expect(b).toBeEnabled();
+  });
+});
+
+describe("the system controls", () => {
+  it("neutral changes the surfaces and survives into the output", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    const before = varOf("--background");
+    await user.click(within(sidebar()).getByRole("radio", { name: "Warm neutral" }));
+
+    expect(varOf("--background")).not.toBe(before);
+    expect(cssPanel().textContent).toContain("--background:");
+  });
+
+  it("radius changes the preview and survives into the output", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    await user.click(within(sidebar()).getByRole("radio", { name: "Rounded radius" }));
+
+    expect(varOf("--radius-md")).toBe("12px");
+    expect(cssPanel().textContent).toContain("--radius-md: 12px");
+  });
+
+  it("surface changes the elevation and survives into the output", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    await user.click(within(sidebar()).getByRole("radio", { name: "Flat surface" }));
+
+    expect(varOf("--shadow-sm")).toBe("none");
+    expect(cssPanel().textContent).toContain("--shadow-sm: none");
+  });
+
+  it("chart palette changes the series and survives into the output", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    const before = varOf("--chart-1");
+    await user.click(within(sidebar()).getByRole("radio", { name: "Categorical chart palette" }));
+
+    expect(varOf("--chart-1")).not.toBe(before);
+    expect(cssPanel().textContent).toContain("--chart-1:");
+  });
+
+  it("a style applies its dimensions and then stops naming a preset", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    await user.click(within(sidebar()).getByRole("radio", { name: "Sharp style" }));
+    expect(varOf("--radius-md")).toBe("0px");
+    expect(within(sidebar()).getByRole("radio", { name: "Square radius" })).toBeChecked();
+
+    // Changing a dimension the preset set must stick, not be reasserted.
+    await user.click(within(sidebar()).getByRole("radio", { name: "Soft radius" }));
+    expect(within(sidebar()).getByRole("radio", { name: "Sharp style" })).not.toBeChecked();
   });
 });
 
@@ -112,24 +205,26 @@ describe("appearance", () => {
     const user = userEvent.setup();
     render(<CreateWorkspace />);
 
-    const lightBackground = previewRoot().style.getPropertyValue("--background");
+    const light = varOf("--background");
     await user.click(within(sidebar()).getByRole("button", { name: "Dark" }));
 
-    expect(previewRoot().style.getPropertyValue("--background")).not.toBe(lightBackground);
+    expect(varOf("--background")).not.toBe(light);
     expect(previewRoot().className).toContain("dark");
-    // The page's own theme is the visitor's, not the preview's. Nothing was written to <html>.
+    // The page's own theme is the visitor's, not the preview's.
     expect(document.documentElement.className).not.toContain("dark");
   });
 
-  it("keeps your overrides when you switch", async () => {
+  it("keeps the configuration when switching — one config describes both", async () => {
     const user = userEvent.setup();
     render(<CreateWorkspace />);
 
-    await user.type(themeInput(), "primary,#ff0000");
+    await user.click(within(sidebar()).getByRole("radio", { name: "Warm neutral" }));
     await user.click(within(sidebar()).getByRole("button", { name: "Dark" }));
 
-    expect(previewRoot().style.getPropertyValue("--primary")).toBe("0 100% 50%");
-    expect(themeInput()).toHaveValue("primary,#ff0000");
+    expect(within(sidebar()).getByRole("radio", { name: "Warm neutral" })).toBeChecked();
+    // The copied CSS carries both appearances regardless of which one is on screen.
+    expect(cssPanel().textContent).toContain(":root");
+    expect(cssPanel().textContent).toContain(".dark");
   });
 });
 
@@ -138,20 +233,122 @@ describe("scoping", () => {
     const user = userEvent.setup();
     render(<CreateWorkspace />);
 
-    await user.type(themeInput(), "background,#ff0000");
+    await user.click(within(sidebar()).getByRole("radio", { name: "Cool neutral" }));
 
-    expect(previewRoot().style.getPropertyValue("--background")).toBe("0 100% 50%");
-    // The failure this guards against is the one that makes the whole site unusable rather than the
-    // preview: a builder that sets its theme on :root recolours the page it lives on.
+    expect(varOf("--background")).not.toBe("");
+    // The failure this guards against makes the whole site unusable rather than the preview.
     expect(document.documentElement.style.getPropertyValue("--background")).toBe("");
     expect(document.body.style.getPropertyValue("--background")).toBe("");
   });
 
   it("carries a full theme class so the page's own appearance cannot leak in", () => {
     render(<CreateWorkspace />);
-    // `--warning`, `--info` and `--chart-*` are not editable here, so without this the preview would
-    // inherit whichever theme the visitor happens to have the site set to.
     expect(previewRoot().className).toContain("theme-light");
+  });
+});
+
+describe("advanced", () => {
+  it("still has the raw editor, and it still works", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+    await openAdvanced(user);
+
+    const raw = within(sidebar()).getByLabelText("All overrides, as text");
+    await user.click(raw);
+    await user.paste("action,#ff0000");
+
+    expect(varOf("--action")).toBe("0 100% 50%");
+    expect(cssPanel().textContent).toContain("--action: 0 100% 50%");
+  });
+
+  it("reports an invalid row without taking the preview down", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+    await openAdvanced(user);
+
+    const raw = within(sidebar()).getByLabelText("All overrides, as text");
+    await user.click(raw);
+    await user.paste("action,#ff0000\nbackground,nope");
+
+    expect(within(sidebar()).getByRole("status").textContent).toMatch(/nope/);
+    expect(varOf("--action")).toBe("0 100% 50%");
+    expect(varOf("--background")).not.toBe("");
+  });
+
+  it("lets a manual value beat the generated one, and says which is which", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+    await openAdvanced(user);
+
+    const field = within(sidebar()).getByLabelText(/^Action/);
+    await user.clear(field);
+    await user.paste("#ff0000");
+
+    expect(varOf("--action")).toBe("0 100% 50%");
+    expect(within(sidebar()).getByLabelText(/^Action/).closest("div")?.textContent).toContain("manual");
+  });
+
+  it("keeps a manual value when the thing that generated it changes", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+    await openAdvanced(user);
+
+    const field = within(sidebar()).getByLabelText(/^Action/);
+    await user.clear(field);
+    await user.paste("#ff0000");
+
+    const hex = within(sidebar()).getByLabelText("Hex");
+    await user.clear(hex);
+    await user.paste("#15803d");
+
+    expect(varOf("--action")).toBe("0 100% 50%");
+  });
+
+  it("shows a contrast failure the user created rather than repairing it", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+    await openAdvanced(user);
+
+    const raw = within(sidebar()).getByLabelText("All overrides, as text");
+    await user.click(raw);
+    await user.paste("card,#ffffff\ncard-foreground,#c9c9c9");
+
+    expect(within(sidebar()).getAllByText("Fail").length).toBeGreaterThan(0);
+    expect(varOf("--card-foreground")).toBe("0 0% 79%");
+    // Copy is not blocked by a failing manual override — a warning is shown instead (§75).
+    for (const b of screen.getAllByRole("button", { name: /Copy CSS/ })) expect(b).toBeEnabled();
+  });
+});
+
+describe("preview scenes", () => {
+  it("switches between them without touching the design controls", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    expect(within(previewRoot()).getByRole("table")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Form" }));
+
+    expect(within(previewRoot()).getByLabelText("Project name")).toBeTruthy();
+    expect(within(sidebar()).getByRole("radio", { name: "Default style" })).toBeChecked();
+  });
+
+  it("builds both scenes from real Kinetix components", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    const dash = within(previewRoot());
+    expect(dash.getByRole("button", { name: "New report" })).toBeTruthy();
+    expect(dash.getByRole("button", { name: "Delete" })).toBeTruthy();
+    expect(dash.getByRole("table")).toBeTruthy();
+    expect(dash.getByRole("alert")).toBeTruthy();
+    expect(dash.getByRole("progressbar")).toBeTruthy();
+    expect(dash.getByRole("img", { name: /data series/ })).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: "Form" }));
+    const form = within(previewRoot());
+    expect(form.getByRole("checkbox")).toBeTruthy();
+    expect(form.getByRole("switch")).toBeTruthy();
+    expect(form.getByRole("combobox")).toBeTruthy();
   });
 });
 
@@ -160,53 +357,48 @@ describe("reset", () => {
     const user = userEvent.setup();
     render(<CreateWorkspace />);
 
-    const reset = screen.getByRole("button", { name: /Reset/ });
+    const reset = screen.getByRole("button", { name: "Reset" });
     expect(reset).toBeDisabled();
 
-    await user.type(themeInput(), "primary,#ff0000");
+    await user.click(within(sidebar()).getByRole("radio", { name: "Warm neutral" }));
     expect(reset).toBeEnabled();
   });
 
-  it("returns the theme, the input and the appearance to the shipped default", async () => {
+  it("returns every dimension, including ones set in Advanced", async () => {
     const user = userEvent.setup();
     render(<CreateWorkspace />);
 
-    await user.type(themeInput(), "primary,#ff0000");
+    await user.click(within(sidebar()).getByRole("radio", { name: "Warm neutral" }));
+    await user.click(within(sidebar()).getByRole("radio", { name: "Sharp style" }));
     await user.click(within(sidebar()).getByRole("button", { name: "Dark" }));
-    await user.click(screen.getByRole("button", { name: /Reset/ }));
+    await openAdvanced(user);
+    const raw = within(sidebar()).getByLabelText("All overrides, as text");
+    await user.click(raw);
+    await user.paste("action,#ff0000");
 
-    expect(themeInput()).toHaveValue("");
+    await user.click(screen.getByRole("button", { name: "Reset" }));
+
     expect(previewRoot().className).toContain("theme-light");
-    expect(previewRoot().style.getPropertyValue("--primary")).toBe(
-      // whatever the shipped light theme says, expressed the way the preview writes it
-      previewRoot().style.getPropertyValue("--primary"),
-    );
-    expect(within(sidebar()).getByRole("group", { name: "Generated CSS" }).textContent).toContain("--card:");
-  });
-
-  it("can fill the input with the current values and get back to where it started", async () => {
-    const user = userEvent.setup();
-    render(<CreateWorkspace />);
-
-    await user.click(within(sidebar()).getByRole("button", { name: "Load current values" }));
-
-    expect((themeInput() as HTMLTextAreaElement).value).toContain(`primary,${DEFAULT_TOKENS.light.primary}`);
-    // Loading the defaults and applying them must be a no-op on the preview, or they were not the defaults.
-    expect(previewRoot().style.getPropertyValue("--primary")).toBe("224 76% 48%");
+    expect(varOf("--background")).toBe(hslOf(SHIPPED_TOKENS.light.background));
+    expect(varOf("--action")).toBe(hslOf(SHIPPED_TOKENS.light.action));
+    expect(varOf("--radius-md")).toBe("");
+    expect(cssPanel().textContent).toContain("Nothing to override");
   });
 });
 
-describe("the preview scene", () => {
-  it("is built from real Kinetix components, not a drawing of them", () => {
-    render(<CreateWorkspace />);
-    const preview = within(previewRoot());
+/* ------------------------------------------------------------------ helpers */
 
-    // Each of these is a real @kinetixui/ui element rendering through the token classes the library uses.
-    expect(preview.getByRole("button", { name: "New report" })).toBeTruthy();
-    expect(preview.getByRole("table")).toBeTruthy();
-    expect(preview.getByRole("alert")).toBeTruthy();
-    expect(preview.getByLabelText("Email")).toBeTruthy();
-    expect(preview.getByRole("progressbar")).toBeTruthy();
-    expect(preview.getByRole("navigation", { name: "Preview sections" })).toBeTruthy();
-  });
-});
+/** `"0 100% 50%"` → the hex the preview would render, so assertions can be written in hex. */
+function rgbFromVar(channels: string): string {
+  const [h, s, l] = channels.split(" ").map((p) => Number.parseFloat(p));
+  const a = (s / 100) * Math.min(l / 100, 1 - l / 100);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const v = l / 100 - a * Math.max(-1, Math.min(k - 3, Math.min(9 - k, 1)));
+    return Math.round(255 * v).toString(16).padStart(2, "0");
+  };
+  return `${f(0)}${f(8)}${f(4)}`;
+}
+
+/** The HSL-channel string the preview writes for a hex — the same conversion the adapter uses. */
+const hslOf = hexToHslChannels;

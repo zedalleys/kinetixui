@@ -34,12 +34,12 @@ function useCopy(value: string) {
  * not a native export, so it is not called one — `kinetixui theme build` has the same honest scope, and
  * PR 4 is where that changes.
  */
-export function CopyCssButton({ css, className }: { css: string; className?: string }) {
+export function CopyCssButton({ css, className, disabled }: { css: string; className?: string; disabled?: boolean }) {
   const { copied, copy } = useCopy(css);
 
   return (
     <>
-      <Button size="sm" variant="Outline" onClick={copy} className={className}>
+      <Button size="sm" variant="Outline" onClick={copy} disabled={disabled} className={className}>
         {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
         Copy CSS
       </Button>
@@ -51,31 +51,32 @@ export function CopyCssButton({ css, className }: { css: string; className?: str
 }
 
 /**
- * The generated block.
+ * The generated block: only what differs from the shipped theme, in both appearances.
  *
- * `isDefault` is the difference between "here is the theme you are previewing" and "here is what you
- * changed". With overrides, this block is byte-identical to what the CLI writes for the same rows — one
- * engine, two front ends — so the caption says which of the two a reader is looking at rather than
- * leaving them to infer it from whether they remember typing anything.
+ * It is NOT the same output `kinetixui theme build` writes any more, and the caption says so. The CLI
+ * compiles a CSV of colours into one `:root` block; Create also writes a `.dark` block and the radius and
+ * elevation variables, which the CLI has no input format for. PR 1 claimed the two were identical, and
+ * keeping that sentence once it stopped being true would be the exact failure the campaign this project
+ * sits next to is about (§102).
  */
 export function CreateOutput({
   css,
-  isDefault,
+  isEmpty,
   className,
 }: {
   css: string;
-  isDefault: boolean;
+  isEmpty: boolean;
   className?: string;
 }) {
   return (
     <div className={cn("flex min-h-0 flex-col", className)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
-          {isDefault
-            ? "The KinetixUI default, for reference. Change a value and this becomes your override block."
-            : "Your overrides. Paste after the token import in your own stylesheet."}
+          {isEmpty
+            ? "Nothing to override yet — the preview is the shipped Kinetix theme."
+            : "Web CSS. Paste after the token import in your own stylesheet; it carries both appearances."}
         </p>
-        <CopyCssButton css={css} />
+        <CopyCssButton css={css} disabled={isEmpty} />
       </div>
 
       {/* Scrolls sideways on a narrow screen, so it is focusable and named — the convention <TokenTable>

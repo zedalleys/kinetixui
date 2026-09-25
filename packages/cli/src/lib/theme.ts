@@ -1,11 +1,17 @@
 /**
- * Theme override parsing/compiling — CLI counterpart to the /create web
- * workspace (apps/web/src/lib/theme-builder.ts). Ported 1:1 for the same
- * `token,hex` format and the same derived-foreground/contrast-check
- * behavior, so `kinetixui theme build` produces output identical to what
- * the web tool would produce for the same values. The one addition here is
- * `#`-prefixed comment-line support, since this reads a real file
+ * Theme override parsing/compiling — the CLI counterpart to the raw editor
+ * inside /create (apps/web/src/lib/theme-builder.ts). Ported 1:1 for the
+ * same `token,hex` format and the same derived-foreground/contrast-check
+ * behavior, so for a file of literal colour rows `kinetixui theme build`
+ * writes the same `:root` block the workspace does. The one addition here
+ * is `#`-prefixed comment-line support, since this reads a real file
  * (`kinetixui-themes/<name>.csv`) rather than pasted spreadsheet rows.
+ *
+ * That is now a SUBSET, not the whole of Create. The workspace generates
+ * colours from an OKLCH model, emits a `.dark` block alongside `:root`, and
+ * writes radius and elevation variables — none of which this format can
+ * express, and none of which this file attempts to. A theme built here is a
+ * colour override; a theme copied from Create may be more than one.
  */
 import { bestTextHex, contrastRatio, hexToHslChannels, isHex, normalizeHex } from "./color-math.js";
 
