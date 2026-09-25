@@ -136,7 +136,7 @@ engine that produced them the first time.
 that design. **Copy preset** copies the bare code, which is what
 [`kinetixui preset decode`](/docs/cli) reads and
 [`kinetixui preset css`](/docs/cli) resolves into this same stylesheet without a
-browser. **Copy CSS** remains a different artifact from the preset itself: a
+browser — and [`kinetixui preset swiftui`](/docs/cli) into a SwiftUI theme file. **Copy CSS** remains a different artifact from the preset itself: a
 preset is a design, CSS is one rendering of it.
 
 The version is in the prefix, so a code made today stays readable, and a future
@@ -144,6 +144,10 @@ format is refused with an explanation rather than misread. A preset can only nam
 tokens from the contract above — it is structured configuration, never arbitrary
 CSS.
 
-**Presets are web CSS today.** Applying one to SwiftUI, Compose or Flutter is not
-implemented; the preset format is deliberately platform-neutral so that it can be
-when it is.
+**Presets reach web CSS and SwiftUI colours.**
+[`kinetixui preset swiftui`](/docs/cli) resolves a preset into a `KinetixColors`
+pair for [the SwiftUI package](/docs/swiftui) — colours only, because that is the
+one axis it is themeable along; a design's radius and surface treatment apply on
+the web and have no token to land on natively. Compose and Flutter have no
+exporter yet. The preset format is platform-neutral so that they can, without a
+new code format.

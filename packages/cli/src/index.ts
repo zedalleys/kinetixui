@@ -8,7 +8,8 @@ import { inspect } from "./commands/inspect.js";
 import { lint } from "./commands/lint.js";
 import { list } from "./commands/list.js";
 import { parity } from "./commands/parity.js";
-import { presetCss, presetDecode, presetUrlCommand } from "./commands/preset.js";
+import { presetCss, presetDecode, presetSwiftUi, presetUrlCommand } from "./commands/preset.js";
+import { DEFAULT_SWIFT_SYMBOL } from "@kinetixui/create-theme";
 import { themeBuild, themeCreate } from "./commands/theme.js";
 import { DEFAULT_REGISTRY } from "./lib/config.js";
 // Bundled at build time (esbuild inlines JSON imports), not read at runtime —
@@ -180,6 +181,21 @@ preset
   .action(async (input: string, opts: { output?: string }) => {
     try {
       await presetCss(input, { output: opts.output });
+    } catch (err) {
+      console.error(pc.red("✖"), (err as Error).message);
+      process.exitCode = 1;
+    }
+  });
+
+preset
+  .command("swiftui")
+  .description("Resolve a preset into a SwiftUI theme file (KinetixColors, light and dark). Colours only — SwiftUI has no radius or elevation token to carry. No Compose or Flutter output.")
+  .argument("<preset>", "a KX1_ code, or a share URL")
+  .option("-o, --output <file>", "write to a file instead of stdout")
+  .option("-n, --name <symbol>", "the Swift enum to generate", DEFAULT_SWIFT_SYMBOL)
+  .action(async (input: string, opts: { output?: string; name?: string }) => {
+    try {
+      await presetSwiftUi(input, { output: opts.output, name: opts.name });
     } catch (err) {
       console.error(pc.red("✖"), (err as Error).message);
       process.exitCode = 1;

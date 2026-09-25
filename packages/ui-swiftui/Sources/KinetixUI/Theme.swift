@@ -254,15 +254,37 @@ public extension EnvironmentValues {
 ///     KinetixButton(action: {}) { Text("Save") }
 /// }
 /// ```
+///
+/// Pass your own colour sets to use a custom theme — a file exported from
+/// kinetixui.com/create with `kinetixui preset swiftui`, or one written by
+/// hand — and the light/dark switching still comes from `colorScheme`:
+///
+/// ```swift
+/// KinetixTheme(light: AcmeTheme.light, dark: AcmeTheme.dark) {
+///     KinetixButton(action: {}) { Text("Save") }
+/// }
+/// ```
+///
+/// Setting `\.kinetixColors` directly still works and pins one appearance;
+/// this exists so a custom theme does not have to give up the automatic
+/// switch to get one.
 public struct KinetixTheme<Content: View>: View {
     @Environment(\.colorScheme) private var colorScheme
+    private let light: KinetixColors
+    private let dark: KinetixColors
     private let content: Content
 
-    public init(@ViewBuilder content: () -> Content) {
+    public init(
+        light: KinetixColors = .light,
+        dark: KinetixColors = .dark,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.light = light
+        self.dark = dark
         self.content = content()
     }
 
     public var body: some View {
-        content.environment(\.kinetixColors, colorScheme == .dark ? .dark : .light)
+        content.environment(\.kinetixColors, colorScheme == .dark ? dark : light)
     }
 }

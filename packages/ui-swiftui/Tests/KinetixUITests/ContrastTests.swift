@@ -72,6 +72,26 @@ final class ContrastTests: XCTestCase {
 
     func testTextPairsMeetAAInDark() { assertAA(.dark, theme: "dark") }
 
+    // MARK: a generated Create theme
+
+    /// `Generated/CreateThemeFixture.swift` is emitted by the `swiftui` exporter in
+    /// `packages/create-theme` and committed so this target compiles it — which is the only place the
+    /// repo actually type-checks that exporter's output against `KinetixColors`' initializer. Running
+    /// the same AA pairs over it takes the check one step further: a Create design that a person could
+    /// build in the workspace produces a SwiftUI theme that is still readable, on the platform, rather
+    /// than only in the TypeScript engine's own sweep.
+    ///
+    /// The TS side keeps the fixture in step (`swiftui-fixture.test.ts` fails if it drifts) and asserts
+    /// that these two lines still exist, so the fixture cannot quietly become a file that compiles and
+    /// proves nothing.
+    func testGeneratedCreateThemeMeetsAAInLight() {
+        assertAA(CreateThemeFixture.light, theme: "generated Create theme (light)")
+    }
+
+    func testGeneratedCreateThemeMeetsAAInDark() {
+        assertAA(CreateThemeFixture.dark, theme: "generated Create theme (dark)")
+    }
+
     /// A sanity check on the maths itself, so a bug here can't silently pass everything.
     func testContrastMathMatchesKnownValues() {
         XCTAssertEqual(ratio(Color(red: 0, green: 0, blue: 0), Color(red: 1, green: 1, blue: 1)), 21, accuracy: 0.01)

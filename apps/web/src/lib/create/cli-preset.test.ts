@@ -5,8 +5,8 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ACCEPTED_TOKENS, encodePreset, presetUrl, type PresetConfig } from "@kinetixui/create-preset";
 import { DEFAULT_PRESET } from "@kinetixui/create-preset";
-import { exportCss, resolveCreateTheme } from "@kinetixui/create-theme";
-import { presetCss, presetDecode, presetUrlCommand } from "../../../../../packages/cli/src/commands/preset";
+import { exportCss, exportSwiftUi, resolveCreateTheme } from "@kinetixui/create-theme";
+import { presetCss, presetDecode, presetSwiftUi, presetUrlCommand } from "../../../../../packages/cli/src/commands/preset";
 
 /**
  * The CLI side of the preset contract.
@@ -20,17 +20,25 @@ const preset = (over: Partial<PresetConfig> = {}): PresetConfig => ({ ...DEFAULT
 
 let out: string[];
 let err: string[];
+/** `preset swiftui` writes to stdout directly, so a file redirect gets no extra newline. */
+let written: string[];
 
 beforeEach(() => {
   out = [];
   err = [];
+  written = [];
   vi.spyOn(console, "log").mockImplementation((...args) => void out.push(args.join(" ")));
   vi.spyOn(console, "error").mockImplementation((...args) => void err.push(args.join(" ")));
+  vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+    written.push(String(chunk));
+    return true;
+  });
 });
 
 afterEach(() => vi.restoreAllMocks());
 
 const printed = () => out.join("\n");
+const stdout = () => written.join("");
 /** picocolors emits escapes when the stream looks like a TTY; compare on the text. */
 const plain = () => printed().replace(/\u001b\[\d+m/g, "");
 
@@ -75,18 +83,23 @@ describe("preset decode", () => {
     expect(plain()).toContain("shipped Kinetix default");
   });
 
-  it("does not imply it can produce native themes", () => {
+  it("names only the platforms that exist", () => {
+    // This used to forbid the word "swiftui" outright, because no SwiftUI exporter existed and mentioning
+    // one would have been a promise. `preset swiftui` exists now, so the guard narrows to what is still
+    // untrue rather than being deleted: there is no Compose or Flutter output behind any command, and
+    // nothing here may suggest a general "native" or five-platform export.
     presetDecode(encodePreset(preset({ brand: "#c2410c" })), { json: false });
     const text = plain().toLowerCase();
-    for (const claim of ["swiftui", "compose", "flutter", "native", "every platform", "all five"]) {
+    for (const claim of ["compose", "flutter", "android", "native", "every platform", "all five"]) {
       expect(text, claim).not.toContain(claim);
     }
   });
 
-  it("points at the tools that do produce CSS", () => {
+  it("points at the tools that do produce something", () => {
     presetDecode(encodePreset(preset({ brand: "#c2410c" })), { json: false });
     expect(plain()).toContain("theme build");
     expect(plain()).toContain("preset css");
+    expect(plain()).toContain("preset swiftui");
   });
 });
 
@@ -188,6 +201,109 @@ describe("bad input is a message, not a crash", () => {
   it("prints nothing when it fails", () => {
     expect(() => presetDecode("KX1_!!!!", { json: false })).toThrow();
     expect(out).toEqual([]);
+  });
+});
+
+describe("preset swiftui", () => {
+  it("prints a Swift theme, and nothing else", async () => {
+    await presetSwiftUi(encodePreset(preset({ brand: "#c2410c" })), {});
+
+    expect(stdout()).toContain("public enum CreateTheme {");
+    expect(stdout()).toContain("import KinetixUI");
+    expect(out).toEqual([]); // written to stdout directly, not through console.log
+  });
+
+  it("is byte-identical to the shared exporter", async () => {
+    // The same claim `preset css` makes, for the second target: one resolve, one exporter, two front
+    // ends. It is the property PR 4's seam exists to have, so it is asserted rather than assumed.
+    for (const over of [
+      {},
+      { brand: "#7e22ce" },
+      { neutral: "warm" as const, chartPalette: "cool" as const },
+      { manualOverrides: { border: "#ff0000" } },
+    ]) {
+      written = [];
+      await presetSwiftUi(encodePreset(preset(over)), {});
+      expect(stdout(), JSON.stringify(over)).toBe(
+        exportSwiftUi(resolveCreateTheme(preset(over)), { symbol: "CreateTheme" }),
+      );
+    }
+  });
+
+  it("accepts a share URL as readily as a bare code", async () => {
+    await presetSwiftUi(presetUrl(preset({ neutral: "cool" }), "https://kinetixui.com"), {});
+    expect(stdout()).toBe(exportSwiftUi(resolveCreateTheme(preset({ neutral: "cool" })), { symbol: "CreateTheme" }));
+  });
+
+  it("names the enum after --name", async () => {
+    await presetSwiftUi(encodePreset(preset({ brand: "#c2410c" })), { name: "AcmeTheme" });
+    expect(stdout()).toContain("public enum AcmeTheme {");
+  });
+
+  it("writes a file when asked, and says how to apply it", async () => {
+    const file = join(mkdtempSync(join(tmpdir(), "kx-swift-")), "AcmeTheme.swift");
+    await presetSwiftUi(encodePreset(preset({ neutral: "warm" })), { output: file, name: "AcmeTheme" });
+
+    expect(readFileSync(file, "utf8")).toBe(
+      exportSwiftUi(resolveCreateTheme(preset({ neutral: "warm" })), { symbol: "AcmeTheme" }),
+    );
+    expect(plain()).toContain(file);
+    expect(plain()).toContain("KinetixTheme(light: AcmeTheme.light, dark: AcmeTheme.dark)");
+  });
+
+  it("still produces a file for the default preset, unlike preset css", async () => {
+    // A Swift file is a complete artifact rather than an override block, so "nothing to override" is not
+    // an outcome this format has.
+    await presetSwiftUi(encodePreset(preset()), {});
+    expect(stdout()).toContain("public enum CreateTheme {");
+    expect(stdout()).not.toContain("Color(red:");
+  });
+
+  it.each([
+    ["a digit first", "123Theme"],
+    ["a statement", "Theme; import Foundation"],
+    ["a keyword", "class"],
+    ["a hyphen", "Theme-Name"],
+    ["emoji", "Theme🎨"],
+  ])("refuses %s as a name, before it decodes anything", async (_name, symbol) => {
+    // The message should be about the argument the user got wrong, so the name is checked first — a bad
+    // name and a bad code together must not report the code.
+    await expect(presetSwiftUi("KX1_!!!!", { name: symbol })).rejects.toThrow(/name|identifier|keyword|digit/i);
+    expect(written).toEqual([]);
+  });
+
+  it("refuses a bad preset with a message, not a stack trace", async () => {
+    await expect(presetSwiftUi("KX1_!!!!", {})).rejects.toThrow(/^[A-Z].*\.$/);
+    expect(written).toEqual([]);
+  });
+
+  it("claims no platform it cannot deliver", async () => {
+    await presetSwiftUi(encodePreset(preset({ brand: "#c2410c", surface: "elevated" })), {});
+    const text = stdout().toLowerCase();
+    for (const claim of ["compose", "flutter", "android", "every platform", "all five"]) {
+      expect(text, claim).not.toContain(claim);
+    }
+  });
+});
+
+describe("the other preset commands still work", () => {
+  it("decode, url and css are unchanged by the new target", async () => {
+    presetDecode(encodePreset(preset({ brand: "#c2410c" })), { json: false });
+    expect(plain()).toContain("#c2410c");
+
+    out = [];
+    presetUrlCommand(encodePreset(preset()), { site: "https://kinetixui.com" });
+    expect(printed().startsWith("https://kinetixui.com/create?preset=KX1_")).toBe(true);
+
+    out = [];
+    await presetCss(encodePreset(preset({ neutral: "warm" })), {});
+    expect(printed()).toBe(exportCss(resolveCreateTheme(preset({ neutral: "warm" }))));
+  });
+
+  it("decode points at both exporters", () => {
+    presetDecode(encodePreset(preset({ brand: "#c2410c" })), { json: false });
+    expect(plain()).toContain("preset css");
+    expect(plain()).toContain("preset swiftui");
   });
 });
 

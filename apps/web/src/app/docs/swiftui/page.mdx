@@ -60,6 +60,37 @@ struct ContentView: View {
 `@Environment(\.kinetixColors)` exposes the active `KinetixColors` set if
 you need a token directly.
 
+## A custom theme
+
+`KinetixTheme` takes your own colour sets and still switches on
+`colorScheme`:
+
+```swift
+KinetixTheme(light: AcmeTheme.light, dark: AcmeTheme.dark) {
+    KinetixButton(action: {}) { Text("Save") }
+}
+```
+
+You can write that pair by hand, or export one from a
+[Create](/create) design:
+
+```bash
+kinetixui preset swiftui KX1_… --name AcmeTheme --output Sources/AcmeTheme.swift
+```
+
+That writes a `public enum` with a `light` and a `dark` `KinetixColors`,
+built from the same resolved theme the workspace's Copy CSS renders —
+see [the CLI reference](/docs/cli).
+
+**Colours only.** `KinetixColors` is the whole themeable surface here:
+corner radius and elevation are literals inside each view
+(`RoundedRectangle(cornerRadius: 16)`), with no token an exported file
+could set. A Create design's radius and surface treatment therefore apply
+on the web and not in SwiftUI, and the generated file says so in its own
+header. A colour the design did not change is written as a reference to
+the shipped token rather than a copy of today's value, so it keeps
+following the library.
+
 ## Tokens: SwiftUI `Color`, not `UIColor`
 
 The pre-existing iOS token output
