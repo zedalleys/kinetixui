@@ -346,7 +346,7 @@ export const RELEASES: Release[] = [
         area: "tokens",
         title: "Contrast fixes on tinted and pressed surfaces",
         body: "Banner and Inform information text was 4.15:1 on its own tint; it now uses a new text-info-on-container utility (--semantic-on-info-container). Button Primary pressed is 4.54:1 (was 4.11) and Secondary pressed is a solid fill (was 3.97). All clear WCAG AA in both themes.",
-        href: "/colors",
+        href: "/docs/colors",
       },
       {
         kind: "new",
@@ -440,7 +440,7 @@ export const RELEASES: Release[] = [
         area: "cli",
         title: "`kinetixui theme create <name>` and `theme build <name>`",
         body: "Scaffold a token override file (kinetixui-themes/<name>.csv) and compile it to a drop-in CSS :root override block plus a WCAG AA contrast report. It ports the same hex / HSL / contrast maths as the /theme-builder web tool, so both produce identical output for the same input.",
-        href: "/theme-builder",
+        href: "/create",
       },
     ],
   },

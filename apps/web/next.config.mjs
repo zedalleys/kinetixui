@@ -82,6 +82,23 @@ const registryCorsHeaders = [
   { key: "Access-Control-Allow-Methods", value: "GET, OPTIONS" },
 ];
 
+/**
+ * Routes Create replaced, and where they go.
+ *
+ * `/colors` and `/theme-builder` were two separate product destinations for one job. Create is that job,
+ * so both are permanent (308): the pages are not coming back, and a permanent redirect is what tells a
+ * search engine to transfer the old URLs rather than keep indexing two builders. The reference material
+ * that used to live on `/colors` moved to `/docs/colors`, which is a docs page, not a second builder —
+ * `/colors` still points at Create because that is what someone opening it was looking for.
+ *
+ * Exported so a test can assert the mapping without booting a server; there is no other redirect
+ * mechanism in play (no middleware, no route handlers).
+ */
+export const routeRedirects = [
+  { source: "/colors", destination: "/create", permanent: true },
+  { source: "/theme-builder", destination: "/create", permanent: true },
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ["ts", "tsx", "md", "mdx"],
@@ -94,6 +111,9 @@ const nextConfig = {
       { source: "/:path*", headers: securityHeaders },
       { source: "/r/:path*", headers: registryCorsHeaders },
     ];
+  },
+  async redirects() {
+    return routeRedirects;
   },
 };
 

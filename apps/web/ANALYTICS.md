@@ -97,7 +97,7 @@ GitHub click is `github_clicked` and never also `external_link_clicked` or `cta_
 
 ### Not instrumented on purpose
 
-Copy buttons on `/blocks`, `/charts`, `/colors`, `/theme-builder` and "copy page as markdown" (no component +
+Copy buttons on `/blocks`, `/charts`, `/docs/colors`, `/create` and "copy page as markdown" (no component +
 platform to attribute, or not code); ordinary navigation, the docs search palette, gallery search and filters
 (their text must never be sent); attribution links (Radix, Lucide, Recharts); `platform_selected` on the
 homepage (there is no platform selector there). `npm_clicked` has no surface yet — the site links to no npm page —

@@ -1,6 +1,6 @@
 /**
- * Theme override parsing/compiling — CLI counterpart to the /theme-builder
- * web tool (apps/web/src/lib/theme-builder.ts). Ported 1:1 for the same
+ * Theme override parsing/compiling — CLI counterpart to the /create web
+ * workspace (apps/web/src/lib/theme-builder.ts). Ported 1:1 for the same
  * `token,hex` format and the same derived-foreground/contrast-check
  * behavior, so `kinetixui theme build` produces output identical to what
  * the web tool would produce for the same values. The one addition here is
@@ -149,7 +149,7 @@ export function deriveForegrounds(values: Partial<Record<AcceptedToken, string>>
   return out;
 }
 
-/** :root override block — matches what /theme-builder tells users to paste after the token import. */
+/** :root override block — matches what /create tells users to paste after the token import. */
 export function toCssBlock(values: Partial<Record<AcceptedToken, string>>): string {
   const lines = ACCEPTED_TOKENS.filter((t) => values[t]).map((t) => `  --${t}: ${hexToHslChannels(values[t]!)};`);
   return `:root {\n${lines.join("\n")}\n}\n`;

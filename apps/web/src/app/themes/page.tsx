@@ -30,17 +30,17 @@ export default function ThemesPage() {
       </div>
 
       <Link
-        href="/theme-builder"
+        href="/create"
         className="group mt-8 flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/20 px-4 py-3 transition-colors hover:border-primary/40"
       >
         <span>
-          <span className="font-medium">Have your own palette?</span>{" "}
+          <span className="font-medium">Want your own palette?</span>{" "}
           <span className="text-sm text-muted-foreground">
-            Paste it into the Theme Builder and preview it on real components.
+            Customize this contract in Create and preview it on real components.
           </span>
         </span>
         <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-primary transition-transform group-hover:translate-x-0.5">
-          Try it →
+          Customize in Create →
         </span>
       </Link>
 

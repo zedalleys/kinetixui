@@ -9,9 +9,10 @@ import { allDocsLinks, componentDocs, mainNav, siteConfig } from "./site";
  * Public routes that are not in any nav: real pages a visitor can reach and a crawler should see, but that
  * are linked from page content rather than the header or sidebar. Keep this list short and justified.
  */
-const UNLISTED_PUBLIC_ROUTES = [
-  "/theme-builder", // linked from /docs/theming and /colors
-] as const;
+const UNLISTED_PUBLIC_ROUTES: readonly string[] = [
+  // Empty on purpose. /create is in mainNav and /docs/colors is in docsNav, so both reach the sitemap
+  // through the navigation they are actually in — which is the point of deriving this list.
+];
 
 /** Every indexable route, absolute-path form (`/docs/tokens`), deduped, in a stable order. */
 export function publicRoutes(): string[] {

@@ -33,7 +33,7 @@ semantics, variants and whether the code matches the design intent.
 - **Believes already:** token naming is the hard part.
 - **Wins them:** DTCG source, semantic vs primitive layering, the token pipeline
   diagram, light/dark as one contract.
-- **Entry point:** `/docs/tokens`, `/colors`, `/theme-builder`.
+- **Entry point:** `/docs/tokens`, `/docs/colors`, `/create`.
 
 ## D — Team shipping web **and** mobile (primary)
 

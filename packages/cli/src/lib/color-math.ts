@@ -1,6 +1,6 @@
 /**
  * Hex <-> RGB/HSL conversion and WCAG contrast — no dependency.
- * Ported 1:1 from apps/web/src/lib/color-math.ts (the /theme-builder web
+ * Ported 1:1 from apps/web/src/lib/color-math.ts (the /create web
  * tool's math) so `kinetixui theme build` produces identical output to the
  * web tool for the same input. Keep the two in sync by hand if either
  * changes — there's no shared package boundary between a private Next.js
