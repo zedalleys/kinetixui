@@ -102,7 +102,7 @@ export const routeRedirects = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ["ts", "tsx", "md", "mdx"],
-  transpilePackages: ["@kinetixui/ui", "@kinetixui/tokens"],
+  transpilePackages: ["@kinetixui/ui", "@kinetixui/tokens", "@kinetixui/create-preset"],
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
   poweredByHeader: false,
   experimental: { mdxRs: false },

@@ -134,6 +134,33 @@ shared subset is exactly this: semantic colours, given as literal hex values,
 for the light theme. Anything Create generates beyond that has to be copied
 from the workspace.
 
+## Presets
+
+```bash
+kinetixui preset decode KX1_…
+```
+
+Prints what a [Create](/create) preset contains — theme colour, neutral, radius,
+surface, chart palette and any manual overrides. It accepts a bare `KX1_` code or
+a full `/create?preset=…` URL, and `--json` prints the same thing for piping.
+
+```bash
+kinetixui preset url KX1_…
+```
+
+Prints the canonical share URL. It prints rather than launching a browser: piping
+it to `open`, `xdg-open` or `start` is one character, and a command that spawns a
+browser is unusable over SSH and untestable in CI.
+
+Both commands use the same codec the website does, so a code means one thing in
+both places. Neither executes anything from a preset — a preset is enum names,
+hex colours and token names off a fixed list, and anything else is refused.
+
+**There is no `preset apply`.** Turning a preset into CSS needs the theme engine,
+which lives in the website today; `theme build` remains the way to compile a file
+of literal colours from the command line. To get CSS from a preset, open it in
+Create and use Copy CSS.
+
 **Not yet built**: native (SwiftUI/Compose/Flutter) theme output. Doing
 that properly means porting meaningful parts of
 [`style-dictionary/hooks.mjs`](https://github.com/zedalleys/kinetixui/blob/main/style-dictionary/hooks.mjs)'s

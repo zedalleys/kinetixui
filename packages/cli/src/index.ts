@@ -8,6 +8,7 @@ import { inspect } from "./commands/inspect.js";
 import { lint } from "./commands/lint.js";
 import { list } from "./commands/list.js";
 import { parity } from "./commands/parity.js";
+import { presetDecode, presetUrlCommand } from "./commands/preset.js";
 import { themeBuild, themeCreate } from "./commands/theme.js";
 import { DEFAULT_REGISTRY } from "./lib/config.js";
 // Bundled at build time (esbuild inlines JSON imports), not read at runtime —
@@ -141,6 +142,44 @@ theme
   .action(async (name: string, opts: { failOnContrast: boolean }) => {
     try {
       await themeBuild(name, { failOnContrast: opts.failOnContrast });
+    } catch (err) {
+      console.error(pc.red("✖"), (err as Error).message);
+      process.exitCode = 1;
+    }
+  });
+
+/**
+ * `preset` sits beside `theme` rather than inside it, because they are different inputs to the same
+ * system: `theme` compiles a local CSV of literal colours, `preset` reads a portable code produced by the
+ * /create workspace. Folding either into the other would mean one command with two unrelated argument
+ * shapes. `theme create/build` are unchanged.
+ */
+const preset = program
+  .command("preset")
+  .description("Read a Kinetix Create preset code (KX1_…) produced by kinetixui.com/create.");
+
+preset
+  .command("decode")
+  .description("Show what a preset contains. Accepts a KX1_ code or a full /create?preset=… URL.")
+  .argument("<preset>", "a KX1_ code, or a share URL")
+  .option("--json", "print the configuration as JSON", false)
+  .action((input: string, opts: { json: boolean }) => {
+    try {
+      presetDecode(input, { json: opts.json });
+    } catch (err) {
+      console.error(pc.red("✖"), (err as Error).message);
+      process.exitCode = 1;
+    }
+  });
+
+preset
+  .command("url")
+  .description("Print the canonical share URL for a preset. Prints it — piping it to your opener is up to you.")
+  .argument("<preset>", "a KX1_ code, or a share URL")
+  .option("-s, --site <origin>", "site origin", "https://kinetixui.com")
+  .action((input: string, opts: { site: string }) => {
+    try {
+      presetUrlCommand(input, { site: opts.site });
     } catch (err) {
       console.error(pc.red("✖"), (err as Error).message);
       process.exitCode = 1;

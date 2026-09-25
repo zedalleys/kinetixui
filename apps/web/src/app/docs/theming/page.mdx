@@ -122,3 +122,26 @@ rather than quietly corrected.
 
 The output is web CSS. Native theme compilation is not implemented — see the
 [CLI](/docs/cli) page for what `theme build` covers.
+
+### Presets
+
+A configuration can be saved as a **preset**: a short code beginning `KX1_` that
+describes the design and nothing else. It carries the theme colour, the neutral,
+the radius, the surface treatment, the chart palette and any manual overrides —
+not the generated colours, not the CSS, and not which appearance or demo scene
+you happened to be looking at. Those are regenerated from the preset by the same
+engine that produced them the first time.
+
+**Share** copies a `/create?preset=KX1_…` link that reopens the workspace with
+that design. **Copy preset** copies the bare code, which is what
+[`kinetixui preset decode`](/docs/cli) reads. **Copy CSS** is unchanged and
+remains a different artifact: a preset is a design, CSS is a stylesheet.
+
+The version is in the prefix, so a code made today stays readable, and a future
+format is refused with an explanation rather than misread. A preset can only name
+tokens from the contract above — it is structured configuration, never arbitrary
+CSS.
+
+**Presets are web CSS today.** Applying one to SwiftUI, Compose or Flutter is not
+implemented; the preset format is deliberately platform-neutral so that it can be
+when it is.

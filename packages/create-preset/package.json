@@ -1,0 +1,17 @@
+{
+  "name": "@kinetixui/create-preset",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The portable Kinetix Create preset contract: schema, validation, canonicalization and the KX1 codec.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
