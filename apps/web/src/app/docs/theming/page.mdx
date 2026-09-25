@@ -102,4 +102,23 @@ re-add components with the CLI.
 
 Seven ramps (`azure`, `blue`, `green`, `taupe`, `cream`, `amber`, `red`) plus a
 synthesized `neutral`, each `0`–`1000`. Browse them on the [Colors](/docs/colors)
-page, or change them in [Create](/create).
+page.
+
+## Building a theme visually
+
+[Create](/create) generates a theme from a handful of choices rather than a list
+of hex values. Pick a theme colour and it derives the brand, action, link and
+focus roles from it, along with the hover and pressed states and a foreground
+that clears AA — in OKLCH, so the same rule produces the same perceptual step on
+every hue. A separate neutral control sets the personality of the greys, and
+radius and surface presets write the `--radius-*` and `--shadow-*` variables
+documented above.
+
+What it copies is a CSS override block containing only what differs from the
+shipped theme, with a `:root` and a `.dark` section — one configuration
+describes both appearances. Manual values set in its Advanced panel beat
+everything generated, and a contrast failure you introduce there is reported
+rather than quietly corrected.
+
+The output is web CSS. Native theme compilation is not implemented — see the
+[CLI](/docs/cli) page for what `theme build` covers.

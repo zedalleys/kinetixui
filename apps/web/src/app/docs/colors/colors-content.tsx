@@ -76,7 +76,7 @@ export function ColorsContent() {
         <span>
           <span className="font-medium">Want your own palette?</span>{" "}
           <span className="text-sm text-muted-foreground">
-            Customize the theme in Create and preview it on real components.
+            Pick a theme colour in Create and it derives the interactive roles, in OKLCH.
           </span>
         </span>
         <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-primary transition-transform group-hover:translate-x-0.5">

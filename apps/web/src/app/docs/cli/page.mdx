@@ -122,10 +122,17 @@ don't have to specify both. `theme build` exits non-zero if any pair fails
 AA (4.5:1), so it's safe to run in CI; pass `--no-fail-on-contrast` to
 build anyway and just see the report.
 
-This is the same math as the [Create](/create) workspace
-(paste-a-palette, get a CSS block) — `theme` is the scriptable,
-version-controllable equivalent for a project that wants its override
-checked into source rather than pasted by hand each time.
+This is the same math as the [Create](/create) workspace, and for a file of
+`token,hex` rows the two produce the same `:root` block — `theme` is the
+scriptable, version-controllable route for a project that wants its override
+checked into source rather than pasted by hand.
+
+**They are no longer equivalent in full.** Create also generates a `.dark`
+block and the radius and elevation variables from its visual controls, and it
+has no CSV input format to express a radius or a surface treatment in. The
+shared subset is exactly this: semantic colours, given as literal hex values,
+for the light theme. Anything Create generates beyond that has to be copied
+from the workspace.
 
 **Not yet built**: native (SwiftUI/Compose/Flutter) theme output. Doing
 that properly means porting meaningful parts of
