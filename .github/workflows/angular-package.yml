@@ -1,0 +1,77 @@
+name: Angular package
+
+# `@kinetixui/angular` is not published, and this workflow does not publish it. It proves the
+# artifact behind that decision is genuinely usable: ng-packagr build, public API snapshot,
+# publication simulation, artifact contract, and a clean Angular application outside the workspace
+# that installs the packed tarball and runs a production AOT build against it.
+#
+# Path-filtered on purpose. The consumer build installs a full Angular toolchain, which is not
+# something an unrelated pull request should pay for — but any change that can alter the packaged
+# artifact does run it.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "packages/ui-angular/**"
+      - "packages/tokens/**"
+      - "scripts/angular-package/**"
+      - "scripts/release/**"
+      - ".github/workflows/angular-package.yml"
+  push:
+    branches: [main]
+    paths:
+      - "packages/ui-angular/**"
+      - "packages/tokens/**"
+      - "scripts/angular-package/**"
+      - "scripts/release/**"
+      - ".github/workflows/angular-package.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: angular-package-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # @kinetixui/angular's stylesheet spends the generated token custom properties, and the
+      # consumer imports them from the packed @kinetixui/tokens — so the tokens have to exist first.
+      - name: Build tokens
+        run: pnpm build:tokens
+
+      # The whole gate: build, API snapshot, DOM-access check, publication simulation, artifact
+      # contract, clean external install, production AOT build, and a check that the stylesheets
+      # actually reached the bundle.
+      - name: Angular publication readiness
+        run: pnpm check:angular-package
+
+      # Belt and braces on the thing this PR most needs to stay true. `check:angular-package`
+      # asserts both already; this fails loudly and on its own line if either ever flips.
+      - name: Angular is still unpublishable
+        run: |
+          node -e '
+            const pkg = require("./packages/ui-angular/package.json");
+            const allow = require("./release/publish-packages.json");
+            if (pkg.private !== true) throw new Error("packages/ui-angular is no longer private");
+            if (allow.packages.some((p) => p.name === "@kinetixui/angular")) {
+              throw new Error("@kinetixui/angular is in the publish allowlist");
+            }
+            console.log("@kinetixui/angular: private: true, not allowlisted — cannot be published.");
+          '

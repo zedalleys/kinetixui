@@ -723,6 +723,9 @@ importers:
       '@angular/platform-browser':
         specifier: 21.2.23
         version: 21.2.23(@angular/common@21.2.23(@angular/core@21.2.23(@angular/compiler@21.2.23)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@21.2.23(@angular/compiler@21.2.23)(rxjs@7.8.2)(zone.js@0.15.1))
+      '@kinetixui/tokens':
+        specifier: workspace:*
+        version: link:../tokens
       jsdom:
         specifier: ^28.0.0
         version: 28.1.0(supports-color@7.2.0)

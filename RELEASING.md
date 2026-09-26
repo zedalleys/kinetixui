@@ -246,12 +246,165 @@ not in the allowlist — two independent reasons it cannot be published by accid
 `ng-packagr` also copies the flag into `dist/package.json`, so a publish from the build output is
 refused too.
 
-Making it publishable is its own piece of work — `publishConfig`, a `files` list, a resolvable root
-entry point, building it in the release pipeline, an install test from a real tarball, and the
-question of whether it should stay in the Changesets `fixed` group. The documentation guards that
-currently assert it is unpublished (`apps/web/src/lib/marketing-claims.test.ts`,
-`angular-docs.test.ts`, `verification-guardrails.test.ts`, the `/docs/angular` callout) must move in
-that same change, and not before.
+### Publication readiness — validated, still not published
+
+`pnpm check:angular-package` proves the artifact behind those locks is genuinely usable, without
+unlocking anything:
+
+- ng-packagr builds it, and the generated Angular Package Format manifest is used as-is
+- `packages/ui-angular/public-api.json` records the public surface — every exported symbol,
+  selector, input and output alias — so a change to it shows up in review
+- DOM access goes through the injected element, never a global browser object
+- **Publication simulation**: `dist/` is copied to a temp directory where `private` is removed and
+  `publishConfig` added — *only* those two switches, and *only* in the copy. The repository is
+  never modified. The resulting tarball is then validated by the release tooling's own
+  `validatePackedArtifact`, the same function that gates the three published packages
+- a clean Angular application outside the workspace installs that tarball, type-checks and runs a
+  production AOT build against it, with no `paths` mapping and no workspace link
+- the emitted CSS is checked for the token contract, the extras sheet and the component classes, so
+  a stylesheet that silently failed to resolve cannot pass
+
+Readiness is not availability. `npm install @kinetixui/angular` still does not work, and no public
+documentation says otherwise.
+
+### What activation still requires
+
+Activation is not four manifest edits. Two of the prerequisites are in the release engine, and
+neither is in the readiness work.
+
+#### Prerequisite A — an artifact source
+
+The Angular artifact is `packages/ui-angular/dist`: ng-packagr generates the publishable manifest
+there, and the package root is what the workspace contains. The release tooling packs from the
+allowlist's `directory`, and `classify()` requires that directory to be the one workspace discovery
+found — so the allowlist cannot currently say "pack `dist/`". Naming `packages/ui-angular` instead
+packs the source root, whose manifest has no `.` export and whose `styles.css` is under `src/`,
+which the artifact validator rejects.
+
+So a naive activation is blocked rather than dangerous. Adding Angular to the allowlist today fails
+`release:check` offline, before anything is built:
+
+```
+✗ @kinetixui/angular: packages/ui-angular/package.json needs a non-empty "files" array.
+release:check failed. No package was published.
+```
+
+PR #227 needs one of:
+
+- an **artifact directory** in the allowlist schema — workspace identity stays
+  `packages/ui-angular`, packing happens in `packages/ui-angular/dist`. The smaller change, and the
+  one that keeps ng-packagr's output canonical; or
+- a root manifest publishing `dist/` through `files` and root-level `exports` pointing into it,
+  which duplicates what ng-packagr already generates and diverges from the Angular Package Format.
+
+#### Prerequisite B — release cohorts
+
+**The release engine assumes every allowlisted package is one release cohort: one version, one
+release commit.** That is correct today — `@kinetixui/{tokens,ui,cli}` are one Changesets `fixed`
+group by design — and it is exactly what independent Angular versioning breaks.
+
+`buildPlan()` takes the majority version across the whole allowlist and validates every package
+against it:
+
+```js
+const versions = classified.allowlisted.map((pkg) => pkg.version).filter(Boolean);
+const expectedVersion = versions.length > 0 ? mode(versions) : null;
+```
+
+and tag reconciliation derives a single commit and maps every owed tag to it:
+
+```js
+const expected = new Map(names.map((name) => [name, decision.commit]));
+```
+
+Under Strategy B the allowlist holds two versions and the history holds two release commits:
+
+```
+core     tokens@0.23.0  ui@0.23.0  cli@0.23.0   → released at commit A
+angular  angular@0.24.0                          → released at commit B
+```
+
+Both are legitimate. Today's engine rejects both, and
+`scripts/release/test/cohort-assumption.test.mjs` pins that behaviour down so the cohort work has
+to update it deliberately:
+
+1. **Version contract** — `@kinetixui/angular@0.24.0 does not match the other allowlisted packages
+   at 0.23.0`. Its advice ("run `pnpm changeset version`") is right today and would be wrong in a
+   two-cohort world.
+2. **Tag contract** — an Angular-only release at commit B still has the core packages in
+   `alreadyPublished`, so their tags are considered owed *at commit B*. Their real tags point at
+   commit A, so all three read as divergent and the release stops with `TagIntegrityError`.
+
+The second failure is the tag-integrity work behaving correctly: **no tag is created, pushed, moved
+or force-pushed**. The historical core tags stay authoritative. What is missing is not a safety
+property — it is the planner's ability to know the two cohorts were released separately.
+
+The target model, not decided here:
+
+```json
+{ "name": "@kinetixui/tokens",  "releaseGroup": "core" },
+{ "name": "@kinetixui/ui",      "releaseGroup": "core" },
+{ "name": "@kinetixui/cli",     "releaseGroup": "core" },
+{ "name": "@kinetixui/angular", "releaseGroup": "angular" }
+```
+
+The invariant matters more than the schema:
+
+> **Within** a cohort, version equality and release-commit identity may be enforced.
+> **Between** cohorts, versions may differ and historical release commits may differ.
+
+The core cohort's guarantee is not being weakened. `tokens`, `ui` and `cli` keep sharing one version
+and one release commit, and `check:releases` and `/docs/changelog` keep saying so. The change is to
+scope that enforcement to a cohort instead of applying it to the whole allowlist.
+
+One encouraging result from the same test file: once the plan contains only the cohort being
+released, today's tag reconciler already does the right thing — it owes exactly
+`@kinetixui/angular@0.24.0`, pushes exactly that, and treats the core tags as none of its business.
+So cohort support may be mostly about **scoping the plan**, not rewriting the tag engine.
+
+#### The activation checklist
+
+1. Remove Angular from the Changesets `fixed` core group.
+2. Add a minor Angular changeset: `@kinetixui/angular` 0.23.0 → 0.24.0.
+3. Remove Angular's `"private": true` publication lock.
+4. Add `publishConfig.access = "public"` and `publishConfig.provenance = true`.
+5. Add Angular to `release/publish-packages.json`.
+6. Add artifact-directory support — workspace identity `packages/ui-angular`, pack source
+   `packages/ui-angular/dist`.
+7. Add release-cohort support — `core` = tokens/ui/cli, `angular` = angular.
+8. Preserve same-version enforcement **inside** core.
+9. Make registry planning work across cohorts on different versions.
+10. Make tag reconciliation cohort-aware.
+11. Prove an Angular-only release does not republish tokens/ui/cli.
+12. Prove an Angular-only release does not reinterpret, recreate or move historical core tags.
+13. Update the Angular npm/install documentation **only** when publication actually happens — the
+    guards in `apps/web/src/lib/marketing-claims.test.ts`, `angular-docs.test.ts`,
+    `verification-guardrails.test.ts` and the `/docs/angular` callout move in that same change.
+14. Run the full release preflight.
+15. Audit before merge.
+
+### Which Changesets strategy, when Angular goes public
+
+Simulated against the installed Changesets 3.0.3 with a single Angular-only changeset, then
+reverted. None of this is in effect.
+
+| | what happens | cost |
+| --- | --- | --- |
+| **A — keep Angular in `fixed`** | all four go 0.23.0 → 0.24.0 | `tokens`, `ui` and `cli` are republished with no changes; their changelog entry is just `- @kinetixui/tokens@0.24.0`. Angular is Preview and will iterate, so every Angular change drags three stable packages through a release |
+| **B — remove Angular from `fixed`** | only Angular moves, 0.23.0 → 0.24.0; the other three stay at 0.23.0 and are untouched | Angular's version diverges from the React set's — which is what "its own lifecycle is separate from the React set's" already says in the 0.23.0 notes |
+| **C — `linked` instead** | Changesets refuses a package in both `fixed` and `linked`, so this means moving all four to `linked`. A `ui`-only changeset then bumps **only** `ui` to 0.23.1 while `cli` and `tokens` stay at 0.23.0 | breaks "the three npm packages always share a version", which `/docs/changelog` states and `check:releases` enforces — the simulation fails that gate |
+
+**Recommendation: B.** It is the only option that leaves the three published packages' guarantee
+intact while letting a Preview package iterate at its own pace.
+
+**First public version.** Not `1.0.0` — Angular is Preview and that must stay true. Two candidates:
+
+- **0.24.0**, via a minor changeset under B. Preferred: the first publication gets its own release
+  commit and its own tag, and the npm contents match the commit they were built from.
+- **0.23.0**, by activating with no changeset at all — the plan would see `@kinetixui/angular@0.23.0`
+  as unpublished and publish it. Simpler, but it puts contents on npm as "0.23.0" that differ from
+  what the repository's 0.23.0 era contained, and its tag would point at a different commit from the
+  other three packages' `@0.23.0` tags.
 
 ---
 
