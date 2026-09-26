@@ -138,21 +138,59 @@ So tag reconciliation runs on **every** release, including one with an empty pub
 npm plan does not mean the release is finished.
 
 What is owed is one tag per allowlisted package whose version is on the registry — including
-versions published by an earlier, failed run. `changeset git-tag` (Changesets 3.0.3) creates them:
-it skips `private` packages (which is why `@kinetixui/angular@0.23.0` has a version and a changelog
-entry but no tag), skips packages in `ignore`, and skips any tag that already exists locally **or**
-on the remote, so running it repeatedly is safe. It creates tags; it does not push them.
+versions published by an earlier, failed run. Private packages are never owed a tag, which is why
+`@kinetixui/angular@0.23.0` has a version and a changelog entry but none.
 
-The release then pushes every owed tag the **remote** is missing — not merely the ones this run
-created, because a tag left behind locally by a run that failed before pushing will never be created
-again. Pushes are by explicit ref and never forced: a tag already on the remote is left exactly as
-it is, and a tag the remote holds at a different commit makes the push fail rather than be
-overwritten. The old pipeline ran `git push --tags`, which pushes every local tag the runner
-happens to have.
+### Tags are checked by identity, not by name
 
-If tag creation fails, the report names what was published and says to re-run the release — not to
-bump the version. If the push fails, it says plainly that **npm publication completed and tag
-publication is incomplete**. Re-running is safe in both cases.
+A tag *name* existing proves nothing. `@kinetixui/ui@0.24.0` pointing at some other commit is worse
+than no tag at all, because it is a confident lie about what was released. Every tag is compared by
+the commit it resolves to:
+
+| state | behaviour |
+| --- | --- |
+| absent locally and remotely | created at the release commit, then pushed |
+| local, correct commit, absent remotely | pushed by explicit ref; not re-created |
+| remote, correct commit | left untouched |
+| remote, **different** commit | **fail** — nothing created, nothing pushed, nothing forced |
+| local, **different** commit | **fail** before pushing |
+| local and remote disagree | **fail** — neither ref is mutated |
+
+Changesets creates *annotated* tags, so `git ls-remote --tags` reports both `refs/tags/X` and the
+peeled `refs/tags/X^{}`. The tag object's own sha is not a commit sha, so the **peeled** commit is
+the identity; a lightweight tag is compared directly.
+
+Nothing is ever force-pushed and no remote tag is ever deleted. A divergent tag is reported with
+both commits and left alone — resolving it is a deliberate decision, not one a release should make.
+
+### Which commit is the release commit
+
+This is not derivable from versions. Six commits carry version 0.23.0 — the Changesets bump, the
+merge that landed it, two fixes, the merge that released it, and everything after — and the real
+tags point at the fifth. "The commit that introduced the version" would call the genuine 0.23.0 tags
+divergent.
+
+What is sound is narrower:
+
+- **If this run published a package, HEAD is the release commit.** The tarballs that went to npm
+  were built from this tree.
+- **If this run published nothing**, HEAD is not evidence — unrelated commits may have landed since
+  the release. A sibling tag from the same release is evidence, and is used when one exists.
+- **Otherwise the release commit is unknown**, and the release fails closed rather than tagging
+  HEAD. It prints the commands to create the tags at the right commit by hand, and says not to bump
+  the version and not to tag HEAD to make it pass.
+
+Changesets' own `git-tag` is no longer what creates the tags: it runs `git tag <name> -m <name>`,
+which tags HEAD unconditionally — the exact behaviour that would corrupt a delayed recovery. Tags
+are created here in the same annotated form and with the same name, and `releaseTagName` is checked
+against the installed Changesets implementation so the naming stays theirs.
+
+Because a recovery may need a commit that is not HEAD, the release job checks out full history and
+tags. The preflight job does not: it has no credentials and never touches tags.
+
+If tag creation fails, the report names what was published and says to re-run — not to bump. If the
+push fails, it says plainly that **npm publication completed and tag publication is incomplete**.
+Re-running is safe in both cases.
 
 Because `privatePackages` is not set in `.changeset/config.json`, it defaults to
 `{ version: false, tag: false }`. Now that `@kinetixui/angular` is private, Changesets will neither

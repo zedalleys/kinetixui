@@ -21,8 +21,13 @@
  */
 import { preflight, publish, ReleaseError } from "./release/preflight.mjs";
 import { formatPlan, planToMarkdown } from "./release/report.mjs";
-import { packageManagerCommand } from "./release/exec.mjs";
-import { reconcileReleaseTags, TagCreationError, TagPushError } from "./release/tags.mjs";
+import {
+  reconcileReleaseTags,
+  ReleaseCommitUnknownError,
+  TagCreationError,
+  TagIntegrityError,
+  TagPushError,
+} from "./release/tags.mjs";
 import { appendFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -53,13 +58,7 @@ try {
 
   // Always — including when nothing was published, because that is exactly the state a failed tag
   // push leaves behind.
-  const tags = await reconcileReleaseTags({
-    root,
-    plan: result.plan,
-    published,
-    packageManager: packageManagerCommand(),
-    log,
-  });
+  const tags = await reconcileReleaseTags({ root, plan: result.plan, published, log });
 
   console.log("");
   const npmLine =
@@ -68,27 +67,19 @@ try {
       : `npm: published ${published.map((a) => `${a.name}@${a.version}`).join(", ")}`;
   const tagLine =
     tags.pushed.length === 0
-      ? `tags: nothing to push; ${tags.alreadyOnRemote.length} of ${tags.expected.length} release tag(s) already on the remote`
-      : `tags: pushed ${tags.pushed.join(", ")}`;
+      ? `tags: nothing to push; ${tags.correctRemote.length} of ${tags.expected.length} release tag(s) already correct on the remote`
+      : `tags: pushed ${tags.pushed.join(", ")} at ${tags.releaseCommit.slice(0, 10)}`;
 
-  if (tags.unreconciled.length > 0) {
-    console.error(
-      [
-        "release incomplete.",
-        `  ${npmLine}`,
-        `  ${tagLine}`,
-        `  tags: no tag could be created or found for ${tags.unreconciled.join(", ")}`,
-        "",
-        "The registry side is accurate as reported above. Re-running the release is safe: published",
-        "versions are skipped and tags already on the remote are left alone. Do not bump the version.",
-      ].join("\n"),
-    );
-    process.exit(1);
-  }
-
+  // Every owed tag is now either correct on the remote or was just pushed there: reconciliation
+  // throws rather than returning with something outstanding.
   console.log(`release ok\n  ${npmLine}\n  ${tagLine}`);
 } catch (error) {
-  if (error instanceof TagCreationError || error instanceof TagPushError) {
+  if (
+    error instanceof TagIntegrityError ||
+    error instanceof ReleaseCommitUnknownError ||
+    error instanceof TagCreationError ||
+    error instanceof TagPushError
+  ) {
     console.error(`\n${error.message}`);
     process.exit(1);
   }

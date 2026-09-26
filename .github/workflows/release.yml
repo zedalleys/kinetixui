@@ -91,7 +91,16 @@ jobs:
       pull-requests: write
       id-token: write # npm publish provenance (OIDC attestation)
     steps:
+      # Full history and tags, which only this job needs. Release tags are verified by the commit
+      # they resolve to, and a tag-only recovery has to create them at the commit the release
+      # actually went out from — which, once other work has landed on main, is not HEAD. At the
+      # default shallow depth that commit is not in the repository and `git tag <sha>` cannot name
+      # it. The preflight job is deliberately left shallow: it has no credentials and does not
+      # touch tags.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
 

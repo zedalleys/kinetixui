@@ -1,210 +1,367 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  determineReleaseCommit,
   expectedReleaseTags,
+  parseTagRefs,
   reconcileReleaseTags,
   reconcileTags,
   releaseTagName,
+  ReleaseCommitUnknownError,
   TagCreationError,
+  TagIntegrityError,
   TagPushError,
 } from "../tags.mjs";
 
 const V = "0.24.0";
+const A = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"; // the release commit
+const B = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"; // some other commit
+const ANNOTATED = "0123456789abcdef0123456789abcdef01234567"; // an annotated tag's own object
+
 const tag = (name) => `@kinetixui/${name}@${V}`;
 const ALL = [tag("cli"), tag("tokens"), tag("ui")];
-
 const target = (name) => ({ name: `@kinetixui/${name}`, version: V });
 const planOf = ({ publish = [], alreadyPublished = [] }) => ({
   publish: publish.map(target),
   alreadyPublished: alreadyPublished.map(target),
-  private: [{ name: "@kinetixui/angular", version: "0.23.0" }],
 });
+const at = (commit, names = ALL) => new Map(names.map((name) => [name, commit]));
 
 /**
- * A fake git, recording what it was asked to do. `created` is what the tagger would add locally,
- * which mirrors Changesets: a tag already present locally or on the remote is not re-created.
+ * A fake git. `local` and `remote` are tag → commit maps, so every assertion below is about tag
+ * identity rather than tag existence.
  */
-function fakeGit({ local = [], remote = [], createFails = false, pushFails = false } = {}) {
-  const state = { local: new Set(local), remote: new Set(remote), pushed: [], created: [], taggerRuns: 0 };
+function fakeGit({ local = new Map(), remote = new Map(), head = A, ancestors = [A, B], createFails = false, pushFails = false } = {}) {
+  const state = { local: new Map(local), remote: new Map(remote), created: [], pushed: [] };
   return {
     state,
     git: {
-      listLocalTags: async () => new Set(state.local),
-      listRemoteTags: async () => new Set(state.remote),
-      createTags: async () => {
-        state.taggerRuns += 1;
-        if (createFails) throw Object.assign(new Error("git tag failed"), { stderr: "fatal: tag already exists" });
-        for (const name of ALL) {
-          if (state.local.has(name) || state.remote.has(name)) continue;
-          state.local.add(name);
-          state.created.push(name);
-        }
+      headCommit: async () => head,
+      listLocalTags: async () => new Map(state.local),
+      listRemoteTags: async () => new Map(state.remote),
+      isAncestorOfHead: async ({ commit }) => ancestors.includes(commit),
+      createTag: async ({ tag: name, commit }) => {
+        if (createFails) throw Object.assign(new Error("tag failed"), { stderr: "fatal: unable to write tag" });
+        state.created.push({ tag: name, commit });
+        state.local.set(name, commit);
       },
       pushTags: async ({ tags }) => {
-        if (pushFails) throw Object.assign(new Error("push failed"), { stderr: "! [remote rejected]" });
+        if (pushFails) throw Object.assign(new Error("push failed"), { stderr: "! [rejected] would clobber existing tag" });
         state.pushed.push(...tags);
-        for (const t of tags) state.remote.add(t);
+        for (const name of tags) state.remote.set(name, state.local.get(name));
       },
     },
   };
 }
 
-const reconcile = (plan, git, published = []) =>
-  reconcileReleaseTags({ root: "/repo", plan, published, packageManager: { file: "pnpm", prefix: [] }, git });
+const reconcile = (plan, git, published = []) => reconcileReleaseTags({ root: "/repo", plan, published, git });
 
-describe("expected release tags", () => {
+describe("tag names", () => {
   it("uses the name@version form Changesets creates for a workspace package", () => {
-    assert.equal(releaseTagName("@kinetixui/ui", "0.24.0"), "@kinetixui/ui@0.24.0");
+    assert.equal(releaseTagName("@kinetixui/ui", V), tag("ui"));
   });
 
-  it("covers both what this run published and what was already published", () => {
-    const plan = planOf({ publish: ["ui", "cli"], alreadyPublished: ["tokens"] });
-    assert.deepEqual(expectedReleaseTags(plan), ALL);
-  });
-
-  it("never includes a private package", () => {
-    const plan = planOf({ publish: ["ui", "cli", "tokens"] });
-    assert.ok(!expectedReleaseTags(plan).some((t) => t.includes("angular")));
+  it("owes a tag for what this run published and for what was already published", () => {
+    assert.deepEqual(expectedReleaseTags(planOf({ publish: ["ui", "cli"], alreadyPublished: ["tokens"] })), ALL);
   });
 });
 
-describe("tag reconciliation", () => {
-  it("pushes a tag the remote does not have, whoever created it", () => {
-    const state = reconcileTags({ expected: ALL, localBefore: [], localAfter: ALL, remote: [] });
-    assert.deepEqual(state.created, ALL);
-    assert.deepEqual(state.toPush, ALL);
-    assert.deepEqual(state.unreconciled, []);
+describe("reading tag refs", () => {
+  /**
+   * Changesets creates annotated tags, so `git ls-remote --tags` reports the tag object *and* the
+   * peeled commit. Comparing the tag object's sha against a commit sha would never match.
+   */
+  it("uses the peeled commit for an annotated tag, not the tag object", () => {
+    const { commits, objects } = parseTagRefs(
+      [`${ANNOTATED}\trefs/tags/${tag("ui")}`, `${A}\trefs/tags/${tag("ui")}^{}`].join("\n"),
+    );
+    assert.equal(objects.get(tag("ui")), ANNOTATED);
+    assert.equal(commits.get(tag("ui")), A, "an annotated tag must resolve to its peeled commit");
+    assert.notEqual(commits.get(tag("ui")), ANNOTATED);
+  });
+
+  it("uses the direct target for a lightweight tag", () => {
+    const { commits } = parseTagRefs(`${A}\trefs/tags/${tag("ui")}`);
+    assert.equal(commits.get(tag("ui")), A);
+  });
+
+  it("ignores anything that is not a tag ref", () => {
+    const { commits } = parseTagRefs([`${A}\trefs/heads/main`, `${B}\trefs/tags/${tag("ui")}`].join("\n"));
+    assert.deepEqual([...commits.keys()], [tag("ui")]);
+  });
+});
+
+describe("which commit the release is tagged at", () => {
+  it("is HEAD when this run published something, because the tarballs came from this tree", () => {
+    const decision = determineReleaseCommit({ publishedCount: 2, head: A, expected: ALL, remote: new Map(), local: new Map() });
+    assert.equal(decision.commit, A);
   });
 
   /**
-   * A tag created by an earlier run that then failed to push. Changesets will not create it again —
-   * it can already see it locally — so a "what did the tagger just create" diff would find nothing
-   * and the remote would stay missing it forever. What matters is the remote, not who made it.
+   * The delayed-recovery hazard: npm is complete, only tags are missing, and unrelated commits have
+   * landed since. HEAD is not evidence of anything, and a sibling tag from the same release is.
    */
-  it("pushes a tag that already existed locally but was never pushed", () => {
-    const state = reconcileTags({ expected: ALL, localBefore: ALL, localAfter: ALL, remote: [] });
-    assert.deepEqual(state.created, []);
+  it("is taken from a sibling release tag when this run published nothing", () => {
+    const decision = determineReleaseCommit({
+      publishedCount: 0,
+      head: B,
+      expected: ALL,
+      remote: new Map([[tag("tokens"), A]]),
+      local: new Map(),
+    });
+    assert.equal(decision.commit, A, "must not assume the advanced HEAD");
+    assert.match(decision.source, /existing release tag/);
+  });
+
+  it("fails closed when nothing was published and no tag from this release exists", () => {
+    const decision = determineReleaseCommit({ publishedCount: 0, head: B, expected: ALL, remote: new Map(), local: new Map() });
+    assert.equal(decision.commit, null);
+    assert.match(decision.reason, /no evidence|no tag from this release/i);
+  });
+
+  it("fails closed when the existing release tags disagree with each other", () => {
+    const decision = determineReleaseCommit({
+      publishedCount: 0,
+      head: A,
+      expected: ALL,
+      remote: new Map([
+        [tag("tokens"), A],
+        [tag("ui"), B],
+      ]),
+      local: new Map(),
+    });
+    assert.equal(decision.commit, null);
+    assert.match(decision.reason, /disagree/);
+  });
+});
+
+describe("reconciling by identity", () => {
+  it("accepts a remote tag that resolves to the release commit", () => {
+    const state = reconcileTags({ expected: at(A), local: new Map(), remote: at(A) });
+    assert.deepEqual(state.correctRemote, ALL);
+    assert.deepEqual(state.toPush, []);
+    assert.deepEqual(state.divergentRemote, []);
+  });
+
+  it("rejects a remote tag that resolves to another commit", () => {
+    const state = reconcileTags({ expected: at(A), local: new Map(), remote: at(B, [tag("ui")]) });
+    assert.deepEqual(
+      state.divergentRemote.map((d) => d.tag),
+      [tag("ui")],
+    );
+    assert.ok(!state.toPush.includes(tag("ui")), "a divergent tag is never in toPush");
+  });
+
+  it("pushes a correct local tag the remote lacks", () => {
+    const state = reconcileTags({ expected: at(A), local: at(A), remote: new Map() });
+    assert.deepEqual(state.correctLocalNeedsPush, ALL);
     assert.deepEqual(state.toPush, ALL);
   });
 
-  it("never re-pushes a tag the remote already has", () => {
-    const state = reconcileTags({ expected: ALL, localBefore: [], localAfter: ALL, remote: ALL });
+  it("rejects a local tag that resolves to another commit, and never pushes it", () => {
+    const state = reconcileTags({ expected: at(A), local: at(B, [tag("ui")]), remote: new Map() });
+    assert.deepEqual(
+      state.divergentLocal.map((d) => d.tag),
+      [tag("ui")],
+    );
+    assert.ok(!state.toPush.includes(tag("ui")));
+  });
+
+  it("treats a correct remote and a divergent local as an integrity conflict", () => {
+    const state = reconcileTags({ expected: at(A), local: at(B, [tag("ui")]), remote: at(A, [tag("ui")]) });
+    assert.deepEqual(
+      state.divergentLocal.map((d) => d.tag),
+      [tag("ui")],
+    );
+    assert.deepEqual(state.correctRemote, []);
+  });
+
+  it("is a clean no-op when local and remote are both correct", () => {
+    const state = reconcileTags({ expected: at(A), local: at(A), remote: at(A) });
+    assert.deepEqual(state.correctRemote, ALL);
     assert.deepEqual(state.toPush, []);
-    assert.deepEqual(state.alreadyOnRemote, ALL);
+    assert.deepEqual(state.missingNeedsCreation, []);
   });
 
-  it("reports an owed tag that exists neither locally nor on the remote", () => {
-    const state = reconcileTags({ expected: ALL, localBefore: [], localAfter: [tag("ui")], remote: [] });
-    assert.deepEqual(state.toPush, [tag("ui")]);
-    assert.deepEqual(state.unreconciled, [tag("cli"), tag("tokens")]);
+  it("marks a tag that exists nowhere for creation", () => {
+    const state = reconcileTags({ expected: at(A), local: new Map(), remote: new Map() });
+    assert.deepEqual(state.missingNeedsCreation, ALL);
   });
 
-  it("does not push a tag this release does not own", () => {
-    const state = reconcileTags({ expected: [tag("ui")], localBefore: [], localAfter: [tag("ui"), "v9.9.9"], remote: [] });
+  it("ignores a local tag this release does not own", () => {
+    const state = reconcileTags({ expected: at(A, [tag("ui")]), local: new Map([[tag("ui"), A], ["v9.9.9", B]]), remote: new Map() });
+    assert.deepEqual(state.unexpected, ["v9.9.9"]);
     assert.deepEqual(state.toPush, [tag("ui")]);
-    assert.deepEqual(state.createdUnexpected, ["v9.9.9"]);
   });
 });
 
 describe("recovery", () => {
-  /**
-   * The bug this module was added for. A run published all three packages and then failed before
-   * the tags reached the remote. On the retry every version is already on the registry, so the
-   * publish plan is empty — and an implementation that stops there can never repair the tags.
-   */
-  it("reconciles tags when every npm version is already published but the release tags are missing", async () => {
-    const { state, git } = fakeGit({ local: [], remote: [] });
-    const plan = planOf({ alreadyPublished: ["tokens", "ui", "cli"] });
+  it("creates and pushes every tag when npm is complete but the tags are missing", async () => {
+    // Recovered on the release commit itself, so HEAD is still the right answer even though
+    // nothing needed publishing — a sibling tag is absent, so this is the fail-closed path unless
+    // something published. Here one package publishes, which settles it.
+    const { state, git } = fakeGit({ head: A });
+    const result = await reconcile(planOf({ publish: ["ui"], alreadyPublished: ["tokens", "cli"] }), git, [target("ui")]);
 
-    const result = await reconcile(plan, git, []);
-
-    assert.equal(state.taggerRuns, 1, "tag reconciliation must run even with an empty publish plan");
-    assert.deepEqual(result.expected, ALL);
-    assert.deepEqual(result.created, ALL);
+    assert.equal(result.releaseCommit, A);
+    assert.deepEqual(result.created.sort(), ALL);
     assert.deepEqual(result.pushed, ALL);
-    assert.deepEqual(state.pushed, ALL);
+    for (const entry of state.created) assert.equal(entry.commit, A);
   });
 
-  it("is a clean no-op when the registry and the tags are both complete", async () => {
-    const { state, git } = fakeGit({ local: ALL, remote: ALL });
+  /** npm complete, tags absent, HEAD has advanced, and one sibling tag survives to point the way. */
+  it("tags the real release commit, not the advanced HEAD, when a sibling tag exists", async () => {
+    const { state, git } = fakeGit({ head: B, remote: new Map([[tag("tokens"), A]]) });
+    const result = await reconcile(planOf({ alreadyPublished: ["tokens", "ui", "cli"] }), git, []);
+
+    assert.equal(result.releaseCommit, A, "must tag the release commit, not HEAD");
+    assert.deepEqual(result.created.sort(), [tag("cli"), tag("ui")]);
+    for (const entry of state.created) assert.equal(entry.commit, A, "a new tag must be created at the release commit");
+    assert.deepEqual(result.pushed, [tag("cli"), tag("ui")]);
+    assert.ok(!state.pushed.includes(tag("tokens")), "a correct remote tag is never re-pushed");
+  });
+
+  /** npm complete, tags absent, HEAD has advanced, and nothing says where the release was. */
+  it("refuses to tag anything when the release commit cannot be established", async () => {
+    const { state, git } = fakeGit({ head: B });
+    await assert.rejects(
+      () => reconcile(planOf({ alreadyPublished: ["tokens", "ui", "cli"] }), git, []),
+      (error) => {
+        assert.ok(error instanceof ReleaseCommitUnknownError);
+        assert.match(error.message, /Cannot safely determine the commit/);
+        assert.match(error.message, /No tag was created or force-pushed/);
+        assert.match(error.message, /Do not bump the version, and do not tag HEAD/);
+        return true;
+      },
+    );
+    assert.deepEqual(state.created, [], "nothing may be created");
+    assert.deepEqual(state.pushed, [], "nothing may be pushed");
+  });
+
+  it("refuses a release commit that is not reachable from HEAD", async () => {
+    const { state, git } = fakeGit({ head: A, remote: new Map([[tag("tokens"), "cccccccccccccccccccccccccccccccccccccccc"]]), ancestors: [A] });
+    await assert.rejects(
+      () => reconcile(planOf({ alreadyPublished: ["tokens", "ui", "cli"] }), git, []),
+      (error) => error instanceof ReleaseCommitUnknownError && /not reachable from HEAD/.test(error.message),
+    );
+    assert.deepEqual(state.created, []);
+    assert.deepEqual(state.pushed, []);
+  });
+
+  it("is a clean no-op when every tag is already correct on the remote", async () => {
+    const { state, git } = fakeGit({ head: A, local: at(A), remote: at(A) });
     const result = await reconcile(planOf({ alreadyPublished: ["tokens", "ui", "cli"] }), git, []);
 
     assert.deepEqual(result.created, []);
     assert.deepEqual(result.pushed, []);
     assert.deepEqual(state.pushed, []);
-    assert.deepEqual(result.alreadyOnRemote, ALL);
-    assert.deepEqual(result.unreconciled, []);
+    assert.deepEqual(result.correctRemote, ALL);
   });
 
-  /** 0.23.0's shape: tokens published, the run died, ui and cli never went out and nothing tagged. */
-  it("tags everything owed after a partial release is completed", async () => {
-    const { state, git } = fakeGit({ local: [], remote: [] });
-    const plan = planOf({ publish: ["ui", "cli"], alreadyPublished: ["tokens"] });
+  it("pushes a correct local tag the remote lacks, without recreating it", async () => {
+    const { state, git } = fakeGit({ head: A, local: at(A), remote: new Map() });
+    const result = await reconcile(planOf({ publish: ["ui", "cli", "tokens"] }), git, [target("ui"), target("cli"), target("tokens")]);
 
-    const result = await reconcile(plan, git, [target("ui"), target("cli")]);
-
-    // The tag for the package published by the earlier, failed run is owed too.
-    assert.deepEqual(result.expected, ALL);
+    assert.deepEqual(state.created, [], "an existing correct tag is not recreated");
     assert.deepEqual(result.pushed, ALL);
   });
 
-  it("pushes only what the remote is missing when a previous run pushed some tags", async () => {
-    const { state, git } = fakeGit({ local: [], remote: [tag("tokens")] });
+  it("completes a partial npm release and tags everything owed", async () => {
+    const { state, git } = fakeGit({ head: A });
     const result = await reconcile(planOf({ publish: ["ui", "cli"], alreadyPublished: ["tokens"] }), git, [target("ui"), target("cli")]);
 
-    assert.deepEqual(result.alreadyOnRemote, [tag("tokens")]);
-    assert.deepEqual(result.pushed, [tag("cli"), tag("ui")]);
-    assert.ok(!state.pushed.includes(tag("tokens")), "an existing remote tag is never re-pushed");
+    assert.deepEqual(result.expected, ALL, "the earlier run's package is owed a tag too");
+    assert.deepEqual(result.pushed, ALL);
+    for (const entry of state.created) assert.equal(entry.commit, A);
+  });
+});
+
+describe("integrity failures", () => {
+  it("stops on a divergent remote tag without creating, pushing or forcing anything", async () => {
+    const { state, git } = fakeGit({ head: A, remote: at(B, [tag("ui")]) });
+    await assert.rejects(
+      () => reconcile(planOf({ publish: ["tokens", "cli"], alreadyPublished: ["ui"] }), git, [target("tokens"), target("cli")]),
+      (error) => {
+        assert.ok(error instanceof TagIntegrityError);
+        assert.match(error.message, /Release tag integrity check failed/);
+        assert.match(error.message, new RegExp(`expected commit:\\s+${A}`));
+        assert.match(error.message, new RegExp(`remote resolves to:\\s+${B}`));
+        assert.match(error.message, /No tag was created, overwritten or force-pushed/);
+        assert.doesNotMatch(error.message, /--force|force-push it|delete/i);
+        return true;
+      },
+    );
+    assert.deepEqual(state.created, []);
+    assert.deepEqual(state.pushed, []);
   });
 
-  it("pushes a locally-present tag the remote lacks, without re-creating it", async () => {
-    const { state, git } = fakeGit({ local: ALL, remote: [] });
-    const result = await reconcile(planOf({ alreadyPublished: ["tokens", "ui", "cli"] }), git, []);
+  /** An annotated remote tag whose peeled commit is wrong — the case a name-only check misses. */
+  it("stops on a divergent annotated remote tag", async () => {
+    const { commits } = parseTagRefs([`${ANNOTATED}\trefs/tags/${tag("ui")}`, `${B}\trefs/tags/${tag("ui")}^{}`].join("\n"));
+    const { state, git } = fakeGit({ head: A, remote: commits });
+    await assert.rejects(
+      () => reconcile(planOf({ publish: ["tokens", "cli"], alreadyPublished: ["ui"] }), git, [target("tokens")]),
+      (error) => error instanceof TagIntegrityError && error.divergent[0].actual === B,
+    );
+    assert.deepEqual(state.pushed, []);
+  });
 
-    assert.deepEqual(state.created, [], "Changesets must not re-create a tag it can already see");
-    assert.deepEqual(result.pushed, ALL);
+  it("accepts an annotated remote tag whose peeled commit is right", async () => {
+    const { commits } = parseTagRefs([`${ANNOTATED}\trefs/tags/${tag("ui")}`, `${A}\trefs/tags/${tag("ui")}^{}`].join("\n"));
+    const { git } = fakeGit({ head: A, remote: commits });
+    const result = await reconcile(planOf({ publish: ["tokens", "cli"], alreadyPublished: ["ui"] }), git, [target("tokens"), target("cli")]);
+    assert.ok(result.correctRemote.includes(tag("ui")));
+  });
+
+  it("stops on a divergent local tag before pushing", async () => {
+    const { state, git } = fakeGit({ head: A, local: at(B, [tag("ui")]) });
+    await assert.rejects(
+      () => reconcile(planOf({ publish: ["tokens", "cli", "ui"] }), git, [target("tokens")]),
+      (error) => error instanceof TagIntegrityError && error.divergent[0].where === "local",
+    );
+    assert.deepEqual(state.pushed, []);
+    assert.deepEqual(state.created, []);
+  });
+
+  it("stops when the local ref and a correct remote ref disagree", async () => {
+    const { state, git } = fakeGit({ head: A, local: at(B, [tag("ui")]), remote: at(A, [tag("ui")]) });
+    await assert.rejects(
+      () => reconcile(planOf({ publish: ["tokens", "cli"], alreadyPublished: ["ui"] }), git, [target("tokens")]),
+      (error) => error instanceof TagIntegrityError,
+    );
+    assert.deepEqual(state.pushed, [], "neither ref is mutated");
+    assert.deepEqual(state.created, []);
   });
 });
 
 describe("failure reporting", () => {
   it("says what was published and to re-run, not to bump, when tag creation fails", async () => {
-    const { git } = fakeGit({ createFails: true });
-    const plan = planOf({ publish: ["ui"], alreadyPublished: ["tokens", "cli"] });
-
+    const { git } = fakeGit({ head: A, createFails: true });
     await assert.rejects(
-      () => reconcile(plan, git, [target("ui")]),
+      () => reconcile(planOf({ publish: ["ui"], alreadyPublished: ["tokens", "cli"] }), git, [target("ui")]),
       (error) => {
         assert.ok(error instanceof TagCreationError);
-        assert.ok(error.message.includes("Published in this run: @kinetixui/ui@0.24.0"));
-        assert.ok(error.message.includes("Re-run the release"));
-        assert.ok(error.message.includes("Do not bump the version"));
+        assert.match(error.message, /Published in this run: @kinetixui\/ui@0\.24\.0/);
+        assert.match(error.message, /Nothing was overwritten or force-pushed/);
+        assert.match(error.message, /Do not bump the version/);
         return true;
       },
     );
   });
 
-  it("separates the two states when the push fails", async () => {
-    const { git } = fakeGit({ pushFails: true });
-    const plan = planOf({ publish: ["ui", "cli", "tokens"] });
-
+  it("separates the two states when the push fails, and never suggests forcing", async () => {
+    const { git } = fakeGit({ head: A, pushFails: true });
     await assert.rejects(
-      () => reconcile(plan, git, [target("ui"), target("cli"), target("tokens")]),
+      () => reconcile(planOf({ publish: ["ui", "cli", "tokens"] }), git, [target("ui"), target("cli"), target("tokens")]),
       (error) => {
         assert.ok(error instanceof TagPushError);
-        assert.ok(error.message.includes("npm publication completed. Tag publication is incomplete."));
-        assert.ok(error.message.includes("Re-running the release is safe"));
-        assert.ok(error.message.includes("do not force-push"));
+        assert.match(error.message, /npm publication completed\. Tag publication is incomplete\./);
+        assert.match(error.message, /Re-running the release is safe/);
+        assert.match(error.message, /investigate it rather than forcing it/);
+        assert.doesNotMatch(error.message, /--force/);
         assert.deepEqual(error.attempted, ALL);
         return true;
       },
-    );
-  });
-
-  it("reports honestly when nothing was published and tag creation fails", async () => {
-    const { git } = fakeGit({ createFails: true });
-    await assert.rejects(
-      () => reconcile(planOf({ alreadyPublished: ["ui"] }), git, []),
-      (error) => error.message.includes("No package was published in this run."),
     );
   });
 });
