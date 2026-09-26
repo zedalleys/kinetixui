@@ -1,5 +1,136 @@
 # @kinetixui/ui
 
+## 0.23.0
+
+### Minor Changes
+
+- 714c4ae: Graduate eleven audited components to lifecycle Stable, and correct four Beta APIs.
+  
+  **Breaking, on Beta components only.** Pre-1.0 Beta is when a bad API gets
+  corrected rather than carried to 1.0 behind an alias:
+  
+  - **ColorPicker** — `value` and `onChange` were both required, so the picker
+    could only be used controlled, and `onChange` contradicted the convention
+    every other KinetixUI value control follows. Now `value?` / `defaultValue?` /
+    `onValueChange?`. Migration: rename `onChange` to `onValueChange`; a
+    controlled picker is otherwise unchanged.
+  - **MarkdownEditor** — same two faults, same fix. The preview still escapes HTML
+    on every path; a test now pins that against the state change.
+  - **TreeView** — expansion and checking supported `default*`; selection did not,
+    and `select` only called back, so an uncontrolled tree could never show a
+    selection at all. Adds `defaultSelected`.
+  - **JsonViewer** — `hideCopy` was a negative boolean whose default could not be
+    stated without inverting it. Now `copyable`, defaulting to true. Migration:
+    `hideCopy` → `copyable={false}`.
+  
+  **Accessibility fix.** A `TreeView` item's accessible name was computed from its
+  contents, so an expanded node announced its whole subtree — "src" as "src
+  index.ts". Items are now named by their own label.
+  
+  **Lifecycle promotions.** `color-picker`, `data-grid`, `diff-viewer`,
+  `json-viewer`, `kanban-board`, `markdown-editor`, `message-bubble`,
+  `multi-select`, `tour`, `tree-view` and `virtual-list` move from `beta` to
+  `stable`, each against a documented gate rather than against a release cycle.
+  `notification-center` stays Beta: its read-state ownership and its
+  component-versus-Block boundary are genuinely unresolved, and the manifest now
+  records that.
+  
+  This changes lifecycle status only. No implementation's verification level
+  changed, and no package maturity changed.
+
+### Patch Changes
+
+- 714c4ae: Document every component's React API on its docs page.
+  
+  Component pages ended at `import { DataGrid } from "@kinetixui/ui"` and a
+  paragraph about tokens. For a Badge that is enough; for a 792-line grid with
+  column pinning, range selection and edit-in-place it is not, and "lifecycle
+  stable" is meant to mean a reader can use the component without opening its
+  source.
+  
+  Each page now renders its props — name, type, required, and the description from
+  the source — from `specs/components/*.json`, which is generated from the
+  TypeScript, so the table cannot drift from the props the component accepts.
+  
+  The table is headed **React API** and says so in as many words. SwiftUI, Jetpack
+  Compose, Flutter and Angular share the design contract — the same variants,
+  sizes, states and tokens — but each exposes its own idiomatic interface; their
+  real usage stays in the platform tabs on the example above.
+- a5564c0: Name a Tag's dismiss control after the tag, on the four platforms that didn't.
+  
+  A row of dismissible filter chips announced "Remove, Remove, Remove" — the
+  control told a screen-reader user which button they were on but never what it
+  would remove. Angular already solved this; React and SwiftUI hard-coded
+  "Remove", and Compose and Flutter gave the control no accessible name and no
+  button role at all, so it was neither findable by role nor readable.
+  
+  All four now default to `Remove <tag text>`, with a `removeLabel` override for
+  the cases where the tag's text is not the right name — the same contract Angular
+  already had, so the five implementations now agree.
+  
+  Found by writing the new `filter-panel` block, which puts three of them in a row.
+- 6f5cce9: Five-platform component guidance, Angular waves 1–2, and a Compose chart.
+  
+  **Every component page now represents all five platforms truthfully.**
+  `components.manifest.json` gains `platformGuidance`: for every (component,
+  platform) pair with no implementation, one of `native-equivalent`,
+  `composition` or `planned` (with a delivery wave). `platforms` keeps its single
+  meaning — a real KinetixUI implementation — so guidance never counts towards
+  parity anywhere on the site. `pnpm check:manifest` fails if any pair is
+  uncovered; `pnpm check:platform-code` fails if guidance promises a snippet and
+  has none, or if a snippet sits under a `planned` gap.
+  `platform-code-compositions.json` is folded into the manifest and deleted.
+  
+  **`@kinetixui/angular` (preview) gains 20 components**, taking it from 11 to
+  31: `KxAspectRatio`, `KxAvatar`/`KxAvatarImage`/`KxAvatarFallback`/
+  `KxAvatarGroup`, `KxKbd`/`KxKbdGroup`, `KxSkeleton`, `KxSpinner`, `KxTag`,
+  `KxQuote`, `KxMetric`, the `KxEmpty` family, `KxTextarea`, `KxNativeSelect`,
+  `KxRadioGroup`/`KxRadio`, `KxSlider`, `KxNumberInput`, `KxPasswordInput`, the
+  `KxField` family, `KxToggle`, `KxToggleGroup`/`KxToggleGroupItem` and
+  `KxSegmentedControl`/`KxSegment`. Radio groups, sliders, number inputs,
+  segmented controls and single-select toggle groups are built on real native
+  form controls, so arrow-key selection, roving focus, `aria-valuenow` and the
+  form value come from the browser rather than from an ARIA re-implementation.
+  
+  **Breaking (preview package):** `kxInput` no longer matches `<textarea>`. A
+  multi-line field is `<textarea kxTextarea>`, matching the React package's
+  Input/Textarea split, which have different metrics.
+  
+  **Jetpack Compose gains `KinetixChart`** — Canvas-drawn bar and line charts
+  over the generated `--chart-1…5` palette, the same decision the Flutter port
+  made. This was the last partial platform gap: all four catalogue-complete
+  platforms now carry 90 of 98 components.
+  
+  Angular remains **Preview**. `/docs/angular` now lists what is left by delivery
+  wave, derived from the manifest, and states the package-level gates that
+  Stable would require.
+- eff98f6: Evidence-backed implementation verification, kept separate from package maturity.
+  
+  Three different things were being said with one word, and the word being
+  printed was the one nothing backed up: `platformDefinitions` called SwiftUI
+  stable, and the only thing behind that was a filename.
+  
+  They are now three fields that never derive from each other — **component
+  lifecycle** (is the API settled?), **package maturity** (is the offering a
+  product?) and **verification** (how much automated evidence stands behind this
+  implementation, on this platform).
+  
+  Verification is derived from the tests themselves: a marked passage declares
+  what kind of verification it performs, and the components it covers are read
+  from the KinetixUI symbols that passage calls. Every positive result carries
+  the file and line range behind it, so `pnpm platform:matrix --verification`
+  can answer "why does this say RTL verified?".
+  
+  Package maturity is unchanged — React stable, Angular preview, SwiftUI,
+  Compose and Flutter stable. What is new is that the site no longer lets that
+  word stand in for evidence. `@kinetixui/ui` is a stable, published package
+  whose catalogue is verified to beta; both are true, and the pages now say both.
+  
+  `pnpm check:stories` closes the hole that let `direction-provider` go
+  unchecked: two accessibility suites take their subjects from the story
+  directory, so a component with no story is a component nothing checks.
+- @kinetixui/tokens@0.23.0
+
 ## 0.22.1
 
 ### Patch Changes
