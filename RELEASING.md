@@ -297,6 +297,33 @@ PR #227 therefore needs one of:
 - a root manifest that publishes `dist/` through `files` and root-level `exports` pointing into it,
   which duplicates what ng-packagr already generates and diverges from the Angular Package Format.
 
+A naive activation is not dangerous, only blocked: adding Angular to the allowlist without the
+above fails `release:check` with *"packages/ui-angular/package.json needs a non-empty `files`
+array"*, offline, before anything is built or published.
+
+### Which Changesets strategy, when Angular goes public
+
+Simulated against the installed Changesets 3.0.3 with a single Angular-only changeset, then
+reverted. None of this is in effect.
+
+| | what happens | cost |
+| --- | --- | --- |
+| **A — keep Angular in `fixed`** | all four go 0.23.0 → 0.24.0 | `tokens`, `ui` and `cli` are republished with no changes; their changelog entry is just `- @kinetixui/tokens@0.24.0`. Angular is Preview and will iterate, so every Angular change drags three stable packages through a release |
+| **B — remove Angular from `fixed`** | only Angular moves, 0.23.0 → 0.24.0; the other three stay at 0.23.0 and are untouched | Angular's version diverges from the React set's — which is what "its own lifecycle is separate from the React set's" already says in the 0.23.0 notes |
+| **C — `linked` instead** | Changesets refuses a package in both `fixed` and `linked`, so this means moving all four to `linked`. A `ui`-only changeset then bumps **only** `ui` to 0.23.1 while `cli` and `tokens` stay at 0.23.0 | breaks "the three npm packages always share a version", which `/docs/changelog` states and `check:releases` enforces — the simulation fails that gate |
+
+**Recommendation: B.** It is the only option that leaves the three published packages' guarantee
+intact while letting a Preview package iterate at its own pace.
+
+**First public version.** Not `1.0.0` — Angular is Preview and that must stay true. Two candidates:
+
+- **0.24.0**, via a minor changeset under B. Preferred: the first publication gets its own release
+  commit and its own tag, and the npm contents match the commit they were built from.
+- **0.23.0**, by activating with no changeset at all — the plan would see `@kinetixui/angular@0.23.0`
+  as unpublished and publish it. Simpler, but it puts contents on npm as "0.23.0" that differ from
+  what the repository's 0.23.0 era contained, and its tag would point at a different commit from the
+  other three packages' `@0.23.0` tags.
+
 ---
 
 ## Running the release tooling on Windows
