@@ -1,0 +1,37 @@
+{
+  "$comment": [
+    "The canonical list of workspace packages KinetixUI publishes to npm. This file is the only",
+    "thing that grants publication permission — a package is never published because it merely",
+    "lacks `private: true`.",
+    "",
+    "Every other workspace package must carry `private: true`. A package that is neither listed",
+    "here nor private fails `pnpm release:check` before anything is built or published, which is",
+    "the check that would have caught @kinetixui/angular before the 0.23.0 partial release.",
+    "",
+    "`build` names scripts in the root package.json, run in order before packing. `requireFiles`",
+    "are paths that must exist inside the packed tarball, on top of every target declared by the",
+    "package's own `main` / `module` / `types` / `exports` / `bin` fields, which are checked",
+    "automatically. See RELEASING.md."
+  ],
+  "registry": "https://registry.npmjs.org/",
+  "packages": [
+    {
+      "name": "@kinetixui/tokens",
+      "directory": "packages/tokens",
+      "build": ["build:tokens"],
+      "requireFiles": ["dist/web/tokens.js", "dist/web/tokens.d.ts", "dist/web/globals.css"]
+    },
+    {
+      "name": "@kinetixui/ui",
+      "directory": "packages/ui",
+      "build": ["build:tokens", "build:ui"],
+      "requireFiles": ["dist/index.js", "dist/index.d.ts"]
+    },
+    {
+      "name": "@kinetixui/cli",
+      "directory": "packages/cli",
+      "build": ["build:cli"],
+      "requireFiles": ["dist/index.js"]
+    }
+  ]
+}

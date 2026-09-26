@@ -6,14 +6,88 @@ on:
 
 concurrency: release-${{ github.ref }}
 
+# Least privilege at the top level: read-only. Each job raises only what it needs, so the
+# preflight job — the one that runs before any decision to publish — has no write access and no
+# OIDC identity at all.
 permissions:
-  contents: write
-  pull-requests: write
-  id-token: write # npm publish provenance (OIDC attestation)
+  contents: read
 
 jobs:
-  release:
+  # Everything the repository can decide for itself about this release, with no credentials in the
+  # environment. It cannot publish: it has no npm token and no id-token permission.
+  #
+  # This is a real gate, not a signal read from another workflow. Polling CI across workflows is
+  # fragile in both directions — a green CI run for a different commit, or a race between the two
+  # — so the release-critical subset is executed here, in the job that gates publication.
+  preflight:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The release tooling's own tests. If the thing that decides what may be published is broken,
+      # nothing it says afterwards is worth acting on.
+      - name: Release tooling tests
+        run: pnpm test:release
+
+      # Every workspace package is either allowlisted or private, and every allowlisted package has
+      # publication-ready metadata. Offline: this is the check @kinetixui/angular would have failed
+      # before 0.23.0 published anything.
+      - name: Publish allowlist and package metadata
+        run: pnpm release:check
+
+      # The release-critical subset of CI. Not a duplicate of ci.yml — these are the checks whose
+      # failure would mean publishing something wrong, rather than something merely unreviewed.
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test (@kinetixui/ui)
+        run: pnpm --filter @kinetixui/ui test
+
+      - name: Test (@kinetixui/create-theme)
+        run: pnpm --filter @kinetixui/create-theme test
+
+      - name: Changelog page is current with the packages
+        run: pnpm check:releases
+
+      - name: Token table matches the tokens
+        run: pnpm check:token-contract
+
+      - name: Contrast audit (WCAG AA text pairs)
+        run: pnpm check:contrast
+
+      # Build, pack, validate every tarball's entry points, install each one into a clean consumer
+      # and use it, then rehearse the upload. Nothing here touches the registry.
+      - name: Release preflight (build, pack, artifact validation, consumer smoke tests)
+        run: pnpm release:preflight
+
+      - name: Release plan
+        run: |
+          echo '## KinetixUI release preflight' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          pnpm --silent release:plan >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+  # The only job that can mutate anything. It runs the same preflight again in-process (`pnpm
+  # release` is preflight + publish, from one code path) and publishes exactly the artifacts that
+  # preflight produced.
+  release:
+    needs: preflight
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # changesets opens the Version PR, and the release pushes its tags
+      pull-requests: write
+      id-token: write # npm publish provenance (OIDC attestation)
     steps:
       - uses: actions/checkout@v4
 
@@ -48,6 +122,6 @@ jobs:
           # workflow filename), then drop these two lines.
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          # provenance comes from `pnpm -r publish --provenance` (+ publishConfig
-          # per package); this env is a harmless extra belt.
+          # provenance also comes from each package's publishConfig; this env is a
+          # harmless extra belt.
           NPM_CONFIG_PROVENANCE: "true"
