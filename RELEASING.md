@@ -246,12 +246,56 @@ not in the allowlist — two independent reasons it cannot be published by accid
 `ng-packagr` also copies the flag into `dist/package.json`, so a publish from the build output is
 refused too.
 
-Making it publishable is its own piece of work — `publishConfig`, a `files` list, a resolvable root
-entry point, building it in the release pipeline, an install test from a real tarball, and the
-question of whether it should stay in the Changesets `fixed` group. The documentation guards that
-currently assert it is unpublished (`apps/web/src/lib/marketing-claims.test.ts`,
-`angular-docs.test.ts`, `verification-guardrails.test.ts`, the `/docs/angular` callout) must move in
-that same change, and not before.
+### Publication readiness — validated, still not published
+
+`pnpm check:angular-package` proves the artifact behind those locks is genuinely usable, without
+unlocking anything:
+
+- ng-packagr builds it, and the generated Angular Package Format manifest is used as-is
+- `packages/ui-angular/public-api.json` records the public surface — every exported symbol,
+  selector, input and output alias — so a change to it shows up in review
+- DOM access goes through the injected element, never a global browser object
+- **Publication simulation**: `dist/` is copied to a temp directory where `private` is removed and
+  `publishConfig` added — *only* those two switches, and *only* in the copy. The repository is
+  never modified. The resulting tarball is then validated by the release tooling's own
+  `validatePackedArtifact`, the same function that gates the three published packages
+- a clean Angular application outside the workspace installs that tarball, type-checks and runs a
+  production AOT build against it, with no `paths` mapping and no workspace link
+- the emitted CSS is checked for the token contract, the extras sheet and the component classes, so
+  a stylesheet that silently failed to resolve cannot pass
+
+Readiness is not availability. `npm install @kinetixui/angular` still does not work, and no public
+documentation says otherwise.
+
+### What activation still requires
+
+Four changes, none of which are in the readiness work:
+
+1. remove `"private": true` from `packages/ui-angular/package.json`
+2. add `"publishConfig": { "access": "public", "provenance": true }`
+3. add `@kinetixui/angular` to `release/publish-packages.json`, with its `build` and `requireFiles`
+4. decide the Changesets strategy and the first public version (see below)
+
+Then, and only then, the documentation guards that currently assert it is unpublished —
+`apps/web/src/lib/marketing-claims.test.ts`, `angular-docs.test.ts`,
+`verification-guardrails.test.ts` and the `/docs/angular` callout — move in that same change.
+
+A fifth point is not optional, and step 3 above is not sufficient on its own.
+
+The Angular artifact is `packages/ui-angular/dist` — ng-packagr generates the publishable manifest
+there — but the package root is what the workspace contains. The release tooling packs from the
+allowlist's `directory`, and `classify()` requires that directory to be the one workspace discovery
+found, so the allowlist cannot currently say "pack `dist/`". Adding `packages/ui-angular` instead
+would pack the source root, whose manifest has no `.` export and whose `styles.css` lives under
+`src/` — which the artifact validator rejects. So a naive activation fails closed rather than
+publishing something broken, but it does fail.
+
+PR #227 therefore needs one of:
+
+- an optional artifact directory in the allowlist schema (pack from `dist/`, keep discovery on the
+  package root) — the smaller change, and the one that keeps ng-packagr's output canonical; or
+- a root manifest that publishes `dist/` through `files` and root-level `exports` pointing into it,
+  which duplicates what ng-packagr already generates and diverges from the Angular Package Format.
 
 ---
 

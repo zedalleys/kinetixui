@@ -6,7 +6,17 @@
  * spends tokens, it never defines one. Load the contract first, then this:
  *
  *   @import "@kinetixui/tokens/css";
+ *   @import "@kinetixui/tokens/css/extras";
  *   @import "@kinetixui/angular/styles.css";
+ *
+ * Both token sheets, not just the first. `globals.css` carries colour, spacing and radius; the elevation and
+ * typography scales this file spends — `--shadow-focus`, `--shadow-sm`, `--text-body-md` and the rest of the
+ * `--text-*` ramp — live in `extras.css`. Importing only `globals.css` leaves focus rings and every type size
+ * undefined, which renders as components that look almost right, so the external-consumer test in
+ * `scripts/angular-package/` asserts the documented imports are the ones that actually work.
+ *
+ * `@kinetixui/tokens` is a peer dependency for this reason: the custom properties are a single global
+ * contract, and a second copy of it in the tree would be waste at best and a version skew at worst.
  *
  * Colour tokens are HSL channel triplets ("221 83% 53%"), so they are always used as hsl(var(--token)) — the
  * same convention the React package and the registry's globals.css use, which is what lets `/` alpha work.

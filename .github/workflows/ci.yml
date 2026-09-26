@@ -127,6 +127,12 @@ jobs:
       - name: Build @kinetixui/angular (AOT + strict template typecheck)
         run: pnpm build:angular
 
+      # The Angular package's public surface — every exported symbol, selector, input and output —
+      # as a file review can diff. Cheap here because the build above already produced the .d.ts it
+      # reads; the expensive external-consumer proof lives in angular-package.yml.
+      - name: Angular public API snapshot is current
+        run: pnpm check:angular-api
+
       - name: Test (@kinetixui/angular)
         run: pnpm test:angular
 
