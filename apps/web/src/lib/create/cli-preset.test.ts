@@ -5,11 +5,18 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ACCEPTED_TOKENS, encodePreset, presetUrl, type PresetConfig } from "@kinetixui/create-preset";
 import { DEFAULT_PRESET } from "@kinetixui/create-preset";
-import { exportCompose, exportCss, exportSwiftUi, resolveCreateTheme } from "@kinetixui/create-theme";
+import {
+  exportCompose,
+  exportCss,
+  exportFlutter,
+  exportSwiftUi,
+  resolveCreateTheme,
+} from "@kinetixui/create-theme";
 import {
   presetCompose,
   presetCss,
   presetDecode,
+  presetFlutter,
   presetSwiftUi,
   presetUrlCommand,
 } from "../../../../../packages/cli/src/commands/preset";
@@ -96,7 +103,7 @@ describe("preset decode", () => {
     // export, so those are what remain forbidden.
     presetDecode(encodePreset(preset({ brand: "#c2410c" })), { json: false });
     const text = plain().toLowerCase();
-    for (const claim of ["flutter", "android", "native", "every platform", "all five"]) {
+    for (const claim of ["android xml", "native", "every platform", "all five"]) {
       expect(text, claim).not.toContain(claim);
     }
   });
@@ -107,6 +114,7 @@ describe("preset decode", () => {
     expect(plain()).toContain("preset css");
     expect(plain()).toContain("preset swiftui");
     expect(plain()).toContain("preset compose");
+    expect(plain()).toContain("preset flutter");
   });
 });
 
@@ -375,7 +383,86 @@ describe("preset compose", () => {
   });
 });
 
-describe("the three exporters agree on the design", () => {
+describe("preset flutter", () => {
+  it("prints a Dart theme, and nothing else", async () => {
+    await presetFlutter(encodePreset(preset({ brand: "#c2410c" })), {});
+
+    expect(stdout()).toContain("abstract final class CreateTheme {");
+    expect(stdout()).toContain("import 'package:kinetix_ui/kinetix_ui.dart';");
+    expect(out).toEqual([]);
+  });
+
+  it("is byte-identical to the shared exporter", async () => {
+    for (const over of [
+      {},
+      { brand: "#7e22ce" },
+      { neutral: "warm" as const, chartPalette: "cool" as const },
+      { manualOverrides: { border: "#ff0000" } },
+    ]) {
+      written = [];
+      await presetFlutter(encodePreset(preset(over)), {});
+      expect(stdout(), JSON.stringify(over)).toBe(
+        exportFlutter(resolveCreateTheme(preset(over)), { symbol: "CreateTheme" }),
+      );
+    }
+  });
+
+  it("accepts a share URL as readily as a bare code", async () => {
+    await presetFlutter(presetUrl(preset({ neutral: "cool" }), "https://kinetixui.com"), {});
+    expect(stdout()).toBe(exportFlutter(resolveCreateTheme(preset({ neutral: "cool" })), { symbol: "CreateTheme" }));
+  });
+
+  it("names the class after --name", async () => {
+    await presetFlutter(encodePreset(preset({ brand: "#c2410c" })), { name: "AcmeTheme" });
+    expect(stdout()).toContain("abstract final class AcmeTheme {");
+  });
+
+  it("writes a file when asked, and says how to apply it", async () => {
+    const file = join(mkdtempSync(join(tmpdir(), "kx-flutter-")), "acme_theme.dart");
+    await presetFlutter(encodePreset(preset({ neutral: "warm" })), { output: file, name: "AcmeTheme" });
+
+    expect(readFileSync(file, "utf8")).toBe(
+      exportFlutter(resolveCreateTheme(preset({ neutral: "warm" })), { symbol: "AcmeTheme" }),
+    );
+    expect(plain()).toContain(file);
+    expect(plain()).toContain("KinetixTheme.custom(light: AcmeTheme.light, dark: AcmeTheme.dark");
+  });
+
+  it("carries the roles Compose cannot, because Flutter has fields for them", async () => {
+    // The difference from `preset compose`, asserted rather than described: `input` and `ring` are real
+    // values here instead of a documented gap.
+    await presetFlutter(encodePreset(preset({ brand: "#c2410c", neutral: "warm" })), {});
+    expect(stdout()).toMatch(/input: Color\(0xFF[0-9A-F]{6}\),/);
+    expect(stdout()).toMatch(/ring: Color\(0xFF[0-9A-F]{6}\),/);
+    expect(stdout()).toContain("tertiaryForeground:");
+  });
+
+  it.each([
+    ["a digit first", "123Theme"],
+    ["a statement", "Theme; import 'dart:io';"],
+    ["a Dart reserved word", "class"],
+    ["a hyphen", "Theme-Name"],
+    ["emoji", "Theme\u{1F3A8}"],
+  ])("refuses %s as a name, before it decodes anything", async (_name, symbol) => {
+    await expect(presetFlutter("KX1_!!!!", { name: symbol })).rejects.toThrow(/name|identifier|reserved|digit/i);
+    expect(written).toEqual([]);
+  });
+
+  it("refuses a bad preset with a message, not a stack trace", async () => {
+    await expect(presetFlutter("KX1_!!!!", {})).rejects.toThrow(/^[A-Z].*\.$/);
+    expect(written).toEqual([]);
+  });
+
+  it("claims no platform it cannot deliver", async () => {
+    await presetFlutter(encodePreset(preset({ brand: "#c2410c", surface: "elevated" })), {});
+    const text = stdout().toLowerCase();
+    for (const claim of ["swiftui", "jetpack", "android xml", "every platform", "all five", "five-platform"]) {
+      expect(text, claim).not.toContain(claim);
+    }
+  });
+});
+
+describe("the four exporters agree on the design", () => {
   it("all read the same resolved theme rather than deriving their own", async () => {
     // Web, SwiftUI and Compose render one design three ways. The colours are the same colours; only the
     // syntax differs. Compose writes the resolved hex verbatim, which is what makes it checkable here.
@@ -394,6 +481,10 @@ describe("the three exporters agree on the design", () => {
     written = [];
     await presetSwiftUi(encodePreset(preset(over)), {});
     expect(stdout()).toBe(exportSwiftUi(theme, { symbol: "CreateTheme" }));
+
+    written = [];
+    await presetFlutter(encodePreset(preset(over)), {});
+    expect(stdout()).toContain(`action: Color(0xFF${action.slice(1).toUpperCase()}),`);
   });
 });
 
@@ -416,6 +507,7 @@ describe("the other preset commands still work", () => {
     expect(plain()).toContain("preset css");
     expect(plain()).toContain("preset swiftui");
     expect(plain()).toContain("preset compose");
+    expect(plain()).toContain("preset flutter");
   });
 });
 

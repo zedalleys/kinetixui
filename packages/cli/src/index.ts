@@ -8,8 +8,15 @@ import { inspect } from "./commands/inspect.js";
 import { lint } from "./commands/lint.js";
 import { list } from "./commands/list.js";
 import { parity } from "./commands/parity.js";
-import { presetCompose, presetCss, presetDecode, presetSwiftUi, presetUrlCommand } from "./commands/preset.js";
-import { DEFAULT_COMPOSE_SYMBOL, DEFAULT_SWIFT_SYMBOL } from "@kinetixui/create-theme";
+import {
+  presetCompose,
+  presetCss,
+  presetDecode,
+  presetFlutter,
+  presetSwiftUi,
+  presetUrlCommand,
+} from "./commands/preset.js";
+import { DEFAULT_COMPOSE_SYMBOL, DEFAULT_FLUTTER_SYMBOL, DEFAULT_SWIFT_SYMBOL } from "@kinetixui/create-theme";
 import { themeBuild, themeCreate } from "./commands/theme.js";
 import { DEFAULT_REGISTRY } from "./lib/config.js";
 // Bundled at build time (esbuild inlines JSON imports), not read at runtime —
@@ -211,6 +218,21 @@ preset
   .action(async (input: string, opts: { output?: string; name?: string }) => {
     try {
       await presetCompose(input, { output: opts.output, name: opts.name });
+    } catch (err) {
+      console.error(pc.red("✖"), (err as Error).message);
+      process.exitCode = 1;
+    }
+  });
+
+preset
+  .command("flutter")
+  .description("Resolve a preset into a Flutter theme file (KinetixColors, light and dark). Colours only — Flutter's radius and elevation are not runtime-themeable. No Android XML output.")
+  .argument("<preset>", "a KX1_ code, or a share URL")
+  .option("-o, --output <file>", "write to a file instead of stdout")
+  .option("-n, --name <symbol>", "the Dart class to generate", DEFAULT_FLUTTER_SYMBOL)
+  .action(async (input: string, opts: { output?: string; name?: string }) => {
+    try {
+      await presetFlutter(input, { output: opts.output, name: opts.name });
     } catch (err) {
       console.error(pc.red("✖"), (err as Error).message);
       process.exitCode = 1;

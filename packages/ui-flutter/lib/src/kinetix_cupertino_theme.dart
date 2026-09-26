@@ -44,6 +44,23 @@ class KinetixCupertinoTheme {
   static CupertinoThemeData fromBrightness(Brightness brightness) =>
       brightness == Brightness.dark ? dark() : light();
 
+  /// The same mapping over your own palette — a theme exported from
+  /// kinetixui.com/create with `kinetixui preset flutter`, or one written by
+  /// hand:
+  ///
+  /// ```dart
+  /// CupertinoApp(
+  ///   theme: KinetixCupertinoTheme.fromColors(Brightness.light, AcmeTheme.light),
+  /// )
+  /// ```
+  ///
+  /// Mapping unchanged, so the caveat above applies here too: [CupertinoThemeData]
+  /// is a small surface and this carries only the roles it can represent. Wrap
+  /// the app in [KinetixTheme.custom] as well for `Kinetix*` widgets to see the
+  /// full palette.
+  static CupertinoThemeData fromColors(Brightness brightness, KinetixColors colors) =>
+      _build(brightness, colors);
+
   static CupertinoThemeData _build(Brightness brightness, KinetixColors c) => CupertinoThemeData(
         brightness: brightness,
         primaryColor: c.action,

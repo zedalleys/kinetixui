@@ -36,6 +36,17 @@ export type ThemeExporter<TOptions = void, TResult = string> = {
 
 export { cssExporter, exportCss, cssVarOverrides, shadowCss, NOTHING_TO_OVERRIDE, type CssExportOptions } from "./css";
 export {
+  flutterExporter,
+  exportFlutter,
+  dartSymbolError,
+  dartFieldName,
+  dartColor,
+  DEFAULT_FLUTTER_SYMBOL,
+  FLUTTER_COLOR_FIELDS,
+  FLUTTER_CHART_STOPS,
+  type FlutterExportOptions,
+} from "./flutter";
+export {
   composeExporter,
   exportCompose,
   kotlinSymbolError,
