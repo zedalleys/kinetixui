@@ -1,5 +1,5 @@
 /**
- * release-publish.mjs — the one place that mutates the registry.
+ * release-publish.mjs — the one place that mutates anything.
  *
  *   node scripts/release-publish.mjs
  *
@@ -8,26 +8,26 @@
  * did not name. That is deliberate — the 0.23.0 release published a package nobody had approved
  * because `pnpm -r publish` decided for itself what the workspace contained.
  *
- * Tags are created only after every publish in the run has succeeded, and only the tags this run
- * created are pushed. `git push --tags` would push every local tag, including ones that have
- * nothing to do with this release.
+ * The lifecycle is:
+ *
+ *   preflight → publish whatever is missing → reconcile tags → push the tags this run owes
+ *
+ * and not "if there is nothing to publish, stop". A release has two states that fail separately:
+ * what is on the registry, and what is tagged. A run that published everything and then failed to
+ * push its tags leaves an empty publish plan behind it, so treating an empty plan as a finished
+ * release would make those tags unrepairable. Tag reconciliation therefore runs every time.
  *
  * npm publication is still not transactional: see RELEASING.md.
  */
 import { preflight, publish, ReleaseError } from "./release/preflight.mjs";
 import { formatPlan, planToMarkdown } from "./release/report.mjs";
-import { run } from "./release/exec.mjs";
+import { packageManagerCommand } from "./release/exec.mjs";
+import { reconcileReleaseTags, TagCreationError, TagPushError } from "./release/tags.mjs";
 import { appendFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const log = (message) => console.log(`  ${message}`);
-
-/** Tags that exist locally right now. */
-async function localTags() {
-  const { stdout } = await run("git", ["tag", "--list"], { cwd: root });
-  return new Set(stdout.split(/\r?\n/).map((line) => line.trim()).filter(Boolean));
-}
 
 function writeStepSummary(markdown) {
   const target = process.env.GITHUB_STEP_SUMMARY;
@@ -49,33 +49,38 @@ try {
   console.log("");
   writeStepSummary(planToMarkdown(result.plan));
 
-  if (result.packed.length === 0) {
-    console.log("release ok — nothing to publish; every allowlisted version is already on the registry.");
-    process.exit(0);
-  }
+  const published = result.packed.length === 0 ? [] : await publish({ root, packed: result.packed, log });
 
-  const before = await localTags();
-  const published = await publish({ root, packed: result.packed, log });
-
-  // Changesets 3.0.3 `git-tag` skips private packages (so @kinetixui/angular is not tagged) and
-  // skips tags that already exist locally or on the remote, so re-running it after a recovered
-  // partial release adds only what is missing. It creates tags; it does not push them.
-  log("tag: changeset git-tag");
-  const pnpmBin = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
-  await run(pnpmBin, ["exec", "changeset", "git-tag"], { cwd: root });
-
-  const after = await localTags();
-  const created = [...after].filter((tag) => !before.has(tag));
-  if (created.length === 0) {
-    log("tag: nothing new to push (every tag for this version already exists)");
-  } else {
-    log(`tag: pushing ${created.join(", ")}`);
-    await run("git", ["push", "origin", ...created.map((tag) => `refs/tags/${tag}`)], { cwd: root });
-  }
+  // Always — including when nothing was published, because that is exactly the state a failed tag
+  // push leaves behind.
+  const tags = await reconcileReleaseTags({
+    root,
+    plan: result.plan,
+    published,
+    packageManager: packageManagerCommand(),
+    log,
+  });
 
   console.log("");
-  console.log(`release ok — published ${published.map((a) => `${a.name}@${a.version}`).join(", ")}.`);
+  const npmLine =
+    published.length === 0
+      ? "npm: nothing to publish; every allowlisted version was already on the registry"
+      : `npm: published ${published.map((a) => `${a.name}@${a.version}`).join(", ")}`;
+  const tagLine =
+    tags.pushed.length === 0
+      ? `tags: nothing to push; ${tags.alreadyOnRemote.length} of ${tags.expected.length} release tag(s) already on the remote`
+      : `tags: pushed ${tags.pushed.join(", ")}`;
+  console.log(`release ok\n  ${npmLine}\n  ${tagLine}`);
+
+  if (tags.unreconciled.length > 0) {
+    console.error(`\nrelease incomplete: no tag could be created or found for ${tags.unreconciled.join(", ")}.`);
+    process.exit(1);
+  }
 } catch (error) {
+  if (error instanceof TagCreationError || error instanceof TagPushError) {
+    console.error(`\n${error.message}`);
+    process.exit(1);
+  }
   if (error instanceof ReleaseError) {
     console.error(error.errors.join("\n\n"));
     process.exit(1);

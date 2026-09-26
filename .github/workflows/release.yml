@@ -73,10 +73,12 @@ jobs:
 
       - name: Release plan
         run: |
-          echo '## KinetixUI release preflight' >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          pnpm --silent release:plan >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo '## KinetixUI release preflight'
+            echo '```'
+            pnpm --silent release:plan
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # The only job that can mutate anything. It runs the same preflight again in-process (`pnpm
   # release` is preflight + publish, from one code path) and publishes exactly the artifacts that

@@ -120,21 +120,39 @@ unknown state is exactly the situation to avoid.
    `release:check`, the release-critical subset of CI, then `release:preflight`.
 3. Changesets opens or updates the **Version Packages** PR.
 4. Merging that PR pushes to `main`, and the `release` job runs `pnpm release`.
-5. Packages are published one at a time, then `changeset git-tag` creates the tags and only the
-   tags that run created are pushed.
+5. The lifecycle is **preflight → publish whatever is missing → reconcile tags → push the tags this
+   run owes**. Packages are published one at a time; then the tag state is brought in line with the
+   registry state.
 
-Between releases every allowlisted version is already on the registry, so the plan is empty and
-`pnpm release` is a clean no-op. That is not a failure.
+Between releases every allowlisted version is already on the registry and every tag is on the
+remote, so both halves are no-ops. That is not a failure.
 
-### Tags
+### Tags are a separate convergence problem
 
-`changeset git-tag` (Changesets 3.0.3) skips packages that are `private` — which is why
-`@kinetixui/angular@0.23.0` has a version and a changelog entry but no git tag — and skips tags that
-already exist locally or on the remote, so re-running it after a recovered partial release adds only
-what is missing. It creates tags; it does not push them.
+A release has two states that fail independently: **what is on the registry** and **what is
+tagged**. A run can publish all three packages and then fail to create or push the tags. On the
+retry every version is already published, so the publish plan is empty — and an implementation that
+treated "nothing to publish" as "nothing to do" could never repair those tags.
 
-The release pushes only the tags it just created, by name. The old pipeline ran `git push --tags`,
-which pushes every local tag the runner happens to have.
+So tag reconciliation runs on **every** release, including one with an empty publish plan. An empty
+npm plan does not mean the release is finished.
+
+What is owed is one tag per allowlisted package whose version is on the registry — including
+versions published by an earlier, failed run. `changeset git-tag` (Changesets 3.0.3) creates them:
+it skips `private` packages (which is why `@kinetixui/angular@0.23.0` has a version and a changelog
+entry but no tag), skips packages in `ignore`, and skips any tag that already exists locally **or**
+on the remote, so running it repeatedly is safe. It creates tags; it does not push them.
+
+The release then pushes every owed tag the **remote** is missing — not merely the ones this run
+created, because a tag left behind locally by a run that failed before pushing will never be created
+again. Pushes are by explicit ref and never forced: a tag already on the remote is left exactly as
+it is, and a tag the remote holds at a different commit makes the push fail rather than be
+overwritten. The old pipeline ran `git push --tags`, which pushes every local tag the runner
+happens to have.
+
+If tag creation fails, the report names what was published and says to re-run the release — not to
+bump the version. If the push fails, it says plainly that **npm publication completed and tag
+publication is incomplete**. Re-running is safe in both cases.
 
 Because `privatePackages` is not set in `.changeset/config.json`, it defaults to
 `{ version: false, tag: false }`. Now that `@kinetixui/angular` is private, Changesets will neither
@@ -171,8 +189,10 @@ not something to change here.
 6. **Verify that already-published packages are skipped** before publishing. They are skipped
    automatically, but read the plan and confirm it.
 7. **Publish only the missing versions** by re-running the release.
-8. **Verify the tags.** `changeset git-tag` is idempotent, so the tags for packages published in
-   the first, partial run are created by the recovery run.
+8. **Verify the tags.** The recovery run reconciles them, including the tags for packages published
+   by the first, partial run. This holds even when *nothing* is left to publish: if a release
+   completed on npm and only the tags are missing, re-running the release is still the fix — the
+   publish plan will be empty and the tags will be created and pushed anyway.
 
 **Do not unpublish.** npm unpublishing is not a normal recovery step: it breaks anyone who already
 installed the version, and the version number can never be reused.
