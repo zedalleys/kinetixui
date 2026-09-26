@@ -70,12 +70,23 @@ try {
     tags.pushed.length === 0
       ? `tags: nothing to push; ${tags.alreadyOnRemote.length} of ${tags.expected.length} release tag(s) already on the remote`
       : `tags: pushed ${tags.pushed.join(", ")}`;
-  console.log(`release ok\n  ${npmLine}\n  ${tagLine}`);
 
   if (tags.unreconciled.length > 0) {
-    console.error(`\nrelease incomplete: no tag could be created or found for ${tags.unreconciled.join(", ")}.`);
+    console.error(
+      [
+        "release incomplete.",
+        `  ${npmLine}`,
+        `  ${tagLine}`,
+        `  tags: no tag could be created or found for ${tags.unreconciled.join(", ")}`,
+        "",
+        "The registry side is accurate as reported above. Re-running the release is safe: published",
+        "versions are skipped and tags already on the remote are left alone. Do not bump the version.",
+      ].join("\n"),
+    );
     process.exit(1);
   }
+
+  console.log(`release ok\n  ${npmLine}\n  ${tagLine}`);
 } catch (error) {
   if (error instanceof TagCreationError || error instanceof TagPushError) {
     console.error(`\n${error.message}`);
