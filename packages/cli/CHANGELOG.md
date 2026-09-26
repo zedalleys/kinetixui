@@ -1,5 +1,107 @@
 # @kinetixui/cli
 
+## 0.23.0
+
+### Minor Changes
+
+- 9f73a8a: `kinetixui preset …` — read and resolve a Kinetix Create preset from the command line.
+  
+  - `preset decode <code|url>` prints what a preset contains, with `--json` for piping.
+  - `preset url <code>` prints the canonical `/create?preset=…` share link.
+  - `preset css <code|url>` resolves a preset into its web CSS override block — the `:root` and `.dark`
+    declarations, including the radius and elevation variables `theme build`'s CSV format cannot express.
+    `--output <file>` writes it instead of printing it.
+  
+  `preset css` runs the same theme engine and the same exporter the /create workspace runs behind Copy CSS,
+  so for a given preset the two produce byte-identical output. Web CSS only: there is no SwiftUI, Compose or
+  Flutter output behind any of these commands, which is why the third one is named `preset css` rather than
+  `preset apply`.
+  
+  `theme create` and `theme build` are unchanged.
+  
+  (`preset decode` and `preset url` shipped in the previous release without a changeset, so they are recorded
+  here alongside `preset css` rather than going unlisted.)
+- 5756e9d: `kinetixui preset compose <code|url>` — export a Kinetix Create preset as a Jetpack Compose theme file.
+  
+  Writes a Kotlin `object` holding a light and a dark `KinetixColors`, resolved through the same theme
+  engine `preset css` and `preset swiftui` use, so all three render one design rather than deriving it
+  three times. `--name <Symbol>` picks the object (default `CreateTheme`) and `--output <file>` writes it
+  instead of printing it.
+  
+  Apply it with the new `KinetixTheme(light = …, dark = …)` overload in `packages/ui-compose`, which still
+  switches on `isSystemInDarkTheme()`. The original `KinetixTheme(darkTheme, content)` is untouched and
+  delegates to it, so an app compiled against an earlier release keeps its JVM entry point:
+  
+  ```kotlin
+  KinetixTheme(light = AcmeTheme.light, dark = AcmeTheme.dark) { App() }
+  ```
+  
+  **Colours only, and Compose only.** Radius and elevation are generated constants Compose components read
+  directly, with no runtime theme to override, so a design's radius and surface treatment apply on the web
+  and not there — the generated file states that in its own header, along with the two preset roles
+  (`input`, `ring`) that `KinetixColors` has no field for. There is no Flutter or Android XML exporter.
+  
+  Compose writes `Color(0xffRRGGBB)`, the resolved colour exactly, so it needs no representation of its own
+  in the shared contrast guarantee — unlike SwiftUI's three-decimal channels. The guarantee is unchanged.
+  
+  `preset decode`, `preset url`, `preset css`, `preset swiftui`, `theme create` and `theme build` are
+  unchanged.
+- ddaf948: `kinetixui preset flutter <code|url>` — export a Kinetix Create preset as a Flutter theme file.
+  
+  Writes a Dart class holding a light and a dark `KinetixColors`, resolved through the same theme engine
+  `preset css`, `preset swiftui` and `preset compose` use, so all four render one design rather than
+  deriving it four times. `--name <Symbol>` picks the class (default `CreateTheme`) and `--output <file>`
+  writes it instead of printing it.
+  
+  Apply it with the new `KinetixTheme.custom` constructor in `packages/ui-flutter`, or feed the Material and
+  Cupertino adapters through their new `fromColors` entry points:
+  
+  ```dart
+  KinetixTheme.custom(light: AcmeTheme.light, dark: AcmeTheme.dark, child: App())
+  
+  MaterialApp(theme: KinetixMaterialTheme.fromColors(Brightness.light, AcmeTheme.light))
+  ```
+  
+  **The most complete native target.** Flutter's `KinetixColors` has all 35 semantic fields — including
+  `input`, `ring` and `tertiaryForeground`, which Compose has no field for — so no colour role is left
+  behind. Radius and elevation still do not travel: widgets read `KinetixRadius` constants directly and
+  `KinetixTheme` carries no shadow model. The Material and Cupertino adapters map the subset their own
+  theme APIs represent, unchanged from `light()` / `dark()`.
+  
+  Flutter writes `Color(0xFFRRGGBB)`, the resolved colour exactly, so like Compose it needs no
+  representation of its own in the shared contrast guarantee. The guarantee is unchanged.
+  
+  There is no Android XML exporter. `preset decode`, `preset url`, `preset css`, `preset swiftui`,
+  `preset compose`, `theme create` and `theme build` are unchanged.
+- 21ba276: `kinetixui preset swiftui <code|url>` — export a Kinetix Create preset as a SwiftUI theme file.
+  
+  Writes a `public enum` holding a light and a dark `KinetixColors`, resolved through the same theme engine
+  `preset css` uses, so both targets render one design rather than two derivations that agree by hand.
+  `--name <Symbol>` picks the Swift type (default `CreateTheme`) and `--output <file>` writes it instead of
+  printing it.
+  
+  Apply it with the new `KinetixTheme(light:dark:)` initializer in `packages/ui-swiftui`, which still
+  switches on `colorScheme`:
+  
+  ```swift
+  KinetixTheme(light: AcmeTheme.light, dark: AcmeTheme.dark) { … }
+  ```
+  
+  **Colours only, and SwiftUI only.** KinetixUI for SwiftUI is themeable through `KinetixColors`; corner
+  radius and elevation are literals inside each view, with no token an exported file could set, so a
+  design's radius and surface treatment apply on the web and not there — the generated file states that in
+  its own header. There is no Compose, Flutter or Android XML exporter.
+  
+  `preset decode`, `preset url`, `theme create` and `theme build` are unchanged.
+  
+  `preset css` gains no options, but its OUTPUT changes for some designs. Building the SwiftUI exporter
+  surfaced a contrast defect in the shared theme engine: `action-foreground` was chosen against `action`
+  and never re-checked against `action-hover` / `action-pressed`, so a button label could sit at 3.37:1
+  while pressed. 96 of 256 sampled designs were affected. The foreground is now scored across all three
+  fills and the state movement scales back when the label cannot follow it, so those designs resolve to
+  different — readable — values. `action` itself is unchanged, and designs that already cleared AA are
+  byte-identical to before.
+
 ## 0.22.1
 
 ### Patch Changes

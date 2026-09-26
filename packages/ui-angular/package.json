@@ -1,6 +1,6 @@
 {
   "name": "@kinetixui/angular",
-  "version": "0.22.1",
+  "version": "0.23.0",
   "description": "KinetixUI for Angular — standalone components built on the same generated design tokens as the React, SwiftUI, Jetpack Compose and Flutter implementations.",
   "license": "MIT",
   "homepage": "https://kinetixui.com/docs/angular",
