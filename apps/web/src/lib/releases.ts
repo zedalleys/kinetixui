@@ -68,7 +68,7 @@ export const RELEASES: Release[] = [
     version: "0.23.0",
     date: "2026-09-26",
     summary:
-      "A Create preset becomes a real theme file — web CSS, SwiftUI, Compose or Flutter — from one shared engine. Eleven components reach Stable, every component's React API is documented, and Angular arrives as a preview package.",
+      "A Create preset becomes a real theme file — web CSS, SwiftUI, Compose or Flutter — from one shared engine. Eleven components reach Stable, every component's React API is documented, and Angular arrives as a preview implementation, versioned here but not yet on npm.",
     breaking: [
       "`ColorPicker` and `MarkdownEditor` (Beta): `onChange` is now `onValueChange`, and `value` is no longer required — both accept `value?` / `defaultValue?` / `onValueChange?`.",
       "`JsonViewer` (Beta): `hideCopy` is now `copyable`, defaulting to true.",
@@ -80,7 +80,7 @@ export const RELEASES: Release[] = [
       "The native exporters write colours and nothing else. SwiftUI, Compose and Flutter all read radius from generated constants and have no runtime elevation theme, so a design's radius and surface treatment apply on the web and nowhere else — each generated file says so in its own header.",
       "Compose's `KinetixColors` has no field for `input`, `ring` or `tertiary-foreground`, so a preset overriding either of the first two reaches the web, SwiftUI and Flutter but not Compose. SwiftUI and Flutter carry the whole contract.",
       "There is no Android XML exporter, and no single command that exports every platform at once.",
-      "The native libraries are not versioned with these npm packages. `@kinetixui/angular` is a preview package: 31 of 98 components, and its own lifecycle is separate from the React set's.",
+      "The native libraries are not versioned with these npm packages. `@kinetixui/angular` is a preview implementation and is not published to npm in this release: 31 of 98 components, and its own lifecycle is separate from the React set's.",
     ],
     changes: [
       {
@@ -128,8 +128,8 @@ export const RELEASES: Release[] = [
       {
         kind: "new",
         area: ["components", "platforms"],
-        title: "`@kinetixui/angular` — a preview package",
-        body: "31 components, built AOT with strict template checking in CI. Preview: the API may still change, and it is not at parity with the React set.",
+        title: "`@kinetixui/angular` — a preview implementation",
+        body: "31 components, built AOT with strict template checking in CI. Preview: the API may still change, and it is not at parity with the React set. It is not on npm in this release — it is versioned and CI-validated in the repository, and there is no install command to give yet.",
         href: "/docs/angular",
       },
       {
