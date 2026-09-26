@@ -45,11 +45,11 @@
     "build:web": "pnpm --filter @kinetixui/web build",
     "clean": "turbo run clean && rimraf node_modules",
     "lint": "turbo run lint",
-    "test": "turbo run test",
+    "test": "turbo run test && pnpm test:release",
     "typecheck": "turbo run typecheck",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build:tokens && pnpm --filter @kinetixui/ui build && pnpm --filter @kinetixui/cli build && pnpm -r publish --no-git-checks --provenance && changeset git-tag && git push --tags",
+    "release": "node scripts/release-publish.mjs",
     "check:platform-source": "node scripts/check-platform-source.mjs",
     "platform:matrix": "node scripts/check-platform-source.mjs --matrix",
     "report:beta": "node scripts/report-beta.mjs",
@@ -62,7 +62,11 @@
     "check:usage": "node scripts/gen-usage-examples.mjs --check",
     "check:platform-code": "node scripts/check-platform-code.mjs",
     "marketing:stats": "node scripts/marketing-stats.mjs",
-    "marketing:release-notes": "node scripts/release-to-content.mjs"
+    "marketing:release-notes": "node scripts/release-to-content.mjs",
+    "release:check": "node scripts/release-check.mjs",
+    "release:plan": "node scripts/release-plan.mjs",
+    "release:preflight": "node scripts/release-preflight.mjs",
+    "test:release": "node scripts/release/test/run.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

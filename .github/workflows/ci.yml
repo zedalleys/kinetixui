@@ -32,6 +32,19 @@ jobs:
       - name: Build tokens
         run: pnpm build:tokens
 
+      # The release safety layer, tested like anything else. Pure planning logic: no network, no
+      # subprocess, nothing published.
+      - name: Test (release tooling)
+        run: pnpm test:release
+
+      # Every workspace package is either allowlisted for npm in release/publish-packages.json or
+      # carries `private: true`, and every allowlisted package has publication-ready metadata.
+      # A package that is neither fails here, on the pull request that introduced it, rather than
+      # at the registry halfway through a release — which is how @kinetixui/angular took 0.23.0
+      # down with it. Offline, so it passes on an ordinary PR whose version is already on npm.
+      - name: Publish allowlist and package metadata
+        run: pnpm release:check
+
       - name: Lint
         run: pnpm lint
 

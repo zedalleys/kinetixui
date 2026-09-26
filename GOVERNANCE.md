@@ -35,9 +35,14 @@ Two invariants hold regardless of who's contributing:
   there's one maintainer, not because review doesn't matter — a real
   contributor's PR gets read the same as a solo commit would.
 - **Releases** go out via Changesets on merge to `main` — see
+  [`RELEASING.md`](./RELEASING.md) for the mechanics, what the release system
+  does and does not guarantee, and how to recover a partial release, and
   [`/docs/contributing`](https://kinetixui.com/docs/contributing) for the
-  mechanics. `@kinetixui/{tokens,ui,cli}` version together; none of them ship
-  `1.0.0` until the library is considered feature-complete.
+  contributor-facing summary. `@kinetixui/{tokens,ui,cli}` version together;
+  none of them ship `1.0.0` until the library is considered feature-complete.
+  Which packages npm may receive is an explicit list
+  ([`release/publish-packages.json`](./release/publish-packages.json)), not
+  whatever the workspace happens to contain.
 - **Security issues** follow [`SECURITY.md`](./SECURITY.md), not this file —
   report privately, not as a PR or public issue.
 - **Roadmap** is tracked in-repo (`COMPONENT-ADDITIONS.md`) rather than in a
