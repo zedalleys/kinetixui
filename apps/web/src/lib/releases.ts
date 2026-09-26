@@ -65,6 +65,89 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.23.0",
+    date: "2026-09-26",
+    summary:
+      "A Create preset becomes a real theme file — web CSS, SwiftUI, Compose or Flutter — from one shared engine. Eleven components reach Stable, every component's React API is documented, and Angular arrives as a preview package.",
+    breaking: [
+      "`ColorPicker` and `MarkdownEditor` (Beta): `onChange` is now `onValueChange`, and `value` is no longer required — both accept `value?` / `defaultValue?` / `onValueChange?`.",
+      "`JsonViewer` (Beta): `hideCopy` is now `copyable`, defaulting to true.",
+      "`@kinetixui/angular` (preview): `kxInput` no longer matches `<textarea>`; use `kxTextarea`.",
+    ],
+    migration:
+      'Rename `onChange` to `onValueChange` on ColorPicker and MarkdownEditor; a controlled component is otherwise unchanged. Replace `hideCopy` on JsonViewer with `copyable={false}`. In Angular, change `<textarea kxInput>` to `<textarea kxTextarea>`. Nothing in the Stable set changed — these are pre-1.0 Beta corrections, made now rather than carried to 1.0 behind an alias.',
+    limitations: [
+      "The native exporters write colours and nothing else. SwiftUI, Compose and Flutter all read radius from generated constants and have no runtime elevation theme, so a design's radius and surface treatment apply on the web and nowhere else — each generated file says so in its own header.",
+      "Compose's `KinetixColors` has no field for `input`, `ring` or `tertiary-foreground`, so a preset overriding either of the first two reaches the web, SwiftUI and Flutter but not Compose. SwiftUI and Flutter carry the whole contract.",
+      "There is no Android XML exporter, and no single command that exports every platform at once.",
+      "The native libraries are not versioned with these npm packages. `@kinetixui/angular` is a preview package: 31 of 98 components, and its own lifecycle is separate from the React set's.",
+    ],
+    changes: [
+      {
+        kind: "new",
+        area: "cli",
+        title: "`kinetixui preset` — read a Create design, and turn it into a theme",
+        body: "`preset decode` prints what a `KX1_` code contains and `preset url` prints its share link. `preset css`, `preset swiftui`, `preset compose` and `preset flutter` resolve it into a real artifact: a `:root` / `.dark` override block, or a light/dark colour pair for the platform's own theme type. All four run one shared engine over one resolved theme, so a design means the same thing everywhere — the CLI's output is asserted byte-identical to the workspace's Copy CSS.",
+        href: "/docs/cli",
+      },
+      {
+        kind: "new",
+        area: "platforms",
+        title: "The three native packages accept a custom palette",
+        body: "SwiftUI's `KinetixTheme(light:dark:)`, Compose's `KinetixTheme(light = …, dark = …)` and Flutter's `KinetixTheme.custom` install an exported theme while still following the system appearance. Flutter's Material and Cupertino adapters gain `fromColors`. Every existing call — `KinetixTheme { }`, `KinetixTheme(child:)`, `KinetixMaterialTheme.light()` — behaves exactly as before, and Compose's original JVM entry point is preserved for apps already compiled against it.",
+        href: "/docs/flutter",
+      },
+      {
+        kind: "accessibility",
+        area: ["components", "tokens"],
+        title: "A generated theme's buttons stay readable while hovered and pressed",
+        body: "The action foreground was chosen against the resting fill and never re-checked against `action-hover` / `action-pressed`, so a generated theme could put a button label at 3.37:1 — below AA — the moment it was pressed. The foreground is now scored across all three fills and the state movement scales back when the label cannot follow. Contrast is also measured on the colour a platform actually receives, not the one the engine computed, because integer-HSL output cost up to 0.37 of a ratio.",
+        href: "/create",
+      },
+      {
+        kind: "breaking",
+        area: "components",
+        title: "Four Beta APIs corrected before 1.0",
+        body: "ColorPicker and MarkdownEditor could only be used controlled and used `onChange` against the convention every other value control follows. TreeView's selection had no `defaultSelected`, so an uncontrolled tree could never show one. JsonViewer's `hideCopy` was a negative boolean. See the migration note above.",
+        href: "/docs/components",
+      },
+      {
+        kind: "improved",
+        area: "components",
+        title: "Eleven audited components graduate to Stable",
+        body: "Each one audited against its React source, its docs page and its tests before the lifecycle moved — the manifest refuses a maturity the evidence does not support.",
+        href: "/docs/platforms",
+      },
+      {
+        kind: "new",
+        area: "components",
+        title: "Every component's React API is on its docs page",
+        body: "Props, types and defaults, generated from the source rather than written twice.",
+        href: "/docs/components",
+      },
+      {
+        kind: "new",
+        area: ["components", "platforms"],
+        title: "`@kinetixui/angular` — a preview package",
+        body: "31 components, built AOT with strict template checking in CI. Preview: the API may still change, and it is not at parity with the React set.",
+        href: "/docs/angular",
+      },
+      {
+        kind: "accessibility",
+        area: "platforms",
+        title: "A Tag's dismiss control is named after its tag",
+        body: 'On SwiftUI, Compose, Flutter and Angular the remove button announced only "Remove", so a screen reader user hearing it out of context could not tell which tag it belonged to.',
+      },
+      {
+        kind: "new",
+        area: "release",
+        title: "Implementation verification, kept separate from package maturity",
+        body: "What each platform's implementation has actually been verified to do — build, interaction, accessibility, RTL — derived from the test files themselves rather than declared. A manifest claim the evidence does not support now fails CI.",
+        href: "/docs/platforms",
+      },
+    ],
+  },
+  {
     version: "0.22.1",
     date: "2026-09-21",
     summary: "`kinetixui parity` now explains why its list is shorter than the component total on the site.",
