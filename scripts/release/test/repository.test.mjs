@@ -5,7 +5,9 @@
  */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { createRequire } from "node:module";
+import path from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { validateAllowlist } from "../contract.mjs";
@@ -97,34 +99,62 @@ describe("the release scripts", () => {
 });
 
 /**
- * `releaseTagName` restates what Changesets does rather than importing an internal, so it is worth
- * checking against tags a real release actually produced instead of against the source it was read
- * from.
+ * `releaseTagName` restates what Changesets does rather than importing an internal alias out of a
+ * bundled file, so it is checked against the installed implementation — which is the authority, and
+ * is present wherever the tests run.
+ *
+ * It is deliberately not checked against `git tag` alone: `actions/checkout` does not fetch tags at
+ * the default depth, so on CI the local tag list is empty. (That is also why the release reads the
+ * remote tag list explicitly instead of trusting the local one.) The history check below therefore
+ * only runs where history is available.
  */
 describe("release tag names", () => {
+  it("matches what the installed Changesets builds a tag from", () => {
+    const require = createRequire(`${root}package.json`);
+    const dist = path.join(path.dirname(require.resolve("@changesets/cli/package.json")), "dist");
+    const sources = readdirSync(dist)
+      .filter((name) => name.endsWith(".mjs"))
+      .map((name) => readFileSync(path.join(dist, name), "utf8"));
+    const buildGitTag = sources.find((source) => source.includes("function buildGitTag"));
+
+    assert.ok(
+      buildGitTag,
+      "could not find buildGitTag in the installed @changesets/cli — re-verify releaseTagName against it",
+    );
+    // `tool.type !== "root" ? `${name}@${version}` : `v${version}`` — this is a pnpm workspace, so
+    // the first branch is the one that applies.
+    assert.match(
+      buildGitTag,
+      /\$\{name\}@\$\{version\}/,
+      "Changesets no longer builds a tag as `${name}@${version}` — re-verify releaseTagName",
+    );
+    assert.equal(releaseTagName("@kinetixui/ui", "0.24.0"), "@kinetixui/ui@0.24.0");
+  });
+
   const localTags = new Set(
     execFileSync("git", ["tag", "--list"], { cwd: root, encoding: "utf8" })
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean),
   );
-  // The most recent version that has tags at all, so this keeps working as releases go by.
-  const tagged = [...localTags].filter((tag) => tag.startsWith("@kinetixui/"));
+  const kinetixTags = [...localTags].filter((tag) => tag.startsWith("@kinetixui/"));
 
-  it("matches the tags Changesets created for the last tagged release", () => {
-    assert.ok(tagged.length > 0, "expected some @kinetixui/* tags in the repository");
-    const version = tagged
+  it("matches the tags a real release produced, where the checkout has them", { skip: kinetixTags.length === 0 && "shallow checkout: no tags fetched" }, () => {
+    // The newest version that has tags, so this keeps working as releases go by.
+    const version = kinetixTags
       .map((tag) => tag.slice(tag.lastIndexOf("@") + 1))
       .sort()
       .at(-1);
     for (const name of ["@kinetixui/cli", "@kinetixui/tokens", "@kinetixui/ui"]) {
-      const expected = releaseTagName(name, version);
-      assert.ok(localTags.has(expected), `expected the real tag ${expected} to exist`);
+      assert.ok(localTags.has(releaseTagName(name, version)), `expected the real tag ${releaseTagName(name, version)} to exist`);
     }
   });
 
   it("has never tagged the private Angular package", () => {
-    const angularTags = [...localTags].filter((tag) => tag.startsWith("@kinetixui/angular@"));
-    assert.deepEqual(angularTags, [], "a private package must never get a release tag");
+    assert.deepEqual(
+      [...localTags].filter((tag) => tag.startsWith("@kinetixui/angular@")),
+      [],
+      "a private package must never get a release tag",
+    );
   });
 });
