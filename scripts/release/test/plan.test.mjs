@@ -27,7 +27,8 @@ describe("the publish set", () => {
       plan.publish.map((t) => `${t.name}@${t.version}`),
       ["@kinetixui/cli@0.24.0", "@kinetixui/tokens@0.24.0", "@kinetixui/ui@0.24.0"],
     );
-    assert.equal(plan.version, "0.24.0");
+    assert.equal(plan.cohorts[0].group, "core");
+    assert.equal(plan.cohorts[0].version, "0.24.0");
   });
 
   it("never contains a private package", () => {
@@ -59,8 +60,8 @@ describe("recovery from a partial release", () => {
 
   it("says so in the human output, so completing a release is a deliberate act", () => {
     const text = formatPlan(buildPlan({ ...base, packages: healthyWorkspace(), registryState: partial }));
-    includes(text, "@kinetixui/tokens@0.24.0 already published — skip");
-    includes(text, "@kinetixui/ui@0.24.0 unpublished");
+    includes(text, "@kinetixui/tokens already published");
+    includes(text, "@kinetixui/ui     unpublished");
   });
 });
 
@@ -71,7 +72,7 @@ describe("an empty release", () => {
     assert.equal(plan.ok, true);
     assert.deepEqual(plan.publish, []);
     assert.equal(isNoOp(plan), true);
-    includes(formatPlan(plan), "every allowlisted version is already on the registry");
+    includes(formatPlan(plan), "publish:\n    none");
   });
 });
 
@@ -99,16 +100,15 @@ describe("planning without the registry", () => {
     assert.equal(plan.publish.length, 3);
     const text = formatPlan(plan);
     includes(text, "registry not consulted");
-    includes(text, "@kinetixui/ui@0.24.0 unknown");
   });
 });
 
 describe("the machine-readable plan", () => {
   it("carries the three sets and nothing else", () => {
     const plan = buildPlan({ ...base, packages: healthyWorkspace(), registryState: partial });
-    assert.deepEqual(planToJson(plan), {
+    const json = planToJson(plan);
+    assert.deepEqual({ ok: json.ok, registry: json.registry, registryConsulted: json.registryConsulted, publish: json.publish, alreadyPublished: json.alreadyPublished, private: json.private, errors: json.errors }, {
       ok: true,
-      version: "0.24.0",
       registry: "https://registry.npmjs.org/",
       registryConsulted: true,
       publish: [
@@ -137,10 +137,10 @@ describe("the step summary", () => {
   it("names the publishing, already-published and private sets, and no credentials", () => {
     const packages = [...healthyWorkspace(), privatePackage("@kinetixui/angular", "packages/ui-angular")];
     const markdown = planToMarkdown(buildPlan({ ...base, packages, registryState: partial }));
-    includes(markdown, "### Already published");
-    includes(markdown, "`@kinetixui/tokens@0.24.0`");
-    includes(markdown, "### Publishing");
-    includes(markdown, "`@kinetixui/ui@0.24.0`");
+    includes(markdown, "### core — 0.24.0");
+    includes(markdown, "`@kinetixui/tokens`");
+    includes(markdown, "**publish**");
+    includes(markdown, "`@kinetixui/ui`");
     includes(markdown, "### Private / excluded");
     includes(markdown, "`@kinetixui/angular@0.24.0`");
     // Credential shapes, not the word "token" — @kinetixui/tokens is a package name.

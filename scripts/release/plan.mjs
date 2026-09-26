@@ -29,20 +29,47 @@ export function buildPlan({ allowlistFile, packages, rootScriptNames = [], regis
   const classified = classify(packages, allowlist.packages);
   errors.push(...classified.errors);
 
-  // One version across the published set is a repository rule (the Changesets `fixed` group), so a
-  // mismatch means something edited a manifest by hand. Take the majority as expected so the error
-  // names the odd one out rather than all three.
-  const versions = classified.allowlisted.map((pkg) => pkg.version).filter(Boolean);
-  const expectedVersion = versions.length > 0 ? mode(versions) : null;
+  // Packages belong to release cohorts. A cohort marked `sameVersion` releases in lockstep — that
+  // is the rule for `core` (@kinetixui/{tokens,ui,cli}), where a mismatch means a manifest was
+  // edited by hand. Cohorts are independent of one another: `angular` carrying a different version
+  // from `core` is the design, not a defect, which is why this is no longer one version across the
+  // whole allowlist.
+  const byGroup = new Map();
+  for (const pkg of classified.allowlisted) {
+    const group = pkg.allowlist.releaseGroup;
+    if (!byGroup.has(group)) byGroup.set(group, []);
+    byGroup.get(group).push(pkg);
+  }
+
+  const groupVersion = new Map();
+  for (const [group, members] of byGroup) {
+    const versions = members.map((pkg) => pkg.version).filter(Boolean);
+    // The majority, so the error names the odd one out rather than every member of the cohort.
+    groupVersion.set(group, versions.length > 0 ? mode(versions) : null);
+  }
 
   for (const pkg of classified.allowlisted) {
-    errors.push(...validatePublishMetadata(pkg, { expectedVersion }));
+    const group = pkg.allowlist.releaseGroup;
+    errors.push(
+      ...validatePublishMetadata(pkg, {
+        expectedVersion: allowlist.groups[group]?.sameVersion ? groupVersion.get(group) : null,
+        releaseGroup: group,
+        packsFromArtifact: Boolean(pkg.allowlist.artifactDirectory),
+        requireFiles: pkg.allowlist.requireFiles,
+      }),
+    );
   }
 
   const publish = [];
   const alreadyPublished = [];
   for (const pkg of classified.allowlisted) {
-    const target = { name: pkg.name, version: pkg.version, directory: pkg.directory, allowlist: pkg.allowlist };
+    const target = {
+      name: pkg.name,
+      version: pkg.version,
+      directory: pkg.directory,
+      releaseGroup: pkg.allowlist.releaseGroup,
+      allowlist: pkg.allowlist,
+    };
     if (!registryState) {
       publish.push({ ...target, registry: null });
       continue;
@@ -64,20 +91,49 @@ export function buildPlan({ allowlistFile, packages, rootScriptNames = [], regis
     }
   }
 
-  // Sorted by name, so the plan — and everything rendered from it — is identical run to run
-  // regardless of the order the workspace happened to be read in. A release plan that reorders
-  // itself is a release plan nobody can diff.
+  publish.sort(byName);
+  alreadyPublished.sort(byName);
+
+  /**
+   * The same packages, split by cohort. Downstream stages use this rather than the flat lists
+   * whenever "which release is this?" matters — most importantly tag reconciliation, which must
+   * never be handed one cohort's tags while deriving another cohort's release commit.
+   */
+  const cohorts = [...byGroup.keys()].sort().map((group) => ({
+    group,
+    sameVersion: Boolean(allowlist.groups[group]?.sameVersion),
+    version: groupVersion.get(group) ?? null,
+    publish: publish.filter((target) => target.releaseGroup === group),
+    alreadyPublished: alreadyPublished.filter((target) => target.releaseGroup === group),
+  }));
+
+  // Sorted by name and by group, so the plan — and everything rendered from it — is identical run
+  // to run regardless of the order the workspace happened to be read in. A release plan that
+  // reorders itself is a release plan nobody can diff.
   return {
     ok: errors.length === 0,
     errors,
     registryConsulted: Boolean(registryState),
-    version: expectedVersion,
-    publish: publish.sort(byName),
-    alreadyPublished: alreadyPublished.sort(byName),
+    cohorts,
+    publish,
+    alreadyPublished,
     private: classified.private.map((pkg) => ({ name: pkg.name, version: pkg.version, directory: pkg.directory })).sort(byName),
     allowlist: allowlist.packages,
+    groups: allowlist.groups,
     registryUrl: allowlist.registry,
   };
+}
+
+/**
+ * One cohort's slice of a plan, in the shape the rest of the pipeline expects. This is what makes
+ * tag reconciliation cohort-safe: it is handed a plan containing only the release it is
+ * reconciling, so another cohort's historical tags are never in scope and its release commit is
+ * never inferred from them.
+ */
+export function cohortPlan(plan, group) {
+  const cohort = plan.cohorts.find((entry) => entry.group === group);
+  if (!cohort) throw new Error(`no release cohort named ${JSON.stringify(group)}`);
+  return { ...cohort, publish: cohort.publish, alreadyPublished: cohort.alreadyPublished };
 }
 
 const byName = (a, b) => a.name.localeCompare(b.name);

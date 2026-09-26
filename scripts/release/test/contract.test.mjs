@@ -106,7 +106,7 @@ describe("publication metadata", () => {
     const pkg = ok();
     pkg.manifest.version = "0.24.1";
     pkg.version = "0.24.1";
-    includes(errorsFor(pkg, { expectedVersion: "0.24.0" }), "does not match the other allowlisted packages");
+    includes(errorsFor(pkg, { expectedVersion: "0.24.0", releaseGroup: "core" }), 'does not match release group "core", which releases at 0.24.0');
   });
 
   it("fails on a version that is not semver", () => {

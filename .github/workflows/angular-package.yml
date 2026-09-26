@@ -17,6 +17,8 @@ on:
       - "packages/tokens/**"
       - "scripts/angular-package/**"
       - "scripts/release/**"
+      - "release/publish-packages.json"
+      - ".changeset/config.json"
       - ".github/workflows/angular-package.yml"
   push:
     branches: [main]
@@ -25,6 +27,8 @@ on:
       - "packages/tokens/**"
       - "scripts/angular-package/**"
       - "scripts/release/**"
+      - "release/publish-packages.json"
+      - ".changeset/config.json"
       - ".github/workflows/angular-package.yml"
   workflow_dispatch:
 
@@ -62,16 +66,29 @@ jobs:
       - name: Angular publication readiness
         run: pnpm check:angular-package
 
-      # Belt and braces on the thing this PR most needs to stay true. `check:angular-package`
-      # asserts both already; this fails loudly and on its own line if either ever flips.
-      - name: Angular is still unpublishable
+      # Angular is now an allowlisted, publishable package in its own release cohort. What must
+      # stay true is that it releases independently: it is not in the core lockstep, and a release
+      # of it never drags tokens/ui/cli along.
+      - name: Angular releases independently of the core cohort
         run: |
           node -e '
-            const pkg = require("./packages/ui-angular/package.json");
             const allow = require("./release/publish-packages.json");
-            if (pkg.private !== true) throw new Error("packages/ui-angular is no longer private");
-            if (allow.packages.some((p) => p.name === "@kinetixui/angular")) {
-              throw new Error("@kinetixui/angular is in the publish allowlist");
+            const changesets = require("./.changeset/config.json");
+            const entry = allow.packages.find((p) => p.name === "@kinetixui/angular");
+            if (!entry) throw new Error("@kinetixui/angular is not in the publish allowlist");
+            if (entry.releaseGroup !== "angular") throw new Error("Angular must be in its own release group");
+            if (entry.artifactDirectory !== "packages/ui-angular/dist") throw new Error("Angular must pack from its ng-packagr dist");
+            const core = allow.packages.filter((p) => p.releaseGroup === "core").map((p) => p.name).sort();
+            if (core.join() !== ["@kinetixui/cli", "@kinetixui/tokens", "@kinetixui/ui"].join()) {
+              throw new Error("the core cohort changed: " + core.join(", "));
             }
-            console.log("@kinetixui/angular: private: true, not allowlisted — cannot be published.");
+            if (changesets.fixed[0].includes("@kinetixui/angular")) throw new Error("Angular is still in the Changesets fixed group");
+            console.log("@kinetixui/angular: own release cohort, packs from dist, core untouched.");
           '
+
+      # The cohort-aware plan and the artifact contract, offline.
+      - name: Release cohort planning
+        run: pnpm release:check
+
+      - name: Release tooling tests
+        run: pnpm test:release

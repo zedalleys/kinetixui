@@ -25,10 +25,10 @@ const packages = discoverWorkspace(root);
 const planIt = () => buildPlan({ allowlistFile, packages, rootScriptNames });
 
 describe("this repository's publish allowlist", () => {
-  it("is the three packages that are actually on npm", () => {
+  it("is the core cohort plus the Angular cohort", () => {
     const { packages: allowed, errors } = validateAllowlist(allowlistFile, rootScriptNames);
     assert.deepEqual(errors, []);
-    assert.deepEqual(allowed.map((p) => p.name).sort(), ["@kinetixui/cli", "@kinetixui/tokens", "@kinetixui/ui"]);
+    assert.deepEqual(allowed.map((p) => p.name).sort(), ["@kinetixui/angular", "@kinetixui/cli", "@kinetixui/tokens", "@kinetixui/ui"]);
   });
 
   it("produces a clean plan over the real workspace", () => {
@@ -44,36 +44,84 @@ describe("this repository's publish allowlist", () => {
     assert.equal(accounted.size, packages.length);
   });
 
-  it("keeps the published packages on one version", () => {
-    assert.equal(new Set(planIt().publish.map((p) => p.version)).size, 1);
-  });
+  // Version equality is a cohort rule now, not an allowlist-wide one — see "release cohorts in
+  // this repository" below. Asserting it across the whole allowlist here would fail the moment
+  // Angular versions independently, which is the point of the cohort.
 });
 
 describe("@kinetixui/angular", () => {
   const angular = packages.find((p) => p.name === "@kinetixui/angular");
+  const entry = allowlistFile.packages.find((p) => p.name === "@kinetixui/angular");
+
+  it("is publication-ready: public, with the metadata npm requires", () => {
+    assert.ok(angular, "@kinetixui/angular should be a workspace package");
+    assert.notEqual(angular.manifest.private, true);
+    assert.deepEqual(angular.manifest.publishConfig, { access: "public", provenance: true });
+  });
+
+  it("is allowlisted, in its own release cohort", () => {
+    assert.ok(entry, "@kinetixui/angular should be in release/publish-packages.json");
+    assert.equal(entry.releaseGroup, "angular");
+    assert.notEqual(entry.releaseGroup, "core", "Angular must not share the core cohort's lockstep");
+  });
+
+  /** ng-packagr generates the publishable Angular Package Format manifest into `dist/`. */
+  it("packs from its built artifact, not its workspace root", () => {
+    assert.equal(entry.directory, "packages/ui-angular");
+    assert.equal(entry.artifactDirectory, "packages/ui-angular/dist");
+    const resolved = planIt().allowlist.find((p) => p.name === "@kinetixui/angular");
+    assert.equal(resolved.packDirectory, "packages/ui-angular/dist");
+  });
+
+  it("builds before it can be packed", () => {
+    assert.ok(entry.build.includes("build:angular"), "the allowlist must build Angular before packing its dist");
+    for (const script of entry.build) assert.ok(script in rootManifest.scripts, `root script ${script} must exist`);
+  });
+
+  it("requires the files a consumer actually needs", () => {
+    for (const file of ["styles.css", "fesm2022/kinetixui-angular.mjs", "types/kinetixui-angular.d.ts"]) {
+      assert.ok(entry.requireFiles.includes(file), `requireFiles should name ${file}`);
+    }
+  });
 
   /**
-   * This work does not make Angular publishable — that is its own piece of work. What it must do
-   * is make it impossible for Angular to reach npm by accident, which `private: true` plus the
-   * allowlist does twice over.
+   * Publication readiness is not maturity. Angular stays Preview, and its version stays whatever
+   * Changesets last set — the transition to 0.24.0 happens in the Version Packages PR, not here.
    */
-  it("is private, which is the mechanism that keeps it off npm", () => {
-    assert.ok(angular, "@kinetixui/angular should still be a workspace package");
-    assert.equal(angular.manifest.private, true);
+  it("is still Preview, and still not on npm at this commit", () => {
+    const manifest = read("components.manifest.json");
+    assert.equal(manifest.platformDefinitions.Angular.maturity, "preview");
+    assert.equal(angular.version, "0.23.0", "the version transition belongs to the Version Packages PR");
   });
 
-  it("is not in the publish allowlist", () => {
-    assert.ok(!allowlistFile.packages.map((p) => p.name).includes("@kinetixui/angular"));
-  });
-
-  it("never appears in the publish plan", () => {
+  it("appears in the angular cohort of the plan, never in core", () => {
     const plan = planIt();
-    assert.ok(!plan.publish.map((p) => p.name).includes("@kinetixui/angular"));
-    assert.ok(plan.private.map((p) => p.name).includes("@kinetixui/angular"));
+    const cohort = plan.cohorts.find((c) => c.group === "angular");
+    assert.deepEqual([...cohort.publish, ...cohort.alreadyPublished].map((t) => t.name), ["@kinetixui/angular"]);
+    const core = plan.cohorts.find((c) => c.group === "core");
+    assert.ok(![...core.publish, ...core.alreadyPublished].some((t) => t.name === "@kinetixui/angular"));
+  });
+});
+
+describe("release cohorts in this repository", () => {
+  it("keeps tokens, ui and cli together in core", () => {
+    const core = allowlistFile.packages.filter((p) => p.releaseGroup === "core").map((p) => p.name).sort();
+    assert.deepEqual(core, ["@kinetixui/cli", "@kinetixui/tokens", "@kinetixui/ui"]);
+    assert.equal(allowlistFile.releaseGroups.core.sameVersion, true, "core releases in lockstep");
   });
 
-  it("has not quietly acquired publication metadata", () => {
-    assert.equal(angular.manifest.publishConfig, undefined);
+  it("keeps the core cohort on one version", () => {
+    const plan = planIt();
+    const core = plan.cohorts.find((c) => c.group === "core");
+    const versions = new Set([...core.publish, ...core.alreadyPublished].map((t) => t.version));
+    assert.equal(versions.size, 1, `core must share one version, found ${[...versions].join(", ")}`);
+  });
+
+  it("matches the Changesets fixed group, which owns core and not Angular", () => {
+    const config = read(".changeset/config.json");
+    const fixed = config.fixed[0].sort();
+    assert.deepEqual(fixed, ["@kinetixui/cli", "@kinetixui/tokens", "@kinetixui/ui"]);
+    assert.ok(!fixed.includes("@kinetixui/angular"), "Angular versions independently");
   });
 });
 
@@ -156,5 +204,44 @@ describe("release tag names", () => {
       [],
       "a private package must never get a release tag",
     );
+  });
+});
+
+/**
+ * The two-stage release flow.
+ *
+ * A pending changeset means the versions in this tree are the ones about to be superseded. The
+ * `changesets/action` the Release workflow pins reaches its publish branch only under
+ * `!hasChangesets` — with a changeset present it runs the version step and opens the Version
+ * Packages PR instead — so merging an activation PR cannot publish the outgoing version.
+ *
+ * That guarantee lives in someone else's action, so `scripts/release-publish.mjs` enforces the same
+ * rule itself. These assert both halves are still in place.
+ */
+describe("a release cannot run while changesets are pending", () => {
+  const publishScript = readFileSync(`${root}scripts/release-publish.mjs`, "utf8");
+
+  it("refuses to publish when .changeset holds an unapplied changeset", () => {
+    assert.match(publishScript, /Refusing to publish: .*changeset\(s\) are pending/);
+    assert.match(publishScript, /No package was published\./);
+  });
+
+  it("reads the changeset directory rather than trusting the caller", () => {
+    assert.match(publishScript, /readdirSync\(dir\)[\s\S]{0,120}endsWith\("\.md"\)/);
+  });
+
+  it("keeps the workflow's two-stage inputs, which is what routes a changeset to the Version PR", () => {
+    const workflow = readFileSync(`${root}.github/workflows/release.yml`, "utf8");
+    assert.match(workflow, /uses: changesets\/action@[0-9a-f]{40}/, "the action must stay pinned to the audited commit");
+    assert.match(workflow, /version: pnpm changeset version/);
+    assert.match(workflow, /publish: pnpm release/);
+  });
+
+  it("has exactly one pending changeset, for Angular's first public release", () => {
+    const pending = readdirSync(`${root}.changeset`).filter((f) => f.endsWith(".md") && f.toLowerCase() !== "readme.md");
+    assert.deepEqual(pending, ["angular-first-public-release.md"]);
+    const body = readFileSync(`${root}.changeset/${pending[0]}`, "utf8");
+    assert.match(body, /"@kinetixui\/angular": minor/);
+    assert.ok(!/"@kinetixui\/(ui|cli|tokens)"/.test(body), "the core cohort must not be dragged into this release");
   });
 });

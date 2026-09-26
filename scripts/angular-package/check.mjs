@@ -4,19 +4,14 @@
  *   node scripts/angular-package/check.mjs            build, simulate, install, typecheck, build
  *   node scripts/angular-package/check.mjs --contract stop after the artifact contract (no network)
  *
- * The package is deliberately unpublishable: it carries `private: true` and is absent from
- * `release/publish-packages.json`, and PR-time release checks assert both. This proves the other
- * half — that the artifact behind those locks is genuinely usable — without removing them.
+ * The package is activated: public, allowlisted, and in its own release cohort. This proves the
+ * artifact behind that decision is one a consumer can actually use, and that the activation is
+ * coherent — a package that is public but unlisted, or listed in the core cohort, is worse than
+ * either end state.
  *
- * ## Publication simulation
+ * What it does not do is publish. That happens when the Version Packages release runs.
  *
- * The repository's package manifest is never modified. `dist/` is copied to a temp directory and
- * *that copy* gets the two publication locks removed: `private` deleted and `publishConfig` added.
- * Nothing else is changed. If the resulting tarball is a valid npm artifact, then flipping those
- * exact switches in PR #227 produces a valid npm artifact, and the simulation says so without ever
- * making the repository publishable.
- *
- * The tarball is then validated by the release tooling's own `validatePackedArtifact` — the same
+ * The tarball is validated by the release tooling's own `validatePackedArtifact` — the same
  * function that gates `@kinetixui/{tokens,ui,cli}` — rather than an Angular-only reimplementation.
  * An Angular package that would fail the real release gate fails here.
  *
@@ -27,7 +22,7 @@
  * no link to this repository, so nothing resolves through the monorepo: if the package's own
  * `exports`, `typings` or partial-compiled FESM are wrong, the build fails.
  */
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -89,15 +84,28 @@ const dist = path.join(pkgDir, "dist");
 const built = JSON.parse(readFileSync(path.join(dist, "package.json"), "utf8"));
 detail(`built ${built.name}@${built.version}`);
 
-// The locks this PR must not remove. Asserted against the real, unmodified artifact.
-if (built.private !== true) fail(`the built package lost "private": true — the repository must stay unpublishable`);
+// The activation, asserted against the real artifact. A half-activated package — public but
+// unlisted, or listed inside the core cohort — is worse than either end state, so these check the
+// whole set rather than any one switch.
+if (built.private === true) fail(`the built package still carries "private": true — it cannot be published`);
 const source = JSON.parse(readFileSync(path.join(pkgDir, "package.json"), "utf8"));
-if (source.private !== true) fail(`packages/ui-angular/package.json lost "private": true`);
+if (source.private === true) fail(`packages/ui-angular/package.json is still private`);
+if (source.publishConfig?.access !== "public") fail(`packages/ui-angular/package.json needs publishConfig.access: "public"`);
+if (source.publishConfig?.provenance !== true) fail(`packages/ui-angular/package.json needs publishConfig.provenance: true`);
 const allowlist = JSON.parse(readFileSync(path.join(root, "release", "publish-packages.json"), "utf8"));
-if (allowlist.packages.some((entry) => entry.name === built.name)) {
-  fail(`${built.name} is in release/publish-packages.json — this PR must not make it publishable`);
+const entry = allowlist.packages.find((candidate) => candidate.name === built.name);
+if (!entry) fail(`${built.name} is not in release/publish-packages.json, so a release would never publish it`);
+if (entry && entry.releaseGroup !== "angular") {
+  fail(`${built.name} is in release group "${entry.releaseGroup}" — it must release independently of core`);
 }
-detail(`private: true preserved, and absent from the publish allowlist`);
+if (entry && entry.artifactDirectory !== "packages/ui-angular/dist") {
+  fail(`${built.name} must pack from packages/ui-angular/dist, not ${entry.artifactDirectory ?? "its workspace root"}`);
+}
+const changesets = JSON.parse(readFileSync(path.join(root, ".changeset", "config.json"), "utf8"));
+if (changesets.fixed.some((group) => group.includes(built.name))) {
+  fail(`${built.name} is still in the Changesets fixed group; it would drag the core cohort into its releases`);
+}
+if (errors.length === 0) detail(`public, allowlisted in the "angular" cohort, packing from ${entry.artifactDirectory}`);
 
 // ── 1b. public API snapshot ─────────────────────────────────────────────────
 // Every exported symbol, selector, input and output, in a file review can diff. Once a symbol is
@@ -136,17 +144,14 @@ step("Checking DOM access (no global browser objects)");
   }
 }
 
-// ── 2. publication simulation ───────────────────────────────────────────────
-step("Simulating publication (a temp copy — the repository is not modified)");
-const staging = mkdtempSync(path.join(tmpdir(), "kinetixui-angular-sim-"));
-const stageDir = path.join(staging, "package");
-cpSync(dist, stageDir, { recursive: true });
-
-const staged = JSON.parse(readFileSync(path.join(stageDir, "package.json"), "utf8"));
-delete staged.private; // lock 1
-staged.publishConfig = { access: "public", provenance: true }; // lock 2
-writeFileSync(path.join(stageDir, "package.json"), `${JSON.stringify(staged, null, 2)}\n`);
-detail("removed `private`, added publishConfig — nothing else");
+// ── 2. pack the real artifact ───────────────────────────────────────────────
+// There is no staging copy and no manifest edit any more. The package is activated, so what
+// ng-packagr wrote into `dist/` is exactly what a release uploads — packing anything else would
+// be checking a thing that never ships.
+step("Packing the artifact the release would publish");
+const staging = mkdtempSync(path.join(tmpdir(), "kinetixui-angular-pack-"));
+const stageDir = dist;
+detail(`packing ${path.relative(root, dist).split(path.sep).join("/")} unmodified`);
 
 const npm = resolveNpm();
 let tarballPath;
@@ -287,11 +292,10 @@ function finish() {
   console.log(
     contractOnly
       ? `\n✓ @kinetixui/angular's packed artifact is a valid npm package.\n` +
-          `  The clean-consumer build was skipped (--contract), so this does not prove a consumer can use it.\n` +
-          `  It remains private: true and absent from release/publish-packages.json, so it cannot be published.`
+          `  The clean-consumer build was skipped (--contract), so this does not prove a consumer can use it.`
       : `\n✓ @kinetixui/angular is publication-ready: the artifact is a valid npm package and a clean ` +
           `Angular application builds against it.\n` +
-          `  It remains private: true and absent from release/publish-packages.json, so it cannot be published.`,
+          `  It is activated but not yet published — the Version Packages release does that. See RELEASING.md.`,
   );
   process.exit(0);
 }
