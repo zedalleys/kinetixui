@@ -87,14 +87,42 @@ that generates the same file in the browser, and shows the command above beside 
 The preview there is web — it renders the React components — so what changes when
 you select SwiftUI is the generated file, not the picture.
 
-**Colours only.** `KinetixColors` is the whole themeable surface here:
-corner radius and elevation are literals inside each view
-(`RoundedRectangle(cornerRadius: 16)`), with no token an exported file
-could set. A Create design's radius and surface treatment therefore apply
-on the web and not in SwiftUI, and the generated file says so in its own
-header. A colour the design did not change is written as a reference to
-the shipped token rather than a copy of today's value, so it keeps
-following the library.
+**Colours, and now corners and shadows too.** `KinetixColors` used to be the
+whole themeable surface: corner radius and elevation were literals inside each
+view (`RoundedRectangle(cornerRadius: 16)`), so a design could not move them.
+The package ships two more sets beside it, and the components read them:
+
+```swift
+KinetixTheme(
+    light: AcmeTheme.light,
+    dark: AcmeTheme.dark,
+    radii: KinetixRadii(field: 2, control: 6, container: 10, surface: 14),
+    elevations: .flat
+) {
+    ContentView()
+}
+```
+
+`KinetixRadii` is four corners named for what the corner does — `field` (inputs,
+tags), `control` (buttons, tabs), `container` (alerts, panels), `surface` (cards,
+dialogs, sheets) — plus `none` and `full`. `KinetixElevations` is the `sm` / `md`
+/ `lg` / `xl` ladder, each step an ordered list of shadow layers, the same shape
+Flutter's `KinetixShadow` uses. Both default to the shipped tokens, so
+`KinetixTheme { … }` looks exactly as it did.
+
+**`preset swiftui` still exports colours only.** The runtime can take radii and
+elevation; the exporter does not write them yet, so a Create design's radius and
+surface treatment still do not arrive in the generated file — set them by hand on
+`KinetixTheme` until it does. The generated file says the same thing in its own
+header. A colour the design did not change is written as a reference to the
+shipped token rather than a copy of today's value, so it keeps following the
+library.
+
+Two limits worth knowing. SwiftUI's `.shadow` has no `spread`, and the shared
+token ladder uses it on `lg`, so a SwiftUI `lg` renders slightly larger than the
+web's. And eight corners across five components (AppBar, ColorPicker, FileUpload,
+InputOtp, Sidebar) sit at `6`, which is not a step on the 4 / 8 / 12 / 16 ladder;
+they stay literal rather than being moved silently.
 
 ## Tokens: SwiftUI `Color`, not `UIColor`
 

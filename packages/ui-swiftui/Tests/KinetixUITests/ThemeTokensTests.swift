@@ -83,7 +83,10 @@ final class ThemeTokensTests: XCTestCase {
 
     func testNoneDrawsNothingAndFlatIsAllNone() {
         XCTAssertTrue(KinetixElevation.none.layers.isEmpty)
-        for step in [KinetixElevations.flat.sm, .flat.md, .flat.lg, .flat.xl] {
+        // Written out rather than `[.flat.sm, .flat.md, …]`: the array's element type is
+        // KinetixElevation, so the leading-dot shorthand would look for `flat` on the step.
+        let flat = KinetixElevations.flat
+        for step in [flat.sm, flat.md, flat.lg, flat.xl] {
             XCTAssertTrue(step.layers.isEmpty)
         }
     }

@@ -132,9 +132,13 @@ rather than quietly corrected.
 Each target also shows the `kinetixui preset …` command that writes the same file,
 because the CLI and the workspace run the same exporter.
 
-What no target carries is radius and surface on native: the SwiftUI, Compose and
-Flutter packages read generated constants rather than a runtime theme, so there is
-nowhere for either to land. Colours and the chart palette travel everywhere.
+What no target carries is radius and surface on native — but the reason now
+differs by platform. Compose and Flutter read generated constants rather than a
+runtime theme, so there is nowhere for either to land. SwiftUI has somewhere:
+[`KinetixRadii` and `KinetixElevations`](/docs/swiftui) are part of its theme, and
+its components read them. What is missing there is the export — `preset swiftui`
+writes colours only, so a design's radius still has to be set by hand. Colours and
+the chart palette travel everywhere.
 `kinetixui theme build` is a separate, older path — a CSV of literal colours
 compiled to CSS — and is web-only; see the [CLI](/docs/cli) page for its scope.
 
