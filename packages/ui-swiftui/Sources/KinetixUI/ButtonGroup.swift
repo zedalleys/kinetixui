@@ -22,6 +22,7 @@ public enum KinetixButtonGroupOrientation {
 
 public struct KinetixButtonGroup<Content: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     private let orientation: KinetixButtonGroupOrientation
     private let content: Content
 
@@ -31,7 +32,7 @@ public struct KinetixButtonGroup<Content: View>: View {
     }
 
     public var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 8, style: .continuous) // radius/md
+        let shape = RoundedRectangle(cornerRadius: radii.control, style: .continuous) // radius/md
         Group {
             if orientation == .horizontal {
                 HStack(spacing: 0) { content }
@@ -64,6 +65,7 @@ public struct KinetixButtonGroupSeparator: View {
 /// A static, non-interactive label segment inside a group — e.g. a unit or a prefix next to steppers.
 public struct KinetixButtonGroupText<Content: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     private let content: Content
 
     public init(@ViewBuilder content: () -> Content) {
@@ -71,7 +73,7 @@ public struct KinetixButtonGroupText<Content: View>: View {
     }
 
     public var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 8, style: .continuous) // radius/md
+        let shape = RoundedRectangle(cornerRadius: radii.control, style: .continuous) // radius/md
         HStack(spacing: 6) { content } // gap-1.5, off the shared spacing scale — same call as KinetixBadge
             .padding(.horizontal, 12) // spacing/3
             .background(colors.muted, in: shape)

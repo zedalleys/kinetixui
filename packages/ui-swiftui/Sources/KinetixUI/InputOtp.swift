@@ -48,7 +48,7 @@ public struct KinetixInputOtp: View {
                         .font(.system(size: 18, weight: .medium, design: .monospaced))
                         .foregroundStyle(colors.foreground)
                         .frame(width: 40, height: 48)
-                        .background(colors.background, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .background(colors.background, in: RoundedRectangle(cornerRadius: 6, style: .continuous))  // 6 is off the radius ladder — see Radii.swift
                         .overlay {
                             RoundedRectangle(cornerRadius: 6, style: .continuous)
                                 .strokeBorder(

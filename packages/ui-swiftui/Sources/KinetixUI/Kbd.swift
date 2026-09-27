@@ -11,6 +11,7 @@ import SwiftUI
 
 public struct KinetixKbd: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
 
     private let text: String
 
@@ -26,9 +27,9 @@ public struct KinetixKbd: View {
             // Figma has no 1.5x spacing step (6pt) — px-1.5 mirrored
             // literally, same "off-scale, documented" call as KinetixBadge.
             .padding(.horizontal, 6)
-            .background(colors.muted, in: RoundedRectangle(cornerRadius: 4, style: .continuous)) // radius/sm
+            .background(colors.muted, in: RoundedRectangle(cornerRadius: radii.field, style: .continuous)) // radius/sm
             .overlay {
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                RoundedRectangle(cornerRadius: radii.field, style: .continuous)
                     .strokeBorder(colors.border, lineWidth: 1)
             }
     }

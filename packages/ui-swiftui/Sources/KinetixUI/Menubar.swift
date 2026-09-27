@@ -11,6 +11,7 @@ import SwiftUI
 
 public struct KinetixMenubar<Content: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     private let content: Content
 
     public init(@ViewBuilder content: () -> Content) {
@@ -20,9 +21,9 @@ public struct KinetixMenubar<Content: View>: View {
     public var body: some View {
         HStack(spacing: 4) { content }
             .padding(4)
-            .background(colors.background, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .background(colors.background, in: RoundedRectangle(cornerRadius: radii.control, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: radii.control, style: .continuous)
                     .strokeBorder(colors.border, lineWidth: 1)
             }
     }

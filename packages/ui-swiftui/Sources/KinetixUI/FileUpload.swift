@@ -29,6 +29,7 @@ public struct KinetixFileItem: Identifiable {
 
 public struct KinetixFileUpload: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
 
     private let files: [KinetixFileItem]
     private let prompt: String
@@ -78,7 +79,7 @@ public struct KinetixFileUpload: View {
                 .padding(.vertical, 32)
                 .background(colors.muted.opacity(0.4))
                 .overlay {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: radii.control, style: .continuous)
                         .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6]))
                         .foregroundStyle(colors.border)
                 }
@@ -112,7 +113,7 @@ public struct KinetixFileUpload: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(colors.background, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .background(colors.background, in: RoundedRectangle(cornerRadius: 6, style: .continuous))  // 6 is off the radius ladder — see Radii.swift
                 .overlay {
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .strokeBorder(colors.border, lineWidth: 1)

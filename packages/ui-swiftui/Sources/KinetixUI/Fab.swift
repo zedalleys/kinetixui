@@ -21,6 +21,7 @@ public enum KinetixFabSize {
 
 public struct KinetixFab<Content: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixElevations) private var elevations
     @Environment(\.isEnabled) private var isEnabled
 
     private let variant: KinetixFabVariant
@@ -62,7 +63,7 @@ public struct KinetixFab<Content: View>: View {
                 .frame(minWidth: extended ? diameter : nil)
                 .padding(.horizontal, extended ? 20 : 0) // px-5
                 .background(background, in: Capsule())
-                .shadow(color: .black.opacity(0.2), radius: 8, y: 4) // shadow-lg approx
+                .kinetixElevation(elevations.md)
         }
         .buttonStyle(.plain)
         .opacity(isEnabled ? 1 : 0.5)

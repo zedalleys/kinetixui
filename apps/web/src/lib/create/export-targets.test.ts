@@ -169,9 +169,11 @@ describe("a design change reaches every supported output", () => {
     for (const id of ["swiftui", "compose", "flutter"] as const) {
       expect(declarations(out(changed, id)), id).toBe(declarations(out(base, id)));
       expect(out(changed, id), id).toContain("square");
-      // Each exporter explains the limitation in its own package's terms — Compose reads generated
-      // constants, Flutter has no field on KinetixTheme — so the shared assertion is the conclusion.
-      expect(out(changed, id), id).toMatch(/apply on the web/i);
+      // Each exporter explains the limitation in its own package's terms, and the terms differ by
+      // more than wording now: Compose and Flutter have nowhere to put a radius, while SwiftUI has
+      // `KinetixRadii` and simply is not exported into it yet. So the shared assertion is the one
+      // thing all three still say — this design's radius is not in this file.
+      expect(out(changed, id), id).toMatch(/not carried|apply on the web/i);
     }
   });
 

@@ -16,6 +16,7 @@ public enum KinetixMetricTrend {
 
 public struct KinetixMetric<Icon: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
 
     private let label: String
     private let value: String
@@ -74,9 +75,9 @@ public struct KinetixMetric<Icon: View>: View {
             }
         }
         .padding(16) // p-4
-        .background(colors.background, in: RoundedRectangle(cornerRadius: 8, style: .continuous)) // radius/md
+        .background(colors.background, in: RoundedRectangle(cornerRadius: radii.control, style: .continuous)) // radius/md
         .overlay {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: radii.control, style: .continuous)
                 .strokeBorder(colors.input, lineWidth: 1)
         }
     }

@@ -16,6 +16,7 @@ import SwiftUI
 
 public struct KinetixNumberInput: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     @Environment(\.isEnabled) private var isEnabled
 
     @Binding private var value: Int
@@ -49,12 +50,12 @@ public struct KinetixNumberInput: View {
             stepButton(symbol: "plus", label: "Increase", enabled: canIncrement) { value = clamp(value + step) }
         }
         .frame(height: 40) // h-10
-        .background(colors.background, in: RoundedRectangle(cornerRadius: 8, style: .continuous)) // radius/md
+        .background(colors.background, in: RoundedRectangle(cornerRadius: radii.control, style: .continuous)) // radius/md
         .overlay {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: radii.control, style: .continuous)
                 .strokeBorder(colors.input, lineWidth: 1)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: radii.control, style: .continuous))
         .opacity(isEnabled ? 1 : 0.5)
     }
 

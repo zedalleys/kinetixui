@@ -268,23 +268,45 @@ public extension EnvironmentValues {
 /// Setting `\.kinetixColors` directly still works and pins one appearance;
 /// this exists so a custom theme does not have to give up the automatic
 /// switch to get one.
+///
+/// Corner radii and elevation are themeable too, and unlike colours they do
+/// not have a light and a dark form — a card's radius is the same in both, so
+/// they are one value rather than a pair:
+///
+/// ```swift
+/// KinetixTheme(radii: .sharp, elevations: .flat) {
+///     KinetixCard { Text("No corners, no shadow") }
+/// }
+/// ```
 public struct KinetixTheme<Content: View>: View {
     @Environment(\.colorScheme) private var colorScheme
     private let light: KinetixColors
     private let dark: KinetixColors
+    private let radii: KinetixRadii
+    private let elevations: KinetixElevations
     private let content: Content
 
+    /// Every parameter defaults, so `KinetixTheme { … }` and the colour-only
+    /// `KinetixTheme(light:dark:) { … }` both still compile exactly as before —
+    /// adding `radii:` and `elevations:` here is additive, not a new overload.
     public init(
         light: KinetixColors = .light,
         dark: KinetixColors = .dark,
+        radii: KinetixRadii = .default,
+        elevations: KinetixElevations = .default,
         @ViewBuilder content: () -> Content
     ) {
         self.light = light
         self.dark = dark
+        self.radii = radii
+        self.elevations = elevations
         self.content = content()
     }
 
     public var body: some View {
-        content.environment(\.kinetixColors, colorScheme == .dark ? dark : light)
+        content
+            .environment(\.kinetixColors, colorScheme == .dark ? dark : light)
+            .environment(\.kinetixRadii, radii)
+            .environment(\.kinetixElevations, elevations)
     }
 }

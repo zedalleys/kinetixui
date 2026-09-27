@@ -14,6 +14,7 @@ import SwiftUI
 
 public struct KinetixDescriptionList<Content: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     private let content: Content
 
     public init(@ViewBuilder content: () -> Content) {
@@ -21,7 +22,7 @@ public struct KinetixDescriptionList<Content: View>: View {
     }
 
     public var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 12, style: .continuous) // radius/lg
+        let shape = RoundedRectangle(cornerRadius: radii.container, style: .continuous) // radius/lg
         VStack(spacing: 0) { content }
             .background(colors.muted.opacity(0.2))
             .clipShape(shape)

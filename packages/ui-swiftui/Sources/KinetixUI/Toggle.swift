@@ -21,6 +21,7 @@ public enum KinetixToggleSize {
 
 public struct KinetixToggle<Label: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     @Environment(\.isEnabled) private var isEnabled
 
     @Binding private var isOn: Bool
@@ -68,11 +69,11 @@ public struct KinetixToggle<Label: View>: View {
                 .frame(minWidth: dimension)
                 .background(
                     isOn ? colors.accent : .clear,
-                    in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    in: RoundedRectangle(cornerRadius: radii.control, style: .continuous)
                 )
                 .overlay {
                     if isOn || variant == .outline {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        RoundedRectangle(cornerRadius: radii.control, style: .continuous)
                             .strokeBorder(isOn ? colors.focus : colors.input, lineWidth: 1)
                     }
                 }

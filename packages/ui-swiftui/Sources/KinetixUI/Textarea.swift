@@ -15,6 +15,7 @@ import SwiftUI
 
 public struct KinetixTextarea: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     @Environment(\.isEnabled) private var isEnabled
     @FocusState private var focused: Bool
 
@@ -41,7 +42,7 @@ public struct KinetixTextarea: View {
             .scrollContentBackground(.hidden) // iOS 16 / macOS 13
             .frame(minHeight: 100, alignment: .topLeading)
             .padding(12) // spacing/3
-            .background(colors.background, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .background(colors.background, in: RoundedRectangle(cornerRadius: radii.field, style: .continuous))
             .overlay(alignment: .topLeading) {
                 if text.isEmpty {
                     Text(placeholder)
@@ -53,7 +54,7 @@ public struct KinetixTextarea: View {
                 }
             }
             .overlay {
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                RoundedRectangle(cornerRadius: radii.field, style: .continuous)
                     .strokeBorder(borderColor, lineWidth: 1)
             }
             .opacity(isEnabled ? 1 : 0.5)

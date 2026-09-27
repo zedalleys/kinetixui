@@ -26,6 +26,8 @@ public struct KinetixToast {
 
 public struct KinetixToaster: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixElevations) private var elevations
+    @Environment(\.kinetixRadii) private var radii
 
     @Binding private var toast: KinetixToast?
     private let duration: Double
@@ -59,12 +61,12 @@ public struct KinetixToaster: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .frame(maxWidth: 400)
-                .background(colors.popover, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .background(colors.popover, in: RoundedRectangle(cornerRadius: radii.control, style: .continuous))
                 .overlay {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: radii.control, style: .continuous)
                         .strokeBorder(colors.border, lineWidth: 1)
                 }
-                .shadow(color: .black.opacity(0.15), radius: 12, y: 4)
+                .kinetixElevation(elevations.lg)
                 .padding(16)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .task(id: toast.message) {

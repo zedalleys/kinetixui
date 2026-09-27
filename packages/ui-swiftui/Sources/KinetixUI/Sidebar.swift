@@ -83,7 +83,7 @@ public struct KinetixSidebarItem: View {
             .padding(.vertical, 8)
             .background(
                 isActive ? colors.accent : .clear,
-                in: RoundedRectangle(cornerRadius: 6, style: .continuous)
+                in: RoundedRectangle(cornerRadius: 6, style: .continuous)  // 6 is off the radius ladder — see Radii.swift
             )
             .contentShape(Rectangle())
         }

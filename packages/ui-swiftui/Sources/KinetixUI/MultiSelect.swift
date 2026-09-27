@@ -29,6 +29,7 @@ public struct KinetixMultiSelectOption: Identifiable {
 
 public struct KinetixMultiSelect: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
 
     private let options: [KinetixMultiSelectOption]
     @Binding private var selected: Set<String>
@@ -88,7 +89,7 @@ public struct KinetixMultiSelect: View {
             .padding(12) // spacing/3
             .frame(minHeight: 44, alignment: .leading)
             .overlay {
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                RoundedRectangle(cornerRadius: radii.field, style: .continuous)
                     .strokeBorder(colors.border, lineWidth: 1)
             }
         } content: {

@@ -4,17 +4,19 @@
 // Mirrors packages/ui/src/components/card.tsx's Card / CardHeader /
 // CardTitle / CardDescription / CardContent / CardFooter — thin styled
 // slots around a `content` view, same as the React version's plain
-// `<div>`s. `p-6` (24) and `radius-xl` (16) are on the shared token
-// scale; the `space-y-1.5` header gap (6) isn't — literal, same
-// reasoning as KinetixBadge's padding. `shadow-sm` has no token in this
-// package (no elevation scale yet) — a small literal shadow, matching the
-// Compose port's call.
+// `<div>`s. `p-6` (24) is on the shared token scale; the `space-y-1.5`
+// header gap (6) isn't — literal, same reasoning as KinetixBadge's
+// padding. The corner and the shadow are themeable now: `radii.surface`
+// and `elevations.sm`, so a design can change both (Radii.swift,
+// Elevation.swift).
 //
 
 import SwiftUI
 
 public struct KinetixCard<Content: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixElevations) private var elevations
+    @Environment(\.kinetixRadii) private var radii
     private let content: Content
 
     public init(@ViewBuilder content: () -> Content) {
@@ -25,12 +27,12 @@ public struct KinetixCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 0) { content }
             .frame(maxWidth: .infinity, alignment: .leading)
             .foregroundStyle(colors.cardForeground) // cascades to Text descendants
-            .background(colors.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(colors.card, in: RoundedRectangle(cornerRadius: radii.surface, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: radii.surface, style: .continuous)
                     .strokeBorder(colors.border, lineWidth: 1)
             }
-            .shadow(color: .black.opacity(0.05), radius: 2, y: 1) // shadow-sm approx
+            .kinetixElevation(elevations.sm)
     }
 }
 

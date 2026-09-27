@@ -6,10 +6,11 @@
 //
 // Theme colour #c2410c · warm neutral · warm charts
 //
-// COLOURS ONLY. KinetixUI for SwiftUI is themeable through `KinetixColors`; corner radius and
-// elevation are literals inside each view, with no token to override. This design's radius
-// (default) and surface treatment (soft) therefore are NOT carried here — they
-// apply on the web. Nothing is silently dropped; there is nowhere for them to go yet.
+// COLOURS ONLY — and that is now a limit of this exporter rather than of the package. SwiftUI
+// gained `KinetixRadii` and `KinetixElevations` alongside `KinetixColors`, so there is somewhere
+// for a radius to land; this file does not write one yet. This design's radius (default) and
+// surface treatment (soft) are therefore NOT carried here — set them by hand for now:
+// `KinetixTheme(light: …, dark: …, radii: …, elevations: …)`. Nothing is silently dropped.
 //
 // A field written as `KinetixColorsSwiftUI.…` is one this design did not change, and it keeps
 // following the library.

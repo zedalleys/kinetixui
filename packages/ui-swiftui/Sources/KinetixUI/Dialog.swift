@@ -18,6 +18,8 @@ import SwiftUI
 
 public struct KinetixDialog<Content: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixElevations) private var elevations
+    @Environment(\.kinetixRadii) private var radii
 
     @Binding private var isPresented: Bool
     private let dismissible: Bool
@@ -43,7 +45,7 @@ public struct KinetixDialog<Content: View>: View {
                 VStack(alignment: .leading, spacing: 16) { content }
                     .padding(24) // p-6
                     .frame(maxWidth: 448) // max-w-lg
-                    .background(colors.background, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(colors.background, in: RoundedRectangle(cornerRadius: radii.surface, style: .continuous))
                     .overlay(alignment: .topTrailing) {
                         if dismissible {
                             Button { isPresented = false } label: {
@@ -57,10 +59,10 @@ public struct KinetixDialog<Content: View>: View {
                         }
                     }
                     .overlay {
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        RoundedRectangle(cornerRadius: radii.surface, style: .continuous)
                             .strokeBorder(colors.border, lineWidth: 1)
                     }
-                    .shadow(color: .black.opacity(0.2), radius: 16, y: 8)
+                    .kinetixElevation(elevations.xl)
                     .padding(24)
             }
             .transition(.opacity)

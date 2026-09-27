@@ -35,6 +35,7 @@ public struct KinetixCodeBlockFile {
 
 public struct KinetixCodeBlock: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     @State private var activeTab = 0
     @State private var copied = false
 
@@ -106,10 +107,10 @@ public struct KinetixCodeBlock: View {
         }
         .background(colors.muted)
         .overlay {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: radii.control, style: .continuous)
                 .strokeBorder(colors.input, lineWidth: 1)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: radii.control, style: .continuous))
     }
 
     private var copyButton: some View {

@@ -13,6 +13,7 @@ import SwiftUI
 
 public struct KinetixSegmentedControl<Content: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     private let content: Content
 
     public init(@ViewBuilder content: () -> Content) {
@@ -22,13 +23,15 @@ public struct KinetixSegmentedControl<Content: View>: View {
     public var body: some View {
         HStack(spacing: 0) { content }
             .padding(4) // p-1
-            .background(colors.muted, in: RoundedRectangle(cornerRadius: 12, style: .continuous)) // radius/lg
+            .background(colors.muted, in: RoundedRectangle(cornerRadius: radii.container, style: .continuous)) // radius/lg
             .fixedSize(horizontal: false, vertical: true)
     }
 }
 
 public struct KinetixSegmentedControlItem: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixElevations) private var elevations
+    @Environment(\.kinetixRadii) private var radii
     @Environment(\.isEnabled) private var isEnabled
 
     private let text: String
@@ -51,9 +54,9 @@ public struct KinetixSegmentedControlItem: View {
                 .padding(.vertical, 4)    // py-1
                 .background(
                     isSelected ? colors.background : .clear,
-                    in: RoundedRectangle(cornerRadius: 8, style: .continuous) // radius/md
+                    in: RoundedRectangle(cornerRadius: radii.control, style: .continuous) // radius/md
                 )
-                .shadow(color: isSelected ? .black.opacity(0.08) : .clear, radius: 1, y: 1)
+                .kinetixElevation(isSelected ? elevations.sm : .none)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
