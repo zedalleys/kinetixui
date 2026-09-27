@@ -195,15 +195,42 @@ describe("release tag names", () => {
   );
   const kinetixTags = [...localTags].filter((tag) => tag.startsWith("@kinetixui/"));
 
-  it("matches the tags a real release produced, where the checkout has them", { skip: kinetixTags.length === 0 && "shallow checkout: no tags fetched" }, () => {
-    // The newest version that has tags, so this keeps working as releases go by.
-    const version = kinetixTags
+  /**
+   * Versions sort numerically, not as text.
+   *
+   * This used to take `.sort().at(-1)` over every version string, which makes `0.9.0` the "newest"
+   * release because `"9" > "2"`. It was therefore asserting against 0.9.0's tags while reading as
+   * though it tracked the latest release, and it passed for a reason unrelated to what it claimed.
+   */
+  const newestVersionOf = (name) =>
+    kinetixTags
+      .filter((tag) => tag.startsWith(`${name}@`))
       .map((tag) => tag.slice(tag.lastIndexOf("@") + 1))
-      .sort()
+      .sort((a, b) => {
+        const [x, y] = [a.split(".").map(Number), b.split(".").map(Number)];
+        return x[0] - y[0] || x[1] - y[1] || x[2] - y[2];
+      })
       .at(-1);
-    for (const name of ["@kinetixui/cli", "@kinetixui/tokens", "@kinetixui/ui"]) {
-      assert.ok(localTags.has(releaseTagName(name, version)), `expected the real tag ${releaseTagName(name, version)} to exist`);
+
+  const CORE = ["@kinetixui/cli", "@kinetixui/tokens", "@kinetixui/ui"];
+
+  it("matches the tags a real release produced, where the checkout has them", { skip: kinetixTags.length === 0 && "shallow checkout: no tags fetched" }, () => {
+    // The core three are a lockstep cohort, so their newest tags are one version — and that version
+    // has a tag for each of them. That is the cohort's own guarantee, checked against real tags
+    // rather than against whichever version happens to sort last as a string.
+    const newest = CORE.map((name) => newestVersionOf(name));
+    assert.equal(new Set(newest).size, 1, `the core cohort's newest tags disagree: ${CORE.map((n, i) => `${n}@${newest[i]}`).join(", ")}`);
+    for (const name of CORE) {
+      assert.ok(localTags.has(releaseTagName(name, newest[0])), `expected the real tag ${releaseTagName(name, newest[0])} to exist`);
     }
+  });
+
+  /** Angular versions on its own, and its newest tag is allowed — expected — to differ from core's. */
+  it("lets the Angular cohort sit at its own version", { skip: kinetixTags.length === 0 && "shallow checkout: no tags fetched" }, () => {
+    const angular = newestVersionOf("@kinetixui/angular");
+    if (!angular) return; // not yet released in this checkout
+    assert.equal(angular, read("packages/ui-angular/package.json").version);
+    assert.notEqual(angular, newestVersionOf("@kinetixui/cli"), "this assertion is only meaningful while the cohorts differ");
   });
 
   /**
