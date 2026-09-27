@@ -16,7 +16,8 @@
  *
  * Beyond axe it also runs four behaviour checks that only make sense in a real browser. They have
  * no baseline — any failure fails the run:
- *   - reduced motion: with prefers-reduced-motion, no story may run a looping animation faster than 3s
+ *   - reduced motion: with prefers-reduced-motion, no story may run a looping animation faster than 3s.
+ *                     Storybook's own preview chrome is out of scope — see scripts/a11y-animations.mjs
  *   - forced colors:  with forced-colors active, every focus stop in every story keeps a visible
  *                     indicator (box-shadow rings are stripped in that mode; an outline survives)
  *   - keyboard drag:  KanbanBoard cards can be picked up, moved and dropped with Space / arrows
@@ -41,6 +42,7 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { chromium } from "playwright";
+import { describeAnimation, harnessAnimations, reducedMotionViolations } from "./a11y-animations.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
@@ -108,6 +110,7 @@ const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_C
 const found = new Map(); // key -> sample message
 const failedToLoad = [];
 const behaviourFailures = [];
+let harnessMotionIgnored = 0; // Storybook's own spinner, left out of the reduced-motion verdict
 
 async function scan(context, story, theme) {
   const page = await context.newPage();
@@ -116,17 +119,25 @@ async function scan(context, story, theme) {
     await page.waitForFunction(() => document.body.classList.contains("sb-show-main") || document.body.classList.contains("sb-show-errordisplay"), null, { timeout: 20000 });
     if (await page.evaluate(() => document.body.classList.contains("sb-show-errordisplay"))) throw new Error("story threw while rendering");
     // Reduced motion: anything still looping faster than 3s after settling ignores the preference.
+    // The page only reports what it sees; a11y-animations.mjs decides what counts, so the rule is
+    // testable without a browser and Storybook's own spinner stays out of KinetixUI's verdict.
     await page.waitForTimeout(300);
-    const fastLoops = await page.evaluate(() =>
-      document
-        .getAnimations()
-        .filter((a) => {
-          const timing = a.effect && a.effect.getComputedTiming();
-          return timing && timing.iterations === Infinity && Number(timing.duration) < 3000 && a.playState === "running";
-        })
-        .map((a) => (a.effect && a.effect.target && a.effect.target.tagName.toLowerCase()) + ":" + (a.animationName || a.transitionProperty || "animation")),
+    const animations = await page.evaluate(() =>
+      document.getAnimations().map((a) => {
+        const timing = a.effect && a.effect.getComputedTiming();
+        const target = a.effect && a.effect.target;
+        return {
+          name: a.animationName || a.transitionProperty || null,
+          target: target ? target.tagName.toLowerCase() + (target.classList && target.classList.length ? `.${target.classList[0]}` : "") : null,
+          durationMs: timing ? timing.duration : null,
+          loops: Boolean(timing && timing.iterations === Infinity),
+          playState: a.playState,
+        };
+      }),
     );
+    const fastLoops = reducedMotionViolations(animations).map(describeAnimation);
     if (fastLoops.length) behaviourFailures.push(`${story.id}|${theme} reduced-motion: still looping: ${[...new Set(fastLoops)].join(", ")}`);
+    harnessMotionIgnored += harnessAnimations(animations).length;
 
     // Colour transitions (components use transition-colors) would otherwise be measured
     // mid-flight after the theme class flips, giving flaky contrast results.
@@ -333,6 +344,10 @@ await Promise.all(
 
 await browser.close();
 server.close();
+
+// Nonzero means Storybook's spinner was still turning when a story was measured — the old
+// false-positive, now reported rather than fatal. Silent when it did not happen, which is most runs.
+if (harnessMotionIgnored) console.log(`reduced motion: ignored ${harnessMotionIgnored} Storybook harness animation(s)`);
 
 if (failedToLoad.length) {
   console.error(`✗ ${failedToLoad.length} story render(s) failed:\n` + failedToLoad.map((f) => `  ${f}`).join("\n"));
