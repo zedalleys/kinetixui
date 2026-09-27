@@ -28,8 +28,8 @@
       "distribution": {
         "channel": "npm",
         "coordinate": "@kinetixui/angular",
-        "published": false,
-        "note": "Built and tested in CI, not yet published. publish is part of the Angular Stable gate."
+        "published": true,
+        "note": "Published from 0.24.0. Versions independently of @kinetixui/{tokens,ui,cli} — publication is distribution, not maturity, and Angular stays Preview."
       }
     },
     "SwiftUI": {

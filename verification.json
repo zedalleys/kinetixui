@@ -34,7 +34,7 @@
       "rtl": 1,
       "largeText": 0,
       "visual": 0,
-      "published": 0
+      "published": 31
     },
     "SwiftUI": {
       "build": 90,
@@ -576,6 +576,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -692,6 +695,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -773,6 +779,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -819,6 +828,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       }
     },
@@ -847,6 +859,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -960,6 +975,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -1076,6 +1094,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -1195,6 +1216,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -1774,6 +1798,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -1849,6 +1876,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -2072,6 +2102,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -2237,6 +2270,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -2277,6 +2313,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -2480,6 +2519,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -2594,6 +2636,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       }
     },
@@ -2697,6 +2742,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -2807,6 +2855,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -2885,6 +2936,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -2931,6 +2985,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -2980,6 +3037,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -3131,6 +3191,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -3206,6 +3269,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -3322,6 +3388,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -3371,6 +3440,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -3452,6 +3524,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -3536,6 +3611,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -3702,6 +3780,9 @@
         ],
         "rtl": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -3766,6 +3847,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -3812,6 +3896,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -3887,6 +3974,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -3942,6 +4032,9 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-482"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {

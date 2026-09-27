@@ -66,7 +66,7 @@ export const platforms: PlatformRow[] = [
     name: "Web · Angular",
     technology: "Angular (standalone components, signal inputs)",
     package: "@kinetixui/angular",
-    distribution: "From a repository checkout — not published to npm yet",
+    distribution: "npm — versioned independently of `@kinetixui/{tokens,ui,cli}`",
     components: count("Angular"),
     tokens: "The same generated CSS custom properties as React — one stylesheet, no Angular-specific token set",
     darkMode: "Yes — the same `.dark` class contract",

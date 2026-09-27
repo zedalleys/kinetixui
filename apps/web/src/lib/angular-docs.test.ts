@@ -13,7 +13,11 @@ const root = "../..";
 const page = readFileSync("src/app/docs/angular/page.mdx", "utf8");
 const publicApi = readFileSync(`${root}/packages/ui-angular/src/public-api.ts`, "utf8");
 const spec = readFileSync(`${root}/packages/ui-angular/src/lib/kinetix-angular.spec.ts`, "utf8");
-const pkg = JSON.parse(readFileSync(`${root}/packages/ui-angular/package.json`, "utf8")) as { name: string; homepage: string };
+const pkg = JSON.parse(readFileSync(`${root}/packages/ui-angular/package.json`, "utf8")) as {
+  name: string;
+  homepage: string;
+  peerDependencies?: Record<string, string>;
+};
 
 describe("/docs/angular", () => {
   it("is the route the package's homepage field points at", () => {
@@ -44,10 +48,42 @@ describe("/docs/angular", () => {
     expect(page).toContain(fromSpec!.trim());
   });
 
-  it("shows no install command while the package is unpublished", () => {
-    // When @kinetixui/angular is published, change this test deliberately alongside the page — not before.
-    expect(page).not.toMatch(/(npm (i|install)|pnpm add|yarn add|bun add)\s+@kinetixui\/angular/);
-    expect(page).toMatch(/not published/i);
+  /**
+   * The package is published from 0.24.0, so the page now carries a real install command. The
+   * guard did not go away with the old truth — it inverted. What it protects is the same thing:
+   * the page must agree with the manifest about whether the package is installable, in whichever
+   * direction that currently points.
+   */
+  it("shows an install command that matches the published coordinate", () => {
+    const distribution = PLATFORM_DEFINITIONS.Angular.distribution;
+    expect(distribution.published, "the manifest should say Angular is published").toBe(true);
+    expect(page).toMatch(new RegExp(`npm i .*${distribution.coordinate.replace("/", "\\/")}`));
+    expect(page).not.toMatch(/not published/i);
+  });
+
+  it("installs the token contract alongside it, because the styles need it", () => {
+    const peers = pkg.peerDependencies ?? {};
+    expect(Object.keys(peers)).toContain("@kinetixui/tokens");
+    expect(page).toContain("@kinetixui/tokens");
+    // Both sheets: globals alone leaves the elevation and typography ramps undefined.
+    expect(page).toContain('@import "@kinetixui/tokens/css";');
+    expect(page).toContain('@import "@kinetixui/tokens/css/extras";');
+  });
+
+  it("does not turn availability into maturity", () => {
+    // Being on npm says nothing about the API settling. The page may discuss what Stable *would*
+    // require — that is the honest content — but it must not claim Angular has got there.
+    expect(PLATFORM_DEFINITIONS.Angular.maturity).toBe("preview");
+    expect(page).not.toMatch(/Angular[^.]{0,40}\bis (now )?stable\b/i);
+    expect(page).not.toMatch(/production[- ]ready/i);
+    // Parity is denied rather than merely unmentioned — the word appears on the page inside that
+    // denial, so this asserts the denial instead of forbidding the word. Blanket parity claims
+    // across the marketing copy are covered by marketing-claims.test.ts.
+    expect(page).toMatch(/full parity\s*\n?\s*with the other platforms is not claimed/i);
+  });
+
+  it("says the version is independent of the core packages", () => {
+    expect(page).toMatch(/versions independently/i);
   });
 
   it("does not ship an overlay component the page says is deferred", () => {

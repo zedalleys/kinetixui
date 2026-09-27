@@ -17,7 +17,10 @@ const root = "../..";
 const read = (p: string) => readFileSync(`${root}/${p}`, "utf8");
 const homepage = readFileSync("src/app/page.tsx", "utf8");
 const readme = read("README.md");
-const defs = manifest.platformDefinitions as Record<string, { maturity: string; label: string }>;
+const defs = manifest.platformDefinitions as Record<
+  string,
+  { maturity: string; label: string; distribution: { channel: string; coordinate: string; published: boolean } }
+>;
 
 /** Every surface whose prose names platforms or makes a coverage claim. */
 const COPY = {
@@ -73,8 +76,14 @@ describe("no overstated coverage", () => {
 });
 
 describe("only real distribution is advertised", () => {
-  const published = ["@kinetixui/ui", "@kinetixui/cli", "@kinetixui/tokens"];
-  const unpublished = ["@kinetixui/angular"];
+  /**
+   * The published set is read from the manifest rather than listed here, so this guard follows the
+   * truth instead of having to be remembered. `@kinetixui/angular` moved into it when it was
+   * published; the rule did not change, only which side each package is on.
+   */
+  const distribution = Object.values(defs).map((d) => d.distribution);
+  const npmPackages = distribution.filter((d) => d.channel === "npm");
+  const unpublished = npmPackages.filter((d) => !d.published).map((d) => d.coordinate);
 
   it("shows install commands only for packages that are actually on npm", () => {
     for (const [where, text] of Object.entries(COPY)) {
@@ -85,7 +94,21 @@ describe("only real distribution is advertised", () => {
         expect(text, `${where} shows an install command for the unpublished ${pkg}`).not.toMatch(cmd);
       }
     }
-    // …and the published ones are real, so the CLI copy on the homepage is safe to keep
-    expect(published.length).toBeGreaterThan(0);
+    expect(npmPackages.some((d) => d.published), "at least one npm package should be published").toBe(true);
+  });
+
+  /**
+   * Publication is distribution, not maturity. A package can be installable and still have an API
+   * that moves — saying otherwise is the specific claim this repository has to avoid making about
+   * a Preview platform.
+   */
+  it("does not let being on npm imply a platform is stable or complete", () => {
+    for (const [name, d] of Object.entries(defs)) {
+      if (d.maturity === "stable" || d.distribution.channel !== "npm" || !d.distribution.published) continue;
+      for (const [where, text] of Object.entries(COPY)) {
+        const claim = new RegExp(`${d.label}[^.]{0,60}(stable|production[- ]ready|full parity)`, "i");
+        expect(text, `${where} implies ${d.label} is stable because it is published`).not.toMatch(claim);
+      }
+    }
   });
 });
