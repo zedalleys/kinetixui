@@ -238,6 +238,11 @@ describe("preset swiftui", () => {
       { brand: "#7e22ce" },
       { neutral: "warm" as const, chartPalette: "cool" as const },
       { manualOverrides: { border: "#ff0000" } },
+      // The two dimensions the exporter learned to write. Without these the sweep would compare four
+      // designs that all emit `KinetixRadii.default` and prove nothing about either new code path.
+      { radius: "soft" as const },
+      { surface: "elevated" as const },
+      { radius: "square" as const, surface: "flat" as const },
     ]) {
       written = [];
       await presetSwiftUi(encodePreset(preset(over)), {});
@@ -245,6 +250,27 @@ describe("preset swiftui", () => {
         exportSwiftUi(resolveCreateTheme(preset(over)), { symbol: "CreateTheme" }),
       );
     }
+  });
+
+  /**
+   * The output is three things now, not one. A file missing the radii would still compile in someone's
+   * app and would silently ignore the design's corners — the failure worth catching here.
+   */
+  it("writes colours, radii and elevations", async () => {
+    await presetSwiftUi(encodePreset(preset({ radius: "soft", surface: "elevated" })), {});
+    const text = stdout();
+    expect(text).toContain("public static let light = KinetixColors(");
+    expect(text).toContain("public static let radii = KinetixRadii(");
+    expect(text).toContain("public static let elevations = KinetixElevations(");
+    expect(text).toContain("KinetixShadowLayer(");
+    // Swift, not CSS: no units, no custom properties, no box-shadow strings.
+    expect(text).not.toMatch(/px|box-shadow|var\(--/);
+  });
+
+  it("follows the library when the design leaves a ladder alone", async () => {
+    await presetSwiftUi(encodePreset(preset({ brand: "#c2410c" })), {});
+    expect(stdout()).toContain("radii = KinetixRadii.default");
+    expect(stdout()).toContain("elevations = KinetixElevations.default");
   });
 
   it("accepts a share URL as readily as a bare code", async () => {
@@ -265,7 +291,9 @@ describe("preset swiftui", () => {
       exportSwiftUi(resolveCreateTheme(preset({ neutral: "warm" })), { symbol: "AcmeTheme" }),
     );
     expect(plain()).toContain(file);
-    expect(plain()).toContain("KinetixTheme(light: AcmeTheme.light, dark: AcmeTheme.dark)");
+    expect(plain()).toContain(
+      "KinetixTheme(light: AcmeTheme.light, dark: AcmeTheme.dark, radii: AcmeTheme.radii, elevations: AcmeTheme.elevations)",
+    );
   });
 
   it("still produces a file for the default preset, unlike preset css", async () => {

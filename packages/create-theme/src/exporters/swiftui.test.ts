@@ -339,7 +339,7 @@ describe("elevation", () => {
   it("emits the four steps in ladder order", () => {
     const out = swift({ surface: "elevated" });
     const block = out.slice(out.indexOf("let elevations"));
-    for (const [a, b] of [["sm:", "md:"], ["md:", "lg:"], ["lg:", "xl:"]]) {
+    for (const [a, b] of [["sm:", "md:"], ["md:", "lg:"], ["lg:", "xl:"]] as const) {
       expect(block.indexOf(a), `${a} before ${b}`).toBeLessThan(block.indexOf(b));
     }
   });
@@ -356,7 +356,7 @@ describe("elevation", () => {
     const emitted = (block.match(/KinetixShadowLayer\(/g) ?? []).length;
     const expected = (["sm", "md", "lg", "xl"] as const).reduce((n, step) => n + theme.light.elevation[step].length, 0);
     expect(emitted).toBe(expected);
-    expect(expected).toBeGreaterThan(4, "at least one step should be multi-layer, or this proves nothing");
+    expect(expected, "at least one step should be multi-layer, or this proves nothing").toBeGreaterThan(4);
   });
 
   it("writes an empty step as .none rather than an empty array", () => {

@@ -110,19 +110,32 @@ dialogs, sheets) — plus `none` and `full`. `KinetixElevations` is the `sm` / `
 Flutter's `KinetixShadow` uses. Both default to the shipped tokens, so
 `KinetixTheme { … }` looks exactly as it did.
 
-**`preset swiftui` still exports colours only.** The runtime can take radii and
-elevation; the exporter does not write them yet, so a Create design's radius and
-surface treatment still do not arrive in the generated file — set them by hand on
-`KinetixTheme` until it does. The generated file says the same thing in its own
-header. A colour the design did not change is written as a reference to the
-shipped token rather than a copy of today's value, so it keeps following the
-library.
+**`preset swiftui` exports all three.** A Create design arrives as colours, radii
+and elevation together:
+
+```swift
+KinetixTheme(
+    light: AcmeTheme.light,
+    dark: AcmeTheme.dark,
+    radii: AcmeTheme.radii,
+    elevations: AcmeTheme.elevations
+) {
+    ContentView()
+}
+```
+
+A value the design did not change — a colour, or a whole ladder — is written as a
+reference to the shipped token rather than a copy of today's number, so it keeps
+following the library. A design that changes nothing exports a file of pure
+references.
 
 Two limits worth knowing. SwiftUI's `.shadow` has no `spread`, and the shared
 token ladder uses it on `lg`, so a SwiftUI `lg` renders slightly larger than the
-web's. And eight corners across five components (AppBar, ColorPicker, FileUpload,
-InputOtp, Sidebar) sit at `6`, which is not a step on the 4 / 8 / 12 / 16 ladder;
-they stay literal rather than being moved silently.
+web's — the built-in ladder is mapped the same way, so a generated theme and the
+default differ from the web identically. And eight corners across five components
+(AppBar, ColorPicker, FileUpload, InputOtp, Sidebar) sit at `6`, which is not a
+step on the 4 / 8 / 12 / 16 ladder; they stay literal rather than being moved
+silently.
 
 ## Tokens: SwiftUI `Color`, not `UIColor`
 
