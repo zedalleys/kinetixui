@@ -256,14 +256,25 @@ describe("a release cannot run while changesets are pending", () => {
   });
 
   it("consumed the Angular changeset into a changelog entry rather than losing it", () => {
-    const changelog = readFileSync(`${root}packages/ui-angular/CHANGELOG.md`, "utf8");
+    // Compared as whole lines rather than by a regex built from the version. Escaping a value into
+    // a pattern by hand is the kind of thing that is wrong more often than it is right — and a
+    // heading is an exact string, so there is nothing a pattern would buy here.
+    const headingsOf = (markdown) =>
+      markdown
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.startsWith("## "));
+
     const angularPkg = read("packages/ui-angular/package.json");
-    assert.match(changelog, new RegExp(`^## ${angularPkg.version.replace(/\./g, "\\.")}$`, "m"));
+    const heading = `## ${angularPkg.version}`;
+    const angularHeadings = headingsOf(readFileSync(`${root}packages/ui-angular/CHANGELOG.md`, "utf8"));
+    assert.ok(angularHeadings.includes(heading), `the Angular changelog has no "${heading}" entry`);
+
     // The core cohort was not dragged along: its changelogs have no entry at Angular's version.
     for (const name of ["tokens", "ui", "cli"]) {
-      const core = readFileSync(`${root}packages/${name}/CHANGELOG.md`, "utf8");
+      const core = headingsOf(readFileSync(`${root}packages/${name}/CHANGELOG.md`, "utf8"));
       assert.ok(
-        !new RegExp(`^## ${angularPkg.version.replace(/\./g, "\\.")}$`, "m").test(core),
+        !core.includes(heading),
         `packages/${name}/CHANGELOG.md has an entry at Angular's version — the cohorts got coupled`,
       );
     }

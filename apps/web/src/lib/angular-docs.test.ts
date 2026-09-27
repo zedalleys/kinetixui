@@ -57,7 +57,11 @@ describe("/docs/angular", () => {
   it("shows an install command that matches the published coordinate", () => {
     const distribution = PLATFORM_DEFINITIONS.Angular.distribution;
     expect(distribution.published, "the manifest should say Angular is published").toBe(true);
-    expect(page).toMatch(new RegExp(`npm i .*${distribution.coordinate.replace("/", "\\/")}`));
+    // An exact substring rather than a pattern built from the coordinate: escaping a value into a
+    // regex by hand goes wrong quietly, and there is nothing to match loosely here.
+    const install = page.split(/\r?\n/).find((line) => line.trim().startsWith("npm i "));
+    expect(install, "the page should show an npm install command").toBeTruthy();
+    expect(install).toContain(distribution.coordinate);
     expect(page).not.toMatch(/not published/i);
   });
 
