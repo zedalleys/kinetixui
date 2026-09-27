@@ -8,30 +8,57 @@
     "here nor private fails `pnpm release:check` before anything is built or published, which is",
     "the check that would have caught @kinetixui/angular before the 0.23.0 partial release.",
     "",
+    "RELEASE GROUPS. A group is a release cohort: the packages in it go out together. Membership is",
+    "explicit, never inferred from a name, a directory, a version or Changesets config. `core` is",
+    "the React set, which releases in lockstep — `sameVersion` makes that a rule the planner",
+    "enforces rather than a convention. `angular` is a Preview package on its own lifecycle, so it",
+    "carries its own version and its own release commit. A release in one group never publishes,",
+    "tags or re-tags anything in another.",
+    "",
     "`build` names scripts in the root package.json, run in order before packing. `requireFiles`",
     "are paths that must exist inside the packed tarball, on top of every target declared by the",
     "package's own `main` / `module` / `types` / `exports` / `bin` fields, which are checked",
-    "automatically. See RELEASING.md."
+    "automatically.",
+    "",
+    "`artifactDirectory` is for a package whose publishable artifact is not its workspace root.",
+    "@kinetixui/angular is built by ng-packagr, which generates the Angular Package Format manifest",
+    "into `dist/` — that is the package npm receives, while `directory` stays the workspace identity",
+    "the allowlist is matched against. See RELEASING.md."
   ],
   "registry": "https://registry.npmjs.org/",
+  "releaseGroups": {
+    "core": { "sameVersion": true },
+    "angular": { "sameVersion": true }
+  },
   "packages": [
     {
       "name": "@kinetixui/tokens",
+      "releaseGroup": "core",
       "directory": "packages/tokens",
       "build": ["build:tokens"],
       "requireFiles": ["dist/web/tokens.js", "dist/web/tokens.d.ts", "dist/web/globals.css"]
     },
     {
       "name": "@kinetixui/ui",
+      "releaseGroup": "core",
       "directory": "packages/ui",
       "build": ["build:tokens", "build:ui"],
       "requireFiles": ["dist/index.js", "dist/index.d.ts"]
     },
     {
       "name": "@kinetixui/cli",
+      "releaseGroup": "core",
       "directory": "packages/cli",
       "build": ["build:cli"],
       "requireFiles": ["dist/index.js"]
+    },
+    {
+      "name": "@kinetixui/angular",
+      "releaseGroup": "angular",
+      "directory": "packages/ui-angular",
+      "artifactDirectory": "packages/ui-angular/dist",
+      "build": ["build:tokens", "build:angular"],
+      "requireFiles": ["styles.css", "fesm2022/kinetixui-angular.mjs", "types/kinetixui-angular.d.ts"]
     }
   ]
 }

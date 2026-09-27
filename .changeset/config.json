@@ -6,8 +6,7 @@
     [
       "@kinetixui/cli",
       "@kinetixui/tokens",
-      "@kinetixui/ui",
-      "@kinetixui/angular"
+      "@kinetixui/ui"
     ]
   ],
   "linked": [],

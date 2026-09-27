@@ -10,7 +10,8 @@
 
 const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 const SAFE_SCRIPT_NAME = /^[a-z0-9][a-z0-9:_-]*$/i;
-const SAFE_RELATIVE_PATH = /^(?!\/)(?!.*(^|\/)\.\.(\/|$))[\w./@-]+$/;
+const SAFE_RELATIVE_PATH = /^(?!\/)(?![A-Za-z]:)(?!.*(^|\/)\.\.(\/|$))[\w./@-]+$/;
+const SAFE_GROUP_NAME = /^[a-z][a-z0-9-]*$/;
 
 /** Dependency fields whose specs are rewritten at pack time and must not leak `workspace:`. */
 export const PUBLISHED_DEPENDENCY_FIELDS = ["dependencies", "peerDependencies", "optionalDependencies"];
@@ -26,14 +27,38 @@ export const PUBLISHED_DEPENDENCY_FIELDS = ["dependencies", "peerDependencies", 
 export function validateAllowlist(raw, rootScriptNames = []) {
   const errors = [];
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    return { packages: [], registry: null, errors: ["release/publish-packages.json must be a JSON object."] };
+    return { packages: [], registry: null, groups: {}, errors: ["release/publish-packages.json must be a JSON object."] };
   }
   const registry = typeof raw.registry === "string" && raw.registry.length > 0 ? raw.registry : null;
   if (!registry) errors.push(`release/publish-packages.json needs a "registry" URL.`);
 
+  // Release groups. A package's group decides which release it belongs to, so an unknown or
+  // missing one is a hard failure rather than something to default: guessing here would put a
+  // package in a release nobody approved it for.
+  const groups = {};
+  if (raw.releaseGroups === null || typeof raw.releaseGroups !== "object" || Array.isArray(raw.releaseGroups)) {
+    errors.push(`release/publish-packages.json needs a "releaseGroups" object.`);
+  } else {
+    for (const [name, config] of Object.entries(raw.releaseGroups)) {
+      if (!SAFE_GROUP_NAME.test(name)) {
+        errors.push(`release/publish-packages.json has an unusable release group name: ${JSON.stringify(name)}.`);
+        continue;
+      }
+      if (config === null || typeof config !== "object" || Array.isArray(config)) {
+        errors.push(`release group "${name}" must be an object.`);
+        continue;
+      }
+      if (typeof config.sameVersion !== "boolean") {
+        errors.push(`release group "${name}" needs a boolean "sameVersion".`);
+        continue;
+      }
+      groups[name] = { sameVersion: config.sameVersion };
+    }
+  }
+
   if (!Array.isArray(raw.packages) || raw.packages.length === 0) {
     errors.push(`release/publish-packages.json needs a non-empty "packages" array.`);
-    return { packages: [], registry, errors };
+    return { packages: [], registry, groups, errors };
   }
 
   const packages = [];
@@ -68,9 +93,57 @@ export function validateAllowlist(raw, rootScriptNames = []) {
         errors.push(`${entry.name} lists an unusable requireFiles entry: ${JSON.stringify(file)}.`);
       }
     }
-    packages.push({ name: entry.name, directory: entry.directory, build, requireFiles });
+    if (typeof entry.releaseGroup !== "string" || entry.releaseGroup.length === 0) {
+      errors.push(`${entry.name} needs a "releaseGroup".`);
+      continue;
+    }
+    if (!Object.prototype.hasOwnProperty.call(groups, entry.releaseGroup)) {
+      errors.push(
+        `${entry.name} is in release group "${entry.releaseGroup}", which "releaseGroups" does not define. ` +
+          `Known groups: ${Object.keys(groups).join(", ") || "(none)"}.`,
+      );
+      continue;
+    }
+
+    // The artifact a package publishes is not always its workspace root — ng-packagr generates
+    // @kinetixui/angular's package into `dist/`. This is config, so it is treated as untrusted:
+    // relative, inside the repository, no traversal, and underneath the package it belongs to.
+    let artifactDirectory = null;
+    if (entry.artifactDirectory !== undefined) {
+      const value = entry.artifactDirectory;
+      if (typeof value !== "string" || !SAFE_RELATIVE_PATH.test(value)) {
+        errors.push(`${entry.name} has an unusable "artifactDirectory": ${JSON.stringify(value)}.`);
+        continue;
+      }
+      if (!value.startsWith(`${entry.directory}/`)) {
+        errors.push(
+          `${entry.name}: artifactDirectory "${value}" is not inside its package directory ` +
+            `"${entry.directory}". A package may only publish an artifact it owns.`,
+        );
+        continue;
+      }
+      artifactDirectory = value;
+    }
+
+    packages.push({
+      name: entry.name,
+      releaseGroup: entry.releaseGroup,
+      directory: entry.directory,
+      artifactDirectory,
+      // Where `pnpm pack` runs. The workspace directory stays the package's identity.
+      packDirectory: artifactDirectory ?? entry.directory,
+      build,
+      requireFiles,
+    });
   }
-  return { packages, registry, errors };
+
+  for (const name of Object.keys(groups)) {
+    if (!packages.some((pkg) => pkg.releaseGroup === name)) {
+      errors.push(`release group "${name}" has no packages. Remove it, or give it one.`);
+    }
+  }
+
+  return { packages, registry, groups, errors };
 }
 
 /**
@@ -126,18 +199,26 @@ export function declaredTargets(manifest) {
  * @param {{expectedVersion?: string|null}} [options]
  * @returns {string[]} errors
  */
-export function validatePublishMetadata(pkg, { expectedVersion = null } = {}) {
+export function validatePublishMetadata(pkg, { expectedVersion = null, releaseGroup = null, packsFromArtifact = false, requireFiles = [] } = {}) {
   const errors = [];
   const m = pkg.manifest;
   const at = `${pkg.directory}/package.json`;
+  const inGroup = releaseGroup ? ` release group "${releaseGroup}"` : " the published set";
 
   if (m.private === true) errors.push(`${pkg.name}: "private": true in ${at}, but it is allowlisted for npm.`);
   if (typeof m.version !== "string" || !SEMVER.test(m.version)) {
     errors.push(`${pkg.name}: ${at} needs a semver "version" (found ${JSON.stringify(m.version)}).`);
   } else if (expectedVersion && m.version !== expectedVersion) {
+    // Cohort-scoped: a version differing from *another* cohort is the design, so the error names
+    // the group whose lockstep rule was broken rather than implying the whole allowlist must match.
     errors.push(
-      `${pkg.name}@${m.version} does not match the other allowlisted packages at ${expectedVersion}. ` +
-        `The published packages release as one version; run \`pnpm changeset version\` rather than editing ${at}.`,
+      `${pkg.name}@${m.version} does not match${inGroup}, which releases at ${expectedVersion}.\n` +
+        `  release group: ${releaseGroup ?? "(none)"}\n` +
+        `  expected:      ${expectedVersion}\n` +
+        `  actual:        ${m.version}\n` +
+        `  package:       ${pkg.name} (${at})\n` +
+        `Packages in a \`sameVersion\` group release together — run \`pnpm changeset version\` rather ` +
+        `than editing ${at}. A package that should version independently belongs in its own release group.`,
     );
   }
 
@@ -154,7 +235,19 @@ export function validatePublishMetadata(pkg, { expectedVersion = null } = {}) {
     errors.push(`${pkg.name}: ${at} needs "publishConfig": { "provenance": true } so the release is attested.`);
   }
 
-  if (!Array.isArray(m.files) || m.files.length === 0) {
+  // `files` exists to stop npm packing a whole source directory. A package that packs from a
+  // generated artifact directory has no source directory in the tarball to begin with — its
+  // contents are whatever its generator wrote — so the rule would be asserting something that
+  // cannot happen. Those packages are held to `requireFiles` instead, which names what the
+  // artifact must contain and is checked against the packed tarball.
+  if (packsFromArtifact) {
+    if (requireFiles.length === 0) {
+      errors.push(
+        `${pkg.name}: it packs from an artifact directory, so "requireFiles" must name the paths ` +
+          `that artifact has to contain. Nothing else constrains what the generator produced.`,
+      );
+    }
+  } else if (!Array.isArray(m.files) || m.files.length === 0) {
     errors.push(
       `${pkg.name}: ${at} needs a non-empty "files" array. Without it npm packs the whole package ` +
         `directory, which is how source-only or half-built packages reach the registry.`,

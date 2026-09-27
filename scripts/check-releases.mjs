@@ -31,10 +31,29 @@ const cmp = (a, b) => {
 };
 const errors = [];
 
-// 1. one version across the packages
-const versions = Object.fromEntries(["cli", "tokens", "ui"].map((p) => [p, json(`packages/${p}/package.json`).version]));
-if (new Set(Object.values(versions)).size !== 1) errors.push(`packages are not on one version: ${JSON.stringify(versions)}`);
+// 1. one version across the core release cohort
+//
+// "The three npm packages always share a version" is a rule about the `core` cohort, not about
+// everything KinetixUI publishes: `@kinetixui/angular` is Preview and releases on its own train, so
+// it is deliberately absent here. The cohort is read from the publish allowlist rather than listed
+// again, so adding a package to `core` brings it under this check automatically and moving one out
+// removes it — without this file having to be remembered.
+const allowlist = json("release/publish-packages.json");
+const coreDirectories = allowlist.packages.filter((p) => p.releaseGroup === "core").map((p) => p.directory);
+if (coreDirectories.length === 0) errors.push(`release/publish-packages.json has no "core" release group`);
+const versions = Object.fromEntries(
+  coreDirectories.map((directory) => [directory.replace(/^packages\//, ""), json(`${directory}/package.json`).version]),
+);
+if (new Set(Object.values(versions)).size !== 1) {
+  errors.push(`the core release cohort is not on one version: ${JSON.stringify(versions)}`);
+}
 const latest = versions.ui;
+// The changelog page is the core train's, so an independently versioned package must not be in it.
+for (const entry of allowlist.packages) {
+  if (entry.releaseGroup !== "core" && coreDirectories.includes(entry.directory)) {
+    errors.push(`${entry.name} is outside the core cohort but was read as part of it`);
+  }
+}
 
 // parse the entries out of releases.ts
 const src = read("apps/web/src/lib/releases.ts");
