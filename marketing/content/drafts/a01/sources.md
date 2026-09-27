@@ -5,9 +5,10 @@ here. Re-run `pnpm marketing:stats` on the day of publishing and re-check the
 numbers before posting — they move.
 
 **Numbers verified:** 2026-09-23, against `main` @ `e29184c`, KinetixUI v0.22.1.
-**Current-state figures re-derived:** 2026-09-24, against `main` @ `dfd0d81`, still
-v0.22.1. Only the *current* columns moved — every historical figure below is tied
-to a commit and is unchanged.
+**Current-state figures re-derived:** 2026-09-27, core v0.23.1 with
+`@kinetixui/angular` at 0.24.0 in its own release cohort. Only the *current*
+columns moved — every historical figure below is tied to a commit and is
+unchanged.
 
 ## Coverage figures used
 
@@ -191,10 +192,10 @@ before trusting any tooling that "found nothing".
 
 ---
 
-# Current repository state — 2026-09-24
+# Current repository state — 2026-09-27
 
-Use this for the "ours, today" paragraph. `main` @ `dfd0d81`, v0.22.1 MIT. From
-`pnpm marketing:stats`:
+Use this for the "ours, today" paragraph. Core v0.23.1 MIT, with
+`@kinetixui/angular` at 0.24.0. From `pnpm marketing:stats`:
 
 | | |
 | --- | --- |
@@ -208,7 +209,7 @@ Use this for the "ours, today" paragraph. `main` @ `dfd0d81`, v0.22.1 MIT. From
 | On all four catalogue-complete platforms | **90 / 98** |
 | Documented exceptions | 8 |
 | Blocks | 20, on all five platforms |
-| npm | `ui`, `cli`, `tokens` at 0.22.1; **`angular` unpublished** |
+| npm | `ui`, `cli`, `tokens` at 0.23.1; `angular` at **0.24.0 — published, still preview**, versioned independently |
 
 Snippet migration, counted directly (not covered by `marketing:stats`):
 

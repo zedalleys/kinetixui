@@ -11,7 +11,7 @@ fact, not a feeling.
   framework Discords.
 - **Ask:** "does the cross-platform claim read as credible, and what would you
   check first?"
-- **Entry criteria:** ✅ all met — site is live, three packages published, every
+- **Entry criteria:** ✅ all met — site is live, every npm package published, every
   displayed snippet verified, coverage derived.
 
 ## Stage 2 — Design-system and frontend communities
@@ -70,8 +70,8 @@ that does not convert wastes the one launch you get.
 - **Assets needed:** homepage screenshot (light + dark) · flagship demo GIF ·
   token pipeline diagram · platform coverage table · CLI install clip.
 - **FAQ:** Is this React Native? (No.) Do I have to use all of it? (No — tokens
-  only is a supported path.) Is Angular ready? (Preview, 31 of 98, stated
-  everywhere, and not published to npm.) What is the licence? (MIT.) Is there a paid tier? (Not yet.)
+  only is a supported path.) Is Angular ready? (Published and installable,
+  and still preview: 31 of 98, stated everywhere, versioned independently.) What is the licence? (MIT.) Is there a paid tier? (Not yet.)
 
 **No testimonials.** None exist. Engineering proof only.
 

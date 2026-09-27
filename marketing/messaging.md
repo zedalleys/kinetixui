@@ -48,10 +48,13 @@ Each has problem / promise / proof / CTA. Proof must be a repository fact.
 
 ### 5. Accessibility and RTL as infrastructure
 - **Problem:** both are retrofitted, per platform, badly.
-- **Promise:** enforced centrally, tested per platform.
+- **Promise:** enforced centrally, and the direction-aware evidence is named
+  platform by platform rather than claimed for all of them.
 - **Proof:** WCAG AA contrast gate in CI; browser axe over 19 pages × 2 themes ×
-  3 widths; `check:rtl` logical-property guardrail; direction-aware behaviour
-  tests on Compose, Flutter and Angular.
+  4 widths; `check:rtl` logical-property guardrail on the React source; and
+  direction-aware behaviour tests on Compose, Flutter and Angular. SwiftUI has
+  token and foundation verification, not direction-aware behaviour tests — say so
+  rather than rounding up.
 - **CTA:** `/docs/accessibility`, `/docs/rtl`
 
 ### 6. Developer workflow and CI guardrails

@@ -79,5 +79,35 @@ ok(!all.includes("kx_parity_proof"), "does not reuse a01's campaign id");
 ok(!files.includes("article.md"), "no article.md — format stays `post`");
 ok(files.length === 6, `six files as specified (found ${files.length})`);
 
+/*
+ * Publication and version, derived like every platform figure above.
+ *
+ * The gap this closes: the sources table read "`@kinetixui/{ui,cli,tokens}` 0.22.1" and "Not
+ * published | `@kinetixui/angular` | live `npm view` returned 404" for weeks after the core moved
+ * to 0.23.1 and Angular shipped at 0.24.0 — and every check in this file passed, because none of
+ * them looked at a version or a publication flag. Applied to the guidance files, which is where
+ * those facts live.
+ */
+const versionOf = (d) => JSON.parse(readFileSync(`packages/${d}/package.json`, "utf8")).version;
+const known = new Set(["cli", "tokens", "ui", "ui-angular"].map(versionOf));
+const publishedNpm = Object.entries(defs).filter(([, d]) => d.distribution?.channel === "npm" && d.distribution.published);
+
+for (const f of ["sources.md", "publish-checklist.md"]) {
+  const body = read(f);
+  const unknown = [...new Set([...body.matchAll(/0\.\d+\.\d+/g)].map((x) => x[0]))].filter((v) => !known.has(v));
+  ok(unknown.length === 0, `${f}: every version named is one a package actually has${unknown.length ? ` — stale: ${unknown.join(", ")}` : ""}`);
+  for (const [, d] of publishedNpm) {
+    const denial = /(unpublished|not published|returned 404)/i;
+    // The full coordinate or the bare package name: these tables sometimes write "`angular`".
+    const coordinate = d.distribution.coordinate;
+    const names = new RegExp(`(${coordinate}|\\b${coordinate.split("/").pop()}\\b)`, "i");
+    const contradictions = body
+      .split(/\r?\n/)
+      .filter((line) => names.test(line) && denial.test(line));
+    ok(contradictions.length === 0, `${f}: no "unpublished" claim for the published ${coordinate}${contradictions.length ? ` (${contradictions[0].trim().slice(0, 90)})` : ""}`);
+  }
+}
+ok(publishedNpm.length > 0, "derived the published set from the manifest rather than listing it");
+
 console.log(fail ? `\n${fail} problem(s)` : "\na02 package QA: all checks passed");
 process.exit(fail ? 1 : 0);

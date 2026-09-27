@@ -22,7 +22,19 @@ const defs = manifest.platformDefinitions as Record<
   { maturity: string; label: string; distribution: { channel: string; coordinate: string; published: boolean } }
 >;
 
-/** Every surface whose prose names platforms or makes a coverage claim. */
+/**
+ * Every surface whose prose names platforms or makes a coverage claim.
+ *
+ * Published copy only. The `marketing/*.md` guidance documents were tried here and removed: they
+ * *quote* the anti-patterns in order to ban them — `positioning.md` tabulates "Same components on
+ * all platforms" so it can be rebutted, and this repository's own marketing README describes the
+ * guard as catching "a blanket parity claim, a transpilation implication". Phrase rules cannot tell
+ * a claim from its refutation, so pointing them at documents whose job is to list bad claims
+ * produces failures on the correct text.
+ *
+ * Those documents are covered instead by `current-truth.test.ts`, whose rules are narrow enough to
+ * survive being quoted at: they compare against a derived set rather than searching for a phrase.
+ */
 const COPY = {
   "homepage": homepage,
   "README.md": readme,

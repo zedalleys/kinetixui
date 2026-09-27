@@ -263,15 +263,18 @@ Prints the canonical share URL. It prints rather than launching a browser: pipin
 it to `open`, `xdg-open` or `start` is one character, and a command that spawns a
 browser is unusable over SSH and untestable in CI.
 
-All three commands use the same codec the website does, so a code means one thing
-in both places. None of them executes anything from a preset — a preset is enum
+Every `preset` subcommand uses the same codec the website does, so a code means one
+thing in both places. None of them executes anything from a preset — a preset is enum
 names, hex colours and token names off a fixed list, and anything else is refused.
 
-**Not yet built**: native (SwiftUI/Compose/Flutter) theme output. Doing
-that properly means porting meaningful parts of
+**`theme build` is the CSS-only command, and that is a fact about that command
+rather than about the library.** It compiles a CSV of literal colours, and doing
+the same for a native platform would mean porting meaningful parts of
 [`style-dictionary/hooks.mjs`](https://github.com/zedalleys/kinetixui/blob/main/style-dictionary/hooks.mjs)'s
 token-transform logic to three more target languages — a real, separate
-undertaking, not attempted here. `theme build` only ever writes CSS.
+undertaking, not attempted. A native theme comes from a preset instead:
+`preset swiftui`, `preset compose` and `preset flutter`, documented above, with
+the colour-only limits each one states.
 
 ## lint
 

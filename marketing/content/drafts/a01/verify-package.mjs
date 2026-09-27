@@ -157,6 +157,61 @@ for (const f of files.concat("sources.md")) {
 }
 t(true, "no stale current-state figures (historical before/after left intact)");
 
+/*
+ * Publication and version, re-derived like every other current figure.
+ *
+ * These were the two facts the package had no check for, and they were the two that went stale: the
+ * sources table still read "`ui`, `cli`, `tokens` at 0.22.1; `angular` unpublished" long after the
+ * core moved to 0.23.1 and `@kinetixui/angular` shipped at 0.24.0. Everything else here already
+ * re-derived, so the file passed while carrying a wrong npm row.
+ *
+ * Read from each package.json and from the manifest's distribution flags, never typed — so this
+ * fails when the copy stops matching the repository, not merely because a version moved.
+ */
+const versionOf = (dir) => JSON.parse(readFileSync(new URL(`packages/${dir}/package.json`, root), "utf8")).version;
+const CORE = { cli: versionOf("cli"), tokens: versionOf("tokens"), ui: versionOf("ui") };
+const angularVersion = versionOf("ui-angular");
+const publishedPlatforms = Object.entries(defs)
+  .filter(([, d]) => d.distribution?.channel === "npm" && d.distribution.published)
+  .map(([name]) => name);
+
+for (const f of ["sources.md", "publish-checklist.md"]) {
+  const body = read(f);
+  /*
+   * Current-state material only.
+   *
+   * A version inside dated provenance — "Editorial freeze: 2026-09-23, against `main` @ e29184c,
+   * v0.22.1" — is a record of when the numbers were checked, not a claim about today, and must
+   * survive. It is the same HISTORICAL/CURRENT split the stale-figure sweep above already makes:
+   * rewriting the freeze line to say 0.23.1 would be a lie about when the work was done.
+   */
+  const PROVENANCE = /^.*(verified:|freeze:|against `main`|@ `[0-9a-f]{7,}`).*$/gim;
+  const current = body.replace(PROVENANCE, "");
+  const versions = [...current.matchAll(/0\.\d+\.\d+/g)].map((m) => m[0]);
+  const known = new Set([...Object.values(CORE), angularVersion]);
+  const unknown = versions.filter((v) => !known.has(v));
+  t(
+    unknown.length === 0,
+    `${f}: version string(s) no package has — ${[...new Set(unknown)].join(", ") || "none"} ` +
+      `(core ${CORE.ui}, angular ${angularVersion})`,
+  );
+
+  // And no claim that a published package is unpublished.
+  for (const platform of publishedPlatforms) {
+    const coordinate = defs[platform].distribution.coordinate;
+    const denial = /(unpublished|not published|returned 404)/i;
+    // The full coordinate or the bare package name — this table writes "`angular` unpublished", not
+    // "@kinetixui/angular unpublished", and a check that only knew the coordinate read straight past
+    // the exact row it exists to catch.
+    const names = new RegExp(`(${coordinate}|\\b${coordinate.split("/").pop()}\\b)`, "i");
+    const contradictions = body
+      .split(/\r?\n/)
+      .filter((line) => names.test(line) && denial.test(line));
+    t(contradictions.length === 0, `${f}: ${coordinate} is published — no "unpublished" claim${contradictions.length ? ` (${contradictions[0].trim().slice(0, 90)})` : ""}`);
+  }
+}
+t(publishedPlatforms.length > 0, `derived the published set from the manifest (${publishedPlatforms.join(", ")})`);
+
 const words = art.split(/\s+/).filter(Boolean).length;
 console.log(
   `\ntruth now: ${comps.length} components ${JSON.stringify(impl)} ` +
