@@ -10,6 +10,9 @@ import {
   SWIFT_COLOR_FIELDS,
   exportSwiftUi,
   swiftColor,
+  swiftElevations,
+  swiftRadii,
+  swiftShadowColor,
   swiftFieldName,
   swiftSymbolError,
 } from "./swiftui";
@@ -60,8 +63,25 @@ describe("it targets the real SwiftUI API", () => {
   });
 
   it("suggests an initializer KinetixTheme has", () => {
-    expect(swift()).toContain("KinetixTheme(light: .light, dark: .dark)");
-    expect(themeSwift).toMatch(/public init\(\s*light: KinetixColors = \.light,\s*dark: KinetixColors = \.dark,/);
+    // The comment tells a reader how to apply the file. If it names a signature the package does not
+    // have, it is worse than no comment — so the suggestion is checked against the real initializer.
+    expect(swift()).toContain("KinetixTheme(light: .light, dark: .dark, radii: .radii, elevations: .elevations)");
+    const init = themeSwift.slice(themeSwift.indexOf("public init("), themeSwift.indexOf("@ViewBuilder content"));
+    for (const parameter of ["light: KinetixColors", "dark: KinetixColors", "radii: KinetixRadii", "elevations: KinetixElevations"]) {
+      expect(init, parameter).toContain(parameter);
+    }
+  });
+
+  it("names the radius and elevation types the package declares", () => {
+    const radii = readFileSync(new URL("../../../ui-swiftui/Sources/KinetixUI/Radii.swift", import.meta.url), "utf8");
+    const elevation = readFileSync(new URL("../../../ui-swiftui/Sources/KinetixUI/Elevation.swift", import.meta.url), "utf8");
+    // Role names, not invented ones: the export writes what the struct accepts.
+    for (const role of ["field", "control", "container", "surface"]) {
+      expect(radii, role).toMatch(new RegExp(`public let ${role}: CGFloat`));
+    }
+    expect(elevation).toContain("public struct KinetixShadowLayer");
+    expect(elevation).toContain("public struct KinetixElevations");
+    expect(elevation).toMatch(/public init\(color: Color, radius: CGFloat, x: CGFloat = 0, y: CGFloat = 0\)/);
   });
 });
 
@@ -108,10 +128,23 @@ describe("the default design", () => {
     expect(source).toContain("public static let dark = KinetixColors(");
   });
 
-  it("writes no literal colour at all, because it changes nothing", () => {
-    // Every field references the shipped token. That is what "this design changes nothing" should look
-    // like — and it is what stops a default export from freezing today's numbers into someone's app.
-    expect(swift()).not.toContain("Color(red:");
+  it("writes no literal value at all, because it changes nothing", () => {
+    // Every field references the shipped token, and the untouched radius and elevation ladders come out
+    // as `.default`. That is what "this design changes nothing" should look like — and it is what stops
+    // a default export from freezing today's numbers into someone's app.
+    const source = swift();
+    expect(source).not.toContain("Color(red:");
+    expect(source).toContain("radii = KinetixRadii.default");
+    expect(source).toContain("elevations = KinetixElevations.default");
+    expect(source).not.toContain("KinetixShadowLayer(");
+  });
+
+  /** And the moment the design does touch them, the values are written out. */
+  it("stops referencing the default once the design moves a ladder", () => {
+    expect(swift({ radius: "soft" })).not.toContain("radii = KinetixRadii.default");
+    expect(swift({ surface: "flat" })).not.toContain("elevations = KinetixElevations.default");
+    // A design that moves only the corners leaves the shadow ladder following the library.
+    expect(swift({ radius: "soft" })).toContain("elevations = KinetixElevations.default");
   });
 
   it("does not write an approximation of a token Create only derives", () => {
@@ -217,12 +250,20 @@ describe("what it refuses to be", () => {
     }
   });
 
-  it("says plainly that radius and elevation do not travel", () => {
-    // The limitation belongs in the artifact, not only in the docs — this is the file someone reads six
-    // months later when they wonder why their corners are not soft.
-    expect(source).toContain("COLOURS ONLY");
-    expect(source).toMatch(/radius \(soft\) and\n\/\/ surface treatment \(elevated\)/);
-    expect(source).not.toMatch(/cornerRadius|\.shadow\(/);
+  it("names the design's radius and surface in the header", () => {
+    // The file someone reads six months later, wondering which design this was.
+    expect(source).toMatch(/Radius soft · surface elevated/);
+    expect(source).not.toContain("COLOURS ONLY");
+  });
+
+  /**
+   * The one limit that remains. `spread` is a CSS property `.shadow` has no equivalent for, so it is
+   * dropped — said in the artifact rather than only in the docs, because the artifact is where
+   * someone notices their shadow sitting wider than the web's.
+   */
+  it("states the spread limitation in the file itself", () => {
+    expect(source).toMatch(/spread/i);
+    expect(source).toMatch(/SwiftUI's `\.shadow` has no/);
   });
 
   /**
@@ -233,16 +274,158 @@ describe("what it refuses to be", () => {
    * write them — which makes the limit this exporter's, not the platform's. Saying "there is nowhere
    * for them to go" would be the wrong excuse, and would talk a reader out of setting them by hand.
    */
-  it("blames the exporter rather than the platform, and says what to do instead", () => {
-    expect(source).not.toMatch(/nowhere for them to go/);
-    expect(source).not.toMatch(/no token to override/);
-    expect(source).toMatch(/limit of this exporter/);
-    expect(source).toContain("KinetixRadii");
-    expect(source).toMatch(/radii: …, elevations: …/);
+  /** Claims that were true while this exporter wrote colours only, and are not any more. */
+  it("no longer says radius has nowhere to go, or that it is not carried", () => {
+    for (const stale of [
+      /nowhere for them to go/,
+      /no token to override/,
+      /limit of this exporter/,
+      /NOT carried here/,
+      /set them by hand/,
+    ]) {
+      expect(source, String(stale)).not.toMatch(stale);
+    }
   });
 });
 
 /* ------------------------------------------------------------------ identifiers */
+
+/* ------------------------------------------------------------------ radii and elevation */
+
+describe("radii", () => {
+  it("emits the four roles the runtime declares, in its order", () => {
+    // A design that moves the corners — the default one references `KinetixRadii.default` instead.
+    const out = swift({ radius: "soft" });
+    expect(out).toMatch(/public static let radii = KinetixRadii\(/);
+    const block = out.slice(out.indexOf("let radii"), out.indexOf("let elevations"));
+    expect(block.indexOf("field:")).toBeLessThan(block.indexOf("control:"));
+    expect(block.indexOf("control:")).toBeLessThan(block.indexOf("container:"));
+    expect(block.indexOf("container:")).toBeLessThan(block.indexOf("surface:"));
+  });
+
+  /** The ladder is sm/md/lg/xl in the token source and field/control/container/surface at runtime. */
+  it("maps the size ladder onto the role names", () => {
+    const theme = resolveCreateTheme(design({ radius: "soft" }));
+    const out = swift({ radius: "soft" });
+    expect(out).toContain(`field: ${theme.light.radius.sm},`);
+    expect(out).toContain(`control: ${theme.light.radius.md},`);
+    expect(out).toContain(`container: ${theme.light.radius.lg},`);
+    expect(out).toContain(`surface: ${theme.light.radius.xl}`);
+  });
+
+  it("carries a design that changes the radius", () => {
+    expect(swift({ radius: "soft" })).toMatch(/field: 12,[\s\S]*?surface: 36/);
+    expect(swift({ radius: "square" })).toMatch(/field: 0,[\s\S]*?surface: 0/);
+    expect(swift({ radius: "soft" })).not.toBe(swift());
+  });
+
+  /**
+   * `none` and `full` are left to the initializer's defaults. Neither is on the ladder a design
+   * moves: zero is zero, and a capsule does not get rounder because the design got softer.
+   */
+  it("does not invent a none or full value", () => {
+    expect(swift({ radius: "soft" })).not.toMatch(/none:|full:/);
+  });
+
+  it("writes numbers, not CSS", () => {
+    const out = swift({ radius: "soft" });
+    const block = out.slice(out.indexOf("let radii"), out.indexOf("let elevations"));
+    expect(block).not.toMatch(/px|rem|var\(|"/);
+    expect(block).toMatch(/field: \d+(\.\d+)?,/);
+  });
+});
+
+describe("elevation", () => {
+  it("emits the four steps in ladder order", () => {
+    const out = swift({ surface: "elevated" });
+    const block = out.slice(out.indexOf("let elevations"));
+    for (const [a, b] of [["sm:", "md:"], ["md:", "lg:"], ["lg:", "xl:"]]) {
+      expect(block.indexOf(a), `${a} before ${b}`).toBeLessThan(block.indexOf(b));
+    }
+  });
+
+  /**
+   * The near/far pair is the shape of a raised surface. Flattening a two-layer step to one would
+   * still compile and would quietly be a different shadow, so the layer count is asserted against
+   * the resolved theme rather than hard-coded.
+   */
+  it("keeps every layer, in order", () => {
+    const theme = resolveCreateTheme(design({ surface: "elevated" }));
+    const out = swift({ surface: "elevated" });
+    const block = out.slice(out.indexOf("let elevations"));
+    const emitted = (block.match(/KinetixShadowLayer\(/g) ?? []).length;
+    const expected = (["sm", "md", "lg", "xl"] as const).reduce((n, step) => n + theme.light.elevation[step].length, 0);
+    expect(emitted).toBe(expected);
+    expect(expected).toBeGreaterThan(4, "at least one step should be multi-layer, or this proves nothing");
+  });
+
+  it("writes an empty step as .none rather than an empty array", () => {
+    const flat = swift({ surface: "flat" });
+    expect(flat).toMatch(/sm: \.none/);
+    expect(flat).not.toMatch(/KinetixElevation\(\[\s*\]\)/);
+  });
+
+  it("carries a design that changes the surface", () => {
+    expect(swift({ surface: "elevated" })).not.toBe(swift());
+    expect(swift({ surface: "flat" })).not.toBe(swift());
+  });
+
+  it("writes no CSS shadow syntax", () => {
+    const block = swift({ surface: "elevated" }).slice(swift({ surface: "elevated" }).indexOf("let elevations"));
+    expect(block).not.toMatch(/box-shadow|rgba\(|var\(|px|spread/);
+  });
+
+  /** SwiftUI has no spread. The token source has it; dropping it is the documented mapping. */
+  it("drops spread rather than inventing a field for it", () => {
+    // The shipped `lg` carries spread, so a design that writes its own ladder is the case to check.
+    const theme = resolveCreateTheme(design());
+    expect(theme.light.elevation.lg.some((l) => Number(l.spread) !== 0), "lg should carry spread").toBe(true);
+    expect(swift({ surface: "elevated" })).not.toMatch(/spread:/);
+    expect(swift({ surface: "elevated" })).toContain("KinetixShadowLayer(");
+  });
+});
+
+describe("shadow colours", () => {
+  it("writes pure black the way the hand-written ladder does", () => {
+    expect(swiftShadowColor("#0000000d")).toBe("Color.black.opacity(0.051)");
+    expect(swiftShadowColor("#000000")).toBe("Color.black");
+  });
+
+  /** Not every shadow is black — the shipped `md` has a slate layer, and assuming black would lose it. */
+  it("keeps a non-black shadow colour", () => {
+    const out = swiftShadowColor("#676e7614");
+    expect(out).toMatch(/^Color\(red: /);
+    expect(out).not.toContain("black");
+    expect(out).toMatch(/\.opacity\(0\.078\)$/);
+  });
+
+  it("refuses anything that is not a hex colour", () => {
+    for (const bad of ["", "#fff", "rgb(0,0,0)", "var(--shadow)", "#00000", "#0000000g"]) {
+      expect(swiftShadowColor(bad), bad).toBeNull();
+    }
+  });
+});
+
+describe("the emitters are pure", () => {
+  it("produce the same text for the same input", () => {
+    const theme = resolveCreateTheme(design({ radius: "soft", surface: "elevated" }));
+    expect(swiftRadii(theme.light.radius)).toBe(swiftRadii(theme.light.radius));
+    expect(swiftElevations(theme.light.elevation)).toBe(swiftElevations(theme.light.elevation));
+  });
+
+  /**
+   * The runtime takes one radii value and one elevation set, not a pair — which is only honest if
+   * the two appearances resolve to the same ladder. They do, for every design; if that ever stops
+   * being true this exporter is silently picking light and must be revisited.
+   */
+  it("light and dark resolve to the same radii and elevation", () => {
+    for (const over of [{}, { radius: "soft" }, { surface: "elevated" }, { surface: "flat" }] as Partial<PresetConfig>[]) {
+      const theme = resolveCreateTheme(design(over));
+      expect(swiftRadii(theme.light.radius), JSON.stringify(over)).toBe(swiftRadii(theme.dark.radius));
+      expect(swiftElevations(theme.light.elevation), JSON.stringify(over)).toBe(swiftElevations(theme.dark.elevation));
+    }
+  });
+});
 
 describe("token names become Swift field names", () => {
   it.each([
