@@ -206,11 +206,37 @@ describe("release tag names", () => {
     }
   });
 
-  it("has never tagged the private Angular package", () => {
-    assert.deepEqual(
-      [...localTags].filter((tag) => tag.startsWith("@kinetixui/angular@")),
-      [],
-      "a private package must never get a release tag",
+  /**
+   * Written when `@kinetixui/angular` was the private package and said so by name. It is public and
+   * released now, so the name-specific form had become a false claim that only stayed green because
+   * CI does not fetch tags. The rule it was reaching for is not about Angular: a tag is a claim that
+   * a version was published, so no package that cannot be published may carry one.
+   */
+  it("has never tagged a package that cannot be published", { skip: kinetixTags.length === 0 && "shallow checkout: no tags fetched" }, () => {
+    const unpublishable = packages.filter((pkg) => pkg.manifest.private === true).map((pkg) => pkg.name);
+    for (const name of unpublishable) {
+      assert.deepEqual(
+        kinetixTags.filter((tag) => tag.startsWith(`${name}@`)),
+        [],
+        `${name} is private and must never get a release tag`,
+      );
+    }
+    // And every tag that does exist names a package this repository still knows about, so a rename
+    // shows up here rather than as an orphaned claim about something that no longer exists.
+    const known = new Set(packages.map((pkg) => pkg.name));
+    for (const tag of kinetixTags) {
+      const name = tag.slice(0, tag.lastIndexOf("@"));
+      assert.ok(known.has(name), `tag ${tag} names a package this workspace does not have`);
+    }
+  });
+
+  /** The positive half, now that Angular is allowlisted: the activation really did tag its release. */
+  it("tagged Angular's release once it became publishable", { skip: kinetixTags.length === 0 && "shallow checkout: no tags fetched" }, () => {
+    const angular = read("packages/ui-angular/package.json");
+    assert.notEqual(angular.private, true, "this assertion assumes Angular is publishable");
+    assert.ok(
+      localTags.has(releaseTagName("@kinetixui/angular", angular.version)),
+      `expected ${releaseTagName("@kinetixui/angular", angular.version)} to exist`,
     );
   });
 });
@@ -246,13 +272,36 @@ describe("a release cannot run while changesets are pending", () => {
   });
 
   /**
-   * The other side of the gate. While a changeset was pending the release was forbidden; the
-   * Version Packages operation consumed it, so a release may now proceed — and what it would
-   * publish is the version that operation produced, not the one it superseded.
+   * The other side of the gate, restated.
+   *
+   * This asserted that `.changeset` was empty, which was true at the 0.24.0 release boundary and is
+   * not an invariant of the repository: between releases, pending changesets are the normal state of
+   * `main`. As written it would have failed every pull request that carried one — the guard above is
+   * what forbids a release while they are pending, and it reads the directory at release time.
+   *
+   * What is always true is that a pending changeset must name a package the release engine can
+   * actually act on. A changeset naming an ignored, private or misspelled package is silently
+   * dropped by `changeset version`, so the work ships with no version bump and no changelog entry —
+   * a failure with no error message, which is the kind worth catching on the pull request.
    */
-  it("has no pending changesets, so a release is now permitted", () => {
+  it("keeps every pending changeset pointed at a package a release can act on", () => {
     const pending = readdirSync(`${root}.changeset`).filter((f) => f.endsWith(".md") && f.toLowerCase() !== "readme.md");
-    assert.deepEqual(pending, [], `a release must not run with changesets pending: ${pending.join(", ")}`);
+    const config = read(".changeset/config.json");
+    const ignored = new Set(config.ignore ?? []);
+    const versionable = new Set(
+      packages.filter((pkg) => pkg.manifest.private !== true && !ignored.has(pkg.name)).map((pkg) => pkg.name),
+    );
+
+    for (const file of pending) {
+      const text = readFileSync(`${root}.changeset/${file}`, "utf8");
+      const front = text.split(/^---\s*$/m)[1];
+      assert.ok(front, `${file} has no frontmatter`);
+      const named = [...front.matchAll(/^\s*"([^"]+)":\s*(patch|minor|major)\s*$/gm)].map((m) => m[1]);
+      assert.ok(named.length > 0, `${file} names no package`);
+      for (const name of named) {
+        assert.ok(versionable.has(name), `${file} names ${name}, which \`changeset version\` would ignore`);
+      }
+    }
   });
 
   it("consumed the Angular changeset into a changelog entry rather than losing it", () => {

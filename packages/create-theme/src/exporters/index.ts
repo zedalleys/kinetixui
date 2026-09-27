@@ -5,15 +5,15 @@
  * registry, no lifecycle, no plugin loader, because nothing here needs one and every one of those would
  * have to be designed around exporters that do not exist yet.
  *
- * Three exporters exist: `web-css`, `swiftui` and `compose`. The second was the test of this shape and
- * the third was the proof — neither needed a change to the preset schema, the engine or any existing
- * exporter, because the resolved theme already carries colours as hex, radii as numbers and elevation as
- * layers, which is what a platform needs and none of the CSS it does not. A Flutter or Android XML
- * exporter is another file in this directory with a `target` and an `export`; neither exists yet.
+ * Four exporters exist: `web-css`, `swiftui`, `compose` and `flutter`. The second was the test of this
+ * shape and the two after it were the proof — none needed a change to the preset schema, the engine or
+ * any existing exporter, because the resolved theme already carries colours as hex, radii as numbers and
+ * elevation as layers, which is what a platform needs and none of the CSS it does not. An Android XML
+ * exporter would be another file in this directory with a `target` and an `export`; it does not exist.
  *
- * An exporter is also where a platform's limits get told truthfully. `swiftui` and `compose` both write
- * colours and say in their own headers that they write nothing else, because neither native package has
- * a runtime radius or elevation token to write to. That belongs in the exporter, not in the engine: the
+ * An exporter is also where a platform's limits get told truthfully. All three native exporters write
+ * colours and say in their own headers that they write nothing else, because no native package has a
+ * runtime radius or elevation token to write to. That belongs in the exporter, not in the engine: the
  * theme is complete, and what a target can carry is the target's business.
  *
  * What an exporter must NOT do is repair a theme. If a platform's colour format loses precision, that

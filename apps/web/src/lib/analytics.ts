@@ -99,6 +99,12 @@ export interface AnalyticsEvents {
   preset_code_copied: Shape<never, "source">;
   preset_loaded: Shape<never, "source">;
   preset_randomized: Shape<never, "source">;
+  // Export. `target` is one of the four stable exporter ids — "web-css", "swiftui", "compose",
+  // "flutter" — and nothing else travels: not the preset, not the generated code, not the symbol
+  // name the author typed. Deliberately separate from `component_code_copied`, which is about
+  // activating a component and would stop meaning anything if theme exports were folded into it.
+  create_export_target_selected: Shape<"target", "source">;
+  create_export_copied: Shape<"target", "source">;
 }
 
 export type AnalyticsEventName = keyof AnalyticsEvents;

@@ -76,7 +76,7 @@ describe("both appearances", () => {
 });
 
 describe("every durable control survives the round trip", () => {
-  // The durability rule, as a test: a control whose effect does not survive Copy CSS must not ship.
+  // The durability rule, as a test: a control whose effect does not survive the export must not ship.
   it.each<[string, Partial<PresetConfig>, RegExp]>([
     ["brand", { brand: "#c2410c" }, /--action:/],
     ["neutral", { neutral: "warm" }, /--background:/],

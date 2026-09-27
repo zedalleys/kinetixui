@@ -121,14 +121,22 @@ every hue. A separate neutral control sets the personality of the greys, and
 radius and surface presets write the `--radius-*` and `--shadow-*` variables
 documented above.
 
-What it copies is a CSS override block containing only what differs from the
-shipped theme, with a `:root` and a `.dark` section — one configuration
-describes both appearances. Manual values set in its Advanced panel beat
-everything generated, and a contrast failure you introduce there is reported
+Its **Export** panel then generates that design for one of four targets: web CSS,
+SwiftUI, Jetpack Compose or Flutter. The web CSS is an override block containing
+only what differs from the shipped theme, with a `:root` and a `.dark` section —
+one configuration describes both appearances. The three native targets are a
+`KinetixColors` pair each, light and dark. Manual values set in the Advanced panel
+beat everything generated, and a contrast failure you introduce there is reported
 rather than quietly corrected.
 
-The output is web CSS. Native theme compilation is not implemented — see the
-[CLI](/docs/cli) page for what `theme build` covers.
+Each target also shows the `kinetixui preset …` command that writes the same file,
+because the CLI and the workspace run the same exporter.
+
+What no target carries is radius and surface on native: the SwiftUI, Compose and
+Flutter packages read generated constants rather than a runtime theme, so there is
+nowhere for either to land. Colours and the chart palette travel everywhere.
+`kinetixui theme build` is a separate, older path — a CSV of literal colours
+compiled to CSS — and is web-only; see the [CLI](/docs/cli) page for its scope.
 
 ### Presets
 
@@ -143,8 +151,18 @@ engine that produced them the first time.
 that design. **Copy preset** copies the bare code, which is what
 [`kinetixui preset decode`](/docs/cli) reads and
 [`kinetixui preset css`](/docs/cli) resolves into this same stylesheet without a
-browser — and [`kinetixui preset swiftui`](/docs/cli) into a SwiftUI theme file. **Copy CSS** remains a different artifact from the preset itself: a
-preset is a design, CSS is one rendering of it.
+browser — and [`preset swiftui`, `preset compose` and `preset flutter`](/docs/cli)
+resolve into native theme files.
+
+The workspace's **Export** panel is the same four targets in the browser: one
+design, one resolved theme, and the exporter for whichever target is selected. A
+preset stays a different artifact from any of them — a preset is the design,
+generated code is one rendering of it.
+
+The preview is always web. Selecting SwiftUI, Jetpack Compose or Flutter changes
+what Export generates, not what is drawn: those targets carry colours, and radius
+and surface apply on the web only, because no native package has a runtime token
+for them.
 
 The version is in the prefix, so a code made today stays readable, and a future
 format is refused with an explanation rather than misread. A preset can only name

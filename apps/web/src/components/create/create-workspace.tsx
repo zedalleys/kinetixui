@@ -21,9 +21,10 @@ import {
   type CreateConfig,
 } from "@/lib/create/config";
 import { resolveTheme } from "@/lib/create/theme-adapter";
-import { PRESET_PARAM, decodeIntoConfig, randomizeConfig, type PresetError } from "@/lib/create/preset";
+import { PRESET_PARAM, decodeIntoConfig, encodeConfig, randomizeConfig, type PresetError } from "@/lib/create/preset";
 import { analytics } from "@/lib/analytics";
 import { CreateActions } from "./create-actions";
+import { CreateExport } from "./create-export";
 import { CreatePreview, SCENE_LABELS } from "./create-preview";
 import { CreateSidebar } from "./create-sidebar";
 
@@ -85,6 +86,10 @@ export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfi
   const key = configKey(config);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- `key` is a complete, stable digest of `config`
   const theme = React.useMemo(() => resolveTheme(config), [key]);
+  // The Export panel's terminal command carries the design, so it is encoded once per design rather
+  // than on every render — `key` digests the same config the encoder reads.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- as above
+  const presetCode = React.useMemo(() => encodeConfig(config), [key]);
   const isDefault = isDefaultConfig(config);
 
   const sidebar = (
@@ -99,15 +104,13 @@ export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfi
           <p className="eyebrow">Workspace</p>
           <h1 className="mt-2 font-display text-3xl font-bold tracking-[-0.02em] md:text-4xl">Create</h1>
           <p className="mt-2 max-w-xl text-muted-foreground">
-            Shape the Kinetix design language visually, then inspect the semantic tokens and web CSS
-            underneath.
+            Shape the Kinetix design language visually, preview it on real components, then export the
+            same theme for web and native platforms.
           </p>
         </div>
 
         <CreateActions
           config={config}
-          css={theme.css}
-          cssIsEmpty={theme.cssIsEmpty}
           isDefault={isDefault}
           onRandomize={() => dispatch({ type: "replace", config: randomizeConfig(config) })}
           onReset={() => {
@@ -215,16 +218,29 @@ export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfi
 
             <p className="mt-3 text-sm text-muted-foreground">
               Real <code className="rounded bg-muted px-1 font-mono text-xs text-foreground">@kinetixui/ui</code>{" "}
-              components, rendered with the configuration on the left. The output is web CSS custom
-              properties — see{" "}
+              components, rendered with the configuration on the left. The preview is always web — the
+              native targets below change what Export generates, not what is drawn here. See{" "}
               <a href="/docs/theming" className="font-medium text-primary underline underline-offset-4">
                 Theming
               </a>{" "}
-              for what each one controls.
+              for what each token controls.
             </p>
           </div>
         </section>
       </div>
+
+      {/* Export is full width rather than a sidebar section. A generated Swift or Dart file is a
+          hundred lines; the 22rem configuration column was the wrong shape for it, and was already
+          the wrong shape for CSS. */}
+      <section aria-labelledby="create-export-heading" className="mt-10 border-t border-border pt-8">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 id="create-export-heading" className="font-display text-xl font-semibold tracking-[-0.01em]">
+            Export
+          </h2>
+          <p className="text-sm text-muted-foreground">One design, four targets — generated from the same theme.</p>
+        </div>
+        <CreateExport theme={theme} presetCode={presetCode} className="mt-4" />
+      </section>
     </div>
   );
 }

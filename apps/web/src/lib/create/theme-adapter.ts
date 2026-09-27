@@ -7,7 +7,11 @@
  *
  *   active   which of the two appearances is on screen — a preview control, not a design decision
  *   style    the resolved theme as inline custom properties for the scoped preview root
- *   css      the web CSS export, memoized alongside the rest so the Output panel and Copy CSS agree
+ *   contrast the readability report the sidebar shows
+ *
+ * Export output is deliberately NOT here. There is one resolved theme and four exporters that read it,
+ * and which one a reader has selected is presentation state — see `export-targets.ts`. Generating all
+ * four on every colour drag would be three files of work nobody asked to see.
  *
  * There is no second derivation here, and there must not be one: the moment this file computes a colour,
  * the website and `kinetixui preset css` can disagree about what a preset means.
@@ -16,7 +20,6 @@ import {
   NOTHING_TO_OVERRIDE,
   contrastOf,
   cssVarOverrides,
-  exportCss,
   hexToHslChannels,
   hexToOklch,
   parsePaletteText,
@@ -45,9 +48,6 @@ export type CreateTheme = ResolvedCreateTheme & {
   contrast: ContrastResult[];
   /** Tokens the user set by hand — shown as "manual" beside a contrast result. */
   manualTokens: Set<string>;
-  css: string;
-  /** True when the design is the shipped default and there is genuinely nothing to override. */
-  cssIsEmpty: boolean;
 };
 
 /**
@@ -70,7 +70,6 @@ function previewStyle(mode: ResolvedThemeMode): Record<string, string> {
 export function resolveTheme(config: CreateConfig): CreateTheme {
   const theme = resolveCreateTheme(configToPreset(config));
   const active = config.mode === "dark" ? theme.dark : theme.light;
-  const css = exportCss(theme);
 
   return {
     ...theme,
@@ -78,8 +77,6 @@ export function resolveTheme(config: CreateConfig): CreateTheme {
     style: previewStyle(active),
     contrast: contrastOf(active),
     manualTokens: new Set(theme.meta.manualTokens),
-    css: css || NOTHING_TO_OVERRIDE,
-    cssIsEmpty: css === "",
   };
 }
 

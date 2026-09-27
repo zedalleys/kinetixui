@@ -77,8 +77,12 @@ kinetixui preset compose KX1_… --name AcmeTheme --output AcmeTheme.kt
 ```
 
 That writes a Kotlin `object` with a `light` and a `dark` `KinetixColors`,
-built from the same resolved theme the workspace's Copy CSS renders —
+built from the same resolved theme the workspace exports —
 see [the CLI reference](/docs/cli).
+
+Or skip the terminal: [Create](/create)'s **Export** panel has a Jetpack Compose
+target that generates the same file in the browser. It names the roles below that
+Compose has no field for, rather than leaving them to be discovered here.
 
 **Colours only.** `KinetixColors` is the whole themeable surface here:
 corner radius and elevation are generated constants that components
