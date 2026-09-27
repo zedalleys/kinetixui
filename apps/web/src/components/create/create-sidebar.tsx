@@ -27,13 +27,12 @@ import {
 } from "@/lib/create/labels";
 import { CreateAdvanced } from "./create-advanced";
 import { CreateColorPicker } from "./create-color-picker";
-import { CreateOutput } from "./create-output";
 
 /**
  * The configuration panel.
  *
  * Simple controls are visible; only Advanced is folded away (§51). Everything here writes into the one
- * config — there is no control that changes the preview without changing what Copy CSS produces, which is
+ * config — there is no control that changes the preview without changing what Export produces, which is
  * the rule that decided what PR 2 ships at all (§104).
  */
 
@@ -353,12 +352,9 @@ export function CreateSidebar({
         </details>
       </section>
 
-      {/* ── Output ─────────────────────────────────────────────────────── */}
-      <section aria-labelledby={`${id}-output`}>
-        <SectionHead index="07" label="Output" meta="web css" />
-        {heading("output", "Output")}
-        <CreateOutput css={theme.css} isEmpty={theme.cssIsEmpty} className="mt-3" />
-      </section>
+      {/* Export used to live here as section 07, "Output — web css". It is its own region below the
+          preview now: a generated Swift or Dart file is a hundred lines, and a 22rem column was
+          already the wrong shape for CSS. */}
     </div>
   );
 }

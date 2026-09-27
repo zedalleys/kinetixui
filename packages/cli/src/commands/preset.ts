@@ -89,7 +89,7 @@ export function presetDecode(input: string, opts: { json: boolean }): void {
       // Wrapped so that no command name is split across lines — a reader scanning for `theme build`
       // should find it, and so should a test.
       "  A preset describes a design, not a stylesheet.\n\n" +
-        "    kinetixui preset css <code>       the same web CSS the workspace's Copy CSS produces\n" +
+        "    kinetixui preset css <code>       the same web CSS the workspace exports\n" +
         "    kinetixui preset swiftui <code>   a SwiftUI colour theme\n" +
         "    kinetixui preset compose <code>   a Jetpack Compose colour theme\n" +
         "    kinetixui preset flutter <code>   a Flutter colour theme\n\n" +
@@ -102,7 +102,7 @@ export function presetDecode(input: string, opts: { json: boolean }): void {
 /**
  * `preset css <code|url>` — resolve a preset into the web CSS override block.
  *
- * Web CSS, and only web CSS. It is the same exporter the /create workspace's Copy CSS runs, over the same
+ * Web CSS, and only web CSS. It is the same exporter the /create workspace's Web CSS target runs, over the same
  * resolved theme, so the two cannot drift; `cli-preset.test.ts` asserts byte equality rather than trusting
  * that. There is no SwiftUI, Compose or Flutter output behind this command and the command name says so —
  * `preset apply` would not have, which is why it is not the name.

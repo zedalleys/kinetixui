@@ -81,7 +81,7 @@ export async function themeBuild(name: string, options: ThemeBuildOptions): Prom
   }
 
   console.log();
-  console.log("Native (SwiftUI/Compose/Flutter) theme output isn't built yet — this compiles to CSS only.");
+  console.log("This command compiles to CSS only. For a native theme, run `preset swiftui`, `preset compose` or `preset flutter` on a KX1 preset.");
   console.log(pc.dim("See https://kinetixui.com/docs/cli#theme for the current scope."));
 
   if (failed > 0 && options.failOnContrast) {

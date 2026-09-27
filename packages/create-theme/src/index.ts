@@ -5,10 +5,10 @@
  *                    (@kinetixui/create-preset)   (this package)      (this package's exporters)
  *
  * Framework-free on purpose: no React, no Next, no `node:` imports, no DOM. The website renders from it,
- * `kinetixui preset css` prints from it, and a future SwiftUI/Compose/Flutter exporter will read the same
+ * `kinetixui preset css` prints from it, and the SwiftUI, Compose and Flutter exporters read that same
  * resolved theme rather than a second derivation that agrees by hand.
  *
- * Three exporters exist: web CSS, SwiftUI colours and Jetpack Compose colours. None of them is a general
+ * Four exporters exist: web CSS, SwiftUI colours, Jetpack Compose colours and Flutter colours. None is a general
  * "native export" — each native one writes a `KinetixColors` pair because colour is the only axis its
  * package is themeable along, and each says so in the file it generates. There is no Flutter or Android
  * XML exporter, and nothing here should be read as claiming otherwise.

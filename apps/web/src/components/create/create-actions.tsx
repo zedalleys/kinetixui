@@ -8,16 +8,20 @@ import type { CreateConfig } from "@/lib/create/config";
 import { encodeConfig, shareUrlFor } from "@/lib/create/preset";
 
 /**
- * The workspace actions: Share, Copy preset, Copy CSS, Randomize, Reset.
+ * The workspace actions: Share, Copy preset, Randomize, Reset.
  *
- * Three of these produce something you can paste, and they are deliberately not interchangeable:
+ * These are about the *design*. Two of them produce something you can paste, and they are
+ * deliberately not interchangeable:
  *
  *   Share link   → https://kinetixui.com/create?preset=KX1_…   opens the workspace with this design
  *   Preset code  → KX1_…                                        the design itself, for the CLI or a note
- *   Copy CSS     → :root { … } .dark { … }                      the theme, for a stylesheet
  *
  * A label that blurred them would be the most expensive kind of small mistake: someone pastes a preset
  * code into a stylesheet, or CSS into the CLI, and neither says anything useful about why it failed.
+ *
+ * Generated code is not here. "Copy CSS" used to be, from when CSS was the only thing Create could
+ * produce; now that there are four targets, copying belongs to whichever one is selected in Export,
+ * and a second CSS-shaped button up here would quietly privilege the web.
  */
 
 /** Clipboard write plus a spoken confirmation. Returns false when the platform refused. */
@@ -50,16 +54,12 @@ function useCopyAction() {
 
 export function CreateActions({
   config,
-  css,
-  cssIsEmpty,
   isDefault,
   onRandomize,
   onReset,
   onShared,
 }: {
   config: CreateConfig;
-  css: string;
-  cssIsEmpty: boolean;
   isDefault: boolean;
   onRandomize: () => void;
   onReset: () => void;
@@ -80,8 +80,6 @@ export function CreateActions({
 
   const copyCode = () =>
     run("code", encodeConfig(config), () => analytics.track("preset_code_copied", { source: "create_workspace" }));
-
-  const copyCss = () => run("css", css);
 
   const label = (id: string, idle: string) => (done === id ? "Copied" : idle);
 
@@ -109,11 +107,6 @@ export function CreateActions({
         {label("code", "Copy preset")}
       </Button>
 
-      <Button size="sm" variant="Outline" onClick={copyCss} disabled={cssIsEmpty}>
-        {done === "css" ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
-        {label("css", "Copy CSS")}
-      </Button>
-
       <Button size="sm" onClick={shareLink} disabled={isDefault}>
         {done === "share" ? <Check className="size-4" aria-hidden /> : <Link2 className="size-4" aria-hidden />}
         {label("share", "Share")}
@@ -128,13 +121,11 @@ export function CreateActions({
             ? "Share link copied to clipboard"
             : done === "code"
               ? "Preset code copied to clipboard"
-              : done === "css"
-                ? "CSS copied to clipboard"
-                : ""}
+              : ""}
       </span>
       {failed && (
         <p role="status" className="basis-full text-sm text-destructive">
-          Could not copy — your browser blocked clipboard access. Select the code in the Output panel and
+          Could not copy — your browser blocked clipboard access. Select the code in the Export panel and
           copy it manually.
         </p>
       )}

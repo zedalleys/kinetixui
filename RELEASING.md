@@ -267,16 +267,20 @@ unlocking anything:
 Readiness is not availability. `npm install @kinetixui/angular` still does not work, and no public
 documentation says otherwise.
 
-### Activation — done, pending the Version Packages release
+### Activation — complete
 
-Both release-engine prerequisites are implemented, and the package metadata is activated. What has
-**not** happened is publication: `@kinetixui/angular` is still `0.23.0` in this tree and still
-returns 404 on npm. The transition to `0.24.0` belongs to the Version Packages pull request.
+`@kinetixui/angular@0.24.0` is published, tagged and installable. The two-stage flow below is what
+produced it: the activation merged with a changeset pending, which routed it to a Version Packages
+pull request, and merging *that* published the version the bump produced.
+
+The cohorts did what they exist for. Angular moved `0.23.0 → 0.24.0` while `@kinetixui/tokens`,
+`@kinetixui/ui` and `@kinetixui/cli` stayed at `0.23.0` — Angular's changelog has a `0.24.0` entry
+and none of the core three does.
 
 | step | state |
 | --- | --- |
 | Remove Angular from the Changesets `fixed` core group | done |
-| Angular-only minor changeset, 0.23.0 → 0.24.0 | pending in `.changeset/` |
+| Angular-only minor changeset, 0.23.0 → 0.24.0 | consumed by the Version Packages PR |
 | Remove `"private": true` | done |
 | `publishConfig.access` + `provenance` | done |
 | Angular in `release/publish-packages.json` | done, in the `angular` cohort |
@@ -284,8 +288,17 @@ returns 404 on npm. The transition to `0.24.0` belongs to the Version Packages p
 | Release-cohort support | done |
 | Same-version enforcement inside `core` | preserved, now cohort-scoped |
 | Registry planning across cohort versions | done |
-| Cohort-aware tag reconciliation | done |
-| npm/install documentation | **deferred** — see below |
+| Cohort-aware tag reconciliation | done — `@kinetixui/angular@0.24.0` tagged, core untouched |
+| npm/install documentation | done — the install command is real |
+
+One thing to know when reading `scripts/release/test/repository.test.mjs`: two assertions written
+during this activation described the *state* at the release boundary rather than a rule, and both
+became wrong the moment the release succeeded. `.changeset` being empty is not an invariant — it is
+empty between releases and full during them — and "Angular has no tag" stopped being true when
+Angular was published. They now assert the rules underneath: a pending changeset must name a
+package `changeset version` will actually act on, and no *unpublishable* package may carry a tag.
+The tag assertion had been passing only because CI checks out without tags, which is worth
+remembering before trusting a green tag test.
 
 #### Why the two stages cannot collapse
 

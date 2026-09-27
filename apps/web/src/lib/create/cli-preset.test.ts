@@ -6,12 +6,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ACCEPTED_TOKENS, encodePreset, presetUrl, type PresetConfig } from "@kinetixui/create-preset";
 import { DEFAULT_PRESET } from "@kinetixui/create-preset";
 import {
+  NOTHING_TO_OVERRIDE,
   exportCompose,
   exportCss,
   exportFlutter,
   exportSwiftUi,
   resolveCreateTheme,
 } from "@kinetixui/create-theme";
+import { TARGETS, generateExport } from "./export-targets";
 import {
   presetCompose,
   presetCss,
@@ -127,7 +129,7 @@ describe("preset css", () => {
     expect(printed()).toContain("--action:");
   });
 
-  it("is byte-identical to what the workspace's Copy CSS produces", async () => {
+  it("is byte-identical to what the workspace exports for Web CSS", async () => {
     // The claim the command makes. One resolve, one exporter, two front ends — asserted rather than
     // assumed, because the last time two implementations were kept in step by hand they drifted.
     for (const over of [
@@ -508,6 +510,74 @@ describe("the other preset commands still work", () => {
     expect(plain()).toContain("preset swiftui");
     expect(plain()).toContain("preset compose");
     expect(plain()).toContain("preset flutter");
+  });
+});
+
+/**
+ * The claim the /create Export panel makes, closed end to end.
+ *
+ * Each half is asserted elsewhere — `export-targets.test.ts` proves the workspace calls the canonical
+ * exporter, and the per-command describes above prove the CLI prints it. This is the composition,
+ * written as one assertion so that the thing a reader is told ("the same file, without a browser") is
+ * the thing a test checks: for every target, what the browser would show and what the terminal would
+ * print are the same bytes.
+ *
+ * It is the assertion most likely to earn its keep later. A new theme dimension, a renamed field, a
+ * symbol default changed on one side — each would pass both halves separately and fail here.
+ */
+describe("the browser and the terminal produce the same file", () => {
+  const designs: Partial<PresetConfig>[] = [
+    {},
+    { brand: "#c2410c" },
+    { neutral: "warm", radius: "soft", surface: "elevated" },
+    { brand: "#7e22ce", chartPalette: "cool", manualOverrides: { primary: "#0f766e" } },
+  ];
+
+  it("web CSS", async () => {
+    for (const over of designs) {
+      const config = preset(over);
+      const browser = generateExport(resolveCreateTheme(config), "web-css", "");
+      await presetCss(encodePreset(config), {});
+      // `preset css` prints nothing for a design that overrides nothing and says so on stderr; the
+      // panel shows the same sentence in place of an empty box, so compare against that convention.
+      const terminal = printed() || NOTHING_TO_OVERRIDE;
+      expect(browser.code, JSON.stringify(over)).toBe(terminal);
+      out = [];
+      err = [];
+    }
+  });
+
+  it.each([
+    ["swiftui", presetSwiftUi],
+    ["compose", presetCompose],
+    ["flutter", presetFlutter],
+  ] as const)("%s", async (target, command) => {
+    for (const symbol of [TARGETS[target].symbol!.default, "AcmeTheme"]) {
+      for (const over of designs) {
+        const config = preset(over);
+        const browser = generateExport(resolveCreateTheme(config), target, symbol);
+        await command(encodePreset(config), { name: symbol });
+        expect(browser.code, `${target} / ${symbol} / ${JSON.stringify(over)}`).toBe(stdout());
+        written = [];
+      }
+    }
+  });
+
+  /** And the command the panel prints is the one that would have produced it. */
+  it("prints the invocation the panel shows", async () => {
+    const config = preset({ brand: "#c2410c" });
+    const code = encodePreset(config);
+    const { command } = generateExport(resolveCreateTheme(config), "swiftui", "AcmeTheme", code);
+    expect(command).toBe(`kinetixui preset swiftui ${code} -n AcmeTheme -o CreateTheme.swift`);
+
+    // Run it the way the command line would parse it, and get the file the panel showed.
+    const [, , , preset_, , name, , output] = command!.split(" ");
+    expect(preset_).toBe(code);
+    const file = join(mkdtempSync(join(tmpdir(), "kx-cmd-")), output!);
+    await presetSwiftUi(preset_!, { name, output: file });
+    expect(readFileSync(file, "utf8")).toBe(
+      generateExport(resolveCreateTheme(config), "swiftui", "AcmeTheme").code,
+    );
   });
 });
 

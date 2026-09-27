@@ -16,7 +16,10 @@ import { CreateWorkspace } from "./create-workspace";
 
 const previewRoot = () => document.querySelector("[data-create-preview-root]") as HTMLElement;
 const sidebar = () => screen.getByRole("complementary", { name: "Configuration" });
-const cssPanel = () => within(sidebar()).getByRole("group", { name: "Generated CSS" });
+const exportPanel = () => screen.getByRole("region", { name: "Export" });
+/** Export moved out of the sidebar: a generated Swift file is a hundred lines. */
+const cssPanel = () => within(exportPanel()).getByRole("group", { name: "Generated Web CSS" });
+const copyCode = () => within(exportPanel()).getByRole("button", { name: /Copy code/ });
 const varOf = (token: string) => previewRoot().style.getPropertyValue(token);
 
 /** Open the Advanced disclosure, which is collapsed by default on purpose. */
@@ -32,7 +35,7 @@ describe("first load", () => {
     // Default config generates nothing, so the preview is the real library rather than an imitation.
     expect(varOf("--background")).not.toBe("");
     expect(cssPanel().textContent).toContain("Nothing to override");
-    for (const b of screen.getAllByRole("button", { name: /Copy CSS/ })) expect(b).toBeDisabled();
+    expect(copyCode()).toBeEnabled(); // the message is still copyable text, unlike an empty file
   });
 
   it("opens with every Simple control set and visible, not hidden behind accordions", () => {
@@ -138,7 +141,7 @@ describe("theme colour", () => {
     await user.paste("#7e22ce");
 
     expect(cssPanel().textContent).toContain("--action:");
-    for (const b of screen.getAllByRole("button", { name: /Copy CSS/ })) expect(b).toBeEnabled();
+    expect(copyCode()).toBeEnabled();
   });
 });
 
@@ -315,7 +318,7 @@ describe("advanced", () => {
     expect(within(sidebar()).getAllByText("Fail").length).toBeGreaterThan(0);
     expect(varOf("--card-foreground")).toBe("0 0% 79%");
     // Copy is not blocked by a failing manual override — a warning is shown instead (§75).
-    for (const b of screen.getAllByRole("button", { name: /Copy CSS/ })) expect(b).toBeEnabled();
+    expect(copyCode()).toBeEnabled();
   });
 });
 
@@ -382,6 +385,139 @@ describe("reset", () => {
     expect(varOf("--action")).toBe(hslOf(SHIPPED_TOKENS.light.action));
     expect(varOf("--radius-md")).toBe("");
     expect(cssPanel().textContent).toContain("Nothing to override");
+  });
+});
+
+describe("export targets", () => {
+  const targetButton = (name: string) => within(exportPanel()).getByRole("button", { name });
+  const commandOf = () =>
+    within(exportPanel()).getByRole("group", { name: /^Terminal command for / }).textContent ?? "";
+
+  it("offers the four targets that exist, and no platform that does not", async () => {
+    render(<CreateWorkspace />);
+    for (const name of ["Web CSS", "SwiftUI", "Jetpack Compose", "Flutter"]) {
+      expect(targetButton(name)).toBeTruthy();
+    }
+    expect(within(exportPanel()).queryByRole("button", { name: /Android XML|Angular|React Native/ })).toBeNull();
+  });
+
+  it("starts on Web CSS, and says which one is selected rather than only colouring it", () => {
+    render(<CreateWorkspace />);
+    expect(targetButton("Web CSS").getAttribute("aria-pressed")).toBe("true");
+    expect(targetButton("SwiftUI").getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("switches the generated file without touching the preview, which is always web", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    await user.click(within(sidebar()).getByLabelText("Hex"));
+    await user.paste("#c2410c");
+    const previewBefore = previewRoot().getAttribute("style");
+
+    await user.click(targetButton("SwiftUI"));
+
+    expect(within(exportPanel()).getByRole("group", { name: "Generated SwiftUI theme" }).textContent).toContain(
+      "KinetixColors",
+    );
+    // The point of the panel: the preview did not become an iOS screen.
+    expect(previewRoot().getAttribute("style")).toBe(previewBefore);
+    expect(screen.getByText(/The preview is always web/)).toBeTruthy();
+  });
+
+  it("says what each native target cannot carry, on the target itself", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    await user.click(targetButton("Jetpack Compose"));
+    // The capability line, not the generated file's header — both say it, and the reader should not
+    // have to scroll a hundred lines of Kotlin to find out.
+    const capability = within(exportPanel()).getByText(/^Colours and the chart palette/);
+    expect(capability.textContent).toContain("not runtime-themeable");
+    expect(capability.textContent).toContain("no field for");
+  });
+
+  it("carries a design change into whichever target is selected", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    await user.click(targetButton("Flutter"));
+    const before = within(exportPanel()).getByRole("group", { name: "Generated Flutter theme" }).textContent;
+
+    await user.click(within(sidebar()).getByRole("radio", { name: "Warm neutral" }));
+
+    expect(within(exportPanel()).getByRole("group", { name: "Generated Flutter theme" }).textContent).not.toBe(before);
+  });
+
+  it("reports an unusable type name instead of quietly fixing it", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    await user.click(targetButton("SwiftUI"));
+    const name = within(exportPanel()).getByLabelText(/name$/);
+    await user.clear(name);
+    await user.type(name, "My Theme!");
+
+    expect(within(exportPanel()).getByRole("alert").textContent).toBeTruthy();
+    expect(name.getAttribute("aria-invalid")).toBe("true");
+    // Nothing generated from a name it cannot use — not "MyTheme", not a partial file.
+    expect(within(exportPanel()).queryByRole("group", { name: "Generated SwiftUI theme" })?.textContent).toBe("");
+    expect(copyCode()).toHaveProperty("disabled", true);
+  });
+
+  it("shows the terminal command for the selected target, carrying this design", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    await user.click(within(sidebar()).getByLabelText("Hex"));
+    await user.paste("#c2410c");
+
+    expect(commandOf()).toContain("kinetixui preset css ");
+    expect(commandOf()).toContain("KX1_");
+
+    await user.click(targetButton("Flutter"));
+    expect(commandOf()).toContain("kinetixui preset flutter ");
+    expect(commandOf()).toContain("-o create_theme.dart");
+  });
+
+  it("adds the name flag only once a name has actually been chosen", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    await user.click(targetButton("Jetpack Compose"));
+    expect(commandOf()).not.toContain("-n ");
+
+    const name = within(exportPanel()).getByLabelText(/name$/);
+    await user.clear(name);
+    await user.type(name, "AcmeTheme");
+    expect(commandOf()).toContain("-n AcmeTheme");
+  });
+
+  it("withholds the command entirely while the name is unusable", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    await user.click(targetButton("SwiftUI"));
+    const name = within(exportPanel()).getByLabelText(/name$/);
+    await user.clear(name);
+    await user.type(name, "My Theme!");
+
+    expect(within(exportPanel()).queryByRole("group", { name: /^Terminal command for / })).toBeNull();
+  });
+
+  it("keeps a typed name per target rather than losing it on the way back", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+
+    await user.click(targetButton("SwiftUI"));
+    const swift = within(exportPanel()).getByLabelText(/name$/);
+    await user.clear(swift);
+    await user.type(swift, "AcmeSwift");
+
+    await user.click(targetButton("Flutter"));
+    await user.click(targetButton("SwiftUI"));
+
+    expect((within(exportPanel()).getByLabelText(/name$/) as HTMLInputElement).value).toBe("AcmeSwift");
   });
 });
 

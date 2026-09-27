@@ -17,6 +17,7 @@ import {
   type CreateConfig,
 } from "./config";
 import { configToPreset, presetToConfig, randomizeConfig } from "./preset";
+import { generateExport } from "./export-targets";
 import {
   SHIPPED_TOKENS,
   effectiveValue,
@@ -80,7 +81,7 @@ describe("the reducer", () => {
     s = createReducer(s, { type: "reset" });
 
     expect(s).toEqual(DEFAULT_CREATE_CONFIG);
-    expect(resolveTheme(s).cssIsEmpty).toBe(true);
+    expect(generateExport(resolveTheme(s), "web-css", "").code).toBe(NOTHING_TO_OVERRIDE);
   });
 
   it("reports the default as default, and anything else as not", () => {
@@ -107,7 +108,7 @@ describe("the reducer", () => {
       brand: "#c2410c",
     };
     expect(configKey(a)).toBe(configKey(b));
-    expect(resolveTheme(a).css).toBe(resolveTheme(b).css);
+    expect(cssOf(resolveTheme(a))).toBe(cssOf(resolveTheme(b)));
   });
 
   it("holds no unserializable value anywhere in the config", () => {
@@ -115,6 +116,9 @@ describe("the reducer", () => {
     expect(JSON.parse(JSON.stringify(config))).toEqual(config);
   });
 });
+
+/** The web CSS a workspace theme exports — what the Export panel shows for the CSS target. */
+const cssOf = (theme: Parameters<typeof generateExport>[0]) => generateExport(theme, "web-css", "").code;
 
 /* ------------------------------------------------------------------ the active appearance */
 
@@ -125,8 +129,12 @@ describe("the active appearance", () => {
 
     expect(light.active).toBe(light.light);
     expect(dark.active).toBe(dark.dark);
-    // `mode` is a preview control, not a design decision: the resolved theme and the CSS are identical.
-    expect(light.css).toBe(dark.css);
+    // `mode` is a preview control, not a design decision: the resolved theme and every export are
+    // identical. A dark preview must not produce a light-only native file.
+    expect(cssOf(light)).toBe(cssOf(dark));
+    for (const target of ["swiftui", "compose", "flutter"] as const) {
+      expect(generateExport(light, target, "CreateTheme").code).toBe(generateExport(dark, target, "CreateTheme").code);
+    }
     expect(light.light).toEqual(dark.light);
   });
 
@@ -168,16 +176,15 @@ describe("the preview and the copied CSS agree", () => {
     expect(JSON.stringify(t.style)).not.toContain("var(--shadow");
   });
 
-  it("hands Copy CSS exactly what the shared exporter produces", () => {
+  it("hands Export exactly what the shared exporter produces", () => {
     const config = cfg({ brand: "#7e22ce", neutral: "stone", surface: "elevated" });
-    expect(resolveTheme(config).css).toBe(exportCss(resolveCreateTheme(configToPreset(config))));
+    expect(cssOf(resolveTheme(config))).toBe(exportCss(resolveCreateTheme(configToPreset(config))));
   });
 
   it("shows a message rather than empty output when there is nothing to override", () => {
     // The message is the workspace's, not the exporter's — a file of CSS must not contain it.
     const t = resolveTheme(DEFAULT_CREATE_CONFIG);
-    expect(t.cssIsEmpty).toBe(true);
-    expect(t.css).toBe(NOTHING_TO_OVERRIDE);
+    expect(generateExport(t, "web-css", "").code).toBe(NOTHING_TO_OVERRIDE);
     expect(exportCss(resolveCreateTheme(configToPreset(DEFAULT_CREATE_CONFIG)))).toBe("");
   });
 });

@@ -73,6 +73,13 @@ reaches Angular exactly as it reaches React. Tailwind is not required: the
 React package is a Tailwind consumer, but an Angular app can use KinetixUI
 without adopting it. Dark mode is the same `.dark` class contract.
 
+That is also why **retheming is not Angular-specific**. A theme from
+[Create](/create) is an override block over the same custom properties this
+package spends, so its **Web CSS** target applies to an Angular app exactly as it
+does to a React one — there is no Angular export target because there would be
+nothing different in it. Import it after `@kinetixui/tokens/css` and after
+`@kinetixui/angular/styles.css`.
+
 ## Conventions
 
 - **Standalone** components and directives — import the ones a template uses.

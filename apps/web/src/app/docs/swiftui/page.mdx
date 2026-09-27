@@ -79,8 +79,13 @@ kinetixui preset swiftui KX1_… --name AcmeTheme --output Sources/AcmeTheme.swi
 ```
 
 That writes a `public enum` with a `light` and a `dark` `KinetixColors`,
-built from the same resolved theme the workspace's Copy CSS renders —
+built from the same resolved theme the workspace exports —
 see [the CLI reference](/docs/cli).
+
+Or skip the terminal: [Create](/create)'s **Export** panel has a SwiftUI target
+that generates the same file in the browser, and shows the command above beside it.
+The preview there is web — it renders the React components — so what changes when
+you select SwiftUI is the generated file, not the picture.
 
 **Colours only.** `KinetixColors` is the whole themeable surface here:
 corner radius and elevation are literals inside each view

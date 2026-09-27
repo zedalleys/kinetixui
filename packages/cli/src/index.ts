@@ -144,7 +144,7 @@ theme
 
 theme
   .command("build")
-  .description("Compile kinetixui-themes/<name>.csv to CSS and print a WCAG AA contrast report. CSS only — no native (SwiftUI/Compose/Flutter) output yet.")
+  .description("Compile kinetixui-themes/<name>.csv to CSS and print a WCAG AA contrast report. This command is CSS only; native themes come from `preset swiftui|compose|flutter`.")
   .argument("<name>", "theme name, e.g. acme")
   .option("--no-fail-on-contrast", "exit 0 even if a pair fails WCAG AA")
   .action(async (name: string, opts: { failOnContrast: boolean }) => {
@@ -182,7 +182,7 @@ preset
 
 preset
   .command("css")
-  .description("Resolve a preset into its web CSS override block — the same output as Copy CSS in the workspace. Web CSS only; no native (SwiftUI/Compose/Flutter) output.")
+  .description("Resolve a preset into its web CSS override block — the same output the workspace exports for Web CSS. This command is CSS only; see `preset swiftui|compose|flutter`.")
   .argument("<preset>", "a KX1_ code, or a share URL")
   .option("-o, --output <file>", "write to a file instead of stdout")
   .action(async (input: string, opts: { output?: string }) => {

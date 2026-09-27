@@ -187,13 +187,14 @@ describe("copy preset", () => {
     expect(clipboard[0]).not.toContain("http");
   });
 
-  it("is a different artifact from Copy CSS", async () => {
+  it("is a different artifact from the generated code Export copies", async () => {
     const user = setup();
     render(<CreateWorkspace />);
 
     await user.click(within(sidebar()).getByRole("radio", { name: "Warm neutral" }));
     await user.click(action(/Copy preset/));
-    await user.click(action(/Copy CSS/));
+    const exportPanel = screen.getByRole("region", { name: "Export" });
+    await user.click(within(exportPanel).getByRole("button", { name: /Copy code/ }));
 
     expect(clipboard[0].startsWith("KX1_")).toBe(true);
     expect(clipboard[1]).toContain(":root {");
@@ -302,7 +303,7 @@ describe("reset", () => {
     expect(within(sidebar()).getByRole("radio", { name: "Kinetix neutral" })).toBeChecked();
     expect(within(sidebar()).getByLabelText("Hex")).toHaveValue("#1d4ed8");
     expect(varOf("--shadow-sm")).toBe("");
-    expect(within(sidebar()).getByRole("group", { name: "Generated CSS" }).textContent).toContain("Nothing to override");
+    expect(screen.getByRole("group", { name: "Generated Web CSS" }).textContent).toContain("Nothing to override");
     expect(action("Reset")).toBeDisabled();
   });
 });
