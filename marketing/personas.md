@@ -50,7 +50,9 @@ Arabic or Hebrew UI across platforms. Usually treated as a late patch.
 
 - **Believes already:** RTL is always retrofitted and always breaks.
 - **Wins them:** RTL as infrastructure — logical properties enforced by
-  `check:rtl`, direction-aware behaviour tested on Compose, Flutter and Angular.
+  `check:rtl`, plus direction-aware behaviour evidence on Compose, Flutter and
+  Angular at the per-component counts the verification matrix publishes. Quote
+  the fractions, never "every platform".
 - **Entry point:** `/docs/rtl`.
 
 ## Secondary

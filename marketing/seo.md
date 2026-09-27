@@ -35,8 +35,10 @@ plus theme adapters to show.
 `rtl design system` · `arabic design system` · `flutter rtl components` ·
 `swiftui rtl` · `compose rtl` · `rtl design tokens`
 
-**Strong fit.** We enforce logical properties in CI and test direction-aware
-behaviour per platform. Few libraries can say that.
+**Strong fit.** We enforce logical properties in CI on the React source and have
+direction-aware behaviour tests on Compose, Flutter and Angular — not on every
+platform, and the difference is published rather than blurred. Few libraries can
+show either.
 
 ### E — Accessibility
 `accessible design system` · `cross platform accessibility components` ·

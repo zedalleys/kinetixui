@@ -10,6 +10,7 @@ Work top to bottom on publication day. Nothing here is automated, and nothing
 should be: every step is a human deciding the claim still holds.
 
 **Editorial freeze:** 2026-09-23, against `main` @ `e29184c`, v0.22.1.
+**Volatile facts re-derived:** 2026-09-27, v0.23.1 core / `@kinetixui/angular` 0.24.0.
 **Current-state figures re-derived:** 2026-09-24, `main` @ `dfd0d81`.
 Anything below marked ⏱ ages and must be re-derived.
 
@@ -28,8 +29,9 @@ to eyeball. `verify-evidence.mjs` covers the historical claims against git.
   - [ ] "98 components. React 98, SwiftUI 90, Compose 90, Flutter 90, Angular 31"
   - [ ] "90 of 98 … 8 documented exceptions"
 - [ ] Angular still `maturity: "preview"` and `catalogComplete: false`
-- [ ] `@kinetixui/angular` still unpublished — if it has shipped, the article
-      does not change, but check nothing elsewhere implies it was installable
+- [x] `@kinetixui/angular` shipped on 2026-09-27 (0.24.0, still preview). As this
+      item anticipated, the article does not change — it never claimed the package
+      was unavailable. Check instead that nothing implies publication means Stable
 
 **Historical numbers must NOT be refreshed.** 91/90/91 → 90/89/90, the 300
 snippets and 164/182/175 symbol counts are tied to specific commits and stay in

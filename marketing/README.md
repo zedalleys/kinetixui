@@ -26,7 +26,7 @@ rather than being collapsed into the same thing.
 | Whether a platform is meant to carry the whole catalogue | `platformDefinitions[].catalogComplete` |
 | Why a component is missing on a platform | `components.manifest.json` → `platformNote` |
 | Published version | `packages/ui/package.json` |
-| What is actually installable | `npm view <pkg> version` — `@kinetixui/angular` is **not** published |
+| What is actually installable | `npm view <pkg> version` — all four npm packages are published; the native SwiftUI / Compose / Flutter ports are not distributed |
 
 **These are five different questions and they have five different answers.**
 A platform can be a *stable package* whose *catalogue verification* is

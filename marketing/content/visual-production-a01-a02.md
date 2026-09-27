@@ -242,7 +242,7 @@ React 98 · Angular 31 preview · SwiftUI 90 · Jetpack Compose 90 · Flutter 90
 90 of 98 on the four catalogue-complete platforms
 8 documented exceptions
 Blocks 20 on all five
-@kinetixui/angular — NOT PUBLISHED
+@kinetixui/angular 0.24.0 — published, preview
 ```
 
 ```bash

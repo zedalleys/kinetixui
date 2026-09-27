@@ -39,7 +39,7 @@ verification is the position.
 | "Single source" (of components) | Only the *tokens* have a single source. | "Shared token contract, separate implementations" |
 | "Same components on all platforms" | Coverage is partial and documented. | "Verified coverage, with documented exceptions" |
 | "Full Angular support" | Angular is preview, a subset of the catalogue. | "Angular in preview" |
-| "npm install @kinetixui/angular" | Not published. | "Not published yet — it lives in the monorepo and is CI-validated" |
+| "npm install @kinetixui/angular" means Angular is ready | It is installable, and still preview at 31 of 98. | "Published and installable — and still preview: 31 of 98, versioned independently of the core packages" |
 
 ## Proof assets (all real, all in-repo)
 
@@ -54,8 +54,10 @@ verification is the position.
 - Accessibility: `check:contrast` (WCAG AA), a real-browser axe pass over 19 site
   pages × 2 themes × 4 widths (320/375/768/1280), and a second browser pass over
   every Storybook story
-- RTL: `check:rtl` logical-property guardrail, plus RTL behaviour tests on
-  Compose, Flutter and Angular components
+- RTL: `check:rtl` logical-property guardrail on the React source, plus RTL
+  behaviour tests on a documented subset of Compose, Flutter and Angular
+  components — `pnpm marketing:stats` prints the current fractions, and SwiftUI
+  has none of them
 
 ## Positioning risks to manage honestly
 

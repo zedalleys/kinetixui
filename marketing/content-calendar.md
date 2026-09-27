@@ -44,7 +44,7 @@ Everything below maps to work that has actually happened in this repository.
 
 | Day | Channel | Piece | Pillar |
 | --- | --- | --- | --- |
-| 22 (Mon) | LinkedIn + DEV | "RTL is infrastructure, not a patch" — logical properties enforced in CI, direction-aware tests per platform | D |
+| 22 (Mon) | LinkedIn + DEV | "RTL is infrastructure, not a patch" — logical properties enforced in CI, direction-aware tests on the platforms the verification matrix lists | D |
 | 23 | X | Short: contrast as a build gate, not a review step | D |
 | 24 (Wed) | X + LinkedIn | Demo: RTL toggle, same components mirroring correctly | D |
 | 25 | GitHub Discussions | Open a "Platform requests" thread — which platform should deepen next | — |
