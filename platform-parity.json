@@ -35,8 +35,8 @@
       "distribution": {
         "channel": "npm",
         "coordinate": "@kinetixui/angular",
-        "published": false,
-        "note": "Built and tested in CI, not yet published. publish is part of the Angular Stable gate."
+        "published": true,
+        "note": "Published from 0.24.0. Versions independently of @kinetixui/{tokens,ui,cli} — publication is distribution, not maturity, and Angular stays Preview."
       }
     },
     "SwiftUI": {
@@ -1902,7 +1902,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -1961,7 +1962,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -2002,7 +2004,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -2025,7 +2028,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ]
     },
     "badge": {
@@ -2038,7 +2042,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -2096,7 +2101,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -2155,7 +2161,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -2215,7 +2222,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -2515,7 +2523,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -2554,7 +2563,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -2670,7 +2680,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -2754,7 +2765,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -2775,7 +2787,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -2882,7 +2895,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -2940,7 +2954,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ]
     },
     "navigation-bar": {
@@ -2993,7 +3008,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3050,7 +3066,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3090,7 +3107,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3113,7 +3131,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3137,7 +3156,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3214,7 +3234,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3253,7 +3274,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3312,7 +3334,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3336,7 +3359,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3377,7 +3401,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3419,7 +3444,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3501,6 +3527,7 @@
         "accessibility",
         "build",
         "interaction",
+        "published",
         "rtl"
       ],
       "SwiftUI": [
@@ -3530,7 +3557,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3553,7 +3581,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3592,7 +3621,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3618,7 +3648,8 @@
       "Angular": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "published"
       ],
       "SwiftUI": [
         "build"
@@ -3707,7 +3738,7 @@
       "rtl": 1,
       "largeText": 0,
       "visual": 0,
-      "published": 0
+      "published": 31
     },
     "SwiftUI": {
       "build": 90,

@@ -202,7 +202,9 @@ library.
 
 ## Cutting a release (the changelog page)
 
-Changesets opens a "version packages" PR that bumps the three npm packages together. **That PR cannot
+Changesets opens a "version packages" PR that bumps the core npm packages — `@kinetixui/tokens`,
+`@kinetixui/ui` and `@kinetixui/cli` — together. (`@kinetixui/angular` is its own release cohort and
+versions separately; a release of one does not move the other.) **That PR cannot
 merge until `/docs/changelog` has an entry for the new version** — `pnpm check:releases` (in `ci.yml`)
 fails when the top entry in `apps/web/src/lib/releases.ts` isn't the version the packages are at. This
 exists because the page once sat at 0.6.0 for eleven releases while the packages went to 0.17.0.

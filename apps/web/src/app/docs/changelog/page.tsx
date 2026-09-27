@@ -1,5 +1,6 @@
 import * as React from "react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LATEST_VERSION, PACKAGE_CHANGELOGS, RELEASES, isNotable, packagesChanged, releaseTypeAt } from "@/lib/releases";
 import { PLATFORMS, PLATFORM_ABBR, platformsFor } from "@/lib/platform-parity";
 import { componentDocs } from "@/lib/site";
@@ -82,8 +83,12 @@ export default function ChangelogPage() {
       <p className="mt-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm leading-relaxed text-muted-foreground">
         KinetixUI is pre-1.0. A minor version may change an API while the component and token contracts stabilise. Any
         change that needs action from you is listed under <strong className="font-medium text-foreground">Breaking
-        changes</strong>, with a migration note where there is one. The three npm packages always share a version;
-        the indicators on each release show which ones actually changed.
+        changes</strong>, with a migration note where there is one. This page is the release train for{" "}
+        <code className="text-foreground">@kinetixui/tokens</code>, <code className="text-foreground">@kinetixui/ui</code>{" "}
+        and <code className="text-foreground">@kinetixui/cli</code>, which always share a version; the indicators on
+        each release show which ones actually changed. <code className="text-foreground">@kinetixui/angular</code> is
+        released on its own cadence and has its own version — see{" "}
+        <Link href="/docs/angular" className="underline underline-offset-4 hover:text-foreground">Angular</Link>.
       </p>
 
       {/* ChangelogView reads the URL (?filter=…&q=…) with useSearchParams, which needs a Suspense boundary on a

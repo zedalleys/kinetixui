@@ -12,11 +12,35 @@ export const metadata = {
 KinetixUI components today — a foundation subset, not the full catalogue —
 and grows incrementally.
 
+## Install
+
+```bash
+npm i @kinetixui/angular @kinetixui/tokens
+```
+
+`@kinetixui/tokens` is a peer dependency, not a convenience: the components
+spend generated CSS custom properties and never define them, so the token
+contract has to be present for anything to render as designed. Load both
+stylesheets before the component styles — `globals.css` carries colour, spacing
+and radius, and `extras.css` carries the elevation and typography ramps the
+components also use:
+
+```css
+@import "@kinetixui/tokens/css";
+@import "@kinetixui/tokens/css/extras";
+@import "@kinetixui/angular/styles.css";
+```
+
+Angular 21 is the tested and supported range (`@angular/core` and
+`@angular/forms`, `^21.0.0`). Every export is standalone, so a template imports
+the directives it uses and nothing else — there is no NgModule.
+
 <Callout>
-  **Not published yet.** `@kinetixui/angular` lives in this monorepo and is
-  built and tested in CI, but it is not on npm, so there is no install
-  command to give you yet. Installation will be documented here when the
-  package is distributed.
+  `@kinetixui/angular` versions independently of `@kinetixui/ui`,
+  `@kinetixui/tokens` and `@kinetixui/cli`, which release together. Its version
+  number will not match theirs, and that is deliberate — it is a
+  **<PlatformMaturityInline platform="Angular" />** package on its own release
+  cadence, so its API may still change.
 </Callout>
 
 ## What's available
@@ -144,8 +168,9 @@ not by itself change the label, and nothing here is graded on a curve:
    `@kinetixui/ui` already has.
 7. **Distribution ready** — the built package verified by
    `scripts/check-dist.mjs`, including the stylesheet.
-8. **Published** to npm, so the install instructions on this page are
-   something a reader can run.
+8. ~~**Published** to npm~~ — done in 0.24.0. Availability was never the
+   blocker on its own, and reaching it does not move the label: the rest of
+   this list still has to be true.
 9. **API stability reviewed** — a deliberate pass over the public surface, with
    any breaking change made *before* the label changes rather than after.
 
@@ -155,6 +180,8 @@ not by itself change the label, and nothing here is graded on a curve:
   with the other platforms is not claimed. Because its catalogue is not yet
   complete, Angular is left out of the "on every platform" figure on
   [Platforms](/docs/platforms) rather than counted against it.
-- **Not published** to npm yet (see above).
+- **Published, not settled.** Being installable from npm says nothing about the
+  API having stopped moving — the maturity label above is the thing to read,
+  and it is independent of distribution.
 - **No Angular browser axe suite** yet — accessibility is covered by unit
   tests only for now.

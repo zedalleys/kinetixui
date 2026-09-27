@@ -85,13 +85,21 @@ describe("@kinetixui/angular", () => {
   });
 
   /**
-   * Publication readiness is not maturity. Angular stays Preview, and its version stays whatever
-   * Changesets last set — the transition to 0.24.0 happens in the Version Packages PR, not here.
+   * Publication is distribution, not maturity. Angular is being published and stays Preview — the
+   * two are deliberately independent, and this is the assertion that keeps them that way.
    */
-  it("is still Preview, and still not on npm at this commit", () => {
+  it("is Preview regardless of being published", () => {
     const manifest = read("components.manifest.json");
     assert.equal(manifest.platformDefinitions.Angular.maturity, "preview");
-    assert.equal(angular.version, "0.23.0", "the version transition belongs to the Version Packages PR");
+    assert.equal(manifest.platformDefinitions.Angular.catalogComplete, false);
+  });
+
+  /** The version is whatever Changesets set, checked against the changelog rather than hardcoded. */
+  it("carries the version its changelog most recently recorded", () => {
+    const changelog = readFileSync(`${root}packages/ui-angular/CHANGELOG.md`, "utf8");
+    const latest = changelog.match(/^## (\d+\.\d+\.\d+)/m)?.[1];
+    assert.ok(latest, "the Angular changelog should have a version heading");
+    assert.equal(angular.version, latest, "package.json and CHANGELOG.md must agree");
   });
 
   it("appears in the angular cohort of the plan, never in core", () => {
@@ -237,11 +245,79 @@ describe("a release cannot run while changesets are pending", () => {
     assert.match(workflow, /publish: pnpm release/);
   });
 
-  it("has exactly one pending changeset, for Angular's first public release", () => {
+  /**
+   * The other side of the gate. While a changeset was pending the release was forbidden; the
+   * Version Packages operation consumed it, so a release may now proceed — and what it would
+   * publish is the version that operation produced, not the one it superseded.
+   */
+  it("has no pending changesets, so a release is now permitted", () => {
     const pending = readdirSync(`${root}.changeset`).filter((f) => f.endsWith(".md") && f.toLowerCase() !== "readme.md");
-    assert.deepEqual(pending, ["angular-first-public-release.md"]);
-    const body = readFileSync(`${root}.changeset/${pending[0]}`, "utf8");
-    assert.match(body, /"@kinetixui\/angular": minor/);
-    assert.ok(!/"@kinetixui\/(ui|cli|tokens)"/.test(body), "the core cohort must not be dragged into this release");
+    assert.deepEqual(pending, [], `a release must not run with changesets pending: ${pending.join(", ")}`);
+  });
+
+  it("consumed the Angular changeset into a changelog entry rather than losing it", () => {
+    // Compared as whole lines rather than by a regex built from the version. Escaping a value into
+    // a pattern by hand is the kind of thing that is wrong more often than it is right — and a
+    // heading is an exact string, so there is nothing a pattern would buy here.
+    const headingsOf = (markdown) =>
+      markdown
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.startsWith("## "));
+
+    const angularPkg = read("packages/ui-angular/package.json");
+    const heading = `## ${angularPkg.version}`;
+    const angularHeadings = headingsOf(readFileSync(`${root}packages/ui-angular/CHANGELOG.md`, "utf8"));
+    assert.ok(angularHeadings.includes(heading), `the Angular changelog has no "${heading}" entry`);
+
+    // The core cohort was not dragged along: its changelogs have no entry at Angular's version.
+    for (const name of ["tokens", "ui", "cli"]) {
+      const core = headingsOf(readFileSync(`${root}packages/${name}/CHANGELOG.md`, "utf8"));
+      assert.ok(
+        !core.includes(heading),
+        `packages/${name}/CHANGELOG.md has an entry at Angular's version — the cohorts got coupled`,
+      );
+    }
+  });
+});
+
+/**
+ * Angular's version and the token contract it depends on are independent numbers.
+ *
+ * `@kinetixui/angular@0.24.0` peering on `@kinetixui/tokens@^0.23.0` looks like drift and is not:
+ * the cohorts release separately, and Angular's compatibility is with the token contract it was
+ * built and verified against, not with its own version string. Bumping the peer to match the
+ * package version would quietly reintroduce the lockstep the cohorts exist to remove.
+ */
+describe("Angular's token peer is a compatibility range, not a mirror of its own version", () => {
+  const angular = read("packages/ui-angular/package.json");
+  const tokens = read("packages/tokens/package.json");
+  const peer = angular.peerDependencies["@kinetixui/tokens"];
+
+  it("declares a range the workspace's token version actually satisfies", () => {
+    assert.ok(peer, "@kinetixui/tokens should be a peer dependency");
+    const [, major, minor] = peer.match(/\^(\d+)\.(\d+)\./) ?? [];
+    const [tMajor, tMinor] = tokens.version.split(".");
+    assert.equal(major, tMajor, `peer ${peer} does not match tokens ${tokens.version}`);
+    // Caret on 0.x pins the minor, so the peer must name the token minor actually shipped.
+    if (tMajor === "0") assert.equal(minor, tMinor, `peer ${peer} does not match tokens ${tokens.version}`);
+  });
+
+  it("does not mirror Angular's own version", () => {
+    if (angular.version === tokens.version) return; // nothing to prove while they coincide
+    assert.ok(
+      !peer.includes(angular.version.split(".").slice(0, 2).join(".")),
+      `the token peer (${peer}) was bumped to follow @kinetixui/angular@${angular.version} rather than the token contract`,
+    );
+  });
+
+  it("keeps Angular out of the core cohort's version, which is the point", () => {
+    const allowlistEntry = allowlistFile.packages.find((p) => p.name === "@kinetixui/angular");
+    assert.equal(allowlistEntry.releaseGroup, "angular");
+    const core = allowlistFile.packages.filter((p) => p.releaseGroup === "core");
+    for (const entry of core) {
+      const pkg = read(`${entry.directory}/package.json`);
+      assert.equal(pkg.version, tokens.version, "the core cohort stays in lockstep");
+    }
   });
 });
