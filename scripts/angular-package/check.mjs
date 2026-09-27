@@ -295,7 +295,7 @@ function finish() {
           `  The clean-consumer build was skipped (--contract), so this does not prove a consumer can use it.`
       : `\n✓ @kinetixui/angular is publication-ready: the artifact is a valid npm package and a clean ` +
           `Angular application builds against it.\n` +
-          `  It is activated but not yet published — the Version Packages release does that. See RELEASING.md.`,
+          `  This says nothing about maturity: Angular is Preview, at 31 of 98 components. See RELEASING.md.`,
   );
   process.exit(0);
 }

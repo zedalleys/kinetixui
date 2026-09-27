@@ -370,3 +370,126 @@ describe("Angular's token peer is a compatibility range, not a mirror of its own
     }
   });
 });
+
+/**
+ * A version that has shipped cannot be changed, so the repository must stop describing it differently.
+ *
+ * The 0.23.1 Version Packages PR rewrote `@kinetixui/angular`'s token peer from `^0.23.0` to
+ * `^0.23.1` without versioning Angular. `@kinetixui/angular@0.24.0` was already on npm declaring
+ * `^0.23.0`, and it must not be republished, so the new range could never reach a consumer — it only
+ * made this repository disagree with the artifact. It was also pointless: `^0.23.0` already accepts
+ * `0.23.1`, and the core patch carried no token-contract change.
+ *
+ * Changesets does this by design, and not through anything `updateInternalDependencies` controls.
+ * `applyReleasePlan` iterates every entry in the release plan, and a package that merely *depends* on
+ * a released package is in that plan with `type: "none"` — Angular appears as `0.24.0 -> 0.24.0`. Its
+ * `version` key is skipped (`newVersion != null`) and its changelog is skipped (`getChangelogEntry`
+ * returns null for `none`), but its dependency ranges are rewritten anyway, because
+ * `shouldUpdateDependencyBasedOnConfig` ends with:
+ *
+ *     let shouldUpdate = getBumpLevel(release.type) >= minLevel;
+ *     if (depType === "peerDependencies") shouldUpdate = !onlyUpdatePeerDependentsWhenOutOfRange;
+ *
+ * For a peer dependency that assignment *replaces* the decision rather than refining it, so the
+ * in-range check two lines above is discarded and `updateInternalDependencies` has no say at all.
+ * The only switch is `onlyUpdatePeerDependentsWhenOutOfRange`, which lives under
+ * `___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH` and is described by its own schema as "Unsafe
+ * options". Its name is a promise that it can change in a patch release. Trading a visible,
+ * one-line revert for a config key that may silently change the meaning of every future release is a
+ * bad trade, so this repository does not set it — see RELEASING.md.
+ *
+ * What is asserted instead is the invariant the drift violated, which is wider than this one bug: a
+ * package with no pending version bump, already published at the version in its manifest, must still
+ * describe what was published. On a feature branch that means a consumer-facing manifest change needs
+ * a changeset — which is correct, because without one the change never reaches npm.
+ */
+describe("a published package still describes what was published", () => {
+  /**
+   * Fields that end up in the tarball and that a consumer resolves against. `devDependencies` and
+   * `scripts` are deliberately absent: they change between releases as ordinary maintenance and
+   * nothing downstream resolves them.
+   */
+  const PUBLISHED_FIELDS = [
+    "name",
+    "version",
+    "dependencies",
+    "peerDependencies",
+    "peerDependenciesMeta",
+    "optionalDependencies",
+    "exports",
+    "main",
+    "module",
+    "types",
+    "typings",
+    "bin",
+    "files",
+    "engines",
+    "sideEffects",
+    "publishConfig",
+  ];
+
+  const tags = new Set(
+    execFileSync("git", ["tag", "--list"], { cwd: root, encoding: "utf8" })
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean),
+  );
+
+  /**
+   * Packages a pending changeset will bump, expanded through the `fixed` cohorts. Anything here is
+   * mid-release and exempt — its manifest is *supposed* to be moving.
+   *
+   * Read from `.changeset` rather than assembled through the Changesets API: this needs to hold with
+   * no extra dependency and no network, and naming a cohort member is enough because the cohort moves
+   * together. A package bumped only as a transitive dependent would be missed, which would show up as
+   * a failure asking for a changeset rather than as silence.
+   */
+  const pending = () => {
+    const config = read(".changeset/config.json");
+    const groups = (config.fixed ?? []).concat(config.linked ?? []);
+    const named = new Set();
+    for (const file of readdirSync(`${root}.changeset`).filter((f) => f.endsWith(".md") && f.toLowerCase() !== "readme.md")) {
+      const front = readFileSync(`${root}.changeset/${file}`, "utf8").split(/^---\s*$/m)[1] ?? "";
+      for (const [, name] of front.matchAll(/^\s*"([^"]+)":\s*(?:patch|minor|major)\s*$/gm)) named.add(name);
+    }
+    for (const group of groups) if (group.some((name) => named.has(name))) for (const name of group) named.add(name);
+    return named;
+  };
+
+  const publishedShape = (manifest) =>
+    Object.fromEntries(PUBLISHED_FIELDS.filter((key) => manifest[key] !== undefined).map((key) => [key, manifest[key]]));
+
+  const subjects = packages.filter((pkg) => pkg.manifest.private !== true);
+
+  it("has publishable packages to check", () => {
+    assert.ok(subjects.length > 0);
+  });
+
+  for (const pkg of subjects) {
+    const tag = releaseTagName(pkg.name, pkg.manifest.version);
+    const bumping = pending().has(pkg.name);
+    const why =
+      tags.size === 0
+        ? "shallow checkout: no tags fetched"
+        : bumping
+          ? `${pkg.name} has a pending changeset — its manifest is meant to move`
+          : !tags.has(tag)
+            ? `${pkg.name}@${pkg.manifest.version} is not published yet`
+            : false;
+
+    it(`${pkg.name} matches ${tag}`, { skip: why }, () => {
+      // `discoverWorkspace` already reports a repo-relative, forward-slash directory, which is what
+      // `git show tag:path` wants on Windows as well.
+      const shipped = JSON.parse(
+        execFileSync("git", ["show", `${tag}:${pkg.directory}/package.json`], { cwd: root, encoding: "utf8" }),
+      );
+      assert.deepEqual(
+        publishedShape(pkg.manifest),
+        publishedShape(shipped),
+        `${pkg.name}@${pkg.manifest.version} is already on npm and cannot be republished, so this change ` +
+          `can never reach a consumer — it only makes the repository disagree with the artifact. Either ` +
+          `revert it, or add a changeset so the change ships under a new version.`,
+      );
+    });
+  }
+});

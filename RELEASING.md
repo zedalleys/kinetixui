@@ -413,6 +413,59 @@ catalogue is still 31 of 98 components.
 
 ---
 
+## Changesets rewrites peer ranges on packages it is not releasing
+
+Expect this on every Version Packages PR that patches `@kinetixui/tokens`, and revert it:
+
+```diff
+ packages/ui-angular/package.json
+-    "@kinetixui/tokens": "^0.23.0"
++    "@kinetixui/tokens": "^0.23.1"
+```
+
+`@kinetixui/angular` is not being versioned in that PR. It stays at the version already on npm, and
+that published artifact declares the old range. The rewritten range therefore cannot reach any
+consumer — the only thing it changes is that this repository stops describing what was actually
+published. It is also unnecessary: `^0.23.0` already accepts `0.23.1`, and a lockstep core patch
+carries no token-contract change for Angular to be incompatible with.
+
+**Why it happens.** `applyReleasePlan` iterates every entry in the release plan, and a package that
+merely depends on a released package is in that plan with `type: "none"` — Angular appears as
+`0.24.0 -> 0.24.0`. Its `version` key is skipped (guarded by `newVersion != null`) and its changelog
+is skipped (`getChangelogEntry` returns `null` for `none`), but its dependency ranges are rewritten
+regardless, because of the last two lines of `shouldUpdateDependencyBasedOnConfig`:
+
+```js
+if (!semverSatisfies(release.newVersion, depVersionRange)) return true;  // genuinely out of range
+const minLevel = getBumpLevel(minReleaseType);
+let shouldUpdate = getBumpLevel(release.type) >= minLevel;
+if (depType === "peerDependencies") shouldUpdate = !onlyUpdatePeerDependentsWhenOutOfRange;
+```
+
+For a peer dependency that last assignment **replaces** the decision rather than refining it, so the
+in-range check above is discarded and `updateInternalDependencies` has no say at all. Raising it to
+`"minor"` would not help.
+
+**Why it is not configured away.** The only switch is
+`___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH.onlyUpdatePeerDependentsWhenOutOfRange`, which
+the config schema labels "Unsafe options" and whose name is a promise that its behaviour can change
+in a patch release. Setting it would quietly alter how every future release computes dependency
+ranges, in exchange for removing a one-line revert that is visible in a diff. A loud, recurring
+revert is the better trade, so this repository leaves the option unset.
+
+**What catches it.** `scripts/release/test/repository.test.mjs` → *"a published package still
+describes what was published"*. For every publishable package with no pending changeset whose
+current version already has a release tag, it compares the publish-facing fields of `package.json`
+against the same file at that tag. Anything that differs is metadata describing an artifact that can
+no longer be changed. On a feature branch the same assertion means a consumer-facing manifest change
+needs a changeset — which is correct, because without one it would never reach npm.
+
+That test, and the other tag assertions beside it, only run where the checkout has tags. CI used to
+use the default shallow checkout, so **they skipped silently and reported green for years**;
+`.github/workflows/ci.yml` now checks out with `fetch-depth: 0`.
+
+---
+
 ## Running the release tooling on Windows
 
 The release runs on Linux, where `pnpm` is an ordinary executable. On Windows, `pnpm` is a `.cmd`

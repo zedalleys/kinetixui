@@ -65,6 +65,26 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.23.1",
+    date: "2026-09-27",
+    summary:
+      "A patch for one thing: the CLI told you native theme output did not exist yet. It has since 0.23.0 — the command that is CSS-only is `theme build`, and the messages now say that instead.",
+    breaking: [],
+    changes: [
+      {
+        kind: "fixed",
+        area: "cli",
+        title: "`theme build` and `preset css` no longer deny that native themes exist",
+        body: 'Three shipped strings announced that native output "isn\'t built yet". `preset swiftui`, `preset compose` and `preset flutter` have written SwiftUI, Compose and Flutter theme files since 0.23.0, so the claim was not a caveat but a wrong answer — someone reading it would conclude the feature was missing and stop looking. The real limitation is narrower: `theme build` compiles a CSV of literal colours to CSS. Each message now says that and names the commands that do produce a native theme. Two descriptions also pointed at a "Copy CSS" button, which is now an Export panel with four targets.',
+        href: "/docs/cli",
+      },
+    ],
+    limitations: [
+      "Text only — no command, flag, argument or output format changed, and nothing new is exported. The capability being described has been there since 0.23.0.",
+      "`@kinetixui/tokens` and `@kinetixui/ui` carry no changes of their own. They move to 0.23.1 because the three npm packages are one lockstep release cohort.",
+    ],
+  },
+  {
     version: "0.23.0",
     date: "2026-09-26",
     summary:
