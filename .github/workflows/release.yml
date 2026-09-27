@@ -24,7 +24,14 @@ jobs:
     permissions:
       contents: read
     steps:
+      # Full history and tags. This job creates no tags, but it runs `pnpm test:release`, and several
+      # of those assertions are about real release tags — that a published version's manifest has not
+      # drifted from what shipped, that no unpublishable package carries a tag, that the core cohort's
+      # newest tags agree. On a shallow checkout every one of them skips itself, so the gate that is
+      # supposed to protect the release was reporting green without running. 629 commits, 47 MB.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
 
@@ -95,8 +102,8 @@ jobs:
       # they resolve to, and a tag-only recovery has to create them at the commit the release
       # actually went out from — which, once other work has landed on main, is not HEAD. At the
       # default shallow depth that commit is not in the repository and `git tag <sha>` cannot name
-      # it. The preflight job is deliberately left shallow: it has no credentials and does not
-      # touch tags.
+      # it. (Preflight also checks out in full, for the tag assertions in its test suite — but it
+      # holds no credentials and creates nothing.)
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0

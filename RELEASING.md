@@ -18,6 +18,32 @@ What the release system does guarantee is narrower and worth stating precisely:
 
 The 0.23.0 release failed on a deterministic one. That class is what this removes.
 
+And one guarantee about what happens *after* the uploads:
+
+> A release tag is never created on the strength of an exit code. Every version this run uploaded is
+> confirmed against the registry first.
+
+### A publish that exits 0 is a claim, not evidence
+
+`pnpm publish` returning 0 means the upload was accepted, not that the registry serves the version.
+Until 0.23.1 the release printed `npm: published …` straight from that exit code, which is the same
+kind of evidence that let 0.23.0 announce a release it had not finished.
+
+So `publish()` now asks the registry, and the release stops before tagging if any version cannot be
+confirmed. The stop is deliberately not phrased as a failed upload, because usually it is not one:
+
+**npm is not read-your-writes.** In the 0.23.1 release the three core packages became visible 3, 4
+and 7 minutes after their uploads, and a packument fetched in between came back with a `modified`
+timestamp from the *previous day*. That is a stale answer, not a wrong one, and reading it as a
+failed publish is an easy and expensive mistake — it invites bumping the version to retry, which
+burns a version number over a few minutes of propagation.
+
+The confirmation therefore polls for a window (10 minutes by default) and treats an unreachable or
+refused registry the same as "not yet", never as absence. If the window elapses, the release stops
+**before creating any tag**, so the state it leaves is the one the recovery path already handles:
+npm complete or partly complete, tags missing. Re-run the release — the plan skips whatever is
+already published and the tag step creates what is owed. Do not bump the version.
+
 ### What happened in 0.23.0
 
 The release command was `pnpm -r publish`, which publishes whatever the workspace happens to

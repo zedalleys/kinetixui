@@ -19,7 +19,7 @@ import { readFileSync } from "node:fs";
 import { rmSync } from "node:fs";
 import { discoverWorkspace } from "./workspace.mjs";
 import { buildPlan, isNoOp } from "./plan.mjs";
-import { lookupRegistryState } from "./registry.mjs";
+import { confirmPublished, lookupRegistryState } from "./registry.mjs";
 import { buildPlanned, packPlanned, smokeTest, validatePackedArtifact } from "./artifacts.mjs";
 import { run, packageManagerCommand, resolveInside } from "./exec.mjs";
 
@@ -120,8 +120,13 @@ function consumerPeers(packed) {
  * Each upload is the tarball that was validated, not a fresh pack, so nothing can differ between
  * what was proved and what is sent. Uploads are sequential and the first failure stops the rest:
  * with a partial release already possible, the useful thing is to stop somewhere describable.
+ *
+ * An upload exiting 0 is the package manager's claim, and this function used to end there — which is
+ * the same kind of evidence that let 0.23.0 report a release it had not finished. So when a registry
+ * is given, every version is confirmed against the registry itself before the caller goes on to
+ * create tags. Nothing is tagged on the strength of an exit code.
  */
-export async function publish({ root, packed, log = () => {}, dryRun = false }) {
+export async function publish({ root, packed, log = () => {}, dryRun = false, registry, confirm = confirmPublished, confirmOptions = {} }) {
   const { file, prefix } = packageManagerCommand();
   const published = [];
   for (const artifact of packed) {
@@ -151,5 +156,53 @@ export async function publish({ root, packed, log = () => {}, dryRun = false }) 
     }
     published.push(artifact);
   }
+
+  /**
+   * A dry run uploads nothing, so there is nothing to confirm and looking would only find the
+   * previous version. Callers without a registry (the unit tests for the upload loop itself) opt out
+   * the same way.
+   */
+  if (!dryRun && registry && published.length > 0) {
+    assertAllConfirmed(
+      published,
+      await confirm(
+        published.map(({ name, version }) => ({ name, version })),
+        { registry, log, ...confirmOptions },
+      ),
+    );
+  }
+
   return published;
+}
+
+/**
+ * Turn a confirmation result into either nothing or a stop, and say which.
+ *
+ * Separate from `publish` so the decision is testable without a registry or a package manager — the
+ * upload loop needs a subprocess, this does not, and this is the part with a judgement in it.
+ *
+ * The judgement: an unconfirmed version is *not* asserted to have failed. npm is not
+ * read-your-writes, and in the 0.23.1 release the three core packages became visible 3, 4 and 7
+ * minutes after their uploads. What the message has to convey is an unfinished release with a known
+ * recovery, not a diagnosis nobody can support.
+ *
+ * @param {{name: string, version: string}[]} published
+ * @param {{confirmed: {name: string, version: string}[],
+ *          unconfirmed: {name: string, version: string, detail: string}[]}} result
+ */
+export function assertAllConfirmed(published, { confirmed, unconfirmed }) {
+  if (unconfirmed.length === 0) return;
+  const show = (list) => list.map((t) => `${t.name}@${t.version}`).join(", ");
+  throw new ReleaseError([
+    `Uploaded ${published.length} package(s), but the registry could not confirm ${show(unconfirmed)} ` +
+      `within the wait window.`,
+    confirmed.length > 0 ? `Confirmed on the registry: ${show(confirmed)}.` : "No version was confirmed on the registry.",
+    ...unconfirmed.map((t) => `  ${t.name}@${t.version}: ${t.detail}`),
+    "This is not proof the upload failed. npm is not read-your-writes, and a version can take minutes " +
+      "to become visible; in the 0.23.1 release the three core packages appeared 3, 4 and 7 minutes " +
+      "after their uploads.",
+    "No release tag was created, which is the recoverable state: re-run the release once the registry " +
+      "has caught up. The plan skips whatever is already published and the tag step then creates what " +
+      "is owed. Do not bump the version to retry. See RELEASING.md.",
+  ]);
 }
