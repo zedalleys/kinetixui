@@ -245,6 +245,13 @@ export const docsNav: NavGroup[] = [
     ],
   },
   {
+    // Not "Platform libraries": a module adds a domain vocabulary on top of the token contract, it does
+    // not re-implement the component surface for a platform. Filing IoT above would have implied a sixth
+    // platform and an IoT port of all 98 components, neither of which exists.
+    title: "Modules",
+    items: [{ title: "IoT", href: "/docs/iot", badge: "experimental" }],
+  },
+  {
     title: "Project",
     items: [
       { title: "Contributing", href: "/docs/contributing" },

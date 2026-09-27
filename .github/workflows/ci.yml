@@ -133,6 +133,12 @@ jobs:
       - name: Build registry
         run: pnpm build:registry
 
+      # `pnpm typecheck` type-checks the IoT source, which is not the same as proving it bundles: the
+      # three entry points, the .d.ts rollup and the `exports` map's paths are all produced here. Without
+      # this step a broken build would first appear during a release, which is the worst place for it.
+      - name: Build @kinetixui/iot
+        run: pnpm build:iot
+
       # ng-packagr runs the full Angular compiler with strictTemplates, so this is the package's typecheck as
       # well as its build — every template is compiled, not just the TypeScript around it. A regression here
       # fails CI like any other.
@@ -155,6 +161,13 @@ jobs:
 
       - name: Test (@kinetixui/ui)
         run: pnpm --filter @kinetixui/ui test
+
+      # The IoT module: classification edge cases, rendered a11y over its primitives, and the assertion
+      # that `@kinetixui/iot/functions` imports no React — named explicitly because this job lists its
+      # test steps rather than running `turbo run test`, so a new package is invisible here until it is
+      # added by hand.
+      - name: Test (@kinetixui/iot)
+        run: pnpm --filter @kinetixui/iot test
 
       - name: Test (@kinetixui/web - changelog search, URL state, release notes)
         run: pnpm --filter @kinetixui/web test

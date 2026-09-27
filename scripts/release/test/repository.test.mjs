@@ -25,10 +25,16 @@ const packages = discoverWorkspace(root);
 const planIt = () => buildPlan({ allowlistFile, packages, rootScriptNames });
 
 describe("this repository's publish allowlist", () => {
-  it("is the core cohort plus the Angular cohort", () => {
+  it("is the core cohort, the Angular cohort and the IoT cohort", () => {
     const { packages: allowed, errors } = validateAllowlist(allowlistFile, rootScriptNames);
     assert.deepEqual(errors, []);
-    assert.deepEqual(allowed.map((p) => p.name).sort(), ["@kinetixui/angular", "@kinetixui/cli", "@kinetixui/tokens", "@kinetixui/ui"]);
+    assert.deepEqual(allowed.map((p) => p.name).sort(), [
+      "@kinetixui/angular",
+      "@kinetixui/cli",
+      "@kinetixui/iot",
+      "@kinetixui/tokens",
+      "@kinetixui/ui",
+    ]);
   });
 
   it("produces a clean plan over the real workspace", () => {
@@ -108,6 +114,90 @@ describe("@kinetixui/angular", () => {
     assert.deepEqual([...cohort.publish, ...cohort.alreadyPublished].map((t) => t.name), ["@kinetixui/angular"]);
     const core = plan.cohorts.find((c) => c.group === "core");
     assert.ok(![...core.publish, ...core.alreadyPublished].some((t) => t.name === "@kinetixui/angular"));
+  });
+});
+
+describe("@kinetixui/iot", () => {
+  const iot = packages.find((p) => p.name === "@kinetixui/iot");
+  const entry = allowlistFile.packages.find((p) => p.name === "@kinetixui/iot");
+
+  it("is publication-ready: public, with the metadata npm requires", () => {
+    assert.ok(iot, "@kinetixui/iot should be a workspace package");
+    assert.notEqual(iot.manifest.private, true);
+    assert.deepEqual(iot.manifest.publishConfig, { access: "public", provenance: true });
+  });
+
+  it("is allowlisted, in its own release cohort", () => {
+    assert.ok(entry, "@kinetixui/iot should be in release/publish-packages.json");
+    assert.equal(entry.releaseGroup, "iot");
+    assert.notEqual(entry.releaseGroup, "core", "a new experimental module must not join the core lockstep");
+  });
+
+  it("packs from its workspace root, unlike Angular", () => {
+    assert.equal(entry.directory, "packages/iot");
+    assert.equal(entry.artifactDirectory, undefined);
+  });
+
+  it("builds before it can be packed", () => {
+    assert.ok(entry.build.includes("build:iot"), "the allowlist must build IoT before packing it");
+    for (const script of entry.build) assert.ok(script in rootManifest.scripts, `root script ${script} must exist`);
+  });
+
+  /** All three entry points, both halves of each: the module is useless if a subpath does not resolve. */
+  it("requires every file its exports map promises", () => {
+    for (const file of [
+      "dist/index.js",
+      "dist/index.d.ts",
+      "dist/functions/index.js",
+      "dist/functions/index.d.ts",
+      "dist/react/index.js",
+      "dist/react/index.d.ts",
+    ]) {
+      assert.ok(entry.requireFiles.includes(file), `requireFiles should name ${file}`);
+    }
+  });
+
+  /**
+   * The reason this module has no workspace dependencies. Changesets rewrites a peer range on every
+   * release of the package it points at, in range or not — the behaviour "Angular's token peer is a
+   * compatibility range" below exists to revert. Declaring one here would enlist this package in the
+   * same recurring correction, so the token contract is a documented prerequisite instead.
+   */
+  it("depends on no workspace package, in any dependency field", () => {
+    for (const field of ["dependencies", "peerDependencies", "optionalDependencies", "devDependencies"]) {
+      for (const name of Object.keys(iot.manifest[field] ?? {})) {
+        assert.ok(
+          !name.startsWith("@kinetixui/"),
+          `${field}.${name}: @kinetixui/iot is deliberately free of workspace dependencies — see its README`,
+        );
+      }
+    }
+  });
+
+  it("appears in the iot cohort of the plan, never in core or angular", () => {
+    const plan = planIt();
+    const cohort = plan.cohorts.find((c) => c.group === "iot");
+    assert.deepEqual([...cohort.publish, ...cohort.alreadyPublished].map((t) => t.name), ["@kinetixui/iot"]);
+    for (const group of ["core", "angular"]) {
+      const other = plan.cohorts.find((c) => c.group === group);
+      assert.ok(![...other.publish, ...other.alreadyPublished].some((t) => t.name === "@kinetixui/iot"));
+    }
+  });
+
+  /**
+   * Publication is distribution, not maturity — the same separation Angular's block asserts. IoT is
+   * experimental and being published; neither implies the other.
+   */
+  it("is not counted as a core cross-platform component set", () => {
+    const manifest = read("components.manifest.json");
+    assert.equal(manifest.platformDefinitions.IoT, undefined, "IoT is a module, not a platform");
+    for (const [slug, component] of Object.entries(manifest.components)) {
+      assert.ok(
+        !/^(device-status-badge|battery-indicator|signal-strength|last-sync|sensor-reading)$/.test(slug),
+        `${slug} is an IoT module primitive and must not inflate the core component count`,
+      );
+      assert.ok(!("IoT" in (component.platforms ?? {})), `${slug} must not claim an IoT platform`);
+    }
   });
 });
 
