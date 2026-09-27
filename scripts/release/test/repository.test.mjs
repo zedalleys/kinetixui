@@ -142,6 +142,45 @@ describe("the release scripts", () => {
     assert.equal(rootManifest.scripts.release, "node scripts/release-publish.mjs");
   });
 
+  /**
+   * The wiring, not the logic. `assertAllConfirmed` is unit-tested; this is the line that makes it
+   * run at all. Dropping the registry argument would restore the old behaviour — tags created on the
+   * strength of an exit code — and every unit test would still pass.
+   */
+  it("confirms the upload against the registry before anything is tagged", () => {
+    const entry = readFileSync(`${root}scripts/release-publish.mjs`, "utf8");
+    const publishCall = entry.slice(entry.indexOf("await publish("));
+    assert.ok(publishCall.startsWith("await publish("), "could not find the publish call");
+    assert.match(
+      publishCall.slice(0, publishCall.indexOf(")") + 1),
+      /registry:\s*result\.plan\.registryUrl/,
+      "release-publish.mjs must pass the registry to publish(), or the upload is never confirmed",
+    );
+    // And the confirmation happens before tags: an unconfirmed release must leave nothing behind.
+    // Compared against the call site, not the import at the top of the file.
+    const tagCall = entry.indexOf("await reconcileReleaseTags(");
+    assert.ok(tagCall > 0, "could not find the reconcileReleaseTags call");
+    assert.ok(
+      entry.indexOf("await publish(") < tagCall,
+      "publish (and its confirmation) must run before tag reconciliation",
+    );
+
+    const preflightSource = readFileSync(`${root}scripts/release/preflight.mjs`, "utf8");
+    assert.match(preflightSource, /assertAllConfirmed\(/, "publish() must act on the confirmation result");
+  });
+
+  /** Both release jobs need tags: one creates them, the other asserts against them. */
+  it("checks out full history in every job that depends on tags", () => {
+    const workflow = readFileSync(`${root}.github/workflows/release.yml`, "utf8");
+    const checkouts = workflow.split("actions/checkout@v4").slice(1);
+    assert.equal(checkouts.length, 2, "release.yml should have exactly two checkouts");
+    for (const [index, block] of checkouts.entries()) {
+      assert.match(block.slice(0, 200), /fetch-depth:\s*0/, `release.yml checkout ${index + 1} is shallow`);
+    }
+    const ci = readFileSync(`${root}.github/workflows/ci.yml`, "utf8");
+    assert.match(ci.slice(ci.indexOf("actions/checkout@v4"), ci.indexOf("actions/checkout@v4") + 200), /fetch-depth:\s*0/);
+  });
+
   it("declares every build the allowlist asks for", () => {
     for (const entry of allowlistFile.packages) {
       for (const script of entry.build) assert.ok(script in rootManifest.scripts, `${entry.name} needs a root "${script}" script`);

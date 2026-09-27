@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { classifyRegistryResult, lookupRegistryState, packumentUrl } from "../registry.mjs";
+import { classifyRegistryResult, confirmPublished, lookupRegistryState, packumentUrl } from "../registry.mjs";
 
 const target = { name: "@kinetixui/ui", version: "0.24.0" };
 const stateOf = (result) => classifyRegistryResult(result, target).state;
@@ -111,5 +111,119 @@ describe("looking up several packages at once", () => {
       }),
     });
     assert.equal(state.get("@kinetixui/ui").state, "unknown");
+  });
+});
+
+/**
+ * Confirming a publish against the registry.
+ *
+ * The 0.23.1 release is the case these are written from: three uploads all exited 0, and the
+ * registry served the three versions 3, 4 and 7 minutes later. In between, a packument fetch
+ * returned a `modified` timestamp from the previous day — stale, not wrong. So the rule being
+ * asserted is "keep looking until the window runs out", never "absent once means failed".
+ */
+describe("confirming a publish reached the registry", () => {
+  /** A registry that starts empty and starts serving the version after `after` polls. */
+  const appearsAfter = (after, version = "0.24.0") => {
+    let polls = 0;
+    return async () => {
+      polls += 1;
+      const versions = polls > after ? { [version]: {} } : {};
+      return { status: 200, ok: true, json: async () => ({ versions }) };
+    };
+  };
+
+  const noWait = { sleep: async () => {}, intervalMs: 0 };
+  const targets = [{ name: "@kinetixui/ui", version: "0.24.0" }];
+
+  it("confirms a version the registry already serves, in one look", async () => {
+    const result = await confirmPublished(targets, {
+      registry: "https://registry.npmjs.org/",
+      fetchImpl: appearsAfter(0),
+      ...noWait,
+    });
+    assert.deepEqual(result.confirmed, targets);
+    assert.deepEqual(result.unconfirmed, []);
+    assert.equal(result.attempts, 1);
+  });
+
+  it("keeps looking while the registry has not caught up, rather than calling it a failure", async () => {
+    const result = await confirmPublished(targets, {
+      registry: "https://registry.npmjs.org/",
+      fetchImpl: appearsAfter(3),
+      ...noWait,
+    });
+    assert.deepEqual(result.unconfirmed, []);
+    assert.equal(result.attempts, 4);
+  });
+
+  it("treats an unreachable registry as not-yet-known and keeps waiting", async () => {
+    let calls = 0;
+    const result = await confirmPublished(targets, {
+      registry: "https://registry.npmjs.org/",
+      fetchImpl: async () => {
+        calls += 1;
+        if (calls < 3) throw new Error("ECONNRESET");
+        return { status: 200, ok: true, json: async () => ({ versions: { "0.24.0": {} } }) };
+      },
+      ...noWait,
+    });
+    assert.deepEqual(result.unconfirmed, []);
+    assert.equal(result.attempts, 3);
+  });
+
+  it("gives up only when the window has elapsed, and reports why", async () => {
+    let clock = 0;
+    const result = await confirmPublished(targets, {
+      registry: "https://registry.npmjs.org/",
+      fetchImpl: appearsAfter(Infinity),
+      windowMs: 100,
+      intervalMs: 0,
+      sleep: async () => {
+        clock += 60;
+      },
+      now: () => clock,
+    });
+    assert.deepEqual(result.confirmed, []);
+    assert.equal(result.unconfirmed.length, 1);
+    assert.equal(result.unconfirmed[0].name, "@kinetixui/ui");
+    // Carries the registry's own reason forward, so the failure says what was seen.
+    assert.match(result.unconfirmed[0].detail, /registry/i);
+    // Polled more than once before giving up — a single miss is never the answer.
+    assert.ok(result.attempts >= 2, `expected more than one attempt, got ${result.attempts}`);
+  });
+
+  it("looks at least once even with no window at all", async () => {
+    const result = await confirmPublished(targets, {
+      registry: "https://registry.npmjs.org/",
+      fetchImpl: appearsAfter(Infinity),
+      windowMs: 0,
+      ...noWait,
+    });
+    assert.equal(result.attempts, 1);
+    assert.equal(result.unconfirmed.length, 1);
+  });
+
+  it("stops asking about a package once it is confirmed, and reports the rest", async () => {
+    const asked = [];
+    const result = await confirmPublished(
+      [
+        { name: "@kinetixui/tokens", version: "0.24.0" },
+        { name: "@kinetixui/ui", version: "0.24.0" },
+      ],
+      {
+        registry: "https://registry.npmjs.org/",
+        fetchImpl: async (url) => {
+          asked.push(url.includes("tokens") ? "tokens" : "ui");
+          const versions = url.includes("tokens") ? { "0.24.0": {} } : {};
+          return { status: 200, ok: true, json: async () => ({ versions }) };
+        },
+        windowMs: 0,
+        ...noWait,
+      },
+    );
+    assert.deepEqual(result.confirmed.map((t) => t.name), ["@kinetixui/tokens"]);
+    assert.deepEqual(result.unconfirmed.map((t) => t.name), ["@kinetixui/ui"]);
+    assert.equal(asked.filter((n) => n === "tokens").length, 1, "a confirmed package should not be polled again");
   });
 });

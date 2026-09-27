@@ -94,7 +94,13 @@ try {
   console.log("");
   writeStepSummary(planToMarkdown(result.plan));
 
-  const published = result.packed.length === 0 ? [] : await publish({ root, packed: result.packed, log });
+  // The registry is passed in, so the upload is followed by the registry's own confirmation before
+  // anything is tagged. A tag is a durable claim that a version shipped; it should not rest on an
+  // exit code.
+  const published =
+    result.packed.length === 0
+      ? []
+      : await publish({ root, packed: result.packed, log, registry: result.plan.registryUrl });
 
   /**
    * Tags, one release cohort at a time.

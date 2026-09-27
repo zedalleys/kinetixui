@@ -113,3 +113,74 @@ export async function lookupRegistryState(targets, { registry, timeoutMs = 20000
   );
   return new Map(entries);
 }
+
+/**
+ * Wait until the registry can confirm every target, or give up and say which it could not.
+ *
+ * A publish that exits 0 is the package manager's claim, not the registry's. The 0.23.0 release is
+ * the reason that distinction matters: the useful question after an upload is "does the registry
+ * serve this version", and until it answers yes nothing downstream should be treated as shipped.
+ *
+ * The complication is that npm is not read-your-writes. In the 0.23.1 release the three core
+ * packages became visible 3, 4 and 7 minutes after their uploads, and a packument fetched in between
+ * came back with a `modified` timestamp from the previous day — a stale answer, not a wrong one. So
+ * "not there yet" is never treated as failure on its own; it is only reported after the caller's
+ * whole window has elapsed, and it is reported as *unconfirmed* rather than as unpublished.
+ *
+ * `unknown` (unreachable, refused, malformed) keeps polling for the same reason it does everywhere
+ * else in this module: it is not evidence of absence.
+ *
+ * @param {{name: string, version: string}[]} targets
+ * @param {{registry: string, timeoutMs?: number, windowMs?: number, intervalMs?: number,
+ *          fetchImpl?: typeof fetch, sleep?: (ms: number) => Promise<void>, now?: () => number,
+ *          log?: (line: string) => void}} options
+ * @returns {Promise<{confirmed: {name: string, version: string}[],
+ *                    unconfirmed: {name: string, version: string, detail: string}[], attempts: number}>}
+ */
+export async function confirmPublished(
+  targets,
+  {
+    registry,
+    timeoutMs = 20000,
+    windowMs = 10 * 60 * 1000,
+    intervalMs = 15000,
+    fetchImpl = fetch,
+    sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    now = () => Date.now(),
+    log = () => {},
+  } = {},
+) {
+  const confirmed = [];
+  const detailOf = new Map();
+  let waiting = [...targets];
+  let attempts = 0;
+  const deadline = now() + windowMs;
+
+  while (waiting.length > 0) {
+    attempts += 1;
+    const states = await lookupRegistryState(waiting, { registry, timeoutMs, fetchImpl });
+    const stillWaiting = [];
+    for (const target of waiting) {
+      const result = states.get(target.name) ?? { state: "unknown", detail: "no result" };
+      detailOf.set(target.name, result.detail);
+      if (result.state === "published") {
+        confirmed.push(target);
+        log(`confirm: ${target.name}@${target.version} is on the registry`);
+      } else {
+        stillWaiting.push(target);
+      }
+    }
+    waiting = stillWaiting;
+    if (waiting.length === 0) break;
+    // Checked after the attempt, so a window of 0 still buys exactly one look.
+    if (now() >= deadline) break;
+    log(`confirm: waiting for ${waiting.map((t) => t.name).join(", ")} to appear on the registry`);
+    await sleep(intervalMs);
+  }
+
+  return {
+    confirmed,
+    unconfirmed: waiting.map((target) => ({ ...target, detail: detailOf.get(target.name) ?? "no result" })),
+    attempts,
+  };
+}
