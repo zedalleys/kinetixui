@@ -25,6 +25,7 @@
     "check:releases": "node scripts/check-releases.mjs",
     "release:notes": "node scripts/release-notes.mjs",
     "check:rtl": "node scripts/check-rtl.mjs",
+    "check:swiftui-tokens": "node scripts/check-swiftui-tokens.mjs",
     "check:icons": "node scripts/check-icon-mapping.mjs",
     "gen:verification": "node scripts/gen-verification.mjs",
     "check:verification": "node scripts/gen-verification.mjs --check",

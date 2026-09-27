@@ -221,8 +221,24 @@ describe("what it refuses to be", () => {
     // The limitation belongs in the artifact, not only in the docs — this is the file someone reads six
     // months later when they wonder why their corners are not soft.
     expect(source).toContain("COLOURS ONLY");
-    expect(source).toMatch(/radius\n\/\/ \(soft\) and surface treatment \(elevated\)/);
+    expect(source).toMatch(/radius \(soft\) and\n\/\/ surface treatment \(elevated\)/);
     expect(source).not.toMatch(/cornerRadius|\.shadow\(/);
+  });
+
+  /**
+   * The reason changed even though the outcome did not.
+   *
+   * It used to be that SwiftUI had no radius token, so there was nothing an exported file could set.
+   * The package has `KinetixRadii` and `KinetixElevations` now, and this exporter still does not
+   * write them — which makes the limit this exporter's, not the platform's. Saying "there is nowhere
+   * for them to go" would be the wrong excuse, and would talk a reader out of setting them by hand.
+   */
+  it("blames the exporter rather than the platform, and says what to do instead", () => {
+    expect(source).not.toMatch(/nowhere for them to go/);
+    expect(source).not.toMatch(/no token to override/);
+    expect(source).toMatch(/limit of this exporter/);
+    expect(source).toContain("KinetixRadii");
+    expect(source).toMatch(/radii: …, elevations: …/);
   });
 });
 

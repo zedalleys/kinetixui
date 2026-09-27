@@ -17,6 +17,7 @@ import SwiftUI
 
 public struct KinetixComparisonSlider<Before: View, After: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
 
     private let before: Before
     private let after: After
@@ -62,7 +63,7 @@ public struct KinetixComparisonSlider<Before: View, After: View>: View {
             .foregroundStyle(colors.foreground)
             .padding(.horizontal, 8)
             .padding(.vertical, 2)
-            .background(colors.background.opacity(0.8), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .background(colors.background.opacity(0.8), in: RoundedRectangle(cornerRadius: radii.field, style: .continuous))
             .padding(8)
     }
 
@@ -107,7 +108,7 @@ public struct KinetixComparisonSlider<Before: View, After: View>: View {
                             }
                     )
             }
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: radii.control, style: .continuous))
         }
         .aspectRatio(16.0 / 9.0, contentMode: .fit)
     }

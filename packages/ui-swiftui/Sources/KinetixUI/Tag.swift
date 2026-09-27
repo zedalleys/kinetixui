@@ -23,6 +23,7 @@ public enum KinetixTagVariant {
 
 public struct KinetixTag: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
 
     private let text: String
     private let variant: KinetixTagVariant
@@ -61,10 +62,10 @@ public struct KinetixTag: View {
         .foregroundStyle(fg)
         .padding(.horizontal, 8) // spacing/2
         .padding(.vertical, 4)   // spacing/1
-        .background(bg, in: RoundedRectangle(cornerRadius: 4, style: .continuous)) // radius/sm
+        .background(bg, in: RoundedRectangle(cornerRadius: radii.field, style: .continuous)) // radius/sm
         .overlay {
             if let border {
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                RoundedRectangle(cornerRadius: radii.field, style: .continuous)
                     .strokeBorder(border, lineWidth: 1)
             }
         }

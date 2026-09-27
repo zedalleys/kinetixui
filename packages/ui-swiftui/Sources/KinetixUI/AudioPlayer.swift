@@ -17,6 +17,7 @@ public enum KinetixAudioPlayerVariant {
 
 public struct KinetixAudioPlayer: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
 
     private let title: String
     private let subtitle: String?
@@ -103,9 +104,9 @@ public struct KinetixAudioPlayer: View {
                 }
             }
             .padding(16)
-            .background(colors.background, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .background(colors.background, in: RoundedRectangle(cornerRadius: radii.control, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: radii.control, style: .continuous)
                     .strokeBorder(colors.border, lineWidth: 1)
             }
 
@@ -122,9 +123,9 @@ public struct KinetixAudioPlayer: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(colors.background, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .background(colors.background, in: RoundedRectangle(cornerRadius: radii.control, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: radii.control, style: .continuous)
                     .strokeBorder(colors.border, lineWidth: 1)
             }
         }

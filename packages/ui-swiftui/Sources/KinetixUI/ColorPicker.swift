@@ -90,6 +90,7 @@ func kinetixRgbToHsv(_ r: Double, _ g: Double, _ b: Double) -> (Double, Double, 
 
 public struct KinetixColorPicker: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
 
     private let value: String
     private let onChange: (String) -> Void
@@ -143,7 +144,7 @@ public struct KinetixColorPicker: View {
                         .overlay(Circle().stroke(Color.white, lineWidth: 2))
                         .position(x: geo.size.width * s / 100, y: geo.size.height * (1 - v / 100))
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: radii.control))
                 .gesture(
                     DragGesture(minimumDistance: 0).onChanged { drag in
                         let ns = min(100, max(0, drag.location.x / geo.size.width * 100))
@@ -179,7 +180,7 @@ public struct KinetixColorPicker: View {
             }
 
             HStack(spacing: 8) {
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: 6)  // 6 is off the radius ladder — see Radii.swift
                     .fill(Color(hue: h / 360, saturation: s / 100, brightness: v / 100).opacity(a))
                     .frame(width: 32, height: 32)
                     .overlay(RoundedRectangle(cornerRadius: 6).stroke(colors.border, lineWidth: 1))
@@ -204,7 +205,7 @@ public struct KinetixColorPicker: View {
                 HStack(spacing: 6) {
                     ForEach(swatches, id: \.self) { sw in
                         let rgba = kinetixHexToRgba(sw)
-                        RoundedRectangle(cornerRadius: 4)
+                        RoundedRectangle(cornerRadius: radii.field)
                             .fill(Color(red: rgba.0 / 255, green: rgba.1 / 255, blue: rgba.2 / 255))
                             .frame(width: 24, height: 24)
                             .onTapGesture {
@@ -245,6 +246,8 @@ public struct KinetixColorPicker: View {
                     .fill(Color.white)
                     .frame(width: 14, height: 14)
                     .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                    // A swatch separating itself from the one beside it — not an
+                    // elevation step, and SwiftUI's default shadow colour is the point.
                     .shadow(radius: 1)
                     .offset(x: geo.size.width * fraction - 7)
             }

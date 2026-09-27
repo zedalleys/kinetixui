@@ -19,6 +19,7 @@ public enum KinetixAlertVariant {
 
 public struct KinetixAlert<Content: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     private let variant: KinetixAlertVariant
     private let content: Content
 
@@ -44,9 +45,9 @@ public struct KinetixAlert<Content: View>: View {
             .foregroundStyle(p.fg) // cascades to Title / Description
             .padding(.horizontal, 16) // spacing/4
             .padding(.vertical, 12)   // spacing/3
-            .background(colors.background, in: RoundedRectangle(cornerRadius: 12, style: .continuous)) // radius/lg
+            .background(colors.background, in: RoundedRectangle(cornerRadius: radii.container, style: .continuous)) // radius/lg
             .overlay {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: radii.container, style: .continuous)
                     .strokeBorder(p.border, lineWidth: 1)
             }
             .accessibilityElement(children: .combine)

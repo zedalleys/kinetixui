@@ -70,6 +70,7 @@ public struct KinetixTreeView: View {
 
 private struct KinetixTreeItemRow: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
 
     let node: KinetixTreeNode
     let level: Int
@@ -119,7 +120,7 @@ private struct KinetixTreeItemRow: View {
             .padding(.leading, CGFloat(level * 20 + 8))
             .padding(.vertical, 6)
             .padding(.trailing, 8)
-            .background(isSelected ? colors.accent : .clear, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .background(isSelected ? colors.accent : .clear, in: RoundedRectangle(cornerRadius: radii.field, style: .continuous))
             .contentShape(Rectangle())
             .onTapGesture {
                 selected = node.value

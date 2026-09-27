@@ -76,7 +76,7 @@ public struct KinetixAppBarLink: View {
                 .padding(.horizontal, 12) // px-3
                 .padding(.vertical, 6) // py-1.5
                 .background(active ? colors.accent : Color.clear)
-                .clipShape(RoundedRectangle(cornerRadius: 6)) // rounded-md
+                .clipShape(RoundedRectangle(cornerRadius: 6)) // rounded-md (off the radius ladder — see Radii.swift)
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(active ? .isSelected : [])

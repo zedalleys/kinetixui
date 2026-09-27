@@ -24,6 +24,7 @@ public struct KinetixSelectOption<Value: Hashable>: Identifiable {
 
 public struct KinetixSelect<Value: Hashable>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     @Environment(\.isEnabled) private var isEnabled
 
     @Binding private var selection: Value?
@@ -75,9 +76,9 @@ public struct KinetixSelect<Value: Hashable>: View {
             .padding(.vertical, 12)
             .frame(minHeight: 44, alignment: .leading)
             .frame(maxWidth: .infinity)
-            .background(colors.background, in: RoundedRectangle(cornerRadius: 4, style: .continuous)) // radius/sm
+            .background(colors.background, in: RoundedRectangle(cornerRadius: radii.field, style: .continuous)) // radius/sm
             .overlay {
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                RoundedRectangle(cornerRadius: radii.field, style: .continuous)
                     .strokeBorder(isError ? colors.destructive : colors.input, lineWidth: 1)
             }
             .contentShape(Rectangle())

@@ -20,6 +20,7 @@ import SwiftUI
 
 public struct KinetixMarkdownEditor: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
 
     private let value: String
     private let onChange: (String) -> Void
@@ -80,7 +81,7 @@ public struct KinetixMarkdownEditor: View {
                     .padding(4)
             }
         }
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(colors.border, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: radii.control).stroke(colors.border, lineWidth: 1))
     }
 
     @ViewBuilder

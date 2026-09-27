@@ -18,6 +18,7 @@ public enum KinetixInformVariant {
 
 public struct KinetixInform: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     private let text: String
     private let variant: KinetixInformVariant
     private let actionLabel: String?
@@ -75,6 +76,6 @@ public struct KinetixInform: View {
             }
         }
         .padding(12) // spacing/3
-        .background(tint.container, in: RoundedRectangle(cornerRadius: 8, style: .continuous)) // radius/md
+        .background(tint.container, in: RoundedRectangle(cornerRadius: radii.control, style: .continuous)) // radius/md
     }
 }

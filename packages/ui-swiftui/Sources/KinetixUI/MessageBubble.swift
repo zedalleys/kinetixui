@@ -95,6 +95,7 @@ public struct KinetixMessageBubble<Avatar: View>: View {
 
 public struct KinetixTypingIndicator: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     @State private var animate = false
 
     public init() {}
@@ -114,7 +115,7 @@ public struct KinetixTypingIndicator: View {
         }
         .padding(.horizontal, 14) // px-3.5, off-scale
         .padding(.vertical, 10) // spacing/2.5, off-scale
-        .background(colors.muted, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(colors.muted, in: RoundedRectangle(cornerRadius: radii.surface, style: .continuous))
         .onAppear { animate = true }
     }
 }

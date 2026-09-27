@@ -16,6 +16,7 @@ public enum KinetixInputGroupAddonAlign {
 
 public struct KinetixInputGroup<Content: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     private let content: Content
 
     public init(@ViewBuilder content: () -> Content) {
@@ -27,10 +28,10 @@ public struct KinetixInputGroup<Content: View>: View {
             .frame(maxWidth: .infinity)
             .background(colors.background)
             .overlay {
-                RoundedRectangle(cornerRadius: 4, style: .continuous) // radius/sm
+                RoundedRectangle(cornerRadius: radii.field, style: .continuous) // radius/sm
                     .strokeBorder(colors.input, lineWidth: 1)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: radii.field, style: .continuous))
     }
 }
 

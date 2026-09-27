@@ -18,6 +18,7 @@ import SwiftUI
 
 public struct KinetixCheckbox: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
     @Environment(\.isEnabled) private var isEnabled
 
     @Binding private var isOn: Bool
@@ -46,10 +47,10 @@ public struct KinetixCheckbox: View {
         Button {
             isOn.toggle()
         } label: {
-            RoundedRectangle(cornerRadius: 4, style: .continuous)
+            RoundedRectangle(cornerRadius: radii.field, style: .continuous)
                 .fill(fillColor)
                 .overlay {
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    RoundedRectangle(cornerRadius: radii.field, style: .continuous)
                         .strokeBorder(borderColor, lineWidth: 2)
                 }
                 .overlay {

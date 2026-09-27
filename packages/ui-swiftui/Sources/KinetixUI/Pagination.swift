@@ -28,6 +28,7 @@ public struct KinetixPagination<Content: View>: View {
 
 public struct KinetixPaginationItem: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixRadii) private var radii
 
     private let label: String
     private let isActive: Bool
@@ -47,11 +48,11 @@ public struct KinetixPaginationItem: View {
                 .frame(width: 36, height: 36) // size-9
                 .background(
                     isActive ? colors.accent : .clear,
-                    in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    in: RoundedRectangle(cornerRadius: radii.control, style: .continuous)
                 )
                 .overlay {
                     if isActive {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        RoundedRectangle(cornerRadius: radii.control, style: .continuous)
                             .strokeBorder(colors.input, lineWidth: 1)
                     }
                 }

@@ -30,6 +30,9 @@ public struct KinetixSwitch: View {
                 Circle()
                     .fill(colors.background)
                     .frame(width: 20, height: 20)
+                    // Not on the elevation ladder on purpose: this is the knob's own
+                    // depth inside the track, a control detail rather than a surface
+                    // floating above the page. `sm` would read as a card edge here.
                     .shadow(color: .black.opacity(0.2), radius: 2, y: 1)
                     .padding(.horizontal, 2)
             }

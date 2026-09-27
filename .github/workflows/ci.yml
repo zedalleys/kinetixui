@@ -66,6 +66,12 @@ jobs:
       - name: RTL logical-property guardrail
         run: pnpm check:rtl
 
+      # Corners and shadows in the SwiftUI package come from the theme, not from literals. Runs here
+      # rather than in `swift test` so it checks every pull request, not only the ones that trip the
+      # macOS workflow's path filter.
+      - name: SwiftUI radius/elevation token guardrail
+        run: pnpm check:swiftui-tokens
+
       - name: Typography alias guardrail
         run: pnpm check:typography
 

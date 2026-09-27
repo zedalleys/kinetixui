@@ -17,6 +17,8 @@ import SwiftUI
 
 public struct KinetixSheet<Content: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.kinetixElevations) private var elevations
+    @Environment(\.kinetixRadii) private var radii
 
     @Binding private var isPresented: Bool
     private let content: Content
@@ -44,13 +46,13 @@ public struct KinetixSheet<Content: View>: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     colors.background,
-                    in: RoundedRectangle(cornerRadius: 16, style: .continuous) // radius/xl, top corners visually
+                    in: RoundedRectangle(cornerRadius: radii.surface, style: .continuous) // radius/xl, top corners visually
                 )
                 .overlay(alignment: .top) {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: radii.surface, style: .continuous)
                         .strokeBorder(colors.border, lineWidth: 1)
                 }
-                .shadow(color: .black.opacity(0.2), radius: 16, y: -4)
+                .kinetixElevation(elevations.xl.flippedVertically)
                 .ignoresSafeArea(edges: .bottom)
                 .transition(.move(edge: .bottom))
             }
