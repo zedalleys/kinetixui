@@ -34,7 +34,7 @@ import {
   TagIntegrityError,
   TagPushError,
 } from "./release/tags.mjs";
-import { appendFileSync, readdirSync, rmSync } from "node:fs";
+import { appendFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -137,6 +137,35 @@ try {
   // Every owed tag is now either correct on the remote or was just pushed there: reconciliation
   // throws rather than returning with something outstanding.
   console.log([`release ok`, `  ${npmLine}`, ...tagLines.map((line) => `  ${line}`)].join("\n"));
+
+  /**
+   * A machine-readable record of what this run did, for the step that creates GitHub Releases.
+   *
+   * Why this exists: `changesets/action` creates GitHub Releases by parsing its publish command's
+   * stdout for the `New tag:` lines the Changesets CLI prints. This repository publishes with its own
+   * `pnpm release` instead — preflight and publish from one code path, with registry confirmation before
+   * tagging — so the action has never had anything to parse, and has therefore never created a Release.
+   * That is why npm sat at 0.23.3 while the Releases page still showed v0.5.0 from an older scheme.
+   *
+   * Printing Changesets' format to be parsed would be a lie about which tool ran, and it would couple
+   * the release to another project's stdout. Writing the facts down is cheaper and honest.
+   *
+   * Only written when the path is asked for, so a local `pnpm release` leaves nothing behind.
+   */
+  const summaryPath = process.env.KINETIXUI_RELEASE_SUMMARY;
+  if (summaryPath) {
+    const summary = {
+      publishedAt: new Date().toISOString(),
+      published: published.map((a) => ({ name: a.name, version: a.version, releaseGroup: a.releaseGroup })),
+      cohorts: tagResults.map(([group, tags]) => ({
+        group,
+        pushed: tags.pushed,
+        releaseCommit: tags.releaseCommit ?? null,
+      })),
+    };
+    writeFileSync(summaryPath, `${JSON.stringify(summary, null, 2)}\n`, "utf8");
+    console.log(`  summary: ${summaryPath}`);
+  }
 } catch (error) {
   if (
     error instanceof TagIntegrityError ||

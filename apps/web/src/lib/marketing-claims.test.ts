@@ -199,3 +199,76 @@ describe("only real distribution is advertised", () => {
     }
   });
 });
+
+/* ------------------------------------------------------------------ wearables */
+
+/**
+ * Wearables are approved in principle and **nothing is built** — `WEARABLES.md` opens by saying so.
+ *
+ * The specific way this goes wrong is not someone writing "wearables are supported". It is the word
+ * appearing in a list beside five platforms that *are* implemented, where a reader counts six. The IoT
+ * docs page has a legitimate reason to say "wearables" — a fitness band is a device its models describe —
+ * so a blanket ban would delete a correct technical point. These rules ban the two things that would
+ * actually be false instead: a wearable in a derived platform list, and a wearable described as shipping.
+ *
+ * The internal architecture documents (`WEARABLES.md`, `CORE-AUDIT.md`) are deliberately out of scope.
+ * Their job is to record the decision and the plan, factually, and they already say nothing is built.
+ */
+describe("wearables are never counted as a platform", () => {
+  const WEARABLE = /wearables?|watchOS|Wear OS|smartwatch/i;
+
+  /** Everything a prospective user reads, plus the module that feeds the platform pages. */
+  const PUBLIC_SURFACES = {
+    ...COPY,
+    "platform-support.ts": readFileSync("src/lib/platform-support.ts", "utf8"),
+    "docs/iot": readFileSync("src/app/docs/iot/page.mdx", "utf8"),
+    "docs/platforms": readFileSync("src/app/docs/platforms/page.mdx", "utf8"),
+    "site.ts": readFileSync("src/lib/site.ts", "utf8"),
+  };
+
+  it("has no wearable platform in the manifest, so no derived list can contain one", () => {
+    for (const [name, d] of Object.entries(defs)) {
+      expect(WEARABLE.test(name), `${name} is a platform definition and reads as a wearable`).toBe(false);
+      expect(WEARABLE.test(d.label), `${d.label} is a platform label and reads as a wearable`).toBe(false);
+    }
+    // And the sentences built from those definitions, checked directly rather than trusted.
+    expect(WEARABLE.test(platformSentence)).toBe(false);
+    expect(WEARABLE.test(stablePlatformSentence)).toBe(false);
+    expect(WEARABLE.test(availabilityClause)).toBe(false);
+  });
+
+  it("never describes a wearable as supported, available, shipping or coming soon", () => {
+    // Deliberately includes "coming soon": an unbuilt platform with an implied date is the same promise as
+    // a claim, and there is no approved roadmap statement for wearables.
+    //
+    // The lookbehinds matter more than the word list. Without them this fired on `notSupported` — the
+    // correctly named array that lists the platforms with no implementation — and on the phrase "No
+    // implementation yet" inside it. A guard that cannot tell a claim from its denial fails on exactly the
+    // text that is doing the right thing, and gets deleted for being annoying.
+    const NEG = "(?<![A-Za-z])(?<!not)(?<!No )(?<!no )(?<!never )";
+    const CLAIM = "(supported|available|implemented|ships|shipping|coming soon|on the roadmap|in progress)";
+    const WEAR = "(wearables?|watchOS|Wear OS|smartwatch)";
+    const claimed = new RegExp(`${WEAR}[^.]{0,80}${NEG}${CLAIM}`, "i");
+    const reversed = new RegExp(`${NEG}${CLAIM}[^.]{0,80}${WEAR}`, "i");
+    for (const [where, text] of Object.entries(PUBLIC_SURFACES)) {
+      expect(claimed.exec(text)?.[0], `${where} presents a wearable as real`).toBeUndefined();
+      expect(reversed.exec(text)?.[0], `${where} presents a wearable as real`).toBeUndefined();
+    }
+  });
+
+  it("pairs every wearable mention with a statement that nothing is built", () => {
+    const disclaimed = /no implementation yet|not implemented|nothing is built|no wearable component library/i;
+    for (const [where, text] of Object.entries(PUBLIC_SURFACES)) {
+      if (!WEARABLE.test(text)) continue;
+      expect(
+        disclaimed.test(text),
+        `${where} mentions a wearable without saying anywhere that none is implemented`,
+      ).toBe(true);
+    }
+  });
+
+  /** The premise. If a wearable is ever built, this fails and these rules get revisited deliberately. */
+  it("still describes wearables as unbuilt in the design spec", () => {
+    expect(read("WEARABLES.md")).toMatch(/nothing built|nothing is built/i);
+  });
+});

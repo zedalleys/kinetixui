@@ -65,8 +65,11 @@ import { tokens } from "@kinetixui/tokens";
 | `@kinetixui/tokens/css/extras` | additional composites (shadows, text styles) |
 | `@kinetixui/tokens/css/extras/dark` | the dark half of those composites |
 
-`sideEffects` is declared as `["*.css"]`, so the stylesheets survive bundling while the JavaScript entry
-stays shakeable.
+`sideEffects` is declared as `["*.css"]`. That is what stops a bundler treating the stylesheets as unused
+and dropping them; it says nothing about granularity. The typed export is **one object** — `tokens` — so
+importing it brings the whole set (about 8 KB minified), not just the branch you read. That is fine at this
+size, and it is not tree-shaking: if you want a handful of values in a bundle-sensitive place, read them
+from the CSS variables instead.
 
 ## Native output
 
