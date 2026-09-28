@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import semver from "semver";
 import { validateAllowlist } from "../contract.mjs";
 import { buildPlan } from "../plan.mjs";
-import { readPendingChangesets } from "../peers.mjs";
+import { plannedVersions, readPendingChangesets } from "../peers.mjs";
 import { releaseTagName } from "../tags.mjs";
 import { discoverWorkspace } from "../workspace.mjs";
 
@@ -546,7 +546,12 @@ describe("Angular's token peer is a compatibility range, not a mirror of its own
         `@kinetixui/angular → @kinetixui/tokens. An audit that cannot see the claim that drifted is vacuous.`,
     );
     assert.equal(claim.range, peer);
-    assert.equal(claim.next, tokens.version, "no release is pending, so the planned version is the current one");
+    const planned = plannedVersions({
+      packages,
+      changesets: pendingChangesets,
+      ...changesetConfig,
+    });
+    assert.equal(claim.next, planned.get(tokens.name) ?? tokens.version, "the audit checks the pending token version, or the current version between releases");
     assert.equal(claim.satisfied, true);
   });
 
