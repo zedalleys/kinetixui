@@ -270,6 +270,81 @@ without this module growing a variant API.
 There is no size-variant prop. These are single-line readings that inherit their type scale from the
 surrounding text, and a variant matrix would be five APIs to maintain for a choice CSS already makes.
 
+## Three levels, and when each is the right one
+
+The React surface has two layers, and the website carries a third. Knowing which one you are reaching
+for saves rebuilding something that already exists — or importing something larger than the job.
+
+| Level | What it is | Where it lives | Reach for it when |
+| --- | --- | --- | --- |
+| **Primitives** | One fact, rendered as text | `@kinetixui/iot/react` | You are laying out your own card and need the status, battery, signal, timestamp or reading inside it |
+| **Patterns** | A composition of primitives, plus a rule or two | `@kinetixui/iot/react` | You are building the arrangement every device product builds and would otherwise rewrite it |
+| **Examples** | A whole screen, assembled from patterns | [kinetixui.com/iot](/iot) — copy, do not install | You want a starting layout for a fleet view, a detail panel or an alert list |
+
+Primitives and patterns are both published API. Examples are not: they are source on the website, meant
+to be read and copied into your own codebase, because a screen layout is where your product's
+decisions live and importing someone else's is rarely the shortcut it looks like.
+
+## Patterns
+
+Nine compositions, each built from the primitives above rather than re-deriving their semantics — so
+what "stale" means is decided once and every one of them agrees.
+
+```tsx
+import {
+  AlertCard,
+  CommandStatus,
+  ConnectionHealth,
+  DeviceCard,
+  DeviceListItem,
+  DeviceStateSummary,
+  FirmwareStatus,
+  TelemetryCard,
+  TelemetryTrend,
+} from "@kinetixui/iot/react";
+```
+
+| Pattern | Composes | Answers |
+| --- | --- | --- |
+| `DeviceCard` | all five primitives | What is this device doing? |
+| `DeviceListItem` | the same, at list density | …across four hundred devices |
+| `DeviceStateSummary` | `summarizeDevices` | How is this group doing? |
+| `TelemetryTrend` | — | What has this metric been doing, including where it stopped? |
+| `TelemetryCard` | `SensorReading` + `TelemetryTrend` + `LastSync` | …and what is it now? |
+| `ConnectionHealth` | the status, signal, last-seen and freshness facts | Why can I not reach this device? |
+| `AlertCard` | `LastSync` | What is wrong, how serious, and has anyone looked? |
+| `CommandStatus` | `LastSync` | Where did the command I sent get to? |
+| `FirmwareStatus` | — | What version is this on, and does it need one? |
+
+### Two rules the patterns add
+
+**A device in transition does not show its last value.** `DeviceCard` and `DeviceListItem` suppress the
+reading while a device is `syncing`, `pairing` or `updating`, showing the state where the number would
+be. A value rendered beside "Updating" is read as the current value, and it is not.
+
+**A dropout is drawn as a dropout.** `TelemetryTrend` breaks the line at any point whose quality is
+`missing` or `error` and never interpolates across it. A straight line between two readings an hour
+apart is a claim that the sensor was answering in between, which is the claim `quality` exists to
+prevent. The bounds are printed as text beneath the plot, so the chart's textual equivalent is what
+everyone reads rather than a hidden description that can drift out of step.
+
+### Composition, not configuration
+
+`DeviceCard` takes an `action` node and decides where it goes; it has no `onToggle`, `onPower` or
+`onRun`. What a control *does* implies a transport, and this module has none — so the card owns the
+position and your product owns the behaviour.
+
+Two candidates were evaluated and deliberately left out. A `QuickAction` would duplicate
+`@kinetixui/ui`'s Button in a package that cannot depend on it. A `DeviceDetailHeader` is a layout
+arrangement rather than a semantic one, which makes it an example rather than an API.
+
+### Motion
+
+The patterns transition colour on state change, and an in-flight command carries a pulse. Both use
+Tailwind's own `motion-reduce:` variant, so a reader who asks for reduced motion gets the static
+version with no stylesheet to copy and no page-level rule to remember. Nothing loops, nothing moves a
+layout, and no animation carries information that is not also written down.
+
 ## Accessibility
 
 Every primitive renders its fact as **text**, so the reading survives greyscale, forced-colors mode and

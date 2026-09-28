@@ -75,6 +75,18 @@ there is deliberately no `activated` event, derive it in PostHog):
 | `github_clicked` | a link into our GitHub repository is clicked | `AnalyticsProvider` listener |
 | `npm_clicked` | a link to one of our npm packages is clicked | `AnalyticsProvider` listener |
 | `external_link_clicked` | a link to a listed external host with no more specific event (today: the Figma file) | `AnalyticsProvider` listener |
+| `iot_example_copied` | an IoT example's source is copied from `/iot` | `IotExampleShowcase` |
+
+`iot_example_copied` is deliberately **not** `component_code_copied`, and the distinction is the reason the
+activation metric still means something. `component_code_copied` says a component from the 98-component
+catalogue was activated; an IoT example is a whole composition copied off a marketing page, from a separate
+Experimental module that is not in that catalogue. Folding the two together would inflate Developer Activation
+Rate with a different kind of action and make its trend unreadable in both directions — a rise could be either
+thing, and so could a fall. Adding an `example` property to the existing event was considered and rejected for
+the same reason: a metric that needs a filter to mean what it used to mean has already changed.
+
+It carries a `source` and a `location` and nothing else. Not the example's slug, which is a name and would be
+the first piece of free text in the schema, and not a line of the snippet.
 
 The view events are mutually exclusive: a page produces exactly one of `installation_viewed`,
 `changelog_viewed`, `component_viewed` or `docs_viewed`. The more specific event wins, so a funnel step for
