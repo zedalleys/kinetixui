@@ -44,19 +44,16 @@ jobs:
         with:
           packages: "platform-tools"
 
-      # CI provisions a real Gradle directly instead of relying on
-      # ./gradlew (the wrapper jar is committed for local/Android Studio use
-      # — see packages/ui-compose/README.md — but CI doesn't depend on it).
+      # Cache Gradle and validate the committed wrapper. Build through the
+      # wrapper so dependency PRs exercise the version used locally too.
       - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
-        with:
-          gradle-version: "9.7.1"
 
       - name: Assemble
-        run: gradle :ui:assembleDebug
+        run: ./gradlew :ui:assembleDebug
 
       # Compose UI tests on Robolectric (JVM, no emulator): interaction, accessibility semantics, RTL.
       - name: Test
-        run: gradle :ui:testDebugUnitTest
+        run: ./gradlew :ui:testDebugUnitTest
 
       - name: Lint
-        run: gradle :ui:lintDebug
+        run: ./gradlew :ui:lintDebug
