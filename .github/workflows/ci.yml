@@ -121,6 +121,12 @@ jobs:
       - name: Block snippet drift check (generated vs. the real source files)
         run: pnpm check:blocks
 
+      # The same drift check for the IoT examples, which are a separate layer because a published
+      # Block must carry all five platforms and @kinetixui/iot is React-only. This caught a stale
+      # snippet on its first real run: a source file was edited and the extraction was not rerun.
+      - name: IoT example drift check (generated vs. the real composition files)
+        run: pnpm check:iot-examples
+
       - name: Flagship example drift check (homepage source vs. the four CI-compiled example files)
         run: pnpm check:flagship-examples
 
