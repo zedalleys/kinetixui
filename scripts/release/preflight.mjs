@@ -19,6 +19,7 @@ import { readFileSync } from "node:fs";
 import { rmSync } from "node:fs";
 import { discoverWorkspace } from "./workspace.mjs";
 import { buildPlan, isNoOp } from "./plan.mjs";
+import { readPendingChangesets } from "./peers.mjs";
 import { confirmPublished, lookupRegistryState } from "./registry.mjs";
 import { buildPlanned, packPlanned, smokeTest, validatePackedArtifact } from "./artifacts.mjs";
 import { run, packageManagerCommand, resolveInside } from "./exec.mjs";
@@ -35,23 +36,28 @@ export class ReleaseError extends Error {
 export async function plan({ root, consultRegistry = true, fetchImpl }) {
   const allowlistFile = JSON.parse(readFileSync(resolveInside(root, "release/publish-packages.json"), "utf8"));
   const rootManifest = JSON.parse(readFileSync(resolveInside(root, "package.json"), "utf8"));
+  const changesetConfig = JSON.parse(readFileSync(resolveInside(root, ".changeset/config.json"), "utf8"));
   const packages = discoverWorkspace(root);
+  // Read once and passed down, so the peer audit sees the same pending release the plan does.
+  const pendingChangesets = readPendingChangesets(root);
+  const common = {
+    allowlistFile,
+    packages,
+    rootScriptNames: Object.keys(rootManifest.scripts ?? {}),
+    pendingChangesets,
+    changesetConfig,
+  };
 
   // The registry is only worth asking about packages that survived the local contract, so a first
   // pass without it decides who the candidates are.
-  const offline = buildPlan({ allowlistFile, packages, rootScriptNames: Object.keys(rootManifest.scripts ?? {}) });
+  const offline = buildPlan(common);
   if (!consultRegistry || offline.errors.length > 0) return offline;
 
   const registryState = await lookupRegistryState(
     offline.publish.map((target) => ({ name: target.name, version: target.version })),
     { registry: offline.registryUrl, fetchImpl },
   );
-  return buildPlan({
-    allowlistFile,
-    packages,
-    rootScriptNames: Object.keys(rootManifest.scripts ?? {}),
-    registryState,
-  });
+  return buildPlan({ ...common, registryState });
 }
 
 /**
