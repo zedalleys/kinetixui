@@ -279,9 +279,9 @@ proximity to the token source it depends on.
   and synced in a real Android Studio, which generated and committed the
   Gradle wrapper (`gradlew`, `gradlew.bat`, `gradle/wrapper/gradle-wrapper.jar`)
   — `./gradlew :ui:assembleDebug` works locally now, no separate Gradle
-  install needed (current toolchain: Gradle 9.7.1, AGP 9.4.0, Kotlin 2.4.20,
+  install needed (current toolchain: Gradle 9.8.0, AGP 9.4.0, Kotlin 2.4.20,
   JVM 21, compileSdk 37). CI (`.github/workflows/native-compose.yml`) also
-  runs `assembleDebug` + `lintDebug` on every push that touches this package
+  runs the wrapper's `assembleDebug` + `testDebugUnitTest` + `lintDebug` on every push that touches this package
   or the token source.
 - **Dark mode only exists for this one Android theme file.** Extending
   `sd.config.mjs`'s `android-compose-theme` platform was scoped narrowly to
