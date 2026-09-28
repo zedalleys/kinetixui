@@ -1,6 +1,7 @@
 export const metadata = {
   title: "Introduction",
-  description: "How KinetixUI fits together: one design-token source compiled to CSS, TypeScript, Swift, Kotlin and Dart, and the separately implemented component libraries built on it for React, SwiftUI, Jetpack Compose and Flutter, with Angular in preview.",
+  description:
+    "How KinetixUI fits together: one design-token source compiled to CSS, TypeScript, Swift, Kotlin and Dart, and the component libraries implemented separately on top of it — which are installable today and which are source you compile is on Supported platforms.",
 };
 
 # Introduction
@@ -10,6 +11,12 @@ living tokens and components that stay in sync across every platform it
 implements — the name comes from *kinetics*: change it once, and it propagates
 everywhere. Which platforms those are, and how complete each one is, is on
 [Supported platforms](/docs/platforms).
+
+<Callout>
+  **What you can install, and what you compile.** <PlatformAvailability /> Being undistributed is a
+  fact about a package registry, not about the implementation — each native port is compiled by its own
+  CI on every change.
+</Callout>
 
 - **Tokens** — DTCG token files, compiled by Style Dictionary v4 into CSS
   variables, a TypeScript object, SwiftUI, Jetpack Compose, and Flutter.

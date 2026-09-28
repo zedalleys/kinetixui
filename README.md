@@ -13,6 +13,12 @@ in CI and published on [/docs/platforms](https://kinetixui.com/docs/platforms)
 rather than asserted here. Copy a component in via the CLI, own the code, and
 re‑theme with a token edit everywhere at once.
 
+**What installs, and what you compile.** React and Angular (preview) install
+from npm. SwiftUI, Jetpack Compose and Flutter are real implementations,
+compiled by their own CI on every change, **not yet distributed as packages** —
+you build them from source. That is a fact about package registries, not about
+the implementations.
+
 Free while in beta.
 
 [**Docs**](https://kinetixui.com/docs) ·
@@ -81,14 +87,20 @@ contract import, dark mode — is in [Installation](https://kinetixui.com/docs/i
 
 ## Packages
 
-| Package | Registry | What |
+| Package | Distribution | What |
 |---|---|---|
 | [`@kinetixui/tokens`](packages/tokens) | npm | The compiled token contract — CSS vars, `tokens.ts`, native colour + type sets |
 | [`@kinetixui/ui`](packages/ui) | npm + shadcn registry | The React component library + Tailwind preset |
-| [`@kinetixui/cli`](packages/cli) | npm | The install CLI (`init` / `add` / `list`) |
-| [`ui-compose`](packages/ui-compose) | — (Gradle) | Jetpack Compose port |
-| [`ui-swiftui`](packages/ui-swiftui) | — (SwiftPM) | SwiftUI port |
-| [`ui-flutter`](packages/ui-flutter) | — (Dart) | Flutter port |
+| [`@kinetixui/cli`](packages/cli) | npm | The install CLI (`init` / `add` / `list` / `inspect` / `parity` / `lint` / `doctor` / `theme` / `preset`) |
+| [`@kinetixui/angular`](packages/ui-angular) | npm — **Preview** | Angular standalone components and directives. Versions independently |
+| [`@kinetixui/iot`](packages/iot) | npm — **Experimental** | Connected-device semantics and React patterns. Versions independently |
+| [`ui-swiftui`](packages/ui-swiftui) | **not distributed** — build from source (SwiftPM) | SwiftUI port |
+| [`ui-compose`](packages/ui-compose) | **not distributed** — build from source (Gradle) | Jetpack Compose port |
+| [`ui-flutter`](packages/ui-flutter) | **not distributed** — build from source (Dart) | Flutter port |
+
+`@kinetixui/{tokens,ui,cli}` share one version line. `@kinetixui/angular` and
+`@kinetixui/iot` version independently, so no single number describes the whole
+product — run `pnpm marketing:stats` for the current set.
 
 ## Monorepo layout
 
@@ -101,9 +113,13 @@ kinetixui/
 ├─ packages/
 │  ├─ tokens/              @kinetixui/tokens — dist/{web,ios,android,flutter}
 │  ├─ ui/                  @kinetixui/ui — React
-│  ├─ ui-compose/          Jetpack Compose port (Gradle)
-│  ├─ ui-swiftui/          SwiftUI port (SwiftPM)
-│  ├─ ui-flutter/          Flutter port (Dart)
+│  ├─ ui-angular/          @kinetixui/angular — Angular (Preview), built by ng-packagr
+│  ├─ iot/                 @kinetixui/iot — connected-device module (Experimental)
+│  ├─ ui-compose/          Jetpack Compose port (Gradle, not distributed)
+│  ├─ ui-swiftui/          SwiftUI port (SwiftPM, not distributed)
+│  ├─ ui-flutter/          Flutter port (Dart, not distributed)
+│  ├─ create-theme/        theme engine + native exporters (private)
+│  ├─ create-preset/       preset codec for kinetixui.com/create (private)
 │  └─ cli/                 @kinetixui/cli
 ├─ registry/               registry.json manifest + source files
 ├─ scripts/                gen-registry · gen-docs · gen-stories · check-contrast · vendor-*
@@ -128,10 +144,15 @@ pnpm workspace + Turborepo. Node 22, pnpm (see `packageManager` in `package.json
 | `pnpm dev:web` | kinetixui.com dev server on `:3000` |
 | `pnpm storybook` | Storybook dev server on `:6006` |
 
-CI (`ci.yml`) builds tokens → ui → registry → site and runs the `@kinetixui/ui`
-tests on every push/PR; it fails if generated output (`packages/tokens/dist`,
-`apps/web/public/r`) is stale. `native-{compose,swiftui,flutter}.yml` compile the
-ports.
+CI (`ci.yml`) builds tokens → ui → iot → angular → registry → site, runs all
+five JavaScript test suites plus the release tooling, typechecks every
+workspace, and runs the contrast, RTL, typography, grid, manifest and platform
+guardrails. Eight of its steps are **drift checks**: they fail when generated
+documentation stops matching the source it was generated from (component
+snippets, usage examples, Block snippets, IoT examples, the flagship homepage
+example, icon mappings, verification evidence, and generated-file sync).
+`native-{compose,swiftui,flutter}.yml` compile the ports; `a11y-browser.yml` and
+`a11y-site.yml` run real-browser axe passes in light and dark.
 
 ### Adding a component — the platform rule
 
@@ -150,8 +171,18 @@ is in [Contributing](https://kinetixui.com/docs/contributing).
 
 Changesets‑driven: `pnpm changeset` to describe a change; on merge to `main` the
 Release workflow opens a **Version Packages** PR, and merging that publishes
-`@kinetixui/{tokens,ui,cli}` to npm (they share one version line). `apps/web` and
-`apps/docs` are private and never published.
+whatever that PR versioned. There are three release cohorts, declared in
+[`release/publish-packages.json`](release/publish-packages.json):
+`core` (`@kinetixui/{tokens,ui,cli}`, one shared version line), `angular`
+(`@kinetixui/angular`) and `iot` (`@kinetixui/iot`), each on its own lifecycle.
+A release in one cohort never publishes or re-tags another.
+
+Publication is gated: the preflight builds, packs, validates every tarball
+against its `requireFiles`, smoke-tests each one in a clean consumer and
+dry-run publishes — all before the first upload — and each version is confirmed
+on the registry before any git tag is created. Every package publishes with npm
+provenance. `apps/web`, `apps/docs`, `create-theme` and `create-preset` are
+private and never published.
 
 ## Governance
 

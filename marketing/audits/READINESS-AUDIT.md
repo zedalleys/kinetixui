@@ -5,6 +5,13 @@
 test run, a workflow result or the npm registry during this audit. README copy, website copy, package
 descriptions and changelog prose were treated as **claims to be checked**, not as evidence.
 
+> **Status: findings below are the state at `789c90e` and are left as written.** This is a dated
+> snapshot, not a living document — the same reason `releases.ts` and the CHANGELOGs are never
+> retro-edited here. What has since been fixed, mitigated or deferred is tracked in
+> [`PHASE-0.5-REMEDIATION.md`](./PHASE-0.5-REMEDIATION.md); read that for current state.
+> This file moved from `docs/marketing/` to `marketing/audits/` during that remediation, which
+> resolves finding §6.4.3 and recommendation P1 #18 below.
+
 ## Audit method and its one limitation
 
 Everything below was verified by reading the repository at `789c90e`, running its own test and check scripts,

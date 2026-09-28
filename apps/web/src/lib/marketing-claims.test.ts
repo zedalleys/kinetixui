@@ -3,7 +3,12 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import manifest from "../../../../components.manifest.json";
 import parity from "../../../../platform-parity.json";
-import { platformSentence, stablePlatformSentence } from "./platform-prose";
+import {
+  SOURCE_ONLY_PLATFORMS,
+  availabilityClause,
+  platformSentence,
+  stablePlatformSentence,
+} from "./platform-prose";
 import { siteConfig } from "./site";
 
 /**
@@ -39,6 +44,10 @@ const COPY = {
   "homepage": homepage,
   "README.md": readme,
   "docs landing": readFileSync("src/app/docs/page.mdx", "utf8"),
+  // Added in Phase 0.5: its `description` is a search snippet that said components "ship on" four
+  // platforms, which a reader hears as four they can install. A snippet is top-of-funnel copy, so it
+  // belongs under the same rules as the homepage.
+  "components page": readFileSync("src/app/components/page.tsx", "utf8"),
 };
 
 describe("platform lists are derived, not typed", () => {
@@ -55,8 +64,23 @@ describe("platform lists are derived, not typed", () => {
     }
   });
 
-  it("uses the derived sentence in the site description, which is the OpenGraph and search snippet", () => {
-    expect(siteConfig.description).toContain(platformSentence);
+  /**
+   * The description used to be asserted to contain `platformSentence` verbatim. It now carries
+   * `availabilityClause` instead, because a search snippet is a surface someone acts on and
+   * `platformSentence` is derived from maturity alone — it names three platforms nobody can install.
+   *
+   * The rule the old assertion was protecting is unchanged and still enforced: the description must name
+   * every platform the manifest has, and must not be hand-typed. Both halves are checked directly rather
+   * than through one string, so the description can be reworded without weakening the guard.
+   */
+  it("names every platform in the site description, which is the OpenGraph and search snippet", () => {
+    for (const p of Object.keys(defs)) {
+      expect(siteConfig.description, `the site description omits ${defs[p]!.label}`).toContain(defs[p]!.label);
+    }
+  });
+
+  it("carries the derived availability clause in the site description rather than a typed list", () => {
+    expect(siteConfig.description).toContain(availabilityClause);
   });
 
   it("no longer hard-codes the old four-platform list in the copy that drifted", () => {
@@ -93,6 +117,7 @@ describe("only real distribution is advertised", () => {
    * truth instead of having to be remembered. `@kinetixui/angular` moved into it when it was
    * published; the rule did not change, only which side each package is on.
    */
+  const escape = (v: string) => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const distribution = Object.values(defs).map((d) => d.distribution);
   const npmPackages = distribution.filter((d) => d.channel === "npm");
   const unpublished = npmPackages.filter((d) => !d.published).map((d) => d.coordinate);
@@ -107,6 +132,56 @@ describe("only real distribution is advertised", () => {
       }
     }
     expect(npmPackages.some((d) => d.published), "at least one npm package should be published").toBe(true);
+  });
+
+  /**
+   * The npm rule above only ever looked at npm-channel packages, and every npm package is published —
+   * so `unpublished` was empty and the guard was passing vacuously while three platforms on other
+   * channels were undistributed. This is the half that was missing.
+   *
+   * Each channel gets the syntax a developer would actually paste, built from the coordinate in the
+   * manifest rather than listed here, so a platform that later publishes drops out of the guard by
+   * changing one boolean.
+   */
+  const NON_NPM_INSTALL_SYNTAX: Record<string, (coordinate: string) => RegExp[]> = {
+    "Maven Central": (c) => [new RegExp("(implementation|api)\\s*[(\'\"]" + escape(c)), new RegExp(escape(c) + ":\\d")],
+    "pub.dev": (c) => [new RegExp("(flutter )?pub add " + escape(c)), new RegExp("^\\s*" + escape(c) + ":\\s*[\\^\\d]", "m")],
+    "Swift Package Manager": () => [/\.package\(\s*url:/],
+  };
+
+  it("shows no dependency snippet for a platform that is not distributed on its own channel", () => {
+    expect(SOURCE_ONLY_PLATFORMS.length, "this guard needs at least one undistributed platform to mean anything").toBeGreaterThan(0);
+    for (const platform of SOURCE_ONLY_PLATFORMS) {
+      const d = defs[platform]!;
+      const patterns = NON_NPM_INSTALL_SYNTAX[d.distribution.channel]?.(d.distribution.coordinate) ?? [];
+      for (const [where, text] of Object.entries(COPY)) {
+        for (const pattern of patterns) {
+          expect(
+            text,
+            `${where} shows a ${d.distribution.channel} dependency for ${d.label}, which is not distributed`,
+          ).not.toMatch(pattern);
+        }
+      }
+    }
+  });
+
+  /**
+   * The positive half. Banning install commands stops the worst version; it does not stop a page naming
+   * five platforms in one breath and letting the reader assume all five are installable, which is what
+   * the homepage did. So any surface that names an undistributed platform has to say somewhere that it
+   * is not distributed.
+   */
+  it("qualifies every undistributed platform it names", () => {
+    const qualifier =
+      /not (yet )?(distributed|published|on (npm|Maven Central|pub\.dev|a package registry))|(build|compile) (it )?from source|source you compile|source to copy/i;
+    for (const [where, text] of Object.entries(COPY)) {
+      const named = SOURCE_ONLY_PLATFORMS.filter((p) => text.includes(defs[p]!.label));
+      if (named.length === 0) continue;
+      expect(
+        qualifier.test(text),
+        `${where} names ${named.map((p) => defs[p]!.label).join(", ")} without saying anywhere that they are not distributed`,
+      ).toBe(true);
+    }
   });
 
   /**

@@ -10,9 +10,10 @@ npm install @kinetixui/iot
 
 ## What it is
 
-A product semantic layer for connected devices: the models, the classification rules and five small
-React primitives, generic enough for smart agriculture, medical devices, smart home, industrial
-dashboards, fleet and logistics, and wearables.
+A product semantic layer for connected devices: the models, the classification rules, five small React
+primitives, and nine composed product patterns built from them. Deliberately generic — the same
+vocabulary suits smart agriculture, medical devices, smart home, industrial dashboards, and fleet and
+logistics.
 
 ```ts
 import { classifyBatteryLevel, formatLastSeen, type KinetixDevice } from "@kinetixui/iot/functions";
@@ -23,7 +24,7 @@ import { DeviceStatusBadge, SensorReading } from "@kinetixui/iot/react";
 | -------------------------- | ------------------------------------------------- |
 | `@kinetixui/iot`           | everything                                        |
 | `@kinetixui/iot/functions` | models and pure functions — **no React**          |
-| `@kinetixui/iot/react`     | the five React primitives                         |
+| `@kinetixui/iot/react`     | the primitives and the product patterns           |
 
 ## What it is not
 
