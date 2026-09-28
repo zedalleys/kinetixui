@@ -24,7 +24,14 @@ export function CodeSample({
       <div className="border-b border-border px-4 py-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
         {language}
       </div>
-      <pre dir="ltr" className="overflow-x-auto p-4 text-[13px] leading-relaxed">
+      {/* `tabIndex={0}` because this scrolls horizontally on a phone, and a scroll container that only a
+          pointer can reach strands keyboard users — axe's `scrollable-region-focusable`, which caught it here.
+          Same treatment `CodePre` gives the docs' own fences. */}
+      <pre
+        dir="ltr"
+        tabIndex={0}
+        className="overflow-x-auto p-4 text-[13px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      >
         <code>{code}</code>
       </pre>
     </div>

@@ -22,8 +22,13 @@ export function InstallCommand({ command, language = "bash" }: { command: string
         <span>{language}</span>
         <CopyButton value={command} onCopy={() => trackFenceCopy(command, language, "/iot")} />
       </div>
-      {/* Commands stay left-to-right in RTL: a shell command is not prose. */}
-      <pre dir="ltr" className="overflow-x-auto p-4 text-[13px] leading-relaxed">
+      {/* Commands stay left-to-right in RTL: a shell command is not prose. `tabIndex={0}` for the same reason
+          as in `CodeSample` — a horizontally scrolling region needs keyboard access. */}
+      <pre
+        dir="ltr"
+        tabIndex={0}
+        className="overflow-x-auto p-4 text-[13px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      >
         <code>{command}</code>
       </pre>
     </div>

@@ -108,7 +108,9 @@ export function DeviceShowcase() {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-10">
       {/* ── preview ─────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-border bg-card p-5 sm:p-6">
+      {/* `self-start` so the card sizes to its rows. Grid items stretch to the row height by default, and the
+          controls column is the taller of the two — which left a large empty area under SensorReading. */}
+      <div className="self-start rounded-xl border border-border bg-card p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
           <div>
             <p className="font-display text-base font-semibold">Environment Sensor</p>
