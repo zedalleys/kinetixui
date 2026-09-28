@@ -65,6 +65,28 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.23.3",
+    date: "2026-09-28",
+    summary:
+      "`preset swiftui` finishes what 0.23.2 started: a Create design's corner radii and shadow ladder now reach the generated Swift file instead of stopping at the web. Alongside it, and on its own version line, the first connected-device module — @kinetixui/iot 0.1.0, Experimental.",
+    breaking: [],
+    changes: [
+      {
+        kind: "new",
+        area: ["cli", "platforms"],
+        title: "`preset swiftui` exports the whole design, not just its colours",
+        body: "0.23.2 gave the SwiftUI package `KinetixRadii` and `KinetixElevations` and left the exporter writing colours only — so a design could move its corners on the web and see nothing change in Swift. The generated file now carries both ladders beside the existing `KinetixColors` pair, applied together through `KinetixTheme(light:dark:radii:elevations:)`. A ladder the design did not touch is written as `KinetixRadii.default` rather than a copy of today's numbers, so it keeps following the library — the same rule the colours already followed.",
+        href: "/docs/cli",
+      },
+    ],
+    limitations: [
+      "SwiftUI's `.shadow` has no `spread` and CSS shadows carry one, so it is dropped: the larger elevation steps render slightly wider than on the web. The generated header says so, and the shipped `KinetixElevations.default` is mapped the same way — a generated theme and the built-in one differ from the web identically rather than in two directions.",
+      "`preset compose` and `preset flutter` are unchanged. Their radius and elevation are still generated constants with no runtime theme to override.",
+      "`@kinetixui/tokens` and `@kinetixui/ui` carry no changes of their own — they move to 0.23.3 because the three npm packages are one lockstep release cohort.",
+      "`@kinetixui/iot` is **Experimental** and versioned independently of this train, starting at 0.1.0. It ships framework-independent models and functions plus five React primitives; there are no SwiftUI, Compose or Flutter ports, no transport or protocol adapters, and no IoT blocks. It is not counted in the component catalogue.",
+    ],
+  },
+  {
     version: "0.23.2",
     date: "2026-09-27",
     summary:
