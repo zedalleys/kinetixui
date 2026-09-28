@@ -28,7 +28,7 @@ export function AlertInboxExample() {
           {visible.length} alert{visible.length === 1 ? "" : "s"}
           {loudest ? <span className="text-muted-foreground"> · loudest is {loudest}</span> : null}
         </p>
-        <label className="flex items-center gap-2 text-label-sm text-muted-foreground">
+        <label className="flex min-h-6 cursor-pointer items-center gap-2 py-1 text-label-sm text-muted-foreground">
           <input
             type="checkbox"
             checked={showAcknowledged}
