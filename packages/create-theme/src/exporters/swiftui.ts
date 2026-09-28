@@ -3,16 +3,20 @@
  *
  * ## What it writes, and why that is all it writes
  *
- * `packages/ui-swiftui` is themeable along exactly one axis. `KinetixColors` is a public struct of 35
- * semantic colours plus a five-stop chart palette, read by every `Kinetix*` view through
- * `@Environment(\.kinetixColors)`. Radius and elevation are NOT tokens there: `Card.swift` says
- * `RoundedRectangle(cornerRadius: 16)` and `.shadow(color: .black.opacity(0.05), radius: 2, y: 1)` as
- * literals, and no public type exists that could change either.
+ * `packages/ui-swiftui` is themeable along three axes, and this writes all three. `KinetixColors` is a
+ * public struct of 35 semantic colours plus a five-stop chart palette; `KinetixRadii` is four corners
+ * named by role; `KinetixElevations` is a four-step shadow ladder whose steps are ordered layer lists.
+ * Every `Kinetix*` view reads all three through `@Environment`.
  *
- * So this exporter emits colours and nothing else. Writing a radius struct that no view reads would be
- * the same failure PR 2 refused in the other direction — a control that looks applied and is not — and it
- * would be worse here, because a Swift file is something a person checks into their app and expects to
- * work. The generated header says so in the file itself rather than only in the docs.
+ * It used to emit colours only, and said so, because radius and elevation were literals inside each
+ * view with no public type that could change them. That was a fact about the package rather than about
+ * this exporter, and it stopped being true when those types landed — so the output grew rather than the
+ * caveat.
+ *
+ * ONE THING STILL DOES NOT TRAVEL. CSS shadows carry `spread`; SwiftUI's `.shadow` has no equivalent
+ * and no way to synthesise one, so spread is dropped. The shipped `KinetixElevations.default` is mapped
+ * the same way, which means a generated theme and the built-in one differ from the web identically
+ * rather than in two different directions. The generated header says so in the file itself.
  *
  * ## Complete file, changed values only
  *
@@ -31,6 +35,7 @@
  * Pure, like every exporter here: no file system, no process, no CLI formatting.
  */
 import { swiftUiChannels } from "../color-math";
+import { SHIPPED_ELEVATION, SHIPPED_RADIUS, type ElevationStep } from "../contract";
 import { SHIPPED_COLORS, type ResolvedCreateTheme, type ResolvedThemeMode } from "../resolve";
 import type { ThemeExporter } from "./index";
 
@@ -120,6 +125,116 @@ export function swiftColor(hex: string): string | null {
   return `Color(red: ${r}, green: ${g}, blue: ${b})`;
 }
 
+/**
+ * A shadow colour, which unlike every other colour here carries alpha.
+ *
+ * The token source writes shadows as 8-digit `#rrggbbaa` — `#0000000d` is black at 5%, and `#676e7614`
+ * is a slate grey at 8%, so assuming black would be wrong on the second one. SwiftUI has no 8-digit
+ * initializer, so the alpha becomes `.opacity(…)`, which is also how `Elevation.swift` writes the
+ * shipped ladder by hand. The RGB channels go through `swiftUiChannels`, the same function
+ * `swiftColor` uses, so there is one rounding rule in this file rather than two.
+ */
+export function swiftShadowColor(hex: string): string | null {
+  const h = hex.replace("#", "").trim();
+  if (!/^[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(h)) return null;
+  // Pure black as `.black`, which is what `Elevation.swift` writes for the shipped ladder and what
+  // almost every shadow in the token source is. The long form is correct but reads as a stranger
+  // beside the hand-written file, and this exporter's stated aim is to be indistinguishable from it.
+  const base = h.slice(0, 6) === "000000" ? "Color.black" : swiftColor(`#${h.slice(0, 6)}`);
+  if (!base) return null;
+  if (h.length === 6) return base;
+  const alpha = Number((parseInt(h.slice(6, 8), 16) / 255).toFixed(3));
+  return `${base}.opacity(${alpha})`;
+}
+
+const RADIUS_STEPS = ["sm", "md", "lg", "xl"] as const;
+const ELEVATION_STEPS = ["sm", "md", "lg", "xl"] as const;
+
+/** Two layer lists are the same shadow when every field of every layer matches, in order. */
+const sameLayers = (a: ResolvedThemeMode["elevation"][ElevationStep], b: ResolvedThemeMode["elevation"][ElevationStep]): boolean =>
+  a.length === b.length &&
+  a.every((layer, i) => {
+    const other = b[i]!;
+    return (
+      layer.color.toLowerCase() === other.color.toLowerCase() &&
+      layer.offsetX === other.offsetX &&
+      layer.offsetY === other.offsetY &&
+      layer.blur === other.blur &&
+      layer.spread === other.spread
+    );
+  });
+
+/** `"0"` / `"-1"` / `"2"` as the numbers Swift wants. Unitless in the token source already. */
+const swiftLength = (value: string): number => Number(Number(value).toFixed(3));
+
+/**
+ * `KinetixRadii`, from the resolved ladder.
+ *
+ * The runtime names corners by role and the token source names them by size, and the two are the same
+ * four values — `KinetixRadii.default` is built from `KinetixRadius.field` … `.surface`, which are
+ * aliases of `sm` … `xl`. That mapping lives in one place, here, rather than being re-derived.
+ *
+ * `none` and `full` are left to the initializer's defaults on purpose. Neither is on the ladder a
+ * design moves: `none` is zero by definition, and `full` means "a pill" — a design that softens its
+ * corners does not make a capsule rounder.
+ */
+export function swiftRadii(radius: ResolvedThemeMode["radius"]): string {
+  // A design that did not touch the corners gets `.default`, not a copy of today's ladder. Same rule
+  // the colours follow: exporting a design that changes nothing must not change anything, and a
+  // literal here would pin the user's app to this week's numbers.
+  if (RADIUS_STEPS.every((step) => radius[step] === SHIPPED_RADIUS[step])) return "KinetixRadii.default";
+  return [
+    "KinetixRadii(",
+    `        field: ${swiftLength(String(radius.sm))},`,
+    `        control: ${swiftLength(String(radius.md))},`,
+    `        container: ${swiftLength(String(radius.lg))},`,
+    `        surface: ${swiftLength(String(radius.xl))}`,
+    "    )",
+  ].join("\n");
+}
+
+/**
+ * `KinetixElevations`, from the resolved layers.
+ *
+ * Layer order is preserved, because a two-layer step is a near shadow and a far one and swapping them
+ * is a different shadow. An empty list becomes `.none` rather than `KinetixElevation([])` — the same
+ * value, and the one a reader recognises.
+ *
+ * SPREAD IS DROPPED. CSS shadows have it, SwiftUI's `.shadow` does not, and there is no way to
+ * synthesise it. The shipped ladder uses `-1` / `-2` on `lg`, so an exported `lg` renders slightly
+ * larger in SwiftUI than on the web — the same mapping `Elevation.swift` documents for the built-in
+ * ladder, applied here so a generated theme and the default theme are wrong in exactly the same way
+ * rather than in two different ways.
+ */
+export function swiftElevations(elevation: ResolvedThemeMode["elevation"]): string {
+  // As above: an untouched ladder follows the library rather than freezing into the export.
+  if (ELEVATION_STEPS.every((s) => sameLayers(elevation[s], SHIPPED_ELEVATION[s]))) return "KinetixElevations.default";
+  const step = (layers: ResolvedThemeMode["elevation"][ElevationStep]): string => {
+    if (layers.length === 0) return ".none";
+    const rendered = layers.map((layer) => {
+      const color = swiftShadowColor(layer.color) ?? "Color.black.opacity(0.05)";
+      return [
+        "            KinetixShadowLayer(",
+        `                color: ${color},`,
+        `                radius: ${swiftLength(layer.blur)},`,
+        `                x: ${swiftLength(layer.offsetX)},`,
+        `                y: ${swiftLength(layer.offsetY)}`,
+        "            ),",
+      ].join("\n");
+    });
+    return ["KinetixElevation([", ...rendered, "        ])"].join("\n");
+  };
+
+  return [
+    "KinetixElevations(",
+    `        sm: ${step(elevation.sm)},`,
+    `        md: ${step(elevation.md)},`,
+    `        lg: ${step(elevation.lg)},`,
+    `        xl: ${step(elevation.xl)}`,
+    "    )",
+  ].join("\n");
+}
+
 /* ------------------------------------------------------------------ the field list */
 
 /**
@@ -204,12 +319,16 @@ function header(symbol: string, theme: ResolvedCreateTheme): string {
     "// editing this file: it is a rendering of a preset, not a source of one.",
     "//",
     `// Theme colour ${design.brand} · ${design.neutral} neutral · ${design.chartPalette} charts`,
+    `// Radius ${design.radius} · surface ${design.surface}`,
     "//",
-    "// COLOURS ONLY — and that is now a limit of this exporter rather than of the package. SwiftUI",
-    "// gained `KinetixRadii` and `KinetixElevations` alongside `KinetixColors`, so there is somewhere",
-    `// for a radius to land; this file does not write one yet. This design's radius (${design.radius}) and`,
-    `// surface treatment (${design.surface}) are therefore NOT carried here — set them by hand for now:`,
-    "// `KinetixTheme(light: …, dark: …, radii: …, elevations: …)`. Nothing is silently dropped.",
+    "// Colours, corner radii and elevation — the whole design this file can express. Radii and",
+    "// elevation are one value rather than a light/dark pair, because the runtime takes one and the",
+    "// two appearances resolve to the same ladder.",
+    "//",
+    "// ONE THING DOES NOT SURVIVE THE PORT. CSS shadows have `spread`; SwiftUI's `.shadow` has no",
+    "// equivalent, so the spread on this design's larger steps is dropped and they render slightly",
+    "// wider here than on the web. The shipped `KinetixElevations.default` is mapped the same way, so",
+    "// a generated theme and the built-in one differ from the web in exactly the same manner.",
     "//",
     "// A field written as `KinetixColorsSwiftUI.…` is one this design did not change, and it keeps",
     "// following the library.",
@@ -231,8 +350,9 @@ export function exportSwiftUi(theme: ResolvedCreateTheme, options: SwiftUiExport
     "import KinetixUI",
     "",
     `public enum ${symbol} {`,
-    "    /// Apply with `KinetixTheme(light: .light, dark: .dark) { … }`, or set",
-    "    /// `\\.kinetixColors` directly to pin one appearance.",
+    "    /// Apply the whole design with",
+    `    /// \`KinetixTheme(light: .light, dark: .dark, radii: .radii, elevations: .elevations) { … }\`,`,
+    "    /// or set `\\.kinetixColors` directly to pin one appearance.",
     `    public static let light = KinetixColors(`,
     colorSet(theme.light, "light"),
     "    )",
@@ -240,6 +360,13 @@ export function exportSwiftUi(theme: ResolvedCreateTheme, options: SwiftUiExport
     `    public static let dark = KinetixColors(`,
     colorSet(theme.dark, "dark"),
     "    )",
+    "",
+    // One value, not a light/dark pair: the runtime takes one, and the resolver produces the same
+    // ladder for both appearances — a card's corner does not change when the lights go out.
+    // `swiftui.test.ts` asserts that equality rather than trusting it.
+    `    public static let radii = ${swiftRadii(theme.light.radius)}`,
+    "",
+    `    public static let elevations = ${swiftElevations(theme.light.elevation)}`,
     "}",
     "",
   ].join("\n");

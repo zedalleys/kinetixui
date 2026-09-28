@@ -132,6 +132,12 @@ Within the consumer, each `@kinetixui/*` dependency resolves to the sibling tarb
 release, since `@kinetixui/ui@X` depends on `@kinetixui/tokens@X` and that version is by definition
 not on the registry yet.
 
+**Peer compatibility across cohorts**: every `peerDependencies` range one allowlisted package
+declares on another is checked against the version this release plans to publish, derived from the
+pending changesets. A range that already accepts the planned version is left exactly as it is; one
+that does not fails the release with both numbers named. Offline, so it runs on an ordinary pull
+request — before the Version Packages PR exists. See [Peer ranges across cohorts](#peer-ranges-across-cohorts).
+
 **Registry state**: whether each allowlisted version already exists, read from the packument rather
 than parsed out of CLI output. An unreachable registry, an authentication failure or a malformed
 response is **not** read as "unpublished" — it stops the release, because publishing against
@@ -410,6 +416,9 @@ Merging the activation opens a Version Packages PR that should contain **only**:
 
 Simulated and reverted: `tokens`, `ui` and `cli` stay at 0.23.0 with no changelog entries and no
 package.json changes. If that PR touches a core package, something is wrong — audit before merging.
+The reverse holds too, and needs no manual correction any more: a Version Packages PR for a core
+release must not touch `packages/ui-angular/package.json` at all. See
+[Peer ranges across cohorts](#peer-ranges-across-cohorts).
 
 Merging *that* PR is what publishes. The release plan at that point is exactly:
 
@@ -439,27 +448,95 @@ catalogue is still 31 of 98 components.
 
 ---
 
-## Changesets rewrites peer ranges on packages it is not releasing
+## Peer ranges across cohorts
 
-Expect this on every Version Packages PR that patches `@kinetixui/tokens`, and revert it:
+`@kinetixui/angular` is versioned independently of the `core` cohort and declares its token
+compatibility as a range:
 
-```diff
- packages/ui-angular/package.json
--    "@kinetixui/tokens": "^0.23.0"
-+    "@kinetixui/tokens": "^0.23.1"
+```json
+"peerDependencies": {
+  "@kinetixui/tokens": "^0.23.0"
+}
 ```
 
-`@kinetixui/angular` is not being versioned in that PR. It stays at the version already on npm, and
-that published artifact declares the old range. The rewritten range therefore cannot reach any
-consumer — the only thing it changes is that this repository stops describing what was actually
-published. It is also unnecessary: `^0.23.0` already accepts `0.23.1`, and a lockstep core patch
-carries no token-contract change for Angular to be incompatible with.
+That range is a **claim**, not a resolved edge. Nothing in this repository picks the token version a
+consumer installs — the consumer does — so the only question worth asking about the range is:
 
-**Why it happens.** `applyReleasePlan` iterates every entry in the release plan, and a package that
-merely depends on a released package is in that plan with `type: "none"` — Angular appears as
-`0.24.0 -> 0.24.0`. Its `version` key is skipped (guarded by `newVersion != null`) and its changelog
-is skipped (`getChangelogEntry` returns `null` for `none`), but its dependency ranges are rewritten
-regardless, because of the last two lines of `shouldUpdateDependencyBasedOnConfig`:
+> does the range this package already declares accept the version the release is about to publish?
+
+The invariant that follows, and the two things it rules out:
+
+| situation | what happens |
+| --- | --- |
+| the declared range already accepts the planned version | nothing changes — not the range, not the version |
+| the planned version falls outside the declared range | the release fails, naming both, until someone decides |
+
+**In range, nothing moves.** A core patch takes `@kinetixui/tokens` from `0.23.3` to `0.23.4`;
+`^0.23.0` already accepts that, and `packages/ui-angular/package.json` is not touched by
+`changeset version` at all. It used to be — see *What this replaced* below.
+
+**Out of range, someone decides.** `pnpm release:check` fails before generation with the actual
+numbers:
+
+```
+@kinetixui/angular@0.24.0 declares @kinetixui/tokens "^0.23.0",
+but the planned @kinetixui/tokens version is 0.24.0.
+
+@kinetixui/angular is not in this release. @kinetixui/angular@0.24.0 is already published
+declaring "^0.23.0", and cannot be changed.
+
+Left alone, `changeset version` widens the range to cover 0.24.0 and gives
+@kinetixui/angular a patch bump to carry it — a compatibility claim nobody made.
+
+Decide it deliberately: widen @kinetixui/tokens in packages/ui-angular/package.json
+to a range that accepts 0.24.0, and add a changeset for @kinetixui/angular so the new
+claim reaches npm. Or keep @kinetixui/tokens inside the range @kinetixui/angular
+already supports.
+```
+
+Two ways forward, and the point is that both are decisions:
+
+- **Widen the range and release Angular.** Verify the components against the new token contract,
+  edit the peer range by hand (`"^0.23.0 || ^0.24.0"`, or whatever is true), and add an Angular
+  changeset saying so. Angular then gets its own version and its own changelog entry describing the
+  compatibility change, and the hand-written range is kept verbatim.
+- **Keep tokens inside the supported range.** Ship the token change as a patch, or wait for the
+  release that does the Angular work.
+
+There is deliberately no third option, and no flag to silence it. "Preserve the old range" is not
+one of the two: a range that has stopped being true is not something to protect.
+
+### How it is enforced
+
+Three mechanisms, each doing one thing:
+
+1. **`.changeset/config.json`** sets
+   `___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH.onlyUpdatePeerDependentsWhenOutOfRange`.
+   Inside `shouldUpdateDependencyBasedOnConfig` that turns the peer branch back into a semver
+   question instead of an unconditional rewrite — see *The mechanism* below. It is what makes the
+   in-range case a no-op.
+2. **`scripts/release/peers.mjs`** computes what the release will publish from the pending
+   changesets and checks every peer claim in the workspace against it. It runs inside `buildPlan`,
+   so `release:check`, `release:plan`, `release:preflight` and `pnpm release` all gate on it, with no
+   network and no registry. It only ever reports; it rewrites nothing.
+3. **`scripts/release/test/version-generation.test.mjs`** builds throwaway workspaces from *this*
+   repository's Changesets options and runs the real `changeset version` in them. The option in (1)
+   is labelled unsafe and its name promises it can change in a patch release; an option that might
+   change meaning is only dangerous while the change would be silent, and these fixtures are what
+   make it loud. They assert the in-range case is left alone **and** that the out-of-range case is
+   still rewritten, so the configuration cannot degenerate into freezing ranges.
+
+`scripts/release/test/peers.test.mjs` holds the rule itself, on synthetic workspaces at several
+version lines so that a release cannot turn it into a `0.23.x` museum piece.
+
+### The mechanism
+
+Worth knowing, because the default is surprising. `applyReleasePlan` iterates every entry in the
+release plan, and a package that merely *depends* on a released package is in that plan with
+`type: "none"` — Angular appears as `0.24.0 -> 0.24.0`. Its `version` key is skipped (guarded by
+`newVersion != null`) and its changelog is skipped (`getChangelogEntry` returns `null` for `none`),
+but its dependency ranges are rewritten regardless, because of the last two lines of
+`shouldUpdateDependencyBasedOnConfig`:
 
 ```js
 if (!semverSatisfies(release.newVersion, depVersionRange)) return true;  // genuinely out of range
@@ -469,22 +546,40 @@ if (depType === "peerDependencies") shouldUpdate = !onlyUpdatePeerDependentsWhen
 ```
 
 For a peer dependency that last assignment **replaces** the decision rather than refining it, so the
-in-range check above is discarded and `updateInternalDependencies` has no say at all. Raising it to
-`"minor"` would not help.
+in-range check above is discarded and `updateInternalDependencies` has no say at all — raising it to
+`"minor"` does nothing. Setting `onlyUpdatePeerDependentsWhenOutOfRange` makes the assignment agree
+with the check instead of overriding it: out of range still returns early and rewrites, in range no
+longer does.
 
-**Why it is not configured away.** The only switch is
-`___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH.onlyUpdatePeerDependentsWhenOutOfRange`, which
-the config schema labels "Unsafe options" and whose name is a promise that its behaviour can change
-in a patch release. Setting it would quietly alter how every future release computes dependency
-ranges, in exchange for removing a one-line revert that is visible in a diff. A loud, recurring
-revert is the better trade, so this repository leaves the option unset.
+Separately, `determineDependents` in `@changesets/assemble-release-plan` gives an out-of-range peer
+dependent a **patch** bump — a token major would move Angular by one patch — which is the other half
+of why the out-of-range case is a decision rather than a computation.
 
-**What catches it.** `scripts/release/test/repository.test.mjs` → *"a published package still
-describes what was published"*. For every publishable package with no pending changeset whose
-current version already has a release tag, it compares the publish-facing fields of `package.json`
-against the same file at that tag. Anything that differs is metadata describing an artifact that can
-no longer be changed. On a feature branch the same assertion means a consumer-facing manifest change
-needs a changeset — which is correct, because without one it would never reach npm.
+### What this replaced
+
+Until this was fixed, every Version Packages PR that patched `@kinetixui/tokens` arrived with a
+rewrite that had to be reverted by hand:
+
+```diff
+ packages/ui-angular/package.json
+-    "@kinetixui/tokens": "^0.23.0"
++    "@kinetixui/tokens": "^0.23.1"
+```
+
+`@kinetixui/angular` was not being versioned in those PRs. It stayed at the version already on npm,
+whose published artifact declares the old range, so the rewritten range could not reach any consumer
+— the only thing it changed was that this repository stopped describing what was actually published.
+It also narrowed the claim for nothing, dropping `0.23.0`–`0.23.2` while they remained compatible.
+That revert is no longer a step in any release. **A Version Packages PR that touches
+`packages/ui-angular/package.json` while Angular is not being released is a bug, not a chore.**
+
+`scripts/release/test/repository.test.mjs` → *"a published package still describes what was
+published"* remains as the backstop, and is what caught the drift each time it happened. For every
+publishable package with no pending changeset whose current version already has a release tag, it
+compares the publish-facing fields of `package.json` against the same file at that tag. On a feature
+branch the same assertion means a consumer-facing manifest change needs a changeset — which is
+correct, because without one it would never reach npm. It is also what makes "widen the range" a
+decision that cannot be made quietly: the edit fails this test until a changeset accompanies it.
 
 That test, and the other tag assertions beside it, only run where the checkout has tags. CI used to
 use the default shallow checkout, so **they skipped silently and reported green for years**;

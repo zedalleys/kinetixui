@@ -45,6 +45,7 @@ export function sourceForPath(pathname: string): AnalyticsSource | null {
   if (pathname.startsWith("/docs/components/")) return "component_page";
   if (pathname === "/docs" || pathname.startsWith("/docs/")) return "docs_page";
   if (pathname === "/components") return "components_gallery";
+  if (pathname === "/iot") return "iot_page";
   return null;
 }
 

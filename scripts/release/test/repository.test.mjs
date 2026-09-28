@@ -10,8 +10,10 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
+import semver from "semver";
 import { validateAllowlist } from "../contract.mjs";
 import { buildPlan } from "../plan.mjs";
+import { readPendingChangesets } from "../peers.mjs";
 import { releaseTagName } from "../tags.mjs";
 import { discoverWorkspace } from "../workspace.mjs";
 
@@ -22,13 +24,23 @@ const allowlistFile = read("release/publish-packages.json");
 const rootManifest = read("package.json");
 const rootScriptNames = Object.keys(rootManifest.scripts);
 const packages = discoverWorkspace(root);
-const planIt = () => buildPlan({ allowlistFile, packages, rootScriptNames });
+const changesetConfig = read(".changeset/config.json");
+const pendingChangesets = readPendingChangesets(root);
+// The same inputs `release:check` builds its plan from, so what this file asserts is what the
+// release gate decides — including the peer-compatibility audit, which needs the pending changesets.
+const planIt = () => buildPlan({ allowlistFile, packages, rootScriptNames, pendingChangesets, changesetConfig });
 
 describe("this repository's publish allowlist", () => {
-  it("is the core cohort plus the Angular cohort", () => {
+  it("is the core cohort, the Angular cohort and the IoT cohort", () => {
     const { packages: allowed, errors } = validateAllowlist(allowlistFile, rootScriptNames);
     assert.deepEqual(errors, []);
-    assert.deepEqual(allowed.map((p) => p.name).sort(), ["@kinetixui/angular", "@kinetixui/cli", "@kinetixui/tokens", "@kinetixui/ui"]);
+    assert.deepEqual(allowed.map((p) => p.name).sort(), [
+      "@kinetixui/angular",
+      "@kinetixui/cli",
+      "@kinetixui/iot",
+      "@kinetixui/tokens",
+      "@kinetixui/ui",
+    ]);
   });
 
   it("produces a clean plan over the real workspace", () => {
@@ -108,6 +120,90 @@ describe("@kinetixui/angular", () => {
     assert.deepEqual([...cohort.publish, ...cohort.alreadyPublished].map((t) => t.name), ["@kinetixui/angular"]);
     const core = plan.cohorts.find((c) => c.group === "core");
     assert.ok(![...core.publish, ...core.alreadyPublished].some((t) => t.name === "@kinetixui/angular"));
+  });
+});
+
+describe("@kinetixui/iot", () => {
+  const iot = packages.find((p) => p.name === "@kinetixui/iot");
+  const entry = allowlistFile.packages.find((p) => p.name === "@kinetixui/iot");
+
+  it("is publication-ready: public, with the metadata npm requires", () => {
+    assert.ok(iot, "@kinetixui/iot should be a workspace package");
+    assert.notEqual(iot.manifest.private, true);
+    assert.deepEqual(iot.manifest.publishConfig, { access: "public", provenance: true });
+  });
+
+  it("is allowlisted, in its own release cohort", () => {
+    assert.ok(entry, "@kinetixui/iot should be in release/publish-packages.json");
+    assert.equal(entry.releaseGroup, "iot");
+    assert.notEqual(entry.releaseGroup, "core", "a new experimental module must not join the core lockstep");
+  });
+
+  it("packs from its workspace root, unlike Angular", () => {
+    assert.equal(entry.directory, "packages/iot");
+    assert.equal(entry.artifactDirectory, undefined);
+  });
+
+  it("builds before it can be packed", () => {
+    assert.ok(entry.build.includes("build:iot"), "the allowlist must build IoT before packing it");
+    for (const script of entry.build) assert.ok(script in rootManifest.scripts, `root script ${script} must exist`);
+  });
+
+  /** All three entry points, both halves of each: the module is useless if a subpath does not resolve. */
+  it("requires every file its exports map promises", () => {
+    for (const file of [
+      "dist/index.js",
+      "dist/index.d.ts",
+      "dist/functions/index.js",
+      "dist/functions/index.d.ts",
+      "dist/react/index.js",
+      "dist/react/index.d.ts",
+    ]) {
+      assert.ok(entry.requireFiles.includes(file), `requireFiles should name ${file}`);
+    }
+  });
+
+  /**
+   * The reason this module has no workspace dependencies. Changesets rewrites a peer range on every
+   * release of the package it points at, in range or not — the behaviour "Angular's token peer is a
+   * compatibility range" below exists to revert. Declaring one here would enlist this package in the
+   * same recurring correction, so the token contract is a documented prerequisite instead.
+   */
+  it("depends on no workspace package, in any dependency field", () => {
+    for (const field of ["dependencies", "peerDependencies", "optionalDependencies", "devDependencies"]) {
+      for (const name of Object.keys(iot.manifest[field] ?? {})) {
+        assert.ok(
+          !name.startsWith("@kinetixui/"),
+          `${field}.${name}: @kinetixui/iot is deliberately free of workspace dependencies — see its README`,
+        );
+      }
+    }
+  });
+
+  it("appears in the iot cohort of the plan, never in core or angular", () => {
+    const plan = planIt();
+    const cohort = plan.cohorts.find((c) => c.group === "iot");
+    assert.deepEqual([...cohort.publish, ...cohort.alreadyPublished].map((t) => t.name), ["@kinetixui/iot"]);
+    for (const group of ["core", "angular"]) {
+      const other = plan.cohorts.find((c) => c.group === group);
+      assert.ok(![...other.publish, ...other.alreadyPublished].some((t) => t.name === "@kinetixui/iot"));
+    }
+  });
+
+  /**
+   * Publication is distribution, not maturity — the same separation Angular's block asserts. IoT is
+   * experimental and being published; neither implies the other.
+   */
+  it("is not counted as a core cross-platform component set", () => {
+    const manifest = read("components.manifest.json");
+    assert.equal(manifest.platformDefinitions.IoT, undefined, "IoT is a module, not a platform");
+    for (const [slug, component] of Object.entries(manifest.components)) {
+      assert.ok(
+        !/^(device-status-badge|battery-indicator|signal-strength|last-sync|sensor-reading)$/.test(slug),
+        `${slug} is an IoT module primitive and must not inflate the core component count`,
+      );
+      assert.ok(!("IoT" in (component.platforms ?? {})), `${slug} must not claim an IoT platform`);
+    }
   });
 });
 
@@ -410,12 +506,17 @@ describe("Angular's token peer is a compatibility range, not a mirror of its own
   const peer = angular.peerDependencies["@kinetixui/tokens"];
 
   it("declares a range the workspace's token version actually satisfies", () => {
+    // Asked of semver rather than of a pattern. The old form matched `^<major>.<minor>.` and checked
+    // the captures against the token version, which answers "does the range look like the version"
+    // — a different and narrower question than whether it accepts it, and one that rejects every
+    // range that is not a caret. `>=0.23.0 <0.25.0` is a perfectly good peer range.
     assert.ok(peer, "@kinetixui/tokens should be a peer dependency");
-    const [, major, minor] = peer.match(/\^(\d+)\.(\d+)\./) ?? [];
-    const [tMajor, tMinor] = tokens.version.split(".");
-    assert.equal(major, tMajor, `peer ${peer} does not match tokens ${tokens.version}`);
-    // Caret on 0.x pins the minor, so the peer must name the token minor actually shipped.
-    if (tMajor === "0") assert.equal(minor, tMinor, `peer ${peer} does not match tokens ${tokens.version}`);
+    assert.notEqual(semver.validRange(peer), null, `the token peer ${peer} is not a semver range`);
+    assert.ok(
+      semver.satisfies(tokens.version, peer),
+      `the token peer ${peer} does not accept @kinetixui/tokens@${tokens.version}, which is the version ` +
+        `this workspace builds @kinetixui/angular against`,
+    );
   });
 
   it("does not mirror Angular's own version", () => {
@@ -424,6 +525,29 @@ describe("Angular's token peer is a compatibility range, not a mirror of its own
       !peer.includes(angular.version.split(".").slice(0, 2).join(".")),
       `the token peer (${peer}) was bumped to follow @kinetixui/angular@${angular.version} rather than the token contract`,
     );
+  });
+
+  /**
+   * The audit has to be looking at this repository, not at nothing.
+   *
+   * A guard that checks zero claims passes every release, which is the failure mode worth asserting
+   * against directly: the one thing it must be able to see is the claim that has already drifted
+   * twice. The range and the version are read from the manifests, so a release moves this test rather
+   * than breaking it.
+   */
+  it("is the claim the release gate actually checks", () => {
+    const plan = planIt();
+    const claim = plan.peers.checked.find(
+      (entry) => entry.dependent === "@kinetixui/angular" && entry.dependency === "@kinetixui/tokens",
+    );
+    assert.ok(
+      claim,
+      `the release plan checked ${plan.peers.checked.length} peer claim(s) and none of them was ` +
+        `@kinetixui/angular → @kinetixui/tokens. An audit that cannot see the claim that drifted is vacuous.`,
+    );
+    assert.equal(claim.range, peer);
+    assert.equal(claim.next, tokens.version, "no release is pending, so the planned version is the current one");
+    assert.equal(claim.satisfied, true);
   });
 
   it("keeps Angular out of the core cohort's version, which is the point", () => {
@@ -446,28 +570,19 @@ describe("Angular's token peer is a compatibility range, not a mirror of its own
  * made this repository disagree with the artifact. It was also pointless: `^0.23.0` already accepts
  * `0.23.1`, and the core patch carried no token-contract change.
  *
- * Changesets does this by design, and not through anything `updateInternalDependencies` controls.
- * `applyReleasePlan` iterates every entry in the release plan, and a package that merely *depends* on
- * a released package is in that plan with `type: "none"` — Angular appears as `0.24.0 -> 0.24.0`. Its
- * `version` key is skipped (`newVersion != null`) and its changelog is skipped (`getChangelogEntry`
- * returns null for `none`), but its dependency ranges are rewritten anyway, because
- * `shouldUpdateDependencyBasedOnConfig` ends with:
+ * That rewrite no longer happens. `.changeset/config.json` sets
+ * `___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH.onlyUpdatePeerDependentsWhenOutOfRange`, which
+ * turns the peer branch of `shouldUpdateDependencyBasedOnConfig` back into a semver question, and
+ * `scripts/release/peers.mjs` fails the release when a planned version genuinely leaves a declared
+ * range. `version-generation.test.mjs` proves both halves against the real `changeset version`, and
+ * RELEASING.md → *Peer ranges across cohorts* is the whole story.
  *
- *     let shouldUpdate = getBumpLevel(release.type) >= minLevel;
- *     if (depType === "peerDependencies") shouldUpdate = !onlyUpdatePeerDependentsWhenOutOfRange;
- *
- * For a peer dependency that assignment *replaces* the decision rather than refining it, so the
- * in-range check two lines above is discarded and `updateInternalDependencies` has no say at all.
- * The only switch is `onlyUpdatePeerDependentsWhenOutOfRange`, which lives under
- * `___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH` and is described by its own schema as "Unsafe
- * options". Its name is a promise that it can change in a patch release. Trading a visible,
- * one-line revert for a config key that may silently change the meaning of every future release is a
- * bad trade, so this repository does not set it — see RELEASING.md.
- *
- * What is asserted instead is the invariant the drift violated, which is wider than this one bug: a
- * package with no pending version bump, already published at the version in its manifest, must still
- * describe what was published. On a feature branch that means a consumer-facing manifest change needs
- * a changeset — which is correct, because without one the change never reaches npm.
+ * This suite is the backstop underneath all of that, and it is wider than the one bug: a package with
+ * no pending version bump, already published at the version in its manifest, must still describe what
+ * was published — whatever moved it. On a feature branch the same assertion means a consumer-facing
+ * manifest change needs a changeset, which is correct, because without one the change never reaches
+ * npm. It is also what stops "widen the peer range" from being done quietly: the edit fails here until
+ * a changeset accompanies it.
  */
 describe("a published package still describes what was published", () => {
   /**

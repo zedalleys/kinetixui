@@ -1,0 +1,386 @@
+export const metadata = {
+  title: "IoT",
+  description:
+    "KinetixUI IoT is a connected-device module for building products that pair, monitor, control, and troubleshoot devices. Experimental.",
+};
+
+# IoT
+
+**KinetixUI IoT is a connected-device module for building products that pair, monitor, control, and
+troubleshoot devices.**
+
+`@kinetixui/iot` is a separate module, not part of `@kinetixui/ui`. It adds a domain vocabulary —
+devices, telemetry, commands, pairing, firmware, alerts — on top of the same token contract every
+other KinetixUI platform is built from.
+
+<Callout>
+  **Experimental.** The API may change without a major version while this finds its shape. It is not
+  part of the <ComponentTotalInline /> cross-platform component surface, and there is no SwiftUI,
+  Jetpack Compose or Flutter port of its primitives.
+</Callout>
+
+This page is the reference. For the shorter tour — the primitives rendered live, an interactive demo and the
+module boundary — see [the IoT overview](/iot).
+
+## Install
+
+```bash
+npm install @kinetixui/iot
+```
+
+Three entry points, because the useful half of this module has nothing to do with rendering:
+
+| import                     | contains                                 |
+| -------------------------- | ---------------------------------------- |
+| `@kinetixui/iot`           | everything                               |
+| `@kinetixui/iot/functions` | models and pure functions — **no React** |
+| `@kinetixui/iot/react`     | the five React primitives                |
+
+The `functions` subpath imports neither React nor the DOM, so it runs in a server route, a worker, a
+queue consumer or a test with no renderer. That is asserted twice rather than promised: against the
+source import graph, and against the built `dist` that npm ships.
+
+### Peer dependencies
+
+`react` is an **optional** peer (`>=18`). The `react` subpath needs it, and so does the root
+`@kinetixui/iot` import because it re-exports the primitives; `@kinetixui/iot/functions` needs nothing
+at all. There is no `react-dom` peer — no primitive renders a portal — and no `@kinetixui/ui` peer,
+since nothing here imports a component from it.
+
+```bash
+# functions only — no React required
+npm install @kinetixui/iot
+
+# using the primitives
+npm install @kinetixui/iot react
+```
+
+### Styling prerequisite
+
+This package has **no runtime dependencies**, and deliberately does not depend on `@kinetixui/tokens`
+or `@kinetixui/ui` — not even as a peer. The primitives style themselves with Tailwind utilities on
+the [token contract](/docs/tokens), which are class names rather than imports. So an app needs the
+token stylesheet loaded and this package inside its Tailwind `content`:
+
+```js
+// tailwind.config.js
+content: ["./src/**/*.{ts,tsx}", "./node_modules/@kinetixui/iot/dist/**/*.js"],
+```
+
+The `functions` subpath needs none of that.
+
+## Scope
+
+**Available now**
+
+- device, telemetry, command, pairing, firmware and alert models
+- status, battery, signal, last-seen, firmware, telemetry, command, pairing and alert utilities
+- five React primitives: `DeviceStatusBadge`, `BatteryIndicator`, `SignalStrength`, `LastSync`, `SensorReading`
+
+**Not in this module**
+
+- MQTT, BLE, WebSocket or HTTP polling — no transport of any kind
+- vendor adapters (Matter, Zigbee, LoRaWAN, Modbus, or any product's own API)
+- native SwiftUI, Jetpack Compose or Flutter components
+- IoT blocks, a pairing wizard, or a telemetry dashboard
+- charting — a telemetry series here is data, not a plotted thing
+
+Nothing in this module opens a connection, holds a credential, or parses or executes a device payload.
+It models what a device *is*, so that the layer which talks to one has something honest to render into.
+
+## Generic on purpose
+
+The models are shaped to be equally true for smart agriculture, medical devices, smart home, industrial
+dashboards, fleet and logistics, and wearables. A field earns a place in `KinetixDevice` only if a soil
+probe, an infusion pump, a thermostat, a delivery van tracker and a fitness band would all populate it
+with the same meaning. Anything narrower goes in `metadata`, and there are no transport or protocol
+fields at all.
+
+## The device model
+
+```ts
+import type { KinetixDevice, KinetixDeviceStatus } from "@kinetixui/iot/functions";
+
+type KinetixDeviceStatus =
+  | "online" | "offline" | "stale" | "syncing" | "pairing"
+  | "updating" | "warning" | "error" | "disabled";
+
+type KinetixDevice = {
+  id: string;
+  name: string;
+  type: string;            // product-defined: "thermostat", "soil-probe", "gateway"
+  status: KinetixDeviceStatus;
+  battery?: number;        // 0–100
+  signal?: number;         // normalised 0–100, not dBm
+  firmwareVersion?: string;
+  lastSeenAt?: string | Date;
+  locationName?: string;
+  metadata?: Record<string, unknown>;
+};
+```
+
+`stale` is the one worth pointing at: it means "there is a connection story, but the data behind it is
+old", which is the state device UIs most often render as a confident `online`.
+
+## The telemetry model
+
+```ts
+type KinetixTelemetryQuality = "good" | "estimated" | "missing" | "error";
+
+type KinetixTelemetryPoint = {
+  timestamp: string | Date;
+  metric: string;          // product-defined: "temperature", "soil-moisture", "heart-rate"
+  value: number;
+  unit?: string;           // "°C", "%", "bpm" — printed, never converted
+  quality?: KinetixTelemetryQuality;
+};
+
+type KinetixTelemetrySeries = {
+  deviceId: string;
+  metric: string;
+  points: KinetixTelemetryPoint[];
+};
+```
+
+`quality` exists so that missingness survives the trip to the UI. It is why `formatTelemetryValue` can
+refuse to print a number.
+
+## Pairing is UI state, not a transport
+
+This is worth being blunt about, because the module's positioning says "pair" and that could be read as
+a promise it does not make. **Nothing here discovers, connects to, or authenticates a device.** There
+is no Bluetooth, no Wi-Fi provisioning and no network call anywhere in this package.
+
+What it gives you is the vocabulary and the local logic for a pairing *screen*, so the screen can be
+built, tested and reviewed before any transport exists — and so that whichever transport arrives later
+does not invent its own word for "connecting":
+
+```ts
+import {
+  getPairingProgress,
+  normalizePairingCode,
+  validatePairingCode,
+  describePairingStatus,
+  isPairingSettled,
+  type KinetixPairingStatus,
+  type KinetixPairingStep,
+} from "@kinetixui/iot/functions";
+
+type KinetixPairingStatus =
+  | "idle" | "scanning" | "found" | "connecting"
+  | "authenticating" | "paired" | "failed" | "cancelled";
+
+normalizePairingCode("a1b-2c3");            // "A1B2C3"
+validatePairingCode("A1B2C3");              // true  — shape only, never correctness
+getPairingProgress(steps).ratio;            // 0 for an empty list, never NaN
+isPairingSettled("failed");                 // true  — the screen can stop waiting
+```
+
+`validatePairingCode` checks a code's *shape* so a form can enable its submit button. It does not
+transmit the code, store it, or judge whether it is the right one — only the device can do that.
+
+## Known limitations of the model
+
+- **`status` is one field, so a device has one state.** A device that is reachable *and* reporting a
+  fault is `error` or `online`, not both. That is deliberate — a single field is what a list row can
+  sort and render — but it means product-level nuance belongs elsewhere: alerts carry severity
+  independently, and `needsAttention` exists so a fleet view can emphasise without collapsing.
+- **Statuses mix concerns on purpose.** `online`/`offline` is a link fact, `stale` is about the data,
+  `syncing`/`updating`/`pairing` are activities and `disabled` is configuration. They share one union
+  because a device row shows one badge. If you need two axes, keep the second one yourself.
+
+## Utilities
+
+Every function is pure and deterministic, and every time-dependent one takes an injectable `now`.
+
+```ts
+import {
+  classifyBatteryLevel,
+  classifySignalStrength,
+  compareFirmwareVersions,
+  detectStaleReading,
+  formatLastSeen,
+  formatTelemetryValue,
+  normalizeDeviceStatus,
+} from "@kinetixui/iot/functions";
+
+normalizeDeviceStatus("CONNECTED");        // "online"
+normalizeDeviceStatus("ota");              // "updating"
+normalizeDeviceStatus("something else");   // "offline"  (and isKnownDeviceStatus() is false)
+
+classifyBatteryLevel(72);                  // "high"
+classifyBatteryLevel(null);                // "unknown"  — not "critical"
+
+classifySignalStrength(0);                 // "none"     — reported, and zero
+classifySignalStrength(undefined);         // "unknown"  — not reported
+
+formatLastSeen(fiveMinutesAgo, { now });   // "5m ago"
+formatLastSeen(null);                      // "Never"
+
+detectStaleReading(undefined, 60_000);     // true       — freshness is a claim
+formatTelemetryValue({ value: 0, quality: "missing" }); // "Unknown" — never "0"
+
+compareFirmwareVersions("1.9.9", "1.10.0"); // -1        — numeric, not lexical
+compareFirmwareVersions("R3.2", "1.0.0");   // null      — not 0
+```
+
+### "We do not know" survives
+
+That is the rule running through all of it. A device that does not report a battery is not a device
+with a flat one. An undated reading is not a fresh one. A firmware pair that cannot be compared is not
+up to date. Each of those is a place where a convenient default becomes a lie the interface tells about
+someone's hardware, so `unknown` is a first-class result rather than a fallback — and
+`isKnownDeviceStatus` exists so that the information `normalizeDeviceStatus` discards stays reachable.
+
+### Documented limitations
+
+- **Signal is a normalised 0–100 quality, not dBm.** dBm ranges differ per radio — Wi-Fi, LTE, LoRa and
+  BLE do not share a usable scale — so banding dBm would mean guessing the radio. That conversion
+  belongs in the product, next to the radio it knows about.
+- **Firmware comparison ignores prerelease tags.** `1.4.0-rc.2` and `1.4.0` compare equal. Device
+  firmware strings are rarely semver (`1.04`, `2.1.3.7`, `R3.2` all occur), so a strict parser would
+  reject more real versions than the loose comparison gets wrong, and no semver dependency is added.
+- **`formatLastSeen` stops at days.** A year-old reading reads `400d ago`, not `1y ago`. Month
+  arithmetic needs the locale rules this deliberately avoids.
+- **`buildDeviceCommand` requires an `id`.** Generating one would make the function non-deterministic,
+  and products almost always have an id they need to correlate with.
+
+## React primitives
+
+```tsx
+import {
+  BatteryIndicator,
+  DeviceStatusBadge,
+  LastSync,
+  SensorReading,
+  SignalStrength,
+} from "@kinetixui/iot/react";
+
+<DeviceStatusBadge status="online" />
+<BatteryIndicator value={72} />
+<SignalStrength value={84} />
+<LastSync value={device.lastSeenAt} />
+<SensorReading metric="Temperature" value={23.4} unit="°C" />
+```
+
+Each accepts `className` and forwards the rest of its props, and each emits a `data-` attribute for the
+value it resolved — `data-status`, `data-level`, `data-quality` — so a product can restyle per state
+without this module growing a variant API.
+
+There is no size-variant prop. These are single-line readings that inherit their type scale from the
+surrounding text, and a variant matrix would be five APIs to maintain for a choice CSS already makes.
+
+## Three levels, and when each is the right one
+
+The React surface has two layers, and the website carries a third. Knowing which one you are reaching
+for saves rebuilding something that already exists — or importing something larger than the job.
+
+| Level | What it is | Where it lives | Reach for it when |
+| --- | --- | --- | --- |
+| **Primitives** | One fact, rendered as text | `@kinetixui/iot/react` | You are laying out your own card and need the status, battery, signal, timestamp or reading inside it |
+| **Patterns** | A composition of primitives, plus a rule or two | `@kinetixui/iot/react` | You are building the arrangement every device product builds and would otherwise rewrite it |
+| **Examples** | A whole screen, assembled from patterns | [kinetixui.com/iot](/iot) — copy, do not install | You want a starting layout for a fleet view, a detail panel or an alert list |
+
+Primitives and patterns are both published API. Examples are not: they are source on the website, meant
+to be read and copied into your own codebase, because a screen layout is where your product's
+decisions live and importing someone else's is rarely the shortcut it looks like.
+
+## Patterns
+
+Nine compositions, each built from the primitives above rather than re-deriving their semantics — so
+what "stale" means is decided once and every one of them agrees.
+
+```tsx
+import {
+  AlertCard,
+  CommandStatus,
+  ConnectionHealth,
+  DeviceCard,
+  DeviceListItem,
+  DeviceStateSummary,
+  FirmwareStatus,
+  TelemetryCard,
+  TelemetryTrend,
+} from "@kinetixui/iot/react";
+```
+
+| Pattern | Composes | Answers |
+| --- | --- | --- |
+| `DeviceCard` | all five primitives | What is this device doing? |
+| `DeviceListItem` | the same, at list density | …across four hundred devices |
+| `DeviceStateSummary` | `summarizeDevices` | How is this group doing? |
+| `TelemetryTrend` | — | What has this metric been doing, including where it stopped? |
+| `TelemetryCard` | `SensorReading` + `TelemetryTrend` + `LastSync` | …and what is it now? |
+| `ConnectionHealth` | the status, signal, last-seen and freshness facts | Why can I not reach this device? |
+| `AlertCard` | `LastSync` | What is wrong, how serious, and has anyone looked? |
+| `CommandStatus` | `LastSync` | Where did the command I sent get to? |
+| `FirmwareStatus` | — | What version is this on, and does it need one? |
+
+### Two rules the patterns add
+
+**A device in transition does not show its last value.** `DeviceCard` and `DeviceListItem` suppress the
+reading while a device is `syncing`, `pairing` or `updating`, showing the state where the number would
+be. A value rendered beside "Updating" is read as the current value, and it is not.
+
+**A dropout is drawn as a dropout.** `TelemetryTrend` breaks the line at any point whose quality is
+`missing` or `error` and never interpolates across it. A straight line between two readings an hour
+apart is a claim that the sensor was answering in between, which is the claim `quality` exists to
+prevent. The bounds are printed as text beneath the plot, so the chart's textual equivalent is what
+everyone reads rather than a hidden description that can drift out of step.
+
+### Composition, not configuration
+
+`DeviceCard` takes an `action` node and decides where it goes; it has no `onToggle`, `onPower` or
+`onRun`. What a control *does* implies a transport, and this module has none — so the card owns the
+position and your product owns the behaviour.
+
+Two candidates were evaluated and deliberately left out. A `QuickAction` would duplicate
+`@kinetixui/ui`'s Button in a package that cannot depend on it. A `DeviceDetailHeader` is a layout
+arrangement rather than a semantic one, which makes it an example rather than an API.
+
+### Motion
+
+The patterns transition colour on state change, and an in-flight command carries a pulse. Both use
+Tailwind's own `motion-reduce:` variant, so a reader who asks for reduced motion gets the static
+version with no stylesheet to copy and no page-level rule to remember. Nothing loops, nothing moves a
+layout, and no animation carries information that is not also written down.
+
+## Accessibility
+
+Every primitive renders its fact as **text**, so the reading survives greyscale, forced-colors mode and
+a screen reader. Colour is always a second encoding of something already written down.
+
+Where a visual shorthand is used — a battery bar, a signal meter, `5m ago` — the visuals are hidden
+from assistive technology and the full sentence is supplied as the accessible name. Nothing is
+announced twice, and nothing is announced only as an abbreviation.
+
+```
+Online
+Battery 72%, high
+Signal 84%, excellent
+Last seen 5 minutes ago
+Temperature 23.4 °C
+```
+
+Those sentences come from the pure half — `describeDeviceStatus`, `describeBattery`, `describeSignal`,
+`describeLastSeen` — so the text a screen reader receives is covered by the same unit tests as the
+classification, and a non-React consumer can render it.
+
+Missing values are stated rather than implied: `Battery level unknown`, `Signal strength unknown`,
+`Never seen`, `No reading`. `LastSync` renders a `<time>` whose `dateTime` is omitted rather than left
+blank when there is no instant to state.
+
+No primitive animates, so there is nothing for `prefers-reduced-motion` to suppress — asserted in the
+test suite, not assumed. See [Accessibility](/docs/accessibility) for how the rest of the library is
+verified.
+
+## Roadmap
+
+Nothing here is scheduled, and none of it is in the module today.
+
+- **Transport adapters** — MQTT, BLE, WebSocket and HTTP polling, as separate opt-in entry points so
+  that the semantic layer stays usable without any of them
+- **IoT blocks** — a device list, a pairing flow and a telemetry panel, composed from
+  [blocks](/blocks) and these primitives
+- **Native ports** — SwiftUI, Jetpack Compose and Flutter, once the API has stopped moving
+- **Richer telemetry presentation** — sparklines and threshold bands, on the existing chart stack

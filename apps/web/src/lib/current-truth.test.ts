@@ -269,6 +269,296 @@ describe("RTL claims stay inside the verification evidence", () => {
   });
 });
 
+/* ------------------------------------------------------------------ the IoT module */
+
+/**
+ * What the site may say about `@kinetixui/iot`.
+ *
+ * Every number comes from the package's own manifest, so the guard cannot be satisfied by editing a second
+ * copy of the truth: if the version moves and a page still names the old one, this fails. The prose rules are
+ * the four ways this particular module is easy to oversell — as a platform, as a transport, as a native port,
+ * and as a catalogue component — plus the two ways it is easy to undersell now that it has actually shipped.
+ */
+/**
+ * Every sentence in `text` that names `term`.
+ *
+ * Sentence-scoped for the same reason the platform rules above are: a page may legitimately say "there is no
+ * SwiftUI port" while also naming SwiftUI elsewhere, and a whole-file search would call that a contradiction.
+ *
+ * Split on sentence punctuation and on blank lines — **not** on every newline. Both MDX and JSX wrap prose at a
+ * column, so a single newline is usually the middle of a sentence: splitting there tore "there is no SwiftUI,
+ * Jetpack Compose or Flutter port" in half and reported the second half as an unqualified claim. Whitespace is
+ * collapsed so a wrapped sentence reads as one line in a failure message.
+ */
+function sentencesMentioning(text: string, term: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+|\n\s*\n/)
+    .map((sentence) => sentence.replace(/\s+/g, " ").trim())
+    .filter((sentence) => sentence.includes(term));
+}
+
+describe("the IoT module is described as what it is", () => {
+  const iotManifest = JSON.parse(read("packages/iot/package.json")) as {
+    name: string;
+    version: string;
+    description: string;
+    exports: Record<string, unknown>;
+    peerDependencies: Record<string, string>;
+    peerDependenciesMeta?: { react?: { optional?: boolean } };
+    dependencies?: Record<string, string>;
+  };
+
+  /**
+   * The IoT-facing surfaces, in present tense: the landing page, the reference, and every composition
+   * the site renders.
+   *
+   * The examples are in here for the same reason the page is. A dashboard is the most persuasive
+   * surface on the site and therefore the easiest place for a claim to appear that the package cannot
+   * honour — a device that looks discovered, a control that looks connected, a protocol named as
+   * though it shipped. A guard that stopped at the page would police the prose and leave the
+   * demonstration unpoliced.
+   */
+  const IOT_SURFACES = {
+    "app/iot/page.tsx": readFileSync("src/app/iot/page.tsx", "utf8"),
+    "components/iot/module-boundary.tsx": readFileSync("src/components/iot/module-boundary.tsx", "utf8"),
+    "components/iot/device-showcase.tsx": readFileSync("src/components/iot/device-showcase.tsx", "utf8"),
+    "components/iot/hero-devices.tsx": readFileSync("src/components/iot/hero-devices.tsx", "utf8"),
+    "components/iot/example-showcase.tsx": readFileSync("src/components/iot/example-showcase.tsx", "utf8"),
+    "examples/iot/demo-fleet.ts": readFileSync("src/examples/iot/demo-fleet.ts", "utf8"),
+    "examples/iot/device-dashboard.tsx": readFileSync("src/examples/iot/device-dashboard.tsx", "utf8"),
+    "examples/iot/device-fleet.tsx": readFileSync("src/examples/iot/device-fleet.tsx", "utf8"),
+    "examples/iot/device-detail.tsx": readFileSync("src/examples/iot/device-detail.tsx", "utf8"),
+    "examples/iot/telemetry-board.tsx": readFileSync("src/examples/iot/telemetry-board.tsx", "utf8"),
+    "examples/iot/connection-troubleshooting.tsx": readFileSync("src/examples/iot/connection-troubleshooting.tsx", "utf8"),
+    "examples/iot/alert-inbox.tsx": readFileSync("src/examples/iot/alert-inbox.tsx", "utf8"),
+    "lib/iot-examples.ts": readFileSync("src/lib/iot-examples.ts", "utf8"),
+    "docs/iot": readFileSync("src/app/docs/iot/page.mdx", "utf8"),
+  } as const;
+
+  it("has surfaces to check, so nothing below is vacuous", () => {
+    expect(Object.keys(IOT_SURFACES).length).toBeGreaterThan(2);
+    for (const [name, text] of Object.entries(IOT_SURFACES)) {
+      expect(text.length, `${name} should not be empty`).toBeGreaterThan(200);
+    }
+    // And the manifest really does carry the fields the rules below read.
+    expect(iotManifest.name).toBe("@kinetixui/iot");
+    expect(iotManifest.version).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+
+  /* ---- derived facts, never typed twice ---- */
+
+  it("never hardcodes the IoT version anywhere on the site", () => {
+    /**
+     * The whole version string, anywhere in these surfaces, is the failure — not a particular phrasing of it.
+     * An earlier version of this rule matched `@kinetixui/iot@0.1.0` and `iot: 0.1.0` and was defeated by the
+     * obvious thing: someone writing `Experimental · 0.1.0` by hand. There is no shape of "0.1.0 typed into a
+     * page" that is correct, so the rule is now the simple one.
+     */
+    for (const [name, text] of Object.entries(IOT_SURFACES)) {
+      expect(
+        text.includes(iotManifest.version),
+        `${name} spells out "${iotManifest.version}" — read it from IOT_VERSION, or it goes stale on the next release`,
+      ).toBe(false);
+    }
+    const iotLib = readFileSync("src/lib/iot.ts", "utf8");
+    expect(iotLib, "lib/iot.ts must read the version from the manifest").toMatch(/iotPackage\.version/);
+  });
+
+  it("exposes exactly the entry points the package exports", () => {
+    const declared = Object.keys(iotManifest.exports).filter((s) => s !== "./package.json");
+    expect(declared).toEqual([".", "./functions", "./react"]);
+    // The page's entry-point list is generated from the same map, so it cannot advertise a subpath that the
+    // package does not resolve — which is the failure a hand-written list produces.
+    const iotLib = readFileSync("src/lib/iot.ts", "utf8");
+    expect(iotLib).toMatch(/Object\.keys\(iotPackage\.exports\)/);
+  });
+
+  /* ---- the four ways to oversell it ---- */
+
+  it("never calls IoT a platform", () => {
+    for (const [name, text] of Object.entries(IOT_SURFACES)) {
+      // "sixth platform", "IoT platform", "platform: IoT" — any framing that puts it beside React/SwiftUI.
+      expect(text, `${name} must not call IoT a platform`).not.toMatch(/IoT platform|platform called IoT|sixth platform(?!,| and not)/i);
+    }
+  });
+
+  /**
+   * Two regions name SwiftUI, MQTT and BLE on purpose, and in both the denial lives above the line rather than
+   * in it — so a sentence-scoped rule cannot see it:
+   *
+   *  - the landing page's roadmap, where the unshipped columns carry `state: "planned"`;
+   *  - the docs' "Not in this module" list, where the heading negates every bullet under it.
+   *
+   * Both are excised before the prose rules run, and the test below asserts each excised region really is the
+   * negative one. That keeps the layering honest: one test proves the region is marked as not-shipped, and the
+   * rules then hold everywhere else with no per-sentence exceptions to remember.
+   */
+  const EXCISIONS: readonly { from: string; to: string }[] = [
+    { from: 'when: "Next"', to: "export default" }, // landing page roadmap: the planned columns
+    { from: "**Not in this module**", to: "## Generic on purpose" }, // docs: the negated list
+    { from: "## Roadmap", to: "\u0000" }, // docs: the roadmap, which runs to the end of the file
+  ];
+
+  /** `to` of "\0" means "to the end of the file" — a sentinel, since no source contains a NUL byte. */
+  function claimsOnly(text: string): string {
+    let out = text;
+    for (const { from, to } of EXCISIONS) {
+      const start = out.indexOf(from);
+      if (start === -1) continue;
+      const end = to === "\u0000" ? out.length : out.indexOf(to, start + 1);
+      if (end !== -1) out = out.slice(0, start) + out.slice(end);
+    }
+    return out;
+  }
+
+  it("excises only regions that are explicitly not-shipped", () => {
+    const page = IOT_SURFACES["app/iot/page.tsx"];
+    const roadmap = page.slice(page.indexOf('when: "Next"'), page.indexOf("export default"));
+    expect(roadmap, "the excised roadmap region should be the unshipped columns").toMatch(/state:\s*"planned"/);
+    expect(roadmap, "and must not contain the shipped column").not.toMatch(/state:\s*"now"/);
+
+    const docs = IOT_SURFACES["docs/iot"];
+    const notInModule = docs.slice(docs.indexOf("**Not in this module**"), docs.indexOf("## Generic on purpose"));
+    expect(notInModule, "the excised docs region should be the not-in-this-module list").toMatch(/no transport of any kind/);
+    expect(notInModule).toMatch(/native SwiftUI/);
+
+    const docsRoadmap = docs.slice(docs.indexOf("## Roadmap"));
+    expect(docsRoadmap, "the excised docs roadmap must say nothing in it has shipped").toMatch(
+      /Nothing here is scheduled, and none of it is in the module today/,
+    );
+
+    // Both excisions must actually remove something, or the rules below would be checking the whole file and
+    // the assertions above would be describing a region nothing uses.
+    expect(claimsOnly(page).length).toBeLessThan(page.length);
+    expect(claimsOnly(docs).length).toBeLessThan(docs.length);
+  });
+
+  it("never claims a native IoT port exists", () => {
+    for (const [name, text] of Object.entries(IOT_SURFACES)) {
+      for (const native of ["SwiftUI", "Jetpack Compose", "Flutter"]) {
+        for (const sentence of sentencesMentioning(claimsOnly(text), native)) {
+          // Outside the roadmap, a sentence may name a native platform only to deny a port.
+          const denied = /\b(no|not|none|without|neither|nor|planned|intended|later|yet)\b/i.test(sentence);
+          expect(denied, `${name}: "${sentence.trim()}" names ${native} without denying a port`).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("never claims a protocol or transport is supported", () => {
+    for (const [name, text] of Object.entries(IOT_SURFACES)) {
+      for (const protocol of ["MQTT", "BLE", "WebSocket", "Zigbee", "Matter", "LoRaWAN", "Modbus"]) {
+        const supported = new RegExp(`(?:supports?|ships?|includes?|provides?|built-in)\\s+(?:\\w+\\s+){0,3}${protocol}`, "i");
+        expect(supported.test(claimsOnly(text)), `${name} must not claim ${protocol} support`).toBe(false);
+      }
+    }
+  });
+
+  it("never counts IoT primitives in the component catalogue", () => {
+    const primitives = ["DeviceStatusBadge", "BatteryIndicator", "SignalStrength", "LastSync", "SensorReading"];
+    for (const slug of Object.keys(manifest.components)) {
+      expect(primitives.map((p) => p.toLowerCase())).not.toContain(slug.replace(/-/g, ""));
+    }
+    expect(manifest.platformDefinitions, "IoT must not be a platform in the manifest").not.toHaveProperty("IoT");
+  });
+
+  /**
+   * The patterns are a second way to inflate the catalogue, and a more tempting one: nine components
+   * is a number somebody will eventually want to add to 98.
+   */
+  it("never counts IoT patterns in the component catalogue either", () => {
+    const patterns = [
+      "DeviceCard",
+      "DeviceListItem",
+      "DeviceStateSummary",
+      "TelemetryTrend",
+      "TelemetryCard",
+      "ConnectionHealth",
+      "AlertCard",
+      "CommandStatus",
+      "FirmwareStatus",
+    ];
+    for (const slug of Object.keys(manifest.components)) {
+      expect(patterns.map((p) => p.toLowerCase())).not.toContain(slug.replace(/-/g, ""));
+    }
+  });
+
+  /**
+   * And a third: the examples are not Blocks. A published Block carries every platform, which this
+   * React-only module cannot do, so an IoT composition appearing in `blocks.manifest.json` would
+   * either be lying about four platforms or sitting in the `draft` status the site never renders.
+   */
+  it("never lets an IoT example into the Blocks catalogue", () => {
+    const blocks = JSON.parse(read("blocks.manifest.json")) as {
+      blocks: Record<string, { sources: Record<string, string> }>;
+    };
+    for (const [slug, block] of Object.entries(blocks.blocks)) {
+      for (const [platform, path] of Object.entries(block.sources)) {
+        expect(path, `block ${slug} (${platform}) points into the IoT examples directory`).not.toMatch(
+          /examples\/iot\//,
+        );
+      }
+    }
+    const iotManifestRaw = JSON.parse(read("iot-examples.manifest.json")) as {
+      examples: Record<string, unknown>;
+    };
+    // Both catalogues exist and neither is empty, so the loop above is not passing by having nothing
+    // to iterate.
+    expect(Object.keys(blocks.blocks).length).toBeGreaterThan(0);
+    expect(Object.keys(iotManifestRaw.examples).length).toBeGreaterThan(0);
+  });
+
+  /**
+   * The dashboard is the most persuasive surface on the site, so it carries the strongest obligation
+   * to say what it is. A reader who believes the controls reach a device has been misled by the page,
+   * not by the package.
+   */
+  it("says the showcase controls are demonstration state", () => {
+    const dashboard = IOT_SURFACES["examples/iot/device-dashboard.tsx"];
+    expect(dashboard, "the dashboard must state that its controls are local demo state").toMatch(
+      /LOCAL DEMO STATE|local demo state/,
+    );
+    expect(dashboard, "and that nothing reaches a device").toMatch(/no transport|nothing here reaches a device/i);
+    const page = IOT_SURFACES["app/iot/page.tsx"];
+    expect(page, "the page must say the same beside the showcase").toMatch(/local demo state|demo state only/i);
+  });
+
+  /* ---- the two ways to undersell it, now that it has shipped ---- */
+
+  it("never describes the functions subpath as needing React", () => {
+    expect(iotManifest.peerDependenciesMeta?.react?.optional, "react must still be an optional peer").toBe(true);
+    for (const [name, text] of Object.entries(IOT_SURFACES)) {
+      expect(text, `${name} must not say the functions subpath requires React`).not.toMatch(
+        /functions[^.]{0,80}requires? React|React is required/i,
+      );
+    }
+  });
+
+  it("never says IoT is unpublished or merely planned", () => {
+    for (const [name, text] of Object.entries(IOT_SURFACES)) {
+      expect(text, `${name} must not say the IoT package is unpublished`).not.toMatch(
+        /iot[^.]{0,60}(not (yet )?(published|on npm)|coming soon|unreleased)/i,
+      );
+    }
+  });
+
+  /* ---- planned work stays marked ---- */
+
+  it("marks every roadmap item that has not shipped", () => {
+    const page = IOT_SURFACES["app/iot/page.tsx"];
+    // The unshipped columns carry `state: "planned"`, and the badge for them reads "Planned".
+    expect(page).toMatch(/state:\s*"planned"/);
+    expect(page).toMatch(/"Planned"/);
+    // Blocks, adapters and native ports appear only inside a planned column — never in the shipped one.
+    const shippedColumn = page.slice(page.indexOf('state: "now"'), page.indexOf('when: "Next"'));
+    for (const unshipped of ["block", "adapter", "MQTT", "SwiftUI", "dashboard", "wizard"]) {
+      expect(shippedColumn.toLowerCase(), `"${unshipped}" must not be listed as shipped`).not.toContain(
+        unshipped.toLowerCase(),
+      );
+    }
+  });
+});
+
 /* ------------------------------------------------------------------ the historical exclusion */
 
 /**

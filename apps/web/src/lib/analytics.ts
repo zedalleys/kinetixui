@@ -36,6 +36,7 @@ export const ANALYTICS_SOURCES = [
   "installation_page",
   "changelog_page",
   "create_workspace",
+  "iot_page",
   "not_found",
 ] as const;
 export type AnalyticsSource = (typeof ANALYTICS_SOURCES)[number];
@@ -105,6 +106,14 @@ export interface AnalyticsEvents {
   // activating a component and would stop meaning anything if theme exports were folded into it.
   create_export_target_selected: Shape<"target", "source">;
   create_export_copied: Shape<"target", "source">;
+  // IoT. One event, carrying only a surface and a position — never the example's slug as free text,
+  // never the snippet. Deliberately NOT `component_code_copied`: that event means a component from
+  // the 98-component catalogue was activated and is the core activation metric, while an IoT example
+  // is a composition from a separate Experimental module. Folding the two together would inflate the
+  // metric with a different kind of thing and make the trend unreadable in both directions.
+  // The alternative considered was adding an `example` property to `component_code_copied`; rejected
+  // for the same reason — a metric that needs a filter to mean what it used to mean has changed.
+  iot_example_copied: Shape<"source", "location">;
 }
 
 export type AnalyticsEventName = keyof AnalyticsEvents;

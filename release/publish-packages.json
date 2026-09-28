@@ -12,8 +12,9 @@
     "explicit, never inferred from a name, a directory, a version or Changesets config. `core` is",
     "the React set, which releases in lockstep — `sameVersion` makes that a rule the planner",
     "enforces rather than a convention. `angular` is a Preview package on its own lifecycle, so it",
-    "carries its own version and its own release commit. A release in one group never publishes,",
-    "tags or re-tags anything in another.",
+    "carries its own version and its own release commit. `iot` is a new experimental module that",
+    "depends on no other workspace package, so nothing versions with it either. A release in one",
+    "group never publishes, tags or re-tags anything in another.",
     "",
     "`build` names scripts in the root package.json, run in order before packing. `requireFiles`",
     "are paths that must exist inside the packed tarball, on top of every target declared by the",
@@ -28,7 +29,8 @@
   "registry": "https://registry.npmjs.org/",
   "releaseGroups": {
     "core": { "sameVersion": true },
-    "angular": { "sameVersion": true }
+    "angular": { "sameVersion": true },
+    "iot": { "sameVersion": true }
   },
   "packages": [
     {
@@ -59,6 +61,20 @@
       "artifactDirectory": "packages/ui-angular/dist",
       "build": ["build:tokens", "build:angular"],
       "requireFiles": ["styles.css", "fesm2022/kinetixui-angular.mjs", "types/kinetixui-angular.d.ts"]
+    },
+    {
+      "name": "@kinetixui/iot",
+      "releaseGroup": "iot",
+      "directory": "packages/iot",
+      "build": ["build:iot"],
+      "requireFiles": [
+        "dist/index.js",
+        "dist/index.d.ts",
+        "dist/functions/index.js",
+        "dist/functions/index.d.ts",
+        "dist/react/index.js",
+        "dist/react/index.d.ts"
+      ]
     }
   ]
 }

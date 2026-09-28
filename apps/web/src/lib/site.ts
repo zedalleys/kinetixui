@@ -1,4 +1,5 @@
 import uiPkg from "@kinetixui/ui/package.json";
+import { IOT_MATURITY } from "./iot";
 import { PLATFORM_DEFINITIONS, type Platform } from "./platform-parity";
 import { platformSentence } from "./platform-prose";
 
@@ -46,6 +47,14 @@ export const mainNav: NavItem[] = [
   { title: "Infographic", href: "/infographic" },
   { title: "Themes", href: "/themes" },
   { title: "Create", href: "/create" },
+  // A module, beside Create, rather than a sixth entry in any platform list: IoT adds a domain vocabulary on
+  // top of the token contract, it does not re-implement the component surface for a platform.
+  //
+  // No `badge` here on purpose. The primary nav and the mobile sheet render `soon` but not `badge` — badges are
+  // a docs-sidebar affordance — so one would be a prop that silently does nothing, and IoT would be the only
+  // item in an eight-item bar carrying a maturity. The module's maturity is stated where someone reads it: the
+  // /iot hero, the homepage module section, and the docs sidebar entry below.
+  { title: "IoT", href: "/iot" },
 ];
 
 const built = (title: string, slug: string): NavItem => ({ title, href: `/docs/components/${slug}` });
@@ -243,6 +252,13 @@ export const docsNav: NavGroup[] = [
       { title: "SwiftUI", href: "/docs/swiftui" },
       { title: "Flutter", href: "/docs/flutter" },
     ],
+  },
+  {
+    // Not "Platform libraries": a module adds a domain vocabulary on top of the token contract, it does
+    // not re-implement the component surface for a platform. Filing IoT above would have implied a sixth
+    // platform and an IoT port of all 98 components, neither of which exists.
+    title: "Modules",
+    items: [{ title: "IoT", href: "/docs/iot", badge: IOT_MATURITY }],
   },
   {
     title: "Project",
