@@ -4,6 +4,7 @@ import * as React from "react";
 import { describeLastSeen, formatLastSeen } from "../functions/last-seen";
 import { parseTimestamp } from "../functions/time";
 import { cn } from "./cn";
+import { resolveLabel } from "./label";
 
 /**
  * LastSync — when a device was last heard from.
@@ -24,7 +25,10 @@ export interface LastSyncProps extends Omit<React.HTMLAttributes<HTMLTimeElement
   now?: string | Date | number | null;
   /** Shown when there is no usable timestamp. Defaults to `"Never"`. */
   neverLabel?: string;
-  /** Replace the accessible label, e.g. for translation. */
+  /**
+   * Replace the accessible label, e.g. for translation. A blank or whitespace-only string falls back
+   * to the generated sentence rather than leaving the element without an accessible name.
+   */
   label?: string;
 }
 
@@ -37,7 +41,7 @@ const LastSync = React.forwardRef<HTMLTimeElement, LastSyncProps>(
         ref={ref}
         // Omitted rather than empty when there is no instant to state: an empty dateTime is invalid.
         dateTime={parsed ? parsed.toISOString() : undefined}
-        aria-label={label ?? describeLastSeen(value, options)}
+        aria-label={resolveLabel(label, describeLastSeen(value, options))}
         className={cn("text-label-md font-sans text-muted-foreground", className)}
         {...props}
       >

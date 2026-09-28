@@ -4,6 +4,7 @@ import * as React from "react";
 import type { KinetixDeviceStatus } from "../types/device";
 import { describeDeviceStatus, normalizeDeviceStatus } from "../functions/status";
 import { cn } from "./cn";
+import { resolveLabel } from "./label";
 
 /**
  * DeviceStatusBadge — a device's state, as a word.
@@ -18,7 +19,10 @@ import { cn } from "./cn";
 export interface DeviceStatusBadgeProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, "children"> {
   /** A `KinetixDeviceStatus`, or any string a backend produced — it is normalised. */
   status: KinetixDeviceStatus | string | null | undefined;
-  /** Override the visible text. Use for translation; it replaces the label, never removes it. */
+  /**
+   * Override the visible text. Use for translation; it replaces the label, never removes it — a blank or
+   * whitespace-only string falls back to the status text, so the state is never conveyed by colour alone.
+   */
   label?: string;
   /** Hide the decorative dot. */
   hideIndicator?: boolean;
@@ -57,7 +61,7 @@ const DeviceStatusBadge = React.forwardRef<HTMLSpanElement, DeviceStatusBadgePro
         {...props}
       >
         {hideIndicator ? null : <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-current" />}
-        {label ?? describeDeviceStatus(resolved)}
+        {resolveLabel(label, describeDeviceStatus(resolved))}
       </span>
     );
   },

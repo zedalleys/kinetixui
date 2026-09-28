@@ -3,6 +3,7 @@
 import * as React from "react";
 import { classifyBatteryLevel, describeBattery, formatBatteryPercent } from "../functions/battery";
 import { cn } from "./cn";
+import { resolveLabel } from "./label";
 
 /**
  * BatteryIndicator — a battery reading, with the band spelled out.
@@ -19,7 +20,10 @@ export interface BatteryIndicatorProps extends Omit<React.HTMLAttributes<HTMLSpa
   value: number | null | undefined;
   /** Hide the numeric percentage and show only the bar. The accessible label is unaffected. */
   hideValue?: boolean;
-  /** Replace the accessible label, e.g. for translation. */
+  /**
+   * Replace the accessible label, e.g. for translation. A blank or whitespace-only string falls back
+   * to the generated sentence rather than leaving the element without an accessible name.
+   */
   label?: string;
 }
 
@@ -40,7 +44,7 @@ const BatteryIndicator = React.forwardRef<HTMLSpanElement, BatteryIndicatorProps
       <span
         ref={ref}
         role="img"
-        aria-label={label ?? describeBattery(value)}
+        aria-label={resolveLabel(label, describeBattery(value))}
         data-level={level}
         className={cn("inline-flex items-center gap-2 text-label-md font-sans text-foreground", className)}
         {...props}

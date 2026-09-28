@@ -42,22 +42,35 @@ export function classifySignalStrength(value: number | null | undefined): Kineti
  * the component so it can be tested directly.
  *
  * `"none"` and `"unknown"` both fill zero; they differ in the label, not the picture.
+ *
+ * The result is always an integer in `0…bars`. A caller computing `bars` from a layout can arrive at
+ * `0`, a fraction or a negative, and a fill count larger than the meter it describes is not a number
+ * any renderer can use: `bars` is floored to a whole number and anything below 1 yields no fill at
+ * all, rather than the one bar a `Math.max(1, …)` floor would have invented out of a meter with no
+ * segments in it.
  */
 export function signalBars(value: number | null | undefined, bars = 4): number {
+  const total = typeof bars === "number" && Number.isFinite(bars) ? Math.floor(bars) : 0;
+  if (total <= 0) return 0;
   const level = classifySignalStrength(value);
   switch (level) {
     case "unknown":
     case "none":
       return 0;
     case "weak":
-      return Math.max(1, Math.round(bars * 0.25));
+      return clampBars(Math.round(total * 0.25), total);
     case "fair":
-      return Math.max(1, Math.round(bars * 0.5));
+      return clampBars(Math.round(total * 0.5), total);
     case "good":
-      return Math.max(1, Math.round(bars * 0.75));
+      return clampBars(Math.round(total * 0.75), total);
     case "excellent":
-      return bars;
+      return total;
   }
+}
+
+/** At least one bar for any reported signal, and never more bars than the meter has. */
+function clampBars(filled: number, total: number): number {
+  return Math.min(total, Math.max(1, filled));
 }
 
 /** The full accessible label: `"Signal 84%, excellent"`. */

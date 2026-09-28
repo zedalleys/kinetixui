@@ -3,6 +3,7 @@
 import * as React from "react";
 import { classifySignalStrength, describeSignal, formatSignalPercent, signalBars } from "../functions/signal";
 import { cn } from "./cn";
+import { resolveLabel } from "./label";
 
 /**
  * SignalStrength — a normalised 0–100 signal quality as a bar meter.
@@ -21,7 +22,10 @@ export interface SignalStrengthProps extends Omit<React.HTMLAttributes<HTMLSpanE
   bars?: number;
   /** Hide the numeric percentage and show only the meter. The accessible label is unaffected. */
   hideValue?: boolean;
-  /** Replace the accessible label, e.g. for translation. */
+  /**
+   * Replace the accessible label, e.g. for translation. A blank or whitespace-only string falls back
+   * to the generated sentence rather than leaving the element without an accessible name.
+   */
   label?: string;
 }
 
@@ -34,7 +38,7 @@ const SignalStrength = React.forwardRef<HTMLSpanElement, SignalStrengthProps>(
       <span
         ref={ref}
         role="img"
-        aria-label={label ?? describeSignal(value)}
+        aria-label={resolveLabel(label, describeSignal(value))}
         data-level={level}
         className={cn("inline-flex items-center gap-2 text-label-md font-sans text-foreground", className)}
         {...props}

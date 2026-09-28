@@ -10,11 +10,20 @@ import { parseTimestamp, resolveNow } from "./time";
  */
 
 export type FormatTelemetryOptions = {
-  /** Decimal places. Omit to print the value as-is. */
+  /**
+   * Decimal places. Omit to print the value as-is.
+   *
+   * Clamped to the 0–100 that `toFixed` accepts, and a non-finite value is treated as absent. A
+   * formatter whose whole job is to avoid presenting a misleading number must not be the thing that
+   * throws in the middle of a render.
+   */
   precision?: number;
   /** Shown when there is no usable value. Defaults to `"Unknown"`. */
   unknownLabel?: string;
 };
+
+/** The largest fraction digit count `Number.prototype.toFixed` accepts; beyond it, it throws. */
+const MAX_FIXED_DIGITS = 100;
 
 /**
  * A reading as text: `"23.4 °C"`, or `"72 %"`, or the unknown label.
@@ -31,8 +40,20 @@ export function formatTelemetryValue(
   if (point.quality === "missing" || point.quality === "error") return unknown;
   const { value } = point;
   if (typeof value !== "number" || !Number.isFinite(value)) return unknown;
-  const text = typeof options.precision === "number" ? value.toFixed(Math.max(0, Math.trunc(options.precision))) : String(value);
+  const digits = fixedDigits(options.precision);
+  const text = digits === null ? String(value) : value.toFixed(digits);
   return point.unit ? `${text} ${point.unit}` : text;
+}
+
+/**
+ * The `toFixed` digit count to use, or `null` to print the value as given.
+ *
+ * `toFixed` throws a `RangeError` outside 0–100, so an out-of-range `precision` is clamped into it
+ * rather than allowed to become an exception thrown from inside a component's render.
+ */
+function fixedDigits(precision: number | undefined): number | null {
+  if (typeof precision !== "number" || !Number.isFinite(precision)) return null;
+  return Math.min(MAX_FIXED_DIGITS, Math.max(0, Math.trunc(precision)));
 }
 
 /**
@@ -73,6 +94,10 @@ export function detectStaleReading(
  *
  * Points are not assumed to be sorted, and points with an unusable timestamp are skipped rather than
  * treated as epoch zero — which would make an undated reading the oldest thing in every series.
+ *
+ * Ties go to the point that appears **last** in the array. Two readings sharing a timestamp is a
+ * duplicate-delivery artefact rather than a meaningful ordering, and preferring the later element is
+ * at least the one a caller appending to a series would expect to win.
  */
 export function latestPoint(series: KinetixTelemetrySeries | null | undefined): KinetixTelemetryPoint | null {
   if (!series || !Array.isArray(series.points)) return null;

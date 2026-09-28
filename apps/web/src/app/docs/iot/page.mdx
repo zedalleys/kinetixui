@@ -34,7 +34,23 @@ Three entry points, because the useful half of this module has nothing to do wit
 | `@kinetixui/iot/react`     | the five React primitives                |
 
 The `functions` subpath imports neither React nor the DOM, so it runs in a server route, a worker, a
-queue consumer or a test with no renderer. That is asserted against the source rather than promised.
+queue consumer or a test with no renderer. That is asserted twice rather than promised: against the
+source import graph, and against the built `dist` that npm ships.
+
+### Peer dependencies
+
+`react` is an **optional** peer (`>=18`). The `react` subpath needs it, and so does the root
+`@kinetixui/iot` import because it re-exports the primitives; `@kinetixui/iot/functions` needs nothing
+at all. There is no `react-dom` peer — no primitive renders a portal — and no `@kinetixui/ui` peer,
+since nothing here imports a component from it.
+
+```bash
+# functions only — no React required
+npm install @kinetixui/iot
+
+# using the primitives
+npm install @kinetixui/iot react
+```
 
 ### Styling prerequisite
 
@@ -125,6 +141,50 @@ type KinetixTelemetrySeries = {
 
 `quality` exists so that missingness survives the trip to the UI. It is why `formatTelemetryValue` can
 refuse to print a number.
+
+## Pairing is UI state, not a transport
+
+This is worth being blunt about, because the module's positioning says "pair" and that could be read as
+a promise it does not make. **Nothing here discovers, connects to, or authenticates a device.** There
+is no Bluetooth, no Wi-Fi provisioning and no network call anywhere in this package.
+
+What it gives you is the vocabulary and the local logic for a pairing *screen*, so the screen can be
+built, tested and reviewed before any transport exists — and so that whichever transport arrives later
+does not invent its own word for "connecting":
+
+```ts
+import {
+  getPairingProgress,
+  normalizePairingCode,
+  validatePairingCode,
+  describePairingStatus,
+  isPairingSettled,
+  type KinetixPairingStatus,
+  type KinetixPairingStep,
+} from "@kinetixui/iot/functions";
+
+type KinetixPairingStatus =
+  | "idle" | "scanning" | "found" | "connecting"
+  | "authenticating" | "paired" | "failed" | "cancelled";
+
+normalizePairingCode("a1b-2c3");            // "A1B2C3"
+validatePairingCode("A1B2C3");              // true  — shape only, never correctness
+getPairingProgress(steps).ratio;            // 0 for an empty list, never NaN
+isPairingSettled("failed");                 // true  — the screen can stop waiting
+```
+
+`validatePairingCode` checks a code's *shape* so a form can enable its submit button. It does not
+transmit the code, store it, or judge whether it is the right one — only the device can do that.
+
+## Known limitations of the model
+
+- **`status` is one field, so a device has one state.** A device that is reachable *and* reporting a
+  fault is `error` or `online`, not both. That is deliberate — a single field is what a list row can
+  sort and render — but it means product-level nuance belongs elsewhere: alerts carry severity
+  independently, and `needsAttention` exists so a fleet view can emphasise without collapsing.
+- **Statuses mix concerns on purpose.** `online`/`offline` is a link fact, `stale` is about the data,
+  `syncing`/`updating`/`pairing` are activities and `disabled` is configuration. They share one union
+  because a device row shows one badge. If you need two axes, keep the second one yourself.
 
 ## Utilities
 

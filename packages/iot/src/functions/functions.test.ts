@@ -195,6 +195,43 @@ describe("classifySignalStrength", () => {
     // A weak signal on a 2-bar meter still lights one: rounding to zero would render as "no signal".
     expect(signalBars(10, 2)).toBe(1);
   });
+
+  /**
+   * A fill count has to be renderable. `bars` is a public parameter with a default, so a caller
+   * deriving it from a layout can hand over `0`, a fraction or a negative, and the answer must stay
+   * an integer inside the meter — a meter with no segments cannot have one of them lit.
+   */
+  it("never reports more filled bars than the meter has", () => {
+    for (const bars of [0, -4, -1, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+      for (const value of [null, 0, 10, 40, 70, 95]) {
+        const filled = signalBars(value, bars);
+        expect(Number.isInteger(filled), `signalBars(${String(value)}, ${String(bars)}) = ${filled}`).toBe(true);
+        expect(filled).toBe(0);
+      }
+    }
+  });
+
+  it("floors a fractional meter and stays inside it", () => {
+    // 2.5 bars is 2 bars: the half is not a segment anything can fill.
+    expect(signalBars(95, 2.5)).toBe(2);
+    expect(signalBars(70, 2.5)).toBe(2);
+    expect(signalBars(10, 2.5)).toBe(1);
+    for (const bars of [1, 2, 3, 4, 5, 7, 10]) {
+      for (const value of [0, 1, 25, 26, 50, 51, 80, 81, 100]) {
+        const filled = signalBars(value, bars);
+        expect(filled).toBeGreaterThanOrEqual(0);
+        expect(filled).toBeLessThanOrEqual(bars);
+        expect(Number.isInteger(filled)).toBe(true);
+      }
+    }
+  });
+
+  it("lights exactly one bar on a single-bar meter for any reported signal", () => {
+    expect(signalBars(1, 1)).toBe(1);
+    expect(signalBars(100, 1)).toBe(1);
+    expect(signalBars(0, 1)).toBe(0);
+    expect(signalBars(null, 1)).toBe(0);
+  });
 });
 
 describe("formatLastSeen", () => {
@@ -336,6 +373,31 @@ describe("telemetry", () => {
     expect(formatTelemetryValue({ value: 72 })).toBe("72");
     expect(formatTelemetryValue({ value: 23.456, unit: "°C" }, { precision: 1 })).toBe("23.5 °C");
     expect(formatTelemetryValue({ value: 23.456 }, { precision: 0 })).toBe("23");
+  });
+
+  /**
+   * `toFixed` throws a `RangeError` outside 0–100, and this formatter is called from `SensorReading`'s
+   * render. An out-of-range `precision` must not be the thing that takes a device screen down — the
+   * one function whose entire purpose is refusing to print a misleading number should not be able to
+   * throw instead of printing.
+   */
+  it("clamps precision rather than throwing", () => {
+    for (const precision of [101, 500, Number.POSITIVE_INFINITY, -1, -50, Number.NEGATIVE_INFINITY]) {
+      expect(() => formatTelemetryValue({ value: 23.456, unit: "°C" }, { precision }), `precision ${String(precision)}`).not.toThrow();
+    }
+    // Clamped to the ends of the legal range, not silently dropped.
+    expect(formatTelemetryValue({ value: 23.456 }, { precision: -1 })).toBe("23");
+    expect(formatTelemetryValue({ value: 23.456 }, { precision: 101 })).toBe(
+      formatTelemetryValue({ value: 23.456 }, { precision: 100 }),
+    );
+    // A fractional precision truncates toward zero.
+    expect(formatTelemetryValue({ value: 23.456 }, { precision: 1.9 })).toBe("23.5");
+  });
+
+  /** A non-finite precision is not a precision, so the value prints as given rather than as an integer. */
+  it("treats a non-finite precision as absent", () => {
+    expect(formatTelemetryValue({ value: 23.456 }, { precision: Number.NaN })).toBe("23.456");
+    expect(formatTelemetryValue({ value: 23.456 })).toBe("23.456");
   });
 
   /** The bug this module exists for: a missing reading rendered as a confident number. */

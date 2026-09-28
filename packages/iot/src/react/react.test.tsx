@@ -240,6 +240,19 @@ describe("SensorReading", () => {
   });
 });
 
+/**
+ * What axe does and does not protect here, because "0 axe violations" is easy to over-read.
+ *
+ * axe covers accessible names, ARIA validity and roles — real coverage, and the reason an empty
+ * `aria-label` on a `role="img"` is caught. It does **not** cover colour-independence: a `<span>` whose
+ * only distinguishing feature is its background class is not an axe violation, because axe cannot know
+ * the colour was carrying meaning.
+ *
+ * So the guarantee that a device's state is readable without colour rests on the explicit text
+ * assertions in "status is never conveyed by colour alone", not on this block. Verified by removing the
+ * badge's status text: nineteen text assertions fail and axe stays silent. If those assertions are ever
+ * weakened, axe will not catch the regression.
+ */
 describe("accessibility (axe)", () => {
   const cases: [string, React.ReactElement][] = [
     ["status badge, every state", <>{["online", "offline", "stale", "syncing", "pairing", "updating", "warning", "error", "disabled"].map((s) => <DeviceStatusBadge key={s} status={s} />)}</>],
@@ -255,6 +268,121 @@ describe("accessibility (axe)", () => {
       expect(await axeViolations(container)).toEqual([]);
     });
   }
+});
+
+describe("a blank label never removes the accessible name", () => {
+  /**
+   * `label` exists for translation, and the way translation fails is an empty string: a missing i18n
+   * key returns `""` from most libraries. Nullish coalescing let that through, so the prop added to
+   * make these primitives translatable was also the one way to get a status badge with no words in
+   * it — colour-only — and a `role="img"` with an empty accessible name.
+   *
+   * Asserted for every primitive that takes a label, and for whitespace as well as empty, because
+   * `" "` names nothing either.
+   */
+  for (const blank of ["", "   ", "\n\t"]) {
+    const shown = JSON.stringify(blank);
+
+    it(`status badge keeps its status text when label is ${shown}`, () => {
+      render(<DeviceStatusBadge status="error" label={blank} data-testid="badge" />);
+      expect(screen.getByTestId("badge")).toHaveTextContent("Error");
+    });
+
+    it(`battery keeps its accessible name when label is ${shown}`, () => {
+      render(<BatteryIndicator value={72} label={blank} />);
+      expect(screen.getByRole("img")).toHaveAccessibleName("Battery 72%, high");
+    });
+
+    it(`signal keeps its accessible name when label is ${shown}`, () => {
+      render(<SignalStrength value={84} label={blank} />);
+      expect(screen.getByRole("img")).toHaveAccessibleName("Signal 84%, excellent");
+    });
+
+    it(`last sync keeps its accessible name when label is ${shown}`, () => {
+      render(<LastSync value={at(-5 * 60_000)} now={NOW} label={blank} data-testid="sync" />);
+      expect(screen.getByTestId("sync")).toHaveAccessibleName("Last seen 5 minutes ago");
+    });
+  }
+
+  /** A real label still wins, untrimmed — replacing the text is the prop's actual job. */
+  it("passes a supplied label through unchanged", () => {
+    render(<DeviceStatusBadge status="online" label=" En ligne " data-testid="badge" />);
+    expect(screen.getByTestId("badge")).toHaveTextContent("En ligne");
+    render(<BatteryIndicator value={72} label="Batterie 72 %" />);
+    expect(screen.getByRole("img")).toHaveAccessibleName("Batterie 72 %");
+  });
+});
+
+describe("status is never conveyed by colour alone", () => {
+  /**
+   * The hard requirement for this module: a device's state has to be readable with styling discarded.
+   * Every status, asserted as text rather than as a class name — `data-status` is a styling hook and
+   * proves nothing about what a person can read.
+   */
+  const STATUS_TEXT: Record<string, string> = {
+    online: "Online",
+    offline: "Offline",
+    stale: "Data is stale",
+    syncing: "Syncing",
+    pairing: "Pairing",
+    updating: "Updating",
+    warning: "Needs attention",
+    error: "Error",
+    disabled: "Disabled",
+  };
+
+  for (const [status, text] of Object.entries(STATUS_TEXT)) {
+    it(`${status} reads as "${text}"`, () => {
+      render(<DeviceStatusBadge status={status} data-testid="badge" />);
+      const badge = screen.getByTestId("badge");
+      expect(badge).toHaveTextContent(text);
+      // Non-empty with every class removed: the words survive losing the stylesheet entirely.
+      badge.className = "";
+      expect(badge.textContent?.trim().length).toBeGreaterThan(0);
+    });
+  }
+
+  it("distinguishes all nine statuses by text, not just by colour", () => {
+    const rendered = new Set<string>();
+    for (const status of Object.keys(STATUS_TEXT)) {
+      const { container, unmount } = render(<DeviceStatusBadge status={status} />);
+      rendered.add(container.textContent?.trim() ?? "");
+      unmount();
+    }
+    // Nine distinct strings: no two states are told apart by appearance alone.
+    expect(rendered.size).toBe(Object.keys(STATUS_TEXT).length);
+  });
+
+  /** The unknown states too — "we do not know" is a reading a person has to be able to get. */
+  it("states unknown readings in words", () => {
+    render(
+      <>
+        <BatteryIndicator value={null} />
+        <SignalStrength value={null} />
+      </>,
+    );
+    const [battery, signal] = screen.getAllByRole("img");
+    expect(battery).toHaveAccessibleName("Battery level unknown");
+    expect(signal).toHaveAccessibleName("Signal strength unknown");
+    render(<LastSync value={null} now={NOW} data-testid="never" />);
+    expect(screen.getByTestId("never")).toHaveAccessibleName("Never seen");
+    render(<SensorReading metric="Soil" value={null} quality="missing" data-testid="missing" />);
+    expect(screen.getByTestId("missing")).toHaveTextContent("No reading");
+  });
+});
+
+describe("SensorReading precision", () => {
+  /**
+   * `precision` reaches `toFixed`, which throws outside 0–100. A component that throws during render
+   * takes the whole tree with it, so the clamp is asserted here as well as in the formatter: this is
+   * the call site that made it matter.
+   */
+  it("does not throw on an out-of-range precision", () => {
+    for (const precision of [101, 1000, Number.POSITIVE_INFINITY, -5]) {
+      expect(() => render(<SensorReading metric="T" value={23.456} unit="°C" precision={precision} />)).not.toThrow();
+      cleanup();
+    }
+  });
 });
 
 describe("reduced motion", () => {
