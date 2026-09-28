@@ -167,12 +167,12 @@ export function DeviceShowcase() {
             onChange={(e) => setBattery(Number(e.target.value))}
             className={rangeClass}
           />
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          <label className="flex min-h-6 cursor-pointer items-center gap-2 py-1 text-xs text-muted-foreground">
             <input
               type="checkbox"
               checked={!batteryReported}
               onChange={(e) => setBatteryReported(!e.target.checked)}
-              className="size-3.5 accent-primary"
+              className="size-4 accent-primary"
             />
             Device reports no battery
           </label>
@@ -190,12 +190,12 @@ export function DeviceShowcase() {
             onChange={(e) => setSignal(Number(e.target.value))}
             className={rangeClass}
           />
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          <label className="flex min-h-6 cursor-pointer items-center gap-2 py-1 text-xs text-muted-foreground">
             <input
               type="checkbox"
               checked={!signalReported}
               onChange={(e) => setSignalReported(!e.target.checked)}
-              className="size-3.5 accent-primary"
+              className="size-4 accent-primary"
             />
             Device reports no signal
           </label>

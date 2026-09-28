@@ -26,6 +26,7 @@ export {
   normalizeFirmwareVersion,
   resolveFirmwareStatus,
 } from "./firmware";
+export { compareDeviceAttention, summarizeDevices, type KinetixDeviceSummary } from "./group";
 export { describeLastSeen, formatLastSeen, millisecondsSince, type FormatLastSeenOptions } from "./last-seen";
 export {
   describePairingStatus,
@@ -40,9 +41,13 @@ export { clampSignalStrength, classifySignalStrength, describeSignal, formatSign
 export { describeDeviceStatus, isKnownDeviceStatus, needsAttention, normalizeDeviceStatus } from "./status";
 export {
   classifyTelemetryQuality,
+  describeTelemetryQuality,
   detectStaleReading,
   formatTelemetryValue,
   latestPoint,
+  sortTelemetryPoints,
+  telemetryExtent,
   type FormatTelemetryOptions,
+  type KinetixTelemetryExtent,
 } from "./telemetry";
 export { parseTimestamp, resolveNow } from "./time";

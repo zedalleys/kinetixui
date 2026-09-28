@@ -308,11 +308,30 @@ describe("the IoT module is described as what it is", () => {
     dependencies?: Record<string, string>;
   };
 
-  /** The IoT-facing surfaces, in present tense. The landing page and the reference. */
+  /**
+   * The IoT-facing surfaces, in present tense: the landing page, the reference, and every composition
+   * the site renders.
+   *
+   * The examples are in here for the same reason the page is. A dashboard is the most persuasive
+   * surface on the site and therefore the easiest place for a claim to appear that the package cannot
+   * honour — a device that looks discovered, a control that looks connected, a protocol named as
+   * though it shipped. A guard that stopped at the page would police the prose and leave the
+   * demonstration unpoliced.
+   */
   const IOT_SURFACES = {
     "app/iot/page.tsx": readFileSync("src/app/iot/page.tsx", "utf8"),
     "components/iot/module-boundary.tsx": readFileSync("src/components/iot/module-boundary.tsx", "utf8"),
     "components/iot/device-showcase.tsx": readFileSync("src/components/iot/device-showcase.tsx", "utf8"),
+    "components/iot/hero-devices.tsx": readFileSync("src/components/iot/hero-devices.tsx", "utf8"),
+    "components/iot/example-showcase.tsx": readFileSync("src/components/iot/example-showcase.tsx", "utf8"),
+    "examples/iot/demo-fleet.ts": readFileSync("src/examples/iot/demo-fleet.ts", "utf8"),
+    "examples/iot/device-dashboard.tsx": readFileSync("src/examples/iot/device-dashboard.tsx", "utf8"),
+    "examples/iot/device-fleet.tsx": readFileSync("src/examples/iot/device-fleet.tsx", "utf8"),
+    "examples/iot/device-detail.tsx": readFileSync("src/examples/iot/device-detail.tsx", "utf8"),
+    "examples/iot/telemetry-board.tsx": readFileSync("src/examples/iot/telemetry-board.tsx", "utf8"),
+    "examples/iot/connection-troubleshooting.tsx": readFileSync("src/examples/iot/connection-troubleshooting.tsx", "utf8"),
+    "examples/iot/alert-inbox.tsx": readFileSync("src/examples/iot/alert-inbox.tsx", "utf8"),
+    "lib/iot-examples.ts": readFileSync("src/lib/iot-examples.ts", "utf8"),
     "docs/iot": readFileSync("src/app/docs/iot/page.mdx", "utf8"),
   } as const;
 
@@ -441,6 +460,67 @@ describe("the IoT module is described as what it is", () => {
       expect(primitives.map((p) => p.toLowerCase())).not.toContain(slug.replace(/-/g, ""));
     }
     expect(manifest.platformDefinitions, "IoT must not be a platform in the manifest").not.toHaveProperty("IoT");
+  });
+
+  /**
+   * The patterns are a second way to inflate the catalogue, and a more tempting one: nine components
+   * is a number somebody will eventually want to add to 98.
+   */
+  it("never counts IoT patterns in the component catalogue either", () => {
+    const patterns = [
+      "DeviceCard",
+      "DeviceListItem",
+      "DeviceStateSummary",
+      "TelemetryTrend",
+      "TelemetryCard",
+      "ConnectionHealth",
+      "AlertCard",
+      "CommandStatus",
+      "FirmwareStatus",
+    ];
+    for (const slug of Object.keys(manifest.components)) {
+      expect(patterns.map((p) => p.toLowerCase())).not.toContain(slug.replace(/-/g, ""));
+    }
+  });
+
+  /**
+   * And a third: the examples are not Blocks. A published Block carries every platform, which this
+   * React-only module cannot do, so an IoT composition appearing in `blocks.manifest.json` would
+   * either be lying about four platforms or sitting in the `draft` status the site never renders.
+   */
+  it("never lets an IoT example into the Blocks catalogue", () => {
+    const blocks = JSON.parse(read("blocks.manifest.json")) as {
+      blocks: Record<string, { sources: Record<string, string> }>;
+    };
+    for (const [slug, block] of Object.entries(blocks.blocks)) {
+      for (const [platform, path] of Object.entries(block.sources)) {
+        expect(path, `block ${slug} (${platform}) points into the IoT examples directory`).not.toMatch(
+          /examples\/iot\//,
+        );
+      }
+    }
+    const iotManifestRaw = JSON.parse(read("iot-examples.manifest.json")) as {
+      examples: Record<string, unknown>;
+    };
+    // Both catalogues exist and neither is empty, so the loop above is not passing by having nothing
+    // to iterate.
+    expect(Object.keys(blocks.blocks).length).toBeGreaterThan(0);
+    expect(Object.keys(iotManifestRaw.examples).length).toBeGreaterThan(0);
+  });
+
+  /**
+   * The dashboard is the most persuasive surface on the site, so it carries the strongest obligation
+   * to say what it is. A reader who believes the controls reach a device has been misled by the page,
+   * not by the package.
+   */
+  it("says the showcase controls are demonstration state", () => {
+    const dashboard = IOT_SURFACES["examples/iot/device-dashboard.tsx"];
+    expect(dashboard, "the dashboard must state that its controls are local demo state").toMatch(
+      /LOCAL DEMO STATE|local demo state/,
+    );
+    expect(dashboard, "and that nothing reaches a device").toMatch(/no transport|nothing here reaches a device/i);
+    const page = IOT_SURFACES["app/iot/page.tsx"];
+    expect(page, "the page must say the same beside the showcase").toMatch(/local demo state|demo state only/i);
   });
 
   /* ---- the two ways to undersell it, now that it has shipped ---- */

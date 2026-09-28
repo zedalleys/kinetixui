@@ -10,9 +10,10 @@ import {
 } from "@kinetixui/iot/react";
 import { Button } from "@kinetixui/ui";
 import { CodeSample } from "@/components/iot/code-sample";
-import { DeviceCard } from "@/components/iot/device-card";
 import { DeviceShowcase } from "@/components/iot/device-showcase";
+import { HeroDevices } from "@/components/iot/hero-devices";
 import { InstallCommand } from "@/components/iot/install-command";
+import { IotExample } from "@/components/iot/iot-example";
 import { ModuleBoundary } from "@/components/iot/module-boundary";
 import { Reveal } from "@/components/reveal";
 import { SectionHead } from "@/components/section-head";
@@ -25,6 +26,7 @@ import {
   IOT_REACT_PEER,
   IOT_VERSION,
 } from "@/lib/iot";
+import { IOT_EXAMPLES } from "@/lib/iot-examples";
 import { canonical } from "@/lib/seo";
 
 /**
@@ -150,8 +152,7 @@ const ROADMAP: readonly { when: string; state: "now" | "planned"; items: readonl
 
 export default function IotPage() {
   return (
-    <div className="flex flex-col">
-      {/* ─── hero ──────────────────────────────────────────────────────── */}
+    <div className="flex flex-col">      {/* ─── hero ──────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-border">
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
           <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-16">
@@ -187,16 +188,41 @@ export default function IotPage() {
               </div>
             </div>
 
-            <DeviceCard />
+            <HeroDevices />
           </div>
         </div>
       </section>
+      {/* ─── live product showcase ─────────────────────────────────────── */}
+      <section className="border-b border-border bg-muted/20">
+        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+          <Reveal>
+            <SectionHead index="01" label="Live showcase" meta="demo state only" />
+            <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
+              A device dashboard, built from the package.
+            </h2>
+            <p className="mt-4 max-w-2xl text-muted-foreground">
+              Not a screenshot and not a mockup: every card, reading, badge and plot below is a component from{" "}
+              <code className="font-mono text-[0.9em] text-foreground">{IOT_PACKAGE}</code>, rendering the same
+              props your app would pass. Switch to <strong className="font-medium text-foreground">Code</strong>{" "}
+              and you are reading the file that drew it.
+            </p>
+            <p className="mt-4 max-w-2xl text-sm text-muted-foreground">
+              The controls change local demo state and nothing else. There is no device, no broker and no
+              request — this module ships no transport, so a showcase that implied one would be advertising a
+              capability it does not have.
+            </p>
+          </Reveal>
 
+          <Reveal className="mt-10">
+            <IotExample slug="device-dashboard" />
+          </Reveal>
+        </div>
+      </section>
       {/* ─── what ships today ──────────────────────────────────────────── */}
       <section className="border-b border-border bg-muted/20">
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
           <Reveal>
-            <SectionHead index="01" label="What ships today" meta={IOT_VERSION} />
+            <SectionHead index="02" label="What ships today" meta={IOT_VERSION} />
             <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
               Two layers. The useful half has nothing to do with rendering.
             </h2>
@@ -268,32 +294,41 @@ normalizeDeviceStatus("ONLINE"); // "online"`}
           </div>
         </div>
       </section>
-
-      {/* ─── interactive showcase ──────────────────────────────────────── */}
+      {/* ─── reusable patterns ─────────────────────────────────────────── */}
       <section className="border-b border-border">
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
           <Reveal>
-            <SectionHead index="02" label="Try the primitives" meta="live" />
+            <SectionHead index="03" label="Patterns" meta={`${IOT_EXAMPLES.length} compositions`} />
             <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-              Move a control, watch what the reading says.
+              The arrangements every device product rebuilds.
             </h2>
             <p className="mt-4 max-w-2xl text-muted-foreground">
-              These are the shipped components with their real props. Set a battery nobody reported, drag a
-              reading three days into the past, tell the sensor it errored — the point is what the interface says
-              when the data is imperfect.
+              A fleet overview, a device detail panel, a telemetry board, a troubleshooting grid, an alert inbox.
+              Each is assembled from the patterns above, and each preview is the file its code tab shows —{" "}
+              <code className="font-mono text-[0.9em] text-foreground">pnpm gen:iot-examples</code> extracts one
+              from the other, so the two cannot drift.
+            </p>
+            <p className="mt-4 max-w-2xl text-sm text-muted-foreground">
+              These are React examples, not catalogue Blocks. A published KinetixUI Block carries all five
+              platforms; this module is React-only, so its compositions live in their own layer rather than
+              claiming a coverage that does not exist.
             </p>
           </Reveal>
-          <Reveal className="mt-10">
-            <DeviceShowcase />
-          </Reveal>
+
+          <div className="mt-10 flex flex-col gap-8">
+            {IOT_EXAMPLES.filter((example) => example.slug !== "device-dashboard").map((example) => (
+              <Reveal key={example.slug}>
+                <IotExample slug={example.slug} />
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
-
       {/* ─── "we do not know" survives ─────────────────────────────────── */}
       <section className="border-b border-border bg-muted/20">
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
           <Reveal>
-            <SectionHead index="03" label="Missing data" meta="the rule" />
+            <SectionHead index="04" label="Missing data" meta="the rule" />
             <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
               &ldquo;We do not know&rdquo; survives.
             </h2>
@@ -357,73 +392,31 @@ normalizeDeviceStatus("ONLINE"); // "online"`}
           </Reveal>
         </div>
       </section>
-
-      {/* ─── accessible device states ──────────────────────────────────── */}
+      {/* ─── interactive showcase ──────────────────────────────────────── */}
       <section className="border-b border-border">
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
-            <Reveal>
-              <SectionHead index="04" label="Accessible device states" />
-              <h2 className="mt-6 max-w-xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-                A green dot is not a device state.
-              </h2>
-              <p className="mt-4 max-w-xl text-muted-foreground">
-                Device dashboards lean on colour harder than almost any other interface — and colour is the one
-                channel that disappears in greyscale, in forced-colors mode, and for a screen reader. Every
-                primitive here renders its fact as text, and colour is only ever a second encoding of something
-                already written down.
-              </p>
-              <p className="mt-4 max-w-xl text-sm text-muted-foreground">
-                Where a visual shorthand is used — a battery bar, a signal meter,{" "}
-                <code className="text-foreground">5m ago</code> — the visuals are hidden from assistive
-                technology and the full sentence is the accessible name. Nothing is announced twice, and nothing
-                is announced only as an abbreviation.
-              </p>
-            </Reveal>
-
-            <Reveal>
-              <div className="rounded-xl border border-border bg-card p-5 sm:p-6">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  What assistive technology receives
-                </p>
-                <dl className="mt-4 grid gap-3">
-                  {[
-                    { el: <DeviceStatusBadge status="online" />, said: "Online" },
-                    { el: <BatteryIndicator value={72} />, said: "Battery 72%, high" },
-                    { el: <SignalStrength value={84} />, said: "Signal 84%, excellent" },
-                    { el: <LastSync value={FIVE_MINUTES_AGO} now={NOW} />, said: "Last seen 5 minutes ago" },
-                    {
-                      el: <SensorReading metric="Temperature" value={23.4} unit="°C" precision={1} />,
-                      said: "Temperature 23.4 °C",
-                    },
-                  ].map((r) => (
-                    <div
-                      key={r.said}
-                      className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-border pb-3 last:border-b-0 last:pb-0"
-                    >
-                      <dt className="flex items-center">{r.el}</dt>
-                      <dd className="font-mono text-xs text-muted-foreground">{r.said}</dd>
-                    </div>
-                  ))}
-                </dl>
-                <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-                  Missing values are stated rather than implied —{" "}
-                  <span className="text-foreground">Battery level unknown</span>,{" "}
-                  <span className="text-foreground">Never seen</span>. No primitive animates, so there is
-                  nothing for <code className="text-foreground">prefers-reduced-motion</code> to suppress.
-                </p>
-              </div>
-            </Reveal>
-          </div>
+          <Reveal>
+            <SectionHead index="05" label="Try the primitives" meta="live" />
+            <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
+              Move a control, watch what the reading says.
+            </h2>
+            <p className="mt-4 max-w-2xl text-muted-foreground">
+              These are the shipped components with their real props. Set a battery nobody reported, drag a
+              reading three days into the past, tell the sensor it errored — the point is what the interface says
+              when the data is imperfect.
+            </p>
+          </Reveal>
+          <Reveal className="mt-10">
+            <DeviceShowcase />
+          </Reveal>
         </div>
       </section>
-
       {/* ─── architecture / bring your own connection ──────────────────── */}
       <section className="border-b border-border bg-muted/20">
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
             <Reveal>
-              <SectionHead index="05" label="Where the module sits" />
+              <SectionHead index="06" label="Where the module sits" />
               <h2 className="mt-6 max-w-xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
                 Bring your own connection.
               </h2>
@@ -455,12 +448,11 @@ normalizeDeviceStatus("ONLINE"); // "online"`}
           </div>
         </div>
       </section>
-
       {/* ─── install ───────────────────────────────────────────────────── */}
       <section className="border-b border-border">
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
           <Reveal>
-            <SectionHead index="06" label="Install" meta={IOT_PACKAGE} />
+            <SectionHead index="07" label="Install" meta={IOT_PACKAGE} />
             <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
               One package, {IOT_ENTRY_POINTS.length} entry points.
             </h2>
@@ -527,12 +519,70 @@ import { SensorReading, formatLastSeen } from "${IOT_PACKAGE}";`}
           </div>
         </div>
       </section>
+      {/* ─── accessible device states ──────────────────────────────────── */}
+      <section className="border-b border-border">
+        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
+            <Reveal>
+              <SectionHead index="08" label="Accessible device states" />
+              <h2 className="mt-6 max-w-xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
+                A green dot is not a device state.
+              </h2>
+              <p className="mt-4 max-w-xl text-muted-foreground">
+                Device dashboards lean on colour harder than almost any other interface — and colour is the one
+                channel that disappears in greyscale, in forced-colors mode, and for a screen reader. Every
+                primitive here renders its fact as text, and colour is only ever a second encoding of something
+                already written down.
+              </p>
+              <p className="mt-4 max-w-xl text-sm text-muted-foreground">
+                Where a visual shorthand is used — a battery bar, a signal meter,{" "}
+                <code className="text-foreground">5m ago</code> — the visuals are hidden from assistive
+                technology and the full sentence is the accessible name. Nothing is announced twice, and nothing
+                is announced only as an abbreviation.
+              </p>
+            </Reveal>
 
+            <Reveal>
+              <div className="rounded-xl border border-border bg-card p-5 sm:p-6">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  What assistive technology receives
+                </p>
+                <dl className="mt-4 grid gap-3">
+                  {[
+                    { el: <DeviceStatusBadge status="online" />, said: "Online" },
+                    { el: <BatteryIndicator value={72} />, said: "Battery 72%, high" },
+                    { el: <SignalStrength value={84} />, said: "Signal 84%, excellent" },
+                    { el: <LastSync value={FIVE_MINUTES_AGO} now={NOW} />, said: "Last seen 5 minutes ago" },
+                    {
+                      el: <SensorReading metric="Temperature" value={23.4} unit="°C" precision={1} />,
+                      said: "Temperature 23.4 °C",
+                    },
+                  ].map((r) => (
+                    <div
+                      key={r.said}
+                      className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-border pb-3 last:border-b-0 last:pb-0"
+                    >
+                      <dt className="flex items-center">{r.el}</dt>
+                      <dd className="font-mono text-xs text-muted-foreground">{r.said}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+                  Missing values are stated rather than implied —{" "}
+                  <span className="text-foreground">Battery level unknown</span>,{" "}
+                  <span className="text-foreground">Never seen</span>. No primitive animates, so there is
+                  nothing for <code className="text-foreground">prefers-reduced-motion</code> to suppress.
+                </p>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
       {/* ─── roadmap ───────────────────────────────────────────────────── */}
       <section className="border-b border-border bg-muted/20">
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
           <Reveal>
-            <SectionHead index="07" label="Roadmap" meta="no dates" />
+            <SectionHead index="09" label="Roadmap" meta="no dates" />
             <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
               What exists, and what is only intended.
             </h2>
@@ -570,12 +620,11 @@ import { SensorReading, formatLastSeen } from "${IOT_PACKAGE}";`}
           </Reveal>
         </div>
       </section>
-
       {/* ─── closer ────────────────────────────────────────────────────── */}
       <section>
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 md:py-28 lg:px-8">
           <Reveal className="max-w-3xl">
-            <SectionHead index="08" label="Next" />
+            <SectionHead index="10" label="Next" />
             <h2 className="mt-6 text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-5xl">
               The reference, the models, and every prop.
             </h2>

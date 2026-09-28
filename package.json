@@ -60,6 +60,8 @@
     "test:angular": "pnpm --filter @kinetixui/angular test",
     "gen:blocks": "node scripts/gen-block-examples.mjs",
     "check:blocks": "node scripts/gen-block-examples.mjs --check",
+    "gen:iot-examples": "node scripts/gen-iot-examples.mjs",
+    "check:iot-examples": "node scripts/gen-iot-examples.mjs --check",
     "check:block-source": "node scripts/check-block-source.mjs",
     "gen:usage": "node scripts/gen-usage-examples.mjs",
     "check:usage": "node scripts/gen-usage-examples.mjs --check",

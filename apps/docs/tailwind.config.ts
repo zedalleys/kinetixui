@@ -6,5 +6,6 @@ export default {
   content: [
     "./.storybook/**/*.{ts,tsx}",
     "../../packages/ui/src/**/*.{ts,tsx}",
+    "../../packages/iot/src/**/*.{ts,tsx}",
   ],
 } satisfies Config;
