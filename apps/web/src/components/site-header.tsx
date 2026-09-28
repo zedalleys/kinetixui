@@ -53,7 +53,11 @@ export function SiteHeader() {
               key={item.href}
               href={item.href}
               className={cn(
-                "group relative flex items-center gap-2 px-3 font-medium transition-colors lg:px-4",
+                // px-2 at md, not px-3: the bar shows every primary nav item from 768px up, and at exactly that
+                // width eight items at px-3 overflowed the viewport by 12px — which showed up as sideways scroll
+                // on every page, since this header is shared. Tightening the gutter one step at md buys 64px
+                // across the bar and leaves the roomier lg spacing untouched.
+                "group relative flex items-center gap-2 px-2 font-medium transition-colors lg:px-4",
                 active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
