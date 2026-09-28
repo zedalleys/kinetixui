@@ -40,6 +40,8 @@
     "build:registry": "node scripts/gen-registry.mjs && shadcn build registry/registry.json --output apps/web/public/r && node scripts/rewrite-schema.mjs && node scripts/gen-registry-index.mjs && node scripts/gen-component-specs.mjs",
     "build:ui": "pnpm --filter @kinetixui/ui build",
     "build:cli": "pnpm --filter @kinetixui/cli build",
+    "build:iot": "pnpm --filter @kinetixui/iot build",
+    "check:iot-dist": "node scripts/check-iot-dist.mjs",
     "storybook": "pnpm --filter @kinetixui/docs storybook",
     "build-storybook": "pnpm --filter @kinetixui/docs build-storybook",
     "dev:web": "pnpm --filter @kinetixui/web dev",

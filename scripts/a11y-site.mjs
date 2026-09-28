@@ -39,6 +39,9 @@ const PAGES = [
   "/docs/cli",
   "/docs/changelog",
   "/docs/angular",
+  // The IoT module's page, added with the module. `/docs/angular` is the precedent: a module that ships
+  // a docs page brings the page into this sweep, or the page is the one part of the site nothing checks.
+  "/docs/iot",
   "/docs/components/button",
   "/docs/components/data-grid",
 ];
