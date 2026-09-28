@@ -50,6 +50,12 @@ export const FIXTURE_DESIGN: PresetConfig = {
   brand: "#c2410c",
   neutral: "warm",
   chartPalette: "warm",
+  // Radius and surface are moved off their defaults deliberately. A design that leaves them alone
+  // exports `KinetixRadii.default` / `KinetixElevations.default`, which compiles without ever
+  // type-checking a generated `KinetixRadii(field:…)` or `KinetixShadowLayer(…)` — so the fixture
+  // would prove nothing about the two things this exporter learned to write.
+  radius: "soft",
+  surface: "elevated",
 };
 
 const FIXTURE_SYMBOL = "CreateThemeFixture";

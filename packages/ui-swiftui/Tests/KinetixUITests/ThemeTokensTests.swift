@@ -164,3 +164,40 @@ final class ThemeTokensTests: XCTestCase {
         XCTAssertEqual(values.kinetixColors.background, KinetixColors.dark.background)
     }
 }
+
+/// The generated theme, compiled.
+///
+/// `Generated/CreateThemeFixture.swift` is written by `kinetixui preset swiftui` and committed so the
+/// macOS runner type-checks it — `ContrastTests` then runs WCAG AA over its colours. These cover the
+/// other two thirds: that the exporter's radii and elevation are values this package's initializers
+/// actually accept, and that the four-argument `KinetixTheme` the generated header recommends is real.
+///
+/// Nothing here asserts a number. The compiler is the assertion — a generated `KinetixRadii(field:…)`
+/// whose labels or types drifted would fail the build, which is the failure worth catching, and it
+/// would fail here rather than in someone's app.
+final class GeneratedThemeTests: XCTestCase {
+    func testGeneratedRadiiAndElevationsAreTheRealTypes() {
+        let radii: KinetixRadii = CreateThemeFixture.radii
+        let elevations: KinetixElevations = CreateThemeFixture.elevations
+        XCTAssertGreaterThan(radii.surface, 0, "the fixture design softens its corners")
+        XCTAssertFalse(elevations.sm.layers.isEmpty, "the fixture design raises its surfaces")
+    }
+
+    /// The exact call the generated file's own header tells the reader to write.
+    func testTheSuggestedInitializerCompiles() {
+        _ = KinetixTheme(
+            light: CreateThemeFixture.light,
+            dark: CreateThemeFixture.dark,
+            radii: CreateThemeFixture.radii,
+            elevations: CreateThemeFixture.elevations
+        ) {
+            EmptyView()
+        }
+    }
+
+    /// A generated theme is still a theme: every layer has to survive the modifier that applies it.
+    func testGeneratedElevationApplies() {
+        _ = EmptyView().kinetixElevation(CreateThemeFixture.elevations.lg)
+        _ = EmptyView().kinetixRadii(CreateThemeFixture.radii)
+    }
+}

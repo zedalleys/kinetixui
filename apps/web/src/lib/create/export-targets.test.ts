@@ -90,14 +90,17 @@ describe("the four targets", () => {
   });
 
   /**
-   * Radius and surface are web-only on every native target, because no native package has a runtime
-   * token for either. The UI has to keep saying so — a capability line that stopped mentioning it
-   * would be the first step to implying native themes carry more than they do.
+   * The capability lines have to track which platforms actually carry radius and surface, and that is
+   * no longer one answer. Compose and Flutter have no runtime token for either; SwiftUI does, and the
+   * exporter writes it. A line that still said "not runtime-themeable" for SwiftUI would undersell the
+   * export as badly as the old copy oversold the others.
    */
-  it("tell the truth about radius and surface on native targets", () => {
-    for (const id of ["swiftui", "compose", "flutter"] as const) {
+  it("tell the truth about radius and surface, which now differs by platform", () => {
+    for (const id of ["compose", "flutter"] as const) {
       expect(TARGETS[id].capability, id).toMatch(/not runtime-themeable/i);
     }
+    expect(TARGETS.swiftui.capability).not.toMatch(/not runtime-themeable/i);
+    expect(TARGETS.swiftui.capability, "SwiftUI carries them, and says what it does not").toMatch(/spread/i);
     expect(TARGETS["web-css"].capability).toMatch(/radius and surface/i);
   });
 
@@ -163,24 +166,34 @@ describe("a design change reaches every supported output", () => {
       .filter((line) => !line.trim().startsWith("//"))
       .join("\n");
 
-  it("radius changes the CSS, and reaches native output only as an explanation", () => {
+  /**
+   * Radius is no longer uniform across the native targets, and that asymmetry is the truth worth
+   * pinning. SwiftUI has `KinetixRadii` and the exporter writes it, so a radius change moves real
+   * declarations. Compose and Flutter read generated constants with no runtime theme, so their
+   * output still changes only in the header that names what was left behind.
+   */
+  it("radius reaches SwiftUI, and Compose and Flutter only as an explanation", () => {
     const changed = themeOf(cfg({ radius: "square" }));
     expect(out(changed, "web-css")).not.toBe(out(base, "web-css"));
-    for (const id of ["swiftui", "compose", "flutter"] as const) {
+
+    expect(declarations(out(changed, "swiftui"))).not.toBe(declarations(out(base, "swiftui")));
+    expect(out(changed, "swiftui")).toContain("KinetixRadii(");
+
+    for (const id of ["compose", "flutter"] as const) {
       expect(declarations(out(changed, id)), id).toBe(declarations(out(base, id)));
       expect(out(changed, id), id).toContain("square");
-      // Each exporter explains the limitation in its own package's terms, and the terms differ by
-      // more than wording now: Compose and Flutter have nowhere to put a radius, while SwiftUI has
-      // `KinetixRadii` and simply is not exported into it yet. So the shared assertion is the one
-      // thing all three still say — this design's radius is not in this file.
       expect(out(changed, id), id).toMatch(/not carried|apply on the web/i);
     }
   });
 
-  it("surface changes the CSS, and reaches native output only as an explanation", () => {
+  it("surface reaches SwiftUI, and Compose and Flutter only as an explanation", () => {
     const changed = themeOf(cfg({ surface: "elevated" }));
     expect(out(changed, "web-css")).not.toBe(out(base, "web-css"));
-    for (const id of ["swiftui", "compose", "flutter"] as const) {
+
+    expect(declarations(out(changed, "swiftui"))).not.toBe(declarations(out(base, "swiftui")));
+    expect(out(changed, "swiftui")).toContain("KinetixShadowLayer(");
+
+    for (const id of ["compose", "flutter"] as const) {
       expect(declarations(out(changed, id)), id).toBe(declarations(out(base, id)));
       expect(out(changed, id), id).toContain("elevated");
     }
