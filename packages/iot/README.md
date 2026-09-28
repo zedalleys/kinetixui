@@ -47,11 +47,13 @@ not even as a peer. Two reasons:
 **Nothing is imported at runtime.** The primitives style themselves with Tailwind utilities on the
 KinetixUI token contract (`bg-muted`, `text-label-md`). Those are class names, not imports.
 
-**A workspace peer would churn.** Changesets rewrites a peer dependency's range on every release of
-the package it points at, whether or not the existing range still fits — the behaviour that kept
-rewriting `@kinetixui/angular`'s token peer and had to be reverted by hand in 0.23.1 and 0.23.2.
-Declaring one here would sign this package up for the same recurring correction for no benefit it
-cannot get from a documented prerequisite.
+**A peer range would be a claim with nothing behind it.** A peer range says "bring me a
+`@kinetixui/tokens` in this range and I will work", and it has to be maintained as a claim: when the
+token version moves outside it, someone has to verify the package against the new contract and widen
+it deliberately (RELEASING.md → *Peer ranges across cohorts*). Nothing here imports the tokens
+package, so there is nothing to verify and no compatibility to claim — the range would only ever be a
+number to keep in step. A documented prerequisite says the same thing without pretending to be
+resolvable.
 
 So the prerequisite is stated instead of depended on. For the React primitives to look right, an app
 needs the KinetixUI token stylesheet loaded and this package inside its Tailwind `content`:

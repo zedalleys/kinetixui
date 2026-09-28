@@ -13,6 +13,7 @@
  */
 import { classify } from "./workspace.mjs";
 import { validateAllowlist, validatePublishMetadata } from "./contract.mjs";
+import { auditPeerCompatibility, plannedVersions } from "./peers.mjs";
 
 /**
  * @param {object} input
@@ -20,14 +21,38 @@ import { validateAllowlist, validatePublishMetadata } from "./contract.mjs";
  * @param {{name: string, version: string, directory: string, manifest: object}[]} input.packages
  * @param {string[]} [input.rootScriptNames]
  * @param {Map<string, {state: string, detail: string}>} [input.registryState] omitted = not consulted
+ * @param {{releases: {name: string, type: string}[]}[]} [input.pendingChangesets] parsed .changeset/*.md
+ * @param {object} [input.changesetConfig] parsed .changeset/config.json
  */
-export function buildPlan({ allowlistFile, packages, rootScriptNames = [], registryState = null }) {
+export function buildPlan({
+  allowlistFile,
+  packages,
+  rootScriptNames = [],
+  registryState = null,
+  pendingChangesets = [],
+  changesetConfig = {},
+}) {
   const errors = [];
   const allowlist = validateAllowlist(allowlistFile, rootScriptNames);
   errors.push(...allowlist.errors);
 
   const classified = classify(packages, allowlist.packages);
   errors.push(...classified.errors);
+
+  // What this release will publish, and whether every peer compatibility claim in the workspace still
+  // holds against it. This runs before `changeset version` does, on an ordinary pull request: a
+  // changeset that would move a package outside an independently versioned dependent's declared peer
+  // range fails here, where a human can decide what the new range should be, rather than being
+  // computed into the Version Packages PR. See peers.mjs.
+  const planned = plannedVersions({
+    packages,
+    changesets: pendingChangesets,
+    fixed: changesetConfig.fixed ?? [],
+    linked: changesetConfig.linked ?? [],
+    ignore: changesetConfig.ignore ?? [],
+  });
+  const peers = auditPeerCompatibility({ packages, allowlist: allowlist.packages, planned });
+  errors.push(...peers.errors);
 
   // Packages belong to release cohorts. A cohort marked `sameVersion` releases in lockstep — that
   // is the rule for `core` (@kinetixui/{tokens,ui,cli}), where a mismatch means a manifest was
@@ -114,6 +139,8 @@ export function buildPlan({ allowlistFile, packages, rootScriptNames = [], regis
     ok: errors.length === 0,
     errors,
     registryConsulted: Boolean(registryState),
+    /** Planned versions and every peer claim checked against them, for the report and the tests. */
+    peers: { planned: [...planned].map(([name, version]) => ({ name, version })).sort(byName), checked: peers.checked },
     cohorts,
     publish,
     alreadyPublished,
