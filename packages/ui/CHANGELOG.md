@@ -1,5 +1,11 @@
 # @kinetixui/ui
 
+## 0.23.2
+
+### Patch Changes
+
+- @kinetixui/tokens@0.23.2
+
 ## 0.23.1
 
 ### Patch Changes

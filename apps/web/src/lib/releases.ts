@@ -65,6 +65,36 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.23.2",
+    date: "2026-09-27",
+    summary:
+      "SwiftUI gains real corner-radius and elevation theming: KinetixRadii and KinetixElevations sit beside KinetixColors, and the components read them. The npm packages move for one reason — the CLI stops telling you that native radius has nowhere to go.",
+    breaking: [],
+    changes: [
+      {
+        kind: "new",
+        area: "platforms",
+        title: "SwiftUI corners and shadows are themeable",
+        body: "`KinetixColors` used to be the whole themeable surface: every corner radius and every shadow was a literal inside a view, so a design could not move them. `KinetixRadii` names four corners by the job they do — `field`, `control`, `container`, `surface` — and `KinetixElevations` is the `sm`/`md`/`lg`/`xl` ladder, each step an ordered list of shadow layers like Flutter's. 57 corners and 7 shadows across 31 components now read them, and `KinetixTheme(radii:elevations:)` sets them. Every existing call still compiles.",
+        href: "/docs/swiftui",
+      },
+      {
+        kind: "fixed",
+        area: "cli",
+        title: "`preset swiftui` stops blaming the platform for an exporter gap",
+        body: 'The generated file said corner radius and elevation had "no token to override" and that "there is nowhere for them to go yet". There is somewhere now — the exporter simply does not write it. The header says that instead, and tells the reader to set `radii:` and `elevations:` by hand in the meantime.',
+        href: "/docs/cli",
+      },
+    ],
+    limitations: [
+      "`preset swiftui` still exports colours only. The SwiftUI runtime accepts radii and elevation; the exporter does not emit them yet, so a Create design's radius still has to be applied by hand.",
+      "SwiftUI's `.shadow` has no `spread`, and the shared elevation ladder uses it on `lg` — so a SwiftUI `lg` renders slightly larger than the web's.",
+      "Eight corners across five components (AppBar, ColorPicker, FileUpload, InputOtp, Sidebar) sit at 6, which is not a step on the 4/8/12/16 ladder. They stay literal rather than being moved silently in a refactor.",
+      "Compose and Flutter are unchanged: their radius and elevation are still generated constants with no runtime theme to override.",
+      "`@kinetixui/tokens` and `@kinetixui/ui` carry no changes of their own — they move to 0.23.2 because the three npm packages are one lockstep release cohort.",
+    ],
+  },
+  {
     version: "0.23.1",
     date: "2026-09-27",
     summary:
