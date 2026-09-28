@@ -45,7 +45,8 @@
     "dist",
     "src",
     "!src/**/*.test.ts",
-    "!src/**/*.test.tsx"
+    "!src/**/*.test.tsx",
+    "!src/**/*.stories.tsx"
   ],
   "scripts": {
     "build": "tsup src/index.ts src/functions/index.ts src/react/index.ts --format esm --dts --clean --external react --external react-dom",

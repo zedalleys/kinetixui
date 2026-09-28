@@ -41,6 +41,16 @@ const SEVERITY_CLASS: Record<KinetixAlertSeverity, string> = {
   critical: "border-destructive/40 bg-destructive/5",
 };
 
+/**
+ * Acknowledged, without fading the text.
+ *
+ * This used to be `opacity-70`, which the real-browser axe pass rejected: opacity multiplies through
+ * to every descendant, so an acknowledged alert's severity line, message and timestamp all fell below
+ * the contrast threshold at once. De-emphasis has to come from the surface, which has contrast
+ * headroom, rather than from the text, which does not.
+ */
+const ACKNOWLEDGED_CLASS = "border-border bg-muted/40";
+
 const SEVERITY_DOT: Record<KinetixAlertSeverity, string> = {
   info: "bg-muted-foreground",
   warning: "bg-secondary-foreground",
@@ -65,8 +75,7 @@ const AlertCard = React.forwardRef<HTMLDivElement, AlertCardProps>(
           // An alert being acknowledged settles rather than snapping. Tailwind's own reduced-motion
           // variant, so no consumer stylesheet is involved.
           "transition-colors duration-300 ease-out motion-reduce:transition-none",
-          SEVERITY_CLASS[severity],
-          acknowledged ? "opacity-70" : "",
+          acknowledged ? ACKNOWLEDGED_CLASS : SEVERITY_CLASS[severity],
           className,
         )}
         {...props}
@@ -86,7 +95,11 @@ const AlertCard = React.forwardRef<HTMLDivElement, AlertCardProps>(
 
         <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 ps-3.5 text-label-sm text-muted-foreground">
           <LastSync value={alert?.raisedAt} now={now} neverLabel="an unknown time" className="text-label-sm" />
-          {acknowledged ? <span data-acknowledged-at="">Acknowledged</span> : null}
+          {acknowledged ? (
+            <span data-acknowledged-at="" className="rounded-sm border border-border px-1.5 py-0.5">
+              Acknowledged
+            </span>
+          ) : null}
         </p>
       </div>
     );

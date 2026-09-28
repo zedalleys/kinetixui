@@ -27,6 +27,10 @@ import type { KinetixTelemetryPoint, KinetixTelemetrySeries } from "../types/tel
  * Same axe configuration as the primitives: jsdom has no stylesheet, so contrast is covered by
  * `pnpm check:contrast` and the real-browser pass, while names, roles and ARIA validity are checked
  * here where they are cheap and deterministic.
+ *
+ * `list` and `listitem` are deliberately NOT disabled. They were, briefly, and the real-browser sweep
+ * then caught a nested `<ul>` these tests had been configured not to see. A rule turned off because a
+ * fixture was inconvenient is a rule that stops protecting the component.
  */
 
 const NOW = "2026-09-27T12:00:00.000Z";
@@ -41,8 +45,6 @@ async function axeViolations(container: HTMLElement): Promise<string[]> {
       region: { enabled: false },
       "landmark-one-main": { enabled: false },
       "page-has-heading-one": { enabled: false },
-      list: { enabled: false },
-      listitem: { enabled: false },
     },
   });
   return results.violations.map((v) => v.id);
