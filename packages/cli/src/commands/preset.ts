@@ -132,9 +132,9 @@ export async function presetCss(input: string, opts: { output?: string }): Promi
  *
  * SwiftUI, and only SwiftUI. There is no Compose, Flutter or Android XML output behind this or any other
  * command, and the command name is the platform rather than something like `preset native` for that
- * reason. What it writes is colours: `packages/ui-swiftui` is themeable through `KinetixColors` and
- * nothing else, so the design's radius and surface treatment do not travel — the generated file says so
- * in its own header, not only in the docs.
+ * reason. What it writes is the whole design the package can hold: `KinetixColors`, `KinetixRadii` and
+ * `KinetixElevations`. The one thing that does not survive is shadow `spread`, which SwiftUI has no
+ * equivalent for — the generated file says so in its own header, not only in the docs.
  *
  * Unlike `preset css`, the default preset still produces a file. A Swift file is a complete artifact
  * rather than an override block layered over one the consumer already has, so "nothing to override" is
@@ -152,7 +152,11 @@ export async function presetSwiftUi(input: string, opts: { output?: string; name
 
   if (opts.output) {
     await writeFile(opts.output, swift, "utf8");
-    console.log(pc.green("✔"), `Wrote ${opts.output} — apply it with KinetixTheme(light: ${symbol}.light, dark: ${symbol}.dark)`);
+    console.log(
+      pc.green("✔"),
+      `Wrote ${opts.output} — apply it with KinetixTheme(light: ${symbol}.light, dark: ${symbol}.dark, ` +
+        `radii: ${symbol}.radii, elevations: ${symbol}.elevations)`,
+    );
     return;
   }
   // No trailing console.log: the exporter's output already ends in a newline, and a second one would

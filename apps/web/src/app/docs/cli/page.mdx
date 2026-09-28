@@ -178,12 +178,19 @@ identifier — letters, digits and underscores, not starting with a digit, and n
 a Swift keyword. Anything else is refused with the reason rather than quietly
 rewritten.
 
-**Colours only, and SwiftUI only — an exporter limit, not a platform one.** The
-SwiftUI package is themeable through `KinetixColors`, and now through
-[`KinetixRadii` and `KinetixElevations`](/docs/swiftui) as well. This command does
-not write those yet: a design's radius and surface treatment still apply on the
-web and not here, and the generated file says so in its own header rather than
-only in these docs — along with how to set them by hand in the meantime. A field the design did not change is
+**The whole design, and SwiftUI only.** This writes `KinetixColors`,
+[`KinetixRadii` and `KinetixElevations`](/docs/swiftui) — colours, corner radii
+and the shadow ladder — so a design's radius and surface treatment now arrive in
+SwiftUI rather than applying on the web alone. Radii and elevation are one value
+each rather than a light/dark pair, because the runtime takes one and both
+appearances resolve to the same ladder.
+
+One thing does not survive: CSS shadows carry `spread` and SwiftUI's `.shadow`
+has no equivalent, so it is dropped and the larger steps render slightly wider
+than on the web. The generated file says so in its own header. A ladder the
+design did not touch is written as `KinetixRadii.default` rather than a copy of
+today's numbers, so it keeps following the library — the same rule the colours
+follow. A field the design did not change is
 written as a reference to the shipped token, so it keeps following the library.
 
 ```bash

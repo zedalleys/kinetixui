@@ -5,12 +5,16 @@
 // editing this file: it is a rendering of a preset, not a source of one.
 //
 // Theme colour #c2410c · warm neutral · warm charts
+// Radius soft · surface elevated
 //
-// COLOURS ONLY — and that is now a limit of this exporter rather than of the package. SwiftUI
-// gained `KinetixRadii` and `KinetixElevations` alongside `KinetixColors`, so there is somewhere
-// for a radius to land; this file does not write one yet. This design's radius (default) and
-// surface treatment (soft) are therefore NOT carried here — set them by hand for now:
-// `KinetixTheme(light: …, dark: …, radii: …, elevations: …)`. Nothing is silently dropped.
+// Colours, corner radii and elevation — the whole design this file can express. Radii and
+// elevation are one value rather than a light/dark pair, because the runtime takes one and the
+// two appearances resolve to the same ladder.
+//
+// ONE THING DOES NOT SURVIVE THE PORT. CSS shadows have `spread`; SwiftUI's `.shadow` has no
+// equivalent, so the spread on this design's larger steps is dropped and they render slightly
+// wider here than on the web. The shipped `KinetixElevations.default` is mapped the same way, so
+// a generated theme and the built-in one differ from the web in exactly the same manner.
 //
 // A field written as `KinetixColorsSwiftUI.…` is one this design did not change, and it keeps
 // following the library.
@@ -20,8 +24,9 @@ import SwiftUI
 import KinetixUI
 
 public enum CreateThemeFixture {
-    /// Apply with `KinetixTheme(light: .light, dark: .dark) { … }`, or set
-    /// `\.kinetixColors` directly to pin one appearance.
+    /// Apply the whole design with
+    /// `KinetixTheme(light: .light, dark: .dark, radii: .radii, elevations: .elevations) { … }`,
+    /// or set `\.kinetixColors` directly to pin one appearance.
     public static let light = KinetixColors(
         primary: Color(red: 0.761, green: 0.255, blue: 0.047),
         primaryForeground: Color(red: 1, green: 1, blue: 1),
@@ -110,5 +115,59 @@ public enum CreateThemeFixture {
             Color(red: 0.439, green: 0.475, blue: 0),
             Color(red: 0.965, green: 0.784, blue: 0.208),
         ]
+    )
+
+    public static let radii = KinetixRadii(
+        field: 12,
+        control: 20,
+        container: 28,
+        surface: 36
+    )
+
+    public static let elevations = KinetixElevations(
+        sm: KinetixElevation([
+            KinetixShadowLayer(
+                color: Color.black.opacity(0.122),
+                radius: 1,
+                x: 0,
+                y: 1
+            ),
+            KinetixShadowLayer(
+                color: Color(red: 0.404, green: 0.431, blue: 0.463).opacity(0.078),
+                radius: 5,
+                x: 0,
+                y: 2
+            ),
+        ]),
+        md: KinetixElevation([
+            KinetixShadowLayer(
+                color: Color.black.opacity(0.071),
+                radius: 6,
+                x: 0,
+                y: 4
+            ),
+            KinetixShadowLayer(
+                color: Color.black.opacity(0.059),
+                radius: 4,
+                x: 0,
+                y: 2
+            ),
+        ]),
+        lg: KinetixElevation([
+            KinetixShadowLayer(
+                color: Color.black.opacity(0.122),
+                radius: 24,
+                x: 0,
+                y: 4
+            ),
+        ]),
+        xl: KinetixElevation([
+            KinetixShadowLayer(
+                color: Color.black.opacity(0.122),
+                radius: 24,
+                x: 0,
+                y: 4
+            ),
+        ])
     )
 }

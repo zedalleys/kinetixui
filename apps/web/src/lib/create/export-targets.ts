@@ -58,13 +58,17 @@ export type TargetConfig = {
 };
 
 /**
- * Radius and surface are web-only, and every native target says so in the same words.
+ * Radius and surface are web-only on two of the three native targets, and the split is real.
  *
- * None of the three native packages has a runtime radius or elevation token: their widgets read
- * generated constants directly. That is a fact about those packages, not a gap in the theme, and the
- * exporters already write it into each generated file's header.
+ * Compose and Flutter widgets read generated radius and elevation constants directly — there is no
+ * runtime theme to override, which is a fact about those packages rather than a gap in this one.
+ * SwiftUI gained `KinetixRadii` and `KinetixElevations`, so it is no longer in that set, and saying
+ * otherwise here would undersell what the export actually does.
  */
 const NATIVE_LIMIT = "Radius and surface are not runtime-themeable here — they apply on the web.";
+
+/** What SwiftUI cannot take is narrower: CSS `spread`, which `.shadow` has no equivalent for. */
+const SWIFTUI_LIMIT = "Radius and elevation travel too; only shadow spread does not, as SwiftUI has no equivalent.";
 
 export const TARGETS: Record<ExportTarget, TargetConfig> = {
   "web-css": {
@@ -86,8 +90,8 @@ export const TARGETS: Record<ExportTarget, TargetConfig> = {
     label: "SwiftUI",
     outputLabel: "Generated SwiftUI theme",
     filename: "CreateTheme.swift",
-    description: "A KinetixColors pair for the SwiftUI package — light and dark.",
-    capability: `Colours and the chart palette, in both appearances. ${NATIVE_LIMIT}`,
+    description: "A KinetixColors pair, plus KinetixRadii and KinetixElevations, for the SwiftUI package.",
+    capability: `Colours and the chart palette, in both appearances. ${SWIFTUI_LIMIT}`,
     symbol: { default: DEFAULT_SWIFT_SYMBOL, validate: swiftSymbolError, shape: "public enum" },
     generate: (theme, symbol) => exportSwiftUi(theme, { symbol }),
   },
