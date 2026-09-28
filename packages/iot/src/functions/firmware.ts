@@ -21,8 +21,69 @@ import type { KinetixFirmwareInfo, KinetixFirmwareStatus } from "../types/firmwa
  * derived status returns `"unknown"`.
  */
 
-/** A digits-and-dots core, optionally prefixed with `v` and followed by a prerelease/build tail. */
-const VERSION = /^v?(\d+(?:\.\d+)*)(.*)$/i;
+/**
+ * Split a version string into its numeric core and whatever follows it.
+ *
+ * ## Why this is a scan and not a regular expression
+ *
+ * This was `/^v?(\d+(?:\.\d+)*)(.*)$/i`, and that pattern is a polynomial ReDoS — CodeQL's
+ * `js/polynomial-redos`, reported against both of its call sites.
+ *
+ * The trap is the interaction of the two groups. `.` does not match a newline and `$` without `m`
+ * will not match before one in the middle of the string, so a version containing a newline forces the
+ * overall match to **fail** — and to fail, the engine must first try every way of dividing the
+ * digits-and-dots run between `\d+` and the `(?:\.\d+)*` repetition. Measured on
+ * `"0" + ".0".repeat(n) + "\n!"`: 141ms at n=8k, 551ms at 16k, **2.4s at 32k**, quadratic.
+ *
+ * That input is reachable. `normalizeFirmwareVersion` takes `unknown` straight from a device payload,
+ * and a gateway reporting a version with a trailing newline is an ordinary kind of malformed — which
+ * is exactly the malformed input this module set out to handle gracefully.
+ *
+ * A single left-to-right pass has no backtracking to do, so it is linear by construction rather than
+ * by argument. The grammar it accepts is unchanged: an optional `v`/`V`, then `digit+ ( "." digit+ )*`,
+ * then everything else as the tail. A dot extends the core only when a digit follows it, so `"1."`
+ * keeps the `.` in the tail exactly as the regex did.
+ *
+ * ## One deliberate behaviour change
+ *
+ * The regex returned `null` for any version containing a newline — `"1.0\nx"` was unparseable — while
+ * `"1.0 x"` parsed fine. That difference was not a decision: it fell out of `.` excluding `\n`, the
+ * same property that made the pattern quadratic. Two strings of identical shape got different answers
+ * depending on which whitespace character separated the core from the junk, and the newline one read as
+ * "we cannot tell what version this is" all the way out to `resolveFirmwareStatus`.
+ *
+ * `null` is documented to mean **no numeric core**, and `"1.0\nx"` has one. So a newline is now tail
+ * like any other trailing character: kept for display, ignored for ordering. Asserted both ways in the
+ * suite, alongside the space case it is now consistent with.
+ */
+function splitVersion(input: string): { core: string; tail: string } | null {
+  let index = input.charCodeAt(0) === 118 || input.charCodeAt(0) === 86 ? 1 : 0; // v | V
+  const start = index;
+  let coreEnd = index;
+  let sawDigit = false;
+
+  while (index < input.length) {
+    const code = input.charCodeAt(index);
+    if (code >= 48 && code <= 57) {
+      sawDigit = true;
+      index += 1;
+      coreEnd = index;
+      continue;
+    }
+    // A separator belongs to the core only if a digit follows it; otherwise it starts the tail.
+    if (code === 46 && sawDigit) {
+      const next = input.charCodeAt(index + 1);
+      if (next >= 48 && next <= 57) {
+        index += 1;
+        continue;
+      }
+    }
+    break;
+  }
+
+  if (!sawDigit) return null;
+  return { core: input.slice(start, coreEnd), tail: input.slice(coreEnd) };
+}
 
 /**
  * Trim, drop a leading `v`, and confirm there is a numeric core.
@@ -34,9 +95,9 @@ export function normalizeFirmwareVersion(input: unknown): string | null {
   if (typeof input !== "string") return null;
   const trimmed = input.trim();
   if (trimmed.length === 0) return null;
-  const match = VERSION.exec(trimmed);
-  if (!match) return null;
-  return `${match[1]}${match[2] ?? ""}`;
+  const split = splitVersion(trimmed);
+  if (!split) return null;
+  return `${split.core}${split.tail}`;
 }
 
 /**
@@ -92,10 +153,18 @@ export function describeFirmwareStatus(status: KinetixFirmwareStatus): string {
   }
 }
 
+/**
+ * The comparable integers in a version, or `null` when there is no numeric core.
+ *
+ * One `splitVersion` pass rather than normalising and then re-parsing the result: the second call was
+ * the other site CodeQL flagged, and re-deriving the core from a string this function had already
+ * produced was only ever a way to run the same scan twice.
+ */
 function numericSegments(input: unknown): number[] | null {
-  const normalized = normalizeFirmwareVersion(input);
-  if (normalized === null) return null;
-  const core = VERSION.exec(normalized)?.[1];
-  if (!core) return null;
-  return core.split(".").map((part) => Number.parseInt(part, 10));
+  if (typeof input !== "string") return null;
+  const trimmed = input.trim();
+  if (trimmed.length === 0) return null;
+  const split = splitVersion(trimmed);
+  if (!split) return null;
+  return split.core.split(".").map((part) => Number.parseInt(part, 10));
 }

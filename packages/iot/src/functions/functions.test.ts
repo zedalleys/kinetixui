@@ -353,6 +353,50 @@ describe("firmware versions", () => {
     expect(compareFirmwareVersions("2.0.0+build7", "2.0.0")).toBe(0);
   });
 
+  /**
+   * Whitespace in the tail is tail, whichever character it is.
+   *
+   * The old regex (`^v?(\d+(?:\.\d+)*)(.*)$`) returned `null` for a version containing a newline,
+   * because `.` excludes `\n`, while accepting the same string with a space. That inconsistency was an
+   * artefact of the pattern that also made it quadratic, so the scan that replaced it treats both the
+   * same way: there is a numeric core, therefore the version parses.
+   */
+  it("treats a newline in the tail like any other trailing junk", () => {
+    expect(normalizeFirmwareVersion("1.0 x")).toBe("1.0 x");
+    expect(normalizeFirmwareVersion("1.0\nx")).toBe("1.0\nx");
+    expect(normalizeFirmwareVersion("1.0\r\nx")).toBe("1.0\r\nx");
+    // The core still decides ordering, so the junk cannot change the answer.
+    expect(compareFirmwareVersions("1.0\nx", "1.0")).toBe(0);
+    expect(compareFirmwareVersions("1.0\nx", "2.0")).toBe(-1);
+    expect(compareFirmwareVersions("1.0 x", "1.0\nx")).toBe(0);
+    // And a string with no numeric core is still null, newline or not.
+    expect(normalizeFirmwareVersion("R3.2\nx")).toBe(null);
+    expect(normalizeFirmwareVersion("\n")).toBe(null);
+  });
+
+  /**
+   * The ReDoS regression. `"0" + ".0".repeat(n) + "\n!"` forced the old regex to fail, and failing meant
+   * backtracking through every split of the digits-and-dots run: 2.3s at n=32k, reported by CodeQL as
+   * `js/polynomial-redos` against both call sites. `normalizeFirmwareVersion` takes `unknown` straight
+   * from a device payload, so that input was reachable rather than theoretical.
+   *
+   * The bound asserts the complexity class, not a benchmark: the linear scan does this in under a
+   * millisecond, so 250ms is a margin no CI runner closes, and the quadratic form missed it by 10x.
+   */
+  it("parses an adversarial version string in linear time", () => {
+    const adversarial = `0${".0".repeat(50_000)}\n!`;
+    const started = performance.now();
+    expect(normalizeFirmwareVersion(adversarial)).toBe(adversarial);
+    const elapsed = performance.now() - started;
+    expect(elapsed, `took ${elapsed.toFixed(0)}ms — version parsing has become superlinear`).toBeLessThan(250);
+
+    // Comparison runs the same scan on both sides; it must stay linear too.
+    const comparing = performance.now();
+    expect(compareFirmwareVersions(adversarial, adversarial)).toBe(0);
+    const comparingElapsed = performance.now() - comparing;
+    expect(comparingElapsed, `compare took ${comparingElapsed.toFixed(0)}ms`).toBeLessThan(250);
+  });
+
   it("derives a status, and never derives the two a product owns", () => {
     expect(resolveFirmwareStatus({ currentVersion: "1.0.0", availableVersion: "1.1.0", status: "unknown" })).toBe(
       "update-available",
