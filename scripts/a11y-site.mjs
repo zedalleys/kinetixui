@@ -42,6 +42,10 @@ const PAGES = [
   // The IoT module's page, added with the module. `/docs/angular` is the precedent: a module that ships
   // a docs page brings the page into this sweep, or the page is the one part of the site nothing checks.
   "/docs/iot",
+  // /iot renders the five real IoT primitives plus an interactive demo with selects, ranges and checkboxes —
+  // the densest set of custom controls outside /create, and the only page whose components come from a
+  // different package. It is in the sweep for the same reason /create is.
+  "/iot",
   "/docs/components/button",
   "/docs/components/data-grid",
 ];

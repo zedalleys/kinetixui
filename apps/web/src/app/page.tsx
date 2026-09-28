@@ -8,6 +8,7 @@ import { Marquee, Reveal } from "@/components/reveal";
 import { SectionHead } from "@/components/section-head";
 import { StructuredData } from "@/components/structured-data";
 import { ctaAttrs } from "@/lib/analytics-surfaces";
+import { IOT_MATURITY_LABEL } from "@/lib/iot";
 import { componentTotal } from "@/lib/platform-support";
 import { PLATFORMS as COMPONENT_PLATFORMS } from "@/lib/platform-parity";
 import { platformSentence } from "@/lib/platform-prose";
@@ -221,11 +222,38 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── modules ──────────────────────────────────────────────────── */}
+      <section className="border-b border-border bg-muted/20">
+        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-20 lg:px-8">
+          <Reveal>
+            <SectionHead index="03" label="Modules" meta="beyond the catalogue" />
+            <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
+              Connected-device products
+            </h2>
+            <p className="mt-4 max-w-2xl text-muted-foreground">
+              Models, framework-independent functions and accessible React primitives for device status,
+              telemetry, battery, signal, firmware and alerts. A module on top of the token contract — not a sixth
+              platform, and not part of the component catalogue.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <Link
+                href="/iot"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
+                {...ctaAttrs("homepage", "read_docs")}
+              >
+                Explore IoT <ArrowUpRight className="size-3.5" />
+              </Link>
+              <span className="text-xs text-muted-foreground">{IOT_MATURITY_LABEL}</span>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ─── closer ───────────────────────────────────────────────────── */}
       <section>
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 md:py-28 lg:px-8">
           <Reveal className="max-w-3xl">
-            <SectionHead index="03" label="Who it's for" />
+            <SectionHead index="04" label="Who it's for" />
             <h2 className="mt-6 text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-5xl">
               Built for teams that ship on more than one platform.
             </h2>

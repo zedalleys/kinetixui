@@ -20,8 +20,28 @@ const ORIGIN = "https://kinetixui.com";
 const anyComponent = componentDocs[0]!.href.split("/").pop()!;
 
 describe("packages come from the package.json files, not from this test or the site", () => {
-  it("are the three public packages", () => {
-    expect(Object.values(PACKAGES).sort()).toEqual(["@kinetixui/cli", "@kinetixui/tokens", "@kinetixui/ui"]);
+  it("are the public packages the site can name", () => {
+    expect(Object.values(PACKAGES).sort()).toEqual([
+      "@kinetixui/cli",
+      "@kinetixui/iot",
+      "@kinetixui/tokens",
+      "@kinetixui/ui",
+    ]);
+  });
+
+  /**
+   * The list above is what `classifyCommand` recognises, so a package missing from it makes its install command
+   * copy silently untracked. `@kinetixui/iot` joined when /iot shipped an install command; this asserts the
+   * consequence rather than the list, so the next package added is caught by a failing classification instead of
+   * by someone remembering to look here.
+   */
+  it("recognises an install command for every one of them", () => {
+    for (const pkg of Object.values(PACKAGES)) {
+      expect(classifyCommand(`pnpm add ${pkg}`, "bash"), `${pkg} install command should classify`).toEqual({
+        event: "install_command_copied",
+        package: pkg,
+      });
+    }
   });
 });
 

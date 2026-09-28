@@ -8,6 +8,13 @@ export default {
     "./src/**/*.{ts,tsx,md,mdx}",
     "../../packages/ui/src/**/*.{ts,tsx}",
     "../../packages/ui/dist/**/*.js",
+    // @kinetixui/iot styles itself with Tailwind utilities on the token contract rather than importing
+    // anything, which is why its README lists being inside the consuming app's content globs as a
+    // prerequisite. /iot renders the real primitives, so the site has to satisfy that documented
+    // requirement — without this line every class the five primitives emit is purged and they render
+    // unstyled. Source only: the class strings are literals under src, so there is no reason to couple
+    // the site's CSS to a build of the package's dist.
+    "../../packages/iot/src/**/*.{ts,tsx}",
   ],
   theme: {
     extend: {

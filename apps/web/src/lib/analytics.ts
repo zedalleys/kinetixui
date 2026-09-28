@@ -36,6 +36,7 @@ export const ANALYTICS_SOURCES = [
   "installation_page",
   "changelog_page",
   "create_workspace",
+  "iot_page",
   "not_found",
 ] as const;
 export type AnalyticsSource = (typeof ANALYTICS_SOURCES)[number];

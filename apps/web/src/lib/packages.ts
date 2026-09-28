@@ -3,10 +3,16 @@
  * one edit where it belongs, and analytics never carries a hand-typed package name.
  */
 import cliPackage from "../../../../packages/cli/package.json";
+import iotPackage from "../../../../packages/iot/package.json";
 import tokensPackage from "../../../../packages/tokens/package.json";
 import uiPackage from "../../../../packages/ui/package.json";
 
-export const PACKAGES = { ui: uiPackage.name, tokens: tokensPackage.name, cli: cliPackage.name } as const;
+export const PACKAGES = {
+  ui: uiPackage.name,
+  tokens: tokensPackage.name,
+  cli: cliPackage.name,
+  iot: iotPackage.name,
+} as const;
 
 /** Every public package name, for recognising one in a command or a link. */
 export const PACKAGE_NAMES: readonly string[] = Object.values(PACKAGES);

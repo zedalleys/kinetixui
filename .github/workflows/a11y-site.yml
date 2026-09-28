@@ -48,8 +48,10 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Build tokens and UI
-        run: pnpm build:tokens && pnpm build:ui
+      # `build:iot` is not optional here: /iot imports `@kinetixui/iot/react`, which the exports map resolves
+      # to `dist/`, so on a fresh checkout the site build fails to resolve it rather than degrading.
+      - name: Build tokens, UI and IoT
+        run: pnpm build:tokens && pnpm build:ui && pnpm build:iot
 
       - name: Build site
         run: pnpm build:web
