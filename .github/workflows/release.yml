@@ -64,6 +64,10 @@ jobs:
       - name: Test (@kinetixui/create-theme)
         run: pnpm --filter @kinetixui/create-theme test
 
+      # @kinetixui/cli is published by this workflow, and it is how most people install anything at all.
+      - name: Test (@kinetixui/cli)
+        run: pnpm --filter @kinetixui/cli test
+
       - name: Changelog page is current with the packages
         run: pnpm check:releases
 

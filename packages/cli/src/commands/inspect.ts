@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import pc from "picocolors";
-import { readConfig, resolveAliasDir } from "../lib/config.js";
+import { readConfig, resolveAliasDir, resolveRegistry } from "../lib/config.js";
 import { fetchComponentSpec, fetchRegistryItem } from "../lib/registry.js";
 
 export interface InspectOptions {
@@ -9,7 +9,8 @@ export interface InspectOptions {
 }
 
 export async function inspect(name: string, options: InspectOptions): Promise<void> {
-  const item = await fetchRegistryItem(options.registry, name);
+  const registry = await resolveRegistry(process.cwd(), options.registry);
+  const item = await fetchRegistryItem(registry, name);
 
   console.log(`${pc.bold(item.title ?? item.name)} ${pc.dim(`(${item.name})`)}`);
   if (item.description) console.log(item.description);
@@ -44,7 +45,7 @@ export async function inspect(name: string, options: InspectOptions): Promise<vo
     console.log(`  ${file.path} ${pc.dim("→")} ${file.target}`);
   }
 
-  const spec = await fetchComponentSpec(options.registry, name);
+  const spec = await fetchComponentSpec(registry, name);
   if (spec) {
     if (spec.since || spec.status) {
       console.log();

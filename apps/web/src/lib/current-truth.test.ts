@@ -80,7 +80,9 @@ const totals = verification.totals as Record<string, Record<string, number>>;
 const NATIVE_TARGETS = [swiftuiExporter, composeExporter, flutterExporter].map((e) => e.target);
 
 const presetSubcommands = (() => {
-  const cli = read("packages/cli/src/index.ts");
+  // `program.ts`, not `index.ts`: the command tree moved there in Phase 0.5 so it could be built without
+  // being executed, which is what made the CLI testable at all. `index.ts` is now four lines.
+  const cli = read("packages/cli/src/program.ts");
   const section = cli.slice(cli.indexOf("const preset"));
   return [...section.matchAll(/\.command\("([a-z]+)"\)/g)].map((m) => m[1]!);
 })();

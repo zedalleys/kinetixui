@@ -172,6 +172,11 @@ jobs:
       - name: Test (@kinetixui/create-theme)
         run: pnpm --filter @kinetixui/create-theme test
 
+      # The CLI is the primary activation path — `npx @kinetixui/cli add` — and had no tests at all until
+      # Phase 0.5. It is also published, so a regression here ships.
+      - name: Test (@kinetixui/cli)
+        run: pnpm --filter @kinetixui/cli test
+
       - name: Test (@kinetixui/ui)
         run: pnpm --filter @kinetixui/ui test
 

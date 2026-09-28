@@ -83,3 +83,7 @@ assumed.
 ## Documentation
 
 <https://kinetixui.com/docs/iot>
+
+## License
+
+MIT

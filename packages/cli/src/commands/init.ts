@@ -3,7 +3,7 @@ import path from "node:path";
 import pc from "picocolors";
 import prompts from "prompts";
 import { writeItems } from "../lib/apply.js";
-import { CONFIG_FILE, DEFAULT_CONFIG, writeConfig, type KinetixConfig } from "../lib/config.js";
+import { CONFIG_FILE, DEFAULT_CONFIG, resolveRegistry, writeConfig, type KinetixConfig } from "../lib/config.js";
 import { resolveTree } from "../lib/registry.js";
 
 export interface InitOptions {
@@ -86,7 +86,7 @@ export async function init(options: InitOptions): Promise<void> {
   await writeConfig(cwd, config);
   console.log(pc.green("✔"), `Created ${CONFIG_FILE}`);
 
-  const items = await resolveTree(options.registry, ["tokens"]);
+  const items = await resolveTree(await resolveRegistry(cwd, options.registry), ["tokens"]);
   const { written, skipped } = await writeItems(cwd, config, items.values(), false);
 
   for (const file of written) console.log(pc.green("✔"), `Wrote ${file}`);

@@ -4,26 +4,58 @@
   "title": "kinetixui.json",
   "description": "Project config read by the kinetixui CLI (`kinetixui init` writes it, `kinetixui add` reads it).",
   "type": "object",
-  "required": ["tailwind", "aliases"],
+  "required": [
+    "tailwind",
+    "aliases"
+  ],
   "properties": {
-    "$schema": { "type": "string" },
+    "$schema": {
+      "type": "string"
+    },
+    "registry": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional. Where the CLI fetches components from. Omitted by default, which means https://kinetixui.com/r. Set it to a mirror if your builds cannot depend on that origin; the --registry flag still wins when passed."
+    },
     "tailwind": {
       "type": "object",
-      "required": ["css"],
+      "required": [
+        "css"
+      ],
       "properties": {
-        "css": { "type": "string", "description": "Path to the global stylesheet the token contract is written into." }
+        "css": {
+          "type": "string",
+          "description": "Path to the global stylesheet the token contract is written into."
+        }
       }
     },
     "aliases": {
       "type": "object",
-      "required": ["components", "ui", "lib", "utils"],
+      "required": [
+        "components",
+        "ui",
+        "lib",
+        "utils"
+      ],
       "properties": {
-        "components": { "type": "string" },
-        "ui": { "type": "string", "description": "Where `kinetixui add <name>` writes component files." },
-        "lib": { "type": "string" },
-        "utils": { "type": "string" }
+        "components": {
+          "type": "string"
+        },
+        "ui": {
+          "type": "string",
+          "description": "Where `kinetixui add <name>` writes component files."
+        },
+        "lib": {
+          "type": "string"
+        },
+        "utils": {
+          "type": "string"
+        }
       }
     },
-    "srcDir": { "type": "boolean", "description": "Prefix every resolved path with src/." }
+    "srcDir": {
+      "type": "boolean",
+      "description": "Prefix every resolved path with src/."
+    }
   }
 }

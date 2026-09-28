@@ -46,13 +46,23 @@ shadcn-compatible JSON descriptor per component. You can point it elsewhere:
 npx @kinetixui/cli add button --registry https://your-mirror.example.com/r
 ```
 
-`-r, --registry <url>` is accepted by `init`, `add`, `list` and `inspect`. The URL is validated before
-use, and component names are validated against a strict character set before they are used to build any
-path — a registry response cannot direct the CLI to write outside your project.
+`-r, --registry <url>` is accepted by `init`, `add`, `list` and `inspect`. To set it once for a project
+instead of on every command, put it in `kinetixui.json`:
+
+```json
+{
+  "registry": "https://your-mirror.example.com/r"
+}
+```
+
+The flag wins when both are present. The URL is validated before use, and component names are validated
+against a strict character set before they are used to build any path — a registry response cannot direct
+the CLI to write outside your project.
 
 **One consequence to be aware of:** `add` needs that origin to be reachable, and there is no offline
-mode. If you need installs to keep working without the default registry, mirror the JSON and pass
-`--registry`.
+mode. If your builds cannot depend on `kinetixui.com`, mirror the registry JSON and set `registry` in
+`kinetixui.json`. When the registry is unreachable the CLI says so and names both ways to point
+elsewhere, rather than failing with a bare network error.
 
 ## Requirements
 

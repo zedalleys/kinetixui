@@ -315,7 +315,8 @@ describe("the Web CSS contract covers Angular", () => {
  * argument to someone who has no reason to doubt the page.
  */
 describe("the terminal command", () => {
-  const cli = readFileSync("../../packages/cli/src/index.ts", "utf8");
+  // See the note in current-truth.test.ts: the command declarations live in program.ts since Phase 0.5.
+  const cli = readFileSync("../../packages/cli/src/program.ts", "utf8");
   const theme = themeOf(cfg({ brand: "#c2410c" }));
   const code = "KX1_EXAMPLE";
   const commandFor = (id: ExportTarget, symbol = TARGETS[id].symbol?.default ?? "") =>
