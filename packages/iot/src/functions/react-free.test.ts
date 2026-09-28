@@ -48,8 +48,17 @@ const ALLOWED_DIRS = ["functions", "types"];
  */
 const ALLOWED_BARE_IMPORTS: readonly string[] = [];
 
-/** Any form of pulling React in: static import, `export … from`, `require`, dynamic `import()`. */
-const REACT_IMPORT = /(?:from|import|require)\s*\(?\s*["'](react|react-dom)(?:\/[^"']*)?["']/;
+/**
+ * Any form of pulling React in: static import, `export … from`, `require`, dynamic `import()`.
+ *
+ * The optional paren is written `(?:\(\s*)?` rather than `\(?\s*` after a `\s*`. Two adjacent `\s*`
+ * with an optional group between them are ambiguous: given a run of whitespace that is not followed by
+ * a quote, the engine can split it between the two stars in as many ways as there are spaces, and has
+ * to try all of them — quadratic backtracking (CodeQL's `js/polynomial-redos`, measured at ~440ms for
+ * 16k spaces). Anchoring the whitespace to one star and letting the paren branch own its own leaves
+ * exactly one way to match, so the scan stays linear.
+ */
+const REACT_IMPORT = /(?:from|import|require)\s*(?:\(\s*)?["'](react|react-dom)(?:\/[^"']*)?["']/;
 
 /**
  * Globals the pure half must not reach for.
@@ -258,6 +267,38 @@ describe("the functions subpath is React-free", () => {
       expect(importSpecifiers(`/** Normalised from \`"v1.4.0"\` to "1.4.0". */`)).toEqual([]);
       // Real code beside a comment that mentions one is still collected.
       expect(importSpecifiers(`// not from "react"\nimport { x } from "./x";`)).toEqual(["./x"]);
+    });
+
+    /**
+     * The patterns must stay linear, not just correct.
+     *
+     * `REACT_IMPORT` was written `\s*\(?\s*` — two adjacent whitespace stars with an optional group
+     * between them. On a whitespace run that is not followed by a quote the engine tries every way to
+     * split it, which is quadratic: 16k spaces took ~440ms, 32k took ~1.4s, and CodeQL failed the PR
+     * on `js/polynomial-redos`. Both patterns now anchor the whitespace to one star.
+     *
+     * The bound is deliberately loose. The unambiguous form runs this in well under a millisecond, so
+     * 250ms is a ~1000x margin that a slow CI runner cannot reach, while the ambiguous form blows
+     * through it by an order of magnitude. This asserts a complexity class, not a benchmark.
+     */
+    it("stays linear on adversarial whitespace", () => {
+      const adversarial = `import${" ".repeat(50_000)}x`;
+      for (const [name, pattern] of [
+        ["REACT_IMPORT", REACT_IMPORT],
+        ["the specifier pattern", /(?:\bfrom\s*|\bimport\s*|\brequire\s*\(\s*|\bimport\s*\(\s*)["']([^"']+)["']/g],
+      ] as const) {
+        const started = performance.now();
+        if (pattern.global) {
+          const scoped = new RegExp(pattern.source, pattern.flags);
+          while (scoped.exec(adversarial) !== null) {
+            /* drain */
+          }
+        } else {
+          pattern.test(adversarial);
+        }
+        const elapsed = performance.now() - started;
+        expect(elapsed, `${name} took ${elapsed.toFixed(0)}ms on 50k spaces — it has become superlinear`).toBeLessThan(250);
+      }
     });
 
     it("detects a browser global in code but not in prose", () => {

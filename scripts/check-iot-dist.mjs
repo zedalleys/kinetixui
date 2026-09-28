@@ -49,10 +49,17 @@ const manifest = JSON.parse(readFileSync(path.join(pkgDir, "package.json"), "utf
 /** Any reference to React at all: an import specifier, or the jsx-runtime a compiled component pulls. */
 const REACT_REFERENCE = /["'](react|react-dom)(\/[^"']*)?["']/;
 
-/** Relative specifiers a built file imports, which for tsup output means its sibling chunks. */
+/**
+ * Relative specifiers a built file imports, which for tsup output means its sibling chunks.
+ *
+ * The optional paren is `(?:\(\s*)?` and not `\(?\s*` following a `\s*`: two adjacent `\s*` with an
+ * optional group between them let the engine split a whitespace run every possible way before failing,
+ * which is quadratic (CodeQL's `js/polynomial-redos`). One star owns the whitespace, the paren branch
+ * owns its own, and the match becomes unambiguous.
+ */
 function relativeImports(source) {
   const found = new Set();
-  for (const match of source.matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)["'](\.[^"']+)["']/g)) found.add(match[1]);
+  for (const match of source.matchAll(/(?:\bfrom|\bimport)\s*(?:\(\s*)?["'](\.[^"']+)["']/g)) found.add(match[1]);
   return [...found];
 }
 
