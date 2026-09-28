@@ -113,3 +113,100 @@ export function latestPoint(series: KinetixTelemetrySeries | null | undefined): 
   }
   return best;
 }
+
+/** Human-readable text for a telemetry quality. The word a reading is annotated with. */
+export function describeTelemetryQuality(quality: KinetixTelemetryQuality): string {
+  switch (quality) {
+    case "good":
+      return "Measured";
+    case "estimated":
+      return "Estimated";
+    case "missing":
+      return "No reading";
+    case "error":
+      return "Sensor error";
+  }
+}
+
+/**
+ * A series' points in time order, each paired with the timestamp that was parsed out of it.
+ *
+ * Points whose timestamp is unusable are **dropped**, not sorted to the front. A reading with no time
+ * on it cannot be placed on a time axis, and placing it anyway is how an undated value ends up
+ * rendered as the oldest or newest thing in a chart.
+ *
+ * The returned `at` is a millisecond stamp, so a caller plotting the series does not parse each
+ * timestamp a second time.
+ */
+export function sortTelemetryPoints(
+  series: KinetixTelemetrySeries | null | undefined,
+): { point: KinetixTelemetryPoint; at: number }[] {
+  if (!series || !Array.isArray(series.points)) return [];
+  const dated: { point: KinetixTelemetryPoint; at: number }[] = [];
+  for (const point of series.points) {
+    const parsed = parseTimestamp(point?.timestamp ?? null);
+    if (!parsed) continue;
+    dated.push({ point, at: parsed.getTime() });
+  }
+  return dated.sort((a, b) => a.at - b.at);
+}
+
+/**
+ * The bounds of a series, over the points that are actually measurements.
+ *
+ * `missing` and `error` points, and non-finite values, are excluded from `min`/`max` and counted in
+ * `missing` instead. That is the whole reason this is not `Math.min(...values)`: a series where the
+ * sensor dropped out reports those gaps as `value: 0, quality: "missing"` often enough that letting
+ * them into the extent would drag the axis to zero and make a flat-lining sensor look like a real
+ * measurement of nothing.
+ *
+ * `null` bounds mean there is nothing plottable — a caller must render an empty state rather than an
+ * axis from `null` to `null`. `from`/`to` still describe the time span the series covers, because a
+ * window with no readings in it is itself worth showing.
+ */
+export type KinetixTelemetryExtent = {
+  /** Lowest measured value, or `null` when nothing was measured. */
+  min: number | null;
+  /** Highest measured value, or `null` when nothing was measured. */
+  max: number | null;
+  /** First and last usable timestamps, as millisecond stamps, or `null` for an empty series. */
+  from: number | null;
+  to: number | null;
+  /** How many points carry a value that may be plotted. */
+  measured: number;
+  /** How many points are present but unusable as measurements. */
+  missing: number;
+};
+
+export function telemetryExtent(series: KinetixTelemetrySeries | null | undefined): KinetixTelemetryExtent {
+  const ordered = sortTelemetryPoints(series);
+  let min: number | null = null;
+  let max: number | null = null;
+  let measured = 0;
+  let missing = 0;
+
+  for (const { point } of ordered) {
+    const quality = classifyTelemetryQuality(point);
+    if (quality === "missing" || quality === "error") {
+      missing += 1;
+      continue;
+    }
+    const { value } = point;
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      missing += 1;
+      continue;
+    }
+    measured += 1;
+    if (min === null || value < min) min = value;
+    if (max === null || value > max) max = value;
+  }
+
+  return {
+    min,
+    max,
+    from: ordered.length > 0 ? ordered[0]!.at : null,
+    to: ordered.length > 0 ? ordered[ordered.length - 1]!.at : null,
+    measured,
+    missing,
+  };
+}
