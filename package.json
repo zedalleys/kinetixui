@@ -76,7 +76,9 @@
     "check:angular-package": "node scripts/angular-package/check.mjs",
     "gen:angular-api": "node scripts/angular-package/api-snapshot.mjs",
     "check:angular-api": "node scripts/angular-package/api-snapshot.mjs --check",
-    "check:content": "node scripts/check-content-register.mjs"
+    "check:content": "node scripts/check-content-register.mjs",
+    "gen:visuals": "node scripts/gen-marketing-visuals.mjs",
+    "render:visuals": "node scripts/render-marketing-visuals.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

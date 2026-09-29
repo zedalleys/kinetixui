@@ -41,7 +41,7 @@ MIT licensed, all of it.
 
 <div align="center">
   <a href="https://kinetixui.com">
-    <img src=".github/assets/home.png" alt="KinetixUI — one token architecture, in motion across every platform" />
+    <img src=".github/assets/home.png" alt="The KinetixUI homepage: one design language, five platforms, claims you can check — with the platform coverage spec panel" />
   </a>
 </div>
 

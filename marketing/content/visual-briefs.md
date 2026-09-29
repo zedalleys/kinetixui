@@ -9,8 +9,12 @@ Seven briefs (**VIS-001 … VIS-007**) for the strongest assets of the month. Tw
 reused campaigns: `drafts/a01/visual-brief.md` and `drafts/a02/visual-brief.md`, with production notes in
 `visual-production-a01-a02.md`.
 
-**Nothing is produced here.** The repository has no reliable automated visual generation, so generating
-images in this phase would mean hand-made assets that drift from the product. These briefs feed Phase 5.
+> **Phase 5 update — most of these are now produced.** `marketing/content/visuals/` holds the generated
+> assets; `manifest.json` there is the index, with alt text per asset. VIS-001, VIS-002, VIS-003, VIS-005,
+> VIS-006 and VIS-007 are built, plus two new companions (VIS-008 component architecture, VIS-009
+> verification pipeline) and the GitHub social preview. **VIS-004 is deferred** — it needs a real code
+> excerpt laid out as a before/after, which the current generator does not do well, and the registry-defect
+> posts read fine without it. Regenerate everything with `pnpm gen:visuals`.
 
 **Standing requirements for every asset:**
 

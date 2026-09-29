@@ -7,7 +7,10 @@
     "VIS-004",
     "VIS-005",
     "VIS-006",
-    "VIS-007"
+    "VIS-007",
+    "VIS-008",
+    "VIS-009",
+    "SOCIAL-PREVIEW"
   ],
   "families": {
     "F1-drift": {
@@ -488,5 +491,10 @@
       "file": "marketing/content/community-briefs.md",
       "derived_from": "LI-008"
     }
-  ]
+  ],
+  "visualsProduced": {
+    "manifest": "marketing/content/visuals/manifest.json",
+    "regenerate": "pnpm gen:visuals",
+    "render": "pnpm render:visuals"
+  }
 }
