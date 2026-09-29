@@ -64,6 +64,18 @@ const CURRENT_SURFACES = {
   "marketing/content-calendar.md": read("marketing/content-calendar.md"),
   "marketing/CLAIMS.md": read("marketing/CLAIMS.md"),
   "marketing/CONTENT-PILLARS.md": read("marketing/CONTENT-PILLARS.md"),
+  /*
+   * The distribution documents make present-tense claims about platforms, coverage, distribution and what
+   * may be said in someone else's community, so they belong here for the same reason MESSAGING.md does.
+   * They were written outside these rules and added afterwards, which is the wrong order: Phase 0.75 found
+   * a guard that had the right rule and could not see the sentence, and a guard that cannot see the FILE is
+   * the same defect one level up.
+   */
+  "marketing/community.md": read("marketing/community.md"),
+  "marketing/distribution/README.md": read("marketing/distribution/README.md"),
+  "marketing/distribution/first-14-days.md": read("marketing/distribution/first-14-days.md"),
+  "marketing/distribution/github.md": read("marketing/distribution/github.md"),
+  "marketing/distribution/outreach.md": read("marketing/distribution/outreach.md"),
 };
 
 const defs = manifest.platformDefinitions as Record<

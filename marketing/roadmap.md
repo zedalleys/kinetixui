@@ -39,7 +39,9 @@ publishing no longer the only traffic source.
 - Campaign 3 ("One design language, native implementations")
 - Evaluate Stage 3 launch criteria; execute if met
 - Two or three more landing pages, based on observed search queries
-- Retention analysis: do activated developers return?
+- Retention read: **returning evaluators** — distinct anonymous IDs with a qualified evaluation in ≥2
+  sessions (`analytics.md` §6). Not "activated developers": activation is not measurable from the site and
+  D1 is `PENDING LIVE VERIFICATION`
 - Decide `/blog`: only if ≥3 off-site articles have landed
 - Prepare, do not submit, Product Hunt assets
 

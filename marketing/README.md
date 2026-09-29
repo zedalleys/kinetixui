@@ -67,8 +67,9 @@ repository may contradict them.
 | File | Use it when |
 | --- | --- |
 | `seo.md` | Topic clusters and landing-page architecture |
-| `content-calendar.md` | Planning the next 30 days |
-| `community.md` | GitHub, Reddit, HN, Discussions |
+| `content-calendar.md` | The cadence principle. **Superseded as a calendar** — the schedule is `content/calendar.md` |
+| `community.md` | Which communities to participate in, fit classification, the weekly listening routine |
+| `distribution/` | **Channel roles, the 14-day execution plan, GitHub as a channel, partnerships, the distribution log** |
 | `launches.md` | Staged launch criteria and Product Hunt prep |
 | `experiments.md` | Growth experiment backlog |
 | `analytics.md` | Instrumentation, funnels and what each event is for |
@@ -81,6 +82,7 @@ repository may contradict them.
 | --- | --- |
 | [`research/`](./research/) | Dated observations — what we saw, not what we decided |
 | [`content/`](./content/) | Campaign drafts and production briefs, with a status register |
+| [`distribution/`](./distribution/) | How published work reaches an audience, and the log of what went out |
 | [`audits/`](./audits/) | Dated audit and remediation records. Historical, never retro-edited |
 
 There is no `archive/` directory. Nothing has yet been superseded rather than corrected; when something is,
@@ -133,7 +135,12 @@ beside it, and the audit keeps a banner pointing there.
 | `audits/PHASE-0.75-PUBLIC-SURFACE.md` | Contributor-trust and public-surface closure |
 | `audits/PHASE-0.9-LIVE-VERIFICATION.md` | Live production verification. Both findings closed; see its remediation section |
 | `audits/PHASE-0.9.1-REGISTRY-FIX.md` | The registry dependency defect, its structural fix, and its production verification |
-| `audits/PHASE-1-MESSAGING-RECONCILIATION.md` | This reconciliation: what was consolidated, what changed, what remains unknown |
+| `audits/PHASE-1-MESSAGING-RECONCILIATION.md` | Positioning reconciliation: what was consolidated, what changed, what remains unknown |
+| `audits/PHASE-2-CONVERSION-FOUNDATION.md` | The conversion system: hero, verification and adoption-ladder sections, CTA changes |
+| `audits/PHASE-3-FUNNEL-MEASUREMENT.md` | The funnel, what each stage means, and what we deliberately do not claim to measure |
+| `audits/PHASE-4-CONTENT-ENGINE.md` | The 30-day content engine: 27 finished assets, six families, the campaign register |
+| `audits/PHASE-5-VISUAL-LAUNCH-ASSETS.md` | Generated visual proof, and the check that measures what the browser drew |
+| `audits/PHASE-6-DISTRIBUTION.md` | Channel roles, the first 14 days, GitHub as a channel, the launch model and the distribution log |
 
 Because they are historical, audits are deliberately **not** in the `CURRENT_SURFACES` list that
 `current-truth.test.ts` checks — a present-tense guard pointed at a dated document produces failures on

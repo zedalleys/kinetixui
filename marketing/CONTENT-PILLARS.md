@@ -176,8 +176,9 @@ A substantive change becomes a week of material. Template: `content/source-event
 3. **No evergreen piece hard-codes a version.** Release announcements may; positioning may not. See
    `CLAIMS.md` and the version-resilience rule in [`README.md`](./README.md).
 4. **One pillar per piece.** A piece that spans three is usually three pieces or none.
-5. **Cadence beats volume.** The rhythm lives in [`content-calendar.md`](./content-calendar.md); fewer and
-   better compounds with this audience.
+5. **Cadence beats volume.** The schedule lives in [`content/calendar.md`](./content/calendar.md) and the
+   cadence principle behind it in [`content-calendar.md`](./content-calendar.md); fewer and better compounds
+   with this audience.
 
 ## What changed from the previous version
 
