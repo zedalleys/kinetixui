@@ -108,6 +108,18 @@ Four were found by writing the tests, and would each have shipped silently.
 
 A fifth was a packaging defect, measured rather than guessed — see below.
 
+### And one in the project's own showcase
+
+`/iot`'s flagship `device-dashboard` example hand-rolled a switch, a range input and a ± setpoint,
+because no control existed to use. All three updated **optimistically** — `setPowered(!powered)` on
+click, with no pending state anywhere — so the page demonstrating the module was demonstrating the
+exact defect the control layer exists to prevent. It now composes the real controls, and holds each
+command for 1.1s before confirming it, so the gap is visible rather than described.
+
+A new `connected-space` example covers the composition layer: zones via `DeviceGroupCard`, devices
+via `DeviceControlCard` with controls in slots, and automations via `RoutineCard`. Both previews and
+their copyable source come from one file through `gen:iot-examples`, so they cannot drift.
+
 ---
 
 ## 5. Measurements
@@ -152,6 +164,15 @@ the scanned file list — and fails on each.
 Total JS grows because the package genuinely contains more. Per-import cost is the number a consumer
 pays, and it fell.
 
+### Website
+
+| Route | Before | After |
+| --- | --- | --- |
+| `/iot` | 14.7 kB / 441 kB First Load | 21 kB / 447 kB First Load |
+| `/docs/iot` | 155 B / 501 kB | 155 B / 501 kB |
+
+`/iot` carries one more interactive showcase and a dashboard rebuilt on the control layer.
+
 ---
 
 ## 6. What this module still is not
@@ -176,12 +197,11 @@ Explicitly not done, so that the P0 above is coherent rather than thin in nine p
 
 | Deferred | Why | Blocked on |
 | --- | --- | --- |
-| Three domain showcases (smart space, agritech, operations) on the website | Each is a whole screen; the control layer had to exist and be correct first | Nothing — next in line |
-| Redesigned `/iot` device-detail and dashboard screens | Same | The showcases |
-| Pairing flow composed from the new controls | `functions/pairing.ts` already models it; the composition is a screen, not a component | The showcases |
-| Extending `iot-examples.manifest.json` so live previews and copyable source stay single-sourced | The generator exists and must not be bypassed by hand-written duplicate snippets | The showcases |
-| A pattern gallery in `/docs/iot` | The prose documentation of the control layer landed in this pass; the gallery is presentation | The showcases |
-| Real-browser visual QA at 390/768/1440, light/dark/RTL | jsdom axe and Storybook cover structure; contrast and layout need a browser | The showcases |
+| Agritech and operations domain showcases | One composition showcase shipped (`connected-space`) and the dashboard was rebuilt on the control layer, which demonstrates the same components; two further domain framings are presentation rather than capability | Nothing — next in line |
+| Redesigned `/iot` device-detail screen | `device-detail` never hand-rolled controls, so it has no correctness defect to fix — only a layout to revisit | Design |
+| Pairing flow composed from the new controls | `functions/pairing.ts` already models it; the composition is a screen, not a component | Design |
+| A pattern gallery in `/docs/iot` | The prose documentation of the control layer landed in this pass; the gallery is presentation | Design |
+| Real-browser visual QA at 390/768/1440, light/dark/RTL | jsdom axe and Storybook cover structure; contrast and layout need a browser | A browser pass |
 | A grouped/scheduled command queue | Genuinely useful, genuinely a product concern; modelling it here risks becoming the engine this module refuses to be | A real product's requirements |
 | Optimistic-with-rollback as an opt-in | Some products legitimately want it for low-stakes devices. It needs a rollback story before it is safe to offer | Design |
 

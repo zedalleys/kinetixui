@@ -11,6 +11,7 @@
  */
 import type { ComponentType } from "react";
 import { AlertInboxExample } from "@/examples/iot/alert-inbox";
+import { ConnectedSpaceExample } from "@/examples/iot/connected-space";
 import { ConnectionTroubleshootingExample } from "@/examples/iot/connection-troubleshooting";
 import { DeviceDashboardExample } from "@/examples/iot/device-dashboard";
 import { DeviceDetailExample } from "@/examples/iot/device-detail";
@@ -24,4 +25,5 @@ export const iotPreviews: Record<string, ComponentType> = {
   "connection-troubleshooting": ConnectionTroubleshootingExample,
   "alert-inbox": AlertInboxExample,
   "device-dashboard": DeviceDashboardExample,
+  "connected-space": ConnectedSpaceExample,
 };
