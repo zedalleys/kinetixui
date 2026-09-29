@@ -5,6 +5,7 @@ import type { KinetixDeviceStatus } from "../types/device";
 import { describeDeviceStatus, normalizeDeviceStatus } from "../functions/status";
 import { cn } from "./cn";
 import { resolveLabel } from "./label";
+import { withDisplayName } from "./display-name";
 
 /**
  * DeviceStatusBadge — a device's state, as a word.
@@ -46,7 +47,7 @@ const STATUS_CLASS: Record<KinetixDeviceStatus, string> = {
   disabled: "bg-muted text-muted-foreground",
 };
 
-const DeviceStatusBadge = React.forwardRef<HTMLSpanElement, DeviceStatusBadgeProps>(
+const DeviceStatusBadge = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLSpanElement, DeviceStatusBadgeProps>(
   ({ status, label, hideIndicator = false, className, ...props }, ref) => {
     const resolved = normalizeDeviceStatus(status);
     return (
@@ -65,7 +66,6 @@ const DeviceStatusBadge = React.forwardRef<HTMLSpanElement, DeviceStatusBadgePro
       </span>
     );
   },
-);
-DeviceStatusBadge.displayName = "DeviceStatusBadge";
+), "DeviceStatusBadge");
 
 export { DeviceStatusBadge };

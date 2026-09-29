@@ -9,6 +9,7 @@ import { DeviceStatusBadge } from "./device-status-badge";
 import { LastSync } from "./last-sync";
 import { SignalStrength } from "./signal-strength";
 import { cn } from "./cn";
+import { withDisplayName } from "./display-name";
 
 /**
  * DeviceListItem — the same facts as `DeviceCard`, at list density.
@@ -39,7 +40,7 @@ export interface DeviceListItemProps extends Omit<React.HTMLAttributes<HTMLEleme
 
 const IN_TRANSITION = new Set(["syncing", "pairing", "updating"]);
 
-const DeviceListItem = React.forwardRef<HTMLElement, DeviceListItemProps>(
+const DeviceListItem = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLElement, DeviceListItemProps>(
   ({ device, reading, action, now, as: Tag = "li", className, ...props }, ref) => {
     const status = normalizeDeviceStatus(device?.status);
     const transitioning = IN_TRANSITION.has(status);
@@ -86,7 +87,6 @@ const DeviceListItem = React.forwardRef<HTMLElement, DeviceListItemProps>(
       </Tag>
     );
   },
-);
-DeviceListItem.displayName = "DeviceListItem";
+), "DeviceListItem");
 
 export { DeviceListItem };

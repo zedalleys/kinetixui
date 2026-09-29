@@ -5,6 +5,7 @@ import type { KinetixTelemetrySeries } from "../types/telemetry";
 import { classifyTelemetryQuality, formatTelemetryValue, sortTelemetryPoints, telemetryExtent } from "../functions/telemetry";
 import { cn } from "./cn";
 import { resolveLabel } from "./label";
+import { withDisplayName } from "./display-name";
 
 /**
  * TelemetryTrend — a series over time, with its gaps left as gaps.
@@ -73,7 +74,7 @@ function drawableRuns(series: KinetixTelemetrySeries | null | undefined): { at: 
   return runs;
 }
 
-const TelemetryTrend = React.forwardRef<HTMLDivElement, TelemetryTrendProps>(
+const TelemetryTrend = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, TelemetryTrendProps>(
   ({ series, label, precision, hideBounds = false, height = 48, emptyLabel, className, ...props }, ref) => {
     const extent = telemetryExtent(series);
     const runs = drawableRuns(series);
@@ -178,7 +179,6 @@ const TelemetryTrend = React.forwardRef<HTMLDivElement, TelemetryTrendProps>(
       </div>
     );
   },
-);
-TelemetryTrend.displayName = "TelemetryTrend";
+), "TelemetryTrend");
 
 export { TelemetryTrend };

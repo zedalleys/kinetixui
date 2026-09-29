@@ -10,6 +10,15 @@
 export * from "../types";
 
 export { activeAlerts, describeAlertSeverity, highestAlertSeverity, type AlertFilterOptions } from "./alerts";
+export {
+  canRunAutomation,
+  compareAutomationAttention,
+  describeAutomationStatus,
+  describeRelativeTime,
+  formatRelativeTime,
+  millisecondsUntil,
+  type RelativeTimeOptions,
+} from "./automation";
 export { clampBatteryLevel, classifyBatteryLevel, describeBattery, describeBatteryLevel, formatBatteryPercent } from "./battery";
 export {
   buildDeviceCommand,
@@ -20,6 +29,15 @@ export {
   type BuildDeviceCommandInput,
 } from "./commands";
 export {
+  clampLevel,
+  describeControlState,
+  describePowerState,
+  normalizePowerState,
+  resolveActiveMode,
+  resolveControlState,
+  snapToStep,
+} from "./control";
+export {
   compareFirmwareVersions,
   describeFirmwareStatus,
   isFirmwareOutdated,
@@ -27,6 +45,7 @@ export {
   resolveFirmwareStatus,
 } from "./firmware";
 export { compareDeviceAttention, summarizeDevices, type KinetixDeviceSummary } from "./group";
+export { categoryAffordances, describeDeviceCategory, isKnownDeviceCategory, resolveDeviceCategory } from "./identity";
 export { describeLastSeen, formatLastSeen, millisecondsSince, type FormatLastSeenOptions } from "./last-seen";
 export {
   describePairingStatus,

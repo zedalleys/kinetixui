@@ -7,6 +7,7 @@ import { SensorReading } from "./sensor-reading";
 import { TelemetryTrend } from "./telemetry-trend";
 import { LastSync } from "./last-sync";
 import { cn } from "./cn";
+import { withDisplayName } from "./display-name";
 
 /**
  * TelemetryCard — one metric: its newest reading, its recent shape, and how much to trust it.
@@ -36,7 +37,7 @@ export interface TelemetryCardProps extends Omit<React.HTMLAttributes<HTMLDivEle
   now?: string | Date | number;
 }
 
-const TelemetryCard = React.forwardRef<HTMLDivElement, TelemetryCardProps>(
+const TelemetryCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, TelemetryCardProps>(
   ({ series, metric, precision, hideTrend = false, trendHeight, footer, now, className, ...props }, ref) => {
     const newest = latestPoint(series);
     const quality = classifyTelemetryQuality(newest);
@@ -86,7 +87,6 @@ const TelemetryCard = React.forwardRef<HTMLDivElement, TelemetryCardProps>(
       </div>
     );
   },
-);
-TelemetryCard.displayName = "TelemetryCard";
+), "TelemetryCard");
 
 export { TelemetryCard };

@@ -4,6 +4,7 @@ import * as React from "react";
 import { classifyBatteryLevel, describeBattery, formatBatteryPercent } from "../functions/battery";
 import { cn } from "./cn";
 import { resolveLabel } from "./label";
+import { withDisplayName } from "./display-name";
 
 /**
  * BatteryIndicator — a battery reading, with the band spelled out.
@@ -36,7 +37,7 @@ const LEVEL_CLASS: Record<ReturnType<typeof classifyBatteryLevel>, string> = {
   full: "bg-secondary-foreground",
 };
 
-const BatteryIndicator = React.forwardRef<HTMLSpanElement, BatteryIndicatorProps>(
+const BatteryIndicator = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLSpanElement, BatteryIndicatorProps>(
   ({ value, hideValue = false, label, className, ...props }, ref) => {
     const level = classifyBatteryLevel(value);
     const known = level !== "unknown";
@@ -65,7 +66,6 @@ const BatteryIndicator = React.forwardRef<HTMLSpanElement, BatteryIndicatorProps
       </span>
     );
   },
-);
-BatteryIndicator.displayName = "BatteryIndicator";
+), "BatteryIndicator");
 
 export { BatteryIndicator };

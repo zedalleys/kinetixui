@@ -8,7 +8,7 @@ import { iotPreviews } from "@/registry/iot-previews";
  *
  * A **server** component, which is the point. `IotExampleShowcase` is a client component because tabs
  * need state, but the preview is passed to it as `children` — already rendered — so a static example
- * stays on the server and only the tab chrome ships as JavaScript. Two of the six examples bring
+ * stays on the server and only the tab chrome ships as JavaScript. The interactive examples bring
  * their own `"use client"` because they are genuinely interactive; the rest do not become client
  * components merely by being displayed in a tab.
  *

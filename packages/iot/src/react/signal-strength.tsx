@@ -4,6 +4,7 @@ import * as React from "react";
 import { classifySignalStrength, describeSignal, formatSignalPercent, signalBars } from "../functions/signal";
 import { cn } from "./cn";
 import { resolveLabel } from "./label";
+import { withDisplayName } from "./display-name";
 
 /**
  * SignalStrength — a normalised 0–100 signal quality as a bar meter.
@@ -29,7 +30,7 @@ export interface SignalStrengthProps extends Omit<React.HTMLAttributes<HTMLSpanE
   label?: string;
 }
 
-const SignalStrength = React.forwardRef<HTMLSpanElement, SignalStrengthProps>(
+const SignalStrength = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLSpanElement, SignalStrengthProps>(
   ({ value, bars = 4, hideValue = false, label, className, ...props }, ref) => {
     const total = Number.isInteger(bars) && bars > 0 ? bars : 4;
     const level = classifySignalStrength(value);
@@ -62,7 +63,6 @@ const SignalStrength = React.forwardRef<HTMLSpanElement, SignalStrengthProps>(
       </span>
     );
   },
-);
-SignalStrength.displayName = "SignalStrength";
+), "SignalStrength");
 
 export { SignalStrength };

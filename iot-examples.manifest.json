@@ -7,8 +7,8 @@
     "status beta / stable / deprecated, and the only escape hatch is status \"draft\", which",
     "gen-block-examples.mjs leaves out of the website entirely. @kinetixui/iot is a React-only module,",
     "so an IoT composition can be in the Blocks catalogue either untruthfully or invisibly, and neither",
-    "is worth having. Rather than weaken the Blocks parity rule — which exists precisely so the",
-    "catalogue cannot drift back into a React catalogue with four platforms sprinkled on it — IoT gets",
+    "is worth having. Rather than weaken the Blocks parity rule \u2014 which exists precisely so the",
+    "catalogue cannot drift back into a React catalogue with four platforms sprinkled on it \u2014 IoT gets",
     "its own layer and states its own scope.",
     "",
     "Each entry therefore has ONE `source`, not a `sources` map. The React-only-ness is structural: there",
@@ -22,38 +22,76 @@
     "device-fleet": {
       "title": "Device overview",
       "description": "A fleet at a glance: identity, state, key reading, battery, signal and last contact, worst first.",
-      "uses": ["DeviceCard", "DeviceStateSummary"],
+      "uses": [
+        "DeviceCard",
+        "DeviceStateSummary"
+      ],
       "source": "apps/web/src/examples/iot/device-fleet.tsx"
     },
     "device-detail": {
       "title": "Device detail",
       "description": "One device in full: connection health, telemetry, firmware, and the commands sent to it.",
-      "uses": ["ConnectionHealth", "TelemetryCard", "FirmwareStatus", "CommandStatus"],
+      "uses": [
+        "ConnectionHealth",
+        "TelemetryCard",
+        "FirmwareStatus",
+        "CommandStatus"
+      ],
       "source": "apps/web/src/examples/iot/device-detail.tsx"
     },
     "telemetry-board": {
       "title": "Telemetry board",
       "description": "Several metrics side by side, including one whose sensor stopped answering.",
-      "uses": ["TelemetryCard", "TelemetryTrend"],
+      "uses": [
+        "TelemetryCard",
+        "TelemetryTrend"
+      ],
       "source": "apps/web/src/examples/iot/telemetry-board.tsx"
     },
     "connection-troubleshooting": {
       "title": "Connection troubleshooting",
       "description": "The states a device UI usually collapses into one red dot, separated so they can be acted on.",
-      "uses": ["ConnectionHealth", "DeviceStatusBadge"],
+      "uses": [
+        "ConnectionHealth",
+        "DeviceStatusBadge"
+      ],
       "source": "apps/web/src/examples/iot/connection-troubleshooting.tsx"
     },
     "alert-inbox": {
       "title": "Alert inbox",
       "description": "Severity, device, message and time, with acknowledgement as a state rather than a deletion.",
-      "uses": ["AlertCard"],
+      "uses": [
+        "AlertCard"
+      ],
       "source": "apps/web/src/examples/iot/alert-inbox.tsx"
     },
     "device-dashboard": {
       "title": "Device dashboard",
       "description": "The full composition: group summary, fleet, telemetry, alerts and activity in one responsive layout.",
-      "uses": ["DeviceCard", "DeviceStateSummary", "TelemetryCard", "AlertCard", "CommandStatus"],
+      "uses": [
+        "DeviceCard",
+        "DeviceStateSummary",
+        "TelemetryCard",
+        "AlertCard",
+        "CommandStatus",
+        "DevicePowerControl",
+        "DeviceLevelControl",
+        "DeviceSetpointControl",
+        "DeviceModeControl"
+      ],
       "source": "apps/web/src/examples/iot/device-dashboard.tsx"
+    },
+    "connected-space": {
+      "title": "Connected space",
+      "description": "Zones, the devices inside one, and the automations that run it \u2014 with every command showing the gap between requested and confirmed.",
+      "uses": [
+        "DeviceGroupCard",
+        "DeviceControlCard",
+        "DevicePowerControl",
+        "DeviceLevelControl",
+        "RoutineCard"
+      ],
+      "source": "apps/web/src/examples/iot/connected-space.tsx"
     }
   }
 }
