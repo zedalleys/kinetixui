@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -7,24 +7,54 @@ import { AnalyticsProvider } from "@/components/analytics-provider";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
-const sans = Inter({
-  subsets: ["latin"],
+/**
+ * Fonts are served from this repository, not fetched from Google at build time.
+ *
+ * `next/font/google` downloads from `fonts.googleapis.com` during `next build`, which put every job
+ * that builds this site — `build`, `axe`, and the Vercel deployment — behind a third-party network
+ * call. That call failed twice (#253, #255) with
+ * `TypeError: Cannot read properties of null (reading '1')` thrown inside the font loader, turning a
+ * healthy tree into a red check. Vendoring the files removes the network from the build path.
+ *
+ * These are the exact variable `.woff2` files this site was already serving, in the same versions —
+ * Inter 4.001, Space Grotesk 2.000, JetBrains Mono 2.211 — so the rendered type is unchanged. Only
+ * the `latin` subset is vendored, which is measurably all this site uses: a scan of the built HTML
+ * and every source file found no `latin-ext`, `cyrillic`, `greek` or `vietnamese` character. The
+ * symbols that do appear outside `latin` (arrows, box-drawing, ⌘) are in none of those subsets and
+ * already fall back to a system font.
+ *
+ * The `@font-face` declarations below mirror the ones `next/font/google` used to emit, weight for
+ * weight, rather than widening to the fonts' full axis ranges. See `fonts/README.md` for provenance
+ * and licensing.
+ */
+const sans = localFont({
+  // One face across the whole axis, exactly as the Google loader declared it (`font-weight: 100 900`).
+  src: [{ path: "./fonts/inter-latin.woff2", weight: "100 900", style: "normal" }],
   variable: "--font-sans",
   display: "swap",
+  adjustFontFallback: "Arial",
 });
 
-const display = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
+const display = localFont({
+  // Three faces off one variable file — the same shape the loader emitted for weight: ["500","600","700"].
+  src: [
+    { path: "./fonts/space-grotesk-latin.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/space-grotesk-latin.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/space-grotesk-latin.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-display",
   display: "swap",
+  adjustFontFallback: "Arial",
 });
 
-const mono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
+const mono = localFont({
+  src: [
+    { path: "./fonts/jetbrains-mono-latin.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/jetbrains-mono-latin.woff2", weight: "500", style: "normal" },
+  ],
   variable: "--font-mono",
   display: "swap",
+  adjustFontFallback: "Arial",
 });
 
 export const metadata: Metadata = {
