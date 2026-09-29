@@ -48,7 +48,7 @@ export const KINETIX_METRIC_REGISTRY: Readonly<Record<string, KinetixMetricDefin
 };
 
 /** The registered metric ids, in registry order. */
-export const KINETIX_METRIC_IDS: readonly string[] = Object.keys(KINETIX_METRIC_REGISTRY);
+export const KINETIX_METRIC_IDS: readonly string[] = /* @__PURE__ */ Object.keys(KINETIX_METRIC_REGISTRY);
 
 /** The definition for a metric key, matched case-insensitively with `_`/space folded to `-`; else `undefined`. */
 export function getMetricDefinition(metric: string | null | undefined): KinetixMetricDefinition | undefined {

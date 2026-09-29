@@ -1,4 +1,4 @@
-import { KINETIX_ALERT_SEVERITIES, type KinetixAlertSeverity, type KinetixDeviceAlert } from "../types/alert";
+import { type KinetixAlertSeverity, type KinetixDeviceAlert } from "../types/alert";
 import { parseTimestamp, resolveNow } from "./time";
 
 /**
@@ -8,7 +8,7 @@ import { parseTimestamp, resolveNow } from "./time";
  * that is a reduction over its alerts, not a field on the device.
  */
 
-const RANK = new Map<KinetixAlertSeverity, number>(KINETIX_ALERT_SEVERITIES.map((severity, index) => [severity, index]));
+const RANK = /* @__PURE__ */ new Map<KinetixAlertSeverity, number>([["info", 0], ["warning", 1], ["critical", 2]]);
 
 export type AlertFilterOptions = {
   /** Count alerts somebody has already acknowledged. Defaults to false. */
