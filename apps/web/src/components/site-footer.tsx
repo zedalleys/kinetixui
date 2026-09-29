@@ -45,8 +45,10 @@ export function SiteFooter() {
                 Kinetix<span className="text-primary">ui</span>
               </span>
             </div>
+            {/* The canonical tagline, not a second copy of it: this paragraph carried the retired
+                "One token architecture, in motion across every platform" long after the hero dropped it. */}
             <p className="mt-4 max-w-xs text-sm text-muted-foreground">
-              One token architecture, in motion across every platform. This site is built with it.
+              {siteConfig.tagline} This site is built with it.
             </p>
           </div>
 
