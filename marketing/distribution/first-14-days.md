@@ -18,16 +18,48 @@ cadence on purpose (`../audits/PHASE-4-CONTENT-ENGINE.md`): one person, who also
 
 ## Before day 1 — the blocking set
 
-| # | Action | Blocking? | Where |
-| --- | --- | --- | --- |
-| 1 | **Replace the repository description** and **set topics** (topics are currently empty) | **YES** | [`github.md`](./github.md) §1 |
-| 2 | **Upload `SOCIAL-PREVIEW.png`** as the social preview | **YES** — day 1 links to the repository eventually, and an untitled card is the first impression | [`github.md`](./github.md) §1 |
-| 3 | **Build the PostHog dashboard** — 11 insights | **YES.** Without it the fortnight produces data nobody reads | `../analytics.md` §11 |
-| 4 | **Read the current rules** for every community in `../content/community-briefs.md` | Blocks community work only | `LIVE RULE CHECK REQUIRED` |
-| 5 | **Re-run `pnpm marketing:stats`** and re-check every number in LI-003, X-005, LI-004, X-003 | **YES** | — |
-| 6 | Aesthetic approval on VIS-001, VIS-002, VIS-003, VIS-005 | Soft — a post ships without its visual rather than late | `../content/visuals/` |
+| # | Action | Blocking? | State | Where |
+| --- | --- | --- | --- | --- |
+| 0 | **Merge this branch and deploy `apps/web`** | **YES — and it was missing from every earlier phase's list** | **NOT DONE.** 7 commits unmerged | below |
+| 1 | **Replace the repository description** and **set topics** (topics are currently empty) | **YES** | **NOT DONE.** Web UI only — see below | [`github.md`](./github.md) §1 |
+| 2 | **Upload `SOCIAL-PREVIEW.png`** as the social preview | **YES** — day 1 links to the repository eventually, and an untitled card is the first impression | **NOT DONE.** Web UI only; GitHub has no API for it | [`github.md`](./github.md) §1 |
+| 3 | **Build the PostHog dashboard** — 11 insights | **YES.** Without it the fortnight produces data nobody reads | **DONE** 2026-09-29 — `dashboard/2148797` | `../analytics.md` §11 |
+| 4 | **Read the current rules** for every community in `../content/community-briefs.md` | Blocks community work only | Not done | `LIVE RULE CHECK REQUIRED` |
+| 5 | **Re-run `pnpm marketing:stats`** and re-check every number in LI-003, X-005, LI-004, X-003 | **YES** | Re-run 2026-09-29; numbers unchanged | — |
+| 6 | Aesthetic approval on VIS-001, VIS-002, VIS-003, VIS-005 | Soft — a post ships without its visual rather than late | Not done | `../content/visuals/` |
 
-Items 1–3 and 5 are the real gate. Everything else can move.
+Items 0–3 and 5 are the real gate. Everything else can move.
+
+### Item 0 — the prerequisite nobody listed
+
+**Production runs `main`. Phases 1–6 are on this branch, unmerged.** That means the site a Day 1 visitor
+lands on has the **pre-Phase-2 hero and the pre-Phase-2 CTAs**, and it does not emit most of the funnel:
+`platform_coverage`, `view_verification`, `adopt_tokens`, `adopt_components`, `adopt_blocks`,
+`block_code_copied`, `platform_selected` and `blocks_gallery` have **never fired**, verified against the
+PostHog event table rather than assumed.
+
+Two consequences, and the second is the expensive one:
+
+1. **The destinations promise things the deployed page does not show.** Every asset in these 14 days points
+   at `/docs/platforms`, `/docs/tokens` or `/components` with a Phase 2 framing behind it.
+2. **Qualified Evaluation silently under-counts.** Three of its six signals cannot fire, so the primary
+   Tier 1 metric would record a fraction of what happened — and a low number would be read as *the content
+   did not work* when it actually means *the page could not report it*. That is the worst failure mode
+   available here, because it is invisible and it would be acted on.
+
+**Publishing before the merge and deploy would spend the month's content against a measurement system that
+cannot see it.** The merge is the user's call and no phase has authorised it.
+
+### Items 1 and 2 — why they are still manual
+
+Not a permissions problem. This container's proxy refuses repository *settings* writes as a category:
+`PATCH /repos/zedalleys/kinetixui` returned **"Repository settings writes are not permitted through this
+proxy"** and `PUT .../topics` returned **"Write access to this GitHub API path is not permitted through this
+proxy"**, both while the token reports `admin: true`. The social preview has **no REST endpoint at all** —
+it is a web-UI-only setting, so no token or proxy would help.
+
+All three are done in **Settings → General** in the browser, in one sitting. The strings are in
+[`github.md`](./github.md) §1.
 
 ---
 

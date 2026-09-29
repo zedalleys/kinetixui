@@ -229,8 +229,45 @@ not, and an underpowered test produces confident nonsense).
 
 ## 11. Dashboard — "KinetixUI — marketing funnel"
 
-To be created manually in PostHog; the repository has no dashboard-as-code convention and inventing one for
-eleven insights would be its own maintenance burden. **11 insights.**
+**BUILT 2026-09-29.** `https://us.posthog.com/project/620385/dashboard/2148797` — 11 numbered insights, the
+3 funnels, returning evaluators, and a text tile carrying the reading rules, so no number on it can be read
+without §10's baseline policy beside it.
+
+There is still no dashboard-as-code convention here, and inventing one for eleven insights would be its own
+maintenance burden. The spec below stays canonical; the dashboard is built from it.
+
+**Two things about it are worth knowing before reading any tile.**
+
+**A. Five tiles cannot receive data yet.** The deployed site runs `main`, and the Phase 2–6 analytics
+vocabulary is on an unmerged branch. `platform_coverage`, `view_verification`, `adopt_tokens`,
+`adopt_components`, `adopt_blocks`, `block_code_copied`, `platform_selected` and `blocks_gallery` have
+**never fired in the project**, verified against the event table. Insights 7 and 9 are empty by
+construction, 3 shows only the retired `get_started`/`installation` CTAs, 5 and 6 under-count because three
+of the six Qualified Evaluation signals cannot fire, and Funnel 3 is empty. **An empty tile means "not
+deployed", not "nobody did it"** — and this is a prerequisite for Day 1 that no earlier phase listed.
+
+**B. An older dashboard contradicts §5.** "KinetixUI — Developer Growth & Activation" (dashboard 2120439,
+created 2026-09-21, pinned) has `Developer Activation Rate — Observed` as its headline tile: copy events ÷
+pageviews, displayed as a percentage. That is the inference §5 forbids, and it predates this specification.
+It was **left untouched rather than edited** — it is a record of what was being measured then, and rewriting
+someone's dashboard to match a later rule is the same mistake as retro-editing a changelog. Treat the
+marketing-funnel dashboard as canonical and retire the older one when its remaining product tiles have been
+re-homed.
+
+### A defect in §4, found by building it
+
+`Adoption Intent Rate` is defined in §6 as Adoption Intent ÷ Qualified Evaluation, and §4's prose says
+"having evaluated" — but §4's *signal list* does not require it. `install_command_copied`,
+`cli_command_copied` and the `adopt_*` CTAs are not Qualified Evaluation signals, so a session can reach
+Adoption Intent without ever qualifying, and **the rate can exceed 100%**. This is not hypothetical: on
+2026-09-21 the project recorded 6 Adoption Intent sessions against 5 Qualified Evaluation sessions.
+
+Unresolved on purpose — it is a change to a canonical definition, which is a decision rather than a fix. The
+two options are to make Adoption Intent require Qualified Evaluation (matching §4's prose), or to change the
+denominator to all sessions. Until then insight 8 reports **counts**, and insight 10 carries a `Both` column
+so the overlap is visible rather than assumed.
+
+**11 insights.**
 
 | # | Name | Event / filter | Breakdown | Range | Question |
 | --- | --- | --- | --- | --- | --- |

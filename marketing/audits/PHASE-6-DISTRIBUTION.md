@@ -496,6 +496,51 @@ prohibited-language sweep above was run by hand rather than asserted in CI.
 - **No fake `good first issue`, no manufactured commit or issue.**
 - **No Phase 7 work started.**
 
+## Addendum, 2026-09-29 — closing the prerequisites
+
+Attempted after this report's first version, at the user's instruction. **One of four closed; a fifth was
+found that matters more than the three that did not.**
+
+| # | Prerequisite | Outcome |
+| --- | --- | --- |
+| 1 | Repository description | **BLOCKED.** `PATCH /repos/zedalleys/kinetixui` → *"Repository settings writes are not permitted through this proxy"*, with the token reporting `admin: true`. Not a permissions problem — the proxy refuses settings writes as a category |
+| 2 | Twenty topics | **BLOCKED.** `PUT .../topics` → *"Write access to this GitHub API path is not permitted through this proxy"* |
+| 3 | Social preview upload | **NOT POSSIBLE BY API.** GitHub has no REST endpoint for the social preview; `GET .../social-preview` is 404. Web UI only, so no token or proxy would change it |
+| 4 | PostHog dashboard | **DONE** — `dashboard/2148797`, 11 numbered insights + 3 flexible-step funnels + returning evaluators + a reading-rules text tile |
+
+### The fifth prerequisite, which no earlier phase listed
+
+**Production runs `main`, and Phases 1–6 are unmerged.** Verified two ways: `git` shows the Phase 2–6
+analytics vocabulary absent from `origin/main`, and the PostHog event table shows that in 90 days the only
+`cta_clicked` targets ever emitted are `get_started` and `installation` — the **retired, pre-Phase-2** pair.
+`block_code_copied`, `platform_selected`, `install_command_copied` and `kx_campaign` have never been seen at
+all.
+
+So **Qualified Evaluation would silently under-count**: three of its six signals cannot fire. A low Tier 1
+number would read as *the content did not work* when it actually means *the page could not report it* — an
+invisible failure that would be acted on. Publishing before the merge and deploy spends the month's content
+against a measurement system that cannot see it.
+
+This is recorded in `distribution/first-14-days.md` as blocking item 0. The merge remains the user's call.
+
+### Two defects found by building the dashboard rather than specifying it
+
+1. **`Adoption Intent Rate` can exceed 100%.** §6 defines it as Adoption Intent ÷ Qualified Evaluation and
+   §4's prose says "having evaluated", but §4's signal list does not require it — `cli_command_copied`,
+   `install_command_copied` and the `adopt_*` CTAs are not Qualified Evaluation signals. On 2026-09-21 the
+   project recorded **6 Adoption Intent sessions against 5 Qualified Evaluation sessions**. Left unresolved
+   on purpose: changing a canonical definition is a decision, not a fix. Insight 8 reports counts and insight
+   10 carries a `Both` column so the overlap is visible.
+
+2. **An older dashboard contradicts §5.** "KinetixUI — Developer Growth & Activation" (2120439, pinned) has
+   `Developer Activation Rate — Observed` as its headline: copy events ÷ pageviews, as a percentage. That is
+   exactly the inference §5 forbids. **Left untouched rather than edited** — it records what was being
+   measured in September, and rewriting someone's dashboard to match a later rule is the same mistake as
+   retro-editing a changelog. The new dashboard's text tile names it and says which one is canonical.
+
+`pnpm marketing:stats` was re-run (numbers unchanged), and `check:content` and `check:distribution` both
+pass.
+
 ## Risks
 
 - **Everything before day 1 is a manual action in a settings page.** Three GitHub settings and one PostHog
