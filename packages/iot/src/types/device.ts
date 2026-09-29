@@ -55,6 +55,13 @@ export type KinetixDevice = {
   firmwareVersion?: string;
   lastSeenAt?: string | Date;
   locationName?: string;
+  /** Who made it. Product-supplied and never interpreted here. */
+  manufacturer?: string;
+  model?: string;
+  /** Placement, as the product names it. For a real hierarchy use `KinetixSpaceNode.deviceIds`. */
+  room?: string;
+  zone?: string;
+  site?: string;
   metadata?: Record<string, unknown>;
 };
 

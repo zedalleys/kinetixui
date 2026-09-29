@@ -178,6 +178,41 @@ describe("the functions subpath is React-free", () => {
     expect(names).toContain("types/telemetry.ts");
   });
 
+  /**
+   * The 0.3 headless model. Each of these is reached only through the barrel, so listing them here
+   * proves they are inside the closure the guarantee above is asserted over — a new file that is
+   * exported but not walked, or walked but not exported, fails one of the two lines.
+   */
+  it("covers every 0.3 headless module, so the guarantee applies to them", () => {
+    const names = files.map((f) => f.file);
+    for (const expected of [
+      "functions/activity.ts",
+      "functions/device-state.ts",
+      "functions/energy.ts",
+      "functions/hierarchy.ts",
+      "functions/metrics.ts",
+      "types/activity.ts",
+      "types/device-state.ts",
+      "types/energy.ts",
+      "types/hierarchy.ts",
+    ]) {
+      expect(names, `${expected} is not reachable from functions/index.ts`).toContain(expected);
+    }
+  });
+
+  /**
+   * `sideEffects: false` only helps a consumer if module top levels are inert. Registries are data,
+   * and the one derived table is a pure-annotated call over an identifier — so a top-level
+   * statement that is a bare call or `new` is the shape of a regression.
+   */
+  it("has no top-level call statements in the new modules", () => {
+    for (const { file, source } of files) {
+      if (!/^(functions|types)\/(activity|device-state|energy|hierarchy|metrics)\.ts$/.test(file)) continue;
+      const code = stripComments(source);
+      expect(/^(?:[A-Za-z_$][\w$.]*)\(.*\);?$/m.test(code), `${file} has a top-level call statement`).toBe(false);
+    }
+  });
+
   it("imports neither react nor react-dom anywhere in that graph", () => {
     for (const { file, source } of files) {
       expect(REACT_IMPORT.test(source), `${file} imports React — it would break @kinetixui/iot/functions`).toBe(false);

@@ -120,6 +120,45 @@ const PATHS: Record<KinetixDeviceCategory, React.ReactNode> = {
       <path d="M10.4 6.6a9 9 0 0 1 3.2 0" />
     </>
   ),
+  motor: (
+    <>
+      <rect x="6" y="7" width="11" height="10" rx="2" />
+      <path d="M17 10h3v4h-3" />
+      <path d="M3.5 12H6" />
+      <path d="M9 7V5h5v2" />
+      <path d="M9 10.5v3" />
+      <path d="M12 10.5v3" />
+      <path d="M14.5 10.5v3" />
+    </>
+  ),
+  "weather-station": (
+    <>
+      <path d="M12 21V9" />
+      <path d="M8 21h8" />
+      <path d="M12 9 6.5 5" />
+      <path d="M12 9l5.5-4" />
+      <circle cx="6" cy="4.6" r="1.3" />
+      <circle cx="18" cy="4.6" r="1.3" />
+      <path d="M12 13h5" />
+    </>
+  ),
+  "air-quality": (
+    <>
+      <path d="M3 9h11a2.5 2.5 0 1 0-2.5-2.5" />
+      <path d="M3 13.5h15a2.5 2.5 0 1 1-2.5 2.5" />
+      <path d="M3 18h6" />
+    </>
+  ),
+  "soil-sensor": (
+    <>
+      <path d="M12 3v11" />
+      <path d="M9.5 14h5l-1 4.5h-3Z" />
+      <path d="M12 18.5V21" />
+      <path d="M4 21h16" />
+      <path d="M7.5 6.5c1.6 0 2.8.9 3.5 2.5" />
+      <path d="M16.5 6.5c-1.6 0-2.8.9-3.5 2.5" />
+    </>
+  ),
   unknown: (
     <>
       <rect x="4" y="5" width="16" height="14" rx="2.5" />
