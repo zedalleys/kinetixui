@@ -4,7 +4,9 @@
   "title": "Tabs",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "@radix-ui/react-tabs"
+    "@radix-ui/react-tabs",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

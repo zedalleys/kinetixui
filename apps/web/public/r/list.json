@@ -3,7 +3,10 @@
   "name": "list",
   "title": "List",
   "description": "Ported onto the KinetixUI token contract.",
-  "dependencies": [],
+  "dependencies": [
+    "clsx",
+    "tailwind-merge"
+  ],
   "registryDependencies": [
     "tokens"
   ],

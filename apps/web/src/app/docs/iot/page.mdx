@@ -93,7 +93,11 @@ It models what a device *is*, so that the layer which talks to one has something
 The models are shaped to be equally true for smart agriculture, medical devices, smart home, industrial
 dashboards, fleet and logistics, and wearables. A field earns a place in `KinetixDevice` only if a soil
 probe, an infusion pump, a thermostat, a delivery van tracker and a fitness band would all populate it
-with the same meaning. Anything narrower goes in `metadata`, and there are no transport or protocol
+with the same meaning.
+
+A wearable is a *device this vocabulary describes*, which is not the same as a platform KinetixUI targets:
+there is **no wearable component library** and nothing is built. See
+[Supported platforms](/docs/platforms). Anything narrower goes in `metadata`, and there are no transport or protocol
 fields at all.
 
 ## The device model

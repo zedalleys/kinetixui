@@ -4,7 +4,9 @@
   "title": "Chart",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "recharts"
+    "clsx",
+    "recharts",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

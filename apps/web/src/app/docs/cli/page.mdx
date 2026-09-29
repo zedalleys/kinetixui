@@ -327,12 +327,30 @@ not building yet:
 | `-y, --yes` | `init` | skip prompts, use defaults |
 | `-a, --all` | `add` | install every component in the registry |
 | `-o, --overwrite` | `add` | replace files that already exist |
-| `-r, --registry <url>` | `init`, `add`, `list`, `inspect`, `parity` | point at a different registry (defaults to `https://kinetixui.com/r`) |
+| `-r, --registry <url>` | `init`, `add`, `list`, `inspect`, `parity` | point at a different registry (defaults to `https://kinetixui.com/r`, or `registry` in `kinetixui.json`) |
 | `-f, --force` | `theme create` | overwrite an existing theme file |
 | `--no-fail-on-contrast` | `theme build` | exit 0 even if a pair fails WCAG AA |
 
-`doctor` always checks against the default registry — it doesn't take
-`--registry` yet, since `kinetixui.json` doesn't record which registry a
-project was set up against.
+`doctor` doesn't take `--registry`, but it no longer assumes the default
+either: it checks whichever registry the project resolves to, so if
+`kinetixui.json` sets `registry`, that is the origin it reports on. Checking a
+different origin from the one `add` will use is worse than not checking, because
+it reads as a pass for something that was never tested.
+
+### Pointing at your own registry
+
+`add` needs the registry origin to be reachable and has no offline mode, so the
+default origin is a dependency of every install. To set an alternative once for
+a project rather than on every command, put it in `kinetixui.json`:
+
+```json
+{
+  "registry": "https://your-mirror.example.com/r"
+}
+```
+
+`--registry` still wins when given. When the registry cannot be reached the CLI
+names the origin and both ways to change it, rather than surfacing a bare
+network error.
 
 See [kinetixui.json](/docs/kinetixui-json) for what the config file controls.

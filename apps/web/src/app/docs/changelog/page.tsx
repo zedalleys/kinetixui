@@ -53,7 +53,8 @@ const releases: ViewRelease[] = RELEASES.map((r, i) => ({
   migration: r.migration,
   limitations: r.limitations,
   groups: r.newComponents?.map((g) => ({ group: g.group, items: g.slugs.map(componentFor) })),
-  // a Changesets fixed group tags all three packages; the UI tag is the canonical one (there are no GitHub Releases after v0.5.0)
+  // a Changesets fixed group tags all three packages; the UI tag is the canonical one, and many versions have
+  // only that tag rather than a GitHub Release — see `githubReleaseUrl` in releases.ts
   tagHref: `https://github.com/zedalleys/kinetixui/tree/@kinetixui/ui@${r.version}`,
   githubReleaseUrl: r.githubReleaseUrl,
 }));

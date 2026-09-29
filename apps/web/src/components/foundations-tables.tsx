@@ -13,6 +13,7 @@ import {
   type Platform,
 } from "@/lib/platform-parity";
 import { componentTotal, gaps, nonPorts, notSupported, platformCount, platforms, statusCounts } from "@/lib/platform-support";
+import { availabilitySentence } from "@/lib/platform-prose";
 
 const manifestComponents = manifest.components as Record<
   string,
@@ -381,6 +382,19 @@ export function PlatformCountInline({ platform }: { platform: Platform }) {
 export function PlatformMaturityInline({ platform }: { platform: Platform }) {
   const m = PLATFORM_DEFINITIONS[platform].maturity;
   return <>{m.charAt(0).toUpperCase() + m.slice(1)}</>;
+}
+
+/**
+ * "React and Angular (preview) install from a package registry today. SwiftUI, … are real
+ * implementations, compiled in CI, not yet distributed as packages."
+ *
+ * Maturity and distribution are separate axes and this renders the second one. Every native port is
+ * `maturity: "stable"` and on no package registry, so a page that names the platforms from maturity alone
+ * reads as five installable things. Derived in `platform-prose.ts`; both halves disappear on their own if
+ * the native ports are ever published.
+ */
+export function PlatformAvailability() {
+  return <>{availabilitySentence}</>;
 }
 
 /**

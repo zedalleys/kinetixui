@@ -1,7 +1,7 @@
 import uiPkg from "@kinetixui/ui/package.json";
 import { IOT_MATURITY } from "./iot";
 import { PLATFORM_DEFINITIONS, type Platform } from "./platform-parity";
-import { platformSentence } from "./platform-prose";
+import { availabilityClause } from "./platform-prose";
 
 /**
  * A platform's maturity as a nav tag, read from `platformDefinitions` in components.manifest.json. Stable
@@ -18,7 +18,12 @@ export const siteConfig = {
   // Derived, not typed: this is the OpenGraph and search snippet, and it named four platforms for weeks
   // after Angular shipped. It also used to say one source becomes "tokens and components", which implies the
   // component code is generated too — it is not, and the homepage stopped saying so in #199.
-  description: `KinetixUI compiles one DTCG token source into every platform's own token output, and ships native component implementations for ${platformSentence}.`,
+  //
+  // It now carries `availabilityClause` rather than `platformSentence`. Both name all five platforms, but
+  // `platformSentence` is derived from maturity alone, and every native port is "stable" on that axis while
+  // being on no package registry. A search snippet is a surface someone acts on, so it has to say which of
+  // the five they can install — see platform-prose.ts.
+  description: `KinetixUI compiles one DTCG token source into every platform's own token output. Components are native per platform: ${availabilityClause}.`,
   url: "https://kinetixui.com",
   repo: "https://github.com/zedalleys/kinetixui",
   figma: "https://www.figma.com/design/GQXTKKJAPbawd4wcuE77Pf/KinetixUI?node-id=3877-10388",

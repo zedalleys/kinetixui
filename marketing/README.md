@@ -25,12 +25,13 @@ rather than being collapsed into the same thing.
 | **Component lifecycle** — is one component's own API settled (stable / beta / deprecated) | `component-status.json`, generated from `components.manifest.json` |
 | Whether a platform is meant to carry the whole catalogue | `platformDefinitions[].catalogComplete` |
 | Why a component is missing on a platform | `components.manifest.json` → `platformNote` |
-| Published version | `packages/ui/package.json` |
-| What is actually installable | `npm view <pkg> version` — all four npm packages are published; the native SwiftUI / Compose / Flutter ports are not distributed |
+| Published version | each package's own `package.json`. `@kinetixui/{ui,tokens,cli}` share one line (a Changesets `fixed` cohort); `@kinetixui/angular` and `@kinetixui/iot` version independently, so one number does not describe the product |
+| **Distribution** — is it publicly installable at all | `components.manifest.json` → `platformDefinitions[].distribution.published`, corroborated by `npm view <pkg> version`. A stable implementation that is not distributed is not installable, and the two must never be written as one claim |
 
-**These are five different questions and they have five different answers.**
-A platform can be a *stable package* whose *catalogue verification* is
-experimental, carrying *stable components*, while not being *catalogue-complete*.
+**These are six different questions and they have six different answers.**
+A platform can be a *stable implementation* whose *catalogue verification* is
+experimental, carrying *stable components*, while not being *catalogue-complete* — and
+while not being *distributed* anywhere a reader could install it.
 Today React is exactly that mismatch in miniature: stable package, beta
 verification. Collapsing any two of them into one word is the fastest way to
 write something untrue — and the most common, because "mature" sounds like it
@@ -49,14 +50,72 @@ implication, or an install command for an unpublished package.
 | `messaging.md` | Writing a headline, a post, a page, a release note |
 | `content-pillars.md` | Deciding what to write about |
 | `content-calendar.md` | Planning the next 30 days |
-| `campaigns.md` | Running a themed push across channels |
 | `seo.md` | Topic clusters and landing-page architecture |
 | `community.md` | GitHub, Reddit, HN, Discussions |
 | `launches.md` | Staged launch criteria and Product Hunt prep |
 | `experiments.md` | Growth experiment backlog |
 | `weekly-review.md` / `monthly-review.md` | The review ritual |
+| `analytics.md` | Instrumentation, funnels and what each event is for |
+| `roadmap.md` | Internal sequencing. Not a public roadmap, and not a claim surface |
 | `content/backlog.json` | Machine-readable article/post backlog |
-| `research/` | Captured pain points from the wild, dated |
+| `content/drafts/<id>/` | Per-piece drafts, sources and measurement plans |
+| `audits/` | Dated audits and remediation records — see below |
+
+## Generated versus maintained
+
+Two kinds of file live here, and the difference decides whether you may edit one.
+
+**Maintained by hand** — every `.md` in this directory, `content/backlog.json`, and the drafts under
+`content/drafts/`. These hold judgement: who we are for, what we say, what we ship next.
+
+**Generated, never edited** — nothing in this directory. The numbers marketing uses are generated
+*elsewhere* and read from there: `platform-parity.json`, `block-parity.json`, `component-status.json`
+and `verification.json` are all build outputs at the repository root, and `pnpm marketing:stats` is the
+one command that assembles them into the figures a post may quote. If you find yourself typing a count
+into a file in this directory, that is the mistake this whole README exists to prevent.
+
+## Source-of-truth hierarchy
+
+When two surfaces disagree, the higher row wins:
+
+1. **Source code and manifests** — `components.manifest.json`, `release/publish-packages.json`, each
+   `package.json`. The product is whatever these say.
+2. **Generated data** — `platform-parity.json`, `block-parity.json`, `verification.json`,
+   `component-status.json`. Derived from row 1 by `pnpm gen:*`, and re-derived in CI.
+3. **`pnpm marketing:stats`** — row 2, assembled and printed. The only figures cleared for public use.
+4. **Guidance in this directory** — positioning, messaging, personas. Interprets rows 1–3; never
+   overrides them.
+5. **Published copy** — the website, the READMEs, posts. Guarded against rows 1–2 by
+   `apps/web/src/lib/marketing-claims.test.ts` and `current-truth.test.ts`.
+
+A claim that cannot be traced to row 1 or 2 does not ship.
+
+## Audits
+
+`audits/` holds **dated snapshots**, not living documents. An audit records what was true at a named
+commit; it is not retro-edited when the product moves, for the same reason `releases.ts` and the
+CHANGELOGs are not. If an audit's finding is later fixed, the fix is recorded in a remediation document
+beside it, and the audit keeps a banner pointing there.
+
+| Document | What it is |
+| --- | --- |
+| `audits/READINESS-AUDIT.md` | Marketing readiness audit at `789c90e`, 2026-09-28. The claim verification matrix lives here |
+| `audits/PHASE-0.5-REMEDIATION.md` | What was fixed, mitigated or deferred against that audit |
+| `audits/TREE-SHAKING.md` | Why `@kinetixui/ui` cannot be marketed as tree-shakeable, measured |
+
+Because they are historical, audits are deliberately **not** in the `CURRENT_SURFACES` list that
+`current-truth.test.ts` checks — a present-tense guard pointed at a dated document produces failures on
+correct text.
+
+## Where new work goes
+
+| Doing | Put it |
+| --- | --- |
+| A new campaign or content piece | `content/drafts/<id>/`, following the `a01` / `a02` shape |
+| A one-off number for a post | Nowhere. Run `pnpm marketing:stats` at the time of writing |
+| A new audit | `audits/`, dated, with the commit it audited in its header |
+| A change to what we claim | The guidance file that owns it, then check the guards still pass |
+| Positioning or messaging strategy | `positioning.md` / `messaging.md` — **Phase 1 work**, not yet started |
 
 ## What this is not
 

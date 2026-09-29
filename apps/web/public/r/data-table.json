@@ -4,7 +4,9 @@
   "title": "Data Table",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "@tanstack/react-table"
+    "@tanstack/react-table",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens",

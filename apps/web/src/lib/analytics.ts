@@ -46,7 +46,17 @@ export const ANALYTICS_LOCATIONS = ["hero", "primary_nav", "sidebar", "installat
 export type AnalyticsLocation = (typeof ANALYTICS_LOCATIONS)[number];
 
 /** What a product call-to-action is FOR — never its visible label and never its destination URL. */
-export const ANALYTICS_CTA_TARGETS = ["get_started", "browse_components", "read_docs", "installation", "view_changelog"] as const;
+export const ANALYTICS_CTA_TARGETS = [
+  "get_started",
+  "browse_components",
+  "read_docs",
+  "installation",
+  "view_changelog",
+  // The hero's "what ships where" link. Worth measuring on its own: it answers the question the hero used to
+  // leave open — which of the five platforms you can actually install — so how often it is followed says
+  // whether the distinction landed or just added a line.
+  "platform_availability",
+] as const;
 export type AnalyticsCtaTarget = (typeof ANALYTICS_CTA_TARGETS)[number];
 
 /**

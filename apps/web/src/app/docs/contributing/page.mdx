@@ -219,9 +219,10 @@ exists because the page once sat at 0.6.0 for eleven releases while the packages
 4. The per-package "changed / unchanged" indicators are generated from the package changelogs
    (`node scripts/gen-release-meta.mjs`) — run it if the check says they're stale.
 
-There are no GitHub Releases after v0.5.0, only per-package tags, so by default the page links to the tag.
-If you do publish a GitHub Release for a version, generate its notes from the same curated entry — nothing
-is written twice:
+Not every version has a GitHub Release page: versions between `v0.5.0` and the release-automation change
+carry only a per-package tag, so the page links the tag unless `githubReleaseUrl` is set. Releases created
+from now on are made by `scripts/release/github-releases.mjs` during the release itself. If you publish one
+by hand, generate its notes from the same curated entry — nothing is written twice:
 
 ```bash
 pnpm release:notes 0.21.0            # prints Markdown to paste into the GitHub Release

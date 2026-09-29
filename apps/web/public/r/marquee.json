@@ -3,7 +3,10 @@
   "name": "marquee",
   "title": "Marquee",
   "description": "Ported onto the KinetixUI token contract.",
-  "dependencies": [],
+  "dependencies": [
+    "clsx",
+    "tailwind-merge"
+  ],
   "registryDependencies": [
     "tokens"
   ],

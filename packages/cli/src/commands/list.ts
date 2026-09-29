@@ -1,3 +1,4 @@
+import { resolveRegistry } from "../lib/config.js";
 import pc from "picocolors";
 import { fetchRegistryIndex } from "../lib/registry.js";
 
@@ -6,7 +7,7 @@ export interface ListOptions {
 }
 
 export async function list(options: ListOptions): Promise<void> {
-  const items = await fetchRegistryIndex(options.registry);
+  const items = await fetchRegistryIndex(await resolveRegistry(process.cwd(), options.registry));
   const components = items.filter((item) => item.type === "registry:ui").sort((a, b) => a.name.localeCompare(b.name));
 
   console.log(`${components.length} component(s):`);

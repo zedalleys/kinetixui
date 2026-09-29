@@ -66,7 +66,7 @@ const CURRENT_SURFACES = {
 
 const defs = manifest.platformDefinitions as Record<
   string,
-  { label: string; maturity: string; catalogComplete: boolean; distribution: { channel: string; published: boolean } }
+  { label: string; maturity: string; catalogComplete: boolean; distribution: { channel: string; coordinate: string; published: boolean } }
 >;
 const totals = verification.totals as Record<string, Record<string, number>>;
 
@@ -80,7 +80,9 @@ const totals = verification.totals as Record<string, Record<string, number>>;
 const NATIVE_TARGETS = [swiftuiExporter, composeExporter, flutterExporter].map((e) => e.target);
 
 const presetSubcommands = (() => {
-  const cli = read("packages/cli/src/index.ts");
+  // `program.ts`, not `index.ts`: the command tree moved there in Phase 0.5 so it could be built without
+  // being executed, which is what made the CLI testable at all. `index.ts` is now four lines.
+  const cli = read("packages/cli/src/program.ts");
   const section = cli.slice(cli.indexOf("const preset"));
   return [...section.matchAll(/\.command\("([a-z]+)"\)/g)].map((m) => m[1]!);
 })();
@@ -161,10 +163,40 @@ describe("publication claims match the manifest", () => {
   const claimsNaming = (text: string, label: string) => {
     const named = new RegExp(`\\b${label}\\b`, "i");
     const units: string[] = [];
+    /**
+     * Prose is unwrapped into paragraphs BEFORE being split into sentences.
+     *
+     * The third version of this, and the reason for it. Splitting per line first looked equivalent and is
+     * not, because every markdown file here hard-wraps at about 80 columns: a sentence that crosses a line
+     * break was never seen whole, so the package name and the denial could land in different units and
+     * neither unit was a claim. `marketing/positioning.md` carried exactly that shape for months —
+     *
+     *     ...and `@kinetixui/tokens` are on npm; `@kinetixui/angular` and the three native
+     *     libraries are not.
+     *
+     * — where line one names the package with no denial in it and line two denies with no name in it. The
+     * guard read both and objected to neither.
+     *
+     * Table rows are still kept whole (a row is one claim across cells) and a blank line still ends a
+     * paragraph, so unrelated prose is never joined into one unit.
+     */
+    let paragraph: string[] = [];
+    const flush = () => {
+      if (paragraph.length === 0) return;
+      units.push(...paragraph.join(" ").split(/(?<=[.!?])/));
+      paragraph = [];
+    };
     for (const line of text.split("\n")) {
-      if (line.trimStart().startsWith("|")) units.push(line);
-      else units.push(...line.split(/(?<=[.!?])/));
+      if (line.trimStart().startsWith("|")) {
+        flush();
+        units.push(line);
+      } else if (line.trim() === "") {
+        flush();
+      } else {
+        paragraph.push(line.trim());
+      }
     }
+    flush();
     return units.filter((unit) => named.test(unit));
   };
 
@@ -180,6 +212,44 @@ describe("publication claims match the manifest", () => {
               `${where} says ${label} is not published, but the manifest says it is`,
             ).not.toMatch(denial);
           }
+        }
+      }
+    },
+  );
+
+  /**
+   * The elliptical denial, which no phrase rule above can see.
+   *
+   * `marketing/positioning.md` carried this for months and every guard read it as fine:
+   *
+   *     Only the npm packages are published. `@kinetixui/ui`, `@kinetixui/cli` and `@kinetixui/tokens`
+   *     are on npm; `@kinetixui/angular` and the three native libraries are not.
+   *
+   * The denial is "are not." — the predicate is elided. None of `not published`, `unpublished` or
+   * `not on npm` appears anywhere in it, so searching for those phrases was never going to work, and
+   * unwrapping the line break (which was also needed, and is fixed above) does not help either.
+   *
+   * This looks instead for a negation that *ends* a clause — the shape ellipsis takes — inside a unit
+   * that is talking about distribution and names a published package. It deliberately does not fire on
+   * "Angular is published, but not stable", because there the negation is followed by its own predicate.
+   */
+  it.each(published.map(([id, d]) => [id, d.label, d.distribution.coordinate] as const))(
+    "never excludes the published %s from a distribution list by ellipsis",
+    (_id, label, coordinate) => {
+      const aboutDistribution = /\b(npm|registry|distribut|publish)/i;
+      const elided = /\b(is|are)\s+not\s*[.;,]/i;
+      for (const [where, text] of Object.entries(CURRENT_SURFACES)) {
+        for (const unit of claimsNaming(text, label)) {
+          if (!aboutDistribution.test(unit)) continue;
+          const flat = unit.replace(/\s+/g, " ").trim();
+          // Only when the elision comes AFTER the package is named — otherwise an earlier clause about
+          // something else would implicate a package merely mentioned later in the same sentence.
+          const at = flat.toLowerCase().indexOf(coordinate.toLowerCase());
+          const named = at >= 0 ? flat.slice(at) : flat;
+          expect(
+            elided.exec(named)?.[0],
+            `${where} excludes ${coordinate} from a distribution list by ellipsis ("…are not."), and it is published: "${flat.slice(0, 140)}"`,
+          ).toBeUndefined();
         }
       }
     },

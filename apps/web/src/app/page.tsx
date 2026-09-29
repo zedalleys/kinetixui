@@ -11,7 +11,7 @@ import { ctaAttrs } from "@/lib/analytics-surfaces";
 import { IOT_MATURITY_LABEL } from "@/lib/iot";
 import { componentTotal } from "@/lib/platform-support";
 import { PLATFORMS as COMPONENT_PLATFORMS } from "@/lib/platform-parity";
-import { platformSentence } from "@/lib/platform-prose";
+import { installableSentence, platformSentence, sourceOnlySentence } from "@/lib/platform-prose";
 import { componentPlatformCount, projectLicense, projectVersion } from "@/lib/project-stats";
 
 // "Compose" is the manifest's short platform name; the marketing ticker uses the fuller, more recognisable name.
@@ -86,6 +86,30 @@ export default function HomePage() {
                 One token source, generated for every platform. {platformSentence} each implement the
                 same component contract natively. Copy a component, own the code, stay in sync as the
                 design moves.
+              </p>
+
+              {/*
+                Availability, stated in the hero rather than three clicks down.
+
+                `platformSentence` above is derived from `maturity`, on which every native port is
+                "stable" — and none of them is on a package registry. Naming five platforms and leaving
+                that out is the one place this page was misleading: a reader came away expecting five
+                installable things. This says which two install and what the other three are, without
+                shrinking them, because the implementations are real and compiled in CI.
+              */}
+              <p className="mt-3 max-w-xl text-sm text-muted-foreground">
+                <span className="text-foreground">{installableSentence}</span> install from a package
+                registry today. <span className="text-foreground">{sourceOnlySentence}</span> are real
+                implementations, compiled in their own CI, that you build from source — not yet
+                distributed as packages.{" "}
+                <Link
+                  href="/docs/platforms"
+                  {...ctaAttrs("homepage_hero", "platform_availability")}
+                  className="text-primary underline-offset-4 hover:underline"
+                >
+                  What ships where
+                </Link>
+                .
               </p>
 
               <div className="mt-9 flex flex-wrap items-center gap-3">

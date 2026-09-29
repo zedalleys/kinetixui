@@ -4,7 +4,9 @@
   "title": "Tooltip",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "@radix-ui/react-tooltip"
+    "@radix-ui/react-tooltip",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

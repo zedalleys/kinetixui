@@ -4,7 +4,9 @@
   "title": "Progress",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "@radix-ui/react-progress"
+    "@radix-ui/react-progress",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

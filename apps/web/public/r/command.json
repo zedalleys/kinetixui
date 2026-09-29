@@ -4,8 +4,10 @@
   "title": "Command",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
+    "clsx",
     "cmdk",
-    "lucide-react"
+    "lucide-react",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens",

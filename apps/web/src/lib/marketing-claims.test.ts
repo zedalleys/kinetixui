@@ -3,7 +3,12 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import manifest from "../../../../components.manifest.json";
 import parity from "../../../../platform-parity.json";
-import { platformSentence, stablePlatformSentence } from "./platform-prose";
+import {
+  SOURCE_ONLY_PLATFORMS,
+  availabilityClause,
+  platformSentence,
+  stablePlatformSentence,
+} from "./platform-prose";
 import { siteConfig } from "./site";
 
 /**
@@ -39,6 +44,10 @@ const COPY = {
   "homepage": homepage,
   "README.md": readme,
   "docs landing": readFileSync("src/app/docs/page.mdx", "utf8"),
+  // Added in Phase 0.5: its `description` is a search snippet that said components "ship on" four
+  // platforms, which a reader hears as four they can install. A snippet is top-of-funnel copy, so it
+  // belongs under the same rules as the homepage.
+  "components page": readFileSync("src/app/components/page.tsx", "utf8"),
 };
 
 describe("platform lists are derived, not typed", () => {
@@ -55,8 +64,23 @@ describe("platform lists are derived, not typed", () => {
     }
   });
 
-  it("uses the derived sentence in the site description, which is the OpenGraph and search snippet", () => {
-    expect(siteConfig.description).toContain(platformSentence);
+  /**
+   * The description used to be asserted to contain `platformSentence` verbatim. It now carries
+   * `availabilityClause` instead, because a search snippet is a surface someone acts on and
+   * `platformSentence` is derived from maturity alone — it names three platforms nobody can install.
+   *
+   * The rule the old assertion was protecting is unchanged and still enforced: the description must name
+   * every platform the manifest has, and must not be hand-typed. Both halves are checked directly rather
+   * than through one string, so the description can be reworded without weakening the guard.
+   */
+  it("names every platform in the site description, which is the OpenGraph and search snippet", () => {
+    for (const p of Object.keys(defs)) {
+      expect(siteConfig.description, `the site description omits ${defs[p]!.label}`).toContain(defs[p]!.label);
+    }
+  });
+
+  it("carries the derived availability clause in the site description rather than a typed list", () => {
+    expect(siteConfig.description).toContain(availabilityClause);
   });
 
   it("no longer hard-codes the old four-platform list in the copy that drifted", () => {
@@ -93,6 +117,7 @@ describe("only real distribution is advertised", () => {
    * truth instead of having to be remembered. `@kinetixui/angular` moved into it when it was
    * published; the rule did not change, only which side each package is on.
    */
+  const escape = (v: string) => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const distribution = Object.values(defs).map((d) => d.distribution);
   const npmPackages = distribution.filter((d) => d.channel === "npm");
   const unpublished = npmPackages.filter((d) => !d.published).map((d) => d.coordinate);
@@ -110,6 +135,56 @@ describe("only real distribution is advertised", () => {
   });
 
   /**
+   * The npm rule above only ever looked at npm-channel packages, and every npm package is published —
+   * so `unpublished` was empty and the guard was passing vacuously while three platforms on other
+   * channels were undistributed. This is the half that was missing.
+   *
+   * Each channel gets the syntax a developer would actually paste, built from the coordinate in the
+   * manifest rather than listed here, so a platform that later publishes drops out of the guard by
+   * changing one boolean.
+   */
+  const NON_NPM_INSTALL_SYNTAX: Record<string, (coordinate: string) => RegExp[]> = {
+    "Maven Central": (c) => [new RegExp("(implementation|api)\\s*[(\'\"]" + escape(c)), new RegExp(escape(c) + ":\\d")],
+    "pub.dev": (c) => [new RegExp("(flutter )?pub add " + escape(c)), new RegExp("^\\s*" + escape(c) + ":\\s*[\\^\\d]", "m")],
+    "Swift Package Manager": () => [/\.package\(\s*url:/],
+  };
+
+  it("shows no dependency snippet for a platform that is not distributed on its own channel", () => {
+    expect(SOURCE_ONLY_PLATFORMS.length, "this guard needs at least one undistributed platform to mean anything").toBeGreaterThan(0);
+    for (const platform of SOURCE_ONLY_PLATFORMS) {
+      const d = defs[platform]!;
+      const patterns = NON_NPM_INSTALL_SYNTAX[d.distribution.channel]?.(d.distribution.coordinate) ?? [];
+      for (const [where, text] of Object.entries(COPY)) {
+        for (const pattern of patterns) {
+          expect(
+            text,
+            `${where} shows a ${d.distribution.channel} dependency for ${d.label}, which is not distributed`,
+          ).not.toMatch(pattern);
+        }
+      }
+    }
+  });
+
+  /**
+   * The positive half. Banning install commands stops the worst version; it does not stop a page naming
+   * five platforms in one breath and letting the reader assume all five are installable, which is what
+   * the homepage did. So any surface that names an undistributed platform has to say somewhere that it
+   * is not distributed.
+   */
+  it("qualifies every undistributed platform it names", () => {
+    const qualifier =
+      /not (yet )?(distributed|published|on (npm|Maven Central|pub\.dev|a package registry))|(build|compile) (it )?from source|source you compile|source to copy/i;
+    for (const [where, text] of Object.entries(COPY)) {
+      const named = SOURCE_ONLY_PLATFORMS.filter((p) => text.includes(defs[p]!.label));
+      if (named.length === 0) continue;
+      expect(
+        qualifier.test(text),
+        `${where} names ${named.map((p) => defs[p]!.label).join(", ")} without saying anywhere that they are not distributed`,
+      ).toBe(true);
+    }
+  });
+
+  /**
    * Publication is distribution, not maturity. A package can be installable and still have an API
    * that moves — saying otherwise is the specific claim this repository has to avoid making about
    * a Preview platform.
@@ -121,6 +196,150 @@ describe("only real distribution is advertised", () => {
         const claim = new RegExp(`${d.label}[^.]{0,60}(stable|production[- ]ready|full parity)`, "i");
         expect(text, `${where} implies ${d.label} is stable because it is published`).not.toMatch(claim);
       }
+    }
+  });
+});
+
+/* ------------------------------------------------------------------ wearables */
+
+/**
+ * Wearables are approved in principle and **nothing is built** — `WEARABLES.md` opens by saying so.
+ *
+ * The specific way this goes wrong is not someone writing "wearables are supported". It is the word
+ * appearing in a list beside five platforms that *are* implemented, where a reader counts six. The IoT
+ * docs page has a legitimate reason to say "wearables" — a fitness band is a device its models describe —
+ * so a blanket ban would delete a correct technical point. These rules ban the two things that would
+ * actually be false instead: a wearable in a derived platform list, and a wearable described as shipping.
+ *
+ * The internal architecture documents (`WEARABLES.md`, `CORE-AUDIT.md`) are deliberately out of scope.
+ * Their job is to record the decision and the plan, factually, and they already say nothing is built.
+ */
+describe("wearables are never counted as a platform", () => {
+  const WEARABLE = /wearables?|watchOS|Wear OS|smartwatch/i;
+
+  /** Everything a prospective user reads, plus the module that feeds the platform pages. */
+  const PUBLIC_SURFACES = {
+    ...COPY,
+    "platform-support.ts": readFileSync("src/lib/platform-support.ts", "utf8"),
+    "docs/iot": readFileSync("src/app/docs/iot/page.mdx", "utf8"),
+    "docs/platforms": readFileSync("src/app/docs/platforms/page.mdx", "utf8"),
+    "site.ts": readFileSync("src/lib/site.ts", "utf8"),
+  };
+
+  it("has no wearable platform in the manifest, so no derived list can contain one", () => {
+    for (const [name, d] of Object.entries(defs)) {
+      expect(WEARABLE.test(name), `${name} is a platform definition and reads as a wearable`).toBe(false);
+      expect(WEARABLE.test(d.label), `${d.label} is a platform label and reads as a wearable`).toBe(false);
+    }
+    // And the sentences built from those definitions, checked directly rather than trusted.
+    expect(WEARABLE.test(platformSentence)).toBe(false);
+    expect(WEARABLE.test(stablePlatformSentence)).toBe(false);
+    expect(WEARABLE.test(availabilityClause)).toBe(false);
+  });
+
+  it("never describes a wearable as supported, available, shipping or coming soon", () => {
+    // Deliberately includes "coming soon": an unbuilt platform with an implied date is the same promise as
+    // a claim, and there is no approved roadmap statement for wearables.
+    //
+    // The lookbehinds matter more than the word list. Without them this fired on `notSupported` — the
+    // correctly named array that lists the platforms with no implementation — and on the phrase "No
+    // implementation yet" inside it. A guard that cannot tell a claim from its denial fails on exactly the
+    // text that is doing the right thing, and gets deleted for being annoying.
+    const NEG = "(?<![A-Za-z])(?<!not)(?<!No )(?<!no )(?<!never )";
+    const CLAIM = "(supported|available|implemented|ships|shipping|coming soon|on the roadmap|in progress)";
+    const WEAR = "(wearables?|watchOS|Wear OS|smartwatch)";
+    const claimed = new RegExp(`${WEAR}[^.]{0,80}${NEG}${CLAIM}`, "i");
+    const reversed = new RegExp(`${NEG}${CLAIM}[^.]{0,80}${WEAR}`, "i");
+    for (const [where, text] of Object.entries(PUBLIC_SURFACES)) {
+      expect(claimed.exec(text)?.[0], `${where} presents a wearable as real`).toBeUndefined();
+      expect(reversed.exec(text)?.[0], `${where} presents a wearable as real`).toBeUndefined();
+    }
+  });
+
+  it("pairs every wearable mention with a statement that nothing is built", () => {
+    const disclaimed = /no implementation yet|not implemented|nothing is built|no wearable component library/i;
+    for (const [where, text] of Object.entries(PUBLIC_SURFACES)) {
+      if (!WEARABLE.test(text)) continue;
+      expect(
+        disclaimed.test(text),
+        `${where} mentions a wearable without saying anywhere that none is implemented`,
+      ).toBe(true);
+    }
+  });
+
+  /** The premise. If a wearable is ever built, this fails and these rules get revisited deliberately. */
+  it("still describes wearables as unbuilt in the design spec", () => {
+    expect(read("WEARABLES.md")).toMatch(/nothing built|nothing is built/i);
+  });
+});
+
+/* ------------------------------------------------------------------ maturity claims */
+
+/**
+ * "Production ready" is the claim this project is most exposed to and has never made.
+ *
+ * A search of the whole repository found no assertion of it about KinetixUI: the only matches were a code
+ * comment calling `@dnd-kit` battle-tested — a statement about a dependency, and a true one — and a campaign
+ * draft that lists the phrase among the things not to write. Nothing needed retracting.
+ *
+ * The exposure is that it would be *easy* to write and hard to notice, because so much of the evidence looks
+ * like it supports it: 2,600-plus tests, roughly 35 CI gates, an empty axe baseline, provenance on every
+ * package. None of those is the claim. The claim is about a product being finished, and the project says
+ * otherwise in its own voice — every published package is `0.x`, the IoT module is Experimental, Angular is
+ * Preview, and the homepage eyebrow reads "Free while in beta". Saying both is the contradiction a reader
+ * catches first.
+ *
+ * So the rule is tied to the evidence rather than to taste, and the premise is asserted: the day a package
+ * reaches 1.0.0 this fails, and the claim gets reconsidered deliberately instead of drifting in.
+ */
+describe("maturity is not overstated", () => {
+  const published = Object.values(defs).filter((d) => d.distribution.published);
+
+  /** Read from the release allowlist, so a new package is covered without being listed here. */
+  const publishedVersions = (() => {
+    const allowlist = JSON.parse(readFileSync(`${root}/release/publish-packages.json`, "utf8")) as {
+      packages: { name: string; directory: string }[];
+    };
+    return allowlist.packages.map((pkg) => ({
+      name: pkg.name,
+      version: (JSON.parse(readFileSync(`${root}/${pkg.directory}/package.json`, "utf8")) as { version: string }).version,
+    }));
+  })();
+
+  it("still has every published package below 1.0.0 — the premise of the rule below", () => {
+    expect(publishedVersions.length).toBeGreaterThan(0);
+    for (const pkg of publishedVersions) {
+      expect(
+        pkg.version.startsWith("0."),
+        `${pkg.name} is at ${pkg.version}. Once a package reaches 1.0.0, revisit the production-readiness ` +
+          `wording deliberately rather than leaving this test asserting a premise that no longer holds.`,
+      ).toBe(true);
+    }
+    expect(published.length).toBeGreaterThan(0);
+  });
+
+  it("claims no production readiness in public copy", () => {
+    // Bare phrases, not "about KinetixUI" phrases: in top-of-funnel copy there is no useful sentence
+    // containing these that is not a claim about the product. The component sources, the campaign draft that
+    // bans the phrase, and these audits are all outside COPY on purpose.
+    const overstated =
+      /production[ -]?ready|ready for production|enterprise[ -]?ready|battle[ -]?tested|production[ -]grade|industrial[ -]strength/i;
+    for (const [where, text] of Object.entries(COPY)) {
+      expect(overstated.exec(text)?.[0], `${where} claims production readiness, which nothing here supports`).toBeUndefined();
+    }
+  });
+
+  it("keeps saying it is beta where it says anything about maturity", () => {
+    // The homepage eyebrow is the one place the product states its own stage. If that ever stops being true,
+    // the rule above is the thing to revisit — so it is asserted rather than assumed.
+    expect(homepage, "the homepage should still state the product's stage").toMatch(/beta/i);
+  });
+
+  it("does not offer a stability guarantee it has no versioning to back", () => {
+    for (const [where, text] of Object.entries(COPY)) {
+      expect(text, `${where} promises API stability the 0.x line does not support`).not.toMatch(
+        /(stable|unchanging|frozen) API|no breaking changes|semver guarantee/i,
+      );
     }
   });
 });

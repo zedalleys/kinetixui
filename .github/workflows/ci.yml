@@ -139,6 +139,12 @@ jobs:
       - name: Build registry
         run: pnpm build:registry
 
+      # Every npm package a registry item's delivered files import must be one it declares. 91 of 97 items
+      # shipped lib/utils.ts without declaring its clsx and tailwind-merge imports, so `add card` exited 0
+      # and left a project that could not build. Runs after the build so it checks what would be served.
+      - name: Registry dependency completeness
+        run: pnpm check:registry-deps
+
       # `pnpm typecheck` type-checks the IoT source, which is not the same as proving it bundles: the
       # three entry points, the .d.ts rollup and the `exports` map's paths are all produced here. Without
       # this step a broken build would first appear during a release, which is the worst place for it.
@@ -171,6 +177,11 @@ jobs:
       # It has no DOM and no React, and its vitest environment is `node` so it cannot quietly acquire one.
       - name: Test (@kinetixui/create-theme)
         run: pnpm --filter @kinetixui/create-theme test
+
+      # The CLI is the primary activation path — `npx @kinetixui/cli add` — and had no tests at all until
+      # Phase 0.5. It is also published, so a regression here ships.
+      - name: Test (@kinetixui/cli)
+        run: pnpm --filter @kinetixui/cli test
 
       - name: Test (@kinetixui/ui)
         run: pnpm --filter @kinetixui/ui test

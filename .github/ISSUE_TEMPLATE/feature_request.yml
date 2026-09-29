@@ -23,6 +23,7 @@ body:
       description: Not every component belongs on every platform — say which make sense and why.
       options:
         - label: Web · React
+        - label: Web · Angular (Preview — 31 of 98 components today)
         - label: iOS · SwiftUI
         - label: Android · Jetpack Compose
         - label: Flutter

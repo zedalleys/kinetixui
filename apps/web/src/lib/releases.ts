@@ -55,10 +55,11 @@ export type Release = {
   /** new components, grouped for scanning; the page adds platform badges from platform-parity.json */
   newComponents?: { group: string; slugs: string[] }[];
   /**
-   * A real GitHub Release page for this version. Optional and never inferred: most versions have only a
-   * git tag (there are no GitHub Releases after v0.5.0), so the changelog links the tag unless this is
-   * set. Add it only once the Release exists — e.g. after pasting the output of
-   * `pnpm release:notes <version>` into a new GitHub Release. `check:releases` verifies the shape.
+   * A real GitHub Release page for this version. Optional and never inferred: many versions have only a
+   * git tag — nothing created Releases between `v0.5.0` and the release-automation change — so the
+   * changelog links the tag unless this is set. Add it only once the Release exists, whether that was
+   * `scripts/release/github-releases.mjs` during the release or a hand-made one from
+   * `pnpm release:notes <version>`. `check:releases` verifies the shape.
    */
   githubReleaseUrl?: string;
 };

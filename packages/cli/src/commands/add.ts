@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import pc from "picocolors";
 import { writeItems } from "../lib/apply.js";
-import { CONFIG_FILE, DEFAULT_CONFIG, readConfig } from "../lib/config.js";
+import { CONFIG_FILE, DEFAULT_CONFIG, readConfig, resolveRegistry } from "../lib/config.js";
 import { detectPackageManager, runInstall } from "../lib/pm.js";
 import { fetchComponentNames, resolveTree } from "../lib/registry.js";
 
@@ -15,6 +15,8 @@ export interface AddOptions {
 export async function add(names: string[], options: AddOptions): Promise<void> {
   const cwd = process.cwd();
   const config = (await readConfig(cwd)) ?? DEFAULT_CONFIG;
+  // `--registry` if given, else this project's own `registry`, else the default.
+  const registry = await resolveRegistry(cwd, options.registry);
 
   if (!existsSync(path.join(cwd, CONFIG_FILE))) {
     console.log(pc.yellow("!"), `No ${CONFIG_FILE} found — using defaults. Run "kinetixui init" first to set your own aliases.`);
@@ -22,13 +24,13 @@ export async function add(names: string[], options: AddOptions): Promise<void> {
 
   if (options.all) {
     console.log("Fetching the full component list…");
-    names = await fetchComponentNames(options.registry);
+    names = await fetchComponentNames(registry);
   } else if (names.length === 0) {
     throw new Error('Pass component names to add (e.g. "kinetixui add button card"), or use --all for every component.');
   }
 
   console.log(options.all ? `Resolving all ${names.length} components…` : `Resolving ${names.join(", ")}…`);
-  const items = await resolveTree(options.registry, names);
+  const items = await resolveTree(registry, names);
 
   const { deps, written, skipped } = await writeItems(cwd, config, items.values(), options.overwrite);
 

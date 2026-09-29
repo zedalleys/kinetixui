@@ -3,7 +3,10 @@
   "name": "quote",
   "title": "Quote",
   "description": "Ported onto the KinetixUI token contract.",
-  "dependencies": [],
+  "dependencies": [
+    "clsx",
+    "tailwind-merge"
+  ],
   "registryDependencies": [
     "tokens"
   ],

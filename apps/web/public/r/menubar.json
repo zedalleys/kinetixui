@@ -5,7 +5,9 @@
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
     "@radix-ui/react-menubar",
-    "lucide-react"
+    "clsx",
+    "lucide-react",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

@@ -64,6 +64,10 @@ jobs:
       - name: Test (@kinetixui/create-theme)
         run: pnpm --filter @kinetixui/create-theme test
 
+      # @kinetixui/cli is published by this workflow, and it is how most people install anything at all.
+      - name: Test (@kinetixui/cli)
+        run: pnpm --filter @kinetixui/cli test
+
       - name: Changelog page is current with the packages
         run: pnpm check:releases
 
@@ -126,7 +130,16 @@ jobs:
           publish: pnpm release
           commit: "chore: version packages"
           title: "chore: version packages"
+          # The action's own Release creation works by parsing the Changesets CLI's `New tag:` lines out
+          # of the publish command's stdout. `pnpm release` is this repository's own pipeline and prints
+          # its own report, so there has never been anything there to parse — which is exactly why npm
+          # reached 0.23.3 while the Releases page still showed v0.5.0. Turned off explicitly rather than
+          # left at its default, so the next reader knows it is deliberate, and the job is done by the
+          # step below from the summary `pnpm release` writes.
+          createGithubReleases: false
         env:
+          # Where `pnpm release` records what it published and tagged. Read by the next step.
+          KINETIXUI_RELEASE_SUMMARY: ${{ runner.temp }}/kinetixui-release.json
           # GITHUB_TOKEN can publish but can't open the Version Packages PR
           # ("GitHub Actions is not permitted to create pull requests" — a
           # deliberate org setting). Add a fine-grained PAT with `contents:write`
@@ -143,3 +156,20 @@ jobs:
           # provenance also comes from each package's publishConfig; this env is a
           # harmless extra belt.
           NPM_CONFIG_PROVENANCE: "true"
+
+      # A GitHub Release is a view of a release, never the release itself: npm and the git tags are
+      # already correct and irreversible by the time this runs. So it cannot be allowed to fail the job —
+      # `continue-on-error`, plus the script exits 0 on a `gh` failure and says what is missing.
+      #
+      # Creates a Release only for a tag this run pushed for a package this run published, so the 92
+      # historical tags are not backfilled with today's date. It never edits a Release that exists.
+      #
+      # No `if:` guard on the summary file: `hashFiles` only sees paths inside GITHUB_WORKSPACE and the
+      # summary is written to the runner temp dir, so a guard built on it would be permanently false and
+      # this step would silently never run. The script is a no-op when the file is absent instead, which
+      # is the same outcome without a condition that lies.
+      - name: GitHub Releases for what was just published
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/release/github-releases.mjs "${{ runner.temp }}/kinetixui-release.json"

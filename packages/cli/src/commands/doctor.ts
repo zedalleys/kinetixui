@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 import pc from "picocolors";
-import { CONFIG_FILE, DEFAULT_REGISTRY, readConfig, resolveAliasDir, type KinetixConfig } from "../lib/config.js";
+import { CONFIG_FILE, DEFAULT_REGISTRY, readConfig, resolveAliasDir, resolveRegistry, type KinetixConfig } from "../lib/config.js";
 import { fetchRegistryIndex } from "../lib/registry.js";
 
 type Level = "pass" | "warn" | "fail";
@@ -58,13 +58,19 @@ export async function doctor(): Promise<void> {
     }
   }
 
+  // The registry this project actually uses, not the default: since `kinetixui.json` can carry a `registry`,
+  // checking the default would report a different origin from the one `add` will fetch from — which is worse
+  // than not checking, because it reads as a pass for something that was never tested.
+  const registry = await resolveRegistry(cwd);
+  const origin = registry === DEFAULT_REGISTRY ? registry : `${registry} (from ${CONFIG_FILE})`;
+
   let registryNames: Set<string> | null = null;
   try {
-    const items = await fetchRegistryIndex(DEFAULT_REGISTRY);
+    const items = await fetchRegistryIndex(registry);
     registryNames = new Set(items.filter((item) => item.type === "registry:ui").map((item) => item.name));
-    levels.push(report("pass", `Registry reachable (${DEFAULT_REGISTRY}) — ${registryNames.size} component(s) listed.`));
+    levels.push(report("pass", `Registry reachable (${origin}) — ${registryNames.size} component(s) listed.`));
   } catch (err) {
-    levels.push(report("fail", `Registry unreachable at ${DEFAULT_REGISTRY}: ${(err as Error).message}`));
+    levels.push(report("fail", `Registry unreachable at ${origin}: ${(err as Error).message}`));
   }
 
   if (config && registryNames) {

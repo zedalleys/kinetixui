@@ -14,6 +14,7 @@ Quick orientation:
   (`ci.yml` plus the path-filtered `native-*.yml` workflows) is the actual
   compile check for each platform, since none of the native toolchains are
   assumed to be on your machine.
+- How we treat each other here: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 - Decision-making / maintainer structure: [`GOVERNANCE.md`](GOVERNANCE.md).
 - Found a security issue? Don't open a PR or public issue —
   see [`SECURITY.md`](SECURITY.md).
