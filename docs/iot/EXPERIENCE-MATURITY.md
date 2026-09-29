@@ -97,7 +97,7 @@ React:
 
 ## 4. Defects found and fixed during the pass
 
-Four were found by writing the tests, and would each have shipped silently.
+Six were found before they shipped: four by writing the tests, one by measuring, one by looking.
 
 | Defect | Why it mattered |
 | --- | --- |
@@ -106,7 +106,16 @@ Four were found by writing the tests, and would each have shipped silently.
 | `DeviceModeControl` moved selection but not focus | In a roving-tabindex radiogroup the tabbable radio is the selected one, so focus was left on a radio that was no longer the group's tab stop |
 | `RoutineCard` rendered a future run as "Last seen just now" | `formatLastSeen` floors elapsed time at zero by design, so it cannot express a *next* run |
 
-A fifth was a packaging defect, measured rather than guessed — see below.
+A fifth was a packaging defect, measured rather than guessed — see §5.
+
+A sixth was found only by *looking*. Automated checks reported zero page overflow across all twelve
+viewport/theme/direction combinations, and zero elements whose `scrollWidth` exceeded their
+`clientWidth`. A screenshot of the dashboard's side panel showed its content plainly cut off anyway.
+The cause: `<fieldset>` defaults to `min-inline-size: min-content` and will not shrink below its
+widest child, so the panel laid out at **370px inside a 320px column** — and the first scan missed it
+because it ran against the settled layout, while the overflow only exists while a command is pending
+and the longer "not yet confirmed" descriptions are on screen. `min-w-0` on the fieldset fixed it;
+re-measured in the pending state, the spill went from +67px across ten elements to zero.
 
 ### And one in the project's own showcase
 
@@ -201,7 +210,7 @@ Explicitly not done, so that the P0 above is coherent rather than thin in nine p
 | Redesigned `/iot` device-detail screen | `device-detail` never hand-rolled controls, so it has no correctness defect to fix — only a layout to revisit | Design |
 | Pairing flow composed from the new controls | `functions/pairing.ts` already models it; the composition is a screen, not a component | Design |
 | A pattern gallery in `/docs/iot` | The prose documentation of the control layer landed in this pass; the gallery is presentation | Design |
-| Real-browser visual QA at 390/768/1440, light/dark/RTL | jsdom axe and Storybook cover structure; contrast and layout need a browser | A browser pass |
+
 | A grouped/scheduled command queue | Genuinely useful, genuinely a product concern; modelling it here risks becoming the engine this module refuses to be | A real product's requirements |
 | Optimistic-with-rollback as an opt-in | Some products legitimately want it for low-stakes devices. It needs a rollback story before it is safe to offer | Design |
 
@@ -214,8 +223,19 @@ pnpm --filter @kinetixui/iot typecheck   # clean
 pnpm --filter @kinetixui/iot lint        # clean
 pnpm --filter @kinetixui/iot test        # 9 files, 304 tests
 pnpm build:iot && pnpm check:iot-dist    # React-free closure holds, 4 export paths resolve
-pnpm check:content                       # ok
+pnpm --filter @kinetixui/web test        # 39 files, 1097 tests
+pnpm check:content && pnpm check:iot-examples
 ```
+
+### Real-browser pass
+
+Chromium, against the production build of `/iot`:
+
+- 390 / 768 / 1440, each in light and dark, each in LTR and RTL — **12 combinations, zero horizontal
+  overflow, zero axe violations** (only the `region` rule disabled; colour contrast was checked).
+- The central claim, asserted in a real browser rather than in jsdom: clicking the power switch
+  leaves `aria-checked` **unchanged** while the command is in flight, disables the control so a
+  second press cannot queue a duplicate, and flips only once the simulated device confirms.
 
 Passing tests are not the whole bar. The three control defects in §4 were found by writing tests that
 failed, and the packaging defect in §5 was found by measuring rather than by any test — a suite that

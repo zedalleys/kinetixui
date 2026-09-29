@@ -173,7 +173,9 @@ export function DeviceDashboardExample() {
               A request is held for 1.1s before it "confirms", because that is what a device on a
               real network does — and because the state worth showing is the one in between. Nothing
               here reaches a device: `@kinetixui/iot` has no transport of any kind. */}
-          <fieldset className="flex flex-col gap-4 border-t border-border pt-4">
+          {/* `min-w-0` because a <fieldset> defaults to `min-inline-size: min-content` and will not shrink
+              below its widest child — which put a 370px panel inside a 320px column. */}
+          <fieldset className="flex min-w-0 flex-col gap-4 border-t border-border pt-4">
             <legend className="sr-only">Demonstration controls for {selected.name}</legend>
 
             <DevicePowerControl
