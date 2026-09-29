@@ -1,0 +1,100 @@
+[
+  {
+    "file": "SOCIAL-PREVIEW.png",
+    "w": 1280,
+    "h": 640,
+    "minFont": 20,
+    "atPhone": 6.1,
+    "ok": true,
+    "overflow": [],
+    "collisions": []
+  },
+  {
+    "file": "VIS-001.png",
+    "w": 1200,
+    "h": 986,
+    "minFont": 20,
+    "atPhone": 6.5,
+    "ok": true,
+    "overflow": [],
+    "collisions": []
+  },
+  {
+    "file": "VIS-002.png",
+    "w": 1200,
+    "h": 838,
+    "minFont": 20,
+    "atPhone": 6.5,
+    "ok": true,
+    "overflow": [],
+    "collisions": []
+  },
+  {
+    "file": "VIS-003.png",
+    "w": 1200,
+    "h": 914,
+    "minFont": 20,
+    "atPhone": 6.5,
+    "ok": true,
+    "overflow": [],
+    "collisions": []
+  },
+  {
+    "file": "VIS-005.png",
+    "w": 1200,
+    "h": 786,
+    "minFont": 20,
+    "atPhone": 6.5,
+    "ok": true,
+    "overflow": [],
+    "collisions": []
+  },
+  {
+    "file": "VIS-006.png",
+    "w": 1200,
+    "h": 784,
+    "minFont": 20,
+    "atPhone": 6.5,
+    "ok": true,
+    "overflow": [],
+    "collisions": []
+  },
+  {
+    "file": "VIS-007.png",
+    "w": 1200,
+    "h": 800,
+    "minFont": 20,
+    "atPhone": 6.5,
+    "ok": true,
+    "overflow": [],
+    "collisions": []
+  },
+  {
+    "file": "VIS-008.png",
+    "w": 1200,
+    "h": 752,
+    "minFont": 20,
+    "atPhone": 6.5,
+    "ok": true,
+    "overflow": [],
+    "collisions": []
+  },
+  {
+    "file": "VIS-009.png",
+    "w": 1200,
+    "h": 822,
+    "minFont": 20,
+    "atPhone": 6.5,
+    "ok": true,
+    "overflow": [],
+    "collisions": []
+  },
+  {
+    "file": ".github/assets/home.png",
+    "w": 1440,
+    "h": 900,
+    "minFont": "—",
+    "atPhone": "—",
+    "ok": true
+  }
+]

@@ -71,8 +71,8 @@ describe("campaign links survive the attribution parser", () => {
   it("uses a different campaign id per campaign, so the two never merge in reporting", () => {
     const ids = new Set(links.map((l) => new URL(l).searchParams.get("utm_campaign")));
     expect(ids.size).toBeGreaterThanOrEqual(2);
-    expect(ids).toContain("kx_parity_proof");
-    expect(ids).toContain("kx_count_isnt_coverage");
+    expect(ids).toContain("kx_p1_a_parity_proof");
+    expect(ids).toContain("kx_p1_a_count_isnt_coverage");
   });
 
   it("points every campaign link at a real page on our own site", () => {

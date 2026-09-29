@@ -1,9 +1,9 @@
 ---
 id: a02
 type: x thread
-campaign: kx_count_isnt_coverage
+campaign: kx_p1_a_count_isnt_coverage
 status: drafted
-link: https://kinetixui.com/docs/platforms?utm_source=x&utm_medium=social&utm_campaign=kx_count_isnt_coverage&utm_content=x_thread
+link: https://kinetixui.com/docs/platforms?utm_source=x&utm_medium=social&utm_campaign=kx_p1_a_count_isnt_coverage&utm_content=x_thread
 ---
 
 # a02 — X thread (8 posts)

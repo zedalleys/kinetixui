@@ -74,7 +74,7 @@ for (const stale of ["89/98", "89 of 98", "Angular 11", "Compose 89", "SwiftUI 9
 ok(/four platforms (that are )?meant to carry/i.test(copy), "the 90/98 denominator names its four platforms");
 ok(/[Ss]table package, beta verification/.test(copy), "package maturity vs verification stated as two claims");
 ok(/preview/i.test(copy), "Angular's preview state appears in the copy");
-ok(/^kx_[a-z0-9][a-z0-9_-]{0,62}$/.test("kx_count_isnt_coverage"), "campaign id matches the attribution contract");
+ok(/^kx_[a-z0-9][a-z0-9_-]{0,62}$/.test("kx_p1_a_count_isnt_coverage"), "campaign id matches the attribution contract");
 ok(!all.includes("kx_parity_proof"), "does not reuse a01's campaign id");
 ok(!files.includes("article.md"), "no article.md — format stays `post`");
 ok(files.length === 6, `six files as specified (found ${files.length})`);
@@ -89,7 +89,17 @@ ok(files.length === 6, `six files as specified (found ${files.length})`);
  * those facts live.
  */
 const versionOf = (d) => JSON.parse(readFileSync(`packages/${d}/package.json`, "utf8")).version;
-const known = new Set(["cli", "tokens", "ui", "ui-angular"].map(versionOf));
+/*
+ * Derived from the release allowlist, not enumerated. The hard-coded list here went stale when
+ * `@kinetixui/iot` shipped — it flagged a real published version as one no package has. A package
+ * list cannot fail, only be incomplete.
+ */
+const ALLOWLIST = JSON.parse(readFileSync("release/publish-packages.json", "utf8"));
+const known = new Set(
+  ALLOWLIST.packages.map(
+    (pkg) => JSON.parse(readFileSync(`${pkg.directory}/package.json`, "utf8")).version,
+  ),
+);
 const publishedNpm = Object.entries(defs).filter(([, d]) => d.distribution?.channel === "npm" && d.distribution.published);
 
 for (const f of ["sources.md", "publish-checklist.md"]) {

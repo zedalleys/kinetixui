@@ -5,10 +5,10 @@ here. Re-run `pnpm marketing:stats` on the day of publishing and re-check the
 numbers before posting — they move.
 
 **Numbers verified:** 2026-09-23, against `main` @ `e29184c`, KinetixUI v0.22.1.
-**Current-state figures re-derived:** 2026-09-27, core v0.23.1 with
-`@kinetixui/angular` at 0.24.0 in its own release cohort. Only the *current*
-columns moved — every historical figure below is tied to a commit and is
-unchanged.
+**Current-state figures re-derived:** 2026-09-29, core v0.23.3 with
+`@kinetixui/angular` at 0.24.0 and `@kinetixui/iot` at 0.2.0, each in its own
+release cohort. Only the *current* columns moved — every historical figure below
+is tied to a commit and is unchanged.
 
 ## Coverage figures used
 
@@ -192,14 +192,15 @@ before trusting any tooling that "found nothing".
 
 ---
 
-# Current repository state — 2026-09-27
+# Current repository state — 2026-09-29
 
-Use this for the "ours, today" paragraph. Core v0.23.1 MIT, with
-`@kinetixui/angular` at 0.24.0. From `pnpm marketing:stats`:
+Use this for the "ours, today" paragraph. Core v0.23.3 MIT, with
+`@kinetixui/angular` at 0.24.0 and `@kinetixui/iot` at 0.2.0. Re-run
+`pnpm marketing:stats` before publishing — these move:
 
 | | |
 | --- | --- |
-| Components | 98 |
+| Catalogue entries | 98 — 97 components + 1 documented recipe (`combobox`) |
 | Lifecycle | 97 stable, 1 beta |
 | React | 98 / 98 |
 | Angular | 31 / 98 — **preview**, `catalogComplete: false` |
@@ -209,7 +210,7 @@ Use this for the "ours, today" paragraph. Core v0.23.1 MIT, with
 | On all four catalogue-complete platforms | **90 / 98** |
 | Documented exceptions | 8 |
 | Blocks | 20, on all five platforms |
-| npm | `ui`, `cli`, `tokens` at 0.23.1; `angular` at **0.24.0 — published, still preview**, versioned independently |
+| npm | `ui`, `cli`, `tokens` at 0.23.3; `angular` at **0.24.0 — published, still preview**; `iot` at 0.2.0 — each non-core package versioned independently |
 
 Snippet migration, counted directly (not covered by `marketing:stats`):
 

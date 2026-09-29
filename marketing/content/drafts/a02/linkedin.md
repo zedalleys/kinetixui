@@ -1,9 +1,9 @@
 ---
 id: a02
 type: linkedin
-campaign: kx_count_isnt_coverage
+campaign: kx_p1_a_count_isnt_coverage
 status: drafted
-link: https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_count_isnt_coverage&utm_content=li_primary
+link: https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_count_isnt_coverage&utm_content=li_primary
 ---
 
 # a02 — LinkedIn (primary)

@@ -1,7 +1,7 @@
 ---
 id: a01
 type: measurement plan
-campaign: kx_parity_proof
+campaign: kx_p1_a_parity_proof
 status: drafted
 ---
 
@@ -27,7 +27,7 @@ const CAMPAIGN = /^kx_[a-z0-9][a-z0-9_-]{0,62}$/;
 ```
 
 A campaign tagged `parity-proof` is **silently discarded**. It must be
-`kx_parity_proof`. This is the single most likely way to lose this campaign's
+`kx_p1_a_parity_proof`. This is the single most likely way to lose this campaign's
 data, and it fails quietly.
 
 **2. `utm_source` must be a recognised alias.** `linkedin`, `lnkd.in`, `x`,
@@ -46,9 +46,9 @@ what PostHog will actually receive. Not inferred — executed.
 
 | Channel | URL | Produces |
 | --- | --- | --- |
-| LinkedIn | `https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_parity_proof` | `kx_source: linkedin`, `kx_medium: social`, `kx_campaign: kx_parity_proof` |
-| X | `https://kinetixui.com/docs/platforms?utm_source=x&utm_medium=social&utm_campaign=kx_parity_proof` | `kx_source: x`, `kx_medium: social`, `kx_campaign: kx_parity_proof` |
-| DEV article CTA | `https://kinetixui.com/docs/platforms?utm_source=devto&utm_medium=community&utm_campaign=kx_parity_proof` | `kx_source: devto`, `kx_medium: community`, `kx_campaign: kx_parity_proof` |
+| LinkedIn | `https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_parity_proof` | `kx_source: linkedin`, `kx_medium: social`, `kx_campaign: kx_p1_a_parity_proof` |
+| X | `https://kinetixui.com/docs/platforms?utm_source=x&utm_medium=social&utm_campaign=kx_p1_a_parity_proof` | `kx_source: x`, `kx_medium: social`, `kx_campaign: kx_p1_a_parity_proof` |
+| DEV article CTA | `https://kinetixui.com/docs/platforms?utm_source=devto&utm_medium=community&utm_campaign=kx_p1_a_parity_proof` | `kx_source: devto`, `kx_medium: community`, `kx_campaign: kx_p1_a_parity_proof` |
 
 All three also carry `kx_landing_page: /docs/platforms`.
 
@@ -82,7 +82,7 @@ These decide whether the campaign worked.
 
 | Metric | Where | Why |
 | --- | --- | --- |
-| **Sessions reaching `/docs/platforms`** attributed to `kx_parity_proof` | `docs_viewed` filtered by campaign | The article's whole argument points here. If people read it and do not look at the coverage page, the argument did not land. |
+| **Sessions reaching `/docs/platforms`** attributed to `kx_p1_a_parity_proof` | `docs_viewed` filtered by campaign | The article's whole argument points here. If people read it and do not look at the coverage page, the argument did not land. |
 | **Activation from campaign sessions** — `cli_command_copied`, `install_command_copied`, `component_code_copied` | the three canonical events | An awareness piece converting at all is the interesting result. |
 | **Activation rate** = activated campaign sessions ÷ campaign sessions | derived | Comparable to baseline once one exists. |
 

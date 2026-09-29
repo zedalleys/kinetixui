@@ -1,7 +1,7 @@
 ---
 id: a02
 type: measurement plan
-campaign: kx_count_isnt_coverage
+campaign: kx_p1_a_count_isnt_coverage
 status: drafted
 ---
 
@@ -26,9 +26,9 @@ Each row below was executed against `deriveAttribution` + `toProps`. The
 
 | Surface | `utm_content` | URL | Produces |
 | --- | --- | --- | --- |
-| LinkedIn primary | `li_primary` | `…/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_count_isnt_coverage&utm_content=li_primary` | `kx_source: linkedin`, `kx_medium: social`, `kx_campaign: kx_count_isnt_coverage`, `kx_content: li_primary`, `kx_landing_page: /docs/platforms` |
+| LinkedIn primary | `li_primary` | `…/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_count_isnt_coverage&utm_content=li_primary` | `kx_source: linkedin`, `kx_medium: social`, `kx_campaign: kx_p1_a_count_isnt_coverage`, `kx_content: li_primary`, `kx_landing_page: /docs/platforms` |
 | LinkedIn alternative | `li_alt` | same with `utm_content=li_alt` | as above, `kx_content: li_alt` |
-| X thread | `x_thread` | `…?utm_source=x&utm_medium=social&utm_campaign=kx_count_isnt_coverage&utm_content=x_thread` | `kx_source: x`, `kx_medium: social`, `kx_campaign: kx_count_isnt_coverage`, `kx_content: x_thread` |
+| X thread | `x_thread` | `…?utm_source=x&utm_medium=social&utm_campaign=kx_p1_a_count_isnt_coverage&utm_content=x_thread` | `kx_source: x`, `kx_medium: social`, `kx_campaign: kx_p1_a_count_isnt_coverage`, `kx_content: x_thread` |
 | X standalone S1 | `x_numbers` | same with `utm_content=x_numbers` | as above, `kx_content: x_numbers` |
 | X standalone S2 | `x_principle` | same | `kx_content: x_principle` |
 | X standalone S3 | `x_checklist` | same | `kx_content: x_checklist` |
@@ -51,7 +51,7 @@ valid campaign is present.
 
 | Metric | Where | Why |
 | --- | --- | --- |
-| **Sessions reaching `/docs/platforms`** attributed to `kx_count_isnt_coverage` | `docs_viewed` filtered by campaign | The entire post argues that the breakdown is the interesting thing. If people agree and do not go look at it, the argument did not land. |
+| **Sessions reaching `/docs/platforms`** attributed to `kx_p1_a_count_isnt_coverage` | `docs_viewed` filtered by campaign | The entire post argues that the breakdown is the interesting thing. If people agree and do not go look at it, the argument did not land. |
 | **Engaged exploration** — campaign sessions that view a second platform/docs page | `docs_viewed` count ≥ 2 per session | Distinguishes "clicked the link" from "actually inspected the evidence", which is the desired action for an awareness piece. |
 | **Activation** — `cli_command_copied`, `install_command_copied`, `component_code_copied` | the three canonical events | Secondary. An awareness post converting at all is the interesting result, not the target. |
 

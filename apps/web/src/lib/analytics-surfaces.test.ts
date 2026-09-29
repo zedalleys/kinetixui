@@ -5,11 +5,13 @@ import {
   classifyLink,
   componentSlugFor,
   ctaAttrs,
+  analyticsPlatformFor,
   platformForLanguage,
   sourceForPath,
   trackFenceCopy,
   trackRouteView,
 } from "./analytics-surfaces";
+import { PLATFORMS } from "./platform-parity";
 import { PACKAGES } from "./packages";
 import { componentDocs, siteConfig } from "./site";
 
@@ -281,5 +283,50 @@ describe("ctaAttrs", () => {
     ctaAttrs("homepage_hero", "Get started");
     // @ts-expect-error — the source is a closed union
     ctaAttrs("my own place", "get_started");
+  });
+});
+
+/* ------------------------------------------------------------------ Phase 3: blocks are measurable */
+
+/**
+ * `/blocks` was the one rung of the adoption ladder with no instrumentation at all.
+ *
+ * Phase 2 added an `adopt_blocks` CTA pointing at it, so we could see people reach for blocks and then see
+ * nothing they did there: no source, no platform switch, no copy. The gallery is a single page of many
+ * blocks, so `$pageview` cannot say which composition held anyone's attention.
+ *
+ * These assert the contract rather than the implementation: that the route resolves to a source, and that
+ * the platform mapper refuses to invent a dimension. The second matters more than it looks — a mapper that
+ * silently passed an unknown string through would put an unvalidated value into the event stream, which is
+ * exactly what the closed vocabularies exist to prevent.
+ */
+describe("blocks gallery (Phase 3)", () => {
+  it("resolves /blocks to its own source", () => {
+    expect(sourceForPath("/blocks")).toBe("blocks_gallery");
+  });
+
+  it("does not claim a source for a blocks-shaped path that is not the gallery", () => {
+    expect(sourceForPath("/blocks/not-a-real-page")).toBeNull();
+  });
+
+  it("maps every manifest platform that has blocks to an analytics platform", () => {
+    // Derived from the same list the gallery renders tabs from, so a platform added to the manifest is
+    // covered here without an edit — and fails loudly if its name cannot be mapped.
+    for (const platform of PLATFORMS) {
+      expect(analyticsPlatformFor(platform), `${platform} has no analytics platform`).not.toBeNull();
+    }
+  });
+
+  it("refuses to invent a platform for anything else", () => {
+    for (const notAPlatform of ["", "wearos", "watchos", "html", "Preview", undefined]) {
+      expect(analyticsPlatformFor(notAPlatform)).toBeNull();
+    }
+  });
+
+  it("would notice if the mapper started passing strings through — so the rule above is not vacuous", () => {
+    // The failure mode being guarded: `(p) => p?.toLowerCase()` with no membership check.
+    const unchecked = (p: string | undefined) => p?.toLowerCase() ?? null;
+    expect(unchecked("wearos")).toBe("wearos");
+    expect(analyticsPlatformFor("wearos")).toBeNull();
   });
 });

@@ -8,8 +8,9 @@ no deploy. One documentation correction was made, for a claim proven false — s
 > [Phase 1 Gate](#phase-1-gate-fail) is the verification as it stood on the date above and is left
 > unedited as the record. What changed afterwards is in
 > [Remediation — Phase 0.9.1](#remediation--phase-091-f1-fixed-in-source) at the end, and in
-> [`PHASE-0.9.1-REGISTRY-FIX.md`](./PHASE-0.9.1-REGISTRY-FIX.md). **F1: FIXED IN SOURCE — AWAITING
-> DEPLOYMENT.** F3 is unchanged and still blocking. **Phase 0 is still BLOCKED.**
+> [`PHASE-0.9.1-REGISTRY-FIX.md`](./PHASE-0.9.1-REGISTRY-FIX.md). **F1: CLOSED — fixed, deployed and
+> verified against production.** **F3: CLOSED** — the live origin has been reached and the documented
+> journey succeeds against it. **PHASE 0 COMPLETE.**
 
 ## Executive Summary
 
@@ -334,7 +335,10 @@ defect into the documentation of three surfaces instead of one.
 > **Superseded.** Phase 0.9.1 fixed the generator, so the `npm i clsx tailwind-merge` callout described
 > above has been **removed** from `/docs/installation` — keeping a workaround for a fixed defect would
 > have made the defect permanent documentation. Claims 5 and 6 are now true as written, which is why they
-> were left alone. All three claims are accurate **in source**; production still serves the old metadata.
+> were left alone. **All three have since been verified against production**, where claim 4 was false: a
+> clean project running the documented command received `clsx` and `tailwind-merge`, and `/r/button.json`
+> serves all four packages. Claims 1–3, marked UNVERIFIED above only for want of a reachable origin, are
+> verified too — the copy-a-component journey completed end to end against `kinetixui.com`.
 
 
 ---
@@ -343,7 +347,7 @@ defect into the documentation of three surfaces instead of one.
 
 ### F1 — Registry items under-declare npm dependencies · **P0**
 
-> **Now FIXED IN SOURCE — AWAITING DEPLOYMENT.** See [Remediation](#remediation--phase-091-f1-fixed-in-source). The diagnosis below stands; the root cause turned out to have a second half (a hand-maintained package allowlist) that this entry did not identify.
+> **Now CLOSED — fixed, deployed and verified against production.** See [Remediation](#remediation--phase-091-f1-fixed-in-source). The diagnosis below stands; the root cause turned out to have a second half (a hand-maintained package allowlist) that this entry did not identify.
 
 | | |
 | --- | --- |
@@ -473,22 +477,24 @@ prevented the journey tested here.
 ---
 ---
 
-# Remediation — Phase 0.9.1 (F1 fixed in source)
+# Remediation — Phase 0.9.1 (F1 fixed, deployed, verified)
 
 **2026-09-29.** Everything above this line is the Phase 0.9 verification, unedited. This section records
 what changed afterwards. Full detail: [`PHASE-0.9.1-REGISTRY-FIX.md`](./PHASE-0.9.1-REGISTRY-FIX.md).
 
-**Still nothing published, released, deployed or merged.**
+Nothing was published to npm and no GitHub Release was created. The website was deployed, and PR #252 was
+merged to `main` as `e86b3ec`, both on the repository owner's explicit instruction.
 
-## F1 — FIXED IN SOURCE — AWAITING DEPLOYMENT
+## F1 — CLOSED, VERIFIED IN PRODUCTION
 
 | | |
 | --- | --- |
 | **Fixed in source** | ✅ Yes |
-| **Verified against production** | ❌ No — production still serves the defective metadata |
-| **Deployment required** | **YES** — website only (`apps/web`) |
-| **npm publication required** | **NO** — proven, see below |
-| **Status** | **FIXED IN SOURCE — AWAITING DEPLOYMENT** — not closed |
+| **Merged** | ✅ `e86b3ec` (PR #252) |
+| **Deployed** | ✅ by the Vercel git integration, on the push to `main` |
+| **Verified against production** | ✅ Yes — the live origin serves the corrected metadata |
+| **npm publication required** | **NO** — confirmed: `@kinetixui/cli@latest` still resolves to **0.23.3** |
+| **Status** | **CLOSED** |
 
 ### The root cause had a second half this report missed
 
@@ -527,16 +533,43 @@ No published package's contents changed (verified by diffing the change set agai
 package directory: zero hits), and the same unmodified CLI 0.23.3 now installs the complete set. So one
 `apps/web` deploy fixes every existing installation, with no new CLI version and no user action.
 
-## F3 — unchanged
+## F3 — CLOSED
 
-`kinetixui.com` is still denied by this container's egress policy (`403`,
-`x-deny-reason: host_not_allowed`). Production remains unverified. Remedy is unchanged: add the host to the
-environment's allowed domains, or run the `PHASE-0.75-PUBLIC-SURFACE.md` checklist yourself.
+The live origin was reached and the documented activation journey ran against it end to end. The
+verification was performed by the repository owner on their own machine: this container's egress policy
+denies `kinetixui.com` (`403` on the proxy CONNECT, `x-deny-reason: host_not_allowed`), so no request from
+the agent ever reached production. Their output, verbatim:
 
-## Phase 0 status: still BLOCKED
+```
+$ curl -s https://kinetixui.com/r/card.json | grep -E '"(clsx|tailwind-merge)"'
+    "clsx",
+    "tailwind-merge"
 
-Of the two Phase 1 gate blockers, one is fixed in source and awaiting a deploy; the other is untouched.
-Neither has been verified against production, which is the question Phase 0.9 exists to answer.
+Resolving card…
+✔ Added components\ui\card.tsx
+✔ Added lib\utils.ts
+Installing clsx, tailwind-merge with npm…
+added 2 packages, and audited 3 packages in 2s
+Done.
 
-**Next action:** deploy `apps/web`, then verify `/r/card.json` declares `clsx` and `tailwind-merge` and run
-the end-to-end `add` test against production.
+$ grep -E '"(clsx|tailwind-merge)"' package.json
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.7.0"
+```
+
+`/r/button.json` served all four of `@radix-ui/react-slot`, `class-variance-authority`, `clsx` and
+`tailwind-merge` — the claim this report classified **FALSE** is now true where it was false.
+
+**Not covered, and left uncovered rather than assumed:** `/r/registry.json` was not fetched, so the 97-item
+index is unverified against production; the rest of the `PHASE-0.75-PUBLIC-SURFACE.md` endpoint checklist
+(robots, sitemap, `/specs/`) was not re-run after this deploy; and the production deployment's own state was
+never read, because the agent's Vercel deployment access was refused. The deploy is evidenced by its effect.
+
+## Phase 0 status: COMPLETE
+
+Both Phase 1 gate blockers are cleared. F1 is fixed, deployed and verified. F3 is answered: a real user can
+discover KinetixUI, run the documented command against the live production system, and get a project that
+builds — demonstrated on a clean machine with the unmodified published CLI. Everything else this report
+listed was explicitly non-blocking.
+
+**PHASE 0 COMPLETE**, with the uncovered items named above.

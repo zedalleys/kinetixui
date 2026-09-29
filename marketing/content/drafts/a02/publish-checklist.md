@@ -1,7 +1,7 @@
 ---
 id: a02
 type: publish checklist
-campaign: kx_count_isnt_coverage
+campaign: kx_p1_a_count_isnt_coverage
 status: drafted
 ---
 
@@ -29,7 +29,7 @@ Nothing in this package is scheduled. Work top to bottom on the day.
 | SwiftUI / Compose / Flutter verification | experimental |
 | Lifecycle | 97 stable, 1 beta |
 | Blocks | 20, all five platforms |
-| Version | 0.23.1 (core); `@kinetixui/angular` 0.24.0, versioned independently |
+| Version | 0.23.3 (core); `@kinetixui/angular` 0.24.0 and `@kinetixui/iot` 0.2.0, versioned independently |
 | `@kinetixui/angular` | published, still preview at 31 / 98 |
 
 These are volatile by nature: implementation counts, verification levels, the
@@ -58,7 +58,7 @@ between drafting and posting.
 
 - [ ] Post the LinkedIn link with `utm_content=li_primary`.
 - [ ] Open it yourself.
-- [ ] Confirm the event carries **`kx_campaign: kx_count_isnt_coverage`**.
+- [ ] Confirm the event carries **`kx_campaign: kx_p1_a_count_isnt_coverage`**.
 - [ ] **If it is missing, STOP.** Do not post the X thread or any standalone.
       Fix the tag first — every later link is unattributable until it is right,
       and the failure is silent.

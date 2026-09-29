@@ -38,6 +38,15 @@ export const ANALYTICS_SOURCES = [
   "create_workspace",
   "iot_page",
   "not_found",
+  // Phase 2 conversion sections. Separate sources rather than one "homepage" bucket, because the whole
+  // question they exist to answer is *which* part of the narrative moves someone on — a click counted
+  // against the page as a whole cannot distinguish the proof section from the adoption ladder.
+  "homepage_verification",
+  "homepage_adoption",
+  // Phase 3. /blocks had no source at all, so Phase 2's `adopt_blocks` CTA pointed at a page whose only
+  // signal was `$pageview` — the rung of the adoption ladder we could see people reach for and then not
+  // see them use.
+  "blocks_gallery",
 ] as const;
 export type AnalyticsSource = (typeof ANALYTICS_SOURCES)[number];
 
@@ -56,6 +65,22 @@ export const ANALYTICS_CTA_TARGETS = [
   // leave open — which of the five platforms you can actually install — so how often it is followed says
   // whether the distinction landed or just added a line.
   "platform_availability",
+  /*
+   * Phase 2. Each answers one funnel question from `marketing/STRATEGY.md` §7:
+   *
+   * `platform_coverage`   — Comprehension → Credibility. Distinct from `platform_availability`, which is the
+   *                         hero's inline "what ships where" link: both land on /docs/platforms, and merging
+   *                         them would hide whether the coverage *button* pulls its weight.
+   * `view_verification`   — Credibility. Does the verification argument get followed, or only read?
+   * `adopt_tokens` /      — First value. Which rung of the adoption ladder a visitor reaches for is the
+   * `adopt_components` /    clearest signal available of whether incremental adoption reads as legitimate,
+   * `adopt_blocks`          and which ICP is in front of us: tokens skew P2, components skew P1.
+   */
+  "platform_coverage",
+  "view_verification",
+  "adopt_tokens",
+  "adopt_components",
+  "adopt_blocks",
 ] as const;
 export type AnalyticsCtaTarget = (typeof ANALYTICS_CTA_TARGETS)[number];
 
@@ -72,6 +97,14 @@ interface EventProps {
   page?: string;
   /** a component slug: "button", "data-grid" */
   component?: string;
+  /**
+   * A block slug from `blocks.manifest.json`: "pricing-tier", "profile-form".
+   *
+   * Deliberately its own property rather than reusing `component`. A block is a composition of catalogue
+   * components, so folding the two together would inflate `component_*` metrics with a different kind of
+   * thing — the same reasoning that kept IoT examples out of `component_code_copied`.
+   */
+  block?: string;
   platform?: AnalyticsPlatform;
   /** an npm package name: "@kinetixui/cli" */
   package?: string;
@@ -99,7 +132,7 @@ export interface AnalyticsEvents {
   install_command_copied: Shape<"source", "package" | "platform">;
   component_viewed: Shape<"component", "platform" | "source">;
   component_code_copied: Shape<"component" | "platform", "source">;
-  platform_selected: Shape<"platform", "location" | "component" | "source">;
+  platform_selected: Shape<"platform", "location" | "component" | "block" | "source">;
   github_clicked: Shape<"source", "location">;
   npm_clicked: Shape<"source", "package">;
   changelog_viewed: Shape<never, "version" | "source">;
@@ -124,6 +157,12 @@ export interface AnalyticsEvents {
   // The alternative considered was adding an `example` property to `component_code_copied`; rejected
   // for the same reason — a metric that needs a filter to mean what it used to mean has changed.
   iot_example_copied: Shape<"source", "location">;
+  /*
+   * Blocks. `block` and `platform` are both required: a copy with neither answers no question, and the
+   * whole point of the event is which composition, on which platform. Separate from
+   * `component_code_copied` for the reason above — a block is not a catalogue component.
+   */
+  block_code_copied: Shape<"block" | "platform", "source">;
 }
 
 export type AnalyticsEventName = keyof AnalyticsEvents;
@@ -140,6 +179,7 @@ const ALLOWED_KEYS: ReadonlySet<string> = new Set([
   "location",
   "page",
   "component",
+  "block",
   "platform",
   "package",
   "target",

@@ -2,16 +2,21 @@
 
 # KinetixUI
 
-**One token architecture, in motion across every platform.**
+**A design system for teams on more than one platform — with cross-platform
+claims verified against source in CI.**
 
-KinetixUI compiles one DTCG token source into every platform's own token
-output, and ships a **native component implementation per platform** —
-**React, SwiftUI, Jetpack Compose and Flutter**, with **Angular in preview**.
-The token contract is shared; the component code is written natively for each
-platform, not generated from one another. Coverage is verified against source
-in CI and published on [/docs/platforms](https://kinetixui.com/docs/platforms)
-rather than asserted here. Copy a component in via the CLI, own the code, and
-re‑theme with a token edit everywhere at once.
+Your web app and your native apps drift apart the moment they are maintained
+separately. KinetixUI is the design system for teams in that position:
+**one DTCG token source** generates every platform's native token output, and
+**components are implemented natively per platform** — **React, SwiftUI,
+Jetpack Compose and Flutter**, with **Angular in preview**.
+
+The token contract is shared; the component code is hand-written for each
+platform, **never one source converted into five**. And every platform claim is
+checked against real source in CI — a component cannot say it runs on SwiftUI
+unless SwiftUI source exists. Coverage is generated and published on
+[/docs/platforms](https://kinetixui.com/docs/platforms) rather than asserted
+here, gaps included.
 
 **What installs, and what you compile.** React and Angular (preview) install
 from npm. SwiftUI, Jetpack Compose and Flutter are real implementations,
@@ -19,7 +24,7 @@ compiled by their own CI on every change, **not yet distributed as packages** �
 you build them from source. That is a fact about package registries, not about
 the implementations.
 
-Free while in beta.
+MIT licensed, all of it.
 
 [**Docs**](https://kinetixui.com/docs) ·
 [Components](https://kinetixui.com/components) ·
@@ -36,7 +41,7 @@ Free while in beta.
 
 <div align="center">
   <a href="https://kinetixui.com">
-    <img src=".github/assets/home.png" alt="KinetixUI — one token architecture, in motion across every platform" />
+    <img src=".github/assets/home.png" alt="The KinetixUI homepage: one design language, five platforms, claims you can check — with the platform coverage spec panel" />
   </a>
 </div>
 

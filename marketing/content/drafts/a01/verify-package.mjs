@@ -64,11 +64,11 @@ t(true, "claim hygiene sweep (denominator, superlatives, Angular maturity)");
 
 t(li.includes("<DEV_ARTICLE_URL>") && xt.includes("<DEV_ARTICLE_URL>"), "placeholders present in both social files");
 t(!/https?:\/\/dev\.to\/\S+/i.test(li + xt + art), "no fabricated dev.to URL anywhere");
-t(/utm_campaign=kx_parity_proof/.test(read("measurement.md")), "campaign tag uses the kx_ prefix the regex requires");
+t(/utm_campaign=kx_p1_a_parity_proof/.test(read("measurement.md")), "campaign tag uses the kx_ prefix the regex requires");
 // Only recommended links matter. measurement.md quotes the bad tag deliberately, as the warning.
 const recommended = read("measurement.md").split("\n").filter((l) => l.startsWith("| ") && l.includes("utm_campaign="));
 t(recommended.length >= 3, "link table has the three channel rows");
-t(recommended.every((l) => l.includes("utm_campaign=kx_parity_proof")), "every recommended link uses the kx_ campaign tag");
+t(recommended.every((l) => l.includes("utm_campaign=kx_p1_a_parity_proof")), "every recommended link uses the kx_ campaign tag");
 t(!recommended.some((l) => /utm_medium=article/.test(l)), "no recommended link uses the rejected medium");
 
 // ── current state, re-derived from the repository ───────────────────────────────────────────────
@@ -171,6 +171,23 @@ t(true, "no stale current-state figures (historical before/after left intact)");
 const versionOf = (dir) => JSON.parse(readFileSync(new URL(`packages/${dir}/package.json`, root), "utf8")).version;
 const CORE = { cli: versionOf("cli"), tokens: versionOf("tokens"), ui: versionOf("ui") };
 const angularVersion = versionOf("ui-angular");
+
+/*
+ * Every publishable package's version, derived from the release allowlist.
+ *
+ * This used to be the hard-coded set {core, angular}, and it went stale the moment `@kinetixui/iot`
+ * shipped: the draft named a real published version and the check called it a version no package has.
+ * A list of packages cannot fail — it can only be incomplete — which is the same defect the registry
+ * generator had. So the set comes from `release/publish-packages.json`, the list the release tooling
+ * itself publishes from, and a sixth package needs no edit here.
+ */
+const ALLOWLIST = JSON.parse(readFileSync(new URL("release/publish-packages.json", root), "utf8"));
+const publishableVersions = new Map(
+  ALLOWLIST.packages.map((pkg) => [
+    pkg.name,
+    JSON.parse(readFileSync(new URL(`${pkg.directory}/package.json`, root), "utf8")).version,
+  ]),
+);
 const publishedPlatforms = Object.entries(defs)
   .filter(([, d]) => d.distribution?.channel === "npm" && d.distribution.published)
   .map(([name]) => name);
@@ -188,12 +205,12 @@ for (const f of ["sources.md", "publish-checklist.md"]) {
   const PROVENANCE = /^.*(verified:|freeze:|against `main`|@ `[0-9a-f]{7,}`).*$/gim;
   const current = body.replace(PROVENANCE, "");
   const versions = [...current.matchAll(/0\.\d+\.\d+/g)].map((m) => m[0]);
-  const known = new Set([...Object.values(CORE), angularVersion]);
+  const known = new Set(publishableVersions.values());
   const unknown = versions.filter((v) => !known.has(v));
   t(
     unknown.length === 0,
     `${f}: version string(s) no package has — ${[...new Set(unknown)].join(", ") || "none"} ` +
-      `(core ${CORE.ui}, angular ${angularVersion})`,
+      `(published: ${[...publishableVersions].map(([n, v]) => `${n} ${v}`).join(", ")})`,
   );
 
   // And no claim that a published package is unpublished.

@@ -45,6 +45,7 @@ export function sourceForPath(pathname: string): AnalyticsSource | null {
   if (pathname.startsWith("/docs/components/")) return "component_page";
   if (pathname === "/docs" || pathname.startsWith("/docs/")) return "docs_page";
   if (pathname === "/components") return "components_gallery";
+  if (pathname === "/blocks") return "blocks_gallery";
   if (pathname === "/iot") return "iot_page";
   return null;
 }
@@ -206,6 +207,19 @@ const LANGUAGE_PLATFORM: Record<string, AnalyticsPlatform> = {
 export function platformForLanguage(language: string | undefined): AnalyticsPlatform | null {
   const p = language ? LANGUAGE_PLATFORM[language] : undefined;
   return p && isMember(ANALYTICS_PLATFORMS, p) ? p : null;
+}
+
+/**
+ * A manifest platform name ("SwiftUI", "Compose") as an analytics platform, or null.
+ *
+ * Lower-casing happens to map all five today, so the mapping is derived rather than listed — but the result
+ * is checked against `ANALYTICS_PLATFORMS` before it is returned. A sixth manifest platform whose name does
+ * not lower-case into the vocabulary therefore produces *no* platform rather than a new, unvalidated string
+ * in the event stream. Silence is the safe failure; an invented dimension is not.
+ */
+export function analyticsPlatformFor(manifestPlatform: string | undefined): AnalyticsPlatform | null {
+  const candidate = manifestPlatform?.toLowerCase();
+  return candidate && isMember(ANALYTICS_PLATFORMS, candidate) ? candidate : null;
 }
 
 /** The docs code-block ids used by `platform-code.ts` mapped to analytics platforms. */
