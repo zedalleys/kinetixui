@@ -398,16 +398,73 @@ their own boundaries, and the missing-data demo. Every environment tab carries t
 
 ### 9.6 Measurements
 
-Measured sizes: see §9.6 Measurements (filled by lead).
+Method: esbuild `--bundle --minify --format=esm`, React external, importing from `packages/iot/dist/react/index.js`
+(bytes; the §5 baseline is 2026-era `main` at 5927117).
 
-<!-- LEAD: sizes -->
+| Import | Baseline (§5) | 0.3 | Why it moved |
+| --- | --- | --- | --- |
+| one control (`DevicePowerControl`) | 4.03 KB | 5.30 KB | Shared glyph layer and status wording used by every control |
+| `DeviceCard` | 10.25 KB | 11.79 KB | Same shared layer |
+| `DeviceControlCard` | — | 13.91 KB | Composes the controls |
+| `CommandLifecycle` | — | 11.74 KB | New |
+| `AutomationBuilder` | — | 28.18 KB | New; the largest single pattern (form, validation, reorder, focus management) |
+| a headless helper alone (`clampBatteryLevel`) | — | 65 B | Guarded by `functions/tree-shaking.test.ts` |
+| all components | 46.23 KB | 133.5 KB | 27 patterns instead of 12 |
+| `dist` JS total | 107,028 B | 284,528 B | The package contains far more: the headless model, 15 more React patterns |
 
-Baseline for the website routes, from §5, for the lead to compare against: `/iot` 21 kB / 447 kB First Load and
-`/docs/iot` 155 B / 501 kB.
+**A regression found and fixed during the pass.** The first 0.3 build put a single control at 10.3 KB and
+importing one headless helper at 4.9 KB. Cause: module-level initialisers in `functions/` (registries built by
+calls, a `Set`, a `Map`, `Object.keys`) that a bundler cannot prove pure, which kept the shared chunk's tables
+alive for every importer. They are now annotated `/* @__PURE__ */` (both the outer call and its arguments — see
+§5) and `functions/tree-shaking.test.ts` parses every module under `functions/` and `types/` and fails on an
+unannotated module-load call. It was mutation-tested: appending a bare `export const X = Object.keys(...)`
+fails it. A further leak in `react/health-bar.tsx` (an object spread built at module load) was removed the
+same way. Per-import cost did not return fully to the §5 figures; the remainder is real code added to the
+components.
+
+**Website routes.**
+
+| Route | Before | 0.3 |
+| --- | --- | --- |
+| `/iot` | 21 kB / 447 kB First Load | 45.5 kB / 472 kB First Load |
+| `/docs/iot` | 155 B / 501 kB | 155 B / 501 kB |
+
+The first 0.3 build of `/iot` was 77.6 kB / 504 kB. The nine interactive examples now mount lazily (each loads its own chunk when its section nears the viewport or its tab opens; hovering or focusing a tab
+prefetches it), which cut the route by 32 kB. About 38.7 kB of the remaining 45.5 kB is `@kinetixui/iot` itself, pulled in by the eager hero; taking the route lower would mean
+deferring the hero, which was deliberately kept eager.
 
 ### 9.7 Verification
 
-<!-- LEAD: validation -->
+Run on the final tree; every command below exited 0.
+
+```
+pnpm --filter @kinetixui/iot typecheck        # clean
+pnpm --filter @kinetixui/iot lint             # clean
+pnpm --filter @kinetixui/iot test             # 24 files, 704 tests
+pnpm build:iot && pnpm check:iot-dist         # React-free closure holds, 4 export paths resolve
+pnpm --filter @kinetixui/web typecheck        # clean
+pnpm --filter @kinetixui/web lint             # clean
+pnpm --filter @kinetixui/web test             # 47 files, 1303 tests
+pnpm check:iot-examples                       # 15 examples, snippets current
+pnpm check:rtl  check:token-contract  check:contrast  check:typography
+pnpm check:content  check:distribution  check:block-source  check:platform-source
+pnpm check:platform-code  check:blocks  check:manifest  check:verification
+pnpm check:stories  check:releases
+pnpm --filter @kinetixui/web build
+node scripts/a11y-site.mjs --base http://127.0.0.1:3100   # 21 pages x 2 themes x 4 widths: no axe findings, no overflow
+```
+
+Before this pass the IoT package had 304 tests and the web app 1,097.
+
+**Real-browser pass beyond the repository gate** (Chromium, production build): `/iot` at 390 / 768 / 1440, each in
+light and dark and in LTR and RTL, activating every environment and layout tab and scrolling every lazy section
+into view — no page overflow and no axe violations at any point. The one class of horizontal scroller left is the
+named, keyboard-focusable source blocks. The Device detail tab strip, which scrolled sideways with no cue at 390px,
+now wraps. Colour contrast is checked in the browser, not in jsdom.
+
+**Not verified.** No screen reader (VoiceOver, NVDA, TalkBack) was run against the new components — the checks
+are axe, keyboard-driven tests and structural assertions, which do not replace listening to them. The build was
+not exercised on a device or in Safari or Firefox.
 
 Tests that guard the 0.3 claims are in `apps/web/src/lib/iot-page.test.tsx` (the page: one `h1`, no skipped
 heading level, named landmarks, a simulation disclosure in every environment, the diagram's accessible names,
