@@ -10,10 +10,15 @@ npm install @kinetixui/iot
 
 ## What it is
 
-A product semantic layer for connected devices: the models, the classification rules, five small React
-primitives, and nine composed product patterns built from them. Deliberately generic — the same
-vocabulary suits smart agriculture, medical devices, smart home, industrial dashboards, and fleet and
-logistics.
+A product semantic layer for connected devices: the models, the classification rules, seven React
+primitives, four device controls, and twelve composed product patterns built from them. Deliberately
+generic — the same vocabulary suits smart agriculture, medical devices, smart home, industrial
+dashboards, and fleet and logistics.
+
+The controls are the part that makes this more than a dashboard, and they share one rule: **what the
+user asked for is drawn differently from what the device has confirmed.** A control that fills in the
+instant you touch it is lying until the device agrees, and on a lock or an irrigation valve that lie
+has a cost.
 
 ```ts
 import { classifyBatteryLevel, formatLastSeen, type KinetixDevice } from "@kinetixui/iot/functions";
@@ -24,7 +29,7 @@ import { DeviceStatusBadge, SensorReading } from "@kinetixui/iot/react";
 | -------------------------- | ------------------------------------------------- |
 | `@kinetixui/iot`           | everything                                        |
 | `@kinetixui/iot/functions` | models and pure functions — **no React**          |
-| `@kinetixui/iot/react`     | the primitives and the product patterns           |
+| `@kinetixui/iot/react`     | the primitives, the controls and the patterns     |
 
 ## What it is not
 
@@ -81,6 +86,8 @@ No primitive animates, so there is nothing for `prefers-reduced-motion` to suppr
 assumed.
 
 ## Documentation
+
+- [Experience maturity pass](https://github.com/zedalleys/kinetixui/blob/main/docs/iot/EXPERIENCE-MATURITY.md) — the control layer, what was measured, and what is deferred
 
 <https://kinetixui.com/docs/iot>
 

@@ -5,6 +5,7 @@ import type { KinetixAlertSeverity, KinetixDeviceAlert } from "../types/alert";
 import { describeAlertSeverity } from "../functions/alerts";
 import { LastSync } from "./last-sync";
 import { cn } from "./cn";
+import { withDisplayName } from "./display-name";
 
 /**
  * AlertCard — one alert: how serious, what it says, when, and whether anyone has seen it.
@@ -57,7 +58,7 @@ const SEVERITY_DOT: Record<KinetixAlertSeverity, string> = {
   critical: "bg-destructive",
 };
 
-const AlertCard = React.forwardRef<HTMLDivElement, AlertCardProps>(
+const AlertCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, AlertCardProps>(
   ({ alert, deviceName, action, now, className, ...props }, ref) => {
     // An unrecognised severity is shown as `info` rather than promoted: an alert whose severity we
     // could not read is not evidence of an emergency.
@@ -104,7 +105,6 @@ const AlertCard = React.forwardRef<HTMLDivElement, AlertCardProps>(
       </div>
     );
   },
-);
-AlertCard.displayName = "AlertCard";
+), "AlertCard");
 
 export { AlertCard };

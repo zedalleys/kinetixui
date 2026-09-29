@@ -1,8 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { AlertCard, CommandStatus, DeviceCard, DeviceStateSummary, TelemetryCard } from "@kinetixui/iot/react";
-import { compareDeviceAttention, describeDeviceStatus, summarizeDevices } from "@kinetixui/iot/functions";
+import {
+  AlertCard,
+  CommandStatus,
+  DeviceCard,
+  DeviceLevelControl,
+  DeviceModeControl,
+  DevicePowerControl,
+  DeviceSetpointControl,
+  DeviceStateSummary,
+  TelemetryCard,
+} from "@kinetixui/iot/react";
+import { compareDeviceAttention, describeDeviceStatus, resolveControlState, summarizeDevices } from "@kinetixui/iot/functions";
 import type { KinetixDevice, KinetixDeviceStatus } from "@kinetixui/iot/functions";
 import {
   DEMO_ALERTS,
@@ -26,14 +36,43 @@ import {
 const GROUPS = ["All", "Cold store A", "Plant room", "Bay 2"] as const;
 type Group = (typeof GROUPS)[number];
 
+// The product supplies these. `@kinetixui/iot` hard-codes no mode vocabulary, because the same
+// control serves a chiller, an irrigation valve and a conveyor.
+const MODES = [
+  { id: "cool", label: "Cool" },
+  { id: "hold", label: "Hold" },
+  { id: "defrost", label: "Defrost", description: "Unavailable until the cycle completes", unavailable: true },
+];
+
 export function DeviceDashboardExample() {
   const [group, setGroup] = React.useState<Group>("All");
   const [selectedId, setSelectedId] = React.useState<string>("probe-a");
   const [overrides, setOverrides] = React.useState<Record<string, KinetixDeviceStatus>>({});
   const [acknowledged, setAcknowledged] = React.useState<Record<string, string>>({});
-  const [powered, setPowered] = React.useState(true);
+  // Confirmed values — what the imaginary device has reported.
+  const [powered, setPowered] = React.useState<"on" | "off">("on");
   const [intensity, setIntensity] = React.useState(62);
   const [target, setTarget] = React.useState(4);
+  const [mode, setMode] = React.useState("cool");
+
+  // Requested values — what the user has asked for and the device has not confirmed yet.
+  const [pending, setPending] = React.useState<null | { kind: "power" | "level" | "target" | "mode"; value: string | number }>(null);
+
+  // A command that resolves after a beat, so the requested-versus-confirmed gap is visible rather
+  // than theoretical. A product would replace this with whatever its transport reports back.
+  React.useEffect(() => {
+    if (!pending) return;
+    const timer = setTimeout(() => {
+      if (pending.kind === "power") setPowered(pending.value as "on" | "off");
+      if (pending.kind === "level") setIntensity(pending.value as number);
+      if (pending.kind === "target") setTarget(pending.value as number);
+      if (pending.kind === "mode") setMode(pending.value as string);
+      setPending(null);
+    }, 1100);
+    return () => clearTimeout(timer);
+  }, [pending]);
+
+  const request = (kind: "power" | "level" | "target" | "mode", value: string | number) => setPending({ kind, value });
 
   const devices: KinetixDevice[] = DEMO_DEVICES.map((device) =>
     overrides[device.id] ? { ...device, status: overrides[device.id]! } : device,
@@ -42,6 +81,13 @@ export function DeviceDashboardExample() {
   const ordered = [...inGroup].sort(compareDeviceAttention);
   const summary = summarizeDevices(inGroup);
   const selected = deviceById(selectedId);
+
+  // One resolution for all four controls, so they cannot disagree about whether the device is
+  // reachable or a command is outstanding.
+  const control = resolveControlState({
+    deviceStatus: selected.status,
+    commandStatus: pending ? "sent" : undefined,
+  });
   const alerts = DEMO_ALERTS.map((a) => (acknowledged[a.id] ? { ...a, acknowledgedAt: acknowledged[a.id] } : a));
   const openAlerts = alerts.filter((a) => !a.acknowledgedAt);
 
@@ -123,86 +169,52 @@ export function DeviceDashboardExample() {
             <span className="text-label-sm text-muted-foreground">{selected.locationName}</span>
           </div>
 
-          {/* Demo controls. Each writes its value out as text beside the control, which is the one
-              thing every reference product does and the reason the visual and accessible versions of
-              this panel are the same artifact. */}
-          <fieldset className="flex flex-col gap-4 border-t border-border pt-4">
+          {/* The control layer, wired to LOCAL DEMO STATE.
+              A request is held for 1.1s before it "confirms", because that is what a device on a
+              real network does — and because the state worth showing is the one in between. Nothing
+              here reaches a device: `@kinetixui/iot` has no transport of any kind. */}
+          {/* `min-w-0` because a <fieldset> defaults to `min-inline-size: min-content` and will not shrink
+              below its widest child — which put a 370px panel inside a 320px column. */}
+          <fieldset className="flex min-w-0 flex-col gap-4 border-t border-border pt-4">
             <legend className="sr-only">Demonstration controls for {selected.name}</legend>
 
-            <div className="flex items-center justify-between gap-3">
-              <label htmlFor="kx-demo-power" className="text-label-md text-foreground">
-                Power
-              </label>
-              <button
-                id="kx-demo-power"
-                type="button"
-                role="switch"
-                aria-checked={powered}
-                onClick={() => setPowered((on) => !on)}
-                className="flex items-center gap-2 rounded-md border border-input px-2 py-1.5 text-label-sm text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <span
-                  aria-hidden="true"
-                  className={[
-                    "size-2 rounded-full transition-colors duration-200 motion-reduce:transition-none",
-                    powered ? "bg-foreground" : "bg-muted-foreground",
-                  ].join(" ")}
-                />
-                {powered ? "On" : "Off"}
-              </button>
-            </div>
+            <DevicePowerControl
+              state={powered}
+              requested={pending?.kind === "power" ? (pending.value as "on" | "off") : undefined}
+              control={control}
+              label={`${selected.name} power`}
+              onToggle={(next) => request("power", next)}
+            />
 
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-baseline justify-between gap-3">
-                <label htmlFor="kx-demo-intensity" className="text-label-md text-foreground">
-                  Intensity
-                </label>
-                <span className="text-label-md tabular-nums text-foreground">{intensity}%</span>
-              </div>
-              <input
-                id="kx-demo-intensity"
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={intensity}
-                disabled={!powered}
-                onChange={(event) => setIntensity(Number(event.target.value))}
-                className="h-6 w-full accent-foreground disabled:opacity-50"
-              />
-              {/* Bounds written out, so the scale does not depend on reading pixel positions. */}
-              <p className="flex justify-between text-label-sm text-muted-foreground" aria-hidden="true">
-                <span>0%</span>
-                <span>100%</span>
-              </p>
-            </div>
+            <DeviceLevelControl
+              value={intensity}
+              target={pending?.kind === "level" ? (pending.value as number) : undefined}
+              control={control}
+              label="Intensity"
+              unit="%"
+              onCommit={(next) => request("level", next)}
+            />
 
-            <div className="flex items-center justify-between gap-3">
-              <span id="kx-demo-target-label" className="text-label-md text-foreground">
-                Target temperature
-              </span>
-              <span className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTarget((t) => Math.max(-20, t - 1))}
-                  className="size-9 rounded-md border border-input text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <span className="sr-only">Decrease target temperature</span>
-                  <span aria-hidden="true">−</span>
-                </button>
-                <output aria-labelledby="kx-demo-target-label" className="w-14 text-center text-label-md tabular-nums text-foreground">
-                  {target} °C
-                </output>
-                <button
-                  type="button"
-                  onClick={() => setTarget((t) => Math.min(25, t + 1))}
-                  className="size-9 rounded-md border border-input text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <span className="sr-only">Increase target temperature</span>
-                  <span aria-hidden="true">+</span>
-                </button>
-              </span>
-            </div>
+            <DeviceSetpointControl
+              current={selected.id === "probe-a" ? 4.2 : undefined}
+              target={target}
+              requestedTarget={pending?.kind === "target" ? (pending.value as number) : undefined}
+              min={-20}
+              max={25}
+              unit="°C"
+              label="Target temperature"
+              control={control}
+              onCommit={(next) => request("target", next)}
+            />
+
+            <DeviceModeControl
+              modes={MODES}
+              value={mode}
+              requested={pending?.kind === "mode" ? (pending.value as string) : undefined}
+              control={control}
+              label="Operating mode"
+              onSelect={(id) => request("mode", id)}
+            />
 
             <div className="flex flex-col gap-1.5">
               <span className="text-label-md text-foreground">Simulate a state</span>

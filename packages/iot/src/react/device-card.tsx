@@ -9,6 +9,7 @@ import { LastSync } from "./last-sync";
 import { SensorReading } from "./sensor-reading";
 import { SignalStrength } from "./signal-strength";
 import { cn } from "./cn";
+import { withDisplayName } from "./display-name";
 
 /**
  * DeviceCard — one device, as a card.
@@ -55,7 +56,7 @@ export interface DeviceCardProps extends Omit<React.HTMLAttributes<HTMLDivElemen
 /** Statuses during which a previously-reported value must not be presented as current. */
 const IN_TRANSITION = new Set(["syncing", "pairing", "updating"]);
 
-const DeviceCard = React.forwardRef<HTMLDivElement, DeviceCardProps>(
+const DeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceCardProps>(
   ({ device, action, reading, footer, now, hideMeta = false, className, ...props }, ref) => {
     const status = normalizeDeviceStatus(device?.status);
     const transitioning = IN_TRANSITION.has(status);
@@ -124,7 +125,6 @@ const DeviceCard = React.forwardRef<HTMLDivElement, DeviceCardProps>(
       </div>
     );
   },
-);
-DeviceCard.displayName = "DeviceCard";
+), "DeviceCard");
 
 export { DeviceCard };

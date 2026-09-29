@@ -6,6 +6,7 @@ import { KINETIX_DEVICE_STATUSES } from "../types/device";
 import { describeDeviceStatus } from "../functions/status";
 import { summarizeDevices } from "../functions/group";
 import { cn } from "./cn";
+import { withDisplayName } from "./display-name";
 
 /**
  * DeviceStateSummary — how a group of devices is doing, as counts.
@@ -30,7 +31,7 @@ export interface DeviceStateSummaryProps extends Omit<React.HTMLAttributes<HTMLD
   label?: string;
 }
 
-const DeviceStateSummary = React.forwardRef<HTMLDivElement, DeviceStateSummaryProps>(
+const DeviceStateSummary = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceStateSummaryProps>(
   ({ devices, showEmpty = false, statuses, label, className, ...props }, ref) => {
     const summary = summarizeDevices(devices);
     const order = statuses ?? KINETIX_DEVICE_STATUSES;
@@ -68,7 +69,6 @@ const DeviceStateSummary = React.forwardRef<HTMLDivElement, DeviceStateSummaryPr
       </div>
     );
   },
-);
-DeviceStateSummary.displayName = "DeviceStateSummary";
+), "DeviceStateSummary");
 
 export { DeviceStateSummary };

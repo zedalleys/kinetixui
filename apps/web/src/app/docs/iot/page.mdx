@@ -34,7 +34,7 @@ Three entry points, because the useful half of this module has nothing to do wit
 | -------------------------- | ---------------------------------------- |
 | `@kinetixui/iot`           | everything                               |
 | `@kinetixui/iot/functions` | models and pure functions — **no React** |
-| `@kinetixui/iot/react`     | the five React primitives                |
+| `@kinetixui/iot/react`     | primitives, controls and patterns        |
 
 The `functions` subpath imports neither React nor the DOM, so it runs in a server route, a worker, a
 queue consumer or a test with no renderer. That is asserted twice rather than promised: against the
@@ -75,7 +75,11 @@ The `functions` subpath needs none of that.
 
 - device, telemetry, command, pairing, firmware and alert models
 - status, battery, signal, last-seen, firmware, telemetry, command, pairing and alert utilities
-- five React primitives: `DeviceStatusBadge`, `BatteryIndicator`, `SignalStrength`, `LastSync`, `SensorReading`
+- seven React primitives: `DeviceStatusBadge`, `BatteryIndicator`, `SignalStrength`, `LastSync`, `SensorReading`, `DeviceIcon`, `DeviceIdentity`
+- four device controls: `DevicePowerControl`, `DeviceLevelControl`, `DeviceSetpointControl`, `DeviceModeControl`
+- twelve patterns, including `DeviceControlCard`, `DeviceGroupCard` and `RoutineCard`
+- control-state resolution: `resolveControlState` turns a device status and a command status into
+  one answer about whether a control is operable, and whether what you are looking at is confirmed
 
 **Not in this module**
 
@@ -84,6 +88,9 @@ The `functions` subpath needs none of that.
 - native SwiftUI, Jetpack Compose or Flutter components
 - IoT blocks, a pairing wizard, or a telemetry dashboard
 - charting — a telemetry series here is data, not a plotted thing
+- an automation engine — `RoutineCard` renders a scene, routine or schedule that a product's own
+  engine populates; nothing here evaluates a trigger or schedules a run
+- video — nothing in this module streams, decodes or displays a camera feed
 
 Nothing in this module opens a connection, holds a credential, or parses or executes a device payload.
 It models what a device *is*, so that the layer which talks to one has something honest to render into.
@@ -274,25 +281,116 @@ without this module growing a variant API.
 There is no size-variant prop. These are single-line readings that inherit their type scale from the
 surrounding text, and a variant matrix would be five APIs to maintain for a choice CSS already makes.
 
-## Three levels, and when each is the right one
+## Four levels, and when each is the right one
 
-The React surface has two layers, and the website carries a third. Knowing which one you are reaching
-for saves rebuilding something that already exists — or importing something larger than the job.
+The React surface has three layers, and the website carries a fourth. Knowing which one you are
+reaching for saves rebuilding something that already exists — or importing something larger than the
+job.
 
 | Level | What it is | Where it lives | Reach for it when |
 | --- | --- | --- | --- |
-| **Primitives** | One fact, rendered as text | `@kinetixui/iot/react` | You are laying out your own card and need the status, battery, signal, timestamp or reading inside it |
-| **Patterns** | A composition of primitives, plus a rule or two | `@kinetixui/iot/react` | You are building the arrangement every device product builds and would otherwise rewrite it |
+| **Primitives** | One fact, rendered | `@kinetixui/iot/react` | You are laying out your own card and need the status, battery, signal, timestamp, reading or identity inside it |
+| **Controls** | One thing a user can change | `@kinetixui/iot/react` | The user needs to operate the device, not just read it |
+| **Patterns** | A composition of the above, plus a rule or two | `@kinetixui/iot/react` | You are building the arrangement every device product builds and would otherwise rewrite it |
 | **Examples** | A whole screen, assembled from patterns | [kinetixui.com/iot](/iot) — copy, do not install | You want a starting layout for a fleet view, a detail panel or an alert list |
 
-Primitives and patterns are both published API. Examples are not: they are source on the website, meant
-to be read and copied into your own codebase, because a screen layout is where your product's
-decisions live and importing someone else's is rarely the shortcut it looks like.
+Primitives, controls and patterns are all published API. Examples are not: they are source on the
+website, meant to be read and copied into your own codebase, because a screen layout is where your
+product's decisions live and importing someone else's is rarely the shortcut it looks like.
+
+## Controls
+
+A control is the part that makes this a connected-device system rather than a dashboard. All four
+share one rule, and it is the rule most device UIs get wrong:
+
+> **What the user asked for is drawn differently from what the device has confirmed.**
+
+A switch that slides over and fills in the instant you touch it is telling you the device is on. It
+does not know that. On a lamp the lie is harmless; on a door lock or an irrigation valve it is not,
+and the user finds out minutes later. So a requested state and a confirmed state never look the same:
+
+| Control | Confirmed | Requested, not yet confirmed |
+| --- | --- | --- |
+| `DevicePowerControl` | Track filled, knob solid | Track moves, knob stays hollow and dashed |
+| `DeviceLevelControl` | Solid fill to the value | Hatched fill to the requested value, solid fill left at the confirmed one |
+| `DeviceSetpointControl` | Target shown plainly | Target tinted, with the current reading still visible beneath it |
+| `DeviceModeControl` | Mode filled | Mode outlined and dashed, never filled |
+
+The same distinction reaches assistive technology rather than being a visual flourish:
+`aria-checked` on the power switch reports the **confirmed** state while a request is open, and the
+slider's `aria-valuetext` names both numbers.
+
+### `resolveControlState`
+
+Controls do not each decide what "offline" or "pending" means. `resolveControlState` takes a device
+status and an optional command status and returns one answer:
+
+```ts
+import { resolveControlState } from "@kinetixui/iot/functions";
+
+const control = resolveControlState({
+  deviceStatus: device.status,
+  commandStatus: pendingCommand?.status,
+});
+
+<DevicePowerControl state={device.power} requested={requested} control={control} label={device.name} />;
+```
+
+Its precedence is fixed so that five controls on one screen cannot disagree:
+
+1. An explicit `disabled` wins over everything.
+2. Device status outranks command status — a command cannot be meaningfully pending on a device that
+   is offline.
+3. A command in flight is `pending`, and pending is **not interactive**: a second press while the
+   first is unresolved is how users end up toggling a device twice.
+4. `stale` stays interactive. Sending a command is exactly how you find out whether a quiet device is
+   still there, so stale must not lock the control the way offline does.
+
+An unreported status resolves to `offline`, inherited from `normalizeDeviceStatus` — a control for a
+device nothing is known about should not look live.
+
+### Composition over configuration
+
+`DeviceControlCard` takes **slots** — `primaryControl`, `statusLine`, `meta`, `expanded` — rather
+than a prop per control. The alternative is `onToggle`, `level`, `onLevelChange`, `mode`, `modes`,
+`onModeChange`, `setpoint`… and it would still not fit the fourth product that arrives with a control
+nobody predicted.
+
+```tsx
+<DeviceControlCard
+  device={device}
+  active={device.power === "on"}
+  control={control}
+  statusLine="Warming to 21°"
+  primaryControl={<DevicePowerControl state={device.power} control={control} label={device.name} />}
+  expanded={<DeviceLevelControl value={device.level} control={control} label="Brightness" />}
+/>
+```
+
+Expanded content is unmounted while collapsed, so a grid of twenty cards does not carry twenty
+sliders it is not showing.
+
+### The library owns no vocabulary
+
+Mode labels come from you. There is no built-in `"heat" | "cool" | "auto"`, because the same control
+serves a thermostat, an irrigation valve and a conveyor, and a library that ships one domain's words
+is wrong for the other two. The same applies to groups: `DeviceGroupCard` takes a `kind` string, so a
+home calls it a room, a farm calls it a zone and an operator calls it a site.
+
+Unavailable modes stay visible and `aria-disabled` rather than disappearing — a mode that vanishes
+cannot explain why it is gone.
+
+### Commands are sent on release
+
+`DeviceLevelControl` composes a real `input[type="range"]` rather than reimplementing a slider, so
+keyboard, pointer and assistive technology behave exactly as the platform does. It reports a live
+value through `onPreview` and commits through `onCommit` on release — one command per drag rather
+than one per animation frame, which on a real gateway is a real cost.
 
 ## Patterns
 
-Nine compositions, each built from the primitives above rather than re-deriving their semantics — so
-what "stale" means is decided once and every one of them agrees.
+Twelve compositions, each built from the primitives and controls above rather than re-deriving their
+semantics — so what "stale" means is decided once and every one of them agrees.
 
 ```tsx
 import {
@@ -310,7 +408,10 @@ import {
 
 | Pattern | Composes | Answers |
 | --- | --- | --- |
-| `DeviceCard` | all five primitives | What is this device doing? |
+| `DeviceCard` | the reporting primitives | What is this device doing? |
+| `DeviceControlCard` | `DeviceIdentity` + a control in a slot | …and what can I do about it? |
+| `DeviceGroupCard` | `DeviceIcon` | How is this room, zone or site doing? |
+| `RoutineCard` | — | Is this scene, routine or schedule running, and when does it run next? |
 | `DeviceListItem` | the same, at list density | …across four hundred devices |
 | `DeviceStateSummary` | `summarizeDevices` | How is this group doing? |
 | `TelemetryTrend` | — | What has this metric been doing, including where it stopped? |

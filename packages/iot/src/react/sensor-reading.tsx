@@ -4,6 +4,7 @@ import * as React from "react";
 import type { KinetixTelemetryQuality } from "../types/telemetry";
 import { classifyTelemetryQuality, formatTelemetryValue } from "../functions/telemetry";
 import { cn } from "./cn";
+import { withDisplayName } from "./display-name";
 
 /**
  * SensorReading — one metric, its value and its unit.
@@ -34,7 +35,7 @@ const QUALITY_NOTE: Partial<Record<KinetixTelemetryQuality, string>> = {
   error: "Sensor error",
 };
 
-const SensorReading = React.forwardRef<HTMLDivElement, SensorReadingProps>(
+const SensorReading = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, SensorReadingProps>(
   ({ metric, value, unit, quality, precision, unknownLabel, className, ...props }, ref) => {
     const point = { value: value ?? Number.NaN, unit, quality };
     const resolved = classifyTelemetryQuality(point);
@@ -55,7 +56,6 @@ const SensorReading = React.forwardRef<HTMLDivElement, SensorReadingProps>(
       </div>
     );
   },
-);
-SensorReading.displayName = "SensorReading";
+), "SensorReading");
 
 export { SensorReading };
