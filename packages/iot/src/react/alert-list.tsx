@@ -75,8 +75,10 @@ const AlertList = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardR
                 .map((s) => (
                   <span key={s} data-severity-count={s} className={cn("inline-flex items-center gap-1.5", s === "critical" && "text-destructive")}>
                     <Glyph name={GLYPH[s]} size={14} />
-                    <span className="tabular-nums">{counts[s]}</span>
-                    <span>{describeAlertSeverity(s)}</span>
+                    {/* One text node, so the count and the word are read as "2 Critical", not "2Critical". */}
+                    <span>
+                      <span className="tabular-nums">{counts[s]}</span> {describeAlertSeverity(s)}
+                    </span>
                   </span>
                 ))
             )}

@@ -1,80 +1,125 @@
 import * as React from "react";
 import type { KinetixDeviceHealthLevel } from "../types/device-state";
+import type { KinetixFleetHealthEntry } from "../functions/device-state";
 import { describeDeviceHealth } from "../functions/device-state";
 import { cn } from "./cn";
-import { Glyph, HEALTH_GLYPH } from "./glyph";
+import { Glyph, HEALTH_GLYPH, type GlyphName } from "./glyph";
 
 /**
- * Internal: the segmented health bar and its legend, shared by `DeviceHealthSummary` and
- * `SpaceRollup` so the two cannot drift apart.
+ * Internal: mutually exclusive health buckets, the segmented bar and its legend. Shared by
+ * `DeviceHealthSummary` and `SpaceRollup` so the two cannot drift apart.
  *
- * **The bar and the legend are visual; the sentence the caller prints is the data.** Segments differ by fill *and* by border style
- * (solid, dashed, dotted, outlined) so they stay distinguishable in greyscale, but a bar of five
- * proportional slivers is not something to rely on — so both are `aria-hidden` and the caller prints
- * the same counts as a sentence, which is what assistive technology reads (once, not three times).
+ * ## Buckets are exclusive, and they sum to the total
+ * The headless summaries report **offline beside the health counts**, because an offline device also
+ * has a health level (offline is a warning-level verdict) and so it appears in `byHealth.warning` *and*
+ * in `offline`. Printed as they stand, "1 warning · 1 offline" would describe one device twice and a
+ * bar built from both would be wider than the fleet. The UI therefore presents **one bucket per
+ * device**: a device that is offline or unreachable is `offline`, whatever its health level, and every
+ * other device is counted at its health level.
+ *
+ * - From `entries` (a `summarizeFleetHealth` result carries them) this is exact.
+ * - From bare counts it is an approximation: the offline count is taken out of `warning` first (where
+ *   an offline verdict lands), then out of the next-worst buckets if `warning` runs out. A caller that
+ *   has the per-device entries should pass them.
+ *
+ * **The bar and the legend are visual; the sentence the caller prints is the data.** Segments differ by
+ * fill *and* border style (solid, dashed, dotted, double) so they stay distinguishable in greyscale,
+ * but a bar of proportional slivers is not something to rely on — so both are `aria-hidden` and the
+ * caller prints the same counts as a sentence, which assistive technology reads once.
  */
-export type HealthCounts = Partial<Record<KinetixDeviceHealthLevel, number>>;
+export type HealthBucket = KinetixDeviceHealthLevel | "offline";
+export type HealthBuckets = Record<HealthBucket, number>;
 
-const ORDER: readonly KinetixDeviceHealthLevel[] = ["critical", "warning", "degraded", "unknown", "healthy"];
+/**
+ * Healthy first (the number people look for), then the buckets that need someone, worst first, with
+ * offline last. One order for the sentence, the bar and the legend, so they read the same way.
+ */
+const ORDER: readonly HealthBucket[] = ["healthy", "critical", "warning", "degraded", "unknown", "offline"];
 
-const SEGMENT: Record<KinetixDeviceHealthLevel, string> = {
+const SEGMENT: Record<HealthBucket, string> = {
   healthy: "border border-transparent bg-primary",
   degraded: "border border-solid border-primary bg-primary/30",
   warning: "border-2 border-dashed border-foreground bg-background",
   critical: "border border-transparent bg-destructive",
   unknown: "border-2 border-dotted border-muted-foreground bg-muted",
+  offline: "border-4 border-double border-muted-foreground bg-muted",
 };
 
-export function HealthBar({
-  counts,
-  offline,
-  total,
-  compact = false,
-}: {
-  counts: HealthCounts;
-  offline?: number;
-  total: number;
-  compact?: boolean;
-}) {
-  const present = ORDER.filter((level) => (counts[level] ?? 0) > 0);
+const GLYPH: Record<HealthBucket, GlyphName> = { ...HEALTH_GLYPH, offline: "slash" };
+const WORD: Record<HealthBucket, string> = {
+  healthy: "healthy",
+  degraded: "degraded",
+  warning: "warning",
+  critical: "critical",
+  unknown: "unknown",
+  offline: "offline",
+};
+
+const isOffline = (entry: KinetixFleetHealthEntry) => entry.connectivity.state === "offline" || entry.connectivity.state === "unreachable";
+
+/** One bucket per device. Exact. */
+export function bucketsFromEntries(entries: readonly KinetixFleetHealthEntry[]): HealthBuckets {
+  const b: HealthBuckets = { healthy: 0, degraded: 0, warning: 0, critical: 0, unknown: 0, offline: 0 };
+  for (const entry of entries) {
+    if (isOffline(entry)) b.offline += 1;
+    else b[entry.health.level] += 1;
+  }
+  return b;
+}
+
+/** Counts that overlap (`offline` is also inside a health count) turned into exclusive ones. Approximate. */
+export function bucketsFromCounts(counts: Partial<Record<KinetixDeviceHealthLevel, number>>, offline: number | undefined): HealthBuckets {
+  const b: HealthBuckets = {
+    healthy: counts.healthy ?? 0,
+    degraded: counts.degraded ?? 0,
+    warning: counts.warning ?? 0,
+    critical: counts.critical ?? 0,
+    unknown: counts.unknown ?? 0,
+    offline: 0,
+  };
+  let remaining = Math.max(0, offline ?? 0);
+  for (const level of ["warning", "degraded", "critical", "unknown"] as const) {
+    const take = Math.min(b[level], remaining);
+    b[level] -= take;
+    b.offline += take;
+    remaining -= take;
+  }
+  // Offline devices the health counts cannot account for still exist; they are not silently dropped.
+  b.offline += remaining;
+  return b;
+}
+
+export const bucketTotal = (b: HealthBuckets): number => ORDER.reduce((sum, key) => sum + b[key], 0);
+
+export function HealthBar({ buckets, compact = false }: { buckets: HealthBuckets; compact?: boolean }) {
+  const present = ORDER.filter((key) => buckets[key] > 0);
   return (
     <div className="flex min-w-0 flex-col gap-2">
-      {total > 0 ? (
+      {present.length > 0 ? (
         <div aria-hidden="true" data-health-bar="" className="flex h-2.5 w-full gap-0.5 overflow-hidden rounded-full">
-          {present.map((level) => (
-            <span key={level} data-segment={level} className={cn("h-full min-w-1.5 rounded-full", SEGMENT[level])} style={{ flexGrow: counts[level] }} />
+          {present.map((key) => (
+            <span key={key} data-segment={key} data-count={buckets[key]} className={cn("h-full min-w-1.5 rounded-full", SEGMENT[key])} style={{ flexGrow: buckets[key] }} />
           ))}
         </div>
       ) : null}
       {compact ? null : (
         <ul aria-hidden="true" className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0">
-          {present.map((level) => (
-            <li key={level} data-legend={level} className="inline-flex items-center gap-1.5 text-label-sm text-foreground">
-              <Glyph name={HEALTH_GLYPH[level]} size={12} />
-              <span className="tabular-nums">{counts[level]}</span>
-              <span>{describeDeviceHealth(level)}</span>
+          {present.map((key) => (
+            <li key={key} data-legend={key} className="inline-flex items-center gap-1.5 text-label-sm text-foreground">
+              <Glyph name={GLYPH[key]} size={12} />
+              <span className="tabular-nums">{buckets[key]}</span>
+              <span>{key === "unknown" ? "Health unknown" : key === "offline" ? "Offline" : describeDeviceHealth(key)}</span>
             </li>
           ))}
-          {offline && offline > 0 ? (
-            <li data-legend="offline" className="inline-flex items-center gap-1.5 text-label-sm text-foreground">
-              <Glyph name="slash" size={12} />
-              <span className="tabular-nums">{offline}</span>
-              <span>Offline</span>
-            </li>
-          ) : null}
         </ul>
       )}
     </div>
   );
 }
 
-/** "22 healthy · 1 warning · 1 offline" — nonzero, worst first, healthy last; the text form of the bar. */
-export function healthText(counts: HealthCounts, offline: number | undefined): string {
-  const parts: string[] = [];
-  for (const level of ORDER) {
-    const n = counts[level] ?? 0;
-    if (n > 0) parts.push(`${n} ${describeDeviceHealth(level).toLowerCase()}`);
-  }
-  if (offline && offline > 0) parts.push(`${offline} offline`);
-  return parts.join(" · ");
+/** "22 healthy · 1 warning · 1 offline" — nonzero buckets, worst first, healthy last; the text form of the bar. */
+export function healthText(buckets: HealthBuckets): string {
+  return ORDER.filter((key) => buckets[key] > 0)
+    .map((key) => `${buckets[key]} ${WORD[key]}`)
+    .join(" · ");
 }

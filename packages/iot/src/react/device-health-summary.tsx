@@ -1,8 +1,7 @@
 import * as React from "react";
 import type { KinetixDevice } from "../types/device";
-import type { KinetixDeviceHealthLevel } from "../types/device-state";
 import { summarizeFleetHealth, type AssessDevicesOptions, type KinetixFleetHealthSummary } from "../functions/device-state";
-import { HealthBar, healthText } from "./health-bar";
+import { HealthBar, bucketsFromCounts, bucketsFromEntries, bucketTotal, healthText } from "./health-bar";
 import { cn } from "./cn";
 import { withDisplayName } from "./display-name";
 
@@ -14,8 +13,13 @@ import { withDisplayName } from "./display-name";
  * primary output; the bar is `aria-hidden` and its segments differ in fill *and* border style (solid,
  * dashed, dotted), with a legend that repeats every count as a glyph, a number and a word.
  *
- * Offline is reported beside the health counts, not as one of them (it overlaps them, exactly as in
- * `summarizeFleetHealth`), so the health counts still sum to the total.
+ * **The buckets are mutually exclusive and sum to the total.** `summarizeFleetHealth` reports offline
+ * *beside* the health counts, and an offline device is also a warning-level verdict, so the raw numbers
+ * count it twice. This component gives every device one bucket — offline or unreachable is `offline`,
+ * whatever its health level; everything else is its health level — so a 24-device site reads
+ * "22 healthy · 1 warning · 1 offline", not "1 warning · 1 offline" for a single device. With `entries`
+ * (present on every `summarizeFleetHealth` result) that is exact; with hand-built counts it is an
+ * approximation that takes offline out of `warning` first — see `health-bar.tsx`.
  */
 export interface DeviceHealthSummaryProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "children"> {
   /** An already-computed summary. Wins over `devices`. */
@@ -33,16 +37,17 @@ export interface DeviceHealthSummaryProps extends Omit<React.HTMLAttributes<HTML
 const DeviceHealthSummary = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceHealthSummaryProps>(
   ({ summary, devices, assess, compact = false, noun, className, ...props }, ref) => {
     const s = summary ?? summarizeFleetHealth(devices, assess);
-    const word = s.total === 1 ? (noun?.one ?? "device") : (noun?.other ?? "devices");
-    const counts = s.byHealth as Partial<Record<KinetixDeviceHealthLevel, number>>;
-    const detail = healthText(counts, s.offline);
+    const buckets = s.entries.length > 0 ? bucketsFromEntries(s.entries) : bucketsFromCounts(s.byHealth, s.offline);
+    const total = s.total > 0 ? s.total : bucketTotal(buckets);
+    const detail = healthText(buckets);
+    const word = total === 1 ? (noun?.one ?? "device") : (noun?.other ?? "devices");
 
     return (
       <div ref={ref} data-worst={s.worst} className={cn("flex min-w-0 flex-col gap-2 font-sans", className)} {...props}>
         <p data-health-text="" className="break-words text-label-md text-foreground">
-          {s.total === 0 ? `No ${noun?.other ?? "devices"}` : `${s.total} ${word}${detail ? ` · ${detail}` : ""}`}
+          {total === 0 ? `No ${noun?.other ?? "devices"}` : `${total} ${word}${detail ? ` · ${detail}` : ""}`}
         </p>
-        <HealthBar counts={counts} offline={s.offline} total={s.total} compact={compact} />
+        <HealthBar buckets={buckets} compact={compact} />
       </div>
     );
   },

@@ -70,6 +70,12 @@ export interface AutomationBuilderProps extends Omit<React.FormHTMLAttributes<HT
   targets: readonly KinetixBuilderTarget[];
   /** A subset of operators to offer. Defaults to all of them. */
   operators?: readonly KinetixAutomationOperator[];
+  /**
+   * Names for ids in the summary and the read-only view. Consulted first; without it subjects and
+   * targets are named from `subjects` / `targets`, and a `scope` (which this form preserves but does
+   * not edit) falls back to its readable id, so pass this if your rules carry scopes.
+   */
+  labelFor?: (kind: "subject" | "scope" | "target", id: string) => string | undefined;
   /** Unit for a subject, when it is not on the subject itself. */
   unitFor?: (subjectId: string) => string | undefined;
   /** The `type` given to a newly created trigger. Defaults to `"metric"`. */
@@ -127,7 +133,7 @@ function issueContext(path: string): string {
 const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLFormElement, AutomationBuilderProps>(
   (
     {
-      value, onChange, subjects, targets, operators, unitFor, triggerType = "metric", disabled = false, readOnly = false,
+      value, onChange, subjects, targets, operators, labelFor: labelForProp, unitFor, triggerType = "metric", disabled = false, readOnly = false,
       onSubmit, onCancel, submitLabel = "Save rule", cancelLabel = "Cancel", showValidation = false, label = "Automation rule", className, ...props
     },
     ref,
@@ -161,7 +167,8 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
     }
 
     const labelFor = (kind: "subject" | "scope" | "target", id: string): string | undefined =>
-      kind === "subject" ? subjects.find((s) => s.id === id)?.label : kind === "target" ? targets.find((t) => t.id === id)?.label : undefined;
+      labelForProp?.(kind, id) ??
+      (kind === "subject" ? subjects.find((s) => s.id === id)?.label : kind === "target" ? targets.find((t) => t.id === id)?.label : undefined);
 
     // Focus follows an edit, but only once the parent has actually re-rendered with a new value —
     // otherwise a parent that ignores `onChange` would have focus yanked at some later, unrelated render.
@@ -227,12 +234,13 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
       </div>
     );
 
-    const select = (path: string, text: string, current: string, options: readonly { id: string; label: string }[], onPick: (id: string) => void, focusKey?: string) =>
+    const select = (path: string, text: string, current: string, options: readonly { id: string; label: string }[], onPick: (id: string) => void, focusKey?: string, required = false) =>
       field(
         path,
         text,
         <select {...a11y(path)} value={current} data-focus-key={focusKey} onChange={(e) => onPick(e.target.value)}>
-          <option value="">Choose…</option>
+          {/* A choice that always has an answer (a comparison, a join) has no "Choose…" to fall back to. */}
+          {required ? null : <option value="">Choose…</option>}
           {/* A current value the product no longer offers stays selectable so the form does not silently drop it. */}
           {current !== "" && !options.some((o) => o.id === current) ? <option value={current}>{current}</option> : null}
           {options.map((o) => (
@@ -276,6 +284,8 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
               const next = id as KinetixAutomationOperator;
               patch(valueKindOf(next) === kind ? { operator: next } : { operator: next, value: undefined });
             },
+            undefined,
+            true,
           )}
           {kind === "number"
             ? field(
@@ -516,6 +526,8 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
                         { id: "or", label: "Or" },
                       ],
                       (id) => patchCondition(index, { join: id === "or" ? "or" : "and" }),
+                      undefined,
+                      true,
                     )
                   : null}
                 {comparison(`conditions[${index}]`, condition, "condition", (p) => patchCondition(index, p), `condition:${condition.id}:first`)}

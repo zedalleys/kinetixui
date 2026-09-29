@@ -148,9 +148,9 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
               <dt className="text-muted-foreground">{labels?.device ?? "Device reports"}</dt>
               <dd data-confirmed="" className="text-foreground">{format(lifecycle.confirmedValue)}</dd>
             </div>
-            {attemptText ? <div data-attempts="" className="text-muted-foreground">{attemptText}</div> : null}
           </dl>
         )}
+        {attemptText ? <p data-attempts="" className="text-label-sm text-muted-foreground">{attemptText}</p> : null}
 
         {/* The one live region. Live regions announce *changes*, so the first render is silent and a
             stage change is spoken once. The stepper above is deliberately not live. */}

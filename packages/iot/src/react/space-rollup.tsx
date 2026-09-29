@@ -1,8 +1,7 @@
 import * as React from "react";
 import type { KinetixSpaceHealthRollup } from "../types/hierarchy";
-import { describeSpaceRollup } from "../functions/hierarchy";
 import { describeDeviceHealth } from "../functions/device-state";
-import { HealthBar } from "./health-bar";
+import { HealthBar, bucketsFromCounts, healthText } from "./health-bar";
 import { Glyph, HEALTH_GLYPH } from "./glyph";
 import { cn } from "./cn";
 import { withDisplayName } from "./display-name";
@@ -10,10 +9,12 @@ import { withDisplayName } from "./display-name";
 /**
  * SpaceRollup — the health of everything beneath one space: text first, bar second.
  *
- * `rollup` is one entry of `rollupSpaceHealth(tree, devices)`. The sentence is `describeSpaceRollup`
- * ("3 of 5 healthy, 1 warning, 1 offline."), preceded by the **worst** level found anywhere below as a
- * glyph and a word — because a room with one critical pump is critical, and the rollup says so before
- * the counts do. Devices placed in the space but absent from the list supplied are counted as unknown
+ * `rollup` is one entry of `rollupSpaceHealth(tree, devices)`. The sentence gives one bucket per device
+ * ("5 devices · 3 healthy · 1 warning · 1 offline"), preceded by the **worst** level found anywhere
+ * below as a glyph and a word — because a room with one critical pump is critical, and the rollup says so before
+ * the counts do. `rollupSpaceHealth` reports offline beside the health counts (an offline device is
+ * also in `warning`), so the buckets are made exclusive here — approximately, since a rollup carries
+ * counts and not per-device entries; see `health-bar.tsx`. Devices placed in the space but absent from the list supplied are counted as unknown
  * and called out, never dropped.
  */
 export interface SpaceRollupProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "children"> {
@@ -27,6 +28,7 @@ export interface SpaceRollupProps extends Omit<React.HTMLAttributes<HTMLDivEleme
 const SpaceRollup = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, SpaceRollupProps>(
   ({ rollup, name, compact = false, className, ...props }, ref) => {
     const empty = rollup.total === 0;
+    const buckets = bucketsFromCounts(rollup, rollup.offline);
     return (
       <div
         ref={ref}
@@ -43,9 +45,9 @@ const SpaceRollup = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwar
               <span>{describeDeviceHealth(rollup.worst)}</span>
             </span>
           )}
-          <span data-rollup-text="" className="break-words text-label-sm text-muted-foreground">{describeSpaceRollup(rollup)}</span>
+          <span data-rollup-text="" className="break-words text-label-sm text-muted-foreground">{empty ? "No devices." : `${rollup.total} ${rollup.total === 1 ? "device" : "devices"} · ${healthText(buckets)}`}</span>
         </p>
-        <HealthBar counts={rollup} offline={rollup.offline} total={rollup.total} compact={compact} />
+        <HealthBar buckets={buckets} compact={compact} />
         {rollup.missing > 0 ? (
           <p data-missing="" className="text-label-sm text-muted-foreground">
             {rollup.missing} {rollup.missing === 1 ? "device is" : "devices are"} placed here but not in the device list, counted as unknown.

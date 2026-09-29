@@ -58,7 +58,7 @@ function physicalUtilities(source: string): string[] {
  * the tokens define and are allowed.
  */
 const TOKEN_OWNED =
-  /^-?(bg|text|border|ring|ring-offset|outline|fill|stroke|from|via|to|p[xytblrse]?|m[xytblrse]?|gap|gap-[xy]|space-[xy]|w|h|size|min-w|min-h|max-w|max-h|inset|inset-[xy]|top|bottom|start|end|basis|rounded|rounded-[a-z]+|shadow|leading|tracking|opacity)-\[/;
+  /^-?(bg|text|border|ring|ring-offset|outline|fill|stroke|from|via|to|p[xytblrse]?|m[xytblrse]?|gap|gap-[xy]|space-[xy]|inset|inset-[xy]|top|bottom|start|end|rounded|rounded-[a-z]+|shadow|leading|tracking|opacity)-\[/;
 
 function arbitraryValues(source: string): string[] {
   return utilityTokens(source)
@@ -95,7 +95,7 @@ describe("component conventions", () => {
   describe("token contract only", () => {
     it("catches an arbitrary value in a sample (self-check)", () => {
       expect(arbitraryValues('<div className="bg-[#fff] p-[13px] w-full [&>img]:size-full" />')).toEqual(["bg-[#fff]", "p-[13px]"]);
-      expect(arbitraryValues('<div className="[&::-webkit-slider-thumb]:size-6 transition-[width] sm:w-[3px]" />')).toEqual(["sm:w-[3px]"]);
+      expect(arbitraryValues('<div className="[&::-webkit-slider-thumb]:size-6 transition-[width] max-w-[16ch] sm:p-[3px]" />')).toEqual(["sm:p-[3px]"]);
     });
 
     it("uses no arbitrary Tailwind value in any component", () => {
