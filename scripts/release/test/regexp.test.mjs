@@ -16,14 +16,24 @@ import { escapeRegExp } from "./regexp.mjs";
 const dir = fileURLToPath(new URL(".", import.meta.url));
 
 /**
- * `.replace(/…/g, "\\…")` — a regular expression rewritten with a backslash-prefixed replacement, which is
- * what escaping by hand looks like and what CodeQL flagged.
+ * Escaping by hand looks like `.replace(/…/g, "\\…")`: a regular expression rewritten with a
+ * backslash-prefixed replacement. A line is flagged when it shows both halves.
  *
- * The bracket-group alternative is load-bearing: one of the five real call sites was `.replace(/[/@]/g, …)`,
- * whose character class contains a `/`. Matching the pattern body as "anything but a slash" would have
- * skipped exactly that shape, which the fixture below caught.
+ * Two small patterns rather than one that spans the whole call, because matching the pattern body is where
+ * this gets dangerous. Writing the body as "anything but a slash" silently skipped `.replace(/[/@]/g, …)` —
+ * a real call site, whose character class contains a `/`. Adding a bracket-group alternative fixed that and
+ * bought an `js/redos` alert of its own, on this very file: `[]` could be read either as the bracket group
+ * or as two ordinary characters, so `.replace(/[][][]…` had exponentially many parses.
+ *
+ * Neither pattern below can backtrack — in both, `\s*` is followed by a character `\s` cannot match — and
+ * together they catch the shapes the body-matching version missed, including a class containing `]`.
+ * A guard that needs a guard is a guard that is too clever.
  */
-const AD_HOC_ESCAPE = /\.replace\(\s*\/(?:\[[^\]\n]*\]|[^/\n])+\/[gimsuy]*\s*,\s*"\\\\/;
+const REGEXP_FIRST_ARGUMENT = /\.replace\(\s*\//;
+const BACKSLASH_REPLACEMENT = /,\s*"\\\\/;
+
+/** Both halves on one line: something is being escaped into a pattern by hand. */
+const escapesInline = (line) => REGEXP_FIRST_ARGUMENT.test(line) && BACKSLASH_REPLACEMENT.test(line);
 
 /**
  * `regexp.mjs` documents the two bad shapes it replaced, and this file carries the detector and a sample of
@@ -57,12 +67,23 @@ describe("regular expressions built from real data", () => {
   });
 
   it("detects an escape written by hand", () => {
-    // Proving the scan below is not vacuous. Both are real shapes that were in this directory.
-    assert.match('version.replace(/\\./g, "\\\\.")', AD_HOC_ESCAPE);
-    assert.match('name.replace(/[/@]/g, "\\\\$&")', AD_HOC_ESCAPE);
-    assert.doesNotMatch("escapeRegExp(pkg.name)", AD_HOC_ESCAPE);
+    // Proving the scan below is not vacuous. The first two are the real shapes that were in this directory.
+    assert.ok(escapesInline('version.replace(/\\./g, "\\\\.")'));
+    assert.ok(escapesInline('name.replace(/[/@]/g, "\\\\$&")'));
+    // A character class containing `]`, which the body-matching detector could not reach.
+    assert.ok(escapesInline('s.replace(/[\\]]/g, "\\\\$&")'));
+    assert.ok(!escapesInline("escapeRegExp(pkg.name)"));
     // Not every `replace` is an escape: path normalisation must not be flagged.
-    assert.doesNotMatch('p.replace(root, "").replace(/\\\\/g, "/")', AD_HOC_ESCAPE);
+    assert.ok(!escapesInline('p.replace(root, "").replace(/\\\\/g, "/")'));
+  });
+
+  it("cannot be made to backtrack", () => {
+    // The input that earned this file its own js/redos alert. Linear patterns return immediately; the
+    // ambiguous one this replaced did not. A second of headroom is several orders of magnitude of slack.
+    const adversarial = `.replace(/${"[]".repeat(40)}`;
+    const started = performance.now();
+    escapesInline(adversarial);
+    assert.ok(performance.now() - started < 1000, "the detector backtracks — it is too clever again");
   });
 
   it("no release test escapes inline any more", () => {
@@ -71,7 +92,7 @@ describe("regular expressions built from real data", () => {
       if (EXPLAINS_THE_RULE.has(name)) continue;
       const source = readFileSync(path.join(dir, name), "utf8");
       source.split("\n").forEach((line, i) => {
-        if (AD_HOC_ESCAPE.test(line)) offenders.push(`${name}:${i + 1}`);
+        if (escapesInline(line)) offenders.push(`${name}:${i + 1}`);
       });
     }
     assert.deepEqual(
