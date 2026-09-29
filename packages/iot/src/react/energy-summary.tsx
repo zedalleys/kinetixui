@@ -41,7 +41,9 @@ export interface EnergySummaryProps extends Omit<React.HTMLAttributes<HTMLDivEle
 
 const EnergySummary = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, EnergySummaryProps>(
   ({ summary, current, today, days, dayLabels, breakdownLabel = "Top contributors", precision = 1, className, ...props }, ref) => {
-    const fmt = (n: number) => n.toFixed(precision);
+    // `toFixed` throws a RangeError outside 0–100 and on NaN-derived counts; a public prop must not be able to take the card down.
+    const digits = Number.isFinite(precision) ? Math.min(20, Math.max(0, Math.trunc(precision))) : 1;
+    const fmt = (n: number) => n.toFixed(digits);
     const unit = summary.unit;
     const high = summary.flags.includes("high-consumption");
     const usableDays = Array.isArray(days) ? days : [];

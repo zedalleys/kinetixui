@@ -346,7 +346,8 @@ export function transitionPairing(state: KinetixPairingFlowState, event: Kinetix
     case "next": {
       if (state.status !== "active" || state.stage === "complete") return reject(state, event);
       const stage = KINETIX_PAIRING_STAGES[stageIndex(state.stage) + 1]!;
-      return { ok: true, state: { ...state, stage, status: stage === "complete" ? "complete" : "active", retries: 0 } };
+      // A stage that advances has moved past whatever a retried failure left behind, so the cleanup flag ends here.
+      return { ok: true, state: { ...state, stage, status: stage === "complete" ? "complete" : "active", retries: 0, needsCleanup: false } };
     }
     case "back": {
       if (state.status === "active" && stageIndex(state.stage) > 0) {

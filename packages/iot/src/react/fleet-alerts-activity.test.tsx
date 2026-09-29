@@ -596,6 +596,13 @@ describe("CameraDeviceCard", () => {
 /* ------------------------------------------------------------------ EnergySummary */
 
 describe("EnergySummary", () => {
+  it("does not throw for a precision toFixed would reject", () => {
+    const summary = summarizeEnergy([{ id: "a", label: "A", value: 3 }], { unit: "kWh" });
+    for (const precision of [-1, 101, 1e9, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() => render(<EnergySummary summary={summary} today={3} precision={precision} />).unmount(), String(precision)).not.toThrow();
+    }
+  });
+
   const items = [
     { id: "hvac", label: "Heat pump", value: 12 },
     { id: "cold", label: "Cold room", value: 6 },

@@ -119,6 +119,15 @@ describe("advancePairing", () => {
     expect(failed.needsCleanup).toBe(true);
     expect(advancePairing(failed, { type: "retry" }).needsCleanup).toBe(true);
   });
+  it("clears needsCleanup once a retried stage advances, through to complete", () => {
+    const failed = run([NEXT, NEXT, NEXT, { type: "fail", code: "partial-provisioning" }], started);
+    const retried = advancePairing(failed, { type: "retry" });
+    expect(retried.needsCleanup).toBe(true);
+    let state = advancePairing(retried, NEXT);
+    expect(state.needsCleanup).toBe(false);
+    while (state.status === "active") state = advancePairing(state, NEXT);
+    expect(state).toMatchObject({ status: "complete", needsCleanup: false });
+  });
   it("refuses retry for a non-retryable failure, with a typed reason", () => {
     const failed = run([NEXT, { type: "fail", code: "already-owned" }], started);
     const r = transitionPairing(failed, { type: "retry" });

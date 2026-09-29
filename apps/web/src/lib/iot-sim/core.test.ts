@@ -239,6 +239,17 @@ describe("drift, alerts and derived state", () => {
     expect(s.alerts.some((a) => a.deviceId === "quiet" && a.kind === "sensor-stale")).toBe(true);
   });
 
+  it("keeps stale alerts per metric on a device with several sensors", () => {
+    const quietTemperature = testScenario.sensors.find((x) => x.deviceId === "quiet")!;
+    const scenario = {
+      ...testScenario,
+      sensors: [...testScenario.sensors, { ...quietTemperature, metric: "humidity", unit: "%", base: 50 }],
+    };
+    const s = tick(createSimulation(scenario), at(1000));
+    const stale = s.alerts.filter((a) => a.deviceId === "quiet" && a.kind === "sensor-stale");
+    expect(stale.map((a) => a.source).sort()).toEqual(["sim:stale:humidity", "sim:stale:temperature"]);
+  });
+
   it("keeps a bounded live series after the scenario history", () => {
     const s = run(createSimulation(testScenario), 0, 30_000, 1000);
     expect(selectSeries(s, "probe", "temperature").points.length).toBeGreaterThan(20);

@@ -234,7 +234,11 @@ function judgeStale(sim: Simulation, nowMs: number): void {
     if (!reading) continue;
     const ev = evaluateReading({ value: reading.value, quality: "good", metric: s.metric, timestamp: reading.timestamp, now: nowMs, staleAfterMs: staleAfterOf(s) });
     const stale = ev.state === "stale";
-    const open = sim.alerts.find((a) => isOpen(a) && a.deviceId === s.deviceId && a.kind === "sensor-stale");
+    // Stale alerts are per metric: a device with several sensors must not let one metric's alert stand in for another's.
+    const metricSource = `sim:stale:${s.metric}`;
+    const open = sim.alerts.find(
+      (a) => isOpen(a) && a.deviceId === s.deviceId && a.kind === "sensor-stale" && (a.source === metricSource || !a.source?.startsWith("sim:stale:")),
+    );
     if (stale && !open) {
       // The moment it became stale, not the tick that noticed: keeps the log independent of tick cadence.
       const becameStale = Math.min(nowMs, Math.max(startMs, (toMs(reading.timestamp) ?? nowMs) + staleAfterOf(s) + 1));
