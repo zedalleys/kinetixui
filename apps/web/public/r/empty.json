@@ -4,7 +4,9 @@
   "title": "Empty",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "class-variance-authority"
+    "class-variance-authority",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

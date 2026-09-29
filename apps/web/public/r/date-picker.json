@@ -4,8 +4,10 @@
   "title": "Date Picker",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
+    "clsx",
     "date-fns",
-    "lucide-react"
+    "lucide-react",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens",

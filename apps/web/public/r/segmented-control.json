@@ -4,7 +4,9 @@
   "title": "Segmented Control",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "@radix-ui/react-toggle-group"
+    "@radix-ui/react-toggle-group",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

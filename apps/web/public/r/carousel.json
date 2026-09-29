@@ -4,8 +4,10 @@
   "title": "Carousel",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
+    "clsx",
     "embla-carousel-react",
-    "lucide-react"
+    "lucide-react",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens",

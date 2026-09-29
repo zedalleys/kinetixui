@@ -5,7 +5,9 @@
   "description": "Generated 1:1 from the KinetixUI design source, node 54863:351.",
   "dependencies": [
     "@radix-ui/react-slot",
-    "class-variance-authority"
+    "class-variance-authority",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

@@ -4,7 +4,9 @@
   "title": "Kbd",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "@radix-ui/react-slot"
+    "@radix-ui/react-slot",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

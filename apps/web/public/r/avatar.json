@@ -4,7 +4,9 @@
   "title": "Avatar",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "@radix-ui/react-avatar"
+    "@radix-ui/react-avatar",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

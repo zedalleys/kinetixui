@@ -6,7 +6,9 @@
   "dependencies": [
     "@radix-ui/react-navigation-menu",
     "class-variance-authority",
-    "lucide-react"
+    "clsx",
+    "lucide-react",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

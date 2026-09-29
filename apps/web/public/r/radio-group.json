@@ -5,7 +5,9 @@
   "description": "Generated 1:1 from the KinetixUI design source, node 54863:536.",
   "dependencies": [
     "@radix-ui/react-radio-group",
-    "lucide-react"
+    "clsx",
+    "lucide-react",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

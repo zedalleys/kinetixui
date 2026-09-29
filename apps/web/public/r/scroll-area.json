@@ -4,7 +4,9 @@
   "title": "Scroll Area",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "@radix-ui/react-scroll-area"
+    "@radix-ui/react-scroll-area",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

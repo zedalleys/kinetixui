@@ -49,25 +49,15 @@ Native text styles ship too: `KinetixType.swift`, `KinetixType.kt`,
 npx @kinetixui/cli add button
 ```
 
-The CLI resolves `tokens` first (a registry dependency), installs the npm
-packages the component itself declares — for `button`, `@radix-ui/react-slot`
-and `class-variance-authority` — then drops `button.tsx` into your configured
-components directory.
+The CLI resolves `tokens` first (a registry dependency), installs every npm
+package the delivered files import — for `button` that is
+`@radix-ui/react-slot`, `class-variance-authority`, `clsx` and `tailwind-merge`
+— then drops `button.tsx` into your configured components directory.
 
-<Callout>
-  **Install `clsx` and `tailwind-merge` once per project.** Every component that
-  uses `cn()` also brings in `lib/utils.ts`, which imports both — and the CLI does
-  not install them for you yet, so a fresh project fails to build without them.
-
-```bash
-npm i clsx tailwind-merge
-```
-
-  This is a gap in the registry metadata rather than something you should have to
-  know: the two belong in each component's declared dependencies, and once they are
-  there the CLI installs them like any other. Recorded in
-  `marketing/audits/PHASE-0.9-LIVE-VERIFICATION.md`.
-</Callout>
+`clsx` and `tailwind-merge` are there because `button.tsx` imports `cn()`, so
+the item also delivers `lib/utils.ts`, which imports both. You do not install
+them yourself: each item's dependencies are derived from every file it ships, and
+`pnpm check:registry-deps` fails the build if one is ever missing.
 
 Name several at once (`add button card dialog`), run `npx @kinetixui/cli
 list` to see everything available, or pull the whole library in one go

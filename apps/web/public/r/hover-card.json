@@ -4,7 +4,9 @@
   "title": "Hover Card",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "@radix-ui/react-hover-card"
+    "@radix-ui/react-hover-card",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

@@ -6,7 +6,9 @@
   "dependencies": [
     "@radix-ui/react-label",
     "@radix-ui/react-slot",
-    "react-hook-form"
+    "clsx",
+    "react-hook-form",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens",

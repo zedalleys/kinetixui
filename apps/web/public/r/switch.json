@@ -4,7 +4,9 @@
   "title": "Switch",
   "description": "Generated 1:1 from the KinetixUI design source, node 54855:13984.",
   "dependencies": [
-    "@radix-ui/react-switch"
+    "@radix-ui/react-switch",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

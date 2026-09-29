@@ -6,7 +6,10 @@
   "dependencies": [
     "@dnd-kit/core",
     "@dnd-kit/sortable",
-    "@dnd-kit/utilities"
+    "@dnd-kit/utilities",
+    "@kinetixui/tokens",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

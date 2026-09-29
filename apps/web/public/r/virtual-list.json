@@ -3,7 +3,10 @@
   "name": "virtual-list",
   "title": "Virtual List",
   "description": "Ported onto the KinetixUI token contract.",
-  "dependencies": [],
+  "dependencies": [
+    "clsx",
+    "tailwind-merge"
+  ],
   "registryDependencies": [
     "tokens"
   ],

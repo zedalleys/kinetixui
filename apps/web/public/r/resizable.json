@@ -4,8 +4,10 @@
   "title": "Resizable",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
+    "clsx",
     "lucide-react",
-    "react-resizable-panels"
+    "react-resizable-panels",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

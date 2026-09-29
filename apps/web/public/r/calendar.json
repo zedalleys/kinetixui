@@ -4,8 +4,10 @@
   "title": "Calendar",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
+    "clsx",
     "lucide-react",
-    "react-day-picker"
+    "react-day-picker",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens",

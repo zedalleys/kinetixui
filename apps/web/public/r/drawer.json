@@ -4,6 +4,8 @@
   "title": "Drawer",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
+    "clsx",
+    "tailwind-merge",
     "vaul"
   ],
   "registryDependencies": [

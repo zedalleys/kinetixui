@@ -3,7 +3,10 @@
   "name": "table-of-contents",
   "title": "Table Of Contents",
   "description": "Ported onto the KinetixUI token contract.",
-  "dependencies": [],
+  "dependencies": [
+    "clsx",
+    "tailwind-merge"
+  ],
   "registryDependencies": [
     "tokens"
   ],

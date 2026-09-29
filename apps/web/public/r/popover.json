@@ -4,7 +4,9 @@
   "title": "Popover",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "@radix-ui/react-popover"
+    "@radix-ui/react-popover",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

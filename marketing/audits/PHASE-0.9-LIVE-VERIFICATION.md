@@ -4,6 +4,13 @@
 no deploy. One documentation correction was made, for a claim proven false — see
 [Marketing Claim Verification](#marketing-claim-verification).
 
+> **Status update — F1 has since been fixed in source.** Everything from here to
+> [Phase 1 Gate](#phase-1-gate-fail) is the verification as it stood on the date above and is left
+> unedited as the record. What changed afterwards is in
+> [Remediation — Phase 0.9.1](#remediation--phase-091-f1-fixed-in-source) at the end, and in
+> [`PHASE-0.9.1-REGISTRY-FIX.md`](./PHASE-0.9.1-REGISTRY-FIX.md). **F1: FIXED IN SOURCE — AWAITING
+> DEPLOYMENT.** F3 is unchanged and still blocking. **Phase 0 is still BLOCKED.**
+
 ## Executive Summary
 
 **The live production origin could not be reached, and a separate, real activation defect was found that
@@ -324,11 +331,19 @@ gap rather than something they should have to know.
 missing dependencies, so the correct fix is the generator, not the prose. Rewording them now would bake a
 defect into the documentation of three surfaces instead of one.
 
+> **Superseded.** Phase 0.9.1 fixed the generator, so the `npm i clsx tailwind-merge` callout described
+> above has been **removed** from `/docs/installation` — keeping a workaround for a fixed defect would
+> have made the defect permanent documentation. Claims 5 and 6 are now true as written, which is why they
+> were left alone. All three claims are accurate **in source**; production still serves the old metadata.
+
+
 ---
 
 ## Failures
 
 ### F1 — Registry items under-declare npm dependencies · **P0**
+
+> **Now FIXED IN SOURCE — AWAITING DEPLOYMENT.** See [Remediation](#remediation--phase-091-f1-fixed-in-source). The diagnosis below stands; the root cause turned out to have a second half (a hand-maintained package allowlist) that this entry did not identify.
 
 | | |
 | --- | --- |
@@ -454,3 +469,74 @@ marketing: the deferred `@kinetixui/ui` subpath exports; visual-regression infra
 coverage; native package publication; registry fallback architecture; the three missing GitHub Releases;
 repository description and topics; Discussions; `/specs/` being crawlable; F2's error wording. None of them
 prevented the journey tested here.
+
+---
+---
+
+# Remediation — Phase 0.9.1 (F1 fixed in source)
+
+**2026-09-29.** Everything above this line is the Phase 0.9 verification, unedited. This section records
+what changed afterwards. Full detail: [`PHASE-0.9.1-REGISTRY-FIX.md`](./PHASE-0.9.1-REGISTRY-FIX.md).
+
+**Still nothing published, released, deployed or merged.**
+
+## F1 — FIXED IN SOURCE — AWAITING DEPLOYMENT
+
+| | |
+| --- | --- |
+| **Fixed in source** | ✅ Yes |
+| **Verified against production** | ❌ No — production still serves the defective metadata |
+| **Deployment required** | **YES** — website only (`apps/web`) |
+| **npm publication required** | **NO** — proven, see below |
+| **Status** | **FIXED IN SOURCE — AWAITING DEPLOYMENT** — not closed |
+
+### The root cause had a second half this report missed
+
+Phase 0.9 named the scan running over the component file only. Correct, but incomplete: dependencies were
+also matched against a **hand-written list of package names**. A list cannot fail, only be incomplete —
+`@kinetixui/tokens` was never on it, so `kanban-board`'s real runtime import of it was undeclared too, and
+two entries on it matched nothing at all.
+
+So the fix was not the "roughly five lines" this report estimated. The allowlist was **removed** and imports
+are now derived from source, and dependencies are computed from the **delivered set after it is assembled** —
+which is what makes the class of bug structurally unavailable rather than merely patched.
+
+### What changed
+
+| | |
+| --- | --- |
+| `scripts/gen-registry.mjs` | Allowlist deleted; imports derived; every delivered file scanned |
+| `scripts/check-registry-deps.mjs` | **New.** `pnpm check:registry-deps` — fails if any item omits an import of any file it delivers, or declares one nothing imports |
+| `.github/workflows/ci.yml` | Runs that check straight after `Build registry` |
+| `scripts/release/test/registry-deps.test.mjs` | **New**, 14 tests, written against the architecture rather than this incident |
+| `registry/registry.json`, `apps/web/public/r/*.json` | Regenerated: `clsx` +91, `tailwind-merge` +91, `@kinetixui/tokens` +1; **nothing removed**; still 97 items |
+| `apps/web/src/app/docs/installation/page.mdx` | Workaround callout removed; now describes verified behaviour |
+
+### Evidence
+
+- **All 97 items audited programmatically:** 0 with unresolved external imports, 0 over-declarations.
+- **Clean-consumer builds** with the **unmodified published** `@kinetixui/cli@0.23.3` and no manual
+  installs: `button`, `card` and `kanban-board` each installed their full set, built, and server-rendered.
+- **Mutation test:** reverting the generator produced exactly 91 checker problems and 2 test failures;
+  restored output is byte-identical.
+
+### Why deployment is website-only
+
+`apps/web/public/r/*.json` *is* the registry — `DEPLOY.md`: *"There is no separate 'registry' deployment."*
+No published package's contents changed (verified by diffing the change set against every allowlisted
+package directory: zero hits), and the same unmodified CLI 0.23.3 now installs the complete set. So one
+`apps/web` deploy fixes every existing installation, with no new CLI version and no user action.
+
+## F3 — unchanged
+
+`kinetixui.com` is still denied by this container's egress policy (`403`,
+`x-deny-reason: host_not_allowed`). Production remains unverified. Remedy is unchanged: add the host to the
+environment's allowed domains, or run the `PHASE-0.75-PUBLIC-SURFACE.md` checklist yourself.
+
+## Phase 0 status: still BLOCKED
+
+Of the two Phase 1 gate blockers, one is fixed in source and awaiting a deploy; the other is untouched.
+Neither has been verified against production, which is the question Phase 0.9 exists to answer.
+
+**Next action:** deploy `apps/web`, then verify `/r/card.json` declares `clsx` and `tailwind-merge` and run
+the end-to-end `add` test against production.

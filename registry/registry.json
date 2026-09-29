@@ -23,7 +23,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "@radix-ui/react-accordion",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -47,7 +49,9 @@
       "title": "Alert Dialog",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "@radix-ui/react-alert-dialog"
+        "@radix-ui/react-alert-dialog",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -72,7 +76,9 @@
       "title": "Alert",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "class-variance-authority"
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -97,7 +103,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "@radix-ui/react-slot",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -140,7 +148,9 @@
       "title": "Audio Player",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -165,7 +175,9 @@
       "title": "Avatar",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "@radix-ui/react-avatar"
+        "@radix-ui/react-avatar",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -190,7 +202,9 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:13995.",
       "dependencies": [
         "@radix-ui/react-slot",
-        "class-variance-authority"
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -215,7 +229,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "class-variance-authority",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -240,7 +256,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "@radix-ui/react-slot",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -263,7 +281,10 @@
       "type": "registry:ui",
       "title": "Button Group",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -287,7 +308,9 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54863:351.",
       "dependencies": [
         "@radix-ui/react-slot",
-        "class-variance-authority"
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -311,8 +334,10 @@
       "title": "Calendar",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
+        "clsx",
         "lucide-react",
-        "react-day-picker"
+        "react-day-picker",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -336,7 +361,10 @@
       "type": "registry:ui",
       "title": "Card",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -359,8 +387,10 @@
       "title": "Carousel",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
+        "clsx",
         "embla-carousel-react",
-        "lucide-react"
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -385,7 +415,9 @@
       "title": "Chart",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "recharts"
+        "clsx",
+        "recharts",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -410,7 +442,9 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54863:483.",
       "dependencies": [
         "@radix-ui/react-checkbox",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -433,7 +467,10 @@
       "type": "registry:ui",
       "title": "Circular Progress",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -456,7 +493,9 @@
       "title": "Code Block",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -500,7 +539,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "@radix-ui/react-slider",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -526,8 +567,10 @@
       "title": "Command",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
+        "clsx",
         "cmdk",
-        "lucide-react"
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -553,7 +596,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "@radix-ui/react-slider",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -578,7 +623,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "@radix-ui/react-context-menu",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -601,7 +648,10 @@
       "type": "registry:ui",
       "title": "Data Grid",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -624,7 +674,9 @@
       "title": "Data Table",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "@tanstack/react-table"
+        "@tanstack/react-table",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -650,8 +702,10 @@
       "title": "Date Picker",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
+        "clsx",
         "date-fns",
-        "lucide-react"
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -677,7 +731,10 @@
       "type": "registry:ui",
       "title": "Description List",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -701,7 +758,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "@radix-ui/react-dialog",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -724,7 +783,10 @@
       "type": "registry:ui",
       "title": "Diff Viewer",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -766,6 +828,8 @@
       "title": "Drawer",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
+        "clsx",
+        "tailwind-merge",
         "vaul"
       ],
       "registryDependencies": [
@@ -791,7 +855,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "@radix-ui/react-dropdown-menu",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -815,7 +881,9 @@
       "title": "Empty",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "class-variance-authority"
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -840,7 +908,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "@radix-ui/react-slot",
-        "class-variance-authority"
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -866,7 +936,9 @@
       "dependencies": [
         "@radix-ui/react-slot",
         "class-variance-authority",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -891,7 +963,9 @@
       "title": "File Upload",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -915,7 +989,10 @@
       "type": "registry:ui",
       "title": "Footer",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -940,7 +1017,9 @@
       "dependencies": [
         "@radix-ui/react-label",
         "@radix-ui/react-slot",
-        "react-hook-form"
+        "clsx",
+        "react-hook-form",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -965,7 +1044,9 @@
       "title": "Hover Card",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "@radix-ui/react-hover-card"
+        "@radix-ui/react-hover-card",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -989,7 +1070,9 @@
       "title": "Image",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1014,7 +1097,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "class-variance-authority",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1038,7 +1123,9 @@
       "title": "Input Group",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "class-variance-authority"
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1062,8 +1149,10 @@
       "title": "Input Otp",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
+        "clsx",
         "input-otp",
-        "lucide-react"
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1087,7 +1176,9 @@
       "title": "Input",
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:13836.",
       "dependencies": [
-        "class-variance-authority"
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1111,7 +1202,9 @@
       "title": "Json Viewer",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1137,7 +1230,10 @@
       "dependencies": [
         "@dnd-kit/core",
         "@dnd-kit/sortable",
-        "@dnd-kit/utilities"
+        "@dnd-kit/utilities",
+        "@kinetixui/tokens",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1161,7 +1257,9 @@
       "title": "Kbd",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "@radix-ui/react-slot"
+        "@radix-ui/react-slot",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1186,7 +1284,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "@radix-ui/react-label",
-        "class-variance-authority"
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1209,7 +1309,10 @@
       "type": "registry:ui",
       "title": "List",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -1232,7 +1335,9 @@
       "title": "Markdown Editor",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -1256,7 +1361,10 @@
       "type": "registry:ui",
       "title": "Marquee",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -1280,7 +1388,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "@radix-ui/react-menubar",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1304,7 +1414,9 @@
       "title": "Message Bubble",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1328,7 +1440,9 @@
       "title": "Metric",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1353,7 +1467,9 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54857:1322.",
       "dependencies": [
         "@radix-ui/react-dialog",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -1379,7 +1495,9 @@
       "title": "Multi Select",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -1407,7 +1525,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "class-variance-authority",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1431,7 +1551,9 @@
       "title": "Navigation Bar",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1457,7 +1579,9 @@
       "dependencies": [
         "@radix-ui/react-navigation-menu",
         "class-variance-authority",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1481,7 +1605,9 @@
       "title": "Notification Center",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -1507,7 +1633,9 @@
       "title": "Number Input",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1530,7 +1658,10 @@
       "type": "registry:ui",
       "title": "Page Header",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -1553,7 +1684,9 @@
       "title": "Pagination",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -1578,7 +1711,9 @@
       "title": "Password Input",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -1603,7 +1738,9 @@
       "title": "Popover",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "@radix-ui/react-popover"
+        "@radix-ui/react-popover",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1627,7 +1764,9 @@
       "title": "Progress",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "@radix-ui/react-progress"
+        "@radix-ui/react-progress",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1650,7 +1789,10 @@
       "type": "registry:ui",
       "title": "Quote",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -1674,7 +1816,9 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54863:536.",
       "dependencies": [
         "@radix-ui/react-radio-group",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1699,7 +1843,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "class-variance-authority",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1723,8 +1869,10 @@
       "title": "Resizable",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
+        "clsx",
         "lucide-react",
-        "react-resizable-panels"
+        "react-resizable-panels",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1748,7 +1896,9 @@
       "title": "Scroll Area",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "@radix-ui/react-scroll-area"
+        "@radix-ui/react-scroll-area",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1772,7 +1922,9 @@
       "title": "Segmented Control",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "@radix-ui/react-toggle-group"
+        "@radix-ui/react-toggle-group",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1797,7 +1949,9 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:13882.",
       "dependencies": [
         "@radix-ui/react-select",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1821,7 +1975,9 @@
       "title": "Separator",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "@radix-ui/react-separator"
+        "@radix-ui/react-separator",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1847,7 +2003,9 @@
       "dependencies": [
         "@radix-ui/react-dialog",
         "class-variance-authority",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1873,7 +2031,9 @@
       "dependencies": [
         "@radix-ui/react-slot",
         "class-variance-authority",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -1902,7 +2062,10 @@
       "type": "registry:ui",
       "title": "Skeleton",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -1925,7 +2088,9 @@
       "title": "Slider",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "@radix-ui/react-slider"
+        "@radix-ui/react-slider",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1968,7 +2133,9 @@
       "title": "Spinner",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "class-variance-authority"
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -1992,7 +2159,9 @@
       "title": "Stepper",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -2016,7 +2185,9 @@
       "title": "Switch",
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:13984.",
       "dependencies": [
-        "@radix-ui/react-switch"
+        "@radix-ui/react-switch",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -2039,7 +2210,10 @@
       "type": "registry:ui",
       "title": "Tab Bar",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -2061,7 +2235,10 @@
       "type": "registry:ui",
       "title": "Table Of Contents",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -2083,7 +2260,10 @@
       "type": "registry:ui",
       "title": "Table",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -2106,7 +2286,9 @@
       "title": "Tabs",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "@radix-ui/react-tabs"
+        "@radix-ui/react-tabs",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -2132,7 +2314,9 @@
       "dependencies": [
         "@radix-ui/react-slot",
         "class-variance-authority",
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -2156,7 +2340,9 @@
       "title": "Textarea",
       "description": "Generated 1:1 from the KinetixUI design source, node 54855:13857.",
       "dependencies": [
-        "class-variance-authority"
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -2179,7 +2365,10 @@
       "type": "registry:ui",
       "title": "Timeline",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],
@@ -2203,7 +2392,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "@radix-ui/react-toggle-group",
-        "class-variance-authority"
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -2229,7 +2420,9 @@
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "@radix-ui/react-toggle",
-        "class-variance-authority"
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -2253,7 +2446,9 @@
       "title": "Tooltip",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "@radix-ui/react-tooltip"
+        "@radix-ui/react-tooltip",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -2295,7 +2490,9 @@
       "title": "Tree View",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "lucide-react"
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens",
@@ -2319,7 +2516,10 @@
       "type": "registry:ui",
       "title": "Virtual List",
       "description": "Ported onto the KinetixUI token contract.",
-      "dependencies": [],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "registryDependencies": [
         "tokens"
       ],

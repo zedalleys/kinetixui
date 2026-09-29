@@ -4,7 +4,9 @@
   "title": "Json Viewer",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "lucide-react"
+    "clsx",
+    "lucide-react",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

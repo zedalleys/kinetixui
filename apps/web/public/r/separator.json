@@ -4,7 +4,9 @@
   "title": "Separator",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "@radix-ui/react-separator"
+    "@radix-ui/react-separator",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"

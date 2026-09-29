@@ -4,7 +4,9 @@
   "title": "Input",
   "description": "Generated 1:1 from the KinetixUI design source, node 54855:13836.",
   "dependencies": [
-    "class-variance-authority"
+    "class-variance-authority",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"
