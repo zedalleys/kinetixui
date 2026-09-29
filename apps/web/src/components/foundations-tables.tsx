@@ -204,14 +204,14 @@ export function PlatformSupportTable() {
         return (
           <li key={p.id} className="rounded-lg border border-border">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border bg-muted/30 px-4 py-3">
-              <h3 className="m-0 text-base font-medium">
+              <p className="m-0 text-base font-medium">
                 {p.name}
                 {maturity && maturity !== "stable" && (
                   <span className="ml-2 rounded-[3px] border border-border px-1 align-middle font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
                     {maturity}
                   </span>
                 )}
-              </h3>
+              </p>
               <span className="text-xs text-muted-foreground">{p.technology}</span>
               <span className="ml-auto text-sm tabular-nums">
                 {p.components} of {componentTotal} components
