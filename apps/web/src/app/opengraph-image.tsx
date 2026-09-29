@@ -1,5 +1,17 @@
 import { ImageResponse } from "next/og";
 import { siteConfig } from "@/lib/site";
+import { PLATFORMS, PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
+
+/**
+ * The platform strip, DERIVED from the manifest rather than typed.
+ *
+ * It read "React · SwiftUI · Jetpack Compose · Flutter" — four platforms, omitting Angular, which has been
+ * published on npm for months. `site.ts`'s own description carries a comment about exactly this mistake
+ * ("it named four platforms for weeks after Angular shipped"); the fix never reached the social card,
+ * because no guard could see this file. A shared link is the first thing many people see, so it is the
+ * worst surface on which to under-count the product.
+ */
+const platformStrip = PLATFORMS.map((p) => PLATFORM_DEFINITIONS[p].label).join(" \u00b7 ");
 
 /**
  * The social sharing card for every page that doesn't define its own (the whole site today).
@@ -61,9 +73,7 @@ export default function Image() {
           <div style={{ fontSize: 72, fontWeight: 700, lineHeight: 1.1, letterSpacing: -2 }}>
             {siteConfig.tagline}
           </div>
-          <div style={{ fontSize: 30, color: MUTED, lineHeight: 1.4 }}>
-            React · SwiftUI · Jetpack Compose · Flutter
-          </div>
+          <div style={{ fontSize: 30, color: MUTED, lineHeight: 1.4 }}>{platformStrip}</div>
         </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 24, color: MUTED }}>

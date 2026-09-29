@@ -9,6 +9,7 @@ import {
   platformSentence,
   stablePlatformSentence,
 } from "./platform-prose";
+import { PLATFORMS } from "./platform-parity";
 import { siteConfig } from "./site";
 
 /**
@@ -398,5 +399,89 @@ describe("no paid tier is teased, because none exists", () => {
     expect(TIER.test("MIT licensed, all of it.")).toBe(false);
     expect(CONDITIONAL_FREE.test("MIT licensed, all of it.")).toBe(false);
     expect(TIER.test("Angular is published and in preview")).toBe(false);
+  });
+});
+
+/**
+ * The global metadata tagline, and the surfaces that carry it.
+ *
+ * This is the one string that reaches people who never open the site: it is the page `<title>`, it is
+ * `og:title` and `og:image:alt`, and it is painted into the generated social card at 72px. Phase 2 retired
+ * "One token architecture, in motion across every platform." from the hero and the sentence survived here
+ * for six phases, so every shared link kept saying the thing the positioning had rejected.
+ *
+ * The rules below are deliberately scoped to the tagline and its consumers rather than to all copy: the
+ * phrase "every platform" is legitimate elsewhere (token OUTPUT really is generated for every platform),
+ * and a repository-wide ban would fire on true sentences.
+ */
+describe("global metadata cannot drift back to retired positioning", () => {
+  const layout = readFileSync("src/app/layout.tsx", "utf8");
+  const ogImage = readFileSync("src/app/opengraph-image.tsx", "utf8");
+
+  /** Positioning this project has explicitly retired. Not style preferences — each one was a claim problem. */
+  const RETIRED: ReadonlyArray<readonly [RegExp, string]> = [
+    [/one token architecture/i, "leads with the mechanism, and was retired from the hero in Phase 2"],
+    [/in motion across/i, "decorative, and pairs with the parity reading"],
+    [/across every platform/i, "invites the cross-platform parity reading the positioning rejects"],
+    [/on every platform/i, "same parity reading"],
+    [/identical (on|across)/i, "the implementations are native per platform, not identical"],
+  ];
+
+  it("names no retired positioning", () => {
+    for (const [pattern, why] of RETIRED) {
+      expect(siteConfig.tagline, `the tagline ${why}`).not.toMatch(pattern);
+    }
+  });
+
+  /**
+   * The count is derived, so this asserts the ONLY number in the tagline is the real platform count. A
+   * future edit that types "five" or freezes "5" while a sixth platform lands fails here rather than
+   * shipping a wrong number onto every shared link.
+   */
+  it("carries the derived platform count and no other number", () => {
+    expect(siteConfig.tagline.match(/\d+/g) ?? []).toEqual([String(PLATFORMS.length)]);
+  });
+
+  /**
+   * Derived rather than duplicated: the tagline's prose, minus its count, must be what the hero renders.
+   * Change one without the other and this fails — which is exactly the drift that produced this guard.
+   */
+  it("is the sentence the homepage hero actually renders", () => {
+    for (const fragment of siteConfig.tagline.split(/\s*\d+\s*platforms\.\s*/)) {
+      const phrase = fragment.trim();
+      if (phrase) expect(COPY.homepage, `the hero no longer renders "${phrase}"`).toContain(phrase);
+    }
+  });
+
+  it("is read from siteConfig by every metadata consumer, never re-typed", () => {
+    expect(layout, "the page title should build on siteConfig.tagline").toContain("siteConfig.tagline");
+    expect(ogImage, "the card's alt text should build on siteConfig.tagline").toContain("siteConfig.tagline");
+  });
+
+  /**
+   * The social card under-counted the product for months — "React · SwiftUI · Jetpack Compose · Flutter",
+   * omitting Angular — because no guard could see this file. Asserting the SOURCE types no list is the
+   * honest form: re-deriving the strip here and checking it contains every label would assert nothing,
+   * since both sides would come from the same array.
+   */
+  it("derives the social card's platform strip instead of typing a list", () => {
+    expect(ogImage, "the card should build its strip from the manifest").toContain("PLATFORM_DEFINITIONS");
+    // Comments are stripped first: the file documents the old typed list in order to explain why it went,
+    // and a phrase rule cannot tell a claim from its explanation. This fired on that very comment once.
+    const code = ogImage.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    const typedList = /["'`>][^"'`<]*\b(React|Angular|SwiftUI|Flutter)\b[^"'`<]*\u00b7/;
+    expect(
+      typedList.exec(code)?.[0],
+      "the social card types a platform list; derive it, or it will under-count the next platform",
+    ).toBeUndefined();
+  });
+
+  it("would catch each of these, so none of the assertions above is vacuous", () => {
+    const retired = "One token architecture, in motion across every platform.";
+    expect(RETIRED.some(([r]) => r.test(retired))).toBe(true);
+    expect(RETIRED.some(([r]) => r.test(siteConfig.tagline))).toBe(false);
+    expect("One design language. 4 platforms. Claims you can check.".match(/\d+/g)).not.toEqual([
+      String(PLATFORMS.length),
+    ]);
   });
 });

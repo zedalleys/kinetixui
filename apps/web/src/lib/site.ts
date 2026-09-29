@@ -1,6 +1,6 @@
 import uiPkg from "@kinetixui/ui/package.json";
 import { IOT_MATURITY } from "./iot";
-import { PLATFORM_DEFINITIONS, type Platform } from "./platform-parity";
+import { PLATFORMS, PLATFORM_DEFINITIONS, type Platform } from "./platform-parity";
 import { availabilityClause } from "./platform-prose";
 
 /**
@@ -14,7 +14,17 @@ function maturityBadge(platform: Platform): string | undefined {
 
 export const siteConfig = {
   name: "KinetixUI",
-  tagline: "One token architecture, in motion across every platform.",
+  // The canonical hero, `marketing/MESSAGING.md` §E, and the same sentence the homepage renders.
+  //
+  // It replaces "One token architecture, in motion across every platform.", which Phase 2 retired from the
+  // hero but which survived here — so every page title, every shared-link card and the generated OG image
+  // still carried it. Two things were wrong with it: "every platform" invites the parity reading the whole
+  // position rejects, and leading with the mechanism speaks only to someone already convinced that token
+  // architecture is the answer.
+  //
+  // The count is DERIVED, never typed. This string is painted into the OG image at 72px and into every
+  // `<title>`, so a hard-coded number here would be a wrong number on a surface nobody re-reads.
+  tagline: `One design language. ${PLATFORMS.length} platforms. Claims you can check.`,
   // Derived, not typed: this is the OpenGraph and search snippet, and it named four platforms for weeks
   // after Angular shipped. It also used to say one source becomes "tokens and components", which implies the
   // component code is generated too — it is not, and the homepage stopped saying so in #199.
