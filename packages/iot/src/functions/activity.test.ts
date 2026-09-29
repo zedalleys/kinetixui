@@ -80,3 +80,19 @@ describe("describeActivityEvent", () => {
     expect(describeActivityEvent(e)).toBe("Valve opened. By Sam via schedule. For 12 minutes.");
   });
 });
+
+describe("describeActivityEvent trailing-stop stripping", () => {
+  const base = { id: "e1", timestamp: "2026-01-01T12:00:00.000Z", kind: "command" } as const;
+
+  it("drops trailing full stops and whitespace, and leading whitespace", () => {
+    expect(describeActivityEvent({ ...base, message: "  Pump started. \n" })).toBe("Pump started.");
+    expect(describeActivityEvent({ ...base, message: "Pump started..." })).toBe("Pump started.");
+  });
+
+  it("stays linear on a long run of whitespace that is not at the end", () => {
+    const message = `${"\t".repeat(200_000)}x${"\t".repeat(10)}y`;
+    const started = performance.now();
+    describeActivityEvent({ ...base, message });
+    expect(performance.now() - started).toBeLessThan(500);
+  });
+});

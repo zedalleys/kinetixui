@@ -105,6 +105,17 @@ function describeActivityStatus(status: KinetixActivityStatus): string {
   }
 }
 
+/**
+ * Trim whitespace and trailing full stops, in one linear scan. A `/[.\s]+$/` regex looks equivalent but
+ * backtracks quadratically on a long run of whitespace that is not at the end — a message is
+ * product-supplied text, so that is a denial-of-service shape (flagged by CodeQL).
+ */
+function stripTrailingStops(text: string): string {
+  let end = text.length;
+  while (end > 0 && (text[end - 1] === "." || /\s/.test(text[end - 1] as string))) end--;
+  return text.slice(0, end).trimStart();
+}
+
 export type DescribeActivityOptions = {
   /** Resolve a device id to a name. Without it the id is not printed, only the message. */
   deviceName?: (deviceId: string) => string | undefined;
@@ -116,7 +127,7 @@ export type DescribeActivityOptions = {
  */
 export function describeActivityEvent(event: KinetixActivityEvent, options: DescribeActivityOptions = {}): string {
   const device = event.deviceId ? options.deviceName?.(event.deviceId) : undefined;
-  const message = event.message.trim().replace(/[.\s]+$/, "");
+  const message = stripTrailingStops(event.message);
   let text = device ? `${device}: ${message}` : message;
   if (event.status) text += ` (${describeActivityStatus(event.status)})`;
   text += ".";
