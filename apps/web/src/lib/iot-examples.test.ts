@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { IOT_EXAMPLES, IOT_EXAMPLE_COMPONENTS, iotExample } from "./iot-examples";
-import { iotPreviews } from "@/registry/iot-previews";
+import { iotStaticPreviews } from "@/registry/iot-previews";
+import { iotPreviewLoaders } from "@/registry/iot-preview-loaders";
 import * as iot from "@kinetixui/iot/react";
 
 /**
@@ -19,7 +20,12 @@ describe("the IoT examples manifest", () => {
   });
 
   it("gives every example a preview, and every preview an example", () => {
-    expect(Object.keys(iotPreviews).sort()).toEqual(IOT_EXAMPLES.map((e) => e.slug).sort());
+    const previews = [...Object.keys(iotStaticPreviews), ...Object.keys(iotPreviewLoaders)];
+    expect(previews.sort()).toEqual(IOT_EXAMPLES.map((e) => e.slug).sort());
+  });
+
+  it("never lists a slug as both server-rendered and lazy", () => {
+    for (const slug of Object.keys(iotStaticPreviews)) expect(iotPreviewLoaders[slug], slug).toBeUndefined();
   });
 
   it("carries extracted source for every example", () => {

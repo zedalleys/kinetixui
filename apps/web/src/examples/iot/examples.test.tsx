@@ -221,6 +221,17 @@ describe("device detail tabs", () => {
     expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute("aria-selected", "true");
   });
 
+  it("wraps its tabs instead of scrolling them sideways, and each tab carries its own underline", () => {
+    render(<DeviceDetailExample />);
+    const list = screen.getByRole("tablist");
+    expect(list.className).toMatch(/\bflex-wrap\b/);
+    // No horizontal scroller anywhere around the strip.
+    for (let el: HTMLElement | null = list; el && el.tagName !== "ARTICLE"; el = el.parentElement) {
+      expect(el.className, "an ancestor of the tab strip scrolls sideways").not.toMatch(/overflow-x-(auto|scroll)/);
+    }
+    for (const tab of screen.getAllByRole("tab")) expect(tab.className).toMatch(/border-b-2/);
+  });
+
   it("reverses the arrow keys under RTL", async () => {
     const user = userEvent.setup();
     rtl(<DeviceDetailExample />);

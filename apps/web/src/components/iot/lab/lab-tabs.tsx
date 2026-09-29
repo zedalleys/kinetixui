@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import * as Tabs from "@radix-ui/react-tabs";
+import { preloadPreview } from "@/components/iot/lazy-preview";
 import { cn } from "@/lib/utils";
 
 /**
@@ -17,16 +18,21 @@ import { cn } from "@/lib/utils";
  *   hash with `replaceState` so the back button is not filled with tab presses. No hash means the first tab.
  * - **Direction.** Radix reads `dir` to decide which arrow key moves which way. The document's direction is read
  *   after mount, so a right-to-left page gets arrows that follow the reading order rather than fighting it.
- * - **A disclosure per panel.** `disclosure` renders inside every panel, so the simulation notice is never
- *   more than a tab away from the thing it qualifies — and is not lost when the panel changes.
+ * - **Prefetch on intent.** A tab with `preload` starts fetching its example's chunk on hover or focus, so the
+ *   click usually finds it already in cache. The example itself still mounts only when the panel opens.
+ * - **An optional disclosure per panel.** `disclosure` renders inside every panel. The environments do not use
+ *   it: each example carries its own SIMULATION notice (and its placeholder does before it mounts), so a second
+ *   box in the panel header would say the same thing twice.
  */
 export type LabTab = {
   id: string;
   label: string;
-  /** One line under the panel heading. */
+  /** One line at the top of the panel. */
   summary?: string;
   /** Small mono line, e.g. the hierarchy the environment uses. */
   meta?: string;
+  /** An example slug whose chunk to start fetching when the tab is hovered or focused. */
+  preload?: string;
   panel: React.ReactNode;
 };
 
@@ -77,6 +83,8 @@ export function LabTabs({
           <Tabs.Trigger
             key={tab.id}
             value={tab.id}
+            onPointerEnter={tab.preload ? () => preloadPreview(tab.preload!) : undefined}
+            onFocus={tab.preload ? () => preloadPreview(tab.preload!) : undefined}
             className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[state=active]:border-primary data-[state=active]:bg-primary/10 data-[state=active]:text-foreground"
           >
             {tab.label}
@@ -88,13 +96,14 @@ export function LabTabs({
         <Tabs.Content
           key={tab.id}
           value={tab.id}
-          className="mt-8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background"
+          className="mt-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background"
         >
-          <div className="flex flex-col gap-2">
-            <h3 className="font-display text-xl font-semibold">{tab.label}</h3>
-            {tab.meta ? <p className="font-mono text-xs text-muted-foreground">{tab.meta}</p> : null}
-            {tab.summary ? <p className="max-w-2xl text-sm text-muted-foreground">{tab.summary}</p> : null}
-          </div>
+          {tab.meta || tab.summary ? (
+            <div className="flex flex-col gap-1">
+              {tab.meta ? <p className="font-mono text-xs text-muted-foreground">{tab.meta}</p> : null}
+              {tab.summary ? <p className="max-w-2xl text-sm text-muted-foreground">{tab.summary}</p> : null}
+            </div>
+          ) : null}
           {disclosure ? (
             <p
               data-simulation-disclosure=""
@@ -106,7 +115,7 @@ export function LabTabs({
               <span>{disclosure}</span>
             </p>
           ) : null}
-          <div className="mt-6">{tab.panel}</div>
+          <div className={tab.meta || tab.summary || disclosure ? "mt-4" : undefined}>{tab.panel}</div>
         </Tabs.Content>
       ))}
     </Tabs.Root>

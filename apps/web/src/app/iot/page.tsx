@@ -25,7 +25,6 @@ import {
   IOT_REACT_PEER,
   IOT_VERSION,
 } from "@/lib/iot";
-import { SIMULATION_DISCLOSURE } from "@/lib/iot-sim/labels";
 import { canonical } from "@/lib/seo";
 
 /**
@@ -243,12 +242,12 @@ export default function IotPage() {
         <Reveal className="mt-10">
           <LabTabs
             label="Reference environment"
-            disclosure={SIMULATION_DISCLOSURE}
             tabs={IOT_ENVIRONMENTS.map((env) => ({
               id: env.id,
               label: env.label,
               meta: env.hierarchy,
               summary: env.summary,
+              preload: env.slug,
               panel: <IotExample slug={env.slug} />,
             }))}
           />
@@ -421,6 +420,7 @@ export default function IotPage() {
             tabs={IOT_PAGE_EXAMPLES.layouts.map((layout) => ({
               id: layout.id,
               label: layout.label,
+              preload: layout.slug,
               panel: <IotExample slug={layout.slug} />,
             }))}
           />

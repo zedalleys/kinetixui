@@ -28,8 +28,8 @@ import { cn } from "@/lib/utils";
 // kx-iot:start
 /**
  * One device in full, as a screen with six tabs. The tabs are real `tablist` / `tab` / `tabpanel`
- * elements with roving arrow-key focus (Radix Tabs); the list scrolls sideways on a narrow screen
- * rather than wrapping the page.
+ * elements with roving arrow-key focus (Radix Tabs); on a narrow screen the tabs wrap onto further rows
+ * instead of scrolling sideways, where the tabs past the edge would have no visible cue.
  *
  * "Settings" is a read-only presentation of what the product knows about the device. Nothing on that
  * tab configures hardware, and nothing in this example sends anything: it is SIMULATED.
@@ -38,7 +38,7 @@ const DEVICE_ID = "pump-01";
 const TABS = ["Overview", "Controls", "Telemetry", "Automations", "Activity", "Settings"] as const;
 
 const TAB_TRIGGER = cn(
-  "-mb-px inline-flex min-h-11 shrink-0 items-center whitespace-nowrap border-b-2 border-transparent px-4 text-label-md text-muted-foreground",
+  "inline-flex min-h-11 items-center whitespace-nowrap border-b-2 border-border px-4 text-label-md text-muted-foreground",
   "transition-colors hover:text-foreground motion-reduce:transition-none",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
   "data-[state=active]:border-primary data-[state=active]:text-foreground",
@@ -87,16 +87,14 @@ export function DeviceDetailExample() {
       </header>
 
       <Tabs.Root value={tab} onValueChange={(next) => setTab(next as (typeof TABS)[number])} dir={dir}>
-        {/* The scroller is a plain wrapper: the tabs inside it are focusable, so keyboard users reach it. */}
-        <div className="overflow-x-auto border-b border-border">
-          <Tabs.List aria-label={`${device.name} sections`} className="flex w-max min-w-full">
-            {TABS.map((name) => (
-              <Tabs.Trigger key={name} value={name} className={TAB_TRIGGER}>
-                {name}
-              </Tabs.Trigger>
-            ))}
-          </Tabs.List>
-        </div>
+        {/* The tabs wrap; each carries its own underline, so the active one still reads on any row. */}
+        <Tabs.List aria-label={`${device.name} sections`} className="flex flex-wrap">
+          {TABS.map((name) => (
+            <Tabs.Trigger key={name} value={name} className={TAB_TRIGGER}>
+              {name}
+            </Tabs.Trigger>
+          ))}
+        </Tabs.List>
 
         <Tabs.Content value="Overview" className={PANEL}>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-6">

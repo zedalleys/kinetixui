@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import IotPage, { metadata } from "../app/iot/page";
 import {
   KINETIX_COMMAND_LIFECYCLE_STAGES,
@@ -15,15 +15,34 @@ import { IOT_CATALOGUE, IOT_ENVIRONMENTS, IOT_PAGE_EXAMPLES } from "./iot";
 import { IOT_EXAMPLES } from "./iot-examples";
 import { SIMULATION_DISCLOSURE } from "./iot-sim/labels";
 
-// <Reveal> observes its own mount with IntersectionObserver, which jsdom does not implement.
+// <Reveal> and <LazyPreview> observe with IntersectionObserver, which jsdom does not implement. The stub
+// records its observers so a test can say "this element scrolled near the viewport".
+const observers = new Set<{ target?: Element; callback: IntersectionObserverCallback }>();
 vi.stubGlobal(
   "IntersectionObserver",
   class {
-    observe() {}
-    disconnect() {}
+    entry: { target?: Element; callback: IntersectionObserverCallback };
+    constructor(callback: IntersectionObserverCallback) {
+      this.entry = { callback };
+      observers.add(this.entry);
+    }
+    observe(target: Element) {
+      this.entry.target = target;
+    }
+    disconnect() {
+      observers.delete(this.entry);
+    }
     unobserve() {}
   },
 );
+/** Report every observed element matching `selector` as intersecting. */
+function intersect(selector: string) {
+  act(() => {
+    for (const o of [...observers]) {
+      if (o.target?.matches(selector)) o.callback([{ isIntersecting: true, target: o.target } as IntersectionObserverEntry], {} as IntersectionObserver);
+    }
+  });
+}
 
 /**
  * The /iot page against its own claims. `current-truth.test.ts` polices what the page must never say; this file
@@ -212,6 +231,11 @@ describe("/iot: hero and metadata", () => {
 /* ------------------------------------------------------------------ environments */
 
 describe("/iot: reference environments", () => {
+  // Choosing a tab rewrites the hash, and the next render would read it back.
+  beforeEach(() => {
+    window.history.replaceState(null, "", "/");
+  });
+
   it("offers three environments as accessible tabs, one rendered at a time", () => {
     render(<IotPage />);
     const tabs = within(screen.getByRole("tablist", { name: "Reference environment" })).getAllByRole("tab");
@@ -228,11 +252,32 @@ describe("/iot: reference environments", () => {
     for (const env of IOT_ENVIRONMENTS) {
       await user.click(within(list).getByRole("tab", { name: env.label }));
       const panel = screen.getByRole("tabpanel", { name: env.label });
-      const disclosure = panel.querySelector("[data-simulation-disclosure]");
-      expect(disclosure, `${env.label} has no simulation disclosure`).not.toBeNull();
-      expect(disclosure!.textContent).toContain("Simulation");
-      expect(disclosure!.textContent).toContain(SIMULATION_DISCLOSURE);
+      // One disclosure per environment, and it is the example's own: the panel header does not repeat it.
+      const disclosures = panel.querySelectorAll("[data-simulation-notice], [data-simulation-disclosure]");
+      expect(disclosures, `${env.label} should carry exactly one simulation disclosure`).toHaveLength(1);
+      expect(disclosures[0]!.textContent).toMatch(/Simulated/);
+      expect(disclosures[0]!.textContent).toContain("no device is contacted");
+      expect(SIMULATION_DISCLOSURE).toContain("no device is contacted");
     }
+  });
+
+  it("mounts the environment's real example only when it nears the viewport, replacing the placeholder", async () => {
+    render(<IotPage />);
+    const panel = screen.getByRole("tabpanel", { name: "Smart space" });
+    // Before it is near: the server-rendered placeholder, hidden from assistive technology, and its notice.
+    expect(panel.querySelector("[data-preview-placeholder]")).toHaveAttribute("aria-hidden", "true");
+    expect(within(panel).queryByRole("switch")).toBeNull();
+    intersect('[data-lazy-preview="smart-space-environment"]');
+    await waitFor(() => expect(panel.querySelector("[data-preview-placeholder]")).toBeNull());
+    expect(panel.querySelector('[data-lazy-preview="smart-space-environment"]')).toHaveAttribute("data-mounted");
+    // Still exactly one disclosure once the example has replaced the placeholder.
+    expect(panel.querySelectorAll("[data-simulation-notice]")).toHaveLength(1);
+  });
+
+  it("does not render the same disclosure in the panel header as well as in the example", () => {
+    render(<IotPage />);
+    const panel = screen.getByRole("tabpanel", { name: "Smart space" });
+    expect(panel.querySelector("[data-simulation-disclosure]")).toBeNull();
   });
 
   it("selects an environment from the URL hash", async () => {
@@ -241,6 +286,46 @@ describe("/iot: reference environments", () => {
     const list = screen.getByRole("tablist", { name: "Reference environment" });
     expect(await within(list).findByRole("tab", { name: "Agritech" })).toHaveAttribute("aria-selected", "true");
     window.location.hash = "";
+  });
+});
+
+/* ------------------------------------------------------------------ lazy previews */
+
+describe("/iot: interactive examples load on demand", () => {
+  const LAZY = [IOT_PAGE_EXAMPLES.stateHonesty, IOT_PAGE_EXAMPLES.telemetry, IOT_PAGE_EXAMPLES.alerts, IOT_PAGE_EXAMPLES.automation, IOT_PAGE_EXAMPLES.pairing, IOT_PAGE_EXAMPLES.deviceDetail];
+
+  it("renders every section's example with its title, code and a placeholder before anything intersects", () => {
+    const { container } = render(<IotPage />);
+    for (const slug of LAZY) {
+      const wrapper = container.querySelector(`[data-lazy-preview="${slug}"]`);
+      expect(wrapper, `${slug} has no lazy preview wrapper`).not.toBeNull();
+      expect(wrapper!.querySelector("[data-preview-placeholder]"), `${slug} placeholder`).not.toBeNull();
+      expect(wrapper!.hasAttribute("data-mounted")).toBe(false);
+      const example = IOT_EXAMPLES.find((e) => e.slug === slug)!;
+      // The source is server-rendered and in the DOM whether or not the preview has mounted.
+      expect(container.textContent).toContain(example.title);
+      expect(container.textContent).toContain(example.path);
+    }
+    // Nothing interactive has been mounted for the sections below the fold.
+    expect(screen.queryByRole("tablist", { name: /Pump 01 sections|sections$/ })).toBeNull();
+  });
+
+  it("mounts a section's real example when it nears the viewport", async () => {
+    const { container } = render(<IotPage />);
+    intersect('[data-lazy-preview="device-detail"]');
+    expect(await screen.findByRole("tablist", { name: "Pump Station sections" })).toBeInTheDocument();
+    expect(container.querySelector('[data-lazy-preview="device-detail"] [data-preview-placeholder]')).toBeNull();
+    // A neighbour that has not intersected stays a placeholder.
+    expect(container.querySelector('[data-lazy-preview="pairing-flow"] [data-preview-placeholder]')).not.toBeNull();
+  });
+
+  it("keeps the placeholder out of the accessibility tree and free of animation", () => {
+    const { container } = render(<IotPage />);
+    for (const el of container.querySelectorAll("[data-preview-placeholder]")) {
+      expect(el).toHaveAttribute("aria-hidden", "true");
+      expect(el.className).not.toMatch(/animate-/);
+      expect(el.textContent).toBe("");
+    }
   });
 });
 
