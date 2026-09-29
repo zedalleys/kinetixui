@@ -17,6 +17,7 @@ adds an asset, and nothing here is a second calendar.
 | [`outreach.md`](./outreach.md) | Five partnership archetypes and the outreach templates |
 | [`register.json`](./register.json) | The distribution log — one row per act of publishing. Validated by `pnpm check:distribution` |
 | [`../community.md`](../community.md) | Per-community assessment and the weekly listening routine |
+| [`merge-preflight.md`](./merge-preflight.md) | The Phase 1–6 merge preflight: what was verified before the PR, and what still blocks Day 1 |
 
 ---
 
