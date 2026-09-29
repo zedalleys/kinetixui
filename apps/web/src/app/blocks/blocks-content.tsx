@@ -32,6 +32,7 @@ export function BlocksContent() {
             contentClassName={block.contentClassName}
             sources={sources}
             platforms={block.platforms.map((p) => PLATFORM_DEFINITIONS[p].label)}
+            analyticsBlock={block.slug}
           >
             <Preview />
           </Showcase>

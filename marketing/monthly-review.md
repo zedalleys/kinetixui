@@ -51,3 +51,23 @@ something better, that is a roadmap input.
 - What the data says to do more of:
 - What to stop:
 - Next month's single biggest bet:
+
+## The question that decides whether this ritual is worth keeping
+
+**Did any number here change a decision this month?**
+
+If a metric has not informed a decision in three months, it is a candidate for deletion — from the
+dashboard and from [`analytics.md`](./analytics.md). A scorecard nobody acts on is a scorecard that
+quietly teaches everyone to stop reading it.
+
+Before drawing any conclusion, check the evidence rules in `analytics.md` §10:
+
+| Evidence | Action |
+| --- | --- |
+| Under ~30 qualified evaluations in the comparison | **KEEP** — this is noise |
+| A directional gap across 2+ cycles | **INVESTIGATE** |
+| A mechanism plus a repeated pattern | **TEST** |
+| A tested change that holds | **CHANGE** |
+
+Specifically: do not declare a P1/P2 winner. Attribution indicates which *message* earned the click, not
+who the person is.

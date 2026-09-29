@@ -5,6 +5,10 @@
 > **Read every number from source, not from last week's file.**
 > `pnpm marketing:stats` prints the derived product numbers.
 
+> **Before baseline, report absolute counts — never a percentage change.**
+> Every Tier 1 KPI is NO BASELINE until the window in [`analytics.md`](./analytics.md) §10 closes.
+> A rate computed from nine sessions is a story, not a measurement.
+
 ## Traffic
 - Unique visitors:
 - Top acquisition channels (`kx_source`):

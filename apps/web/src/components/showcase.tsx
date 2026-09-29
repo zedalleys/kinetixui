@@ -5,6 +5,8 @@ import * as Tabs from "@radix-ui/react-tabs";
 import { PLATFORMS, PLATFORM_DEFINITIONS, type Platform } from "@/lib/platform-parity";
 import { cn } from "@/lib/utils";
 import { CopyButton } from "./copy-button";
+import { analytics } from "@/lib/analytics";
+import { analyticsPlatformFor } from "@/lib/analytics-surfaces";
 
 /**
  * The real source for the same example on each platform that implements it, keyed by platform name. Only
@@ -51,6 +53,7 @@ export function Showcase({
   description,
   code,
   sources,
+  analyticsBlock,
   platforms,
   children,
   className,
@@ -62,6 +65,14 @@ export function Showcase({
   description?: string;
   code?: string;
   sources?: PlatformSources;
+  /**
+   * The block slug this showcase is for, when it is one.
+   *
+   * Opt-in on purpose: /charts uses the same component for chart examples, which are not blocks, and
+   * emitting `block_code_copied` for them would put a different kind of thing into the metric. No slug,
+   * no events — the honest default for a shared component.
+   */
+  analyticsBlock?: string;
   /** Platform labels to show as a coverage line — derived by the caller, never counted here. */
   platforms?: string[];
   children: React.ReactNode;
@@ -141,7 +152,23 @@ export function Showcase({
                 gives all three, and the code panel below is labelled by the selected tab.
               */}
               {multi && (
-                <Tabs.Root value={lang} onValueChange={setLang}>
+                <Tabs.Root
+                  value={lang}
+                  onValueChange={(next) => {
+                    setLang(next);
+                    // Only a real platform the manifest knows, and only for a block. `isAnalyticsPlatform`
+                    // rejects anything else, so a future non-platform tab cannot leak in as one.
+                    const platform = analyticsPlatformFor(next);
+                    if (analyticsBlock && platform) {
+                      analytics.track("platform_selected", {
+                        platform,
+                        block: analyticsBlock,
+                        location: "platform_tabs",
+                        source: "blocks_gallery",
+                      });
+                    }
+                  }}
+                >
                   <Tabs.List className="flex items-center gap-1 border-b border-border/60 px-3 pt-1.5" aria-label={`${title} — implementation platform`}>
                     {langs.map((l) => (
                       <Tabs.Trigger
@@ -161,7 +188,20 @@ export function Showcase({
               )}
               {active && (
                 <>
-                  <CopyButton value={active.value} className={cn("absolute right-3 z-10", multi ? "top-11" : "top-3")} />
+                  <CopyButton
+                    value={active.value}
+                    onCopy={
+                      analyticsBlock && analyticsPlatformFor(active.key)
+                        ? () =>
+                            analytics.track("block_code_copied", {
+                              block: analyticsBlock,
+                              platform: analyticsPlatformFor(active.key)!,
+                              source: "blocks_gallery",
+                            })
+                        : undefined
+                    }
+                    className={cn("absolute right-3 z-10", multi ? "top-11" : "top-3")}
+                  />
                   <pre
                     // a code block scrolls sideways when a long Kotlin or Dart line overflows, so the keyboard
                     // must be able to reach it (WCAG 2.1.1 / axe scrollable-region-focusable)
