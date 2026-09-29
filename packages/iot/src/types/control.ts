@@ -15,7 +15,7 @@
  * the product supplies one, the status of the command it sent. This package never sends anything.
  */
 
-import type { KinetixCommandStatus } from "./command";
+import type { KinetixCommandLifecycle, KinetixCommandStatus } from "./command";
 import type { KinetixDeviceStatus } from "./device";
 
 /**
@@ -109,6 +109,11 @@ export type ResolveControlStateInput = {
   deviceStatus?: KinetixDeviceStatus | string | null;
   /** The status of the command this control sent, if the product is tracking one. */
   commandStatus?: KinetixCommandStatus | string | null;
+  /**
+   * The lifecycle of the change, as an alternative to `commandStatus`. An explicit `commandStatus`
+   * wins. Acknowledged maps to in-flight, never to confirmed.
+   */
+  lifecycle?: Pick<KinetixCommandLifecycle, "stage"> | null;
   /**
    * Force the control off regardless of device state — a permission boundary, a read-only view, a
    * parent form's disabled state. Kept separate from device availability so the reason stays true.
