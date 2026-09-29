@@ -38,6 +38,11 @@ export const ANALYTICS_SOURCES = [
   "create_workspace",
   "iot_page",
   "not_found",
+  // Phase 2 conversion sections. Separate sources rather than one "homepage" bucket, because the whole
+  // question they exist to answer is *which* part of the narrative moves someone on — a click counted
+  // against the page as a whole cannot distinguish the proof section from the adoption ladder.
+  "homepage_verification",
+  "homepage_adoption",
 ] as const;
 export type AnalyticsSource = (typeof ANALYTICS_SOURCES)[number];
 
@@ -56,6 +61,22 @@ export const ANALYTICS_CTA_TARGETS = [
   // leave open — which of the five platforms you can actually install — so how often it is followed says
   // whether the distinction landed or just added a line.
   "platform_availability",
+  /*
+   * Phase 2. Each answers one funnel question from `marketing/STRATEGY.md` §7:
+   *
+   * `platform_coverage`   — Comprehension → Credibility. Distinct from `platform_availability`, which is the
+   *                         hero's inline "what ships where" link: both land on /docs/platforms, and merging
+   *                         them would hide whether the coverage *button* pulls its weight.
+   * `view_verification`   — Credibility. Does the verification argument get followed, or only read?
+   * `adopt_tokens` /      — First value. Which rung of the adoption ladder a visitor reaches for is the
+   * `adopt_components` /    clearest signal available of whether incremental adoption reads as legitimate,
+   * `adopt_blocks`          and which ICP is in front of us: tokens skew P2, components skew P1.
+   */
+  "platform_coverage",
+  "view_verification",
+  "adopt_tokens",
+  "adopt_components",
+  "adopt_blocks",
 ] as const;
 export type AnalyticsCtaTarget = (typeof ANALYTICS_CTA_TARGETS)[number];
 

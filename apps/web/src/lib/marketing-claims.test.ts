@@ -343,3 +343,60 @@ describe("maturity is not overstated", () => {
     }
   });
 });
+
+/* ------------------------------------------------------------------ commercial tiers */
+
+/**
+ * No public surface teases a paid tier, because none exists.
+ *
+ * `marketing/CLAIMS.md` F2 prohibits this outright, and the homepage was breaking it: the closer read
+ * "Free today; advanced tooling arrives as KinetixUI Pro" and the docs landing said "deeper tooling will
+ * arrive as KinetixUI Pro". The hero eyebrow reinforced it with "Free while in beta" — free *while*, which
+ * only means anything if something is expected to stop being free.
+ *
+ * Why it matters more than it looks: the audience being asked to depend on this is deciding whether the
+ * project will still be maintained and still be MIT in three years. A teased commercial tier answers "no,
+ * not all of it" — for a product that does not exist and may never. It is the one claim here that costs
+ * trust while promising nothing.
+ *
+ * The rule is a phrase search, which is normally the brittle kind. It is justified here because the
+ * prohibited thing IS a phrase — a named future product — rather than a number that drifts. The escape
+ * hatch is deliberate: if a tier is ever built, this test fails and the decision gets made in the open
+ * instead of arriving in copy.
+ *
+ * Both this file's own explanation and the comment in `page.tsx` paraphrase rather than quote the banned
+ * string, for the reason the wearable rule learned the hard way: a guard that fires on the text explaining
+ * it is a guard that gets deleted.
+ */
+describe("no paid tier is teased, because none exists", () => {
+  /** A named commercial tier, in the forms someone would actually write. */
+  const TIER = /\b(kinetix\s*ui\s+pro|kinetixui\s+pro)\b|\bpro\s+(tier|plan|version|edition)\b|\b(paid|premium|enterprise)\s+(tier|plan)\b/i;
+
+  /** "free while/during/for now" — a hedge that implies an end. Plain "free" and "MIT" are fine. */
+  const CONDITIONAL_FREE = /\bfree\s+(while|during|for now|for the moment|until)\b/i;
+
+  it("names no commercial tier on any public surface", () => {
+    for (const [where, text] of Object.entries(COPY)) {
+      expect(TIER.exec(text)?.[0], `${where} names a commercial tier that does not exist`).toBeUndefined();
+    }
+  });
+
+  it("never frames the licence as temporarily free", () => {
+    for (const [where, text] of Object.entries(COPY)) {
+      expect(
+        CONDITIONAL_FREE.exec(text)?.[0],
+        `${where} implies the licence is only free for now; it is MIT`,
+      ).toBeUndefined();
+    }
+  });
+
+  it("would catch both, so neither assertion above is vacuous", () => {
+    expect(TIER.test("deeper tooling will arrive as KinetixUI Pro")).toBe(true);
+    expect(TIER.test("upgrade to the Pro plan")).toBe(true);
+    expect(CONDITIONAL_FREE.test("KinetixUI is free while in beta")).toBe(true);
+    // And does not fire on the honest statements that replaced them.
+    expect(TIER.test("MIT licensed, all of it.")).toBe(false);
+    expect(CONDITIONAL_FREE.test("MIT licensed, all of it.")).toBe(false);
+    expect(TIER.test("Angular is published and in preview")).toBe(false);
+  });
+});

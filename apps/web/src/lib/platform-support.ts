@@ -23,6 +23,21 @@ export const componentTotal = all.length;
 /** How many components ship on `platform` — the one place prose and tables get a coverage number from. */
 export const platformCount = count;
 
+/**
+ * Catalogue entries that the manifest itself says are not components.
+ *
+ * `combobox` is a documented composition of `Command`, and its `platformNote` says so in as many words.
+ * Detected from that note rather than named here, so a second recipe needs no edit — the same derivation
+ * `scripts/marketing-stats.mjs` uses, which is why the two agree.
+ *
+ * This matters publicly: "98 components" overstates by one, and `marketing/CLAIMS.md` B2 makes the honest
+ * phrasing a condition of quoting the number at all.
+ */
+export const recipes = all.filter((n) => /not a component/i.test(components[n]!.platformNote ?? ""));
+
+/** Entries that really are components — 98 minus the documented recipes. */
+export const componentCount = componentTotal - recipes.length;
+
 /** Derived from the manifest's platform families — never a second hard-coded list. */
 const NATIVE: readonly string[] = NATIVE_PLATFORMS;
 

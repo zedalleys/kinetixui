@@ -38,9 +38,24 @@ describe("homepage source: no hand-typed facts", () => {
   });
 
   it("never writes a bare numeric literal next to the old SPEC labels (the exact shape of the drift this guards)", () => {
-    // the literals that were wrong when this was audited: 72 components, a "05" platform-target count, "Beta" as
-    // a license value. None of these should appear as quoted string literals in the source at all.
-    for (const banned of ['"72"', '"05"', '"Beta"']) expect(source).not.toContain(banned);
+    /*
+     * The drift this guards is a *fact* typed into the spec panel: 72 components, an "05" platform-target
+     * count, "Beta" as a licence value.
+     *
+     * It used to ban those three strings anywhere in the file, which stopped working the moment the page
+     * legitimately grew past four sections — `<SectionHead index="05">` is an ordinal, not a count of
+     * anything, and failing on it taught nobody anything. So the numeric rule is scoped to the SPEC array
+     * and strengthened while it is there: *no* quoted digit-only literal may appear inside it, which covers
+     * the next wrong number as well as the last one. Every value must come through `String(<derived>)`.
+     *
+     * "72" and "Beta" stay banned file-wide: neither is ever a section ordinal, so neither has an innocent
+     * reading here.
+     */
+    const spec = /const SPEC: \[string, string\]\[\] = \[[\s\S]*?\n\];/.exec(source)?.[0];
+    expect(spec, "the SPEC array should still be findable, or this test is checking nothing").toBeTruthy();
+    expect(spec, "SPEC holds a hand-typed number; derive it instead").not.toMatch(/"\d+"/);
+
+    for (const banned of ['"72"', '"Beta"']) expect(source).not.toContain(banned);
   });
 });
 

@@ -264,6 +264,21 @@ source is named instead.
   real packed artefact."
 - **Review trigger:** provenance or the artefact gate changes.
 
+### E5b — Runtime dependencies and lock-in
+
+- **Status:** APPROVED WITH QUALIFICATION
+- **Evidence:** `packages/ui/package.json` declares roughly 50 runtime dependencies (Radix, `cva`, `clsx`,
+  `tailwind-merge`, `recharts`, `date-fns` and others). The registry/CLI model copies source into the
+  consumer's repository instead, where KinetixUI itself is not a dependency — though the copied files still
+  import the packages they need, which the CLI installs.
+- **Approved wording:** "Copy the source in and KinetixUI is not a dependency of your app — the code is
+  yours to change." For the npm package: name the dependencies, or say nothing.
+- **Forbidden interpretation:** **"zero runtime dependencies"**, or any dependency *count* presented as a
+  headline figure. The homepage spec panel carried "Runtime deps: 0" until Phase 2 — a flat, checkable,
+  false number on the most public surface in the project. The defensible claim is about lock-in, and it does
+  not survive compression into two words.
+- **Review trigger:** `@kinetixui/ui`'s dependency list changes materially, or subpath exports ship.
+
 ### E6 — Marketing copy is itself under test
 
 - **Status:** APPROVED, and a genuine differentiator
@@ -292,8 +307,16 @@ source is named instead.
 
 - **Status:** PROHIBITED
 - **Evidence:** nothing exists.
-- **Forbidden interpretation:** "Pro", "coming soon", waitlists, or any teased commercial tier.
-- **Review trigger:** a real decision to build one.
+- **Forbidden interpretation:** "Pro", "coming soon", waitlists, or any teased commercial tier. Also
+  prohibited: framing the licence as *temporarily* free — "free while in beta" only means something if
+  something is expected to stop being free.
+- **Enforced:** `marketing-claims.test.ts` → *"no paid tier is teased, because none exists"*, added in
+  Phase 2 after the homepage and docs landing were found naming a future commercial tier and the hero
+  eyebrow was hedging the licence. The rule is a phrase search, which is normally the brittle kind; it is
+  justified because the prohibited thing *is* a phrase — a named future product — rather than a number that
+  drifts.
+- **Review trigger:** a real decision to build one. The guard fails first, so the decision gets made in the
+  open rather than arriving in copy.
 
 ### F3 — Open source
 
