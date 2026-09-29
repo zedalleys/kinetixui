@@ -21,6 +21,10 @@ import { withDisplayName } from "./display-name";
  * **Attention outranks activity.** A zone with four running pumps and one fault reads as the fault.
  * Products that render activity first bury the thing the user came to find.
  *
+ * Two optional slots were added in 0.3 for hierarchies: `path` (a `SpaceBreadcrumb`, above the kind
+ * label) and `rollup` (a `SpaceRollup` or any health summary, below the summary line). They are nodes,
+ * not data, so this card does not learn what a space tree is; without them it renders exactly as before.
+ *
  * The whole card is a button when `onSelect` is given — a group is a navigation target, and a card
  * with a small "View" link inside it wastes the 200px of tap area around the link.
  */
@@ -37,13 +41,17 @@ export interface DeviceGroupCardProps extends Omit<React.HTMLAttributes<HTMLDivE
   category?: KinetixDeviceCategory;
   /** One line of context — "21°C · 48% RH", "3 of 8 valves open". */
   summary?: React.ReactNode;
+  /** Where this group sits — typically a `SpaceBreadcrumb`. Rendered above the group's name, outside the select button. */
+  path?: React.ReactNode;
+  /** Health of everything in the group — typically a `SpaceRollup`. Rendered below the summary. */
+  rollup?: React.ReactNode;
   /** A control applying to the whole group. Rendered outside the button so it stays operable. */
   action?: React.ReactNode;
   onSelect?: () => void;
 }
 
 const DeviceGroupCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceGroupCardProps>(
-  ({ name, kind, deviceCount, activeCount = 0, attentionCount = 0, category = "unknown", summary, action, onSelect, className, ...props }, ref) => {
+  ({ name, kind, deviceCount, activeCount = 0, attentionCount = 0, category = "unknown", summary, path, rollup, action, onSelect, className, ...props }, ref) => {
     const attention = attentionCount > 0;
     const active = !attention && activeCount > 0;
 
@@ -97,6 +105,8 @@ const DeviceGroupCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
         )}
         {...props}
       >
+        {path ? <div data-slot="path">{path}</div> : null}
+
         {onSelect ? (
           <button
             type="button"
@@ -114,6 +124,8 @@ const DeviceGroupCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
         ) : (
           inner
         )}
+
+        {rollup ? <div data-slot="rollup">{rollup}</div> : null}
 
         {action ? <div className="flex items-center justify-end border-t border-border/70 pt-3">{action}</div> : null}
       </div>

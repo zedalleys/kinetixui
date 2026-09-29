@@ -56,7 +56,7 @@ const BatteryIndicator = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
           className="relative inline-block h-3 w-6 shrink-0 rounded-sm border border-input bg-background"
         >
           <span
-            className={cn("absolute inset-y-0.5 left-0.5 rounded-sm transition-none", LEVEL_CLASS[level])}
+            className={cn("absolute inset-y-0.5 start-0.5 rounded-sm transition-none", LEVEL_CLASS[level])}
             style={{ width: known ? `calc(${formatBatteryPercent(value as number)}% - 2px)` : 0 }}
           />
         </span>

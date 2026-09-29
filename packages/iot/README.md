@@ -10,8 +10,8 @@ npm install @kinetixui/iot
 
 ## What it is
 
-A product semantic layer for connected devices: the models, the classification rules, seven React
-primitives, four device controls, and twelve composed product patterns built from them. Deliberately
+A product semantic layer for connected devices: the models, the classification rules, eight React
+primitives, four device controls, and twenty-seven composed product patterns built from them. Deliberately
 generic — the same vocabulary suits smart agriculture, medical devices, smart home, industrial
 dashboards, and fleet and logistics.
 
@@ -30,6 +30,34 @@ import { DeviceStatusBadge, SensorReading } from "@kinetixui/iot/react";
 | `@kinetixui/iot`           | everything                                        |
 | `@kinetixui/iot/functions` | models and pure functions — **no React**          |
 | `@kinetixui/iot/react`     | the primitives, the controls and the patterns     |
+
+## The connected-product layer (0.3)
+
+The same rule — *a request is not a state* — extends past the controls. These are all React, all
+data-in and callbacks-out, and none of them talks to a device:
+
+| Moment | Components |
+| --- | --- |
+| A change settling | `CommandLifecycle` — requested, acknowledged (never drawn as confirmed), confirmed, or timed out / unreachable with a Retry |
+| A reading you may not trust | `TelemetryMetric`, `TelemetryGrid`, `MetricStatus`; `TelemetryTrend` gains thresholds, gaps, a stale marker, a summary row and a "View data" table |
+| Alerts and health | `AlertList`, `AlertCard` (kind, source, action, acknowledged/resolved), `DeviceHealthSummary` |
+| Places | `SpaceBreadcrumb`, `SpaceRollup`, and `path` / `rollup` slots on `DeviceGroupCard` |
+| What happened | `ActivityTimeline` |
+| Automations | `AutomationRuleView` (read-only) and `AutomationBuilder` (a structured, keyboard-operable form) |
+| Adding a device | `PairingMethodPicker`, `PairingStepper`, `PairingFailure` — UI pieces only |
+| Two device families | `CameraDeviceCard` (a poster slot, never a video), `EnergySummary` (application-supplied numbers) |
+
+Some things to know before relying on them:
+
+- **Status is never colour alone.** Every state is a glyph with a different silhouette *and* a word.
+- **`AutomationBuilder` edits a rule; it does not run one.** There is no engine, scheduler or trigger
+  evaluation in this package.
+- **`CameraDeviceCard` never shows or implies a live feed.** There is no `<video>`, no stream and no
+  player; the picture is a poster slot the product fills, or a placeholder that says "no live feed".
+- **`EnergySummary` is display only** — no billing, cost, carbon or forecast.
+- **Pairing components are UI state.** No Bluetooth, Wi-Fi or discovery lives here.
+- **Live regions are rare.** `CommandLifecycle` and `AutomationBuilder` each have one polite
+  `role="status"`; `PairingFailure` is a `role="alert"`. Nothing else announces.
 
 ## What it is not
 

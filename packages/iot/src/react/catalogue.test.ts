@@ -25,6 +25,13 @@ const WORDS: Record<string, number> = {
   eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17,
   eighteen: 18, nineteen: 19, twenty: 20,
 };
+// "twenty-seven" and friends: the patterns layer passed twenty in 0.3, and a count spelled with a
+// hyphen would otherwise read as "not a number" and fail with a confusing message.
+const TENS: Record<string, number> = { twenty: 20, thirty: 30, forty: 40, fifty: 50 };
+for (const [tens, n] of Object.entries(TENS)) {
+  WORDS[tens] = n;
+  for (const [unit, u] of Object.entries(WORDS)) if (u >= 1 && u <= 9) WORDS[`${tens}-${unit}`] = n + u;
+}
 
 /** The components exported under one `/* ---- <layer> *\/` banner in the barrel. */
 function layer(name: string): string[] {
@@ -43,7 +50,7 @@ function layer(name: string): string[] {
  * further down, and matching that instead would fail on the article rather than on the count.
  */
 function stated(phrase: string): number {
-  const words = [...readme.matchAll(new RegExp(`(\\w+) ${phrase}`, "g"))].map((m) => m[1]!.toLowerCase());
+  const words = [...readme.matchAll(new RegExp(`([\\w-]+) ${phrase}`, "g"))].map((m) => m[1]!.toLowerCase());
   expect(words.length, `the README no longer mentions "${phrase}"`).toBeGreaterThan(0);
 
   const counts = words.filter((w) => w in WORDS);
@@ -73,6 +80,13 @@ describe("the README counts what the package actually exports", () => {
 
   it("states the number of patterns correctly", () => {
     expect(stated("composed product patterns")).toBe(patterns.length);
+  });
+
+  it("keeps the barrel to one `export { Name, … }` per line, which is what this test reads", () => {
+    // A multi-line export would be invisible to `layer()` and silently uncounted; fail loudly instead.
+    const declared = [...barrel.matchAll(/^export \{/gm)].length;
+    const readable = [...barrel.matchAll(/^export \{ (\w+),/gm)].length;
+    expect(readable).toBe(declared);
   });
 
   it("puts every component in exactly one layer", () => {
