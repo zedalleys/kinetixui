@@ -13,7 +13,18 @@
  * can't import that .ts file directly (it imports package.json without an import attribute), so it is
  * transpiled here with the repo's own TypeScript and evaluated with those two JSON imports supplied.
  *
- * Exits 1 with a clear message for an unknown version, 2 for bad usage.
+ * ## This covers the CORE cohort only
+ *
+ * `RELEASES` is the core version line — `@kinetixui/{ui,tokens,cli}`, which share one number. It has never
+ * described `@kinetixui/angular` or `@kinetixui/iot`, and since those release independently their version
+ * numbers now collide with historical core ones: `0.2.0` is both `@kinetixui/iot@0.2.0` (current) and the
+ * core 0.2.0 that shipped the rebrand on 2026-09-03. Asking for `0.2.0` used to print the rebrand notes and
+ * exit 0, which is exactly the shape of mistake that ends up pasted into a public Release.
+ *
+ * So an ambiguous version is refused, and the message names the tag and where that cohort's real notes live
+ * (its own generated CHANGELOG.md). `--ui` confirms the core line when someone genuinely wants it.
+ *
+ * Exits 1 with a clear message for an unknown or ambiguous version, 2 for bad usage.
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -148,10 +159,35 @@ function main(argv) {
   const outFile = outIndex >= 0 ? args[outIndex + 1] : undefined;
   const positional = args.filter((a, i) => !a.startsWith("--") && (outIndex < 0 || i !== outIndex + 1));
   if (positional.length !== 1 || (outIndex >= 0 && !outFile)) {
-    console.error("usage: pnpm release:notes <version> [--out <file>]\n  e.g. pnpm release:notes 0.21.0");
+    console.error("usage: pnpm release:notes <version> [--out <file>] [--ui]\n  e.g. pnpm release:notes 0.21.0");
     return 2;
   }
   const version = positional[0].replace(/^v/, "");
+
+  /**
+   * Refuse a version that also names the current release of an independently versioned cohort, unless the
+   * caller says they mean the core line. Read from the release allowlist and each manifest, so a fourth
+   * cohort is covered the day it exists.
+   */
+  if (!args.includes("--ui")) {
+    const allowlist = JSON.parse(readFileSync(`${root}/release/publish-packages.json`, "utf8"));
+    const collisions = allowlist.packages
+      .filter((pkg) => pkg.releaseGroup !== "core")
+      .map((pkg) => ({ ...pkg, current: JSON.parse(readFileSync(`${root}/${pkg.directory}/package.json`, "utf8")).version }))
+      .filter((pkg) => pkg.current === version);
+    if (collisions.length > 0) {
+      for (const pkg of collisions) {
+        console.error(
+          `release:notes: "${version}" is also the current version of ${pkg.name}, which releases on its own ` +
+            `line and is not described by these notes.\n` +
+            `  For ${pkg.name}@${version}, use its own changelog: ${pkg.directory}/CHANGELOG.md\n` +
+            `  For the core line's ${version} (@kinetixui/ui, @kinetixui/tokens, @kinetixui/cli), re-run with --ui.`,
+        );
+      }
+      return 1;
+    }
+  }
+
   let notes;
   try {
     notes = renderReleaseNotes(loadReleaseData(), version);

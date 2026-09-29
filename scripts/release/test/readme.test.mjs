@@ -73,3 +73,40 @@ describe("every publishable package ships a README", () => {
     assert.match(missing[0], /requires "README\.md", which is not in the tarball/);
   });
 });
+
+/**
+ * The security policy has to cover every package a release can publish.
+ *
+ * `SECURITY.md` listed `@kinetixui/{tokens,ui,cli}` as the in-scope packages and said nothing about
+ * `@kinetixui/angular` or `@kinetixui/iot`, both of which have been published for a while. By that text, a
+ * vulnerability in either was out of scope — which is the kind of gap a reporter reads as "they do not want
+ * to hear about it", and the kind nobody notices because it is an absence.
+ *
+ * The file now says its scope follows the allowlist. This is what makes that true rather than aspirational:
+ * the names in the prose are checked against the allowlist, so a sixth package cannot be published into an
+ * unstated security scope.
+ */
+describe("the security policy covers every publishable package", () => {
+  const policy = readFileSync(path.join(root, "SECURITY.md"), "utf8");
+
+  it("names each one", () => {
+    for (const pkg of allowlist.packages) {
+      assert.ok(
+        policy.includes(pkg.name),
+        `SECURITY.md does not mention ${pkg.name}, so its scope does not cover a package that can be published`,
+      );
+    }
+  });
+
+  it("points at the allowlist as the source, rather than being a second list", () => {
+    assert.match(
+      policy,
+      /release\/publish-packages\.json/,
+      "SECURITY.md should name the allowlist as what defines its scope, so the prose is a restatement and not an authority",
+    );
+  });
+
+  it("still says how to report privately", () => {
+    assert.match(policy, /security\/advisories\/new/, "the private reporting route must stay in the policy");
+  });
+});

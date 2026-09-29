@@ -1,0 +1,29 @@
+# GitHub Sponsors / funding links for the "Sponsor" button.
+#
+# EVERY KEY IS COMMENTED OUT ON PURPOSE. Nothing here is a real account.
+#
+# The readiness audit listed a missing Sponsor button as a discoverability gap, and it is — but the fix needs
+# an account that exists, and inventing a handle would point people at a stranger, or at nothing. So this
+# file is the placeholder, sitting where the change gets made, rather than a guess that looks finished.
+#
+# To turn it on, uncomment ONE line and put the real handle in it. The GitHub Sponsors route is the usual
+# first choice for a solo-maintained project: it needs no third-party account, and it is the only one of
+# these that GitHub renders without an external redirect.
+#
+#   github: zedalleys          # requires GitHub Sponsors to be enabled on the account first
+#
+# Other supported keys, for reference — use whichever already exists rather than creating one for this:
+#
+#   open_collective: <slug>
+#   ko_fi: <username>
+#   buy_me_a_coffee: <username>
+#   liberapay: <username>
+#   polar: <username>
+#   thanks_dev: <username>
+#   custom: ["https://example.com/donate"]
+#
+# While every line is commented, GitHub shows no Sponsor button — which is the correct behaviour for a
+# project that has no funding account, and is why this file is safe to commit as it stands.
+#
+# Full key reference:
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository

@@ -14,10 +14,12 @@ body:
       description: Which implementation is affected?
       options:
         - Web · React (@kinetixui/ui)
+        - Web · Angular (@kinetixui/angular)
         - iOS · SwiftUI
         - Android · Jetpack Compose
         - Flutter
         - Tokens (@kinetixui/tokens)
+        - IoT (@kinetixui/iot)
         - CLI (@kinetixui/cli)
         - Documentation site
     validations:

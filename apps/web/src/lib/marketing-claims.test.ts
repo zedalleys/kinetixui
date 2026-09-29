@@ -272,3 +272,74 @@ describe("wearables are never counted as a platform", () => {
     expect(read("WEARABLES.md")).toMatch(/nothing built|nothing is built/i);
   });
 });
+
+/* ------------------------------------------------------------------ maturity claims */
+
+/**
+ * "Production ready" is the claim this project is most exposed to and has never made.
+ *
+ * A search of the whole repository found no assertion of it about KinetixUI: the only matches were a code
+ * comment calling `@dnd-kit` battle-tested — a statement about a dependency, and a true one — and a campaign
+ * draft that lists the phrase among the things not to write. Nothing needed retracting.
+ *
+ * The exposure is that it would be *easy* to write and hard to notice, because so much of the evidence looks
+ * like it supports it: 2,600-plus tests, roughly 35 CI gates, an empty axe baseline, provenance on every
+ * package. None of those is the claim. The claim is about a product being finished, and the project says
+ * otherwise in its own voice — every published package is `0.x`, the IoT module is Experimental, Angular is
+ * Preview, and the homepage eyebrow reads "Free while in beta". Saying both is the contradiction a reader
+ * catches first.
+ *
+ * So the rule is tied to the evidence rather than to taste, and the premise is asserted: the day a package
+ * reaches 1.0.0 this fails, and the claim gets reconsidered deliberately instead of drifting in.
+ */
+describe("maturity is not overstated", () => {
+  const published = Object.values(defs).filter((d) => d.distribution.published);
+
+  /** Read from the release allowlist, so a new package is covered without being listed here. */
+  const publishedVersions = (() => {
+    const allowlist = JSON.parse(readFileSync(`${root}/release/publish-packages.json`, "utf8")) as {
+      packages: { name: string; directory: string }[];
+    };
+    return allowlist.packages.map((pkg) => ({
+      name: pkg.name,
+      version: (JSON.parse(readFileSync(`${root}/${pkg.directory}/package.json`, "utf8")) as { version: string }).version,
+    }));
+  })();
+
+  it("still has every published package below 1.0.0 — the premise of the rule below", () => {
+    expect(publishedVersions.length).toBeGreaterThan(0);
+    for (const pkg of publishedVersions) {
+      expect(
+        pkg.version.startsWith("0."),
+        `${pkg.name} is at ${pkg.version}. Once a package reaches 1.0.0, revisit the production-readiness ` +
+          `wording deliberately rather than leaving this test asserting a premise that no longer holds.`,
+      ).toBe(true);
+    }
+    expect(published.length).toBeGreaterThan(0);
+  });
+
+  it("claims no production readiness in public copy", () => {
+    // Bare phrases, not "about KinetixUI" phrases: in top-of-funnel copy there is no useful sentence
+    // containing these that is not a claim about the product. The component sources, the campaign draft that
+    // bans the phrase, and these audits are all outside COPY on purpose.
+    const overstated =
+      /production[ -]?ready|ready for production|enterprise[ -]?ready|battle[ -]?tested|production[ -]grade|industrial[ -]strength/i;
+    for (const [where, text] of Object.entries(COPY)) {
+      expect(overstated.exec(text)?.[0], `${where} claims production readiness, which nothing here supports`).toBeUndefined();
+    }
+  });
+
+  it("keeps saying it is beta where it says anything about maturity", () => {
+    // The homepage eyebrow is the one place the product states its own stage. If that ever stops being true,
+    // the rule above is the thing to revisit — so it is asserted rather than assumed.
+    expect(homepage, "the homepage should still state the product's stage").toMatch(/beta/i);
+  });
+
+  it("does not offer a stability guarantee it has no versioning to back", () => {
+    for (const [where, text] of Object.entries(COPY)) {
+      expect(text, `${where} promises API stability the 0.x line does not support`).not.toMatch(
+        /(stable|unchanging|frozen) API|no breaking changes|semver guarantee/i,
+      );
+    }
+  });
+});

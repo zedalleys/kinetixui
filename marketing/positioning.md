@@ -70,11 +70,25 @@ verification is the position.
    Flutter are stable packages at experimental verification. That gap is the
    measurement working, not the libraries failing — say it that way, and never
    imply a low verification level means the source does not run.
-3. **Only the npm packages are published.** `@kinetixui/ui`, `@kinetixui/cli`
-   and `@kinetixui/tokens` are on npm; `@kinetixui/angular` and the three native
-   libraries are not. Never show an install command for an unpublished package.
+3. **Distribution is not maturity, and the npm set is larger than it was.** Five
+   packages are on npm — `@kinetixui/ui`, `@kinetixui/cli`, `@kinetixui/tokens`,
+   `@kinetixui/angular` and `@kinetixui/iot`. The three native libraries are real,
+   compiled in their own CI, and **not distributed anywhere**: they are source
+   someone builds. Never show an install command for an undistributed library, and
+   never let "stable implementation" stand in for "you can install this" — every
+   native port is `maturity: "stable"` and on no package registry. Read the current
+   split from `pnpm marketing:stats`, which prints installable-versus-source-only
+   as its own section.
 4. **No users to point at.** Use engineering proof, never invented adoption.
 5. **Pro does not exist yet.** Do not market it. Core adoption is the goal.
+
+Corrected 2026-09-29: risk 3 listed `@kinetixui/angular` among the libraries with no
+package distribution. It has shipped on npm since 0.24.0, and `@kinetixui/iot` since
+0.1.0 — so the entry told writers to withhold two install commands they were entitled
+to show, while this same file's objection table already called Angular installable.
+The guard in `current-truth.test.ts` had the right rule and could not see the
+sentence, because it split prose per line and this file hard-wraps; it now unwraps
+paragraphs first.
 
 Removed 2026-09-24: *"Blocks have no SwiftUI or Angular coverage."* No longer
 true — `block-parity.json` reports 20 Blocks with real source on all five

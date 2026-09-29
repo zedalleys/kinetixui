@@ -2,8 +2,18 @@
 
 ## Supported versions
 
-`@kinetixui/tokens`, `@kinetixui/ui` and `@kinetixui/cli` share one version
-line. Fixes ship in the **latest published release** — upgrade to pick them up.
+Five packages are published, on three independent version lines. Fixes ship in
+the **latest published version of the affected package** — upgrade to pick them
+up. There are no backported patch branches.
+
+| Package | Version line |
+| --- | --- |
+| `@kinetixui/tokens`, `@kinetixui/ui`, `@kinetixui/cli` | one shared line (a Changesets `fixed` cohort) |
+| `@kinetixui/angular` | its own, independent |
+| `@kinetixui/iot` | its own, independent |
+
+`pnpm marketing:stats` prints the current version of each, read from the release
+allowlist rather than from this file.
 
 ## Reporting a vulnerability
 
@@ -26,9 +36,16 @@ you'd rather stay anonymous).
 
 ## Scope
 
-In scope: the published packages (`@kinetixui/{tokens,ui,cli}`), the registry
+In scope: **every published package** — `@kinetixui/tokens`, `@kinetixui/ui`,
+`@kinetixui/cli`, `@kinetixui/angular` and `@kinetixui/iot` — the registry
 descriptors served from `kinetixui.com/r/`, and the build/release workflows in
-this repo.
+this repo. The scope follows
+[`release/publish-packages.json`](release/publish-packages.json): if a package is
+publishable, it is in scope.
+
+The SwiftUI, Jetpack Compose and Flutter implementations are in this repository
+but are not distributed as packages. Report issues in them the same way — they
+are source people compile, so a problem there still reaches a real consumer.
 
 Out of scope: the marketing site content, third-party dependencies (report those
 upstream; Dependabot tracks them here), and issues that require a

@@ -8,9 +8,11 @@
 
 - [ ] Tokens / foundations (`tokens/`, `style-dictionary/`)
 - [ ] Web · React (`packages/ui`)
+- [ ] Web · Angular (`packages/ui-angular`) — Preview
 - [ ] iOS · SwiftUI (`packages/ui-swiftui`)
 - [ ] Android · Compose (`packages/ui-compose`)
 - [ ] Flutter (`packages/ui-flutter`)
+- [ ] IoT module (`packages/iot`) — Experimental
 - [ ] Docs site (`apps/web`) / CLI / tooling only
 
 <!-- Adding or changing a component? See the four-platform rule in /docs/contributing: React first, then the
@@ -21,7 +23,7 @@
 - [ ] Uses design tokens — no hardcoded colors, and spacing stays on the 8-unit grid (4-unit half-step)
 - [ ] States, dark mode and RTL considered (logical properties on web; native layout direction on native)
 - [ ] Accessible name, keyboard and focus behavior considered; accessibility not claimed on automated checks alone
-- [ ] Changeset added for a change to `@kinetixui/ui`, `@kinetixui/tokens` or `@kinetixui/cli` (`pnpm changeset`)
+- [ ] Changeset added for a change to any published package (`pnpm changeset`) — `@kinetixui/{ui,tokens,cli}` share one version line; `@kinetixui/angular` and `@kinetixui/iot` release independently
 - [ ] Docs and the site updated alongside the code; no example uses an API that does not exist
 - [ ] `components.manifest.json` updated (and `pnpm gen:manifest`) if a component or its platforms changed
 - [ ] Generated files regenerated, not hand-edited (`pnpm build:tokens`, `pnpm build:registry`, `pnpm vendor:*`)
