@@ -216,19 +216,107 @@ source.
 **Deployment is website-only.** One deploy of `apps/web` and production `/r/*` serves corrected metadata to
 every existing CLI installation, with no user action and no new CLI version.
 
-## Remaining blocker
+## Resolution — verified in production
 
-**F1 is FIXED IN SOURCE — AWAITING DEPLOYMENT.** It is not closed: production still serves the defective
-metadata, and this session is not authorized to deploy.
+**F1 is CLOSED. VERIFIED IN PRODUCTION on 2026-09-29.** Merged to `main` as `e86b3ec` (PR #252), deployed by
+the Vercel git integration, and then confirmed against the live origin.
 
-**F3 is unchanged.** `kinetixui.com` is still denied by this container's egress policy (`403`,
-`x-deny-reason: host_not_allowed`), so the live activation path remains unverified. After the deploy, the
-checklist in `PHASE-0.75-PUBLIC-SURFACE.md` plus one command closes both:
+The verification was run by the repository owner on their own machine, not from the agent container: this
+container's egress policy denies `kinetixui.com` (`403` on the proxy CONNECT, `x-deny-reason:
+host_not_allowed`), so no request from here ever reached the origin. The evidence below is their output,
+recorded verbatim rather than re-described.
 
-```bash
-cd "$(mktemp -d)" && npm init -y >/dev/null
-npx @kinetixui/cli@latest init --yes && npx @kinetixui/cli@latest add card
-grep -E '"(clsx|tailwind-merge)"' package.json   # both should be present
+### Served metadata
+
+```
+$ curl -s https://kinetixui.com/r/card.json   | grep -E '"(clsx|tailwind-merge)"'
+    "clsx",
+    "tailwind-merge"
+
+$ curl -s https://kinetixui.com/r/button.json | grep -E '"(@radix-ui/react-slot|class-variance-authority|clsx|tailwind-merge)"'
+    "@radix-ui/react-slot",
+    "class-variance-authority",
+    "clsx",
+    "tailwind-merge"
 ```
 
-**Phase 0 is not complete.**
+`card` declares exactly the two packages `lib/utils.ts` imports. `button` declares all four — the claim on
+`/docs/installation` that Phase 0.9 classified **FALSE** is now true against production, which is where it
+was false.
+
+### The documented journey, end to end
+
+A clean project, the published CLI, nothing installed by hand:
+
+```
+npm warn exec The following package was not found and will be installed: @kinetixui/cli@0.23.3
+✔ Created kinetixui.json
+✔ Wrote app\globals.css
+
+Resolving card…
+✔ Added components\ui\card.tsx
+✔ Added lib\utils.ts
+skip app\globals.css already exists (pass --overwrite to replace it)
+
+Installing clsx, tailwind-merge with npm…
+added 2 packages, and audited 3 packages in 2s
+Done.
+
+$ grep -E '"(clsx|tailwind-merge)"' package.json
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.7.0"
+```
+
+Three things this proves that nothing in the repository could:
+
+| | |
+| --- | --- |
+| **The deploy carried the fix** | `Installing clsx, tailwind-merge` is the CLI reading corrected metadata from the live origin |
+| **No npm publication was needed** | `@kinetixui/cli@latest` resolved to **0.23.3** — the same version that failed in Phase 0.9, unchanged. The predicted website-only deployment scope held |
+| **The packages really land** | They are in the consumer's `package.json`, not merely reported as installed |
+
+Windows path separators in that output are incidental but welcome: the journey was exercised on Windows,
+the platform the `run.mjs` comment and the `escapeRegExp` work were both wary of.
+
+### What this verification did not cover
+
+Honest scope, so the next phase does not inherit a false "all green":
+
+- **`/r/registry.json` was not fetched.** The 97-item index is unverified against production; only `card`
+  and `button` were.
+- **The rest of the `PHASE-0.75-PUBLIC-SURFACE.md` endpoint checklist** — robots, sitemap, `/specs/` — was
+  not re-run after this deploy. Nothing in this change touches those, but they are unconfirmed on the
+  current deployment.
+- **The production deployment's own state was never read.** The Vercel deployment API was refused to the
+  agent (the permission classifier denies deployment reads as a production-deploy action), so the deploy is
+  evidenced only by its effect: production serving the corrected bytes. That is the stronger evidence
+  anyway.
+- `add card` reported `skip app\globals.css already exists`, correct for a project that had just run
+  `init`, and not a dependency concern.
+
+### One thing observed, not fixed
+
+The CLI emitted a Node deprecation warning while installing:
+
+```
+(node:2460) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead
+to security vulnerabilities, as the arguments are not escaped, only concatenated.
+```
+
+That is `packages/cli` spawning the package manager with `shell: true` and an argument array. It is not
+related to this fix, it did not affect the outcome, and package names come from the registry rather than
+from user input — but it is shipped code spawning a shell with concatenated arguments, and Node is warning
+about exactly the class of problem this phase spent its time on. Recorded here as a finding for a separate,
+scoped change; deliberately not fixed in this one.
+
+## Phase 0 status
+
+**F1: CLOSED — verified in production.** **F3: CLOSED** — the live origin has now been reached and the
+documented activation journey succeeds against it.
+
+Both Phase 1 gate blockers from `PHASE-0.9-LIVE-VERIFICATION.md` are cleared, and everything else that
+report listed was explicitly non-blocking. The question Phase 0 existed to answer — *can a real user
+discover KinetixUI today and successfully use the documented CLI against the live production system?* — is
+answered: **yes**, demonstrated end to end on a clean machine with the published CLI.
+
+**PHASE 0 COMPLETE**, with the uncovered items above stated rather than assumed.
