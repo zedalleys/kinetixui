@@ -40,9 +40,10 @@ because both read the manifest, not because either copied the other.
 | SwiftUI / Compose / Flutter verification | `experimental` | same | `gen:verification` |
 | Component lifecycle | 97 stable, 1 beta | `component-status.json` | `gen:manifest` |
 | Blocks | 20, all five platforms | `block-parity.json` | `gen:blocks` |
-| Published on npm | `@kinetixui/{ui,cli,tokens}` 0.23.1 | live `npm view <pkg> version` | `marketing:stats` |
+| Published on npm | `@kinetixui/{ui,cli,tokens}` 0.23.3 | live `npm view <pkg> version` | `marketing:stats` |
 | Published on npm | `@kinetixui/angular` 0.24.0 — preview, own cohort | live `npm view <pkg> version` | `marketing:stats` |
-| Version | 0.23.1 | `packages/ui/package.json` | — |
+| Published on npm | `@kinetixui/iot` 0.2.0 — module, own cohort | live `npm view <pkg> version` | `marketing:stats` |
+| Version | 0.23.3 (core cohort) | `packages/ui/package.json` | — |
 
 ## The two claims that need their wording checked, not just their value
 

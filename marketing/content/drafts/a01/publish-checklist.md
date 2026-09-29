@@ -10,7 +10,7 @@ Work top to bottom on publication day. Nothing here is automated, and nothing
 should be: every step is a human deciding the claim still holds.
 
 **Editorial freeze:** 2026-09-23, against `main` @ `e29184c`, v0.22.1.
-**Volatile facts re-derived:** 2026-09-27, v0.23.1 core / `@kinetixui/angular` 0.24.0.
+**Volatile facts re-derived:** 2026-09-29, v0.23.3 core / `@kinetixui/angular` 0.24.0 / `@kinetixui/iot` 0.2.0.
 **Current-state figures re-derived:** 2026-09-24, `main` @ `dfd0d81`.
 Anything below marked ⏱ ages and must be re-derived.
 

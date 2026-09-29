@@ -56,12 +56,14 @@ const CURRENT_SURFACES = {
   "docs/rtl": readFileSync("src/app/docs/rtl/page.mdx", "utf8"),
   "docs/theming": readFileSync("src/app/docs/theming/page.mdx", "utf8"),
   "marketing/README.md": read("marketing/README.md"),
-  "marketing/positioning.md": read("marketing/positioning.md"),
-  "marketing/messaging.md": read("marketing/messaging.md"),
-  "marketing/personas.md": read("marketing/personas.md"),
+  "marketing/STRATEGY.md": read("marketing/STRATEGY.md"),
+  "marketing/MESSAGING.md": read("marketing/MESSAGING.md"),
+  "marketing/PERSONAS.md": read("marketing/PERSONAS.md"),
   "marketing/seo.md": read("marketing/seo.md"),
   "marketing/launches.md": read("marketing/launches.md"),
   "marketing/content-calendar.md": read("marketing/content-calendar.md"),
+  "marketing/CLAIMS.md": read("marketing/CLAIMS.md"),
+  "marketing/CONTENT-PILLARS.md": read("marketing/CONTENT-PILLARS.md"),
 };
 
 const defs = manifest.platformDefinitions as Record<
@@ -169,7 +171,7 @@ describe("publication claims match the manifest", () => {
      * The third version of this, and the reason for it. Splitting per line first looked equivalent and is
      * not, because every markdown file here hard-wraps at about 80 columns: a sentence that crosses a line
      * break was never seen whole, so the package name and the denial could land in different units and
-     * neither unit was a claim. `marketing/positioning.md` carried exactly that shape for months —
+     * neither unit was a claim. `marketing/STRATEGY.md` (then `positioning.md`) carried exactly that shape for months —
      *
      *     ...and `@kinetixui/tokens` are on npm; `@kinetixui/angular` and the three native
      *     libraries are not.
@@ -220,7 +222,7 @@ describe("publication claims match the manifest", () => {
   /**
    * The elliptical denial, which no phrase rule above can see.
    *
-   * `marketing/positioning.md` carried this for months and every guard read it as fine:
+   * `marketing/STRATEGY.md` (then `positioning.md`) carried this for months and every guard read it as fine:
    *
    *     Only the npm packages are published. `@kinetixui/ui`, `@kinetixui/cli` and `@kinetixui/tokens`
    *     are on npm; `@kinetixui/angular` and the three native libraries are not.

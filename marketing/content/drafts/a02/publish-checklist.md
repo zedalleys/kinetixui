@@ -29,7 +29,7 @@ Nothing in this package is scheduled. Work top to bottom on the day.
 | SwiftUI / Compose / Flutter verification | experimental |
 | Lifecycle | 97 stable, 1 beta |
 | Blocks | 20, all five platforms |
-| Version | 0.23.1 (core); `@kinetixui/angular` 0.24.0, versioned independently |
+| Version | 0.23.3 (core); `@kinetixui/angular` 0.24.0 and `@kinetixui/iot` 0.2.0, versioned independently |
 | `@kinetixui/angular` | published, still preview at 31 / 98 |
 
 These are volatile by nature: implementation counts, verification levels, the

@@ -89,7 +89,17 @@ ok(files.length === 6, `six files as specified (found ${files.length})`);
  * those facts live.
  */
 const versionOf = (d) => JSON.parse(readFileSync(`packages/${d}/package.json`, "utf8")).version;
-const known = new Set(["cli", "tokens", "ui", "ui-angular"].map(versionOf));
+/*
+ * Derived from the release allowlist, not enumerated. The hard-coded list here went stale when
+ * `@kinetixui/iot` shipped — it flagged a real published version as one no package has. A package
+ * list cannot fail, only be incomplete.
+ */
+const ALLOWLIST = JSON.parse(readFileSync("release/publish-packages.json", "utf8"));
+const known = new Set(
+  ALLOWLIST.packages.map(
+    (pkg) => JSON.parse(readFileSync(`${pkg.directory}/package.json`, "utf8")).version,
+  ),
+);
 const publishedNpm = Object.entries(defs).filter(([, d]) => d.distribution?.channel === "npm" && d.distribution.published);
 
 for (const f of ["sources.md", "publish-checklist.md"]) {

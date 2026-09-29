@@ -28,6 +28,11 @@ rather than being collapsed into the same thing.
 | Published version | each package's own `package.json`. `@kinetixui/{ui,tokens,cli}` share one line (a Changesets `fixed` cohort); `@kinetixui/angular` and `@kinetixui/iot` version independently, so one number does not describe the product |
 | **Distribution** — is it publicly installable at all | `components.manifest.json` → `platformDefinitions[].distribution.published`, corroborated by `npm view <pkg> version`. A stable implementation that is not distributed is not installable, and the two must never be written as one claim |
 
+**No hard-coded versions in evergreen copy.** Positioning, messaging, personas, claims, pillars and SEO
+must not name a version number — they outlive every release. Campaign and release *announcements* may, because
+there the version is the subject. Each campaign draft re-derives its version facts and its own
+`verify-package.mjs` fails when they drift, which is how two drafts carrying a stale `0.23.1` were caught.
+
 **These are six different questions and they have six different answers.**
 A platform can be a *stable implementation* whose *catalogue verification* is
 experimental, carrying *stable components*, while not being *catalogue-complete* — and
@@ -41,25 +46,45 @@ means all of them at once.
 re-introduces a stale platform list, a blanket parity claim, a transpilation
 implication, or an install command for an unpublished package.
 
-## Files
+## Start here
+
+**Canonical documents.** These are authoritative. There is exactly one of each, and no other file in this
+repository may contradict them.
+
+| Question | File |
+| --- | --- |
+| **Who** are we marketing to? | [`PERSONAS.md`](./PERSONAS.md) — behavioural personas, tiered |
+| **What** problem do we solve, and what *is* this product? | [`STRATEGY.md`](./STRATEGY.md) — category, ICP, JTBD, problems, value, funnel |
+| **Why** is KinetixUI different? | [`STRATEGY.md`](./STRATEGY.md) §6 — differentiators, and what is explicitly *not* one |
+| **What** may we safely claim? | [`CLAIMS.md`](./CLAIMS.md) — the claim registry, with status and evidence per claim |
+| **How** do we describe each platform? | [`MESSAGING.md`](./MESSAGING.md) §2 — short, medium and technical wording per platform |
+| **What** language do we avoid? | [`CLAIMS.md`](./CLAIMS.md) §G and [`MESSAGING.md`](./MESSAGING.md) §5 |
+| **How** do we word anything public? | [`MESSAGING.md`](./MESSAGING.md) — positioning, pitches, hierarchy, audience matrix, objections |
+| **What** do we write about? | [`CONTENT-PILLARS.md`](./CONTENT-PILLARS.md) — six pillars, with the rejected candidates recorded |
+
+**Supporting documents.** Operational. They execute the canonical strategy and never override it.
 
 | File | Use it when |
 | --- | --- |
-| `positioning.md` | Writing anything that explains what KinetixUI *is* |
-| `personas.md` | Choosing who a piece is for, and what they already believe |
-| `messaging.md` | Writing a headline, a post, a page, a release note |
-| `content-pillars.md` | Deciding what to write about |
-| `content-calendar.md` | Planning the next 30 days |
 | `seo.md` | Topic clusters and landing-page architecture |
+| `content-calendar.md` | Planning the next 30 days |
 | `community.md` | GitHub, Reddit, HN, Discussions |
 | `launches.md` | Staged launch criteria and Product Hunt prep |
 | `experiments.md` | Growth experiment backlog |
-| `weekly-review.md` / `monthly-review.md` | The review ritual |
 | `analytics.md` | Instrumentation, funnels and what each event is for |
+| `weekly-review.md` / `monthly-review.md` | The review ritual — captures land in `research/` |
 | `roadmap.md` | Internal sequencing. Not a public roadmap, and not a claim surface |
-| `content/backlog.json` | Machine-readable article/post backlog |
-| `content/drafts/<id>/` | Per-piece drafts, sources and measurement plans |
-| `audits/` | Dated audits and remediation records — see below |
+
+**Directories.**
+
+| Directory | Holds |
+| --- | --- |
+| [`research/`](./research/) | Dated observations — what we saw, not what we decided |
+| [`content/`](./content/) | Campaign drafts and production briefs, with a status register |
+| [`audits/`](./audits/) | Dated audit and remediation records. Historical, never retro-edited |
+
+There is no `archive/` directory. Nothing has yet been superseded rather than corrected; when something is,
+it goes there with a banner pointing at its replacement.
 
 ## Generated versus maintained
 
@@ -83,10 +108,13 @@ When two surfaces disagree, the higher row wins:
 2. **Generated data** — `platform-parity.json`, `block-parity.json`, `verification.json`,
    `component-status.json`. Derived from row 1 by `pnpm gen:*`, and re-derived in CI.
 3. **`pnpm marketing:stats`** — row 2, assembled and printed. The only figures cleared for public use.
-4. **Guidance in this directory** — positioning, messaging, personas. Interprets rows 1–3; never
-   overrides them.
-5. **Published copy** — the website, the READMEs, posts. Guarded against rows 1–2 by
-   `apps/web/src/lib/marketing-claims.test.ts` and `current-truth.test.ts`.
+4. **Canonical strategy in this directory** — `STRATEGY.md`, `MESSAGING.md`, `PERSONAS.md`,
+   `CLAIMS.md`, `CONTENT-PILLARS.md`. Interprets rows 1–3; never overrides them. Within this row,
+   `CLAIMS.md` decides whether something may be said at all and `MESSAGING.md` decides how it is worded.
+5. **Research and drafts** — `research/`, `content/`. Observations and unpublished work. No authority.
+6. **Published copy** — the website, the READMEs, posts. Guarded against rows 1–2 by
+   `apps/web/src/lib/marketing-claims.test.ts` and `current-truth.test.ts`, which read the canonical
+   documents in this directory as well as the site.
 
 A claim that cannot be traced to row 1 or 2 does not ship.
 
@@ -102,6 +130,10 @@ beside it, and the audit keeps a banner pointing there.
 | `audits/READINESS-AUDIT.md` | Marketing readiness audit at `789c90e`, 2026-09-28. The claim verification matrix lives here |
 | `audits/PHASE-0.5-REMEDIATION.md` | What was fixed, mitigated or deferred against that audit |
 | `audits/TREE-SHAKING.md` | Why `@kinetixui/ui` cannot be marketed as tree-shakeable, measured |
+| `audits/PHASE-0.75-PUBLIC-SURFACE.md` | Contributor-trust and public-surface closure |
+| `audits/PHASE-0.9-LIVE-VERIFICATION.md` | Live production verification. Both findings closed; see its remediation section |
+| `audits/PHASE-0.9.1-REGISTRY-FIX.md` | The registry dependency defect, its structural fix, and its production verification |
+| `audits/PHASE-1-MESSAGING-RECONCILIATION.md` | This reconciliation: what was consolidated, what changed, what remains unknown |
 
 Because they are historical, audits are deliberately **not** in the `CURRENT_SURFACES` list that
 `current-truth.test.ts` checks — a present-tense guard pointed at a dated document produces failures on
@@ -114,8 +146,11 @@ correct text.
 | A new campaign or content piece | `content/drafts/<id>/`, following the `a01` / `a02` shape |
 | A one-off number for a post | Nowhere. Run `pnpm marketing:stats` at the time of writing |
 | A new audit | `audits/`, dated, with the commit it audited in its header |
-| A change to what we claim | The guidance file that owns it, then check the guards still pass |
-| Positioning or messaging strategy | `positioning.md` / `messaging.md` — **Phase 1 work**, not yet started |
+| A change to what we claim | `CLAIMS.md` first — add the row with its evidence and review trigger — then the wording in `MESSAGING.md` |
+| A new persona or a change to priorities | `PERSONAS.md`, then check `STRATEGY.md` §2 still ranks them the same way |
+| A weekly or monthly review capture | `research/YYYY-MM-DD.md` |
+| A competitor or category observation | `research/`, cited per its README. **Not** into strategy directly |
+| Positioning or messaging strategy | `STRATEGY.md` / `MESSAGING.md` — canonical as of Phase 1 |
 
 ## What this is not
 
