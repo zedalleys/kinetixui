@@ -28,7 +28,7 @@ function Table({ head, children, label }: { head: string[]; children: React.Reac
       role="region"
       aria-label={label}
       tabIndex={0}
-      className="my-6 overflow-x-auto rounded-lg border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="my-6 overflow-x-auto rounded-lg border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [background:linear-gradient(to_right,hsl(var(--background))_30%,transparent),linear-gradient(to_left,hsl(var(--background))_30%,transparent),radial-gradient(farthest-side_at_0_50%,hsl(var(--foreground)/0.18),transparent),radial-gradient(farthest-side_at_100%_50%,hsl(var(--foreground)/0.18),transparent)_100%_0] [background-attachment:local,local,scroll,scroll] [background-repeat:no-repeat] [background-size:40px_100%,40px_100%,14px_100%,14px_100%] [background-position:0_0,100%_0,0_0,100%_0]"
     >
       <table className="w-full border-collapse text-sm">
         <caption className="sr-only">{label}</caption>
@@ -189,44 +189,68 @@ export function ElevationTable() {
   );
 }
 
+/**
+ * One card per platform instead of a 7-column table: the columns are prose-heavy, so a table forced a hidden
+ * horizontal scroll that readers had to discover. Cards wrap to the container and never scroll sideways.
+ */
 export function PlatformSupportTable() {
+  const field = "text-[11px] font-mono uppercase tracking-[0.1em] text-muted-foreground";
   return (
-    <Table label="Supported platforms" head={["Platform", "Package · distribution", "Components", "Tokens", "Dark mode", "RTL", "Automated verification"]}>
+    <ul aria-label="Supported platforms" className="my-6 grid list-none gap-4 p-0">
       {platforms.map((p) => {
         // maturity comes from platformDefinitions, keyed by the row's platform id — never a second label here
         const key = (Object.keys(PLATFORM_DEFINITIONS) as Platform[]).find((k) => k.toLowerCase() === p.id);
         const maturity = key ? PLATFORM_DEFINITIONS[key].maturity : undefined;
         return (
-        <tr key={p.id}>
-          <th scope="row" className={`${td} text-left font-medium`}>
-            {p.name}
-            {maturity && maturity !== "stable" && (
-              <span className="ml-2 rounded-[3px] border border-border px-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-                {maturity}
+          <li key={p.id} className="rounded-lg border border-border">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border bg-muted/30 px-4 py-3">
+              <h3 className="m-0 text-base font-medium">
+                {p.name}
+                {maturity && maturity !== "stable" && (
+                  <span className="ml-2 rounded-[3px] border border-border px-1 align-middle font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                    {maturity}
+                  </span>
+                )}
+              </h3>
+              <span className="text-xs text-muted-foreground">{p.technology}</span>
+              <span className="ml-auto text-sm tabular-nums">
+                {p.components} of {componentTotal} components
               </span>
-            )}
-            <span className="mt-0.5 block text-xs font-normal text-muted-foreground">{p.technology}</span>
-          </th>
-          <td className={td}>
-            <Code>{p.package}</Code>
-            <span className="mt-1 block text-xs text-muted-foreground">
-              <Inline text={p.distribution} />
-            </span>
-          </td>
-          <td className={`${td} tabular-nums`}>
-            {p.components} of {componentTotal}
-          </td>
-          <td className={td}>{p.tokens}</td>
-          <td className={td}>{p.darkMode}</td>
-          <td className={td}>{p.rtl}</td>
-          <td className={td}>
-            <Inline text={p.verification} />
-            <span className="mt-1 block font-mono text-[11px] text-muted-foreground">{p.workflow}</span>
-          </td>
-        </tr>
+            </div>
+            <dl className="m-0 grid gap-x-6 gap-y-4 px-4 py-4 text-sm sm:grid-cols-2">
+              <div>
+                <dt className={field}>Package · distribution</dt>
+                <dd className="m-0 mt-1">
+                  <Code>{p.package}</Code>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    <Inline text={p.distribution} />
+                  </span>
+                </dd>
+              </div>
+              <div>
+                <dt className={field}>Tokens</dt>
+                <dd className="m-0 mt-1">{p.tokens}</dd>
+              </div>
+              <div>
+                <dt className={field}>Dark mode</dt>
+                <dd className="m-0 mt-1">{p.darkMode}</dd>
+              </div>
+              <div>
+                <dt className={field}>RTL</dt>
+                <dd className="m-0 mt-1">{p.rtl}</dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className={field}>Automated verification</dt>
+                <dd className="m-0 mt-1">
+                  <Inline text={p.verification} />
+                  <span className="mt-1 block font-mono text-[11px] text-muted-foreground">{p.workflow}</span>
+                </dd>
+              </div>
+            </dl>
+          </li>
         );
       })}
-    </Table>
+    </ul>
   );
 }
 
