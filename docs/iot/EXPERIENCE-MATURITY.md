@@ -196,7 +196,8 @@ Unchanged by this pass, and stated because a control layer is exactly what invit
 - **No video.** Nothing streams, decodes or displays a camera feed.
 - **No cross-platform parity.** The controls are React. There is no SwiftUI, Compose or Flutter
   equivalent, and none is implied.
-- **Not published.** `@kinetixui/iot` remains unpublished and experimental.
+- **Not released.** `@kinetixui/iot@0.2.0` is on npm; nothing in this pass publishes a new
+  version. The package remains experimental and its API may change without a major bump.
 
 ---
 
