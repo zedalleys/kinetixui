@@ -5,6 +5,7 @@ import type { KinetixFirmwareInfo, KinetixFirmwareStatus } from "../types/firmwa
 import { describeFirmwareStatus, resolveFirmwareStatus } from "../functions/firmware";
 import { cn } from "./cn";
 import { resolveLabel } from "./label";
+import { withDisplayName } from "./display-name";
 
 /**
  * FirmwareStatus — which version a device is on, and whether that is the current one.
@@ -48,7 +49,7 @@ function Version({ children }: { children: React.ReactNode }) {
   return <span className="inline-block max-w-[16ch] truncate align-bottom font-mono">{children}</span>;
 }
 
-const FirmwareStatus = React.forwardRef<HTMLDivElement, FirmwareStatusProps>(
+const FirmwareStatus = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, FirmwareStatusProps>(
   ({ firmware, showVersions = true, action, label, className, ...props }, ref) => {
     const status = resolveFirmwareStatus(firmware ?? { status: "unknown" });
     const current = firmware?.currentVersion;
@@ -87,7 +88,6 @@ const FirmwareStatus = React.forwardRef<HTMLDivElement, FirmwareStatusProps>(
       </div>
     );
   },
-);
-FirmwareStatus.displayName = "FirmwareStatus";
+), "FirmwareStatus");
 
 export { FirmwareStatus };

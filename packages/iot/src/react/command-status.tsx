@@ -6,6 +6,7 @@ import { describeCommandStatus, isCommandInFlight, isCommandUnsuccessful } from 
 import { LastSync } from "./last-sync";
 import { cn } from "./cn";
 import { resolveLabel } from "./label";
+import { withDisplayName } from "./display-name";
 
 /**
  * CommandStatus — where a command sent to a device has got to.
@@ -41,7 +42,7 @@ const STATUS_CLASS: Record<KinetixCommandStatus, string> = {
   expired: "text-muted-foreground",
 };
 
-const CommandStatus = React.forwardRef<HTMLDivElement, CommandStatusProps>(
+const CommandStatus = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, CommandStatusProps>(
   ({ command, showName = false, label, now, className, ...props }, ref) => {
     const status = command?.status;
     const known = typeof status === "string" && status in STATUS_CLASS;
@@ -72,7 +73,6 @@ const CommandStatus = React.forwardRef<HTMLDivElement, CommandStatusProps>(
       </div>
     );
   },
-);
-CommandStatus.displayName = "CommandStatus";
+), "CommandStatus");
 
 export { CommandStatus };

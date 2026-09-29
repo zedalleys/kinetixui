@@ -7,6 +7,7 @@ import { classifySignalStrength, describeSignal } from "../functions/signal";
 import { describeLastSeen } from "../functions/last-seen";
 import { detectStaleReading } from "../functions/telemetry";
 import { cn } from "./cn";
+import { withDisplayName } from "./display-name";
 
 /**
  * ConnectionHealth — what is known about reaching this device, written out.
@@ -51,7 +52,7 @@ function Row({ term, children, state }: { term: string; children: React.ReactNod
   );
 }
 
-const ConnectionHealth = React.forwardRef<HTMLDListElement, ConnectionHealthProps>(
+const ConnectionHealth = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDListElement, ConnectionHealthProps>(
   ({ device, freshnessMs, lastReadingAt, now, className, ...props }, ref) => {
     const status = normalizeDeviceStatus(device?.status);
     const signalLevel = classifySignalStrength(device?.signal);
@@ -78,7 +79,6 @@ const ConnectionHealth = React.forwardRef<HTMLDListElement, ConnectionHealthProp
       </dl>
     );
   },
-);
-ConnectionHealth.displayName = "ConnectionHealth";
+), "ConnectionHealth");
 
 export { ConnectionHealth };

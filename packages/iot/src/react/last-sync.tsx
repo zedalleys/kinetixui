@@ -5,6 +5,7 @@ import { describeLastSeen, formatLastSeen } from "../functions/last-seen";
 import { parseTimestamp } from "../functions/time";
 import { cn } from "./cn";
 import { resolveLabel } from "./label";
+import { withDisplayName } from "./display-name";
 
 /**
  * LastSync — when a device was last heard from.
@@ -32,7 +33,7 @@ export interface LastSyncProps extends Omit<React.HTMLAttributes<HTMLTimeElement
   label?: string;
 }
 
-const LastSync = React.forwardRef<HTMLTimeElement, LastSyncProps>(
+const LastSync = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLTimeElement, LastSyncProps>(
   ({ value, now, neverLabel, label, className, ...props }, ref) => {
     const parsed = parseTimestamp(value ?? null);
     const options = { now, neverLabel };
@@ -49,7 +50,6 @@ const LastSync = React.forwardRef<HTMLTimeElement, LastSyncProps>(
       </time>
     );
   },
-);
-LastSync.displayName = "LastSync";
+), "LastSync");
 
 export { LastSync };
