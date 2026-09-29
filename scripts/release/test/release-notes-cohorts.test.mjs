@@ -16,6 +16,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { escapeRegExp } from "./regexp.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const script = path.join(root, "scripts/release-notes.mjs");
@@ -37,14 +38,14 @@ describe("release:notes and the release cohorts", () => {
     const core = JSON.parse(readFileSync(path.join(root, "packages/ui/package.json"), "utf8")).version;
     const result = run(core);
     assert.equal(result.status, 0, `expected notes for the core version ${core}, got: ${result.stderr}`);
-    assert.match(result.stdout, new RegExp(`^## KinetixUI ${core.replace(/\./g, "\\.")}`), "notes should head with the version");
+    assert.match(result.stdout, new RegExp(`^## KinetixUI ${escapeRegExp(core)}`), "notes should head with the version");
   });
 
   it("refuses a version that is also an independent cohort's current release", () => {
     for (const pkg of independent) {
       const result = run(pkg.current);
       assert.equal(result.status, 1, `${pkg.current} (${pkg.name}) should be refused, not answered`);
-      assert.match(result.stderr, new RegExp(pkg.name.replace(/[/@]/g, "\\$&")), "the message must name the colliding package");
+      assert.match(result.stderr, new RegExp(escapeRegExp(pkg.name)), "the message must name the colliding package");
       assert.match(result.stderr, /CHANGELOG\.md/, "the message must say where that cohort's real notes live");
     }
   });
@@ -55,7 +56,7 @@ describe("release:notes and the release cohorts", () => {
       // Either it is a real core version (notes) or it never was one (unknown version) — never the wrong
       // cohort's notes presented as that package's.
       if (result.status === 0) {
-        assert.match(result.stdout, new RegExp(`^## KinetixUI ${pkg.current.replace(/\./g, "\\.")}`));
+        assert.match(result.stdout, new RegExp(`^## KinetixUI ${escapeRegExp(pkg.current)}`));
       } else {
         assert.match(result.stderr, /unknown version/, `unexpected failure for --ui ${pkg.current}: ${result.stderr}`);
       }
@@ -67,7 +68,7 @@ describe("release:notes and the release cohorts", () => {
       const changelog = readFileSync(path.join(root, pkg.directory, "CHANGELOG.md"), "utf8");
       assert.match(
         changelog,
-        new RegExp(`^## ${pkg.current.replace(/\./g, "\\.")}$`, "m"),
+        new RegExp(`^## ${escapeRegExp(pkg.current)}$`, "m"),
         `${pkg.name}: CHANGELOG.md has no "## ${pkg.current}" section, so there is nothing to paste into its Release`,
       );
     }

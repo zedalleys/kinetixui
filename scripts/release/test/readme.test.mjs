@@ -18,6 +18,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { existsSync, readFileSync } from "node:fs";
+import { escapeRegExp } from "./regexp.mjs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { validatePackedArtifact } from "../artifacts.mjs";
@@ -42,7 +43,7 @@ describe("every publishable package ships a README", () => {
       const text = readFileSync(file, "utf8");
       // A stub is the same blank page with extra steps.
       assert.ok(text.length > 400, `${pkg.name}: README.md is ${text.length} bytes — too short to be useful`);
-      assert.match(text, new RegExp(`^# ${pkg.name.replace(/[/@]/g, "\\$&")}|^# `), `${pkg.name}: README has no heading`);
+      assert.match(text, new RegExp(`^# ${escapeRegExp(pkg.name)}|^# `), `${pkg.name}: README has no heading`);
       assert.match(text, /## /, `${pkg.name}: README has no sections`);
     }
   });
