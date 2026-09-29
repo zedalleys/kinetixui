@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { KinetixControlState } from "../types/control";
-import { clampLevel } from "../functions/control";
+import { clampLevel, snapToStep } from "../functions/control";
 import { cn } from "./cn";
 import { withDisplayName } from "./display-name";
 
@@ -56,9 +56,23 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
     const interactive = control ? control.interactive : true;
     const isDisabled = disabled || !interactive;
 
-    // The slider's own position follows the request while one is open, so the thumb sits where the
-    // user put it rather than snapping back to the device's older value mid-transition.
-    const position = pending ? requested! : (confirmed ?? min);
+    // A drag is held locally until it is released.
+    //
+    // The input is controlled, so without this React rewrites its value back to the prop on every
+    // change and the release handler reads the *old* number. A product that wired only `onCommit` —
+    // which the name invites — would then command 20 every time the user dragged to 80, silently.
+    // The draft also keeps the thumb under the finger during the drag.
+    const [draft, setDraft] = React.useState<number | null>(null);
+
+    // The slider's own position follows the drag, then the request while one is open, so the thumb
+    // sits where the user put it rather than snapping back to the device's older value.
+    const position = draft ?? (pending ? requested! : (confirmed ?? min));
+
+    const commit = (raw: string) => {
+      const next = snapToStep(Number(raw), min, max, step);
+      setDraft(null);
+      onCommit?.(next);
+    };
     const span = max - min || 1;
     const pct = (n: number) => `${(((n - min) / span) * 100).toFixed(2)}%`;
 
@@ -123,12 +137,21 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
                   ? "Not reported"
                   : `${confirmed}${unit}`
             }
-            onChange={(e) => onPreview?.(Number(e.currentTarget.value))}
-            // `change` on a range fires on release in every engine; `input` fires per frame. Commit
-            // on release so a drag across a dimmer is one command, not eighty.
-            onMouseUp={(e) => onCommit?.(Number(e.currentTarget.value))}
-            onTouchEnd={(e) => onCommit?.(Number(e.currentTarget.value))}
-            onKeyUp={(e) => onCommit?.(Number(e.currentTarget.value))}
+            onChange={(e) => {
+              const next = Number(e.currentTarget.value);
+              setDraft(next);
+              onPreview?.(next);
+            }}
+            // Commit on release, so a drag across a dimmer is one command and not eighty.
+            onMouseUp={(e) => commit(e.currentTarget.value)}
+            onTouchEnd={(e) => commit(e.currentTarget.value)}
+            onKeyUp={(e) => commit(e.currentTarget.value)}
+            onBlur={(e) => {
+              // A drag that ends outside the input still has to resolve, or the thumb keeps a draft
+              // the device never heard about.
+              if (draft !== null) commit(e.currentTarget.value);
+              props.onBlur?.(e);
+            }}
             className={cn(
               "absolute inset-0 w-full cursor-pointer appearance-none bg-transparent",
               "focus-visible:outline-none",

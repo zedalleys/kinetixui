@@ -43,20 +43,41 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
     const interactive = control ? control.interactive : true;
 
     const selectable = modes.filter((m) => !m.unavailable);
+
     // Roving tabindex lands on the current mode, or the first selectable one if the device reports
-    // a mode this product no longer offers.
-    const focusId = modes.find((m) => m.id === (pendingId ?? value))?.id ?? selectable[0]?.id;
+    // a mode this product no longer offers. Once the user has arrowed within the group, it lands on
+    // wherever they arrowed to instead — the group stays one tab stop either way.
+    const [arrowedTo, setArrowedTo] = React.useState<string | null>(null);
+    const settledId = modes.find((m) => m.id === (pendingId ?? value))?.id ?? selectable[0]?.id;
+    const focusId = arrowedTo && modes.some((m) => m.id === arrowedTo) ? arrowedTo : settledId;
+
+    // Focusing the next radio needs the group element, and `ref` belongs to the caller.
+    const groupRef = React.useRef<HTMLDivElement | null>(null);
+    const setGroup = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        groupRef.current = node;
+        if (typeof ref === "function") ref(node);
+        else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      },
+      [ref],
+    );
 
     const move = (from: string, dir: 1 | -1) => {
       if (!interactive || selectable.length === 0) return;
       const i = selectable.findIndex((m) => m.id === from);
       const next = selectable[(i + dir + selectable.length) % selectable.length]!;
+      // Focus has to follow, not just selection. In a roving-tabindex radiogroup the tabbable radio
+      // is the selected one, so selecting without moving focus leaves the user's focus on a radio
+      // that is no longer the group's tab stop — and a subsequent arrow press starts from the wrong
+      // place. Arrow keys in a radiogroup move focus and selection together.
+      setArrowedTo(next.id);
+      groupRef.current?.querySelector<HTMLElement>(`[data-mode-id="${CSS.escape(next.id)}"]`)?.focus();
       onSelect?.(next.id);
     };
 
     return (
       <div
-        ref={ref}
+        ref={setGroup}
         role="radiogroup"
         aria-label={label}
         data-pending={pendingId ? "" : undefined}
@@ -83,6 +104,7 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
               aria-disabled={disabled || undefined}
               aria-label={isPending ? `${mode.label}, requested, not yet confirmed` : undefined}
               tabIndex={mode.id === focusId ? 0 : -1}
+              data-mode-id={mode.id}
               data-state={isConfirmed ? "confirmed" : isPending ? "requested" : "inactive"}
               onClick={() => !disabled && onSelect?.(mode.id)}
               onKeyDown={(e) => {

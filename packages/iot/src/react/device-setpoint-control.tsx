@@ -90,7 +90,9 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
 
           <div className="flex min-w-0 flex-1 flex-col items-center">
             <span
-              aria-live="polite"
+              // Deliberately NOT a live region. The sr-only sentence below announces the same change
+              // with its context ("target 21, currently 19"); making this one live as well had a
+              // screen reader read the bare number first and the sentence straight after.
               className={cn("text-display-sm tabular-nums leading-none", pending ? "text-primary" : "text-foreground")}
             >
               {shown === null ? "—" : shown}
