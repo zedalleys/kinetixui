@@ -75,7 +75,7 @@ past tense. See `sources.md`.
 ### STOP GATE — attribution must be working
 
 - [ ] Open **one** real tagged link in a fresh browser session, after deploy
-- [ ] Confirm PostHog receives `kx_campaign = kx_parity_proof`, plus the
+- [ ] Confirm PostHog receives `kx_campaign = kx_p1_a_parity_proof`, plus the
       expected `kx_source` and `kx_medium`
 - [ ] If `kx_campaign` is **absent**, the tag is wrong. **Stop.** Do not publish
       any social derivative until it arrives — every post made before this works

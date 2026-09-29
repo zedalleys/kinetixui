@@ -1,7 +1,7 @@
 ---
 id: a02
 type: source ledger
-campaign: kx_count_isnt_coverage
+campaign: kx_p1_a_count_isnt_coverage
 status: drafted
 baseline_commit: 75945b7
 generated: 2026-09-24

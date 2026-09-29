@@ -21,12 +21,16 @@ const sources = { React: "const a = 1;", SwiftUI: "let a = 1", Flutter: "final a
 
 describe("Showcase analytics", () => {
   it("fires nothing on render — showing a block is not evaluating one", () => {
-    render(<Showcase title="Pricing tier" sources={sources} analyticsBlock="pricing-tier" />);
+    render(<Showcase title="Pricing tier" sources={sources} analyticsBlock="pricing-tier">
+      <div>preview</div>
+    </Showcase>);
     expect(track).not.toHaveBeenCalled();
   });
 
   it("reports a platform switch with the block that was switched", async () => {
-    render(<Showcase title="Pricing tier" sources={sources} analyticsBlock="pricing-tier" />);
+    render(<Showcase title="Pricing tier" sources={sources} analyticsBlock="pricing-tier">
+      <div>preview</div>
+    </Showcase>);
     await userEvent.click(screen.getByRole("tab", { name: /code/i }));
     await userEvent.click(screen.getByRole("tab", { name: "SwiftUI" }));
 
@@ -42,7 +46,9 @@ describe("Showcase analytics", () => {
     // `setup()` installs the clipboard stub jsdom lacks. Without it `CopyButton` treats the write as
     // blocked and — correctly — reports nothing, so the test would pass for the wrong reason.
     const user = userEvent.setup();
-    render(<Showcase title="Pricing tier" sources={sources} analyticsBlock="pricing-tier" />);
+    render(<Showcase title="Pricing tier" sources={sources} analyticsBlock="pricing-tier">
+      <div>preview</div>
+    </Showcase>);
     await user.click(screen.getByRole("tab", { name: /code/i }));
     await user.click(screen.getByRole("button", { name: /copy/i }));
 
@@ -57,7 +63,9 @@ describe("Showcase analytics", () => {
 
   it("stays silent without a block slug, so /charts reports nothing as a block", async () => {
     const user = userEvent.setup();
-    render(<Showcase title="Area chart" sources={sources} />);
+    render(<Showcase title="Area chart" sources={sources}>
+      <div>preview</div>
+    </Showcase>);
     await user.click(screen.getByRole("tab", { name: /code/i }));
     await user.click(screen.getByRole("tab", { name: "SwiftUI" }));
     await user.click(screen.getByRole("button", { name: /copy/i }));
@@ -65,7 +73,9 @@ describe("Showcase analytics", () => {
   });
 
   it("emits only sanitary properties", async () => {
-    render(<Showcase title="Pricing tier" sources={sources} analyticsBlock="pricing-tier" />);
+    render(<Showcase title="Pricing tier" sources={sources} analyticsBlock="pricing-tier">
+      <div>preview</div>
+    </Showcase>);
     await userEvent.click(screen.getByRole("tab", { name: /code/i }));
     await userEvent.click(screen.getByRole("tab", { name: "Flutter" }));
     for (const [, props] of track.mock.calls) {

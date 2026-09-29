@@ -64,11 +64,11 @@ t(true, "claim hygiene sweep (denominator, superlatives, Angular maturity)");
 
 t(li.includes("<DEV_ARTICLE_URL>") && xt.includes("<DEV_ARTICLE_URL>"), "placeholders present in both social files");
 t(!/https?:\/\/dev\.to\/\S+/i.test(li + xt + art), "no fabricated dev.to URL anywhere");
-t(/utm_campaign=kx_parity_proof/.test(read("measurement.md")), "campaign tag uses the kx_ prefix the regex requires");
+t(/utm_campaign=kx_p1_a_parity_proof/.test(read("measurement.md")), "campaign tag uses the kx_ prefix the regex requires");
 // Only recommended links matter. measurement.md quotes the bad tag deliberately, as the warning.
 const recommended = read("measurement.md").split("\n").filter((l) => l.startsWith("| ") && l.includes("utm_campaign="));
 t(recommended.length >= 3, "link table has the three channel rows");
-t(recommended.every((l) => l.includes("utm_campaign=kx_parity_proof")), "every recommended link uses the kx_ campaign tag");
+t(recommended.every((l) => l.includes("utm_campaign=kx_p1_a_parity_proof")), "every recommended link uses the kx_ campaign tag");
 t(!recommended.some((l) => /utm_medium=article/.test(l)), "no recommended link uses the rejected medium");
 
 // ── current state, re-derived from the repository ───────────────────────────────────────────────

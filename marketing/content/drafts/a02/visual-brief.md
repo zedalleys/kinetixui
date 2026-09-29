@@ -1,7 +1,7 @@
 ---
 id: a02
 type: visual brief
-campaign: kx_count_isnt_coverage
+campaign: kx_p1_a_count_isnt_coverage
 status: drafted
 ---
 
