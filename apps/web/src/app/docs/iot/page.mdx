@@ -1,26 +1,38 @@
 export const metadata = {
   title: "IoT",
   description:
-    "KinetixUI IoT is a connected-device module for building products that pair, monitor, control, and troubleshoot devices. Experimental.",
+    "KinetixUI IoT is a React-only, experimental module for connected products: device state, a command lifecycle that separates requested from confirmed, telemetry, alerts, automation rules, pairing and places. It ships no transport, no automation engine and no video.",
 };
 
 # IoT
 
-**KinetixUI IoT is a connected-device module for building products that pair, monitor, control, and
-troubleshoot devices.**
+**KinetixUI IoT is a set of controls, telemetry, pairing and automation patterns for connected products
+whose hardware answers asynchronously.**
 
 `@kinetixui/iot` is a separate module, not part of `@kinetixui/ui`. It adds a domain vocabulary —
-devices, telemetry, commands, pairing, firmware, alerts — on top of the same token contract every
-other KinetixUI platform is built from.
+devices, commands, telemetry, alerts, automation rules, pairing, places — on top of the same token contract
+every other KinetixUI platform is built from, and it is organised around one principle: **the interface tells
+the truth about device state.** See [State honesty](#state-honesty).
 
 <Callout>
-  **Experimental.** The API may change without a major version while this finds its shape. It is not
-  part of the <ComponentTotalInline /> cross-platform component surface, and there is no SwiftUI,
-  Jetpack Compose or Flutter port of its primitives.
+  **Experimental, and React only.** The API may change without a major version while this finds its shape. It
+  is not part of the <ComponentTotalInline /> cross-platform component surface, and there is no SwiftUI,
+  Jetpack Compose or Flutter port of it. It ships no transport, no automation engine and no video, and every
+  demo on the website is simulation.
 </Callout>
 
-This page is the reference. For the shorter tour — the primitives rendered live, an interactive demo and the
-module boundary — see [the IoT overview](/iot).
+This page is the reference. For the tour — three reference environments, the command lifecycle and each
+pattern working — see [the IoT overview](/iot).
+
+## Contents of the module
+
+| Layer | What it is | Import |
+| --- | --- | --- |
+| **State model** | Types and pure functions. No React, no DOM | `@kinetixui/iot/functions` |
+| **Primitives** | One fact, rendered | `@kinetixui/iot/react` |
+| **Controls** | One thing a user can change | `@kinetixui/iot/react` |
+| **Patterns** | A composition with a rule or two | `@kinetixui/iot/react` |
+| **Compositions** | Whole screens, published as source to copy | [kinetixui.com/iot](/iot) |
 
 ## Install
 
@@ -73,23 +85,23 @@ The `functions` subpath needs none of that.
 
 **Available now**
 
-- device, telemetry, command, pairing, firmware and alert models
-- status, battery, signal, last-seen, firmware, telemetry, command, pairing and alert utilities
-- seven React primitives: `DeviceStatusBadge`, `BatteryIndicator`, `SignalStrength`, `LastSync`, `SensorReading`, `DeviceIcon`, `DeviceIdentity`
-- four device controls: `DevicePowerControl`, `DeviceLevelControl`, `DeviceSetpointControl`, `DeviceModeControl`
-- twelve patterns, including `DeviceControlCard`, `DeviceGroupCard` and `RoutineCard`
-- control-state resolution: `resolveControlState` turns a device status and a command status into
-  one answer about whether a control is operable, and whether what you are looking at is confirmed
+- a state model — device, health, command lifecycle, telemetry, alert, activity, automation rule, pairing flow,
+  space hierarchy and energy types — with pure functions for each
+- 8 React primitives, 4 device controls and 27 patterns
+- a device taxonomy and a metric registry, so a category and a metric mean the same thing everywhere
+- control-state resolution: `resolveControlState` turns a device status and a command lifecycle into one answer
+  about whether a control is operable, and whether what you are looking at is confirmed
+- a deterministic simulation and three reference environments, on the website only, as source to copy
 
 **Not in this module**
 
 - MQTT, BLE, WebSocket or HTTP polling — no transport of any kind
 - vendor adapters (Matter, Zigbee, LoRaWAN, Modbus, or any product's own API)
 - native SwiftUI, Jetpack Compose or Flutter components
-- IoT blocks, a pairing wizard, or a telemetry dashboard
-- charting — a telemetry series here is data, not a plotted thing
-- an automation engine — `RoutineCard` renders a scene, routine or schedule that a product's own
-  engine populates; nothing here evaluates a trigger or schedules a run
+- a device-discovery or provisioning implementation — pairing here is screen state
+- charting infrastructure — a series is data, and `TelemetryTrend` is a plain accessible plot
+- an automation engine — `AutomationBuilder` edits a rule and `RoutineCard` renders one; nothing evaluates a
+  trigger or schedules a run
 - video — nothing in this module streams, decodes or displays a camera feed
 
 Nothing in this module opens a connection, holds a credential, or parses or executes a device payload.
@@ -97,15 +109,165 @@ It models what a device *is*, so that the layer which talks to one has something
 
 ## Generic on purpose
 
-The models are shaped to be equally true for smart agriculture, medical devices, smart home, industrial
-dashboards, fleet and logistics, and wearables. A field earns a place in `KinetixDevice` only if a soil
-probe, an infusion pump, a thermostat, a delivery van tracker and a fitness band would all populate it
-with the same meaning.
+The models are shaped to be equally true for smart homes, agriculture, industrial operations, medical
+devices and fleet tracking. A field earns a place in `KinetixDevice` only if a soil probe, an infusion
+pump, a thermostat and a delivery van tracker would all populate it with the same meaning. Anything
+narrower goes in `metadata`, and there are no transport or protocol fields at all.
 
-A wearable is a *device this vocabulary describes*, which is not the same as a platform KinetixUI targets:
-there is **no wearable component library** and nothing is built. See
-[Supported platforms](/docs/platforms). Anything narrower goes in `metadata`, and there are no transport or protocol
-fields at all.
+The same reasoning keeps vocabulary out of the library. Mode labels, group nouns ("room", "zone",
+"line") and unit strings come from your product; the module supplies the state model they hang on.
+
+## Architecture
+
+Five layers, and the boundary that matters is the second one:
+
+1. **Your application and provider layer** — wherever device state actually comes from: MQTT, BLE, Matter, a
+   REST API, a WebSocket, a vendor SDK, a cloud service. These are examples of what an *application* might
+   use. None of them is in this package.
+2. **Your application adapter** — your code turns whatever a provider sends into the module's shapes, and turns
+   a callback from a control back into a request to the provider.
+3. **KinetixUI IoT state** (`@kinetixui/iot/functions`) — the state model as pure functions.
+4. **KinetixUI IoT components** (`@kinetixui/iot/react`) — primitives, controls and patterns that draw that state
+   and report intent through callbacks.
+5. **Compositions** — whole screens, published as source on [kinetixui.com/iot](/iot) for you to copy.
+
+The [overview page](/iot#architecture) draws this as a diagram.
+
+## Transport boundary
+
+**KinetixUI does not own the transport.** The module starts *above* it. Your application receives device
+state through an API, a gateway, a device SDK, a broker or something else entirely; the module begins after
+that and turns the result into consistent product semantics and UI.
+
+In practice the boundary is one function you write. It takes what your provider sends and returns a
+`KinetixDevice`, and nothing about the provider leaks past it:
+
+```ts
+import { normalizeDeviceStatus, type KinetixDevice } from "@kinetixui/iot/functions";
+
+// Your provider's shape. This type is yours; the module never sees it.
+type ProviderMessage = { id: string; label: string; kind: string; link: string; batteryPct?: number; seen?: string };
+
+function toDevice(message: ProviderMessage): KinetixDevice {
+  return {
+    id: message.id,
+    name: message.label,
+    type: message.kind,
+    status: normalizeDeviceStatus(message.link), // "CONNECTED" -> "online"; anything unrecognised -> "offline"
+    battery: message.batteryPct,
+    lastSeenAt: message.seen,
+  };
+}
+```
+
+Going the other way, a control reports intent and your code does whatever your transport requires. The
+control never assumes it worked:
+
+```tsx
+import { DevicePowerControl } from "@kinetixui/iot/react";
+
+// confirmedPower, requestedPower and sendToDevice are yours.
+<DevicePowerControl
+  label="Pump 01 power"
+  state={confirmedPower}          // what the device last reported
+  requested={requestedPower}      // what the user asked for, until the device agrees
+  onToggle={(next) => sendToDevice(next)} // yours
+/>
+```
+
+## State honesty
+
+This is the principle the rest of the module is built on, so it is stated once, plainly.
+
+> **A request is not a state.** What the user asked for is drawn differently from what the device has
+> confirmed — in the picture and in assistive technology.
+
+Almost every device UI fills the gap between *asked* and *confirmed* with an optimistic update. The switch
+slides, the icon lights, and the screen asserts a state the device has not reported. On a lamp that is
+harmless. On a door lock, an irrigation valve or a pump it is a lie the user discovers later.
+
+The module holds this line in four places:
+
+- **Controls** take `state` (confirmed) and `requested` (asked) as separate props, and never treat a press as a
+  result. `aria-checked` on the power switch reports the confirmed state while a request is open.
+- **The command lifecycle** is a state machine in which only a `confirmed` event changes what the device is
+  said to be. `acknowledged` is not `confirmed`.
+- **Telemetry** separates a reading from how much to trust it: stale, missing and errored are states with words,
+  and a gap in a series is drawn as a gap.
+- **Unknown is a result.** No battery, no signal, no timestamp and no reading are each rendered as “unknown”,
+  never as zero.
+
+Optimistic updates are not forbidden — a product can pass `requested` equal to the new value and update `state`
+when the device confirms. The point is that the requested value stays visibly a request until then.
+
+## The command lifecycle
+
+One user-initiated change, from *asked* to *confirmed* or to an honest failure. `KinetixCommandLifecycle` is a
+small state machine with nine stages: `idle`, `requested`, `acknowledged`, `confirmed`, `failed`, `timed-out`,
+`unreachable`, `retrying` and `cancelled`. It holds two values side by side — `requestedValue` and
+`confirmedValue` — and **only a `confirm` event moves `confirmedValue`**. Everything else, including
+`acknowledged`, leaves it alone, so “the device heard me” can never be drawn as “the device did it”.
+
+Here is the whole story of a switch that does not get its answer — off, turning on, timeout, unreachable, retry:
+
+```ts
+import {
+  advanceCommandLifecycle,
+  canRetryLifecycle,
+  describeCommandLifecycle,
+  startCommandLifecycle,
+} from "@kinetixui/iot/functions";
+
+const say = (value: unknown) => String(value);
+
+// OFF — the device last confirmed "off". You ask for "on".
+let cmd = startCommandLifecycle<"on" | "off">({ confirmed: "off", requested: "on" });
+describeCommandLifecycle(cmd, { formatValue: say });
+// "No change requested. The device reports off."
+
+// TURNING ON — sent, and not yet confirmed. The switch must not say "on".
+cmd = advanceCommandLifecycle(cmd, { type: "sent" });
+describeCommandLifecycle(cmd, { formatValue: say });
+// "Requested on. Waiting for the device; not yet confirmed. It last reported off."
+
+// TIMEOUT — no confirmation inside your window. You decide the window; the machine records the outcome.
+cmd = advanceCommandLifecycle(cmd, { type: "timeout" });
+describeCommandLifecycle(cmd, { formatValue: say });
+// "No confirmation for on: the request timed out. The device last reported off."
+
+// UNREACHABLE — the device did not answer at all. A different sentence, because the next step differs.
+cmd = advanceCommandLifecycle(cmd, { type: "deviceUnreachable", reason: "No reply from the gateway." });
+describeCommandLifecycle(cmd, { formatValue: say });
+// "The device is unreachable, so on was not confirmed. No reply from the gateway. It last reported off."
+
+// RETRY — a new attempt, counted and bounded (three by default).
+canRetryLifecycle(cmd);                        // true
+cmd = advanceCommandLifecycle(cmd, { type: "retry" });
+describeCommandLifecycle(cmd, { formatValue: say });
+// "Retrying, attempt 2 of 3. on is still not confirmed; the device last reported off."
+
+// Only now does the device's state change.
+cmd = advanceCommandLifecycle(cmd, { type: "confirm" });
+describeCommandLifecycle(cmd, { formatValue: say });
+// "Confirmed: the device reports on."
+```
+
+Three properties are worth relying on:
+
+- **Every unconfirmed sentence names both values** — the one requested and the one last reported — and none of
+  them says the device *is* the requested value before `confirmed`. A screen-reader user has no colour or
+  spinner to correct an over-claim.
+- **The machine never throws and never mutates.** `transitionCommandLifecycle` returns `ok: false` with the same
+  state and a reason (`illegal-transition`, or `max-attempts` past the limit), so a caller fed by duplicate or
+  late deliveries can ignore a rejection and keep rendering.
+- **Late truth is accepted.** A `confirm` after `timed-out` or `unreachable` is legal: a device that answers late
+  has told you the truth, and refusing it would leave the screen insisting on a state the device has left.
+  `confirmed` and `cancelled` are terminal; a new change is a new lifecycle.
+
+The machine has no clock and no timer. *Your* code decides when to send `timeout` — `isLifecycleTimedOut` answers
+whether a window has passed when you pass it `now` and a limit — and what to do about it. `CommandLifecycle`
+renders a lifecycle as a stepper (`requested → acknowledged → confirmed`, or a failure branch with a Retry when
+the machine allows one) with one polite `role="status"` sentence, the same one `describeCommandLifecycle` returns.
 
 ## The device model
 
@@ -133,16 +295,75 @@ type KinetixDevice = {
 `stale` is the one worth pointing at: it means "there is a connection story, but the data behind it is
 old", which is the state device UIs most often render as a confident `online`.
 
-## The telemetry model
+### Status, connectivity and health are different questions
+
+`status` is what a device row shows as one badge. Beneath it the module keeps two more precise answers:
+
+- **Connectivity** — can the device be reached (`online`, `stale`, `offline`, `unreachable`)?
+- **Health** — is it working (`healthy`, `degraded`, `warning`, `critical`, `unknown`), with the *reasons* listed?
+
+`deriveDeviceHealth` returns both a level and the reasons behind it, so a screen can say why:
+
+```ts
+import { deriveDeviceHealth, summarizeFleetHealth } from "@kinetixui/iot/functions";
+
+deriveDeviceHealth({ status: "offline" });
+// { level: "warning", reasons: [{ code: "offline", level: "warning", message: "The device is offline" }], faults: [] }
+
+const fleet = summarizeFleetHealth([
+  { id: "valve-03", name: "Valve 03", type: "valve", status: "online" },
+  { id: "soil-04", name: "Soil sensor 04", type: "soil-sensor", status: "offline" },
+]);
+fleet.description; // "1 of 2 healthy, 1 warning, 1 offline."
+```
+
+Read that description carefully: it is one offline device, counted once as a `warning` and once as `offline`.
+`summarizeFleetHealth` reports offline *beside* the health counts because an offline device also has a health
+level, so the raw numbers overlap. `DeviceHealthSummary` therefore gives every device exactly one bucket
+(offline or unreachable is its own bucket, taken out of `warning`) so the visible counts sum to the fleet size.
+If you draw your own summary from `byHealth` and `offline`, do the same.
+
+### Device categories and the domain registry
+
+`KinetixDevice.type` is free text, because your product's vocabulary is yours. `resolveDeviceCategory` maps it
+onto a small set of categories, and the taxonomy says everything the module knows about each one:
+
+```ts
+import {
+  KINETIX_DEVICE_TAXONOMY,
+  categoryAffordances,
+  resolveDeviceCategory,
+  resolveDeviceDomain,
+} from "@kinetixui/iot/functions";
+
+resolveDeviceCategory({ type: "Soil Probe" });   // "soil-sensor"
+resolveDeviceCategory("mystery");                // "unknown" — rendered neutrally, never guessed
+resolveDeviceDomain("thermostat");               // "climate"
+categoryAffordances("thermostat");               // ["setpoint", "mode"]
+
+KINETIX_DEVICE_TAXONOMY.valve;
+// { domain: "water", label: "Valve", affordances: ["power", "level"], defaultMetrics: ["flow"], groupKey: "valves" }
+```
+
+The 16 categories keep their **interaction shape** (a light, a lock, a pump, a motor), which decides which
+controls a device is offered. A separate **domain** registry (lighting, climate, security, irrigation, pump,
+industrial, and so on) groups devices for filtering and roll-ups without changing what a device can do.
+Both live in one table, so adding a category is one entry there and one union member, and nothing else switches
+on a category to find out its label or affordances. Domain and category values are lowercase strings by design,
+matching the rest of the module's unions.
+
+## Metrics and telemetry
+
+### The telemetry model
 
 ```ts
 type KinetixTelemetryQuality = "good" | "estimated" | "missing" | "error";
 
 type KinetixTelemetryPoint = {
   timestamp: string | Date;
-  metric: string;          // product-defined: "temperature", "soil-moisture", "heart-rate"
+  metric: string;          // product-defined: "temperature", "soil-moisture", "flow"
   value: number;
-  unit?: string;           // "°C", "%", "bpm" — printed, never converted
+  unit?: string;           // "°C", "%", "L/min" — printed, never converted
   quality?: KinetixTelemetryQuality;
 };
 
@@ -156,6 +377,82 @@ type KinetixTelemetrySeries = {
 `quality` exists so that missingness survives the trip to the UI. It is why `formatTelemetryValue` can
 refuse to print a number.
 
+### The metric registry
+
+`KINETIX_METRIC_REGISTRY` says what a metric is called, its usual unit and how many decimals it deserves, so a
+tile, a plot axis and an accessible summary agree. It holds 13 metrics, from `temperature` and `soil-moisture`
+to `flow`, `energy` and `battery`. Everything in it is a default your product can override per call.
+
+Thresholds are given only where they are not domain-specific: `battery`, `signal-strength` and `air-quality`
+have widely shared bands. **Temperature, humidity and soil moisture deliberately have none** — 30 °C is fine
+in a greenhouse and an emergency in a cold store, and a wrong default is worse than none. You supply the
+threshold that is true for your product:
+
+```ts
+import { getMetricDefinition, resolveMetricThresholds } from "@kinetixui/iot/functions";
+
+getMetricDefinition("soil-moisture");                        // { id: "soil-moisture", label: "Soil moisture", unit: "%", decimals: 0 }
+resolveMetricThresholds("soil-moisture", { warningLow: 28 }); // { warningLow: 28 }
+```
+
+### Readings, thresholds, stale and missing
+
+`evaluateReading` judges one reading and returns a **state** with a word and a glyph: `normal`, `warning`,
+`critical`, `stale` or `unavailable`. The precedence is fixed: no usable value beats an old value beats the
+threshold result. A stale reading is never called `normal`, however in-range it is, because an old number is
+not evidence of a current condition.
+
+```ts
+import { evaluateReading } from "@kinetixui/iot/functions";
+
+const now = "2026-01-01T12:00:00Z";
+
+evaluateReading({ metric: "air-quality", value: 130, timestamp: "2026-01-01T11:59:00Z", now, staleAfterMs: 300_000 });
+// { state: "warning", level: "warning", word: "Warning", glyph: "triangle", side: "high" }
+
+evaluateReading({ metric: "air-quality", value: 130, timestamp: "2026-01-01T10:00:00Z", now, staleAfterMs: 300_000 });
+// { state: "stale", level: "warning", word: "Stale", glyph: "clock", side: "high" } — what the number alone would have been
+
+evaluateReading({ metric: "temperature", value: null, quality: "missing" });
+// { state: "unavailable", level: null, word: "Unavailable", glyph: "dash" }
+```
+
+Every state is a different glyph silhouette *and* a word, so no state is carried by colour alone.
+
+### Series, gaps and accessible summaries
+
+A series is analysed without interpolating over what is missing. `summarizeSeries` reports min, max, average
+and trend over the *measured* points and counts the rest as missing; `detectSeriesGaps` finds where readings
+were due and did not arrive; `thresholdCrossings` lists each time a series changed level, including recovery.
+
+`describeSeriesForAssistiveTech` writes the sentence a screen reader gets for a plot, from the same functions,
+so the text is covered by the same tests as the classification:
+
+```ts
+import { describeSeriesForAssistiveTech, summarizeSeries } from "@kinetixui/iot/functions";
+
+const series = {
+  deviceId: "soil-04",
+  metric: "soil-moisture",
+  points: [
+    { timestamp: "2026-01-01T09:00:00Z", metric: "soil-moisture", value: 41, unit: "%" },
+    { timestamp: "2026-01-01T10:00:00Z", metric: "soil-moisture", value: 37, unit: "%" },
+    { timestamp: "2026-01-01T11:00:00Z", metric: "soil-moisture", value: 0, quality: "missing" as const },
+    { timestamp: "2026-01-01T12:00:00Z", metric: "soil-moisture", value: 29, unit: "%" },
+  ],
+};
+
+summarizeSeries(series).trend;            // "falling"
+summarizeSeries(series).missingCount;     // 1 — the point marked missing is not averaged in
+describeSeriesForAssistiveTech(series);
+// "Soil moisture: 3 readings from 2026-01-01 09:00 UTC to 2026-01-01 12:00 UTC. Latest 29 %. Lowest 29 %,
+//  highest 41 %, average 36 %. Overall falling. 1 point has no usable reading."
+```
+
+`TelemetryMetric` renders one reading with its state, `TelemetryGrid` lays several out, and `TelemetryTrend`
+draws the series with a broken line at every dropout, optional threshold bands, a summary row and a "View data"
+table as the plot's textual equivalent.
+
 ## Pairing is UI state, not a transport
 
 This is worth being blunt about, because the module's positioning says "pair" and that could be read as
@@ -163,32 +460,198 @@ a promise it does not make. **Nothing here discovers, connects to, or authentica
 is no Bluetooth, no Wi-Fi provisioning and no network call anywhere in this package.
 
 What it gives you is the vocabulary and the local logic for a pairing *screen*, so the screen can be
-built, tested and reviewed before any transport exists — and so that whichever transport arrives later
-does not invent its own word for "connecting":
+built, tested and reviewed before any transport exists — and so that whichever transport you use
+does not invent its own word for "connecting".
+
+### Stages, methods and events
+
+A pairing flow has seven **stages** (`discover`, `identify`, `authenticate`, `configure`, `assign`, `verify`,
+`complete`) and five **methods** — how a person is being *asked* to connect: `bluetooth`, `network`, `qr`,
+`manual-code` and `cloud`. The methods are labels so a screen can choose its copy; your transport decides what
+actually happens and tells the flow with events.
 
 ```ts
 import {
-  getPairingProgress,
-  normalizePairingCode,
-  validatePairingCode,
-  describePairingStatus,
-  isPairingSettled,
-  type KinetixPairingStatus,
-  type KinetixPairingStep,
+  advancePairing,
+  getPairingFailure,
+  pairingFlowSteps,
+  startPairingFlow,
+  transitionPairing,
 } from "@kinetixui/iot/functions";
 
-type KinetixPairingStatus =
-  | "idle" | "scanning" | "found" | "connecting"
-  | "authenticating" | "paired" | "failed" | "cancelled";
+let flow = startPairingFlow();                             // { status: "idle", stage: "discover", ... }
+flow = advancePairing(flow, { type: "start", method: "qr" });
+flow = advancePairing(flow, { type: "next" });             // your transport reported the device was found
+pairingFlowSteps(flow).map((step) => `${step.id}:${step.status}`);
+// ["discover:complete", "identify:active", "authenticate:pending", ...]
 
-normalizePairingCode("a1b-2c3");            // "A1B2C3"
-validatePairingCode("A1B2C3");              // true  — shape only, never correctness
-getPairingProgress(steps).ratio;            // 0 for an empty list, never NaN
-isPairingSettled("failed");                 // true  — the screen can stop waiting
+const failed = transitionPairing(flow, { type: "fail", code: "weak-signal" });
+failed.ok;                                                 // true
+failed.state.status;                                       // "failed" — and the stage it failed at is kept
+```
+
+`transitionPairing` never throws: an event that is not legal for the current state comes back as `ok: false`
+with the same state and a reason, so a screen fed by an unreliable source can ignore it and keep rendering.
+
+### The failure registry
+
+Thirteen failures are described once, each with what to say, where it happens, whether a retry makes sense,
+whether a half-finished setup needs cleaning up, and the recovery actions to offer:
+
+```ts
+import { getPairingFailure } from "@kinetixui/iot/functions";
+
+getPairingFailure("weak-signal");
+// {
+//   code: "weak-signal", title: "Signal too weak",
+//   description: "The connection to the device was too weak to continue.",
+//   recovery: [{ id: "retry", label: "Try again", kind: "retry" }, { id: "cancel", label: "Cancel setup", kind: "cancel" }],
+//   retryable: true, stage: "identify", needsCleanup: false
+// }
+```
+
+`PairingMethodPicker`, `PairingStepper` and `PairingFailure` render these. `PairingFailure` is a
+`role="alert"`, and its recovery actions report through `onAction` — they change nothing on their own.
+
+### Code entry
+
+```ts
+import { normalizePairingCode, validatePairingCode } from "@kinetixui/iot/functions";
+
+normalizePairingCode("a1b-2c3");   // "A1B2C3"
+validatePairingCode("A1B2C3");     // true — shape only, never correctness
 ```
 
 `validatePairingCode` checks a code's *shape* so a form can enable its submit button. It does not
 transmit the code, store it, or judge whether it is the right one — only the device can do that.
+
+## Alerts and activity
+
+An alert is a fact a person has to own: a severity, a message, when it was raised, and optionally what raised
+it (`source`), a machine-readable `kind`, and one suggested `action`. It has three moments a screen must keep
+apart — raised, **acknowledged** (someone has seen it) and **resolved** (the cause is gone). Acknowledging
+does not resolve, and an acknowledged alert stays visible as acknowledged rather than disappearing.
+
+```ts
+import { acknowledgeAlert, sortAlerts, summarizeAlerts } from "@kinetixui/iot/functions";
+
+const alerts = [
+  { id: "a1", deviceId: "d1", severity: "warning" as const, message: "Low battery", raisedAt: "2026-01-01T09:00:00Z" },
+  { id: "a2", deviceId: "d2", severity: "critical" as const, message: "Pressure high", raisedAt: "2026-01-01T08:00:00Z" },
+];
+
+sortAlerts(alerts).map((a) => a.id);   // ["a2", "a1"] — unresolved first, then loudest, then unacknowledged
+summarizeAlerts(alerts).description;
+// "2 open alerts on 2 devices: 1 critical, 1 warning. 2 not yet acknowledged."
+acknowledgeAlert(alerts[1]!, "2026-01-01T12:00:00Z"); // a copy with acknowledgedAt set; nothing is mutated
+```
+
+`AlertList` renders a triaged, optionally per-device list with a summary line; `AlertCard` renders one, with kind,
+source, action and an acknowledged or resolved state. Severity is a glyph and a word. The callbacks
+(`onAcknowledge`, `onAction`) report intent — your application decides what acknowledging does. `ActivityTimeline`
+renders what happened, grouped by day: commands (with their lifecycle status, so a `requested` entry reads
+“Requested, not yet confirmed” and cannot be mistaken for a result), state changes, alerts, automation and
+firmware. Live-region announcements are rare on purpose; a list is not announced when it changes.
+
+## Automation
+
+An automation is a **rule**: one trigger, any number of conditions joined by `and` / `or`, and one or more
+actions. The module models the rule and edits it. **It does not run it.** There is no engine, no scheduler and
+no trigger evaluation in this package; your application owns execution.
+
+```ts
+import {
+  summarizeAutomationRule,
+  validateAutomationRule,
+  type KinetixAutomationRule,
+} from "@kinetixui/iot/functions";
+
+const rule: KinetixAutomationRule = {
+  id: "irrigate-zone-3",
+  name: "Irrigate when dry",
+  enabled: true,
+  trigger: { type: "sensor", subject: "soil-moisture", scope: "zone-3", operator: "lt", value: 28, unit: "%" },
+  conditions: [],
+  actions: [{ id: "open-valve", target: "valve-03", command: "open", durationMinutes: 20 }],
+};
+
+validateAutomationRule(rule);   // [] — no issues
+summarizeAutomationRule(rule);  // "When soil moisture falls below 28% in zone 3, open valve 03 for 20 minutes."
+validateAutomationRule({ ...rule, name: "", actions: [] });
+// [{ path: "name", code: "missing-name", ... }, { path: "actions", code: "missing-action", ... }]
+```
+
+Validation returns issues with a `path` and a `code`, never an exception, so a form can point at the field.
+`summarizeAutomationRule` reads a rule back as a sentence and takes a `label` callback so subjects and targets
+read as your product names them. `AutomationRuleView` shows a rule read-only. `AutomationBuilder` is a
+keyboard-operable form over the same structure: you pass the subjects and targets your product offers, and it
+reports a new rule through `onChange` and `onSubmit`. It runs its own validation, shows the issues inline and
+keeps one polite status region.
+
+`RoutineCard` and the older `KinetixAutomation` type describe a scene, routine or schedule *that your engine
+already populates* — a name, a status, a last and next run. That is presentation of state, not a scheduler.
+
+## Grouping and hierarchy
+
+A connected product organises devices into places, and every product names the levels differently. So the
+levels are not modelled. There is one node type, a `kind` string your product fills in, and a `parentId`;
+depth is whatever the data says it is. The module's tests build all four of the shapes below, and none of the
+level names is built in:
+
+| Product | Levels |
+| --- | --- |
+| Smart space | Home → Floor → Room |
+| Agritech | Farm → Field → Irrigation zone |
+| Operations | Organization → Site → Line → Machine |
+| Commercial property | Portfolio → Site → Building → Zone |
+
+```ts
+import { buildSpaceTree, describeSpaceRollup, rollupSpaceHealth, spacePath } from "@kinetixui/iot/functions";
+
+const tree = buildSpaceTree([
+  { id: "farm", name: "Demo Farm", kind: "farm" },
+  { id: "gh-a", name: "Greenhouse A", kind: "field", parentId: "farm" },
+  { id: "zone-3", name: "Irrigation Zone 3", kind: "irrigation-zone", parentId: "gh-a", deviceIds: ["valve-03", "soil-04"] },
+]);
+
+spacePath(tree, "zone-3").map((p) => p.name);  // ["Demo Farm", "Greenhouse A", "Irrigation Zone 3"]
+
+const rollups = rollupSpaceHealth(tree, [
+  { id: "valve-03", name: "Valve 03", type: "valve", status: "online" },
+  { id: "soil-04", name: "Soil sensor 04", type: "soil-sensor", status: "offline" },
+]);
+describeSpaceRollup(rollups.get("farm")!); // "1 of 2 healthy, 1 warning, 1 offline."
+```
+
+`buildSpaceTree` never throws on bad input: a duplicate id, an orphan or a cycle is worked around and reported
+in `tree.issues`. A rollup exists at every level and follows the exclusive-bucket rule above.
+`SpaceBreadcrumb` renders a path, `SpaceRollup` a rollup, and `DeviceGroupCard` takes `path` and `rollup` slots.
+The tree is a description to render and roll up. It is not a permissions model, a device registry or a schema.
+
+## Energy
+
+`summarizeEnergy` takes the per-device figures your application already has and returns a total, each item's
+share and rank, and an optional comparison with a baseline. `energyTrend` reads a list of daily totals as
+rising, falling, steady or unknown.
+
+```ts
+import { energyTrend, summarizeEnergy } from "@kinetixui/iot/functions";
+
+const energy = summarizeEnergy([{ id: "heater", label: "Heater", value: 6 }, { id: "fridge", label: "Fridge", value: 2 }], { unit: "kWh" });
+energy.total;                        // 8
+energy.top[0]?.share;                // 0.75
+energyTrend([3, 4, 5, 6]).direction; // "rising"
+```
+
+`EnergySummary` displays these. It is display only: no billing, no cost, no carbon estimate and no forecast, and
+every number comes from your application.
+
+## Camera pattern
+
+`CameraDeviceCard` is a device card for a camera, and it **never shows or implies a live feed.** There is no
+`<video>`, no stream, no player and no request. The picture is a `poster` slot your product fills (or a
+placeholder that says “no live feed”), the privacy and recording states are plain words, and `lastEvent` says
+what happened and when. It is the camera's state, not the camera's output.
 
 ## Known limitations of the model
 
@@ -274,12 +737,13 @@ import {
 <SensorReading metric="Temperature" value={23.4} unit="°C" />
 ```
 
-Each accepts `className` and forwards the rest of its props, and each emits a `data-` attribute for the
+Eight primitives in all: those five, plus `DeviceIcon` and `DeviceIdentity` (a device's category, drawn with its
+state carried on the icon tile) and `MetricStatus` (a reading's state as a glyph and a word). Each accepts `className` and forwards the rest of its props, and each emits a `data-` attribute for the
 value it resolved — `data-status`, `data-level`, `data-quality` — so a product can restyle per state
 without this module growing a variant API.
 
 There is no size-variant prop. These are single-line readings that inherit their type scale from the
-surrounding text, and a variant matrix would be five APIs to maintain for a choice CSS already makes.
+surrounding text, and a variant matrix would be eight APIs to maintain for a choice CSS already makes.
 
 ## Four levels, and when each is the right one
 
@@ -389,37 +853,31 @@ than one per animation frame, which on a real gateway is a real cost.
 
 ## Patterns
 
-Twelve compositions, each built from the primitives and controls above rather than re-deriving their
-semantics — so what "stale" means is decided once and every one of them agrees.
+27 compositions, each built from the primitives and controls above rather than re-deriving their semantics —
+so what "stale" means is decided once and every one of them agrees.
 
 ```tsx
 import {
-  AlertCard,
-  CommandStatus,
-  ConnectionHealth,
+  AlertList,
+  CommandLifecycle,
   DeviceCard,
-  DeviceListItem,
-  DeviceStateSummary,
-  FirmwareStatus,
-  TelemetryCard,
+  DeviceHealthSummary,
+  TelemetryGrid,
   TelemetryTrend,
 } from "@kinetixui/iot/react";
 ```
 
-| Pattern | Composes | Answers |
+| Moment | Patterns | Answers |
 | --- | --- | --- |
-| `DeviceCard` | the reporting primitives | What is this device doing? |
-| `DeviceControlCard` | `DeviceIdentity` + a control in a slot | …and what can I do about it? |
-| `DeviceGroupCard` | `DeviceIcon` | How is this room, zone or site doing? |
-| `RoutineCard` | — | Is this scene, routine or schedule running, and when does it run next? |
-| `DeviceListItem` | the same, at list density | …across four hundred devices |
-| `DeviceStateSummary` | `summarizeDevices` | How is this group doing? |
-| `TelemetryTrend` | — | What has this metric been doing, including where it stopped? |
-| `TelemetryCard` | `SensorReading` + `TelemetryTrend` + `LastSync` | …and what is it now? |
-| `ConnectionHealth` | the status, signal, last-seen and freshness facts | Why can I not reach this device? |
-| `AlertCard` | `LastSync` | What is wrong, how serious, and has anyone looked? |
-| `CommandStatus` | `LastSync` | Where did the command I sent get to? |
-| `FirmwareStatus` | — | What version is this on, and does it need one? |
+| A device | `DeviceCard`, `DeviceListItem`, `DeviceControlCard`, `DeviceStateSummary` | What is this device doing, and what can I do about it? |
+| Connection and firmware | `ConnectionHealth`, `FirmwareStatus` | Why can I not reach it, and what version is it on? |
+| A change settling | `CommandLifecycle`, `CommandStatus` | Where did the command I sent get to? |
+| A reading | `TelemetryMetric`, `TelemetryGrid`, `TelemetryCard`, `TelemetryTrend` | What is it, how much should I trust it, and what has it been doing, including where it stopped? |
+| Alerts and history | `AlertList`, `AlertCard`, `ActivityTimeline` | What is wrong, has anyone looked, and what happened? |
+| Places and health | `DeviceGroupCard`, `DeviceHealthSummary`, `SpaceBreadcrumb`, `SpaceRollup` | How is this room, zone, line or site doing? |
+| Automation | `AutomationRuleView`, `AutomationBuilder`, `RoutineCard` | What will happen, and when? (The rule is edited here and run by you.) |
+| Adding a device | `PairingMethodPicker`, `PairingStepper`, `PairingFailure` | How is setup going, and what next if it fails? |
+| Two device families | `CameraDeviceCard`, `EnergySummary` | A camera that is never a feed; energy that is never a bill. |
 
 ### Two rules the patterns add
 
@@ -479,13 +937,82 @@ No primitive animates, so there is nothing for `prefers-reduced-motion` to suppr
 test suite, not assumed. See [Accessibility](/docs/accessibility) for how the rest of the library is
 verified.
 
+### State is never colour alone
+
+Status, severity and reading state are each a glyph with its own silhouette *and* a word, and offline is a
+dashed edge as well as a muted one. A requested value and a confirmed one differ by shape and text, not by hue.
+
+### Live regions are rare
+
+`CommandLifecycle` and `AutomationBuilder` each have one polite `role="status"`; `PairingFailure` is a
+`role="alert"`. Nothing else announces, and a live region announces *changes*, so nothing is spoken on first render.
+
+### Charts and scroll regions
+
+`TelemetryTrend` prints its bounds and a summary as text and offers a "View data" table, so the plot is never the
+only way to reach a number. Any region that scrolls horizontally must be focusable and named; the website's
+examples use `role="region"`, an accessible name and `tabindex="0"`.
+
+## Right-to-left
+
+The components use logical properties (`ms-`, `ps-`, `text-start`) rather than left and right, so a
+right-to-left page mirrors without a second stylesheet, and `DevicePowerControl` reverses its knob travel with
+Tailwind's `rtl:` variant. Two deliberate exceptions keep their direction: **the time axis of `TelemetryTrend`
+stays left-to-right**, because time is drawn one way on a plot in every reading direction, and identifiers, code
+and units should be wrapped in `dir="ltr"` inside right-to-left text. If you set `dir` on a Radix-based
+wrapper of your own, pass it through so arrow keys follow the reading order.
+
+## Simulation
+
+The website's demos are driven by a small deterministic simulation that lives in the website's source, **not in
+`@kinetixui/iot`.** It exists so that a demo can show a command settling, a sensor drifting past a threshold or a
+device going quiet without a device. It is demo state, and every page that renders it says so with the
+same disclosure sentence:
+
+> Simulated — no device is contacted. Readings, commands and delays are scripted in your browser; nothing is sent
+> over a network.
+
+What it is, and is not:
+
+- **Deterministic.** A scenario is data (devices, spaces, sensors, latencies, scripted events). Readings are a
+  pure function of a seed, a sensor and elapsed time, from a seeded generator, so a given scenario and seed
+  produce the same numbers every time.
+- **An injected clock.** The simulation never reads the time itself. Its state advances when a caller passes it a
+  time, which is how the tests run it without waiting and how the React hook drives it from `performance.now`.
+  The first render is at the scenario's fixed start time, so server and client agree, and time only advances after
+  mount.
+- **It models the honest lifecycle.** A command runs through the real `@kinetixui/iot` lifecycle machine —
+  requested, acknowledged, confirmed — with per-device latency, and a device can be flaky (fail its first
+  commands), slow, or unreachable, in which case the command times out.
+- **Not an automation engine.** Where a scenario shows an automation firing, the event is a scripted entry that
+  says “Scripted demo event — KinetixUI has no automation engine, so no rule was evaluated.”
+- **Not a transport, and not a test double for one.** It is not exported, not published and not something to build
+  a product on. Your application supplies the real thing.
+- **Reduced motion.** Under `prefers-reduced-motion` ambient drift stops; a command you issued still settles.
+
+## Reference environments
+
+Three environments are published on [the overview page](/iot) as source to copy. Each is a fabricated scenario
+— nothing was measured and no device exists — and each carries the simulation disclosure.
+
+| Environment | Levels | What it exercises |
+| --- | --- | --- |
+| **Smart space** | Home → Floor → Room | Light, thermostat, plug and lock controls; air quality; a sample camera frame with no feed; energy; alerts; scenes |
+| **Agritech** | Farm → Field → Irrigation zone | Soil and climate readings; a soil-moisture trend against its threshold; valve and pump controls with a flaky valve; an irrigation rule |
+| **Operations** | Organization → Site → Line → Machine | Fleet and equipment health with a rollup at every level; energy; faults; command history |
+
+They are compositions, not components: read them, copy what fits, and replace the scenario with your own
+adapter. Alongside them the site publishes compositions for the moments above — a state-honesty demo, telemetry
+history, an alert centre, the automation builder, a pairing flow and a pump-station device detail — and the
+earlier fleet, dashboard, connected-space, telemetry-board, alert-inbox and connection-troubleshooting layouts.
+
 ## Roadmap
 
 Nothing here is scheduled, and none of it is in the module today.
 
-- **Transport adapters** — MQTT, BLE, WebSocket and HTTP polling, as separate opt-in entry points so
-  that the semantic layer stays usable without any of them
-- **IoT blocks** — a device list, a pairing flow and a telemetry panel, composed from
-  [blocks](/blocks) and these primitives
-- **Native ports** — SwiftUI, Jetpack Compose and Flutter, once the API has stopped moving
-- **Richer telemetry presentation** — sparklines and threshold bands, on the existing chart stack
+- **A grouped or scheduled command queue** — genuinely useful and genuinely a product concern. Modelling it here
+  risks becoming the engine this module refuses to be, so it waits for a real product's requirements.
+- **Optimistic updates with rollback, as an opt-in** — some products legitimately want it for low-stakes devices,
+  and it needs a rollback story before it is safe to offer.
+
+Transports, an automation engine and video are not roadmap items: they are outside what this module is.

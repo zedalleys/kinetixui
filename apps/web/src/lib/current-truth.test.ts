@@ -406,7 +406,9 @@ describe("the IoT module is described as what it is", () => {
     "app/iot/page.tsx": readFileSync("src/app/iot/page.tsx", "utf8"),
     "components/iot/module-boundary.tsx": readFileSync("src/components/iot/module-boundary.tsx", "utf8"),
     "components/iot/device-showcase.tsx": readFileSync("src/components/iot/device-showcase.tsx", "utf8"),
-    "components/iot/hero-devices.tsx": readFileSync("src/components/iot/hero-devices.tsx", "utf8"),
+    "components/iot/lab/hero-command-strip.tsx": readFileSync("src/components/iot/lab/hero-command-strip.tsx", "utf8"),
+    "components/iot/lab/lab-tabs.tsx": readFileSync("src/components/iot/lab/lab-tabs.tsx", "utf8"),
+    "components/iot/lab/lab-section.tsx": readFileSync("src/components/iot/lab/lab-section.tsx", "utf8"),
     "components/iot/example-showcase.tsx": readFileSync("src/components/iot/example-showcase.tsx", "utf8"),
     "examples/iot/demo-fleet.ts": readFileSync("src/examples/iot/demo-fleet.ts", "utf8"),
     "examples/iot/device-dashboard.tsx": readFileSync("src/examples/iot/device-dashboard.tsx", "utf8"),
@@ -470,7 +472,7 @@ describe("the IoT module is described as what it is", () => {
    * Two regions name SwiftUI, MQTT and BLE on purpose, and in both the denial lives above the line rather than
    * in it — so a sentence-scoped rule cannot see it:
    *
-   *  - the landing page's roadmap, where the unshipped columns carry `state: "planned"`;
+   *  - the landing page's roadmap, where the unshipped columns carry `state: "excluded"` or `"deferred"`;
    *  - the docs' "Not in this module" list, where the heading negates every bullet under it.
    *
    * Both are excised before the prose rules run, and the test below asserts each excised region really is the
@@ -478,7 +480,7 @@ describe("the IoT module is described as what it is", () => {
    * rules then hold everywhere else with no per-sentence exceptions to remember.
    */
   const EXCISIONS: readonly { from: string; to: string }[] = [
-    { from: 'when: "Next"', to: "export default" }, // landing page roadmap: the planned columns
+    { from: 'when: "Not in the module, by design"', to: "export default" }, // landing page roadmap: the excluded and deferred columns
     { from: "**Not in this module**", to: "## Generic on purpose" }, // docs: the negated list
     { from: "## Roadmap", to: "\u0000" }, // docs: the roadmap, which runs to the end of the file
   ];
@@ -497,9 +499,10 @@ describe("the IoT module is described as what it is", () => {
 
   it("excises only regions that are explicitly not-shipped", () => {
     const page = IOT_SURFACES["app/iot/page.tsx"];
-    const roadmap = page.slice(page.indexOf('when: "Next"'), page.indexOf("export default"));
-    expect(roadmap, "the excised roadmap region should be the unshipped columns").toMatch(/state:\s*"planned"/);
-    expect(roadmap, "and must not contain the shipped column").not.toMatch(/state:\s*"now"/);
+    const roadmap = page.slice(page.indexOf('when: "Not in the module, by design"'), page.indexOf("export default"));
+    expect(roadmap, "the excised roadmap region should be the unshipped columns").toMatch(/state:\s*"excluded"/);
+    expect(roadmap).toMatch(/state:\s*"deferred"/);
+    expect(roadmap, "and must not contain the shipped column").not.toMatch(/state:\s*"shipped"/);
 
     const docs = IOT_SURFACES["docs/iot"];
     const notInModule = docs.slice(docs.indexOf("**Not in this module**"), docs.indexOf("## Generic on purpose"));
@@ -630,16 +633,19 @@ describe("the IoT module is described as what it is", () => {
 
   it("marks every roadmap item that has not shipped", () => {
     const page = IOT_SURFACES["app/iot/page.tsx"];
-    // The unshipped columns carry `state: "planned"`, and the badge for them reads "Planned".
-    expect(page).toMatch(/state:\s*"planned"/);
-    expect(page).toMatch(/"Planned"/);
-    // Blocks, adapters and native ports appear only inside a planned column — never in the shipped one.
-    const shippedColumn = page.slice(page.indexOf('state: "now"'), page.indexOf('when: "Next"'));
-    for (const unshipped of ["block", "adapter", "MQTT", "SwiftUI", "dashboard", "wizard"]) {
-      expect(shippedColumn.toLowerCase(), `"${unshipped}" must not be listed as shipped`).not.toContain(
-        unshipped.toLowerCase(),
-      );
+    // The unshipped groups carry `state: "excluded"` or `"deferred"`, and their badges say so.
+    expect(page).toMatch(/state:\s*"excluded"/);
+    expect(page).toMatch(/state:\s*"deferred"/);
+    expect(page).toMatch(/"Excluded"/);
+    expect(page).toMatch(/"Deferred"/);
+    // Transports, adapters, native ports and engines appear only inside a non-shipped group — never in the shipped one.
+    const shippedGroup = page.slice(page.indexOf('state: "shipped"'), page.indexOf('when: "Not in the module, by design"'));
+    for (const unshipped of ["adapter", "MQTT", "SwiftUI", "engine", "video", "protocol"]) {
+      expect(shippedGroup.toLowerCase(), `"${unshipped}" must not be listed as shipped`).not.toContain(unshipped.toLowerCase());
     }
+    // And the roadmap carries no date and no "coming soon".
+    const roadmap = page.slice(page.indexOf("const ROADMAP"), page.indexOf("export default"));
+    expect(roadmap).not.toMatch(/coming soon|\bQ[1-4]\b|\b20\d\d\b/i);
   });
 });
 

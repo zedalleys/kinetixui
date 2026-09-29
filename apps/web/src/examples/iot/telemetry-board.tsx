@@ -17,7 +17,7 @@ export function TelemetryBoardExample() {
       {/* The trend on its own, at the size a detail view would give it. The two dropouts in the load
           series are breaks in the line and a count in the footer — never interpolated across. */}
       <figure className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
-        <figcaption className="text-label-sm uppercase tracking-[0.12em] text-muted-foreground">
+        <figcaption className="text-label-sm uppercase tracking-wide text-muted-foreground">
           Load · last 3 hours
         </figcaption>
         <TelemetryTrend series={DEMO_SERIES.load} precision={1} height={120} />

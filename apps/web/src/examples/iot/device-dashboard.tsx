@@ -164,7 +164,7 @@ export function DeviceDashboardExample() {
             and a section below it on narrow ones. */}
         <aside aria-label={`Detail: ${selected.name}`} className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
           <div className="flex flex-col gap-1">
-            <span className="text-label-sm uppercase tracking-[0.12em] text-muted-foreground">Selected device</span>
+            <span className="text-label-sm uppercase tracking-wide text-muted-foreground">Selected device</span>
             <span className="text-title-sm text-foreground">{selected.name}</span>
             <span className="text-label-sm text-muted-foreground">{selected.locationName}</span>
           </div>
@@ -252,7 +252,7 @@ export function DeviceDashboardExample() {
       {/* ---------------------------------------------------------------- alerts + activity */}
       <div className="grid gap-4 lg:grid-cols-2">
         <section aria-label="Alerts" className="flex flex-col gap-2">
-          <h4 className="text-label-sm uppercase tracking-[0.12em] text-muted-foreground">Alerts</h4>
+          <h4 className="text-label-sm uppercase tracking-wide text-muted-foreground">Alerts</h4>
           {openAlerts.length === 0 ? (
             <p className="rounded-lg border border-dashed border-border p-4 text-label-md text-muted-foreground">
               Nothing unacknowledged.
@@ -283,12 +283,12 @@ export function DeviceDashboardExample() {
         </section>
 
         <section aria-label="Activity" className="flex flex-col gap-2">
-          <h4 className="text-label-sm uppercase tracking-[0.12em] text-muted-foreground">Recent commands</h4>
+          <h4 className="text-label-sm uppercase tracking-wide text-muted-foreground">Recent commands</h4>
           {/* The time-rail activity list: the timestamp gutter is the structure, not a trailing note. */}
           <ul className="flex flex-col">
             {DEMO_COMMANDS.map((command) => (
               <li key={command.id} className="grid grid-cols-[auto_1fr] gap-3 border-s border-border ps-4 pb-4 last:pb-0">
-                <span aria-hidden="true" className="-ms-[1.3rem] mt-1.5 size-2 rounded-full bg-border" />
+                <span aria-hidden="true" className="-ms-5 mt-1.5 size-2 rounded-full bg-border" />
                 <span className="flex flex-col gap-0.5">
                   <span className="text-label-md text-foreground">{deviceById(command.deviceId).name}</span>
                   <CommandStatus command={command} showName now={DEMO_NOW} />

@@ -10,6 +10,14 @@
  * ship without a preview and a preview cannot linger after its example is gone.
  */
 import type { ComponentType } from "react";
+import { AgritechEnvironmentExample } from "@/examples/iot/agritech-environment";
+import { AlertCenterExample } from "@/examples/iot/alert-center";
+import { AutomationBuilderExample } from "@/examples/iot/automation-builder";
+import { OperationsEnvironmentExample } from "@/examples/iot/operations-environment";
+import { PairingFlowExample } from "@/examples/iot/pairing-flow";
+import { SmartSpaceEnvironmentExample } from "@/examples/iot/smart-space-environment";
+import { StateHonestyExample } from "@/examples/iot/state-honesty";
+import { TelemetryHistoryExample } from "@/examples/iot/telemetry-history";
 import { AlertInboxExample } from "@/examples/iot/alert-inbox";
 import { ConnectedSpaceExample } from "@/examples/iot/connected-space";
 import { ConnectionTroubleshootingExample } from "@/examples/iot/connection-troubleshooting";
@@ -19,6 +27,14 @@ import { DeviceFleetExample } from "@/examples/iot/device-fleet";
 import { TelemetryBoardExample } from "@/examples/iot/telemetry-board";
 
 export const iotPreviews: Record<string, ComponentType> = {
+  "state-honesty": StateHonestyExample,
+  "smart-space-environment": SmartSpaceEnvironmentExample,
+  "agritech-environment": AgritechEnvironmentExample,
+  "operations-environment": OperationsEnvironmentExample,
+  "automation-builder": AutomationBuilderExample,
+  "pairing-flow": PairingFlowExample,
+  "telemetry-history": TelemetryHistoryExample,
+  "alert-center": AlertCenterExample,
   "device-fleet": DeviceFleetExample,
   "device-detail": DeviceDetailExample,
   "telemetry-board": TelemetryBoardExample,

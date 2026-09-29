@@ -19,6 +19,133 @@
     "copies and the composition they are looking at are one artifact rather than two that drift."
   ],
   "examples": {
+    "state-honesty": {
+      "title": "Requested is not confirmed",
+      "description": "A live demo of the gap most device UIs hide: what you asked for against what the device reported, through acknowledged, confirmed, failed, timed out and unreachable.",
+      "uses": [
+        "CommandLifecycle",
+        "DevicePowerControl",
+        "DeviceModeControl"
+      ],
+      "source": "apps/web/src/examples/iot/state-honesty.tsx"
+    },
+    "smart-space-environment": {
+      "title": "Smart space environment",
+      "description": "A home end to end: rooms with rolled-up health, light, thermostat, plug and lock controls, air quality, a sample camera frame, energy, alerts and scenes.",
+      "uses": [
+        "SpaceBreadcrumb",
+        "SpaceRollup",
+        "DeviceGroupCard",
+        "DeviceControlCard",
+        "DevicePowerControl",
+        "DeviceLevelControl",
+        "DeviceSetpointControl",
+        "DeviceModeControl",
+        "TelemetryGrid",
+        "TelemetryMetric",
+        "CameraDeviceCard",
+        "EnergySummary",
+        "AlertList",
+        "RoutineCard",
+        "CommandLifecycle"
+      ],
+      "source": "apps/web/src/examples/iot/smart-space-environment.tsx"
+    },
+    "agritech-environment": {
+      "title": "Agritech environment",
+      "description": "Greenhouse A: climate and soil readings, a soil-moisture trend against its 28% threshold, valve and pump controls with a flaky valve, zones, alerts and the irrigation rule.",
+      "uses": [
+        "TelemetryGrid",
+        "TelemetryMetric",
+        "TelemetryTrend",
+        "DeviceControlCard",
+        "DeviceModeControl",
+        "DevicePowerControl",
+        "DeviceGroupCard",
+        "SpaceRollup",
+        "DeviceHealthSummary",
+        "AlertList",
+        "AutomationRuleView",
+        "ActivityTimeline",
+        "CommandLifecycle"
+      ],
+      "source": "apps/web/src/examples/iot/agritech-environment.tsx"
+    },
+    "operations-environment": {
+      "title": "Operations environment",
+      "description": "Site 04: fleet health, an Organization to Machine hierarchy with a rollup at every level, equipment health, energy, faults and the command history.",
+      "uses": [
+        "DeviceHealthSummary",
+        "SpaceBreadcrumb",
+        "SpaceRollup",
+        "TelemetryGrid",
+        "TelemetryMetric",
+        "TelemetryTrend",
+        "DeviceControlCard",
+        "EnergySummary",
+        "AlertList",
+        "ActivityTimeline"
+      ],
+      "source": "apps/web/src/examples/iot/operations-environment.tsx"
+    },
+    "device-detail": {
+      "title": "Device detail",
+      "description": "The flagship: one pump in full, with Overview, Controls, Telemetry, Automations, Activity and Settings tabs, and every command showing requested against confirmed.",
+      "uses": [
+        "DeviceIdentity",
+        "DeviceStatusBadge",
+        "LastSync",
+        "ConnectionHealth",
+        "TelemetryGrid",
+        "TelemetryTrend",
+        "AlertList",
+        "DeviceControlCard",
+        "DevicePowerControl",
+        "RoutineCard",
+        "AutomationRuleView",
+        "ActivityTimeline",
+        "CommandLifecycle"
+      ],
+      "source": "apps/web/src/examples/iot/device-detail.tsx"
+    },
+    "automation-builder": {
+      "title": "Automation builder",
+      "description": "A structured rule editor wired to farm vocabulary, starting from the Zone 3 irrigation rule, with inline validation and a saved-as-demo confirmation.",
+      "uses": [
+        "AutomationBuilder",
+        "AutomationRuleView"
+      ],
+      "source": "apps/web/src/examples/iot/automation-builder.tsx"
+    },
+    "pairing-flow": {
+      "title": "Pairing flow",
+      "description": "Nine steps from choosing a method to done, driven by the package's pairing state machine, with real failure and recovery states.",
+      "uses": [
+        "PairingMethodPicker",
+        "PairingStepper",
+        "PairingFailure"
+      ],
+      "source": "apps/web/src/examples/iot/pairing-flow.tsx"
+    },
+    "telemetry-history": {
+      "title": "Telemetry history",
+      "description": "Twelve kinds of reading in normal, warning, critical, stale and unavailable states, and trends with a time range, gaps, threshold bands and a data table.",
+      "uses": [
+        "TelemetryGrid",
+        "TelemetryMetric",
+        "TelemetryTrend"
+      ],
+      "source": "apps/web/src/examples/iot/telemetry-history.tsx"
+    },
+    "alert-center": {
+      "title": "Alert centre",
+      "description": "Fleet health above an alert list, with an acknowledge flow that keeps acknowledged distinct from resolved.",
+      "uses": [
+        "AlertList",
+        "DeviceHealthSummary"
+      ],
+      "source": "apps/web/src/examples/iot/alert-center.tsx"
+    },
     "device-fleet": {
       "title": "Device overview",
       "description": "A fleet at a glance: identity, state, key reading, battery, signal and last contact, worst first.",
@@ -27,17 +154,6 @@
         "DeviceStateSummary"
       ],
       "source": "apps/web/src/examples/iot/device-fleet.tsx"
-    },
-    "device-detail": {
-      "title": "Device detail",
-      "description": "One device in full: connection health, telemetry, firmware, and the commands sent to it.",
-      "uses": [
-        "ConnectionHealth",
-        "TelemetryCard",
-        "FirmwareStatus",
-        "CommandStatus"
-      ],
-      "source": "apps/web/src/examples/iot/device-detail.tsx"
     },
     "telemetry-board": {
       "title": "Telemetry board",

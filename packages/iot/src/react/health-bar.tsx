@@ -45,7 +45,7 @@ const SEGMENT: Record<HealthBucket, string> = {
   offline: "border-4 border-double border-muted-foreground bg-muted",
 };
 
-const GLYPH: Record<HealthBucket, GlyphName> = { ...HEALTH_GLYPH, offline: "slash" };
+const bucketGlyph = (bucket: HealthBucket): GlyphName => (bucket === "offline" ? "slash" : HEALTH_GLYPH[bucket]);
 const WORD: Record<HealthBucket, string> = {
   healthy: "healthy",
   degraded: "degraded",
@@ -106,7 +106,7 @@ export function HealthBar({ buckets, compact = false }: { buckets: HealthBuckets
         <ul aria-hidden="true" className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0">
           {present.map((key) => (
             <li key={key} data-legend={key} className="inline-flex items-center gap-1.5 text-label-sm text-foreground">
-              <Glyph name={GLYPH[key]} size={12} />
+              <Glyph name={bucketGlyph(key)} size={12} />
               <span className="tabular-nums">{buckets[key]}</span>
               <span>{key === "unknown" ? "Health unknown" : key === "offline" ? "Offline" : describeDeviceHealth(key)}</span>
             </li>
