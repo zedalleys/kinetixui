@@ -397,13 +397,36 @@ const emit = (id, svg, meta) => {
 ${text(80, 190, "KinetixUI", { size: 76, weight: 700 })}
 ${text(80, 268, "A design system for teams on more than one platform", { size: 34, fill: T.fg })}
 ${text(80, 318, "with cross-platform claims verified against source in CI.", { size: 34, fill: T.primary })}
-${platformRows.map((p, i) => {
-  const x = 80 + i * 228;
-  return box(x, 390, 208, 118, { fill: T.surface, r: 10 })
-    + text(x + 20, 428, p.label, { size: 20, weight: 600 })
-    + text(x + 20, 462, `${p.covered}/${p.total}`, { size: 26, weight: 700, font: T.mono, fill: T.primary })
-    + text(x + 20, 490, p.published ? "on npm" : "from source", { size: 16, font: T.mono, fill: T.muted });
-}).join("")}
+${(() => {
+  // The cards are sized to their labels, not to a single width, because one label is an outlier:
+  // "Jetpack Compose" measures 196px at size 20 against 89px for the next widest (Angular). Five
+  // equal cards have to fit the 1120px between the 80px margins, and fitting 196px plus padding
+  // would need every card to be 228 wide — 1140px before a single gap. The old layout used 208 and
+  // the label painted 8px past its own rectangle.
+  //
+  // Shrinking the label is not available: MIN_FONT clamps every string to 20px so that a card scaled
+  // to a 390px feed stays readable, and it silently clamped an attempt to set 17 here. Shortening
+  // the label is not available either — it is the platform's name, from the manifest.
+  //
+  // So each card takes the width its own label needs, and the leftover is shared as equal gaps.
+  // CHAR_W is a calibrated upper bound for Inter 600 at 20px: the five real labels measure between
+  // 11.1 and 13.1 px per character, so 13.5 over-estimates every one of them. Over-estimating is the
+  // safe direction — it buys slack rather than spending it. Verify after changing any of this: SVG
+  // text paints past its rectangle silently, so an overflow shows up in a screenshot and in nothing
+  // a DOM scan reports.
+  const pad = 16, MIN_CARD = 200, CHAR_W = 13.5, ROW = 1120, LEFT = 80;
+  const widths = platformRows.map((p) => Math.max(MIN_CARD, pad * 2 + Math.ceil(p.label.length * CHAR_W)));
+  const gap = Math.floor((ROW - widths.reduce((a, b) => a + b, 0)) / (widths.length - 1));
+  let x = LEFT;
+  return platformRows.map((p, i) => {
+    const cardX = x;
+    x += widths[i] + gap;
+    return box(cardX, 390, widths[i], 118, { fill: T.surface, r: 10 })
+      + text(cardX + pad, 428, p.label, { size: 20, weight: 600 })
+      + text(cardX + pad, 462, `${p.covered}/${p.total}`, { size: 26, weight: 700, font: T.mono, fill: T.primary })
+      + text(cardX + pad, 490, p.published ? "on npm" : "from source", { size: 20, font: T.mono, fill: T.muted });
+  }).join("");
+})()}
 ${text(80, 578, "MIT · kinetixui.com", { size: 22, fill: T.muted, font: T.mono })}
 </svg>`;
   emit("SOCIAL-PREVIEW", svg, {
