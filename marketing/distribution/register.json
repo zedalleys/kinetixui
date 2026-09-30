@@ -5,7 +5,8 @@
     "attribution is null where the channel carries no tracked link on purpose (community, outreach). That is a decision, not a gap -- see README.md section 5.",
     "Rows for days 1-14 were DERIVED from marketing/content/register.json rather than typed, so the two cannot disagree.",
     "Validated by `pnpm check:distribution`, which re-derives every field from the content register and the site routes and fails on any drift.",
-    "Append rows for days 15-30 when those days are reached. This file is a log, not a plan: marketing/content/calendar.md is the schedule."
+    "Append rows for days 15-30 when those days are reached. This file is a log, not a plan: marketing/content/calendar.md is the schedule.",
+    "amplification is a SEPARATE log for paid promotion of an already-published asset. It is not a row, because a boost is not an act of publishing, and it never changes the organic row's date, result or copy. The row points at it so its counts cannot be read as organic-only. Unknowns stay null: a guessed spend or boost window is worse than an absent one."
   ],
   "rowShape": {
     "date": "YYYY-MM-DD, the day it actually went out. null while planned",
@@ -19,6 +20,18 @@
     "status": "planned | published | skipped | blocked",
     "result": "free text, written after. Absolute counts only until analytics.md section 10's baseline window closes"
   },
+  "amplificationShape": {
+    "id": "amp-NNN, referenced by the `amplification` field on the row it amplifies",
+    "asset": "an id from marketing/content/register.json, and it must already be published",
+    "channel": "same vocabulary as a row's channel",
+    "type": "boosted-post | ad-campaign",
+    "durationDays": "whole days the amplification runs, or null if not known",
+    "startedOn": "YYYY-MM-DD or null. NEVER guessed",
+    "endedOn": "YYYY-MM-DD or null. NEVER guessed",
+    "spend": "an object once the platform reports it, else null. NEVER guessed",
+    "platformMetrics": "impressions/clicks/CPM/CPC/CTR as the platform reports them, else null. NEVER guessed",
+    "note": "free text. Must carry the measurement rule: traffic during the window is not purely organic"
+  },
   "channels": [
     "linkedin",
     "x",
@@ -27,6 +40,20 @@
     "github",
     "community",
     "outreach"
+  ],
+  "amplification": [
+    {
+      "id": "amp-001",
+      "asset": "LI-003",
+      "channel": "linkedin",
+      "type": "boosted-post",
+      "durationDays": 4,
+      "startedOn": null,
+      "endedOn": null,
+      "spend": null,
+      "platformMetrics": null,
+      "note": "Paid amplification of the ALREADY-PUBLISHED LI-003. This is not a second act of publishing and not a new asset: the organic row keeps its own date, result and copy. Only four facts are known and recorded \u2014 the asset, the channel, that it is a boosted post, and that it runs four days. Start and end dates, spend, impressions, clicks, CPM, CPC, CTR, audience settings and any LinkedIn campaign id are NOT known and are left null rather than guessed. MEASUREMENT RULE: arrivals during the boost window are not purely organic LI-003 performance and must never be reported as such. Two things follow. First, it is not known whether the counts already recorded on the organic row fall inside the boost window, so they cannot be called organic-only either. Second, a LinkedIn boost normally promotes the original post, which carries the original tagged URL \u2014 so paid and organic arrivals reach us with the same kx_source, kx_campaign and kx_content and are INDISTINGUISHABLE in first-party data. Unless a separate tagged URL was used, the end-of-boost comparison can set LinkedIn's reported figures beside our session counts, but cannot split our sessions into paid and organic. Confirm which link the boost served before any such comparison."
+    }
   ],
   "notYetRoutes": [
     "/blog"
@@ -51,6 +78,7 @@
       "linkPlacement": "in the post body",
       "secondary": null,
       "communityReuse": null,
+      "amplification": "amp-001",
       "metricToWatch": "kx_p2_a_drift sessions; any arrival at /docs/platforms",
       "status": "published",
       "result": "5 sessions carried kx_p2_a_drift; 1 reached Qualified Evaluation; 0 reached Adoption Intent. Attribution pipeline confirmed working end to end \u2014 campaign, medium and content arrived intact, and the funnel vocabulary was already deployed (#253, 2026-09-29 12:43 UTC). One early session recorded kx_source=other while campaign, medium and content survived; the register's own URL cannot produce that, so a variant link was used for that click. The raw value is discarded by design and was not recovered, and this is logged as a single observation, not a defect. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open, so no rate is computed and no conclusion drawn."

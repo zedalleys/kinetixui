@@ -83,8 +83,10 @@ forcing it in would cost a stronger asset its slot. Revisit in month two.
 
 **By ICP** — P1: 15 · P2: 8 · NEUTRAL: 4. Skewed to P1, and worth being honest about why: two finished
 campaign sets already existed as P1 material, so the skew is inherited rather than chosen. It is a real
-limitation of the first month's comparison — week 1's deliberate pair (LI-003 vs LI-004) is the cleanest
-test in the month, and the P2 assets are concentrated in weeks 2 and 4.
+limitation of the first month's comparison — week 1's deliberate pair (LI-003 vs LI-004) was meant to be
+the cleanest test in the month, and the P2 assets are concentrated in weeks 2 and 4. That pair is no longer
+clean: LI-003 took a four-day paid boost and LI-004 did not, so the two arms differ in distribution as well
+as message. See `../distribution/README.md` §P1/P2 sequencing.
 
 **By stage** — Awareness: 12 · Evaluation: 13 · Adoption intent: 2. Weighted toward evaluation on purpose:
 `STRATEGY.md` §7 names Credibility as the narrowest point in the funnel.
