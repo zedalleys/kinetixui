@@ -56,16 +56,16 @@
         "TelemetryGrid",
         "TelemetryMetric",
         "TelemetryTrend",
-        "DeviceControlCard",
         "DeviceModeControl",
         "DevicePowerControl",
         "DeviceGroupCard",
-        "SpaceRollup",
         "DeviceHealthSummary",
         "AlertList",
         "AutomationRuleView",
         "ActivityTimeline",
-        "CommandLifecycle"
+        "CommandLifecycle",
+        "BatteryIndicator",
+        "RoutineCard"
       ],
       "source": "apps/web/src/examples/iot/agritech-environment.tsx"
     },
