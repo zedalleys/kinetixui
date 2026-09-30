@@ -95,19 +95,18 @@
       "title": "Device detail",
       "description": "The flagship: one pump in full, with Overview, Controls, Telemetry, Automations, Activity and Settings tabs, and every command showing requested against confirmed.",
       "uses": [
-        "DeviceIdentity",
         "DeviceStatusBadge",
         "LastSync",
         "ConnectionHealth",
-        "TelemetryGrid",
         "TelemetryTrend",
         "AlertList",
-        "DeviceControlCard",
         "DevicePowerControl",
         "RoutineCard",
         "AutomationRuleView",
         "ActivityTimeline",
-        "CommandLifecycle"
+        "CommandLifecycle",
+        "SpaceBreadcrumb",
+        "TelemetryMetric"
       ],
       "source": "apps/web/src/examples/iot/device-detail.tsx"
     },

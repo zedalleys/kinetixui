@@ -145,7 +145,8 @@ describe.each(EXAMPLES)("%s", (_slug, make) => {
       rules: { "color-contrast": { enabled: false }, region: { enabled: false }, "landmark-one-main": { enabled: false }, "page-has-heading-one": { enabled: false } },
     });
     expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`)).toEqual([]);
-  });
+    // The environment compositions are large; axe on them takes seconds, and more under a parallel suite.
+  }, 30_000);
 });
 
 // ------------------------------------------------------------------------------------------------

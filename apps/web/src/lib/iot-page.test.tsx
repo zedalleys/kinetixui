@@ -313,7 +313,7 @@ describe("/iot: interactive examples load on demand", () => {
   it("mounts a section's real example when it nears the viewport", async () => {
     const { container } = render(<IotPage />);
     intersect('[data-lazy-preview="device-detail"]');
-    expect(await screen.findByRole("tablist", { name: "Pump Station sections" })).toBeInTheDocument();
+    expect(await screen.findByRole("article", { name: "Pump Station detail" })).toBeInTheDocument();
     expect(container.querySelector('[data-lazy-preview="device-detail"] [data-preview-placeholder]')).toBeNull();
     // A neighbour that has not intersected stays a placeholder.
     expect(container.querySelector('[data-lazy-preview="pairing-flow"] [data-preview-placeholder]')).not.toBeNull();
