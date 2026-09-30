@@ -27,14 +27,12 @@ import {
   IconCluster,
   Panel,
   PillSelector,
-  RailGroup,
   RailItem,
   RailList,
   ShowcaseShell,
   SpaceCanvas,
   SpaceHeader,
   Stat,
-  SummaryChip,
   Tile,
   type HotspotState,
   type PlanHotspot,
@@ -63,11 +61,21 @@ import { SimNotice, SimTransport, controlOf, deviceOf, readingOf, statusLineOf, 
  * last CONFIRMED. A request is drawn beside it as a dashed "requested, not yet confirmed" mark, and a failed
  * or unreachable one keeps the last confirmed value and offers Retry (never automatic).
  *
+ * On a phone the header is ranked rather than laid out flat. PRIMARY is where you are and what needs you:
+ * the house mark, the home's name, and ONE summary status line ("7 of 9 online · 3 need attention")
+ * carried by a glyph and words, followed immediately by the floor/room navigation, which is what a phone
+ * visitor is actually here to press. SECONDARY is the metadata that explains it: the fabricated address and
+ * the simulated clock, quieter and on their own line, wrapping rather than truncating. TERTIARY — energy,
+ * activity, scenes — is already behind disclosures in the aside. Nothing truthful is hidden: warnings, stale
+ * readings, offline devices, open alerts, requested values and Retry stay where they were.
+ *
  * SIMULATED. No device is contacted and nothing is sent over a network. The camera shows a labelled sample
  * frame, never video. Scenes and routines are shown, not executed: KinetixUI has no automation engine.
  */
 const DAY_MS = 86_400_000;
 const HOME = "home";
+/** Fabricated, and said so. Metadata, not identity: it is quiet, it wraps, and it is never ellipsised. */
+const HOME_ADDRESS = "12 Example Lane, Sample City (fabricated)";
 /** How many of a day's events the aside shows before the rest are grouped behind their real count. */
 const ACTIVITY_HEAD = 3;
 /**
@@ -199,6 +207,38 @@ function ambientOf(iot: UseIotSimulation, roomId: string) {
   };
   return { temperature: read("temperature"), humidity: read("humidity") };
 }
+
+/**
+ * A floor and its rooms inside the rail.
+ *
+ * Same structure as the kit's `RailGroup` — a labelled nested list — with one difference that only applies
+ * below `sm`: one room per row. A two-column grid at 326px leaves about 50px for the room name, which both
+ * clips the name and leaves a dead cell beside a floor with an odd number of rooms. One column per room is
+ * shorter in total (nothing wraps to three lines), leaves the temperature and the warning glyph room to sit
+ * on the name's line, and reads as a list you scan rather than a ragged grid. From `sm` the kit's own
+ * three-column grid and `lg` single-column rail are unchanged.
+ */
+function FloorGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  const id = React.useId();
+  return (
+    <li className="flex flex-col gap-2 lg:gap-1">
+      <p id={id} className="px-1 text-label-md uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <ul aria-labelledby={id} className="flex flex-col gap-2 sm:grid sm:grid-cols-3 lg:flex lg:flex-col lg:gap-1">
+        {children}
+      </ul>
+    </li>
+  );
+}
+
+/**
+ * `break-words` is inherited, so it reaches the rail item's own name span: a room name wider than its column
+ * breaks instead of spilling past the tile. Below `sm` — where the rail is the first thing a phone visitor
+ * reaches and the room tiles are full-width rows — the selected room also takes an inset ring, because a 10%
+ * tint alone is not an obvious selection at arm's length. From `sm` the rail is exactly as it was.
+ */
+const railItemClass = (selected: boolean) => (selected ? "break-words ring-2 ring-inset ring-primary sm:ring-0" : "break-words");
 
 const rollupWords = (r: { total: number; offline: number; warning: number; critical: number }) => {
   const parts = [r.critical ? `${r.critical} critical` : "", r.warning ? `${r.warning} needs attention` : "", r.offline ? `${r.offline} offline` : ""].filter(Boolean);
@@ -449,18 +489,26 @@ export function SmartSpaceEnvironmentExample() {
   const airState = selectReading(sim, "air-living", "air-quality")?.evaluation.state;
   const airShown: ShowcaseState = airState === "warning" ? "warning" : airState === "critical" ? "critical" : "confirmed";
 
+  // One summary status line, not two chips racing the title: how much of the home is reachable and how much
+  // of it wants you, in one sentence, with the kit's glyph so the state is never colour alone.
+  const summaryLine = `${online} of ${allViews.length} online · ${needAttention} ${needAttention === 1 ? "needs" : "need"} attention`;
+
   const header = (
     <SpaceHeader
       eyebrow={`Home · ${floors.length} floors`}
       title={spaces.find((s) => s.id === HOME)?.name ?? "Home"}
-      location="12 Example Lane, Sample City (fabricated)"
       identity={<HouseMark />}
+      status={needAttention ? "warning" : "confirmed"}
+      statusWord={<bdi>{summaryLine}</bdi>}
       chips={
-        <>
-          <SummaryChip label="Online" value={`${online} of ${allViews.length}`} />
-          <SummaryChip label="Attention" value={needAttention} />
-          <SummaryChip label="Simulated clock" value={clock} />
-        </>
+        // Secondary metadata, one quiet block rather than three pills racing the title: the fabricated address
+        // and the simulated clock. It shares its row with the icon buttons instead of pushing them onto a row
+        // of their own, and it wraps — a truncated address tells you neither the street nor that it is fake.
+        // "Simulated" stays in the words: that is a truth claim about the clock, not decoration.
+        <p className="flex min-w-0 flex-1 flex-col gap-0.5 text-body-sm text-muted-foreground md:flex-none md:flex-row md:items-center md:gap-2">
+          <bdi>{HOME_ADDRESS}</bdi>
+          <bdi className="tabular-nums">Simulated clock {clock}</bdi>
+        </p>
       }
       actions={
         <IconCluster label="Home">
@@ -485,9 +533,10 @@ export function SmartSpaceEnvironmentExample() {
         healthWord={homeRollup ? rollupWords(homeRollup) : undefined}
         selected={spaceId === HOME}
         onSelect={() => selectRoom(HOME)}
+        className={railItemClass(spaceId === HOME)}
       />
       {floors.map((floor) => (
-        <RailGroup key={floor.id} label={floor.name}>
+        <FloorGroup key={floor.id} label={floor.name}>
           {spaces
             .filter((s) => s.parentId === floor.id)
             .map((r) => {
@@ -504,10 +553,11 @@ export function SmartSpaceEnvironmentExample() {
                   count={rollup.total}
                   selected={spaceId === r.id}
                   onSelect={() => selectRoom(r.id)}
+                  className={railItemClass(spaceId === r.id)}
                 />
               );
             })}
-        </RailGroup>
+        </FloorGroup>
       ))}
     </RailList>
   );
@@ -537,9 +587,12 @@ export function SmartSpaceEnvironmentExample() {
             </bdi>
           </p>
         </div>
+        {/* The room's temperature is context for the controls below, not the primary value of the screen, so
+            on a phone it is a reading beside the room name rather than a second display-sized number racing
+            it. From `sm` it keeps the size it had. */}
         {ambientHere?.temperature ? (
           <p className="flex flex-col items-start sm:items-end">
-            <span className="text-display-sm tabular-nums text-foreground">
+            <span className="text-headline-sm tabular-nums text-foreground sm:text-display-sm">
               <bdi>{ambientHere.temperature.text}</bdi>
             </span>
             <span className="text-body-sm text-muted-foreground">Room temperature · {ambientHere.temperature.source}</span>

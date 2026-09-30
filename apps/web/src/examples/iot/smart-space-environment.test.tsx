@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen, within } from "@testing-librar
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SmartSpaceEnvironmentExample } from "./smart-space-environment";
-import { smartSpaceAlerts, smartSpaceAutomations } from "./scenarios/smart-space";
+import { smartSpaceAlerts, smartSpaceAutomations, smartSpaceSpaces } from "./scenarios/smart-space";
 
 /** The scenario's own alerts, split the way the aside splits them. Real data, never a typed-in number. */
 const openAlerts = smartSpaceAlerts.filter((a) => !a.acknowledgedAt && !a.resolvedAt);
@@ -176,6 +176,77 @@ describe("smart space: connected space", () => {
     for (const routine of selfRunning) expect(within(group).getByText(routine.name)).toBeInTheDocument();
     // The honesty line covers both groups and stays outside them.
     expect(group.contains(screen.getByText(/Shown, not executed/))).toBe(false);
+  });
+
+  // ---- the phone header is ranked: one summary line, quiet metadata, then the rooms ----
+
+  it("says how much is online and how much needs attention in ONE summary line, not two chips", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    const summary = screen.getByText(/^\d+ of \d+ online · \d+ needs? attention$/);
+    expect(summary).toBeInTheDocument();
+    // The attention count no longer stands as its own labelled chip beside the title.
+    expect(screen.queryByText("Attention", { selector: "span" })).toBeNull();
+    // The attention half of the line is the scenario's own open alerts, not a typed-in number.
+    expect(summary.textContent).toMatch(new RegExp(`· ${openAlerts.length} needs? attention$`));
+  });
+
+  it("prints the fabricated address in full, quietly, and never behind an ellipsis", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    const address = screen.getByText("12 Example Lane, Sample City (fabricated)");
+    expect(address.className).not.toMatch(/truncate/);
+    expect(address.closest(".truncate")).toBeNull();
+    expect(address.closest("p")!.className).toMatch(/text-body-sm/);
+  });
+
+  it("keeps the clock labelled as simulated even though it is demoted to metadata", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    expect(screen.getByText(/^Simulated clock \d\d:\d\d UTC$/)).toBeInTheDocument();
+  });
+
+  it("gives each floor a labelled list of its rooms, one room per row below `sm`", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    const floors = smartSpaceSpaces.filter((s) => s.kind === "floor");
+    expect(floors.length).toBeGreaterThan(0);
+    for (const floor of floors) {
+      const list = screen.getByRole("list", { name: floor.name });
+      // A two-column grid at phone width clipped the names and left a dead cell beside an odd room count.
+      expect(list.className).not.toMatch(/(^|\s)grid(\s|$)|grid-cols-2/);
+      expect(list.className).toMatch(/flex flex-col/);
+      expect(list.className).toMatch(/sm:grid-cols-3/);
+      const rooms = smartSpaceSpaces.filter((s) => s.parentId === floor.id);
+      expect(within(list).getAllByRole("button").length).toBe(rooms.length);
+      for (const room of rooms) expect(within(list).getByRole("button", { name: new RegExp(room.name) })).toBeInTheDocument();
+    }
+  });
+
+  it("breaks a room name that is wider than its tile instead of letting it spill", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    for (const button of rail().getAllByRole("button")) expect(button.className).toMatch(/break-words/);
+  });
+
+  it("marks the selected room with more than a tint below `sm`, and moves the mark when the room changes", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    const selectedRing = /ring-2 ring-inset ring-primary sm:ring-0/;
+    expect(rail().getByRole("button", { name: /Hallway/ }).className).toMatch(selectedRing);
+    expect(rail().getByRole("button", { name: /Office/ }).className).not.toMatch(selectedRing);
+    fireEvent.click(rail().getByRole("button", { name: /Office/ }));
+    expect(rail().getByRole("button", { name: /Office/ }).className).toMatch(selectedRing);
+    expect(rail().getByRole("button", { name: /Hallway/ }).className).not.toMatch(selectedRing);
+  });
+
+  it("keeps stale and warning wording in the rail rather than trading truth for compactness", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    expect(rail().getByText(/18\.9 °C · stale/)).toBeInTheDocument();
+    expect(rail().getByRole("button", { name: /Bedroom/ }).textContent).toMatch(/needs attention|offline/);
+    expect(rail().getByRole("button", { name: /Bedroom/ })).toHaveAccessibleName(/offline/);
+  });
+
+  it("keeps the room name larger than the room temperature on a phone, and the temperature as it was from `sm`", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    const temperature = screen.getByText(/Room temperature ·/).previousElementSibling!;
+    expect(temperature.className).toMatch(/text-headline-sm/);
+    expect(temperature.className).toMatch(/sm:text-display-sm/);
+    expect(screen.getByRole("heading", { name: "Hallway" }).className).toMatch(/text-headline-lg/);
   });
 
   it("opens a group on click and its contents stay operable", async () => {
