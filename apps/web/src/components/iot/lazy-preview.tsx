@@ -17,7 +17,15 @@ import { iotPreviewLoaders } from "@/registry/iot-preview-loaders";
  *   SIMULATION notice, so the disclosure is in the HTML and does not shift when the example replaces it.
  *   The mounted example carries its own notice; the placeholder is unmounted, so there is never two.
  * - **No IntersectionObserver** (very old browsers, some test runners) mounts immediately rather than never.
- * - **Reduced motion.** Nothing here animates.
+ * - **A waiting mark.** The reserved height on its own reads as a broken page on a slow connection, so the
+ *   placeholder carries one quiet chip that says the preview is loading. It is laid over the reserved box
+ *   (`absolute`), so it adds no height and shifts nothing when the example replaces it.
+ * - **Reduced motion.** The chip's dot pulses only under `motion-safe`; the word "Loading" is the signal that
+ *   does not move, so nothing is carried by animation alone.
+ * - **Deliberately `aria-hidden`.** `/iot` holds a dozen of these. A live region here would announce
+ *   "loading" again for every example the reader scrolls past, which is noise, not news: the example's
+ *   heading, description and Code tab are already server-rendered above it and are the dependable path. The
+ *   mark is a visual reassurance for a sighted reader watching an empty box.
  * - **A failed chunk** shows a plain sentence instead of taking the page down.
  */
 type Loaded = React.LazyExoticComponent<React.ComponentType>;
@@ -56,6 +64,26 @@ class ChunkBoundary extends React.Component<{ children: React.ReactNode }, { fai
   }
 }
 
+/**
+ * The reserved-height placeholder with a quiet "loading" mark laid over it.
+ *
+ * The mark is absolutely positioned inside the reserved block, so the block's height is unchanged and there is
+ * no layout shift when the example mounts. See the note above for why it is out of the accessibility tree.
+ */
+function Waiting({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative" data-preview-loading="">
+      {children}
+      <span aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <span className="inline-flex items-center gap-2 rounded-full bg-card/90 px-3 py-1 text-label-md text-muted-foreground shadow-sm">
+          <span className="size-2 rounded-full bg-muted-foreground motion-safe:animate-pulse motion-reduce:animate-none" />
+          Loading preview
+        </span>
+      </span>
+    </div>
+  );
+}
+
 export function LazyPreview({
   slug,
   fallback,
@@ -90,16 +118,17 @@ export function LazyPreview({
   }, [active, rootMargin]);
 
   const Preview = active ? componentFor(slug) : null;
+  const waiting = <Waiting>{fallback}</Waiting>;
   return (
     <div ref={ref} data-lazy-preview={slug} data-mounted={Preview ? "" : undefined}>
       {Preview ? (
         <ChunkBoundary>
-          <React.Suspense fallback={fallback}>
+          <React.Suspense fallback={waiting}>
             <Preview />
           </React.Suspense>
         </ChunkBoundary>
       ) : (
-        fallback
+        waiting
       )}
     </div>
   );
