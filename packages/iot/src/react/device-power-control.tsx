@@ -89,6 +89,8 @@ const DevicePowerControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
           className={cn(
             "group relative inline-flex shrink-0 items-center justify-center rounded-full",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            // The focus ring is a box-shadow, which forced-colors strips; an outline is not.
+            "forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-offset-2",
             "disabled:cursor-not-allowed disabled:opacity-55",
             HIT[size],
             className,
@@ -110,6 +112,11 @@ const DevicePowerControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
             <span
               className={cn(
                 "grid place-items-center rounded-full shadow-sm transition-transform duration-base ease-out motion-reduce:transition-none",
+                // In forced-colors the knob is otherwise invisible: its fill is forced to the system
+                // background and its shadow is dropped, so the one thing left saying which end it sits
+                // at disappears. A border is not overridden away, so the knob keeps its silhouette —
+                // and with it the travel — alongside the mark it carries.
+                "forced-colors:border-2 forced-colors:border-current",
                 KNOB[size],
                 shown === "on" && KNOB_ON[size],
                 // Hollow knob = asked for, not confirmed. The one visual that never lies.
@@ -120,14 +127,18 @@ const DevicePowerControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
                     : "bg-background text-muted-foreground",
               )}
             >
-              {/* A shape cue as well as a fill: a tick on the knob when the device CONFIRMED on, a
-                  short bar when it confirmed off. Nothing while a request is unconfirmed. */}
+              {/* The mark, not the fill, is what says which state this is. A tick when the device
+                  CONFIRMED on, a bar when it confirmed off, nothing while a request is unconfirmed.
+                  Both are stroked in `currentColor`, which forced-colors keeps rather than flattens,
+                  so the difference is still there when every fill has collapsed to one system colour.
+                  The tick is the `check` glyph's tick, drawn inline: `glyph.tsx` is one binding
+                  holding all 25 shapes, so importing it for one path would cost 2.7 KB. */}
               {pending ? null : confirmed === "on" ? (
-                <svg width={TICK[size]} height={TICK[size]} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" focusable="false">
+                <svg data-mark="on" width={TICK[size]} height={TICK[size]} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" focusable="false">
                   <path d="m3.6 8.4 2.9 2.9 5.9-6.2" />
                 </svg>
               ) : confirmed === "off" ? (
-                <svg width={TICK[size]} height={TICK[size]} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" focusable="false">
+                <svg data-mark="off" width={TICK[size]} height={TICK[size]} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" focusable="false">
                   <path d="M4.5 8h7" />
                 </svg>
               ) : null}
