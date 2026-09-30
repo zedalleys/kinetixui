@@ -73,7 +73,9 @@ const DevicePowerControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
     const description = control?.description;
 
     return (
-      <div className="flex items-center gap-3">
+      // `min-w-0`, because this row is itself a flex item: without it the row's min-content width is the
+      // full un-wrapped label, which dragged the whole card 395px wide inside a 288px track on a phone.
+      <div className="flex min-w-0 items-center gap-3">
         <button
           ref={ref}
           type="button"
@@ -148,9 +150,11 @@ const DevicePowerControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
 
         {showLabel ? (
           <span className="flex min-w-0 flex-col">
-            <span className={cn("truncate", size === "lg" ? "text-title-md" : "text-label-lg", pending ? "text-muted-foreground" : "text-foreground")}>{text}</span>
+            {/* These wrap rather than truncate. The state word and the reason a change is not yet confirmed
+                are the honest part of this control; an ellipsis is the one thing they must never become. */}
+            <span className={cn("break-words", size === "lg" ? "text-title-md" : "text-label-lg", pending ? "text-muted-foreground" : "text-foreground")}>{text}</span>
             {description && control?.availability !== "ready" ? (
-              <span id={descriptionId} className="truncate text-label-md text-muted-foreground">
+              <span id={descriptionId} className="break-words text-label-md text-muted-foreground">
                 {description}
               </span>
             ) : null}
