@@ -4,7 +4,6 @@ import * as React from "react";
 import type { KinetixDevice } from "../types/device";
 import { normalizeDeviceStatus } from "../functions/status";
 import { BatteryIndicator } from "./battery-indicator";
-import { DeviceIdentity } from "./device-identity";
 import { DeviceStatusBadge } from "./device-status-badge";
 import { LastSync } from "./last-sync";
 import { SensorReading } from "./sensor-reading";
@@ -52,8 +51,11 @@ export interface DeviceCardProps extends Omit<React.HTMLAttributes<HTMLDivElemen
   now?: string | Date | number;
   /** Hide the battery / signal / last-seen row. */
   hideMeta?: boolean;
-  /** Show the device's category icon tile (state-tinted) before its name. Off by default. */
-  showIcon?: boolean;
+  /**
+   * A node drawn before the name — a `DeviceIdentity` tile with `iconOnly`, a `DeviceIcon`, an
+   * illustration. A slot rather than a built-in, so a plain `DeviceCard` does not pull the icon set.
+   */
+  icon?: React.ReactNode;
   /** Size of the headline reading. `lg` draws it as a hero numeral. Default `md`. */
   readingSize?: "md" | "lg" | "xl";
 }
@@ -62,7 +64,7 @@ export interface DeviceCardProps extends Omit<React.HTMLAttributes<HTMLDivElemen
 const IN_TRANSITION = new Set(["syncing", "pairing", "updating"]);
 
 const DeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceCardProps>(
-  ({ device, action, reading, footer, now, hideMeta = false, showIcon = false, readingSize = "md", className, ...props }, ref) => {
+  ({ device, action, reading, footer, now, hideMeta = false, icon, readingSize = "md", className, ...props }, ref) => {
     const status = normalizeDeviceStatus(device?.status);
     const transitioning = IN_TRANSITION.has(status);
     const hasMeta = !hideMeta && (device?.battery !== undefined || device?.signal !== undefined || device?.lastSeenAt !== undefined);
@@ -82,23 +84,15 @@ const DeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forward
         {...props}
       >
         <div className="flex items-start gap-3">
-          {showIcon ? (
-            <DeviceIdentity
-              device={device}
-              active={status === "online"}
-              secondary={device?.locationName ?? device?.type ?? null}
-              className="min-w-0"
-            />
-          ) : (
-            <div className="flex min-w-0 flex-col gap-1">
-              <span className="truncate text-title-sm text-foreground">{device?.name}</span>
-              {device?.locationName || device?.type ? (
-                <span className="truncate text-label-md text-muted-foreground">
-                  {device?.locationName ?? device?.type}
-                </span>
-              ) : null}
-            </div>
-          )}
+          {icon ? <div className="shrink-0">{icon}</div> : null}
+          <div className="flex min-w-0 flex-col gap-1">
+            <span className="truncate text-title-sm text-foreground">{device?.name}</span>
+            {device?.locationName || device?.type ? (
+              <span className="truncate text-label-md text-muted-foreground">
+                {device?.locationName ?? device?.type}
+              </span>
+            ) : null}
+          </div>
           {/* `ms-auto` rather than `ml-auto`: the trailing corner is the end edge, which flips under RTL. */}
           <div className="ms-auto flex shrink-0 items-center gap-2">
             <DeviceStatusBadge status={status} />

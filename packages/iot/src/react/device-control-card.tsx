@@ -6,7 +6,6 @@ import type { KinetixControlState } from "../types/control";
 import type { KinetixDeviceCategory } from "../types/identity";
 import { resolveDeviceCategory } from "../functions/identity";
 import { DeviceIdentity } from "./device-identity";
-import { Glyph } from "./glyph";
 import { cn } from "./cn";
 import { withDisplayName } from "./display-name";
 
@@ -70,7 +69,26 @@ export interface DeviceControlCardProps extends Omit<React.HTMLAttributes<HTMLDi
    * confirmed" chip; the confirmed `value` stays the big number.
    */
   requestedValue?: React.ReactNode;
+  /**
+   * A device illustration, supplied by the caller (so the card imports none). Decorative: it is wrapped
+   * `aria-hidden`. In `quiet` it sits at the inline end of the tile; in `hero` it sits beside the value.
+   */
+  visual?: React.ReactNode;
 }
+
+/** The two chip marks, inline so the card does not import the whole glyph set. */
+const MARK = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.5,
+  strokeLinecap: "round" as const,
+  "aria-hidden": true,
+  focusable: false,
+  width: 14,
+  height: 14,
+  viewBox: "0 0 16 16",
+  className: "shrink-0",
+};
 
 const PAD = { surface: "gap-3 p-4", hero: "gap-5 p-5 sm:p-6", quiet: "gap-2 p-3" } as const;
 const VALUE = {
@@ -83,7 +101,7 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
   (
     {
       device, category, active = false, control, primaryControl, statusLine, meta, expanded, open, onOpenChange, expandLabel,
-      variant = "surface", value, unit, requestedValue, className, ...props
+      variant = "surface", value, unit, requestedValue, visual, className, ...props
     },
     ref,
   ) => {
@@ -123,7 +141,10 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
         data-state-chip="unreachable"
         className="inline-flex w-fit items-center gap-1.5 rounded-full border border-dashed border-border px-2.5 py-1 text-label-md text-muted-foreground"
       >
-        <Glyph name="dash" size={14} />
+        <svg {...MARK} data-glyph="dash">
+          <circle cx="8" cy="8" r="6.25" strokeDasharray="2 2" />
+          <path d="M5.5 8h5" />
+        </svg>
         {control?.availability === "offline" ? "Offline" : "Unavailable"}
         {hasValue ? " — last known value" : ""}
       </span>
@@ -132,7 +153,10 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
         data-state-chip="requested"
         className="inline-flex w-fit max-w-full animate-pulse items-center gap-1.5 rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-1 text-label-md text-foreground motion-reduce:animate-none"
       >
-        <Glyph name="circle-dot" size={14} />
+        <svg {...MARK} data-glyph="circle-dot">
+          <circle cx="8" cy="8" r="6.25" />
+          <circle cx="8" cy="8" r="2" fill="currentColor" stroke="none" />
+        </svg>
         <span className="min-w-0 break-words">
           {requestedValue !== undefined && requestedValue !== null ? (
             <>
@@ -177,10 +201,16 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
             size={hero ? "xl" : quiet ? "sm" : "md"}
             className="min-w-0 flex-1"
           />
-          {primaryControl && !hero ? <div className="ms-auto shrink-0">{primaryControl}</div> : null}
+          {visual && quiet ? <div aria-hidden="true" className="ms-auto shrink-0">{visual}</div> : null}
+          {primaryControl && !hero ? <div className={cn("shrink-0", !(visual && quiet) && "ms-auto")}>{primaryControl}</div> : null}
         </div>
 
-        {valueNode ? <div className={cn("flex flex-wrap items-baseline gap-x-3 gap-y-1", hero && "pt-1")}>{valueNode}</div> : null}
+        {valueNode || (hero && visual) ? (
+          <div className={cn("flex gap-3", hero ? "items-end justify-between pt-1" : "flex-wrap items-baseline gap-y-1")}>
+            {valueNode}
+            {hero && visual ? <div aria-hidden="true" className="ms-auto shrink-0">{visual}</div> : null}
+          </div>
+        ) : null}
 
         {stateChip}
 

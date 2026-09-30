@@ -23,8 +23,14 @@ import { withDisplayName } from "./display-name";
  */
 // `onSelect` is a real DOM handler on HTMLAttributes, so it is omitted rather than shadowed —
 // same reason DeviceGroupCard omits it.
+/** A mode as the product describes it, with an optional icon for the `tiles` presentation. */
+export type DeviceModeOption = KinetixDeviceMode & {
+  /** Drawn above the label in `tiles`. Decorative (`aria-hidden`); the label is the name. */
+  icon?: React.ReactNode;
+};
+
 export interface DeviceModeControlProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange" | "onSelect"> {
-  modes: readonly KinetixDeviceMode[];
+  modes: readonly DeviceModeOption[];
   /** The confirmed mode id. */
   value: string | null | undefined;
   /** A requested mode id that the device has not confirmed. */
@@ -35,6 +41,11 @@ export interface DeviceModeControlProps extends Omit<React.HTMLAttributes<HTMLDi
   onSelect?: (id: string) => void;
   /** `segmented` for 2–4 short modes; `list` when modes carry descriptions. */
   variant?: "segmented" | "list";
+  /**
+   * `segmented` (default) uses `variant`. `tiles` draws icon-over-label square tiles in an inset surface;
+   * the selected tile is solid `bg-primary` with a tick. Radiogroup semantics are identical.
+   */
+  presentation?: "segmented" | "tiles";
 }
 
 /** A small tick drawn inline — the shape cue that says "this one", beside the raised surface. */
@@ -47,7 +58,9 @@ function Tick() {
 }
 
 const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceModeControlProps>(
-  ({ modes, value, requested, label, control, onSelect, variant = "segmented", className, ...props }, ref) => {
+  ({ modes, value, requested, label, control, onSelect, variant: variantProp = "segmented", presentation = "segmented", className, ...props }, ref) => {
+    const tiles = presentation === "tiles";
+    const variant = tiles ? "segmented" : variantProp;
     const pendingId = requested && requested !== value ? requested : null;
     const interactive = control ? control.interactive : true;
 
@@ -91,7 +104,9 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
         aria-label={label}
         data-pending={pendingId ? "" : undefined}
         className={cn(
-          variant === "segmented"
+          tiles
+            ? "grid grid-cols-2 gap-2 rounded-2xl bg-muted/60 p-2 sm:grid-cols-4"
+            : variant === "segmented"
             // An inset surface, not an outlined box: the selected segment is what stands up from it.
             ? "flex w-full gap-1 rounded-xl bg-muted/60 p-1 sm:inline-flex sm:w-auto"
             : "flex flex-col gap-1 rounded-xl bg-muted/60 p-1",
@@ -127,22 +142,35 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
                 }
               }}
               className={cn(
-                "relative min-h-11 rounded-lg px-3 text-label-lg transition-colors duration-fast ease-out md:min-h-9",
+                "relative rounded-lg px-3 text-label-lg transition-colors duration-fast ease-out",
+                tiles ? "min-h-20 rounded-xl" : "min-h-11 md:min-h-9",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                 "focus-visible:ring-offset-background motion-reduce:transition-none",
-                variant === "segmented"
+                tiles
+                  ? "flex flex-col items-center justify-center gap-1.5 py-3 text-center"
+                  : variant === "segmented"
                   ? "flex flex-1 items-center justify-center gap-1.5 text-center"
                   : "flex flex-col items-start gap-0.5 py-2 text-start",
                 disabled && "cursor-not-allowed opacity-45",
                 // Selected = raised: a lighter surface, a shadow, heavier type and a tick. Four cues, so
                 // it survives greyscale, low contrast and a screen magnifier.
-                isConfirmed && "bg-background font-semibold text-foreground shadow-sm",
+                isConfirmed && (tiles ? "bg-primary font-semibold text-primary-foreground shadow-sm" : "bg-background font-semibold text-foreground shadow-sm"),
                 // Requested-not-confirmed: outlined, never filled. Same grammar as the power knob.
                 isPending && "border border-dashed border-primary bg-primary/10 text-foreground",
-                !active && !disabled && "text-muted-foreground hover:bg-background/50 hover:text-foreground",
+                !active && !disabled && (tiles ? "bg-background text-muted-foreground hover:text-foreground" : "text-muted-foreground hover:bg-background/50 hover:text-foreground"),
               )}
             >
-              {variant === "segmented" && isConfirmed ? <Tick /> : null}
+              {tiles && mode.icon ? (
+                <span aria-hidden="true" className="grid size-6 place-items-center">
+                  {mode.icon}
+                </span>
+              ) : null}
+              {tiles && isConfirmed ? (
+                <span aria-hidden="true" className="absolute end-2 top-2">
+                  <Tick />
+                </span>
+              ) : null}
+              {!tiles && variant === "segmented" && isConfirmed ? <Tick /> : null}
               <span className="truncate">{mode.label}</span>
               {variant === "list" && mode.description ? (
                 <span className="truncate text-label-md font-normal text-muted-foreground">{mode.description}</span>

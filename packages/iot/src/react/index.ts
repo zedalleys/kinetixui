@@ -52,7 +52,7 @@ export { SignalStrength, type SignalStrengthProps } from "./signal-strength";
 
 /* ------------------------------------------------------------------ controls */
 export { DeviceLevelControl, type DeviceLevelControlProps } from "./device-level-control";
-export { DeviceModeControl, type DeviceModeControlProps } from "./device-mode-control";
+export { DeviceModeControl, type DeviceModeControlProps, type DeviceModeOption } from "./device-mode-control";
 export { DevicePowerControl, type DevicePowerControlProps } from "./device-power-control";
 export { DeviceSetpointControl, type DeviceSetpointControlProps } from "./device-setpoint-control";
 

@@ -27,6 +27,11 @@ import { withDisplayName } from "./display-name";
  * - **High consumption** appears when `summary.flags` says so, as a triangle and words, quoting only
  *   what the summary carries (the limit, or the percentage over baseline).
  *
+ * **`presentation="sparkline"`** is a compact card instead: the hero value and unit, a worded "updated"
+ * line (`updatedLabel`, supplied — this package does not read a clock), a smooth area with a marker and a
+ * value label on the newest day, and the comparison in words. It leaves out the contributors; the text
+ * summary, the "View data" table and the high-consumption flag are kept.
+ *
  * The bars flow with the writing direction, so under RTL the oldest day is at the right — the same way a
  * timeline reads in that locale — and every offset is logical.
  */
@@ -57,13 +62,38 @@ export interface EnergySummaryProps extends Omit<React.HTMLAttributes<HTMLDivEle
    * no data are left out of the comparison rather than counted as zero.
    */
   comparison?: { label: string; days: readonly (number | null | undefined)[] };
+  /** `chart` (default) is the full breakdown; `sparkline` is a compact card with a smooth area. */
+  presentation?: "chart" | "sparkline";
+  /** A worded freshness line for the sparkline, e.g. "Updated 2 minutes ago". Omit to say nothing. */
+  updatedLabel?: string;
 }
+
+/** A smooth path through points (Catmull-Rom converted to cubic Béziers). One point is a zero-length move. */
+function smoothPath(pts: readonly (readonly [number, number])[]): string {
+  if (pts.length === 0) return "";
+  let d = `M${pts[0]![0].toFixed(2)} ${pts[0]![1].toFixed(2)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i]!;
+    const p1 = pts[i]!;
+    const p2 = pts[i + 1]!;
+    const p3 = pts[i + 2] ?? p2;
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+    const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+    const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += `C${c1x.toFixed(2)} ${c1y.toFixed(2)} ${c2x.toFixed(2)} ${c2y.toFixed(2)} ${p2[0].toFixed(2)} ${p2[1].toFixed(2)}`;
+  }
+  return d;
+}
+
+const SPARK_W = 100;
+const SPARK_H = 40;
 
 const usable = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v) && v >= 0;
 
 const EnergySummary = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, EnergySummaryProps>(
   (
-    { summary, current, today, days, dayLabels, breakdownLabel = "Top contributors", precision = 1, todayIndex, dailyBaseline, dailyBaselineLabel, comparison, className, ...props },
+    { summary, current, today, days, dayLabels, breakdownLabel = "Top contributors", precision = 1, todayIndex, dailyBaseline, dailyBaselineLabel, comparison, presentation = "chart", updatedLabel, className, ...props },
     ref,
   ) => {
     // `toFixed` throws a RangeError outside 0–100 and on NaN-derived counts; a public prop must not be able to take the card down.
@@ -114,7 +144,131 @@ const EnergySummary = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forw
           "."
         : `Last ${usableDays.length} days: no data.`) + (compareText ? ` ${compareText}.` : "");
 
+    const dataTable = (
+      <details data-data-table="" className="text-label-md">
+        <summary className="min-h-11 cursor-pointer py-2.5 text-label-lg text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:min-h-9 md:py-1.5">
+          View data
+        </summary>
+        <table className="w-full border-collapse text-label-md">
+          <caption className="sr-only">Daily energy in {unit}</caption>
+          <thead>
+            <tr className="border-b border-border text-muted-foreground">
+              <th scope="col" className="py-1 pe-3 text-start font-normal">Day</th>
+              <th scope="col" className="py-1 pe-3 text-start font-normal">Energy</th>
+              {comparison ? <th scope="col" className="py-1 text-start font-normal">{comparison.label}</th> : null}
+            </tr>
+          </thead>
+          <tbody>
+            {usableDays.map((v, i) => (
+              <tr key={i} className="border-b border-border/60 text-foreground">
+                <th scope="row" className="py-1 pe-3 text-start font-normal">{label(i)}</th>
+                <td className="py-1 pe-3 tabular-nums">{usable(v) ? `${fmt(v)} ${unit}` : "No data"}</td>
+                {comparison ? <td className="py-1 tabular-nums">{usable(other[i]) ? `${fmt(other[i] as number)} ${unit}` : "No data"}</td> : null}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
+    );
+
     const hero = today !== undefined ? "today" : current ? "current" : null;
+
+    const sparkline = presentation === "sparkline";
+    const measuredDays = usableDays.map((v, i) => (usable(v) ? { i, v } : null));
+    const sparkVals = measuredDays.filter((m): m is { i: number; v: number } => m !== null).map((m) => m.v);
+    const lo = sparkVals.length ? Math.min(...sparkVals) : 0;
+    const hi = sparkVals.length ? Math.max(...sparkVals) : 1;
+    const sx = (i: number) => (usableDays.length <= 1 ? SPARK_W / 2 : (i / (usableDays.length - 1)) * SPARK_W);
+    const sy = (v: number) => (hi === lo ? SPARK_H / 2 : SPARK_H - 5 - ((v - lo) / (hi - lo)) * (SPARK_H - 12));
+    const sparkRuns: (readonly [number, number])[][] = [];
+    measuredDays.forEach((m, i) => {
+      if (m === null) {
+        sparkRuns.push([]);
+        return;
+      }
+      if (sparkRuns.length === 0) sparkRuns.push([]);
+      sparkRuns[sparkRuns.length - 1]!.push([sx(i), sy(m.v)] as const);
+    });
+    const runs2 = sparkRuns.filter((r) => r.length > 0);
+    const lastMeasured = [...measuredDays].reverse().find((m) => m !== null) ?? null;
+    const gradId = `kx-e-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+    const heroValue = today !== undefined ? { label: "Today", text: fmt(today), unit } : current ? { label: "Now", text: fmt(current.value), unit: current.unit } : null;
+
+    if (sparkline) {
+      return (
+        <div ref={ref} data-high={high ? "" : undefined} data-presentation="sparkline" className={cn("flex min-w-0 flex-col gap-4 font-sans", className)} {...props}>
+          <div className="flex flex-col gap-1">
+            {heroValue ? (
+              <>
+                <span className="text-label-lg text-muted-foreground">{heroValue.label}</span>
+                <span data-today={today !== undefined ? "" : undefined} data-current={today === undefined ? "" : undefined} className="text-display-sm tabular-nums leading-none text-foreground">
+                  {heroValue.text}
+                  <span className="text-title-md text-muted-foreground"> {heroValue.unit}</span>
+                </span>
+              </>
+            ) : null}
+            {updatedLabel ? <span data-updated="" className="text-label-md text-muted-foreground">{updatedLabel}</span> : null}
+          </div>
+
+          {high ? (
+            <p data-flag="high-consumption" className="m-0 flex items-start gap-2 rounded-xl bg-warning/10 px-3 py-2 text-body-sm text-foreground">
+              <Glyph name="triangle" size={16} className="mt-0.5" />
+              <span>High consumption{summary.limit !== undefined && summary.total > summary.limit ? ` — ${fmt(summary.total)} ${unit} is over the ${fmt(summary.limit)} ${unit} limit` : ""}.</span>
+            </p>
+          ) : null}
+
+          {usableDays.length > 0 ? (
+            <div data-chart="" className="flex flex-col gap-2">
+              <div aria-hidden="true" className="relative h-24 w-full">
+                <svg viewBox={`0 0 ${SPARK_W} ${SPARK_H}`} preserveAspectRatio="none" focusable="false" className="absolute inset-0 size-full text-primary rtl:-scale-x-100">
+                  <defs>
+                    <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stopColor="currentColor" stopOpacity={0.28} />
+                      <stop offset="1" stopColor="currentColor" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  {runs2.map((run, k) => (
+                    <g key={k}>
+                      {run.length > 1 ? (
+                        <path d={`${smoothPath(run)}L${run[run.length - 1]![0].toFixed(2)} ${SPARK_H}L${run[0]![0].toFixed(2)} ${SPARK_H}Z`} fill={`url(#${gradId})`} stroke="none" />
+                      ) : null}
+                      <path data-spark-line="" d={smoothPath(run)} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                    </g>
+                  ))}
+                </svg>
+                {lastMeasured ? (
+                  <>
+                    <span
+                      data-latest-marker=""
+                      className="pointer-events-none absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary ring-2 ring-background rtl:translate-x-1/2"
+                      style={{ insetInlineStart: `${(sx(lastMeasured.i) / SPARK_W) * 100}%`, top: `${(sy(lastMeasured.v) / SPARK_H) * 100}%` }}
+                    />
+                    <span
+                      data-latest-value=""
+                      className="pointer-events-none absolute -translate-x-1/2 -translate-y-full whitespace-nowrap rtl:translate-x-1/2 pb-2 text-label-md tabular-nums text-foreground"
+                      style={{
+                        insetInlineStart: `${Math.min(88, Math.max(12, (sx(lastMeasured.i) / SPARK_W) * 100))}%`,
+                        top: `${(sy(lastMeasured.v) / SPARK_H) * 100}%`,
+                      }}
+                    >
+                      {fmt(lastMeasured.v)} {unit}
+                    </span>
+                  </>
+                ) : null}
+              </div>
+              {compareText ? (
+                <p data-comparison="" className="m-0 flex items-center gap-2 text-title-sm text-foreground">
+                  <Glyph name={change === 0 ? "trend-flat" : (change ?? 0) > 0 ? "trend-up" : "trend-down"} size={16} />
+                  <span>{compareText}</span>
+                </p>
+              ) : null}
+              <p className="m-0 text-body-sm text-muted-foreground">{chartSummary}</p>
+              {dataTable}
+            </div>
+          ) : null}
+        </div>
+      );
+    }
 
     return (
       <div ref={ref} data-high={high ? "" : undefined} className={cn("flex min-w-0 flex-col gap-6 font-sans", className)} {...props}>
@@ -247,30 +401,7 @@ const EnergySummary = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forw
             </p>
 
             <p className="m-0 text-body-sm text-muted-foreground">{chartSummary}</p>
-            <details data-data-table="" className="text-label-md">
-              <summary className="min-h-11 cursor-pointer py-2.5 text-label-lg text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:min-h-9 md:py-1.5">
-                View data
-              </summary>
-              <table className="w-full border-collapse text-label-md">
-                <caption className="sr-only">Daily energy in {unit}</caption>
-                <thead>
-                  <tr className="border-b border-border text-muted-foreground">
-                    <th scope="col" className="py-1 pe-3 text-start font-normal">Day</th>
-                    <th scope="col" className="py-1 pe-3 text-start font-normal">Energy</th>
-                    {comparison ? <th scope="col" className="py-1 text-start font-normal">{comparison.label}</th> : null}
-                  </tr>
-                </thead>
-                <tbody>
-                  {usableDays.map((v, i) => (
-                    <tr key={i} className="border-b border-border/60 text-foreground">
-                      <th scope="row" className="py-1 pe-3 text-start font-normal">{label(i)}</th>
-                      <td className="py-1 pe-3 tabular-nums">{usable(v) ? `${fmt(v)} ${unit}` : "No data"}</td>
-                      {comparison ? <td className="py-1 tabular-nums">{usable(other[i]) ? `${fmt(other[i] as number)} ${unit}` : "No data"}</td> : null}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </details>
+            {dataTable}
           </div>
         ) : null}
 

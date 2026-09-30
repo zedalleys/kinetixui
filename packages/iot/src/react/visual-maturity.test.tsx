@@ -1,11 +1,13 @@
 import * as React from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   CameraDeviceCard,
   CommandLifecycle,
+  DeviceCard,
   DeviceControlCard,
   DeviceLevelControl,
+  DeviceModeControl,
   DevicePowerControl,
   DeviceSetpointControl,
   EnergySummary,
@@ -194,5 +196,94 @@ describe("EnergySummary chart", () => {
   it("does not compare against a period with no overlapping data", () => {
     const { container } = render(<EnergySummary summary={summary} days={[1, null]} comparison={{ label: "last week", days: [null, 2] }} />);
     expect(container.querySelector("[data-comparison]")).toBeNull();
+  });
+});
+
+describe("reference-driven presentations", () => {
+  it("setpoint ring is decoration only: aria-hidden svg, native buttons, one live sentence", () => {
+    const { container } = render(
+      <DeviceSetpointControl presentation="ring" current={20} target={21} requestedTarget={24} min={16} max={30} unit="°" label="Room" control={PENDING} secondary={<span>Humidity 48%</span>} />,
+    );
+    const ring = container.querySelector("[data-presentation='ring']")!;
+    expect(ring.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    expect(ring.querySelector("[data-ring-confirmed]")).not.toBeNull();
+    expect(ring.querySelector("[data-ring-requested]")).not.toBeNull();
+    expect(container.querySelector("[data-confirmed]")).toHaveTextContent("21");
+    expect(container).toHaveTextContent("Humidity 48%");
+    expect(screen.getByRole("button", { name: "Increase Room" })).toBeInTheDocument();
+    expect(container.querySelectorAll("[aria-live]")).toHaveLength(1);
+  });
+
+  it("setpoint ring nudges through the ± buttons only", () => {
+    let got = 0;
+    render(<DeviceSetpointControl presentation="ring" target={21} min={16} max={30} step={1} label="Room" control={READY} onCommit={(n) => (got = n)} />);
+    fireEvent.click(screen.getByRole("button", { name: "Increase Room" }));
+    expect(got).toBe(22);
+  });
+
+  it("level pill keeps the native range input and draws label and value inside the track", () => {
+    const { container } = render(<DeviceLevelControl variant="pill" value={40} label="Brightness" control={READY} />);
+    expect(screen.getByRole("slider")).toHaveAttribute("type", "range");
+    expect(container.querySelector("[data-pill-text]")).toHaveTextContent("Brightness40%");
+    expect(container.querySelector("[data-pill-text]")).toHaveAttribute("aria-hidden", "true");
+    expect(container.querySelector("[class*='h-14']")).not.toBeNull();
+  });
+
+  it("level pill shows the request as a dashed chip and never as the value", () => {
+    const { container } = render(<DeviceLevelControl variant="pill" value={20} target={80} label="Brightness" control={PENDING} />);
+    expect(container.querySelector("[data-requested]")).toHaveTextContent("Requested 80%, not yet confirmed");
+    expect(container.querySelector("[data-pill-text]")).toHaveTextContent("20%");
+    expect(screen.getByRole("slider").getAttribute("aria-valuetext")).toMatch(/80/);
+  });
+
+  const modes = [
+    { id: "a", label: "Auto", icon: <i data-icon="a" /> },
+    { id: "b", label: "Cool", icon: <i data-icon="b" /> },
+  ];
+
+  it("mode tiles keep radiogroup semantics, show the icon above the label and select solid", () => {
+    const { container } = render(<DeviceModeControl presentation="tiles" modes={modes} value="b" control={READY} label="Mode" />);
+    expect(screen.getByRole("radiogroup", { name: "Mode" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Cool" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Auto" })).toHaveAttribute("aria-checked", "false");
+    expect(container.querySelector("[data-icon='a']")!.parentElement).toHaveAttribute("aria-hidden", "true");
+    expect(screen.getByRole("radio", { name: "Cool" }).className).toContain("bg-primary");
+    expect(screen.getByRole("radio", { name: "Cool" }).querySelector("svg")).not.toBeNull();
+  });
+
+  it("mode tiles: requested is dashed, aria-checked stays confirmed, roving tabindex holds", () => {
+    render(<DeviceModeControl presentation="tiles" modes={modes} value="a" requested="b" control={PENDING} label="Mode" />);
+    expect(screen.getByRole("radio", { name: /Cool, requested/ })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByRole("radio", { name: /Cool, requested/ }).className).toContain("border-dashed");
+    expect(document.querySelectorAll("[role=radio][tabindex='0']")).toHaveLength(1);
+  });
+
+  it("DeviceControlCard visual slot is aria-hidden in quiet and hero", () => {
+    for (const variant of ["quiet", "hero"] as const) {
+      const { container, unmount } = render(<DeviceControlCard variant={variant} device={dev} control={READY} value="1" visual={<b data-art="" />} />);
+      expect(container.querySelector("[data-art]")!.parentElement).toHaveAttribute("aria-hidden", "true");
+      unmount();
+    }
+  });
+
+  it("DeviceCard takes its icon as a slot", () => {
+    const { container } = render(<DeviceCard device={dev} icon={<i data-icon="x" />} />);
+    expect(container.querySelector("[data-icon='x']")).not.toBeNull();
+  });
+
+  it("EnergySummary sparkline: hero value, updated line, marker, comparison, table and summary", () => {
+    const summary = summarizeEnergy([{ id: "a", label: "A", value: 5 }], { unit: "kWh" });
+    const { container } = render(
+      <EnergySummary presentation="sparkline" summary={summary} today={9.8} updatedLabel="Updated 2 minutes ago" days={[4, 6, null, 8]} comparison={{ label: "last week", days: [4, 4, 4, 4] }} />,
+    );
+    expect(container.querySelector("[data-today]")).toHaveTextContent("9.8 kWh");
+    expect(container.querySelector("[data-updated]")).toHaveTextContent("Updated 2 minutes ago");
+    expect(container.querySelector("[data-latest-value]")).toHaveTextContent("8.0 kWh");
+    expect(container.querySelector("[data-latest-marker]")).not.toBeNull();
+    expect(container.querySelectorAll("[data-spark-line]")).toHaveLength(2);
+    expect(container.querySelector("[data-comparison]")).toHaveTextContent("above last week");
+    expect(container.querySelector("details")).not.toBeNull();
+    expect(container).toHaveTextContent(/Last 4 days: 18\.0 kWh in total/);
+    expect(container.querySelector("[aria-live],[role=status]")).toBeNull();
   });
 });

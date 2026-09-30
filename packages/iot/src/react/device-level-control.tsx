@@ -44,14 +44,21 @@ export interface DeviceLevelControlProps extends Omit<React.InputHTMLAttributes<
   showValue?: boolean;
   /** `md` (default) reads as a 24px numeral; `lg` as a hero 36px numeral for a primary control. */
   size?: "md" | "lg";
+  /**
+   * `track` (default) is a slim track with the readout above. `pill` is a fat rounded track (56px) with a
+   * big round thumb and the label and value drawn INSIDE it — the fill carries a light copy of the text, so
+   * both stay legible on either side of the thumb. The native range input is still what you touch.
+   */
+  variant?: "track" | "pill";
 }
 
-/** The native thumb's diameter in px. The drawn fill is inset by it so the fill ends under the thumb's centre. */
+/** The native thumb's diameter in px (track / pill). The drawn fill is inset by it so the fill ends under the thumb's centre. */
 const THUMB = 28;
+const THUMB_PILL = 44;
 
 const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLInputElement, DeviceLevelControlProps>(
   (
-    { value, target, min = 0, max = 100, step = 1, unit = "%", label, control, onCommit, onPreview, showValue = true, size = "md", className, disabled, ...props },
+    { value, target, min = 0, max = 100, step = 1, unit = "%", label, control, onCommit, onPreview, showValue = true, size = "md", variant = "track", className, disabled, ...props },
     ref,
   ) => {
     const confirmed = clampLevel(value, min, max);
@@ -82,13 +89,24 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
     const ratio = (n: number) => (n - min) / span;
     // The native thumb travels `width - THUMB`, not `width`, so a plain percentage drifts away from it at
     // the ends. This lands the fill's edge exactly under the thumb's centre at every position.
-    const edge = (n: number) => `calc(${(ratio(n) * 100).toFixed(2)}% + ${((0.5 - ratio(n)) * THUMB).toFixed(2)}px)`;
+    const pill = variant === "pill";
+    const thumb = pill ? THUMB_PILL : THUMB;
+    const edge = (n: number) => `calc(${(ratio(n) * 100).toFixed(2)}% + ${((0.5 - ratio(n)) * thumb).toFixed(2)}px)`;
+    const valueText = confirmed === null ? "—" : `${confirmed}${unit}`;
+    // Label and value inside the pill. Drawn twice — dark on the track, light inside the fill — so the text
+    // is legible on both sides of the thumb.
+    const pillText = (
+      <>
+        <span className="min-w-0 truncate text-label-lg">{label}</span>
+        <span className="shrink-0 text-title-md tabular-nums">{valueText}</span>
+      </>
+    );
 
     const descriptionId = React.useId();
 
     return (
       <div className={cn("flex flex-col gap-1", className)} data-pending={pending ? "" : undefined}>
-        {showValue ? (
+        {showValue && !pill ? (
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <span className="text-label-lg text-muted-foreground">{label}</span>
             <span className="ms-auto flex flex-wrap items-baseline justify-end gap-x-2 gap-y-1">
@@ -118,20 +136,51 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
           </div>
         ) : null}
 
-        <div className="relative h-11">
+        <div className={cn("relative", pill ? "h-14" : "h-11")}>
           {/* Track. `inset-x-0` is logical-safe: both edges, so RTL needs nothing here. */}
-          <div className="absolute inset-x-0 top-1/2 h-4 -translate-y-1/2 overflow-hidden rounded-full bg-muted">
+          <div
+            className={cn(
+              "absolute inset-x-0 overflow-hidden rounded-full bg-muted",
+              pill ? "inset-y-0" : "top-1/2 h-4 -translate-y-1/2",
+            )}
+          >
+            {pill ? (
+              <span
+                aria-hidden="true"
+                data-pill-text=""
+                className={cn(
+                  "absolute inset-0 flex items-center justify-between gap-3 ps-14 pe-14",
+                  confirmed === null ? "text-muted-foreground" : "text-foreground",
+                )}
+              >
+                <span data-confirmed="" className="contents">
+                  {pillText}
+                </span>
+              </span>
+            ) : null}
             {confirmed !== null ? (
               <div
-                className="absolute inset-y-0 start-0 rounded-full bg-primary transition-[width] duration-base ease-out motion-reduce:transition-none"
+                className="absolute inset-y-0 start-0 overflow-hidden rounded-full bg-primary transition-[width] duration-base ease-out motion-reduce:transition-none"
                 style={{ width: edge(confirmed) }}
-              />
+              >
+                {pill && ratio(confirmed) > 0 ? (
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-y-0 start-0 flex items-center justify-between gap-3 ps-14 pe-14 text-primary-foreground"
+                    // Full track width, whatever the fill's own width is: the fill's width is
+                    // `p·W + (½−p)·thumb`, so W = (fill − (½−p)·thumb) / p.
+                    style={{ width: `calc((100% - ${((0.5 - ratio(confirmed)) * thumb).toFixed(2)}px) / ${ratio(confirmed).toFixed(4)})` }}
+                  >
+                    {pillText}
+                  </span>
+                ) : null}
+              </div>
             ) : null}
             {pending ? (
               // The requested extension, hatched so it is distinguishable from the confirmed fill
               // without relying on the two blues being told apart.
               <div
-                className="absolute inset-y-0 start-0 rounded-full opacity-60 transition-[width] duration-base ease-out motion-reduce:transition-none"
+                className={cn("absolute inset-y-0 start-0 rounded-full transition-[width] duration-base ease-out motion-reduce:transition-none", pill ? "opacity-30" : "opacity-60")}
                 style={{
                   width: edge(requested!),
                   backgroundImage:
@@ -145,7 +194,7 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
             <span
               aria-hidden="true"
               data-requested-marker=""
-              className="pointer-events-none absolute top-1/2 h-8 w-1 -translate-y-1/2 rounded-full bg-foreground"
+              className={cn("pointer-events-none absolute top-1/2 w-1 -translate-y-1/2 rounded-full bg-foreground", pill ? "h-10" : "h-8")}
               style={{ insetInlineStart: `calc(${edge(requested!)} - 2px)` }}
             />
           ) : null}
@@ -188,12 +237,13 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
               "disabled:cursor-not-allowed disabled:opacity-55",
               // The input fills a 44px-tall box (the touch minimum) around a 16px track; the 28px thumb is
               // drawn by the pseudo-elements below.
-              "[&::-webkit-slider-thumb]:size-7 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full",
+              pill ? "[&::-webkit-slider-thumb]:size-11 [&::-moz-range-thumb]:size-11" : "[&::-webkit-slider-thumb]:size-7 [&::-moz-range-thumb]:size-7",
+              "[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full",
               // Pseudo-element thumbs are outside Tailwind's preflight, so a border needs its style spelled out.
               "[&::-webkit-slider-thumb]:border-solid [&::-moz-range-thumb]:border-solid",
               "[&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:bg-background",
               "[&::-webkit-slider-thumb]:shadow-md",
-              "[&::-moz-range-thumb]:size-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-4",
+              "[&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-4",
               "[&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:bg-background [&::-moz-range-thumb]:shadow-md",
               "focus-visible:[&::-webkit-slider-thumb]:ring-2 focus-visible:[&::-webkit-slider-thumb]:ring-ring",
               "focus-visible:[&::-webkit-slider-thumb]:ring-offset-2 focus-visible:[&::-webkit-slider-thumb]:ring-offset-background",
@@ -202,6 +252,16 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
             {...props}
           />
         </div>
+
+        {pill && pending ? (
+          <span
+            data-requested=""
+            className="inline-flex w-fit max-w-full animate-pulse items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md tabular-nums text-foreground motion-reduce:animate-none"
+          >
+            Requested {requested}
+            {unit}, not yet confirmed
+          </span>
+        ) : null}
 
         {control?.description && control.availability !== "ready" ? (
           <span id={descriptionId} className="text-label-md text-muted-foreground">
