@@ -29,7 +29,7 @@ export interface SpaceBreadcrumbProps extends Omit<React.HTMLAttributes<HTMLElem
 }
 
 const LINK =
-  "inline-flex min-h-9 items-center rounded-md px-1 text-label-md text-muted-foreground underline-offset-2 hover:text-foreground hover:underline " +
+  "inline-flex min-h-11 items-center rounded-md px-1.5 text-body-sm text-muted-foreground underline-offset-2 transition-colors duration-fast hover:text-foreground hover:underline motion-reduce:transition-none md:min-h-9 " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background";
 
 const SpaceBreadcrumb = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLElement, SpaceBreadcrumbProps>(
@@ -43,7 +43,7 @@ const SpaceBreadcrumb = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
             return (
               <li key={item.id} data-kind={item.kind} className="inline-flex min-w-0 items-center gap-0.5">
                 {last ? (
-                  <span aria-current="page" className="break-words px-1 text-label-md text-foreground">
+                  <span aria-current="page" className="break-words px-1.5 text-title-sm text-foreground">
                     {item.name}
                   </span>
                 ) : hrefFor ? (
@@ -55,7 +55,7 @@ const SpaceBreadcrumb = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
                     {item.name}
                   </button>
                 ) : (
-                  <span className="break-words px-1 text-label-md text-muted-foreground">{item.name}</span>
+                  <span className="break-words px-1.5 text-body-sm text-muted-foreground">{item.name}</span>
                 )}
                 {last ? null : (
                   <svg aria-hidden="true" focusable="false" width={12} height={12} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-muted-foreground rtl:-scale-x-100">

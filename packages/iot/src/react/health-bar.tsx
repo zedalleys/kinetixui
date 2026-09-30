@@ -91,23 +91,25 @@ export function bucketsFromCounts(counts: Partial<Record<KinetixDeviceHealthLeve
 
 export const bucketTotal = (b: HealthBuckets): number => ORDER.reduce((sum, key) => sum + b[key], 0);
 
-export function HealthBar({ buckets, compact = false }: { buckets: HealthBuckets; compact?: boolean }) {
+export function HealthBar({ buckets, compact = false, size = "md" }: { buckets: HealthBuckets; compact?: boolean; size?: "md" | "lg" }) {
   const present = ORDER.filter((key) => buckets[key] > 0);
   return (
-    <div className="flex min-w-0 flex-col gap-2">
+    <div className="flex min-w-0 flex-col gap-3">
       {present.length > 0 ? (
-        <div aria-hidden="true" data-health-bar="" className="flex h-2.5 w-full gap-0.5 overflow-hidden rounded-full">
+        // Each segment keeps its own fill *and* border pattern (solid, dashed, dotted, double), so the bar
+        // still separates in greyscale; the legend below repeats every bucket with a glyph and a word.
+        <div aria-hidden="true" data-health-bar="" className={cn("flex w-full gap-1 overflow-hidden rounded-full", size === "lg" ? "h-4" : "h-3")}>
           {present.map((key) => (
-            <span key={key} data-segment={key} data-count={buckets[key]} className={cn("h-full min-w-1.5 rounded-full", SEGMENT[key])} style={{ flexGrow: buckets[key] }} />
+            <span key={key} data-segment={key} data-count={buckets[key]} className={cn("h-full min-w-2 rounded-full", SEGMENT[key])} style={{ flexGrow: buckets[key] }} />
           ))}
         </div>
       ) : null}
       {compact ? null : (
-        <ul aria-hidden="true" className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0">
+        <ul aria-hidden="true" className="m-0 flex list-none flex-wrap gap-x-5 gap-y-1.5 p-0">
           {present.map((key) => (
-            <li key={key} data-legend={key} className="inline-flex items-center gap-1.5 text-label-sm text-foreground">
-              <Glyph name={bucketGlyph(key)} size={12} />
-              <span className="tabular-nums">{buckets[key]}</span>
+            <li key={key} data-legend={key} className="inline-flex items-center gap-1.5 text-label-md text-muted-foreground">
+              <Glyph name={bucketGlyph(key)} size={14} className="text-foreground" />
+              <span className="font-medium tabular-nums text-foreground">{buckets[key]}</span>
               <span>{key === "unknown" ? "Health unknown" : key === "offline" ? "Offline" : describeDeviceHealth(key)}</span>
             </li>
           ))}

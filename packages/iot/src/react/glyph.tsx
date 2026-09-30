@@ -37,7 +37,9 @@ export type GlyphName =
   | "dot"
   | "trend-up"
   | "trend-down"
-  | "trend-flat";
+  | "trend-flat"
+  | "plus"
+  | "x";
 
 const RING = <circle cx="8" cy="8" r="6.25" />;
 
@@ -152,6 +154,8 @@ const SHAPES: Record<GlyphName, React.ReactNode> = {
   "trend-up": <path d="M8 13V3M4 7l4-4 4 4" />,
   "trend-down": <path d="M8 3v10M4 9l4 4 4-4" />,
   "trend-flat": <path d="M3 6.2h10M3 9.8h10" />,
+  plus: <path d="M8 3v10M3 8h10" />,
+  x: <path d="m4 4 8 8M12 4l-8 8" />,
 };
 
 export interface GlyphProps extends Omit<React.SVGAttributes<SVGSVGElement>, "children"> {

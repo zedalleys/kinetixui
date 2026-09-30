@@ -57,14 +57,14 @@ const DeviceStateSummary = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
         {/* One accessible sentence for the whole group; the chips below repeat it visually and are
             hidden, so a screen reader reads the summary once rather than as N unlabelled numbers. */}
         <p className="sr-only">{label && label.trim().length > 0 ? label : spoken}</p>
-        <ul aria-hidden="true" className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <ul aria-hidden="true" className="m-0 flex list-none flex-wrap items-stretch gap-2 p-0">
           {visible.map((status) => (
-            <li key={status} data-status={status} className="flex items-baseline gap-1.5">
-              <span className="text-title-sm tabular-nums text-foreground">{summary.byStatus[status]}</span>
-              <span className="text-label-sm text-muted-foreground">{describeDeviceStatus(status).toLowerCase()}</span>
+            <li key={status} data-status={status} className="flex min-w-16 flex-col gap-0.5 rounded-xl bg-muted/50 px-3 py-2">
+              <span className="text-headline-sm font-semibold tabular-nums text-foreground">{summary.byStatus[status]}</span>
+              <span className="text-body-sm text-muted-foreground">{describeDeviceStatus(status).toLowerCase()}</span>
             </li>
           ))}
-          {visible.length === 0 ? <li className="text-label-sm text-muted-foreground">No devices</li> : null}
+          {visible.length === 0 ? <li className="text-body-md text-muted-foreground">No devices</li> : null}
         </ul>
       </div>
     );

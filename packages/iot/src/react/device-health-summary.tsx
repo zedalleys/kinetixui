@@ -32,10 +32,12 @@ export interface DeviceHealthSummaryProps extends Omit<React.HTMLAttributes<HTML
   compact?: boolean;
   /** The noun for what is counted. Defaults to "device" / "devices". */
   noun?: { one: string; other: string };
+  /** `md` (default) or `lg` — the size of the headline numeral and the bar. */
+  size?: "md" | "lg";
 }
 
 const DeviceHealthSummary = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceHealthSummaryProps>(
-  ({ summary, devices, assess, compact = false, noun, className, ...props }, ref) => {
+  ({ summary, devices, assess, compact = false, noun, size = "md", className, ...props }, ref) => {
     const s = summary ?? summarizeFleetHealth(devices, assess);
     const buckets = s.entries.length > 0 ? bucketsFromEntries(s.entries) : bucketsFromCounts(s.byHealth, s.offline);
     const total = s.total > 0 ? s.total : bucketTotal(buckets);
@@ -43,11 +45,21 @@ const DeviceHealthSummary = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Reac
     const word = total === 1 ? (noun?.one ?? "device") : (noun?.other ?? "devices");
 
     return (
-      <div ref={ref} data-worst={s.worst} className={cn("flex min-w-0 flex-col gap-2 font-sans", className)} {...props}>
-        <p data-health-text="" className="break-words text-label-md text-foreground">
-          {total === 0 ? `No ${noun?.other ?? "devices"}` : `${total} ${word}${detail ? ` · ${detail}` : ""}`}
+      <div ref={ref} data-worst={s.worst} data-size={size} className={cn("flex min-w-0 flex-col gap-3 font-sans", className)} {...props}>
+        {/* The whole sentence is one element, so it reads (and is asserted) as one: "24 devices · 22 healthy…".
+            The numeral is scaled up; the per-bucket detail is shown here only when there is no legend. */}
+        <p data-health-text="" className="m-0 flex flex-wrap items-baseline gap-x-2 break-words">
+          {total === 0 ? (
+            <span className="text-title-md text-muted-foreground">{`No ${noun?.other ?? "devices"}`}</span>
+          ) : (
+            <>
+              <span className={cn("tabular-nums text-foreground", size === "lg" ? "text-display-md font-semibold" : "text-headline-md font-semibold")}>{total}</span>
+              <span className="text-title-md text-foreground">{` ${word}`}</span>
+              {detail ? <span className={compact ? "text-body-md text-muted-foreground" : "sr-only"}>{` · ${detail}`}</span> : null}
+            </>
+          )}
         </p>
-        <HealthBar buckets={buckets} compact={compact} />
+        <HealthBar buckets={buckets} compact={compact} size={size} />
       </div>
     );
   },

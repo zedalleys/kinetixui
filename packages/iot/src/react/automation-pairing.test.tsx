@@ -506,9 +506,20 @@ describe("PairingMethodPicker", () => {
 
   it("marks the selection with a shape as well as a colour", () => {
     picker();
-    const glyph = (name: RegExp) => screen.getByRole("radio", { name }).querySelector("svg")!.getAttribute("data-glyph");
-    expect(glyph(/Scan QR code/)).toBe("circle-dot");
-    expect(glyph(/Bluetooth/)).toBe("circle");
+    // The selected tile carries a check glyph (a shape) and a heavier title; the others carry neither.
+    const check = (name: RegExp) => screen.getByRole("radio", { name }).querySelector('svg[data-glyph="check"]');
+    expect(check(/Scan QR code/)).not.toBeNull();
+    expect(check(/Bluetooth/)).toBeNull();
+    expect(screen.getByRole("radio", { name: /Scan QR code/ })).toHaveAttribute("data-state", "selected");
+  });
+
+  it("draws an original icon in every tile and hides it from assistive technology", () => {
+    picker();
+    for (const radio of screen.getAllByRole("radio")) {
+      const icon = radio.querySelector("svg:not([data-glyph])");
+      expect(icon).not.toBeNull();
+      expect(icon).toHaveAttribute("aria-hidden", "true");
+    }
   });
 
   it("does nothing and takes no tab stop when disabled", () => {

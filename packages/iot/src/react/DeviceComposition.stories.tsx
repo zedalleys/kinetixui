@@ -99,6 +99,36 @@ export const Groups: Story = {
   ),
 };
 
+/** `variant="row"`: a compact rail row — selectable (aria-current, check and tint) with a trailing state control. */
+export const GroupRows: Story = {
+  render: function GroupRowsStory() {
+    const [selected, setSelected] = React.useState("hall");
+    const rooms = [
+      { id: "hall", name: "Packing hall", active: 7, total: 12, attention: 0 },
+      { id: "north", name: "North field", active: 4, total: 8, attention: 1 },
+      { id: "cold", name: "Cold store", active: 0, total: 5, attention: 0 },
+    ];
+    return (
+      <div className="flex w-full max-w-sm flex-col gap-1.5">
+        {rooms.map((r) => (
+          <DeviceGroupCard
+            key={r.id}
+            variant="row"
+            name={r.name}
+            kind="Zone"
+            deviceCount={r.total}
+            activeCount={r.active}
+            attentionCount={r.attention}
+            category="light"
+            selected={selected === r.id}
+            onSelect={() => setSelected(r.id)}
+          />
+        ))}
+      </div>
+    );
+  },
+};
+
 export const Automations: Story = {
   render: () => (
     <div className="grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">

@@ -121,3 +121,26 @@ const events: KinetixActivityEvent[] = [
 export const Activity: Story = {
   render: () => <ActivityTimeline events={events} now={NOW} deviceName={(id) => names[id]} />,
 };
+
+/** `blocks` (time on the start side, a soft block per event) and `compact` (one line, for a rail). */
+export const ActivityVariants: Story = {
+  render: () => (
+    <>
+      <Label>blocks</Label>
+      <ActivityTimeline variant="blocks" events={events} now={NOW} deviceName={(id) => names[id]} label="Activity blocks" />
+      <Label>compact</Label>
+      <ActivityTimeline variant="compact" events={events} now={NOW} deviceName={(id) => names[id]} label="Activity compact" />
+    </>
+  ),
+};
+
+/** Compact alert rows for a rail, and the large-numeral health summary. */
+export const AlertsCompact: Story = {
+  render: () => (
+    <>
+      <AlertList variant="compact" alerts={alerts} now={NOW} deviceName={(id) => names[id]} onAcknowledge={() => {}} />
+      <Label>Health summary, size lg</Label>
+      <DeviceHealthSummary devices={site04} assess={{ now: NOW }} size="lg" />
+    </>
+  ),
+};

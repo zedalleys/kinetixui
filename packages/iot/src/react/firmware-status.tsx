@@ -3,6 +3,7 @@
 import * as React from "react";
 import type { KinetixFirmwareInfo, KinetixFirmwareStatus } from "../types/firmware";
 import { describeFirmwareStatus, resolveFirmwareStatus } from "../functions/firmware";
+import { Glyph, type GlyphName } from "./glyph";
 import { cn } from "./cn";
 import { resolveLabel } from "./label";
 import { withDisplayName } from "./display-name";
@@ -37,6 +38,15 @@ const STATUS_CLASS: Record<KinetixFirmwareStatus, string> = {
   unknown: "text-muted-foreground",
 };
 
+/** A shape per status, so the line separates in greyscale as well as by word and tint. */
+const STATUS_GLYPH: Record<KinetixFirmwareStatus, GlyphName> = {
+  "up-to-date": "check",
+  "update-available": "trend-up",
+  updating: "swap",
+  failed: "octagon",
+  unknown: "dash",
+};
+
 /**
  * A version string, rendered safely.
  *
@@ -59,15 +69,24 @@ const FirmwareStatus = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
       <div
         ref={ref}
         data-firmware-status={status}
-        className={cn("flex items-start gap-3 font-sans", className)}
+        className={cn("flex items-center gap-3 font-sans", className)}
         {...props}
       >
+        <span
+          className={cn(
+            "grid size-9 shrink-0 place-items-center rounded-xl",
+            status === "failed" ? "bg-destructive/10" : status === "update-available" || status === "updating" ? "bg-primary/10" : "bg-muted",
+            STATUS_CLASS[status],
+          )}
+        >
+          <Glyph name={STATUS_GLYPH[status]} size={18} />
+        </span>
         <span className="flex min-w-0 flex-col gap-0.5">
-          <span className={cn("text-label-md", STATUS_CLASS[status])}>
+          <span className={cn("text-title-sm", status === "up-to-date" || status === "unknown" ? "text-foreground" : STATUS_CLASS[status])}>
             {resolveLabel(label, describeFirmwareStatus(status))}
           </span>
           {showVersions ? (
-            <span className="text-label-sm text-muted-foreground">
+            <span className="text-body-sm text-muted-foreground">
               {current ? (
                 <>
                   <Version>{current}</Version>

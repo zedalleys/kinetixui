@@ -1,5 +1,6 @@
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { BatteryIndicator } from "./battery-indicator";
 import { DeviceListItem } from "./device-list-item";
 import { compareDeviceAttention } from "../functions/group";
 import type { KinetixDevice } from "../types/device";
@@ -90,5 +91,16 @@ export const WithAction: Story = {
 
 export const RightToLeft: Story = { render: (args) => many(args, "rtl") };
 
-/** Narrow: the last-seen column drops out below `sm`, leaving identity, value and state. */
+/** Narrow: battery and signal drop out below `sm`; the second line keeps location and last seen. */
 export const Narrow: Story = { render: (args) => one(args, "w-[18rem]") };
+
+/** `BatteryIndicator presentation="pill"`: the level as a larger numeral, with a word for low and critical. */
+export const BatteryPill: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-center gap-3">
+      <BatteryIndicator value={82} presentation="pill" />
+      <BatteryIndicator value={9} presentation="pill" />
+      <BatteryIndicator value={null} presentation="pill" />
+    </div>
+  ),
+};

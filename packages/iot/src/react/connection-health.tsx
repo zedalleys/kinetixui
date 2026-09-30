@@ -45,9 +45,9 @@ export interface ConnectionHealthProps extends Omit<React.HTMLAttributes<HTMLDLi
 
 function Row({ term, children, state }: { term: string; children: React.ReactNode; state?: string }) {
   return (
-    <div data-state={state} className="flex items-baseline justify-between gap-4 border-b border-border py-2 last:border-b-0">
-      <dt className="text-label-sm text-muted-foreground">{term}</dt>
-      <dd className="text-end text-label-md text-foreground">{children}</dd>
+    <div data-state={state} className="flex min-h-11 items-baseline justify-between gap-4 border-b border-border/60 py-3 last:border-b-0">
+      <dt className="text-body-sm text-muted-foreground">{term}</dt>
+      <dd className="m-0 text-end text-title-sm text-foreground">{children}</dd>
     </div>
   );
 }
