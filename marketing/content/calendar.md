@@ -1,13 +1,17 @@
 ---
 type: 30-day calendar
-status: planned — nothing scheduled, nothing published
+status: running — day 1 published 2026-09-29; everything from day 2 on is still planned
 ---
 
 # The first 30 days
 
-Day offsets, not dates: the start date is whenever Ziad decides the manual actions in
-`audits/PHASE-4-CONTENT-ENGINE.md` are done. **Day 1 is a Tuesday** in the numbering below — Monday starts
-are worse for a technical audience's first impression of a new account.
+Day offsets, not dates. **Day 1 was 2026-09-29** — the offsets below count from there, so day 2 is
+2026-09-30 and so on. **Day 1 is a Tuesday** in the numbering below — Monday starts are worse for a
+technical audience's first impression of a new account.
+
+Published rows carry their date in the Status column, and the act of publishing is logged per channel in
+[`../distribution/register.json`](../distribution/register.json), which is the record `pnpm check:distribution`
+validates. This file stays the schedule.
 
 The machine-readable version of every row is `register.json`, which `pnpm check:content` validates.
 
