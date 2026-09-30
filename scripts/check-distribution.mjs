@@ -157,6 +157,67 @@ for (const asset of content.assets) {
   }
 }
 
+/* ---------------------------------------------- paid amplification */
+
+/**
+ * Amplification is NOT an act of publishing, so it is not a row: this file's first line says one row per act
+ * of publishing, and a boost of an already-published post is a different fact about the same act. It gets its
+ * own log, and the row it amplifies points at it so nobody can read the row's counts without seeing that paid
+ * distribution overlapped them.
+ *
+ * The rule these checks exist to protect is the measurement one. A LinkedIn boost normally promotes the
+ * original post carrying the original tagged URL, so paid and organic arrivals are indistinguishable in
+ * first-party data. An entry without its caveat would let a later reader quote a boosted asset's sessions as
+ * organic performance, which is the specific mistake this log is here to prevent.
+ */
+const AMPLIFICATION_TYPES = new Set(["boosted-post", "ad-campaign"]);
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const amplification = register.amplification ?? [];
+const ampIds = new Set();
+
+for (const amp of amplification) {
+  const where = `amplification ${amp.id ?? "<no id>"}`;
+  if (!amp.id || !/^amp-\d{3}$/.test(amp.id)) fail(where, "id is not amp-NNN");
+  if (ampIds.has(amp.id)) fail(where, "duplicate amplification id");
+  ampIds.add(amp.id);
+
+  if (!AMPLIFICATION_TYPES.has(amp.type)) fail(where, `type "${amp.type}" is not boosted-post/ad-campaign`);
+  if (!CHANNELS.has(amp.channel)) fail(where, `channel "${amp.channel}" is not in the register's own channel list`);
+
+  // Amplifying something that never went out is a category error, not a typo.
+  const asset = byId.get(amp.asset);
+  if (!asset) { fail(where, `no such asset in marketing/content/register.json: ${amp.asset}`); continue; }
+  if (asset.status !== "published") fail(where, `amplifies "${amp.asset}", which the content register says is "${asset.status}" — you cannot boost what has not published`);
+  if (amp.channel !== asset.channel) fail(where, `channel "${amp.channel}" but the content register says "${asset.channel}"`);
+
+  // Unknowns stay null. A guessed number is worse than an absent one, so the shape allows only null or a value.
+  if (amp.durationDays !== null && !(Number.isInteger(amp.durationDays) && amp.durationDays > 0)) {
+    fail(where, "durationDays is neither null nor a positive whole number of days");
+  }
+  for (const k of ["startedOn", "endedOn"]) {
+    if (amp[k] !== null && !DATE.test(amp[k] ?? "")) fail(where, `${k} is neither null nor YYYY-MM-DD — never guess a boost window`);
+  }
+
+  // The caveat is the point of the record. Without it the log is decoration.
+  if (!amp.note) fail(where, "no note — an amplification nobody can interpret later is not a record");
+  else if (!/not purely organic/i.test(amp.note)) {
+    fail(where, "the note does not carry the measurement rule — it must say in so many words that traffic in this window is not purely organic");
+  }
+
+  // Both directions, so the pointer and the log cannot drift apart.
+  const rows = register.rows.filter((r) => r.asset === amp.asset && r.channel === amp.channel && r.status === "published");
+  if (rows.length === 0) fail(where, `no published ${amp.channel} row for ${amp.asset} to amplify`);
+  else if (!rows.some((r) => r.amplification === amp.id)) {
+    fail(where, `no published ${amp.channel} row for ${amp.asset} points back at ${amp.id} — add "amplification": "${amp.id}" to it`);
+  }
+}
+
+for (const row of register.rows) {
+  if (row.amplification && !ampIds.has(row.amplification)) {
+    fail(`${row.asset}${row.day ? ` (day ${row.day})` : ""}`, `points at amplification "${row.amplification}", which is not in the amplification log`);
+  }
+}
+
 /* ---------------------------------------------- the documents */
 
 /**
@@ -216,5 +277,6 @@ const published = register.rows.filter((r) => r.status === "published").length;
 console.log(
   `check:distribution ok — ${register.rows.length} rows (${published} published), ` +
     `${Object.entries(counts).map(([c, n]) => `${c} ${n}`).join(", ")}; ` +
-    `${ROUTES.size} routes verified, ${SOURCES.size} attribution sources read from the runtime.`,
+    `${ROUTES.size} routes verified, ${SOURCES.size} attribution sources read from the runtime, ` +
+    `${amplification.length} paid amplification${amplification.length === 1 ? "" : "s"}.`,
 );
