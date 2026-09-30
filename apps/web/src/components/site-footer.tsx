@@ -83,7 +83,26 @@ export function SiteFooter() {
         </div>
 
         <div className="flex flex-col gap-2 border-t border-border py-6 font-mono text-[11px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 KinetixUI — beta</p>
+          {/* The licence line and the creator credit are one group, so the bar keeps its two-sided balance.
+              A third top-level item would be centred by `justify-between`, which is more prominence than a
+              by-line should take next to the product's own copyright. */}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <p>© 2026 KinetixUI — beta</p>
+            {/* Underlined rather than colour-only: this is a link inside a text block, which is exactly the
+                shape that tripped `link-in-text-block` on the homepage. It inherits the bar's muted mono, so
+                it reads as a credit and not as a call to action. */}
+            <p>
+              Created by{" "}
+              <Link
+                href="https://zedalleys.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-4 transition-colors hover:text-foreground"
+              >
+                Zed Alleys
+              </Link>
+            </p>
+          </div>
           <p>tokens · DTCG → Style Dictionary v4</p>
         </div>
       </div>
