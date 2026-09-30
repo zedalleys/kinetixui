@@ -64,6 +64,32 @@ describe("operations environment", () => {
     expect(within(screen.getByRole("region", { name: /Selected machine: Transfer pump P-201/ })).getByRole("switch", { name: "Transfer pump P-201 run" })).toHaveAttribute("aria-checked", "false");
   });
 
+  it("keeps the run control in the open and telemetry, connection and the shift log behind disclosures", () => {
+    render(<OperationsEnvironmentExample />);
+    const inspector = screen.getByRole("region", { name: /Selected machine: Transfer pump P-201/ });
+    // Primary: identity, the reported state and the control, with nothing to expand first.
+    expect(within(inspector).getByRole("switch", { name: "Transfer pump P-201 run" })).toBeInTheDocument();
+    expect(within(inspector).getByText("Running")).toBeInTheDocument();
+    // Secondary and tertiary: present, complete, and collapsed rather than stacked beside the control.
+    for (const title of ["Telemetry", "Connection and firmware", "Shift log", "Equipment"]) {
+      const details = screen.getByText(title, { selector: "summary span span" }).closest("details")!;
+      expect(details, title).not.toHaveAttribute("open");
+    }
+  });
+
+  it("draws the duty control as a track, so its confirmed value and a pending request stay readable", () => {
+    render(<OperationsEnvironmentExample />);
+    const inspector = screen.getByRole("region", { name: /Selected machine: Transfer pump P-201/ });
+    const duty = within(inspector).getByRole("slider", { name: /Duty/ });
+    expect((duty as HTMLInputElement).value).toBe("55");
+    // The confirmed level is printed beside the label, not hidden inside the track's fill.
+    expect(within(inspector).getByText("55")).toBeInTheDocument();
+    fireEvent.change(duty, { target: { value: "70" } });
+    fireEvent.blur(duty);
+    expect(within(inspector).getByText(/Requested 70%, not yet confirmed/)).toBeInTheDocument();
+    expect(within(inspector).getByText("55")).toBeInTheDocument();
+  });
+
   it("labels routines as shown, not executed", () => {
     render(<OperationsEnvironmentExample />);
     expect(screen.getByText(/Shown, not executed/)).toBeInTheDocument();

@@ -79,28 +79,29 @@ export function DeviceDetailExample() {
           <span
             aria-hidden="true"
             className={cn(
-              "flex size-20 shrink-0 items-center justify-center rounded-2xl p-2 transition-colors duration-fast motion-reduce:transition-none sm:size-28",
+              "flex size-16 shrink-0 items-center justify-center rounded-2xl p-2 transition-colors duration-fast motion-reduce:transition-none sm:size-28",
               running && online ? "bg-primary/10" : "bg-card shadow-sm",
             )}
           >
             <DeviceIllustration category={resolveDeviceCategory(device)} on={running && online} size="lg" className="size-full" />
           </span>
           <div className="flex min-w-0 flex-col gap-1">
-            <h4 className="truncate text-headline-md text-foreground">{device.name}</h4>
+            {/* Wraps rather than truncates: at 320 the illustration left too little room and the name was cut. */}
+            <h4 className="break-words text-headline-md text-foreground">{device.name}</h4>
             {home ? <SpaceBreadcrumb path={spacePath(tree, home.id)} label={`Location of ${device.name}`} /> : null}
             <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-body-md">
-          <DeviceStatusBadge status={device.status} />
-          <span className="text-muted-foreground">
-            {/* LastSync's own accessible label is the whole sentence ("Last seen 4 seconds ago"); the
-                visible prefix is hidden from assistive technology so it is not read twice. */}
-            <span aria-hidden="true">Last seen </span>
-            <LastSync value={device.lastSeenAt} now={sim.now} />
-          </span>
-          {alerts.length > 0 ? (
-            <StateBadge state="warning">
-              {alerts.length} open {alerts.length === 1 ? "alert" : "alerts"}
-            </StateBadge>
-          ) : null}
+              <DeviceStatusBadge status={device.status} />
+              <span className="text-muted-foreground">
+                {/* LastSync's own accessible label is the whole sentence ("Last seen 4 seconds ago"); the
+                    visible prefix is hidden from assistive technology so it is not read twice. */}
+                <span aria-hidden="true">Last seen </span>
+                <LastSync value={device.lastSeenAt} now={sim.now} />
+              </span>
+              {alerts.length > 0 ? (
+                <StateBadge state="warning">
+                  {alerts.length} open {alerts.length === 1 ? "alert" : "alerts"}
+                </StateBadge>
+              ) : null}
             </p>
           </div>
         </div>
@@ -116,12 +117,15 @@ export function DeviceDetailExample() {
                 <StateBadge state={online ? "confirmed" : "offline"}>{online ? "Confirmed by the pump" : "Last known, pump offline"}</StateBadge>
               </div>
               {/* The word "Running" is the CONFIRMED state. A request in flight is never shown here. */}
-              <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-display-sm text-foreground">
+              {/* The request sits under the confirmed word as a full-width block, not beside it as a pill:
+                  at phone width a rounded pill wrapped its sentence into a lozenge, and this has to stay
+                  readable to stay honest. */}
+              <p className="flex min-w-0 flex-col items-start gap-2 text-display-sm text-foreground">
                 <span>{running ? "Running" : "Stopped"}</span>
                 {requestedPower !== undefined ? (
-                  <span className="inline-flex items-center gap-2 rounded-full border-2 border-dashed border-primary bg-primary/10 px-3 py-1 text-body-md font-medium text-foreground">
-                    <StateGlyph state="pending" size={16} className="text-primary" />
-                    {power.format(requestedPower)} requested, not yet confirmed
+                  <span className="flex min-w-0 items-start gap-2 self-stretch rounded-xl border-2 border-dashed border-primary bg-primary/10 p-3 text-body-md font-medium text-foreground">
+                    <StateGlyph state="pending" className="mt-0.5 text-primary" />
+                    {power.format(requestedPower)} requested, not yet confirmed. The pump still reports {running ? "running" : "stopped"}.
                   </span>
                 ) : null}
               </p>
@@ -148,8 +152,9 @@ export function DeviceDetailExample() {
 
           <section aria-label="Readings" className="flex min-w-0 flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm sm:p-6">
             <div className="grid gap-3 sm:grid-cols-2">
-              <TelemetryMetric {...flow} label="Flow" size="xl" className="rounded-xl bg-muted/60 p-4" />
-              <TelemetryMetric {...pressure} label="Pressure" size="xl" className="rounded-xl bg-muted/60 p-4" />
+              {/* One step below the confirmed "Running": the readings are what the pump measures, not what it is. */}
+              <TelemetryMetric {...flow} label="Flow" size="lg" className="rounded-xl bg-muted/60 p-4" />
+              <TelemetryMetric {...pressure} label="Pressure" size="lg" className="rounded-xl bg-muted/60 p-4" />
             </div>
             <div className="flex min-w-0 flex-col gap-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
