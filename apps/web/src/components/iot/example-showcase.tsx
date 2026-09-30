@@ -32,6 +32,7 @@ export function IotExampleShowcase({
   code,
   children,
   className,
+  bare = false,
 }: {
   slug: string;
   title: string;
@@ -41,47 +42,70 @@ export function IotExampleShowcase({
   code: string;
   children: React.ReactNode;
   className?: string;
+  /**
+   * The preview brings its own surface (for example `ShowcaseShell`), so the wrapper drops its tinted frame and
+   * padding and lets the child sit directly on the page. Default `false` keeps the framed preview.
+   */
+  bare?: boolean;
 }) {
-  // Radix Tabs.Root renders `dir` on its root element and defaults it to "ltr" when it is not given one, so
-  // an un-directed root silently forced every live preview inside it to LTR whatever the document said.
-  // Read the document's direction (after mount, so the server render and hydration agree) and pass it on.
+  // "Built from" is a quiet inline list from `md`; below it, a disclosure that starts closed. The list is rendered
+  // once, inside the `<details>`, which is forced open from `md` up (and follows the breakpoint when it changes).
+  const [partsOpen, setPartsOpen] = React.useState(false);
+  // Radix Tabs stamps `dir="ltr"` on its root unless told otherwise, which would force every preview LTR. Read the
+  // document's direction after mount (so server render and hydration agree) and hand it down.
   const [dir, setDir] = React.useState<"ltr" | "rtl">("ltr");
   React.useEffect(() => {
     setDir(document.documentElement.dir === "rtl" ? "rtl" : "ltr");
   }, []);
+  React.useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const query = window.matchMedia("(min-width: 768px)");
+    setPartsOpen(query.matches);
+    const onChange = (event: MediaQueryListEvent) => setPartsOpen(event.matches);
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
 
   return (
-    <section className={cn("overflow-hidden rounded-xl border border-border bg-background", className)}>
-      <header className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h3 className="text-title-sm text-foreground">{title}</h3>
-          <p className="text-sm text-muted-foreground">{description}</p>
-          {/* What it is built from, named rather than described — the reader can look each one up. */}
-          <ul className="mt-1 flex flex-wrap gap-1.5">
-            {uses.map((name) => (
-              <li
-                key={name}
-                className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted-foreground"
-              >
-                {name}
-              </li>
-            ))}
-          </ul>
-        </div>
+    <section className={cn("flex min-w-0 flex-col gap-4 sm:gap-5", className)}>
+      <header className="flex min-w-0 flex-col gap-2">
+        <h3 className="text-title-lg text-foreground">{title}</h3>
+        <p className="max-w-3xl text-body-md text-muted-foreground">{description}</p>
+        {/* What it is built from, named rather than described — the reader can look each one up. */}
+        <details open={partsOpen} onToggle={(event) => setPartsOpen(event.currentTarget.open)} className="group">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 text-body-md text-muted-foreground marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden">
+            <span>
+              Built from {uses.length} {uses.length === 1 ? "part" : "parts"}
+            </span>
+            <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" className={cn("transition-transform duration-fast motion-reduce:transition-none", partsOpen && "rotate-180")}>
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </summary>
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 pb-1 md:pb-0">
+            <span className="hidden text-body-sm text-muted-foreground md:inline">Built from</span>
+            <ul className="flex flex-wrap gap-x-3 gap-y-1">
+              {uses.map((name) => (
+                <li key={name} className="font-mono text-label-md text-muted-foreground">
+                  {name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </details>
       </header>
 
-      <Tabs.Root defaultValue="preview" dir={dir}>
-        <div className="flex items-center justify-between border-b border-border px-2">
-          <Tabs.List className="flex" aria-label={`${title}: preview or code`}>
+      <Tabs.Root defaultValue="preview" dir={dir} className="flex min-w-0 flex-col gap-4">
+        <div className="flex items-center justify-between gap-2">
+          <Tabs.List aria-label={`${title}: preview or code`} className="inline-flex rounded-full bg-muted/70 p-1">
             {(["preview", "code"] as const).map((value) => (
               <Tabs.Trigger
                 key={value}
                 value={value}
                 className={cn(
-                  "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground",
-                  "transition-colors duration-200 hover:text-foreground motion-reduce:transition-none",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-                  "data-[state=active]:border-primary data-[state=active]:text-foreground",
+                  "min-h-11 rounded-full px-5 text-label-lg capitalize text-muted-foreground md:min-h-9 md:px-4",
+                  "transition-colors duration-fast hover:text-foreground motion-reduce:transition-none",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm",
                 )}
               >
                 {value}
@@ -90,7 +114,7 @@ export function IotExampleShowcase({
           </Tabs.List>
           <CopyButton
             value={code}
-            className="me-1"
+            className="size-11 md:size-8"
             // Only the surface and the position travel. Not the slug, not the snippet. See the note
             // on `iot_example_copied` in lib/analytics.ts for why this is not `component_code_copied`.
             onCopy={() => analytics.track("iot_example_copied", { source: "iot_page", location: "code_example" })}
@@ -104,25 +128,30 @@ export function IotExampleShowcase({
             role="region"
             aria-label={`${title} preview`}
             tabIndex={0}
-            className="overflow-x-auto bg-muted/20 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:p-6"
+            className={cn(
+              "overflow-x-auto rounded-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              bare ? undefined : "bg-muted/30 p-4 sm:p-6",
+            )}
           >
             {children}
           </div>
         </Tabs.Content>
 
         <Tabs.Content value="code" forceMount className="data-[state=inactive]:hidden">
-          <pre
-            // Code is code: the surrounding prose flips under RTL and this must not.
-            dir="ltr"
-            tabIndex={0}
-            aria-label={`${title} source, ${path}`}
-            className="max-h-[32rem] overflow-auto p-4 font-mono text-[13px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-          >
-            <code>{code}</code>
-          </pre>
-          <p className="border-t border-border px-4 py-2 font-mono text-[11px] text-muted-foreground" dir="ltr">
-            {path}
-          </p>
+          <div className="overflow-hidden rounded-2xl bg-muted/40">
+            <pre
+              // Code is code: the surrounding prose flips under RTL and this must not.
+              dir="ltr"
+              tabIndex={0}
+              aria-label={`${title} source, ${path}`}
+              className="max-h-96 overflow-auto p-4 font-mono text-body-md leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+            >
+              <code>{code}</code>
+            </pre>
+            <p className="px-4 pb-3 font-mono text-label-md text-muted-foreground" dir="ltr">
+              {path}
+            </p>
+          </div>
         </Tabs.Content>
       </Tabs.Root>
       <span className="sr-only" data-example={slug} />
