@@ -89,6 +89,11 @@ function smoothPath(pts: readonly (readonly [number, number])[]): string {
 const SPARK_W = 100;
 const SPARK_H = 40;
 
+/** The marker is 6px from its centre, so the plot is inset by that much: a point at `frac` (0-1) of the
+ *  data sits at `6px + frac × (width − 12px)`, which keeps the whole marker inside the card. */
+const PLOT_INSET = "0.375rem";
+const alongPlot = (frac: number) => `calc(${PLOT_INSET} + (100% - ${PLOT_INSET} * 2) * ${frac.toFixed(4)})`;
+
 const usable = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v) && v >= 0;
 
 const EnergySummary = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, EnergySummaryProps>(
@@ -219,35 +224,42 @@ const EnergySummary = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forw
 
           {usableDays.length > 0 ? (
             <div data-chart="" className="flex flex-col gap-2">
+              {/* The marker sits ON the newest point, which is at the end of the plot, and it is 12px
+                  across, so half of it would hang past the end. The plot is therefore inset by that
+                  radius and every overlay is placed inside the inset band: the drawing is 6px narrower
+                  on each side and the marker's own edge lands on the card's edge, instead of pushing the
+                  card into an invisible horizontal scroll on a phone. */}
               <div aria-hidden="true" className="relative h-24 w-full">
-                <svg viewBox={`0 0 ${SPARK_W} ${SPARK_H}`} preserveAspectRatio="none" focusable="false" className="absolute inset-0 size-full text-primary rtl:-scale-x-100">
-                  <defs>
-                    <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0" stopColor="currentColor" stopOpacity={0.28} />
-                      <stop offset="1" stopColor="currentColor" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  {runs2.map((run, k) => (
-                    <g key={k}>
-                      {run.length > 1 ? (
-                        <path d={`${smoothPath(run)}L${run[run.length - 1]![0].toFixed(2)} ${SPARK_H}L${run[0]![0].toFixed(2)} ${SPARK_H}Z`} fill={`url(#${gradId})`} stroke="none" />
-                      ) : null}
-                      <path data-spark-line="" d={smoothPath(run)} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-                    </g>
-                  ))}
-                </svg>
+                <div className="absolute inset-y-0 inset-x-1.5">
+                  <svg viewBox={`0 0 ${SPARK_W} ${SPARK_H}`} preserveAspectRatio="none" focusable="false" className="absolute inset-0 size-full text-primary rtl:-scale-x-100">
+                    <defs>
+                      <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stopColor="currentColor" stopOpacity={0.28} />
+                        <stop offset="1" stopColor="currentColor" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    {runs2.map((run, k) => (
+                      <g key={k}>
+                        {run.length > 1 ? (
+                          <path d={`${smoothPath(run)}L${run[run.length - 1]![0].toFixed(2)} ${SPARK_H}L${run[0]![0].toFixed(2)} ${SPARK_H}Z`} fill={`url(#${gradId})`} stroke="none" />
+                        ) : null}
+                        <path data-spark-line="" d={smoothPath(run)} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                      </g>
+                    ))}
+                  </svg>
+                </div>
                 {lastMeasured ? (
                   <>
                     <span
                       data-latest-marker=""
                       className="pointer-events-none absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary ring-2 ring-background rtl:translate-x-1/2"
-                      style={{ insetInlineStart: `${(sx(lastMeasured.i) / SPARK_W) * 100}%`, top: `${(sy(lastMeasured.v) / SPARK_H) * 100}%` }}
+                      style={{ insetInlineStart: alongPlot(sx(lastMeasured.i) / SPARK_W), top: `${(sy(lastMeasured.v) / SPARK_H) * 100}%` }}
                     />
                     <span
                       data-latest-value=""
                       className="pointer-events-none absolute -translate-x-1/2 -translate-y-full whitespace-nowrap rtl:translate-x-1/2 pb-2 text-label-md tabular-nums text-foreground"
                       style={{
-                        insetInlineStart: `${Math.min(88, Math.max(12, (sx(lastMeasured.i) / SPARK_W) * 100))}%`,
+                        insetInlineStart: alongPlot(Math.min(0.88, Math.max(0.12, sx(lastMeasured.i) / SPARK_W))),
                         top: `${(sy(lastMeasured.v) / SPARK_H) * 100}%`,
                       }}
                     >

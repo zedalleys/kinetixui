@@ -109,7 +109,12 @@ const FIELDSET = "m-0 flex min-w-0 flex-col gap-4 border-0 border-t border-borde
 const ITEM = "m-0 flex min-w-0 flex-col gap-3 rounded-xl border-0 bg-background p-4";
 const LEGEND = "float-start mb-3 w-full p-0 text-title-md text-foreground";
 const ITEM_LEGEND = "float-start mb-2 w-full p-0 text-label-lg text-muted-foreground";
-const FIELD = "flex min-w-0 grow basis-40 flex-col gap-1.5";
+/**
+ * A labelled control in a wrapping row. Below `sm` every field takes the whole row: sharing a phone-width
+ * row squeezed a text field to ~160px, narrower than the name it was holding, so the value scrolled
+ * sideways inside the control. From `sm` up the fields pair off again on a 10rem basis as before.
+ */
+const FIELD = "flex min-w-0 grow basis-full flex-col gap-1.5 sm:basis-40";
 
 const slug = (path: string) => path.replace(/[^a-zA-Z0-9]+/g, "-").replace(/-$/, "");
 
