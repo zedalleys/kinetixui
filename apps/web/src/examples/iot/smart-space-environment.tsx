@@ -2,37 +2,90 @@
 
 import * as React from "react";
 import {
+  ActivityTimeline,
   AlertList,
+  BatteryIndicator,
   CameraDeviceCard,
   CommandLifecycle,
-  DeviceControlCard,
-  DeviceGroupCard,
+  DeviceIcon,
   DeviceLevelControl,
   DeviceModeControl,
   DevicePowerControl,
   DeviceSetpointControl,
   EnergySummary,
   RoutineCard,
-  SpaceBreadcrumb,
-  SpaceRollup,
   TelemetryGrid,
   TelemetryMetric,
 } from "@kinetixui/iot/react";
-import { buildSpaceTree, descendantDeviceIds, resolveDeviceCategory, spacePath } from "@kinetixui/iot/functions";
-import { SAMPLE_IMAGE_LABEL, selectAlerts, selectEnergy, selectSpaceRollups } from "@/lib/iot-sim";
-import { useIotSimulation } from "@/lib/iot-sim/use-simulation";
+import { resolveDeviceCategory, type KinetixDeviceCategory } from "@kinetixui/iot/functions";
+import {
+  DateStrip,
+  DeviceIllustration,
+  Disclosure,
+  HouseMark,
+  IconButton,
+  IconCluster,
+  Panel,
+  PillSelector,
+  RailGroup,
+  RailItem,
+  RailList,
+  ShowcaseShell,
+  SpaceCanvas,
+  SpaceHeader,
+  Stat,
+  SummaryChip,
+  Tile,
+  type HotspotState,
+  type PlanHotspot,
+  type RoomAmbient,
+  type ShowcaseState,
+} from "@/components/iot/showcase";
+import { SAMPLE_IMAGE_LABEL, selectActivity, selectAlerts, selectEnergy, selectReading, selectSpaceRollups } from "@/lib/iot-sim";
+import { useIotSimulation, type UseIotSimulation } from "@/lib/iot-sim/use-simulation";
 import { smartSpace } from "./scenarios";
-import { BUTTON, Section, SimNotice, SimTransport, controlOf, deviceOf, readingOf, statusLineOf, type ControlBinding } from "./harness";
+import { homeAnchors, homePlan } from "./scenarios/plans";
+import { SimNotice, SimTransport, controlOf, deviceOf, readingOf, statusLineOf, type ControlBinding } from "./harness";
 
 // kx-iot:start
 /**
- * A smart space, end to end: rooms with health rolled up from their devices, real controls that show
- * requested against confirmed, air quality, a camera that is never shown as live, energy, alerts and
- * scenes. Built from one simulated scenario through selectors, so nothing here is a hand-typed count.
+ * Connected Space: one home as a place, not a list. A plan of the house with the devices where they are, a
+ * room rail with health rolled up from its devices, real controls for whichever room or device you pick, and
+ * a side of attention, energy, activity and scenes. Built from one simulated scenario through selectors, so
+ * nothing here is a hand-typed count.
  *
- * SIMULATED. No device is contacted and nothing is sent over a network.
+ * State stays honest everywhere: the big number, the switch and the marker on the plan show what the device
+ * last CONFIRMED. A request is drawn beside it as a dashed "requested, not yet confirmed" mark, and a failed
+ * or unreachable one keeps the last confirmed value and offers Retry (never automatic).
+ *
+ * SIMULATED. No device is contacted and nothing is sent over a network. The camera shows a labelled sample
+ * frame, never video. Scenes and routines are shown, not executed: KinetixUI has no automation engine.
  */
 const DAY_MS = 86_400_000;
+const HOME = "home";
+
+type IconName = "home" | "bell" | "flame" | "leaf" | "power" | "lock" | "unlock";
+
+/** Small original glyphs for the rail, the header and the mode tiles. Decorative: the words carry the meaning. */
+function Glyph({ name, size = 20 }: { name: IconName; size?: number }) {
+  const d: Record<IconName, React.ReactNode> = {
+    home: <path d="M4 11 12 4l8 7M6 10v9h12v-9M10 19v-5h4v5" />,
+    bell: <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15ZM10 21h4" />,
+    flame: <path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-6 1-9Z" />,
+    leaf: <path d="M5 19c0-9 5-14 14-14 0 9-5 14-14 14ZM5 19l7-7" />,
+    power: <path d="M12 3v8M7 6.5a7 7 0 1 0 10 0" />,
+    lock: <path d="M6 11h12v9H6ZM8.5 11V8a3.5 3.5 0 0 1 7 0v3" />,
+    unlock: <path d="M6 11h12v9H6ZM8.5 11V8a3.5 3.5 0 0 1 6.6-1.6" />,
+  };
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      {d[name]}
+    </svg>
+  );
+}
+
+const MODE_ICONS: Record<string, IconName> = { heat: "flame", eco: "leaf", off: "power", locked: "lock", unlocked: "unlock" };
+const withIcons = (modes: readonly { id: string; label: string }[]) => modes.map((m) => ({ ...m, icon: MODE_ICONS[m.id] ? <Glyph name={MODE_ICONS[m.id]!} size={22} /> : undefined }));
 
 /** The lifecycle of a request that has not landed, or did not. Nothing for a confirmed one. */
 function Lifecycle({ binding }: { binding: ControlBinding }) {
@@ -40,191 +93,503 @@ function Lifecycle({ binding }: { binding: ControlBinding }) {
   return <CommandLifecycle lifecycle={binding.command.lifecycle} formatValue={binding.format} onRetry={binding.retry} onCancel={binding.cancel} className="w-full" />;
 }
 
+/** A worded battery row: the caption says what the meter is. Nothing when the device has no battery. */
+function Battery({ value, name }: { value: number | undefined; name: string }) {
+  if (value === undefined) return null;
+  return (
+    <div className="flex items-center gap-2 self-start">
+      <span className="text-body-md text-muted-foreground">Battery</span>
+      <BatteryIndicator value={value} presentation="pill" label={`${name} battery`} />
+    </div>
+  );
+}
+
+const shown = (value: unknown) => String(value);
+const onOff = (value: unknown) => (value === "on" ? "On" : value === "off" ? "Off" : "Unknown");
+
+/** What the plan, the tiles and the rail need to say about one device, read from the simulation. */
+type DeviceView = {
+  id: string;
+  device: ReturnType<typeof deviceOf>;
+  category: KinetixDeviceCategory;
+  roomId: string;
+  roomName: string;
+  state: HotspotState;
+  statusWord: string;
+  /** The CONFIRMED value. */
+  value?: string;
+  /** The value asked for and not yet confirmed. */
+  requested?: string;
+  on: boolean;
+  power?: ControlBinding;
+};
+
+function deviceView(iot: UseIotSimulation, id: string): DeviceView {
+  const { sim } = iot;
+  const device = deviceOf(sim, id);
+  const room = sim.scenario.spaces.find((s) => s.kind === "room" && s.deviceIds?.includes(id));
+  const caps = sim.scenario.capabilities[id] ?? [];
+  const bind = (cap: string) => (caps.some((c) => c.id === cap) ? controlOf(iot, id, cap) : undefined);
+  const power = bind("power");
+  const level = bind("level");
+  const setpoint = bind("setpoint");
+  const lock = bind("lock");
+  const controls = [power, level, setpoint, bind("mode"), lock].filter((b): b is ControlBinding => !!b);
+
+  let value: string | undefined;
+  let requested: string | undefined;
+  let on = false;
+  if (device.type === "light" && power) {
+    on = power.confirmed === "on";
+    value = on && level ? `${shown(level.confirmed)}%` : onOff(power.confirmed);
+    requested = power.requested !== undefined ? onOff(power.requested) : level?.requested !== undefined ? `${shown(level.requested)}%` : undefined;
+  } else if (power) {
+    on = power.confirmed === "on";
+    value = onOff(power.confirmed);
+    requested = power.requested !== undefined ? onOff(power.requested) : undefined;
+  } else if (setpoint) {
+    on = bind("mode")?.confirmed === "heat";
+    value = `${shown(setpoint.confirmed)} °C`;
+    requested = setpoint.requested !== undefined ? `${shown(setpoint.requested)} °C` : undefined;
+  } else if (lock) {
+    value = lock.format(lock.confirmed);
+    requested = lock.requested !== undefined ? lock.format(lock.requested) : undefined;
+  } else {
+    const sensor = sim.scenario.sensors.find((s) => s.deviceId === id && (s.metric === "air-quality" || s.metric === "temperature"));
+    const reading = sensor ? selectReading(sim, id, sensor.metric) : undefined;
+    if (sensor && reading) value = sensor.metric === "air-quality" ? `AQI ${reading.value.toFixed(0)}` : `${reading.value.toFixed(1)} ${sensor.unit ?? ""}`.trim();
+  }
+
+  const reading = sim.scenario.sensors.filter((s) => s.deviceId === id).map((s) => selectReading(sim, id, s.metric)?.evaluation.state);
+  const alerted = selectAlerts(sim).some((a) => a.deviceId === id);
+  let state: HotspotState = "confirmed";
+  let statusWord = "Online";
+  if (device.status === "offline") [state, statusWord] = ["offline", "Offline"];
+  else if (controls.some((b) => b.control.availability === "pending")) [state, statusWord] = ["pending", "Waiting for the device"];
+  else if (controls.some((b) => b.unsettled)) [state, statusWord] = ["warning", "Request did not land"];
+  else if (device.status === "stale" || reading.some((r) => r === "stale" || r === "warning" || r === "critical") || alerted) [state, statusWord] = ["warning", device.status === "stale" ? "Stale" : "Needs attention"];
+  return { id, device, category: resolveDeviceCategory(device), roomId: room?.id ?? HOME, roomName: room?.name ?? "Home", state, statusWord, value, requested, on, power };
+}
+
+/** Temperature and humidity readings for the devices in a room, as words. `stale` is said, not implied. */
+function ambientOf(iot: UseIotSimulation, roomId: string) {
+  const ids = iot.sim.scenario.spaces.find((s) => s.id === roomId)?.deviceIds ?? [];
+  const read = (metric: string) => {
+    for (const id of ids) {
+      const sensor = iot.sim.scenario.sensors.find((s) => s.deviceId === id && s.metric === metric);
+      const reading = sensor ? selectReading(iot.sim, id, metric) : undefined;
+      if (sensor && reading) {
+        const text = `${reading.value.toFixed(sensor.decimals ?? 1)} ${sensor.unit ?? ""}`.trim();
+        return { text: reading.evaluation.state === "stale" ? `${text} · stale` : text, source: deviceOf(iot.sim, id).name };
+      }
+    }
+    return undefined;
+  };
+  return { temperature: read("temperature"), humidity: read("humidity") };
+}
+
+const rollupWords = (r: { total: number; offline: number; warning: number; critical: number }) => {
+  const parts = [r.critical ? `${r.critical} critical` : "", r.warning ? `${r.warning} needs attention` : "", r.offline ? `${r.offline} offline` : ""].filter(Boolean);
+  return parts.length ? parts.join(", ") : "All devices well";
+};
+
+/* ---------------------------------- focus compositions ---------------------------------- */
+
+/** The thermostat as the room's hero: a ring around the confirmed target, a request drawn dashed, mode tiles beneath. */
+function ClimateHero({ iot, id, roomName }: { iot: UseIotSimulation; id: string; roomName: string }) {
+  const target = controlOf(iot, id, "setpoint");
+  const mode = controlOf(iot, id, "mode");
+  const battery = target.device.battery;
+  return (
+    <Panel title={target.device.name} description={statusLineOf(target, mode)} as="h5" data-device={id}>
+      <div className="grid min-w-0 items-center gap-6 md:grid-cols-2">
+        <DeviceSetpointControl
+          presentation="ring"
+          current={readingOf(iot, id, "temperature").value}
+          target={target.confirmed as number}
+          requestedTarget={target.requested as number | undefined}
+          min={target.capability.min ?? 16}
+          max={target.capability.max ?? 26}
+          step={target.capability.step ?? 0.5}
+          unit="°C"
+          secondary={`${roomName} · ${mode.format(mode.confirmed)} mode`}
+          control={target.control}
+          label={`${target.device.name} target`}
+          onCommit={target.send}
+        />
+        <div className="flex min-w-0 flex-col gap-4">
+          <DeviceModeControl
+            presentation="tiles"
+            modes={withIcons(mode.capability.modes ?? [])}
+            value={mode.confirmed as string}
+            requested={mode.requested as string | undefined}
+            control={mode.control}
+            label={`${target.device.name} mode`}
+            onSelect={mode.send}
+            style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}
+          />
+          <Battery value={battery} name={target.device.name} />
+        </div>
+      </div>
+      <Lifecycle binding={target} />
+      <Lifecycle binding={mode} />
+    </Panel>
+  );
+}
+
+/** A light: the object, a big switch, and a fat brightness pill. An offline lamp says so and keeps its last settings. */
+function LightPanel({ iot, id }: { iot: UseIotSimulation; id: string }) {
+  const power = controlOf(iot, id, "power");
+  const level = controlOf(iot, id, "level");
+  const offline = power.device.status === "offline";
+  return (
+    <Panel title={power.device.name} description={statusLineOf(power, level)} as="h5" data-device={id} className={offline ? "border-2 border-dashed border-border" : undefined}>
+      <div className="flex min-w-0 items-center gap-4">
+        <span className="shrink-0 rounded-2xl bg-muted/60 p-2">
+          <DeviceIllustration category="light" on={power.confirmed === "on" && !offline} size="lg" />
+        </span>
+        <div className="flex min-w-0 flex-col gap-2">
+          <p className="text-headline-lg tabular-nums text-foreground">{power.confirmed === "on" ? `${shown(level.confirmed)}%` : "Off"}</p>
+          <DevicePowerControl
+            size="lg"
+            state={power.confirmed as "on" | "off"}
+            requested={power.requested as "on" | "off" | undefined}
+            control={power.control}
+            label={`${power.device.name} power`}
+            onToggle={power.send}
+          />
+        </div>
+      </div>
+      <DeviceLevelControl variant="pill" size="lg" value={level.confirmed as number} target={level.requested as number | undefined} unit="%" step={5} control={level.control} label={`${power.device.name} brightness`} onCommit={level.send} />
+      <Lifecycle binding={power} />
+      <Lifecycle binding={level} />
+    </Panel>
+  );
+}
+
+/** A switched plug: one tile, the confirmed state big, the request dashed. */
+function PlugTile({ iot, id }: { iot: UseIotSimulation; id: string }) {
+  const power = controlOf(iot, id, "power");
+  return (
+    <div className="flex min-w-0 flex-col gap-3" data-device={id}>
+      <Tile
+        name={power.device.name}
+        state={statusLineOf(power)}
+        visual={<DeviceIllustration category="plug" on={power.confirmed === "on"} />}
+        value={onOff(power.confirmed)}
+        requested={power.requested !== undefined}
+        requestedWord={`Requested ${onOff(power.requested)}, not yet confirmed`}
+        control={<DevicePowerControl size="lg" state={power.confirmed as "on" | "off"} requested={power.requested as "on" | "off" | undefined} control={power.control} label={`${power.device.name} power`} showLabel={false} onToggle={power.send} />}
+      />
+      <Lifecycle binding={power} />
+    </div>
+  );
+}
+
+/** The door: locked or unlocked as icon tiles. The lock is slow on purpose, so the gap between asking and locked is visible. */
+function LockPanel({ iot, id }: { iot: UseIotSimulation; id: string }) {
+  const lock = controlOf(iot, id, "lock");
+  return (
+    <Panel title={lock.device.name} description={statusLineOf(lock)} as="h5" data-device={id}>
+      <div className="flex min-w-0 flex-wrap items-center gap-4">
+        <p className="text-headline-lg text-foreground">{lock.format(lock.confirmed)}</p>
+        <Battery value={lock.device.battery} name={lock.device.name} />
+      </div>
+      <DeviceModeControl presentation="tiles" modes={withIcons(lock.capability.modes ?? [])} value={lock.confirmed as string} requested={lock.requested as string | undefined} control={lock.control} label="Front door lock" onSelect={lock.send} style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }} />
+      <Lifecycle binding={lock} />
+    </Panel>
+  );
+}
+
+function ReadingsPanel({ iot, id, title, metrics }: { iot: UseIotSimulation; id: string; title: string; metrics: { metric: string; label: string }[] }) {
+  const device = deviceOf(iot.sim, id);
+  return (
+    <Panel title={title} description={device.name} as="h5" data-device={id}>
+      <TelemetryGrid label={`${device.name} readings`}>
+        {metrics.map((m) => (
+          <TelemetryMetric key={m.metric} {...readingOf(iot, id, m.metric)} label={m.label} />
+        ))}
+      </TelemetryGrid>
+      <Battery value={device.battery} name={device.name} />
+    </Panel>
+  );
+}
+
+function DevicePanel({ iot, id, roomName }: { iot: UseIotSimulation; id: string; roomName: string }) {
+  const device = deviceOf(iot.sim, id);
+  switch (device.type) {
+    case "thermostat":
+      return <ClimateHero iot={iot} id={id} roomName={roomName} />;
+    case "light":
+      return <LightPanel iot={iot} id={id} />;
+    case "plug":
+      return <PlugTile iot={iot} id={id} />;
+    case "lock":
+      return <LockPanel iot={iot} id={id} />;
+    case "air-quality":
+      return (
+        <ReadingsPanel
+          iot={iot}
+          id={id}
+          title={`Air · ${roomName}`}
+          metrics={[
+            { metric: "air-quality", label: "Air quality" },
+            { metric: "temperature", label: "Temperature" },
+            { metric: "humidity", label: "Humidity" },
+          ]}
+        />
+      );
+    case "camera":
+      return (
+        <div className="min-w-0" data-device={id}>
+          <CameraDeviceCard device={device} scene="entrance" posterLabel={SAMPLE_IMAGE_LABEL} privacy="off" now={iot.sim.now} />
+        </div>
+      );
+    default:
+      return <ReadingsPanel iot={iot} id={id} title={`Sensor · ${roomName}`} metrics={[{ metric: "temperature", label: "Temperature" }]} />;
+  }
+}
+
+/* ---------------------------------- the composition ---------------------------------- */
+
 export function SmartSpaceEnvironmentExample() {
   const iot = useIotSimulation(smartSpace, { intervalMs: 1000 });
   const { sim } = iot;
-  const [spaceId, setSpaceId] = React.useState("home");
-  const [openIds, setOpenIds] = React.useState<Record<string, boolean>>({ "thermostat-hall": true });
-  const disclose = (id: string) => ({ open: !!openIds[id], onOpenChange: (open: boolean) => setOpenIds((prev) => ({ ...prev, [id]: open })) });
+  const [spaceId, setSpaceId] = React.useState("room-hall");
+  const [deviceId, setDeviceId] = React.useState<string | null>(null);
   const [enabled, setEnabled] = React.useState<Record<string, boolean>>({});
+  const days = React.useMemo(() => Array.from({ length: 7 }, (_, i) => new Date(Date.parse(sim.startAt) - (6 - i) * DAY_MS).toISOString().slice(0, 10)), [sim.startAt]);
+  const [day, setDay] = React.useState(days[6]!);
 
-  const tree = React.useMemo(() => buildSpaceTree(sim.scenario.spaces), [sim.scenario.spaces]);
+  const spaces = sim.scenario.spaces;
   const rollups = selectSpaceRollups(sim);
-  const rooms = sim.scenario.spaces.filter((space) => space.kind === "room");
-  const shownIds = new Set(descendantDeviceIds(tree, spaceId));
-  const show = (deviceId: string) => shownIds.has(deviceId);
-  const lamp = controlOf(iot, "lamp-living", "power");
-  const brightness = controlOf(iot, "lamp-living", "level");
-  const thermostat = controlOf(iot, "thermostat-hall", "setpoint");
-  const thermostatMode = controlOf(iot, "thermostat-hall", "mode");
-  const heater = controlOf(iot, "plug-heater", "power");
-  const lock = controlOf(iot, "lock-front", "lock");
-  const bedroom = controlOf(iot, "lamp-bedroom", "power");
-  const energy = selectEnergy(sim);
-  const dayLabels = energy?.week.map((_, i) =>
-    new Date(Date.parse(sim.startAt) - (energy.week.length - i) * DAY_MS).toLocaleDateString("en", { weekday: "short", timeZone: "UTC" }),
+  const floors = spaces.filter((s) => s.kind === "floor");
+  const room = spaces.find((s) => s.id === spaceId && s.kind === "room");
+  const allViews = Object.keys(sim.devices).map((id) => deviceView(iot, id));
+  const alerts = selectAlerts(sim, { includeAcknowledged: true });
+  const needAttention = selectAlerts(sim).length;
+  const online = allViews.filter((v) => v.device.status === "online").length;
+  const clock = `${sim.now.slice(11, 16)} UTC`;
+
+  const selectRoom = (id: string) => {
+    setSpaceId(id);
+    setDeviceId(null);
+  };
+  const selectDevice = (id: string) => {
+    const view = allViews.find((v) => v.id === id);
+    if (!view) return;
+    setSpaceId(view.roomId);
+    setDeviceId(id);
+  };
+  const jumpToAlerts = () => {
+    const el = document.getElementById("space-alerts");
+    el?.scrollIntoView({ block: "start" });
+    el?.focus({ preventScroll: true });
+  };
+
+  const hotspots: PlanHotspot[] = allViews
+    .filter((v) => homeAnchors[v.id])
+    .map((v) => ({ id: v.id, roomId: homeAnchors[v.id]!.roomId, x: homeAnchors[v.id]!.x, y: homeAnchors[v.id]!.y, category: v.category, state: v.state, label: v.device.name, value: v.value, requested: v.requested }));
+  const ambient: RoomAmbient = Object.fromEntries(
+    spaces
+      .filter((s) => s.kind === "room")
+      .map((s) => {
+        const a = ambientOf(iot, s.id);
+        return [s.id, [a.temperature?.text, a.humidity?.text].filter((t): t is string => !!t)];
+      }),
   );
 
-  return (
-    <section aria-label="Smart space" className="flex flex-col gap-6">
-      <SimNotice scenario={smartSpace}>
-        <SimTransport iot={iot} />
-      </SimNotice>
+  const energy = selectEnergy(sim);
+  const dayLabels = energy ? [...energy.week.map((_, i) => new Date(Date.parse(sim.startAt) - (energy.week.length - i) * DAY_MS).toLocaleDateString("en", { weekday: "short", timeZone: "UTC" })), "Today"] : [];
+  const activity = selectActivity(sim).map((e) => ({ e, date: new Date(e.timestamp).toISOString().slice(0, 10) }));
+  const dayEvents = activity.filter((a) => a.date === day).map((a) => a.e);
+  const stripDays = days.map((date) => ({ id: date, date, count: activity.filter((a) => a.date === date).length }));
 
-      <Section title="Rooms" hint="Health is rolled up from the devices in each room. Select one to filter the controls below.">
-        <SpaceBreadcrumb path={spacePath(tree, spaceId)} label="Selected space" onNavigate={(item) => setSpaceId(item.id)} />
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,17rem),1fr))] gap-3">
-          {rooms.map((room) => {
-            const ids = descendantDeviceIds(tree, room.id);
-            const rollup = rollups.get(room.id)!;
-            const devices = ids.map((id) => deviceOf(sim, id));
-            return (
-              <DeviceGroupCard
-                key={room.id}
-                name={room.name}
-                kind="Room"
-                deviceCount={devices.length}
-                activeCount={devices.filter((d) => d.status === "online").length}
-                attentionCount={rollup.warning + rollup.critical + rollup.offline}
-                category={devices[0] ? resolveDeviceCategory(devices[0]) : undefined}
-                path={<SpaceBreadcrumb path={spacePath(tree, room.id)} label={`Location of ${room.name}`} />}
-                rollup={<SpaceRollup rollup={rollup} name={room.name} compact />}
-                onSelect={() => setSpaceId(room.id)}
-                aria-current={spaceId === room.id ? "true" : undefined}
-                className={spaceId === room.id ? "ring-2 ring-ring ring-offset-2 ring-offset-background" : undefined}
-              />
-            );
-          })}
+  const roomDevices = room?.deviceIds ?? [];
+  const chosen = deviceId && roomDevices.includes(deviceId) ? deviceId : null;
+  const floorName = spaces.find((s) => s.id === room?.parentId)?.name;
+  const ambientHere = room ? ambientOf(iot, room.id) : undefined;
+  const homeRollup = rollups.get(HOME);
+  const air = readingOf(iot, "air-living", "air-quality");
+  const airState = selectReading(sim, "air-living", "air-quality")?.evaluation.state;
+  const airShown: ShowcaseState = airState === "warning" ? "warning" : airState === "critical" ? "critical" : "confirmed";
+
+  const header = (
+    <SpaceHeader
+      eyebrow={`Home · ${floors.length} floors`}
+      title={spaces.find((s) => s.id === HOME)?.name ?? "Home"}
+      location="12 Example Lane, Sample City (fabricated)"
+      identity={<HouseMark />}
+      chips={
+        <>
+          <SummaryChip label="Online" value={`${online} of ${allViews.length}`} />
+          <SummaryChip label="Attention" value={needAttention} />
+          <SummaryChip label="Simulated clock" value={clock} />
+        </>
+      }
+      actions={
+        <IconCluster label="Home">
+          <IconButton label="Show the whole home" pressed={spaceId === HOME} onClick={() => selectRoom(HOME)}>
+            <Glyph name="home" />
+          </IconButton>
+          <IconButton label="Jump to alerts" badge={needAttention} onClick={jumpToAlerts}>
+            <Glyph name="bell" />
+          </IconButton>
+        </IconCluster>
+      }
+    />
+  );
+
+  const rail = (
+    <RailList aria-label="Home and rooms">
+      <RailItem
+        icon={<Glyph name="home" />}
+        name="Whole home"
+        state={`${online} of ${allViews.length} online`}
+        health={homeRollup && homeRollup.warning + homeRollup.critical > 0 ? "warning" : undefined}
+        healthWord={homeRollup ? rollupWords(homeRollup) : undefined}
+        selected={spaceId === HOME}
+        onSelect={() => selectRoom(HOME)}
+      />
+      {floors.map((floor) => (
+        <RailGroup key={floor.id} label={floor.name}>
+          {spaces
+            .filter((s) => s.parentId === floor.id)
+            .map((r) => {
+              const rollup = rollups.get(r.id)!;
+              const a = ambientOf(iot, r.id);
+              return (
+                <RailItem
+                  key={r.id}
+                  icon={<DeviceIcon category={resolveDeviceCategory(deviceOf(sim, r.deviceIds?.[0] ?? ""))} size={20} />}
+                  name={r.name}
+                  state={a.temperature?.text ?? `${rollup.total} ${rollup.total === 1 ? "device" : "devices"}`}
+                  health={rollup.critical ? "critical" : rollup.warning ? "warning" : rollup.offline ? "offline" : undefined}
+                  healthWord={rollupWords(rollup)}
+                  count={rollup.total}
+                  selected={spaceId === r.id}
+                  onSelect={() => selectRoom(r.id)}
+                />
+              );
+            })}
+        </RailGroup>
+      ))}
+    </RailList>
+  );
+
+  const canvas = (
+    <SpaceCanvas
+      plan={homePlan}
+      selectedRoomId={room ? room.id : null}
+      onSelectRoom={selectRoom}
+      hotspots={hotspots}
+      selectedHotspotId={chosen}
+      onSelectHotspot={selectDevice}
+      ambient={ambient}
+      hotspotLabels="selected"
+    />
+  );
+
+  const focus = room ? (
+    <>
+      <div className="flex min-w-0 flex-wrap items-end justify-between gap-x-6 gap-y-2 px-1">
+        <div className="flex min-w-0 flex-col">
+          {floorName ? <p className="text-label-md uppercase tracking-wide text-muted-foreground">{floorName}</p> : null}
+          <h4 className="text-headline-lg text-foreground">{room.name}</h4>
+          <p className="text-body-md text-muted-foreground">
+            <bdi>
+              {roomDevices.length} {roomDevices.length === 1 ? "device" : "devices"} · {rollupWords(rollups.get(room.id)!)}
+            </bdi>
+          </p>
         </div>
-        {spaceId !== "home" ? (
-          <button type="button" className={`${BUTTON} self-start`} onClick={() => setSpaceId("home")}>
-            Show the whole home
-          </button>
+        {ambientHere?.temperature ? (
+          <p className="flex flex-col items-start sm:items-end">
+            <span className="text-display-sm tabular-nums text-foreground">
+              <bdi>{ambientHere.temperature.text}</bdi>
+            </span>
+            <span className="text-body-sm text-muted-foreground">Room temperature · {ambientHere.temperature.source}</span>
+          </p>
         ) : null}
-      </Section>
-
-      <Section title="Controls" hint="Each control shows what the device reported. A request stays visibly unconfirmed until the device agrees.">
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-3">
-          {show("lamp-living") ? (
-            <DeviceControlCard
-              device={lamp.device}
-              active={lamp.confirmed === "on"}
-              control={lamp.control}
-              statusLine={statusLineOf(lamp, brightness)}
-              primaryControl={
-                <DevicePowerControl state={lamp.confirmed as "on" | "off"} requested={lamp.requested as "on" | "off" | undefined} control={lamp.control} label="Living room lamp power" showLabel={false} onToggle={lamp.send} />
-              }
-              meta={<Lifecycle binding={lamp} />}
-              expanded={
-                <>
-                  <DeviceLevelControl value={brightness.confirmed as number} target={brightness.requested as number | undefined} unit="%" step={5} control={brightness.control} label="Living room lamp brightness" onCommit={brightness.send} />
-                  <Lifecycle binding={brightness} />
-                </>
-              }
-              {...disclose("lamp-living")}
-            />
-          ) : null}
-
-          {show("thermostat-hall") ? (
-            <DeviceControlCard
-              device={thermostat.device}
-              active={thermostatMode.confirmed === "heat"}
-              control={thermostat.control}
-              statusLine={statusLineOf(thermostat, thermostatMode)}
-              meta={<Lifecycle binding={thermostat} />}
-              expanded={
-                <>
-                  <DeviceSetpointControl
-                    current={readingOf(iot, "thermostat-hall", "temperature").value}
-                    target={thermostat.confirmed as number}
-                    requestedTarget={thermostat.requested as number | undefined}
-                    min={16}
-                    max={26}
-                    step={0.5}
-                    unit="°C"
-                    control={thermostat.control}
-                    label="Hallway thermostat target"
-                    onCommit={thermostat.send}
-                  />
-                  <DeviceModeControl modes={thermostatMode.capability.modes ?? []} value={thermostatMode.confirmed as string} requested={thermostatMode.requested as string | undefined} control={thermostatMode.control} label="Hallway thermostat mode" onSelect={thermostatMode.send} />
-                  <Lifecycle binding={thermostatMode} />
-                </>
-              }
-              {...disclose("thermostat-hall")}
-            />
-          ) : null}
-
-          {show("plug-heater") ? (
-            <DeviceControlCard
-              device={heater.device}
-              active={heater.confirmed === "on"}
-              control={heater.control}
-              statusLine={statusLineOf(heater)}
-              primaryControl={
-                <DevicePowerControl state={heater.confirmed as "on" | "off"} requested={heater.requested as "on" | "off" | undefined} control={heater.control} label="Space heater plug power" showLabel={false} onToggle={heater.send} />
-              }
-              meta={<Lifecycle binding={heater} />}
-            />
-          ) : null}
-
-          {show("lock-front") ? (
-            <DeviceControlCard
-              device={lock.device}
-              control={lock.control}
-              statusLine={statusLineOf(lock)}
-              meta={
-                <>
-                  <DeviceModeControl modes={lock.capability.modes ?? []} value={lock.confirmed as string} requested={lock.requested as string | undefined} control={lock.control} label="Front door lock" onSelect={lock.send} className="w-full" />
-                  <Lifecycle binding={lock} />
-                </>
-              }
-            />
-          ) : null}
-
-          {show("lamp-bedroom") ? (
-            <DeviceControlCard
-              device={bedroom.device}
-              control={bedroom.control}
-              statusLine={statusLineOf(bedroom)}
-              primaryControl={
-                <DevicePowerControl state={bedroom.confirmed as "on" | "off"} control={bedroom.control} label="Bedroom lamp power" showLabel={false} onToggle={bedroom.send} />
-              }
-            />
-          ) : null}
-        </div>
-      </Section>
-
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-6">
-        <Section title="Air quality · Living room">
-          <TelemetryGrid label="Living room air">
-            <TelemetryMetric {...readingOf(iot, "air-living", "air-quality")} label="Air quality" />
-            <TelemetryMetric {...readingOf(iot, "air-living", "temperature")} label="Temperature" />
-            <TelemetryMetric {...readingOf(iot, "air-living", "humidity")} label="Humidity" />
-          </TelemetryGrid>
-        </Section>
-
-        <Section title="Camera" hint="A sample frame. No video, stream or recording exists behind this card.">
-          <CameraDeviceCard device={deviceOf(sim, "camera-hall")} posterLabel={SAMPLE_IMAGE_LABEL} privacy="off" now={sim.now} />
-        </Section>
       </div>
+      {roomDevices.length > 1 ? (
+        <PillSelector
+          label={`Devices in ${room.name}`}
+          showAll
+          allLabel="Whole room"
+          value={chosen ?? "all"}
+          onChange={(id) => setDeviceId(id === "all" ? null : id)}
+          options={roomDevices.map((id) => ({ id, label: deviceOf(sim, id).name, icon: <DeviceIcon category={resolveDeviceCategory(deviceOf(sim, id))} size={16} /> }))}
+        />
+      ) : null}
+      <div className="grid min-w-0 grid-cols-1 gap-4">
+        {(chosen ? [chosen] : roomDevices).map((id) => (
+          <DevicePanel key={id} iot={iot} id={id} roomName={room.name} />
+        ))}
+      </div>
+    </>
+  ) : (
+    <>
+      <div className="flex min-w-0 flex-col gap-1 px-1">
+        <p className="text-label-md uppercase tracking-wide text-muted-foreground">Whole home</p>
+        <h4 className="text-headline-lg text-foreground">{spaces.find((s) => s.id === HOME)?.name}</h4>
+      </div>
+      <Panel title="At a glance" as="h5">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <Stat size="lg" label="Living room" value={ambientOf(iot, "room-living").temperature?.text.split(" ")[0] ?? "—"} unit="°C" />
+          <Stat size="lg" label="Air quality" value={air.value === null ? "—" : Math.round(air.value)} unit="AQI" state={airShown} stateWord={airShown === "confirmed" ? "Within range" : undefined} />
+          <Stat size="lg" label="Energy today" value={energy ? energy.summary.total.toFixed(1) : "—"} unit={energy?.summary.unit} />
+        </div>
+      </Panel>
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+        {allViews.map((v) => (
+          <Tile
+            key={v.id}
+            name={v.device.name}
+            state={`${v.roomName} · ${v.statusWord}`}
+            value={v.value}
+            requested={v.requested !== undefined}
+            requestedWord={`Requested ${v.requested}, not yet confirmed`}
+            visual={<DeviceIllustration category={v.category} on={v.on && v.state !== "offline"} size="md" />}
+            onSelect={() => selectDevice(v.id)}
+            control={
+              v.power ? (
+                <DevicePowerControl size="sm" showLabel={false} state={v.power.confirmed as "on" | "off"} requested={v.power.requested as "on" | "off" | undefined} control={v.power.control} label={`${v.device.name} power`} onToggle={v.power.send} />
+              ) : undefined
+            }
+          />
+        ))}
+      </div>
+    </>
+  );
+
+  const aside = (
+    <>
+      <Panel id="space-alerts" tabIndex={-1} title="Needs attention" description={needAttention ? <bdi>{needAttention} to review</bdi> : "All clear"} as="h5" className="scroll-mt-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:col-span-2 xl:col-span-1">
+        <AlertList hideSummary alerts={alerts} onAcknowledge={(alert) => iot.acknowledgeAlert(alert.id)} now={sim.now} />
+      </Panel>
 
       {energy ? (
-        <Section title="Energy" hint="Simulated consumption. Devices that are confirmed on accrue as the clock runs.">
-          <EnergySummary summary={energy.summary} today={energy.summary.total} days={energy.week} dayLabels={dayLabels} />
-        </Section>
+        <Disclosure title="Energy" count={energy.summary.items.length} countNoun="devices">
+          <EnergySummary
+            presentation="sparkline"
+            summary={energy.summary}
+            today={energy.summary.total}
+            days={[...energy.week, energy.summary.total]}
+            dayLabels={dayLabels}
+            dailyBaseline={sim.scenario.energy?.baseline}
+            updatedLabel="Simulated. Moves with the demo clock."
+          />
+        </Disclosure>
       ) : null}
 
-      <Section title="Alerts">
-        <AlertList
-          alerts={selectAlerts(sim, { includeAcknowledged: true })}
-          deviceName={(id) => deviceOf(sim, id).name}
-          onAcknowledge={(alert) => iot.acknowledgeAlert(alert.id)}
-          now={sim.now}
-        />
-      </Section>
+      <Disclosure title="Activity" count={dayEvents.length} countNoun="events on this day">
+        <DateStrip label="Activity day" days={stripDays} value={day} onChange={setDay} now={sim.now} />
+        <ActivityTimeline variant="blocks" events={dayEvents} now={sim.now} emptyLabel="Nothing happened on this day." />
+      </Disclosure>
 
-      <Section title="Scenes and routines" hint="Shown, not executed: KinetixUI has no automation engine.">
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,17rem),1fr))] gap-3">
+      <Disclosure title="Scenes and routines" count={sim.automations.length} countNoun="scenes">
+        <p className="text-body-sm text-muted-foreground">Shown, not executed: KinetixUI has no automation engine.</p>
+        <div className="flex flex-col gap-3">
           {sim.automations.map((automation) => {
             const on = enabled[automation.id] ?? automation.enabled;
             return (
@@ -237,8 +602,17 @@ export function SmartSpaceEnvironmentExample() {
             );
           })}
         </div>
-      </Section>
-    </section>
+      </Disclosure>
+    </>
+  );
+
+  return (
+    <div className="flex min-w-0 flex-col gap-4">
+      <SimNotice scenario={smartSpace}>
+        <SimTransport iot={iot} />
+      </SimNotice>
+      <ShowcaseShell label="Connected space" railLabel="Home and rooms" canvasLabel="Home plan" focusLabel={room ? room.name : "Whole home"} asideLabel="Attention, energy, activity and scenes" header={header} rail={rail} canvas={canvas} focus={focus} aside={aside} />
+    </div>
   );
 }
 // kx-iot:end
