@@ -42,6 +42,14 @@ export function IotExampleShowcase({
   children: React.ReactNode;
   className?: string;
 }) {
+  // Radix Tabs.Root renders `dir` on its root element and defaults it to "ltr" when it is not given one, so
+  // an un-directed root silently forced every live preview inside it to LTR whatever the document said.
+  // Read the document's direction (after mount, so the server render and hydration agree) and pass it on.
+  const [dir, setDir] = React.useState<"ltr" | "rtl">("ltr");
+  React.useEffect(() => {
+    setDir(document.documentElement.dir === "rtl" ? "rtl" : "ltr");
+  }, []);
+
   return (
     <section className={cn("overflow-hidden rounded-xl border border-border bg-background", className)}>
       <header className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-start sm:justify-between">
@@ -62,7 +70,7 @@ export function IotExampleShowcase({
         </div>
       </header>
 
-      <Tabs.Root defaultValue="preview">
+      <Tabs.Root defaultValue="preview" dir={dir}>
         <div className="flex items-center justify-between border-b border-border px-2">
           <Tabs.List className="flex" aria-label={`${title}: preview or code`}>
             {(["preview", "code"] as const).map((value) => (
