@@ -116,8 +116,10 @@ function Lifecycle({ binding }: { binding: ControlBinding }) {
 /** A worded battery row: the caption says what the meter is. Nothing when the device has no battery. */
 function Battery({ value, name }: { value: number | undefined; name: string }) {
   if (value === undefined) return null;
+  // Wraps below the narrowest phones: the label and the pill together exceed the content width at 320,
+  // and the pill cannot shrink past its numeral, meter and word.
   return (
-    <div className="flex items-center gap-2 self-start">
+    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 self-start">
       <span className="text-body-md text-muted-foreground">Battery</span>
       <BatteryIndicator value={value} presentation="pill" label={`${name} battery`} />
     </div>
