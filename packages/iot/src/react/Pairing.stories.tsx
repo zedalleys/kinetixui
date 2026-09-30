@@ -60,6 +60,25 @@ export const Progress: Story = {
   },
 };
 
+/** The compact progress pill, and the numbered nodes laid out along a line. */
+export const ProgressVariants: Story = {
+  render: () => {
+    const steps = [
+      { id: "a", label: "Find device", status: "complete" as const },
+      { id: "b", label: "Identify", status: "active" as const },
+      { id: "c", label: "Sign in", status: "pending" as const },
+      { id: "d", label: "Set up", status: "pending" as const },
+    ];
+    return (
+      <>
+        <PairingStepper variant="dots" steps={steps} label="Progress, dots" />
+        <PairingStepper horizontal steps={steps} label="Progress, horizontal" />
+        <PairingStepper horizontal steps={steps.map((s) => (s.id === "b" ? { ...s, status: "error" as const } : s))} label="Progress, needs attention" />
+      </>
+    );
+  },
+};
+
 export const Failures: Story = {
   render: () => (
     <>

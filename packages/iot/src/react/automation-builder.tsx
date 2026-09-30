@@ -95,16 +95,21 @@ export interface AutomationBuilderProps extends Omit<React.FormHTMLAttributes<HT
 }
 
 const INPUT =
-  "min-h-11 w-full min-w-0 rounded-lg border bg-background px-3 text-label-md text-foreground " +
+  "min-h-11 w-full min-w-0 rounded-lg border bg-background px-3 text-body-md text-foreground " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background " +
   "disabled:cursor-not-allowed disabled:opacity-50";
 const BUTTON =
-  "inline-flex min-h-9 min-w-9 items-center justify-center gap-1 rounded-lg border border-input bg-background px-2.5 text-label-md text-foreground " +
+  "inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-3.5 text-label-lg text-foreground transition-colors duration-fast motion-reduce:transition-none md:min-h-9 md:min-w-9 " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background " +
   "disabled:cursor-not-allowed disabled:opacity-40";
-const FIELDSET = "m-0 flex min-w-0 flex-col gap-3 rounded-xl border border-border p-3";
-const LEGEND = "px-1 text-label-md text-foreground";
-const FIELD = "flex min-w-0 grow basis-40 flex-col gap-1";
+const SECONDARY = `${BUTTON} bg-muted/70 hover:bg-muted`;
+/** A section (Rule, Trigger, Conditions, Actions): no box of its own, a hairline above every one after the first. */
+const FIELDSET = "m-0 flex min-w-0 flex-col gap-4 border-0 border-t border-border/60 p-0 pt-5 first-of-type:border-t-0 first-of-type:pt-0";
+/** A repeated item inside a section: an inset row on the shared surface. */
+const ITEM = "m-0 flex min-w-0 flex-col gap-3 rounded-xl border-0 bg-background p-4";
+const LEGEND = "float-start mb-3 w-full p-0 text-title-md text-foreground";
+const ITEM_LEGEND = "float-start mb-2 w-full p-0 text-label-lg text-muted-foreground";
+const FIELD = "flex min-w-0 grow basis-40 flex-col gap-1.5";
 
 const slug = (path: string) => path.replace(/[^a-zA-Z0-9]+/g, "-").replace(/-$/, "");
 
@@ -213,7 +218,7 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
       const errors = messagesFor(path);
       if (errors.length === 0) return null;
       return (
-        <p id={`${idFor(path)}-error`} data-error={path} className="flex items-start gap-1.5 text-label-sm text-destructive">
+        <p id={`${idFor(path)}-error`} data-error={path} className="flex items-start gap-1.5 text-body-sm text-destructive">
           <Glyph name="triangle" size={12} className="mt-0.5" />
           <span>
             <span className="sr-only">Error: </span>
@@ -225,7 +230,7 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
 
     const field = (path: string, text: string, control: React.ReactNode, hint?: React.ReactNode) => (
       <div className={FIELD}>
-        <label htmlFor={idFor(path)} className="text-label-sm text-muted-foreground">
+        <label htmlFor={idFor(path)} className="text-label-md text-muted-foreground">
           {text}
         </label>
         {control}
@@ -292,7 +297,7 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
                 `${base}.value`,
                 "Value",
                 <input {...a11y(`${base}.value`)} type="number" step="any" inputMode="decimal" value={numberValue(item.value)} onChange={(e) => patch({ value: toNumber(e.target.value) })} />,
-                unit ? <span className="text-label-sm text-muted-foreground">Unit: {unit}</span> : null,
+                unit ? <span className="text-body-sm text-muted-foreground">Unit: {unit}</span> : null,
               )
             : null}
           {kind === "scalar"
@@ -326,10 +331,10 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
                     patch({ value: min === undefined && (max === undefined || Number.isNaN(max)) ? undefined : [min ?? Number.NaN, max ?? Number.NaN] });
                   }}
                 />,
-                unit ? <span className="text-label-sm text-muted-foreground">Unit: {unit}</span> : null,
+                unit ? <span className="text-body-sm text-muted-foreground">Unit: {unit}</span> : null,
               )}
               <div className={FIELD}>
-                <label htmlFor={`${idFor(`${base}.value`)}-max`} className="text-label-sm text-muted-foreground">
+                <label htmlFor={`${idFor(`${base}.value`)}-max`} className="text-label-md text-muted-foreground">
                   Maximum
                 </label>
                 <input
@@ -411,18 +416,19 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
     };
 
     const itemControls = (noun: "condition" | "action", id: string, index: number, count: number, move: (from: number, to: number) => void, remove: (i: number) => void) => (
-      <div className="flex flex-wrap items-center gap-2">
-        <button type="button" className={BUTTON} disabled={disabled || index === 0} data-focus-key={`${noun}:${id}:up`} aria-label={`Move ${noun} ${index + 1} up`} title={`Move ${noun} ${index + 1} up`} onClick={() => move(index, index - 1)}>
+      <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+        <button type="button" className={SECONDARY} disabled={disabled || index === 0} data-focus-key={`${noun}:${id}:up`} aria-label={`Move ${noun} ${index + 1} up`} title={`Move ${noun} ${index + 1} up`} onClick={() => move(index, index - 1)}>
           <svg aria-hidden="true" focusable="false" width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
             <path d="m3.5 10 4.5-4.5 4.5 4.5" />
           </svg>
         </button>
-        <button type="button" className={BUTTON} disabled={disabled || index === count - 1} data-focus-key={`${noun}:${id}:down`} aria-label={`Move ${noun} ${index + 1} down`} title={`Move ${noun} ${index + 1} down`} onClick={() => move(index, index + 1)}>
+        <button type="button" className={SECONDARY} disabled={disabled || index === count - 1} data-focus-key={`${noun}:${id}:down`} aria-label={`Move ${noun} ${index + 1} down`} title={`Move ${noun} ${index + 1} down`} onClick={() => move(index, index + 1)}>
           <svg aria-hidden="true" focusable="false" width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
             <path d="m3.5 6 4.5 4.5L12.5 6" />
           </svg>
         </button>
-        <button type="button" className={BUTTON} disabled={disabled} data-focus-key={`${noun}:${id}:remove`} aria-label={`Remove ${noun} ${index + 1}`} onClick={() => remove(index)}>
+        <button type="button" className={cn(SECONDARY, "ms-auto text-destructive")} disabled={disabled} data-focus-key={`${noun}:${id}:remove`} aria-label={`Remove ${noun} ${index + 1}`} onClick={() => remove(index)}>
+          <Glyph name="x" size={12} />
           Remove
         </button>
       </div>
@@ -457,21 +463,21 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
     const titleId = `${uid}-title`;
 
     return (
-      <form ref={setRoot} noValidate aria-label={label} onSubmit={handleSubmit} className={cn("flex min-w-0 flex-col gap-4 font-sans", className)} {...props}>
+      <form ref={setRoot} noValidate aria-label={label} onSubmit={handleSubmit} className={cn("flex min-w-0 flex-col gap-5 rounded-container bg-muted/40 p-5 font-sans", className)} {...props}>
         {/* The one live region, and it is only ever written to after an add, remove or move. */}
         <p role="status" data-builder-status="" className="sr-only">
           {announcement}
         </p>
 
         {submitted && issues.length > 0 ? (
-          <div ref={summaryRef} tabIndex={-1} data-error-summary="" aria-labelledby={titleId} role="group" className="flex flex-col gap-2 rounded-xl border border-destructive p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            <p id={titleId} className="flex items-center gap-1.5 text-label-md text-destructive">
+          <div ref={summaryRef} tabIndex={-1} data-error-summary="" aria-labelledby={titleId} role="group" className="flex flex-col gap-2 rounded-xl border border-dashed border-destructive bg-destructive/5 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <p id={titleId} className="flex items-center gap-1.5 text-title-sm text-destructive">
               <Glyph name="octagon" size={14} />
               <span>
                 {issues.length} {issues.length === 1 ? "problem" : "problems"} to fix before this can be saved
               </span>
             </p>
-            <ul className="m-0 flex list-none flex-col gap-1 p-0 text-label-sm">
+            <ul className="m-0 flex list-none flex-col gap-1.5 p-0 text-body-sm">
               {issues.map((issue, i) => {
                 const path = controlPath(issue.path);
                 const linkable = issue.path !== "" && !/(^|\.)id$/.test(issue.path);
@@ -497,8 +503,8 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
           <legend className={LEGEND}>Rule</legend>
           <div className="flex flex-wrap items-end gap-3">
             {field("name", "Rule name", <input {...a11y("name")} type="text" value={value.name ?? ""} onChange={(e) => emit({ ...value, name: e.target.value })} />)}
-            <label className="flex min-h-11 items-center gap-2 text-label-md text-foreground">
-              <input type="checkbox" className="size-4" checked={value.enabled} disabled={disabled} onChange={(e) => emit({ ...value, enabled: e.target.checked })} />
+            <label className="flex min-h-11 items-center gap-2 text-body-md text-foreground">
+              <input type="checkbox" className="size-5" checked={value.enabled} disabled={disabled} onChange={(e) => emit({ ...value, enabled: e.target.checked })} />
               <span>Rule is on</span>
             </label>
           </div>
@@ -511,10 +517,10 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
 
         <fieldset disabled={disabled} className={FIELDSET}>
           <legend className={LEGEND}>Conditions</legend>
-          {conditions.length === 0 ? <p className="text-label-sm text-muted-foreground">No conditions. The rule applies whenever the trigger happens.</p> : null}
+          {conditions.length === 0 ? <p className="m-0 text-body-md text-muted-foreground">No conditions. The rule applies whenever the trigger happens.</p> : null}
           {conditions.map((condition, index) => (
-            <fieldset key={condition.id} disabled={disabled} data-condition={condition.id} className={FIELDSET}>
-              <legend className={LEGEND}>Condition {index + 1}</legend>
+            <fieldset key={condition.id} disabled={disabled} data-condition={condition.id} className={ITEM}>
+              <legend className={ITEM_LEGEND}>Condition {index + 1}</legend>
               <div className="flex flex-wrap gap-3">
                 {index > 0
                   ? select(
@@ -536,7 +542,8 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
             </fieldset>
           ))}
           <div>
-            <button type="button" className={BUTTON} disabled={disabled} data-focus-key="condition:add" onClick={onAddCondition}>
+            <button type="button" className={SECONDARY} disabled={disabled} data-focus-key="condition:add" onClick={onAddCondition}>
+              <Glyph name="plus" size={14} />
               Add condition
             </button>
           </div>
@@ -544,12 +551,12 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
 
         <fieldset disabled={disabled} className={FIELDSET}>
           <legend className={LEGEND}>Actions</legend>
-          {actions.length === 0 ? <p className="text-label-sm text-muted-foreground">No actions yet.</p> : null}
+          {actions.length === 0 ? <p className="m-0 text-body-md text-muted-foreground">No actions yet.</p> : null}
           {actions.map((action, index) => {
             const commands = targets.find((t) => t.id === action.target)?.commands;
             return (
-              <fieldset key={action.id} disabled={disabled} data-action={action.id} className={FIELDSET}>
-                <legend className={LEGEND}>Action {index + 1}</legend>
+              <fieldset key={action.id} disabled={disabled} data-action={action.id} className={ITEM}>
+                <legend className={ITEM_LEGEND}>Action {index + 1}</legend>
                 <div className="flex flex-wrap gap-3">
                   {select(`actions[${index}].target`, "Act on", action.target ?? "", targets, (id) => patchAction(index, { target: id, command: "" }), `action:${action.id}:first`)}
                   {commands && commands.length > 0
@@ -579,13 +586,14 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
               <button
                 type="button"
                 {...{ id: idFor("actions.add") }}
-                className={BUTTON}
+                className={SECONDARY}
                 disabled={disabled}
                 data-focus-key="action:add"
                 aria-invalid={messagesFor("actions.add").length > 0 ? true : undefined}
                 aria-describedby={messagesFor("actions.add").length > 0 ? `${idFor("actions.add")}-error` : undefined}
                 onClick={onAddAction}
               >
+                <Glyph name="plus" size={14} />
                 Add action
               </button>
             </div>
@@ -593,22 +601,22 @@ const AutomationBuilder = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
           </div>
         </fieldset>
 
-        <div role="group" aria-labelledby={`${uid}-summary`} data-builder-summary="" className="flex flex-col gap-1 rounded-xl border border-border bg-muted/40 p-3">
-          <p id={`${uid}-summary`} className="text-label-md text-foreground">
+        <div role="group" aria-labelledby={`${uid}-summary`} data-builder-summary="" className="flex flex-col gap-1.5 rounded-xl border-s-4 border-primary/40 bg-background p-4">
+          <p id={`${uid}-summary`} className="m-0 text-label-lg text-muted-foreground">
             Summary
           </p>
-          <p className="break-words text-label-md text-muted-foreground">{summarizeAutomationRule(value, { label: labelFor })}</p>
+          <p className="m-0 break-words text-body-lg text-foreground">{summarizeAutomationRule(value, { label: labelFor })}</p>
         </div>
 
         {onSubmit || onCancel ? (
           <div className="flex flex-wrap gap-2">
             {onSubmit ? (
-              <button type="submit" disabled={disabled} className={cn(BUTTON, "min-h-11 border-transparent bg-primary px-4 text-primary-foreground")}>
+              <button type="submit" disabled={disabled} className={cn(BUTTON, "bg-primary px-5 text-primary-foreground hover:bg-primary/90")}>
                 {submitLabel}
               </button>
             ) : null}
             {onCancel ? (
-              <button type="button" disabled={disabled} className={cn(BUTTON, "min-h-11 px-4")} onClick={onCancel}>
+              <button type="button" disabled={disabled} className={cn(SECONDARY, "px-5")} onClick={onCancel}>
                 {cancelLabel}
               </button>
             ) : null}

@@ -50,21 +50,22 @@ const DeviceListItem = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
         ref={ref}
         data-status={status}
         className={cn(
-          "flex items-center gap-3 border-b border-border px-3 py-2.5 font-sans last:border-b-0",
-          "transition-colors duration-300 ease-out motion-reduce:transition-none",
+          "flex min-h-14 items-center gap-3 border-b border-border/60 px-4 py-3 font-sans last:border-b-0",
+          "transition-colors duration-base ease-out motion-reduce:transition-none",
           className,
         )}
         {...props}
       >
-        <span className="flex min-w-0 flex-col">
-          <span className="truncate text-label-md text-foreground">{device?.name}</span>
-          {device?.locationName || device?.type ? (
-            <span className="truncate text-label-sm text-muted-foreground">{device?.locationName ?? device?.type}</span>
-          ) : null}
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="truncate text-title-sm text-foreground">{device?.name}</span>
+          <span className="flex min-w-0 flex-wrap items-center gap-x-2 text-body-sm text-muted-foreground">
+            {device?.locationName || device?.type ? <span className="truncate">{device?.locationName ?? device?.type}</span> : null}
+            {device?.lastSeenAt !== undefined ? <LastSync value={device.lastSeenAt} now={now} className="text-body-sm" /> : null}
+          </span>
         </span>
 
         {reading ? (
-          <span className="ms-auto shrink-0 text-end text-label-md tabular-nums text-foreground" data-reading={transitioning ? "suppressed" : undefined}>
+          <span className="shrink-0 text-end text-title-md tabular-nums text-foreground" data-reading={transitioning ? "suppressed" : undefined}>
             {transitioning ? (
               <span className="text-muted-foreground">—</span>
             ) : (
@@ -73,14 +74,9 @@ const DeviceListItem = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
           </span>
         ) : null}
 
-        <span className={cn("flex shrink-0 items-center gap-3", reading ? "" : "ms-auto")}>
-          {device?.battery !== undefined ? <BatteryIndicator value={device.battery} hideValue /> : null}
-          {device?.signal !== undefined ? <SignalStrength value={device.signal} hideValue /> : null}
-          {device?.lastSeenAt !== undefined ? (
-            // Hidden below `sm`: at list density this is the first thing to go, and the status badge
-            // beside it already says whether the device is reachable.
-            <LastSync value={device.lastSeenAt} now={now} className="hidden text-label-sm sm:inline" />
-          ) : null}
+        <span className="flex shrink-0 items-center gap-3">
+          {device?.battery !== undefined ? <BatteryIndicator value={device.battery} hideValue className="hidden sm:inline-flex" /> : null}
+          {device?.signal !== undefined ? <SignalStrength value={device.signal} hideValue className="hidden sm:inline-flex" /> : null}
           <DeviceStatusBadge status={status} />
           {action}
         </span>

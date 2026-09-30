@@ -41,7 +41,7 @@ const SignalStrength = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
         role="img"
         aria-label={resolveLabel(label, describeSignal(value))}
         data-level={level}
-        className={cn("inline-flex items-center gap-2 text-label-md font-sans text-foreground", className)}
+        className={cn("inline-flex items-center gap-2 font-sans text-body-sm tabular-nums text-foreground", className)}
         {...props}
       >
         <span aria-hidden="true" className="inline-flex items-end gap-0.5">
@@ -49,11 +49,11 @@ const SignalStrength = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
             <span
               key={index}
               className={cn(
-                "w-1 shrink-0 rounded-sm",
+                "w-1.5 shrink-0 rounded-full",
                 index < filled ? "bg-secondary-foreground" : "bg-muted-foreground/30",
               )}
               // A meter is read by relative height, so the bars have to differ in size.
-              style={{ height: `${4 + index * 3}px` }}
+              style={{ height: `${6 + index * 4}px` }}
             />
           ))}
         </span>

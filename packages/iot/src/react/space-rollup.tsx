@@ -35,21 +35,21 @@ const SpaceRollup = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwar
         data-worst={rollup.worst}
         role="group"
         aria-label={name ? `Health of ${name}` : "Health rollup"}
-        className={cn("flex min-w-0 flex-col gap-2 font-sans", className)}
+        className={cn("flex min-w-0 flex-col gap-2.5 font-sans", className)}
         {...props}
       >
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-label-md text-foreground">
+        <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-label-md text-foreground">
           {empty ? null : (
-            <span data-worst-label="" className={cn("inline-flex items-center gap-1.5", rollup.worst === "critical" && "text-destructive")}>
+            <span data-worst-label="" className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-label-md", rollup.worst === "critical" ? "bg-destructive/10 text-destructive" : "bg-muted text-foreground")}>
               <Glyph name={HEALTH_GLYPH[rollup.worst]} size={14} />
               <span>{describeDeviceHealth(rollup.worst)}</span>
             </span>
           )}
-          <span data-rollup-text="" className="break-words text-label-sm text-muted-foreground">{empty ? "No devices." : `${rollup.total} ${rollup.total === 1 ? "device" : "devices"} · ${healthText(buckets)}`}</span>
+          <span data-rollup-text="" className="break-words text-body-sm text-muted-foreground">{empty ? "No devices." : `${rollup.total} ${rollup.total === 1 ? "device" : "devices"} · ${healthText(buckets)}`}</span>
         </p>
         <HealthBar buckets={buckets} compact={compact} />
         {rollup.missing > 0 ? (
-          <p data-missing="" className="text-label-sm text-muted-foreground">
+          <p data-missing="" className="text-body-sm text-muted-foreground">
             {rollup.missing} {rollup.missing === 1 ? "device is" : "devices are"} placed here but not in the device list, counted as unknown.
           </p>
         ) : null}
