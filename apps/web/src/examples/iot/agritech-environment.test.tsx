@@ -87,6 +87,57 @@ describe("agritech environment", () => {
     expect(within(health).getAllByRole("img", { name: /battery/i }).length).toBeGreaterThanOrEqual(4);
   });
 
+  it("separates the zone's condition from the sensor's battery, so 18% never reads as a second moisture value", () => {
+    render(<AgritechEnvironmentExample />);
+    const condition = screen.getByRole("heading", { name: "Zone 3 soil moisture" }).closest("section")!;
+    // The condition group carries the hero number and its relationship to the threshold, in words.
+    expect(within(condition).getByText("34")).toBeInTheDocument();
+    expect(within(condition).getByText(/points above the irrigation threshold \(28%\)/)).toBeInTheDocument();
+    // …and nothing about the battery.
+    expect(within(condition).queryByRole("img", { name: /battery/i })).toBeNull();
+    expect(within(condition).queryByText("18%")).toBeNull();
+
+    const attention = screen.getByRole("heading", { name: "Sensor attention" }).closest("section")!;
+    expect(within(attention).getByText(/Soil Sensor 04 battery is low/)).toBeInTheDocument();
+    expect(within(attention).getByText("A battery level, not a soil reading.")).toBeInTheDocument();
+    expect(within(attention).getByRole("img", { name: /Soil Sensor 04 battery/ })).toBeInTheDocument();
+    // The condition heading comes first in the document; attention follows it, never the other way round.
+    expect(condition.compareDocumentPosition(attention) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("names the sensor attention group only when that sensor needs one", () => {
+    render(<AgritechEnvironmentExample />);
+    fireEvent.click(zoneButton(/Zone 2/));
+    // Soil Sensor 03 is healthy and reporting, so there is nothing to raise.
+    expect(screen.queryByRole("heading", { name: "Sensor attention" })).toBeNull();
+    fireEvent.click(zoneButton(/Orchard block/));
+    const attention = screen.getByRole("heading", { name: "Sensor attention" }).closest("section")!;
+    expect(within(attention).getByText(/last known value, not the current soil moisture/)).toBeInTheDocument();
+  });
+
+  it("words the flaky valve's failure with the device's own reason and keeps the confirmed position", () => {
+    render(<AgritechEnvironmentExample />);
+    const detail = screen.getByRole("region", { name: "Zone 3 detail" });
+    fireEvent.click(within(within(detail).getByRole("radiogroup", { name: /Irrigation Valve 03 position/ })).getByRole("radio", { name: /Open/ }));
+    // In flight: the request is worded and says what the valve still reports.
+    expect(within(detail).getByText(/Requested: Open, not yet confirmed\. The valve still reports closed\./)).toBeInTheDocument();
+
+    tick(3000);
+    // Failed: the reason the scenario scripted is on screen at full contrast, not only in the summary line.
+    expect(within(detail).getByText(/Irrigation Valve 03 did not move — Valve position not reported\./)).toBeInTheDocument();
+    // The confirmed position is still the authoritative one, and the control still reports it.
+    expect(within(detail).getByText("Closed", { selector: "p" })).toBeInTheDocument();
+    expect(within(detail).getByRole("radio", { name: /Closed/ })).toBeChecked();
+    // Retry is offered, never taken for you.
+    const retry = within(detail).getByRole("button", { name: /^Retry$/ });
+    tick(5000);
+    expect(within(detail).getByText("Closed", { selector: "p" })).toBeInTheDocument();
+    fireEvent.click(retry);
+    tick(3000);
+    expect(within(detail).getByText("Open", { selector: "p" })).toBeInTheDocument();
+    expect(within(detail).queryByText(/did not move/)).toBeNull();
+  });
+
   it("selecting a zone on the pills (phone) selects the same zone as the rail", () => {
     render(<AgritechEnvironmentExample />);
     fireEvent.click(within(screen.getByRole("radiogroup", { name: "Zone" })).getByRole("radio", { name: /Zone 2/ }));

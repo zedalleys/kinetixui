@@ -395,15 +395,16 @@ export function OperationsEnvironmentExample() {
           aria-label="Fleet health"
           className="lg:flex-row lg:items-center lg:justify-between lg:gap-8"
         >
+          {/* An overview count, not the primary state of anything: one step below the selected machine. */}
           <DeviceHealthSummary
             summary={fleet}
-            size="lg"
             noun={{ one: "device", other: "devices" }}
             className="lg:max-w-2xl lg:flex-1"
           />
+          {/* Overview figures, so one step below the selected machine's own reported state. */}
           <div className="grid grid-cols-2 gap-4 lg:flex lg:gap-10">
             <Stat
-              size="lg"
+              size="md"
               label="Utilisation"
               value={
                 machineIds.length
@@ -414,7 +415,7 @@ export function OperationsEnvironmentExample() {
               trend={`${running} of ${machineIds.length} machines running`}
             />
             <Stat
-              size="lg"
+              size="md"
               label="Site load"
               value={
                 siteLoad.value !== null
@@ -495,7 +496,7 @@ export function OperationsEnvironmentExample() {
             </Panel>
 
             <Disclosure
-              title={`Equipment · ${line.name}`}
+              title="Equipment"
               count={lineDevices.length}
               countNoun="devices"
             >
@@ -581,7 +582,7 @@ export function OperationsEnvironmentExample() {
                   <dt className="text-body-sm text-muted-foreground">
                     Running
                   </dt>
-                  <dd className="m-0 text-headline-lg tabular-nums text-foreground">
+                  <dd className="m-0 text-headline-sm tabular-nums text-foreground">
                     {lineMachines.filter((id) => isRunning(iot, id)).length}
                     <span className="text-title-md text-muted-foreground">
                       {" "}
@@ -593,7 +594,7 @@ export function OperationsEnvironmentExample() {
                   <dt className="text-body-sm text-muted-foreground">
                     Line load
                   </dt>
-                  <dd className="m-0 text-headline-lg tabular-nums text-foreground">
+                  <dd className="m-0 text-headline-sm tabular-nums text-foreground">
                     {lineLoad.value !== null ? (
                       <>
                         {lineLoad.value.toFixed(1)}
@@ -662,6 +663,7 @@ export function OperationsEnvironmentExample() {
                       <span className="text-body-sm text-muted-foreground">
                         Reported
                       </span>
+                      {/* The selected machine's CONFIRMED state: the largest thing in this region. */}
                       <span className="text-headline-lg tabular-nums text-foreground">
                         {down
                           ? "Offline"
@@ -704,8 +706,9 @@ export function OperationsEnvironmentExample() {
                     <Lifecycle binding={power} />
                     {level && levelCap ? (
                       <>
+                        {/* The `track` variant, not `pill`: at 326px the pill's inline label and value had
+                            nowhere to go and clipped, and the track also words a pending request. */}
                         <DeviceLevelControl
-                          variant="pill"
                           value={level.confirmed as number}
                           target={level.requested as number | undefined}
                           unit="%"
@@ -725,9 +728,13 @@ export function OperationsEnvironmentExample() {
                       : "Read-only device: it reports, and has nothing to command."}
                   </p>
                 )}
+              </Panel>
 
+              {/* Tertiary: how the device is connected and what firmware it runs. Present and complete,
+                  but behind a disclosure on a phone so it does not sit beside the run control. */}
+              <Disclosure title="Connection and firmware">
                 <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="min-w-0 rounded-xl bg-muted/60 px-4">
+                  <div className="min-w-0">
                     <ConnectionHealth
                       device={device}
                       freshnessMs={STALE_AFTER_MS}
@@ -735,7 +742,7 @@ export function OperationsEnvironmentExample() {
                       aria-label={`${device.name} connection`}
                     />
                   </div>
-                  <div className="flex min-w-0 flex-col gap-3 rounded-xl bg-muted/60 p-4">
+                  <div className="flex min-w-0 flex-col gap-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-body-md text-muted-foreground">
                         Signal
@@ -747,10 +754,7 @@ export function OperationsEnvironmentExample() {
                         <span className="text-body-md text-muted-foreground">
                           Battery
                         </span>
-                        <BatteryIndicator
-                          value={device.battery}
-                          presentation="pill"
-                        />
+                        <BatteryIndicator value={device.battery} />
                       </div>
                     ) : null}
                     <FirmwareStatus
@@ -772,12 +776,12 @@ export function OperationsEnvironmentExample() {
                     ) : null}
                   </div>
                 </div>
-              </Panel>
+              </Disclosure>
+
               <Disclosure
-                title={`Telemetry · ${device.name}`}
+                title="Telemetry"
                 count={metrics.length}
                 countNoun="metrics"
-                defaultOpen
               >
                 {metrics.length === 0 ? (
                   <p className="text-body-md text-muted-foreground">

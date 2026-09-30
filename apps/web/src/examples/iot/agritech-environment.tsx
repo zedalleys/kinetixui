@@ -16,7 +16,7 @@ import {
   TelemetryMetric,
   TelemetryTrend,
 } from "@kinetixui/iot/react";
-import { buildSpaceTree, descendantDeviceIds, evaluateReading, resolveDeviceCategory, type KinetixReadingState } from "@kinetixui/iot/functions";
+import { buildSpaceTree, classifyBatteryLevel, descendantDeviceIds, evaluateReading, resolveDeviceCategory, type KinetixReadingState } from "@kinetixui/iot/functions";
 import { selectActivity, selectAlerts, selectFleetHealth } from "@/lib/iot-sim";
 import { useIotSimulation, type UseIotSimulation } from "@/lib/iot-sim/use-simulation";
 import { cn } from "@/lib/utils";
@@ -45,6 +45,12 @@ import { SimNotice, SimTransport, controlOf, deviceOf, readingOf, trendOf, type 
  * each valve, pump and sensor is a hotspot with an honest state. Selecting a zone (in the rail, the pills on a
  * phone, or on the plan) brings up its moisture as the big number, the valve that irrigates it, and the
  * greenhouse and weather readings around it. Time series and device health come before lighting-style controls.
+ *
+ * The selected zone reads as four groups, in the order a phone asks the questions: the CURRENT CONDITION
+ * (one hero numeral and its distance from the 28% irrigation threshold, in words), SENSOR ATTENTION (what is
+ * wrong with the sensor — a low battery is a battery percentage, never a second moisture reading, so it is
+ * set small and labelled as such), HISTORY behind a disclosure, and IRRIGATION (the position the valve
+ * reports, then anything requested or failed, then the control).
  *
  * Every number is only as current as its reading: a sensor that stopped reporting keeps its last value, said
  * as "last known", and never reads as a fresh measurement. The valve and pump are real controls: a request
@@ -90,19 +96,64 @@ const ValveClosedGlyph = () => (
   </svg>
 );
 
-/** The lifecycle of a request that has not landed, or did not. Nothing for a confirmed one. */
-function Lifecycle({ binding }: { binding: ControlBinding }) {
+const FAILED_STAGES = new Set(["failed", "timed-out", "unreachable"]);
+
+/**
+ * The lifecycle of a request that has not landed, or did not.
+ *
+ * Compact, because the words around it already carry the requested and the confirmed value. A failure
+ * is lifted into its own tinted block with a heading, so that at phone width the WHY — the device's own
+ * reason, from `describeCommandLifecycle` — is read before the control is pressed again, and Retry sits
+ * with it. Nothing retries itself.
+ */
+function CommandProgress({ binding, failureTitle }: { binding: ControlBinding; failureTitle: string }) {
   if (!binding.command || !binding.unsettled) return null;
-  return <CommandLifecycle lifecycle={binding.command.lifecycle} formatValue={binding.format} onRetry={binding.retry} onCancel={binding.cancel} className="w-full" />;
+  const body = (
+    <CommandLifecycle
+      lifecycle={binding.command.lifecycle}
+      formatValue={binding.format}
+      onRetry={binding.retry}
+      onCancel={binding.cancel}
+      density="compact"
+      className="w-full"
+    />
+  );
+  if (!FAILED_STAGES.has(binding.command.lifecycle.stage)) return body;
+  const reason = binding.command.lifecycle.reason;
+  return (
+    <div className="flex min-w-0 flex-col gap-2 rounded-xl bg-warning/15 p-3">
+      {/* The device's own reason, at full contrast: on a phone it was the first thing to become unreadable,
+          and without it the honest "it went back" looks like a bug rather than a report. */}
+      <p className="flex min-w-0 items-start gap-2 text-title-md text-foreground">
+        <StateGlyph state="warning" className="mt-0.5 text-warning" />
+        <span>
+          {failureTitle}
+          {reason ? ` — ${reason}` : ""}
+        </span>
+      </p>
+      {body}
+    </div>
+  );
 }
 
 /** The request, worded and dashed, beside the confirmed value: never a substitute for it. */
-function RequestedChip({ children }: { children: React.ReactNode }) {
+function RequestNotice({ children }: { children: React.ReactNode }) {
   return (
-    <p className="inline-flex items-center gap-1.5 self-start rounded-full border-2 border-dashed border-primary px-3 py-1 text-label-md font-medium text-foreground">
-      <StateGlyph state="pending" size={14} className="text-primary" />
-      {children}
+    <p className="flex min-w-0 items-start gap-2 rounded-xl border-2 border-dashed border-primary p-3 text-body-md text-foreground">
+      <StateGlyph state="pending" className="mt-0.5 text-primary" />
+      <span>{children}</span>
     </p>
+  );
+}
+
+/** The confirmed state of a control: the label, then the word the device itself reported. */
+function ConfirmedState({ what, word, note }: { what: string; word: string; note?: React.ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-0.5">
+      <p className="text-label-md uppercase tracking-wide text-muted-foreground">{what}</p>
+      <p className="text-headline-sm text-foreground">{word}</p>
+      {note}
+    </div>
   );
 }
 
@@ -136,6 +187,17 @@ function MoistureBar({ value, state, name }: { value: number | null; state: Kine
       <span aria-hidden="true" className="absolute -inset-y-1 w-0.5 rounded-full bg-foreground/70" style={{ insetInlineStart: `${SOIL_LOW}%` }} />
     </div>
   );
+}
+
+/** The reading's relationship to the irrigation threshold, in words rather than only as a tick on a bar. */
+function thresholdSentence(value: number | null, state: KinetixReadingState): string {
+  if (value === null || state === "unavailable") return `No reading. The irrigation threshold is ${SOIL_LOW}%.`;
+  const diff = Math.round(value) - SOIL_LOW;
+  const relation =
+    diff === 0
+      ? `at the irrigation threshold (${SOIL_LOW}%)`
+      : `${Math.abs(diff)} ${Math.abs(diff) === 1 ? "point" : "points"} ${diff > 0 ? "above" : "below"} the irrigation threshold (${SOIL_LOW}%)`;
+  return state === "stale" ? `Last known reading, ${relation}.` : `${relation[0]!.toUpperCase()}${relation.slice(1)}.`;
 }
 
 const moistureWord = (state: KinetixReadingState) =>
@@ -266,16 +328,12 @@ export function AgritechEnvironmentExample() {
     <Panel
       title="Pump Station"
       description={large ? "Feeds every irrigation zone" : "Supplies this zone"}
-      className={large ? undefined : "bg-muted/40 shadow-none"}
+      tone={large ? "surface" : "inset"}
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <DeviceIllustration category="pump" on={pump.confirmed === "on"} size={large ? "lg" : "md"} />
-          <div className="flex min-w-0 flex-col gap-1">
-            <p className="text-headline-sm text-foreground">{pump.confirmed === "on" ? "Running" : "Stopped"}</p>
-            <p className="text-body-sm text-muted-foreground">Reported by the pump</p>
-            {pump.requested !== undefined ? <RequestedChip>Requested: {pump.format(pump.requested)}, not yet confirmed</RequestedChip> : null}
-          </div>
+        <div className="flex min-w-0 flex-wrap items-center gap-4">
+          <DeviceIllustration category="pump" on={pump.confirmed === "on"} size="md" className={large ? "sm:size-28" : undefined} />
+          <ConfirmedState what="Pump reports" word={pump.confirmed === "on" ? "Running" : "Stopped"} />
         </div>
         <DevicePowerControl
           state={pump.confirmed as "on" | "off"}
@@ -286,57 +344,89 @@ export function AgritechEnvironmentExample() {
           onToggle={pump.send}
         />
       </div>
-      {large ? null : (
-        <TelemetryMetric {...flow} label="Pump flow" size="md" quietWhenNormal />
-      )}
-      <Lifecycle binding={pump} />
+      {pump.requested !== undefined ? (
+        <RequestNotice>
+          Requested: {pump.format(pump.requested)}, not yet confirmed. The pump still reports {pump.confirmed === "on" ? "running" : "stopped"}.
+        </RequestNotice>
+      ) : null}
+      <CommandProgress binding={pump} failureTitle="The pump did not change" />
+      {large ? null : <TelemetryMetric {...flow} label="Pump flow" size="md" quietWhenNormal />}
     </Panel>
   );
 
-  // ---- the focus area: hero numeral, then what to do about it ----
+  // ---- the focus area, in four groups a phone can read in order ----
+  // 1 CURRENT CONDITION: one hero numeral for the zone, and its relationship to the threshold in words.
   const hero =
     zoneMoisture && sensor ? (
       <Panel title={`${zone.name} soil moisture`} description={`${zone.group} · ${sensor.name}`}>
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
           <TelemetryMetric {...zoneMoisture.reading} label="Soil moisture" size="xl" className="sm:min-w-48" />
-          <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
             <MoistureBar value={zoneMoisture.value} state={zoneMoisture.state} name={`${zone.name} soil moisture`} />
-            <p className="text-body-md text-muted-foreground">The irrigation rule watches {SOIL_LOW}%. The tick on the bar marks it.</p>
-            <div className="flex flex-wrap items-center gap-3">
-              <BatteryIndicator presentation="pill" value={sensor.battery} label={`${sensor.name} battery`} />
-              <span className="text-body-sm text-muted-foreground">{sensor.name}</span>
-            </div>
+            <p className="text-body-md text-foreground">{thresholdSentence(zoneMoisture.value, zoneMoisture.state)}</p>
           </div>
           <DeviceIllustration category="soil-sensor" on={zoneMoisture.state !== "stale"} size="lg" className="hidden sm:block" />
         </div>
-        {zoneMoisture.state === "stale" ? (
-          <p className="flex items-start gap-2 rounded-xl bg-muted/60 p-3 text-body-md text-foreground">
-            <StateGlyph state="offline" className="mt-0.5 text-muted-foreground" />
-            <span>{sensor.name} has not reported recently. This is its last known value, not the current soil moisture, so it is not used to judge this block.</span>
-          </p>
-        ) : null}
       </Panel>
     ) : (
       <Panel title="Pump Station" description="Utility yard · what the irrigation runs on">
-        <div className="flex flex-col gap-5 sm:flex-row sm:gap-10">
+        <div className="flex flex-col gap-4 sm:flex-row sm:gap-10">
           <TelemetryMetric {...flow} label="Pump flow" size="xl" />
-          <TelemetryMetric {...pressure} label="Line pressure" size="lg" quietWhenNormal />
+          <TelemetryMetric {...pressure} label="Line pressure" size="md" quietWhenNormal />
         </div>
       </Panel>
     );
 
+  // 2 ATTENTION: what is wrong with the SENSOR, kept apart from the zone's condition and deliberately
+  // quieter than it — a battery percentage is not a second moisture reading.
+  const batteryLevel = classifyBatteryLevel(sensor?.battery);
+  const batteryAlarm = batteryLevel === "low" || batteryLevel === "critical";
+  const sensorStale = zoneMoisture?.state === "stale";
+  const sensorAttention =
+    sensor && (batteryAlarm || sensorStale) ? (
+      <Panel title="Sensor attention" description={`About ${sensor.name} itself, not about the moisture above`} tone="inset">
+        {batteryAlarm ? (
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <p className="flex min-w-0 items-start gap-2 text-body-md text-foreground">
+              <StateGlyph state="warning" className="mt-0.5 text-warning" />
+              <span>
+                {sensor.name} battery is {batteryLevel === "critical" ? "critical" : "low"}. Plan a battery change.
+              </span>
+            </p>
+            <BatteryIndicator value={sensor.battery} label={`${sensor.name} battery`} className="ms-6" />
+            <p className="ms-6 text-body-sm text-muted-foreground">A battery level, not a soil reading.</p>
+          </div>
+        ) : null}
+        {sensorStale ? (
+          <p className="flex min-w-0 items-start gap-2 text-body-md text-foreground">
+            <StateGlyph state="offline" className="mt-0.5 text-muted-foreground" />
+            <span>
+              {sensor.name} has not reported recently. The figure above is its last known value, not the current soil moisture, so it is not used to judge this block.
+            </span>
+          </p>
+        ) : null}
+      </Panel>
+    ) : null;
+
+  // 4 IRRIGATION: the confirmed position first, then anything in flight or failed, then the control.
   const irrigation = valve ? (
     <>
       <Panel title="Irrigation valve" description={`${valve.device.name} · ${valve.device.locationName ?? zone.name}`}>
-        <div className="flex items-center gap-4">
-          <DeviceIllustration category="valve" on={valve.confirmed === "open"} size="lg" />
-          <div className="flex min-w-0 flex-col gap-1">
-            <p className="text-display-sm tabular-nums text-foreground">{valve.format(valve.confirmed)}</p>
-            <p className="text-body-md text-muted-foreground">Reported by the valve</p>
-            {valve.requested !== undefined ? <RequestedChip>Requested: {valve.format(valve.requested)}, not yet confirmed</RequestedChip> : null}
-            {valve.device.status === "offline" ? <StateBadge state="offline">Offline. Showing the last known position.</StateBadge> : null}
-          </div>
+        {/* At 320 the large illustration left too little room and clipped the reported word; it grows from sm up. */}
+        <div className="flex min-w-0 flex-wrap items-center gap-4">
+          <DeviceIllustration category="valve" on={valve.confirmed === "open"} size="md" className="sm:size-28" />
+          <ConfirmedState
+            what="Valve reports"
+            word={valve.format(valve.confirmed)}
+            note={valve.device.status === "offline" ? <StateBadge state="offline">Last known position</StateBadge> : null}
+          />
         </div>
+        {valve.requested !== undefined ? (
+          <RequestNotice>
+            Requested: {valve.format(valve.requested)}, not yet confirmed. The valve still reports {valve.format(valve.confirmed).toLowerCase()}.
+          </RequestNotice>
+        ) : null}
+        <CommandProgress binding={valve} failureTitle={`${valve.device.name} did not move`} />
         <DeviceModeControl
           presentation="tiles"
           modes={(valve.capability.modes ?? []).map((m) => ({ ...m, icon: m.id === "open" ? <ValveOpenGlyph /> : <ValveClosedGlyph /> }))}
@@ -346,7 +436,6 @@ export function AgritechEnvironmentExample() {
           label={`${valve.device.name} position`}
           onSelect={valve.send}
         />
-        <Lifecycle binding={valve} />
       </Panel>
       {pumpBlock(false)}
     </>
@@ -361,10 +450,10 @@ export function AgritechEnvironmentExample() {
   const conditions = (
     <Panel title="Conditions" description="Greenhouse A air, and the weather station in the utility yard">
       <TelemetryGrid label="Conditions" columns={4}>
-        <TelemetryMetric {...air} label="Greenhouse air" size="lg" quietWhenNormal />
-        <TelemetryMetric {...humidity} label="Humidity" size="lg" quietWhenNormal />
-        <TelemetryMetric {...outside} label="Outside air" size="lg" quietWhenNormal />
-        <TelemetryMetric {...wind} label="Wind" size="lg" quietWhenNormal />
+        <TelemetryMetric {...air} label="Greenhouse air" size="md" quietWhenNormal />
+        <TelemetryMetric {...humidity} label="Humidity" size="md" quietWhenNormal />
+        <TelemetryMetric {...outside} label="Outside air" size="md" quietWhenNormal />
+        <TelemetryMetric {...wind} label="Wind" size="md" quietWhenNormal />
       </TelemetryGrid>
     </Panel>
   );
@@ -376,14 +465,15 @@ export function AgritechEnvironmentExample() {
   const focus = (
     <>
       {hero}
+      {sensorAttention}
       {zone.sensorId ? (
-        <Disclosure title={`${zone.name} moisture, last 7 days`}>{trendCard(zone.sensorId, "soil-moisture", `${zone.name} soil moisture, last seven days`, 160)}</Disclosure>
+        <Disclosure title="Moisture, 7 days">{trendCard(zone.sensorId, "soil-moisture", `${zone.name} soil moisture, last seven days`, 160)}</Disclosure>
       ) : (
-        <Disclosure title="Pump flow, last 24 hours">{trendCard("pump-01", "flow", "Pump flow, last 24 hours", 160)}</Disclosure>
+        <Disclosure title="Pump flow, 24 hours">{trendCard("pump-01", "flow", "Pump flow, last 24 hours", 160)}</Disclosure>
       )}
       {irrigation}
       {conditions}
-      <Disclosure title="Air and weather, last 24 hours">
+      <Disclosure title="Air and weather">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {trendCard("climate-a", "temperature", "Greenhouse air temperature, last 24 hours")}
           {trendCard("climate-a", "humidity", "Greenhouse humidity, last 24 hours")}
@@ -415,20 +505,18 @@ export function AgritechEnvironmentExample() {
       </div>
 
       <Panel title="Device health" description="Batteries and reporting, lowest first">
-        <DeviceHealthSummary summary={selectFleetHealth(sim)} size="lg" noun={{ one: "device", other: "devices" }} />
+        <DeviceHealthSummary summary={selectFleetHealth(sim)} noun={{ one: "device", other: "devices" }} />
         <ul aria-label="Batteries and reporting" className="m-0 flex list-none flex-col gap-3 p-0">
           {batteryDevices.map((d) => (
-            <li key={d.id} className="flex min-w-0 flex-col gap-2 rounded-xl bg-muted/40 p-3">
-              <span className="flex min-w-0 items-center gap-3">
-                <DeviceIllustration category={resolveDeviceCategory(d)} on={d.status === "online"} size="sm" className="size-8" />
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="text-body-md text-foreground">{d.name}</span>
-                  <span className="text-body-sm text-muted-foreground">{d.locationName}</span>
+            <li key={d.id} className="flex min-w-0 items-center gap-3">
+              <DeviceIllustration category={resolveDeviceCategory(d)} on={d.status === "online"} size="sm" className="size-8" />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="text-body-md text-foreground">{d.name}</span>
+                <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm text-muted-foreground">
+                  <span>{d.locationName}</span>
+                  {d.battery !== undefined ? <BatteryIndicator value={d.battery} label={`${d.name} battery`} /> : null}
+                  {d.status !== "online" ? <StateBadge state="offline" className="text-body-sm">Not reporting</StateBadge> : null}
                 </span>
-              </span>
-              <span className="flex flex-wrap items-center gap-2">
-                {d.battery !== undefined ? <BatteryIndicator presentation="pill" value={d.battery} label={`${d.name} battery`} className="bg-card" /> : null}
-                {d.status !== "online" ? <StateBadge state="offline">Not reporting</StateBadge> : null}
               </span>
             </li>
           ))}
