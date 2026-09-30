@@ -3,11 +3,18 @@ name: Accessibility (browser)
 # Real-browser axe pass over every Storybook story, light + dark. Complements the
 # jsdom axe test in `ci.yml` (which can't see layout, so it skips colour contrast).
 # Path-filtered so it only runs when something that can change rendering does.
+#
+# Every package with stories in the built Storybook belongs in `paths`. `packages/iot/**` was
+# missing, so the IoT stories were scanned only when an unrelated package happened to trigger a
+# run — five real violations sat on main for a day before a `packages/ui` change surfaced them.
+# `scripts/check-a11y-coverage.mjs` now fails CI if a package with stories is absent from this
+# list, so the filter cannot silently fall behind the story directory again.
 on:
   push:
     branches: [main]
     paths:
       - "packages/ui/**"
+      - "packages/iot/**"
       - "packages/tokens/**"
       - "tokens/**"
       - "apps/docs/**"
@@ -18,6 +25,7 @@ on:
   pull_request:
     paths:
       - "packages/ui/**"
+      - "packages/iot/**"
       - "packages/tokens/**"
       - "tokens/**"
       - "apps/docs/**"
