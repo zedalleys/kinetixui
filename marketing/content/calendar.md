@@ -1,13 +1,17 @@
 ---
 type: 30-day calendar
-status: planned — nothing scheduled, nothing published
+status: running — day 1 published 2026-09-29; everything from day 2 on is still planned
 ---
 
 # The first 30 days
 
-Day offsets, not dates: the start date is whenever Ziad decides the manual actions in
-`audits/PHASE-4-CONTENT-ENGINE.md` are done. **Day 1 is a Tuesday** in the numbering below — Monday starts
-are worse for a technical audience's first impression of a new account.
+Day offsets, not dates. **Day 1 was 2026-09-29** — the offsets below count from there, so day 2 is
+2026-09-30 and so on. **Day 1 is a Tuesday** in the numbering below — Monday starts are worse for a
+technical audience's first impression of a new account.
+
+Published rows carry their date in the Status column, and the act of publishing is logged per channel in
+[`../distribution/register.json`](../distribution/register.json), which is the record `pnpm check:distribution`
+validates. This file stays the schedule.
 
 The machine-readable version of every row is `register.json`, which `pnpm check:content` validates.
 
@@ -35,7 +39,7 @@ appears, which is why they carry no fixed day.
 | Day | Asset | Channel | Format | ICP | Pillar | Stage | Topic / hook | CTA → destination | Campaign | From | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **Week 1 — problem recognition** |
-| 1 | **LI-003** | LinkedIn | post | P2 | A | Awareness | *"Six months later, they don't"* — drift as a mechanism problem | See the coverage → `/docs/platforms` | `kx_p2_a_drift` | — | Ready |
+| 1 | **LI-003** | LinkedIn | post | P2 | A | Awareness | *"Six months later, they don't"* — drift as a mechanism problem | See the coverage → `/docs/platforms` | `kx_p2_a_drift` | — | **Published** 2026-09-29 |
 | 2 | **X-005** | X | single | P2 | A | Awareness | Drift is not a discipline problem | — | `kx_p2_a_drift` | LI-003 | Ready |
 | 4 | **LI-004** | LinkedIn | post | P1 | C | Evaluation | The manifest, and the check that reads it back | See the coverage → `/docs/platforms` | `kx_p1_c_manifest` | — | Ready |
 | 6 | **X-003** | X | single | P1 | C | Evaluation | No source, no claim, build fails | — | `kx_p1_c_manifest` | LI-004 | Ready |

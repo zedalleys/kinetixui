@@ -1,7 +1,7 @@
 ---
 type: linkedin assets
 month: first 30 days
-status: finished copy — nothing here is scheduled or published
+status: finished copy — LI-003 published 2026-09-29; the rest is neither scheduled nor published
 ---
 
 # LinkedIn — finished posts

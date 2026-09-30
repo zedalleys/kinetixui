@@ -105,6 +105,12 @@ for (const row of register.rows ?? []) {
     fail(where, `channel "${row.channel}" but the content register says "${asset.channel}"`);
   }
   if ((row.day ?? null) !== (asset.day ?? null)) fail(where, `day ${row.day} but the calendar says ${asset.day}`);
+
+  // The two registers mean the same thing by "published" or they mean nothing. A row saying an asset went
+  // out while the content register still calls it `ready` is the drift that makes a second source of truth.
+  if (row.status === "published" && asset.status !== "published") {
+    fail(where, `logged as published but the content register still says "${asset.status}" — close the asset out too`);
+  }
   if ((row.visual ?? null) !== (asset.visual ?? null)) fail(where, `visual "${row.visual}" but the content register says "${asset.visual}"`);
 
   if ((row.destination ?? null) !== (asset.destination ?? null)) {
@@ -135,6 +141,20 @@ for (const row of register.rows ?? []) {
   }
 
   if (!row.metricToWatch) fail(where, "no metricToWatch — a post nobody will look at afterwards is a post that cannot inform anything");
+}
+
+/* ---------------------------------------------- the registers agree about "published" */
+
+/**
+ * The other direction. `published` in the content register asserts that an act of publishing happened, and
+ * the act is what this log records — so an asset can only claim it once a row here carries the date and the
+ * result. Without this, both checks pass on an asset marked published that nothing ever went out for.
+ */
+const publishedRows = new Set(register.rows.filter((r) => r.status === "published").map((r) => r.asset));
+for (const asset of content.assets) {
+  if (asset.status === "published" && !publishedRows.has(asset.id)) {
+    fail(asset.id, "the content register says published, but no row here logs the act — add the row with its date and result");
+  }
 }
 
 /* ---------------------------------------------- the documents */

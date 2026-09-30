@@ -24,6 +24,12 @@ const CANONICAL = /^kx_(p1|p2|neutral)_[a-g]_[a-z0-9][a-z0-9_]*$/;
 const ICPS = new Set(["p1", "p2", "neutral"]);
 const PILLARS = new Set(["a", "b", "c", "d", "e", "f", "g"]);
 const STAGES = new Set(["awareness", "discovery", "evaluation", "adoption_intent"]);
+/**
+ * brief -> drafted -> ready -> published. `published` is terminal: it records that the asset actually went
+ * out, and the act of publishing itself is logged per-channel in marketing/distribution/register.json,
+ * which carries the date and the result. This set exists so a typo cannot quietly invent a fourth state.
+ */
+const STATUSES = new Set(["brief", "drafted", "ready", "published"]);
 const seen = new Set();
 
 for (const asset of register.assets) {
@@ -35,6 +41,7 @@ for (const asset of register.assets) {
   if (!ICPS.has(asset.icp)) fail(id, `icp "${asset.icp}" is not p1/p2/neutral`);
   if (!PILLARS.has(asset.pillar)) fail(id, `pillar "${asset.pillar}" is not one of CONTENT-PILLARS.md a–g`);
   if (!STAGES.has(asset.stage)) fail(id, `stage "${asset.stage}" is not a funnel stage from analytics.md §1`);
+  if (!STATUSES.has(asset.status)) fail(id, `status "${asset.status}" is not brief/drafted/ready/published`);
   if (!asset.file) fail(id, "no file — an asset nobody can find is not an asset");
   else if (!existsSync(asset.file)) fail(id, `file does not exist: ${asset.file}`);
 

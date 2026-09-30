@@ -34,7 +34,7 @@
   "$notYetRoutes": "Routes named in the distribution documents BECAUSE they do not exist yet. /blog is the seo.md decision: no blog until three articles have run off-site and one shows traffic. Anything else naming a missing route is a defect.",
   "rows": [
     {
-      "date": null,
+      "date": "2026-09-29",
       "day": 1,
       "asset": "LI-003",
       "channel": "linkedin",
@@ -52,8 +52,8 @@
       "secondary": null,
       "communityReuse": null,
       "metricToWatch": "kx_p2_a_drift sessions; any arrival at /docs/platforms",
-      "status": "planned",
-      "result": null
+      "status": "published",
+      "result": "5 sessions carried kx_p2_a_drift; 1 reached Qualified Evaluation; 0 reached Adoption Intent. Attribution pipeline confirmed working end to end \u2014 campaign, medium and content arrived intact, and the funnel vocabulary was already deployed (#253, 2026-09-29 12:43 UTC). One early session recorded kx_source=other while campaign, medium and content survived; the register's own URL cannot produce that, so a variant link was used for that click. The raw value is discarded by design and was not recovered, and this is logged as a single observation, not a defect. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open, so no rate is computed and no conclusion drawn."
     },
     {
       "date": null,
