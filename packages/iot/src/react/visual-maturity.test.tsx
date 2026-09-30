@@ -108,6 +108,64 @@ describe("CommandLifecycle density", () => {
   });
 });
 
+/**
+ * The phone reflow. On a real iPhone the horizontal stage track ran off the side of the screen —
+ * inside an `overflow-x: auto` preview, so there was no scrollbar to hint at it and "Confirmed", the
+ * one stage the component exists to withhold, was simply unreachable. Below `sm` the steps and the
+ * requested/reported pair are vertical lists; from `sm` up the horizontal track is unchanged.
+ */
+describe("CommandLifecycle reflows at phone widths", () => {
+  const stage = (s: string, over: object = {}) =>
+    ({ stage: s, attempts: 1, maxAttempts: 3, requestedValue: "on", confirmedValue: "off", ...over }) as never;
+  const STAGES = ["requested", "acknowledged", "confirmed", "failed", "timed-out", "unreachable", "retrying", "cancelled"];
+
+  it("stacks the steps below sm and only becomes a horizontal track from sm up", () => {
+    const { container } = render(<CommandLifecycle lifecycle={stage("acknowledged", { ackAt: NOW })} />);
+    const list = container.querySelector("ol")!;
+    expect(list.className).toContain("flex-col");
+    expect(list.className).toContain("sm:flex-row");
+    for (const li of container.querySelectorAll("li")) {
+      // A full-width row that may shrink: the stage word wraps inside it instead of widening it.
+      expect(li.className).toContain("w-full");
+      expect(li.className).toContain("min-w-0");
+      expect(li.className).toContain("sm:w-auto");
+    }
+    // The connecting hairline belongs to the horizontal track and is not drawn on a phone.
+    for (const rule of container.querySelectorAll("li > span[aria-hidden]")) {
+      if (rule.className.includes("border-t")) expect(rule.className).toContain("sm:block");
+    }
+  });
+
+  it("stacks the requested/reported pair rather than sitting it on one row", () => {
+    const { container } = render(<CommandLifecycle lifecycle={stage("requested")} />);
+    const values = container.querySelector("dl")!;
+    expect(values.className).toContain("flex-col");
+    expect(values.className).toContain("sm:flex-row");
+    expect(container.querySelector("[data-requested]")!.className).toContain("break-words");
+    expect(container.querySelector("[data-confirmed]")!.className).toContain("break-words");
+  });
+
+  it("never asks the text not to wrap, and never fixes a width, at any stage or density", () => {
+    for (const s of STAGES) {
+      for (const density of ["full", "compact"] as const) {
+        const { container, unmount } = render(<CommandLifecycle lifecycle={stage(s)} density={density} onRetry={() => {}} onCancel={() => {}} />);
+        expect(container.innerHTML, `${s}/${density}`).not.toMatch(/whitespace-nowrap|truncate|w-max|min-w-\[|w-\[/);
+        unmount();
+      }
+    }
+  });
+
+  it("reserves room for the sentence so the card does not resize between stages", () => {
+    const { container, rerender } = render(<CommandLifecycle lifecycle={stage("requested")} />);
+    const summary = container.querySelector("[data-lifecycle-summary]")!;
+    expect(summary.className).toContain("min-h-16"); // three lines on a phone
+    expect(summary.className).toContain("sm:min-h-10");
+    // Idle has no request to report on, so it reserves nothing.
+    rerender(<CommandLifecycle lifecycle={stage("idle")} />);
+    expect(container.querySelector("[data-lifecycle-summary]")!.className).not.toContain("min-h-16");
+  });
+});
+
 describe("Telemetry sizes and columns", () => {
   it("TelemetryMetric xl prints the unit separately but the text is unchanged", () => {
     const { container } = render(<TelemetryMetric metric="temperature" value={23.4} unit="°C" size="xl" timestamp={NOW} now={NOW} />);
