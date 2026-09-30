@@ -323,7 +323,7 @@ export function SummaryChip({ icon, label, value, className }: { icon?: React.Re
         </span>
       ) : null}
       {label ? <span className="text-muted-foreground">{label}</span> : null}
-      <span className="tabular-nums">{value}</span>
+      <bdi className="tabular-nums">{value}</bdi>
     </span>
   );
 }
@@ -367,13 +367,81 @@ export function AttentionButton({
  * SpaceHeader
  * ----------------------------------------------------------------------------------------------- */
 
+/** An abstract original house mark: a soft tile with a roofline and a lit window. Decorative. */
+export function HouseMark({ className }: { className?: string }) {
+  return (
+    <span aria-hidden="true" className={cn("flex size-12 shrink-0 items-center justify-center rounded-2xl bg-card shadow-sm sm:size-14", className)}>
+      <svg viewBox="0 0 48 48" width={36} height={36} fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 22 24 8l18 14" className="stroke-primary" strokeWidth={3} />
+        <path d="M11 20v18a2 2 0 0 0 2 2h22a2 2 0 0 0 2-2V20" className="fill-primary/10 stroke-muted-foreground/50" strokeWidth={2} />
+        <rect x="19" y="24" width="10" height="16" rx="3" className="fill-card stroke-muted-foreground/50" strokeWidth={2} />
+        <circle cx="26.5" cy="32" r="1.2" className="fill-primary stroke-none" />
+        <circle cx="35" cy="14" r="2.2" className="fill-warning/60 stroke-none" />
+      </svg>
+    </span>
+  );
+}
+
+/** A round 44px icon button for the header's compact cluster. `badge` is a count drawn as a dot with a number. */
+export function IconButton({
+  label,
+  onClick,
+  pressed,
+  badge,
+  children,
+  className,
+}: {
+  /** The accessible name. The glyph itself is decorative. */
+  label: string;
+  onClick?: () => void;
+  pressed?: boolean;
+  badge?: number;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={badge ? `${label}, ${badge} new` : label}
+      aria-pressed={pressed}
+      onClick={onClick}
+      className={cn(
+        "relative inline-flex size-11 items-center justify-center rounded-full text-foreground",
+        "transition-colors duration-fast motion-reduce:transition-none hover:bg-muted",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        pressed && "bg-muted",
+        className,
+      )}
+    >
+      <span aria-hidden="true">{children}</span>
+      {badge ? (
+        <span aria-hidden="true" className="absolute -end-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-label-md tabular-nums text-primary-foreground">
+          {badge}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
+/** A pill that groups `IconButton`s tonally, like a compact toolbar. */
+export function IconCluster({ children, label, className }: { children: React.ReactNode; label?: string; className?: string }) {
+  return (
+    <div role="group" aria-label={label} className={cn("inline-flex items-center gap-1 rounded-full bg-card p-1 shadow-sm", className)}>
+      {children}
+    </div>
+  );
+}
+
 export function SpaceHeader({
   title,
   eyebrow,
+  location,
+  identity,
   icon,
   status,
   statusWord,
   chips,
+  actions,
   attention,
   as: Heading = "h4",
   className,
@@ -381,7 +449,11 @@ export function SpaceHeader({
   title: React.ReactNode;
   /** A small line above the title, e.g. "Home · 2 floors". */
   eyebrow?: React.ReactNode;
-  /** Identity glyph, drawn in a tinted tile. */
+  /** A quiet location line under the title, with a pin glyph, e.g. "Demo street 4". */
+  location?: React.ReactNode;
+  /** The identity tile at the start. Defaults to the abstract `HouseMark`; pass your own for a farm or a plant. */
+  identity?: React.ReactNode;
+  /** Shorthand for a tinted identity tile around a glyph (used when `identity` is not given). */
   icon?: React.ReactNode;
   /** Overall status: glyph + word. */
   status?: ShowcaseState;
@@ -389,22 +461,40 @@ export function SpaceHeader({
   statusWord?: React.ReactNode;
   /** Environment summary chips (`SummaryChip`s). */
   chips?: React.ReactNode;
+  /** A compact cluster of round icon buttons (`IconCluster` with `IconButton`s). */
+  actions?: React.ReactNode;
   /** The attention / notification button (`AttentionButton`). */
   attention?: React.ReactNode;
   as?: HeadingTag;
   className?: string;
 }) {
+  const mark =
+    identity ??
+    (icon ? (
+      <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:size-14">
+        {icon}
+      </span>
+    ) : (
+      <HouseMark />
+    ));
   return (
     <div className={cn("flex min-w-0 flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-6", className)}>
       <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-        {icon ? (
-          <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:size-14">
-            {icon}
-          </span>
-        ) : null}
+        {mark}
         <div className="flex min-w-0 flex-col">
           {eyebrow ? <p className="truncate text-label-md uppercase tracking-wide text-muted-foreground">{eyebrow}</p> : null}
           <Heading className="truncate text-title-lg text-foreground sm:text-headline-sm">{title}</Heading>
+          {location ? (
+            <p className="flex items-center gap-1.5 text-body-md text-muted-foreground">
+              <span aria-hidden="true" className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" focusable="false">
+                  <path d="M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11Z" />
+                  <circle cx="12" cy="10" r="2" />
+                </svg>
+              </span>
+              <span className="truncate">{location}</span>
+            </p>
+          ) : null}
           {status ? (
             <StateBadge state={status} className="mt-0.5 text-body-md text-muted-foreground">
               {statusWord}
@@ -412,9 +502,10 @@ export function SpaceHeader({
           ) : null}
         </div>
       </div>
-      {chips || attention ? (
+      {chips || actions || attention ? (
         <div className="flex flex-wrap items-center gap-2 md:justify-end">
           {chips}
+          {actions}
           {attention}
         </div>
       ) : null}
@@ -521,5 +612,90 @@ export function RailItem({
         ) : null}
       </button>
     </li>
+  );
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Tile
+ * ----------------------------------------------------------------------------------------------- */
+
+/**
+ * Tile: a device tile. A soft tonal surface with the name and worded state at the start, an illustration at the
+ * inline-end, and a big value with a control slot (a toggle) along the bottom. `requested` adds the dashed
+ * "requested, not yet confirmed" treatment; the confirmed value stays the big number.
+ */
+export function Tile({
+  visual,
+  name,
+  state,
+  value,
+  control,
+  selected,
+  onSelect,
+  requested = false,
+  requestedWord = "Requested, not yet confirmed",
+  className,
+}: {
+  /** Usually a `DeviceIllustration`; placed at the inline-end. */
+  visual?: React.ReactNode;
+  name: string;
+  /** Worded state, e.g. "On, 6 hr up" or "Offline". */
+  state?: string;
+  /** The confirmed value, big. */
+  value?: React.ReactNode;
+  /** The control slot (a switch, a small stepper). Kept outside the selectable area. */
+  control?: React.ReactNode;
+  /** When `onSelect` is given the tile is a toggle button (`aria-pressed`). */
+  selected?: boolean;
+  onSelect?: () => void;
+  /** A request is pending: dashed outline plus the words. */
+  requested?: boolean;
+  requestedWord?: string;
+  className?: string;
+}) {
+  const head = (
+    <>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="text-title-md text-foreground">{name}</span>
+        {state ? <span className="text-body-md text-muted-foreground">{state}</span> : null}
+        {requested ? (
+          <span className="mt-1 inline-flex items-center gap-1.5 text-label-md font-medium text-foreground">
+            <StateGlyph state="pending" size={14} className="text-primary" />
+            {requestedWord}
+          </span>
+        ) : null}
+      </span>
+      {visual ? <span className="shrink-0 self-start">{visual}</span> : null}
+    </>
+  );
+  const headClass = "flex min-h-11 w-full min-w-0 items-start justify-between gap-3 text-start";
+  return (
+    <div
+      className={cn(
+        "flex min-w-0 flex-col gap-3 rounded-2xl border-2 p-4 transition-colors duration-fast motion-reduce:transition-none",
+        requested ? "border-dashed border-primary" : "border-transparent",
+        selected ? "bg-primary/10" : "bg-muted/60",
+        className,
+      )}
+    >
+      {onSelect ? (
+        <button
+          type="button"
+          onClick={onSelect}
+          aria-pressed={selected ?? false}
+          className={cn(headClass, "rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")}
+        >
+          {head}
+        </button>
+      ) : (
+        <div className={headClass}>{head}</div>
+      )}
+      {value !== undefined || control ? (
+        <div className="flex min-h-11 items-center justify-between gap-3">
+          <span className="text-headline-sm tabular-nums text-foreground">{value}</span>
+          {control ? <span className="shrink-0">{control}</span> : null}
+        </div>
+      ) : null}
+    </div>
   );
 }

@@ -203,19 +203,20 @@ function Hotspot({ hotspot, selected, labelled, onSelect }: { hotspot: PlanHotsp
       >
         {/* pending: a dashed ring that breathes, only when motion is welcome */}
         {state === "pending" ? (
-          <span aria-hidden="true" className="absolute inset-0.5 rounded-full border-2 border-dashed border-primary motion-safe:animate-pulse motion-reduce:animate-none md:inset-0" />
+          <span aria-hidden="true" className="absolute -inset-1 rounded-full border-2 border-dashed border-primary motion-safe:animate-pulse motion-reduce:animate-none" />
         ) : null}
+        {/* a circular tinted bubble: a soft halo ring, the device glyph, and a small state badge */}
         <span
           aria-hidden="true"
           className={cn(
-            "relative flex size-8 items-center justify-center rounded-full shadow-sm transition-colors duration-fast motion-reduce:transition-none",
-            "group-focus-visible:ring-2 group-focus-visible:ring-ring group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-card",
-            selected && "ring-2 ring-primary ring-offset-2 ring-offset-card",
-            state === "confirmed" && (selected ? "bg-primary text-primary-foreground" : "bg-card text-primary ring-1 ring-primary/30 group-hover:bg-primary/10"),
-            state === "pending" && "bg-card text-primary",
-            state === "offline" && "border-2 border-dashed border-muted-foreground bg-muted text-muted-foreground",
-            state === "warning" && "bg-warning/20 text-foreground",
-            state === "critical" && "bg-destructive/15 text-foreground",
+            "relative flex size-9 items-center justify-center rounded-full ring-4 shadow-sm transition-colors duration-fast motion-reduce:transition-none md:size-10",
+            "group-focus-visible:ring-ring",
+            state === "confirmed" && (selected ? "bg-primary text-primary-foreground ring-primary/30" : "bg-primary/15 text-primary ring-card/80 group-hover:bg-primary/25"),
+            state === "pending" && "bg-card text-primary ring-primary/15",
+            state === "offline" && "border-2 border-dashed border-muted-foreground bg-muted text-muted-foreground ring-card/80",
+            state === "warning" && "bg-warning/20 text-foreground ring-warning/20",
+            state === "critical" && "bg-destructive/15 text-foreground ring-destructive/20",
+            selected && state !== "confirmed" && "ring-primary/40",
           )}
         >
           <DeviceIcon category={hotspot.category} size={18} />
@@ -224,11 +225,9 @@ function Hotspot({ hotspot, selected, labelled, onSelect }: { hotspot: PlanHotsp
               <path d="M8 24 24 8" />
             </svg>
           ) : null}
-          {state === "warning" || state === "critical" ? (
-            <span className="absolute -end-1 -top-1 flex size-4 items-center justify-center rounded-full bg-card">
-              <StateGlyph state={state} size={12} className={STATE_TEXT[state]} />
-            </span>
-          ) : null}
+          <span className="absolute -bottom-1 -end-1 flex size-4 items-center justify-center rounded-full bg-card shadow-sm">
+            <StateGlyph state={state} size={12} className={STATE_TEXT[state]} />
+          </span>
         </span>
         {/* the name beside the marker: hidden below md, where the aria-label carries it */}
         <span

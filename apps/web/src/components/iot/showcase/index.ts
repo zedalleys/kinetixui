@@ -15,6 +15,10 @@ export {
 } from "./space-canvas";
 export {
   AttentionButton,
+  HouseMark,
+  IconButton,
+  IconCluster,
+  Tile,
   Disclosure,
   Panel,
   RailGroup,
@@ -28,3 +32,6 @@ export {
   showcaseStateWord,
   type ShowcaseState,
 } from "./primitives";
+export { DeviceIllustration, type IllustrationKind } from "./device-illustration";
+export { PillSelector, PILL_ALL_ID, type PillOption } from "./pill-selector";
+export { DateStrip, type DateStripDay } from "./date-strip";
