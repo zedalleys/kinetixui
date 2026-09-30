@@ -85,12 +85,25 @@ describe("reduced motion", () => {
 describe("components name their motion", () => {
   const TOKEN_DURATION = /duration-(instant|fast|base|slow|slower)/;
 
+  /**
+   * Per class string, not per file. A file-wide check passes as soon as one element in it is
+   * tokenised, which is how Sheet's overlay kept the plugin default while its content carried a
+   * duration two lines below — the surface most likely to be missed is the one hiding behind a
+   * sibling that is already right.
+   */
   it("gives every animated surface a token duration rather than the plugin default", () => {
-    const animated = components.filter(([, src]) => /animate-in|animate-out/.test(src));
-    expect(animated.length).toBeGreaterThan(0);
-    for (const [file, src] of animated) {
-      expect(TOKEN_DURATION.test(src), `${file} animates on an untokenised default duration`).toBe(true);
+    let checked = 0;
+    for (const [file, src] of components) {
+      for (const literal of src.match(/"[^"\n]*"/g) ?? []) {
+        if (!/animate-in|animate-out/.test(literal)) continue;
+        checked++;
+        expect(
+          TOKEN_DURATION.test(literal),
+          `${file} animates on an untokenised default duration: ${literal.slice(0, 120)}…`,
+        ).toBe(true);
+      }
     }
+    expect(checked, "no animated class string found — the check is not looking at anything").toBeGreaterThan(0);
   });
 
   it("uses no raw numeric duration utilities, which bypass the token contract", () => {
