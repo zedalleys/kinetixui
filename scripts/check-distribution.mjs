@@ -198,6 +198,18 @@ for (const amp of amplification) {
     if (amp[k] !== null && !DATE.test(amp[k] ?? "")) fail(where, `${k} is neither null nor YYYY-MM-DD — never guess a boost window`);
   }
 
+  // The shape declares these as an object once the platform reports them, else null. A string like
+  // "unknown" or an empty array would sail through a null-check and put a placeholder measurement into
+  // the authoritative log, which is the one thing this file must not contain.
+  for (const k of ["spend", "platformMetrics"]) {
+    if (amp[k] === null) continue;
+    if (typeof amp[k] !== "object" || Array.isArray(amp[k])) {
+      fail(where, `${k} is neither null nor an object — a placeholder is not a measurement`);
+    } else if (Object.keys(amp[k]).length === 0) {
+      fail(where, `${k} is an empty object — leave it null until the platform reports something`);
+    }
+  }
+
   // The caveat is the point of the record. Without it the log is decoration.
   if (!amp.note) fail(where, "no note — an amplification nobody can interpret later is not a record");
   else if (!/not purely organic/i.test(amp.note)) {
@@ -212,10 +224,22 @@ for (const amp of amplification) {
   }
 }
 
+const ampById = new Map(amplification.map((a) => [a.id, a]));
 for (const row of register.rows) {
-  if (row.amplification && !ampIds.has(row.amplification)) {
-    fail(`${row.asset}${row.day ? ` (day ${row.day})` : ""}`, `points at amplification "${row.amplification}", which is not in the amplification log`);
+  if (!row.amplification) continue;
+  const where = `${row.asset}${row.day ? ` (day ${row.day})` : ""}`;
+  const amp = ampById.get(row.amplification);
+
+  // Existence is not enough. A row that merely names a real id would show as paid-amplified while the
+  // entry describes a different asset entirely, and the forward check above would still pass as long as
+  // the correct row also points at it — so the pointer has to resolve to an entry about THIS row.
+  if (!amp) {
+    fail(where, `points at amplification "${row.amplification}", which is not in the amplification log`);
+    continue;
   }
+  if (amp.asset !== row.asset) fail(where, `points at ${amp.id}, which amplifies "${amp.asset}", not this row`);
+  if (amp.channel !== row.channel) fail(where, `points at ${amp.id}, which is a ${amp.channel} amplification on a ${row.channel} row`);
+  if (row.status !== "published") fail(where, `is "${row.status}" but points at ${amp.id} — you cannot amplify a post that has not gone out`);
 }
 
 /* ---------------------------------------------- the documents */
