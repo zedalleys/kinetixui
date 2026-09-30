@@ -161,7 +161,12 @@ export default function IotPage() {
       {/* ─── hero ──────────────────────────────────────────────────────── */}
       <section aria-labelledby="iot-title" className="relative overflow-hidden border-b border-border">
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
-          <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-16">
+          {/* The single mobile track is `minmax(0,1fr)`, not the implicit `auto`. A grid item defaults to
+              `min-width: auto`, so an `auto` track grows to its widest child's min-content width: while a
+              command was in flight the strip's lifecycle row pushed this grid to 429px inside a 358px box and
+              shoved the whole hero 55px past a 390px viewport. `documentElement.scrollWidth` never grew, so
+              the overflow was invisible to automation and only showed up on a real phone. */}
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-16">
             <div>
               <p className="eyebrow">Connected Product Lab</p>
               <h1
