@@ -458,7 +458,7 @@ Before this pass the IoT package had 304 tests and the web app 1,097.
 
 **Real-browser pass beyond the repository gate** (Chromium, production build): `/iot` at 390 / 768 / 1440, each in
 light and dark and in LTR and RTL, activating every environment and layout tab and scrolling every lazy section
-into view — no page overflow and no axe violations at any point. The one class of horizontal scroller left is the
+into view — no page overflow and no axe violations at any point. **Correction:** the RTL half of that pass did not mirror the example previews — the showcase's Radix `Tabs.Root` defaulted to `dir="ltr"` and forced them LTR. That is fixed and re-run; see `docs/iot/MANUAL-QA-0.3.md` §6, finding 1. The one class of horizontal scroller left is the
 named, keyboard-focusable source blocks. The Device detail tab strip, which scrolled sideways with no cue at 390px,
 now wraps. Colour contrast is checked in the browser, not in jsdom.
 
