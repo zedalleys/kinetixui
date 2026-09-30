@@ -56,19 +56,19 @@ const CommandStatus = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forw
         className={cn("flex flex-col gap-0.5 font-sans", className)}
         {...props}
       >
-        {showName && command?.name ? <span className="text-label-sm text-muted-foreground">{command.name}</span> : null}
-        <span className={cn("flex items-center gap-1.5 text-label-md", STATUS_CLASS[resolved])}>
+        {showName && command?.name ? <span className="text-label-md text-muted-foreground">{command.name}</span> : null}
+        <span className={cn("flex items-center gap-2 text-label-lg", STATUS_CLASS[resolved])}>
           <span
             aria-hidden="true"
-            className={cn("size-1.5 shrink-0 rounded-full bg-current", inFlight ? "animate-pulse motion-reduce:animate-none" : "")}
+            className={cn("size-2 shrink-0 rounded-full bg-current", inFlight ? "animate-pulse motion-reduce:animate-none" : "")}
           />
           {resolveLabel(label, describeCommandStatus(resolved))}
         </span>
         {isCommandUnsuccessful(resolved) && command?.errorMessage ? (
-          <span className="text-label-sm text-muted-foreground">{command.errorMessage}</span>
+          <span className="text-label-md text-muted-foreground">{command.errorMessage}</span>
         ) : null}
         {command?.updatedAt ?? command?.createdAt ? (
-          <LastSync value={command.updatedAt ?? command.createdAt} now={now} className="text-label-sm" />
+          <LastSync value={command.updatedAt ?? command.createdAt} now={now} className="text-label-md" />
         ) : null}
       </div>
     );

@@ -40,10 +40,10 @@ const MetricStatus = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwa
       <span
         ref={ref}
         data-reading-state={resolved}
-        className={cn("inline-flex items-center gap-1 font-sans text-label-sm", TONE[resolved], className)}
+        className={cn("inline-flex items-center gap-1.5 font-sans text-label-md", TONE[resolved], className)}
         {...props}
       >
-        <Glyph name={readingStateGlyph(resolved)} size={12} />
+        <Glyph name={readingStateGlyph(resolved)} size={14} />
         <span>{resolveLabel(label, describeReadingState(resolved))}</span>
       </span>
     );

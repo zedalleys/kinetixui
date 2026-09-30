@@ -44,6 +44,12 @@ import { withDisplayName } from "./display-name";
  *
  * There is no chart library here, and no canvas: one `<svg>` with one or more `<polyline>` elements.
  *
+ * **Drawing.** Three hairline gridlines, a soft area under each run (a token tint fading to nothing — the
+ * fill stops where the line stops, so a gap stays a gap), a solid marker on the newest reading (hollow and
+ * dashed when that reading is stale), and threshold *bands*: the region beyond a bound is tinted, its line
+ * keeps its dash pattern, and a word ("Warning", "Critical") labels it on the plot. The footer names the
+ * range and the latest value. None of it carries meaning by colour alone.
+ *
  * ## Optional additions (all off unless asked for; the original props are unchanged)
  *
  * - `thresholds` draws each bound as a **line with its own dash pattern** (warning dashed, critical
@@ -154,7 +160,7 @@ function DataTable({
   const unit = series?.points?.find((p) => typeof p?.unit === "string" && p.unit.length > 0)?.unit;
   return (
     <div className="flex flex-col gap-1.5">
-      <table className="w-full border-collapse text-label-sm">
+      <table className="w-full border-collapse text-label-md">
         <caption className="sr-only">{series?.metric ?? "Telemetry"} readings, oldest first</caption>
         <thead>
           <tr className="border-b border-border text-muted-foreground">
@@ -200,7 +206,7 @@ function DataTable({
 const TelemetryTrend = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, TelemetryTrendProps>(
   (
     {
-      series, label, precision, hideBounds = false, height = 48, emptyLabel, thresholds, maxGapMs, staleAfterMs, now,
+      series, label, precision, hideBounds = false, height = 80, emptyLabel, thresholds, maxGapMs, staleAfterMs, now,
       showSummary = false, showTimeRange = false, formatTime, dataTable = false, maxTableRows = 50, dataLabel, className, ...props
     },
     ref,
@@ -226,6 +232,9 @@ const TelemetryTrend = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
     const gapCount = maxGapMs !== undefined ? detectSeriesGaps(series, { maxGapMs }).length : 0;
     const unit = series?.points?.find((point) => typeof point?.unit === "string" && point.unit.length > 0)?.unit;
     const empty = extent.min === null || extent.max === null;
+    const gradientId = `kx-area-${descriptionId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+    const lastRun = runs[runs.length - 1];
+    const latestRun = lastRun ? lastRun[lastRun.length - 1] : undefined;
 
     const print = (value: number | null) =>
       formatTelemetryValue({ value: value ?? Number.NaN, unit }, { precision, unknownLabel: emptyLabel ?? "Unknown" });
@@ -265,80 +274,155 @@ const TelemetryTrend = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
           aria-describedby={descriptionId}
           // Pinned LTR: the plot's reading order belongs to the data, not the page. See the note above.
           dir="ltr"
-          className="relative w-full overflow-hidden rounded-sm bg-muted/40"
+          className="relative w-full rounded-xl bg-muted/40"
           style={{ height }}
         >
           {empty ? null : (
-            <svg
-              aria-hidden="true"
-              className="block h-full w-full text-foreground"
-              viewBox={`0 0 ${VIEW_W} ${height}`}
-              preserveAspectRatio="none"
-              focusable="false"
-            >
-              {bounds.map((b) => (
-                <line
-                  key={`${b.level}-${b.side}`}
-                  data-threshold={`${b.level}-${b.side}`}
-                  x1={0}
-                  x2={VIEW_W}
-                  y1={y(b.value)}
-                  y2={y(b.value)}
-                  stroke="currentColor"
-                  strokeOpacity={0.6}
-                  strokeWidth={1}
-                  strokeDasharray={DASH[b.level]}
-                  vectorEffect="non-scaling-stroke"
-                />
-              ))}
-              {staleLatest && summaryStats.latestAt !== null ? (
-                <line
-                  data-stale-marker=""
-                  x1={x(summaryStats.latestAt)}
-                  x2={x(summaryStats.latestAt)}
-                  y1={0}
-                  y2={height}
-                  stroke="currentColor"
-                  strokeWidth={1}
-                  strokeDasharray="2 2"
-                  vectorEffect="non-scaling-stroke"
-                />
-              ) : null}
-              {runs.map((run, index) => {
-                const points = run.map((entry) => `${x(entry.at)},${y(entry.value)}`).join(" ");
-                // A one-point run has no line to draw, so it becomes a dot — visible, and still a gap
-                // on both sides rather than a line reaching out to its neighbours.
-                if (run.length === 1) {
-                  return (
-                    <circle
-                      key={index}
-                      cx={x(run[0]!.at)}
-                      cy={y(run[0]!.value)}
-                      r={1.5}
-                      fill="currentColor"
+            <div className="absolute inset-x-2 inset-y-3">
+              <svg
+                aria-hidden="true"
+                className="block size-full text-primary"
+                viewBox={`0 0 ${VIEW_W} ${height}`}
+                preserveAspectRatio="none"
+                focusable="false"
+              >
+                <defs>
+                  <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="currentColor" stopOpacity={0.3} />
+                    <stop offset="1" stopColor="currentColor" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <g className="text-foreground">
+                  {[0.25, 0.5, 0.75].map((f) => (
+                    <line
+                      key={f}
+                      data-gridline=""
+                      x1={0}
+                      x2={VIEW_W}
+                      y1={height * f}
+                      y2={height * f}
+                      stroke="currentColor"
+                      strokeOpacity={0.12}
+                      strokeWidth={1}
                       vectorEffect="non-scaling-stroke"
                     />
+                  ))}
+                  {bounds.map((b) => (
+                    <rect
+                      key={`band-${b.level}-${b.side}`}
+                      data-threshold-band={`${b.level}-${b.side}`}
+                      x={0}
+                      width={VIEW_W}
+                      y={b.side === "high" ? 0 : y(b.value)}
+                      height={b.side === "high" ? Math.max(0, y(b.value)) : Math.max(0, height - y(b.value))}
+                      fill="currentColor"
+                      fillOpacity={b.level === "critical" ? 0.1 : 0.06}
+                    />
+                  ))}
+                  {bounds.map((b) => (
+                    <line
+                      key={`${b.level}-${b.side}`}
+                      data-threshold={`${b.level}-${b.side}`}
+                      x1={0}
+                      x2={VIEW_W}
+                      y1={y(b.value)}
+                      y2={y(b.value)}
+                      stroke="currentColor"
+                      strokeOpacity={0.7}
+                      strokeWidth={1.25}
+                      strokeDasharray={DASH[b.level]}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  ))}
+                  {staleLatest && summaryStats.latestAt !== null ? (
+                    <line
+                      data-stale-marker=""
+                      x1={x(summaryStats.latestAt)}
+                      x2={x(summaryStats.latestAt)}
+                      y1={0}
+                      y2={height}
+                      stroke="currentColor"
+                      strokeWidth={1}
+                      strokeDasharray="2 2"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  ) : null}
+                </g>
+                {runs.map((run, index) => {
+                  const points = run.map((entry) => `${x(entry.at)},${y(entry.value)}`).join(" ");
+                  // A one-point run has no line to draw, so it becomes a dot — visible, and still a gap
+                  // on both sides rather than a line reaching out to its neighbours.
+                  if (run.length === 1) {
+                    return (
+                      <circle
+                        key={index}
+                        cx={x(run[0]!.at)}
+                        cy={y(run[0]!.value)}
+                        r={1.5}
+                        fill="currentColor"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    );
+                  }
+                  return (
+                    <g key={index}>
+                      {/* The area stops at the run's own ends, so a dropout is still drawn as absence. */}
+                      <polygon
+                        data-area=""
+                        points={`${points} ${x(run[run.length - 1]!.at)},${height} ${x(run[0]!.at)},${height}`}
+                        fill={`url(#${gradientId})`}
+                        stroke="none"
+                      />
+                      <polyline
+                        points={points}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        // Without this, `preserveAspectRatio="none"` stretches the stroke with the geometry
+                        // and the line thickens as the container widens.
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </g>
                   );
-                }
-                return (
-                  <polyline
-                    key={index}
-                    points={points}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    // Without this, `preserveAspectRatio="none"` stretches the stroke with the geometry
-                    // and the line thickens as the container widens.
-                    vectorEffect="non-scaling-stroke"
-                  />
-                );
-              })}
-            </svg>
+                })}
+              </svg>
+
+              {/* Words on the plot for what each line is. Decorative: the legend below and the
+                  description above state the same facts, with numbers. */}
+              {bounds.map((b) => (
+                <span
+                  key={`label-${b.level}-${b.side}`}
+                  aria-hidden="true"
+                  data-threshold-label={`${b.level}-${b.side}`}
+                  className={cn(
+                    "pointer-events-none absolute rounded-sm bg-muted/80 px-1 text-label-md text-muted-foreground",
+                    b.side === "high" ? "-translate-y-full" : "",
+                  )}
+                  style={{ insetInlineEnd: 0, top: `${(y(b.value) / height) * 100}%` }}
+                >
+                  {b.level === "critical" ? "Critical" : "Warning"}
+                </span>
+              ))}
+
+              {latestRun ? (
+                <span
+                  aria-hidden="true"
+                  data-latest-marker={staleLatest ? "stale" : ""}
+                  className={cn(
+                    "pointer-events-none absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-background",
+                    staleLatest ? "border-2 border-dashed border-primary bg-background" : "bg-primary",
+                  )}
+                  style={{ insetInlineStart: `${(x(latestRun.at) / VIEW_W) * 100}%`, top: `${(y(latestRun.value) / height) * 100}%` }}
+                />
+              ) : null}
+            </div>
           )}
           {empty ? (
-            <span className="absolute inset-0 flex items-center justify-center text-label-sm text-muted-foreground">
+            <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-3 text-center text-label-md text-muted-foreground">
+              {/* A dashed flat stroke: the line that is not there. Not an svg, so an empty plot has no axis. */}
+              <span aria-hidden="true" className="mb-1 block h-0 w-10 border-t-2 border-dashed border-muted-foreground/50" />
               {emptyLabel ?? "No readings"}
             </span>
           ) : null}
@@ -358,7 +442,7 @@ const TelemetryTrend = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
         </p>
 
         {bounds.length > 0 ? (
-          <ul aria-label="Thresholds" className="flex flex-wrap gap-x-4 gap-y-0.5 text-label-sm text-muted-foreground">
+          <ul aria-label="Thresholds" className="flex flex-wrap gap-x-4 gap-y-0.5 text-label-md text-muted-foreground">
             {bounds.map((b) => (
               <li key={`${b.level}-${b.side}`} data-threshold-legend={`${b.level}-${b.side}`} className="inline-flex items-center gap-1.5">
                 <svg aria-hidden="true" focusable="false" width={20} height={6} viewBox="0 0 20 6" className="shrink-0">
@@ -373,7 +457,7 @@ const TelemetryTrend = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
         ) : null}
 
         {showTimeRange && extent.from !== null && extent.to !== null ? (
-          <p data-time-range="" className="text-label-sm text-muted-foreground">
+          <p data-time-range="" className="text-label-md text-muted-foreground">
             <time dateTime={new Date(extent.from).toISOString()}>{fmtTime(extent.from)}</time>
             {" – "}
             <time dateTime={new Date(extent.to).toISOString()}>{fmtTime(extent.to)}</time>
@@ -381,7 +465,7 @@ const TelemetryTrend = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
         ) : null}
 
         {showSummary && !empty ? (
-          <dl data-summary="" className="flex flex-wrap gap-x-5 gap-y-0.5 text-label-sm">
+          <dl data-summary="" className="flex flex-wrap gap-x-5 gap-y-0.5 text-label-md">
             {(
               [
                 ["Min", summaryStats.min],
@@ -398,8 +482,21 @@ const TelemetryTrend = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
         ) : null}
 
         {hideBounds || showSummary ? null : (
-          <p className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-label-sm text-muted-foreground">
-            <span>{empty ? (emptyLabel ?? "No readings") : `${print(extent.min)} – ${print(extent.max)}`}</span>
+          <p className="m-0 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-label-md text-muted-foreground">
+            {empty ? (
+              <span>{emptyLabel ?? "No readings"}</span>
+            ) : (
+              <span className="inline-flex flex-wrap items-baseline gap-x-1.5">
+                <span>Range</span>
+                <span className="tabular-nums text-foreground">{`${print(extent.min)} – ${print(extent.max)}`}</span>
+              </span>
+            )}
+            {!empty && latestRun ? (
+              <span data-latest="" className="inline-flex items-baseline gap-1.5">
+                <span>Latest</span>
+                <span className="tabular-nums text-foreground">{print(latestRun.value)}</span>
+              </span>
+            ) : null}
             {/* Stated, not implied by a shorter line: a gap the reader cannot count is a gap they will not notice. */}
             {extent.missing > 0 ? (
               <span data-missing={extent.missing}>
@@ -410,7 +507,7 @@ const TelemetryTrend = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
         )}
 
         {(showSummary && extent.missing > 0) || gapCount > 0 || staleLatest ? (
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-label-sm text-muted-foreground">
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-label-md text-muted-foreground">
             {showSummary && extent.missing > 0 ? (
               <span data-missing={extent.missing}>
                 {extent.missing} missing of {extent.measured + extent.missing}
@@ -431,7 +528,7 @@ const TelemetryTrend = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
         ) : null}
 
         {dataTable && !empty ? (
-          <details data-data-table="" className="text-label-sm">
+          <details data-data-table="" className="text-label-md">
             <summary className="min-h-9 cursor-pointer py-1.5 text-label-md text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               {dataLabel ?? "View data"}
             </summary>

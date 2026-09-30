@@ -27,7 +27,11 @@ export interface SensorReadingProps extends Omit<React.HTMLAttributes<HTMLDivEle
   precision?: number;
   /** Shown in place of a value that cannot be presented as a measurement. Defaults to `"Unknown"`. */
   unknownLabel?: string;
+  /** `md` (default) is one line of text; `lg` and `xl` draw the value as a hero numeral with a smaller, muted unit. */
+  size?: "md" | "lg" | "xl";
 }
+
+const VALUE_SIZE = { md: "text-title-sm", lg: "text-headline-lg", xl: "text-display-sm" } as const;
 
 const QUALITY_NOTE: Partial<Record<KinetixTelemetryQuality, string>> = {
   estimated: "Estimated",
@@ -36,10 +40,13 @@ const QUALITY_NOTE: Partial<Record<KinetixTelemetryQuality, string>> = {
 };
 
 const SensorReading = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, SensorReadingProps>(
-  ({ metric, value, unit, quality, precision, unknownLabel, className, ...props }, ref) => {
+  ({ metric, value, unit, quality, precision, unknownLabel, size = "md", className, ...props }, ref) => {
     const point = { value: value ?? Number.NaN, unit, quality };
     const resolved = classifyTelemetryQuality(point);
     const note = QUALITY_NOTE[resolved];
+    // A hero numeral carries its unit separately so the unit can be smaller. Only when there IS a
+    // measurement: the unknown label ("Unknown", "—") must never grow a unit after it.
+    const measured = size !== "md" && unit && resolved !== "missing" && resolved !== "error" && typeof value === "number" && Number.isFinite(value);
     return (
       <div
         ref={ref}
@@ -47,12 +54,27 @@ const SensorReading = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forw
         className={cn("flex flex-col gap-0.5 font-sans", className)}
         {...props}
       >
-        <span className="text-label-sm text-muted-foreground">{metric}</span>
-        <span className="text-title-sm text-foreground">
-          {formatTelemetryValue(point, { precision, unknownLabel })}
+        <span className={cn("text-muted-foreground", size === "md" ? "text-label-md" : "text-body-md")}>{metric}</span>
+        <span
+          className={cn(
+            "tabular-nums text-foreground",
+            // A value that is not a measurement is never drawn as a hero numeral.
+            size === "md" || !measured ? VALUE_SIZE.md : VALUE_SIZE[size],
+            size !== "md" && measured && "leading-none",
+            !measured && resolved !== "good" && size !== "md" && "text-muted-foreground",
+          )}
+        >
+          {measured ? (
+            <>
+              {formatTelemetryValue({ value: value as number, quality }, { precision })}
+              <span className="text-title-md text-muted-foreground"> {unit}</span>
+            </>
+          ) : (
+            formatTelemetryValue(point, { precision, unknownLabel })
+          )}
         </span>
         {/* A qualifier only when there is something to qualify — "good" needs no annotation. */}
-        {note ? <span className="text-label-sm text-muted-foreground">{note}</span> : null}
+        {note ? <span className="text-label-md text-muted-foreground">{note}</span> : null}
       </div>
     );
   },

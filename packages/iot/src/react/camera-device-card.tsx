@@ -2,7 +2,6 @@ import * as React from "react";
 import type { KinetixDevice } from "../types/device";
 import { normalizeDeviceStatus } from "../functions/status";
 import { BatteryIndicator } from "./battery-indicator";
-import { DeviceIcon } from "./device-icon";
 import { DeviceStatusBadge } from "./device-status-badge";
 import { LastSync } from "./last-sync";
 import { SignalStrength } from "./signal-strength";
@@ -21,6 +20,12 @@ import { withDisplayName } from "./display-name";
  * feed". Wording is `posterLabel`; the default is deliberate — a grey box that looks like a camera
  * that failed to load is a worse lie than one that says what it is.
  *
+ * ## The built-in scene
+ * With no `poster`, the frame shows an **original abstract SVG scene** — flat shapes in token tints, no
+ * photo, no external asset — chosen by `scene` (`room`, `entrance` or `yard`) so a card can suggest
+ * *where* the camera is. It is decoration (`aria-hidden`) and is captioned as a sample; it is never
+ * presented as what the camera sees.
+ *
  * ## What it does say — only what the application tells it
  * - `device.status` → online/offline through `DeviceStatusBadge`.
  * - `recording` → "Recording" / "Not recording" / "Recording status unknown", as a glyph and words.
@@ -37,6 +42,8 @@ export interface CameraDeviceCardProps extends Omit<React.HTMLAttributes<HTMLDiv
   poster?: React.ReactNode;
   /** Caption for the frame. Defaults to "Sample image — no live feed" when there is no poster. */
   posterLabel?: string;
+  /** The built-in abstract scene shown when there is no `poster`. Default `room`. */
+  scene?: "room" | "entrance" | "yard";
   /** `on` hides the poster. Omit to state nothing about privacy. */
   privacy?: "on" | "off" | "unknown";
   /** Application-supplied. `true` = recording, `false` = not, `null` = unknown. Omit to say nothing. */
@@ -48,6 +55,65 @@ export interface CameraDeviceCardProps extends Omit<React.HTMLAttributes<HTMLDiv
   now?: string | Date | number | null;
 }
 
+/**
+ * Flat, abstract, original shapes in token tints. Everything is `aria-hidden` decoration; nothing in it
+ * is a photograph, a product likeness or a claim about what a camera sees.
+ */
+function Scene({ scene }: { scene: "room" | "entrance" | "yard" }) {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 160 90"
+      preserveAspectRatio="xMidYMid slice"
+      className="block size-full"
+    >
+      <rect width="160" height="90" className="fill-muted" />
+      {scene === "room" ? (
+        <>
+          <rect x="0" y="62" width="160" height="28" className="fill-foreground/10" />
+          <rect x="16" y="14" width="46" height="34" rx="3" className="fill-primary/15" />
+          <path d="M39 14v34M16 31h46" className="stroke-background" strokeWidth="2" fill="none" />
+          <circle cx="126" cy="30" r="15" className="fill-warning/20" />
+          <circle cx="126" cy="30" r="6" className="fill-warning/40" />
+          <path d="M126 45v20" className="stroke-foreground/25" strokeWidth="2" fill="none" />
+          <rect x="70" y="50" width="52" height="20" rx="6" className="fill-foreground/20" />
+          <rect x="66" y="58" width="60" height="14" rx="5" className="fill-foreground/25" />
+          <rect x="34" y="72" width="70" height="8" rx="4" className="fill-primary/20" />
+        </>
+      ) : null}
+      {scene === "entrance" ? (
+        <>
+          <rect x="0" y="66" width="160" height="24" className="fill-foreground/10" />
+          <rect x="52" y="12" width="52" height="58" rx="3" className="fill-foreground/10" />
+          <rect x="58" y="18" width="40" height="52" rx="2" className="fill-primary/20" />
+          <rect x="64" y="24" width="12" height="16" rx="1.5" className="fill-background/60" />
+          <rect x="80" y="24" width="12" height="16" rx="1.5" className="fill-background/60" />
+          <circle cx="90" cy="46" r="2" className="fill-foreground/40" />
+          <rect x="46" y="70" width="64" height="6" rx="2" className="fill-foreground/20" />
+          <circle cx="120" cy="30" r="9" className="fill-warning/25" />
+          <rect x="118" y="36" width="4" height="6" className="fill-foreground/25" />
+          <rect x="16" y="54" width="14" height="16" rx="3" className="fill-foreground/20" />
+          <circle cx="23" cy="48" r="9" className="fill-success/25" />
+        </>
+      ) : null}
+      {scene === "yard" ? (
+        <>
+          <rect x="0" y="54" width="160" height="36" className="fill-success/15" />
+          <path d="M60 90 80 54h8l24 36Z" className="fill-foreground/10" />
+          <rect x="0" y="40" width="160" height="16" className="fill-foreground/10" />
+          {[6, 22, 38, 54, 70, 86, 102, 118, 134, 150].map((x) => (
+            <rect key={x} x={x} y="36" width="8" height="24" rx="1.5" className="fill-foreground/15" />
+          ))}
+          <rect x="26" y="20" width="5" height="22" className="fill-foreground/25" />
+          <circle cx="28" cy="16" r="15" className="fill-success/30" />
+          <circle cx="132" cy="14" r="8" className="fill-warning/30" />
+        </>
+      ) : null}
+    </svg>
+  );
+}
+
 /** A plain `<img>` poster is made to fill the frame; any other node is the product's to size. */
 function fillFrame(poster: React.ReactNode): React.ReactNode {
   if (React.isValidElement<{ className?: string }>(poster) && poster.type === "img") {
@@ -57,82 +123,83 @@ function fillFrame(poster: React.ReactNode): React.ReactNode {
 }
 
 const CameraDeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, CameraDeviceCardProps>(
-  ({ device, poster, posterLabel, privacy, recording, lastEvent, controls, now, className, ...props }, ref) => {
+  ({ device, poster, posterLabel, scene = "room", privacy, recording, lastEvent, controls, now, className, ...props }, ref) => {
     const status = normalizeDeviceStatus(device?.status);
     const hidden = privacy === "on";
-    const caption = posterLabel?.trim() ? posterLabel : poster ? undefined : "Sample image — no live feed";
+    const caption = posterLabel?.trim() ? posterLabel : poster || hidden ? undefined : "Sample image — no live feed";
 
     return (
       <div
         ref={ref}
         data-status={status}
         data-privacy={privacy}
-        className={cn("flex min-w-0 flex-col gap-3 rounded-xl border border-border bg-card p-4 font-sans text-card-foreground", className)}
+        className={cn("flex min-w-0 flex-col gap-3 rounded-2xl bg-card p-3 font-sans text-card-foreground shadow-sm", className)}
         {...props}
       >
-        <div className="flex items-start gap-3">
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="truncate text-title-sm text-foreground">{device?.name}</span>
-            {device?.locationName ? <span className="truncate text-label-sm text-muted-foreground">{device.locationName}</span> : null}
-          </div>
-          <div className="ms-auto shrink-0">
-            <DeviceStatusBadge status={status} />
-          </div>
-        </div>
-
-        <figure className="m-0 flex flex-col gap-1.5">
+        <figure className="m-0 flex flex-col gap-2">
           <div
             data-poster-frame=""
             className={cn(
-              "relative aspect-video w-full overflow-hidden rounded-lg border bg-muted",
-              status === "offline" ? "border-dashed border-border" : "border-border",
+              "relative aspect-video min-h-40 w-full overflow-hidden rounded-xl bg-muted",
+              status === "offline" && "border border-dashed border-border",
             )}
           >
             {hidden ? (
-              <div data-privacy-cover="" className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-background p-3 text-center text-foreground">
-                <Glyph name="eye-off" size={22} />
-                <span className="text-label-md">Privacy mode is on — image hidden</span>
+              <div data-privacy-cover="" className="absolute inset-0 flex flex-col items-center justify-end gap-1.5 bg-muted p-4 pb-5 text-center text-foreground">
+                <Glyph name="eye-off" size={24} />
+                <span className="text-label-lg">Privacy mode is on — image hidden</span>
               </div>
             ) : poster ? (
               <div className="absolute inset-0">{fillFrame(poster)}</div>
             ) : (
-              <div data-poster-placeholder="" className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                <DeviceIcon category="camera" size={36} />
+              <div data-poster-placeholder="" data-scene={scene} className="absolute inset-0 text-muted-foreground">
+                <Scene scene={scene} />
               </div>
             )}
+
+            {/* Status over the frame, where the eye already is. Words and glyphs, not colour alone. */}
+            <div className="absolute inset-x-2 top-2 z-raised flex flex-wrap items-start justify-between gap-2">
+              <DeviceStatusBadge status={status} className="shadow-sm" />
+              <ul className="m-0 flex list-none flex-wrap justify-end gap-1.5 p-0 text-label-md text-foreground">
+                {recording !== undefined ? (
+                  <li data-recording={recording === null ? "unknown" : recording ? "on" : "off"} className="inline-flex items-center gap-1.5 rounded-full bg-background/90 px-2.5 py-1 shadow-sm">
+                    <Glyph name={recording === null ? "dash" : recording ? "record" : "circle"} size={14} className={recording ? "text-destructive" : undefined} />
+                    <span>{recording === null ? "Recording status unknown" : recording ? "Recording" : "Not recording"}</span>
+                  </li>
+                ) : null}
+                {privacy !== undefined ? (
+                  <li data-privacy-state={privacy} className="inline-flex items-center gap-1.5 rounded-full bg-background/90 px-2.5 py-1 shadow-sm">
+                    <Glyph name={privacy === "on" ? "eye-off" : privacy === "off" ? "circle" : "dash"} size={14} />
+                    <span>{privacy === "on" ? "Privacy mode on" : privacy === "off" ? "Privacy mode off" : "Privacy mode unknown"}</span>
+                  </li>
+                ) : null}
+              </ul>
+            </div>
           </div>
-          {caption ? <figcaption className="text-label-sm text-muted-foreground">{caption}</figcaption> : null}
+          {caption ? <figcaption className="text-label-md text-muted-foreground">{caption}</figcaption> : null}
         </figure>
 
-        <ul className="m-0 flex list-none flex-col gap-1 p-0 text-label-md text-foreground">
-          {recording !== undefined ? (
-            <li data-recording={recording === null ? "unknown" : recording ? "on" : "off"} className="flex items-center gap-1.5">
-              <Glyph name={recording === null ? "dash" : recording ? "record" : "circle"} size={14} />
-              <span>{recording === null ? "Recording status unknown" : recording ? "Recording" : "Not recording"}</span>
-            </li>
-          ) : null}
-          {privacy !== undefined ? (
-            <li data-privacy-state={privacy} className="flex items-center gap-1.5">
-              <Glyph name={privacy === "on" ? "eye-off" : privacy === "off" ? "circle" : "dash"} size={14} />
-              <span>{privacy === "on" ? "Privacy mode on" : privacy === "off" ? "Privacy mode off" : "Privacy mode unknown"}</span>
-            </li>
-          ) : null}
-          {lastEvent ? (
-            <li data-last-event="" className="flex flex-wrap items-center gap-x-2">
-              <span className="break-words">{lastEvent.label}</span>
-              {lastEvent.at !== undefined && lastEvent.at !== null ? <LastSync value={lastEvent.at} now={now} className="text-label-sm" /> : null}
-            </li>
-          ) : null}
-        </ul>
+        <div className="flex min-w-0 flex-col gap-0.5 px-1">
+          <span className="truncate text-title-md text-foreground">{device?.name}</span>
+          {device?.locationName ? <span className="truncate text-body-md text-muted-foreground">{device.locationName}</span> : null}
+        </div>
 
-        {device?.battery !== undefined || device?.signal !== undefined ? (
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            {device?.battery !== undefined ? <BatteryIndicator value={device.battery} /> : null}
-            {device?.signal !== undefined ? <SignalStrength value={device.signal} /> : null}
+        {lastEvent || device?.battery !== undefined || device?.signal !== undefined ? (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-body-sm text-muted-foreground">
+            {lastEvent ? (
+              <p data-last-event="" className="m-0 flex min-w-0 flex-wrap items-center gap-x-2 text-body-md text-foreground">
+                <span className="break-words">{lastEvent.label}</span>
+                {lastEvent.at !== undefined && lastEvent.at !== null ? <LastSync value={lastEvent.at} now={now} className="text-label-md" /> : null}
+              </p>
+            ) : null}
+            <span className="ms-auto flex flex-wrap items-center gap-x-4 gap-y-2">
+              {device?.battery !== undefined ? <BatteryIndicator value={device.battery} /> : null}
+              {device?.signal !== undefined ? <SignalStrength value={device.signal} /> : null}
+            </span>
           </div>
         ) : null}
 
-        {controls ? <div className="flex flex-wrap items-center gap-2 border-t border-border/70 pt-3">{controls}</div> : null}
+        {controls ? <div className="flex flex-wrap items-center gap-2 px-1">{controls}</div> : null}
       </div>
     );
   },
