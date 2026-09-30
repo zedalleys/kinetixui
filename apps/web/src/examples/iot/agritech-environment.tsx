@@ -451,7 +451,7 @@ export function AgritechEnvironmentExample() {
       </Panel>
 
       <Disclosure title="Activity" count={selectActivity(sim, { limit: 6 }).length} countNoun="events" className="md:col-span-2 xl:col-span-1">
-        <ActivityTimeline variant="compact" events={selectActivity(sim, { limit: 6 })} deviceName={(id) => deviceOf(sim, id).name} now={sim.now} />
+        <ActivityTimeline variant="rail" events={selectActivity(sim, { limit: 6 })} deviceName={(id) => deviceOf(sim, id).name} now={sim.now} />
       </Disclosure>
     </>
   );

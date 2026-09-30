@@ -446,7 +446,7 @@ export function OperationsEnvironmentExample() {
                 }
               >
                 <AlertList
-                  variant="compact"
+                  variant="list"
                   alerts={alerts}
                   deviceName={(id) => deviceOf(sim, id).name}
                   onAcknowledge={(alert) => iot.acknowledgeAlert(alert.id)}

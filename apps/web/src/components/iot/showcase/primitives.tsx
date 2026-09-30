@@ -595,8 +595,8 @@ export function RailItem({
           {icon}
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-body-md">{name}</span>
-          {state ? <span className={cn("truncate text-body-sm font-normal", selected ? "text-foreground/80" : "text-muted-foreground")}><bdi>{state}</bdi></span> : null}
+          <span className="text-body-md leading-snug sm:truncate">{name}</span>
+          {state ? <span className={cn("text-body-sm font-normal sm:truncate", selected ? "text-foreground/80" : "text-muted-foreground")}><bdi>{state}</bdi></span> : null}
         </span>
         {health && health !== "confirmed" ? (
           <>

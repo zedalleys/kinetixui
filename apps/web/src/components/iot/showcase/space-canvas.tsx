@@ -398,7 +398,7 @@ export function SpaceCanvas({
               <div
                 key={room.id}
                 aria-hidden="true"
-                className="pointer-events-none absolute z-base flex max-w-40 flex-col items-start gap-1"
+                className={cn("pointer-events-none absolute z-base max-w-40 flex-col items-start gap-1", selected ? "flex" : "hidden sm:flex")}
                 style={{ insetInlineStart: pct(room.labelAt.x, vw), insetBlockStart: pct(room.labelAt.y, vh) }}
               >
                 <span className={cn("flex min-w-0 max-w-full flex-col items-start", selected ? "font-semibold text-primary" : "text-muted-foreground")}>
@@ -415,7 +415,7 @@ export function SpaceCanvas({
                         key={chip}
                         className={cn(
                           "items-center rounded-full bg-card/90 px-2 text-label-md tabular-nums text-foreground shadow-sm",
-                          i === 0 ? "inline-flex" : "hidden sm:inline-flex",
+                          "hidden sm:inline-flex",
                         )}
                       >
                         <bdi>{chip}</bdi>
