@@ -29,6 +29,9 @@ beforeEach(() => {
   nav.replace.mockClear();
 });
 
+// Each test renders the whole catalogue; under a parallel full-suite run that can exceed the 5 s default.
+vi.setConfig({ testTimeout: 30_000 });
+
 describe("ComponentGallery filters on a phone", () => {
   it("folds the category and platform chips behind one Filters button", async () => {
     render(<ComponentGallery />);

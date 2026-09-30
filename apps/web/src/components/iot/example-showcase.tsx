@@ -55,7 +55,12 @@ export function IotExampleShowcase({
   // document's direction after mount (so server render and hydration agree) and hand it down.
   const [dir, setDir] = React.useState<"ltr" | "rtl">("ltr");
   React.useEffect(() => {
-    setDir(document.documentElement.dir === "rtl" ? "rtl" : "ltr");
+    const read = () => setDir(document.documentElement.dir === "rtl" ? "rtl" : "ltr");
+    read();
+    // Follow a direction change made after mount (a language switch, a devtools toggle) instead of freezing the first reading.
+    const observer = new MutationObserver(read);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["dir"] });
+    return () => observer.disconnect();
   }, []);
   React.useEffect(() => {
     if (typeof window.matchMedia !== "function") return;

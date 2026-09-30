@@ -97,14 +97,18 @@ const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
             unavailable || stale ? "text-muted-foreground" : "text-foreground",
           )}
         >
-          {heroNumber !== null ? (
-            <>
-              {heroNumber}
-              <span className={cn("text-muted-foreground", size === "xl" ? "text-title-lg" : "text-title-md")}> {heroUnit}</span>
-            </>
-          ) : (
-            shown
-          )}
+          {/* A measurement is a number and its unit as one left-to-right run: in an RTL page the unit's neutral
+              characters ("°C", "%", "L/min") would otherwise reorder around the digits. */}
+          <bdi dir="ltr">
+            {heroNumber !== null ? (
+              <>
+                {heroNumber}
+                <span className={cn("text-muted-foreground", size === "xl" ? "text-title-lg" : "text-title-md")}> {heroUnit}</span>
+              </>
+            ) : (
+              shown
+            )}
+          </bdi>
           {unavailable ? <span className="sr-only"> No reading</span> : null}
         </span>
         {stale ? <span data-last-known="" className="text-label-md text-muted-foreground">Last known value</span> : null}

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { IotExampleShowcase } from "./example-showcase";
 
@@ -28,5 +28,13 @@ describe("IotExampleShowcase direction", () => {
     document.documentElement.setAttribute("dir", "rtl");
     const { container } = show();
     expect(container.querySelector("pre")?.getAttribute("dir")).toBe("ltr");
+  });
+
+  it("follows a direction change made after mount", async () => {
+    show();
+    const region = screen.getByRole("region", { name: "Demo preview" });
+    expect(region.closest("[dir]")?.getAttribute("dir")).toBe("ltr");
+    act(() => document.documentElement.setAttribute("dir", "rtl"));
+    await waitFor(() => expect(region.closest("[dir]")?.getAttribute("dir")).toBe("rtl"));
   });
 });
