@@ -3,6 +3,18 @@ import { act, cleanup, fireEvent, render, screen, within } from "@testing-librar
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SmartSpaceEnvironmentExample } from "./smart-space-environment";
+import { smartSpaceAlerts, smartSpaceAutomations } from "./scenarios/smart-space";
+
+/** The scenario's own alerts, split the way the aside splits them. Real data, never a typed-in number. */
+const openAlerts = smartSpaceAlerts.filter((a) => !a.acknowledgedAt && !a.resolvedAt);
+const handledAlerts = smartSpaceAlerts.filter((a) => a.acknowledgedAt || a.resolvedAt);
+const scenes = smartSpaceAutomations.filter((a) => a.kind === "scene");
+const selfRunning = smartSpaceAutomations.filter((a) => a.kind !== "scene");
+
+/** The `<details>` whose summary starts with this title, and that summary as one normalised string. */
+const groupNamed = (title: string) =>
+  [...document.querySelectorAll("details")].find((d) => summaryOf(d).startsWith(title))!;
+const summaryOf = (group: HTMLDetailsElement) => group.querySelector("summary")!.textContent!.replace(/\s+/g, " ").trim();
 
 const tick = (ms: number) => act(() => void vi.advanceTimersByTime(ms));
 const rail = () => within(screen.getByRole("list", { name: "Home and rooms" }));
@@ -108,5 +120,73 @@ describe("smart space: connected space", () => {
     render(<SmartSpaceEnvironmentExample />);
     expect(screen.getByText(/Shown, not executed/)).toBeInTheDocument();
     expect(screen.getAllByText(/Simulated/).length).toBeGreaterThan(0);
+  });
+
+  // ---- the aside is ranked: open alerts always expanded, everything below grouped behind a real count ----
+
+  it("keeps every open alert expanded, never behind a disclosure", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    const region = document.getElementById("space-alerts")!;
+    expect(openAlerts.length).toBeGreaterThan(0);
+    for (const alert of openAlerts) {
+      const row = screen.getByText(alert.message);
+      expect(row).toBeInTheDocument();
+      expect(row.closest("details")).toBeNull();
+      expect(region.contains(row)).toBe(true);
+    }
+  });
+
+  it("groups acknowledged alerts behind their real count without dropping them", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    expect(handledAlerts.length).toBeGreaterThan(0);
+    const group = groupNamed("Acknowledged");
+    expect(group.open).toBe(false);
+    expect(summaryOf(group)).toBe(`Acknowledged${handledAlerts.length} acknowledged alerts`);
+    for (const alert of handledAlerts) expect(within(group).getByText(alert.message)).toBeInTheDocument();
+  });
+
+  it("moves an alert into the acknowledged group when it is acknowledged, and the count follows", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    const region = document.getElementById("space-alerts")!;
+    expect(summaryOf(groupNamed("Acknowledged"))).toMatch(/^Acknowledged1 acknowledged alerts$/);
+    fireEvent.click(within(region).getAllByRole("button", { name: /acknowledge/i })[0]!);
+    expect(summaryOf(groupNamed("Acknowledged"))).toMatch(/^Acknowledged2 acknowledged alerts$/);
+  });
+
+  it("shows the three latest events of the day and keeps the rest behind their real count", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    const events = (name: string) => within(screen.getByRole("list", { name })).getAllByRole("listitem").filter((li) => li.hasAttribute("data-kind"));
+    expect(events("Activity").length).toBe(3);
+    const earlier = groupNamed("Earlier on this day");
+    expect(earlier.open).toBe(false);
+    const rest = events("Earlier activity").length;
+    expect(rest).toBeGreaterThan(0);
+    expect(summaryOf(earlier)).toBe(`Earlier on this day${rest} earlier events`);
+  });
+
+  it("leads with the scenes and groups the routines that run themselves behind their real count", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    expect(scenes.length).toBeGreaterThan(0);
+    expect(selfRunning.length).toBeGreaterThan(0);
+    const group = groupNamed("Runs on its own");
+    expect(group.open).toBe(false);
+    expect(summaryOf(group)).toBe(`Runs on its own${selfRunning.length} routines and schedules`);
+    // Scenes lead, outside the group; the self-firing ones are inside it. Nothing is dropped.
+    for (const scene of scenes) expect(group.contains(screen.getByText(scene.name))).toBe(false);
+    for (const routine of selfRunning) expect(within(group).getByText(routine.name)).toBeInTheDocument();
+    // The honesty line covers both groups and stays outside them.
+    expect(group.contains(screen.getByText(/Shown, not executed/))).toBe(false);
+  });
+
+  it("opens a group on click and its contents stay operable", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<SmartSpaceEnvironmentExample />);
+    const group = groupNamed("Runs on its own");
+    await user.click(group.querySelector("summary")!);
+    expect(group.open).toBe(true);
+    const toggle = within(group).getByRole("switch", { name: /Away mode enabled/ });
+    expect(toggle).toHaveAttribute("aria-checked", "false");
+    await user.click(toggle);
+    expect(within(group).getByRole("switch", { name: /Away mode enabled/ })).toHaveAttribute("aria-checked", "true");
   });
 });
