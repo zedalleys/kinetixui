@@ -74,15 +74,20 @@
       "description": "Site 04: fleet health, an Organization to Machine hierarchy with a rollup at every level, equipment health, energy, faults and the command history.",
       "uses": [
         "DeviceHealthSummary",
-        "SpaceBreadcrumb",
-        "SpaceRollup",
+        "AlertList",
+        "ConnectionHealth",
+        "FirmwareStatus",
+        "BatteryIndicator",
+        "SignalStrength",
+        "DevicePowerControl",
+        "DeviceLevelControl",
+        "CommandLifecycle",
         "TelemetryGrid",
         "TelemetryMetric",
         "TelemetryTrend",
-        "DeviceControlCard",
-        "EnergySummary",
-        "AlertList",
-        "ActivityTimeline"
+        "ActivityTimeline",
+        "RoutineCard",
+        "EnergySummary"
       ],
       "source": "apps/web/src/examples/iot/operations-environment.tsx"
     },
