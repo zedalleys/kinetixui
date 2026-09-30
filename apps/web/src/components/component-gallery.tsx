@@ -3,8 +3,17 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, Search, X } from "lucide-react";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@kinetixui/ui";
+import { ArrowRight, Search, SlidersHorizontal, X } from "lucide-react";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from "@kinetixui/ui";
 import { cn } from "@/lib/utils";
 import { componentDocs } from "@/lib/site";
 import { CATEGORY_ORDER, PRIMITIVE, categoryOf } from "@/lib/component-registry";
@@ -242,6 +251,69 @@ export function ComponentGallery() {
 
   const grouped = !q && !activeCat && !activePlatform && !activeStatus;
   const isFiltered = Boolean(q || activeCat || activePlatform || activeStatus);
+  // The chip filters (not the search box) are what fold into the phone sheet, so that is what the badge counts.
+  const facetCount = [activeCat, activePlatform, activeStatus].filter(Boolean).length;
+  const [sheetOpen, setSheetOpen] = React.useState(false);
+
+  // One set of chips, rendered inline from md up and inside the sheet below it. The sheet's content only mounts
+  // while it is open, and the inline copy is `display: none` on phones, so a screen reader never meets both.
+  const facetGroups = (
+    <>
+      <div role="group" aria-label="Filter by category" className="flex flex-wrap gap-1.5">
+        <button
+          type="button"
+          aria-pressed={!activeCat}
+          onClick={() => setCat(null)}
+          className={catButton(!activeCat)}
+        >
+          All <span className="tabular-nums">{ITEMS.length}</span>
+        </button>
+        {CATEGORY_ORDER.map((cat) => (
+          <button
+            key={cat}
+            type="button"
+            aria-pressed={activeCat === cat}
+            onClick={() => setCat(activeCat === cat ? null : cat)}
+            className={catButton(activeCat === cat)}
+          >
+            {cat} <span className="tabular-nums">{CATEGORY_COUNT[cat] ?? 0}</span>
+          </button>
+        ))}
+      </div>
+
+      <div role="group" aria-label="Filter by platform" className="flex flex-wrap items-center gap-1.5">
+        <span className="mr-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+          Platform
+        </span>
+        {NATIVE_PLATFORMS.map((p) => {
+          const on = activePlatform === p;
+          return (
+            <button
+              key={p}
+              type="button"
+              aria-pressed={on}
+              onClick={() => setPlatform(on ? null : p)}
+              className={catButton(on)}
+              title={`Components shipping in the ${p} library`}
+            >
+              {p} <span className="tabular-nums">{PLATFORM_COUNT[p] ?? 0}</span>
+            </button>
+          );
+        })}
+        {BETA_COUNT > 0 && (
+          <button
+            type="button"
+            aria-pressed={activeStatus === "beta"}
+            onClick={() => setStatus(activeStatus === "beta" ? null : "beta")}
+            className={catButton(activeStatus === "beta")}
+            title="Components new this release"
+          >
+            Beta <span className="tabular-nums">{BETA_COUNT}</span>
+          </button>
+        )}
+      </div>
+    </>
+  );
 
   return (
     <>
@@ -294,12 +366,59 @@ export function ComponentGallery() {
                 </InputGroupAddon>
               )}
             </InputGroup>
+            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+              <SheetTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={facetCount > 0 ? `Filters, ${facetCount} active` : "Filters"}
+                  className={cn(
+                    "relative inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-border px-3 text-sm md:hidden",
+                    facetCount > 0 ? "border-primary text-foreground" : "text-muted-foreground",
+                    "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  )}
+                >
+                  <SlidersHorizontal aria-hidden className="size-4" />
+                  <span>Filters</span>
+                  {facetCount > 0 && (
+                    <span
+                      aria-hidden
+                      className="grid min-w-5 place-items-center rounded-full bg-primary px-1 font-mono text-[10px] tabular-nums text-primary-foreground"
+                    >
+                      {facetCount}
+                    </span>
+                  )}
+                </button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-xl md:hidden">
+                <SheetTitle>Filters</SheetTitle>
+                <SheetDescription>Category, platform and status. Results update as you choose.</SheetDescription>
+                <div className="mt-4 flex flex-col gap-4">{facetGroups}</div>
+                <div className="mt-6 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSheetOpen(false)}
+                    className="inline-flex h-10 flex-1 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  >
+                    Show {filtered.length} {filtered.length === 1 ? "component" : "components"}
+                  </button>
+                  {isFiltered && (
+                    <button
+                      type="button"
+                      onClick={clearAll}
+                      className="inline-flex h-10 items-center rounded-md px-3 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
             {isFiltered && (
               <button
                 type="button"
                 onClick={clearAll}
                 className={cn(
-                  "inline-flex h-9 shrink-0 items-center gap-1 rounded-md px-2.5 text-sm text-muted-foreground",
+                  "hidden h-9 shrink-0 items-center gap-1 rounded-md px-2.5 text-sm text-muted-foreground md:inline-flex",
                   "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 )}
               >
@@ -309,59 +428,7 @@ export function ComponentGallery() {
             )}
           </div>
 
-          <div role="group" aria-label="Filter by category" className="flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              aria-pressed={!activeCat}
-              onClick={() => setCat(null)}
-              className={catButton(!activeCat)}
-            >
-              All <span className="tabular-nums">{ITEMS.length}</span>
-            </button>
-            {CATEGORY_ORDER.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                aria-pressed={activeCat === cat}
-                onClick={() => setCat(activeCat === cat ? null : cat)}
-                className={catButton(activeCat === cat)}
-              >
-                {cat} <span className="tabular-nums">{CATEGORY_COUNT[cat] ?? 0}</span>
-              </button>
-            ))}
-          </div>
-
-          <div role="group" aria-label="Filter by platform" className="flex flex-wrap items-center gap-1.5">
-            <span className="mr-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-              Platform
-            </span>
-            {NATIVE_PLATFORMS.map((p) => {
-              const on = activePlatform === p;
-              return (
-                <button
-                  key={p}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => setPlatform(on ? null : p)}
-                  className={catButton(on)}
-                  title={`Components shipping in the ${p} library`}
-                >
-                  {p} <span className="tabular-nums">{PLATFORM_COUNT[p] ?? 0}</span>
-                </button>
-              );
-            })}
-            {BETA_COUNT > 0 && (
-              <button
-                type="button"
-                aria-pressed={activeStatus === "beta"}
-                onClick={() => setStatus(activeStatus === "beta" ? null : "beta")}
-                className={catButton(activeStatus === "beta")}
-                title="Components new this release"
-              >
-                Beta <span className="tabular-nums">{BETA_COUNT}</span>
-              </button>
-            )}
-          </div>
+          <div className="hidden flex-col gap-3 md:flex">{facetGroups}</div>
         </div>
       </div>
 

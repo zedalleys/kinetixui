@@ -17,6 +17,13 @@ vi.stubGlobal(
 // animation static, which is irrelevant to what this file asserts.
 window.matchMedia = vi.fn().mockReturnValue({ matches: true, addEventListener() {}, removeEventListener() {} }) as never;
 import { componentTotal } from "./platform-support";
+import { PLATFORM_DEFINITIONS } from "./platform-parity";
+import {
+  SOURCE_ONLY_PLATFORMS,
+  installableSentence,
+  platformSentence,
+  sourceOnlySentence,
+} from "./platform-prose";
 import { documentedExceptionCount, fullCoverageCount, projectLicense, projectVersion } from "./project-stats";
 
 /**
@@ -129,5 +136,83 @@ describe("homepage rendering: matches the repository's current truth", () => {
   it("renders the flagship cross-platform demo, not the old static button/input strip", () => {
     expect(text()).toContain("Notifications"); // the flagship preview's real content
     expect(text()).not.toContain("Rendered by @kinetixui/ui");
+  });
+});
+
+/**
+ * Hero hierarchy, which is a truth problem as much as a layout one.
+ *
+ * On a 390×800 phone viewport the hero put the primary CTA at y≈763 and the install command at y≈939:
+ * a visitor saw a badge, a headline and three architecture paragraphs, and nothing clickable at all
+ * without scrolling a full screen. The fix was ordering, not deletion — so the thing worth guarding is
+ * the ORDER, plus the fact that none of the relocated detail went missing.
+ *
+ * Pixel positions are deliberately not asserted here: jsdom has no layout, and a test that pretended
+ * otherwise would be measuring nothing. What this can check honestly is DOM order and presence, which is
+ * what actually regressed.
+ */
+describe("hero hierarchy: action before architecture", () => {
+  const order = (container: HTMLElement) => {
+    const nodes = [...container.querySelectorAll("h1, a, p")];
+    /** Index of the first node whose text contains `needle`, or -1. */
+    return (needle: string) => nodes.findIndex((n) => (n.textContent ?? "").includes(needle));
+  };
+
+  it("puts the headline, the supporting paragraph and both CTAs before any architecture prose", () => {
+    const { container } = render(<HomePage />);
+    const at = order(container);
+
+    const headline = at("One design language");
+    const supporting = at("drift apart the moment");
+    const primary = at("Explore components");
+    const secondary = at("See what each platform covers");
+    const architecture = at("One DTCG token source generates");
+
+    for (const [name, i] of Object.entries({ headline, supporting, primary, secondary, architecture })) {
+      expect(i, `the hero no longer renders the ${name}`).toBeGreaterThanOrEqual(0);
+    }
+    expect(headline).toBeLessThan(supporting);
+    expect(supporting).toBeLessThan(primary);
+    expect(primary).toBeLessThan(secondary);
+    expect(secondary, "the architecture paragraph is back in front of the CTAs").toBeLessThan(architecture);
+  });
+
+  it("carries exactly one paragraph between the headline and the primary CTA", () => {
+    const { container } = render(<HomePage />);
+    const nodes = [...container.querySelectorAll("h1, p, a")];
+    const h1 = nodes.findIndex((n) => n.tagName === "H1");
+    const cta = nodes.findIndex((n) => (n.textContent ?? "").includes("Explore components"));
+    const between = nodes.slice(h1 + 1, cta).filter((n) => n.tagName === "P");
+    expect(between.map((n) => n.textContent?.slice(0, 40))).toHaveLength(1);
+    // Short enough to read before deciding, long enough to say something.
+    const words = (between[0]!.textContent ?? "").trim().split(/\s+/).length;
+    expect(words, "the hero's supporting paragraph has grown back into an essay").toBeLessThanOrEqual(45);
+    expect(words).toBeGreaterThanOrEqual(20);
+  });
+
+  it("does not make the beta badge the first thing in the hero", () => {
+    const { container } = render(<HomePage />);
+    const at = order(container);
+    const badge = at("Beta — every package is 0.x");
+    expect(badge, "the beta disclosure should still be on the page").toBeGreaterThanOrEqual(0);
+    expect(badge, "the badge is above the headline again, pushing it out of the first viewport").toBeGreaterThan(
+      at("One design language"),
+    );
+    expect(badge, "the badge is back in front of the primary CTA").toBeGreaterThan(at("Explore components"));
+  });
+
+  it("keeps every relocated claim on the page, generated rather than retyped", () => {
+    const { container } = render(<HomePage />);
+    const text = container.textContent ?? "";
+    // The architecture half.
+    expect(text).toContain("One DTCG token source generates");
+    expect(text).toContain(platformSentence);
+    expect(text).toContain("implement the same component contract natively");
+    expect(text).toContain("checked against real source in CI");
+    // The distribution half, including the maturity word, which is the part that must never be dropped.
+    expect(text).toContain(installableSentence);
+    expect(text).toContain(sourceOnlySentence);
+    expect(text).toContain("not yet distributed as packages");
+    for (const p of SOURCE_ONLY_PLATFORMS) expect(text).toContain(PLATFORM_DEFINITIONS[p].label);
   });
 });

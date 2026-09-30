@@ -9,9 +9,9 @@ export function DeviceFleetExample() {
   const devices = [...DEMO_DEVICES].sort(compareDeviceAttention);
 
   return (
-    <section className="flex flex-col gap-4">
+    <section aria-label="Device fleet" className="flex flex-col gap-4 sm:gap-6">
       <header className="flex flex-wrap items-baseline justify-between gap-3">
-        <h3 className="text-title-sm text-foreground">Cold chain · Site 4</h3>
+        <h3 className="text-headline-sm text-foreground">Cold chain · Site 4</h3>
         <DeviceStateSummary devices={devices} />
       </header>
 

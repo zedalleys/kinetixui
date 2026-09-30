@@ -43,7 +43,7 @@ const LastSync = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRe
         // Omitted rather than empty when there is no instant to state: an empty dateTime is invalid.
         dateTime={parsed ? parsed.toISOString() : undefined}
         aria-label={resolveLabel(label, describeLastSeen(value, options))}
-        className={cn("text-label-md font-sans text-muted-foreground", className)}
+        className={cn("font-sans text-body-sm tabular-nums text-muted-foreground", className)}
         {...props}
       >
         {formatLastSeen(value, options)}

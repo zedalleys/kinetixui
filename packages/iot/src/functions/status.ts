@@ -9,7 +9,7 @@ import { KINETIX_DEVICE_STATUSES, type KinetixDeviceStatus } from "../types/devi
  * something we actually recognised.
  */
 
-const KNOWN = new Set<string>(KINETIX_DEVICE_STATUSES);
+const KNOWN = /* @__PURE__ */ new Set<string>(KINETIX_DEVICE_STATUSES);
 
 /**
  * Spellings seen in the wild that mean exactly one of our statuses.

@@ -93,6 +93,53 @@ describe("DevicePowerControl", () => {
     const { container } = render(<DevicePowerControl state="on" control={READY} label="Lamp" />);
     expect(await axeViolations(container)).toEqual([]);
   });
+
+  /**
+   * Forced-colors (Windows High Contrast) throws away every fill this switch uses: the track tint,
+   * the knob tint and the knob's shadow all collapse to one system colour pair. What survives is
+   * borders and `currentColor` strokes, so the state has to ride on those or the control says
+   * nothing on its own and the reading falls back to the word beside it — which is not the control.
+   *
+   * These assertions are deliberately about the *marks and the border*, not about colour classes:
+   * they are the two things that still exist once colour is gone.
+   */
+  describe("says which state it is in without colour", () => {
+    const mark = (ui: React.ReactElement) => render(ui).container.querySelector("[data-mark]");
+
+    it("draws a different mark for confirmed on and confirmed off", () => {
+      expect(mark(<DevicePowerControl state="on" control={READY} label="Lamp" />)).toHaveAttribute("data-mark", "on");
+      cleanup();
+      expect(mark(<DevicePowerControl state="off" control={READY} label="Lamp" />)).toHaveAttribute("data-mark", "off");
+    });
+
+    it("strokes the mark in currentColor, which forced-colors keeps", () => {
+      for (const state of ["on", "off"] as const) {
+        const svg = mark(<DevicePowerControl state={state} control={READY} label="Lamp" />)!;
+        expect(svg).toHaveAttribute("stroke", "currentColor");
+        expect(svg.querySelector("path")).not.toBeNull();
+        cleanup();
+      }
+    });
+
+    it("marks the CONFIRMED state, so a request in flight is not drawn as a result", () => {
+      // off → on in flight: no mark at all. A tick here would be the component claiming success.
+      expect(mark(<DevicePowerControl state="off" requested="on" control={PENDING} label="Lamp" />)).toBeNull();
+    });
+
+    it("gives the knob a border under forced-colors so its position survives", () => {
+      // The knob is a background fill plus a shadow; forced-colors drops both, and with them the one
+      // cue that says which end of the track the knob sits at. A border is not flattened away.
+      const { container } = render(<DevicePowerControl state="on" control={READY} label="Lamp" />);
+      const knob = container.querySelector("[role=switch] > span > span")!;
+      expect(knob.className).toContain("forced-colors:border-2");
+      expect(knob.className).toContain("forced-colors:border-current");
+    });
+
+    it("keeps a focus indicator under forced-colors, where the ring box-shadow is dropped", () => {
+      const { container } = render(<DevicePowerControl state="on" control={READY} label="Lamp" />);
+      expect(container.querySelector("[role=switch]")!.className).toContain("forced-colors:focus-visible:outline");
+    });
+  });
 });
 
 describe("DeviceLevelControl", () => {

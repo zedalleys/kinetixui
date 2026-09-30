@@ -2,6 +2,10 @@
 
 What changed, what was measured, and what was deliberately left for later.
 
+This document has two parts. §1–§8 are the **0.2 control-layer pass**, kept as the record it was. **§9 is
+"0.3 — Connected Product System"**, which builds on it. Where the two differ on a count or a status, §9 and the
+current source win, and the older sections say so where it matters.
+
 The brief was to move the IoT module from *enterprise cards displaying device data* toward *a modern
 connected-device UI system*. SmartThings, IKEA Home smart and Homie were reference points for **how
 connected-device UIs behave** — not for how they look. Nothing here reproduces their visual design,
@@ -78,6 +82,9 @@ Four levels. Three are published API; the fourth is source to copy.
 
 These counts are **derived, not asserted**: `packages/iot/src/react/catalogue.test.ts` reads the
 export barrel and fails if the README's numbers drift from it.
+
+The table above is the state at the end of the 0.2 pass (7 primitives, 4 controls, 12 patterns). The current
+barrel has 8 primitives, 4 controls and 27 patterns; see §9.
 
 ### Added in this pass
 
@@ -186,38 +193,45 @@ pays, and it fell.
 
 ## 6. What this module still is not
 
-Unchanged by this pass, and stated because a control layer is exactly what invites the assumption:
+Unchanged by the 0.2 pass and by 0.3, and stated because a control layer is exactly what invites the assumption:
 
 - **No transport.** No MQTT, BLE, Matter, Zigbee, LoRaWAN, WebSocket, HTTP polling or discovery.
-  Controls report intent through callbacks; what happens next is the product's.
-- **No automation engine.** `RoutineCard` renders a scene, routine or schedule that a product's own
-  engine populates. Nothing evaluates a trigger or schedules a run.
+  Controls report intent through callbacks; what happens next is the product's. Pairing components are screen
+  state and discover nothing.
+- **No automation engine.** `RoutineCard` renders a scene, routine or schedule that a product's own engine
+  populates, and (since 0.3) `AutomationBuilder` edits a structured rule. Nothing evaluates a trigger or
+  schedules a run.
 - **No calendar product.** Scheduling is shown, not edited.
-- **No video.** Nothing streams, decodes or displays a camera feed.
-- **No cross-platform parity.** The controls are React. There is no SwiftUI, Compose or Flutter
-  equivalent, and none is implied.
-- **Not released.** `@kinetixui/iot@0.2.0` is on npm; nothing in this pass publishes a new
-  version. The package remains experimental and its API may change without a major bump.
+- **No video.** Nothing streams, decodes or displays a camera feed; `CameraDeviceCard` is a poster and a state.
+- **No cross-platform parity.** The module is React. There is no SwiftUI, Compose or Flutter equivalent, and
+  none is implied.
+- **Simulation is demo state.** The deterministic simulation that drives the website's demos lives in the
+  website, is not published, and is not a test double for a transport.
+- **Release state is not stated here.** The published version and what it contains are read from
+  `packages/iot/package.json` and the release process, never from this document. The package remains
+  experimental and its API may change without a major bump.
 
 ---
 
 ## 7. Deferred — P1
 
-Explicitly not done, so that the P0 above is coherent rather than thin in nine places.
+Explicitly not done in the 0.2 pass, so that the P0 there was coherent rather than thin in nine places. Status
+as of 0.3:
 
-| Deferred | Why | Blocked on |
+| Deferred | Status | Where it landed, or why it still waits |
 | --- | --- | --- |
-| Agritech and operations domain showcases | One composition showcase shipped (`connected-space`) and the dashboard was rebuilt on the control layer, which demonstrates the same components; two further domain framings are presentation rather than capability | Nothing — next in line |
-| Redesigned `/iot` device-detail screen | `device-detail` never hand-rolled controls, so it has no correctness defect to fix — only a layout to revisit | Design |
-| Pairing flow composed from the new controls | `functions/pairing.ts` already models it; the composition is a screen, not a component | Design |
-| A pattern gallery in `/docs/iot` | The prose documentation of the control layer landed in this pass; the gallery is presentation | Design |
-
-| A grouped/scheduled command queue | Genuinely useful, genuinely a product concern; modelling it here risks becoming the engine this module refuses to be | A real product's requirements |
-| Optimistic-with-rollback as an opt-in | Some products legitimately want it for low-stakes devices. It needs a rollback story before it is safe to offer | Design |
+| Agritech and operations domain showcases | **Done in 0.3** | `agritech-environment` and `operations-environment`, beside `smart-space-environment`, on `/iot` (§9.4) |
+| Redesigned `/iot` device-detail screen | **Done in 0.3** | `device-detail` is now the flagship pump-station screen with Overview, Controls, Telemetry, Automations, Activity and Settings tabs |
+| Pairing flow composed from the new controls | **Done in 0.3** | `pairing-flow`, driven by the pairing state machine, with real failure and recovery states |
+| A pattern gallery in `/docs/iot` | **Done in 0.3** | The patterns are documented by the moment they answer in `/docs/iot`, with a runnable example per moment on `/iot` |
+| A grouped/scheduled command queue | Deferred | Genuinely useful, genuinely a product concern; modelling it here risks becoming the engine this module refuses to be. Blocked on a real product's requirements |
+| Optimistic-with-rollback as an opt-in | Deferred | Some products legitimately want it for low-stakes devices. It needs a rollback story before it is safe to offer. Blocked on design |
 
 ---
 
-## 8. Verification
+## 8. Verification (0.2 pass)
+
+This is the record for the 0.2 pass. The 0.3 run is §9.7.
 
 ```
 pnpm --filter @kinetixui/iot typecheck   # clean
@@ -241,3 +255,219 @@ Chromium, against the production build of `/iot`:
 Passing tests are not the whole bar. The three control defects in §4 were found by writing tests that
 failed, and the packaging defect in §5 was found by measuring rather than by any test — a suite that
 only ever goes green is measuring the author's assumptions.
+
+---
+
+## 9. 0.3 — Connected Product System
+
+The 0.2 pass gave the module a control layer. 0.3 asks the next question: can a product be built on it whose
+*whole* behaviour is honest — not only the switch, but the command that follows it, the reading that arrives
+late, the alert someone owns, the rule being edited, the device being added and the place it lives in?
+
+The answer was a headless state model (types and pure functions), a set of React patterns over it, a
+deterministic simulation and three reference environments for the website, a redesigned `/iot` "Connected
+Product Lab" page, and documentation that treats state honesty as a first-class principle rather than a detail
+of one component. It stays React only, stays experimental, and adds no transport, no automation engine and no
+video.
+
+### 9.1 Baseline: what existed, at `5927117bbb85faa3a7a616a292b50940df48e89f`
+
+Read from that commit's source, not from memory. "Exists" means present and used; "Partial" means the piece is
+there but the moment it belongs to is not covered; "Missing" means nothing.
+
+| Capability | Exists | Partial | Missing | Evidence at the baseline commit |
+| --- | :---: | :---: | :---: | --- |
+| Device controls (power, level, setpoint, mode) with requested vs confirmed | ✓ | | | `react/index.ts` exports four controls; §2 principle 1 |
+| One place that resolves control availability | ✓ | | | `resolveControlState` in `functions/control.ts` |
+| Command lifecycle (requested, acknowledged, confirmed, timed out, unreachable, retry) | | ✓ | | `types/command.ts` has `queued … expired` and `CommandStatus` renders one; no machine, no `acknowledged ≠ confirmed` rule, no retry, no timeout stage |
+| Device categories and affordances | | ✓ | | `types/identity.ts`: 12 categories, affordances by category; no domain registry, no agriculture or industrial shapes |
+| Metric registry and thresholds | | | ✓ | `types/telemetry.ts` has points, series and `quality` only |
+| Reading trust (stale, unavailable, threshold states) | | ✓ | | Staleness and `quality` existed; `TelemetryTrend` broke lines at dropouts. No reading *state*, no thresholds, no `MetricStatus` |
+| Accessible chart summary and data table | | ✓ | | Bounds printed under the plot; no summary sentence, no table |
+| Alerts | | ✓ | | `KinetixDeviceAlert` (id, severity, message, raised, acknowledged) and `AlertCard`; no list, no kind, source, action or resolved |
+| Activity history | | | ✓ | No type, function or component |
+| Automation | | ✓ | | `KinetixAutomation` display model and `RoutineCard`; no rule model, validation or builder |
+| Pairing | | ✓ | | `KinetixPairingStatus`, steps and code validation in `functions/pairing.ts`; no stages, methods, failure registry, flow machine or components |
+| Places, hierarchy and rollup | | ✓ | | `DeviceGroupCard` and `summarizeDevices`; no tree, path or rollup |
+| Health as distinct from status | | | ✓ | `DeviceStateSummary` counts by status only |
+| Energy | | | ✓ | No type, function or component |
+| Camera | | | ✓ | `camera` was a category only; no card |
+| Deterministic simulation | | | ✓ | Demos used local `useState` and fixed timers |
+| Reference environments | | ✓ | | One composition, `connected-space`, and a dashboard on the fleet demo data |
+| Device detail screen | | ✓ | | Layout only; no tabs, no controls, no history |
+| Per-import cost floor | ✓ | | | §5: `withDisplayName` fix; guarded by `react/tree-shaking.test.ts` |
+| Docs covering the lifecycle, registries, hierarchy, simulation and RTL | | ✓ | | `/docs/iot` covered primitives, controls, a dozen patterns and pairing status |
+
+At that commit the barrel was 7 primitives, 4 controls and 12 patterns, and the website carried seven
+compositions (`device-fleet`, `device-detail`, `telemetry-board`, `connection-troubleshooting`, `alert-inbox`,
+`device-dashboard`, `connected-space`).
+
+### 9.2 Architecture decisions
+
+1. **Headless first.** The state model is types and pure functions in `@kinetixui/iot/functions`, asserted
+   React-free, and the React patterns are written over it. A product with its own components gets the same
+   semantics, and a server route or worker can use the model with no renderer.
+2. **Application adapter, not transport.** The module starts above the transport. A product writes one adapter
+   that turns provider data into `KinetixDevice`, telemetry and lifecycle events, and carries a control's callback
+   back the other way. The website draws this boundary as an accessible figure and `/docs/iot#transport-boundary`
+   documents it.
+3. **The lifecycle is a machine, and only `confirm` changes truth.** Nine stages, two values kept side by side
+   (`requestedValue`, `confirmedValue`), transitions that return `ok: false` instead of throwing, and a late
+   `confirm` accepted after a timeout because a device that answers late has told the truth.
+4. **Registries, not switch statements.** The device taxonomy, the metric registry and the pairing-failure
+   registry are each one table. A category's domain, label, affordances and group key are defined in one place
+   and nothing else switches on a category.
+5. **No vocabulary in the library.** Hierarchy levels are a `kind` string and a `parentId`; the model's tests
+   build four different vocabularies (portfolio → zone, farm → irrigation zone, home → room, organisation →
+   machine) and none is built in. Mode labels and units are the product's.
+6. **Exclusive buckets for display.** A summary shown to a person must sum to the fleet size (§9.3).
+7. **The simulation is demo state and lives in the website.** Deterministic (seeded), driven by an injected clock,
+   running the real lifecycle machine, disclosed on every page that renders it, and not published.
+8. **Compositions are source, not API.** The three environments and the rest are copied, not installed, because
+   a screen is where a product's decisions live.
+9. **Every claim on `/iot` is derived or asserted.** Version, entry points and the React peer come from
+   `package.json`; the component counts are asserted against the React barrel; a scan test refuses unsupported
+   claims (wearables, "coming soon", protocol support outside a denial).
+
+### 9.3 Honest deviations from the brief
+
+- **Lowercase domain unions.** Device categories and domains are lowercase strings (`"soil-sensor"`,
+  `"irrigation"`), matching every other union in the module, rather than the capitalised labels a brief tends to
+  use. The human-readable form comes from `describeDeviceCategory` / `describeDeviceDomain`.
+- **Interaction-shape categories were retained, and a domain registry was added beside them.** The brief's
+  domain list (lighting, climate, security, irrigation, …) was not substituted for the categories, because a
+  category decides *which controls a device is offered* (a light, a lock, a pump, a motor) and a domain decides
+  *how devices are grouped and filtered*. Replacing one with the other would have lost either the affordances or
+  the grouping. Four categories were added for genuinely different shapes (`motor`, `weather-station`,
+  `air-quality`, `soil-sensor`); everything else stays `sensor` or `meter`, expressed by metric.
+- **Phase 1 found that offline is counted in a warning bucket.** `deriveDeviceHealth` gives an offline device the
+  level `warning`, and `summarizeFleetHealth` also reports `offline` beside the health counts, so one offline
+  device reads as "1 warning · 1 offline" and the numbers stop summing to the fleet. `DeviceHealthSummary` now
+  gives every device exactly one bucket (offline or unreachable is its own, taken out of `warning`), and
+  `/docs/iot` says so. The raw headless summary still overlaps by design and documents why.
+- **The simulation is not in the package.** It was briefed as demo infrastructure and it is one: it lives in
+  `apps/web/src/lib/iot-sim`, is not exported and is not published.
+- **The hero device does not use the simulation layer.** The hero's single device is a `setTimeout` chain over the
+  real lifecycle machine, so the first paint does not pull scenario data or a tick loop into the initial bundle.
+  It is still labelled SIMULATION and still discloses.
+- **Earlier compositions were kept, not deleted.** The fleet, dashboard, connected-space, telemetry-board,
+  alert-inbox and connection-troubleshooting layouts stay on `/iot` under "More layouts", one at a time, because
+  they answer different questions from the environments.
+- **The page states no "shipped in <version>" badge.** The 0.3 additions describe the working tree, and the
+  published version is whatever `package.json` and the release process say; a hand-typed badge would be a claim
+  this document cannot keep true.
+- **The tree-shaking floor.** The headless additions reopened the per-import cost problem §5 had closed: module-
+  level initialisers a bundler cannot prove pure (registries built with `new Set`, `Object.keys`, `.map`) were
+  kept and kept everything they referenced alive. The source-level guard
+  `packages/iot/src/functions/tree-shaking.test.ts` now asserts that anything reachable from a top-level
+  initialiser is a literal, a function, or a call annotated `/* @__PURE__ */`. Its header records one case
+  (`clampBatteryLevel` alone: 4,939 B before, 65 B after annotation). Measured sizes: see §9.6 Measurements
+  (filled by lead).
+
+### 9.4 What was added
+
+Headless (`@kinetixui/iot/functions`, React-free and asserted so): the command-lifecycle machine; device
+connectivity, health and fleet summaries; the device taxonomy and domain registry; the metric registry,
+reading evaluation, series summaries, gap detection, threshold crossings and accessible series sentences; alert
+sorting, summary and acknowledgement; activity grouping; the automation rule model, validation and plain-language
+summary; the pairing flow machine, methods and failure registry; the space tree, path and health rollup; and
+energy summary and trend.
+
+React: `MetricStatus`; `CommandLifecycle`; `TelemetryMetric`, `TelemetryGrid`; `AlertList`, `ActivityTimeline`;
+`DeviceHealthSummary`, `SpaceBreadcrumb`, `SpaceRollup`; `AutomationRuleView`, `AutomationBuilder`;
+`PairingMethodPicker`, `PairingStepper`, `PairingFailure`; `CameraDeviceCard`; `EnergySummary`. `TelemetryTrend`
+gained thresholds, gaps, a stale marker, a summary row and a data table; `AlertCard` gained kind, source, action
+and resolved.
+
+Website: the deterministic simulation and three reference scenarios; the compositions `state-honesty`,
+`smart-space-environment`, `agritech-environment`, `operations-environment`, `automation-builder`, `pairing-flow`,
+`telemetry-history` and `alert-center`, and an evolved `device-detail`; the `/iot` Connected Product Lab page
+(§9.5); and the documentation in `/docs/iot`.
+
+### 9.5 The `/iot` page
+
+Information architecture: hero, with one simulated device whose command goes requested → acknowledged →
+confirmed (or times out when the reader makes the device stop answering) → a reference-environment switcher
+(Smart space, Agritech, Operations) → device controls and state honesty → telemetry → alerts → automation →
+pairing → device detail → more layouts → architecture (the transport-boundary figure) → what ships (counts read
+against the barrel) → missing data → accessibility, right-to-left and motion → install → roadmap.
+
+Client boundaries: the page is a server component. Client code is the hero's command strip, `LabTabs` (which
+mounts only its active panel, so an interactive environment does not run until opened), the examples, which bring
+their own boundaries, and the missing-data demo. Every environment tab carries the simulation disclosure.
+
+### 9.6 Measurements
+
+Method: esbuild `--bundle --minify --format=esm`, React external, importing from `packages/iot/dist/react/index.js`
+(bytes; the §5 baseline is 2026-era `main` at 5927117).
+
+| Import | Baseline (§5) | 0.3 | Why it moved |
+| --- | --- | --- | --- |
+| one control (`DevicePowerControl`) | 4.03 KB | 5.30 KB | Shared glyph layer and status wording used by every control |
+| `DeviceCard` | 10.25 KB | 11.79 KB | Same shared layer |
+| `DeviceControlCard` | — | 13.91 KB | Composes the controls |
+| `CommandLifecycle` | — | 11.74 KB | New |
+| `AutomationBuilder` | — | 28.18 KB | New; the largest single pattern (form, validation, reorder, focus management) |
+| a headless helper alone (`clampBatteryLevel`) | — | 65 B | Guarded by `functions/tree-shaking.test.ts` |
+| all components | 46.23 KB | 133.5 KB | 27 patterns instead of 12 |
+| `dist` JS total | 107,028 B | 284,528 B | The package contains far more: the headless model, 15 more React patterns |
+
+**A regression found and fixed during the pass.** The first 0.3 build put a single control at 10.3 KB and
+importing one headless helper at 4.9 KB. Cause: module-level initialisers in `functions/` (registries built by
+calls, a `Set`, a `Map`, `Object.keys`) that a bundler cannot prove pure, which kept the shared chunk's tables
+alive for every importer. They are now annotated `/* @__PURE__ */` (both the outer call and its arguments — see
+§5) and `functions/tree-shaking.test.ts` parses every module under `functions/` and `types/` and fails on an
+unannotated module-load call. It was mutation-tested: appending a bare `export const X = Object.keys(...)`
+fails it. A further leak in `react/health-bar.tsx` (an object spread built at module load) was removed the
+same way. Per-import cost did not return fully to the §5 figures; the remainder is real code added to the
+components.
+
+**Website routes.**
+
+| Route | Before | 0.3 |
+| --- | --- | --- |
+| `/iot` | 21 kB / 447 kB First Load | 45.5 kB / 472 kB First Load |
+| `/docs/iot` | 155 B / 501 kB | 155 B / 501 kB |
+
+The first 0.3 build of `/iot` was 77.6 kB / 504 kB. The nine interactive examples now mount lazily (each loads its own chunk when its section nears the viewport or its tab opens; hovering or focusing a tab
+prefetches it), which cut the route by 32 kB. About 38.7 kB of the remaining 45.5 kB is `@kinetixui/iot` itself, pulled in by the eager hero; taking the route lower would mean
+deferring the hero, which was deliberately kept eager.
+
+### 9.7 Verification
+
+Run on the final tree; every command below exited 0.
+
+```
+pnpm --filter @kinetixui/iot typecheck        # clean
+pnpm --filter @kinetixui/iot lint             # clean
+pnpm --filter @kinetixui/iot test             # 24 files, 704 tests
+pnpm build:iot && pnpm check:iot-dist         # React-free closure holds, 4 export paths resolve
+pnpm --filter @kinetixui/web typecheck        # clean
+pnpm --filter @kinetixui/web lint             # clean
+pnpm --filter @kinetixui/web test             # 47 files, 1303 tests
+pnpm check:iot-examples                       # 15 examples, snippets current
+pnpm check:rtl  check:token-contract  check:contrast  check:typography
+pnpm check:content  check:distribution  check:block-source  check:platform-source
+pnpm check:platform-code  check:blocks  check:manifest  check:verification
+pnpm check:stories  check:releases
+pnpm --filter @kinetixui/web build
+node scripts/a11y-site.mjs --base http://127.0.0.1:3100   # 21 pages x 2 themes x 4 widths: no axe findings, no overflow
+```
+
+Before this pass the IoT package had 304 tests and the web app 1,097.
+
+**Real-browser pass beyond the repository gate** (Chromium, production build): `/iot` at 390 / 768 / 1440, each in
+light and dark and in LTR and RTL, activating every environment and layout tab and scrolling every lazy section
+into view — no page overflow and no axe violations at any point. **Correction:** the RTL half of that pass did not mirror the example previews — the showcase's Radix `Tabs.Root` defaulted to `dir="ltr"` and forced them LTR. That is fixed and re-run; see `docs/iot/MANUAL-QA-0.3.md` §6, finding 1. The one class of horizontal scroller left is the
+named, keyboard-focusable source blocks. The Device detail tab strip, which scrolled sideways with no cue at 390px,
+now wraps. Colour contrast is checked in the browser, not in jsdom.
+
+**Not verified.** No screen reader (VoiceOver, NVDA, TalkBack) was run against the new components — the checks
+are axe, keyboard-driven tests and structural assertions, which do not replace listening to them. The build was
+not exercised on a device or in Safari or Firefox.
+
+Tests that guard the 0.3 claims are in `apps/web/src/lib/iot-page.test.tsx` (the page: one `h1`, no skipped
+heading level, named landmarks, a simulation disclosure in every environment, the diagram's accessible names,
+no unsupported claims, counts against the barrel), `apps/web/src/components/iot/lab/hero-command-strip.test.tsx`
+(a press changes the request and not `aria-checked` until the device confirms; a silent device times out and
+offers a Retry) and the extended IoT rules in `apps/web/src/lib/current-truth.test.ts`.

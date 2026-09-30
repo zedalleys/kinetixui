@@ -22,9 +22,19 @@ import { withDisplayName } from "./display-name";
  * component this package is explicitly trying not to become, and it would still not fit the fourth
  * product that turns up with a control nobody predicted.
  *
- * **The card surface carries active state.** A lit light, a running pump: the card is tinted and its
- * border warms, so a wall of them reads at a glance. That is the one piece of visual state a device
- * grid genuinely needs and the reason this is a card rather than a row.
+ * **The card surface carries active state.** A lit light, a running pump: the card is tinted, so a
+ * wall of them reads at a glance. That is the one piece of visual state a device grid genuinely needs
+ * and the reason this is a card rather than a row.
+ *
+ * **Three variants.** `surface` (default) is the ordinary tile; `hero` is a device's full presence — a
+ * large icon tile, a large *confirmed* value and room for the primary control; `quiet` is a compact
+ * row-like tile for secondary devices. None of them has a border: tone is a fill, and the only
+ * outline is the dashed one that means "offline" or "requested, not yet confirmed".
+ *
+ * **The big number is always the confirmed one.** A `requestedValue` is shown separately as a dashed
+ * "Requested …, not yet confirmed" chip, and an unreachable device shows its last known value with the
+ * word "Offline" and a glyph — never a fresh-looking number. Neither chip is a live region; the
+ * control inside the card owns the one announcement.
  *
  * **Expanded content is opt-in and unmounted when closed**, so a grid of twenty cards does not carry
  * twenty sliders it is not showing.
@@ -35,7 +45,7 @@ export interface DeviceControlCardProps extends Omit<React.HTMLAttributes<HTMLDi
   /** Whether the device is doing its thing — lit, running, open. Drives the card's surface. */
   active?: boolean;
   control?: KinetixControlState;
-  /** The primary control. Rendered prominently, at the card's end edge. */
+  /** The primary control. Rendered prominently, at the card's end edge (below the value in `hero`). */
   primaryControl?: React.ReactNode;
   /** One line of state in the product's own words — "Warming to 21°", "Cycle 2 of 4". */
   statusLine?: React.ReactNode;
@@ -48,11 +58,51 @@ export interface DeviceControlCardProps extends Omit<React.HTMLAttributes<HTMLDi
   onOpenChange?: (open: boolean) => void;
   /** Label for the disclosure toggle. Defaults to a sentence naming the device. */
   expandLabel?: string;
+  /** `surface` (default), `hero` (large presence for a primary device) or `quiet` (compact row-like tile). */
+  variant?: "surface" | "hero" | "quiet";
+  /** The device's *confirmed* value, drawn large. Omit for a card without a headline number. */
+  value?: React.ReactNode;
+  /** Unit printed small and muted after `value`. */
+  unit?: string;
+  /**
+   * What the user asked for while it is unconfirmed. Drawn as a dashed "Requested …, not yet
+   * confirmed" chip; the confirmed `value` stays the big number.
+   */
+  requestedValue?: React.ReactNode;
+  /**
+   * A device illustration, supplied by the caller (so the card imports none). Decorative: it is wrapped
+   * `aria-hidden`. In `quiet` it sits at the inline end of the tile; in `hero` it sits beside the value.
+   */
+  visual?: React.ReactNode;
 }
+
+/** The two chip marks, inline so the card does not import the whole glyph set. */
+const MARK = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.5,
+  strokeLinecap: "round" as const,
+  "aria-hidden": true,
+  focusable: false,
+  width: 14,
+  height: 14,
+  viewBox: "0 0 16 16",
+  className: "shrink-0",
+};
+
+const PAD = { surface: "gap-3 p-4", hero: "gap-5 p-5 sm:p-6", quiet: "gap-2 p-3" } as const;
+const VALUE = {
+  surface: "text-headline-sm",
+  hero: "text-headline-lg sm:text-display-sm",
+  quiet: "text-title-lg",
+} as const;
 
 const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceControlCardProps>(
   (
-    { device, category, active = false, control, primaryControl, statusLine, meta, expanded, open, onOpenChange, expandLabel, className, ...props },
+    {
+      device, category, active = false, control, primaryControl, statusLine, meta, expanded, open, onOpenChange, expandLabel,
+      variant = "surface", value, unit, requestedValue, visual, className, ...props
+    },
     ref,
   ) => {
     const [internalOpen, setInternalOpen] = React.useState(false);
@@ -64,35 +114,117 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
 
     const resolved = category ?? resolveDeviceCategory(device);
     const unreachable = control?.availability === "offline" || control?.availability === "unavailable";
+    const pending = !unreachable && (requestedValue !== undefined || control?.availability === "pending");
+    const hasValue = value !== undefined && value !== null;
     const panelId = React.useId();
+    const hero = variant === "hero";
+    const quiet = variant === "quiet";
+
+    const valueNode = hasValue ? (
+      <p
+        data-value=""
+        className={cn(
+          "m-0 flex items-baseline gap-1.5 tabular-nums leading-none",
+          VALUE[variant],
+          unreachable ? "text-muted-foreground" : "text-foreground",
+        )}
+      >
+        <span>{value}</span>
+        {unit ? <span className={cn("text-muted-foreground", hero ? "text-title-md" : "text-title-sm")}>{unit}</span> : null}
+      </p>
+    ) : null;
+
+    // Words + glyph + dashed outline: none of it depends on colour, and none of it is live (the
+    // control beside it owns the one announcement).
+    const stateChip = unreachable ? (
+      <span
+        data-state-chip="unreachable"
+        className="inline-flex w-fit items-center gap-1.5 rounded-full border border-dashed border-border px-2.5 py-1 text-label-md text-muted-foreground"
+      >
+        <svg {...MARK} data-glyph="dash">
+          <circle cx="8" cy="8" r="6.25" strokeDasharray="2 2" />
+          <path d="M5.5 8h5" />
+        </svg>
+        {control?.availability === "offline" ? "Offline" : "Unavailable"}
+        {hasValue ? " — last known value" : ""}
+      </span>
+    ) : pending ? (
+      <span
+        data-state-chip="requested"
+        className="inline-flex w-fit max-w-full animate-pulse items-center gap-1.5 rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-1 text-label-md text-foreground motion-reduce:animate-none"
+      >
+        <svg {...MARK} data-glyph="circle-dot">
+          <circle cx="8" cy="8" r="6.25" />
+          <circle cx="8" cy="8" r="2" fill="currentColor" stroke="none" />
+        </svg>
+        <span className="min-w-0 break-words">
+          {requestedValue !== undefined && requestedValue !== null ? (
+            <>
+              Requested{" "}
+              <span className="tabular-nums">
+                {requestedValue}
+                {unit ? ` ${unit}` : ""}
+              </span>
+              , not yet confirmed
+            </>
+          ) : (
+            "Requested, not yet confirmed"
+          )}
+        </span>
+      </span>
+    ) : null;
 
     return (
       <div
         ref={ref}
         data-active={active ? "" : undefined}
         data-availability={control?.availability}
+        data-variant={variant}
         className={cn(
-          "flex flex-col gap-3 rounded-2xl border p-4 font-sans transition-colors duration-300 ease-out motion-reduce:transition-none",
-          active
-            ? "border-primary/30 bg-primary/[0.06] text-card-foreground"
-            : "border-border bg-card text-card-foreground",
+          "flex flex-col rounded-2xl font-sans text-card-foreground transition-colors duration-base ease-out motion-reduce:transition-none",
+          PAD[variant],
+          // No border on an ordinary card: the surface is a tier, not an outline. Active is a tint.
+          quiet ? "bg-muted/40" : "bg-card shadow-sm",
+          active && (quiet ? "bg-primary/10" : "bg-primary/10 shadow-none"),
           // Offline is drawn, not just worded: a dashed edge and a muted surface, legible in
           // greyscale and distinguishable from merely-idle.
-          unreachable && "border-dashed bg-muted/30",
+          unreachable && "border border-dashed border-border bg-muted/30 shadow-none",
           className,
         )}
         {...props}
       >
-        <div className="flex items-start gap-3">
-          <DeviceIdentity device={device} category={resolved} active={active} className="min-w-0 flex-1" />
-          {primaryControl ? <div className="ms-auto shrink-0">{primaryControl}</div> : null}
+        <div className="flex items-center gap-3">
+          <DeviceIdentity
+            device={device}
+            category={resolved}
+            active={active}
+            size={hero ? "xl" : quiet ? "sm" : "md"}
+            className="min-w-0 flex-1"
+          />
+          {visual && quiet ? <div aria-hidden="true" className="ms-auto shrink-0">{visual}</div> : null}
+          {primaryControl && !hero ? <div className={cn("shrink-0", !(visual && quiet) && "ms-auto")}>{primaryControl}</div> : null}
         </div>
 
-        {statusLine ? (
-          <p className={cn("text-label-md", active ? "text-foreground" : "text-muted-foreground")}>{statusLine}</p>
+        {valueNode || (hero && visual) ? (
+          <div className={cn("flex gap-3", hero ? "items-end justify-between pt-1" : "flex-wrap items-baseline gap-y-1")}>
+            {valueNode}
+            {hero && visual ? <div aria-hidden="true" className="ms-auto shrink-0">{visual}</div> : null}
+          </div>
         ) : null}
 
-        {meta ? <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">{meta}</div> : null}
+        {stateChip}
+
+        {statusLine ? (
+          <p className={cn("m-0", hero ? "text-body-md" : "text-body-sm", active ? "text-foreground" : "text-muted-foreground")}>{statusLine}</p>
+        ) : null}
+
+        {hero && primaryControl ? (
+          <div data-primary-control="" className="min-w-0">
+            {primaryControl}
+          </div>
+        ) : null}
+
+        {meta ? <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-muted-foreground">{meta}</div> : null}
 
         {expanded ? (
           <>
@@ -102,7 +234,7 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
               aria-controls={panelId}
               onClick={() => setOpen(!isOpen)}
               className={cn(
-                "-mx-1 flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-label-sm text-muted-foreground",
+                "-mx-1 flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-label-md text-muted-foreground md:min-h-9",
                 "transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2",
                 "focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 "motion-reduce:transition-none",
@@ -121,7 +253,7 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
                 aria-hidden="true"
                 // Rotation, not a flipped chevron: vertical disclosure is the same in both
                 // directions, so this must NOT be mirrored under RTL.
-                className={cn("transition-transform duration-200 motion-reduce:transition-none", isOpen && "rotate-180")}
+                className={cn("transition-transform duration-fast motion-reduce:transition-none", isOpen && "rotate-180")}
               >
                 <path d="m6 9 6 6 6-6" />
               </svg>

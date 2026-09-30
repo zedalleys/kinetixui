@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { classifyBatteryLevel, describeBattery, formatBatteryPercent } from "../functions/battery";
+import { Glyph } from "./glyph";
 import { cn } from "./cn";
 import { resolveLabel } from "./label";
 import { withDisplayName } from "./display-name";
@@ -26,6 +27,12 @@ export interface BatteryIndicatorProps extends Omit<React.HTMLAttributes<HTMLSpa
    * to the generated sentence rather than leaving the element without an accessible name.
    */
   label?: string;
+  /**
+   * `icon` (default) is the small battery glyph with an optional percentage. `pill` is a rounded meter
+   * with the percentage as a larger numeral and, for low and critical, the word ("Low", "Critical") and a
+   * warning glyph beside it — the level is never only a fill colour. The accessible name is unchanged.
+   */
+  presentation?: "icon" | "pill";
 }
 
 const LEVEL_CLASS: Record<ReturnType<typeof classifyBatteryLevel>, string> = {
@@ -38,25 +45,59 @@ const LEVEL_CLASS: Record<ReturnType<typeof classifyBatteryLevel>, string> = {
 };
 
 const BatteryIndicator = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLSpanElement, BatteryIndicatorProps>(
-  ({ value, hideValue = false, label, className, ...props }, ref) => {
+  ({ value, hideValue = false, label, presentation = "icon", className, ...props }, ref) => {
     const level = classifyBatteryLevel(value);
     const known = level !== "unknown";
+    const alarm = level === "low" || level === "critical";
+
+    if (presentation === "pill") {
+      return (
+        <span
+          ref={ref}
+          role="img"
+          aria-label={resolveLabel(label, describeBattery(value))}
+          data-level={level}
+          data-presentation="pill"
+          className={cn("inline-flex items-center gap-3 rounded-full bg-muted/60 py-1.5 ps-4 pe-3 font-sans text-foreground", className)}
+          {...props}
+        >
+          {hideValue ? null : (
+            <span aria-hidden="true" className="text-title-lg font-semibold tabular-nums">
+              {known ? `${formatBatteryPercent(value as number)}%` : "—"}
+            </span>
+          )}
+          <span aria-hidden="true" className="relative h-3 w-16 shrink-0 overflow-hidden rounded-full bg-background">
+            <span
+              className={cn("absolute inset-y-0 start-0 rounded-full", alarm ? "bg-destructive" : known ? "bg-primary" : "bg-muted-foreground/40")}
+              style={{ inlineSize: known ? `${formatBatteryPercent(value as number)}%` : 0 }}
+            />
+          </span>
+          {alarm || !known ? (
+            <span aria-hidden="true" className={cn("inline-flex items-center gap-1 text-label-md", alarm ? "text-destructive" : "text-muted-foreground")}>
+              <Glyph name={alarm ? "triangle" : "dash"} size={12} />
+              {level === "critical" ? "Critical" : level === "low" ? "Low" : "No reading"}
+            </span>
+          ) : null}
+        </span>
+      );
+    }
+
     return (
       <span
         ref={ref}
         role="img"
         aria-label={resolveLabel(label, describeBattery(value))}
         data-level={level}
-        className={cn("inline-flex items-center gap-2 text-label-md font-sans text-foreground", className)}
+        className={cn("inline-flex items-center gap-2 font-sans text-body-sm tabular-nums text-foreground", className)}
         {...props}
       >
         {/* Decorative: every fact it shows is in the accessible label above. */}
         <span
           aria-hidden="true"
-          className="relative inline-block h-3 w-6 shrink-0 rounded-sm border border-input bg-background"
+          className="relative inline-block h-3.5 w-7 shrink-0 rounded-md border border-input bg-background"
         >
           <span
-            className={cn("absolute inset-y-0.5 left-0.5 rounded-sm transition-none", LEVEL_CLASS[level])}
+            className={cn("absolute inset-y-0.5 start-0.5 rounded-sm transition-none", LEVEL_CLASS[level])}
             style={{ width: known ? `calc(${formatBatteryPercent(value as number)}% - 2px)` : 0 }}
           />
         </span>

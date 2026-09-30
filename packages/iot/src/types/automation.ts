@@ -40,3 +40,118 @@ export type KinetixAutomation = {
   /** Why the last run failed, when it did. */
   errorMessage?: string;
 };
+
+// ---------------------------------------------------------------------------------------------
+// Automation rules (v2): a structured, data-only description of "when this, if that, do those".
+// ---------------------------------------------------------------------------------------------
+//
+// Still **not an engine**. Nothing below is evaluated against live data or scheduled. It is what a
+// rule *editor* edits and a rule *summary* reads, so a product with an engine can round-trip it and a
+// product without one can still show a person what a rule says. It coexists with
+// {@link KinetixAutomation}, which is the read-only card model, and does not replace it.
+
+/**
+ * The comparison a trigger or condition makes. Deliberately small:
+ *
+ * - `lt` `lte` `gt` `gte` — numeric comparison (`value` is a number)
+ * - `eq` `neq` — equal / not equal (`value` is a string, number or boolean)
+ * - `between` — inside an inclusive range (`value` is `[min, max]`)
+ * - `changes-to` — the subject's state becomes `value` (an edge, not a level)
+ * - `is-detected` — a presence-style subject is active (no value)
+ * - `after-time` `before-time` — time of day, `value` is `"HH:MM"` in 24-hour form
+ */
+export type KinetixAutomationOperator =
+  | "lt"
+  | "lte"
+  | "gt"
+  | "gte"
+  | "eq"
+  | "neq"
+  | "between"
+  | "changes-to"
+  | "is-detected"
+  | "after-time"
+  | "before-time";
+
+export const KINETIX_AUTOMATION_OPERATORS: readonly KinetixAutomationOperator[] = [
+  "lt",
+  "lte",
+  "gt",
+  "gte",
+  "eq",
+  "neq",
+  "between",
+  "changes-to",
+  "is-detected",
+  "after-time",
+  "before-time",
+] as const;
+
+export type KinetixAutomationValue = string | number | boolean | readonly [number, number];
+
+/** What sets the rule off. `type` is the product's own word ("metric", "device-state", "schedule"). */
+export type KinetixAutomationTrigger = {
+  type: string;
+  /** What is watched: a metric key, a device id, a state name. Resolved to a name by the summary callback. */
+  subject: string;
+  /** Where, as a space id. Optional. */
+  scope?: string;
+  operator: KinetixAutomationOperator;
+  value?: KinetixAutomationValue;
+  unit?: string;
+};
+
+/** An extra requirement. `join` links it to the item before it and is ignored on the first. */
+export type KinetixAutomationCondition = {
+  id: string;
+  subject: string;
+  scope?: string;
+  operator: KinetixAutomationOperator;
+  value?: KinetixAutomationValue;
+  unit?: string;
+  join: "and" | "or";
+};
+
+export type KinetixAutomationAction = {
+  id: string;
+  /** A device, group or space id. */
+  target: string;
+  /** The product's verb: "open", "turn-off", "notify". */
+  command: string;
+  value?: string | number | boolean;
+  durationMinutes?: number;
+};
+
+export type KinetixAutomationRule = {
+  id: string;
+  name: string;
+  enabled: boolean;
+  /** Optional in the type so a half-built draft can be represented; validation reports it. */
+  trigger?: KinetixAutomationTrigger;
+  conditions: KinetixAutomationCondition[];
+  actions: KinetixAutomationAction[];
+};
+
+export type KinetixAutomationIssueCode =
+  | "missing-id"
+  | "missing-name"
+  | "missing-trigger"
+  | "missing-action"
+  | "duplicate-id"
+  | "missing-subject"
+  | "unknown-operator"
+  | "missing-value"
+  | "invalid-value"
+  | "invalid-range"
+  | "invalid-time"
+  | "invalid-join"
+  | "empty-target"
+  | "missing-command"
+  | "invalid-duration";
+
+export type KinetixAutomationIssue = {
+  /** Where, e.g. `trigger.value`, `conditions[1].subject`, `actions[0].durationMinutes`. */
+  path: string;
+  code: KinetixAutomationIssueCode;
+  message: string;
+};

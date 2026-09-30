@@ -7,8 +7,8 @@
  */
 
 import type { KinetixDevice } from "../types/device";
-import type { KinetixControlAffordance, KinetixDeviceCategory } from "../types/identity";
-import { CATEGORY_AFFORDANCES, KINETIX_DEVICE_CATEGORIES } from "../types/identity";
+import type { KinetixControlAffordance, KinetixDeviceCategory, KinetixDeviceDomain } from "../types/identity";
+import { CATEGORY_AFFORDANCES, KINETIX_DEVICE_CATEGORIES, KINETIX_DEVICE_DOMAINS, KINETIX_DEVICE_TAXONOMY } from "../types/identity";
 
 /**
  * Word fragments that identify a category, in resolution order.
@@ -19,6 +19,11 @@ import { CATEGORY_AFFORDANCES, KINETIX_DEVICE_CATEGORIES } from "../types/identi
  * "soil-moisture-sensor" and "sensor.soil" both land on `sensor`.
  */
 const CATEGORY_HINTS: ReadonlyArray<readonly [KinetixDeviceCategory, readonly string[]]> = [
+  // The specific sensors come first: "soil-moisture-sensor" and "air-quality-monitor" both also
+  // contain the generic `sensor`/`monitor` hints, and the more specific claim must win.
+  ["soil-sensor", ["soil"]],
+  ["weather-station", ["weather", "anemometer", "rain-gauge", "rain gauge", "raingauge", "pyranometer"]],
+  ["air-quality", ["air-quality", "air quality", "airquality", "co2", "aqi", "particulate", "pm2.5"]],
   ["thermostat", ["thermostat", "hvac", "climate", "radiator", "heat-pump", "heatpump"]],
   ["camera", ["camera", "cam", "doorbell", "nvr"]],
   ["lock", ["lock", "deadbolt", "latch", "strike"]],
@@ -26,6 +31,8 @@ const CATEGORY_HINTS: ReadonlyArray<readonly [KinetixDeviceCategory, readonly st
   ["valve", ["valve", "solenoid", "actuator"]],
   ["pump", ["pump", "irrigation", "compressor"]],
   ["fan", ["fan", "ventilat", "extractor", "blower"]],
+  // After pump/valve/fan so "pump-motor" and "fan-motor" stay the thing being run.
+  ["motor", ["motor", "vfd", "servo", "conveyor"]],
   ["plug", ["plug", "socket", "outlet", "relay", "switch"]],
   ["light", ["light", "lamp", "bulb", "luminaire", "dimmer", "led"]],
   ["gateway", ["gateway", "hub", "bridge", "controller", "coordinator"]],
@@ -67,19 +74,80 @@ export function categoryAffordances(category: KinetixDeviceCategory): readonly K
  * rendering `heat_pump` at a user.
  */
 export function describeDeviceCategory(category: KinetixDeviceCategory): string {
-  const names: Record<KinetixDeviceCategory, string> = {
-    light: "Light",
-    thermostat: "Thermostat",
-    sensor: "Sensor",
-    camera: "Camera",
-    lock: "Lock",
-    plug: "Smart plug",
-    fan: "Fan",
-    pump: "Pump",
-    valve: "Valve",
-    meter: "Meter",
-    gateway: "Gateway",
-    unknown: "Device",
-  };
-  return names[category] ?? "Device";
+  return KINETIX_DEVICE_TAXONOMY[category]?.label ?? "Device";
+}
+
+/** The domain a category belongs to. `other` for anything unregistered. */
+export function categoryDomain(category: KinetixDeviceCategory): KinetixDeviceDomain {
+  return KINETIX_DEVICE_TAXONOMY[category]?.domain ?? "other";
+}
+
+const DOMAIN_LABELS: Readonly<Record<KinetixDeviceDomain, string>> = {
+  lighting: "Lighting",
+  climate: "Climate",
+  power: "Power",
+  security: "Security",
+  access: "Access",
+  sensor: "Sensors",
+  camera: "Cameras",
+  water: "Water",
+  irrigation: "Irrigation",
+  pump: "Pumps",
+  motor: "Motors",
+  environment: "Environment",
+  energy: "Energy",
+  agriculture: "Agriculture",
+  industrial: "Industrial",
+  other: "Other",
+};
+
+/** A short English name for a domain, for group headings and filter chips. Not localised. */
+export function describeDeviceDomain(domain: KinetixDeviceDomain): string {
+  return DOMAIN_LABELS[domain] ?? DOMAIN_LABELS.other;
+}
+
+export type KinetixDomainGroup<D extends Pick<KinetixDevice, "type">> = {
+  domain: KinetixDeviceDomain;
+  label: string;
+  devices: D[];
+};
+
+/** The domain of one device, going through category inference. */
+export function resolveDeviceDomain(device: Pick<KinetixDevice, "type"> | string | null | undefined): KinetixDeviceDomain {
+  return categoryDomain(resolveDeviceCategory(device));
+}
+
+/**
+ * Group devices by domain, in the fixed order of `KINETIX_DEVICE_DOMAINS`.
+ *
+ * Empty domains are omitted — a heading with nothing under it is noise — and devices keep their
+ * input order within a group. A non-array input is no groups, since this runs during render.
+ */
+export function groupDevicesByDomain<D extends Pick<KinetixDevice, "type">>(
+  devices: readonly D[] | null | undefined,
+): KinetixDomainGroup<D>[] {
+  if (!Array.isArray(devices)) return [];
+  const buckets = new Map<KinetixDeviceDomain, D[]>();
+  for (const device of devices) {
+    if (!device) continue;
+    const domain = resolveDeviceDomain(device);
+    const list = buckets.get(domain);
+    if (list) list.push(device);
+    else buckets.set(domain, [device]);
+  }
+  return KINETIX_DEVICE_DOMAINS.filter((domain) => buckets.has(domain)).map((domain) => ({
+    domain,
+    label: describeDeviceDomain(domain),
+    devices: buckets.get(domain) as D[],
+  }));
+}
+
+/** Keep only the devices in one domain, or any of several. An empty domain list keeps nothing. */
+export function filterDevicesByDomain<D extends Pick<KinetixDevice, "type">>(
+  devices: readonly D[] | null | undefined,
+  domain: KinetixDeviceDomain | readonly KinetixDeviceDomain[],
+): D[] {
+  if (!Array.isArray(devices)) return [];
+  const wanted: readonly KinetixDeviceDomain[] = typeof domain === "string" ? [domain] : domain;
+  return devices.filter((device) => !!device && wanted.includes(resolveDeviceDomain(device)));
 }

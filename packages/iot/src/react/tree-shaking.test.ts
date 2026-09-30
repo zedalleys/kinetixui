@@ -35,6 +35,10 @@ import path from "node:path";
 
 const reactDir = path.resolve(import.meta.dirname);
 
+/** Every component the barrel exports, with the module it comes from. Derived, so a new export is scanned. */
+const barrel = readFileSync(path.join(reactDir, "index.ts"), "utf8");
+const exported = [...barrel.matchAll(/^export \{ (\w+),.*from "\.\/([\w-]+)";$/gm)].map((m) => ({ name: m[1]!, file: `${m[2]}.tsx` }));
+
 /** Every shipped component module: `.tsx` in `src/react`, excluding stories and tests. */
 function componentFiles(): { name: string; source: string }[] {
   return readdirSync(reactDir)
@@ -54,6 +58,19 @@ describe("the react entry point tree-shakes per component", () => {
     // Vacuity guard: every rule below passes trivially against an empty list, and a rename of the
     // directory or the extension would silently empty it.
     expect(files.length).toBeGreaterThanOrEqual(20);
+    expect(exported.length).toBeGreaterThanOrEqual(39);
+  });
+
+  it("scans the module behind every export in the barrel, and names each component after its export", () => {
+    // A component could otherwise be exported from a file this guard never opened — for instance one
+    // that is not `.tsx`, or lives in a subdirectory — and would be exempt from every rule below.
+    const scanned = new Map(files.map((f) => [f.name, f.source]));
+    const problems = exported.flatMap(({ name, file }) => {
+      const source = scanned.get(file);
+      if (source === undefined) return [`${name}: ${file} is not among the scanned modules`];
+      return source.includes(`}), "${name}");`) || new RegExp(`\\), "${name}"\\);`).test(source) ? [] : [`${name}: no withDisplayName(…, "${name}") in ${file}`];
+    });
+    expect(problems).toEqual([]);
   });
 
   it("gives every forwardRef component both PURE annotations", () => {
@@ -86,6 +103,6 @@ describe("the react entry point tree-shakes per component", () => {
       .map((f) => f.name);
 
     expect(missingImport, `missing the withDisplayName import: ${missingImport.join(", ")}`).toEqual([]);
-    expect(withForwardRef.length).toBeGreaterThanOrEqual(20);
+    expect(withForwardRef.length).toBeGreaterThanOrEqual(exported.length);
   });
 });

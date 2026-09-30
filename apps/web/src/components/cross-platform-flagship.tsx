@@ -73,9 +73,11 @@ export function CrossPlatformFlagship() {
 
   return (
     <div className="mt-10">
-      <div className="grid gap-0 overflow-hidden rounded-xl border border-border md:grid-cols-2">
+      {/* `grid-cols-1` is minmax(0,1fr): without it the single mobile column is `auto`, so the tab row's min-content width
+          stretches the whole grid past the viewport and the preview card is pushed off-screen. */}
+      <div className="grid grid-cols-1 gap-0 overflow-hidden rounded-xl border border-border md:grid-cols-2">
         {/* preview — the same rendered UI, following the site's own light/dark theme */}
-        <div className="flex flex-col border-b border-border bg-muted/30 p-8 md:border-b-0 md:border-r">
+        <div className="flex flex-col border-b border-border bg-muted/30 p-4 sm:p-8 md:border-b-0 md:border-r">
           <div className="flex flex-1 items-center justify-center py-6">
             <PreferencesPanel />
           </div>
@@ -93,7 +95,7 @@ export function CrossPlatformFlagship() {
 
         {/* platform tabs + real, CI-compiled source */}
         <Tabs.Root value={platform} onValueChange={onPlatformChange} className="flex flex-col bg-background">
-          <Tabs.List aria-label="Implementation platform" className="flex items-center gap-1 border-b border-border px-4">
+          <Tabs.List aria-label="Implementation platform" className="flex flex-wrap items-center gap-x-1 border-b border-border px-4">
             {FLAGSHIP_TABS.map((t) => (
               <Tabs.Trigger key={t.tab} value={t.tab} className={tabTrigger}>
                 {t.label}

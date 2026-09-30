@@ -85,18 +85,16 @@ export default function HomePage() {
       <section className="relative overflow-hidden border-b border-border">
         <div className="pointer-events-none absolute inset-0 kx-grid-bg" />
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-12 py-16 md:py-28 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-16">
+          {/*
+            Hero vertical rhythm is a mobile-first decision. At 390×800 — a typical iPhone first viewport —
+            `py-16` above the headline plus a badge line plus three architecture paragraphs put the primary
+            CTA at y≈763 and the install command at y≈939: nothing actionable was on screen at all. The
+            padding is smaller below `sm` for the same reason the copy below it is: the first viewport is the
+            scarcest space on the site.
+          */}
+          <div className="grid gap-12 py-12 sm:py-16 md:py-28 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-16">
             {/* headline */}
             <div className="kx-hero-enter max-w-3xl">
-              <Link
-                href="/docs/changelog"
-                {...ctaAttrs("homepage_hero", "view_changelog")}
-                className="eyebrow group inline-flex items-center gap-2 transition-colors hover:text-foreground"
-              >
-                <span className="text-primary">[00]</span> Beta — every package is 0.x, MIT
-                <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-
               {/*
                 Canonical hero, `marketing/MESSAGING.md` §E.
 
@@ -107,8 +105,14 @@ export default function HomePage() {
 
                 So the order is outcome, then the problem in their words, then mechanism, then evidence.
                 The platform count is derived, never typed.
+
+                The headline is now the first thing in the hero, with no `mt-6`: the beta badge used to sit
+                above it and spend a full line of the first viewport on a disclosure that is not the
+                visitor's first question. It is not gone — it moved down to the install cluster, where a
+                reader who has decided to try this is exactly the reader who needs to know every package is
+                0.x. See the comment there.
               */}
-              <h1 className="mt-6 text-balance font-display text-[2rem] font-bold leading-[1.1] tracking-[-0.03em] sm:text-6xl sm:leading-[1.02] lg:text-[4.5rem]">
+              <h1 className="text-balance font-display text-[2rem] font-bold leading-[1.1] tracking-[-0.03em] sm:text-6xl sm:leading-[1.02] lg:text-[4.5rem]">
                 One design language.{" "}
                 <br className="hidden sm:block" />
                 <span className="kx-underline text-primary">{componentPlatformCount} platforms.</span>{" "}
@@ -116,41 +120,20 @@ export default function HomePage() {
                 Claims you can check.
               </h1>
 
-              <p className="mt-7 max-w-xl text-muted-foreground md:text-lg">
-                Your web app and your native apps drift apart the moment they are maintained separately —
-                different spacing, a brand colour that only got fixed in one place, a component that behaves
-                differently on iOS. KinetixUI is the design system for teams in that position.
-              </p>
-
-              <p className="mt-4 max-w-xl text-sm text-muted-foreground">
-                One DTCG token source generates every platform&rsquo;s native token output.{" "}
-                {platformSentence} each implement the same component contract natively — hand-written per
-                platform, never one source converted into five. And every platform claim is checked against
-                real source in CI, so the coverage you read is the coverage that exists.
-              </p>
-
               {/*
-                Availability, stated in the hero rather than three clicks down.
+                One supporting paragraph, and only one.
 
-                `platformSentence` above is derived from `maturity`, on which every native port is
-                "stable" — and none of them is on a package registry. Naming five platforms and leaving
-                that out is the one place this page was misleading: a reader came away expecting five
-                installable things. This says which two install and what the other three are, without
-                shrinking them, because the implementations are real and compiled in CI.
+                The hero used to carry three: the drift problem, then the token/implementation architecture,
+                then package availability. That is ~130 words of architecture in front of every visitor
+                before anything is clickable. None of it is wrong and none of it has been cut — the second
+                and third paragraphs now open section 01, which is where a reader who wants the mechanism
+                is already heading. What stays here answers only "what is this and why does it matter";
+                "what do I do next" is immediately below it.
               */}
-              <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-                <span className="text-foreground">{installableSentence}</span> install from a package
-                registry today. <span className="text-foreground">{sourceOnlySentence}</span> are real
-                implementations, compiled in their own CI, that you build from source — not yet
-                distributed as packages.{" "}
-                <Link
-                  href="/docs/platforms"
-                  {...ctaAttrs("homepage_hero", "platform_availability")}
-                  className="text-primary underline-offset-4 hover:underline"
-                >
-                  What ships where
-                </Link>
-                .
+              <p className="mt-5 max-w-xl text-muted-foreground md:text-lg">
+                Your web app and your native apps drift apart the moment they are maintained separately —
+                different spacing, a brand colour fixed in one place only. KinetixUI is the design system
+                for teams in that position.
               </p>
 
               {/*
@@ -164,7 +147,7 @@ export default function HomePage() {
                 intent is higher. Analytics targets stay semantic, so the labels can change without breaking
                 the funnel.
               */}
-              <div className="mt-9 flex flex-wrap items-center gap-3">
+              <div className="mt-7 flex flex-wrap items-center gap-3">
                 <Button asChild size="lg">
                   <Link href="/components" {...ctaAttrs("homepage_hero", "browse_components")}>
                     Explore components <ArrowUpRight className="size-4" />
@@ -177,7 +160,12 @@ export default function HomePage() {
                 </Button>
               </div>
 
-              <div className="mt-8 w-full max-w-xl">
+              {/*
+                The install command stays directly behind the CTAs: it is the strongest single piece of
+                proof in the hero — a real command for a real package — and on a phone it now lands inside
+                the first viewport rather than ~140px below it.
+              */}
+              <div className="mt-6 w-full max-w-xl">
                 <HeroCommand />
                 <p className="mt-2 text-[13px] text-muted-foreground sm:whitespace-nowrap">
                   Example — adds one component.{" "}
@@ -191,6 +179,26 @@ export default function HomePage() {
                   covers the full library.
                 </p>
               </div>
+
+              {/*
+                The beta badge, demoted rather than deleted.
+
+                It is honest work — every package really is 0.x and really is MIT, and `marketing-claims`
+                asserts this page keeps saying so — but above the headline it was the first focusable
+                element and a full wide-tracked mono line of the most valuable space on the site, answering
+                a question nobody has yet asked. Attached to the install command instead, it qualifies the
+                thing it is actually about: what you get when you run that command. It is still a link to
+                the changelog, still keyboard reachable, and now reached after the headline and the CTAs
+                rather than before them.
+              */}
+              <Link
+                href="/docs/changelog"
+                {...ctaAttrs("homepage_hero", "view_changelog")}
+                className="eyebrow group mt-5 inline-flex items-center gap-2 transition-colors hover:text-foreground"
+              >
+                <span className="text-primary">[00]</span> Beta — every package is 0.x, MIT
+                <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
+              </Link>
             </div>
 
             {/* right rail: token fan-out + spec panel */}
@@ -257,6 +265,53 @@ export default function HomePage() {
               backed by real, CI-compiled source for SwiftUI, Jetpack Compose and Flutter. Switch tabs to read the
               actual platform code, not a mock-up.
             </p>
+
+            {/*
+              The architecture, moved down from the hero unchanged in substance.
+
+              Two things share a source and two things do not, and this is the paragraph that keeps them
+              apart. It used to be the hero's second paragraph, where it sat between a visitor and every
+              action on the page. Here it introduces the tabs that demonstrate exactly what it claims —
+              which is where a reader who wants the mechanism was going anyway. Nothing is softened: the
+              platform list is still derived, the hand-written claim still stands, CI verification is still
+              stated.
+            */}
+            <p className="mt-4 max-w-2xl text-sm text-muted-foreground">
+              One DTCG token source generates every platform&rsquo;s native token output.{" "}
+              {platformSentence} each implement the same component contract natively — hand-written per
+              platform, never one source converted into five. And every platform claim is checked against
+              real source in CI, so the coverage you read is the coverage that exists.
+            </p>
+
+            {/*
+              Availability, which is not maturity.
+
+              `platformSentence` above is derived from `maturity`, on which every native port is "stable" —
+              and none of them is on a package registry. Naming five platforms and leaving that out is the
+              one place this page was misleading: a reader came away expecting five installable things.
+              This says which two install and what the other three are, without shrinking them, because the
+              implementations are real and compiled in CI.
+
+              It followed the paragraph above out of the hero and has to stay somewhere on this page: both
+              sentences are generated from the manifest and `marketing-claims.test.ts` requires this file to
+              qualify every undistributed platform it names.
+            */}
+            <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
+              <span className="text-foreground">{installableSentence}</span> install from a package registry
+              today. <span className="text-foreground">{sourceOnlySentence}</span> are real implementations,
+              compiled in their own CI, that you build from source — not yet distributed as packages.{" "}
+              <Link
+                href="/docs/platforms"
+                {...ctaAttrs("homepage_flagship", "platform_availability")}
+                // Always underlined, not just on hover: inside a paragraph that mixes foreground and muted
+                // text, colour alone does not separate a link from its surroundings (axe link-in-text-block).
+                className="text-primary underline underline-offset-4"
+              >
+                What ships where
+              </Link>
+              .
+            </p>
+
             <CrossPlatformFlagship />
           </Reveal>
         </div>

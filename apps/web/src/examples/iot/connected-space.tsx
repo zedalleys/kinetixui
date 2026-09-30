@@ -103,10 +103,10 @@ export function ConnectedSpaceExample() {
   const zone = ZONES.find((z) => z.id === zoneId) ?? ZONES[0]!;
 
   return (
-    <section aria-label="Connected space" className="flex flex-col gap-6">
+    <section aria-label="Connected space" className="flex flex-col gap-6 sm:gap-8">
       {/* ------------------------------------------------------------------ zones */}
       <div>
-        <h3 className="mb-3 text-label-sm uppercase tracking-[0.12em] text-muted-foreground">Zones</h3>
+        <h3 className="mb-3 text-title-lg text-foreground">Zones</h3>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,15rem),1fr))] gap-3">
           {ZONES.map((z) => (
             <DeviceGroupCard
@@ -127,7 +127,7 @@ export function ConnectedSpaceExample() {
 
       {/* ------------------------------------------------------------- the devices */}
       <div>
-        <h3 className="mb-3 text-label-sm uppercase tracking-[0.12em] text-muted-foreground">{zone.name} — fixtures</h3>
+        <h3 className="mb-3 text-title-lg text-foreground">{zone.name} — fixtures</h3>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-3">
           {FIXTURES.map((device) => {
             const control = controlFor(device);
@@ -179,7 +179,7 @@ export function ConnectedSpaceExample() {
 
       {/* ---------------------------------------------------------------- routines */}
       <div>
-        <h3 className="mb-3 text-label-sm uppercase tracking-[0.12em] text-muted-foreground">Automations</h3>
+        <h3 className="mb-3 text-title-lg text-foreground">Automations</h3>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,17rem),1fr))] gap-3">
           {routines.map((automation) => (
             <RoutineCard

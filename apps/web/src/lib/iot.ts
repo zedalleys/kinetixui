@@ -59,3 +59,65 @@ export const IOT_REACT_PEER: string = iotPackage.peerDependencies.react;
 export const IOT_RUNTIME_DEPENDENCY_COUNT: number = Object.keys(
   (iotPackage as { dependencies?: Record<string, string> }).dependencies ?? {},
 ).length;
+
+/**
+ * How many components each React layer exports, for the "What ships" section.
+ *
+ * These are typed here because a barrel cannot be counted from client-safe code without a file read, and
+ * `current-truth.test.ts` derives all three from `packages/iot/src/react/index.ts` and fails when they
+ * disagree. So the page states a number, and the barrel is what makes it true — the same arrangement the
+ * package README already has with `catalogue.test.ts`.
+ */
+export const IOT_CATALOGUE = { primitives: 8, controls: 4, patterns: 27 } as const;
+
+/**
+ * The three reference environments, in the order the switcher shows them. Each `slug` is an entry in
+ * `iot-examples.manifest.json`; `current-truth.test.ts` fails if one is missing, so the page cannot render an
+ * empty tab. The hierarchy strings are the vocabularies each environment's own scenario uses.
+ */
+export const IOT_ENVIRONMENTS = [
+  {
+    id: "smart-space",
+    slug: "smart-space-environment",
+    label: "Smart space",
+    hierarchy: "Home → Floor → Room",
+    summary: "A home end to end: rooms with rolled-up health, light, thermostat, plug and lock controls, air quality, a sample camera frame, energy, alerts and scenes.",
+  },
+  {
+    id: "agritech",
+    slug: "agritech-environment",
+    label: "Agritech",
+    hierarchy: "Farm → Field → Irrigation zone",
+    summary: "Greenhouse A: climate and soil readings, a soil-moisture trend against its threshold, valve and pump controls with a flaky valve, zones, alerts and an irrigation rule.",
+  },
+  {
+    id: "operations",
+    slug: "operations-environment",
+    label: "Operations",
+    hierarchy: "Organization → Site → Line → Machine",
+    summary: "Site 04: fleet health, a hierarchy with a rollup at every level, equipment health, energy, faults and the command history.",
+  },
+] as const;
+
+/**
+ * Every example slug the /iot page renders, by section. The page reads its slugs from here rather than
+ * typing them inline so `current-truth.test.ts` can check each one against the manifest, and can check that
+ * a manifest entry is not silently absent from the page.
+ */
+export const IOT_PAGE_EXAMPLES = {
+  stateHonesty: "state-honesty",
+  telemetry: "telemetry-history",
+  alerts: "alert-center",
+  automation: "automation-builder",
+  pairing: "pairing-flow",
+  deviceDetail: "device-detail",
+  /** Earlier layouts, shown one at a time under "More layouts". */
+  layouts: [
+    { id: "layout-fleet", label: "Fleet overview", slug: "device-fleet" },
+    { id: "layout-dashboard", label: "Dashboard", slug: "device-dashboard" },
+    { id: "layout-space", label: "Connected space", slug: "connected-space" },
+    { id: "layout-telemetry", label: "Telemetry board", slug: "telemetry-board" },
+    { id: "layout-inbox", label: "Alert inbox", slug: "alert-inbox" },
+    { id: "layout-troubleshooting", label: "Connection troubleshooting", slug: "connection-troubleshooting" },
+  ],
+} as const;

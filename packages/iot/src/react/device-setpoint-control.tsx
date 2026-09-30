@@ -43,11 +43,38 @@ export interface DeviceSetpointControlProps extends Omit<React.HTMLAttributes<HT
   onCommit?: (next: number) => void;
   /** What the device is doing to reach the target — "Heating", "Cooling", "Idle". Product's words. */
   activity?: string;
+  /**
+   * `numeral` (default) is the big number between round ± buttons. `ring` draws an `aria-hidden` progress
+   * arc around the numeral: the confirmed target as the solid arc and marker, and a dashed segment out to a
+   * hollow marker for a requested change. It is decoration only — the ± buttons stay the interaction; there
+   * is no dragging.
+   */
+  presentation?: "numeral" | "ring";
+  /** An inline secondary reading under the numeral — a humidity chip, a mode word. */
+  secondary?: React.ReactNode;
+}
+
+const ARC_START = 135;
+const ARC_SWEEP = 270;
+const RING = 100;
+
+/** Point on the ring at a 0–1 fraction of the arc, in a 200×200 box. */
+function ringPoint(f: number, r: number): [number, number] {
+  const a = ((ARC_START + ARC_SWEEP * f) * Math.PI) / 180;
+  return [RING + r * Math.cos(a), RING + r * Math.sin(a)];
+}
+
+/** An SVG arc path between two fractions. */
+function ringArc(from: number, to: number, r: number): string {
+  const [x1, y1] = ringPoint(from, r);
+  const [x2, y2] = ringPoint(to, r);
+  const large = (to - from) * ARC_SWEEP > 180 ? 1 : 0;
+  return `M${x1.toFixed(2)} ${y1.toFixed(2)}A${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
 }
 
 const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceSetpointControlProps>(
   (
-    { current, target, requestedTarget, min, max, step = 0.5, unit = "°", label, control, onCommit, activity, className, ...props },
+    { current, target, requestedTarget, min, max, step = 0.5, unit = "°", label, control, onCommit, activity, presentation = "numeral", secondary, className, ...props },
     ref,
   ) => {
     const confirmed = typeof target === "number" && Number.isFinite(target) ? target : null;
@@ -67,63 +94,131 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
     const atMin = shown !== null && shown <= min;
     const atMax = shown !== null && shown >= max;
 
+    const STEP_BUTTON = cn(
+      "grid size-11 shrink-0 place-items-center rounded-full bg-muted text-foreground",
+      "transition-colors duration-fast hover:bg-muted/60 active:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+      "focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none",
+      "disabled:cursor-not-allowed disabled:opacity-45",
+    );
+
+    const ring = presentation === "ring";
+    const span = max - min || 1;
+    const frac = (n: number) => Math.min(1, Math.max(0, (n - min) / span));
+    const numeralBlock = (
+      <div className={cn("flex min-w-0 flex-col items-center gap-1.5", ring ? "px-4" : "flex-1")}>
+            <span
+          // Deliberately NOT a live region. The sr-only sentence below announces the same change
+          // with its context ("target 21, currently 19"); making this one live as well had a
+          // screen reader read the bare number first and the sentence straight after.
+          // The big number is the CONFIRMED target; a request never replaces it.
+          data-confirmed=""
+          className={cn("tabular-nums leading-none text-display-sm", confirmed === null ? "text-muted-foreground" : "text-foreground")}
+            >
+          {confirmed === null ? "—" : confirmed}
+          {confirmed === null ? null : <span className="ms-0.5 align-top text-title-md text-muted-foreground">{unit}</span>}
+            </span>
+            {pending ? (
+          <span
+            data-requested=""
+            className="inline-flex max-w-full animate-pulse items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md tabular-nums text-foreground motion-reduce:animate-none"
+          >
+            Requested {requested}
+            {unit}, not yet confirmed
+          </span>
+            ) : null}
+            {secondary ? <span className="text-body-sm text-muted-foreground">{secondary}</span> : null}
+            <span className="max-w-full truncate text-body-sm text-muted-foreground">
+          {current === null || current === undefined
+            ? "Current unknown"
+            : `Now ${current}${unit}`}
+          {activity ? ` · ${activity}` : ""}
+            </span>
+      </div>
+    );
+
     return (
       <div ref={ref} className={cn("flex flex-col gap-3", className)} data-pending={pending ? "" : undefined} {...props}>
-        <div className="flex items-center gap-4">
+        {ring ? (
+          <div data-presentation="ring" className="relative mx-auto aspect-square w-full max-w-64">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 200 200" className="absolute inset-0 size-full rtl:-scale-x-100">
+              <path d={ringArc(0, 1, 84)} fill="none" strokeWidth={14} strokeLinecap="round" className="stroke-muted" />
+              {confirmed !== null && frac(confirmed) > 0.005 ? (
+                <path data-ring-confirmed="" d={ringArc(0, frac(confirmed), 84)} fill="none" strokeWidth={14} strokeLinecap="round" className="stroke-primary" />
+              ) : null}
+              {pending && confirmed !== null ? (
+                <path
+                  data-ring-requested=""
+                  d={ringArc(Math.min(frac(confirmed), frac(requested!)), Math.max(frac(confirmed), frac(requested!)), 84)}
+                  fill="none"
+                  strokeWidth={14}
+                  strokeDasharray="3 7"
+                  className="stroke-primary"
+                />
+              ) : null}
+              {confirmed !== null ? (
+                <circle cx={ringPoint(frac(confirmed), 84)[0]} cy={ringPoint(frac(confirmed), 84)[1]} r={9} strokeWidth={4} className="fill-background stroke-primary" />
+              ) : null}
+              {pending ? (
+                <circle cx={ringPoint(frac(requested!), 84)[0]} cy={ringPoint(frac(requested!), 84)[1]} r={9} strokeWidth={3} strokeDasharray="3 3" className="fill-background stroke-primary" />
+              ) : null}
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center px-8 pb-4">{numeralBlock}</div>
+            <div className="absolute inset-x-4 bottom-1 flex items-center justify-between">
           <button
             type="button"
             aria-label={`Decrease ${label}`}
             disabled={!interactive || atMin || shown === null}
             onClick={() => nudge(-step)}
-            className={cn(
-              "grid size-11 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground",
-              "transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              "focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none",
-              "disabled:cursor-not-allowed disabled:opacity-45",
-            )}
+            className={STEP_BUTTON}
           >
             {/* Minus and plus are direction-neutral, so nothing here needs to flip under RTL. */}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
               <path d="M5 12h14" />
             </svg>
           </button>
-
-          <div className="flex min-w-0 flex-1 flex-col items-center">
-            <span
-              // Deliberately NOT a live region. The sr-only sentence below announces the same change
-              // with its context ("target 21, currently 19"); making this one live as well had a
-              // screen reader read the bare number first and the sentence straight after.
-              className={cn("text-display-sm tabular-nums leading-none", pending ? "text-primary" : "text-foreground")}
-            >
-              {shown === null ? "—" : shown}
-              <span className="text-title-sm align-top">{unit}</span>
-            </span>
-            <span className="mt-1 truncate text-label-sm text-muted-foreground">
-              {current === null || current === undefined
-                ? "Current unknown"
-                : `Now ${current}${unit}`}
-              {activity ? ` · ${activity}` : ""}
-            </span>
-          </div>
-
           <button
             type="button"
             aria-label={`Increase ${label}`}
             disabled={!interactive || atMax || shown === null}
             onClick={() => nudge(step)}
-            className={cn(
-              "grid size-11 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground",
-              "transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              "focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none",
-              "disabled:cursor-not-allowed disabled:opacity-45",
-            )}
+            className={STEP_BUTTON}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
               <path d="M12 5v14" />
               <path d="M5 12h14" />
             </svg>
           </button>
-        </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 sm:gap-4">
+          <button
+            type="button"
+            aria-label={`Decrease ${label}`}
+            disabled={!interactive || atMin || shown === null}
+            onClick={() => nudge(-step)}
+            className={STEP_BUTTON}
+          >
+            {/* Minus and plus are direction-neutral, so nothing here needs to flip under RTL. */}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
+              <path d="M5 12h14" />
+            </svg>
+          </button>
+          {numeralBlock}
+          <button
+            type="button"
+            aria-label={`Increase ${label}`}
+            disabled={!interactive || atMax || shown === null}
+            onClick={() => nudge(step)}
+            className={STEP_BUTTON}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
+              <path d="M12 5v14" />
+              <path d="M5 12h14" />
+            </svg>
+          </button>
+          </div>
+        )}
 
         {/*
           The live region carries the whole story in one sentence, because a screen-reader user
@@ -137,7 +232,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
         </span>
 
         {control?.description && control.availability !== "ready" ? (
-          <span id={descriptionId} className="text-center text-label-sm text-muted-foreground">
+          <span id={descriptionId} className="text-center text-label-md text-muted-foreground">
             {control.description}
           </span>
         ) : null}

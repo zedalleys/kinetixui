@@ -51,13 +51,20 @@ export interface DeviceCardProps extends Omit<React.HTMLAttributes<HTMLDivElemen
   now?: string | Date | number;
   /** Hide the battery / signal / last-seen row. */
   hideMeta?: boolean;
+  /**
+   * A node drawn before the name — a `DeviceIdentity` tile with `iconOnly`, a `DeviceIcon`, an
+   * illustration. A slot rather than a built-in, so a plain `DeviceCard` does not pull the icon set.
+   */
+  icon?: React.ReactNode;
+  /** Size of the headline reading. `lg` draws it as a hero numeral. Default `md`. */
+  readingSize?: "md" | "lg" | "xl";
 }
 
 /** Statuses during which a previously-reported value must not be presented as current. */
 const IN_TRANSITION = new Set(["syncing", "pairing", "updating"]);
 
 const DeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceCardProps>(
-  ({ device, action, reading, footer, now, hideMeta = false, className, ...props }, ref) => {
+  ({ device, action, reading, footer, now, hideMeta = false, icon, readingSize = "md", className, ...props }, ref) => {
     const status = normalizeDeviceStatus(device?.status);
     const transitioning = IN_TRANSITION.has(status);
     const hasMeta = !hideMeta && (device?.battery !== undefined || device?.signal !== undefined || device?.lastSeenAt !== undefined);
@@ -67,20 +74,21 @@ const DeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forward
         ref={ref}
         data-status={status}
         className={cn(
-          "flex flex-col gap-4 rounded-xl border border-border bg-card p-4 font-sans text-card-foreground",
+          "flex flex-col gap-4 rounded-2xl bg-card p-4 font-sans text-card-foreground shadow-sm",
           // A device changing state settles rather than snapping, so the change is legible as a
           // change. 300ms is the `motion.duration.base` token; `motion-reduce:` is Tailwind's own
           // variant, so this needs no stylesheet from the consumer and no page-level rule.
-          "transition-colors duration-300 ease-out motion-reduce:transition-none",
+          "transition-colors duration-base ease-out motion-reduce:transition-none",
           className,
         )}
         {...props}
       >
         <div className="flex items-start gap-3">
+          {icon ? <div className="shrink-0">{icon}</div> : null}
           <div className="flex min-w-0 flex-col gap-1">
             <span className="truncate text-title-sm text-foreground">{device?.name}</span>
             {device?.locationName || device?.type ? (
-              <span className="truncate text-label-sm text-muted-foreground">
+              <span className="truncate text-label-md text-muted-foreground">
                 {device?.locationName ?? device?.type}
               </span>
             ) : null}
@@ -96,9 +104,9 @@ const DeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forward
           transitioning ? (
             // The reading's slot, holding the reason there is no reading rather than a stale one.
             <div className="flex flex-col gap-0.5" data-reading="suppressed">
-              <span className="text-label-sm text-muted-foreground">{reading.metric}</span>
-              <span className="text-title-sm text-muted-foreground">—</span>
-              <span className="text-label-sm text-muted-foreground">Not current while {status}</span>
+              <span className="text-label-md text-muted-foreground">{reading.metric}</span>
+              <span className={cn("tabular-nums text-muted-foreground", readingSize === "md" ? "text-title-sm" : "text-headline-lg leading-none")}>—</span>
+              <span className="text-label-md text-muted-foreground">Not current while {status}</span>
             </div>
           ) : (
             <SensorReading
@@ -107,6 +115,7 @@ const DeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forward
               unit={reading.unit}
               quality={reading.quality}
               precision={reading.precision}
+              size={readingSize}
             />
           )
         ) : null}
@@ -116,7 +125,7 @@ const DeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forward
             {device?.battery !== undefined ? <BatteryIndicator value={device.battery} /> : null}
             {device?.signal !== undefined ? <SignalStrength value={device.signal} /> : null}
             {device?.lastSeenAt !== undefined ? (
-              <LastSync value={device.lastSeenAt} now={now} className="text-label-sm text-muted-foreground" />
+              <LastSync value={device.lastSeenAt} now={now} className="text-label-md text-muted-foreground" />
             ) : null}
           </div>
         ) : null}

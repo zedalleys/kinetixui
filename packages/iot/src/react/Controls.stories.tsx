@@ -194,3 +194,14 @@ export const RequestThenConfirm: Story = {
     );
   },
 };
+
+/** The large, tactile forms: a hero power switch, and a large level readout with its requested marker. */
+export const LargeControls: Story = {
+  render: () => (
+    <div className="flex flex-col gap-6">
+      <DevicePowerControl state="on" control={READY} label="Pendant lamp" size="lg" />
+      <DevicePowerControl state="off" requested="on" control={PENDING} label="Pendant lamp" size="lg" />
+      <DeviceLevelControl value={20} target={80} control={PENDING} label="Brightness" size="lg" />
+    </div>
+  ),
+};

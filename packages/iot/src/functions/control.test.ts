@@ -150,7 +150,7 @@ describe("resolveDeviceCategory", () => {
   it("infers from the device's own type string", () => {
     expect(resolveDeviceCategory({ type: "smart light" })).toBe("light");
     expect(resolveDeviceCategory({ type: "door lock" })).toBe("lock");
-    expect(resolveDeviceCategory({ type: "soil moisture sensor" })).toBe("sensor");
+    expect(resolveDeviceCategory({ type: "soil moisture sensor" })).toBe("soil-sensor");
   });
 
   it("falls back to unknown rather than guessing", () => {

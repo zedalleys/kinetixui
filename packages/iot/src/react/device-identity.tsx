@@ -38,14 +38,14 @@ export interface DeviceIdentityProps extends Omit<React.HTMLAttributes<HTMLDivEl
   active?: boolean;
   /** Secondary line. Defaults to the device's location, then its category name. */
   secondary?: React.ReactNode;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   /** Hide the text and render the tile alone — for dense grids where the name sits elsewhere. */
   iconOnly?: boolean;
 }
 
-const TILE_SIZES = { sm: "size-9 rounded-lg", md: "size-11 rounded-xl", lg: "size-14 rounded-2xl" } as const;
-const ICON_SIZES = { sm: 18, md: 22, lg: 28 } as const;
-const NAME_SIZES = { sm: "text-label-md", md: "text-title-sm", lg: "text-title-md" } as const;
+const TILE_SIZES = { sm: "size-9 rounded-lg", md: "size-11 rounded-xl", lg: "size-14 rounded-2xl", xl: "size-16 rounded-2xl" } as const;
+const ICON_SIZES = { sm: 18, md: 22, lg: 28, xl: 34 } as const;
+const NAME_SIZES = { sm: "text-label-md", md: "text-title-sm", lg: "text-title-md", xl: "text-title-lg" } as const;
 
 const DeviceIdentity = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceIdentityProps>(
   ({ device, category, active = false, secondary, size = "md", iconOnly = false, className, ...props }, ref) => {
@@ -65,12 +65,14 @@ const DeviceIdentity = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
       <div ref={ref} data-category={resolved} data-tone={tone} className={cn("flex items-center gap-3", className)} {...props}>
         <span
           className={cn(
-            "grid place-items-center border transition-colors duration-300 ease-out motion-reduce:transition-none",
+            // No border on the ordinary tiles: tone is a fill. Only "offline" is drawn with an edge,
+            // because a dashed outline MEANS something (absent) and survives greyscale.
+            "grid shrink-0 place-items-center transition-colors duration-base ease-out motion-reduce:transition-none",
             TILE_SIZES[size],
-            tone === "active" && "border-transparent bg-primary text-primary-foreground",
-            tone === "attention" && "border-destructive/35 bg-destructive/10 text-destructive",
-            tone === "offline" && "border-dashed border-border bg-muted/40 text-muted-foreground",
-            tone === "idle" && "border-border bg-muted/60 text-muted-foreground",
+            tone === "active" && "bg-primary text-primary-foreground shadow-sm",
+            tone === "attention" && "bg-destructive/10 text-destructive ring-1 ring-inset ring-destructive/40",
+            tone === "offline" && "border border-dashed border-border bg-transparent text-muted-foreground",
+            tone === "idle" && "bg-muted/60 text-muted-foreground",
           )}
         >
           <DeviceIcon category={resolved} size={ICON_SIZES[size]} />
@@ -79,7 +81,7 @@ const DeviceIdentity = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
         {iconOnly ? null : (
           <span className="flex min-w-0 flex-col">
             <span className={cn("truncate text-foreground", NAME_SIZES[size])}>{device?.name}</span>
-            {secondaryText ? <span className="truncate text-label-sm text-muted-foreground">{secondaryText}</span> : null}
+            {secondaryText ? <span className="truncate text-label-md text-muted-foreground">{secondaryText}</span> : null}
           </span>
         )}
       </div>

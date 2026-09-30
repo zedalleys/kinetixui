@@ -14,7 +14,7 @@ import type {
   KinetixPowerState,
   ResolveControlStateInput,
 } from "../types/control";
-import { isCommandInFlight, isCommandUnsuccessful } from "./commands";
+import { isCommandInFlight, isCommandUnsuccessful, lifecycleToCommandStatus } from "./commands";
 import { normalizeDeviceStatus } from "./status";
 
 /**
@@ -45,7 +45,12 @@ const STATUS_AVAILABILITY: Partial<Record<string, KinetixControlAvailability>> =
  */
 export function resolveControlState(input: ResolveControlStateInput = {}): KinetixControlState {
   const status = normalizeDeviceStatus(input.deviceStatus);
-  const commandStatus = typeof input.commandStatus === "string" ? input.commandStatus : undefined;
+  const commandStatus =
+    typeof input.commandStatus === "string"
+      ? input.commandStatus
+      : input.lifecycle
+        ? (lifecycleToCommandStatus(input.lifecycle) ?? undefined)
+        : undefined;
 
   const inFlight = isCommandInFlight(commandStatus as never);
   const unsuccessful = isCommandUnsuccessful(commandStatus as never);
