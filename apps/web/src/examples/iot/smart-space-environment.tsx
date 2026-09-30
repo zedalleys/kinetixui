@@ -54,6 +54,11 @@ import { SimNotice, SimTransport, controlOf, deviceOf, readingOf, statusLineOf, 
  * a side of attention, energy, activity and scenes. Built from one simulated scenario through selectors, so
  * nothing here is a hand-typed count.
  *
+ * The aside is ranked, not stacked. Open alerts are always there, expanded, at every width — that is what the
+ * column is for. Everything below them is grouped: what is already acknowledged, what happened earlier in the
+ * day, and the routines that run themselves each sit behind a group that says what it holds and how many,
+ * counted from the data. Nothing is dropped; it is one press away.
+ *
  * State stays honest everywhere: the big number, the switch and the marker on the plan show what the device
  * last CONFIRMED. A request is drawn beside it as a dashed "requested, not yet confirmed" mark, and a failed
  * or unreachable one keeps the last confirmed value and offers Retry (never automatic).
@@ -63,6 +68,13 @@ import { SimNotice, SimTransport, controlOf, deviceOf, readingOf, statusLineOf, 
  */
 const DAY_MS = 86_400_000;
 const HOME = "home";
+/** How many of a day's events the aside shows before the rest are grouped behind their real count. */
+const ACTIVITY_HEAD = 3;
+/**
+ * A group nested inside a panel or another disclosure: the same control, one tonal step quieter, so the
+ * outer surface stays the card and the group reads as part of it rather than as a second card.
+ */
+const SUBGROUP = "bg-muted/40 shadow-none";
 
 type IconName = "home" | "bell" | "flame" | "leaf" | "power" | "lock" | "unlock";
 
@@ -366,8 +378,12 @@ export function SmartSpaceEnvironmentExample() {
   const floors = spaces.filter((s) => s.kind === "floor");
   const room = spaces.find((s) => s.id === spaceId && s.kind === "room");
   const allViews = Object.keys(sim.devices).map((id) => deviceView(iot, id));
+  // Open alerts are the point of the aside and are never folded away. Ones already acknowledged are kept —
+  // nothing is dropped — but grouped behind a count, so a handled alert stops competing with an open one.
+  const openAlerts = selectAlerts(sim);
   const alerts = selectAlerts(sim, { includeAcknowledged: true });
-  const needAttention = selectAlerts(sim).length;
+  const handledAlerts = alerts.filter((a) => !openAlerts.some((open) => open.id === a.id));
+  const needAttention = openAlerts.length;
   const online = allViews.filter((v) => v.device.status === "online").length;
   const clock = `${sim.now.slice(11, 16)} UTC`;
 
@@ -399,11 +415,30 @@ export function SmartSpaceEnvironmentExample() {
       }),
   );
 
+  // A scene is fired by hand, so it leads; a routine or a schedule fires itself, so it keeps its own group.
+  // Both groups sit under the same "shown, not executed" sentence, and the group states its real count.
+  const scenes = sim.automations.filter((a) => a.kind === "scene");
+  const selfRunning = sim.automations.filter((a) => a.kind !== "scene");
+  const routineCard = (automation: (typeof sim.automations)[number]) => {
+    const on = enabled[automation.id] ?? automation.enabled;
+    return (
+      <RoutineCard
+        key={automation.id}
+        automation={{ ...automation, enabled: on, status: on ? (automation.status === "disabled" ? "idle" : automation.status) : "disabled" }}
+        now={sim.now}
+        onToggleEnabled={(next) => setEnabled((prev) => ({ ...prev, [automation.id]: next }))}
+      />
+    );
+  };
+
   const energy = selectEnergy(sim);
   const dayLabels = energy ? [...energy.week.map((_, i) => new Date(Date.parse(sim.startAt) - (energy.week.length - i) * DAY_MS).toLocaleDateString("en", { weekday: "short", timeZone: "UTC" })), "Today"] : [];
   const activity = selectActivity(sim).map((e) => ({ e, date: new Date(e.timestamp).toISOString().slice(0, 10) }));
   const dayEvents = activity.filter((a) => a.date === day).map((a) => a.e);
   const stripDays = days.map((date) => ({ id: date, date, count: activity.filter((a) => a.date === date).length }));
+  // The timeline is newest first, so the head is what happened last. The tail is kept, behind its real count.
+  const latestEvents = dayEvents.slice(0, ACTIVITY_HEAD);
+  const earlierEvents = dayEvents.slice(ACTIVITY_HEAD);
 
   const roomDevices = room?.deviceIds ?? [];
   const chosen = deviceId && roomDevices.includes(deviceId) ? deviceId : null;
@@ -565,7 +600,12 @@ export function SmartSpaceEnvironmentExample() {
   const aside = (
     <>
       <Panel id="space-alerts" tabIndex={-1} title="Needs attention" description={needAttention ? <bdi>{needAttention} to review</bdi> : "All clear"} as="h5" className="scroll-mt-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:col-span-2 xl:col-span-1">
-        <AlertList hideSummary alerts={alerts} onAcknowledge={(alert) => iot.acknowledgeAlert(alert.id)} now={sim.now} />
+        <AlertList hideSummary alerts={openAlerts} onAcknowledge={(alert) => iot.acknowledgeAlert(alert.id)} now={sim.now} emptyLabel="Nothing is open. Acknowledged alerts are below." />
+        {handledAlerts.length ? (
+          <Disclosure title="Acknowledged" count={handledAlerts.length} countNoun="acknowledged alerts" defaultOpen={false} className={SUBGROUP}>
+            <AlertList hideSummary alerts={handledAlerts} label="Acknowledged alerts" now={sim.now} />
+          </Disclosure>
+        ) : null}
       </Panel>
 
       {energy ? (
@@ -584,24 +624,23 @@ export function SmartSpaceEnvironmentExample() {
 
       <Disclosure title="Activity" count={dayEvents.length} countNoun="events on this day">
         <DateStrip label="Activity day" days={stripDays} value={day} onChange={setDay} now={sim.now} />
-        <ActivityTimeline variant="blocks" events={dayEvents} now={sim.now} emptyLabel="Nothing happened on this day." />
+        <ActivityTimeline variant="blocks" events={latestEvents} now={sim.now} emptyLabel="Nothing happened on this day." />
+        {earlierEvents.length ? (
+          <Disclosure title="Earlier on this day" count={earlierEvents.length} countNoun="earlier events" defaultOpen={false} className={SUBGROUP}>
+            <ActivityTimeline variant="blocks" events={earlierEvents} label="Earlier activity" now={sim.now} />
+          </Disclosure>
+        ) : null}
       </Disclosure>
 
-      <Disclosure title="Scenes and routines" count={sim.automations.length} countNoun="scenes">
+      <Disclosure title="Scenes and routines" count={sim.automations.length} countNoun="scenes and routines">
         <p className="text-body-sm text-muted-foreground">Shown, not executed: KinetixUI has no automation engine.</p>
-        <div className="flex flex-col gap-3">
-          {sim.automations.map((automation) => {
-            const on = enabled[automation.id] ?? automation.enabled;
-            return (
-              <RoutineCard
-                key={automation.id}
-                automation={{ ...automation, enabled: on, status: on ? (automation.status === "disabled" ? "idle" : automation.status) : "disabled" }}
-                now={sim.now}
-                onToggleEnabled={(next) => setEnabled((prev) => ({ ...prev, [automation.id]: next }))}
-              />
-            );
-          })}
-        </div>
+        {scenes.length ? <div className="flex flex-col gap-3">{scenes.map(routineCard)}</div> : null}
+        {/* "Runs on its own" is short enough to sit beside its count and chevron without truncating at 292px. */}
+        {selfRunning.length ? (
+          <Disclosure title="Runs on its own" count={selfRunning.length} countNoun="routines and schedules" defaultOpen={false} className={SUBGROUP}>
+            <div className="flex flex-col gap-3">{selfRunning.map(routineCard)}</div>
+          </Disclosure>
+        ) : null}
       </Disclosure>
     </>
   );
