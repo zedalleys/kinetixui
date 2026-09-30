@@ -128,14 +128,23 @@ export function IotExampleShowcase({
 
         <Tabs.Content value="preview" forceMount className="data-[state=inactive]:hidden">
           {/* `overflow-x-auto` with a focusable region: the dashboard is wide, and a scroll container
-              only a pointer can reach strands keyboard users (axe `scrollable-region-focusable`). */}
+              only a pointer can reach strands keyboard users (axe `scrollable-region-focusable`). The
+              region keeps its tabindex and its name whether or not it currently overflows — whether it
+              does depends on the example and the viewport, and a tab stop that comes and goes with the
+              window width is worse than one that is occasionally spare.
+
+              The inline padding is the phone-width part: at 390 the page gutter already takes 32px, and
+              a further 32px here left an otherwise-responsive example 326px to lay itself out in, which
+              is where the "looks broken on a phone" reports came from. Below `sm` the frame is 8px a
+              side — enough for the tint to read as a separate surface, 24px more content per example.
+              `sm:p-6` is unchanged, so the desktop framing is exactly what it was. */}
           <div
             role="region"
             aria-label={`${title} preview`}
             tabIndex={0}
             className={cn(
               "overflow-x-auto rounded-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-              bare ? undefined : "bg-muted/30 p-4 sm:p-6",
+              bare ? undefined : "bg-muted/30 px-2 py-4 sm:p-6",
             )}
           >
             {children}
