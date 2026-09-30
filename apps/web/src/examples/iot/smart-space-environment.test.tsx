@@ -236,7 +236,11 @@ describe("smart space: connected space", () => {
 
   it("keeps stale and warning wording in the rail rather than trading truth for compactness", () => {
     render(<SmartSpaceEnvironmentExample />);
-    expect(rail().getByText(/18\.9 °C · stale/)).toBeInTheDocument();
+    // `RailItem` renders the state line as one nowrap span per "·"-separated segment, so that a
+    // measurement never breaks between its number and its unit. The words are therefore spread across
+    // sibling elements and a single-element text matcher cannot see them — assert on the row's text.
+    const bedroom = rail().getByRole("button", { name: /Bedroom/ });
+    expect(bedroom.textContent?.replace(/\s+/g, " ")).toContain("18.9 °C · stale");
     expect(rail().getByRole("button", { name: /Bedroom/ }).textContent).toMatch(/needs attention|offline/);
     expect(rail().getByRole("button", { name: /Bedroom/ })).toHaveAccessibleName(/offline/);
   });
