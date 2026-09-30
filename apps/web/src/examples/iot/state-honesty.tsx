@@ -6,7 +6,9 @@ import { CommandLifecycle, DeviceModeControl, DevicePowerControl } from "@kineti
 import { isLifecyclePending } from "@kinetixui/iot/functions";
 import { useIotSimulation } from "@/lib/iot-sim/use-simulation";
 import { agritech } from "./scenarios";
+import { StateBadge, StateGlyph, type ShowcaseState } from "@/components/iot/showcase";
 import { BUTTON, SimNotice, SimTransport, controlOf, type ControlBinding } from "./harness";
+import { cn } from "@/lib/utils";
 
 // kx-iot:start
 /**
@@ -20,32 +22,73 @@ import { BUTTON, SimNotice, SimTransport, controlOf, type ControlBinding } from 
  * Everything here is scripted in the browser. `@kinetixui/iot` has no transport, so no request leaves
  * the page, and no delay below is a real network delay.
  */
+const STAGE_WORD: Record<string, { state: ShowcaseState; word: string }> = {
+  requested: { state: "pending", word: "Requested, not yet confirmed" },
+  retrying: { state: "pending", word: "Retrying, not yet confirmed" },
+  acknowledged: { state: "pending", word: "Acknowledged, not yet confirmed" },
+  failed: { state: "warning", word: "Failed. The device did not change." },
+  "timed-out": { state: "warning", word: "Timed out. No answer yet." },
+  unreachable: { state: "offline", word: "Unreachable. Last confirmed value shown." },
+};
+
+/** One device, two values side by side: what it REPORTED (big, solid) and what you ASKED for (dashed, worded). */
 function Panel({ title, note, binding, children }: { title: string; note: string; binding: ControlBinding; children: React.ReactNode }) {
   const { command, confirmed, requested, format } = binding;
+  const stage = command && binding.unsettled ? STAGE_WORD[command.lifecycle.stage] : undefined;
+  const asked = requested !== undefined;
   return (
-    <article className="flex min-w-0 flex-col gap-3 rounded-2xl border border-border bg-card p-4">
-      <header>
-        <h4 className="text-title-sm text-foreground">{binding.device.name}</h4>
-        <p className="text-label-sm text-muted-foreground">
-          {title}. {note}
+    <article className="grid min-w-0 gap-5 rounded-2xl bg-card p-4 shadow-sm md:grid-cols-2 md:gap-8 md:p-6">
+      <div className="flex min-w-0 flex-col gap-5">
+      <header className="flex flex-col gap-1">
+        <h4 className="text-title-lg text-foreground">{binding.device.name}</h4>
+        <p className="text-body-md text-muted-foreground">
+          <span className="font-medium text-foreground">{title}.</span> {note}
         </p>
       </header>
-      {children}
-      <dl className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/30 p-3 text-label-md">
-        <div className="min-w-0">
-          <dt className="text-label-sm text-muted-foreground">Device reports (confirmed)</dt>
-          <dd data-testid={`confirmed-${binding.device.id}`} className="font-medium text-foreground">
+
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-stretch gap-2 sm:gap-3">
+        <dl className="m-0 flex min-w-0 flex-col gap-1 rounded-xl bg-muted/60 p-3 sm:p-4">
+          <dt className="flex items-center gap-1.5 text-label-md text-muted-foreground">
+            <StateGlyph state="confirmed" size={14} className="text-success" />
+            Device reports
+          </dt>
+          <dd data-testid={`confirmed-${binding.device.id}`} className="m-0 break-words text-headline-md text-foreground">
             {format(confirmed)}
           </dd>
-        </div>
-        <div className="min-w-0">
-          <dt className="text-label-sm text-muted-foreground">You asked for (requested)</dt>
-          <dd data-testid={`requested-${binding.device.id}`} className="font-medium text-foreground">
-            {requested === undefined ? "Nothing pending" : format(requested)}
+          <dd className="m-0 text-label-md text-muted-foreground">Confirmed</dd>
+        </dl>
+        <span aria-hidden="true" className="flex items-center text-muted-foreground rtl:-scale-x-100">
+          <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" focusable="false">
+            <path d="M5 12h14m-6-6 6 6-6 6" />
+          </svg>
+        </span>
+        <dl
+          className={cn(
+            "m-0 flex min-w-0 flex-col gap-1 rounded-xl border-2 p-3 transition-colors duration-fast motion-reduce:transition-none sm:p-4",
+            asked ? "border-dashed border-primary bg-primary/10" : "border-transparent bg-muted/30",
+          )}
+        >
+          <dt className="flex items-center gap-1.5 text-label-md text-muted-foreground">
+            <StateGlyph state={asked ? "pending" : "offline"} size={14} className={asked ? "text-primary" : "text-muted-foreground"} />
+            You asked for
+          </dt>
+          <dd data-testid={`requested-${binding.device.id}`} className={cn("m-0 break-words", asked ? "text-headline-md text-foreground" : "text-title-md text-muted-foreground")}>
+            {asked ? format(requested) : "Nothing pending"}
           </dd>
-        </div>
-      </dl>
-      {command ? <CommandLifecycle lifecycle={command.lifecycle} formatValue={format} onRetry={binding.retry} onCancel={binding.cancel} /> : null}
+          <dd className="m-0 text-label-md text-muted-foreground">{asked ? "Requested" : "No open request"}</dd>
+        </dl>
+      </div>
+
+      <div className="flex min-h-6 items-center">
+        {stage ? <StateBadge state={stage.state}>{stage.word}</StateBadge> : <StateBadge state="confirmed">Nothing waiting on the device</StateBadge>}
+      </div>
+
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-4 md:justify-center">
+        <div className="flex min-w-0 flex-col gap-4 rounded-xl bg-muted/60 p-4">{children}</div>
+        {command && binding.unsettled ? <CommandLifecycle lifecycle={command.lifecycle} formatValue={format} onRetry={binding.retry} onCancel={binding.cancel} /> : null}
+      </div>
     </article>
   );
 }
@@ -64,7 +107,7 @@ export function StateHonestyExample() {
         <SimTransport iot={iot} />
       </SimNotice>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-4">
+      <div className="flex flex-col gap-4">
         {([["Reliable valve", "Acknowledges, then confirms.", valve02], ["Flaky valve", "Fails once, then works. Retry is offered, never done for you.", valve03]] as const).map(
           ([title, note, valve]) => (
             <Panel key={valve.device.id} title={title} note={note} binding={valve}>
@@ -107,7 +150,7 @@ export function StateHonestyExample() {
         </Panel>
       </div>
 
-      <p className="text-label-sm text-muted-foreground">
+      <p className="text-body-md text-muted-foreground">
         An optimistic interface would already show the new value the moment you pressed. Here the confirmed value never moves until the device
         confirms it, so a lock, a valve or a pump is never shown in a state it has not reported.
       </p>

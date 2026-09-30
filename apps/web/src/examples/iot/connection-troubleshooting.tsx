@@ -21,13 +21,13 @@ export function ConnectionTroubleshootingExample() {
   return (
     <div className="grid gap-3 md:grid-cols-2">
       {CASES.map(({ device, what }) => (
-        <div key={device.id} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
+        <div key={device.id} className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm sm:p-5">
           <div className="flex items-start justify-between gap-3">
-            <span className="text-label-md text-foreground">{device.name}</span>
+            <span className="text-title-md text-foreground">{device.name}</span>
             <DeviceStatusBadge status={device.status} />
           </div>
           <ConnectionHealth device={device} freshnessMs={10 * 60_000} now={DEMO_NOW} />
-          <p className="text-label-sm text-muted-foreground">{what}</p>
+          <p className="text-body-md text-muted-foreground">{what}</p>
         </div>
       ))}
     </div>

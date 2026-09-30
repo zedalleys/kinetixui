@@ -4,7 +4,9 @@ import * as React from "react";
 import { AutomationBuilder, AutomationRuleView, type KinetixBuilderSubject, type KinetixBuilderTarget } from "@kinetixui/iot/react";
 import { summarizeAutomationRule, type KinetixAutomationRule } from "@kinetixui/iot/functions";
 import { agritech, agritechRule } from "./scenarios";
+import { StateBadge } from "@/components/iot/showcase";
 import { BUTTON, SimNotice } from "./harness";
+import { cn } from "@/lib/utils";
 
 // kx-iot:start
 /**
@@ -39,32 +41,37 @@ export function AutomationBuilderExample() {
   const [saved, setSaved] = React.useState<KinetixAutomationRule | null>(null);
 
   return (
-    <section aria-label="Automation builder" className="flex flex-col gap-4">
+    <section aria-label="Automation builder" className="flex flex-col gap-4 sm:gap-6">
       <SimNotice scenario={agritech} />
 
-      <div className="flex flex-wrap gap-2">
-        <button type="button" className={BUTTON} onClick={() => setDraft(BLANK)}>
-          Start from a blank rule
-        </button>
-        <button type="button" className={BUTTON} onClick={() => setDraft(agritechRule)}>
-          Reset to the Zone 3 rule
-        </button>
+      <div className="flex flex-col gap-4">
+        <p className="text-body-md text-muted-foreground">Edited as data. Nothing evaluates the rule and nothing is sent.</p>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className={cn(BUTTON, "min-h-11 rounded-full px-4 text-body-md md:min-h-9")} onClick={() => setDraft(BLANK)}>
+            Start from a blank rule
+          </button>
+          <button type="button" className={cn(BUTTON, "min-h-11 rounded-full px-4 text-body-md md:min-h-9")} onClick={() => setDraft(agritechRule)}>
+            Reset to the Zone 3 rule
+          </button>
+        </div>
+
+        <AutomationBuilder
+          value={draft}
+          onChange={setDraft}
+          subjects={SUBJECTS}
+          targets={TARGETS}
+          labelFor={nameOf}
+          submitLabel="Save as demo state"
+          onSubmit={(rule) => setSaved(rule)}
+        />
       </div>
 
-      <AutomationBuilder
-        value={draft}
-        onChange={setDraft}
-        subjects={SUBJECTS}
-        targets={TARGETS}
-        labelFor={nameOf}
-        submitLabel="Save as demo state"
-        onSubmit={(rule) => setSaved(rule)}
-      />
-
       {saved ? (
-        <div role="status" className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
-          <p className="text-label-md font-medium text-foreground">Saved as demo state — nothing is executed.</p>
-          <p className="text-label-sm text-muted-foreground">
+        <div role="status" className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm sm:p-6">
+          <StateBadge state="confirmed" className="text-title-md">
+            Saved as demo state — nothing is executed.
+          </StateBadge>
+          <p className="text-body-md text-muted-foreground">
             The rule is {saved.enabled ? "enabled" : "disabled"}: {summarizeAutomationRule(saved, { label: nameOf })}
           </p>
           <AutomationRuleView rule={saved} labelFor={nameOf} hideSummary />
