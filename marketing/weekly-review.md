@@ -31,11 +31,14 @@ Sessions in which someone inspected the product rather than the pitch. Any one s
 - **Which event started it** most often:
 
 ## Adoption Intent — Tier 1 ([`analytics.md`](./analytics.md) §4)
-Someone looking at *how to adopt*, having evaluated. **Not an install count.**
+Someone looking at *how to adopt*. Evaluation is **not** required — see `analytics.md` §4, which is why the
+rate and the progression are separate measures. **Not an install count.**
 - `installation_viewed`:
 - `install_command_copied` · `cli_command_copied`:
 - `cta_clicked` → `adopt_tokens` / `adopt_components` / `adopt_blocks`:
 - **Adoption Intent sessions (count):**
+- **Sessions with intent after or within evaluation (count)** — the numerator of Evaluation → Intent
+  Progression (`analytics.md` §4). Do **not** divide Adoption Intent by Qualified Evaluation:
 - **Which rung** did people reach for:
 
 ## Distribution — from [`distribution/register.json`](./distribution/register.json)

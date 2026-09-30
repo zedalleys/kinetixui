@@ -138,17 +138,21 @@ and this preflight was authorised to prepare the existing change set rather than
 guard gap worth naming: `site.ts` *is* in `marketing-claims.test.ts`'s `PUBLIC_SURFACES`, but no rule ties the
 tagline to the canonical hero or catches "every platform" inside it.
 
-## Known metric-definition issue — unresolved on purpose
+## Known metric-definition issue — resolved in the spec, stale on the dashboard
 
-`Adoption Intent Rate` can exceed 100%. `analytics.md` §6 divides Adoption Intent by Qualified Evaluation and
-§4's prose says "having evaluated", but §4's signal list does not require it: `install_command_copied`,
+`Adoption Intent Rate` could exceed 100%. `analytics.md` §6 divided Adoption Intent by Qualified Evaluation
+and §4's prose said "having evaluated", but §4's signal list did not require it: `install_command_copied`,
 `cli_command_copied` and the `adopt_*` CTAs are not Qualified Evaluation signals. Observed rather than
 hypothetical — **6 Adoption Intent sessions against 5 Qualified Evaluation sessions** on 2026-09-21.
 
-**This does not block event collection, and must not.** The events need to be arriving before the definition
-can be settled against real data. For now: dashboard tiles report **counts**, no misleading percentage is
-shown, insight 10 carries a `Both` overlap column, and `analytics.md` §11 marks the rate definition
-unresolved with both candidate resolutions written down.
+**Resolved in `analytics.md` §4 on 2026-09-30** by splitting the one ratio into the two questions it was
+conflating: **Adoption Intent Rate** (÷ eligible arriving sessions) and **Evaluation → Intent Progression**
+(÷ qualified-evaluation sessions, bounded by 100%).
+
+**This never blocked event collection, and must not.** Dashboard tiles report **counts**, no misleading
+percentage is shown, and insight 10 carries a `Both` overlap column — so the stale tile is safe to leave.
+**The live dashboard was not changed**; rebuilding insight 8 against the corrected definition is a manual
+follow-up, not a day-1 blocker.
 
 ## Rate display — verified
 

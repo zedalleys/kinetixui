@@ -1,13 +1,14 @@
 {
   "$schema": "https://kinetixui.com/schema/marketing-backlog.json",
-  "$description": "Content backlog. One row per planned piece. `status` moves idea -> drafted -> scheduled -> published. `sourceFeature` must name real repository work; a row without one is an opinion post, and there should be almost none. Read by scripts/marketing-backlog.mjs for reporting. Nothing here publishes anything.",
+  "$description": "Content backlog. One row per planned piece. `status` moves idea -> drafted -> scheduled -> published. `sourceFeature` must name real repository work; a row without one is an opinion post, and there should be almost none. Read by scripts/marketing-backlog.mjs for reporting. Nothing here publishes anything. Pillar E rows are IoT: candidates and their constraints live in future-iot-proof-assets.md, which must be read before drafting one — `@kinetixui/iot` is published at 0.2.0, React-only and experimental, and the `/iot` showcase is a labelled deterministic simulation, not the package.",
   "pillars": {
-    "A": "Cross-platform design systems",
-    "B": "Design tokens",
+    "A": "Verified cross-platform design systems",
+    "B": "Design tokens past the web boundary",
     "C": "Engineering a design system",
-    "D": "Accessibility & RTL",
-    "E": "Build in public",
-    "F": "Platform-specific implementation"
+    "D": "Accessibility and direction as infrastructure",
+    "E": "Device and fleet interfaces",
+    "F": "How each platform's idiom actually differs",
+    "G": "Building in public"
   },
   "statuses": [
     "idea",
@@ -597,7 +598,7 @@
     {
       "id": "b01",
       "title": "We found our platform counts were wrong",
-      "pillar": "E",
+      "pillar": "G",
       "audience": [
         "design-system-engineer"
       ],
@@ -616,7 +617,7 @@
     {
       "id": "b02",
       "title": "The Chart page advertised an API that did not exist",
-      "pillar": "E",
+      "pillar": "G",
       "audience": [
         "design-system-engineer"
       ],
@@ -635,7 +636,7 @@
     {
       "id": "b03",
       "title": "Every block on our site now compiles",
-      "pillar": "E",
+      "pillar": "G",
       "audience": [
         "frontend-lead"
       ],
@@ -654,7 +655,7 @@
     {
       "id": "b04",
       "title": "A bug our CI caught that three humans missed",
-      "pillar": "E",
+      "pillar": "G",
       "audience": [
         "design-system-engineer"
       ],
@@ -672,7 +673,7 @@
     {
       "id": "b05",
       "title": "What a Flutter user asked for, and what it changed",
-      "pillar": "E",
+      "pillar": "G",
       "audience": [
         "team-web-and-mobile"
       ],
@@ -690,7 +691,7 @@
     {
       "id": "b06",
       "title": "Shipping Angular as preview, honestly",
-      "pillar": "E",
+      "pillar": "G",
       "audience": [
         "frontend-lead"
       ],
@@ -704,6 +705,26 @@
       "sourceFeature": "Angular preview",
       "insight": "31 of 98 is the real number, and saying so costs nothing.",
       "cta": "/docs/angular",
+      "publishWindow": null
+    },
+    {
+      "id": "i01",
+      "title": "Requested state is not confirmed state",
+      "pillar": "E",
+      "audience": [
+        "team-web-and-mobile",
+        "frontend-lead"
+      ],
+      "channel": [
+        "dev.to",
+        "linkedin"
+      ],
+      "format": "article",
+      "intent": "awareness",
+      "status": "idea",
+      "sourceFeature": "iot command lifecycle (packages/iot/src/functions/commands.ts)",
+      "insight": "A connected UI that draws 'asked' as 'confirmed' is lying; the vocabulary for the gap is the reusable part, not the transport.",
+      "cta": "/docs/iot",
       "publishWindow": null
     }
   ]

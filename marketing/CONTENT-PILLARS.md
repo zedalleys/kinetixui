@@ -103,13 +103,20 @@ round up is strongest in this pillar and the audience most likely to check.
 - **Topics:** modelling "device offline" and "reading is stale" as first-class UI state · fleet-level
   aggregation · why telemetry dashboards keep reinventing the same three states.
 - **Proof assets:** `@kinetixui/iot` on npm (read its version from `marketing:stats`); its React patterns and
-  examples layer; `check:iot-examples`.
+  examples layer; the `/iot` connected-product showcase, as a labelled simulation; `check:iot-examples`.
 - **Channels:** DEV, LinkedIn, IoT and embedded communities.
 - **CTA:** `/docs/iot`, `/iot`.
 - **Funnel stage:** Discovery, narrow.
 
-**Constraints:** it is a module, not a platform. No native port exists. No protocol or transport is supported.
-Its primitives are not counted in the component catalogue. Guards enforce all four.
+**Constraints:** it is a module, not a platform. It is experimental, and React only. No native port exists. No
+protocol or transport is supported, and there is no automation engine, runtime or video — automation and
+camera surfaces are *patterns*, UI for state something else supplies. Its primitives are not counted in the
+component catalogue. Guards enforce the platform, native-port, transport and catalogue rules.
+
+**And the one a piece in this pillar is most likely to get wrong:** the showcase is not the package. The `/iot`
+environments are a deterministic simulation with no network and no device, and they demonstrate source that
+the published module does not yet carry. Anything written here states what `npm install @kinetixui/iot`
+actually delivers, separately from what the showcase shows. `CLAIMS.md` C4b is the row.
 
 ---
 

@@ -25,7 +25,7 @@ unless marked.
 | **Awareness** | Sees a link somewhere | None on-site — attribution only (`kx_source`, `kx_campaign`) | — | Attributed sessions | Which channels are worth repeating |
 | **Discovery** | Arrives and reads | `$pageview` on `/`, plus session entry | Bounces with no second signal | Sessions with ≥1 semantic event | Whether the hero holds anyone |
 | **Evaluation** | Inspects the product | **Qualified Evaluation**, §3 | Pageviews alone; homepage scroll | **Qualified Evaluation Rate** | Whether the proof lands |
-| **Adoption intent** | Looks at how to adopt | **Adoption Intent**, §4 | Any inference of installing | Adoption-Intent Rate | Which rung people reach for |
+| **Adoption intent** | Looks at how to adopt | **Adoption Intent**, §4 | Any inference of installing | Adoption Intent Rate · Evaluation → Intent Progression (§4) | Which rung people reach for |
 | **Activation** | Actually installs and uses | **Not measurable on-site** — §5 | Everything above | — | — |
 
 Discovery is deliberately weak. It is context for the stages that matter.
@@ -80,7 +80,7 @@ and that is a fact we want in the denominator of everything else.
 
 ## 4. Adoption Intent — definition
 
-> A session in which someone looks at *how to adopt*, having evaluated.
+> A session in which someone looks at *how to adopt*.
 
 | Signal | Event |
 | --- | --- |
@@ -90,6 +90,45 @@ and that is a fact we want in the denominator of everything else.
 
 **Adoption Intent is not activation.** It is the strongest on-site signal available and it stops well short
 of the claim.
+
+**Adoption Intent does not require evaluation.** The signal list above *is* the definition. A session that
+copies an install command without ever opening a component page is Adoption Intent, and that is deliberate —
+arriving already knowing what you want is a real behaviour and hiding it would flatter nothing. It is also
+why the next two measures are separate, with different denominators, rather than one rate.
+
+### Adoption Intent Rate
+
+> **Numerator** — sessions with ≥1 Adoption Intent signal.
+> **Denominator** — **eligible arriving sessions**: every session the site received events from at all. The
+> same denominator as Qualified Evaluation Rate (§2), so the two are readable side by side.
+
+*For:* how much of arriving traffic reaches adoption documentation at all. A share of arrivals — **not a
+conversion rate**, and nothing may present it as one.
+
+### Evaluation → Intent Progression
+
+> **Numerator** — sessions containing **both** a Qualified Evaluation signal (§3) and an Adoption Intent
+> signal, where the intent signal occurs **after or within** the evaluation: same session, intent timestamp
+> at or later than the session's first qualifying evaluation. `installation_viewed` is both signals at once
+> and counts as *within*.
+> **Denominator** — Qualified Evaluation sessions (§3).
+
+*For:* whether evaluation leads anywhere. This is the conversion measure, and it is bounded by 100% because
+its numerator is a subset of its denominator.
+
+**How they diverge.** A campaign landing people directly on `/docs/installation` raises Adoption Intent Rate
+and leaves Progression untouched; a component gallery that holds attention but offers no next step raises
+Qualified Evaluation Rate and lowers Progression. They can move in opposite directions on the same week's
+traffic, which is the whole reason for keeping two numbers.
+
+**Never divide Adoption Intent by Qualified Evaluation.** That quotient is neither measure: its numerator is
+not a subset of its denominator, so it can exceed 100% — observed, not hypothetical, on 2026-09-21 (6
+Adoption Intent sessions against 5 Qualified Evaluation sessions).
+
+**Ordering is available.** Verified in `analytics-posthog.ts`: PostHog's own `$session_id` and event
+timestamps are untouched by `before_send`, which deletes only referrer and campaign properties and strips
+query strings from URL-valued ones. Progression is therefore computable PostHog-side, like every other
+definition here — derived, not emitted.
 
 ---
 
@@ -115,12 +154,13 @@ have no intention of adding). Until one exists, the honest answer to "how many p
 
 ## 6. KPI hierarchy
 
-### Tier 1 — decision metrics (4)
+### Tier 1 — decision metrics (5)
 
 | KPI | Definition | Decision it informs | Baseline |
 | --- | --- | --- | --- |
-| **Qualified Evaluation Rate** | Qualified Evaluation sessions ÷ all sessions | Is the site converting attention into inspection? | NO BASELINE |
-| **Adoption Intent Rate** | Adoption Intent sessions ÷ Qualified Evaluation sessions | Does evaluation lead anywhere? | NO BASELINE |
+| **Qualified Evaluation Rate** | Qualified Evaluation sessions ÷ eligible arriving sessions | Is the site converting attention into inspection? | NO BASELINE |
+| **Adoption Intent Rate** | Adoption Intent sessions ÷ eligible arriving sessions (§4) | How much of arriving traffic reaches adoption docs? | NO BASELINE |
+| **Evaluation → Intent Progression** | Sessions with intent after or within evaluation ÷ Qualified Evaluation sessions (§4) | Does evaluation lead anywhere? | NO BASELINE |
 | **Content → Qualified Evaluation** | Qualified Evaluation rate of `kx_campaign`-attributed sessions vs direct | Does content bring the right people? | NO BASELINE |
 | **Returning evaluators** | Distinct anonymous IDs with Qualified Evaluation in ≥2 sessions | Sustained interest — the strongest signal available pre-adoption | NO BASELINE |
 
@@ -189,9 +229,9 @@ variant in `utm_content`.
 architecture-led messaging*. It does **not** mean they are a design-system engineer. We have no identity
 data and are not collecting any, so every ICP statement is about which message earned the click.
 
-Compare `kx_p1_*` against `kx_p2_*` sessions on: Qualified Evaluation Rate, Adoption Intent Rate, which
-ladder rung (`adopt_tokens` skews P2, `adopt_components` skews P1), platform interest, and verification
-engagement.
+Compare `kx_p1_*` against `kx_p2_*` sessions on: Qualified Evaluation Rate, Adoption Intent Rate,
+Evaluation → Intent Progression, which ladder rung (`adopt_tokens` skews P2, `adopt_components` skews P1),
+platform interest, and verification engagement.
 
 **Do not declare a winner.** `STRATEGY.md` §13 unknown #1 is open and stays open until the evidence rules in
 §10 are met. The honest framing is *"P2-attributed sessions evaluate at a higher rate"* — never *"P2 is our
@@ -254,18 +294,28 @@ someone's dashboard to match a later rule is the same mistake as retro-editing a
 marketing-funnel dashboard as canonical and retire the older one when its remaining product tiles have been
 re-homed.
 
-### A defect in §4, found by building it
+### The defect in §4, found by building it — now resolved in §4
 
-`Adoption Intent Rate` is defined in §6 as Adoption Intent ÷ Qualified Evaluation, and §4's prose says
+`Adoption Intent Rate` was defined in §6 as Adoption Intent ÷ Qualified Evaluation, and §4's prose said
 "having evaluated" — but §4's *signal list* does not require it. `install_command_copied`,
 `cli_command_copied` and the `adopt_*` CTAs are not Qualified Evaluation signals, so a session can reach
-Adoption Intent without ever qualifying, and **the rate can exceed 100%**. This is not hypothetical: on
+Adoption Intent without ever qualifying, and **that quotient can exceed 100%**. This is not hypothetical: on
 2026-09-21 the project recorded 6 Adoption Intent sessions against 5 Qualified Evaluation sessions.
 
-Unresolved on purpose — it is a change to a canonical definition, which is a decision rather than a fix. The
-two options are to make Adoption Intent require Qualified Evaluation (matching §4's prose), or to change the
-denominator to all sessions. Until then insight 8 reports **counts**, and insight 10 carries a `Both` column
-so the overlap is visible rather than assumed.
+**Resolved by separating the two questions rather than picking one of them.** §4 now defines **Adoption
+Intent Rate** (÷ eligible arriving sessions — a share of arrivals) and **Evaluation → Intent Progression**
+(÷ Qualified Evaluation sessions, intent after or within the evaluation — the conversion) as two measures
+with explicit numerators and denominators. Neither of the two options previously written down was taken:
+making Adoption Intent require evaluation would have discarded a real behaviour, and simply swapping the
+denominator would have left the progression question unanswered.
+
+**The live dashboard has NOT been changed, and now disagrees with this specification.** Insight 8 still
+reports Adoption Intent and Qualified Evaluation as **counts** against each other, which is safe — no
+misleading percentage is displayed — but it is not either measure named above, and insight 10's `Both`
+column is the overlap Progression would use rather than Progression itself. **Manual follow-up:** rebuild
+insight 8 as Adoption Intent Rate over eligible arriving sessions, and add Evaluation → Intent Progression
+over Qualified Evaluation sessions, before either is read as a rate. Until that is done the spec is
+canonical and the tile is stale.
 
 **11 insights.**
 
@@ -282,10 +332,10 @@ so the overlap is visible rather than assumed.
 | 6 | Evaluation entry point | first QE event in session | event name | 30d | What starts evaluation? |
 | 7 | Verification engagement | `cta_clicked` → `view_verification`, `platform_coverage` | `source` | 30d | Does the position get followed? |
 | **Adoption intent** |
-| 8 | **Adoption Intent Rate** | AI §4 ÷ QE §3 | — | 30d | **Tier 1** |
+| 8 | **Adoption Intent Rate** | AI §4 and QE §3 as counts — **stale, see above**; §4 now specifies AI ÷ eligible arriving sessions, plus a second tile for Evaluation → Intent Progression | — | 30d | **Tier 1** |
 | 9 | Adoption-rung split | `cta_clicked` → `adopt_*` | `target` | 30d | Which rung do people reach for? |
 | **ICP and content** |
-| 10 | **ICP hypothesis comparison** | QE and AI rates | `kx_campaign` prefix (`kx_p1`/`kx_p2`) | 90d | **Tier 1** — which message converts? |
+| 10 | **ICP hypothesis comparison** | QE and AI rates, with a `Both` overlap column | `kx_campaign` prefix (`kx_p1`/`kx_p2`) | 90d | **Tier 1** — which message converts? |
 | 11 | Platform interest | `platform_selected` | `platform` | 30d | Which platform draws attention? |
 
 Component and block interest are deliberately **not** dashboard insights. They are long-tail lists, better

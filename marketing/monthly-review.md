@@ -37,7 +37,9 @@ signals: one weak post, small initial reach, a single negative comment.
 `CLAIMS.md` **D1** is `PENDING LIVE VERIFICATION`.
 
 - Adoption Intent sessions, four-week series (counts):
-- **Adoption Intent Rate** — only if `analytics.md` §10's baseline window has closed. Otherwise counts:
+- **Adoption Intent Rate** (÷ eligible arriving sessions) and **Evaluation → Intent Progression**
+  (÷ qualified-evaluation sessions) — two measures, `analytics.md` §4, and only if §10's baseline window has
+  closed. Otherwise counts:
 - Which entry path leads to it most often (components / tokens / CLI / platform docs):
 - **Returning evaluators** — distinct anonymous IDs with a qualified evaluation in ≥2 sessions. Directional:
   cleared cookies and multiple devices both undercount, by an unknown amount:

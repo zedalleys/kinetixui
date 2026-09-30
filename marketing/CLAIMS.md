@@ -142,13 +142,42 @@ source is named instead.
 
 - **Status:** APPROVED WITH QUALIFICATION
 - **Evidence:** `@kinetixui/iot` is on npm and releases on its own cohort; read its version from
-  `marketing:stats`, never hard-code it.
-- **Approved wording:** "`@kinetixui/iot` is a published React module of device-interface primitives —
-  connectivity, telemetry staleness, fleet state."
+  `marketing:stats`, never hard-code it. `packages/iot/package.json` describes the module as
+  *"Experimental"*, and `/docs/iot` leads with "Experimental, and React only".
+- **Approved wording:** "`@kinetixui/iot` is a published, experimental, React-only module of device-interface
+  primitives — connectivity, telemetry staleness, fleet state."
+- **Qualification:** *experimental* and *React only* are part of the claim, not decoration. The module's own
+  reference page says the API may change without a major version.
 - **Forbidden interpretation:** calling it a *platform* (it is a module, and the guard enforces this);
-  claiming a native IoT port exists; claiming any protocol or transport is supported; counting its primitives
-  or patterns in the component catalogue; or describing it as planned or unpublished.
-- **Review trigger:** a native port, a transport integration, or a catalogue merge.
+  claiming a native IoT port exists; claiming any protocol or transport is supported; claiming an automation
+  *engine*, a runtime, live camera or video, or wearable support (the module ships automation and camera
+  *patterns* — UI for state someone else supplies); counting its primitives or patterns in the component
+  catalogue; or describing it as planned or unpublished.
+- **Review trigger:** a native port, a transport integration, or a catalogue merge. **Also C4b whenever the
+  iot cohort publishes** — the two rows drift apart in opposite directions.
+
+### C4b — What is in main's source is ahead of what is on npm
+
+- **Status:** APPROVED WITH QUALIFICATION — and the qualification is the whole row
+- **Evidence:** `marketing:stats` reads the published `@kinetixui/iot` version from the registry — read it
+  there, never from here. Main carries more than that version ships: the control layer
+  (`DevicePowerControl`, `DeviceLevelControl`, `DeviceSetpointControl`, `DeviceModeControl`,
+  `resolveControlState`) sits behind an **unpublished** changeset,
+  `.changeset/iot-control-layer.md`, and #259 added the `/iot` Connected Space showcase and the expanded
+  reference — website work, not package work. Publishing is a separate decision and has not been made.
+- **Approved wording:** "`@kinetixui/iot` on npm is an experimental, React-only module. The connected-product
+  showcase at `/iot` is a deterministic simulation — no network, no device, no video — and some of what it
+  demonstrates is source in the repository that has not been released yet."
+- **Forbidden interpretation:** presenting the showcase, the reference page or anything behind the pending
+  changeset as *shipped*, *installable today*, or *production-ready*; implying the `/iot` demos talk to
+  hardware; quoting a feature a reader would not get from `npm install @kinetixui/iot` without saying so.
+  Also forbidden: the inverse understatement — main's source is genuinely more mature than the published
+  version, so do not claim the module is only primitives when asked directly.
+- **Qualification that must travel with any IoT sentence in the next fortnight:** React only · experimental ·
+  the showcase is a labelled simulation · the published npm version (quote it from `marketing:stats` at the
+  moment of writing) is behind main · no transport.
+- **Review trigger:** the iot cohort publishes (then fold this row back into C4), or a changeset is added,
+  removed or altered under `.changeset/` for `@kinetixui/iot`.
 
 ### C5 — Wearables
 
@@ -214,9 +243,10 @@ source is named instead.
 ### E1 — Accessibility
 
 - **Status:** APPROVED WITH QUALIFICATION
-- **Evidence:** `check:contrast` (WCAG AA) in CI; a real-browser axe pass over the site (19 pages × 2 themes
-  × 4 widths) and a second over every Storybook story; per-platform accessibility evidence as fractions in
-  `marketing:stats`.
+- **Evidence:** `check:contrast` (WCAG AA) in CI; a real-browser axe pass over the site (`check:a11y-site`,
+  a pages × themes × widths sweep whose own run prints the current dimensions — read them from there, never
+  from here) and a second over every Storybook story (`check:a11y-browser`); per-platform accessibility
+  evidence as fractions in `marketing:stats`.
 - **Approved wording:** "Contrast is gated in CI and accessibility is checked in a real browser across the
   site and every Storybook story." For a platform, quote its fraction.
 - **Forbidden interpretation:** "accessible" as a finished property, or "WCAG compliant" as a certification.

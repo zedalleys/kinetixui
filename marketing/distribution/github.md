@@ -1,6 +1,7 @@
 ---
 type: distribution — GitHub as a channel
-status: plan. No repository setting was changed and no Release was created
+status: partly applied by the maintainer. The three day-1 settings are verified live as of 2026-09-30;
+  no Release was created and no setting was changed by any script
 ---
 
 # GitHub as a distribution channel
@@ -11,26 +12,31 @@ does not.
 
 Its channel role is in [`README.md`](./README.md) §2. This file is the work.
 
-**Nothing here was applied.** Repository settings and Releases are the maintainer's actions; this phase
-changed neither, and never will automatically.
+**Nothing here is applied automatically.** Repository settings and Releases are the maintainer's actions;
+no script in this phase changes either, and none ever will. The three day-1 settings below were since
+applied *by hand* and are recorded as verified, not as done by this phase.
 
 ---
 
 ## 1. Actions before traffic
 
-State read from the GitHub API on **2026-09-29**, not assumed.
+State re-read from the GitHub API on **2026-09-30**, not assumed.
 
-### DO NOW — before day 1
+### DONE — verified live, 2026-09-30
 
-| # | Action | Current state, verified | Why it blocks |
+| # | Action | Verified state, 2026-09-30 | How it was checked |
 | --- | --- | --- | --- |
-| 1 | **Replace the repository description** | `"Multi-platform design system: one token contract, with React, SwiftUI, Jetpack Compose and Flutter components."` | It **omits Angular**, which is published on npm, and omits the verification position entirely — the one thing no competitor markets. Wording: [`../MESSAGING.md`](../MESSAGING.md) §I, or the durable no-platform-names variant in `../audits/PHASE-0.75-PUBLIC-SURFACE.md` |
-| 2 | **Set topics** | **Empty.** The API returns `{"names": []}` | Twenty topics are already chosen and ordered by expected search value in `../audits/PHASE-0.75-PUBLIC-SURFACE.md` §Topics. With none set, `topic:swiftui` and `topic:design-tokens` cannot find us at all — this is the cheapest discovery action available and it is currently unspent |
-| 3 | **Upload the social preview** | **Missing** | Every link shared anywhere renders as a bare URL card. The file exists: `../content/visuals/SOCIAL-PREVIEW.png`, 1280×640. Settings → General → Social preview |
+| 1 | **Replace the repository description** | **Done.** Reads `"Cross-platform design system infrastructure with DTCG tokens, native components, and platform claims verified against source in CI."` — carries the verification position and names no platform, so it cannot go stale when a platform's status moves | `GET /repos/zedalleys/kinetixui` → `description` |
+| 2 | **Set topics** | **Done.** All **20** are set, an exact match for the approved set in `../audits/PHASE-0.75-PUBLIC-SURFACE.md` §Topics — none missing, none extra. `topic:swiftui` and `topic:design-tokens` now find us | `GET /repos/zedalleys/kinetixui` → `topics`, diffed against the approved list |
+| 3 | **Upload the social preview** | **Done.** The repository serves a **custom** preview: `og:image` points at `repository-images.githubusercontent.com`, which is the upload host — an unset preview is served from `opengraph.githubassets.com` instead. The uploaded bytes could not be fetched from this container (egress policy), so the rendered *content* is unverified; the source asset is `../content/visuals/SOCIAL-PREVIEW.png`, **2560×1280** (2× GitHub's 1280×640, same 2:1 ratio, 112 KB) | `og:image` meta on the repository page; `file`/PNG header on the source asset |
 
-Three settings, one sitting. **Description and topics are the pair** — the description should be durable and
-not enumerate platforms, precisely because the topics carry the keywords. Doing one without the other loses
-either discovery or durability.
+All three are applied. **Description and topics are the pair** — the description is durable and does not
+enumerate platforms, precisely because the topics carry the keywords. Both are in place, so neither
+discovery nor durability was traded for the other.
+
+The one thing still unverified here is what the uploaded preview image *shows*. If it was exported from a
+draft rather than from `../content/visuals/SOCIAL-PREVIEW.png`, it may carry stale figures; that is a
+sixty-second visual check on the repository page, not a re-upload.
 
 ### THIS MONTH
 

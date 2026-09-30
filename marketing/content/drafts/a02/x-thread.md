@@ -17,9 +17,10 @@ Numbers regenerate from `pnpm marketing:stats`. Re-run before posting.
 
 **1/**
 
-Our design system has 98 components.
+Our design system has 98 catalogue entries — 97 components and one documented
+recipe.
 
-I put that number on our homepage, and on its own it tells you almost nothing.
+I put that number on our site, and on its own it tells you almost nothing.
 
 Here is what it hides.
 
@@ -37,7 +38,7 @@ Jetpack Compose 90
 Flutter 90
 Angular 31 · preview
 
-"98 components" was really "98 on one of them."
+"98" was really "98 on one of them."
 
 ---
 
@@ -130,7 +131,7 @@ see `measurement.md`.
 
 ## S1 — numerical (`utm_content=x_numbers`)
 
-98 components.
+98 catalogue entries. 97 components, one documented recipe.
 
 React 98
 SwiftUI 90

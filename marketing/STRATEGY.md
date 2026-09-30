@@ -283,7 +283,8 @@ almost nobody else can make, and it is checkable in the repository.
 - **Five platform implementations in their own idioms**, each compiled by its own CI.
 - **20 Blocks with real source on all five platforms** — composed patterns, not just primitives.
 - **`@kinetixui/iot`** — connectivity, telemetry-staleness and fleet-state primitives; an unusual surface for
-  a design system and a genuine differentiator in device dashboards.
+  a design system and a genuine differentiator in device dashboards. Experimental, and React only; the `/iot`
+  showcase is a labelled simulation, not a device integration. See `CLAIMS.md` C4 and C4b.
 - **A shadcn-compatible registry** plus a conventional npm package, so the copy-in and dependency models
   both work.
 
@@ -351,7 +352,7 @@ check exists.
 4. **The catalogue is 98 entries, of which one is a documented recipe, not a component.** "98 components"
    overstates by one. `marketing:stats` says so out loud; quote it that way.
 5. **Direction-aware evidence is uneven.** Flutter is strong; React, Compose and Angular are single-digit
-   component counts. Quote the fractions, never a platform list.
+   component counts; SwiftUI has none at all. Quote the fractions, never a platform list.
 6. **No users to point at.** Engineering proof only. Never invent adoption, testimonials or download
    narratives.
 7. **Pro does not exist.** Do not market it, tease it, or imply a paid tier is planned.

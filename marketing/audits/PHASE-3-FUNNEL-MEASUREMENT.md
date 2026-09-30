@@ -29,7 +29,7 @@ Everything else the funnel needs already existed. That is why this phase changed
 | **Awareness** | Attribution only (`kx_source`, `kx_campaign`) | Attributed sessions |
 | **Discovery** | `$pageview` + session entry | Sessions with ≥1 semantic event |
 | **Evaluation** | **Qualified Evaluation** | **Qualified Evaluation Rate** |
-| **Adoption intent** | **Adoption Intent** | Adoption-Intent Rate |
+| **Adoption intent** | **Adoption Intent** | Adoption Intent Rate · Evaluation → Intent Progression |
 | **Activation** | **Not measurable on-site** | — |
 
 Discovery is deliberately weak — context for the stages that matter. Full definitions, exclusions and the
@@ -74,6 +74,12 @@ capable of disagreeing with its own inputs.
 Kept separate from activation on purpose. It is the strongest on-site signal available and stops well short
 of the claim.
 
+**It does not require evaluation** — the signal list is the whole definition — which is why `analytics.md` §4
+carries two measures rather than one: **Adoption Intent Rate** (÷ eligible arriving sessions, a share of
+arrivals) and **Evaluation → Intent Progression** (÷ Qualified Evaluation sessions, intent after or within
+the evaluation — the conversion). Dividing Adoption Intent by Qualified Evaluation is neither, and can
+exceed 100%.
+
 ## Activation limitation
 
 **Activation is not measurable from this website, and is not reported.**
@@ -88,8 +94,8 @@ own privacy review), or opt-in CLI telemetry (which we have no intention of addi
 
 ## KPI hierarchy
 
-**Tier 1 (4):** Qualified Evaluation Rate · Adoption Intent Rate · Content → Qualified Evaluation ·
-Returning evaluators. All **NO BASELINE**.
+**Tier 1 (5):** Qualified Evaluation Rate · Adoption Intent Rate · Evaluation → Intent Progression ·
+Content → Qualified Evaluation · Returning evaluators. All **NO BASELINE**.
 
 **Tier 2:** platform interest · component interest · block interest · adoption-rung split · CTA progression ·
 docs progression · code-copy behaviour.
@@ -206,7 +212,8 @@ environment cannot reach it.
 5. Which proof creates deeper evaluation — `view_verification` and `platform_coverage` against downstream QE.
 6. Which platforms receive interest — `platform_selected` by platform, now including blocks.
 7. Which components and blocks attract evaluation — `component_viewed`, `block_code_copied`.
-8. Whether visitors reach adoption documentation — Adoption Intent Rate.
+8. Whether visitors reach adoption documentation — Adoption Intent Rate; and whether evaluation leads there
+   — Evaluation → Intent Progression.
 9. Where the funnel loses people — the three funnels.
 10. Whether content creates product evaluation — Content → Qualified Evaluation.
 

@@ -81,6 +81,15 @@ const impl = Object.fromEntries(
 );
 const onAll = comps.filter(([, v]) => CATALOGUE.every((p) => (v.platforms || []).includes(p))).length;
 const exceptions = comps.length - onAll;
+/*
+ * Catalogue entries are not all components. `combobox` is a documented recipe and the manifest says so in
+ * its own platformNote, which is where this is read from — the same derivation `scripts/marketing-stats.mjs`
+ * and `apps/web/src/lib/platform-support.ts` use, so a second recipe needs no edit here.
+ * `marketing/CLAIMS.md` B2 approves the number only with that qualification, so this file asserts the
+ * qualified phrasing and forbids the bare "<total> components" the stats tool warns overstates by one.
+ */
+const recipes = comps.filter(([, v]) => /not a component/i.test(v.platformNote ?? "")).map(([slug]) => slug);
+const componentsOnly = comps.length - recipes.length;
 
 // Demo examples, counted the way the article counts them: keys that carry native code at all, and
 // the subset whose native code is extracted from a file a compiler builds.
@@ -112,7 +121,15 @@ const flat = (s) => s.replace(/\s+/g, " ");
 const start = art.indexOf("Ours, today:");
 const today = start < 0 ? "" : flat(art.slice(start, art.indexOf("Those are generated", start)));
 t(today.length > 0, "article has an 'ours, today' paragraph to check");
-t(today.includes(`${comps.length} components`), `today: ${comps.length} components`);
+t(
+  today.includes(`${comps.length} catalogue entries`),
+  `today: ${comps.length} catalogue entries`,
+);
+t(
+  recipes.length === 0 || (today.includes(`${componentsOnly} components`) && /documented recipe/.test(today)),
+  `today: qualified as ${componentsOnly} components + ${recipes.length} documented recipe(s)`,
+);
+t(!new RegExp(`\\b${comps.length} components\\b`).test(flat(art)), `article never says "${comps.length} components"`);
 for (const [key, label] of [["React", "React"], ["SwiftUI", "SwiftUI"], ["Compose", "Jetpack Compose"], ["Flutter", "Flutter"], ["Angular", "Angular"]]) {
   t(today.includes(`${label} ${impl[key]}`), `today: ${label} ${impl[key]}`);
 }
@@ -231,7 +248,7 @@ t(publishedPlatforms.length > 0, `derived the published set from the manifest ($
 
 const words = art.split(/\s+/).filter(Boolean).length;
 console.log(
-  `\ntruth now: ${comps.length} components ${JSON.stringify(impl)} ` +
+  `\ntruth now: ${comps.length} catalogue entries (${componentsOnly} components + ${recipes.length} recipe) ${JSON.stringify(impl)} ` +
     `onAll(${CATALOGUE.length})=${onAll} exceptions=${exceptions} compiledDemos=${compiledKeys.length}/${demoTotal}`,
 );
 console.log(`article words: ${words} (was 1864, ${(((words - 1864) / 1864) * 100).toFixed(1)}%)`);

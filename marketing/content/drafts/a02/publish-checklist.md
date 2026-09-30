@@ -20,7 +20,7 @@ Nothing in this package is scheduled. Work top to bottom on the day.
 
 | Claim | Expected at drafting (2026-09-24, `75945b7`) |
 | --- | --- |
-| Components | 98 |
+| Catalogue entries | 98 — 97 components + 1 documented recipe (`combobox`) |
 | React / SwiftUI / Compose / Flutter / Angular | 98 / 90 / 90 / 90 / 31 |
 | On all four catalogue-complete platforms | 90 / 98 |
 | Documented exceptions | 8 |

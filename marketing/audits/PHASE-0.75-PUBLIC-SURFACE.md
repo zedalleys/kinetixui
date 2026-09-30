@@ -124,6 +124,11 @@ and the implementations it points at are real.
 
 ### Manual settings to check — not verified, not claimed
 
+> **Since resolved — 2026-09-30.** Description and topics are both applied, and a custom social preview is
+> uploaded. The rows below record what the API returned *when this audit ran*; they are left as written
+> rather than retro-edited. Current verified state lives in [`../distribution/github.md`](../distribution/github.md) §1.
+
+
 | Setting | Current (read via API) | Recommended |
 | --- | --- | --- |
 | Discussions | `has_discussions: false` | **Enable.** It is the only place launch traffic can land that is not the issue tracker |

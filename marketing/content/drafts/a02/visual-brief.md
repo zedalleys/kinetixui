@@ -17,7 +17,8 @@ cross-platform number.
 
 ```
                 98
-          components
+        catalogue entries
+     97 components + 1 recipe
 
      React                98
      SwiftUI              90
@@ -84,7 +85,9 @@ Each variant is exported on both surfaces. Four files, not two.
 ## Do not
 
 - Do not draw five equal bars.
-- Do not write "98 components on 5 platforms".
+- Do not write "98 components" — the manifest calls `combobox` a documented
+  recipe, so the bare count overstates by one (`CLAIMS.md` B2). And never "on 5
+  platforms".
 - Do not put a checkmark next to any platform.
 - Do not include a logo wall or a competitor.
 - Do not use numbers older than the `marketing:stats` run in the checklist.

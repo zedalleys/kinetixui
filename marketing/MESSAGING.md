@@ -117,7 +117,7 @@ Per-package, because the packages are not one product and do not version togethe
 | `@kinetixui/tokens` | The DTCG token contract, generated for web, iOS, Android and Flutter |
 | `@kinetixui/cli` | Add KinetixUI components and tokens to your project |
 | `@kinetixui/angular` | Angular directives on native elements for the KinetixUI token contract — preview |
-| `@kinetixui/iot` | React primitives for device interfaces: connectivity, telemetry staleness, fleet state |
+| `@kinetixui/iot` | React primitives for device interfaces: connectivity, telemetry staleness, fleet state — experimental |
 
 Never imply one version number describes the product. Core (`ui`, `tokens`, `cli`) shares a line; Angular and
 IoT release independently.
@@ -190,13 +190,20 @@ cannot install it, which is false.
 
 ### IoT
 
-- **Short:** "A published React module for device interfaces."
-- **Medium:** "`@kinetixui/iot` is a published React module of device-interface primitives — connectivity,
-  telemetry staleness and fleet state."
-- **Technical:** "Published on npm in its own release cohort. A module, not a platform; its primitives are not
-  counted in the component catalogue, and no native port exists."
+- **Short:** "A published React module for device interfaces — experimental."
+- **Medium:** "`@kinetixui/iot` is a published, experimental, React-only module of device-interface
+  primitives — connectivity, telemetry staleness and fleet state."
+- **Technical:** "Published on npm in its own release cohort. Experimental, and React only: the API may change
+  without a major version. A module, not a platform; its primitives are not counted in the component
+  catalogue, and no native port exists. No transport, no automation engine, no video."
 
 Read its version from `marketing:stats`. Never hard-code it — a guard enforces this.
+
+**The `/iot` showcase is not the package.** The connected-product environments at `/iot` are a deterministic
+simulation — no network, no device, no video — and they demonstrate work that includes source in the
+repository the published module does not yet carry. Never present the showcase as what `npm install` gives
+you, and never let a demo screenshot imply hardware. See `CLAIMS.md` C4b, which carries the five qualifiers
+that travel with any IoT sentence.
 
 ### Wearables
 

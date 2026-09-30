@@ -40,7 +40,7 @@ const ok = (c, msg) => {
   if (!c) fail++;
 };
 
-console.log(`-- truth: ${comps.length} components ${JSON.stringify(impl)} onAll(${cat.length})=${onAll} blocks=${bp.total}\n`);
+console.log(`-- truth: ${comps.length} catalogue entries ${JSON.stringify(impl)} onAll(${cat.length})=${onAll} blocks=${bp.total}\n`);
 
 // every platform figure in the copy is the generated one
 for (const p of Object.keys(defs)) {
@@ -48,7 +48,26 @@ for (const p of Object.keys(defs)) {
   ok(shown.some((s) => copy.includes(s)), `copy states ${p} ${impl[p]}`);
 }
 ok(copy.includes(`${onAll} of ${comps.length}`), `copy states ${onAll} of ${comps.length}`);
-ok(copy.includes(`${comps.length} components`), `copy states ${comps.length} components`);
+/*
+ * Catalogue entries are not all components. `combobox` is a documented recipe and the manifest says so in its
+ * own platformNote — read from there, the same derivation `scripts/marketing-stats.mjs` and
+ * `apps/web/src/lib/platform-support.ts` use, so a second recipe needs no edit here. `marketing/CLAIMS.md` B2
+ * approves the catalogue number only with that qualification, and the stats tool warns that the bare
+ * "<total> components" overstates by one. So: assert the qualified phrasing, and ban the bare one.
+ */
+const recipes = comps.filter(([, v]) => /not a component/i.test(v.platformNote ?? "")).map(([slug]) => slug);
+const componentsOnly = comps.length - recipes.length;
+// These files are hard-wrapped, so a phrase is routinely split across a newline.
+const flatCopy = copy.replace(/\s+/g, " ");
+ok(flatCopy.includes(`${comps.length} catalogue entries`), `copy states ${comps.length} catalogue entries`);
+ok(
+  recipes.length === 0 || (flatCopy.includes(`${componentsOnly} components`) && /documented recipe/.test(flatCopy)),
+  `copy qualifies it as ${componentsOnly} components + ${recipes.length} documented recipe(s)`,
+);
+ok(
+  !new RegExp(`\\b${comps.length} components\\b`).test(flatCopy),
+  `copy never says the bare "${comps.length} components"`,
+);
 ok(all.includes(`${bp.total} Blocks`) || all.includes(`${bp.total}, all five`), `package states Blocks ${bp.total}`);
 
 // framings that must never reach a reader

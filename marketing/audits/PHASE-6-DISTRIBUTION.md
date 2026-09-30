@@ -525,12 +525,18 @@ This is recorded in `distribution/first-14-days.md` as blocking item 0. The merg
 
 ### Two defects found by building the dashboard rather than specifying it
 
-1. **`Adoption Intent Rate` can exceed 100%.** §6 defines it as Adoption Intent ÷ Qualified Evaluation and
-   §4's prose says "having evaluated", but §4's signal list does not require it — `cli_command_copied`,
+1. **`Adoption Intent Rate` could exceed 100%.** §6 defined it as Adoption Intent ÷ Qualified Evaluation and
+   §4's prose said "having evaluated", but §4's signal list did not require it — `cli_command_copied`,
    `install_command_copied` and the `adopt_*` CTAs are not Qualified Evaluation signals. On 2026-09-21 the
-   project recorded **6 Adoption Intent sessions against 5 Qualified Evaluation sessions**. Left unresolved
-   on purpose: changing a canonical definition is a decision, not a fix. Insight 8 reports counts and insight
-   10 carries a `Both` column so the overlap is visible.
+   project recorded **6 Adoption Intent sessions against 5 Qualified Evaluation sessions**. Insight 8 reports
+   counts and insight 10 carries a `Both` column so the overlap is visible.
+
+   **Resolved in the spec on 2026-09-30**, not by picking one of the two candidate fixes but by separating
+   the two questions that were sharing one ratio: **Adoption Intent Rate** (÷ eligible arriving sessions — a
+   share of arrivals, which is what the signal list actually measures) and **Evaluation → Intent
+   Progression** (÷ qualified-evaluation sessions, intent after or within evaluation, bounded by 100%). See
+   `../analytics.md` §4. **The live dashboard was not changed** — insight 8 is now stale against the
+   canonical spec, and its counts-only display stays safe until someone rebuilds it by hand.
 
 2. **An older dashboard contradicts §5.** "KinetixUI — Developer Growth & Activation" (2120439, pinned) has
    `Developer Activation Rate — Observed` as its headline: copy events ÷ pageviews, as a percentage. That is

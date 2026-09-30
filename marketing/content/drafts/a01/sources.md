@@ -17,7 +17,7 @@ From `pnpm marketing:stats` (reads `platform-parity.json` and
 
 | Claim in the piece | Value | Source |
 | --- | --- | --- |
-| 98 components | 98 | `components.manifest.json` |
+| 98 catalogue entries (97 components + 1 documented recipe) | 98 | `components.manifest.json` |
 | React | 98 / 98 | `platform-parity.json` → `coverage` |
 | Angular (preview) | 31 / 98 | same, `platformDefinitions.Angular.maturity = "preview"` |
 | SwiftUI | 90 / 98 | same |

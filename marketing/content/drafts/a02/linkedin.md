@@ -8,22 +8,22 @@ link: https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social
 
 # a02 — LinkedIn (primary)
 
-**242 words.** Every number regenerates from `pnpm marketing:stats`; re-run it
+**249 words.** Every number regenerates from `pnpm marketing:stats`; re-run it
 before posting and replace anything that moved. See `sources.md`.
 
 ---
 
-Our design system has 98 components.
+Our design system has 98 catalogue entries — 97 components and one documented
+recipe.
 
-That number is on our own homepage, and on its own it tells you almost nothing.
+That number is on our own site, and on its own it tells you almost nothing.
 
 Here is what it actually decomposes into today:
 
 React 98. SwiftUI 90. Jetpack Compose 90. Flutter 90. Angular 31, in preview.
 
-So "98 components" is really "98 on one platform." The honest cross-platform
-figure is 90 of 98 on the four platforms that are meant to carry the whole
-catalogue. Angular is deliberately not one of them yet — it is real and
+So "98" is really "98 on one platform." The honest cross-platform figure is
+90 of 98 on the four platforms that are meant to carry the whole catalogue. Angular is deliberately not one of them yet — it is real and
 compiler-backed, and its catalogue is intentionally incomplete.
 
 Then there is a second question the count cannot answer: how much of that is

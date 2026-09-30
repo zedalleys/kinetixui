@@ -25,7 +25,7 @@ because both read the manifest, not because either copied the other.
 
 | Claim in the copy | Value | Source | Generator |
 | --- | --- | --- | --- |
-| Components | 98 | `components.manifest.json` → `components` | — |
+| Catalogue entries | 98 — 97 components + 1 documented recipe (`combobox`) | `components.manifest.json` → `components`, minus entries whose `platformNote` says "not a component" | — |
 | React implementations | 98 | `platform-parity.json` → `components` | `gen:manifest` |
 | SwiftUI implementations | 90 | same | `gen:manifest` |
 | Jetpack Compose implementations | 90 | same | `gen:manifest` |

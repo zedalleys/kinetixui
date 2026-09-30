@@ -40,6 +40,18 @@ pattern working — see [the IoT overview](/iot).
 npm install @kinetixui/iot
 ```
 
+<Callout>
+  **Part of this page is ahead of the published package.** `npm install` today gives you the state model
+  and the fourteen primitives. The **control layer** (`DevicePowerControl`, `DeviceLevelControl`,
+  `DeviceSetpointControl`, `DeviceModeControl`, `resolveControlState`), the **identity and card
+  compositions** (`DeviceIcon`, `DeviceIdentity`, `DeviceControlCard`, `DeviceGroupCard`, `RoutineCard`)
+  and the control-state, device-category and automation-timing helpers in `@kinetixui/iot/functions` are
+  in this repository's `main` but **not in the version npm serves**, so the sections documenting them are
+  marked **Unreleased**. They land on the next `@kinetixui/iot` release; until then, importing one from an
+  installed copy is a build error, not a mistake you made. Check what you have against
+  [the changelog](/docs/changelog).
+</Callout>
+
 Three entry points, because the useful half of this module has nothing to do with rendering:
 
 | import                     | contains                                 |
@@ -555,6 +567,11 @@ firmware. Live-region announcements are rare on purpose; a list is not announced
 
 ## Automation
 
+<Callout>
+  `RoutineCard` is **unreleased** — see [Install](#install). The automation *model* and its timing helpers
+  ship with it; the rest of this section describes types that are already published.
+</Callout>
+
 An automation is a **rule**: one trigger, any number of conditions joined by `and` / `or`, and one or more
 actions. The module models the rule and edits it. **It does not run it.** There is no engine, no scheduler and
 no trigger evaluation in this package; your application owns execution.
@@ -763,6 +780,11 @@ website, meant to be read and copied into your own codebase, because a screen la
 product's decisions live and importing someone else's is rarely the shortcut it looks like.
 
 ## Controls
+
+<Callout>
+  **Unreleased.** Everything in this section is in `main` and not in the published package — see
+  [Install](#install).
+</Callout>
 
 A control is the part that makes this a connected-device system rather than a dashboard. All four
 share one rule, and it is the rule most device UIs get wrong:

@@ -219,11 +219,12 @@ Whether you are evaluating a design system or maintaining one:
 5. **What are the real numbers?** Not catalogue size. The count per platform, and
    what the denominator excludes.
 
-Ours, today: 98 components. React 98, SwiftUI 90, Jetpack Compose 90, Flutter
-90, and Angular 31 — explicitly in preview. 90 of 98 on all four
-catalogue-complete platforms, with 8 documented exceptions that each carry a
-written reason. Angular sits outside that denominator because its catalogue is
-deliberately incomplete; folding it in would flatter the number.
+Ours, today: 98 catalogue entries — 97 components and one documented recipe.
+React 98, SwiftUI 90, Jetpack Compose 90, Flutter 90, and Angular 31 —
+explicitly in preview. 90 of 98 on all four catalogue-complete platforms, with
+8 documented exceptions that each carry a written reason. Angular sits outside
+that denominator because its catalogue is deliberately incomplete; folding it in
+would flatter the number.
 
 Those are generated. Edit them by hand and the build fails — which is also why
 two of them no longer match the numbers earlier in this piece. The correction
