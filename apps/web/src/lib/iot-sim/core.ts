@@ -31,7 +31,7 @@ import {
   type KinetixDeviceCapability,
 } from "@kinetixui/iot/functions";
 import { noiseAt, hashString } from "./prng";
-import { SCRIPTED_AUTOMATION_DETAIL } from "./labels";
+import { SCRIPTED_AUTOMATION_DETAIL, simulationSourceLabel } from "./labels";
 import type { SimCommand, SimDeviceRuntime, SimLatency, SimOptions, SimReading, SimScenario, SimSensor, SimTime, Simulation } from "./types";
 
 const DEFAULT_TIMEOUT_MS = 8000;
@@ -167,7 +167,9 @@ export function createSimulation(scenario: SimScenario, options: SimOptions = {}
     commands: [],
     readings,
     live: {},
-    alerts: [...scenario.alerts],
+    // A scenario's seeded alerts get the same treatment as the ones the run raises: the machine
+    // source is kept as-is and the words to show are added beside it.
+    alerts: scenario.alerts.map(withSourceLabel),
     activity: [...scenario.activity],
     automations: [...scenario.automations],
     energyAccrued: {},
@@ -185,18 +187,29 @@ export function createSimulation(scenario: SimScenario, options: SimOptions = {}
 
 const isOpen = (a: KinetixDeviceAlert) => parseTimestamp(a.resolvedAt ?? null) === null;
 
+/**
+ * Keep the precise machine `source` and add the words for it. Identity and copy are two fields, not
+ * one: the `sim:…` key is what rules, grouping and tests match on, and `sourceLabel` is what a person
+ * reads. An alert that already carries its own label keeps it.
+ */
+function withSourceLabel<T extends { source?: string; sourceLabel?: string }>(alert: T): T {
+  if (alert.sourceLabel) return alert;
+  const label = simulationSourceLabel(alert.source);
+  return label ? { ...alert, sourceLabel: label } : alert;
+}
+
 function raiseAlert(sim: Simulation, alert: Omit<KinetixDeviceAlert, "id">): KinetixDeviceAlert {
   sim.counters.alert += 1;
-  const full: KinetixDeviceAlert = { id: `sim-alert-${sim.counters.alert}`, ...alert };
+  const full: KinetixDeviceAlert = withSourceLabel({ id: `sim-alert-${sim.counters.alert}`, ...alert });
   sim.alerts.push(full);
-  log(sim, { timestamp: String(alert.raisedAt), kind: "alert", deviceId: alert.deviceId, source: alert.source, message: alert.message });
+  log(sim, { timestamp: String(alert.raisedAt), kind: "alert", deviceId: alert.deviceId, source: full.sourceLabel ?? full.source, message: alert.message });
   return full;
 }
 
 function resolveWhere(sim: Simulation, at: string, match: (a: KinetixDeviceAlert) => boolean, message: (a: KinetixDeviceAlert) => string): void {
   sim.alerts = sim.alerts.map((a) => {
     if (!isOpen(a) || !match(a)) return a;
-    log(sim, { timestamp: at, kind: "alert", deviceId: a.deviceId, source: a.source, message: message(a) });
+    log(sim, { timestamp: at, kind: "alert", deviceId: a.deviceId, source: a.sourceLabel ?? a.source, message: message(a) });
     return { ...a, resolvedAt: at };
   });
 }

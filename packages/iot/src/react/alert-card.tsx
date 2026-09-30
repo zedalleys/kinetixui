@@ -28,7 +28,9 @@ import { withDisplayName } from "./display-name";
  * - The severity dot became a **glyph** (ringed "i", triangle, octagon) so severity is a shape as well
  *   as a word.
  * - `kind` and `source` are shown when the alert has them. Only what the application supplied is
- *   displayed: this card never infers a cause.
+ *   displayed: this card never infers a cause. An alert's `source` is a machine identity, so the card
+ *   shows `sourceLabel` when the product supplied one and otherwise makes the id readable; the raw id
+ *   stays on the row as `data-source`.
  * - An alert's own `action` (`{ id, label }`) becomes a button that calls `onAction`. Its label and
  *   description are the product's; the card does not know what "Restart pump" does.
  * - `onAcknowledge` renders an Acknowledge button on an alert that is new and unresolved.
@@ -93,6 +95,25 @@ const SURFACE: Record<KinetixAlertSeverity, string> = {
   critical: "bg-destructive/5",
 };
 
+/**
+ * The words for an alert's origin. `sourceLabel` is the product's copy and is shown as given; with
+ * only a machine id the segments of a key (`rule:threshold:pressure`) are made readable rather than
+ * printed raw, because an implementation identifier is not product copy. The machine id itself is
+ * never discarded — it stays on the row as `data-source` for debugging and auditing.
+ */
+function sourceWords(alert: KinetixDeviceAlert | undefined): string | undefined {
+  const label = alert?.sourceLabel?.trim();
+  if (label) return label;
+  const id = alert?.source?.trim();
+  if (!id) return undefined;
+  const parts = id
+    .split(/[:/.]+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return humanize(id);
+  return parts.map(humanize).join(" · ");
+}
+
 const BUTTON =
   "inline-flex min-h-11 items-center rounded-full px-4 text-label-md transition-colors duration-fast motion-reduce:transition-none md:min-h-9 " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
@@ -111,6 +132,8 @@ const AlertCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardR
     const state = resolved ? "resolved" : acknowledged ? "acknowledged" : "new";
     const settled = acknowledged || resolved;
     const compact = variant === "compact";
+    // Human words for the screen; the machine id stays on the element as `data-source`.
+    const source = sourceWords(alert);
 
     // Acknowledged / resolved settle into a quieter tile and text, not a faded row: opacity multiplies
     // through to every descendant and failed contrast, so the de-emphasis lives in the surface tier.
@@ -163,6 +186,7 @@ const AlertCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardR
           data-severity={severity}
           data-acknowledged={acknowledged ? "" : undefined}
           data-alert-state={state}
+          data-source={alert?.source}
           data-variant="compact"
           className={cn("flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 font-sans", surface, className)}
           {...props}
@@ -196,6 +220,7 @@ const AlertCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardR
         data-severity={severity}
         data-acknowledged={acknowledged ? "" : undefined}
         data-alert-state={state}
+        data-source={alert?.source}
         data-variant="list"
         className={cn("flex items-start gap-3 font-sans transition-colors duration-base motion-reduce:transition-none", bare ? "px-4 py-3.5" : "p-4", surface, className)}
         {...props}
@@ -213,7 +238,7 @@ const AlertCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardR
           <p id={messageId} className={cn("break-words text-body-md", settled ? "text-muted-foreground" : "text-foreground")}>{alert?.message}</p>
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-label-md text-muted-foreground">
             <LastSync value={alert?.raisedAt} now={now} neverLabel="an unknown time" className="text-label-md" />
-            {alert?.source ? <span className="break-words">Source: {alert.source}</span> : null}
+            {source ? <span className="break-words">Source: {source}</span> : null}
             {stateChip}
           </p>
           {buttons ? <div className="flex flex-wrap gap-2 pt-1">{buttons}</div> : null}

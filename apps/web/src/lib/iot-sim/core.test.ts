@@ -250,6 +250,27 @@ describe("drift, alerts and derived state", () => {
     expect(stale.map((a) => a.source).sort()).toEqual(["sim:stale:humidity", "sim:stale:temperature"]);
   });
 
+  it("keeps the machine source and adds human words beside it, on raised and on seeded alerts", () => {
+    const s = tick(createSimulation(agritech), at(1000));
+    for (const a of s.alerts.filter((x) => x.source?.startsWith("sim:"))) {
+      expect(a.sourceLabel, a.source).toBeDefined();
+      expect(a.sourceLabel).not.toContain(":");
+    }
+    const seeded = s.alerts.find((a) => a.source === "sim:stale:soil-moisture");
+    expect(seeded?.sourceLabel).toBe("Soil moisture reporting check");
+    expect(s.alerts.find((a) => a.source === "sim:threshold:flow")?.sourceLabel).toBe("Flow threshold rule");
+    // An application's own vocabulary is left exactly as the scenario wrote it.
+    expect(s.alerts.find((a) => a.source === "battery")?.sourceLabel).toBeUndefined();
+  });
+
+  it("logs an alert's activity with the words, never the machine key", () => {
+    const s = tick(createSimulation(testScenario), at(1000));
+    const raised = s.activity.filter((e) => e.kind === "alert");
+    expect(raised.length).toBeGreaterThan(0);
+    for (const e of raised) expect(e.source ?? "").not.toMatch(/^sim:/);
+    expect(raised.some((e) => e.source === "Temperature reporting check" || e.source === "Temperature threshold rule")).toBe(true);
+  });
+
   it("keeps a bounded live series after the scenario history", () => {
     const s = run(createSimulation(testScenario), 0, 30_000, 1000);
     expect(selectSeries(s, "probe", "temperature").points.length).toBeGreaterThan(20);
