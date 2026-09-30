@@ -459,3 +459,41 @@ The React-free `functions` entry is byte-identical: its built chunk is the same 
 and `packages/iot/src/functions` and `types` have no diff against the baseline apart from one added optional
 field on the alert type.
 
+
+---
+
+## 9. Human QA handoff — implementation frozen, 2026-09-30
+
+**Frozen implementation head:** `8cc0bda5ef00341edd96ae180881ec624ec0cac6`
+**Preview to test:** the URL at the top of this document. **Confirm it serves this head before testing** — the
+Vercel bot reported a completed deployment for `8cc0bda` on the pull request, but that has not been confirmed
+against the served page. Do not test an older deployment.
+
+**No human test was executed at this stage, and no row below §3 changes.** The session that prepared this handoff
+had no human tester, no iPhone, no Safari, no VoiceOver, no Firefox and no Windows machine, and the preview host
+is blocked by its network policy. Every row that needs a person or a device therefore stays **NOT RUN**, with the
+required environment named. Nothing in §6, §7 or §8 is human evidence: those are automated Chromium runs and are
+labelled as such.
+
+### Bundle decision — accepted for #259, no action required before merge
+The shared `Glyph` vocabulary adds about 2.75 KB to an isolated consumer that imports a component requiring
+`Glyph`. Tree shaking otherwise correctly isolates unrelated IoT capabilities, and the React-free `functions`
+entry is unchanged. **No bundle optimization is required before merging #259.** The split is a follow-up
+(§8 follow-up 3), not a blocker.
+
+### For the person doing the testing
+Work the existing rows in §3; they are the canonical checklist. The highest-value ones are rows 30–35 and 64
+(VoiceOver), 36 (Safari), 63 (a real phone) and 39 (real Windows High Contrast). Record each row you actually
+perform in the table below, and leave anything you could not do as NOT RUN with the reason. A test counts only in
+the environment it names: Chromium is not Safari, an emulator is not a phone, axe is not a screen reader, and
+forced-colors emulation is not Windows High Contrast.
+
+| Row(s) | Result | Tester | Device | OS | Browser | Assistive tech | Date | Observation |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| | | | | | | | | |
+
+**Row 5 judgement call, needs a person's eye:** on the Operations plan at about 390 px the spatial view
+deliberately shows roughly 6 of 14 markers, prioritising the selected device and anything needing attention; the
+rest stay reachable in the equipment list and in the plan's screen-reader list. PASS if the hierarchy makes clear
+that the plan is a summary and everything is still reachable. FAIL if a user would read the missing markers as
+missing devices. Do not simply add all 14 markers.
