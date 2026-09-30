@@ -213,6 +213,29 @@ describe("AutomationBuilder structure", () => {
     const free = within(fieldset("Action 2")).getByRole("textbox", { name: "Do" });
     expect(free).toHaveValue("notify");
   });
+
+  /**
+   * Phone widths: a field that shares a wrapping row on a 10rem basis was squeezed to about 160px next
+   * to the "Rule is on" checkbox, narrower than the name it held, so the rule name scrolled sideways
+   * inside the control (measured 193/177 at a 326px container). Every field takes the whole row below
+   * `sm` and pairs off again from `sm` up.
+   */
+  it("gives every field the whole row below sm, so a control is never squeezed narrower than its value", () => {
+    render(<Harness initial={fullRule} />);
+    const fields = [
+      screen.getByRole("textbox", { name: "Rule name" }),
+      ...within(fieldset("Trigger")).getAllByRole("combobox"),
+      within(fieldset("Trigger")).getByRole("spinbutton", { name: "Value" }),
+      ...within(fieldset("Action 1")).getAllByRole("combobox"),
+    ];
+    for (const control of fields) {
+      const field = control.parentElement!;
+      expect(field.className).toContain("basis-full");
+      expect(field.className).toContain("sm:basis-40");
+      // A bare `basis-40` is what let two fields share a phone-width row.
+      expect(field.className).not.toMatch(/(^|\s)basis-40(\s|$)/);
+    }
+  });
 });
 
 describe("AutomationBuilder editing without a pointer", () => {
@@ -583,6 +606,46 @@ describe("PairingStepper", () => {
     const { container } = render(<PairingStepper horizontal label="Setup" steps={[{ id: "a", label: "Plug in", status: "complete" }, { id: "b", label: "Connect", status: "active" }]} />);
     expect(screen.getByRole("list", { name: "Setup" })).toBeInTheDocument();
     expect(container.querySelector("ol")!.className).toMatch(/flex-row/);
+  });
+
+  /**
+   * Phone widths: the hairline between two nodes used to be one `w-full` line offset by 50% of the
+   * step, so every step but the last reported a scrollWidth 1.5× its own width (81 in a 54px box at a
+   * 326px container) — an invisible sideways scroll on iOS. It is now two halves, each inside its own
+   * step, which draws the same continuous line.
+   */
+  it("horizontal: draws the connector as halves inside each step rather than a line that overhangs it", () => {
+    const { container } = render(
+      <PairingStepper
+        horizontal
+        steps={[
+          { id: "a", label: "Plug in", status: "complete" },
+          { id: "b", label: "Connect", status: "active" },
+          { id: "c", label: "Name it", status: "pending" },
+        ]}
+      />,
+    );
+    const lis = [...container.querySelectorAll("li")];
+    const rules = (li: Element) => [...li.querySelectorAll(":scope > span.absolute")].map((s) => s.className);
+    expect(rules(lis[0]!)).toEqual([expect.stringContaining("start-1/2")]);
+    expect(rules(lis[1]!)).toEqual([expect.stringContaining("start-0"), expect.stringContaining("end-0")]);
+    expect(rules(lis[2]!)).toEqual([expect.stringContaining("end-1/2")]);
+    for (const li of lis) {
+      for (const cls of rules(li)) {
+        expect(cls).not.toMatch(/(^|\s)w-full(\s|$)/);
+        expect(cls).toMatch(/(start-0 end-1\/2|start-1\/2 end-0)/);
+      }
+    }
+    // The half leading into step 2 is the completed colour, because step 1 is done.
+    expect(rules(lis[1]!)[0]).toContain("bg-primary");
+    expect(rules(lis[2]!)[0]).toContain("bg-border");
+  });
+
+  it("horizontal: the state word may wrap under its glyph, so a narrow step reflows instead of scrolling", () => {
+    const { container } = render(<PairingStepper horizontal steps={[{ id: "a", label: "Connect", status: "active" }]} />);
+    const word = within(container).getByText("In progress");
+    expect(word.className).toContain("flex-wrap");
+    expect(word.className).toContain("justify-center");
   });
 
   it("announces nothing, is axe-clean and uses logical properties in RTL", async () => {

@@ -13,6 +13,7 @@ import {
   DeviceHealthSummary,
   DeviceListItem,
   DeviceStatusBadge,
+  EnergySummary,
   FirmwareStatus,
   PairingFailure,
   PairingMethodPicker,
@@ -25,6 +26,7 @@ import type { KinetixDeviceAlert } from "../types/alert";
 import type { KinetixActivityEvent } from "../types/activity";
 import type { KinetixAutomationRule } from "../types/automation";
 import { summarizeFleetHealth } from "../functions/device-state";
+import { summarizeEnergy } from "../functions/energy";
 
 /**
  * The visual maturity pass: what its new props and variants promise, kept separate from the behavioural
@@ -420,5 +422,49 @@ describe("Glyph additions", () => {
     const { container } = render(<><Glyph name="plus" /><Glyph name="x" /></>);
     expect([...container.querySelectorAll("svg")].map((s) => s.getAttribute("data-glyph"))).toEqual(["plus", "x"]);
     for (const svg of container.querySelectorAll("svg")) expect(svg.querySelector("path")).not.toBeNull();
+  });
+});
+
+/**
+ * Phone widths. The sparkline's newest-day marker is 12px across and sits ON the last point, which is at
+ * the end of the plot, so half of it hung past the card: the plot measured 268 in a 262px box at a 326px
+ * container, an invisible horizontal scroll on iOS. The plot is inset by the marker's radius and the
+ * overlays are placed inside that band, so nothing is drawn outside the card and nothing is hidden.
+ */
+describe("EnergySummary sparkline fits its container", () => {
+  const render1 = () =>
+    render(
+      <EnergySummary
+        presentation="sparkline"
+        summary={summarizeEnergy([{ id: "a", label: "A", value: 5 }], { unit: "kWh" })}
+        today={9.8}
+        days={[4, 6, null, 8]}
+        dayLabels={["Mon", "Tue", "Wed", "Thu"]}
+        comparison={{ label: "last week", days: [4, 4, 4, 4] }}
+      />,
+    );
+
+  it("insets the plot by the marker's radius instead of letting the marker hang over the edge", () => {
+    const { container } = render1();
+    const plot = container.querySelector("[data-spark-line]")!.closest("svg")!.parentElement!;
+    expect(plot.className).toContain("inset-x-1.5");
+    expect(plot.parentElement!.className).toContain("relative");
+  });
+
+  it("places the marker and its value inside the inset band, never at a bare 100%", () => {
+    const { container } = render1();
+    for (const sel of ["[data-latest-marker]", "[data-latest-value]"]) {
+      const style = container.querySelector(sel)!.getAttribute("style") ?? "";
+      expect(style).toMatch(/inset-inline-start:\s*calc\(/);
+      expect(style).not.toMatch(/inset-inline-start:\s*\d+(\.\d+)?%/);
+    }
+  });
+
+  it("keeps the textual summary and the View data table that carry the same numbers", () => {
+    const { container } = render1();
+    expect(container).toHaveTextContent(/Last 4 days: 18\.0 kWh in total/);
+    const table = container.querySelector("[data-data-table] table")!;
+    expect(within(table as HTMLElement).getByText("No data")).toBeInTheDocument();
+    expect(container.querySelector("details summary")).toHaveTextContent("View data");
   });
 });

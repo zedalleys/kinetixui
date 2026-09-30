@@ -113,6 +113,8 @@ const PairingStepper = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
       >
         {list.map((step, index) => {
           const last = index === list.length - 1;
+          const first = index === 0;
+          const prevDone = list[index - 1]?.status === "complete";
           const current = step.status === "active" || step.status === "error";
           // Below `sm` a horizontal row has no room for every label: the current one stays drawn and the
           // others move to the accessibility tree only.
@@ -129,10 +131,18 @@ const PairingStepper = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
               {horizontal ? (
                 <>
                   <Node status={step.status} index={index} />
-                  {last ? null : <span aria-hidden="true" className={cn("absolute start-1/2 top-4 h-px w-full", done ? "bg-primary" : "bg-border")} />}
+                  {/* The hairline is drawn as two halves, each inside its own step: from this node to the
+                      end of the step, and from the start of the next step to its node. A single
+                      `w-full` line offset by 50% would stick 50% of the step's width past its end, which
+                      is a real horizontal overflow at phone widths (a step 54px wide scrolled to 81px). */}
+                  {first ? null : <span aria-hidden="true" className={cn("absolute start-0 end-1/2 top-4 h-px", prevDone ? "bg-primary" : "bg-border")} />}
+                  {last ? null : <span aria-hidden="true" className={cn("absolute start-1/2 end-0 top-4 h-px", done ? "bg-primary" : "bg-border")} />}
                   <span className="flex min-w-0 flex-col items-center gap-0.5">
                     <span className={cn("break-words text-label-lg", step.status === "pending" ? "text-muted-foreground" : "text-foreground", textClass)}>{step.label}</span>
-                    <span className={cn("inline-flex items-center gap-1 text-label-md", step.status === "error" ? "text-destructive" : "text-muted-foreground", textClass)}>
+                    {/* A step in a four-step row is about 64px wide on a 320px phone, which is narrower
+                        than a glyph plus "In progress" on one line. Wrapping lets the word drop under
+                        the glyph rather than scroll out of the step. */}
+                    <span className={cn("inline-flex flex-wrap items-center justify-center gap-1 text-label-md", step.status === "error" ? "text-destructive" : "text-muted-foreground", textClass)}>
                       <Glyph name={GLYPH[step.status]} size={12} className={horizontal && !current ? "hidden sm:inline-block" : undefined} />
                       {WORD[step.status]}
                     </span>
