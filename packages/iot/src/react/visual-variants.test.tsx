@@ -319,6 +319,15 @@ describe("RoutineCard", () => {
     expect(container.innerHTML).not.toMatch(/opacity-\d/);
     expect(container).toHaveTextContent("Off");
   });
+
+  it("wraps a long name instead of truncating it, because the name is the identifier", () => {
+    const name = "Evening lights and porch lamp";
+    render(<RoutineCard automation={{ ...automation, name }} onToggleEnabled={() => {}} />);
+    // The full name must be present as text, and must not be clipped by `truncate` (a single ellipsised line).
+    const el = screen.getByText(name);
+    expect(el.className).not.toContain("truncate");
+    expect(el.className).toContain("line-clamp-2");
+  });
 });
 
 describe("Automation view and builder", () => {

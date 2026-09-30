@@ -96,7 +96,10 @@ const RoutineCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwar
         <div className="flex items-start gap-3">
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="text-label-md text-muted-foreground">{KIND_LABEL[automation.kind]}</span>
-            <span className={cn("truncate text-title-md", off ? "text-muted-foreground" : "text-foreground")}>{automation.name}</span>
+            {/* The name is the identifier, so it wraps rather than truncates: "Evening lights" clipped to
+                "Evening lig…" in a narrow column names nothing. Clamped at two lines so a long name still
+                cannot stretch the card unboundedly. */}
+            <span className={cn("line-clamp-2 text-title-md", off ? "text-muted-foreground" : "text-foreground")}>{automation.name}</span>
           </span>
           {onToggleEnabled ? (
             <button
