@@ -303,7 +303,9 @@ export default function HomePage() {
               <Link
                 href="/docs/platforms"
                 {...ctaAttrs("homepage_flagship", "platform_availability")}
-                className="text-primary underline-offset-4 hover:underline"
+                // Always underlined, not just on hover: inside a paragraph that mixes foreground and muted
+                // text, colour alone does not separate a link from its surroundings (axe link-in-text-block).
+                className="text-primary underline underline-offset-4"
               >
                 What ships where
               </Link>
