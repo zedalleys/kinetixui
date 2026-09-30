@@ -147,7 +147,7 @@ const Tour: React.FC<TourProps> = ({
     <>
       <div
         aria-hidden
-        className="pointer-events-none fixed z-overlay rounded-lg transition-all duration-fast"
+        className="pointer-events-none fixed z-overlay rounded-lg transition-[top,left,width,height,opacity] duration-fast ease-standard"
         style={spotlightStyle}
       />
       <div
@@ -157,7 +157,7 @@ const Tour: React.FC<TourProps> = ({
         aria-labelledby={titleId}
         tabIndex={-1}
         onKeyDown={trapTab}
-        className="fixed z-overlay w-80 rounded-lg border border-border bg-popover p-4 font-sans text-popover-foreground shadow-lg outline-none transition-all duration-fast"
+        className="fixed z-overlay w-80 rounded-lg border border-border bg-popover p-4 font-sans text-popover-foreground shadow-lg outline-none transition-[top,left,opacity] duration-fast ease-standard"
         style={cardStyle}
       >
         <p id={titleId} className="text-title-sm font-medium text-foreground">

@@ -97,9 +97,34 @@ Two duration and easing scales, shared by every platform. Native ports expose th
 
 <MotionTable />
 
-**Reduced motion.** On the web, components honor `prefers-reduced-motion`: the browser accessibility pass
-fails any story that still runs a looping animation faster than three seconds under it. Native platforms
-have their own Reduce Motion settings; honoring them in the native components has not been audited yet.
+**What each tier is for.** `instant` is press and toggle feedback — the tier a control reaches for when it
+has to answer the pointer. `fast` is a small state change: a chevron, a tab, a menu opening. `base` is a
+fade or a progress stroke. `slow` is a large surface arriving, and `slower` exists for looping animation,
+which is almost always the wrong answer. The easings carry direction rather than taste: `enter` decelerates
+because a surface that is arriving should settle, `exit` accelerates because one that is leaving should get
+out of the way, and `emphasized` is reserved for the rare transition that should be noticed.
+
+**When not to use motion.** Nothing decorative that runs on its own, nothing that delays an interaction,
+nothing that animates layout unless moving is the point (`Tour`'s spotlight travelling between targets is
+the exception that proves it). Prefer `opacity` and `transform`; naming the properties that actually change
+beats `transition-all`, which quietly animates layout too.
+
+**Core is quieter than IoT, deliberately.** A button or a menu should feel immediate and then get out of the
+way. `@kinetixui/iot` uses motion to carry state that genuinely has stages — requested, pending, confirmed —
+and that is a different job, documented in [IoT](/docs/iot).
+
+**Reduced motion.** `@kinetixui/ui` ships no CSS of its own, so the guarantee lives in the Tailwind preset
+consumers already extend: under `prefers-reduced-motion: reduce` it shortens every duration to `0.01ms`
+rather than removing motion. That distinction is the safety property. A shortened transition still arrives
+at the same end state, so a checked box is still checked, a switch thumb is still moved and an IoT control
+still reads confirmed rather than requested — the interpolation goes, the information does not. It is also
+why the rule is not `animation: none`: Radix unmounts an overlay when its exit animation fires
+`animationend`, and an animation that never runs never fires it, which would strand the overlay in the tree
+for exactly the people who asked for less motion. Components that need more than this floor still say so at
+their own call site with `motion-reduce:`, as the IoT package does where a pulse carries meaning.
+
+Native platforms have their own Reduce Motion settings; honoring them in the native components has not been
+audited yet, and this pass did not change any native implementation.
 
 ## On every platform
 
