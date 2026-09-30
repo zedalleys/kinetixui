@@ -24,7 +24,7 @@ import { withDisplayName } from "./display-name";
  * `value` may be `null`, meaning the device has never reported a level. That renders as an empty
  * track with "—", not as zero: a dimmer that has not reported is not a dimmer that is off.
  */
-export interface DeviceLevelControlProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type"> {
+export interface DeviceLevelControlProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type" | "size"> {
   /** The device's confirmed level. `null` means never reported — rendered as unknown, not as 0. */
   value: number | null | undefined;
   /** The requested level while unconfirmed. Omit when there is nothing in flight. */
@@ -42,11 +42,16 @@ export interface DeviceLevelControlProps extends Omit<React.InputHTMLAttributes<
   onPreview?: (next: number) => void;
   /** Show the numeric readout above the track. */
   showValue?: boolean;
+  /** `md` (default) reads as a 24px numeral; `lg` as a hero 36px numeral for a primary control. */
+  size?: "md" | "lg";
 }
+
+/** The native thumb's diameter in px. The drawn fill is inset by it so the fill ends under the thumb's centre. */
+const THUMB = 28;
 
 const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLInputElement, DeviceLevelControlProps>(
   (
-    { value, target, min = 0, max = 100, step = 1, unit = "%", label, control, onCommit, onPreview, showValue = true, className, disabled, ...props },
+    { value, target, min = 0, max = 100, step = 1, unit = "%", label, control, onCommit, onPreview, showValue = true, size = "md", className, disabled, ...props },
     ref,
   ) => {
     const confirmed = clampLevel(value, min, max);
@@ -74,51 +79,76 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
       onCommit?.(next);
     };
     const span = max - min || 1;
-    const pct = (n: number) => `${(((n - min) / span) * 100).toFixed(2)}%`;
+    const ratio = (n: number) => (n - min) / span;
+    // The native thumb travels `width - THUMB`, not `width`, so a plain percentage drifts away from it at
+    // the ends. This lands the fill's edge exactly under the thumb's centre at every position.
+    const edge = (n: number) => `calc(${(ratio(n) * 100).toFixed(2)}% + ${((0.5 - ratio(n)) * THUMB).toFixed(2)}px)`;
 
     const descriptionId = React.useId();
-    const reading = confirmed === null ? "—" : `${confirmed}${unit}`;
 
     return (
-      <div className={cn("flex flex-col gap-2", className)} data-pending={pending ? "" : undefined}>
+      <div className={cn("flex flex-col gap-1", className)} data-pending={pending ? "" : undefined}>
         {showValue ? (
-          <div className="flex items-baseline gap-2">
-            <span className="text-label-sm text-muted-foreground">{label}</span>
-            <span className="ms-auto flex items-baseline gap-1.5">
-              <span className={cn("text-title-sm tabular-nums", pending ? "text-muted-foreground" : "text-foreground")}>{reading}</span>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-label-lg text-muted-foreground">{label}</span>
+            <span className="ms-auto flex flex-wrap items-baseline justify-end gap-x-2 gap-y-1">
+              {/* The confirmed level is the big, solid number. It never shows the request. */}
+              <span
+                data-confirmed=""
+                className={cn(
+                  "tabular-nums leading-none",
+                  size === "lg" ? "text-display-sm" : "text-headline-sm",
+                  confirmed === null ? "text-muted-foreground" : "text-foreground",
+                )}
+              >
+                {confirmed === null ? "—" : confirmed}
+                {confirmed === null ? null : <span className="ms-0.5 text-title-md text-muted-foreground">{unit}</span>}
+              </span>
               {pending ? (
-                <span className="text-label-sm tabular-nums text-primary">
-                  {/* An arrow would flip under RTL and read backwards; the word does not. */}
-                  to {requested}
-                  {unit}
+                // A dashed chip in words, not an arrow: an arrow would flip under RTL and read backwards.
+                <span
+                  data-requested=""
+                  className="inline-flex animate-pulse items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md tabular-nums text-foreground motion-reduce:animate-none"
+                >
+                  Requested {requested}
+                  {unit}, not yet confirmed
                 </span>
               ) : null}
             </span>
           </div>
         ) : null}
 
-        <div className="relative h-9">
+        <div className="relative h-11">
           {/* Track. `inset-x-0` is logical-safe: both edges, so RTL needs nothing here. */}
-          <div className="absolute inset-x-0 top-1/2 h-2.5 -translate-y-1/2 overflow-hidden rounded-full bg-muted">
+          <div className="absolute inset-x-0 top-1/2 h-4 -translate-y-1/2 overflow-hidden rounded-full bg-muted">
             {confirmed !== null ? (
               <div
-                className="absolute inset-y-0 start-0 rounded-full bg-primary transition-[width] duration-300 ease-out motion-reduce:transition-none"
-                style={{ width: pct(confirmed) }}
+                className="absolute inset-y-0 start-0 rounded-full bg-primary transition-[width] duration-base ease-out motion-reduce:transition-none"
+                style={{ width: edge(confirmed) }}
               />
             ) : null}
             {pending ? (
               // The requested extension, hatched so it is distinguishable from the confirmed fill
               // without relying on the two blues being told apart.
               <div
-                className="absolute inset-y-0 start-0 rounded-full opacity-70 transition-[width] duration-300 ease-out motion-reduce:transition-none"
+                className="absolute inset-y-0 start-0 rounded-full opacity-60 transition-[width] duration-base ease-out motion-reduce:transition-none"
                 style={{
-                  width: pct(requested!),
+                  width: edge(requested!),
                   backgroundImage:
                     "repeating-linear-gradient(135deg, hsl(var(--primary)) 0 4px, transparent 4px 8px)",
                 }}
               />
             ) : null}
           </div>
+          {pending ? (
+            // The requested marker: a solid tick standing proud of the track at the asked-for level.
+            <span
+              aria-hidden="true"
+              data-requested-marker=""
+              className="pointer-events-none absolute top-1/2 h-8 w-1 -translate-y-1/2 rounded-full bg-foreground"
+              style={{ insetInlineStart: `calc(${edge(requested!)} - 2px)` }}
+            />
+          ) : null}
 
           <input
             ref={ref}
@@ -156,13 +186,15 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
               "absolute inset-0 w-full cursor-pointer appearance-none bg-transparent",
               "focus-visible:outline-none",
               "disabled:cursor-not-allowed disabled:opacity-55",
-              // A 36px-tall thumb hit area: comfortably past the 24px touch minimum, on a track that
-              // is visually 10px. The thumb is drawn by the pseudo-elements below.
-              "[&::-webkit-slider-thumb]:size-6 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full",
-              "[&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:bg-background",
-              "[&::-webkit-slider-thumb]:shadow-sm",
-              "[&::-moz-range-thumb]:size-6 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2",
-              "[&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:bg-background",
+              // The input fills a 44px-tall box (the touch minimum) around a 16px track; the 28px thumb is
+              // drawn by the pseudo-elements below.
+              "[&::-webkit-slider-thumb]:size-7 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full",
+              // Pseudo-element thumbs are outside Tailwind's preflight, so a border needs its style spelled out.
+              "[&::-webkit-slider-thumb]:border-solid [&::-moz-range-thumb]:border-solid",
+              "[&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:bg-background",
+              "[&::-webkit-slider-thumb]:shadow-md",
+              "[&::-moz-range-thumb]:size-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-4",
+              "[&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:bg-background [&::-moz-range-thumb]:shadow-md",
               "focus-visible:[&::-webkit-slider-thumb]:ring-2 focus-visible:[&::-webkit-slider-thumb]:ring-ring",
               "focus-visible:[&::-webkit-slider-thumb]:ring-offset-2 focus-visible:[&::-webkit-slider-thumb]:ring-offset-background",
               pending && "[&::-webkit-slider-thumb]:border-dashed [&::-moz-range-thumb]:border-dashed",
@@ -172,7 +204,7 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
         </div>
 
         {control?.description && control.availability !== "ready" ? (
-          <span id={descriptionId} className="text-label-sm text-muted-foreground">
+          <span id={descriptionId} className="text-label-md text-muted-foreground">
             {control.description}
           </span>
         ) : null}

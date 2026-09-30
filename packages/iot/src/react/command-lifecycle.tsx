@@ -27,6 +27,11 @@ import { Glyph, STAGE_GLYPH } from "./glyph";
  * text and the Retry button say what happened, and interrupting someone mid-sentence for a timeout
  * that they can retry is worse than telling them next.
  *
+ * **Density.** `full` (default) is the stepper with its values and sentence. `compact` is one line —
+ * "Requested › Acknowledged, not yet confirmed" — with the current stage emphasised by weight and a tint,
+ * for a card that already shows the values. The sentence stays the single `role="status"` region in both
+ * densities (visually hidden in compact unless the request failed, so a failure is never silent on screen).
+ *
  * Nothing here sends anything. `onRetry` and `onCancel` report intent; the product drives the
  * lifecycle machine.
  */
@@ -48,6 +53,8 @@ export interface CommandLifecycleProps extends Omit<React.HTMLAttributes<HTMLDiv
   };
   /** Hide the "Requested / Device reports" pair. Only where both values are already on screen. */
   hideValues?: boolean;
+  /** `full` (default) or `compact` — a single line with the current stage emphasised. */
+  density?: "full" | "compact";
 }
 
 type StepState = "done" | "current" | "upcoming";
@@ -89,7 +96,7 @@ function stepsFor(l: KinetixCommandLifecycle): { stage: KinetixCommandLifecycleS
 const TERMINAL_BAD: readonly KinetixCommandLifecycleStage[] = ["failed", "timed-out", "unreachable"];
 
 const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, CommandLifecycleProps>(
-  ({ lifecycle, formatValue, onRetry, onCancel, labels, hideValues = false, className, ...props }, ref) => {
+  ({ lifecycle, formatValue, onRetry, onCancel, labels, hideValues = false, density = "full", className, ...props }, ref) => {
     const format = (v: unknown) => (v === undefined || v === null ? "Unknown" : (formatValue ?? String)(v));
     const steps = stepsFor(lifecycle);
     const pending = isLifecyclePending(lifecycle);
@@ -98,25 +105,36 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
     // The machine accepts a cancel while in flight and after a failure, timeout or unreachable
     // (abandoning a request that never landed); it does not after confirmed or cancelled.
     const cancel = onCancel !== undefined && (pending || bad);
+    const compact = density === "compact";
     const attemptText =
       lifecycle.attempts > 0
         ? (labels?.attempt?.(lifecycle.attempts, lifecycle.maxAttempts) ?? `Attempt ${lifecycle.attempts} of ${lifecycle.maxAttempts}`)
         : null;
 
+    const wordFor = (step: (typeof steps)[number]) => {
+      const bare = describeLifecycleStage(step.stage);
+      // The half-filled "Acknowledged" is spelled out while it is the current step: it is the
+      // one stage most likely to be misread as done.
+      return step.stage === "acknowledged" && step.state === "current" ? "Acknowledged, not yet confirmed" : bare;
+    };
+
     return (
       <div
         ref={ref}
         data-lifecycle-stage={lifecycle.stage}
-        className={cn("flex min-w-0 flex-col gap-2.5 font-sans", className)}
+        data-density={density}
+        className={cn("flex min-w-0 flex-col font-sans", compact ? "gap-1.5" : "gap-3", className)}
         {...props}
       >
         {steps.length > 0 ? (
-          <ol className="flex flex-wrap items-center gap-x-4 gap-y-1.5" aria-label="Progress of the request">
-            {steps.map((step) => {
-              const bare = describeLifecycleStage(step.stage);
-              // The half-filled "Acknowledged" is spelled out while it is the current step: it is the
-              // one stage most likely to be misread as done.
-              const word = step.stage === "acknowledged" && step.state === "current" ? "Acknowledged, not yet confirmed" : bare;
+          <ol
+            className={cn("m-0 flex list-none flex-wrap items-center p-0", compact ? "gap-x-1.5 gap-y-1" : "gap-x-2 gap-y-2")}
+            aria-label="Progress of the request"
+          >
+            {steps.map((step, index) => {
+              const word = wordFor(step);
+              const last = index === steps.length - 1;
+              const failed = step.state === "current" && bad;
               return (
                 <li
                   key={step.stage}
@@ -124,22 +142,70 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                   data-step-state={step.state}
                   aria-current={step.state === "current" ? "step" : undefined}
                   className={cn(
-                    "inline-flex items-center gap-1.5 text-label-md",
+                    "inline-flex items-center",
+                    compact ? "gap-1.5 text-label-lg" : "gap-2 text-label-lg",
                     step.state === "upcoming" ? "text-muted-foreground" : "text-foreground",
-                    step.state === "current" && bad && "text-destructive",
+                    failed && "text-destructive",
                   )}
                 >
-                  <Glyph name={STAGE_GLYPH[step.stage]} className={cn(step.state === "upcoming" && "opacity-60", step.stage === "retrying" && pending && "animate-spin motion-reduce:animate-none")} />
-                  <span className={step.state === "current" ? "font-medium" : undefined}>{word}</span>
+                  {compact ? (
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5",
+                        step.state === "current" && (failed ? "bg-destructive/10 font-semibold" : "bg-primary/10 font-semibold"),
+                      )}
+                    >
+                      <Glyph
+                        name={STAGE_GLYPH[step.stage]}
+                        size={14}
+                        className={cn(step.state === "upcoming" && "opacity-60", step.stage === "retrying" && pending && "animate-spin motion-reduce:animate-none")}
+                      />
+                      <span>{word}</span>
+                    </span>
+                  ) : (
+                    <>
+                      {/* The marker: filled tone = reached, tinted ring = here, dashed hollow = still ahead. */}
+                      <span
+                        className={cn(
+                          "grid size-7 shrink-0 place-items-center rounded-full",
+                          step.state === "done" && "bg-muted",
+                          step.state === "current" && (failed ? "bg-destructive/10 ring-1 ring-inset ring-destructive/40" : "bg-primary/10 ring-1 ring-inset ring-primary/40"),
+                          step.state === "upcoming" && "border border-dashed border-border",
+                        )}
+                      >
+                        <Glyph
+                          name={STAGE_GLYPH[step.stage]}
+                          size={16}
+                          className={cn(step.state === "upcoming" && "opacity-60", step.stage === "retrying" && pending && "animate-spin motion-reduce:animate-none")}
+                        />
+                      </span>
+                      <span className={step.state === "current" ? "font-semibold" : step.state === "done" ? "font-medium" : "font-normal"}>{word}</span>
+                    </>
+                  )}
                   {step.state === "upcoming" ? <span className="sr-only"> (not reached yet)</span> : null}
+                  {last ? null : compact ? (
+                    // Chevron, mirrored under RTL: it points along the reading direction.
+                    <svg aria-hidden="true" focusable="false" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-muted-foreground rtl:-scale-x-100">
+                      <path d="m6 3.5 4.5 4.5L6 12.5" />
+                    </svg>
+                  ) : (
+                    // The connecting hairline: solid once the next step is reached, dashed while it is ahead.
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "ms-1 hidden h-0 w-6 shrink-0 border-t sm:block",
+                        steps[index + 1]?.state === "upcoming" ? "border-dashed border-border" : "border-solid border-muted-foreground/50",
+                      )}
+                    />
+                  )}
                 </li>
               );
             })}
           </ol>
         ) : null}
 
-        {hideValues ? null : (
-          <dl className="flex flex-wrap gap-x-6 gap-y-1 text-label-sm">
+        {hideValues || compact ? null : (
+          <dl className="m-0 flex flex-wrap gap-x-6 gap-y-1 rounded-xl bg-muted/40 px-3 py-2 text-label-md">
             <div className="flex gap-1.5">
               <dt className="text-muted-foreground">{labels?.requested ?? "Requested"}</dt>
               <dd data-requested="" className="text-foreground">{format(lifecycle.requestedValue)}</dd>
@@ -150,11 +216,15 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
             </div>
           </dl>
         )}
-        {attemptText ? <p data-attempts="" className="text-label-sm text-muted-foreground">{attemptText}</p> : null}
+        {attemptText ? <p data-attempts="" className="m-0 text-label-md text-muted-foreground">{attemptText}</p> : null}
 
         {/* The one live region. Live regions announce *changes*, so the first render is silent and a
             stage change is spoken once. The stepper above is deliberately not live. */}
-        <p role="status" data-lifecycle-summary="" className="text-label-sm text-muted-foreground">
+        <p
+          role="status"
+          data-lifecycle-summary=""
+          className={cn("m-0 text-label-lg text-muted-foreground", compact && !bad && "sr-only")}
+        >
           {describeCommandLifecycle(lifecycle, { formatValue })}
         </p>
 
@@ -165,7 +235,7 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                 type="button"
                 onClick={onRetry}
                 className={cn(
-                  "inline-flex min-h-11 items-center rounded-lg bg-primary px-3.5 text-label-md text-primary-foreground",
+                  "inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-label-lg text-primary-foreground md:min-h-9",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 )}
               >
@@ -177,7 +247,7 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                 type="button"
                 onClick={onCancel}
                 className={cn(
-                  "inline-flex min-h-11 items-center rounded-lg border border-input bg-background px-3.5 text-label-md text-foreground",
+                  "inline-flex min-h-11 items-center rounded-lg bg-muted px-4 text-label-lg text-foreground md:min-h-9",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 )}
               >

@@ -67,38 +67,51 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
     const atMin = shown !== null && shown <= min;
     const atMax = shown !== null && shown >= max;
 
+    const STEP_BUTTON = cn(
+      "grid size-11 shrink-0 place-items-center rounded-full bg-muted text-foreground",
+      "transition-colors duration-fast hover:bg-muted/60 active:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+      "focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none",
+      "disabled:cursor-not-allowed disabled:opacity-45",
+    );
+
     return (
       <div ref={ref} className={cn("flex flex-col gap-3", className)} data-pending={pending ? "" : undefined} {...props}>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <button
             type="button"
             aria-label={`Decrease ${label}`}
             disabled={!interactive || atMin || shown === null}
             onClick={() => nudge(-step)}
-            className={cn(
-              "grid size-11 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground",
-              "transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              "focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none",
-              "disabled:cursor-not-allowed disabled:opacity-45",
-            )}
+            className={STEP_BUTTON}
           >
             {/* Minus and plus are direction-neutral, so nothing here needs to flip under RTL. */}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
               <path d="M5 12h14" />
             </svg>
           </button>
 
-          <div className="flex min-w-0 flex-1 flex-col items-center">
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
             <span
               // Deliberately NOT a live region. The sr-only sentence below announces the same change
               // with its context ("target 21, currently 19"); making this one live as well had a
               // screen reader read the bare number first and the sentence straight after.
-              className={cn("text-display-sm tabular-nums leading-none", pending ? "text-primary" : "text-foreground")}
+              // The big number is the CONFIRMED target; a request never replaces it.
+              data-confirmed=""
+              className={cn("tabular-nums leading-none text-display-sm", confirmed === null ? "text-muted-foreground" : "text-foreground")}
             >
-              {shown === null ? "—" : shown}
-              <span className="text-title-sm align-top">{unit}</span>
+              {confirmed === null ? "—" : confirmed}
+              {confirmed === null ? null : <span className="ms-0.5 align-top text-title-md text-muted-foreground">{unit}</span>}
             </span>
-            <span className="mt-1 truncate text-label-sm text-muted-foreground">
+            {pending ? (
+              <span
+                data-requested=""
+                className="inline-flex max-w-full animate-pulse items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md tabular-nums text-foreground motion-reduce:animate-none"
+              >
+                Requested {requested}
+                {unit}, not yet confirmed
+              </span>
+            ) : null}
+            <span className="max-w-full truncate text-body-sm text-muted-foreground">
               {current === null || current === undefined
                 ? "Current unknown"
                 : `Now ${current}${unit}`}
@@ -111,14 +124,9 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
             aria-label={`Increase ${label}`}
             disabled={!interactive || atMax || shown === null}
             onClick={() => nudge(step)}
-            className={cn(
-              "grid size-11 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground",
-              "transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              "focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none",
-              "disabled:cursor-not-allowed disabled:opacity-45",
-            )}
+            className={STEP_BUTTON}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
               <path d="M12 5v14" />
               <path d="M5 12h14" />
             </svg>
@@ -137,7 +145,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
         </span>
 
         {control?.description && control.availability !== "ready" ? (
-          <span id={descriptionId} className="text-center text-label-sm text-muted-foreground">
+          <span id={descriptionId} className="text-center text-label-md text-muted-foreground">
             {control.description}
           </span>
         ) : null}

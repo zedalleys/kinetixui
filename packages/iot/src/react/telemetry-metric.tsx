@@ -43,7 +43,15 @@ export interface TelemetryMetricProps extends Omit<React.HTMLAttributes<HTMLDivE
   now?: string | Date | number | null;
   /** Hide the status glyph and word for a plain `normal` reading. Attention states always show. */
   quietWhenNormal?: boolean;
+  /**
+   * `md` (default) is a compact tile; `lg` and `xl` draw the value as a hero numeral
+   * (`text-headline-lg` / `text-display-sm`) with the unit smaller and muted. The status glyph and word
+   * are kept at every size.
+   */
+  size?: "md" | "lg" | "xl";
 }
+
+const VALUE_SIZE = { md: "text-title-lg", lg: "text-headline-lg", xl: "text-display-sm" } as const;
 
 const TREND: Record<"rising" | "falling" | "steady", { glyph: "trend-up" | "trend-down" | "trend-flat"; word: string }> = {
   rising: { glyph: "trend-up", word: "Rising" },
@@ -53,7 +61,7 @@ const TREND: Record<"rising" | "falling" | "steady", { glyph: "trend-up" | "tren
 
 const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, TelemetryMetricProps>(
   (
-    { metric, label, value, unit, quality, precision, timestamp, staleAfterMs, thresholds, trend, now, quietWhenNormal = false, className, ...props },
+    { metric, label, value, unit, quality, precision, timestamp, staleAfterMs, thresholds, trend, now, quietWhenNormal = false, size = "md", className, ...props },
     ref,
   ) => {
     const definition = getMetricDefinition(metric);
@@ -65,6 +73,11 @@ const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
       { value: value ?? Number.NaN, unit: unit ?? definition?.unit, quality },
       { precision: precision ?? definition?.decimals, unknownLabel: "—" },
     );
+    // A hero numeral prints its unit separately so the unit can be smaller. Never after "—".
+    const heroUnit = size !== "md" && !unavailable ? (unit ?? definition?.unit) : undefined;
+    const heroNumber = heroUnit
+      ? formatTelemetryValue({ value: value ?? Number.NaN, quality }, { precision: precision ?? definition?.decimals, unknownLabel: "—" })
+      : null;
     const trendInfo = !unavailable && !stale && trend && trend !== "unknown" ? TREND[trend] : null;
     const hideStatus = quietWhenNormal && state === "normal";
 
@@ -72,24 +85,38 @@ const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
       <div
         ref={ref}
         data-reading-state={state}
-        className={cn("flex min-w-0 flex-col gap-1 font-sans", className)}
+        className={cn("flex min-w-0 flex-col font-sans", size === "md" ? "gap-1" : "gap-2", className)}
         {...props}
       >
-        <span className="break-words text-label-sm text-muted-foreground">{label ?? describeMetric(metric)}</span>
-        <span className={cn("break-words text-title-sm tabular-nums", unavailable || stale ? "text-muted-foreground" : "text-foreground")}>
-          {shown}
+        <span className={cn("break-words text-muted-foreground", size === "md" ? "text-label-lg" : "text-body-md")}>{label ?? describeMetric(metric)}</span>
+        <span
+          className={cn(
+            "break-words tabular-nums",
+            VALUE_SIZE[size],
+            size !== "md" && "leading-none",
+            unavailable || stale ? "text-muted-foreground" : "text-foreground",
+          )}
+        >
+          {heroNumber !== null ? (
+            <>
+              {heroNumber}
+              <span className={cn("text-muted-foreground", size === "xl" ? "text-title-lg" : "text-title-md")}> {heroUnit}</span>
+            </>
+          ) : (
+            shown
+          )}
           {unavailable ? <span className="sr-only"> No reading</span> : null}
         </span>
-        {stale ? <span data-last-known="" className="text-label-sm text-muted-foreground">Last known value</span> : null}
-        <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+        {stale ? <span data-last-known="" className="text-label-md text-muted-foreground">Last known value</span> : null}
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {hideStatus ? null : <MetricStatus state={state} />}
           {trendInfo ? (
-            <span data-trend={trend} className="inline-flex items-center gap-1 text-label-sm text-muted-foreground">
-              <Glyph name={trendInfo.glyph} size={12} />
+            <span data-trend={trend} className="inline-flex items-center gap-1 text-label-md text-muted-foreground">
+              <Glyph name={trendInfo.glyph} size={14} />
               <span>{trendInfo.word}</span>
             </span>
           ) : null}
-          {timestamp !== undefined && timestamp !== null ? <LastSync value={timestamp} now={now} className="text-label-sm" /> : null}
+          {timestamp !== undefined && timestamp !== null ? <LastSync value={timestamp} now={now} className="text-label-md" /> : null}
         </span>
       </div>
     );

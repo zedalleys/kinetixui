@@ -37,6 +37,15 @@ export interface DeviceModeControlProps extends Omit<React.HTMLAttributes<HTMLDi
   variant?: "segmented" | "list";
 }
 
+/** A small tick drawn inline — the shape cue that says "this one", beside the raised surface. */
+function Tick() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" className="shrink-0">
+      <path d="m3.6 8.4 2.9 2.9 5.9-6.2" />
+    </svg>
+  );
+}
+
 const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceModeControlProps>(
   ({ modes, value, requested, label, control, onSelect, variant = "segmented", className, ...props }, ref) => {
     const pendingId = requested && requested !== value ? requested : null;
@@ -83,8 +92,9 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
         data-pending={pendingId ? "" : undefined}
         className={cn(
           variant === "segmented"
-            ? "inline-flex rounded-xl border border-border bg-muted/50 p-1"
-            : "flex flex-col gap-1.5",
+            // An inset surface, not an outlined box: the selected segment is what stands up from it.
+            ? "flex w-full gap-1 rounded-xl bg-muted/60 p-1 sm:inline-flex sm:w-auto"
+            : "flex flex-col gap-1 rounded-xl bg-muted/60 p-1",
           className,
         )}
         {...props}
@@ -117,20 +127,25 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
                 }
               }}
               className={cn(
-                "relative min-h-11 rounded-lg px-3 text-label-md transition-colors duration-200 ease-out",
+                "relative min-h-11 rounded-lg px-3 text-label-lg transition-colors duration-fast ease-out md:min-h-9",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                 "focus-visible:ring-offset-background motion-reduce:transition-none",
-                variant === "segmented" ? "flex-1 text-center" : "flex flex-col items-start gap-0.5 py-2 text-start",
+                variant === "segmented"
+                  ? "flex flex-1 items-center justify-center gap-1.5 text-center"
+                  : "flex flex-col items-start gap-0.5 py-2 text-start",
                 disabled && "cursor-not-allowed opacity-45",
-                isConfirmed && "bg-card text-foreground shadow-sm",
+                // Selected = raised: a lighter surface, a shadow, heavier type and a tick. Four cues, so
+                // it survives greyscale, low contrast and a screen magnifier.
+                isConfirmed && "bg-background font-semibold text-foreground shadow-sm",
                 // Requested-not-confirmed: outlined, never filled. Same grammar as the power knob.
-                isPending && "border border-dashed border-primary text-primary",
-                !active && !disabled && "text-muted-foreground hover:text-foreground",
+                isPending && "border border-dashed border-primary bg-primary/10 text-foreground",
+                !active && !disabled && "text-muted-foreground hover:bg-background/50 hover:text-foreground",
               )}
             >
+              {variant === "segmented" && isConfirmed ? <Tick /> : null}
               <span className="truncate">{mode.label}</span>
               {variant === "list" && mode.description ? (
-                <span className="truncate text-label-sm text-muted-foreground">{mode.description}</span>
+                <span className="truncate text-label-md font-normal text-muted-foreground">{mode.description}</span>
               ) : null}
             </button>
           );
