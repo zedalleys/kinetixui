@@ -410,7 +410,7 @@ export function SpaceCanvas({
                 </span>
                 {chips.length ? (
                   <span className="flex flex-wrap gap-1">
-                    {chips.map((chip, i) => (
+                    {chips.map((chip) => (
                       <span
                         key={chip}
                         className={cn(

@@ -7,6 +7,11 @@ No human has run this plan yet. Section 6 records an automated pass on 2026-09-3
 Firefox, genuine browser zoom, or a real phone. A person should spend their time on those ten, which are the
 part tooling cannot judge.
 
+**Update — visual maturity pass.** After §6 was recorded, the `/iot` showcase and the package components were
+restyled (§2 item 6). §6 was run against the earlier composition, so its rows describe that layout, not the current
+one. Rows 50–64 (§3.10) are new and cover the new compositions; §7 records what an automated run could and could not
+say about them. **No row in §3.10 has been executed by a person.**
+
 ---
 
 ## 1. What was already checked, and how far that goes
@@ -38,6 +43,14 @@ part tooling cannot judge.
 3. **`/docs/platforms`**: the seven-column table is now one card per platform (no hidden sideways scroll).
 4. **Home page**: the cross-platform code section no longer overflows on phones.
 5. **`/components`**: on phones the filter chips fold behind one **Filters** button and a bottom sheet.
+
+6. **Visual maturity pass.** The three environments were recomposed: Smart space is a "connected space" (house
+   header, room rail, floor plan with device hotspots, a room focus area, and an attention / energy / activity
+   column); Agritech is a field console (zone rail led by soil moisture, irrigation valve and pump, conditions);
+   Operations is a shift-supervisor console (fleet health, alert triage, site plan, inspector, shift log). Device
+   detail is one product view instead of six tabs. Package components gained optional presentations (setpoint
+   ring, pill level, mode tiles, sparkline energy, row/tile groups, block timeline, pill battery) with defaults
+   that keep the previous API valid.
 
 Everything interactive on `/iot` is simulation. That is by design and is stated on the page; do not report
 "no real device responds" as a bug.
@@ -146,6 +159,28 @@ Run with VoiceOver on iOS or macOS, plus NVDA or TalkBack if you can.
 
 ---
 
+### 3.10 Visual maturity pass (new)
+
+| # | Steps | Expected |
+| --- | --- | --- |
+| 50 | Smart space at desktop width | Reads as zones (header, room rail, plan, room focus, attention column), not a stack of equal cards. Selecting a room updates the rail, the plan highlight and the focus area together |
+| 51 | Select a device hotspot on the plan, by pointer and by keyboard | The focus area narrows to that device. A pending request shows a dashed ring and its accessible name says "requested …, not yet confirmed" |
+| 52 | Thermostat: press + and − | The big number stays the confirmed target while a dashed "requested" value shows; nothing drags; a failure keeps the last confirmed value and offers Retry (never automatic) |
+| 53 | Lamp: the pill brightness slider, by touch and by arrow keys | Label and value stay legible either side of the thumb; a request shows as a dashed "Requested N, not yet confirmed" chip |
+| 54 | Smart space at 390px | One column; room names are not cut off; the plan is legible; controls are comfortable to hit; Energy, Activity and Scenes are collapsed and open on tap |
+| 55 | Energy sparkline | Latest marker and value, comparison in words, and a "View data" table with the same numbers |
+| 56 | Camera | A labelled "Sample image — no live feed"; no video, no play control |
+| 57 | Agritech | Clearly not a house: zone rail with moisture numerals, valve Open/Closed tiles, a failing valve shows Failed with a manual Retry, the stale orchard sensor says "Last known" |
+| 58 | Operations | Fleet numerals add up; acknowledging an alert keeps it listed as acknowledged; the offline meter shows words and no controls; Run and Duty show requested against confirmed |
+| 59 | Device detail | One product view (not tabs); the primary word is the confirmed state; a pending request is visible beside it |
+| 60 | RTL (set the document direction) on all three environments | Rail, plan, ring, sparkline and timeline mirror; each number stays with its unit ("16.4 °C", "34 %") |
+| 61 | Dark mode on all three | Surfaces stay tonal and readable; state is distinguishable without colour |
+| 62 | Reduced motion | Nothing pulses; a pending state is a static dashed treatment plus words |
+| 63 | A real phone, one-handed | Thermostat ±, mode tiles, room tiles and the alert Acknowledge buttons are reachable and hit reliably |
+| 64 | Screen reader on Smart space | Hotspots announce name, state and any request; the room rail announces the current room; the date strip is a radio group with day, event count and "today" |
+
+---
+
 ## 4. Known limitations, so they are not reported as bugs
 
 - **Simulation only.** No MQTT, BLE, Matter, HTTP or WebSocket exists. The camera never streams. Nothing evaluates
@@ -154,7 +189,12 @@ Run with VoiceOver on iOS or macOS, plus NVDA or TalkBack if you can.
 - **Experimental, still `0.2.0`.** No changeset was added and nothing was published; the page shows no new version.
 - **`/iot` route JS grew** from 21 kB to 45.5 kB (First Load 447 → 472 kB) even after lazy loading; about 38.7 kB
   of that is the package itself, pulled in by the eager hero.
-- **Per-import size** grew: one control 4.03 → 5.30 KB, `DeviceCard` 10.25 → 11.79 KB.
+- **Per-import size** grew: one control 4.03 → 5.30 KB, `DeviceCard` 10.25 → 11.79 KB. The visual pass added more
+  (§7): all components together are 133.5 → 172.2 KB minified, and `/iot` is now 55.9 kB (First Load 483 kB).
+- **Alert rows show internal source keys** such as `sim:threshold:pressure`, because the simulation supplies them as
+  the alert `source` and the card prints what it is given. Cosmetic; not fixed here.
+- **English inside an RTL page.** Mirroring is correct, but English sentences that mix numerals and words (header
+  subtitles such as "3 lines · 24 devices") can read oddly in RTL. Numerals with units are kept together.
 - **Headless offline counting.** `summarizeFleetHealth` counts an offline device in a warning bucket as well as in
   `offline`. The UI shows exclusive buckets; a consumer using the raw function needs the same care.
 - **axe `link-name` with a modal open.** With any modal open on `/components` (the existing mobile menu as well as the
@@ -177,6 +217,7 @@ Automated rows are signed as Claude Code, not as a person. A human still has to 
 | Alerts, telemetry, energy (3.6) | Claude Code (automated) | Chromium 141, local production build | 2026-09-30 | PASS (4 of 4) |
 | Screen reader (3.7) | — | — | — | NOT RUN — SCREEN READER REQUIRED |
 | Cross-browser, zoom, layout (3.8) | Claude Code (automated) | Chromium 141 only | 2026-09-30 | 3 executed (40 PASS; 39 FAIL, 41 FAIL); 36, 37, 38 NOT RUN |
+| Visual maturity pass (3.10) | — | — | — | NOT RUN by a person. Automated evidence in §7 |
 | Site fixes (3.9) | Claude Code (automated) | Chromium 141, local production build | 2026-09-30 | 7 PASS; 43 NOT RUN — REAL PHONE REQUIRED |
 
 ---
@@ -267,3 +308,60 @@ Automated rows are signed as Claude Code, not as a person. A human still has to 
    exposed to assistive technology while any modal is open, and their names come out empty. All four contain live
    regions in their decorative thumbnails, which fits how the aria-hidden helper spares live regions, but four other
    cards with live regions are hidden correctly, so the mechanism is not proven. It is worth its own fix.
+
+---
+
+## 7. Execution record — visual maturity pass, 2026-09-30
+
+**Tester:** Claude Code (automated) — Chromium 141 driven by Playwright. Not a person. **No row of §3.10 was executed
+by a person and none is marked PASS.**
+
+**Environment.** A local production build (`next build` + `next start`) of the branch head at the time; not the Vercel
+preview (still unreachable from this session).
+
+**What automation established (evidence, not a pass of the manual rows).**
+
+| Evidence | Result |
+| --- | --- |
+| axe-core in Chromium, colour contrast enabled, on each of the three environment tabs and the whole page at 390 / 768 / 1440, light and dark, LTR and RTL (48 runs) | 0 violations |
+| Repo site gate `scripts/a11y-site.mjs` (21 pages × 2 themes × 4 widths) | no findings, no horizontal overflow |
+| Horizontal overflow of the page with each environment open, every width / theme / direction captured | 0 px |
+| Unit tests (jsdom) for the new compositions: room switching, requested-versus-confirmed staying worded and unconfirmed, keyboard on rails and pills, offline honesty, acknowledge keeps alerts listed, "shown, not executed" labelling | passing (IoT 775, web 1,370) |
+
+**What was looked at by eye (screenshots).** 1440 light LTR for all three environments; 390 light LTR for Smart space,
+Agritech and Operations (top and middle sections); 1440 dark LTR and 1440 dark RTL for Smart space and Operations;
+390 dark RTL for Smart space; 1440 light RTL for Agritech; 768 dark LTR for Smart space was captured (overflow 0)
+but not inspected. **Not inspected by eye:** 768 for Agritech and Operations, 390 dark LTR, the lower half of the
+390 pages, and any device other than desktop Chromium.
+
+**Defects found by looking, and fixed:** room names truncated in the phone rail; plan labels and chips collided with
+hotspots on phones; alert and activity messages truncated in narrow columns; a value and its unit reordered in RTL
+("C° 16.4", "% 34"); the showcase did not follow a direction change made after mount.
+
+**Row status.**
+
+| # | Status | Note |
+| --- | --- | --- |
+| 50–59 | NOT RUN — needs a person's judgement | Automated evidence above covers accessibility and overflow, not whether the composition reads well or the interactions feel right |
+| 60 | NOT RUN — needs a person's judgement | Mirroring inspected in screenshots on the captures listed above, English content only |
+| 61 | NOT RUN — needs a person's judgement | Dark inspected as above; colour-independence not judged by a person |
+| 62 | NOT RUN | Reduced motion was on for every capture, so pulsing was never seen; no comparison run |
+| 63 | NOT RUN — REAL PHONE REQUIRED | Emulated 390 px viewport only |
+| 64 | NOT RUN — SCREEN READER REQUIRED | No screen reader was available |
+
+**Distinctions kept.** Automated browser verification (Chromium) is not WebKit or Safari verification; neither is
+available here. Emulated viewport is not a real touch device. Forced-colors was emulated in §6 only, and not re-run
+for the new compositions; real Windows high contrast has not been tested. Print was not re-tested.
+
+**Bundle, before → after (esbuild, minified, React external).**
+
+| | Before (06c0f32) | After |
+| --- | --- | --- |
+| Everything (`@kinetixui/iot/react`) | 133.5 KB | 172.2 KB |
+| `DevicePowerControl` | 5.30 KB | 6.79 KB |
+| `DeviceCard` | 11.79 KB | 16.69 KB |
+| `DeviceControlCard` | 13.91 KB | 16.93 KB |
+| `@kinetixui/iot/functions` (React-free) | unchanged | unchanged |
+| `dist` JS total | 284.5 KB | 356.7 KB |
+| `/iot` route | 45.5 kB (First Load 472 kB) | 55.9 kB (First Load 483 kB) |
+

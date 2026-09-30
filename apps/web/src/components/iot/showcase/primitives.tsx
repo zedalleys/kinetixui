@@ -290,9 +290,12 @@ export function Stat({
   return (
     <div className={cn("flex min-w-0 flex-col gap-1", className)}>
       <p className="text-body-md text-muted-foreground">{label}</p>
-      <p className={cn("flex items-baseline gap-1.5 tabular-nums text-foreground", STAT_SIZE[size])}>
-        <span>{value}</span>
-        {unit ? <bdi className="text-title-md text-muted-foreground">{unit}</bdi> : null}
+      <p className={cn("tabular-nums text-foreground", STAT_SIZE[size])}>
+        {/* number then unit as one left-to-right run, so an RTL page does not print "% 92" */}
+        <bdi dir="ltr" className="inline-flex items-baseline gap-1.5">
+          <span>{value}</span>
+          {unit ? <span className="text-title-md text-muted-foreground">{unit}</span> : null}
+        </bdi>
       </p>
       {state ? <StateBadge state={state}>{stateWord}</StateBadge> : null}
       {trend ? (
