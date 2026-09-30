@@ -204,9 +204,16 @@ a second post the same week. Route it per §8.
 **Article repurposing.** An article gets **one** LinkedIn post, not a serialisation. ART-002 → LI-005.
 ART-001 → LI-001, and LI-002 three weeks later. That is the ceiling.
 
-**P1/P2 sequencing.** Week 1's pair is the experiment: LI-003 (P2, drift-led) on day 1, LI-004 (P1,
-architecture-led) on day 4. 48 hours apart, different campaigns, **no cross-linking**, same destination. Do
-not mention one in the other — that contaminates the only clean comparison in the month.
+**P1/P2 sequencing.** Week 1's pair was designed as the experiment: LI-003 (P2, drift-led) on day 1,
+LI-004 (P1, architecture-led) on day 4. 48 hours apart, different campaigns, **no cross-linking**, same
+destination. Do not mention one in the other — the no-cross-linking rule still stands.
+
+> **The message comparison is contaminated, and not by cross-linking.** LI-003 received a four-day paid
+> LinkedIn boost (`amplification` amp-001 in `register.json`) and LI-004 did not, so the two arms no longer
+> differ only in their message: one had paid reach and targeting behind it. Any difference between
+> `kx_p2_a_drift` and `kx_p1_c_manifest` is now a difference in message **and** distribution, and must never
+> be read as the message alone. A clean P1/P2 test needs a later pair with equal distribution, or one where
+> both arms are boosted identically.
 
 **Hashtags.** A small policy, because hashtag walls read as marketing. **Three, maximum, at the end,
 all genuinely descriptive**: `#designsystems` always, plus at most two from `#designtokens`,

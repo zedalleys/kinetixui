@@ -65,7 +65,9 @@ All three are done in **Settings → General** in the browser, in one sitting. T
 
 ## Week 1 — problem recognition
 
-The week names the problem for both ICPs and runs **the cleanest experiment in the month**.
+The week names the problem for both ICPs. It was designed to run the month's cleanest P1/P2 experiment;
+LI-003's four-day paid boost has since contaminated that comparison — see the day-4 row and
+`README.md` §P1/P2 sequencing.
 
 ### Day 1 · LI-003 · LinkedIn · P2 · Pillar A · Awareness
 
@@ -106,7 +108,7 @@ The manifest, and the check that reads it back.
 | **Community reuse** | No |
 | **Engagement follow-up** | This post attracts *"how does the check actually work?"*. Answer it in the thread with the check name, not a link. If asked twice, it is a docs gap |
 | **Metric to watch** | `kx_p1_c_manifest` sessions vs `kx_p2_a_drift` from day 1 — **the P1/P2 comparison starts here** |
-| **Hard rule** | **Do not reference LI-003.** No cross-linking, no *"following on from Tuesday"*. Cross-linking contaminates the only clean comparison in the month |
+| **Hard rule** | **Do not reference LI-003.** No cross-linking, no *"following on from Tuesday"* — that rule stands. But the comparison this protected is **already contaminated**: LI-003 took a four-day paid boost and LI-004 does not, so a difference between the two campaigns is message *and* paid reach. Record the counts; do not attribute the gap to the message |
 
 ### Day 6 · X-003 · X · P1 · Pillar C · Evaluation
 
