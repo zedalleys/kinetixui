@@ -15,6 +15,16 @@
  * - Room names and ambient readings on the plan are `aria-hidden` and repeated once, in reading order, in a
  *   visually hidden list, so a screen-reader user gets them without the visual duplication.
  *
+ * Phone widths
+ * - The drawing is the same drawing; it only thins out. Below `sm` a deterministic pass (`phonePlanLayout`)
+ *   drops markers that would physically collide at ~390 px, keeping the selected device first, then anything
+ *   needing attention, then the rest of the selected room. Every marker it drops is still a real control from
+ *   `sm` up, is named in a visually hidden list below `sm`, and is always reachable through the device list the
+ *   composition renders beside the plan. Nothing is duplicated at any one width.
+ * - Room names move out of the rooms and into one caption in the plan's top-start corner, for the selected room
+ *   only; ambient chips and unselected hotspot names were already held back below `sm`. So at 390 the plan
+ *   carries exactly one room name, one device name (the selected one) and a handful of markers.
+ *
  * Direction: the SVG mirrors under RTL (`rtl:-scale-x-100`) and every HTML overlay positions with logical
  * inset, so hotspots stay on the same spot of the drawing in both directions.
  */
@@ -110,6 +120,144 @@ export function hotspotName(h: Pick<PlanHotspot, "label" | "value" | "requested"
 }
 
 /* -------------------------------------------------------------------------------------------------
+ * Phone layout: which markers survive at ~390 px
+ * ----------------------------------------------------------------------------------------------- */
+
+/**
+ * The plan's drawn width at a 390 px viewport, in CSS pixels: 390 less the page gutter, the showcase card, its
+ * padding and the `bg-muted/60` inset the plan sits in. Measured at 254 px (home, farm) and 262 px (site) in a
+ * production build; 250 is the conservative floor. A constant, not a measurement, so the answer is identical on
+ * the server and in the browser and there is no hydration flash.
+ */
+const PHONE_PLAN_WIDTH = 250;
+/** The marker's real touch target, and so the closest two markers may sit before one has to go. */
+const MARKER_PX = 44;
+/** The name chip under the selected marker (`max-w-40`, up to two lines), reserved so no marker sits on it. */
+const SELECTED_LABEL = { width: 160, height: 48, offset: 46 } as const;
+/** The room caption pinned to the plan's top-start corner below `sm`: `start-1 top-1`, one line. */
+const ROOM_CAPTION = { inset: 4, height: 24, maxWidth: 160 } as const;
+
+/**
+ * A generous width for the room caption, from its text: uppercase `text-label-md` runs about 9 px a character
+ * and the constant covers the state glyph, its gap and the chip's padding, rounded up so the reservation is
+ * never short of what the browser draws (checked against 14 room names at 390 px). Only ever used to keep
+ * markers off the caption, so an estimate is right — and it must not measure, or the server and the browser
+ * would disagree and the markers would jump on hydration.
+ */
+export function roomCaptionWidth(label: string): number {
+  return Math.min(ROOM_CAPTION.maxWidth, 28 + label.length * 9.5);
+}
+
+type Box = { cx: number; cy: number; w: number; h: number };
+
+/**
+ * Where the selected marker's name chip hangs. Centred under the marker in the middle of the plan; pinned to
+ * the marker's inline-start or inline-end edge near the edges, so a 160 px chip never runs off a 250 px plan.
+ */
+export function selectedLabelAlign(x: number): "start" | "center" | "end" {
+  if (x < 33) return "start";
+  if (x > 67) return "end";
+  return "center";
+}
+
+function hits(a: Box, b: Box): boolean {
+  return Math.abs(a.cx - b.cx) * 2 < a.w + b.w && Math.abs(a.cy - b.cy) * 2 < a.h + b.h;
+}
+
+/** Attention first, then the selected room, then everything else. Lower sorts earlier. */
+function rankOf(h: PlanHotspot, selectedRoomId: string | null, selectedHotspotId: string | null): number {
+  if (h.id === selectedHotspotId) return 0;
+  if (h.state === "critical") return 1;
+  if (h.state === "warning") return 2;
+  if (h.state === "offline") return 3;
+  if (h.roomId === selectedRoomId) return 4;
+  return 5;
+}
+
+export type PhonePlanLayout = {
+  /** Hotspot ids drawn on the plan below `sm`. */
+  shown: ReadonlySet<string>;
+  /** Hotspots held back below `sm`, in reading order, for the visually hidden list. */
+  dropped: readonly PlanHotspot[];
+  /** Whether the room caption still fits without the selected marker sitting on it. */
+  caption: boolean;
+};
+
+/**
+ * Decide, from the data alone, which markers can share the plan at phone width without touching.
+ *
+ * Pure and deterministic: same input, same answer, on the server and in the browser. The selected device is
+ * never dropped; the room caption gives way only to the selected device itself, and takes precedence over
+ * every quiet marker but not over one needing attention.
+ */
+export function phonePlanLayout(input: {
+  hotspots: readonly PlanHotspot[];
+  selectedRoomId?: string | null;
+  selectedHotspotId?: string | null;
+  /** Width of the room caption in the plan's top-start corner, or null when no room is selected. */
+  captionWidth?: number | null;
+  /** Plan aspect, used to turn a percent of the height into pixels. */
+  viewBox: { width: number; height: number };
+  planWidth?: number;
+}): PhonePlanLayout {
+  const { hotspots, selectedRoomId = null, selectedHotspotId = null, captionWidth = null, viewBox } = input;
+  const width = input.planWidth ?? PHONE_PLAN_WIDTH;
+  const height = (width * viewBox.height) / viewBox.width;
+  const marker = (h: PlanHotspot): Box => ({ cx: (h.x / 100) * width, cy: (h.y / 100) * height, w: MARKER_PX, h: MARKER_PX });
+
+  const order = hotspots
+    .map((h, index) => ({ h, index, rank: rankOf(h, selectedRoomId, selectedHotspotId) }))
+    .sort((a, b) => a.rank - b.rank || a.index - b.index);
+
+  const taken: Box[] = [];
+  const shown = new Set<string>();
+  const free = (box: Box) => !taken.some((t) => hits(t, box));
+
+  // The selected device goes down first and is never dropped: at 390 it is the thing that must read.
+  const chosen = order.find((o) => o.rank === 0);
+  if (chosen) {
+    shown.add(chosen.h.id);
+    const box = marker(chosen.h);
+    taken.push(box);
+    const align = selectedLabelAlign(chosen.h.x);
+    const shift = align === "start" ? (SELECTED_LABEL.width - MARKER_PX) / 2 : align === "end" ? -(SELECTED_LABEL.width - MARKER_PX) / 2 : 0;
+    taken.push({ cx: box.cx + shift, cy: box.cy + SELECTED_LABEL.offset, w: SELECTED_LABEL.width, h: SELECTED_LABEL.height });
+  }
+
+  // Anything needing attention goes down next: an alert outranks the room's name, which is also in the hidden
+  // list and in the composition's heading beside the plan.
+  for (const { h, rank } of order) {
+    if (rank === 0 || rank > 3) continue;
+    const box = marker(h);
+    if (!free(box)) continue;
+    shown.add(h.id);
+    taken.push(box);
+  }
+
+  let caption = true;
+  if (captionWidth !== null) {
+    const box: Box = {
+      cx: ROOM_CAPTION.inset + captionWidth / 2,
+      cy: ROOM_CAPTION.inset + ROOM_CAPTION.height / 2,
+      w: captionWidth,
+      h: ROOM_CAPTION.height,
+    };
+    caption = free(box);
+    if (caption) taken.push(box);
+  }
+
+  for (const { h } of order) {
+    if (shown.has(h.id)) continue;
+    const box = marker(h);
+    if (!free(box)) continue;
+    shown.add(h.id);
+    taken.push(box);
+  }
+
+  return { shown, dropped: hotspots.filter((h) => !shown.has(h.id)), caption };
+}
+
+/* -------------------------------------------------------------------------------------------------
  * Drawing
  * ----------------------------------------------------------------------------------------------- */
 
@@ -184,12 +332,27 @@ const CENTRE = "-translate-x-1/2 -translate-y-1/2 rtl:translate-x-1/2";
 
 const HOTSPOT_STATE_WORD: Partial<Record<HotspotState, string>> = { pending: "Requested", offline: "Offline", warning: "Needs attention", critical: "Critical" };
 
-function Hotspot({ hotspot, selected, labelled, onSelect }: { hotspot: PlanHotspot; selected: boolean; labelled: boolean; onSelect?: (id: string) => void }) {
+function Hotspot({
+  hotspot,
+  selected,
+  labelled,
+  phone,
+  onSelect,
+}: {
+  hotspot: PlanHotspot;
+  selected: boolean;
+  labelled: boolean;
+  /** Drawn below `sm` too. When false the marker only appears from `sm` up. */
+  phone: boolean;
+  onSelect?: (id: string) => void;
+}) {
   const { state } = hotspot;
   const word = HOTSPOT_STATE_WORD[state];
+  const align = selectedLabelAlign(hotspot.x);
   return (
     <div
-      className={cn("absolute", CENTRE, selected ? "z-focus" : "z-raised")}
+      className={cn("absolute", CENTRE, selected ? "z-focus" : "z-raised", !phone && "hidden sm:block")}
+      data-phone-hotspot={phone ? "" : undefined}
       style={{ insetInlineStart: `${hotspot.x}%`, insetBlockStart: `${hotspot.y}%` }}
     >
       <button
@@ -199,7 +362,8 @@ function Hotspot({ hotspot, selected, labelled, onSelect }: { hotspot: PlanHotsp
         data-hotspot={hotspot.id}
         data-state={state}
         onClick={() => onSelect?.(hotspot.id)}
-        className="group relative flex size-11 items-center justify-center rounded-full focus-visible:outline-none md:size-10"
+        // size-11 at every width: the visible bubble is smaller, the padding is the touch target.
+        className="group relative flex size-11 items-center justify-center rounded-full focus-visible:outline-none"
       >
         {/* pending: a dashed ring that breathes, only when motion is welcome */}
         {state === "pending" ? (
@@ -209,7 +373,8 @@ function Hotspot({ hotspot, selected, labelled, onSelect }: { hotspot: PlanHotsp
         <span
           aria-hidden="true"
           className={cn(
-            "relative flex size-9 items-center justify-center rounded-full ring-4 shadow-sm transition-colors duration-fast motion-reduce:transition-none md:size-10",
+            "relative flex items-center justify-center rounded-full ring-4 shadow-sm transition-colors duration-fast motion-reduce:transition-none",
+            selected ? "size-10" : "size-9",
             "group-focus-visible:ring-ring",
             state === "confirmed" && (selected ? "bg-primary text-primary-foreground ring-primary/30" : "bg-primary/15 text-primary ring-card/80 group-hover:bg-primary/25"),
             state === "pending" && "bg-card text-primary ring-primary/15",
@@ -229,18 +394,23 @@ function Hotspot({ hotspot, selected, labelled, onSelect }: { hotspot: PlanHotsp
             <StateGlyph state={state} size={12} className={STATE_TEXT[state]} />
           </span>
         </span>
-        {/* the name beside the marker: hidden below md, where the aria-label carries it */}
+        {/* the name beside the marker: hidden below md except for the selected one, which must read at 390;
+            everywhere else the aria-label carries it */}
         <span
           aria-hidden="true"
           className={cn(
-            "pointer-events-none absolute start-1/2 top-full mt-0.5 hidden -translate-x-1/2 rtl:translate-x-1/2 md:flex",
-            "flex-col items-center whitespace-nowrap rounded-lg bg-card px-2 py-0.5 text-center shadow-sm transition-opacity duration-fast motion-reduce:transition-none",
+            "pointer-events-none absolute top-full mt-0.5",
+            // near an edge the chip hangs off the marker's edge instead of straddling it, so it stays on the plan
+            selected && align !== "center" ? (align === "start" ? "start-0" : "end-0") : "start-1/2 -translate-x-1/2 rtl:translate-x-1/2",
+            // capped only at phone width, where the plan is ~250 px wide; unchanged from `sm` up
+            selected ? "flex max-w-40 sm:max-w-none" : "hidden md:flex",
+            "flex-col items-center overflow-hidden whitespace-nowrap rounded-lg bg-card px-2 py-0.5 text-center shadow-sm transition-opacity duration-fast motion-reduce:transition-none",
             labelled ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100",
           )}
         >
-          <span className={cn("text-label-md text-foreground", selected && "font-semibold")}>{hotspot.label}</span>
+          <span className={cn("max-w-full truncate text-label-md text-foreground", selected && "font-semibold")}>{hotspot.label}</span>
           {hotspot.value || word ? (
-            <span className="text-label-md tabular-nums text-muted-foreground">
+            <span className="max-w-full truncate text-label-md tabular-nums text-muted-foreground">
               {hotspot.value ? <bdi>{hotspot.value}</bdi> : null}
               {hotspot.value && word ? " · " : null}
               {state === "pending" && hotspot.requested ? <>Requested <bdi>{hotspot.requested}</bdi></> : word}
@@ -274,6 +444,16 @@ export type SpaceCanvasProps = {
    * `selected`, so a dense room does not turn into overlapping text.
    */
   hotspotLabels?: "auto" | "selected" | "room" | "all";
+  /**
+   * How many markers the plan carries below `sm` (~390 px), where the drawing is about 320 px wide and a 44 px
+   * touch target is a seventh of it.
+   *
+   * `auto` (default) keeps the selected device, then anything needing attention, then the rest of the selected
+   * room, dropping only markers that would physically overlap one already placed. Dropped markers come back
+   * from `sm` up, are named in a visually hidden list below `sm`, and are always in the composition's device
+   * list. `all` draws every marker at every width (the pre-`auto` behaviour).
+   */
+  markerDensity?: "auto" | "all";
   /** Show a quiet key of the four hotspot states under the plan. Default true. */
   legend?: boolean;
   /** Controlled level; when omitted the plan follows the selected room and the switcher. */
@@ -298,6 +478,7 @@ export function SpaceCanvas({
   onSelectHotspot,
   ambient,
   hotspotLabels = "auto",
+  markerDensity = "auto",
   legend = true,
   levelId,
   onLevelChange,
@@ -324,6 +505,19 @@ export function SpaceCanvas({
 
   const inSelectedRoom = visibleHotspots.filter((h) => h.roomId === selectedRoomId).length;
   const labelMode = hotspotLabels === "auto" ? (inSelectedRoom <= 3 ? "room" : "selected") : hotspotLabels;
+
+  const selectedRoom = level.rooms.find((r) => r.id === selectedRoomId) ?? null;
+  // Cheap (at most a couple of dozen markers) and pure, so it is recomputed rather than memoised.
+  const phone: { shown: ReadonlySet<string> | null; dropped: readonly PlanHotspot[]; caption: boolean } =
+    markerDensity === "all"
+      ? { shown: null, dropped: [], caption: true }
+      : phonePlanLayout({
+          hotspots: visibleHotspots,
+          selectedRoomId,
+          selectedHotspotId,
+          captionWidth: selectedRoom ? roomCaptionWidth(selectedRoom.label) : null,
+          viewBox: plan.viewBox,
+        });
 
   const chooseLevel = (id: string) => {
     setManual({ forRoom: selectedRoomId, level: id });
@@ -390,6 +584,20 @@ export function SpaceCanvas({
             </g>
           </svg>
 
+          {/* Below `sm` the room's name cannot sit in the room: at ~250 px the rooms are smaller than the
+              markers standing in them. It becomes a caption in the plan's top-start corner instead, where
+              nothing else is placed, and the markers are kept off it. Visual only, like the in-place names. */}
+          {selectedRoom && phone.caption ? (
+            <span
+              aria-hidden="true"
+              data-room-caption=""
+              className="pointer-events-none absolute start-1 top-1 z-base inline-flex max-w-40 items-center gap-1 rounded-full bg-card/90 px-2 py-0.5 text-label-md font-semibold uppercase tracking-wide text-primary shadow-sm sm:hidden"
+            >
+              <StateGlyph state="confirmed" size={12} className="shrink-0 text-primary" />
+              <span className="truncate">{selectedRoom.label}</span>
+            </span>
+          ) : null}
+
           {/* room names and ambient readings: visual only, repeated once in the hidden list below */}
           {level.rooms.map((room) => {
             const selected = room.id === selectedRoomId;
@@ -398,7 +606,9 @@ export function SpaceCanvas({
               <div
                 key={room.id}
                 aria-hidden="true"
-                className={cn("pointer-events-none absolute z-base max-w-40 flex-col items-start gap-1", selected ? "flex" : "hidden sm:flex")}
+                className={cn(
+                  "pointer-events-none absolute z-base hidden max-w-40 flex-col items-start gap-1 sm:flex",
+                )}
                 style={{ insetInlineStart: pct(room.labelAt.x, vw), insetBlockStart: pct(room.labelAt.y, vh) }}
               >
                 <span className={cn("flex min-w-0 max-w-full flex-col items-start", selected ? "font-semibold text-primary" : "text-muted-foreground")}>
@@ -428,7 +638,14 @@ export function SpaceCanvas({
           })}
 
           {visibleHotspots.map((h) => (
-            <Hotspot key={h.id} hotspot={h} selected={h.id === selectedHotspotId} labelled={labelMode === "all" || h.id === selectedHotspotId || (labelMode === "room" && h.roomId === selectedRoomId)} onSelect={onSelectHotspot} />
+            <Hotspot
+              key={h.id}
+              hotspot={h}
+              selected={h.id === selectedHotspotId}
+              labelled={labelMode === "all" || h.id === selectedHotspotId || (labelMode === "room" && h.roomId === selectedRoomId)}
+              phone={phone.shown === null || phone.shown.has(h.id)}
+              onSelect={onSelectHotspot}
+            />
           ))}
         </div>
       </div>
@@ -442,6 +659,17 @@ export function SpaceCanvas({
           </li>
         ))}
       </ul>
+
+      {/* Below `sm` the markers above are thinned out; the ones held back are named here instead, so the
+          reading-order equivalent of the plan stays complete. From `sm` up they are buttons again and this
+          list is gone, so nothing is said twice at any one width. */}
+      {phone.dropped.length ? (
+        <ul className="sr-only sm:hidden" aria-label={`${level.label} devices not shown on the plan at this width`}>
+          {phone.dropped.map((h) => (
+            <li key={h.id}>{hotspotName(h)}</li>
+          ))}
+        </ul>
+      ) : null}
 
       {legend ? (
         <ul aria-label="Marker key" className="flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-muted-foreground">
