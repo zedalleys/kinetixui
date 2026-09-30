@@ -365,3 +365,97 @@ for the new compositions; real Windows high contrast has not been tested. Print 
 | `dist` JS total | 284.5 KB | 356.7 KB |
 | `/iot` route | 45.5 kB (First Load 472 kB) | 55.9 kB (First Load 483 kB) |
 
+---
+
+## 8. Execution record — final polish pass, 2026-09-30
+
+**Tester:** Claude Code (automated) — Chromium 141 driven by Playwright, against a local production build
+(`next build` + `next start`). Not a person. The Vercel preview is still unreachable from this environment
+(network policy), so it remains **NOT TESTED**.
+
+**No row of §3.10 is executed by this pass either.** §3.10 asks whether the compositions read well and whether
+the interactions feel right; that is a person's judgement. What follows is evidence, not a sign-off.
+
+### What this pass changed
+| Area | Change |
+| --- | --- |
+| Alert source copy | `source` stays machine identity (still in the DOM as `data-source`); a new optional `sourceLabel` carries the words. The simulation supplies proper labels; the renderer humanises an unlabelled id rather than printing a raw key. |
+| Forced colours | `DevicePowerControl`'s knob keeps a `currentColor` border, so its silhouette and travel survive when fills and shadows are flattened. Its focus indicator gains a real `outline` (the `ring` is a box-shadow and is stripped). |
+| Smart Space aside | Acknowledged alerts, older activity and self-firing routines move behind honest, counted disclosures. Open alerts stay expanded at every width. |
+| Plan at phone width | Below `sm` the plan places the selected device first, then anything needing attention, then the rest, holding back markers that would overlap. Every marker is a 44 px target at every width. Held-back markers are listed by full accessible name in an `sr-only` list, and the device list beside the plan is unchanged. |
+| Loading placeholder | An unmounted lazy preview now shows a "Loading preview" mark inside its already-reserved box. No progress percentage, no layout shift, `motion-reduce` fallback. |
+| Truncation | A routine's name and a rail tile's state line wrap instead of clipping (`"Evening lig…"`, `"18.9 °C …"` losing the word "stale"). |
+
+### Automated evidence collected on the final build
+| Evidence | Result |
+| --- | --- |
+| axe-core, 42 runs: each environment and the whole page at 390/768/1440, light and dark, LTR and RTL, plus forced-colors in both themes | 0 violations |
+| Repo site gate `scripts/a11y-site.mjs`, 21 pages × 2 themes × 4 widths (168 views) | no findings, no horizontal overflow |
+| Horizontal overflow with each environment open, at 320 / 390 / 768 / 1440 | 0 px everywhere |
+| Keyboard: 40 tab stops per environment — every stop has a visible focus indicator and an accessible name | no failures |
+| Reduced motion: no infinite animation left running with `prefers-reduced-motion` | none |
+| Raw implementation keys reachable on screen (`sim:*`) after mounting every example | none |
+| Unit tests | IoT 783, web 1,391 |
+
+**A note on axe and forced colours.** The `color-contrast` rule is disabled for the forced-colors runs only.
+axe-core disables it in real high-contrast mode, because the authored colours it reads are not the ones the OS
+paints; Playwright's emulation does not trip that detection, so the rule reports on system-painted colours. The
+single finding it produced was checked by hand and computes to 13.99:1 on an element this PR does not touch.
+Contrast is covered by the 36 non-forced runs.
+
+### Looked at by eye, on the final build
+1440 light: Smart space, Agritech, Operations. 390 light: Smart space, Agritech, Operations (sliced, upper and
+middle sections). 390 dark: Smart space. 768 light: Smart space, Operations. 1440 dark RTL: Smart space,
+Operations. 1440 light RTL: Agritech. The power switch was inspected separately in forced-colors emulation, light
+and dark, in all three sizes and all five states.
+**Not looked at by eye:** 768 Agritech, 390 dark for Agritech and Operations, the lower third of the 390 pages,
+and anything outside desktop Chromium.
+
+### Honest limits of this pass
+- Forced colours was **emulated** (Chromium `forcedColors: "active"`). That is not real Windows High Contrast,
+  and Edge/Firefox behaviour and Windows theme palettes are unverified.
+- An emulated 390 px viewport is not a real touch device. Target sizes were measured in CSS pixels, not tapped.
+- No screen reader was run. No Safari or WebKit. No genuine browser zoom.
+
+### Row status after this pass
+| # | Status |
+| --- | --- |
+| 50–62 | NOT RUN — needs a person's judgement. The evidence above covers accessibility, overflow and truncation, not whether the composition reads well. |
+| 63 | NOT RUN — REAL PHONE REQUIRED |
+| 64 | NOT RUN — SCREEN READER REQUIRED |
+| 39 (forced colours) | Re-tested under **emulation** and the specific `DevicePowerControl` defect is fixed; the row stays NOT RUN for a real high-contrast environment. |
+| 41 (print) | Still NOT RUN. Side effect only: an unmounted preview would now print the words "Loading preview" rather than an empty box. |
+
+### Follow-ups this pass deliberately did NOT absorb
+1. **Focus rings vanish in forced colours, package-wide.** `focus-visible:ring-*` is a box-shadow, which
+   forced-colors strips; 70 occurrences across 14 IoT components lose their focus indicator. Pre-existing house
+   pattern, not caused by this PR. `DevicePowerControl` is fixed as a side effect of row 39. The sweep must use
+   the plain `outline` / `outline-2` / `outline-offset-2` utilities, because `conventions.test.ts` forbids
+   arbitrary values in this package.
+2. **`link-name` with a modal open on `/components`** — proved pre-existing against `main` in §6 finding 5.
+3. **Glyph vocabulary retention.** `glyph.tsx` holds all 25 shapes in one binding, so importing `Glyph` costs
+   2,751 B whatever a component renders. Amortised to ~1.6% across the whole library; the cost only bites a
+   consumer importing a single component. Splitting it means per-call-site shape maps across ~21 files.
+4. **`EnergySummary` carries both presentations.** A consumer using only the sparkline still downloads the bar
+   chart and its comparison (+7.32 KB). Splitting it would be an API change.
+5. **`RoutineCard` has no density prop**, so a long routine list can only be shortened by grouping.
+
+### Bundle, baseline `06c0f32` → this pass (esbuild, minified, React external)
+| | Before | After |
+| --- | --- | --- |
+| `@kinetixui/iot/functions`, one helper | 65 B | 65 B (unchanged) |
+| `@kinetixui/iot/functions`, whole entry | 53.96 KB | 53.96 KB (unchanged) |
+| `DeviceCard` | 11.52 KB | 16.30 KB |
+| `DeviceControlCard` | 13.59 KB | 16.53 KB |
+| `DevicePowerControl` | 5.18 KB | 6.83 KB |
+| `EnergySummary` | 11.04 KB | 18.36 KB |
+| Telemetry (metric + grid + trend) | 23.69 KB | 27.15 KB |
+| `AlertList` | 13.62 KB | 16.78 KB |
+| All components | 130.44 KB | 168.65 KB |
+| `dist` JS total | 278.15 KB | 349.54 KB |
+| `/iot` route | 45.5 kB (First Load 472 kB) | 56.5 kB (First Load 483 kB) |
+
+The React-free `functions` entry is byte-identical: its built chunk is the same 86,080 bytes before and after,
+and `packages/iot/src/functions` and `types` have no diff against the baseline apart from one added optional
+field on the alert type.
+

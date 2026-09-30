@@ -599,7 +599,9 @@ export function RailItem({
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="text-body-md leading-snug sm:truncate">{name}</span>
-          {state ? <span className={cn("text-body-sm font-normal sm:truncate", selected ? "text-foreground/80" : "text-muted-foreground")}><bdi>{state}</bdi></span> : null}
+          {/* The state line wraps at every width rather than truncating: it carries honesty words
+              ("stale", "offline") that a middle-width tile would otherwise clip away to an ellipsis. */}
+          {state ? <span className={cn("text-body-sm font-normal", selected ? "text-foreground/80" : "text-muted-foreground")}><bdi>{state}</bdi></span> : null}
         </span>
         {health && health !== "confirmed" ? (
           <>
