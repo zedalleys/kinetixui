@@ -27,6 +27,22 @@ import { Glyph, STAGE_GLYPH } from "./glyph";
  * text and the Retry button say what happened, and interrupting someone mid-sentence for a timeout
  * that they can retry is worse than telling them next.
  *
+ * **Narrow widths reflow; they do not shrink.** Below `sm` the three steps are a vertical list, one
+ * per row, and the "Requested / Device reports" pair stacks. A phone has no room for a horizontal
+ * track: wrapped, its last stage — the `confirmed` the whole component exists to withhold — ended up
+ * off the side of the screen. Nothing is scaled down or hidden to make it fit; every stage word, and
+ * the sentence, wrap and stay readable at a 320px screen. From `sm` up it is the horizontal track
+ * with its connecting hairlines, unchanged.
+ *
+ * **Stable footprint.** Once a request exists the block is the same size at every stage: three step
+ * rows whatever has happened, room for the longest sentence, and the action row held open whether or
+ * not a Retry is currently on offer. Nothing empty is announced — the reserved room is the sentence's
+ * own line box and an unnamed, roleless div. A caller that mounts this only while the request is
+ * unsettled still moves its own layout by the height of the whole block when it appears and goes; to
+ * avoid that, either keep it mounted (a `confirmed` lifecycle renders the same size, ending in
+ * "Confirmed: the device reports …", and an `idle` one renders only the values and "No change
+ * requested"), or give the slot it sits in a `min-height` of one block and let it fill that.
+ *
  * **Density.** `full` (default) is the stepper with its values and sentence. `compact` is one line —
  * "Requested › Acknowledged, not yet confirmed" — with the current stage emphasised by weight and a tint,
  * for a card that already shows the values. The sentence stays the single `role="status"` region in both
@@ -59,7 +75,14 @@ export interface CommandLifecycleProps extends Omit<React.HTMLAttributes<HTMLDiv
 
 type StepState = "done" | "current" | "upcoming";
 
-/** The steps reached so far, then the ones still ahead. Only the recorded history is drawn. */
+/**
+ * The three steps of one request: asked, acknowledged, and how it ended.
+ *
+ * Once a request exists the list is always those three rows, so the block does not change size as the
+ * stage moves and the geometry around it does not jump. Nothing is invented to fill a row: an
+ * acknowledgement the device never sent is drawn `upcoming` — hollow, dashed, and read out as not
+ * reached — exactly as it is before a request has got that far. `idle` has no request, so no steps.
+ */
 function stepsFor(l: KinetixCommandLifecycle): { stage: KinetixCommandLifecycleStage; state: StepState }[] {
   const acked = l.ackAt !== undefined;
   switch (l.stage) {
@@ -81,13 +104,13 @@ function stepsFor(l: KinetixCommandLifecycle): { stage: KinetixCommandLifecycleS
     case "confirmed":
       return [
         { stage: "requested", state: "done" },
-        ...(acked ? [{ stage: "acknowledged" as const, state: "done" as const }] : []),
+        { stage: "acknowledged", state: acked ? "done" : "upcoming" },
         { stage: "confirmed", state: "current" },
       ];
     default:
       return [
         { stage: "requested", state: "done" },
-        ...(acked ? [{ stage: "acknowledged" as const, state: "done" as const }] : []),
+        { stage: "acknowledged", state: acked ? "done" : "upcoming" },
         { stage: l.stage, state: "current" },
       ];
   }
@@ -105,6 +128,9 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
     // The machine accepts a cancel while in flight and after a failure, timeout or unreachable
     // (abandoning a request that never landed); it does not after confirmed or cancelled.
     const cancel = onCancel !== undefined && (pending || bad);
+    // The row of actions stays for every stage of a request once the caller offers one, so that it
+    // reserves its height instead of appearing and shoving the surrounding layout down.
+    const actions = (onRetry !== undefined || onCancel !== undefined) && lifecycle.stage !== "idle";
     const compact = density === "compact";
     const attemptText =
       lifecycle.attempts > 0
@@ -128,7 +154,12 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
       >
         {steps.length > 0 ? (
           <ol
-            className={cn("m-0 flex list-none flex-wrap items-center p-0", compact ? "gap-x-1.5 gap-y-1" : "gap-x-2 gap-y-2")}
+            // Below `sm` the three steps are a vertical list, one per row: a phone has no room for a
+            // horizontal track, and a wrapped track is what pushed the last stage off the screen.
+            className={cn(
+              "m-0 flex list-none flex-col p-0 sm:flex-row sm:flex-wrap sm:items-center",
+              compact ? "gap-y-1 sm:gap-x-1.5" : "gap-y-2 sm:gap-x-2",
+            )}
             aria-label="Progress of the request"
           >
             {steps.map((step, index) => {
@@ -142,8 +173,10 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                   data-step-state={step.state}
                   aria-current={step.state === "current" ? "step" : undefined}
                   className={cn(
-                    "inline-flex items-center",
-                    compact ? "gap-1.5 text-label-lg" : "gap-2 text-label-lg",
+                    // `min-w-0` so a long stage word wraps inside the row instead of widening it;
+                    // the reserved row height keeps the block the same size whether it wraps or not.
+                    "flex w-full min-w-0 items-center sm:w-auto",
+                    compact ? "min-h-11 gap-1.5 text-label-lg sm:min-h-0" : "min-h-10 gap-2 text-label-lg sm:min-h-0",
                     step.state === "upcoming" ? "text-muted-foreground" : "text-foreground",
                     failed && "text-destructive",
                   )}
@@ -151,7 +184,7 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                   {compact ? (
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5",
+                        "inline-flex min-w-0 items-center gap-1.5 rounded-full px-2 py-0.5",
                         step.state === "current" && (failed ? "bg-destructive/10 font-semibold" : "bg-primary/10 font-semibold"),
                       )}
                     >
@@ -160,7 +193,7 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                         size={14}
                         className={cn(step.state === "upcoming" && "opacity-60", step.stage === "retrying" && pending && "animate-spin motion-reduce:animate-none")}
                       />
-                      <span>{word}</span>
+                      <span className="min-w-0 break-words">{word}</span>
                     </span>
                   ) : (
                     <>
@@ -179,13 +212,20 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                           className={cn(step.state === "upcoming" && "opacity-60", step.stage === "retrying" && pending && "animate-spin motion-reduce:animate-none")}
                         />
                       </span>
-                      <span className={step.state === "current" ? "font-semibold" : step.state === "done" ? "font-medium" : "font-normal"}>{word}</span>
+                      <span
+                        className={cn(
+                          "min-w-0 break-words",
+                          step.state === "current" ? "font-semibold" : step.state === "done" ? "font-medium" : "font-normal",
+                        )}
+                      >
+                        {word}
+                      </span>
                     </>
                   )}
-                  {step.state === "upcoming" ? <span className="sr-only"> (not reached yet)</span> : null}
+                  {step.state === "upcoming" ? <span className="sr-only"> {pending ? "(not reached yet)" : "(not reported)"}</span> : null}
                   {last ? null : compact ? (
                     // Chevron, mirrored under RTL: it points along the reading direction.
-                    <svg aria-hidden="true" focusable="false" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-muted-foreground rtl:-scale-x-100">
+                    <svg aria-hidden="true" focusable="false" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="hidden shrink-0 text-muted-foreground rtl:-scale-x-100 sm:block">
                       <path d="m6 3.5 4.5 4.5L6 12.5" />
                     </svg>
                   ) : (
@@ -205,14 +245,16 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
         ) : null}
 
         {hideValues || compact ? null : (
-          <dl className="m-0 flex flex-wrap gap-x-6 gap-y-1 rounded-xl bg-muted/40 px-3 py-2 text-label-md">
-            <div className="flex gap-1.5">
+          // The pair stacks below `sm`: side by side it is the widest thing in the block on a phone,
+          // and a requested value that runs to the edge is the one value that must never be half-read.
+          <dl className="m-0 flex flex-col gap-y-1 rounded-xl bg-muted/40 px-3 py-2 text-label-md sm:flex-row sm:flex-wrap sm:gap-x-6">
+            <div className="flex min-w-0 flex-wrap gap-x-1.5">
               <dt className="text-muted-foreground">{labels?.requested ?? "Requested"}</dt>
-              <dd data-requested="" className="text-foreground">{format(lifecycle.requestedValue)}</dd>
+              <dd data-requested="" className="m-0 min-w-0 break-words text-foreground">{format(lifecycle.requestedValue)}</dd>
             </div>
-            <div className="flex gap-1.5">
+            <div className="flex min-w-0 flex-wrap gap-x-1.5">
               <dt className="text-muted-foreground">{labels?.device ?? "Device reports"}</dt>
-              <dd data-confirmed="" className="text-foreground">{format(lifecycle.confirmedValue)}</dd>
+              <dd data-confirmed="" className="m-0 min-w-0 break-words text-foreground">{format(lifecycle.confirmedValue)}</dd>
             </div>
           </dl>
         )}
@@ -223,13 +265,22 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
         <p
           role="status"
           data-lifecycle-summary=""
-          className={cn("m-0 text-label-lg text-muted-foreground", compact && !bad && "sr-only")}
+          className={cn(
+            "m-0 break-words text-label-lg text-muted-foreground",
+            // Three lines of room on a phone, two from `sm`. The sentences differ by a line or two
+            // between stages, and reserving the taller one is what stops the card resizing under the
+            // reader's thumb as the request moves. It is text, never an empty box.
+            !compact && steps.length > 0 && "min-h-16 sm:min-h-10",
+            compact && !bad && "sr-only",
+          )}
         >
           {describeCommandLifecycle(lifecycle, { formatValue })}
         </p>
 
-        {retry || cancel ? (
-          <div className="flex flex-wrap gap-2">
+        {actions ? (
+          // Empty it has no role, no name and no text, so there is nothing for assistive technology
+          // to announce — it is reserved height, not an announced box.
+          <div data-lifecycle-actions="" className={cn("flex flex-wrap gap-2", steps.length > 0 && "min-h-11 md:min-h-9")}>
             {retry ? (
               <button
                 type="button"

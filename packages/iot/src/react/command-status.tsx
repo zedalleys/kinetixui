@@ -21,6 +21,10 @@ import { withDisplayName } from "./display-name";
  * animation and the marker remains as a static dot — the status never depended on the movement.
  *
  * An error message is rendered as text, like an alert message, and for the same reason.
+ *
+ * Every line wraps rather than widening the row: a command name, a translated status word and a
+ * device's error message are all arbitrary length, and on a phone a row that refuses to wrap is a row
+ * whose end is off the screen.
  */
 export interface CommandStatusProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "children"> {
   command: KinetixDeviceCommand;
@@ -53,19 +57,21 @@ const CommandStatus = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forw
       <div
         ref={ref}
         data-command-status={resolved}
-        className={cn("flex flex-col gap-0.5 font-sans", className)}
+        className={cn("flex min-w-0 flex-col gap-0.5 font-sans", className)}
         {...props}
       >
-        {showName && command?.name ? <span className="text-label-md text-muted-foreground">{command.name}</span> : null}
-        <span className={cn("flex items-center gap-2 text-label-lg", STATUS_CLASS[resolved])}>
+        {showName && command?.name ? <span className="min-w-0 break-words text-label-md text-muted-foreground">{command.name}</span> : null}
+        {/* `items-start` with the marker nudged onto the first line: a command name or a translated
+            status that wraps keeps the dot beside its first line rather than centred on a block. */}
+        <span className={cn("flex min-w-0 items-start gap-2 text-label-lg", STATUS_CLASS[resolved])}>
           <span
             aria-hidden="true"
-            className={cn("size-2 shrink-0 rounded-full bg-current", inFlight ? "animate-pulse motion-reduce:animate-none" : "")}
+            className={cn("mt-1.5 size-2 shrink-0 rounded-full bg-current", inFlight ? "animate-pulse motion-reduce:animate-none" : "")}
           />
-          {resolveLabel(label, describeCommandStatus(resolved))}
+          <span className="min-w-0 break-words">{resolveLabel(label, describeCommandStatus(resolved))}</span>
         </span>
         {isCommandUnsuccessful(resolved) && command?.errorMessage ? (
-          <span className="text-label-md text-muted-foreground">{command.errorMessage}</span>
+          <span className="min-w-0 break-words text-label-md text-muted-foreground">{command.errorMessage}</span>
         ) : null}
         {command?.updatedAt ?? command?.createdAt ? (
           <LastSync value={command.updatedAt ?? command.createdAt} now={now} className="text-label-md" />

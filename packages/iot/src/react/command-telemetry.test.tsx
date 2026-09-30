@@ -59,6 +59,10 @@ const acknowledged = life((l) => advanceCommandLifecycle(advanceCommandLifecycle
 const confirmed = life((l) => advanceCommandLifecycle(advanceCommandLifecycle(l, { type: "sent" }, NOW), { type: "confirm" }, NOW));
 const timedOut = life((l) => advanceCommandLifecycle(advanceCommandLifecycle(l, { type: "sent" }, NOW), { type: "timeout" }, NOW));
 const unreachable = life((l) => advanceCommandLifecycle(advanceCommandLifecycle(l, { type: "sent" }, NOW), { type: "deviceUnreachable" }, NOW));
+const ackedThenConfirmed = life((l) => advanceCommandLifecycle(advanceCommandLifecycle(advanceCommandLifecycle(l, { type: "sent" }, NOW), { type: "acknowledge" }, NOW), { type: "confirm" }, NOW));
+const failed = life((l) => advanceCommandLifecycle(advanceCommandLifecycle(l, { type: "sent" }, NOW), { type: "fail", reason: "Valve position not reported." }, NOW));
+const cancelled = life((l) => advanceCommandLifecycle(advanceCommandLifecycle(l, { type: "sent" }, NOW), { type: "cancel" }, NOW));
+const retrying = life((l) => advanceCommandLifecycle(advanceCommandLifecycle(advanceCommandLifecycle(l, { type: "sent" }, NOW), { type: "timeout" }, NOW), { type: "retry" }, NOW));
 
 const stepOf = (name: string) => document.querySelector(`[data-step="${name}"]`) as HTMLElement | null;
 const glyphOf = (el: HTMLElement | null) => el?.querySelector("[data-glyph]")?.getAttribute("data-glyph");
@@ -159,6 +163,50 @@ describe("CommandLifecycle", () => {
     // Same element, new text: that is what a live region announces.
     expect(screen.getByRole("status")).toBe(region);
     expect(region).toHaveTextContent(/^Confirmed/);
+  });
+
+  // Layout stability: the block that reports a request must not resize the card around it as the
+  // request moves. Three steps at every stage is how it keeps the same footprint — and the
+  // acknowledgement is never invented to fill the third row.
+  it("draws the same three steps at every stage of a request, and none while idle", () => {
+    for (const [name, lc] of Object.entries({ requested, acknowledged, confirmed, ackedThenConfirmed, failed, timedOut, unreachable, retrying, cancelled })) {
+      const { unmount } = render(<CommandLifecycle lifecycle={lc} />);
+      expect(screen.getAllByRole("listitem"), `${name} does not walk three steps`).toHaveLength(3);
+      unmount();
+    }
+    render(<CommandLifecycle lifecycle={startCommandLifecycle({ confirmed: "on" })} />);
+    expect(screen.queryByRole("list")).toBeNull();
+  });
+
+  it("never claims an acknowledgement the device did not send", () => {
+    const { rerender } = render(<CommandLifecycle lifecycle={confirmed} />); // confirmed with no ack recorded
+    const ack = stepOf("acknowledged")!;
+    expect(ack).toHaveAttribute("data-step-state", "upcoming");
+    expect(ack).toHaveTextContent("(not reported)");
+    expect(ack).not.toHaveTextContent("not reached yet"); // the request is over; nothing is still coming
+    expect(glyphOf(stepOf("confirmed"))).toBe("check");
+
+    rerender(<CommandLifecycle lifecycle={ackedThenConfirmed} />);
+    expect(stepOf("acknowledged")).toHaveAttribute("data-step-state", "done");
+    expect(stepOf("acknowledged")).not.toHaveTextContent("(not reported)");
+  });
+
+  it("keeps the action row through the stages so a Retry does not shove the page", () => {
+    const row = () => document.querySelector("[data-lifecycle-actions]");
+    const { rerender } = render(<CommandLifecycle lifecycle={requested} onRetry={() => {}} onCancel={() => {}} />);
+    expect(row()).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+
+    rerender(<CommandLifecycle lifecycle={confirmed} onRetry={() => {}} onCancel={() => {}} />);
+    expect(row(), "the row is held open once a caller offers an action").not.toBeNull();
+    expect(screen.queryByRole("button")).toBeNull(); // reserved height, not a button that does nothing
+    expect(row()).toHaveTextContent("");
+    expect(row()).not.toHaveAttribute("role");
+    expect(row()).not.toHaveAttribute("aria-label");
+
+    // A caller that offers neither gets no row at all.
+    rerender(<CommandLifecycle lifecycle={confirmed} />);
+    expect(row()).toBeNull();
   });
 
   it("uses logical properties and is axe-clean in RTL", async () => {
