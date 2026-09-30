@@ -1,6 +1,8 @@
 ---
 type: 30-day calendar
-status: running — day 1 published 2026-09-29; everything from day 2 on is still planned
+status: running. What has actually published is the Status column below, derived from
+  ../distribution/register.json — this line deliberately names no day, because a restated snapshot
+  goes stale on the next post
 ---
 
 # The first 30 days
@@ -40,7 +42,7 @@ appears, which is why they carry no fixed day.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **Week 1 — problem recognition** |
 | 1 | **LI-003** | LinkedIn | post | P2 | A | Awareness | *"Six months later, they don't"* — drift as a mechanism problem | See the coverage → `/docs/platforms` | `kx_p2_a_drift` | — | **Published** 2026-09-29 |
-| 2 | **X-005** | X | single | P2 | A | Awareness | Drift is not a discipline problem | — | `kx_p2_a_drift` | LI-003 | Ready |
+| 2 | **X-005** | X | single | P2 | A | Awareness | Drift is not a discipline problem | — | `kx_p2_a_drift` | LI-003 | **Published** 2026-09-30 |
 | 4 | **LI-004** | LinkedIn | post | P1 | C | Evaluation | The manifest, and the check that reads it back | See the coverage → `/docs/platforms` | `kx_p1_c_manifest` | — | Ready |
 | 6 | **X-003** | X | single | P1 | C | Evaluation | No source, no claim, build fails | — | `kx_p1_c_manifest` | LI-004 | Ready |
 | — | **COM-002** | community | comment | P1 | A | Awareness | How to verify a coverage claim | opportunistic | — | ART-001 | Brief |

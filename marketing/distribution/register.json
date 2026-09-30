@@ -56,7 +56,7 @@
       "result": "5 sessions carried kx_p2_a_drift; 1 reached Qualified Evaluation; 0 reached Adoption Intent. Attribution pipeline confirmed working end to end \u2014 campaign, medium and content arrived intact, and the funnel vocabulary was already deployed (#253, 2026-09-29 12:43 UTC). One early session recorded kx_source=other while campaign, medium and content survived; the register's own URL cannot produce that, so a variant link was used for that click. The raw value is discarded by design and was not recovered, and this is logged as a single observation, not a defect. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open, so no rate is computed and no conclusion drawn."
     },
     {
-      "date": null,
+      "date": "2026-09-30",
       "day": 2,
       "asset": "X-005",
       "channel": "x",
@@ -74,8 +74,8 @@
       "secondary": null,
       "communityReuse": null,
       "metricToWatch": "whether kx_source=x produces any session at all",
-      "status": "planned",
-      "result": null
+      "status": "published",
+      "result": "2 sessions carried kx_p2_a_drift with utm_content=x_single; 0 reached Qualified Evaluation; 0 reached Adoption Intent. Logged the same day it posted, so these are early counts and not a settled figure. The metric to watch was whether kx_source=x produces a session at all: it did \u2014 1 of the 2 resolved to x, the other to `other`, the same fallback one day-1 session hit. Both carried a correct medium, campaign and content and arrived with no referrer, so only utm_source failed to resolve; the register's own URL cannot produce that. Link hygiene to watch, not an instrumentation change \u2014 the raw value is discarded by design and was not recovered. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open, so no rate is computed and no conclusion drawn."
     },
     {
       "date": null,
