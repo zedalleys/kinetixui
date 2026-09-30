@@ -173,6 +173,19 @@ describe("state honesty", () => {
     expect(requested("valve-02")).toBe("Nothing pending");
   });
 
+  it("draws the request as a dashed, worded tile next to the solid confirmed one, and words a failure", () => {
+    render(<StateHonestyExample />);
+    expect(screen.getByTestId("requested-valve-03").closest("dl")!.className).not.toMatch(/border-dashed/);
+    fireEvent.click(within(screen.getByRole("radiogroup", { name: /Irrigation Valve 03 position/ })).getByRole("radio", { name: /Open/ }));
+    const tile = screen.getByTestId("requested-valve-03").closest("dl")!;
+    expect(tile.className).toMatch(/border-dashed/);
+    expect(tile).toHaveTextContent(/Requested/);
+    expect(screen.getAllByText(/Requested, not yet confirmed/).length).toBeGreaterThan(0);
+    tick(3000);
+    expect(screen.getByText(/Failed\. The device did not change\./)).toBeInTheDocument();
+    expect(screen.getByTestId("confirmed-valve-03").textContent).toBe("Closed");
+  });
+
   it("fails the flaky valve once, never confirms the failed value, and confirms on an explicit retry", () => {
     render(<StateHonestyExample />);
     expect(confirmed("valve-03")).toBe("Closed");
@@ -201,49 +214,55 @@ describe("state honesty", () => {
 
 // ------------------------------------------------------------------------------------------------
 
-describe("device detail tabs", () => {
-  it("is a real tablist with six tabs, roving arrow keys, Home and End", async () => {
-    const user = userEvent.setup();
-    render(<DeviceDetailExample />);
-    const tabs = screen.getAllByRole("tab");
-    expect(screen.getByRole("tablist")).toBeInTheDocument();
-    expect(tabs.map((t) => t.textContent)).toEqual(["Overview", "Controls", "Telemetry", "Automations", "Activity", "Settings"]);
-    expect(screen.getByRole("tabpanel")).toBeInTheDocument();
+describe("device detail", () => {
+  beforeEach(() => vi.useFakeTimers());
 
-    tabs[0]!.focus();
-    await user.keyboard("{ArrowRight}");
-    expect(screen.getByRole("tab", { name: "Controls" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("tab", { name: "Controls" })).toHaveFocus();
-    await user.keyboard("{End}");
-    expect(screen.getByRole("tab", { name: "Settings" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByText(/Nothing on this tab configures hardware/)).toBeInTheDocument();
-    await user.keyboard("{Home}");
-    expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute("aria-selected", "true");
-  });
-
-  it("wraps its tabs instead of scrolling them sideways, and each tab carries its own underline", () => {
+  it("is one composed page, not a tab strip: identity, primary control, readings, and the context behind disclosures", () => {
     render(<DeviceDetailExample />);
-    const list = screen.getByRole("tablist");
-    expect(list.className).toMatch(/\bflex-wrap\b/);
-    // No horizontal scroller anywhere around the strip.
-    for (let el: HTMLElement | null = list; el && el.tagName !== "ARTICLE"; el = el.parentElement) {
-      expect(el.className, "an ancestor of the tab strip scrolls sideways").not.toMatch(/overflow-x-(auto|scroll)/);
+    expect(screen.queryByRole("tablist")).toBeNull();
+    expect(screen.getByRole("article", { name: "Pump Station detail" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Location of Pump Station" })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Pump Station power" })).toBeInTheDocument();
+    for (const title of ["Alerts", "Health and connection", "Automation", "Activity", "About this device"]) {
+      expect(screen.getByText(title, { selector: "summary span span" })).toBeInTheDocument();
     }
-    for (const tab of screen.getAllByRole("tab")) expect(tab.className).toMatch(/border-b-2/);
-  });
-
-  it("reverses the arrow keys under RTL", async () => {
-    const user = userEvent.setup();
-    rtl(<DeviceDetailExample />);
-    screen.getByRole("tab", { name: "Overview" }).focus();
-    await user.keyboard("{ArrowLeft}");
-    expect(screen.getByRole("tab", { name: "Controls" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByText(/Shown, not executed/)).toBeInTheDocument();
   });
 
   it("shows the header state from the confirmed value and the simulation clock", () => {
     render(<DeviceDetailExample />);
-    const line = screen.getByText("Running").closest("p")!;
-    expect(within(line).getByLabelText(/^Last seen/)).toBeInTheDocument();
+    expect(screen.getAllByText("Running").length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/^Last seen/).length).toBeGreaterThan(0);
+  });
+
+  it("keeps the large word on the confirmed state while a request is worded, dashed and separate", () => {
+    render(<DeviceDetailExample />);
+    const hero = screen.getByText("Running").closest("p")!;
+    expect(within(hero).queryByText(/requested, not yet confirmed/)).toBeNull();
+
+    fireEvent.click(screen.getByRole("switch", { name: "Pump Station power" }));
+    expect(within(hero).getByText("Running")).toBeInTheDocument();
+    const requested = within(hero).getByText(/Off requested, not yet confirmed/);
+    expect(requested.className).toMatch(/border-dashed/);
+    // The switch reports CONFIRMED, not what was asked.
+    expect(screen.getByRole("switch", { name: "Pump Station power" })).toHaveAttribute("aria-checked", "true");
+
+    tick(4000);
+    expect(screen.getByText("Stopped")).toBeInTheDocument();
+    expect(screen.queryByText(/Off requested, not yet confirmed/)).toBeNull();
+  });
+
+  it("lists its open alert and lets it be acknowledged from this page", () => {
+    render(<DeviceDetailExample />);
+    expect(screen.getByText(/1 open alert/)).toBeInTheDocument();
+    expect(screen.getByText("Alerts").closest("details")).toHaveTextContent(/Pump flow below its limit/);
+  });
+
+  it("puts the primary control and readings before the disclosures in source order, for one designed mobile column", () => {
+    render(<DeviceDetailExample />);
+    const article = screen.getByRole("article", { name: "Pump Station detail" });
+    const order = [...article.querySelectorAll('[aria-label="Pump control"], [aria-label="Readings"], details')].map((el) => el.getAttribute("aria-label") ?? el.tagName);
+    expect(order.slice(0, 2)).toEqual(["Pump control", "Readings"]);
   });
 });
 

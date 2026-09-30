@@ -94,18 +94,18 @@ export function DeviceDashboardExample() {
   return (
     <div className="flex flex-col gap-4">
       {/* ---------------------------------------------------------------- header */}
-      <header className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
+      <header className="flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm sm:p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-          <h3 className="text-title-sm text-foreground">Cold chain · Site 4</h3>
+          <h3 className="text-headline-sm text-foreground">Cold chain · Site 4</h3>
           {/* A count, not a verdict. Whether two offline devices is fine depends on what they are. */}
-          <p className="text-label-sm text-muted-foreground">
+          <p className="text-body-md text-muted-foreground">
             {summary.total} device{summary.total === 1 ? "" : "s"} · {summary.needsAttention} needing attention ·{" "}
             {openAlerts.length} open alert{openAlerts.length === 1 ? "" : "s"}
           </p>
         </div>
 
         {/* The group selector every product surveyed puts here, generalised from "rooms". */}
-        <div role="tablist" aria-label="Device group" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
+        <div role="tablist" aria-label="Device group" className="flex flex-wrap gap-2">
           {GROUPS.map((name) => (
             <button
               key={name}
@@ -114,9 +114,9 @@ export function DeviceDashboardExample() {
               aria-selected={group === name}
               onClick={() => setGroup(name)}
               className={[
-                "shrink-0 rounded-full px-3 py-1.5 text-label-sm transition-colors duration-200 motion-reduce:transition-none",
+                "inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-body-md transition-colors duration-fast motion-reduce:transition-none md:min-h-9",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                group === name ? "bg-foreground text-background" : "border border-input text-muted-foreground hover:text-foreground",
+                group === name ? "bg-primary font-semibold text-primary-foreground shadow-sm" : "bg-muted/60 text-foreground hover:bg-muted",
               ].join(" ")}
             >
               {name}
@@ -138,13 +138,13 @@ export function DeviceDashboardExample() {
                 device={device}
                 reading={DEMO_READINGS[device.id]}
                 now={DEMO_NOW}
-                className={isSelected ? "border-foreground/40 ring-1 ring-foreground/20" : ""}
+                className={isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}
                 action={
                   <button
                     type="button"
                     onClick={() => setSelectedId(device.id)}
                     aria-pressed={isSelected}
-                    className="rounded-md border border-input px-2 py-1 text-label-sm text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="inline-flex min-h-11 items-center rounded-full bg-muted px-4 text-body-md text-foreground hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:min-h-9"
                   >
                     <span className="sr-only">Show details for {device.name}. </span>
                     Details
@@ -154,7 +154,7 @@ export function DeviceDashboardExample() {
             );
           })}
           {ordered.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-border p-6 text-label-md text-muted-foreground">
+            <p className="rounded-xl border-2 border-dashed border-border p-6 text-body-md text-muted-foreground">
               No devices in this group.
             </p>
           ) : null}
@@ -162,11 +162,11 @@ export function DeviceDashboardExample() {
 
         {/* The detail panel: the tile-to-detail pattern, as a column beside the grid on wide screens
             and a section below it on narrow ones. */}
-        <aside aria-label={`Detail: ${selected.name}`} className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
+        <aside aria-label={`Detail: ${selected.name}`} className="flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-1">
-            <span className="text-label-sm uppercase tracking-wide text-muted-foreground">Selected device</span>
-            <span className="text-title-sm text-foreground">{selected.name}</span>
-            <span className="text-label-sm text-muted-foreground">{selected.locationName}</span>
+            <span className="text-body-md text-muted-foreground">Selected device</span>
+            <span className="text-title-lg text-foreground">{selected.name}</span>
+            <span className="text-body-md text-muted-foreground">{selected.locationName}</span>
           </div>
 
           {/* The control layer, wired to LOCAL DEMO STATE.
@@ -175,7 +175,7 @@ export function DeviceDashboardExample() {
               here reaches a device: `@kinetixui/iot` has no transport of any kind. */}
           {/* `min-w-0` because a <fieldset> defaults to `min-inline-size: min-content` and will not shrink
               below its widest child — which put a 370px panel inside a 320px column. */}
-          <fieldset className="flex min-w-0 flex-col gap-4 border-t border-border pt-4">
+          <fieldset className="flex min-w-0 flex-col gap-4 border-0 border-t border-border p-0 pt-4">
             <legend className="sr-only">Demonstration controls for {selected.name}</legend>
 
             <DevicePowerControl
@@ -217,14 +217,14 @@ export function DeviceDashboardExample() {
             />
 
             <div className="flex flex-col gap-1.5">
-              <span className="text-label-md text-foreground">Simulate a state</span>
+              <span className="text-title-md text-foreground">Simulate a state</span>
               <div className="flex flex-wrap gap-1.5">
                 {(["online", "syncing", "stale", "offline", "error"] as const).map((status) => (
                   <button
                     key={status}
                     type="button"
                     onClick={() => setOverrides((prev) => ({ ...prev, [selected.id]: status }))}
-                    className="rounded-full border border-input px-2.5 py-1 text-label-sm text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
+                    className="inline-flex min-h-11 items-center rounded-full bg-muted/60 px-4 text-body-md text-foreground transition-colors duration-fast hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none md:min-h-9"
                   >
                     {describeDeviceStatus(status)}
                   </button>
@@ -233,7 +233,7 @@ export function DeviceDashboardExample() {
               {/* One polite live region for the whole panel, announced only when the reader acted.
                   Telemetry updates are deliberately NOT announced — a dashboard that narrates every
                   reading is a dashboard nobody can use with a screen reader. */}
-              <p aria-live="polite" className="text-label-sm text-muted-foreground">
+              <p aria-live="polite" className="text-body-sm text-muted-foreground">
                 {overrides[selected.id] ? `${selected.name} is now ${describeDeviceStatus(overrides[selected.id]!).toLowerCase()}.` : ""}
               </p>
             </div>
@@ -251,10 +251,10 @@ export function DeviceDashboardExample() {
 
       {/* ---------------------------------------------------------------- alerts + activity */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <section aria-label="Alerts" className="flex flex-col gap-2">
-          <h4 className="text-label-sm uppercase tracking-wide text-muted-foreground">Alerts</h4>
+        <section aria-label="Alerts" className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm sm:p-6">
+          <h4 className="text-title-md text-foreground">Alerts</h4>
           {openAlerts.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-border p-4 text-label-md text-muted-foreground">
+            <p className="rounded-xl border-2 border-dashed border-border p-4 text-body-md text-muted-foreground">
               Nothing unacknowledged.
             </p>
           ) : (
@@ -265,16 +265,7 @@ export function DeviceDashboardExample() {
                     alert={alert}
                     deviceName={deviceById(alert.deviceId).name}
                     now={DEMO_NOW}
-                    action={
-                      <button
-                        type="button"
-                        onClick={() => setAcknowledged((prev) => ({ ...prev, [alert.id]: DEMO_NOW }))}
-                        className="rounded-md border border-input px-2 py-1 text-label-sm text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        <span className="sr-only">Acknowledge alert: {alert.message}. </span>
-                        Acknowledge
-                      </button>
-                    }
+                    onAcknowledge={(target) => setAcknowledged((prev) => ({ ...prev, [target.id]: DEMO_NOW }))}
                   />
                 </li>
               ))}
@@ -282,15 +273,15 @@ export function DeviceDashboardExample() {
           )}
         </section>
 
-        <section aria-label="Activity" className="flex flex-col gap-2">
-          <h4 className="text-label-sm uppercase tracking-wide text-muted-foreground">Recent commands</h4>
+        <section aria-label="Activity" className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm sm:p-6">
+          <h4 className="text-title-md text-foreground">Recent commands</h4>
           {/* The time-rail activity list: the timestamp gutter is the structure, not a trailing note. */}
           <ul className="flex flex-col">
             {DEMO_COMMANDS.map((command) => (
               <li key={command.id} className="grid grid-cols-[auto_1fr] gap-3 border-s border-border ps-4 pb-4 last:pb-0">
                 <span aria-hidden="true" className="-ms-5 mt-1.5 size-2 rounded-full bg-border" />
                 <span className="flex flex-col gap-0.5">
-                  <span className="text-label-md text-foreground">{deviceById(command.deviceId).name}</span>
+                  <span className="text-body-md text-foreground">{deviceById(command.deviceId).name}</span>
                   <CommandStatus command={command} showName now={DEMO_NOW} />
                 </span>
               </li>

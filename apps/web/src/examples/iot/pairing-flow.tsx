@@ -18,6 +18,7 @@ import {
 } from "@kinetixui/iot/functions";
 import { pairingDevices, pairingFailureScenarios, pairingHappyPath } from "./scenarios";
 import { BUTTON, SimNotice, useReducedMotion } from "./harness";
+import { cn } from "@/lib/utils";
 
 // kx-iot:start
 /**
@@ -37,6 +38,10 @@ import { BUTTON, SimNotice, useReducedMotion } from "./harness";
 const UI_STEPS = ["Choose a method", "Searching", "Device found", "Identify", "Verify it is yours", "Configure", "Choose a place", "Check it works", "Done"] as const;
 const PLACES = ["Living room", "Hallway", "Kitchen", "Office", "Bedroom", "Zone 2", "Zone 3", "Utility yard"];
 const DEMO_CODE = "KX2468";
+/** The step's one primary action, a filled pill; everything else is quiet. */
+const ACTION =
+  "inline-flex min-h-11 items-center justify-center self-start rounded-full bg-primary px-6 text-body-md font-medium text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none";
+const QUIET = cn(BUTTON, "min-h-11 rounded-full bg-card px-5 text-body-md shadow-sm");
 /** Stages that begin with a simulated wait; the others begin by asking the person for something. */
 const STARTS_WORKING: readonly KinetixPairingStage[] = ["discover", "identify", "verify"];
 const durationOf = (stage: KinetixPairingStage) => pairingHappyPath.find((step) => step.stage === stage)?.durationMs ?? 1000;
@@ -171,10 +176,10 @@ export function PairingFlowExample() {
   const heading = flow.status === "cancelled" ? "Setup cancelled" : `Step ${uiStep + 1} of ${UI_STEPS.length}: ${UI_STEPS[uiStep]}`;
 
   return (
-    <section aria-label="Pairing flow" className="flex max-w-3xl flex-col gap-4">
+    <section aria-label="Pairing flow" className="flex max-w-3xl flex-col gap-4 sm:gap-6">
       <SimNotice text="Simulated — no Bluetooth, Wi-Fi or network scanning happens. Devices, codes and delays are scripted fixtures in your browser." />
 
-      <label className="flex flex-col gap-1 text-label-md text-foreground">
+      <label className="flex flex-col gap-1 text-body-md text-foreground">
         Simulate a failure
         <select
           value={scenarioId}
@@ -189,13 +194,13 @@ export function PairingFlowExample() {
             </option>
           ))}
         </select>
-        {scenario ? <span className="text-label-sm text-muted-foreground">{scenario.recoveryOutcome}</span> : null}
+        {scenario ? <span className="text-body-sm text-muted-foreground">{scenario.recoveryOutcome}</span> : null}
       </label>
 
       <PairingStepper flow={flow} horizontal />
 
-      <div className="flex min-w-0 flex-col gap-4 rounded-2xl border border-border bg-card p-4">
-        <h4 ref={headingRef} tabIndex={-1} className="text-title-sm text-foreground focus-visible:outline-none">
+      <div className="flex min-w-0 flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm sm:p-6">
+        <h4 ref={headingRef} tabIndex={-1} className="text-title-lg text-foreground focus-visible:outline-none">
           {heading}
         </h4>
 
@@ -205,8 +210,8 @@ export function PairingFlowExample() {
 
         {flow.status === "cancelled" ? (
           <>
-            <p className="text-label-md text-muted-foreground">Nothing was set up, and nothing was stored.</p>
-            <button type="button" className={`${BUTTON} self-start`} onClick={startOver}>
+            <p className="text-body-md text-muted-foreground">Nothing was set up, and nothing was stored.</p>
+            <button type="button" className={ACTION} onClick={startOver}>
               Start again
             </button>
           </>
@@ -222,7 +227,7 @@ export function PairingFlowExample() {
                 if (scenario && scenario.method !== next) setScenarioId("none");
               }}
             />
-            <button type="button" className={`${BUTTON} self-start`} onClick={() => send({ type: "start", method })}>
+            <button type="button" className={ACTION} onClick={() => send({ type: "start", method })}>
               Start setup
             </button>
           </>
@@ -230,11 +235,11 @@ export function PairingFlowExample() {
 
         {flow.status === "active" && working ? (
           <>
-            <p className="text-label-md text-muted-foreground">
+            <p className="text-body-md text-muted-foreground">
               {pairingHappyPath.find((s) => s.stage === flow.stage)?.label}… (simulated, about {(durationOf(flow.stage) / 1000).toFixed(1)} s)
             </p>
             {reducedMotion ? (
-              <button type="button" className={`${BUTTON} self-start`} onClick={workDone}>
+              <button type="button" className={ACTION} onClick={workDone}>
                 Finish this step
               </button>
             ) : null}
@@ -243,18 +248,18 @@ export function PairingFlowExample() {
 
         {flow.status === "active" && !working && flow.stage === "discover" ? (
           <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
-            <legend className="mb-1 text-label-md text-foreground">
+            <legend className="mb-1 text-title-md text-foreground">
               {pairingDevices[flow.method!].length} sample {pairingDevices[flow.method!].length === 1 ? "device" : "devices"} found (fixture data)
             </legend>
             {pairingDevices[flow.method!].map((device) => (
-              <label key={device.id} className="flex min-h-11 items-center gap-2 rounded-lg border border-border px-3 text-label-md text-foreground">
-                <input type="radio" name="found-device" className="size-4" checked={found.id === device.id} onChange={() => setFoundId(device.id)} />
+              <label key={device.id} className="flex min-h-11 items-center gap-2 rounded-xl bg-muted/60 px-4 text-body-md text-foreground has-[:checked]:bg-primary/10 has-[:checked]:ring-2 has-[:checked]:ring-primary">
+                <input type="radio" name="found-device" className="size-5" checked={found.id === device.id} onChange={() => setFoundId(device.id)} />
                 <span className="min-w-0 break-words">
                   {device.name} <span className="text-muted-foreground">· {device.hint}</span>
                 </span>
               </label>
             ))}
-            <button type="button" className={`${BUTTON} self-start`} onClick={() => send({ type: "next" })}>
+            <button type="button" className={ACTION} onClick={() => send({ type: "next" })}>
               Continue with {found.name}
             </button>
           </fieldset>
@@ -262,10 +267,10 @@ export function PairingFlowExample() {
 
         {flow.status === "active" && !working && flow.stage === "identify" ? (
           <>
-            <p className="text-label-md text-foreground">
+            <p className="text-body-md text-foreground">
               Does <strong className="font-medium">{found.hint}</strong> match the label on your {found.name}?
             </p>
-            <button type="button" className={`${BUTTON} self-start`} onClick={() => send({ type: "next" })}>
+            <button type="button" className={ACTION} onClick={() => send({ type: "next" })}>
               Yes, that is my device
             </button>
           </>
@@ -279,7 +284,7 @@ export function PairingFlowExample() {
               if (codeShapeOk) setWorking(true);
             }}
           >
-            <label htmlFor="pairing-code" className="text-label-md text-foreground">
+            <label htmlFor="pairing-code" className="text-body-md text-foreground">
               Setup code
             </label>
             <input
@@ -291,10 +296,10 @@ export function PairingFlowExample() {
               aria-describedby="pairing-code-hint"
               className="min-h-11 max-w-xs rounded-md border border-input bg-background px-3 font-mono text-label-md text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
-            <p id="pairing-code-hint" className="text-label-sm text-muted-foreground">
+            <p id="pairing-code-hint" className="text-body-sm text-muted-foreground">
               {codeLength} characters. Demo code: <span className="font-mono text-foreground">{acceptedCode}</span>. The shape is checked here; only the device can say whether it is the right code.
             </p>
-            <button type="submit" disabled={!codeShapeOk} className={`${BUTTON} self-start`}>
+            <button type="submit" disabled={!codeShapeOk} className={ACTION}>
               Verify code
             </button>
           </form>
@@ -308,7 +313,7 @@ export function PairingFlowExample() {
               setWorking(true);
             }}
           >
-            <label htmlFor="pairing-name" className="text-label-md text-foreground">
+            <label htmlFor="pairing-name" className="text-body-md text-foreground">
               Device name
             </label>
             <input
@@ -317,7 +322,7 @@ export function PairingFlowExample() {
               onChange={(event) => setName(event.target.value)}
               className="min-h-11 max-w-xs rounded-md border border-input bg-background px-3 text-label-md text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
-            <button type="submit" className={`${BUTTON} self-start`}>
+            <button type="submit" className={ACTION}>
               Apply settings
             </button>
           </form>
@@ -331,7 +336,7 @@ export function PairingFlowExample() {
               setWorking(true);
             }}
           >
-            <label htmlFor="pairing-place" className="text-label-md text-foreground">
+            <label htmlFor="pairing-place" className="text-body-md text-foreground">
               Room or zone
             </label>
             <select
@@ -344,7 +349,7 @@ export function PairingFlowExample() {
                 <option key={p}>{p}</option>
               ))}
             </select>
-            <button type="submit" className={`${BUTTON} self-start`}>
+            <button type="submit" className={ACTION}>
               Place it here
             </button>
           </form>
@@ -352,25 +357,25 @@ export function PairingFlowExample() {
 
         {flow.status === "complete" ? (
           <>
-            <p className="text-label-md text-foreground">
+            <p className="text-body-md text-foreground">
               {name || found.name} is set up in {place}. It responded when checked.
             </p>
-            <p className="text-label-sm text-muted-foreground">Simulated: no device was paired, connected to or stored.</p>
-            <button type="button" className={`${BUTTON} self-start`} onClick={startOver}>
+            <p className="text-body-sm text-muted-foreground">Simulated: no device was paired, connected to or stored.</p>
+            <button type="button" className={ACTION} onClick={startOver}>
               Pair another device
             </button>
           </>
         ) : null}
 
-        {note ? <p className="text-label-sm text-muted-foreground">{note}</p> : null}
+        {note ? <p className="text-body-sm text-muted-foreground">{note}</p> : null}
       </div>
 
       {started && flow.status !== "complete" && flow.status !== "cancelled" ? (
         <div className="flex flex-wrap gap-2">
-          <button type="button" className={BUTTON} disabled={!backAllowed} onClick={() => send({ type: "back" })}>
+          <button type="button" className={QUIET} disabled={!backAllowed} onClick={() => send({ type: "back" })}>
             Back
           </button>
-          <button type="button" className={BUTTON} disabled={!cancelAllowed} onClick={() => send({ type: "cancel" })}>
+          <button type="button" className={QUIET} disabled={!cancelAllowed} onClick={() => send({ type: "cancel" })}>
             Cancel setup
           </button>
         </div>

@@ -1,81 +1,94 @@
 "use client";
 
 import * as React from "react";
-import * as Tabs from "@radix-ui/react-tabs";
 import {
   ActivityTimeline,
   AlertList,
   AutomationRuleView,
   CommandLifecycle,
   ConnectionHealth,
-  DeviceControlCard,
-  DeviceIdentity,
   DevicePowerControl,
   DeviceStatusBadge,
   LastSync,
   RoutineCard,
-  TelemetryGrid,
+  SpaceBreadcrumb,
   TelemetryMetric,
   TelemetryTrend,
 } from "@kinetixui/iot/react";
-import { describeConnectivity, describeDeviceHealth } from "@kinetixui/iot/functions";
+import { buildSpaceTree, describeConnectivity, describeDeviceHealth, resolveDeviceCategory, spacePath } from "@kinetixui/iot/functions";
 import { selectActivity, selectDeviceState } from "@/lib/iot-sim";
 import { useIotSimulation } from "@/lib/iot-sim/use-simulation";
+import { DeviceIllustration, Disclosure, PillSelector, StateBadge, StateGlyph, type ShowcaseState } from "@/components/iot/showcase";
 import { agritech } from "./scenarios";
-import { Section, SimNotice, SimTransport, controlOf, deviceOf, readingOf, statusLineOf, trendOf, useInheritedDirection } from "./harness";
+import { SimNotice, SimTransport, controlOf, deviceOf, readingOf, trendOf } from "./harness";
 import { cn } from "@/lib/utils";
 
 // kx-iot:start
 /**
- * One device in full, as a screen with six tabs. The tabs are real `tablist` / `tab` / `tabpanel`
- * elements with roving arrow-key focus (Radix Tabs); on a narrow screen the tabs wrap onto further rows
- * instead of scrolling sideways, where the tabs past the edge would have no visible cue.
+ * One device as a product view rather than a settings page. The device is the pump station of the farm
+ * scenario, and the page is composed in two zones:
  *
- * "Settings" is a read-only presentation of what the product knows about the device. Nothing on that
- * tab configures hardware, and nothing in this example sends anything: it is SIMULATED.
+ *   - the ZONE OF ACTION: who the device is, the one control that matters, and what it is measuring;
+ *   - the ZONE OF CONTEXT: what needs attention, what happened, what is scheduled, how healthy it is.
+ *
+ * Below `lg` the two zones become one designed column: the control first, the readings second, and the
+ * rest behind disclosures that say how much is inside. The large "Running / Stopped" word is the
+ * CONFIRMED state. A request that has not landed appears beneath it as its own dashed, worded
+ * treatment, and never replaces it.
+ *
+ * SIMULATED. Nothing configures hardware and nothing is sent; the routines are SHOWN, never executed.
  */
 const DEVICE_ID = "pump-01";
-const TABS = ["Overview", "Controls", "Telemetry", "Automations", "Activity", "Settings"] as const;
-
-const TAB_TRIGGER = cn(
-  "inline-flex min-h-11 items-center whitespace-nowrap border-b-2 border-border px-4 text-label-md text-muted-foreground",
-  "transition-colors hover:text-foreground motion-reduce:transition-none",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-  "data-[state=active]:border-primary data-[state=active]:text-foreground",
-);
-const PANEL = "flex flex-col gap-6 pt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const METRICS = [
+  { id: "flow", label: "Flow" },
+  { id: "pressure", label: "Pressure" },
+] as const;
 
 export function DeviceDetailExample() {
   const iot = useIotSimulation(agritech, { intervalMs: 1000 });
   const { sim } = iot;
-  const [tab, setTab] = React.useState<(typeof TABS)[number]>("Overview");
-  const [rootRef, dir] = useInheritedDirection<HTMLDivElement>();
+  const [metric, setMetric] = React.useState<(typeof METRICS)[number]["id"]>("flow");
 
   const device = deviceOf(sim, DEVICE_ID);
   const state = selectDeviceState(sim, DEVICE_ID)!;
   const power = controlOf(iot, DEVICE_ID, "power");
-  const powerControl = (
-    <DevicePowerControl state={power.confirmed as "on" | "off"} requested={power.requested as "on" | "off" | undefined} control={power.control} label={`${device.name} power`} onToggle={power.send} />
-  );
-  const lifecycle = power.command ? (
-    <CommandLifecycle lifecycle={power.command.lifecycle} formatValue={power.format} onRetry={power.retry} onCancel={power.cancel} />
-  ) : null;
+  const tree = React.useMemo(() => buildSpaceTree(sim.scenario.spaces), [sim.scenario.spaces]);
+  const home = sim.scenario.spaces.find((space) => space.deviceIds?.includes(DEVICE_ID));
+
+  // CONFIRMED: what the pump last reported. `requested` is separate and only ever shown as a request.
   const running = state.confirmedValues.power === "on";
+  const online = device.status === "online";
+  const requestedPower = power.requested as "on" | "off" | undefined;
   const alerts = state.alerts.filter((alert) => !alert.resolvedAt);
   const routines = sim.automations.filter((automation) => automation.actions?.toLowerCase().includes("pump"));
   const rules = sim.scenario.rules.filter((rule) => rule.actions.some((action) => action.target === DEVICE_ID));
+  const activity = selectActivity(sim, { deviceId: DEVICE_ID });
+  const health: ShowcaseState = !online ? "offline" : state.health.level === "critical" ? "critical" : state.health.level === "warning" ? "warning" : "confirmed";
+  const flow = readingOf(iot, DEVICE_ID, "flow");
+  const pressure = readingOf(iot, DEVICE_ID, "pressure");
 
   return (
-    <article ref={rootRef} aria-label={`${device.name} detail`} className="flex flex-col gap-4">
+    <article aria-label={`${device.name} detail`} className="flex flex-col gap-4 sm:gap-6">
       <SimNotice scenario={agritech}>
         <SimTransport iot={iot} />
       </SimNotice>
 
-      <header className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
-        <DeviceIdentity device={device} active={running && device.status === "online"} size="lg" />
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-label-md text-foreground">
-          {/* The word "Running" is the CONFIRMED state. A request in flight is never shown here. */}
-          <span>{running ? "Running" : "Stopped"}</span>
+      {/* ------------------------------------------------------------------ identity */}
+      <header className="flex min-w-0 flex-col gap-3">
+        <div className="flex min-w-0 items-center gap-4">
+          <span
+            aria-hidden="true"
+            className={cn(
+              "flex size-20 shrink-0 items-center justify-center rounded-2xl p-2 transition-colors duration-fast motion-reduce:transition-none sm:size-28",
+              running && online ? "bg-primary/10" : "bg-card shadow-sm",
+            )}
+          >
+            <DeviceIllustration category={resolveDeviceCategory(device)} on={running && online} size="lg" className="size-full" />
+          </span>
+          <div className="flex min-w-0 flex-col gap-1">
+            <h4 className="truncate text-headline-md text-foreground">{device.name}</h4>
+            {home ? <SpaceBreadcrumb path={spacePath(tree, home.id)} label={`Location of ${device.name}`} /> : null}
+            <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-body-md">
           <DeviceStatusBadge status={device.status} />
           <span className="text-muted-foreground">
             {/* LastSync's own accessible label is the whole sentence ("Last seen 4 seconds ago"); the
@@ -83,90 +96,73 @@ export function DeviceDetailExample() {
             <span aria-hidden="true">Last seen </span>
             <LastSync value={device.lastSeenAt} now={sim.now} />
           </span>
-        </p>
+          {alerts.length > 0 ? (
+            <StateBadge state="warning">
+              {alerts.length} open {alerts.length === 1 ? "alert" : "alerts"}
+            </StateBadge>
+          ) : null}
+            </p>
+          </div>
+        </div>
       </header>
 
-      <Tabs.Root value={tab} onValueChange={(next) => setTab(next as (typeof TABS)[number])} dir={dir}>
-        {/* The tabs wrap; each carries its own underline, so the active one still reads on any row. */}
-        <Tabs.List aria-label={`${device.name} sections`} className="flex flex-wrap">
-          {TABS.map((name) => (
-            <Tabs.Trigger key={name} value={name} className={TAB_TRIGGER}>
-              {name}
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
-
-        <Tabs.Content value="Overview" className={PANEL}>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-6">
-            <Section title="Health">
-              <p className="text-label-md text-foreground">
-                {describeDeviceHealth(state.health.level)} · {describeConnectivity(state.connectivity.state)}
+      <div className="grid min-w-0 gap-4 sm:gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+        {/* ============================================================ zone of action */}
+        <div className="flex min-w-0 flex-col gap-4 sm:gap-6">
+          <section aria-label="Pump control" className="flex min-w-0 flex-col gap-5 rounded-2xl bg-card p-4 shadow-sm sm:p-6">
+            <div className="flex min-w-0 flex-col gap-1">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-body-md text-muted-foreground">Pump status</p>
+                <StateBadge state={online ? "confirmed" : "offline"}>{online ? "Confirmed by the pump" : "Last known, pump offline"}</StateBadge>
+              </div>
+              {/* The word "Running" is the CONFIRMED state. A request in flight is never shown here. */}
+              <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-display-sm text-foreground">
+                <span>{running ? "Running" : "Stopped"}</span>
+                {requestedPower !== undefined ? (
+                  <span className="inline-flex items-center gap-2 rounded-full border-2 border-dashed border-primary bg-primary/10 px-3 py-1 text-body-md font-medium text-foreground">
+                    <StateGlyph state="pending" size={16} className="text-primary" />
+                    {power.format(requestedPower)} requested, not yet confirmed
+                  </span>
+                ) : null}
               </p>
-              <ul className="m-0 list-disc ps-5 text-label-md text-muted-foreground">
-                {state.health.reasons.length === 0 ? <li>No issues reported.</li> : state.health.reasons.map((reason, i) => <li key={i}>{reason.message}</li>)}
-              </ul>
-            </Section>
-            <Section title="Connectivity">
-              <ConnectionHealth device={device} now={sim.now} />
-            </Section>
-          </div>
-          <Section title="Primary readings">
-            <TelemetryGrid label={`${device.name} readings`}>
-              <TelemetryMetric {...readingOf(iot, DEVICE_ID, "flow")} label="Flow" />
-              <TelemetryMetric {...readingOf(iot, DEVICE_ID, "pressure")} label="Pressure" />
-            </TelemetryGrid>
-          </Section>
-          <Section title="Alerts">
-            <AlertList alerts={alerts} deviceName={() => undefined} onAcknowledge={(alert) => iot.acknowledgeAlert(alert.id)} now={sim.now} emptyLabel="No open alerts." hideSummary />
-          </Section>
-          <Section title="Quick controls">
-            <div className="flex flex-wrap items-start gap-3">{powerControl}</div>
-            {power.unsettled ? lifecycle : null}
-          </Section>
-        </Tabs.Content>
-
-        <Tabs.Content value="Controls" className={PANEL}>
-          <Section title="Controls" hint="The switch shows what the pump reported. A request stays visibly unconfirmed until the pump agrees.">
-            <div className="max-w-sm">
-              <DeviceControlCard device={device} active={running} control={power.control} statusLine={statusLineOf(power)} primaryControl={powerControl} />
+              <p className="text-body-md text-muted-foreground">{online ? `As last reported by the pump. ${describeConnectivity(state.connectivity.state)}.` : "Offline. Showing the last known state."}</p>
             </div>
-            {lifecycle}
-          </Section>
-        </Tabs.Content>
 
-        <Tabs.Content value="Telemetry" className={PANEL}>
-          <Section title="Flow" hint="The band below 20 L/min is the low-flow threshold. Gaps are drawn as gaps.">
-            <TelemetryTrend {...trendOf(iot, DEVICE_ID, "flow")} label="Pump flow, last 24 hours" height={140} dataTable />
-          </Section>
-          <Section title="Pressure">
-            <TelemetryTrend {...trendOf(iot, DEVICE_ID, "pressure")} label="Pump pressure, last 24 hours" height={120} dataTable />
-          </Section>
-        </Tabs.Content>
-
-        <Tabs.Content value="Automations" className={PANEL}>
-          <Section title="Routines that involve this pump" hint="Shown, not executed: KinetixUI has no automation engine.">
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,17rem),1fr))] gap-3">
-              {routines.map((automation) => (
-                <RoutineCard key={automation.id} automation={automation} now={sim.now} />
-              ))}
+            <div className="flex min-w-0 flex-col gap-4 rounded-xl bg-muted/60 p-4">
+              <div className="flex min-h-11 min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-4">
+                <span className="text-title-md text-foreground">Pump power</span>
+                <DevicePowerControl
+                  state={power.confirmed as "on" | "off"}
+                  requested={requestedPower}
+                  control={power.control}
+                  label={`${device.name} power`}
+                  size="lg"
+                  onToggle={power.send}
+                />
+              </div>
+              {power.command && power.unsettled ? (
+                <CommandLifecycle lifecycle={power.command.lifecycle} formatValue={power.format} onRetry={power.retry} onCancel={power.cancel} density="compact" />
+              ) : null}
             </div>
-          </Section>
-          {rules.length > 0 ? (
-            rules.map((rule) => <AutomationRuleView key={rule.id} rule={rule} />)
-          ) : (
-            <p className="text-label-sm text-muted-foreground">No structured rule in this scenario targets the pump directly.</p>
-          )}
-        </Tabs.Content>
+          </section>
 
-        <Tabs.Content value="Activity" className={PANEL}>
-          <Section title="Commands and state changes">
-            <ActivityTimeline events={selectActivity(sim, { deviceId: DEVICE_ID })} deviceName={() => undefined} now={sim.now} label={`${device.name} activity`} />
-          </Section>
-        </Tabs.Content>
+          <section aria-label="Readings" className="flex min-w-0 flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm sm:p-6">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <TelemetryMetric {...flow} label="Flow" size="xl" className="rounded-xl bg-muted/60 p-4" />
+              <TelemetryMetric {...pressure} label="Pressure" size="xl" className="rounded-xl bg-muted/60 p-4" />
+            </div>
+            <div className="flex min-w-0 flex-col gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h5 className="text-title-md text-foreground">Last 24 hours</h5>
+                <PillSelector label="Chart metric" options={METRICS} value={metric} onChange={(id) => setMetric(id as (typeof METRICS)[number]["id"])} className="rounded-full bg-muted/60 p-1" />
+              </div>
+              <TelemetryTrend {...trendOf(iot, DEVICE_ID, metric)} label={metric === "flow" ? "Pump flow, last 24 hours" : "Pump pressure, last 24 hours"} height={160} dataTable />
+              {metric === "flow" ? <p className="text-body-sm text-muted-foreground">The band below 20 L/min is the low-flow limit. Gaps are drawn as gaps.</p> : null}
+            </div>
+          </section>
 
-        <Tabs.Content value="Settings" className={PANEL}>
-          <Section title="About this device" hint="Read-only. Nothing on this tab configures hardware; it presents what the product knows.">
-            <dl className="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-x-6 gap-y-3 text-label-md">
+          <Disclosure title="About this device" defaultOpen={false}>
+            <dl className="m-0 grid grid-cols-2 gap-x-6 gap-y-4 text-body-md">
               {(
                 [
                   ["Device id", device.id],
@@ -174,20 +170,53 @@ export function DeviceDetailExample() {
                   ["Firmware", device.firmwareVersion ?? "Not reported"],
                   ["Site", device.site ?? "Not set"],
                   ["Zone", device.zone ?? "Not set"],
-                  ["Location", device.locationName ?? "Not set"],
-                  ["Signal", device.signal === undefined ? "Not reported" : `${device.signal}%`],
                   ["Battery", device.battery === undefined ? "Not reported" : `${device.battery}%`],
                 ] as const
               ).map(([term, value]) => (
                 <div key={term} className="min-w-0">
-                  <dt className="text-label-sm text-muted-foreground">{term}</dt>
+                  <dt className="text-body-sm text-muted-foreground">{term}</dt>
                   <dd className="m-0 break-words text-foreground">{value}</dd>
                 </div>
               ))}
             </dl>
-          </Section>
-        </Tabs.Content>
-      </Tabs.Root>
+            <p className="text-body-sm text-muted-foreground">Read-only. Nothing here configures hardware; it presents what the product knows.</p>
+          </Disclosure>
+        </div>
+
+        {/* ============================================================ zone of context */}
+        <div className="flex min-w-0 flex-col gap-4 sm:gap-6">
+          <Disclosure title="Alerts" count={alerts.length} countNoun="open alerts" defaultOpen={alerts.length > 0 ? true : undefined}>
+            <AlertList alerts={alerts} deviceName={() => undefined} onAcknowledge={(alert) => iot.acknowledgeAlert(alert.id)} now={sim.now} emptyLabel="No open alerts." hideSummary variant="list" />
+          </Disclosure>
+
+          <Disclosure title="Health and connection">
+            <div className="flex flex-col gap-1">
+              <p className="text-title-md text-foreground">
+                {describeDeviceHealth(state.health.level)} · {describeConnectivity(state.connectivity.state)}
+              </p>
+              <p className="flex items-center gap-2 text-body-md text-muted-foreground">
+                <StateBadge state={health}>{state.health.reasons.length === 0 ? "No issues reported." : state.health.reasons.map((reason) => reason.message).join(", ")}</StateBadge>
+              </p>
+            </div>
+            <ConnectionHealth device={device} now={sim.now} />
+          </Disclosure>
+
+          <Disclosure title="Automation" count={routines.length + rules.length} countNoun="routines and rules">
+            <p className="text-body-sm text-muted-foreground">Shown, not executed: KinetixUI has no automation engine.</p>
+            {routines.map((automation) => (
+              <RoutineCard key={automation.id} automation={automation} now={sim.now} />
+            ))}
+            {rules.map((rule) => (
+              <AutomationRuleView key={rule.id} rule={rule} />
+            ))}
+            {routines.length + rules.length === 0 ? <p className="text-body-md text-muted-foreground">No routine or rule involves this pump.</p> : null}
+          </Disclosure>
+
+          <Disclosure title="Activity" count={activity.length} countNoun="events">
+            <ActivityTimeline events={activity} deviceName={() => undefined} now={sim.now} label={`${device.name} activity`} variant="blocks" />
+          </Disclosure>
+        </div>
+      </div>
     </article>
   );
 }
