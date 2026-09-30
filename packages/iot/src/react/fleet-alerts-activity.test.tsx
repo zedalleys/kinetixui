@@ -76,6 +76,23 @@ describe("AlertCard additions", () => {
     expect(container).toHaveTextContent("Source: Rule 12");
   });
 
+  it("never prints a raw machine source key, and keeps the id for debugging", () => {
+    const { container } = render(<AlertCard alert={alert({ source: "sim:threshold:soil-moisture" })} now={NOW} />);
+    expect(container.textContent).not.toContain("sim:threshold:soil-moisture");
+    expect(container).toHaveTextContent("Source: Sim · Threshold · Soil moisture");
+    // The machine identity is not destroyed: it stays on the row as an attribute.
+    expect(container.querySelector("[data-source]")).toHaveAttribute("data-source", "sim:threshold:soil-moisture");
+  });
+
+  it("shows the application's own label verbatim when it supplied one", () => {
+    const { container } = render(
+      <AlertCard alert={alert({ source: "sim:threshold:pressure", sourceLabel: "Pressure threshold rule" })} now={NOW} />,
+    );
+    expect(container).toHaveTextContent("Source: Pressure threshold rule");
+    expect(container.textContent).not.toContain("sim:threshold:pressure");
+    expect(container.querySelector("[data-source]")).toHaveAttribute("data-source", "sim:threshold:pressure");
+  });
+
   it("reads New, Acknowledged or Resolved in words", () => {
     const { container, rerender } = render(<AlertCard alert={alert()} now={NOW} />);
     expect(container.querySelector("[data-new]")).toHaveTextContent("New");

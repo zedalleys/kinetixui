@@ -51,8 +51,19 @@ export type KinetixDeviceAlert = {
   kind?: string;
   /** Application-supplied next step. Never generated here. */
   action?: KinetixAlertAction;
-  /** Who or what raised it: a rule id, a subsystem, a person. Free text, product vocabulary. */
+  /**
+   * Who or what raised it, as the *machine* knows it: a rule id, a subsystem key, a person's id.
+   * Free text, product vocabulary. This is identity, not copy — it is kept for debugging, auditing
+   * and grouping, and is never assumed to be readable. Supply {@link sourceLabel} for the words.
+   */
   source?: string;
+  /**
+   * What to call {@link source} on screen, already localised by the product. When it is absent a
+   * renderer makes the machine id readable rather than printing a raw key; when it is present it is
+   * shown verbatim. The two are separate on purpose: `rule:pressure-high` stays the identity while
+   * "Pressure threshold rule" is the copy.
+   */
+  sourceLabel?: string;
   /** Present once the underlying condition has cleared. Distinct from acknowledged: the user saw it vs. it is over. */
   resolvedAt?: string | Date;
 };
