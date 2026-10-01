@@ -100,6 +100,11 @@ jobs:
       - name: Component manifest check (status, platforms, guidance, maturity)
         run: pnpm check:manifest
 
+      # Keyboard documentation is derived from the keyboard tests, so a behaviour that stops being tested
+      # stops being documented. This fails if the two have drifted apart.
+      - name: Keyboard documentation is current with the keyboard tests
+        run: pnpm check:keyboard
+
       # A manifest claim is not evidence. This checks the other direction: that source exists behind every
       # declared platform, and that source which exists is declared. React and Angular are checked
       # structurally (the symbol must be exported from the package's entry point); the three native platforms
@@ -225,8 +230,9 @@ jobs:
             verification.json \
             packages/ui/src/stories \
             apps/web/src/registry/block-examples.generated.ts \
-            apps/web/src/registry/usage-examples.generated.ts; then
-            echo "::error::Generated output is stale. Run 'pnpm gen:verification && pnpm gen:manifest && pnpm build:tokens && pnpm vendor:compose && pnpm vendor:swiftui && pnpm vendor:flutter && pnpm gen:stories && pnpm build:registry' and commit the result."
+            apps/web/src/registry/usage-examples.generated.ts \
+            apps/web/src/registry/keyboard.generated.ts; then
+            echo "::error::Generated output is stale. Run 'pnpm gen:keyboard && pnpm gen:verification && pnpm gen:manifest && pnpm build:tokens && pnpm vendor:compose && pnpm vendor:swiftui && pnpm vendor:flutter && pnpm gen:stories && pnpm build:registry' and commit the result."
             exit 1
           fi
 

@@ -5,6 +5,7 @@ import * as Tabs from "@radix-ui/react-tabs";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { CopyButton } from "./copy-button";
+import { PreviewEnvironment } from "./preview-environment";
 import { analytics } from "@/lib/analytics";
 import { PLATFORM_FROM_CODE_TAB, componentSlugFor } from "@/lib/analytics-surfaces";
 import { demoRegistry } from "@/registry/demos";
@@ -151,14 +152,9 @@ export function ComponentPreview({
         </Tabs.List>
 
         <Tabs.Content value="preview">
-          <div
-            className={cn(
-              "flex min-h-[350px] w-full border-t border-border bg-background p-10",
-              align === "center" ? "items-center justify-center" : "items-start justify-start",
-            )}
-          >
+          <PreviewEnvironment align={align}>
             <Demo />
-          </div>
+          </PreviewEnvironment>
         </Tabs.Content>
 
         <Tabs.Content value="code">
