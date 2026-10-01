@@ -12,7 +12,7 @@ const meta = {
   args: { disabled: false },
   argTypes: { disabled: { control: "boolean" } },
   parameters: {
-    layout: "centered",
+    layout: "padded",
     docs: { source: { code: "<Slider aria-label=\"Volume\" defaultValue={[50]} max={100} step={1} />", language: "tsx" } },
   },
 } satisfies Meta;

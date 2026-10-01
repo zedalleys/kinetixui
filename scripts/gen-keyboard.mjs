@@ -75,6 +75,9 @@ const SUITES = {
   FileUpload: ["file-upload"],
   Toggle: ["toggle"],
   ToggleGroup: ["toggle-group"],
+  "Input and Textarea": ["input", "textarea"],
+  Select: ["select"],
+  InputOTP: ["input-otp"],
 };
 
 /** `{ArrowDown}` → `Arrow down`, `" "` → `Space`. The words a person would say, not the event codes. */

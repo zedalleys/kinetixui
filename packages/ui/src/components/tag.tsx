@@ -56,7 +56,7 @@ const Tag = React.forwardRef<HTMLSpanElement, TagProps>(
         type="button"
         onClick={onRemove}
         aria-label={name}
-        className="-mr-0.5 ml-0.5 rounded-[2px] opacity-muted outline-none transition-opacity hover:opacity-visible focus-visible:ring-1 focus-visible:ring-current"
+        className="-me-0.5 ms-0.5 rounded-[2px] opacity-muted outline-none transition-opacity hover:opacity-visible focus-visible:ring-1 focus-visible:ring-current"
       >
         <X className="size-3.5" />
       </button>

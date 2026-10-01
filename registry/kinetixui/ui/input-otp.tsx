@@ -11,7 +11,7 @@ const InputOTP = React.forwardRef<
 >(({ className, containerClassName, ...props }, ref) => (
   <OTPInput
     ref={ref}
-    containerClassName={cn("flex items-center gap-2 has-[:disabled]:opacity-disabled", containerClassName)}
+    containerClassName={cn("flex flex-wrap items-center gap-2 has-[:disabled]:opacity-disabled", containerClassName)}
     className={cn("disabled:cursor-not-allowed", className)}
     {...props}
   />
@@ -19,7 +19,17 @@ const InputOTP = React.forwardRef<
 InputOTP.displayName = "InputOTP";
 
 const InputOTPGroup = React.forwardRef<React.ElementRef<"div">, React.ComponentPropsWithoutRef<"div">>(
-  ({ className, ...props }, ref) => <div ref={ref} className={cn("flex items-center", className)} {...props} />,
+  ({ className, ...props }, ref) => (
+    // `flex-wrap` costs nothing at a normal text size — six 36px slots fit the narrowest phone with room
+    // to spare — and rescues the case that measured badly: at 2x the default font size on a 390px
+    // viewport the slots are 72px each, the row is 432px, and the page gained 106px of horizontal
+    // scrolling. A second row of slots is worse-looking than one; a form the reader has to scroll
+    // sideways to type a code into is worse than that.
+    //
+    // Wrapping is only safe because each slot owns its whole border — see InputOTPSlot. A row that
+    // borrowed its first edge from `:first-child` would be open at the end it began from.
+    <div ref={ref} className={cn("flex flex-wrap items-center", className)} {...props} />
+  ),
 );
 InputOTPGroup.displayName = "InputOTPGroup";
 
@@ -34,7 +44,22 @@ const InputOTPSlot = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "relative flex size-9 items-center justify-center border-y border-r border-input text-sm shadow-sm first:rounded-l-md first:border-l last:rounded-r-md",
+        // Every slot carries its own border, and each one after the first is pulled back by a pixel so the
+        // two borders between neighbours collapse into the single divider the design has always shown.
+        //
+        // The obvious cheaper spelling — block borders on all, an inline-end divider, and the inline-start
+        // edge on `:first-child` — is what this replaces, because `:first-child` is the first slot in the
+        // DOM and not the first slot in each visual row. Measured at 390px and 2x text, where six slots
+        // wrap: the second row began with `border-s: 0`, so its outer start edge was open in LTR and in
+        // RTL alike. That is the same missing-outline defect the logical classes were added to fix, and it
+        // came back the moment the row could wrap. With a border on every side of every slot, a row is
+        // closed wherever it starts and wherever it ends.
+        //
+        // Two consequences, both deliberate: the rounded corners still belong to the DOM's first and last
+        // slot, so a wrapped row has square outer corners; and two wrapped rows meet in a 2px seam, since
+        // no selector can pull a row that only exists at one viewport width. A seam is not an open edge.
+        "relative flex size-9 items-center justify-center border border-input text-sm shadow-sm",
+        "[&:not(:first-child)]:-ms-px first:rounded-s-md last:rounded-e-md",
         "transition-[color,border-color,box-shadow] duration-instant",
         // ring is a box-shadow, which forced-colors mode strips; the outline survives it
         isActive && "z-docked ring-1 ring-ring forced-colors:[outline:2px_solid] forced-colors:[outline-offset:-2px]",

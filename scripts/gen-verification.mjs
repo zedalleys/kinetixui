@@ -183,6 +183,67 @@ function runsInCI(script) {
     });
 }
 
+/**
+ * Does every React export resolve to its own component?
+ *
+ * Stems are derived from slugs, so `pascal("input-otp")` is `InputOtp` — and the real export is `InputOTP`.
+ * A prefix match is deliberate (`TabsTrigger` is coverage of `tabs`), and the longest stem wins, so
+ * `InputOTP` fell through to `Input` and every assertion written about the OTP field silently credited the
+ * text field instead. Not an omission: a false claim, on the component that was never tested.
+ *
+ * The cure is a declaration — `sourceNames.React` in the manifest, next to the claim — and this is the
+ * check that makes the declaration necessary rather than optional. An export that resolves to no slug at
+ * all fails too: it is evidence quietly going nowhere, and the next test written against it would read as
+ * having proved nothing.
+ */
+function exportAttributionErrors() {
+  const out = [];
+  const dir = `${root}/packages/ui/src/components`;
+  if (!existsSync(dir)) return out;
+  for (const file of readdirSync(dir).sort()) {
+    if (!file.endsWith(".tsx")) continue;
+    const slug = file.replace(/\.tsx$/, "");
+    if (!components[slug]) continue;
+    const src = readFileSync(`${dir}/${file}`, "utf8");
+    const exported = new Set();
+    for (const block of src.matchAll(/^export \{([^}]*)\}/gm)) {
+      for (const part of block[1].split(",")) {
+        // `x as Y` exports under Y; a type-only export is not a component.
+        const name = part.trim().replace(/^type\s+/, "").split(" as ").pop().trim();
+        if (/^[A-Z][A-Za-z0-9]*$/.test(name)) exported.add(name);
+      }
+    }
+    for (const name of exported) {
+      const hit = STEMS.find((stem) => name.startsWith(stem.stem));
+      if (!hit) {
+        out.push(
+          `${file}: exports ${name}, which matches no component stem — a test using it would credit ` +
+            `nothing. Declare it as "sourceNames": { "React": "${name}" } on a slug in components.manifest.json.`,
+        );
+      } else if (hit.slug !== slug && !components[hit.slug]) {
+        out.push(`${file}: exports ${name}, attributed to the unknown slug ${hit.slug}`);
+      } else if (hit.slug !== slug && !exportedElsewhere(hit.slug, name)) {
+        out.push(
+          `${file}: exports ${name}, which the stem "${hit.stem}" credits to ${hit.slug} rather than to ` +
+            `${slug} — every claim made about ${name} would land on the wrong component. Declare ` +
+            `"sourceNames": { "React": "${name}" } on ${slug} in components.manifest.json.`,
+        );
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * `AvatarGroup` lives in avatar.tsx and is the `avatar-group` component: a file may host the export of a
+ * neighbouring slug, and that attribution is correct rather than a mistake. The test is whether the name
+ * belongs to that slug's own vocabulary.
+ */
+function exportedElsewhere(slug, name) {
+  const names = new Set([pascal(slug), ...Object.values(components[slug].sourceNames ?? {}).map((n) => pascal(n))]);
+  return [...names].some((n) => name.startsWith(n));
+}
+
 function walk(dir, match, acc = []) {
   const abs = `${root}/${dir}`;
   if (!existsSync(abs)) return acc;
@@ -236,6 +297,8 @@ const record = (slug, platform, kind, source) => {
 };
 /** platform → the files that contributed, and what each claims */
 const sources = {};
+
+errors.push(...exportAttributionErrors());
 
 for (const platform of platforms) {
   const spec = TEST_SOURCES[platform];

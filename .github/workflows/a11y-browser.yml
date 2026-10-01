@@ -21,6 +21,7 @@ on:
       - "scripts/a11y-browser.mjs"
       - "scripts/a11y-animations.mjs"
       - "scripts/large-text.mjs"
+      - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
   pull_request:
@@ -33,6 +34,7 @@ on:
       - "scripts/a11y-browser.mjs"
       - "scripts/a11y-animations.mjs"
       - "scripts/large-text.mjs"
+      - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
 

@@ -324,6 +324,36 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       ]
     }
   ],
+  "input": [
+    {
+      "behaviour": "are reached in source order by Tab and skipped when disabled",
+      "keys": [
+        "Tab",
+        "Shift + Tab"
+      ]
+    },
+    {
+      "behaviour": "stay focusable and readable when read-only, and reject typing",
+      "keys": [
+        "Tab"
+      ]
+    }
+  ],
+  "input-otp": [
+    {
+      "behaviour": "fills one slot per keystroke and advances the caret",
+      "keys": [
+        "Tab"
+      ]
+    },
+    {
+      "behaviour": "clears the last filled slot on Backspace and steps the caret back",
+      "keys": [
+        "Backspace",
+        "Tab"
+      ]
+    }
+  ],
   "list": [
     {
       "behaviour": "a pressable row is a listitem containing a button, and Enter / Space activate it",
@@ -339,6 +369,13 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "can be opened and an option chosen using only the keyboard",
       "keys": [
         "Enter",
+        "Arrow down",
+        "Tab"
+      ]
+    },
+    {
+      "behaviour": "opens with a vertical arrow key as well as with Enter",
+      "keys": [
         "Arrow down",
         "Tab"
       ]
@@ -377,12 +414,50 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       ]
     }
   ],
+  "select": [
+    {
+      "behaviour": "opens with Enter, walks options with the arrow keys and Home/End, and commits with Enter",
+      "keys": [
+        "Enter",
+        "Arrow down",
+        "End",
+        "Home",
+        "Tab"
+      ]
+    },
+    {
+      "behaviour": "jumps to an option by typing its first letter",
+      "keys": [
+        "Enter",
+        "Tab"
+      ]
+    },
+    {
+      "behaviour": "closes with Escape without choosing, and hands focus back to the trigger",
+      "keys": [
+        "Enter",
+        "Arrow down",
+        "Escape",
+        "Tab"
+      ]
+    }
+  ],
   "slider": [
     {
       "behaviour": "names the thumb (the role=slider element) from aria-label and moves with the arrow keys",
       "keys": [
         "Arrow right",
         "End",
+        "Tab"
+      ]
+    },
+    {
+      "behaviour": "steps by a page with PageUp and PageDown, and clamps at the ends of the range",
+      "keys": [
+        "Page up",
+        "Page down",
+        "End",
+        "Arrow up",
         "Tab"
       ]
     }
@@ -423,6 +498,21 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "keys": [
         "Arrow left",
         "Arrow right",
+        "Tab"
+      ]
+    }
+  ],
+  "textarea": [
+    {
+      "behaviour": "are reached in source order by Tab and skipped when disabled",
+      "keys": [
+        "Tab",
+        "Shift + Tab"
+      ]
+    },
+    {
+      "behaviour": "stay focusable and readable when read-only, and reject typing",
+      "keys": [
         "Tab"
       ]
     }

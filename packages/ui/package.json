@@ -2,7 +2,7 @@
   "name": "@kinetixui/ui",
   "version": "0.23.3",
   "private": false,
-  "description": "KinetixUI React components — CVA + Radix + Tailwind on the KinetixUI token contract. Also distributed via the kinetixui CLI as a component registry.",
+  "description": "KinetixUI React components \u2014 CVA + Radix + Tailwind on the KinetixUI token contract. Also distributed via the kinetixui CLI as a component registry.",
   "keywords": [
     "react",
     "components",
@@ -40,7 +40,7 @@
     "tailwind.config.ts"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --external react --external react-dom",
+    "build": "tsup src/index.ts --format esm --dts --external react --external react-dom && node ../../scripts/ui-dist-stamp.mjs --write",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
