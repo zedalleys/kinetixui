@@ -427,6 +427,48 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       ]
     }
   ],
+  "toggle": [
+    {
+      "behaviour": "toggles with Space and with Enter, and reports state through aria-pressed",
+      "keys": [
+        "Enter",
+        "Space",
+        "Tab"
+      ]
+    },
+    {
+      "behaviour": "a disabled Toggle is skipped by Tab and does not respond to keys",
+      "keys": [
+        "Tab"
+      ]
+    }
+  ],
+  "toggle-group": [
+    {
+      "behaviour": "is one tab stop, and the arrow keys move between items",
+      "keys": [
+        "Arrow right",
+        "Arrow left",
+        "Tab"
+      ]
+    },
+    {
+      "behaviour": "in multiple mode, Space presses items independently",
+      "keys": [
+        "Space",
+        "Arrow right",
+        "Tab"
+      ]
+    },
+    {
+      "behaviour": "in single mode, pressing one item releases the other",
+      "keys": [
+        "Space",
+        "Arrow right",
+        "Tab"
+      ]
+    }
+  ],
   "tour": [
     {
       "behaviour": "closes on Escape and returns focus to where it was",

@@ -2218,6 +2218,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published"
       ],
       "Angular": [
@@ -3156,7 +3157,9 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "largeText",
+        "published",
+        "rtl"
       ],
       "Angular": [
         "accessibility",
@@ -3444,7 +3447,9 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "largeText",
+        "published",
+        "rtl"
       ],
       "Angular": [
         "accessibility",
@@ -3621,6 +3626,8 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
+        "largeText",
         "published"
       ],
       "Angular": [
@@ -3648,6 +3655,8 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
+        "largeText",
         "published"
       ],
       "Angular": [
@@ -3730,10 +3739,10 @@
   "evidenceCounts": {
     "React": {
       "build": 98,
-      "interaction": 23,
+      "interaction": 25,
       "accessibility": 98,
-      "rtl": 9,
-      "largeText": 0,
+      "rtl": 11,
+      "largeText": 5,
       "visual": 0,
       "published": 98
     },

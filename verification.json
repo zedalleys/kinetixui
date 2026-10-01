@@ -20,10 +20,10 @@
   "totals": {
     "React": {
       "build": 98,
-      "interaction": 23,
+      "interaction": 25,
       "accessibility": 98,
-      "rtl": 9,
-      "largeText": 0,
+      "rtl": 11,
+      "largeText": 5,
       "visual": 0,
       "published": 98
     },
@@ -206,6 +206,8 @@
           "slider",
           "switch",
           "tabs",
+          "toggle",
+          "toggle-group",
           "tour",
           "tree-view"
         ]
@@ -235,6 +237,21 @@
           "navigation-menu",
           "popover",
           "tooltip"
+        ]
+      },
+      {
+        "file": "packages/ui/src/components-selection.test.tsx",
+        "kinds": [
+          "interaction",
+          "rtl"
+        ],
+        "components": [
+          "checkbox",
+          "direction-provider",
+          "radio-group",
+          "switch",
+          "toggle",
+          "toggle-group"
         ]
       },
       {
@@ -341,6 +358,19 @@
           "tour",
           "tree-view",
           "virtual-list"
+        ]
+      },
+      {
+        "file": "scripts/large-text.mjs",
+        "kinds": [
+          "largeText"
+        ],
+        "components": [
+          "checkbox",
+          "radio-group",
+          "switch",
+          "toggle",
+          "toggle-group"
         ]
       }
     ],
@@ -1215,11 +1245,15 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:220-435"
+          "packages/ui/src/components-keyboard.test.tsx:222-437",
+          "packages/ui/src/components-selection.test.tsx:27-137"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:29-377"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:37-174"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1384,7 +1418,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:995-1113",
+          "packages/ui/src/components-keyboard.test.tsx:997-1115",
           "packages/ui/src/components-lifecycle.test.tsx:20-174"
         ],
         "accessibility": [
@@ -1521,14 +1555,14 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:436-994"
+          "packages/ui/src/components-keyboard.test.tsx:438-996"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:29-377"
         ],
         "rtl": [
-          "packages/ui/src/components-keyboard.test.tsx:436-994"
+          "packages/ui/src/components-keyboard.test.tsx:438-996"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1649,7 +1683,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:41-163"
+          "packages/ui/src/components-keyboard.test.tsx:43-165"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -1716,15 +1750,17 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:164-219"
+          "packages/ui/src/components-keyboard.test.tsx:166-221",
+          "packages/ui/src/components-selection.test.tsx:138-199"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:29-377"
         ],
         "rtl": [
-          "packages/ui/src/components-keyboard.test.tsx:164-219",
-          "packages/ui/src/components-rtl.test.tsx:60-259"
+          "packages/ui/src/components-keyboard.test.tsx:166-221",
+          "packages/ui/src/components-rtl.test.tsx:60-259",
+          "packages/ui/src/components-selection.test.tsx:138-199"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1772,7 +1808,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:41-163"
+          "packages/ui/src/components-keyboard.test.tsx:43-165"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -1931,7 +1967,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:995-1113"
+          "packages/ui/src/components-keyboard.test.tsx:997-1115"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -2368,7 +2404,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:995-1113"
+          "packages/ui/src/components-keyboard.test.tsx:997-1115"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -2612,8 +2648,8 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:220-435",
-          "packages/ui/src/components-keyboard.test.tsx:995-1113"
+          "packages/ui/src/components-keyboard.test.tsx:222-437",
+          "packages/ui/src/components-keyboard.test.tsx:997-1115"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -2916,7 +2952,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:41-163"
+          "packages/ui/src/components-keyboard.test.tsx:43-165"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -3049,11 +3085,19 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:220-435"
+          "packages/ui/src/components-keyboard.test.tsx:222-437",
+          "packages/ui/src/components-selection.test.tsx:138-199",
+          "packages/ui/src/components-selection.test.tsx:27-137"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:29-377"
+        ],
+        "rtl": [
+          "packages/ui/src/components-selection.test.tsx:138-199"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:37-174"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3452,7 +3496,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:995-1113"
+          "packages/ui/src/components-keyboard.test.tsx:997-1115"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -3623,11 +3667,19 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:220-435"
+          "packages/ui/src/components-keyboard.test.tsx:222-437",
+          "packages/ui/src/components-selection.test.tsx:138-199",
+          "packages/ui/src/components-selection.test.tsx:27-137"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:29-377"
+        ],
+        "rtl": [
+          "packages/ui/src/components-selection.test.tsx:138-199"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:37-174"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3786,14 +3838,14 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:164-219"
+          "packages/ui/src/components-keyboard.test.tsx:166-221"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:29-377"
         ],
         "rtl": [
-          "packages/ui/src/components-keyboard.test.tsx:164-219"
+          "packages/ui/src/components-keyboard.test.tsx:166-221"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3988,9 +4040,16 @@
         "build": [
           "packages/ui (compiled by CI)"
         ],
+        "interaction": [
+          "packages/ui/src/components-keyboard.test.tsx:1116-1218",
+          "packages/ui/src/components-selection.test.tsx:27-137"
+        ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:29-377"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:37-174"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4046,9 +4105,16 @@
         "build": [
           "packages/ui (compiled by CI)"
         ],
+        "interaction": [
+          "packages/ui/src/components-keyboard.test.tsx:1116-1218",
+          "packages/ui/src/components-selection.test.tsx:27-137"
+        ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:29-377"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:37-174"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4128,7 +4194,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:220-435"
+          "packages/ui/src/components-keyboard.test.tsx:222-437"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -4145,7 +4211,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:220-435",
+          "packages/ui/src/components-keyboard.test.tsx:222-437",
           "packages/ui/src/components-lifecycle.test.tsx:20-174"
         ],
         "accessibility": [

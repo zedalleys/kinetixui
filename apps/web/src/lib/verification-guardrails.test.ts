@@ -69,9 +69,11 @@ function fixture(files: Record<string, string>) {
   temps.push(dir);
   writeFileSync(join(dir, "components.manifest.json"), JSON.stringify(MANIFEST));
   // the generator treats a missing declared evidence source as an error — a renamed suite must not silently
-  // drop its evidence — so the fixture carries an empty stand-in for the one suite listed outside the test tree
+  // drop its evidence — so the fixture carries empty stand-ins for the suites listed outside the test tree
   mkdirSync(join(dir, "scripts"), { recursive: true });
-  writeFileSync(join(dir, "scripts/a11y-browser.mjs"), "// no markers\n");
+  for (const script of ["a11y-browser.mjs", "large-text.mjs"]) {
+    writeFileSync(join(dir, "scripts", script), "// no markers\n");
+  }
   for (const [rel, body] of Object.entries(files)) {
     const full = join(dir, rel);
     mkdirSync(join(full, ".."), { recursive: true });
