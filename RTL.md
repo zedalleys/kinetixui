@@ -1,8 +1,9 @@
 # KinetixUI — RTL support
 
-**Status:** in progress. This is slice 1 of an ongoing conversion — KinetixUI
+**Status:** in progress. Slice 2 of an ongoing conversion — KinetixUI
 does not yet fully mirror under `dir="rtl"`. Treat this file as the running
-ledger of what's converted, not a "done" checkmark.
+ledger of what's converted, not a "done" checkmark. **22 of 29 remaining files
+are still unconverted**; the overlay family is done.
 
 ## The two pieces
 
@@ -59,6 +60,43 @@ Logical-property classes, verified against the Radix direction provider:
 - `alert.tsx`
 - `app-bar.tsx`
 
+## Converted (slice 2) — the overlay family
+
+Slice 1 converted the overlays built on Radix's own direction context (Dialog,
+Sheet, Drawer, DropdownMenu, Select) and stopped there. These are the rest of
+that family, so an app that mirrors one overlay no longer finds the next one
+unmirrored:
+
+- `context-menu.tsx` — inset items (`ps-8`), the check/radio gutter
+  (`start-2`), the shortcut (`ms-auto`), and the submenu chevron now mirrors
+  via `rtl:-scale-x-100`
+- `menubar.tsx` — the same menu anatomy, same conversions
+- `alert-dialog.tsx` — header alignment (`sm:text-start`); the `left-1/2`
+  centring trick stays physical, marked `// rtl-ok`
+- `modal.tsx` — likewise, centring trick marked `// rtl-ok`
+- `navigation-menu.tsx` — chevron gap (`ms-1`) and both panel anchors
+  (`start-0`)
+- `popover.tsx`, `tooltip.tsx` — **no class change.** Their entry animation
+  keys off `data-side`, which Radix has already resolved to a *physical* side
+  after flipping for direction and collisions. Converting those to logical
+  classes would invert the animation under RTL and throw the surface the wrong
+  way, so they are marked `// rtl-ok` with that reason
+
+A review of this slice found a fourth case the guard had been silent about:
+`space-x-*` compiles to a physical `margin-left`, so on the Dialog, Sheet and
+AlertDialog footers the gap landed on the outside of the button pair under RTL
+and the two buttons touched. All three now use `gap-2`, and `space-x-N` is a
+`check-rtl.mjs` rule, so the class cannot return. `avatar.tsx`'s `-space-x-2`
+is the one deliberate use — negative spacing *is* the stack overlap and `gap`
+cannot be negative — and is marked `// rtl-ok`.
+
+Behavioural evidence: `packages/ui/src/components-rtl.test.tsx`
+(`kx-verify: rtl`). `check-rtl.mjs` proves no physical class is *left*; it
+cannot prove the replacement is the *right* one or that the Radix primitive
+flips — which is the failure that cost slice 1 a full pass to find. These
+tests assert the rendered class and the direction-dependent key handling.
+React RTL evidence went from 3 components to 9.
+
 Docs site (`apps/web`): English-only, always `dir="ltr"` — it does not carry
 a live RTL toggle (an earlier dev/QA `DirProvider` + header toggle was
 removed; flipping the whole site's layout without translated content just
@@ -72,14 +110,13 @@ classes + `KinetixDirectionProvider`) is what an app wires up itself.
 Every other file in `packages/ui/src/components` that still contains a
 physical-direction utility — tracked explicitly as `NOT_YET_CONVERTED` in
 `scripts/check-rtl.mjs`, which is the authoritative, current list (grep it
-rather than trusting a stale copy here). As of this slice: `alert-dialog.tsx`,
-`audio-player.tsx`, `button-group.tsx`, `calendar.tsx`, `carousel.tsx`,
-`code-block.tsx`, `command.tsx`, `comparison-slider.tsx`, `context-menu.tsx`,
-`data-grid.tsx`, `diff-viewer.tsx`, `input-otp.tsx`, `json-viewer.tsx`,
-`markdown-editor.tsx`, `menubar.tsx`, `modal.tsx`, `multi-select.tsx`,
-`navigation-menu.tsx`, `notification-center.tsx`, `popover.tsx`,
-`resizable.tsx`, `scroll-area.tsx`, `sidebar.tsx`, `tab-bar.tsx`, `table.tsx`,
-`tag.tsx`, `timeline.tsx`, `tooltip.tsx`, `tree-view.tsx`.
+rather than trusting a stale copy here). As of slice 2, 22 files: `audio-player.tsx`,
+`button-group.tsx`, `calendar.tsx`, `carousel.tsx`, `code-block.tsx`,
+`command.tsx`, `comparison-slider.tsx`, `data-grid.tsx`, `diff-viewer.tsx`,
+`input-otp.tsx`, `json-viewer.tsx`, `markdown-editor.tsx`,
+`multi-select.tsx`, `notification-center.tsx`, `resizable.tsx`,
+`scroll-area.tsx`, `sidebar.tsx`, `tab-bar.tsx`, `table.tsx`, `tag.tsx`,
+`timeline.tsx`, `tree-view.tsx`.
 
 Also out of scope for this slice: native platform ports (`ui-compose`,
 `ui-swiftui`, `ui-flutter`) — each has its own RTL/right-to-left mechanism

@@ -1921,7 +1921,8 @@
       "React": [
         "accessibility",
         "build",
-        "published"
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -2355,7 +2356,8 @@
       "React": [
         "accessibility",
         "build",
-        "published"
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -2858,7 +2860,8 @@
       "React": [
         "accessibility",
         "build",
-        "published"
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -2980,7 +2983,8 @@
       "React": [
         "accessibility",
         "build",
-        "published"
+        "published",
+        "rtl"
       ]
     },
     "notification-center": {
@@ -3086,7 +3090,8 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3667,7 +3672,8 @@
       "React": [
         "accessibility",
         "build",
-        "published"
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3726,7 +3732,7 @@
       "build": 98,
       "interaction": 23,
       "accessibility": 98,
-      "rtl": 3,
+      "rtl": 9,
       "largeText": 0,
       "visual": 0,
       "published": 98
