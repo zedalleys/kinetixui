@@ -35,6 +35,11 @@ const componentsDir = `${root}/packages/ui/src/components`;
 // Kept as separate regexes (not one alternation) so a failure message can
 // name which rule tripped.
 const RULES = [
+  // `space-x-*` compiles to a physical margin-left (plus a reverse variable), so under RTL the gap
+  // lands on the outside of the pair instead of between them and the children touch. `gap-*` is the
+  // direction-agnostic equivalent. This rule exists because a review caught three already-"converted"
+  // overlay footers that the guard had been passing.
+  { name: "space-x-N -> gap-N", re: /\bspace-x-\d/ },
   { name: "pl-N -> ps-N", re: /\bpl-\d/ },
   { name: "pr-N -> pe-N", re: /\bpr-\d/ },
   { name: "ml-N -> ms-N", re: /\bml-(?:\d|auto\b)/ },
@@ -54,7 +59,6 @@ const RULES = [
 // this list as later slices convert more components; an empty array means
 // the whole library is converted.
 const NOT_YET_CONVERTED = new Set([
-  "alert-dialog.tsx",
   "audio-player.tsx",
   "button-group.tsx",
   "calendar.tsx",
@@ -62,18 +66,13 @@ const NOT_YET_CONVERTED = new Set([
   "code-block.tsx",
   "command.tsx",
   "comparison-slider.tsx",
-  "context-menu.tsx",
   "data-grid.tsx",
   "diff-viewer.tsx",
   "input-otp.tsx",
   "json-viewer.tsx",
   "markdown-editor.tsx",
-  "menubar.tsx",
-  "modal.tsx",
   "multi-select.tsx",
-  "navigation-menu.tsx",
   "notification-center.tsx",
-  "popover.tsx",
   "resizable.tsx",
   "scroll-area.tsx",
   "sidebar.tsx",
@@ -81,7 +80,6 @@ const NOT_YET_CONVERTED = new Set([
   "table.tsx",
   "tag.tsx",
   "timeline.tsx",
-  "tooltip.tsx",
   "tree-view.tsx",
 ]);
 
