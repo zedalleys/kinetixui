@@ -4,6 +4,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ComponentPreview } from "@/components/component-preview";
 import { ComponentApi } from "@/components/component-api";
+import { ComponentKeyboard } from "@/components/component-keyboard";
 import { ComponentMeta } from "@/components/component-meta";
 import { Callout } from "@/components/callout";
 import { Steps, Step } from "@/components/steps";
@@ -91,6 +92,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     pre: CodePre,
     ComponentPreview,
     ComponentApi,
+    ComponentKeyboard,
     ComponentMeta,
     Callout,
     Steps,

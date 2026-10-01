@@ -28,6 +28,8 @@
     "check:rtl": "node scripts/check-rtl.mjs",
     "check:swiftui-tokens": "node scripts/check-swiftui-tokens.mjs",
     "check:icons": "node scripts/check-icon-mapping.mjs",
+    "gen:keyboard": "node scripts/gen-keyboard.mjs",
+    "check:keyboard": "node scripts/gen-keyboard.mjs --check",
     "gen:verification": "node scripts/gen-verification.mjs",
     "check:verification": "node scripts/gen-verification.mjs --check",
     "gen:manifest": "node scripts/gen-manifest.mjs",
