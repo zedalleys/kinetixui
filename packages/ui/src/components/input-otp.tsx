@@ -24,8 +24,10 @@ const InputOTPGroup = React.forwardRef<React.ElementRef<"div">, React.ComponentP
     // to spare — and rescues the case that measured badly: at 2x the default font size on a 390px
     // viewport the slots are 72px each, the row is 432px, and the page gained 106px of horizontal
     // scrolling. A second row of slots is worse-looking than one; a form the reader has to scroll
-    // sideways to type a code into is worse than that. The group's rounded ends and shared dividers are
-    // written for a single row, so a wrapped row shows square outer corners: deliberate, and the price.
+    // sideways to type a code into is worse than that.
+    //
+    // Wrapping is only safe because each slot owns its whole border — see InputOTPSlot. A row that
+    // borrowed its first edge from `:first-child` would be open at the end it began from.
     <div ref={ref} className={cn("flex flex-wrap items-center", className)} {...props} />
   ),
 );

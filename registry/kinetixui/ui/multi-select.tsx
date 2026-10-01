@@ -75,7 +75,11 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
             tabIndex={0}
             onClick={() => setOpen(true)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
+              // Enter and Space open it, and so do the vertical arrows: WAI-ARIA's combobox pattern lists
+              // Down Arrow as a way to open the popup, and a keyboard user who has just tabbed onto a
+              // collapsed combobox reaches for it first. Without it the arrows did nothing at all here —
+              // the only way in was Enter or Space.
+              if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown" || e.key === "ArrowUp") {
                 e.preventDefault();
                 setOpen(true);
               }
@@ -125,7 +129,7 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
                 {canCreate ? (
                   <button
                     type="button"
-                    className="flex w-full items-center px-2 py-1.5 text-left text-body-sm text-foreground hover:bg-accent"
+                    className="flex w-full items-center px-2 py-1.5 text-start text-body-sm text-foreground hover:bg-accent"
                     onClick={() => {
                       toggle(trimmed);
                       setQuery("");
