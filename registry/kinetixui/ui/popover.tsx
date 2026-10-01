@@ -11,7 +11,7 @@ const PopoverAnchor = PopoverPrimitive.Anchor;
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
->(({ className, align = "center", sideOffset = 4, ...props }, ref) => (
+>(({ className, align = "center", sideOffset = 4, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => (
   <PopoverPrimitive.Portal>
     <PopoverPrimitive.Content
       ref={ref}
@@ -23,7 +23,12 @@ const PopoverContent = React.forwardRef<
       // The fallback is deliberately only a fallback. A caller who passes `aria-label` or points at a
       // heading with `aria-labelledby` keeps theirs, and should: "Popover" tells a screen-reader user
       // what kind of thing opened and nothing about what is in it. It is the floor, not the goal.
-      aria-label={props["aria-label"] ?? (props["aria-labelledby"] ? undefined : "Popover")}
+      // Both naming props are destructured OUT of the spread, not read from it. Read from `props` with
+      // `{...props}` trailing, `aria-label={label}` with `label` undefined — the ordinary conditional-prop
+      // spelling — spreads the key back as undefined and deletes the attribute, so the fallback computed
+      // here would be erased and the dialog would ship unnamed again by the very pattern it guards.
+      aria-labelledby={ariaLabelledBy}
+      aria-label={ariaLabel ?? (ariaLabelledBy ? undefined : "Popover")}
       className={cn(
         // A surface wider than the window is not usable. Measured at 390px with the root font size
         // doubled: this came out 576px, because `w-72` is rem and doubles with the text, and the

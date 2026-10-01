@@ -31,6 +31,16 @@ context menu stayed 256px wide against a cap that had correctly resolved to 193p
 `min-w-[min(8rem,var(--radix-popper-available-width))]` — keeping the comfortable width wherever there is
 room for it.
 
+**Both fixes compose with your own props.** The Popover name and the Drawer's focus entry were each set
+*before* the trailing `{...props}` spread, which meant the most ordinary call site undid them. Passing an
+optional name the usual way, `aria-label={maybe}` with `maybe` undefined, spread that undefined back over
+the fallback and deleted the attribute, so the unnamed dialog returned. Passing any `onOpenAutoFocus` to
+`DrawerContent` — even one that only logs — replaced the handler that moves focus, and since `vaul`
+suppresses auto-focus otherwise, focus was left on the hidden trigger again. Both props are now handled
+explicitly instead of being read back off the spread: your `aria-label` and `aria-labelledby` still win,
+your `onOpenAutoFocus` is still called, and calling `preventDefault` in it is how you take focus
+placement over yourself.
+
 Patch rather than minor: no API is added, removed or renamed, and nothing new is available to adopt. Each
 change corrects behaviour that was already wrong — an upgrade names a dialog that had no name, moves focus
 somewhere reachable, and keeps a surface inside the window at large text; in a desktop LTR app at the

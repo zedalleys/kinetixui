@@ -64,10 +64,10 @@ const MANIFEST = {
 };
 
 const temps: string[] = [];
-function fixture(files: Record<string, string>) {
+function fixture(files: Record<string, string>, manifest: unknown = MANIFEST) {
   const dir = mkdtempSync(join(tmpdir(), "kx-verify-"));
   temps.push(dir);
-  writeFileSync(join(dir, "components.manifest.json"), JSON.stringify(MANIFEST));
+  writeFileSync(join(dir, "components.manifest.json"), JSON.stringify(manifest));
   // the generator treats a missing declared evidence source as an error — a renamed suite must not silently
   // drop its evidence — so the fixture carries empty stand-ins for the suites listed outside the test tree
   mkdirSync(join(dir, "scripts"), { recursive: true });
@@ -152,6 +152,36 @@ describe("a marker is scoped to its passage, not to its file", () => {
     run(script, [`--root=${dir}`]);
     const data = generated(dir);
     expect(data.components.button.React.interaction[0]).toMatch(/packages\/ui\/src\/x\.test\.tsx:\d+-\d+/);
+  });
+});
+
+describe("the extractor reads the manifest of the tree being scanned", () => {
+  /**
+   * `--root=<dir>` exists so these tests can scan a fixture instead of the repository, and the symbol
+   * extractor has to follow it there. Built from this repository's manifest instead, it answers questions
+   * about the fixture with the wrong vocabulary in both directions: blind to the fixture's own components,
+   * and credulous about names the fixture has never declared.
+   */
+  it("credits a component only the scanned tree declares", () => {
+    const manifest = {
+      ...MANIFEST,
+      components: { ...MANIFEST.components, "fixture-widget": { status: "stable", since: "0.1.0", platforms: ["React"] } },
+    };
+    const dir = fixture(reactTest(`// kx-verify: interaction\n<FixtureWidget />\n`), manifest);
+    const { ok, output } = run(script, [`--root=${dir}`]);
+    expect(ok, output).toBe(true);
+    expect(generated(dir).components["fixture-widget"].React.interaction).toBeTruthy();
+  });
+
+  it("ignores a component only this repository declares", () => {
+    // `accordion` is real here and absent from the fixture; matching it would attach evidence to a slug the
+    // scanned manifest does not have.
+    const dir = fixture(reactTest(`// kx-verify: interaction\n<Button />\n<Accordion />\n`));
+    const { ok, output } = run(script, [`--root=${dir}`]);
+    expect(ok, output).toBe(true);
+    const data = generated(dir);
+    expect(data.components.button.React.interaction).toBeTruthy();
+    expect(data.components.accordion).toBeUndefined();
   });
 });
 

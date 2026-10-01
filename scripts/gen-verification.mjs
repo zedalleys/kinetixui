@@ -101,8 +101,13 @@ const TEST_SOURCES = {
 // The extractor lives in its own module so large-text.mjs can check its claim with the same function
 // that awards the evidence, instead of a regex that resembles it. Re-exported here because
 // apps/web/src/lib/verification-guardrails.test.ts and this file's own callers import it from here.
-export { coveredSlugs, pascal, slugify, STEMS } from "./covered-slugs.mjs";
-import { coveredSlugs, pascal, slugify, STEMS } from "./covered-slugs.mjs";
+import { coverageForRoot, pascal, slugify } from "./covered-slugs.mjs";
+
+// Built from the manifest of the tree being scanned, which under `--root=<dir>` is the fixture's and not
+// this repository's. An extractor wired to the repo would answer questions about the fixture with the
+// wrong slugs: a fixture component would read as "no KinetixUI component used", and repo-only names would
+// resolve to slugs the fixture has never heard of.
+const { STEMS, coveredSlugs } = coverageForRoot(root);
 
 /**
  * The subjects a `kx-verify-covers:` target names. Both forms read the repository, never a written list:

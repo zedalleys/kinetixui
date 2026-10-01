@@ -24,7 +24,7 @@ DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, ...props }, ref) => {
+>(({ className, children, onOpenAutoFocus, ...props }, ref) => {
   /**
    * Focus entry. Measured in Chromium with the drawer open: focus was still on the trigger — which by
    * then sits inside a subtree `aria-hidden="true"`, because the drawer hides the page behind it. So a
@@ -58,7 +58,15 @@ const DrawerContent = React.forwardRef<
         // `onOpenAutoFocus` and not a mount effect: the focus scope underneath runs after mount, so an
         // effect that focuses the panel is overwritten a tick later and the fix silently does nothing
         // (measured — the first attempt here was exactly that). This is the moment the primitive offers.
+        //
+        // Composed with the caller's handler and destructured out of the spread below: with `{...props}`
+        // trailing, any `onOpenAutoFocus` a consumer passes — even one that only logs — would replace this
+        // one outright, and since vaul suppresses auto-focus otherwise, focus would be left on the
+        // now-hidden trigger and the defect would be back. A caller who calls `preventDefault` themselves
+        // is taking focus over deliberately, so that decision stands and the panel is left alone.
         onOpenAutoFocus={(event) => {
+          onOpenAutoFocus?.(event);
+          if (event.defaultPrevented) return;
           event.preventDefault();
           panel.current?.focus();
         }}

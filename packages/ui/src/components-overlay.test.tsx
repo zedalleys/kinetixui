@@ -81,6 +81,25 @@ describe("Popover's accessible name", () => {
     // aria-labelledby and the name would silently become "Popover" again.
     expect(named).not.toHaveAttribute("aria-label");
   });
+
+  it("survives the ordinary conditional-prop spelling, where the name arrives as undefined", async () => {
+    const user = userEvent.setup();
+    const label: string | undefined = undefined;
+    render(
+      <Popover>
+        <PopoverTrigger>C</PopoverTrigger>
+        {/* `aria-label={maybe}` is how a caller passes an optional name, and it puts the key in props
+            with the value undefined. Read off a spread props object, that undefined is spread back over
+            the computed fallback and DELETES the attribute — so the unnamed dialog this fallback exists
+            to prevent comes back through the most ordinary call site there is. */}
+        <PopoverContent aria-label={label}>
+          <p>x</p>
+        </PopoverContent>
+      </Popover>,
+    );
+    await user.click(screen.getByRole("button", { name: "C" }));
+    expect(await screen.findByRole("dialog", { name: "Popover" })).toBeInTheDocument();
+  });
 });
 
 describe("Drawer focus entry", () => {
@@ -110,6 +129,53 @@ describe("Drawer focus entry", () => {
     // first control in it, so a drawer containing a field does not summon a mobile keyboard on open.
     await waitFor(() => expect(document.activeElement).toBe(panel));
     expect(trigger).not.toHaveFocus();
+  });
+
+  it("still enters the panel when the caller also listens for the open-focus event", async () => {
+    const user = userEvent.setup();
+    const seen = vi.fn();
+    render(
+      <Drawer>
+        <DrawerTrigger>Open Drawer</DrawerTrigger>
+        {/* A consumer handler that only observes. With `{...props}` trailing it would REPLACE the one
+            this component installs, and because vaul suppresses auto-focus otherwise, focus would be left
+            on the trigger the drawer has just hidden — the defect back, via a prop that does nothing. */}
+        <DrawerContent onOpenAutoFocus={seen}>
+          <DrawerTitle>Move goal</DrawerTitle>
+          <DrawerClose>Cancel</DrawerClose>
+        </DrawerContent>
+      </Drawer>,
+    );
+    await user.click(screen.getByRole("button", { name: "Open Drawer" }));
+    const panel = await screen.findByRole("dialog");
+    await waitFor(() => expect(document.activeElement).toBe(panel));
+    expect(seen).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves focus to a caller who takes it over deliberately", async () => {
+    const user = userEvent.setup();
+    render(
+      <Drawer>
+        <DrawerTrigger>Open Drawer</DrawerTrigger>
+        {/* Calling preventDefault is how a caller says they are placing focus themselves. Composition has
+            to mean composition and not "ours always wins", or an author who wants focus on their own
+            control cannot have it. */}
+        <DrawerContent
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            document.getElementById("mine")?.focus();
+          }}
+        >
+          <DrawerTitle>Move goal</DrawerTitle>
+          <button id="mine" type="button">
+            Mine
+          </button>
+        </DrawerContent>
+      </Drawer>,
+    );
+    await user.click(screen.getByRole("button", { name: "Open Drawer" }));
+    await screen.findByRole("dialog");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Mine" })).toHaveFocus());
   });
 
   it("closes on Escape and gives focus back", async () => {

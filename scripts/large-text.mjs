@@ -106,10 +106,13 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { OPEN_STATES, openSurface } from "./open-states.mjs";
-import { coveredSlugs } from "./covered-slugs.mjs";
+import { coverageForRoot } from "./covered-slugs.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
+// The same extractor gen-verification awards the evidence with, built from the same manifest, so the
+// claim below is checked by the function that reads it rather than by a regex that resembles one.
+const { coveredSlugs } = coverageForRoot(root);
 
 if (!existsSync(join(staticDir, "index.json"))) {
   console.error("apps/docs/storybook-static not found — run `pnpm build-storybook` first.");
