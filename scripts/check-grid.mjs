@@ -54,8 +54,6 @@ const ARBITRARY = new RegExp(`(?:^|[\\s"'\`:!-])(?:${PROPS})-\\[(\\d+(?:\\.\\d+)
 /** file:value → why it is allowed. Justify, don't just add. */
 const EXCEPTIONS = {
   "button.tsx:18": "icon size from the design source (Material-style 18px glyph in a 40px control)",
-  "checkbox.tsx:18": "checkbox box is 18px in the design source (Material-style)",
-  "radio-group.tsx:18": "radio ring is 18px in the design source (Material-style)",
 };
 
 function* walk(dir) {
