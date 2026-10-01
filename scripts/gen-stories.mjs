@@ -83,6 +83,11 @@ const GROUP = {
 const PADDED = new Set([
   "chart", "data-table", "data-grid", "kanban-board", "markdown-editor", "table", "footer", "calendar", "resizable", "carousel",
   "sidebar", "stepper", "menubar", "navigation-menu",
+  // `layout: "centered"` sizes the wrapper to its content, so a demo whose width is a percentage of that
+  // wrapper resolves to nothing. Measured in Chromium: the Slider story's track was 0x6 and only its 16px
+  // thumb was visible, which is also all the axe pass and the large-text pass had ever been looking at.
+  // Both of these demos are `w-[60%]`, which is right on the website, where the column has a width.
+  "slider", "progress",
 ]);
 
 /**
@@ -523,6 +528,17 @@ for (const { key, component, source } of entries) {
   const Name = title(slug);
   const group = GROUP[slug] ?? "Components";
   const layout = PADDED.has(slug) ? "padded" : "centered";
+  // A percentage width needs a parent with a width. `layout: "centered"` gives it one sized to its own
+  // content, so the demo resolves to zero and the story renders a control that is not there — silently,
+  // because every check downstream still finds the element and reports on whatever is left of it.
+  const relativeWidth = /\b[wh]-\[\d+(?:\.\d+)?%\]/.exec(component);
+  if (relativeWidth && layout !== "padded") {
+    problems.push(
+      `${slug}: its demo sizes itself with ${relativeWidth[0]}, which is a percentage of a wrapper that ` +
+        `\`layout: "centered"\` sizes to its content — the story would render it at zero. Add "${slug}" to ` +
+        `PADDED, or give the demo an absolute width.`,
+    );
+  }
   const usedConsts = constDecls.filter((c) => new RegExp(`\\b${c.name}\\b`).test(component));
   const constBlock = usedConsts.map((c) => c.code).join("\n");
   const ctrl = CONTROLS[slug];

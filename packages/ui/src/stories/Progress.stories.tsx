@@ -19,7 +19,7 @@ const meta = {
   args: { value: 66 },
   argTypes: { value: { control: { type: "range", min: 0, max: 100 } } },
   parameters: {
-    layout: "centered",
+    layout: "padded",
     docs: { source: { code: "const [value, setValue] = React.useState(13)\\n// ...\\n<Progress value={value} aria-label=\\\"Upload progress\\\" />", language: "tsx" } },
   },
 } satisfies Meta;
