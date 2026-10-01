@@ -21,6 +21,10 @@ const TooltipContent = React.forwardRef<
         // Timing stays in the same string as the animation it times, so a reader (and the motion
         // contract test) can see both at once.
         "animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 duration-instant ease-enter data-[state=closed]:ease-exit",
+        // `data-side` is the side Radix RESOLVED the surface onto — it is already physical, having been
+        // flipped for direction and collisions before it reaches the DOM. The slide must therefore stay
+        // physical to travel away from the trigger; a logical class here would invert the animation under
+        // RTL and make the surface fly the wrong way. // rtl-ok
         "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         className,
       )}

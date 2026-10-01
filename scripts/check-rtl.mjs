@@ -54,7 +54,6 @@ const RULES = [
 // this list as later slices convert more components; an empty array means
 // the whole library is converted.
 const NOT_YET_CONVERTED = new Set([
-  "alert-dialog.tsx",
   "audio-player.tsx",
   "button-group.tsx",
   "calendar.tsx",
@@ -62,18 +61,13 @@ const NOT_YET_CONVERTED = new Set([
   "code-block.tsx",
   "command.tsx",
   "comparison-slider.tsx",
-  "context-menu.tsx",
   "data-grid.tsx",
   "diff-viewer.tsx",
   "input-otp.tsx",
   "json-viewer.tsx",
   "markdown-editor.tsx",
-  "menubar.tsx",
-  "modal.tsx",
   "multi-select.tsx",
-  "navigation-menu.tsx",
   "notification-center.tsx",
-  "popover.tsx",
   "resizable.tsx",
   "scroll-area.tsx",
   "sidebar.tsx",
@@ -81,7 +75,6 @@ const NOT_YET_CONVERTED = new Set([
   "table.tsx",
   "tag.tsx",
   "timeline.tsx",
-  "tooltip.tsx",
   "tree-view.tsx",
 ]);
 
