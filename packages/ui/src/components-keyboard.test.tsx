@@ -26,6 +26,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "./components/popover";
 import { RadioGroup, RadioGroupItem } from "./components/radio-group";
 import { Slider } from "./components/slider";
 import { Switch } from "./components/switch";
+import { Toggle } from "./components/toggle";
+import { ToggleGroup, ToggleGroupItem } from "./components/toggle-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/tabs";
 import { Tour } from "./components/tour";
 import { TreeItem, TreeView } from "./components/tree-view";
@@ -1108,5 +1110,108 @@ describe("FileUpload", () => {
     expect(screen.getByRole("button", { name: "Browse files" })).toHaveFocus();
     await user.tab();
     expect(screen.getByRole("button", { name: "after" })).toHaveFocus();
+  });
+});
+
+// kx-verify: interaction
+
+/**
+ * Toggle and ToggleGroup had no interaction or keyboard evidence at all — the only two members of the
+ * selection-control family without any, which is how they came to be in this slice. What they support is
+ * asserted here rather than assumed from the family: a Toggle is a button, so it answers to both Space and
+ * Enter, where a Checkbox answers only to Space.
+ */
+describe("Toggle", () => {
+  it("toggles with Space and with Enter, and reports state through aria-pressed", async () => {
+    const user = userEvent.setup();
+    render(<Toggle aria-label="Bold" />);
+    await user.tab();
+    const toggle = screen.getByRole("button", { name: "Bold" });
+    expect(toggle).toHaveFocus();
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
+
+    // A button, not a checkbox: Enter activates it too.
+    await user.keyboard("{Enter}");
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+    await user.keyboard(" ");
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("a disabled Toggle is skipped by Tab and does not respond to keys", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <button>first</button>
+        <Toggle aria-label="Bold" disabled />
+        <button>last</button>
+      </>,
+    );
+    await user.tab();
+    await user.tab();
+    expect(screen.getByRole("button", { name: "last" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Bold" })).toHaveAttribute("aria-pressed", "false");
+  });
+});
+
+describe("ToggleGroup", () => {
+  function Example({ type = "multiple" as "multiple" | "single" }) {
+    return (
+      <>
+        <button>before</button>
+        <ToggleGroup type={type as never} aria-label="Formatting">
+          <ToggleGroupItem value="bold" aria-label="Bold" />
+          <ToggleGroupItem value="italic" aria-label="Italic" />
+          <ToggleGroupItem value="underline" aria-label="Underline" />
+        </ToggleGroup>
+      </>
+    );
+  }
+
+  it("is one tab stop, and the arrow keys move between items", async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+    await user.tab(); // before
+    await user.tab(); // into the group, landing on the first item
+    expect(screen.getByRole("button", { name: "Bold" })).toHaveFocus();
+
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("button", { name: "Italic" })).toHaveFocus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("button", { name: "Underline" })).toHaveFocus();
+    await user.keyboard("{ArrowLeft}");
+    expect(screen.getByRole("button", { name: "Italic" })).toHaveFocus();
+
+    // A roving tabindex: Tab leaves the group rather than walking the rest of its items.
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Italic" })).not.toHaveFocus();
+  });
+
+  it("in multiple mode, Space presses items independently", async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+    await user.tab();
+    await user.tab();
+    await user.keyboard(" ");
+    expect(screen.getByRole("button", { name: "Bold" })).toHaveAttribute("aria-pressed", "true");
+
+    await user.keyboard("{ArrowRight}");
+    await user.keyboard(" ");
+    // Both stay pressed — that is what multiple means, and what single must not do.
+    expect(screen.getByRole("button", { name: "Bold" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Italic" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("in single mode, pressing one item releases the other", async () => {
+    const user = userEvent.setup();
+    render(<Example type="single" />);
+    await user.tab();
+    await user.tab();
+    await user.keyboard(" ");
+    expect(screen.getByRole("radio", { name: "Bold" })).toHaveAttribute("aria-checked", "true");
+
+    await user.keyboard("{ArrowRight}");
+    await user.keyboard(" ");
+    expect(screen.getByRole("radio", { name: "Italic" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Bold" })).toHaveAttribute("aria-checked", "false");
   });
 });

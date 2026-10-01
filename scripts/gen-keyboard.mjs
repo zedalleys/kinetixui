@@ -73,6 +73,8 @@ const SUITES = {
   Slider: ["slider"],
   List: ["list"],
   FileUpload: ["file-upload"],
+  Toggle: ["toggle"],
+  ToggleGroup: ["toggle-group"],
 };
 
 /** `{ArrowDown}` → `Arrow down`, `" "` → `Space`. The words a person would say, not the event codes. */

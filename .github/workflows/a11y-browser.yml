@@ -20,6 +20,7 @@ on:
       - "apps/docs/**"
       - "scripts/a11y-browser.mjs"
       - "scripts/a11y-animations.mjs"
+      - "scripts/large-text.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
   pull_request:
@@ -31,6 +32,7 @@ on:
       - "apps/docs/**"
       - "scripts/a11y-browser.mjs"
       - "scripts/a11y-animations.mjs"
+      - "scripts/large-text.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
 
@@ -69,3 +71,11 @@ jobs:
 
       - name: Axe pass (every story, light + dark)
         run: pnpm check:a11y-browser
+
+      # verification.json publishes `largeText` for the selection controls off the back of this script, and
+      # a claim nothing executes is not evidence: without this step the controls could regress to a px size,
+      # or the check itself could break, while CI stayed green and the site still showed them as verified.
+      # It belongs in this job rather than its own: the Storybook build and the Chromium install above are
+      # exactly what it needs.
+      - name: Large-text pass (selection controls at 2x the default font size)
+        run: pnpm check:large-text

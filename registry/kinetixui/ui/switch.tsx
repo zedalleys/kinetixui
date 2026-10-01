@@ -27,7 +27,11 @@ const Switch = React.forwardRef<
     <SwitchPrimitive.Thumb
       className={cn(
         "pointer-events-none block size-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-instant ease-standard",
+        // `translate-x` is physical, so under `dir="rtl"` the thumb travelled the same way as in LTR —
+        // away from the start edge it already sat against, and straight off a 48px track (measured: thumb
+        // left edge at 50px). An RTL switch turned on showed a filled pill with no thumb in it at all.
         "data-[state=checked]:translate-x-6 data-[state=unchecked]:translate-x-0",
+        "rtl:data-[state=checked]:-translate-x-6",
       )}
     />
   </SwitchPrimitive.Root>

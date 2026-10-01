@@ -18,7 +18,10 @@ const Checkbox = React.forwardRef<
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
-      "peer size-[18px] shrink-0 rounded-sm border-2 border-input outline-none transition-colors duration-instant",
+      // 1.125rem, not the 18px it replaces: identical at the default root size, but a reader who raises
+      // their browser's default font size scales rem and not px. At 200% the box stayed 18x18 beside a
+      // label that doubled — the control shrank by half relative to its own text, and its hit target with it.
+      "peer size-[1.125rem] shrink-0 rounded-sm border-2 border-input outline-none transition-colors duration-instant",
       "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
       "disabled:cursor-not-allowed disabled:opacity-disabled",
       "data-[state=checked]:border-action data-[state=checked]:bg-action data-[state=checked]:text-action-foreground",
