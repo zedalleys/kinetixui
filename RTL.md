@@ -82,6 +82,14 @@ unmirrored:
   classes would invert the animation under RTL and throw the surface the wrong
   way, so they are marked `// rtl-ok` with that reason
 
+A review of this slice found a fourth case the guard had been silent about:
+`space-x-*` compiles to a physical `margin-left`, so on the Dialog, Sheet and
+AlertDialog footers the gap landed on the outside of the button pair under RTL
+and the two buttons touched. All three now use `gap-2`, and `space-x-N` is a
+`check-rtl.mjs` rule, so the class cannot return. `avatar.tsx`'s `-space-x-2`
+is the one deliberate use — negative spacing *is* the stack overlap and `gap`
+cannot be negative — and is marked `// rtl-ok`.
+
 Behavioural evidence: `packages/ui/src/components-rtl.test.tsx`
 (`kx-verify: rtl`). `check-rtl.mjs` proves no physical class is *left*; it
 cannot prove the replacement is the *right* one or that the Radix primitive

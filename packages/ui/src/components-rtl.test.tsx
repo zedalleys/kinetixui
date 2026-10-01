@@ -35,6 +35,9 @@ import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./components/alert-dialog";
@@ -159,6 +162,28 @@ describe("AlertDialog under RTL", () => {
     expect(content.className).toMatch(/\bleft-1\/2\b/);
     expect(content.className).not.toMatch(/\bstart-1\/2\b/);
     expect(container).toBeTruthy();
+  });
+
+  it("spaces its footer buttons with a direction-agnostic gap", () => {
+    render(
+      rtl(
+        <AlertDialog open>
+          <AlertDialogContent>
+            <AlertDialogTitle>Delete</AlertDialogTitle>
+            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>,
+      ),
+    );
+    const footer = screen.getByRole("button", { name: "Cancel" }).parentElement!;
+    // `space-x-*` compiles to a physical margin-left, so under RTL it lands on the outside of the
+    // pair and the two buttons touch. `gap` has no side.
+    expect(footer).toHaveClass("gap-2");
+    expect(footer.className).not.toMatch(/space-x-/);
   });
 });
 

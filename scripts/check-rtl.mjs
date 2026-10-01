@@ -35,6 +35,11 @@ const componentsDir = `${root}/packages/ui/src/components`;
 // Kept as separate regexes (not one alternation) so a failure message can
 // name which rule tripped.
 const RULES = [
+  // `space-x-*` compiles to a physical margin-left (plus a reverse variable), so under RTL the gap
+  // lands on the outside of the pair instead of between them and the children touch. `gap-*` is the
+  // direction-agnostic equivalent. This rule exists because a review caught three already-"converted"
+  // overlay footers that the guard had been passing.
+  { name: "space-x-N -> gap-N", re: /\bspace-x-\d/ },
   { name: "pl-N -> ps-N", re: /\bpl-\d/ },
   { name: "pr-N -> pe-N", re: /\bpr-\d/ },
   { name: "ml-N -> ms-N", re: /\bml-(?:\d|auto\b)/ },

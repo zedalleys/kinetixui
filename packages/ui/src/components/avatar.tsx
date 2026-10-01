@@ -53,8 +53,11 @@ const AvatarGroup = React.forwardRef<HTMLDivElement, AvatarGroupProps>(
     const visible = max ? items.slice(0, max) : items;
     const overflow = max ? items.length - max : 0;
 
+    // rtl-ok: negative spacing IS the stack overlap; `gap` cannot be negative, and it mirrors naturally
+    const stack = "flex -space-x-2";
+
     return (
-      <div ref={ref} className={cn("flex -space-x-2", className)} {...props}>
+      <div ref={ref} className={cn(stack, className)} {...props}>
         {visible.map((child, i) => (
           <div key={i} className="rounded-full ring-2 ring-background">
             {child}
