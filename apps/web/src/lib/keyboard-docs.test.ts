@@ -49,11 +49,29 @@ describe("generated keyboard documentation", () => {
   });
 
   it("uses readable key names rather than raw event codes", () => {
-    const allowed = /^(Enter|Escape|Tab|Space|Home|End|Backspace|Delete|Page (up|down)|Arrow (up|down|left|right))$/;
+    const key = String.raw`(Enter|Escape|Tab|Space|Home|End|Backspace|Delete|Page (up|down)|Arrow (up|down|left|right))`;
+    // A chord is one shortcut: `{Control>}{End}{/Control}` is Ctrl + End, not Control and End separately.
+    const allowed = new RegExp(`^((Ctrl|Shift|Alt|Cmd) \\+ )*${key}$`);
     for (const [slug, entries] of Object.entries(KEYBOARD)) {
       for (const k of entries.flatMap((e) => e.keys)) {
         expect(k, `${slug}: ${k} is not a readable key name`).toMatch(allowed);
       }
     }
+  });
+
+  it("never lists a bare modifier as though it were a shortcut", () => {
+    for (const [slug, entries] of Object.entries(KEYBOARD)) {
+      for (const k of entries.flatMap((e) => e.keys)) {
+        expect(["Ctrl", "Shift", "Alt", "Cmd"], `${slug}: "${k}" is a modifier on its own`).not.toContain(k);
+      }
+    }
+  });
+
+  it("reads the forms user-event actually uses, not just the simple one", () => {
+    // Each of these was silently dropped or mangled by the first extractor, which is why they are pinned:
+    // a held press `{ArrowDown>}`, a chord `{Alt>}{ArrowRight}{/Alt}`, and `user.type(el, "…{Enter}")`.
+    expect(KEYBOARD["radio-group"].flatMap((e) => e.keys)).toContain("Arrow down");
+    expect(KEYBOARD["data-grid"].flatMap((e) => e.keys)).toContain("Alt + Arrow right");
+    expect(KEYBOARD["color-picker"].map((e) => e.behaviour)).toContain("commits the hex field on Enter");
   });
 });

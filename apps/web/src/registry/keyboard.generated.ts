@@ -23,13 +23,20 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
     {
       "behaviour": "adjusts the saturation/value square with the arrow keys (Shift = bigger step)",
       "keys": [
-        "Arrow right"
+        "Arrow right",
+        "Shift + Arrow right"
       ]
     },
     {
       "behaviour": "the hue rail is a named, keyboard-operable slider",
       "keys": [
         "Arrow right"
+      ]
+    },
+    {
+      "behaviour": "commits the hex field on Enter",
+      "keys": [
+        "Enter"
       ]
     }
   ],
@@ -56,6 +63,8 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
         "Arrow down",
         "End",
         "Home",
+        "Ctrl + End",
+        "Ctrl + Home",
         "Tab"
       ]
     },
@@ -64,7 +73,8 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "keys": [
         "Arrow down",
         "Arrow right",
-        "Tab"
+        "Tab",
+        "Shift + Tab"
       ]
     },
     {
@@ -87,13 +97,14 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "Escape cancels an edit without committing and returns focus to the cell",
       "keys": [
         "Arrow down",
+        "Escape",
         "Tab"
       ]
     },
     {
       "behaviour": "Alt+Arrow reorders a column from its header, keeps focus on it, and announces the move",
       "keys": [
-        "Arrow right",
+        "Alt + Arrow right",
         "Tab"
       ]
     },
@@ -101,7 +112,8 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "Shift+Arrow resizes a column from its header and announces the width",
       "keys": [
         "Arrow right",
-        "Arrow left",
+        "Shift + Arrow right",
+        "Shift + Arrow left",
         "Tab"
       ]
     },
@@ -117,6 +129,7 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "is off by default: no aria-multiselectable, no aria-selected, Shift+Arrow just moves",
       "keys": [
         "Arrow down",
+        "Shift + Arrow down",
         "Tab"
       ]
     },
@@ -124,7 +137,8 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "Shift+Arrow extends a rectangle from the anchor and reports it",
       "keys": [
         "Arrow down",
-        "Arrow right",
+        "Shift + Arrow down",
+        "Shift + Arrow right",
         "Tab"
       ]
     },
@@ -132,7 +146,8 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "shrinks when Shift moves back toward the anchor",
       "keys": [
         "Arrow down",
-        "Arrow up",
+        "Shift + Arrow down",
+        "Shift + Arrow up",
         "Tab"
       ]
     },
@@ -140,6 +155,7 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "a plain arrow key collapses the selection",
       "keys": [
         "Arrow down",
+        "Shift + Arrow down",
         "Tab"
       ]
     },
@@ -161,7 +177,7 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
     {
       "behaviour": "Ctrl+Space on a focused header selects its column",
       "keys": [
-        "Space",
+        "Ctrl + Space",
         "Tab"
       ]
     },
@@ -169,7 +185,7 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "Shift+Space on a cell selects its whole row",
       "keys": [
         "Arrow down",
-        "Space",
+        "Shift + Space",
         "Tab"
       ]
     },
@@ -177,6 +193,7 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "a plain click clears the selection",
       "keys": [
         "Arrow down",
+        "Shift + Arrow down",
         "Tab"
       ]
     },
@@ -184,7 +201,8 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "Ctrl+C copies the range as tab-separated values",
       "keys": [
         "Arrow down",
-        "Arrow right",
+        "Shift + Arrow down",
+        "Shift + Arrow right",
         "Tab"
       ]
     },
@@ -199,6 +217,7 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "Ctrl+click adds a separate range and keeps the first, reporting both",
       "keys": [
         "Arrow down",
+        "Shift + Arrow down",
         "Tab"
       ]
     },
@@ -213,9 +232,10 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "Ctrl+Space is the keyboard way to add a range; Shift+arrows then extends the new one",
       "keys": [
         "Arrow down",
-        "Space",
+        "Ctrl + Space",
         "Arrow up",
-        "Arrow right",
+        "Shift + Arrow down",
+        "Shift + Arrow right",
         "Tab"
       ]
     },
@@ -230,6 +250,7 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "re-sorting clears the selection (it refers to displayed rows)",
       "keys": [
         "Arrow down",
+        "Shift + Arrow down",
         "Arrow up",
         "Enter",
         "Tab"
@@ -247,7 +268,7 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "keys": [
         "Arrow down",
         "Page down",
-        "End",
+        "Ctrl + End",
         "Tab"
       ]
     },
@@ -255,8 +276,9 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "stays reachable by Tab even after the active row scrolls out of the rendered window",
       "keys": [
         "Arrow down",
-        "End",
-        "Tab"
+        "Ctrl + End",
+        "Tab",
+        "Shift + Tab"
       ]
     }
   ],
@@ -271,7 +293,8 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
     {
       "behaviour": "traps Tab inside the dialog",
       "keys": [
-        "Tab"
+        "Tab",
+        "Shift + Tab"
       ]
     },
     {
@@ -349,6 +372,7 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
     {
       "behaviour": "is one tab stop; arrows move and select; Tab leaves the group",
       "keys": [
+        "Arrow down",
         "Tab"
       ]
     }

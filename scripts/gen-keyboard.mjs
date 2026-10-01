@@ -118,22 +118,95 @@ function blocks(src, pattern) {
   return out;
 }
 
-/** Every key a test body presses, in first-press order and without repeats. */
+/** Held modifiers read as a chord prefix: `{Control>}{End}{/Control}` is Ctrl + End, not two keys. */
+const MODIFIER_LABEL = { Control: "Ctrl", Shift: "Shift", Alt: "Alt", Meta: "Cmd" };
+
+/**
+ * Extract the string argument of every `user.<name>(...)` call, with balanced parentheses.
+ *
+ * `user.type(within(target).getByRole("textbox"), "x{Escape}")` is why this is not a regex: the first
+ * argument contains its own quoted string, so "the text between the first quotes" is `textbox`. The typed
+ * sequence is the LAST string literal in the argument list.
+ */
+function callArguments(body, name) {
+  const out = [];
+  const re = new RegExp(String.raw`user\.${name}\(`, "g");
+  let m;
+  while ((m = re.exec(body))) {
+    let depth = 0;
+    let i = m.index + m[0].length - 1;
+    const start = i + 1;
+    for (; i < body.length; i++) {
+      if (body[i] === "(") depth++;
+      else if (body[i] === ")" && --depth === 0) break;
+    }
+    const args = body.slice(start, i);
+    const strings = [...args.matchAll(/"((?:[^"\\]|\\.)*)"/g)];
+    if (strings.length) out.push(strings[strings.length - 1][1]);
+  }
+  return out;
+}
+
+/**
+ * Tokenise one user-event keyboard sequence into the shortcuts it presses.
+ *
+ * user-event's syntax is richer than `{Enter}`, and every form it uses here had to be handled or the page
+ * would under-report what the tests prove:
+ *
+ *   {Enter}                       press and release
+ *   {ArrowDown>}  …  {/ArrowDown} press and HOLD, then release — Radix needs a real held press for
+ *                                 RadioGroup, and the naive `\{(\w+)\}` matched neither half, so that
+ *                                 behaviour listed only Tab
+ *   {Control>}{End}{/Control}     a chord: Ctrl + End is one shortcut, not two keys
+ *   {Shift>}{ArrowLeft}{/Shift}   the same, repeated — deduplicated to one entry
+ *
+ * `typed` marks a `user.type(…)` sequence, where bare characters are text being typed rather than keys
+ * pressed: "ff0000{Enter}" is six characters into a field and then Enter. In a `user.keyboard(…)` sequence
+ * a bare space IS the Space key, which is how Checkbox and Switch are tested.
+ */
+function pressesIn(sequence, { typed }) {
+  const presses = [];
+  const held = [];
+  const re = /\{\/([A-Za-z]+)\}|\{([A-Za-z]+)(>)?\d*\}|(.)/g;
+
+  const emit = (key) => {
+    const label = KEY_LABEL[key];
+    if (!label) return;
+    const mods = held.map((h) => MODIFIER_LABEL[h]).filter(Boolean);
+    presses.push([...mods, label].join(" + "));
+  };
+
+  for (const t of sequence.matchAll(re)) {
+    const [, release, key, hold, bare] = t;
+    if (release) {
+      const at = held.lastIndexOf(release);
+      if (at !== -1) held.splice(at, 1);
+      continue;
+    }
+    if (key) {
+      if (hold && key in MODIFIER_LABEL) held.push(key);
+      else emit(key);
+      continue;
+    }
+    // A bare character. Only a keyboard() sequence presses it; type() is entering text.
+    if (!typed && bare) emit(bare);
+  }
+  return presses;
+}
+
+/** Every shortcut a test body presses, in first-press order and without repeats. */
 function keysIn(body) {
   const keys = [];
   const add = (k) => {
-    const label = KEY_LABEL[k];
-    if (label && !keys.includes(label)) keys.push(label);
+    if (k && !keys.includes(k)) keys.push(k);
   };
 
-  for (const m of body.matchAll(/user\.keyboard\(\s*"((?:[^"\\]|\\.)*)"/g)) {
-    const seq = m[1];
-    // `"{ArrowDown}{ArrowDown}"` is two presses of one key; `" "` is Space.
-    for (const t of seq.matchAll(/\{(\w+)\}|(\s)/g)) add(t[1] ?? t[2]);
+  for (const seq of callArguments(body, "keyboard")) for (const k of pressesIn(seq, { typed: false })) add(k);
+  for (const seq of callArguments(body, "type")) for (const k of pressesIn(seq, { typed: true })) add(k);
+  // `user.tab()` and `user.tab({ shift: true })` both press Tab; the shifted form is Shift + Tab.
+  for (const m of body.matchAll(/user\.tab\(\s*(\{[^)]*\})?\s*\)/g)) {
+    add(/shift:\s*true/.test(m[1] ?? "") ? "Shift + Tab" : "Tab");
   }
-  // `user.tab()` and `user.tab({ shift: true })` press Tab; the shifted form is still Tab, noted as such.
-  if (/user\.tab\(\s*\{\s*shift:\s*true/.test(body)) add("Tab");
-  else if (/user\.tab\(/.test(body)) add("Tab");
 
   return keys;
 }
