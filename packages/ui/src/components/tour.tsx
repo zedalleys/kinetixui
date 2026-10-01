@@ -38,6 +38,13 @@ export interface TourProps {
 
 const SPOTLIGHT_PADDING = 8;
 
+/** `true` when the user asked for less motion. Safe on the server and anywhere `matchMedia` is absent. */
+function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function"
+    ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    : false;
+}
+
 const Tour: React.FC<TourProps> = ({
   steps,
   open,
@@ -98,7 +105,11 @@ const Tour: React.FC<TourProps> = ({
       const el = document.querySelector(step.target);
       if (el) {
         setRect(el.getBoundingClientRect());
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        // An explicit `behavior: "smooth"` overrides the CSS `scroll-behavior: auto` that the
+        // reduced-motion base layer sets, so the option has to be chosen rather than inherited:
+        // otherwise the one motion a reduced-motion user cannot look away from — the viewport
+        // itself travelling — is the one that still plays.
+        el.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "center" });
       } else {
         setRect(null);
       }
@@ -147,7 +158,7 @@ const Tour: React.FC<TourProps> = ({
     <>
       <div
         aria-hidden
-        className="pointer-events-none fixed z-overlay rounded-lg transition-all duration-fast"
+        className="pointer-events-none fixed z-overlay rounded-lg transition-[top,left,width,height,opacity] duration-fast ease-standard"
         style={spotlightStyle}
       />
       <div
@@ -157,7 +168,7 @@ const Tour: React.FC<TourProps> = ({
         aria-labelledby={titleId}
         tabIndex={-1}
         onKeyDown={trapTab}
-        className="fixed z-overlay w-80 rounded-lg border border-border bg-popover p-4 font-sans text-popover-foreground shadow-lg outline-none transition-all duration-fast"
+        className="fixed z-overlay w-80 rounded-lg border border-border bg-popover p-4 font-sans text-popover-foreground shadow-lg outline-none transition-[top,left,opacity] duration-fast ease-standard"
         style={cardStyle}
       >
         <p id={titleId} className="text-title-sm font-medium text-foreground">

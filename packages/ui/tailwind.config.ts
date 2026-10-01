@@ -129,6 +129,10 @@ export default {
       // Added alongside Tailwind's own numeric scales (z-10, opacity-50, …),
       // not replacing them — these are the token-backed semantic names.
       transitionDuration: {
+        // `instant` is the press/toggle tier from tokens/primitives/motion.json. It was generated
+        // into globals.css but never wired here, so the one duration meant for immediate feedback
+        // was the one nobody could reach — components fell back to Tailwind's untokenised 150ms.
+        instant: "var(--duration-instant)",
         fast: "var(--duration-fast)",
         base: "var(--duration-base)",
         slow: "var(--duration-slow)",
@@ -139,6 +143,13 @@ export default {
         // cubic-bezier(0,0,1,1) value, now token-backed instead of hardcoded
         linear: "var(--easing-linear)",
         standard: "var(--easing-standard)",
+        // Same gap as `instant`: enter/exit/emphasized are defined in the DTCG source and emitted
+        // as CSS variables, but were unreachable from a class. Directional easing is the whole
+        // point of the enter/exit pair — a surface that opens should decelerate and one that
+        // closes should accelerate, and without these you cannot say that in a utility.
+        enter: "var(--easing-enter)",
+        exit: "var(--easing-exit)",
+        emphasized: "var(--easing-emphasized)",
       },
       zIndex: {
         base: "var(--z-index-base)",
@@ -170,5 +181,40 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    /**
+     * Reduced motion, for everything this package ships.
+     *
+     * `packages/ui` ships no CSS of its own — components are class strings and consumers extend
+     * this config — so this base layer is the only place a library-wide guarantee can live.
+     * It is needed: `tailwindcss-animate` emits no `prefers-reduced-motion` rule at all, so every
+     * `animate-in` / `animate-out` on Dialog, Sheet, Popover, Dropdown, Tooltip and the rest ran at
+     * full motion in a consumer's app regardless of the operating-system setting.
+     *
+     * It shortens durations rather than removing motion, and that distinction is the safety
+     * property. `transition-duration: 0.01ms` still arrives at the same end state, so a Switch
+     * thumb is still translated, a checked box is still checked, and an IoT control still shows
+     * confirmed rather than requested — the interpolation goes, the information does not. That is
+     * what makes a blanket rule safe here, where `transition: none` would be a blunter instrument
+     * and `animation: none` an actively dangerous one: Radix unmounts an overlay on `animationend`,
+     * and an animation that never runs never fires it, so the overlay would stay in the tree.
+     *
+     * Components that need more than this still say so at their own call site with
+     * `motion-reduce:`, and `packages/iot` already does exactly that where a pulse or a bar carries
+     * meaning. This is the floor, not a replacement for that.
+     */
+    ({ addBase }: { addBase: (styles: Record<string, unknown>) => void }) => {
+      addBase({
+        "@media (prefers-reduced-motion: reduce)": {
+          "*, ::before, ::after": {
+            "animation-duration": "0.01ms !important",
+            "animation-iteration-count": "1 !important",
+            "transition-duration": "0.01ms !important",
+            "scroll-behavior": "auto !important",
+          },
+        },
+      });
+    },
+  ],
 } satisfies Config;

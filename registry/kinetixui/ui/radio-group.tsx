@@ -25,7 +25,7 @@ const RadioGroupItem = React.forwardRef<
   <RadioGroupPrimitive.Item
     ref={ref}
     className={cn(
-      "aspect-square size-[18px] rounded-full border-2 border-input text-action outline-none transition-colors",
+      "aspect-square size-[18px] rounded-full border-2 border-input text-action outline-none transition-colors duration-instant",
       "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
       "disabled:cursor-not-allowed disabled:opacity-disabled",
       "data-[state=checked]:border-action",
