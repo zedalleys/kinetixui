@@ -168,7 +168,12 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
               const failed = step.state === "current" && bad;
               return (
                 <li
-                  key={step.stage}
+                  // Keyed by POSITION, not stage. The track is three fixed slots, and on a terminal
+                  // stage `stepsFor` swaps the third from `confirmed` to `failed`/`timed-out`/
+                  // `unreachable`/`cancelled`. Keying by stage remounts that row, and a node that has
+                  // just mounted has no previous computed value to transition from — the failure, the
+                  // one stage change most worth seeing, would snap.
+                  key={index}
                   data-step={step.stage}
                   data-step-state={step.state}
                   aria-current={step.state === "current" ? "step" : undefined}
@@ -176,6 +181,9 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                     // `min-w-0` so a long stage word wraps inside the row instead of widening it;
                     // the reserved row height keeps the block the same size whether it wraps or not.
                     "flex w-full min-w-0 items-center sm:w-auto",
+                    // The row's own text colour carries the stage too: muted while ahead, full once
+                    // reached, destructive on failure. Without this the word snaps while the marker fades.
+                    "transition-colors duration-fast ease-out motion-reduce:transition-none",
                     compact ? "min-h-11 gap-1.5 text-label-lg sm:min-h-0" : "min-h-10 gap-2 text-label-lg sm:min-h-0",
                     step.state === "upcoming" ? "text-muted-foreground" : "text-foreground",
                     failed && "text-destructive",
@@ -185,13 +193,18 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                     <span
                       className={cn(
                         "inline-flex min-w-0 items-center gap-1.5 rounded-full px-2 py-0.5",
+                        "transition-colors duration-fast ease-out motion-reduce:transition-none",
                         step.state === "current" && (failed ? "bg-destructive/10 font-semibold" : "bg-primary/10 font-semibold"),
                       )}
                     >
                       <Glyph
                         name={STAGE_GLYPH[step.stage]}
                         size={14}
-                        className={cn(step.state === "upcoming" && "opacity-60", step.stage === "retrying" && pending && "animate-spin motion-reduce:animate-none")}
+                        className={cn(
+                          "transition-opacity duration-fast ease-out motion-reduce:transition-none",
+                          step.state === "upcoming" && "opacity-60",
+                          step.stage === "retrying" && pending && "animate-spin motion-reduce:animate-none",
+                        )}
                       />
                       <span className="min-w-0 break-words">{word}</span>
                     </span>
@@ -201,6 +214,10 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                       <span
                         className={cn(
                           "grid size-7 shrink-0 place-items-center rounded-full",
+                          // Not `transition-colors`: the `current` marker's ring is a Tailwind `ring-*`,
+                          // which compiles to box-shadow, and box-shadow is not in that utility's property
+                          // list — the fill would fade while the ring snapped on.
+                          "transition-[background-color,border-color,box-shadow] duration-fast ease-out motion-reduce:transition-none",
                           step.state === "done" && "bg-muted",
                           step.state === "current" && (failed ? "bg-destructive/10 ring-1 ring-inset ring-destructive/40" : "bg-primary/10 ring-1 ring-inset ring-primary/40"),
                           step.state === "upcoming" && "border border-dashed border-border",
@@ -209,7 +226,11 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                         <Glyph
                           name={STAGE_GLYPH[step.stage]}
                           size={16}
-                          className={cn(step.state === "upcoming" && "opacity-60", step.stage === "retrying" && pending && "animate-spin motion-reduce:animate-none")}
+                          className={cn(
+                          "transition-opacity duration-fast ease-out motion-reduce:transition-none",
+                          step.state === "upcoming" && "opacity-60",
+                          step.stage === "retrying" && pending && "animate-spin motion-reduce:animate-none",
+                        )}
                         />
                       </span>
                       <span
