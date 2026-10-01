@@ -52,6 +52,7 @@ class KinetixTheme {
     static const colorSemanticError = Color(0xFFEC5047); /** figma: error (NOT red.500 #c60a0a — Figma keeps error as its own value) */
     static const colorSemanticErrorContainer = Color(0xFFFEF3F2); /** figma: errorContainer */
     static const colorSemanticInfoContainer = Color(0xFFF0F7FF);
+    static const colorSemanticMutedOnContainer = Color(0xFF616161); /** secondary text on a tinted container (bg-primary/10, bg-destructive/10 and their /5 variants) — IoT device, group and activity cards. --muted-foreground (neutral.600 #6d6d6d) is tuned against --background and --muted and clears AA there at 5.17:1, but a 10% tint eats the margin: 4.43:1 on bg-primary/10 and 4.33:1 on bg-destructive/10. This is one step darker and clears AA on every tint those surfaces use, worst case 4.79:1 on bg-destructive/10 over --muted, while staying visibly lighter than --foreground. Exposed as text-muted-on-container. */
     static const colorSemanticOnError = Color(0xFFFEF3F2); /** figma: onError */
     static const colorSemanticOnErrorContainer = Color(0xFFEC5047); /** figma: onErrorContainer */
     static const colorSemanticOnInfoContainer = Color(0xFF395A70); /** text on a tinted info surface (bg-info/10) — Banner/Inform information. --info itself is only 4.15:1 on its own 10% tint; this clears AA. Exposed as text-info-on-container. */

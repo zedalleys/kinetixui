@@ -162,7 +162,7 @@ const ActivityTimeline = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                     ) : null;
 
                     const kindLabel = (
-                      <span data-kind-label="" className="inline-flex items-center gap-1 text-label-md text-muted-foreground">
+                      <span data-kind-label="" className="inline-flex items-center gap-1 text-label-md text-muted-on-container">
                         <Glyph name={KIND_GLYPH[kind] ?? "dot"} size={12} />
                         <span>{humanize(kind)}</span>
                       </span>
@@ -170,15 +170,15 @@ const ActivityTimeline = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
 
                     const message = (
                       <p className={cn("m-0 break-words text-foreground", compact ? "truncate text-body-sm" : "text-title-sm")}>
-                        {device ? <span className="font-normal text-muted-foreground">{device}: </span> : null}
+                        {device ? <span className="font-normal text-muted-on-container">{device}: </span> : null}
                         {event.message}
                       </p>
                     );
 
                     const extras = (
                       <>
-                        {who ? <p className="m-0 break-words text-body-sm text-muted-foreground">By {who}</p> : null}
-                        {event.detail ? <p className="m-0 break-words text-body-sm text-muted-foreground">{event.detail}</p> : null}
+                        {who ? <p className="m-0 break-words text-body-sm text-muted-on-container">By {who}</p> : null}
+                        {event.detail ? <p className="m-0 break-words text-body-sm text-muted-on-container">{event.detail}</p> : null}
                         {renderDetail?.(event)}
                       </>
                     );

@@ -87,6 +87,17 @@ const ALPHA_TEXT_PAIRS = [
   ["secondary", "secondary-foreground", 1, "background", "Button Secondary hover"],
   ["secondary", "secondary-foreground", 1, "background", "Button Secondary pressed"],
   ["on-info-container", "info", 0.1, "background", "Banner/Inform information"],
+  // IoT device, group and activity cards tint their surface to carry state. `--muted-foreground`
+  // is tuned against `--background` and `--muted` and has no margin left on a 10% tint (4.43:1 on
+  // primary, 4.33:1 on destructive), which is how three contrast violations reached main unseen.
+  // `--semantic-muted-on-container` is the value those surfaces use; these rows keep it honest
+  // statically, so the class of bug no longer depends on a browser pass running.
+  ["muted-on-container", "primary", 0.1, "background", "IoT DeviceControlCard active"],
+  ["muted-on-container", "primary", 0.05, "background", "IoT DeviceGroupCard active"],
+  ["muted-on-container", "primary", 0.1, "muted", "IoT group row selected on a muted page"],
+  ["muted-on-container", "destructive", 0.1, "background", "IoT ActivityTimeline failed block"],
+  ["muted-on-container", "destructive", 0.05, "background", "IoT DeviceGroupCard attention"],
+  ["muted-on-container", "destructive", 0.1, "muted", "IoT failed block on a muted page"],
 ];
 const NON_TEXT_PAIRS = [
   ["accent", "background"], // hover fill on transparent controls

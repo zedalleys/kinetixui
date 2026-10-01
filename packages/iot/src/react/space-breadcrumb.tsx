@@ -21,7 +21,13 @@ import { withDisplayName } from "./display-name";
  */
 export interface SpaceBreadcrumbProps extends Omit<React.HTMLAttributes<HTMLElement>, "children"> {
   path: readonly KinetixSpacePathItem[] | null | undefined;
-  /** Accessible name of the `<nav>`. Defaults to "Location". */
+  /**
+   * Accessible name of the `<nav>`. Defaults to `Location: <current place>` — the last item in
+   * `path` — so that several breadcrumbs on one screen are distinguishable. A page listing three
+   * places renders three navigation landmarks, and three identically-named ones are no more use
+   * than none: a screen-reader user picking from the landmark list needs to know which place each
+   * one belongs to. Pass `label` to override.
+   */
   label?: string;
   /** Anchor target for an ancestor. Takes precedence over `onNavigate`. */
   hrefFor?: (item: KinetixSpacePathItem) => string;
@@ -33,10 +39,14 @@ const LINK =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background";
 
 const SpaceBreadcrumb = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLElement, SpaceBreadcrumbProps>(
-  ({ path, label = "Location", hrefFor, onNavigate, className, ...props }, ref) => {
+  ({ path, label, hrefFor, onNavigate, className, ...props }, ref) => {
     const items = Array.isArray(path) ? path : [];
+    // The current place names the landmark. Falls back to the bare word when there is no path,
+    // because an empty breadcrumb still has to be called something.
+    const current = items.length > 0 ? items[items.length - 1].name : null;
+    const navLabel = label ?? (current ? `Location: ${current}` : "Location");
     return (
-      <nav ref={ref} aria-label={label} className={cn("min-w-0 font-sans", className)} {...props}>
+      <nav ref={ref} aria-label={navLabel} className={cn("min-w-0 font-sans", className)} {...props}>
         <ol className="m-0 flex list-none flex-wrap items-center gap-x-0.5 gap-y-0 p-0">
           {items.map((item, index) => {
             const last = index === items.length - 1;

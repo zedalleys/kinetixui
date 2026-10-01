@@ -132,7 +132,7 @@ const DeviceGroupCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
         {tile}
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate text-title-sm text-foreground">{name}</span>
-          <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-body-sm text-muted-foreground">
+          <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-body-sm text-muted-on-container">
             {kind ? <span>{kind}</span> : null}
             <span className={cn("tabular-nums", active && "text-foreground")}>{countLabel}</span>
             {summary ? <span className="truncate">{summary}</span> : null}
@@ -146,16 +146,16 @@ const DeviceGroupCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
         <div className="flex items-start gap-4">
           {tile}
           <span className="flex min-w-0 flex-1 flex-col gap-0.5 pt-0.5">
-            {kind ? <span className="text-label-md text-muted-foreground">{kind}</span> : null}
+            {kind ? <span className="text-label-md text-muted-on-container">{kind}</span> : null}
             <span className="truncate text-title-md text-foreground">{name}</span>
           </span>
           {selected ? <Glyph name="check" size={20} className="mt-1 text-primary" /> : null}
         </div>
 
         <div className="flex flex-col gap-2">
-          <p className="flex flex-wrap items-baseline gap-x-2 text-body-sm text-muted-foreground">
+          <p className="flex flex-wrap items-baseline gap-x-2 text-body-sm text-muted-on-container">
             {deviceCount === 0 ? (
-              <span className="text-title-md text-muted-foreground">{countLabel}</span>
+              <span className="text-title-md text-muted-on-container">{countLabel}</span>
             ) : (
               <>
                 <span className="text-headline-lg font-semibold tabular-nums text-foreground">{activeCount}</span>
@@ -171,7 +171,7 @@ const DeviceGroupCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
         </div>
 
         {attentionChip ? <div className="flex">{attentionChip}</div> : null}
-        {summary ? <p className="truncate text-body-sm text-muted-foreground">{summary}</p> : null}
+        {summary ? <p className="truncate text-body-sm text-muted-on-container">{summary}</p> : null}
       </>
     );
 
