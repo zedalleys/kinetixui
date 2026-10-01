@@ -11,7 +11,7 @@ const InputOTP = React.forwardRef<
 >(({ className, containerClassName, ...props }, ref) => (
   <OTPInput
     ref={ref}
-    containerClassName={cn("flex items-center gap-2 has-[:disabled]:opacity-disabled", containerClassName)}
+    containerClassName={cn("flex flex-wrap items-center gap-2 has-[:disabled]:opacity-disabled", containerClassName)}
     className={cn("disabled:cursor-not-allowed", className)}
     {...props}
   />
@@ -19,7 +19,15 @@ const InputOTP = React.forwardRef<
 InputOTP.displayName = "InputOTP";
 
 const InputOTPGroup = React.forwardRef<React.ElementRef<"div">, React.ComponentPropsWithoutRef<"div">>(
-  ({ className, ...props }, ref) => <div ref={ref} className={cn("flex items-center", className)} {...props} />,
+  ({ className, ...props }, ref) => (
+    // `flex-wrap` costs nothing at a normal text size — six 36px slots fit the narrowest phone with room
+    // to spare — and rescues the case that measured badly: at 2x the default font size on a 390px
+    // viewport the slots are 72px each, the row is 432px, and the page gained 106px of horizontal
+    // scrolling. A second row of slots is worse-looking than one; a form the reader has to scroll
+    // sideways to type a code into is worse than that. The group's rounded ends and shared dividers are
+    // written for a single row, so a wrapped row shows square outer corners: deliberate, and the price.
+    <div ref={ref} className={cn("flex flex-wrap items-center", className)} {...props} />
+  ),
 );
 InputOTPGroup.displayName = "InputOTPGroup";
 

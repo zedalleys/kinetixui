@@ -65,6 +65,14 @@
  * using the scale has it — and converting the scale is a library-wide change whose consequences at 200%
  * are unverified for the other 89 components. It is recorded as a finding and left to its own slice.
  *
+ * ── And once at phone width ─────────────────────────────────────────────────
+ *
+ * Every form control is also loaded at 390px and doubled there, because a control can absorb its text
+ * perfectly well at desktop width and still push the page sideways on a phone. One did: six InputOTP slots
+ * at 72px make a 432px row, and the document gained 106px of horizontal scrolling — a reader with large
+ * text scrolling left and right to type an SMS code. The slots wrap now, and this is the measurement that
+ * says so.
+ *
  * What must not happen meanwhile is those five quietly counting as large-text-verified. They are measured
  * here in full, and every rule except text growth is asserted against them; `TEXT_SCALE_PENDING` names
  * them, and the check fails if one of them *starts* scaling — so the day the scale is fixed, this file is
@@ -212,6 +220,7 @@ const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_C
 const problems = [];
 const rows = [];
 const formRows = [];
+const narrowRows = [];
 
 /** Open a story at the default root size; the caller doubles it. */
 async function open(story, waitFor) {
@@ -392,6 +401,31 @@ for (const subject of FORM_SUBJECTS) {
   );
 }
 
+/**
+ * Phone width, doubled. Only the page-level consequence is judged here: a control that needs more room
+ * than the viewport has must find it by wrapping or scrolling itself, not by making the whole document
+ * scroll sideways.
+ */
+const NARROW = { width: 390, height: 844 };
+for (const subject of FORM_SUBJECTS) {
+  const page = await browser.newPage({ viewport: NARROW });
+  await page.goto(`${base}/iframe.html?id=${subject.story}&viewMode=story`, { waitUntil: "networkidle" });
+  await page.waitForSelector(subject.control, { timeout: 15_000 });
+  await setRootFontSize(page, 16 * SCALE);
+  await page.waitForTimeout(200);
+  const overflowX = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  if (overflowX > 0) {
+    problems.push(
+      `${subject.component} (${subject.story}): ${overflowX}px of horizontal page overflow at ` +
+        `${NARROW.width}px wide and ${SCALE}x text.`,
+    );
+  }
+  narrowRows.push(`  ${subject.component.padEnd(12)} overflowX ${overflowX}px`);
+  await page.close();
+}
+
 /** A pending entry that is not measured at all would be an exclusion nobody checks. */
 for (const name of TEXT_SCALE_PENDING) {
   if (!FORM_SUBJECTS.some((s) => s.component === name)) {
@@ -407,6 +441,8 @@ for (const r of rows) console.log(r);
 console.log(`large-text — ${FORM_SUBJECTS.length} form controls at ${SCALE}x the default font size:`);
 for (const r of formRows) console.log(r);
 console.log(`  (* text pinned by the px type scale — measured, not claimed; see TEXT_SCALE_PENDING)`);
+console.log(`large-text — the same controls at ${NARROW.width}px wide and ${SCALE}x text:`);
+for (const r of narrowRows) console.log(r);
 
 if (problems.length) {
   console.error(`\nlarge-text FAILED:\n  ${problems.join("\n  ")}`);

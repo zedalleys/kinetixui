@@ -135,6 +135,24 @@ describe("Input and Textarea state", () => {
   });
 });
 
+describe("InputOTP layout", () => {
+  it("lets its slots wrap rather than push the page sideways", () => {
+    render(
+      <InputOTP maxLength={6} aria-label="One-time code">
+        <InputOTPGroup data-testid="group">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <InputOTPSlot key={i} index={i} />
+          ))}
+        </InputOTPGroup>
+      </InputOTP>,
+    );
+    // Measured at 390px with the root font size doubled: six 72px slots made a 432px row and the document
+    // gained 106px of horizontal scrolling. jsdom cannot see that; what it can hold is the class that
+    // fixes it, so the geometry check in scripts/large-text.mjs and this assertion fail together.
+    expect(screen.getByTestId("group")).toHaveClass("flex-wrap");
+  });
+});
+
 describe("Label", () => {
   it("names the control it points at, and the one it wraps", () => {
     render(
