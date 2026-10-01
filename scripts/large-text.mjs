@@ -508,7 +508,15 @@ for (const entry of OPEN_STATES) {
         const afterFont = await page.evaluate((sel) => parseFloat(getComputedStyle(document.querySelector(sel)).fontSize), entry.surface);
         const computedDir = await page.evaluate((sel) => getComputedStyle(document.querySelector(sel)).direction, entry.surface);
 
-        if (computedDir !== dir) {
+        const stampedDir = await page.evaluate((sel) => document.querySelector(sel).getAttribute("dir"), entry.surface);
+        if (entry.stampsDir) {
+          // These resolve direction from React context and write it onto the content, which overrides
+          // whatever the document says. With no KinetixDirectionProvider in the story there is nothing
+          // for them to read, so the correct expectation is the stamp itself — not the document's dir.
+          if (!stampedDir) {
+            problems.push(`${where}: expected this surface to carry its own dir attribute (see stampsDir in open-states.mjs); it has none.`);
+          }
+        } else if (computedDir !== dir) {
           problems.push(`${where}: the portaled surface computes direction ${computedDir} with the document set to ${dir}.`);
         }
         if (after.overflowX !== 0) problems.push(`${where}: ${after.overflowX}px of horizontal page overflow at ${SCALE}x text.`);
@@ -519,7 +527,7 @@ for (const entry of OPEN_STATES) {
         }
         overlayRows.push(
           `  ${entry.component.padEnd(14)} ${viewport.label.padEnd(7)} ${dir}  ${before.w}x${before.h} -> ${after.w}x${after.h}  ` +
-            `text ${beforeFont}px -> ${afterFont}px  dir=${computedDir}  overflowX=${after.overflowX}px`,
+            `text ${beforeFont}px -> ${afterFont}px  dir=${computedDir}${entry.stampsDir ? ` (stamped ${stampedDir})` : ""}  overflowX=${after.overflowX}px`,
         );
       } catch (err) {
         problems.push(`${where}: ${String(err.message).split("\n")[0]}`);

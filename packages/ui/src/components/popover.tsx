@@ -25,7 +25,13 @@ const PopoverContent = React.forwardRef<
       // what kind of thing opened and nothing about what is in it. It is the floor, not the goal.
       aria-label={props["aria-label"] ?? (props["aria-labelledby"] ? undefined : "Popover")}
       className={cn(
-        "z-overlay w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none font-sans",
+        // A surface wider than the window is not usable. Measured at 390px with the root font size
+        // doubled: this came out 576px, because `w-72` is rem and doubles with the text, and the
+        // context menu 416px — pushing the page 186px sideways, so a reader who asked for large text
+        // had to scroll horizontally to see a popover. Radix publishes the room it has as
+        // `--radix-popper-available-width`, so the cap is its own measurement rather than a viewport
+        // guess, and it binds only when the surface would otherwise overflow.
+        "z-overlay w-72 max-w-[var(--radix-popper-available-width)] rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none font-sans",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=open]:duration-fast data-[state=open]:ease-enter data-[state=closed]:duration-instant data-[state=closed]:ease-exit",
         // `data-side` is the side Radix RESOLVED the surface onto — it is already physical, having been
         // flipped for direction and collisions before it reaches the DOM. The slide must therefore stay

@@ -66,6 +66,14 @@ export const OVERLAY_FAMILY = [
  * focus trap to either for symmetry would be a regression, not a fix. The menus manage focus themselves
  * without trapping Tab in the DOM sense, so they are checked for focus entry and not for containment.
  *
+ * `stampsDir` marks the surfaces that write a `dir` attribute of their own onto their content. The three
+ * menus do; Dialog, Sheet, Popover and Tooltip do not. It matters because an explicit attribute beats
+ * inherited CSS: an app that sets `dir="rtl"` on <html> and does not also wrap in
+ * `KinetixDirectionProvider` gets menus stamped `dir="ltr"`, so they read left-to-right inside a
+ * right-to-left page. Measured, both widths. That is the concrete form of the rule RTL.md states — the
+ * provider is not optional — and the check below asserts the stamp exists rather than pretending the
+ * document attribute reached it.
+ *
  * `surface` is measured, not guessed: each selector below is what that component actually renders into the
  * portal, read out of a real browser. Popover's content carries `role="dialog"`; Tooltip's carries
  * `role="tooltip"`; the three menus carry `role="menu"`; AlertDialog is `role="alertdialog"`.
@@ -78,9 +86,9 @@ export const OPEN_STATES = [
   { component: "modal", modal: true, story: "overlays-modal--default", state: "open modal", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
   { component: "popover", modal: false, story: "overlays-popover--default", state: "open popover", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
   { component: "tooltip", modal: false, story: "overlays-tooltip--default", state: "visible tooltip", open: { focus: "#storybook-root button" }, surface: '[role="tooltip"]' },
-  { component: "dropdown-menu", modal: false, story: "overlays-dropdownmenu--default", state: "open menu", open: { click: "#storybook-root button" }, surface: '[role="menu"]' },
-  { component: "context-menu", modal: false, story: "overlays-contextmenu--default", state: "open context menu", open: { rightClick: "#storybook-root [data-state]" }, surface: '[role="menu"]' },
-  { component: "menubar", modal: false, story: "navigation-menubar--default", state: "open menubar menu", open: { click: '#storybook-root [role="menuitem"]' }, surface: '[role="menu"]' },
+  { component: "dropdown-menu", modal: false, stampsDir: true, story: "overlays-dropdownmenu--default", state: "open menu", open: { click: "#storybook-root button" }, surface: '[role="menu"]' },
+  { component: "context-menu", modal: false, stampsDir: true, story: "overlays-contextmenu--default", state: "open context menu", open: { rightClick: "#storybook-root [data-state]" }, surface: '[role="menu"]' },
+  { component: "menubar", modal: false, stampsDir: true, story: "navigation-menubar--default", state: "open menubar menu", open: { click: '#storybook-root [role="menuitem"]' }, surface: '[role="menu"]' },
 ];
 
 /** The one action key each entry carries, so a malformed entry is a failure rather than a silent no-op. */
@@ -168,7 +176,15 @@ export async function openSurface(page, entry, { timeout = 10_000 } = {}) {
       offscreen: r.left < -1 || r.top < -1 || r.right > document.documentElement.clientWidth + 1 || r.bottom > document.documentElement.clientHeight + 1,
       overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       // Text that no longer fits the box it is in.
-      clipped: [...el.querySelectorAll("*")].some((n) => n.scrollWidth > n.clientWidth + 1 && getComputedStyle(n).overflowX === "hidden"),
+      // Visually-hidden text is a 1x1 box with its content clipped — that is what `sr-only` IS, so
+      // counting it would report every Close button's screen-reader label as a defect. Measured: the
+      // first version of this check did exactly that, on Dialog and Sheet, in all four combinations.
+      clipped: [...el.querySelectorAll("*")].some((n) => {
+        const cs = getComputedStyle(n);
+        if (cs.overflowX !== "hidden" && cs.overflowY !== "hidden") return false;
+        if (n.clientWidth <= 1 || n.clientHeight <= 1) return false;
+        return n.scrollWidth > n.clientWidth + 1 || n.scrollHeight > n.clientHeight + 1;
+      }),
       focusInside: Boolean(active && el.contains(active)),
       focusInAriaHidden: Boolean(active && active !== document.body && inAriaHidden(active)),
       focusDescription: active ? `${active.tagName.toLowerCase()}${active.getAttribute("role") ? `[${active.getAttribute("role")}]` : ""}` : "none",
