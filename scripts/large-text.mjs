@@ -29,10 +29,46 @@
  *
  * ── What it claims ─────────────────────────────────────────────────────────
  *
- * Subjects are the selection-control family, named beside `SUBJECTS` below — a marked passage runs from
- * its marker to the end of the file, so the names that decide the claim have to live after it, not here.
- * The claim and the measurement are therefore two lists that could drift apart, and
- * `assertClaimMatchesSubjects()` reads this file back and fails if they ever do.
+ * Subjects are named beside their lists below — a marked passage runs from its marker to the end of the
+ * file, so the names that decide the claim have to live after it, not here. The claim and the measurement
+ * are therefore two lists that could drift apart, and `assertClaimMatchesSubjects()` reads this file back
+ * and fails if they ever do.
+ *
+ * ── Two families, two models, and why one ratio will not do ─────────────────
+ *
+ * A selection control is a box whose whole job is to be a box: a checkbox that does not grow with its own
+ * label has shrunk relative to it, so `height x 2` is the right question and 1.00 is the bug.
+ *
+ * A text field is not that. Its width comes from its container and its height from its content plus its
+ * padding, so a field that goes 46px -> 70px has done the right thing and would fail a 1.8 ratio rule.
+ * Demanding 2.0 of a field would be demanding a redesign in the name of a requirement that does not exist.
+ * What a field is held to instead is what a reader at 200% actually needs: its own text grows, its box
+ * absorbs that growth, nothing is clipped or truncated, an overlay still fits on screen, and a label, its
+ * help text and its error message do not collide. The last of those is a rule no ratio could express.
+ *
+ * ── Why five form controls are measured but not claimed ─────────────────────
+ *
+ * The second rule above is the one that bites, and it exposed something bigger than this file's subjects.
+ * `packages/ui/tailwind.config.ts` carries the Material-3 type scale as **px** —
+ * `"body-md": ["14px", { lineHeight: "20px" }]` — while Tailwind's own `text-sm` is `0.875rem`. Measured
+ * at a 32px root:
+ *
+ *     Label (text-sm)                14px -> 28px
+ *     FormLabel / FormDescription    14px -> 28px
+ *     InputOTP slot (text-sm)        14px -> 28px
+ *     Input / Textarea (body-md)     14px -> 14px
+ *     Select's value (body-md)       14px -> 14px
+ *     MultiSelect's chips (label-sm) 12px -> 12px
+ *
+ * So inside one field the label doubles and the value it labels does not: at 200% a form reads at 28px
+ * with its own answers at 14px. That is the type scale's defect, not these components' — every component
+ * using the scale has it — and converting the scale is a library-wide change whose consequences at 200%
+ * are unverified for the other 89 components. It is recorded as a finding and left to its own slice.
+ *
+ * What must not happen meanwhile is those five quietly counting as large-text-verified. They are measured
+ * here in full, and every rule except text growth is asserted against them; `TEXT_SCALE_PENDING` names
+ * them, and the check fails if one of them *starts* scaling — so the day the scale is fixed, this file is
+ * forced to notice rather than being free to keep understating.
  *
  * kx-verify: largeText
  */
@@ -42,6 +78,7 @@ import { readFileSync, existsSync, statSync } from "node:fs";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
+import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
@@ -50,6 +87,10 @@ if (!existsSync(join(staticDir, "index.json"))) {
   console.error("apps/docs/storybook-static not found — run `pnpm build-storybook` first.");
   process.exit(1);
 }
+
+// Most stories import the built package, so a measurement taken against a stale `dist` would be
+// evidence about code that is no longer in the repository. See scripts/ui-dist-stamp.mjs.
+assertUiDistMatchesSource("large-text");
 
 /**
  * The selection-control family: <Checkbox>, <RadioGroup>, <Switch>, <Toggle> and <ToggleGroup>.
@@ -65,6 +106,58 @@ const SUBJECTS = [
   { component: "Toggle", story: "controls-actions-toggle--default", control: "button[data-state]" },
   { component: "ToggleGroup", story: "controls-actions-togglegroup--default", control: "button[data-state]" },
 ];
+
+/**
+ * The form family. Claimed for `largeText`: <Slider>, <InputOTP> and <Label>.
+ *
+ * Input, Textarea, Select, MultiSelect and Form are measured too, and named in `TEXT_SCALE_PENDING`
+ * rather than in angle brackets, because `gen-verification.mjs` reads the bracketed names out of this
+ * passage as the claim — a component whose text cannot grow must not appear in it.
+ *
+ * `control` is the box that must absorb its text, `text` the element that actually renders the
+ * user-visible text (a trigger's font-size is inherited and says nothing about the span inside it).
+ * `model: "control"` switches to the selection-control rule for subjects with no text of their own.
+ * `opens` names a trigger to click so an overlay is on screen at 200%, `inside` descendants that must
+ * stay within their container, and `stack` a field column whose parts must not collide.
+ */
+const FORM_SUBJECTS = [
+  { component: "Input", story: "form-inputs-input--playground", control: "input", text: "input" },
+  { component: "Textarea", story: "form-inputs-textarea--playground", control: "textarea", text: "textarea" },
+  {
+    component: "Select",
+    story: "form-inputs-select--default",
+    control: "[role=combobox]",
+    text: "[role=combobox] span",
+    opens: "[role=combobox]",
+    overlay: "[role=listbox]",
+  },
+  { component: "Slider", story: "form-inputs-slider--default", control: "[role=slider]", model: "control" },
+  {
+    component: "InputOTP",
+    story: "form-inputs-inputotp--default",
+    control: "[class*='size-9']",
+    model: "control",
+    text: "[class*='size-9']",
+  },
+  {
+    component: "MultiSelect",
+    story: "form-inputs-multiselect--default",
+    control: "[role=combobox]",
+    text: "[role=combobox] span",
+    inside: "[role=combobox] > *",
+  },
+  { component: "Label", story: "foundations-label--default", control: "label", text: "label" },
+  // The Form story is the one place a label, a control, its help text and its error message share a
+  // column, which is where 200% text makes them collide if anything in that stack is sized in px.
+  { component: "Form", story: "form-inputs-form--default", control: "input", text: "input", stack: "form" },
+];
+
+/**
+ * Form controls whose visible text is pinned by the px type scale described above. Every other rule is
+ * asserted against them; they simply do not earn the `largeText` claim while their text cannot grow.
+ * The list is checked in both directions, so it shrinks by failing rather than by being remembered.
+ */
+const TEXT_SCALE_PENDING = new Set(["Input", "Textarea", "Select", "MultiSelect", "Form"]);
 
 /** 200% is the resize target WCAG 1.4.4 names, and the size at which a px control is unmistakably wrong. */
 const SCALE = 2;
@@ -86,23 +179,29 @@ await new Promise((r) => server.listen(0, "127.0.0.1", r));
 const base = `http://127.0.0.1:${server.address().port}`;
 
 /**
- * The verification claim is derived from prose; the measurements are derived from `SUBJECTS`. Nothing
- * otherwise keeps the two in step, and a claim that outruns its measurement is the exact failure this
- * whole evidence model exists to prevent — so it is checked rather than trusted.
+ * The verification claim is derived from prose; the measurements are derived from the subject lists.
+ * Nothing otherwise keeps the two in step, and a claim that outruns its measurement is the exact failure
+ * this whole evidence model exists to prevent — so it is checked rather than trusted.
  */
 function assertClaimMatchesSubjects() {
   const self = readFileSync(fileURLToPath(import.meta.url), "utf8");
   // The same region gen-verification.mjs reads: a passage runs from its marker to the end of the file.
   const passage = self.slice(self.indexOf("kx-verify: largeText"));
   const named = new Set([...passage.matchAll(/<([A-Z][A-Za-z0-9]*)>/g)].map((m) => m[1]));
-  const measured = new Set(SUBJECTS.map((s) => s.component));
-  const missing = [...measured].filter((c) => !named.has(c));
-  const extra = [...named].filter((c) => !measured.has(c));
+  // The claim is what is measured AND passes the text-growth rule — a pending subject is measured in
+  // full but must not reach verification.json, so it must not appear in angle brackets.
+  const claimed = new Set(
+    [...SUBJECTS, ...FORM_SUBJECTS].map((s) => s.component).filter((c) => !TEXT_SCALE_PENDING.has(c)),
+  );
+  const missing = [...claimed].filter((c) => !named.has(c));
+  const extra = [...named].filter((c) => !claimed.has(c));
   if (missing.length || extra.length) {
     console.error(
       "large-text: the verification claim and the measured subjects disagree.\n" +
         (missing.length ? `  measured but not claimed: ${missing.join(", ")}\n` : "") +
-        (extra.length ? `  claimed but not measured: ${extra.join(", ")}\n` : ""),
+        (extra.length
+          ? `  claimed but not measured, or claimed while pending: ${extra.join(", ")}\n`
+          : ""),
     );
     process.exit(1);
   }
@@ -112,11 +211,20 @@ assertClaimMatchesSubjects();
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH });
 const problems = [];
 const rows = [];
+const formRows = [];
+
+/** Open a story at the default root size; the caller doubles it. */
+async function open(story, waitFor) {
+  const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
+  await page.goto(`${base}/iframe.html?id=${story}&viewMode=story`, { waitUntil: "networkidle" });
+  await page.waitForSelector(waitFor, { timeout: 15_000 });
+  return page;
+}
+
+const setRootFontSize = (page, px) => page.evaluate((v) => { document.documentElement.style.fontSize = `${v}px`; }, px);
 
 for (const subject of SUBJECTS) {
-  const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
-  await page.goto(`${base}/iframe.html?id=${subject.story}&viewMode=story`, { waitUntil: "networkidle" });
-  await page.waitForSelector(subject.control, { timeout: 15_000 });
+  const page = await open(subject.story, subject.control);
 
   const measure = () =>
     page.evaluate((sel) => {
@@ -139,9 +247,7 @@ for (const subject of SUBJECTS) {
     }, subject.control);
 
   const before = await measure();
-  await page.evaluate((s) => {
-    document.documentElement.style.fontSize = `${16 * s}px`;
-  }, SCALE);
+  await setRootFontSize(page, 16 * SCALE);
   // Let layout settle before reading geometry back.
   await page.waitForTimeout(200);
   const after = await measure();
@@ -160,14 +266,155 @@ for (const subject of SUBJECTS) {
   rows.push(`  ${subject.component.padEnd(12)} ${before.w}x${before.h} -> ${after.w}x${after.h}  ratio ${ratio.toFixed(2)}`);
 }
 
+for (const subject of FORM_SUBJECTS) {
+  const page = await open(subject.story, subject.control);
+
+  const measure = (sel, textSel, inside, stack) =>
+    page.evaluate(([s, textSelector, insideSel, stackSel]) => {
+      const el = document.querySelector(s);
+      const r = el.getBoundingClientRect();
+      const textEl = textSelector ? document.querySelector(textSelector) : null;
+      // A field is clipped when its own content does not fit the space it reports having. A textarea
+      // scrolls by design, so its own overflow is excluded and only its box growth is judged.
+      const scrolls = getComputedStyle(el).overflowY === "auto" || el.tagName === "TEXTAREA";
+      const truncated = !scrolls && (el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1);
+      const escaped = insideSel
+        ? [...document.querySelectorAll(insideSel)].filter((child) => {
+            const c = child.getBoundingClientRect();
+            const p = child.parentElement.getBoundingClientRect();
+            return c.right > p.right + 1 || c.bottom > p.bottom + 1 || c.left < p.left - 1 || c.top < p.top - 1;
+          }).length
+        : 0;
+      // Within one field's column, no two of label / control / help / error may share pixels.
+      const collisions = (() => {
+        if (!stackSel) return 0;
+        const root = document.querySelector(stackSel);
+        if (!root) return 0;
+        const boxes = [...root.querySelectorAll("label, input, textarea, p")].map((n) => n.getBoundingClientRect());
+        let hits = 0;
+        for (let i = 0; i < boxes.length; i++) {
+          for (let j = i + 1; j < boxes.length; j++) {
+            const a = boxes[i], b = boxes[j];
+            // 1px of tolerance: adjacent boxes legitimately share an edge.
+            if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) hits++;
+          }
+        }
+        return hits;
+      })();
+      return {
+        w: +r.width.toFixed(1),
+        h: +r.height.toFixed(1),
+        fontSize: textEl ? parseFloat(getComputedStyle(textEl).fontSize) : 0,
+        truncated,
+        escaped,
+        collisions,
+        overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    }, [sel, textSel ?? null, inside ?? null, stack ?? null]);
+
+  const before = await measure(subject.control, subject.text, subject.inside, subject.stack);
+  await setRootFontSize(page, 16 * SCALE);
+  await page.waitForTimeout(200);
+  const after = await measure(subject.control, subject.text, subject.inside, subject.stack);
+
+  const where = `${subject.component} (${subject.story})`;
+  const textGrowth = after.fontSize - before.fontSize;
+  const boxGrowth = after.h - before.h;
+  const pending = TEXT_SCALE_PENDING.has(subject.component);
+
+  if (subject.model === "control") {
+    // No text of its own to judge, so the selection-control rule applies: the box itself must scale.
+    const ratio = before.h > 0 ? after.h / before.h : 0;
+    if (ratio < MIN_RATIO) {
+      problems.push(`${where}: control did not grow with the text — ${before.w}x${before.h} -> ${after.w}x${after.h} (ratio ${ratio.toFixed(2)}, expected >= ${MIN_RATIO}).`);
+    }
+  } else if (pending) {
+    // The claim is withheld from these, so the thing to enforce is that the reason still holds. If the
+    // type scale is converted to rem, this fires and the list has to shrink.
+    if (textGrowth > 1) {
+      problems.push(
+        `${where}: its text now scales (${before.fontSize}px -> ${after.fontSize}px), so it no longer ` +
+          `belongs in TEXT_SCALE_PENDING — remove it there and add <${subject.component}> to the claim.`,
+      );
+    }
+  } else {
+    if (textGrowth < before.fontSize * (MIN_RATIO - 1)) {
+      problems.push(
+        `${where}: its text did not grow with the reader's — ${before.fontSize}px -> ${after.fontSize}px. ` +
+          `A px font size does this; use rem.`,
+      );
+    }
+    // Whatever the text gained, the box absorbed. A box pinned in px gains nothing and fails here; a box
+    // whose padding stays put but whose height follows the text passes, which is the correct outcome.
+    if (boxGrowth + 1 < textGrowth) {
+      problems.push(
+        `${where}: the box did not absorb its own text at ${SCALE}x — text grew ${textGrowth.toFixed(1)}px, ` +
+          `the box grew ${boxGrowth.toFixed(1)}px (${before.w}x${before.h} -> ${after.w}x${after.h}).`,
+      );
+    }
+  }
+
+  // These hold for every form control, claimed or pending: a reader at 200% meets them either way.
+  if (after.truncated) problems.push(`${where}: content no longer fits the control at ${SCALE}x text.`);
+  if (after.escaped) problems.push(`${where}: ${after.escaped} element(s) sit outside their container at ${SCALE}x text.`);
+  if (after.collisions) problems.push(`${where}: ${after.collisions} overlapping label/help/error box(es) at ${SCALE}x text.`);
+  if (after.overflowX !== 0) problems.push(`${where}: ${after.overflowX}px of horizontal overflow at ${SCALE}x text.`);
+  if (Math.min(after.w, after.h) < MIN_TARGET) {
+    problems.push(`${where}: target is under ${MIN_TARGET}px at ${SCALE}x text (${after.w}x${after.h}).`);
+  }
+
+  // An overlay-bearing control is only usable at 200% if its overlay still fits on screen.
+  let overlayNote = "";
+  if (subject.opens) {
+    await page.click(subject.opens);
+    await page.waitForSelector(subject.overlay, { timeout: 10_000 });
+    await page.waitForTimeout(150);
+    const fit = await page.evaluate((sel) => {
+      const el = document.querySelector(sel);
+      const r = el.getBoundingClientRect();
+      return {
+        w: Math.round(r.width),
+        h: Math.round(r.height),
+        offscreen: r.left < -1 || r.top < -1 || r.right > innerWidth + 1 || r.bottom > innerHeight + 1,
+        empty: r.width < 1 || r.height < 1,
+      };
+    }, subject.overlay);
+    if (fit.offscreen) problems.push(`${where}: its overlay does not fit the viewport at ${SCALE}x text (${fit.w}x${fit.h}).`);
+    if (fit.empty) problems.push(`${where}: its overlay has no size at ${SCALE}x text.`);
+    overlayNote = `  overlay ${fit.w}x${fit.h}`;
+  }
+
+  await page.close();
+  formRows.push(
+    `  ${subject.component.padEnd(12)}${pending ? " *" : "  "} ${before.w}x${before.h} -> ${after.w}x${after.h}  ` +
+      `${before.fontSize ? `text ${before.fontSize}px -> ${after.fontSize}px, ` : "no text of its own, "}` +
+      `box +${boxGrowth.toFixed(0)}px${overlayNote}`,
+  );
+}
+
+/** A pending entry that is not measured at all would be an exclusion nobody checks. */
+for (const name of TEXT_SCALE_PENDING) {
+  if (!FORM_SUBJECTS.some((s) => s.component === name)) {
+    problems.push(`TEXT_SCALE_PENDING names ${name}, which is not among the measured form controls.`);
+  }
+}
+
 await browser.close();
 server.close();
 
 console.log(`large-text — ${SUBJECTS.length} selection controls at ${SCALE}x the default font size:`);
 for (const r of rows) console.log(r);
+console.log(`large-text — ${FORM_SUBJECTS.length} form controls at ${SCALE}x the default font size:`);
+for (const r of formRows) console.log(r);
+console.log(`  (* text pinned by the px type scale — measured, not claimed; see TEXT_SCALE_PENDING)`);
 
 if (problems.length) {
   console.error(`\nlarge-text FAILED:\n  ${problems.join("\n  ")}`);
   process.exit(1);
 }
-console.log(`large-text ok — every control scaled with the text, no overflow, no clipping, target >= ${MIN_TARGET}px.`);
+console.log(
+  `large-text ok — ${SUBJECTS.length} selection controls scaled with the text; ` +
+    `${FORM_SUBJECTS.length - TEXT_SCALE_PENDING.size} form controls grew their own text and ` +
+    `${TEXT_SCALE_PENDING.size} are still pinned by the type scale. None clipped, overlapped, escaped its ` +
+    `container or overflowed the page, and every overlay fitted the viewport.`,
+);

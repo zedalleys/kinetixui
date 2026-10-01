@@ -42,6 +42,7 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { chromium } from "playwright";
+import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { describeAnimation, harnessAnimations, reducedMotionViolations } from "./a11y-animations.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -55,6 +56,10 @@ if (!existsSync(join(staticDir, "index.json"))) {
   console.error("apps/docs/storybook-static not found — run `pnpm build-storybook` first.");
   process.exit(2);
 }
+
+// Most stories import the built package, so a measurement taken against a stale `dist` would be
+// evidence about code that is no longer in the repository. See scripts/ui-dist-stamp.mjs.
+assertUiDistMatchesSource("a11y-browser");
 
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 

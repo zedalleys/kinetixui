@@ -1,9 +1,12 @@
 # KinetixUI — RTL support
 
-**Status:** in progress. Slice 2 of an ongoing conversion — KinetixUI
-does not yet fully mirror under `dir="rtl"`. Treat this file as the running
-ledger of what's converted, not a "done" checkmark. **22 of 29 remaining files
-are still unconverted**; the overlay family is done.
+**Status:** in progress. Treat this file as the running ledger of what's
+converted, not a "done" checkmark — KinetixUI does not yet fully mirror under
+`dir="rtl"`. **18 of 29 remaining files are still unconverted**; the overlay
+family is done, and four more were converted with the form-controls maturity
+slice rather than as a direction slice of their own: `input-otp.tsx`,
+`multi-select.tsx`, and the `command.tsx` and `tag.tsx` that `MultiSelect`
+composes its search row and its chips from.
 
 ## The two pieces
 
@@ -110,13 +113,12 @@ classes + `KinetixDirectionProvider`) is what an app wires up itself.
 Every other file in `packages/ui/src/components` that still contains a
 physical-direction utility — tracked explicitly as `NOT_YET_CONVERTED` in
 `scripts/check-rtl.mjs`, which is the authoritative, current list (grep it
-rather than trusting a stale copy here). As of slice 2, 22 files: `audio-player.tsx`,
+rather than trusting a stale copy here). 18 files: `audio-player.tsx`,
 `button-group.tsx`, `calendar.tsx`, `carousel.tsx`, `code-block.tsx`,
-`command.tsx`, `comparison-slider.tsx`, `data-grid.tsx`, `diff-viewer.tsx`,
-`input-otp.tsx`, `json-viewer.tsx`, `markdown-editor.tsx`,
-`multi-select.tsx`, `notification-center.tsx`, `resizable.tsx`,
-`scroll-area.tsx`, `sidebar.tsx`, `tab-bar.tsx`, `table.tsx`, `tag.tsx`,
-`timeline.tsx`, `tree-view.tsx`.
+`comparison-slider.tsx`, `data-grid.tsx`, `diff-viewer.tsx`,
+`json-viewer.tsx`, `markdown-editor.tsx`, `notification-center.tsx`,
+`resizable.tsx`, `scroll-area.tsx`, `sidebar.tsx`, `tab-bar.tsx`,
+`table.tsx`, `timeline.tsx`, `tree-view.tsx`.
 
 Also out of scope for this slice: native platform ports (`ui-compose`,
 `ui-swiftui`, `ui-flutter`) — each has its own RTL/right-to-left mechanism

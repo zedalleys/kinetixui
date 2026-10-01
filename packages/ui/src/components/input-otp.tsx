@@ -34,7 +34,12 @@ const InputOTPSlot = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "relative flex size-9 items-center justify-center border-y border-r border-input text-sm shadow-sm first:rounded-l-md first:border-l last:rounded-r-md",
+        // Logical, not physical. The slots are a flex row, so under `dir="rtl"` they reverse and the first
+        // slot moves to the right-hand end — while a physical right-hand divider and a physical left-hand
+        // radius stayed exactly where they were. Measured in Chromium at dir=rtl before this: both rounded
+        // corners sat on the group's *inner* edges, the divider after the first slot doubled to 2px, and
+        // the outer edge at the far end had no border at all.
+        "relative flex size-9 items-center justify-center border-y border-e border-input text-sm shadow-sm first:rounded-s-md first:border-s last:rounded-e-md",
         "transition-[color,border-color,box-shadow] duration-instant",
         // ring is a box-shadow, which forced-colors mode strips; the outline survives it
         isActive && "z-docked ring-1 ring-ring forced-colors:[outline:2px_solid] forced-colors:[outline-offset:-2px]",

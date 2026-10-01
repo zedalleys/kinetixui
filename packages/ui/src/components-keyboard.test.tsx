@@ -1,7 +1,7 @@
 import * as React from "react";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { Checkbox } from "./components/checkbox";
 import { ColorPicker } from "./components/color-picker";
 import { FileUpload } from "./components/file-upload";
@@ -21,14 +21,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./components/dropdown-menu";
+import { Input } from "./components/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "./components/input-otp";
 import { MultiSelect } from "./components/multi-select";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/popover";
 import { RadioGroup, RadioGroupItem } from "./components/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/select";
 import { Slider } from "./components/slider";
 import { Switch } from "./components/switch";
 import { Toggle } from "./components/toggle";
 import { ToggleGroup, ToggleGroupItem } from "./components/toggle-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/tabs";
+import { Textarea } from "./components/textarea";
 import { Tour } from "./components/tour";
 import { TreeItem, TreeView } from "./components/tree-view";
 
@@ -41,6 +45,13 @@ import { TreeItem, TreeView } from "./components/tree-view";
  */
 
 // kx-verify: interaction
+
+beforeAll(() => {
+  // `input-otp` tracks which slot the caret is in by polling document.elementFromPoint, which jsdom
+  // does not implement. Unstubbed it throws from a timer after the test has finished — an unhandled
+  // rejection that vitest reports against whichever test happened to be running.
+  (document as unknown as { elementFromPoint: () => Element | null }).elementFromPoint = () => null;
+});
 
 describe("Dialog", () => {
   function Example() {
@@ -365,6 +376,20 @@ describe("MultiSelect", () => {
     // Keys must now drive the option list (focus should be in its search input).
     await user.keyboard("{ArrowDown}{Enter}");
     await waitFor(() => expect(screen.getAllByText("Banana").length).toBeGreaterThan(1));
+  });
+
+  it("opens with a vertical arrow key as well as with Enter", async () => {
+    const user = userEvent.setup();
+    render(<MultiSelect aria-label="Fruit" options={options} />);
+    await user.tab();
+    const combobox = screen.getByRole("combobox");
+    expect(combobox).toHaveAttribute("aria-expanded", "false");
+    // WAI-ARIA's combobox pattern lists Down Arrow as a way to open the popup, and it is what a
+    // keyboard user reaches for first. Before this it did nothing at all: Enter and Space were the
+    // only way in.
+    await user.keyboard("{ArrowDown}");
+    expect(combobox).toHaveAttribute("aria-expanded", "true");
+    await screen.findByPlaceholderText("Search…");
   });
 
   it("closes with Escape and gives focus back to the combobox", async () => {
@@ -1051,6 +1076,25 @@ describe("Slider", () => {
     await user.keyboard("{End}");
     expect(onValueChange).toHaveBeenLastCalledWith([100]);
   });
+
+  it("steps by a page with PageUp and PageDown, and clamps at the ends of the range", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<Slider aria-label="Volume" defaultValue={[50]} max={100} onValueChange={onValueChange} />);
+    await user.tab();
+    await user.keyboard("{PageUp}");
+    expect(onValueChange).toHaveBeenLastCalledWith([60]);
+    await user.keyboard("{PageDown}");
+    expect(onValueChange).toHaveBeenLastCalledWith([50]);
+
+    await user.keyboard("{End}");
+    onValueChange.mockClear();
+    // At the maximum the thumb has nowhere to go: the key is accepted and reports nothing, rather
+    // than wrapping round to the minimum.
+    await user.keyboard("{ArrowUp}");
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("slider", { name: "Volume" })).toHaveAttribute("aria-valuenow", "100");
+  });
 });
 
 describe("MultiSelect chips", () => {
@@ -1213,5 +1257,147 @@ describe("ToggleGroup", () => {
     await user.keyboard(" ");
     expect(screen.getByRole("radio", { name: "Italic" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("radio", { name: "Bold" })).toHaveAttribute("aria-checked", "false");
+  });
+});
+
+describe("Input and Textarea", () => {
+  it("are reached in source order by Tab and skipped when disabled", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <Input aria-label="First" />
+        <Input aria-label="Skipped" disabled />
+        <Textarea aria-label="Second" />
+      </>,
+    );
+    await user.tab();
+    expect(screen.getByLabelText("First")).toHaveFocus();
+    await user.tab();
+    // The disabled field is not a stop, so one Tab goes straight past it to the textarea.
+    expect(screen.getByLabelText("Second")).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(screen.getByLabelText("First")).toHaveFocus();
+  });
+
+  it("stay focusable and readable when read-only, and reject typing", async () => {
+    const user = userEvent.setup();
+    render(<Input aria-label="Reference" readOnly defaultValue="KX-1024" />);
+    const field = screen.getByLabelText("Reference") as HTMLInputElement;
+    await user.tab();
+    // Read-only is not disabled: it must still be reachable, or the value cannot be read or copied.
+    expect(field).toHaveFocus();
+    await user.keyboard("x");
+    expect(field.value).toBe("KX-1024");
+  });
+});
+
+describe("Select", () => {
+  function Example({ onValueChange }: { onValueChange?: (v: string) => void } = {}) {
+    return (
+      <Select onValueChange={onValueChange}>
+        <SelectTrigger aria-label="Fruit">
+          <SelectValue placeholder="Pick one" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="apple">Apple</SelectItem>
+          <SelectItem value="banana">Banana</SelectItem>
+          <SelectItem value="cherry">Cherry</SelectItem>
+        </SelectContent>
+      </Select>
+    );
+  }
+
+  it("opens with Enter, walks options with the arrow keys and Home/End, and commits with Enter", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<Example onValueChange={onValueChange} />);
+    await user.tab();
+    expect(screen.getByRole("combobox", { name: "Fruit" })).toHaveFocus();
+    await user.keyboard("{Enter}");
+    await screen.findByRole("listbox");
+
+    await user.keyboard("{ArrowDown}");
+    await user.keyboard("{End}");
+    expect(screen.getByRole("option", { name: "Cherry" })).toHaveFocus();
+    await user.keyboard("{Home}");
+    expect(screen.getByRole("option", { name: "Apple" })).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(onValueChange).toHaveBeenCalledExactlyOnceWith("apple");
+  });
+
+  it("jumps to an option by typing its first letter", async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+    await user.tab();
+    await user.keyboard("{Enter}");
+    await screen.findByRole("listbox");
+    await user.keyboard("c");
+    expect(screen.getByRole("option", { name: "Cherry" })).toHaveFocus();
+  });
+
+  it("closes with Escape without choosing, and hands focus back to the trigger", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<Example onValueChange={onValueChange} />);
+    await user.tab();
+    await user.keyboard("{Enter}");
+    await screen.findByRole("listbox");
+    await user.keyboard("{ArrowDown}");
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("combobox", { name: "Fruit" })).toHaveFocus();
+  });
+});
+
+describe("InputOTP", () => {
+  function Example({ onChange }: { onChange?: (v: string) => void } = {}) {
+    return (
+      <InputOTP maxLength={4} onChange={onChange} aria-label="One-time code">
+        <InputOTPGroup>
+          {[0, 1, 2, 3].map((i) => (
+            <InputOTPSlot key={i} index={i} data-testid={`slot-${i}`} />
+          ))}
+        </InputOTPGroup>
+      </InputOTP>
+    );
+  }
+  const chars = () => [0, 1, 2, 3].map((i) => screen.getByTestId(`slot-${i}`).textContent);
+  /** The slot the caret is in carries the focus ring; there is one real input behind all four. */
+  const caretAt = () =>
+    [0, 1, 2, 3].findIndex((i) => /\bring-1\b/.test(screen.getByTestId(`slot-${i}`).className));
+
+  it("fills one slot per keystroke and advances the caret", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Example onChange={onChange} />);
+    await user.tab();
+    expect(screen.getByRole("textbox", { name: "One-time code" })).toHaveFocus();
+    expect(caretAt()).toBe(0);
+
+    await user.keyboard("12");
+    expect(chars()).toEqual(["1", "2", "", ""]);
+    expect(caretAt()).toBe(2);
+    expect(onChange).toHaveBeenLastCalledWith("12");
+  });
+
+  it("clears the last filled slot on Backspace and steps the caret back", async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+    await user.tab();
+    await user.keyboard("123");
+    await user.keyboard("{Backspace}");
+    expect(chars()).toEqual(["1", "2", "", ""]);
+    expect(caretAt()).toBe(2);
+  });
+
+  it("accepts a pasted code into every slot at once", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Example onChange={onChange} />);
+    await user.click(screen.getByRole("textbox", { name: "One-time code" }));
+    await user.paste("4321");
+    expect(chars()).toEqual(["4", "3", "2", "1"]);
+    expect(onChange).toHaveBeenLastCalledWith("4321");
   });
 });

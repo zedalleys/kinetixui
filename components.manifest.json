@@ -819,6 +819,9 @@
           "type": "planned",
           "wave": "inputs"
         }
+      },
+      "sourceNames": {
+        "React": "InputOTP"
       }
     },
     "json-viewer": {
@@ -963,6 +966,9 @@
           "type": "planned",
           "wave": "data"
         }
+      },
+      "sourceNames": {
+        "React": "TypingIndicator"
       }
     },
     "metric": {
@@ -1088,6 +1094,9 @@
           "type": "planned",
           "wave": "overlays"
         }
+      },
+      "sourceNames": {
+        "React": "NotificationItem"
       }
     },
     "number-input": {
@@ -1239,6 +1248,9 @@
           "type": "planned",
           "wave": "layout"
         }
+      },
+      "sourceNames": {
+        "React": "ScrollBar"
       }
     },
     "segmented-control": {
@@ -1566,6 +1578,9 @@
           "type": "planned",
           "wave": "data"
         }
+      },
+      "sourceNames": {
+        "React": "TreeItem"
       }
     },
     "virtual-list": {
