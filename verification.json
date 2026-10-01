@@ -23,7 +23,7 @@
       "interaction": 37,
       "accessibility": 98,
       "rtl": 18,
-      "largeText": 8,
+      "largeText": 9,
       "visual": 0,
       "published": 98
     },
@@ -412,6 +412,7 @@
         ],
         "components": [
           "checkbox",
+          "direction-provider",
           "input-otp",
           "label",
           "radio-group",
@@ -619,7 +620,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -654,7 +655,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -706,7 +707,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-rtl.test.tsx:60-259"
@@ -744,7 +745,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -779,7 +780,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -828,7 +829,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -863,7 +864,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -912,7 +913,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -943,7 +944,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -992,7 +993,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1021,7 +1022,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1059,7 +1060,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1120,7 +1121,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1149,7 +1150,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1178,7 +1179,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1227,7 +1228,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1262,7 +1263,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1301,10 +1302,10 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:81-482"
+          "scripts/large-text.mjs:96-564"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1365,7 +1366,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1400,7 +1401,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1435,7 +1436,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1474,7 +1475,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1503,7 +1504,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1517,7 +1518,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1546,7 +1547,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1578,7 +1579,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-rtl.test.tsx:60-259"
@@ -1613,7 +1614,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-keyboard.test.tsx:545-1103"
@@ -1645,7 +1646,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1680,7 +1681,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1709,7 +1710,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1742,7 +1743,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1777,7 +1778,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1812,7 +1813,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-436",
@@ -1820,6 +1821,9 @@
           "packages/ui/src/components-overlay.test.tsx:258-316",
           "packages/ui/src/components-rtl.test.tsx:60-259",
           "packages/ui/src/components-selection.test.tsx:138-199"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:96-564"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1836,7 +1840,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1875,7 +1879,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-overlay.test.tsx:258-316"
@@ -1907,7 +1911,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1950,7 +1954,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1985,7 +1989,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2037,7 +2041,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2072,7 +2076,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2110,7 +2114,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2124,7 +2128,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2153,7 +2157,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2182,7 +2186,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2217,7 +2221,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-436"
@@ -2272,7 +2276,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2312,13 +2316,13 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
-          "scripts/large-text.mjs:81-482"
+          "scripts/large-text.mjs:96-564"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2356,7 +2360,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2385,7 +2389,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2399,7 +2403,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2445,10 +2449,10 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:81-482"
+          "scripts/large-text.mjs:96-564"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2500,7 +2504,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2538,7 +2542,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2567,7 +2571,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2599,7 +2603,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-rtl.test.tsx:60-259"
@@ -2631,7 +2635,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2660,7 +2664,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2713,7 +2717,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2754,7 +2758,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-436"
@@ -2786,7 +2790,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2814,7 +2818,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2849,7 +2853,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-rtl.test.tsx:60-259"
@@ -2866,7 +2870,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2895,7 +2899,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2944,7 +2948,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2973,7 +2977,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3008,7 +3012,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3062,7 +3066,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-overlay.test.tsx:258-316",
@@ -3095,7 +3099,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3144,7 +3148,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3198,13 +3202,13 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-selection.test.tsx:138-199"
         ],
         "largeText": [
-          "scripts/large-text.mjs:81-482"
+          "scripts/large-text.mjs:96-564"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3253,7 +3257,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3288,7 +3292,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3323,7 +3327,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3358,7 +3362,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3406,7 +3410,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-436"
@@ -3444,7 +3448,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3497,7 +3501,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3532,7 +3536,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3567,7 +3571,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3620,13 +3624,13 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
-          "scripts/large-text.mjs:81-482"
+          "scripts/large-text.mjs:96-564"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3675,7 +3679,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3710,7 +3714,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3759,7 +3763,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3799,13 +3803,13 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-selection.test.tsx:138-199"
         ],
         "largeText": [
-          "scripts/large-text.mjs:81-482"
+          "scripts/large-text.mjs:96-564"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3866,7 +3870,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3901,7 +3905,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3930,7 +3934,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3968,7 +3972,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-keyboard.test.tsx:259-314"
@@ -4041,7 +4045,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4095,7 +4099,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-436"
@@ -4147,7 +4151,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4180,10 +4184,10 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:81-482"
+          "scripts/large-text.mjs:96-564"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4245,10 +4249,10 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:81-482"
+          "scripts/large-text.mjs:96-564"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4301,7 +4305,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
           "packages/ui/src/components-rtl.test.tsx:60-259"
@@ -4336,7 +4340,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4354,7 +4358,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4383,7 +4387,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:33-526"
+          "scripts/a11y-browser.mjs:35-560"
         ],
         "published": [
           "npm: @kinetixui/ui"

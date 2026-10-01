@@ -6,7 +6,7 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator,
 
 const Demo = () => (
     <ContextMenu>
-      <ContextMenuTrigger className="flex h-32 w-64 items-center justify-center rounded-md border border-dashed text-sm">
+      <ContextMenuTrigger className="flex h-32 w-full max-w-64 items-center justify-center rounded-md border border-dashed text-sm">
         Right-click here
       </ContextMenuTrigger>
       <ContextMenuContent className="w-52">
