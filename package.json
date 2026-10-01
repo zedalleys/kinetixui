@@ -20,6 +20,7 @@
     "check:stories": "node scripts/gen-stories.mjs --check",
     "gen:specs": "node scripts/gen-component-specs.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
+    "check:a11y-coverage": "node scripts/check-a11y-coverage.mjs",
     "check:token-contract": "node scripts/check-token-contract.mjs",
     "gen:release-meta": "node scripts/gen-release-meta.mjs",
     "check:releases": "node scripts/check-releases.mjs",

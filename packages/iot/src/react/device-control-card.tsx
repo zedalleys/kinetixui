@@ -130,7 +130,7 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
         )}
       >
         <span>{value}</span>
-        {unit ? <span className={cn("text-muted-foreground", hero ? "text-title-md" : "text-title-sm")}>{unit}</span> : null}
+        {unit ? <span className={cn("text-muted-on-container", hero ? "text-title-md" : "text-title-sm")}>{unit}</span> : null}
       </p>
     ) : null;
 
@@ -139,7 +139,7 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
     const stateChip = unreachable ? (
       <span
         data-state-chip="unreachable"
-        className="inline-flex w-fit items-center gap-1.5 rounded-full border border-dashed border-border px-2.5 py-1 text-label-md text-muted-foreground"
+        className="inline-flex w-fit items-center gap-1.5 rounded-full border border-dashed border-border px-2.5 py-1 text-label-md text-muted-on-container"
       >
         <svg {...MARK} data-glyph="dash">
           <circle cx="8" cy="8" r="6.25" strokeDasharray="2 2" />
@@ -224,7 +224,7 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
           </div>
         ) : null}
 
-        {meta ? <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-muted-foreground">{meta}</div> : null}
+        {meta ? <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-muted-on-container">{meta}</div> : null}
 
         {expanded ? (
           <>
@@ -234,7 +234,7 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
               aria-controls={panelId}
               onClick={() => setOpen(!isOpen)}
               className={cn(
-                "-mx-1 flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-label-md text-muted-foreground md:min-h-9",
+                "-mx-1 flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-label-md text-muted-on-container md:min-h-9",
                 "transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2",
                 "focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 "motion-reduce:transition-none",

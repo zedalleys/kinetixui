@@ -81,7 +81,7 @@ const DeviceIdentity = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
         {iconOnly ? null : (
           <span className="flex min-w-0 flex-col">
             <span className={cn("truncate text-foreground", NAME_SIZES[size])}>{device?.name}</span>
-            {secondaryText ? <span className="truncate text-label-md text-muted-foreground">{secondaryText}</span> : null}
+            {secondaryText ? <span className="truncate text-label-md text-muted-on-container">{secondaryText}</span> : null}
           </span>
         )}
       </div>

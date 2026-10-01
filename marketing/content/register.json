@@ -342,7 +342,7 @@
       "icp": "p2",
       "pillar": "a",
       "stage": "awareness",
-      "status": "ready",
+      "status": "published",
       "file": "marketing/content/x.md",
       "day": 2,
       "destination": "/docs/platforms",

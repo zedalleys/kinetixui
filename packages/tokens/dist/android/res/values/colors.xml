@@ -157,6 +157,7 @@
   <color name="color_semantic_warning">#fff97907</color>
   <color name="color_semantic_info_container">#fff0f7ff</color>
   <color name="color_semantic_on_info_container">#ff395a70</color>
+  <color name="color_semantic_muted_on_container">#ff616161</color>
   <color name="color_chart_1">#ff1b3c53</color>
   <color name="color_chart_2">#ff748873</color>
   <color name="color_chart_3">#ffffbc53</color>

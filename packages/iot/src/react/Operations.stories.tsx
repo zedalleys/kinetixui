@@ -88,9 +88,14 @@ const tree = buildSpaceTree([
 const rollups = rollupSpaceHealth(tree, site04, { now: NOW });
 
 export const Places: Story = {
+  // Each breadcrumb points at a different level of the tree. That is what the hierarchy looks like
+  // in use, and it is also the honest composition: three breadcrumbs for the same place produced
+  // three navigation landmarks with the same accessible name, which axe `landmark-unique` flags
+  // and a screen-reader user experiences as three indistinguishable entries in the landmark list.
+  // The card keeps its own zone, because a breadcrumb in a card should describe that card.
   render: () => (
     <>
-      <SpaceBreadcrumb path={spacePath(tree, "zone")} onNavigate={() => {}} />
+      <SpaceBreadcrumb path={spacePath(tree, "farm")} onNavigate={() => {}} />
       <SpaceRollup rollup={rollups.get("zone")!} name="Zone B" />
       <DeviceGroupCard
         name="Zone B"
@@ -104,7 +109,7 @@ export const Places: Story = {
         onSelect={() => {}}
       />
       <div dir="rtl">
-        <SpaceBreadcrumb path={spacePath(tree, "zone")} onNavigate={() => {}} />
+        <SpaceBreadcrumb path={spacePath(tree, "field")} onNavigate={() => {}} />
       </div>
     </>
   ),

@@ -331,11 +331,36 @@ describe("SpaceBreadcrumb", () => {
 
   it("is a named nav with an ordered list and the current place marked", () => {
     render(<SpaceBreadcrumb path={path} />);
-    const nav = screen.getByRole("navigation", { name: "Location" });
+    const nav = screen.getByRole("navigation", { name: "Location: Zone B" });
     const items = within(nav).getAllByRole("listitem");
     expect(items.map((i) => i.textContent)).toEqual(["North Farm", "Field 3", "Zone B"]);
     expect(within(nav).getByText("Zone B")).toHaveAttribute("aria-current", "page");
     expect(within(nav).getByText("Field 3")).not.toHaveAttribute("aria-current");
+  });
+
+  it("names each landmark after its own place, so several on one screen stay distinguishable", () => {
+    // axe `landmark-unique`: a screen listing three places rendered three navigation landmarks
+    // all called "Location", which is no more useful than none for picking one from a landmark list.
+    render(
+      <>
+        <SpaceBreadcrumb path={spacePath(tree, "zone")} />
+        <SpaceBreadcrumb path={spacePath(tree, "field")} />
+        <SpaceBreadcrumb path={spacePath(tree, "farm")} />
+      </>,
+    );
+    const names = screen.getAllByRole("navigation").map((n) => n.getAttribute("aria-label"));
+    expect(names).toEqual(["Location: Zone B", "Location: Field 3", "Location: North Farm"]);
+    expect(new Set(names).size).toBe(names.length);
+  });
+
+  it("still names the landmark when there is no path to describe", () => {
+    render(<SpaceBreadcrumb path={null} />);
+    expect(screen.getByRole("navigation", { name: "Location" })).toBeInTheDocument();
+  });
+
+  it("lets a caller override the name", () => {
+    render(<SpaceBreadcrumb path={spacePath(tree, "zone")} label="Where you are" />);
+    expect(screen.getByRole("navigation", { name: "Where you are" })).toBeInTheDocument();
   });
 
   it("renders ancestors as anchors when given hrefFor, and the current place as text", () => {
@@ -418,7 +443,7 @@ describe("DeviceGroupCard slots", () => {
     expect(container.querySelector('[data-slot="path"]')).toBeNull();
     expect(container.querySelector('[data-slot="rollup"]')).toBeNull();
     rerender(<DeviceGroupCard name="Zone B" deviceCount={3} path={<SpaceBreadcrumb path={spacePath(tree, "zone")} />} rollup={<span>rollup here</span>} />);
-    expect(screen.getByRole("navigation", { name: "Location" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Location: Zone B" })).toBeInTheDocument();
     expect(container.querySelector('[data-slot="rollup"]')).toHaveTextContent("rollup here");
   });
 
