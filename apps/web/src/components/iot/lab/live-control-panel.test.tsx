@@ -120,6 +120,46 @@ describe("LiveControlPanel", () => {
     expect(container.querySelector("[data-presentation='ring'] [data-confirmed]")?.textContent).toBe("22°C");
   });
 
+  it("does not open a command for a value the device already has", async () => {
+    const { container } = render(<LiveControlPanel />);
+    const stage = () => container.querySelector("[data-lifecycle-stage]")?.getAttribute("data-lifecycle-stage");
+    const modes = screen.getByRole("radiogroup", { name: "Climate mode" });
+
+    // Re-picking the selected mode. The controls compare requested to confirmed to decide whether to draw
+    // the pending treatment, so an equal request would lock the panel with nothing on screen explaining it.
+    await press(within(modes).getByRole("radio", { name: "Heat" }));
+    expect(stage(), "a no-op must not start a lifecycle").toBe("idle");
+    expect(powerSwitch()).toBeEnabled();
+
+    // Same for releasing the slider without having moved it.
+    await press(powerSwitch());
+    await settle();
+    const brightness = screen.getByRole("slider", { name: "Brightness" });
+    await act(async () => {
+      fireEvent.keyUp(brightness, { key: "ArrowRight" });
+    });
+    expect(stage()).toBe("confirmed");
+    expect(within(modes).getByRole("radio", { name: "Cool" })).not.toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("cancels an open request that is refined back to the confirmed value", async () => {
+    const { container } = render(<LiveControlPanel />);
+    const stage = () => container.querySelector("[data-lifecycle-stage]")?.getAttribute("data-lifecycle-stage");
+    const nudge = (dir: RegExp) => screen.getByRole("button", { name: dir });
+
+    await press(nudge(/Increase Studio 2 temperature/i));
+    expect(stage()).toBe("requested");
+
+    // Back to where it started: the command now asks for nothing.
+    await press(nudge(/Decrease Studio 2 temperature/i));
+    expect(stage(), "a request that asks for nothing must not be left running").toBe("cancelled");
+
+    // And the panel frees itself rather than waiting out a round trip for a command that was dropped.
+    await settle();
+    expect(powerSwitch()).toBeEnabled();
+    expect(container.querySelector("[data-presentation='ring'] [data-confirmed]")?.textContent).toBe("20.5°C");
+  });
+
   it("never says it is heating while the mode is Cool", async () => {
     render(<LiveControlPanel />);
     // Target 20.5 against a reported 19: heating, under Heat.

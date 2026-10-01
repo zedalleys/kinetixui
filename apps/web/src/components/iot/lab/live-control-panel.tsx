@@ -170,6 +170,24 @@ export function LiveControlPanel() {
   const send = (next: Request) => {
     // Refuse a second setting while one is open; allow the open one to be refined. See the note above.
     if (busy && request.field !== next.field) return;
+
+    // Asking for the value the device already reports is not a command, and treating it as one is
+    // invisible in exactly the wrong way: every control draws "requested" by comparing it to the confirmed
+    // value, so a request equal to it renders no pending treatment at all — while the panel still takes the
+    // other controls away for the round trip. The result is a panel that looks locked for no stated reason.
+    // Two ordinary gestures land here: releasing the slider without moving it, and re-picking the mode that
+    // is already selected.
+    if (next.value === room[next.field]) {
+      // Refined back to where it started (+ then −). The open command now asks for nothing, so it is
+      // cancelled rather than left running — `cancelled` is a resting stage, so the panel frees itself and
+      // the readout says what became of the command instead of silently dropping it.
+      if (busy) {
+        setRequest(null);
+        setLifecycle((l) => advanceCommandLifecycle(l, { type: "cancel" }));
+      }
+      return;
+    }
+
     setEngaged(true);
     setRequest(next);
     setLifecycle(
