@@ -26,7 +26,12 @@ const itemCls =
 const contentCls =
     // Capped to the room Radix reports it has, so large text cannot push the surface past the window —
     // see the note in popover.tsx for the measurement that prompted it.
-  "z-overlay max-w-[var(--radix-popper-available-width)] min-w-[12rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md font-sans data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:duration-fast data-[state=open]:ease-enter";
+    // `min-w` yields to the available room, which is not a detail: `min-width` beats `max-width` in CSS,
+    // so the cap above was unenforceable on its own. Measured on a 390px phone with the root font size
+    // doubled — 8rem becomes 256px, the cap resolved to 193px, and the menu came out 256px wide with its
+    // right edge 63px past the window and those items unreachable. `min(...)` keeps the comfortable
+    // minimum whenever there is room for it and gives it up when there is not.
+  "z-overlay max-w-[var(--radix-popper-available-width)] min-w-[min(12rem,var(--radix-popper-available-width))] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md font-sans data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:duration-fast data-[state=open]:ease-enter";
 
 const Menubar = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.Root>,

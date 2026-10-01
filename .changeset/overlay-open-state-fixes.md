@@ -24,6 +24,13 @@ the context menu 416px, pushing the page 186px sideways. Each surface is now cap
 `max-w-[var(--radix-popper-available-width)]`, which is Radix's own measurement of the space it has rather
 than a viewport guess, and binds only when the surface would otherwise overflow.
 
+The cap alone was not enough, which is worth knowing if you have written one yourself: `min-width` beats
+`max-width` in CSS, and the menus carried a `rem` minimum. At 2x text `min-w-[8rem]` is 256px, so the
+context menu stayed 256px wide against a cap that had correctly resolved to 193px, with its right edge
+63px past the window and those items unreachable. The three menus' minimums now yield —
+`min-w-[min(8rem,var(--radix-popper-available-width))]` — keeping the comfortable width wherever there is
+room for it.
+
 Patch rather than minor: no API is added, removed or renamed, and nothing new is available to adopt. Each
 change corrects behaviour that was already wrong — an upgrade names a dialog that had no name, moves focus
 somewhere reachable, and keeps a surface inside the window at large text; in a desktop LTR app at the
