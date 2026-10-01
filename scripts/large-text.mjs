@@ -93,6 +93,9 @@
  * them, and the check fails if one of them *starts* scaling — so the day the scale is fixed, this file is
  * forced to notice rather than being free to keep understating.
  *
+ * The overlay family is measured open too, through the declaration in open-states.mjs; its members are
+ * named beside the pass itself, below, for the same reason the other two families are.
+ *
  * kx-verify: largeText
  */
 
@@ -103,6 +106,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { OPEN_STATES, openSurface } from "./open-states.mjs";
+import { coveredSlugs } from "./covered-slugs.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
@@ -210,15 +214,27 @@ const base = `http://127.0.0.1:${server.address().port}`;
  * Nothing otherwise keeps the two in step, and a claim that outruns its measurement is the exact failure
  * this whole evidence model exists to prevent — so it is checked rather than trusted.
  */
+/** `Checkbox` -> `checkbox`, `InputOTP` -> `input-otp`: the manifest's spelling, which coveredSlugs returns. */
+const SLUG_OF = { InputOTP: "input-otp", RadioGroup: "radio-group", ToggleGroup: "toggle-group", MultiSelect: "multi-select", AlertDialog: "alert-dialog", DropdownMenu: "dropdown-menu", ContextMenu: "context-menu" };
+const slugOf = (name) => SLUG_OF[name] ?? name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+
 function assertClaimMatchesSubjects() {
   const self = readFileSync(fileURLToPath(import.meta.url), "utf8");
   // The same region gen-verification.mjs reads: a passage runs from its marker to the end of the file.
   const passage = self.slice(self.indexOf("kx-verify: largeText"));
-  const named = new Set([...passage.matchAll(/<([A-Z][A-Za-z0-9]*)>/g)].map((m) => m[1]));
+  // And read with the same function that awards the evidence, rather than a regex that resembles it.
+  // The earlier version here matched only `<Component>`, while gen-verification also reads `Kinetix*`
+  // and `Name(` — so a single word in a comment, "the direction provider", quietly credited
+  // direction-provider with a large-text measurement that had never been taken. A claim check that does
+  // not use the extractor is a second opinion about what the extractor will do.
+  const named = coveredSlugs(passage, "React");
   // The claim is what is measured AND passes the text-growth rule — a pending subject is measured in
-  // full but must not reach verification.json, so it must not appear in angle brackets.
+  // full but must not reach verification.json, so it must not be named in the passage at all.
   const claimed = new Set(
-    [...SUBJECTS, ...FORM_SUBJECTS].map((s) => s.component).filter((c) => !TEXT_SCALE_PENDING.has(c)),
+    [...SUBJECTS, ...FORM_SUBJECTS, ...OPEN_STATES]
+      .map((s) => s.component ?? s)
+      .filter((c) => !TEXT_SCALE_PENDING.has(c))
+      .map(slugOf),
   );
   const missing = [...claimed].filter((c) => !named.has(c));
   const extra = [...named].filter((c) => !claimed.has(c));
@@ -475,7 +491,10 @@ for (const name of TEXT_SCALE_PENDING) {
 }
 
 /**
- * Overlays: opened, then measured at 1x and 2x, at desktop and phone width, in both directions.
+ * Overlays: <Dialog>, <AlertDialog>, <Sheet>, <Drawer>, <Modal>, <Popover>, <Tooltip>, <DropdownMenu>,
+ * <ContextMenu> and <Menubar> — opened, then measured at 1x and 2x, at desktop and phone width, in both
+ * directions. Named here rather than in the file header because the claim is the passage from the marker
+ * to the end of the file, and the header is above it: names written there are read by nobody.
  *
  * `TEXT_SCALE_PENDING` applies here too — an overlay whose body copy is `text-body-md` cannot grow its
  * text until the type scale is converted, and saying otherwise would be the same overstatement the form
@@ -511,7 +530,7 @@ for (const entry of OPEN_STATES) {
         const stampedDir = await page.evaluate((sel) => document.querySelector(sel).getAttribute("dir"), entry.surface);
         if (entry.stampsDir) {
           // These resolve direction from React context and write it onto the content, which overrides
-          // whatever the document says. With no KinetixDirectionProvider in the story there is nothing
+          // whatever the document says. With no direction provider wrapping the story there is nothing
           // for them to read, so the correct expectation is the stamp itself — not the document's dir.
           if (!stampedDir) {
             problems.push(`${where}: expected this surface to carry its own dir attribute (see stampsDir in open-states.mjs); it has none.`);

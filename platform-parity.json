@@ -1922,6 +1922,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -2359,6 +2360,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -2445,6 +2447,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published"
       ],
       "SwiftUI": [
@@ -2480,7 +2483,6 @@
         "accessibility",
         "build",
         "interaction",
-        "largeText",
         "published",
         "rtl"
       ]
@@ -2490,6 +2492,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published"
       ],
       "SwiftUI": [
@@ -2509,6 +2512,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -2874,6 +2878,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -2932,6 +2937,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published"
       ],
       "SwiftUI": [
@@ -3106,6 +3112,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -3319,6 +3326,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published"
       ],
       "SwiftUI": [
@@ -3704,6 +3712,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -3765,7 +3774,7 @@
       "interaction": 37,
       "accessibility": 98,
       "rtl": 18,
-      "largeText": 9,
+      "largeText": 18,
       "visual": 0,
       "published": 98
     },
