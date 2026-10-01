@@ -9,6 +9,7 @@ import { DeviceShowcase } from "@/components/iot/device-showcase";
 import { InstallCommand } from "@/components/iot/install-command";
 import { IotExample } from "@/components/iot/iot-example";
 import { HeroCommandStrip } from "@/components/iot/lab/hero-command-strip";
+import { LiveControlPanel } from "@/components/iot/lab/live-control-panel";
 import { LabSection } from "@/components/iot/lab/lab-section";
 import { LabTabs } from "@/components/iot/lab/lab-tabs";
 import { ModuleBoundary } from "@/components/iot/module-boundary";
@@ -293,6 +294,19 @@ export default function IotPage() {
               </li>
             ))}
           </ol>
+        </Reveal>
+        {/* The five words above describe the model; this is the model with your hands on it. Four kinds of
+            change — power, level, mode and setpoint — on two simulated devices sharing one command queue,
+            so the requested-versus-confirmed split is something a reader can press rather than read. */}
+        <Reveal className="mt-10">
+          <h3 className="font-display text-lg font-semibold">Use it.</h3>
+          <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
+            Every change below is a request first. The dashed treatment is what the device has not agreed to yet,
+            and it disappears when the (scripted) device confirms. Nothing here is connected to anything.
+          </p>
+          <div className="mt-5">
+            <LiveControlPanel />
+          </div>
         </Reveal>
         <Reveal className="mt-10">
           <IotExample slug={IOT_PAGE_EXAMPLES.stateHonesty} />

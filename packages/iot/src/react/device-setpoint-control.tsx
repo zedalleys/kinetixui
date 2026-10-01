@@ -142,8 +142,26 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
           <div data-presentation="ring" className="relative mx-auto aspect-square w-full max-w-64">
             <svg aria-hidden="true" focusable="false" viewBox="0 0 200 200" className="absolute inset-0 size-full rtl:-scale-x-100">
               <path d={ringArc(0, 1, 84)} fill="none" strokeWidth={14} strokeLinecap="round" className="stroke-muted" />
-              {confirmed !== null && frac(confirmed) > 0.005 ? (
-                <path data-ring-confirmed="" d={ringArc(0, frac(confirmed), 84)} fill="none" strokeWidth={14} strokeLinecap="round" className="stroke-primary" />
+              {confirmed !== null ? (
+                // An arc's `d` is not a property a browser can interpolate, so a confirmed target used to
+                // jump to its new length: measured in Chromium, `transition-duration` was `0s` and nothing
+                // was running 45ms after the device agreed. Drawing the WHOLE arc once and revealing a
+                // fraction of it with `stroke-dashoffset` moves the same pixels over a property that does
+                // interpolate. `pathLength={1}` normalises the geometry so the offset is the fraction
+                // itself, with no arc-length arithmetic to keep in step with `ringArc`.
+                <path
+                  data-ring-confirmed=""
+                  d={ringArc(0, 1, 84)}
+                  pathLength={1}
+                  strokeDasharray="1 1"
+                  strokeDashoffset={1 - frac(confirmed)}
+                  fill="none"
+                  strokeWidth={14}
+                  // Butt at the bottom of the range: a round cap on a zero-length dash draws a dot, which
+                  // reads as a value where there is none.
+                  strokeLinecap={frac(confirmed) > 0.005 ? "round" : "butt"}
+                  className="stroke-primary transition-[stroke-dashoffset] duration-base ease-out motion-reduce:transition-none"
+                />
               ) : null}
               {pending && confirmed !== null ? (
                 <path
@@ -156,7 +174,17 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
                 />
               ) : null}
               {confirmed !== null ? (
-                <circle cx={ringPoint(frac(confirmed), 84)[0]} cy={ringPoint(frac(confirmed), 84)[1]} r={9} strokeWidth={4} className="fill-background stroke-primary" />
+                // Same reason, different property: `cx`/`cy` are recomputed per value, so the marker
+                // teleported while the arc under it travelled. Every point on the ring is the same point
+                // rotated, so the marker is drawn once at the arc's start and rotated into place — and
+                // `transform` is a property the browser interpolates.
+                <g
+                  data-ring-marker=""
+                  className="transition-transform duration-base ease-out motion-reduce:transition-none"
+                  style={{ transform: `rotate(${ARC_SWEEP * frac(confirmed)}deg)`, transformOrigin: `${RING}px ${RING}px` }}
+                >
+                  <circle cx={ringPoint(0, 84)[0]} cy={ringPoint(0, 84)[1]} r={9} strokeWidth={4} className="fill-background stroke-primary" />
+                </g>
               ) : null}
               {pending ? (
                 <circle cx={ringPoint(frac(requested!), 84)[0]} cy={ringPoint(frac(requested!), 84)[1]} r={9} strokeWidth={3} strokeDasharray="3 3" className="fill-background stroke-primary" />
