@@ -23,6 +23,15 @@ const PENDING = resolveControlState({ deviceStatus: "online", commandStatus: "se
 const OFFLINE = resolveControlState({ deviceStatus: "offline" });
 const STALE = resolveControlState({ deviceStatus: "stale" });
 
+/**
+ * How long the interactive stories below hold a request before the "device" agrees.
+ *
+ * Shorter than `RequestThenConfirm`'s 1.2s, which is deliberately slow so the gap can be studied. These
+ * stories are about what *using* a control feels like, so the round trip is a beat rather than a pause —
+ * long enough to see the requested treatment, short enough that the control does not feel broken.
+ */
+const CONFIRM_MS = 600;
+
 const meta = {
   title: "IoT/Controls",
   parameters: { layout: "centered" },
@@ -204,4 +213,145 @@ export const LargeControls: Story = {
       <DeviceLevelControl value={20} target={80} control={PENDING} label="Brightness" size="lg" />
     </div>
   ),
+};
+
+/**
+ * Drag the brightness and watch the fill, not the number.
+ *
+ * `Level` above is a column of fixed states, which proves they are distinguishable and proves nothing about
+ * what using one feels like. Here the request is held for {@link CONFIRM_MS} before the device agrees, so the
+ * two halves of the control are visibly doing different jobs: the dashed requested chip appears the instant
+ * you let go, and the solid fill slides to the new value only once the device has confirmed it.
+ *
+ * The fill's travel is the component's own `transition-[width] duration-base`; under
+ * `prefers-reduced-motion: reduce` it is removed and the fill simply arrives at the new width.
+ *
+ * The control stays interactive while the request is open, which is the opposite of what `Mode` below does
+ * and deliberate. `resolveControlState` makes a pending control non-interactive so a user cannot send a
+ * device two commands — right for a discrete one, wrong for a continuous one, where the second change is not
+ * a duplicate but a correction. Keyboard users feel this most: five presses of ArrowRight against a locked
+ * slider move it once. The request is still drawn honestly — the solid fill is the confirmed level, the
+ * hatched extension is the one that has only been asked for.
+ */
+export const LevelInteractive: Story = {
+  render: function Interactive() {
+    const [confirmed, setConfirmed] = React.useState(40);
+    const [requested, setRequested] = React.useState<number | null>(null);
+
+    React.useEffect(() => {
+      if (requested === null) return;
+      const t = setTimeout(() => {
+        setConfirmed(requested);
+        setRequested(null);
+      }, CONFIRM_MS);
+      return () => clearTimeout(t);
+    }, [requested]);
+
+    return (
+      <Row label={requested === null ? "Settled" : "Waiting for the device"}>
+        <DeviceLevelControl
+          value={confirmed}
+          target={requested ?? undefined}
+          min={0}
+          max={100}
+          step={5}
+          unit="%"
+          label="Brightness"
+          control={READY}
+          onCommit={(next) => setRequested(next)}
+        />
+      </Row>
+    );
+  },
+};
+
+/**
+ * Pick a mode and watch the selection move.
+ *
+ * The selected option's background and text are a `transition-colors duration-fast`, so the selection travels
+ * rather than teleporting — which is what tells a reader the two buttons are one control. While the request is
+ * open the chosen mode is outlined and dashed, never filled: filled means the device agreed.
+ *
+ * Unlike `LevelInteractive` above, this one does take itself out of reach while the request is in flight, which
+ * is `resolveControlState`'s default and the right one here: a mode is a discrete command, and pressing Cool
+ * twice in 600ms sends a device two of them.
+ */
+export const ModeInteractive: Story = {
+  render: function Interactive() {
+    const [confirmed, setConfirmed] = React.useState("heat");
+    const [requested, setRequested] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+      if (requested === null) return;
+      const t = setTimeout(() => {
+        setConfirmed(requested);
+        setRequested(null);
+      }, CONFIRM_MS);
+      return () => clearTimeout(t);
+    }, [requested]);
+
+    return (
+      <Row label={requested === null ? "Settled" : "Waiting for the device"}>
+        <DeviceModeControl
+          modes={[
+            { id: "heat", label: "Heat" },
+            { id: "cool", label: "Cool" },
+            { id: "fan", label: "Fan only" },
+          ]}
+          value={confirmed}
+          requested={requested ?? undefined}
+          label="Climate mode"
+          control={resolveControlState({ deviceStatus: "online", commandStatus: requested === null ? undefined : "sent" })}
+          onSelect={(id) => setRequested(id)}
+        />
+      </Row>
+    );
+  },
+};
+
+/**
+ * Nudge the target. Nothing waits for you.
+ *
+ * A setpoint is pressed repeatedly — up, up, up — so a control that blocks the second press while the first is
+ * in flight is a control nobody can use. Every press moves the *requested* target immediately and restarts the
+ * confirmation window, so the feedback is instant and only the device's agreement is deferred. The ring's filled
+ * arc then travels to the confirmed value over `duration-base`; under reduced motion it arrives without the
+ * travel, and the number, the chip and the sentence all say the same thing either way.
+ */
+export const SetpointInteractive: Story = {
+  render: function Interactive() {
+    const [confirmed, setConfirmed] = React.useState(20.5);
+    const [requested, setRequested] = React.useState<number | null>(null);
+
+    React.useEffect(() => {
+      if (requested === null) return;
+      const t = setTimeout(() => {
+        setConfirmed(requested);
+        setRequested(null);
+      }, CONFIRM_MS);
+      return () => clearTimeout(t);
+    }, [requested]);
+
+    return (
+      <Row label={requested === null ? "Settled" : "Waiting for the device"}>
+        <DeviceSetpointControl
+          current={19}
+          target={confirmed}
+          requestedTarget={requested ?? undefined}
+          min={15}
+          max={28}
+          step={0.5}
+          unit="°C"
+          label="Studio 2 temperature"
+          presentation="ring"
+          activity={confirmed > 19 ? "Heating" : "Idle"}
+          // Deliberately NOT resolved as pending: a setpoint the user cannot press again until the last press
+          // has landed is unusable. The request is honest in the picture — dashed arc, dashed chip — without
+          // taking the control away.
+          control={READY}
+          onCommit={(next) => setRequested(next)}
+        />
+      </Row>
+    );
+  },
 };

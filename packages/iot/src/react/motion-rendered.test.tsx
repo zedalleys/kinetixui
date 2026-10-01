@@ -5,6 +5,7 @@ import { CommandLifecycle } from "./command-lifecycle";
 import { DeviceLevelControl } from "./device-level-control";
 import { DeviceModeControl } from "./device-mode-control";
 import { DevicePowerControl } from "./device-power-control";
+import { DeviceSetpointControl } from "./device-setpoint-control";
 
 /** Mid-flight: some stages reached, some still ahead — the state the transitions exist for. */
 const LC = { stage: "acknowledged", attempts: 1, maxAttempts: 3, requestedValue: "on", confirmedValue: "off", ackAt: Date.now() } as never;
@@ -105,5 +106,54 @@ describe("the controls animate the property that actually moves", () => {
     const options = screen.getAllByRole("radio");
     expect(options.length).toBeGreaterThan(1);
     options.forEach((o) => animates(o));
+  });
+});
+
+/**
+ * The setpoint ring is the one place where the obvious markup cannot animate at all.
+ *
+ * Its arc used to be drawn as a `d` of exactly the confirmed length, and its marker placed at computed
+ * `cx`/`cy`. Neither is a property a browser interpolates, so the ring jumped to each new target: measured in
+ * Chromium, `transition-duration` was `0s` and nothing was running 45ms after the device confirmed, while the
+ * numeral beside it changed in the same frame.
+ *
+ * Asserting the class alone would not protect this — the class was never the problem. These assert the
+ * *geometry strategy*: one arc of fixed length revealed by `stroke-dashoffset`, and a marker rotated rather
+ * than repositioned. A revert to per-value geometry makes `d` differ between two targets and fails here.
+ */
+describe("the setpoint ring animates over properties a browser can interpolate", () => {
+  const ring = (target: number) =>
+    render(<DeviceSetpointControl target={target} min={15} max={28} label="Room" presentation="ring" />).container;
+
+  it("reveals a fixed arc with stroke-dashoffset rather than redrawing it per value", () => {
+    const low = ring(16).querySelector("[data-ring-confirmed]")!;
+    cleanup();
+    const high = ring(27).querySelector("[data-ring-confirmed]")!;
+
+    expect(low.getAttribute("d"), "the arc's own geometry must not depend on the value").toBe(high.getAttribute("d"));
+    expect(low.getAttribute("stroke-dashoffset")).not.toBe(high.getAttribute("stroke-dashoffset"));
+    expect(low.getAttribute("pathLength")).toBe("1");
+    expect(classOf(high)).toContain("transition-[stroke-dashoffset]");
+    expect(classOf(high)).toMatch(/duration-(instant|fast|base|slow)/);
+    expect(classOf(high)).toContain("motion-reduce:transition-none");
+  });
+
+  it("rotates the marker into place rather than repositioning it", () => {
+    const low = ring(16).querySelector("[data-ring-marker]")!;
+    const lowCircle = low.querySelector("circle")!;
+    cleanup();
+    const high = ring(27).querySelector("[data-ring-marker]")!;
+    const highCircle = high.querySelector("circle")!;
+
+    expect(lowCircle.getAttribute("cx"), "the marker is drawn once and rotated, so its cx is fixed").toBe(
+      highCircle.getAttribute("cx"),
+    );
+    expect(classOf(high)).toContain("transition-transform");
+    expect(classOf(high)).toContain("motion-reduce:transition-none");
+  });
+
+  it("does not draw a round cap at the bottom of the range, where there is nothing to show", () => {
+    const atMin = ring(15).querySelector("[data-ring-confirmed]")!;
+    expect(atMin.getAttribute("stroke-linecap")).toBe("butt");
   });
 });
