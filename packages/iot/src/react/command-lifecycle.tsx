@@ -168,7 +168,12 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
               const failed = step.state === "current" && bad;
               return (
                 <li
-                  key={step.stage}
+                  // Keyed by POSITION, not stage. The track is three fixed slots, and on a terminal
+                  // stage `stepsFor` swaps the third from `confirmed` to `failed`/`timed-out`/
+                  // `unreachable`/`cancelled`. Keying by stage remounts that row, and a node that has
+                  // just mounted has no previous computed value to transition from — the failure, the
+                  // one stage change most worth seeing, would snap.
+                  key={index}
                   data-step={step.stage}
                   data-step-state={step.state}
                   aria-current={step.state === "current" ? "step" : undefined}
@@ -209,7 +214,10 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                       <span
                         className={cn(
                           "grid size-7 shrink-0 place-items-center rounded-full",
-                          "transition-colors duration-fast ease-out motion-reduce:transition-none",
+                          // Not `transition-colors`: the `current` marker's ring is a Tailwind `ring-*`,
+                          // which compiles to box-shadow, and box-shadow is not in that utility's property
+                          // list — the fill would fade while the ring snapped on.
+                          "transition-[background-color,border-color,box-shadow] duration-fast ease-out motion-reduce:transition-none",
                           step.state === "done" && "bg-muted",
                           step.state === "current" && (failed ? "bg-destructive/10 ring-1 ring-inset ring-destructive/40" : "bg-primary/10 ring-1 ring-inset ring-primary/40"),
                           step.state === "upcoming" && "border border-dashed border-border",

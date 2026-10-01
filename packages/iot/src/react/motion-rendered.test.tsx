@@ -44,11 +44,36 @@ describe("CommandLifecycle animates the stage it is reporting", () => {
     steps.forEach((s) => animates(s));
   });
 
-  it("animates the marker whose fill, ring and border carry the stage", () => {
+  it("animates the marker's ring, which is a box-shadow and not a colour", () => {
     const { container } = render(<CommandLifecycle lifecycle={LC} />);
     const markers = container.querySelectorAll(".rounded-full.size-7, .size-7.rounded-full");
     expect(markers.length).toBeGreaterThan(0);
-    markers.forEach((m) => animates(m));
+    markers.forEach((m) => {
+      const cls = classOf(m);
+      // `ring-*` compiles to box-shadow, which Tailwind's `transition-colors` does NOT cover — the
+      // fill would fade while the ring snapped on. The property list has to name it.
+      expect(cls).toContain("box-shadow");
+      expect(cls).not.toMatch(/\btransition-colors\b/);
+      expect(cls).toMatch(/duration-(instant|fast|base|slow)/);
+      expect(cls).toContain("motion-reduce:transition-none");
+    });
+  });
+
+  it("keeps the last row's DOM identity when a terminal stage replaces confirmed", () => {
+    // A CSS transition needs a previous and a next computed value on the SAME node. `stepsFor` swaps
+    // the third slot from `confirmed` to the terminal stage, so if the row were keyed by stage React
+    // would remount it and the failure — the stage most worth seeing change — would snap.
+    const acked = { stage: "acknowledged", attempts: 1, maxAttempts: 3, requestedValue: "on", ackAt: Date.now() } as never;
+    const { container, rerender } = render(<CommandLifecycle lifecycle={acked} />);
+    const rowBefore = container.querySelectorAll("[data-step-state]")[2];
+    expect(rowBefore).toBeTruthy();
+
+    const failed = { stage: "failed", attempts: 1, maxAttempts: 3, requestedValue: "on", ackAt: Date.now() } as never;
+    rerender(<CommandLifecycle lifecycle={failed} />);
+    const rowAfter = container.querySelectorAll("[data-step-state]")[2];
+
+    expect(rowAfter.getAttribute("data-step")).toBe("failed");
+    expect(rowAfter, "the terminal row must be the same node, or it mounts in its final styles").toBe(rowBefore);
   });
 
   it("animates the glyph that dims while a stage is still ahead", () => {
