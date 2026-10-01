@@ -54,7 +54,13 @@ export default {
         popover: { DEFAULT: c("--popover"), foreground: c("--popover-foreground") },
         primary: { DEFAULT: c("--primary"), foreground: c("--primary-foreground") },
         secondary: { DEFAULT: c("--secondary"), foreground: c("--secondary-foreground") },
-        muted: { DEFAULT: c("--muted"), foreground: c("--muted-foreground") },
+        muted: {
+          DEFAULT: c("--muted"),
+          foreground: c("--muted-foreground"),
+          // Secondary text on a tinted container (bg-primary/10, bg-destructive/10). `--muted-foreground`
+          // is tuned against `--background` and `--muted`; a 10% tint drops it to 4.33:1.
+          "on-container": c("--semantic-muted-on-container"),
+        },
         accent: { DEFAULT: c("--accent"), foreground: c("--accent-foreground") },
         destructive: { DEFAULT: c("--destructive"), foreground: c("--destructive-foreground") },
         success: { DEFAULT: c("--success"), foreground: c("--success-foreground") },

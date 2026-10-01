@@ -57,6 +57,11 @@ jobs:
       - name: Contrast audit (WCAG AA text pairs)
         run: pnpm check:contrast
 
+      # The browser axe pass is path-filtered; this checks the filter still covers every package
+      # that has stories, so a package cannot drift outside the accessibility gate unnoticed.
+      - name: Accessibility gate covers every package with stories
+        run: pnpm check:a11y-coverage
+
       - name: Token table matches the tokens
         run: pnpm check:token-contract
 

@@ -50,6 +50,7 @@ object KinetixTheme {
   val colorSemanticError = Color(0xffec5047)
   val colorSemanticErrorContainer = Color(0xfffef3f2)
   val colorSemanticInfoContainer = Color(0xfff0f7ff)
+  val colorSemanticMutedOnContainer = Color(0xff616161)
   val colorSemanticOnError = Color(0xfffef3f2)
   val colorSemanticOnErrorContainer = Color(0xffec5047)
   val colorSemanticOnInfoContainer = Color(0xff395a70)

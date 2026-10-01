@@ -172,7 +172,8 @@ export const tokens = {
       "on-success-container": "#465245",
       "warning": "#f97907",
       "info-container": "#f0f7ff",
-      "on-info-container": "#395a70"
+      "on-info-container": "#395a70",
+      "muted-on-container": "#616161"
     },
     "chart-1": "#1b3c53",
     "chart-2": "#748873",

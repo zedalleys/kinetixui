@@ -135,6 +135,7 @@
   --semantic-warning: 28 95% 50%;
   --semantic-info-container: 212 100% 97%;
   --semantic-on-info-container: 204 33% 33%; /** text on a tinted info surface (bg-info/10) — Banner/Inform information. --info itself is only 4.15:1 on its own 10% tint; this clears AA. Exposed as text-info-on-container. */
+  --semantic-muted-on-container: 0 0% 38%; /** secondary text on a tinted container (bg-primary/10, bg-destructive/10 and their /5 variants) — IoT device, group and activity cards. --muted-foreground (neutral.600 #6d6d6d) is tuned against --background and --muted and clears AA there at 5.17:1, but a 10% tint eats the margin: 4.43:1 on bg-primary/10 and 4.33:1 on bg-destructive/10. This is one step darker and clears AA on every tint those surfaces use, worst case 4.79:1 on bg-destructive/10 over --muted, while staying visibly lighter than --foreground. Exposed as text-muted-on-container. */
   --tertiary: 0 0% 69%; /** figma: tertiary — switch off-track */
   --action-hover: 224 71% 53%; /** explicit hover fill for native ports: `action` at 90% over `background` (#1d4ed8 over #ffffff). The web renders this as `bg-action/90`; `check:contrast` asserts the two agree. */
   --action-pressed: 224 71% 56%; /** explicit pressed fill for native ports: `action` at 85% over `background`. The web renders this as `bg-action/85`; `check:contrast` asserts the two agree and that text on it clears AA. */
@@ -335,6 +336,7 @@
   --info: 204 33% 68%;
   --info-foreground: 205 55% 4%;
   --semantic-on-info-container: 204 33% 68%; /** text on a tinted info surface (bg-info/10). Dark: same as --info, which already clears AA on the dark tint. Light counterpart is darker — see color.light.json. */
+  --semantic-muted-on-container: 204 33% 68%; /** secondary text on a tinted container. Dark: identical to --muted-foreground, which already clears AA on every dark tint (6.92:1 on bg-primary/10 over --card, 7.24:1 on bg-destructive/10). Darkening is a light-mode problem only, because a 10% tint lightens a dark surface away from the text rather than toward it. Light counterpart is darker — see color.light.json. */
   --brand: 204 25% 56%; /** identity colour, lightened so it stays legible on the dark surface (the light navy would vanish). Independent of light, not a flip. */
   --brand-foreground: 205 55% 4%; /** text/icons on `brand` */
   --action: var(--primary); /** the interactive colour (buttons, selected controls). Defaults to `primary`; override `--action` on its own to split the interactive colour from `primary`. */

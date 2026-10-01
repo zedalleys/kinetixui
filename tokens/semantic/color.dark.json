@@ -180,6 +180,11 @@
         "$value": "{color.blue.100}",
         "$type": "color",
         "$description": "text on a tinted info surface (bg-info/10). Dark: same as --info, which already clears AA on the dark tint. Light counterpart is darker — see color.light.json."
+      },
+      "muted-on-container": {
+        "$value": "{color.blue.100}",
+        "$type": "color",
+        "$description": "secondary text on a tinted container. Dark: identical to --muted-foreground, which already clears AA on every dark tint (6.92:1 on bg-primary/10 over --card, 7.24:1 on bg-destructive/10). Darkening is a light-mode problem only, because a 10% tint lightens a dark surface away from the text rather than toward it. Light counterpart is darker — see color.light.json."
       }
     },
     "brand": {
