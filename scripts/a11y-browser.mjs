@@ -9,10 +9,12 @@
  * the built Storybook (apps/docs/storybook-static) in headless Chromium, opens
  * each story in light AND dark, and runs axe-core with every rule on.
  *
- * a11y-baseline.json lists violations that already existed, keyed
- * `story-id|theme|rule`. A new violation fails the run; a baselined one that no
- * longer occurs also fails (stale entry) so the baseline only shrinks. Use
- * --update to regenerate it deliberately, e.g. right after fixing things.
+ * a11y-baseline.json maps each accepted violation to the reason it is accepted, keyed
+ * `story-id|theme|rule` — or `story-id|theme|open:<state>|rule` for one found with a
+ * surface open. A new violation fails the run; a baselined one that no longer occurs
+ * also fails (stale entry) so the baseline only shrinks; and an entry with no reason
+ * fails too, so nothing is accepted silently. Use --update to regenerate it
+ * deliberately, e.g. right after fixing things.
  *
  * Beyond axe it also runs four behaviour checks that only make sense in a real browser. They have
  * no baseline — any failure fails the run:
@@ -510,16 +512,48 @@ if (behaviourFailures.length) {
 }
 
 const keys = [...found.keys()].sort();
+
+/**
+ * The baseline is a map from key to the reason that violation is accepted, not a list of keys.
+ *
+ * A list is how a baseline becomes permanent: six months on nobody can tell a finding that was
+ * investigated and judged a false positive from one that was inconvenient on a Friday. A reason is
+ * cheap to write when you have just done the investigation and impossible to reconstruct later, so
+ * the format asks for it at the only moment it is free — and `--update` leaves a TODO that fails the
+ * run until somebody replaces it, which makes "just baseline it" cost exactly one sentence.
+ */
+const TODO = "TODO: explain why this is accepted";
+const readBaseline = () => {
+  if (!existsSync(baselinePath)) return {};
+  const raw = JSON.parse(readFileSync(baselinePath, "utf8"));
+  // The older format was an array of keys; read it so a stale checkout still runs.
+  return Array.isArray(raw) ? Object.fromEntries(raw.map((k) => [k, TODO])) : raw;
+};
+
 if (UPDATE) {
-  writeFileSync(baselinePath, JSON.stringify(keys, null, 2) + "\n");
+  const previous = readBaseline();
+  const next = Object.fromEntries(keys.map((k) => [k, previous[k] ?? TODO]));
+  writeFileSync(baselinePath, JSON.stringify(next, null, 2) + "\n");
   console.log(`baseline written: ${keys.length} known violations across ${stories.length} stories × ${THEMES.length} themes`);
+  const unexplained = keys.filter((k) => next[k] === TODO);
+  if (unexplained.length) {
+    console.error(
+      `✗ ${unexplained.length} baselined violation(s) have no reason yet. Replace the TODO in ` +
+        `a11y-baseline.json with what you found:\n` + unexplained.map((k) => `  ${k}`).join("\n"),
+    );
+    process.exit(1);
+  }
   process.exit(0);
 }
 
-const known = new Set(existsSync(baselinePath) ? JSON.parse(readFileSync(baselinePath, "utf8")) : []);
+const baseline = readBaseline();
+const known = new Set(Object.keys(baseline));
 const fresh = keys.filter((k) => !known.has(k));
 const stale = [...known].filter((k) => !found.has(k));
+const unexplained = [...known].filter((k) => !baseline[k] || baseline[k] === TODO);
 if (fresh.length) console.error(`✗ ${fresh.length} new violation(s) (story|theme|rule):\n` + fresh.map((k) => `  ${k} — ${found.get(k)}`).join("\n"));
 if (stale.length) console.error(`✗ ${stale.length} baselined violation(s) no longer occur — run with --update:\n` + stale.map((k) => `  ${k}`).join("\n"));
-if (fresh.length || stale.length) process.exit(1);
-console.log(`a11y-browser ok — ${stories.length} stories × ${THEMES.length} themes, ${known.size} known violations, none new.`);
+if (unexplained.length) console.error(`✗ ${unexplained.length} baselined violation(s) carry no reason:\n` + unexplained.map((k) => `  ${k}`).join("\n"));
+if (fresh.length || stale.length || unexplained.length) process.exit(1);
+console.log(`a11y-browser ok — ${stories.length} stories × ${THEMES.length} themes, ${known.size} known violation(s), none new.`);
+for (const [key, why] of Object.entries(baseline)) console.log(`  accepted: ${key}\n            ${why}`);

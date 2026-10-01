@@ -65,6 +65,21 @@
  * using the scale has it — and converting the scale is a library-wide change whose consequences at 200%
  * are unverified for the other 89 components. It is recorded as a finding and left to its own slice.
  *
+ * ── Overlays, which have to be opened before there is anything to measure ───
+ *
+ * An overlay's geometry at 200% text is not a property of its trigger, so measuring the closed story
+ * would measure a button. Each surface is opened through the shared declaration in open-states.mjs —
+ * the same one the axe pass uses, so there is one definition of "open" and one place that waits for it —
+ * and then judged on whether it is still usable rather than on whether it grew:
+ *
+ *   the surface stays inside the viewport,         a dialog that grows off-screen loses its buttons
+ *   the page gains no horizontal scroll,           sideways scrolling to read a menu is not reading it
+ *   nothing inside it is clipped,                  a label cropped to "Cont…" is not a label
+ *   its own text actually grew.                    the type-scale rule from the form family, unchanged
+ *
+ * Measured at desktop width, at phone width, and under RTL — the last because an overlay is positioned,
+ * and a positioned surface is where mirroring goes wrong in a way no class check can see.
+ *
  * ── And once at phone width ─────────────────────────────────────────────────
  *
  * Every form control is also loaded at 390px and doubled there, because a control can absorb its text
@@ -87,6 +102,7 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
+import { OPEN_STATES, openSurface } from "./open-states.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
@@ -458,6 +474,62 @@ for (const name of TEXT_SCALE_PENDING) {
   }
 }
 
+/**
+ * Overlays: opened, then measured at 1x and 2x, at desktop and phone width, in both directions.
+ *
+ * `TEXT_SCALE_PENDING` applies here too — an overlay whose body copy is `text-body-md` cannot grow its
+ * text until the type scale is converted, and saying otherwise would be the same overstatement the form
+ * family's list exists to prevent. Which overlays those are is measured below rather than assumed.
+ */
+const VIEWPORTS = [
+  { label: "desktop", width: 1024, height: 768 },
+  { label: "phone", width: NARROW.width, height: NARROW.height },
+];
+const overlayRows = [];
+for (const entry of OPEN_STATES) {
+  for (const viewport of VIEWPORTS) {
+    for (const dir of ["ltr", "rtl"]) {
+      const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } });
+      const where = `${entry.component} (${viewport.label}/${dir})`;
+      try {
+        await page.goto(`${base}/iframe.html?id=${entry.story}&viewMode=story`, { waitUntil: "load" });
+        await page.waitForFunction(() => document.body.classList.contains("sb-show-main"), null, { timeout: 20_000 });
+        // Direction on the document element, which is where an RTL app sets it and the only place a
+        // portaled surface can inherit it from — it is a child of <body>, not of the component's tree.
+        await page.evaluate((d) => { document.documentElement.dir = d; }, dir);
+
+        const before = await openSurface(page, entry);
+        const beforeFont = await page.evaluate((sel) => parseFloat(getComputedStyle(document.querySelector(sel)).fontSize), entry.surface);
+        await page.keyboard.press("Escape");
+        await page.waitForSelector(entry.surface, { state: "detached", timeout: 10_000 });
+
+        await setRootFontSize(page, 16 * SCALE);
+        const after = await openSurface(page, entry);
+        const afterFont = await page.evaluate((sel) => parseFloat(getComputedStyle(document.querySelector(sel)).fontSize), entry.surface);
+        const computedDir = await page.evaluate((sel) => getComputedStyle(document.querySelector(sel)).direction, entry.surface);
+
+        if (computedDir !== dir) {
+          problems.push(`${where}: the portaled surface computes direction ${computedDir} with the document set to ${dir}.`);
+        }
+        if (after.overflowX !== 0) problems.push(`${where}: ${after.overflowX}px of horizontal page overflow at ${SCALE}x text.`);
+        if (after.offscreen) problems.push(`${where}: the open surface does not fit the viewport at ${SCALE}x text (${after.w}x${after.h}).`);
+        if (after.clipped) problems.push(`${where}: content inside the open surface is clipped at ${SCALE}x text.`);
+        if (!TEXT_SCALE_PENDING.has(entry.component) && afterFont < beforeFont * (MIN_RATIO - 1) + beforeFont - 0.5) {
+          problems.push(`${where}: the surface's own text did not grow — ${beforeFont}px -> ${afterFont}px.`);
+        }
+        overlayRows.push(
+          `  ${entry.component.padEnd(14)} ${viewport.label.padEnd(7)} ${dir}  ${before.w}x${before.h} -> ${after.w}x${after.h}  ` +
+            `text ${beforeFont}px -> ${afterFont}px  dir=${computedDir}  overflowX=${after.overflowX}px`,
+        );
+      } catch (err) {
+        problems.push(`${where}: ${String(err.message).split("\n")[0]}`);
+      } finally {
+        await page.close();
+      }
+    }
+  }
+}
+
 await browser.close();
 server.close();
 
@@ -468,6 +540,8 @@ for (const r of formRows) console.log(r);
 console.log(`  (* text pinned by the px type scale — measured, not claimed; see TEXT_SCALE_PENDING)`);
 console.log(`large-text — the same controls at ${NARROW.width}px wide and ${SCALE}x text:`);
 for (const r of narrowRows) console.log(r);
+console.log(`large-text — ${OPEN_STATES.length} overlays opened and measured at ${SCALE}x text, both widths, both directions:`);
+for (const r of overlayRows) console.log(r);
 
 if (problems.length) {
   console.error(`\nlarge-text FAILED:\n  ${problems.join("\n  ")}`);
