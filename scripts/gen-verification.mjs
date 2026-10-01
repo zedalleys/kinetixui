@@ -161,6 +161,28 @@ function slugsFromCovers(target, platform) {
     .filter((slug) => components[slug]);
 }
 
+/**
+ * Does any workflow actually execute this script?
+ *
+ * Matched by the script's own path and by the `check:*` package script that wraps it, because a workflow
+ * step runs `pnpm check:large-text` rather than naming the file.
+ */
+function runsInCI(script) {
+  const dir = `${root}/.github/workflows`;
+  if (!existsSync(dir)) return true; // nothing to check against; not this file's job to invent one
+  const pkg = JSON.parse(read("package.json"));
+  const wrappers = Object.entries(pkg.scripts ?? {})
+    .filter(([, cmd]) => cmd.includes(script.replace(/^scripts\//, "")))
+    .map(([name]) => name);
+  const needles = [script, ...wrappers];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
+    .some((f) => {
+      const body = readFileSync(`${dir}/${f}`, "utf8");
+      return needles.some((n) => body.includes(n));
+    });
+}
+
 function walk(dir, match, acc = []) {
   const abs = `${root}/${dir}`;
   if (!existsSync(abs)) return acc;
@@ -223,6 +245,20 @@ for (const platform of platforms) {
     continue;
   }
   const files = [...spec.dirs.flatMap((d) => walk(d, spec.match)), ...(spec.extra ?? [])].sort();
+  for (const script of spec.extra ?? []) {
+    // A standalone script is evidence only if CI runs it. The suites found by `dirs` are covered by
+    // `pnpm test`; an `extra` script has no such home, and one was added here, published `largeText` for
+    // five components, and was executed by nothing — so the controls could have regressed to a fixed size
+    // while CI stayed green and the site still showed them verified. A claim with nothing that breaks when
+    // it stops being true is the one thing this file exists to prevent, so it is checked rather than
+    // remembered.
+    if (!runsInCI(script)) {
+      errors.push(
+        `${script}: listed as a ${platform} evidence source but no workflow in .github/workflows runs it — ` +
+          `add it to a job (and to that workflow's path filters), or the evidence it publishes is unenforced`,
+      );
+    }
+  }
   for (const file of files) {
     if (!existsSync(`${root}/${file}`)) {
       errors.push(`${file}: listed as a ${platform} evidence source but does not exist`);
