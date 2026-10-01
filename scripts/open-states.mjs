@@ -60,21 +60,27 @@ export const OVERLAY_FAMILY = [
  *   focus      — Tooltip, which opens for a keyboard user on focus and is the state worth scanning;
  *                hover would need the provider's 700ms delay and a pointer that stays put
  *
+ * `modal` says whether focus must ENTER the surface on open and be contained there until it closes.
+ * It is true for the five dialog-shaped surfaces and false for the rest, and that is a statement about
+ * each primitive rather than a preference: a Popover and a Tooltip are non-modal by design, and adding a
+ * focus trap to either for symmetry would be a regression, not a fix. The menus manage focus themselves
+ * without trapping Tab in the DOM sense, so they are checked for focus entry and not for containment.
+ *
  * `surface` is measured, not guessed: each selector below is what that component actually renders into the
  * portal, read out of a real browser. Popover's content carries `role="dialog"`; Tooltip's carries
  * `role="tooltip"`; the three menus carry `role="menu"`; AlertDialog is `role="alertdialog"`.
  */
 export const OPEN_STATES = [
-  { component: "dialog", story: "overlays-dialog--default", state: "open dialog", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
-  { component: "alert-dialog", story: "overlays-alertdialog--default", state: "open alert dialog", open: { click: "#storybook-root button" }, surface: '[role="alertdialog"]' },
-  { component: "sheet", story: "overlays-sheet--default", state: "open sheet", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
-  { component: "drawer", story: "overlays-drawer--default", state: "open drawer", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
-  { component: "modal", story: "overlays-modal--default", state: "open modal", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
-  { component: "popover", story: "overlays-popover--default", state: "open popover", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
-  { component: "tooltip", story: "overlays-tooltip--default", state: "visible tooltip", open: { focus: "#storybook-root button" }, surface: '[role="tooltip"]' },
-  { component: "dropdown-menu", story: "overlays-dropdownmenu--default", state: "open menu", open: { click: "#storybook-root button" }, surface: '[role="menu"]' },
-  { component: "context-menu", story: "overlays-contextmenu--default", state: "open context menu", open: { rightClick: "#storybook-root [data-state]" }, surface: '[role="menu"]' },
-  { component: "menubar", story: "navigation-menubar--default", state: "open menubar menu", open: { click: '#storybook-root [role="menuitem"]' }, surface: '[role="menu"]' },
+  { component: "dialog", modal: true, story: "overlays-dialog--default", state: "open dialog", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "alert-dialog", modal: true, story: "overlays-alertdialog--default", state: "open alert dialog", open: { click: "#storybook-root button" }, surface: '[role="alertdialog"]' },
+  { component: "sheet", modal: true, story: "overlays-sheet--default", state: "open sheet", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "drawer", modal: true, story: "overlays-drawer--default", state: "open drawer", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "modal", modal: true, story: "overlays-modal--default", state: "open modal", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "popover", modal: false, story: "overlays-popover--default", state: "open popover", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "tooltip", modal: false, story: "overlays-tooltip--default", state: "visible tooltip", open: { focus: "#storybook-root button" }, surface: '[role="tooltip"]' },
+  { component: "dropdown-menu", modal: false, story: "overlays-dropdownmenu--default", state: "open menu", open: { click: "#storybook-root button" }, surface: '[role="menu"]' },
+  { component: "context-menu", modal: false, story: "overlays-contextmenu--default", state: "open context menu", open: { rightClick: "#storybook-root [data-state]" }, surface: '[role="menu"]' },
+  { component: "menubar", modal: false, story: "navigation-menubar--default", state: "open menubar menu", open: { click: '#storybook-root [role="menuitem"]' }, surface: '[role="menu"]' },
 ];
 
 /** The one action key each entry carries, so a malformed entry is a failure rather than a silent no-op. */
@@ -120,4 +126,57 @@ export function coverageErrors({ storyIds, slugs }) {
     if (!entry.surface) errors.push(`open-states: ${entry.component}'s state "${entry.state}" declares no surface selector`);
   }
   return errors;
+}
+
+/**
+ * Open one declared surface in an already-loaded story page, and return what was measured.
+ *
+ * Shared rather than written twice: `a11y-browser.mjs` needs it to scan and to check the focus contract,
+ * and `large-text.mjs` needs it to measure the same surfaces at 200% text and at phone width. Two copies
+ * of this sequence would be two chances for one of them to start waiting a little less carefully.
+ *
+ * Throws with the selector it was waiting for. The caller turns that into a failure against a named
+ * component and state; nothing here returns a "could not open" that a caller might treat as a skip.
+ */
+export async function openSurface(page, entry, { timeout = 10_000 } = {}) {
+  // A focus-opened surface will not reappear if the trigger is still the active element, which is the
+  // state the page is in after a close-and-reopen. Blur first, so "focus the trigger" is a transition.
+  if (entry.open.focus) await page.evaluate(() => document.activeElement instanceof HTMLElement && document.activeElement.blur());
+  if (entry.open.click) await page.click(entry.open.click, { timeout });
+  else if (entry.open.rightClick) await page.click(entry.open.rightClick, { button: "right", timeout });
+  else if (entry.open.focus) await page.focus(entry.open.focus, { timeout });
+
+  await page.waitForSelector(entry.surface, { state: "visible", timeout });
+  // Settled, by asking the browser rather than by waiting a guessed number of milliseconds.
+  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"), null, { timeout });
+
+  const measured = await page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    const r = el.getBoundingClientRect();
+    const active = document.activeElement;
+    /** An ancestor chain check, because the hidden element is the page root and not the focused node. */
+    const inAriaHidden = (node) => {
+      for (let n = node; n; n = n.parentElement) if (n.getAttribute?.("aria-hidden") === "true") return true;
+      return false;
+    };
+    return {
+      role: el.getAttribute("role"),
+      w: Math.round(r.width),
+      h: Math.round(r.height),
+      text: (el.textContent || "").trim().slice(0, 40),
+      // Does the surface fit on screen, and did the page gain a sideways scroll because of it?
+      offscreen: r.left < -1 || r.top < -1 || r.right > document.documentElement.clientWidth + 1 || r.bottom > document.documentElement.clientHeight + 1,
+      overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      // Text that no longer fits the box it is in.
+      clipped: [...el.querySelectorAll("*")].some((n) => n.scrollWidth > n.clientWidth + 1 && getComputedStyle(n).overflowX === "hidden"),
+      focusInside: Boolean(active && el.contains(active)),
+      focusInAriaHidden: Boolean(active && active !== document.body && inAriaHidden(active)),
+      focusDescription: active ? `${active.tagName.toLowerCase()}${active.getAttribute("role") ? `[${active.getAttribute("role")}]` : ""}` : "none",
+    };
+  }, entry.surface);
+
+  if (measured.w < 1 || measured.h < 1) {
+    throw new Error(`surface ${entry.surface} is present but has no size (${measured.w}x${measured.h})`);
+  }
+  return measured;
 }

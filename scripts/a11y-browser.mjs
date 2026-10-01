@@ -48,7 +48,7 @@ import { createRequire } from "node:module";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { describeAnimation, harnessAnimations, reducedMotionViolations } from "./a11y-animations.mjs";
-import { OPEN_STATES, coverageErrors } from "./open-states.mjs";
+import { OPEN_STATES, coverageErrors, openSurface } from "./open-states.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
@@ -372,6 +372,7 @@ await Promise.all(
 // portaled to a direct child of <body>. Scanning the story root would miss the entire thing — which is
 // exactly how an overlay could be "covered" by a suite that never saw it.
 const openStateScans = [];
+const focusContract = [];
 {
   const ctx = await browser.newContext({ viewport: { width: 1024, height: 768 }, reducedMotion: "reduce" });
   for (const theme of THEMES) {
@@ -383,25 +384,78 @@ const openStateScans = [];
         await page.waitForFunction(() => document.body.classList.contains("sb-show-main") || document.body.classList.contains("sb-show-errordisplay"), null, { timeout: 20000 });
         if (await page.evaluate(() => document.body.classList.contains("sb-show-errordisplay"))) throw new Error("story threw while rendering");
 
-        // Open it the way this primitive opens. Playwright fails if the selector matches nothing, so a
-        // renamed trigger is a failure rather than a quiet no-op.
-        if (entry.open.click) await page.click(entry.open.click, { timeout: 10_000 });
-        else if (entry.open.rightClick) await page.click(entry.open.rightClick, { button: "right", timeout: 10_000 });
-        else if (entry.open.focus) await page.focus(entry.open.focus, { timeout: 10_000 });
+        const surface = await openSurface(page, entry);
 
-        // Proof it opened: the surface exists and is visible. No timeout guess — this waits exactly as
-        // long as the animation takes, and reports the selector it was waiting for when it never arrives.
-        await page.waitForSelector(entry.surface, { state: "visible", timeout: 10_000 });
-        // Settled: nothing is still animating, so geometry and visibility are final.
-        await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"), null, { timeout: 10_000 });
+        // ── the focus contract, which axe cannot judge ────────────────────────────────────────
+        //
+        // Worth stating why this is here and not left to the scan: axe's `aria-hidden-focus` rule
+        // excuses an aria-hidden page whenever a modal dialog is open, wherever focus actually sits.
+        // So it reported the DropdownMenu (whose trigger is focusable inside the hidden page, and
+        // unreachable) and said nothing about the Drawer (which left focus ON that trigger). The rule
+        // is a poor proxy in both directions; focus needs asking about directly.
+        if (surface.focusInAriaHidden) {
+          behaviourFailures.push(
+            `${where} focus-entry: focus is on ${surface.focusDescription}, inside an aria-hidden subtree — ` +
+              `the surface is open and assistive technology has been told that element does not exist`,
+          );
+        }
+        if (entry.modal && !surface.focusInside) {
+          behaviourFailures.push(`${where} focus-entry: focus is on ${surface.focusDescription}, outside the open surface`);
+        }
+        if (entry.modal) {
+          // Containment: Tab must not walk out of a modal surface. Eight presses is past the end of
+          // every one of these, so an escape would have shown itself.
+          for (let i = 0; i < 8; i++) {
+            await page.keyboard.press("Tab");
+            const inside = await page.evaluate((sel) => {
+              const el = document.querySelector(sel);
+              return Boolean(el && document.activeElement && el.contains(document.activeElement));
+            }, entry.surface);
+            if (!inside) {
+              behaviourFailures.push(`${where} focus-containment: Tab left the surface after ${i + 1} press(es)`);
+              break;
+            }
+          }
+        }
+        // Dismissal and return: Escape closes it, and focus goes back to where it came from.
+        const triggerSelector = entry.open.click ?? entry.open.rightClick ?? entry.open.focus;
+        await page.keyboard.press("Escape");
+        try {
+          await page.waitForSelector(entry.surface, { state: "detached", timeout: 10_000 });
+        } catch {
+          behaviourFailures.push(`${where} dismissal: Escape did not close the surface`);
+        }
+        // Waited for rather than read once: focus is restored a tick after the surface leaves, and
+        // sampling immediately made this report "elsewhere" in one theme and "trigger" in the other for
+        // the same component — a race in the check, not a difference in the component.
+        const restoration = await page.evaluate(
+          ([sel, deadline]) =>
+            new Promise((resolve) => {
+              const trigger = document.querySelector(sel);
+              // A span is a legitimate ContextMenu trigger and cannot hold focus; saying so is honest,
+              // where reporting it as a focus-return failure would not be.
+              const focusable = Boolean(trigger && (trigger.tabIndex >= 0 || /^(a|button|input|select|textarea)$/i.test(trigger.tagName)));
+              const check = () => {
+                if (!focusable) return resolve({ focusable, returned: false });
+                if (document.activeElement === trigger) return resolve({ focusable, returned: true });
+                if (Date.now() > deadline) return resolve({ focusable, returned: false });
+                requestAnimationFrame(check);
+              };
+              check();
+            }),
+          [triggerSelector, Date.now() + 2000],
+        );
+        if (restoration.focusable && !restoration.returned) {
+          behaviourFailures.push(`${where} focus-return: Escape did not put focus back on the trigger`);
+        }
+        focusContract.push(
+          `  ${entry.component.padEnd(14)} entry=${surface.focusInside ? "inside" : surface.focusDescription}` +
+            `${entry.modal ? " contained=yes" : " (non-modal)"} ` +
+            `return=${restoration.focusable ? (restoration.returned ? "trigger" : "NOT RETURNED") : "trigger not focusable"}`,
+        );
 
-        const surface = await page.evaluate((sel) => {
-          const el = document.querySelector(sel);
-          const r = el.getBoundingClientRect();
-          return { role: el.getAttribute("role"), w: Math.round(r.width), h: Math.round(r.height), text: (el.textContent || "").trim().slice(0, 40) };
-        }, entry.surface);
-        if (surface.w < 1 || surface.h < 1) throw new Error(`surface ${entry.surface} is present but has no size (${surface.w}x${surface.h})`);
-
+        // Re-open for the scan: Escape left it closed, and the surface is what axe is here for.
+        await openSurface(page, entry);
         await page.addStyleTag({ content: "*,*::before,*::after{transition:none!important;animation:none!important;caret-color:transparent!important}" });
         await page.evaluate(() => document.fonts.ready);
         if (!(await page.evaluate(() => Boolean(window.axe)))) await page.addScriptTag({ content: axeSource });
@@ -441,6 +495,8 @@ if (harnessMotionIgnored) console.log(`reduced motion: ignored ${harnessMotionIg
 
 console.log(`open states — ${openStateScans.length} scan(s), each with its surface measured on screen:`);
 for (const line of openStateScans) console.log(line);
+console.log(`focus contract — entry, containment and return, on ${focusContract.length} open surface(s):`);
+for (const line of focusContract) console.log(line);
 
 if (failedToLoad.length) {
   console.error(`✗ ${failedToLoad.length} story render(s) failed:\n` + failedToLoad.map((f) => `  ${f}`).join("\n"));

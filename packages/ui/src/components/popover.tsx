@@ -17,6 +17,13 @@ const PopoverContent = React.forwardRef<
       ref={ref}
       align={align}
       sideOffset={sideOffset}
+      // Radix gives this `role="dialog"`, and a dialog without an accessible name is announced as just
+      // "dialog" — WCAG 4.1.2. Nothing here named it, so every Popover in the library shipped that way:
+      // found by running axe against the surface while it was open, which until this slice nothing did.
+      // The fallback is deliberately only a fallback. A caller who passes `aria-label` or points at a
+      // heading with `aria-labelledby` keeps theirs, and should: "Popover" tells a screen-reader user
+      // what kind of thing opened and nothing about what is in it. It is the floor, not the goal.
+      aria-label={props["aria-label"] ?? (props["aria-labelledby"] ? undefined : "Popover")}
       className={cn(
         "z-overlay w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none font-sans",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=open]:duration-fast data-[state=open]:ease-enter data-[state=closed]:duration-instant data-[state=closed]:ease-exit",

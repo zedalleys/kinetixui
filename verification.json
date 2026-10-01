@@ -20,9 +20,9 @@
   "totals": {
     "React": {
       "build": 98,
-      "interaction": 30,
+      "interaction": 37,
       "accessibility": 98,
-      "rtl": 17,
+      "rtl": 18,
       "largeText": 8,
       "visual": 0,
       "published": 98
@@ -210,8 +210,10 @@
           "rtl"
         ],
         "components": [
+          "alert-dialog",
           "checkbox",
           "color-picker",
+          "context-menu",
           "data-grid",
           "dialog",
           "direction-provider",
@@ -220,16 +222,20 @@
           "input",
           "input-otp",
           "list",
+          "menubar",
+          "modal",
           "multi-select",
           "popover",
           "radio-group",
           "select",
+          "sheet",
           "slider",
           "switch",
           "tabs",
           "textarea",
           "toggle",
           "toggle-group",
+          "tooltip",
           "tour",
           "tree-view"
         ]
@@ -244,6 +250,23 @@
           "json-viewer",
           "markdown-editor",
           "tree-view"
+        ]
+      },
+      {
+        "file": "packages/ui/src/components-overlay.test.tsx",
+        "kinds": [
+          "interaction",
+          "rtl"
+        ],
+        "components": [
+          "dialog",
+          "direction-provider",
+          "drawer",
+          "dropdown-menu",
+          "modal",
+          "popover",
+          "sheet",
+          "tooltip"
         ]
       },
       {
@@ -596,7 +619,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -631,7 +654,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -678,9 +701,12 @@
         "build": [
           "packages/ui (compiled by CI)"
         ],
+        "interaction": [
+          "packages/ui/src/components-keyboard.test.tsx:1242-1654"
+        ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
           "packages/ui/src/components-rtl.test.tsx:60-259"
@@ -718,7 +744,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -753,7 +779,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -802,7 +828,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -837,7 +863,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -886,7 +912,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -917,7 +943,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -966,7 +992,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -995,7 +1021,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1033,7 +1059,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1094,7 +1120,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1123,7 +1149,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1152,7 +1178,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1201,7 +1227,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1236,7 +1262,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1270,12 +1296,12 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:233-462",
+          "packages/ui/src/components-keyboard.test.tsx:315-544",
           "packages/ui/src/components-selection.test.tsx:27-137"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "largeText": [
           "scripts/large-text.mjs:81-482"
@@ -1339,7 +1365,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1374,7 +1400,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1409,7 +1435,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1443,12 +1469,12 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:1022-1159",
+          "packages/ui/src/components-keyboard.test.tsx:1104-1241",
           "packages/ui/src/components-lifecycle.test.tsx:20-174"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1477,7 +1503,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1491,7 +1517,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1520,7 +1546,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1547,9 +1573,12 @@
         "build": [
           "packages/ui (compiled by CI)"
         ],
+        "interaction": [
+          "packages/ui/src/components-keyboard.test.tsx:67-258"
+        ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
           "packages/ui/src/components-rtl.test.tsx:60-259"
@@ -1580,14 +1609,14 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:463-1021"
+          "packages/ui/src/components-keyboard.test.tsx:545-1103"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
-          "packages/ui/src/components-keyboard.test.tsx:463-1021"
+          "packages/ui/src/components-keyboard.test.tsx:545-1103"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1616,7 +1645,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1651,7 +1680,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1680,7 +1709,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1708,11 +1737,12 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:47-176"
+          "packages/ui/src/components-keyboard.test.tsx:67-258",
+          "packages/ui/src/components-overlay.test.tsx:35-257"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1747,7 +1777,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1776,16 +1806,18 @@
         ],
         "interaction": [
           "packages/ui/src/components-form.test.tsx:311-436",
-          "packages/ui/src/components-keyboard.test.tsx:177-232",
+          "packages/ui/src/components-keyboard.test.tsx:259-314",
+          "packages/ui/src/components-overlay.test.tsx:258-316",
           "packages/ui/src/components-selection.test.tsx:138-199"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-436",
-          "packages/ui/src/components-keyboard.test.tsx:177-232",
+          "packages/ui/src/components-keyboard.test.tsx:259-314",
+          "packages/ui/src/components-overlay.test.tsx:258-316",
           "packages/ui/src/components-rtl.test.tsx:60-259",
           "packages/ui/src/components-selection.test.tsx:138-199"
         ],
@@ -1799,9 +1831,12 @@
         "build": [
           "packages/ui (compiled by CI)"
         ],
+        "interaction": [
+          "packages/ui/src/components-overlay.test.tsx:35-257"
+        ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1835,11 +1870,15 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:47-176"
+          "packages/ui/src/components-keyboard.test.tsx:67-258",
+          "packages/ui/src/components-overlay.test.tsx:258-316"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
+        ],
+        "rtl": [
+          "packages/ui/src/components-overlay.test.tsx:258-316"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1868,7 +1907,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1911,7 +1950,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1946,7 +1985,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1994,11 +2033,11 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:1022-1159"
+          "packages/ui/src/components-keyboard.test.tsx:1104-1241"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2033,7 +2072,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2071,7 +2110,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2085,7 +2124,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2114,7 +2153,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2143,7 +2182,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2174,11 +2213,11 @@
           "packages/ui/src/components-behavior.test.tsx:16-140",
           "packages/ui/src/components-form.test.tsx:311-436",
           "packages/ui/src/components-form.test.tsx:39-310",
-          "packages/ui/src/components-keyboard.test.tsx:1160-1404"
+          "packages/ui/src/components-keyboard.test.tsx:1242-1654"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-436"
@@ -2233,7 +2272,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2269,11 +2308,11 @@
         "interaction": [
           "packages/ui/src/components-form.test.tsx:311-436",
           "packages/ui/src/components-form.test.tsx:39-310",
-          "packages/ui/src/components-keyboard.test.tsx:1160-1404"
+          "packages/ui/src/components-keyboard.test.tsx:1242-1654"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-436"
@@ -2317,7 +2356,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2346,7 +2385,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2360,7 +2399,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2406,7 +2445,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "largeText": [
           "scripts/large-text.mjs:81-482"
@@ -2457,11 +2496,11 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:1022-1159"
+          "packages/ui/src/components-keyboard.test.tsx:1104-1241"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2499,7 +2538,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2528,7 +2567,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2555,9 +2594,12 @@
         "build": [
           "packages/ui (compiled by CI)"
         ],
+        "interaction": [
+          "packages/ui/src/components-keyboard.test.tsx:1242-1654"
+        ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
           "packages/ui/src/components-rtl.test.tsx:60-259"
@@ -2589,7 +2631,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2618,7 +2660,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2665,9 +2707,13 @@
         "build": [
           "packages/ui (compiled by CI)"
         ],
+        "interaction": [
+          "packages/ui/src/components-keyboard.test.tsx:1242-1654",
+          "packages/ui/src/components-overlay.test.tsx:35-257"
+        ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2703,12 +2749,12 @@
         "interaction": [
           "packages/ui/src/components-form.test.tsx:311-436",
           "packages/ui/src/components-form.test.tsx:39-310",
-          "packages/ui/src/components-keyboard.test.tsx:1022-1159",
-          "packages/ui/src/components-keyboard.test.tsx:233-462"
+          "packages/ui/src/components-keyboard.test.tsx:1104-1241",
+          "packages/ui/src/components-keyboard.test.tsx:315-544"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-436"
@@ -2740,7 +2786,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2768,7 +2814,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2803,7 +2849,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
           "packages/ui/src/components-rtl.test.tsx:60-259"
@@ -2820,7 +2866,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2849,7 +2895,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2898,7 +2944,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2927,7 +2973,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2962,7 +3008,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3010,13 +3056,16 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:47-176"
+          "packages/ui/src/components-keyboard.test.tsx:67-258",
+          "packages/ui/src/components-overlay.test.tsx:258-316",
+          "packages/ui/src/components-overlay.test.tsx:35-257"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
+          "packages/ui/src/components-overlay.test.tsx:258-316",
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "published": [
@@ -3046,7 +3095,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3095,7 +3144,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3143,13 +3192,13 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:233-462",
+          "packages/ui/src/components-keyboard.test.tsx:315-544",
           "packages/ui/src/components-selection.test.tsx:138-199",
           "packages/ui/src/components-selection.test.tsx:27-137"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
           "packages/ui/src/components-selection.test.tsx:138-199"
@@ -3204,7 +3253,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3239,7 +3288,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3274,7 +3323,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3309,7 +3358,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3353,11 +3402,11 @@
         "interaction": [
           "packages/ui/src/components-form.test.tsx:311-436",
           "packages/ui/src/components-form.test.tsx:39-310",
-          "packages/ui/src/components-keyboard.test.tsx:1160-1404"
+          "packages/ui/src/components-keyboard.test.tsx:1242-1654"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-436"
@@ -3395,7 +3444,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3442,9 +3491,13 @@
         "build": [
           "packages/ui (compiled by CI)"
         ],
+        "interaction": [
+          "packages/ui/src/components-keyboard.test.tsx:1242-1654",
+          "packages/ui/src/components-overlay.test.tsx:35-257"
+        ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3479,7 +3532,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3514,7 +3567,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3563,11 +3616,11 @@
         ],
         "interaction": [
           "packages/ui/src/components-form.test.tsx:311-436",
-          "packages/ui/src/components-keyboard.test.tsx:1022-1159"
+          "packages/ui/src/components-keyboard.test.tsx:1104-1241"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-436"
@@ -3622,7 +3675,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3657,7 +3710,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3706,7 +3759,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3740,13 +3793,13 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:233-462",
+          "packages/ui/src/components-keyboard.test.tsx:315-544",
           "packages/ui/src/components-selection.test.tsx:138-199",
           "packages/ui/src/components-selection.test.tsx:27-137"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
           "packages/ui/src/components-selection.test.tsx:138-199"
@@ -3813,7 +3866,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3848,7 +3901,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3877,7 +3930,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3911,14 +3964,14 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:177-232"
+          "packages/ui/src/components-keyboard.test.tsx:259-314"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
-          "packages/ui/src/components-keyboard.test.tsx:177-232"
+          "packages/ui/src/components-keyboard.test.tsx:259-314"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3988,7 +4041,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4038,11 +4091,11 @@
         "interaction": [
           "packages/ui/src/components-form.test.tsx:311-436",
           "packages/ui/src/components-form.test.tsx:39-310",
-          "packages/ui/src/components-keyboard.test.tsx:1160-1404"
+          "packages/ui/src/components-keyboard.test.tsx:1242-1654"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-436"
@@ -4094,7 +4147,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4122,12 +4175,12 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:1160-1404",
+          "packages/ui/src/components-keyboard.test.tsx:1242-1654",
           "packages/ui/src/components-selection.test.tsx:27-137"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "largeText": [
           "scripts/large-text.mjs:81-482"
@@ -4187,12 +4240,12 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:1160-1404",
+          "packages/ui/src/components-keyboard.test.tsx:1242-1654",
           "packages/ui/src/components-selection.test.tsx:27-137"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "largeText": [
           "scripts/large-text.mjs:81-482"
@@ -4242,9 +4295,13 @@
         "build": [
           "packages/ui (compiled by CI)"
         ],
+        "interaction": [
+          "packages/ui/src/components-keyboard.test.tsx:1242-1654",
+          "packages/ui/src/components-overlay.test.tsx:35-257"
+        ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "rtl": [
           "packages/ui/src/components-rtl.test.tsx:60-259"
@@ -4275,11 +4332,11 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:233-462"
+          "packages/ui/src/components-keyboard.test.tsx:315-544"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4292,12 +4349,12 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:233-462",
+          "packages/ui/src/components-keyboard.test.tsx:315-544",
           "packages/ui/src/components-lifecycle.test.tsx:20-174"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4326,7 +4383,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:29-382"
+          "scripts/a11y-browser.mjs:33-526"
         ],
         "published": [
           "npm: @kinetixui/ui"

@@ -1,8 +1,24 @@
 import * as React from "react";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./components/alert-dialog";
 import { Checkbox } from "./components/checkbox";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "./components/context-menu";
 import { ColorPicker } from "./components/color-picker";
 import { FileUpload } from "./components/file-upload";
 import { List, ListItem } from "./components/list";
@@ -23,16 +39,20 @@ import {
 } from "./components/dropdown-menu";
 import { Input } from "./components/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "./components/input-otp";
+import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from "./components/menubar";
+import { Modal } from "./components/modal";
 import { MultiSelect } from "./components/multi-select";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/popover";
 import { RadioGroup, RadioGroupItem } from "./components/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/select";
+import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "./components/sheet";
 import { Slider } from "./components/slider";
 import { Switch } from "./components/switch";
 import { Toggle } from "./components/toggle";
 import { ToggleGroup, ToggleGroupItem } from "./components/toggle-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/tabs";
 import { Textarea } from "./components/textarea";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/tooltip";
 import { Tour } from "./components/tour";
 import { TreeItem, TreeView } from "./components/tree-view";
 
@@ -51,6 +71,68 @@ beforeAll(() => {
   // does not implement. Unstubbed it throws from a timer after the test has finished — an unhandled
   // rejection that vitest reports against whichever test happened to be running.
   (document as unknown as { elementFromPoint: () => Element | null }).elementFromPoint = () => null;
+});
+
+/**
+ * First in this module, deliberately.
+ *
+ * Radix's anchored ContextMenu stops opening once any modal overlay has mounted and unmounted in the
+ * same jsdom module: the trigger stays `data-state="closed"` and no `contextmenu` event, with or without
+ * coordinates, revives it — nor does Shift+F10. Measured against Dialog, Sheet and Drawer alike, and the
+ * reason `components-rtl.test.tsx` can open one is that it opens it first too. The state lives inside the
+ * primitive, not in anything this repository sets: clearing the body and documentElement style attributes
+ * that vaul leaves behind changes nothing.
+ *
+ * So the ordering is a real constraint rather than a preference, and `openContextMenu` below fails with
+ * that sentence rather than with a bare "unable to find role=menu" if someone moves this suite down.
+ */
+describe("ContextMenu", () => {
+  function Example() {
+    return (
+      <ContextMenu>
+        <ContextMenuTrigger>Right-click here</ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem>Back</ContextMenuItem>
+          <ContextMenuItem>Forward</ContextMenuItem>
+          <ContextMenuItem>Reload</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    );
+  }
+
+  async function openContextMenu() {
+    fireEvent.contextMenu(screen.getByText("Right-click here"));
+    try {
+      return await screen.findByRole("menu");
+    } catch {
+      throw new Error(
+        "ContextMenu did not open. This suite must run before any modal overlay in this module — Radix's " +
+          "anchored menu does not recover once one has mounted here. Move this describe back to the top.",
+      );
+    }
+  }
+
+  it("walks items with the arrows, jumps with Home and End, finds one by typing, and closes on Escape", async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+    // One open, many assertions — the same trade components-rtl.test.tsx records for this component:
+    // Radix's ContextMenu is modal, and a second open in the same module never arrives, so a test per
+    // key would be testing the harness rather than the menu.
+    await openContextMenu();
+
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "Back" })).toHaveFocus();
+    await user.keyboard("{End}");
+    expect(screen.getByRole("menuitem", { name: "Reload" })).toHaveFocus();
+    await user.keyboard("{Home}");
+    expect(screen.getByRole("menuitem", { name: "Back" })).toHaveFocus();
+    // Typeahead: one letter is a jump, not a filter — the menu keeps every item.
+    await user.keyboard("f");
+    expect(screen.getByRole("menuitem", { name: "Forward" })).toHaveFocus();
+
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+  });
 });
 
 describe("Dialog", () => {
@@ -1399,5 +1481,173 @@ describe("InputOTP", () => {
     await user.paste("4321");
     expect(chars()).toEqual(["4", "3", "2", "1"]);
     expect(onChange).toHaveBeenLastCalledWith("4321");
+  });
+});
+
+describe("AlertDialog", () => {
+  function Example() {
+    return (
+      <AlertDialog>
+        <AlertDialogTrigger>Delete account</AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
+
+  it("opens with Enter and puts focus on the safe action, not the destructive one", async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+    screen.getByRole("button", { name: "Delete account" }).focus();
+    await user.keyboard("{Enter}");
+
+    const alert = await screen.findByRole("alertdialog", { name: "Are you absolutely sure?" });
+    expect(alert).toHaveAccessibleDescription("This action cannot be undone.");
+    // The whole point of an alert dialog: the key that opened it must not also confirm it. Focus lands
+    // on Cancel, so a second Enter dismisses rather than deletes.
+    await waitFor(() => expect(screen.getByRole("button", { name: "Cancel" })).toHaveFocus());
+  });
+
+  it("closes on Escape and returns focus to the trigger", async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+    const trigger = screen.getByRole("button", { name: "Delete account" });
+    await user.click(trigger);
+    await screen.findByRole("alertdialog");
+
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+    expect(trigger).toHaveFocus();
+  });
+});
+
+describe("Sheet", () => {
+  function Example() {
+    return (
+      <Sheet>
+        <SheetTrigger>Open</SheetTrigger>
+        <SheetContent>
+          <SheetTitle>Edit profile</SheetTitle>
+          <SheetDescription>Make changes here.</SheetDescription>
+          <button>Save</button>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  it("traps Tab inside the panel and closes on Escape, returning focus", async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+    const trigger = screen.getByRole("button", { name: "Open" });
+    await user.click(trigger);
+    const panel = await screen.findByRole("dialog", { name: "Edit profile" });
+    expect(panel.contains(document.activeElement)).toBe(true);
+
+    for (let i = 0; i < 6; i++) {
+      await user.tab();
+      expect(panel.contains(document.activeElement)).toBe(true);
+    }
+
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(trigger).toHaveFocus();
+  });
+});
+
+describe("Modal", () => {
+  it("opens from the keyboard, names itself, and closes on Escape without taking the action", async () => {
+    const user = userEvent.setup();
+    const onAction = vi.fn();
+    const onCancel = vi.fn();
+    render(
+      <Modal
+        type="Destructive"
+        title="Delete this item"
+        description="This cannot be undone."
+        trigger={<button>Delete</button>}
+        onAction={onAction}
+        onCancel={onCancel}
+      />,
+    );
+    const trigger = screen.getByRole("button", { name: "Delete" });
+    trigger.focus();
+    await user.keyboard("{Enter}");
+
+    const dialog = await screen.findByRole("dialog", { name: "Delete this item" });
+    expect(dialog.contains(document.activeElement)).toBe(true);
+
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(trigger).toHaveFocus();
+    // Escape is a dismissal, not a decision: neither handler runs. A consumer who needs to know the
+    // modal closed listens to `onOpenChange`, which is what that prop is for.
+    expect(onAction).not.toHaveBeenCalled();
+    expect(onCancel).not.toHaveBeenCalled();
+  });
+});
+
+describe("Tooltip", () => {
+  it("appears on keyboard focus and describes its trigger", async () => {
+    const user = userEvent.setup();
+    render(
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>Library</TooltipTrigger>
+          <TooltipContent>Add to library</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>,
+    );
+    await user.tab();
+    const trigger = screen.getByRole("button", { name: /Library/ });
+    expect(trigger).toHaveFocus();
+
+    // Not modal, and it must not become keyboard-inaccessible for that reason: focus alone shows it,
+    // and the trigger points at it with aria-describedby so it is announced rather than merely drawn.
+    await waitFor(() => expect(screen.getByRole("tooltip")).toBeInTheDocument());
+    expect(trigger).toHaveAccessibleDescription("Add to library");
+  });
+});
+
+describe("Menubar", () => {
+  function Example() {
+    return (
+      <Menubar>
+        <MenubarMenu>
+          <MenubarTrigger>File</MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem>New Tab</MenubarItem>
+            <MenubarItem>New Window</MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger>Edit</MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem>Undo</MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+      </Menubar>
+    );
+  }
+
+  it("opens a menu with Enter, moves into its items, and closes on Escape", async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+    const file = screen.getByRole("menuitem", { name: "File" });
+    file.focus();
+    await user.keyboard("{Enter}");
+
+    await screen.findByRole("menu");
+    await waitFor(() => expect(screen.getByRole("menuitem", { name: "New Tab" })).toHaveFocus());
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "New Window" })).toHaveFocus();
+
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
   });
 });

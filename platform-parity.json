@@ -1921,6 +1921,7 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
         "published",
         "rtl"
       ],
@@ -2357,6 +2358,7 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
         "published",
         "rtl"
       ],
@@ -2486,6 +2488,7 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
         "published"
       ],
       "SwiftUI": [
@@ -2505,7 +2508,8 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -2868,6 +2872,7 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
         "published",
         "rtl"
       ],
@@ -2925,6 +2930,7 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
         "published"
       ],
       "SwiftUI": [
@@ -3311,6 +3317,7 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
         "published"
       ],
       "SwiftUI": [
@@ -3695,6 +3702,7 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
         "published",
         "rtl"
       ],
@@ -3753,9 +3761,9 @@
   "evidenceCounts": {
     "React": {
       "build": 98,
-      "interaction": 30,
+      "interaction": 37,
       "accessibility": 98,
-      "rtl": 17,
+      "rtl": 18,
       "largeText": 8,
       "visual": 0,
       "published": 98

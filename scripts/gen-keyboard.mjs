@@ -78,6 +78,12 @@ const SUITES = {
   "Input and Textarea": ["input", "textarea"],
   Select: ["select"],
   InputOTP: ["input-otp"],
+  AlertDialog: ["alert-dialog"],
+  Sheet: ["sheet"],
+  Modal: ["modal"],
+  Tooltip: ["tooltip"],
+  ContextMenu: ["context-menu"],
+  Menubar: ["menubar"],
 };
 
 /** `{ArrowDown}` → `Arrow down`, `" "` → `Space`. The words a person would say, not the event codes. */
