@@ -9,6 +9,20 @@ export type KeyboardBehaviour = { behaviour: string; keys: string[] };
 export const KEYBOARD_SOURCE = "packages/ui/src/components-keyboard.test.tsx";
 
 export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
+  "alert-dialog": [
+    {
+      "behaviour": "opens with Enter and puts focus on the safe action, not the destructive one",
+      "keys": [
+        "Enter"
+      ]
+    },
+    {
+      "behaviour": "closes on Escape and returns focus to the trigger",
+      "keys": [
+        "Escape"
+      ]
+    }
+  ],
   "checkbox": [
     {
       "behaviour": "Checkbox toggles with Space, not Enter",
@@ -37,6 +51,17 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "behaviour": "commits the hex field on Enter",
       "keys": [
         "Enter"
+      ]
+    }
+  ],
+  "context-menu": [
+    {
+      "behaviour": "walks items with the arrows, jumps with Home and End, finds one by typing, and closes on Escape",
+      "keys": [
+        "Arrow down",
+        "End",
+        "Home",
+        "Escape"
       ]
     }
   ],
@@ -364,6 +389,25 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       ]
     }
   ],
+  "menubar": [
+    {
+      "behaviour": "opens a menu with Enter, moves into its items, and closes on Escape",
+      "keys": [
+        "Enter",
+        "Arrow down",
+        "Escape"
+      ]
+    }
+  ],
+  "modal": [
+    {
+      "behaviour": "opens from the keyboard, names itself, and closes on Escape without taking the action",
+      "keys": [
+        "Enter",
+        "Escape"
+      ]
+    }
+  ],
   "multi-select": [
     {
       "behaviour": "can be opened and an option chosen using only the keyboard",
@@ -437,6 +481,15 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "keys": [
         "Enter",
         "Arrow down",
+        "Escape",
+        "Tab"
+      ]
+    }
+  ],
+  "sheet": [
+    {
+      "behaviour": "traps Tab inside the panel and closes on Escape, returning focus",
+      "keys": [
         "Escape",
         "Tab"
       ]
@@ -555,6 +608,14 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       "keys": [
         "Space",
         "Arrow right",
+        "Tab"
+      ]
+    }
+  ],
+  "tooltip": [
+    {
+      "behaviour": "appears on keyboard focus and describes its trigger",
+      "keys": [
         "Tab"
       ]
     }

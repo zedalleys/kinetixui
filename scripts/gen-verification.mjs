@@ -98,45 +98,16 @@ const TEST_SOURCES = {
   Flutter: { dirs: ["packages/ui-flutter/test"], match: /_test\.dart$/ },
 };
 
-/** "alert-dialog" → "AlertDialog". The same spelling `check-platform-source.mjs` uses. */
-const pascal = (slug) => slug.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join("");
-/** "AlertDialog.stories.tsx" / "alert_dialog.dart" → "alert-dialog". */
-const slugify = (name) =>
-  name
-    .replace(/\.[^.]+$/, "")
-    .replace(/\.stories$/, "")
-    .replace(/_/g, "-")
-    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
-    .toLowerCase();
+// The extractor lives in its own module so large-text.mjs can check its claim with the same function
+// that awards the evidence, instead of a regex that resembles it. Re-exported here because
+// apps/web/src/lib/verification-guardrails.test.ts and this file's own callers import it from here.
+import { coverageForRoot, pascal, slugify } from "./covered-slugs.mjs";
 
-/**
- * slug → the symbol stems that mean it, longest first.
- *
- * A stem matches by PREFIX, so `KinetixTabsTrigger` counts as coverage of `tabs` — a sub-component is part
- * of its component, and an exact-name rule would report a fully tested Tabs as untested. Longest stem wins,
- * so `KinetixButtonGroup` goes to `button-group` and not also to `button`.
- */
-const STEMS = [];
-for (const slug of Object.keys(components)) {
-  const names = new Set([pascal(slug), ...Object.values(components[slug].sourceNames ?? {}).map((n) => pascal(n))]);
-  for (const stem of names) STEMS.push({ slug, stem });
-}
-STEMS.sort((a, b) => b.stem.length - a.stem.length);
-
-const PREFIXED_USED = [/\b(?:Kinetix|Kx)([A-Z][A-Za-z0-9]*)/g];
-// React is mostly unprefixed, but not entirely — `KinetixDirectionProvider` is its real export name.
-const REACT_USED = [/<\s*([A-Z][A-Za-z0-9]*)/g, /\b([A-Z][A-Za-z0-9]*)\s*[({]/g, ...PREFIXED_USED];
-
-export function coveredSlugs(text, platform = "React") {
-  const out = new Set();
-  for (const re of platform === "React" ? REACT_USED : PREFIXED_USED) {
-    for (const m of text.matchAll(re)) {
-      const hit = STEMS.find((s) => m[1].startsWith(s.stem));
-      if (hit) out.add(hit.slug);
-    }
-  }
-  return out;
-}
+// Built from the manifest of the tree being scanned, which under `--root=<dir>` is the fixture's and not
+// this repository's. An extractor wired to the repo would answer questions about the fixture with the
+// wrong slugs: a fixture component would read as "no KinetixUI component used", and repo-only names would
+// resolve to slugs the fixture has never heard of.
+const { STEMS, coveredSlugs } = coverageForRoot(root);
 
 /**
  * The subjects a `kx-verify-covers:` target names. Both forms read the repository, never a written list:

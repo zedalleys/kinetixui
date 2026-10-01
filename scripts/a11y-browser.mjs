@@ -9,10 +9,12 @@
  * the built Storybook (apps/docs/storybook-static) in headless Chromium, opens
  * each story in light AND dark, and runs axe-core with every rule on.
  *
- * a11y-baseline.json lists violations that already existed, keyed
- * `story-id|theme|rule`. A new violation fails the run; a baselined one that no
- * longer occurs also fails (stale entry) so the baseline only shrinks. Use
- * --update to regenerate it deliberately, e.g. right after fixing things.
+ * a11y-baseline.json maps each accepted violation to the reason it is accepted, keyed
+ * `story-id|theme|rule` — or `story-id|theme|open:<state>|rule` for one found with a
+ * surface open. A new violation fails the run; a baselined one that no longer occurs
+ * also fails (stale entry) so the baseline only shrinks; and an entry with no reason
+ * fails too, so nothing is accepted silently. Use --update to regenerate it
+ * deliberately, e.g. right after fixing things.
  *
  * Beyond axe it also runs four behaviour checks that only make sense in a real browser. They have
  * no baseline — any failure fails the run:
@@ -21,6 +23,10 @@
  *   - forced colors:  with forced-colors active, every focus stop in every story keeps a visible
  *                     indicator (box-shadow rings are stripped in that mode; an outline survives)
  *   - keyboard drag:  KanbanBoard cards can be picked up, moved and dropped with Space / arrows
+ *   - open states:   every overlay is opened — by click, right click or focus, as its primitive requires —
+ *                     and scanned with axe over the whole document, so the portal the surface lives in is
+ *                     in scope. Until this existed, an overlay's only axe evidence came from its closed
+ *                     trigger. See scripts/open-states.mjs for the declaration and why it is one.
  *   - grid selection: a DataGrid with `selectable` selects a rectangle by mouse drag and adds a
  *                     separate range with Ctrl+click, a whole column with Ctrl+click on its
  *                     header, and dragging past the grid's edge scrolls it and keeps extending
@@ -44,6 +50,7 @@ import { createRequire } from "node:module";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { describeAnimation, harnessAnimations, reducedMotionViolations } from "./a11y-animations.mjs";
+import { OPEN_STATES, coverageErrors, openSurface } from "./open-states.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
@@ -110,6 +117,20 @@ if (uncovered.length) {
   process.exit(1);
 }
 console.log(`subjects reconciled — ${indexed.size} story titles cover ${Object.keys(manifest.components).length} manifest components`);
+
+/**
+ * The open-state declaration is checked against the same two sources before anything is launched: the
+ * catalogue, and the built index. A drifted entry stops the run here rather than silently scanning less.
+ */
+{
+  const errors = coverageErrors({ storyIds: new Set(stories.map((e) => e.id)), slugs: new Set(Object.keys(manifest.components)) });
+  if (errors.length) {
+    console.error(`  x ${errors.length} problem(s) with the open-state declaration:\n` + errors.map((e) => `      ${e}`).join("\n"));
+    server.close();
+    process.exit(1);
+  }
+}
+console.log(`open states declared — ${OPEN_STATES.length} overlay surfaces will be scanned while open`);
 
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 const found = new Map(); // key -> sample message
@@ -347,12 +368,137 @@ await Promise.all(
   }
 }
 
+// ── open states: scan each overlay with its surface actually on screen ───────────────────────
+//
+// Scope is the whole document rather than #storybook-root, because every one of these surfaces is
+// portaled to a direct child of <body>. Scanning the story root would miss the entire thing — which is
+// exactly how an overlay could be "covered" by a suite that never saw it.
+const openStateScans = [];
+const focusContract = [];
+{
+  const ctx = await browser.newContext({ viewport: { width: 1024, height: 768 }, reducedMotion: "reduce" });
+  for (const theme of THEMES) {
+    for (const entry of OPEN_STATES) {
+      const where = `${entry.component} · ${entry.story} · ${entry.state} · ${theme}`;
+      const page = await ctx.newPage();
+      try {
+        await page.goto(`${base}/iframe.html?id=${entry.story}&viewMode=story&globals=theme:${theme}`, { waitUntil: "load" });
+        await page.waitForFunction(() => document.body.classList.contains("sb-show-main") || document.body.classList.contains("sb-show-errordisplay"), null, { timeout: 20000 });
+        if (await page.evaluate(() => document.body.classList.contains("sb-show-errordisplay"))) throw new Error("story threw while rendering");
+
+        const surface = await openSurface(page, entry);
+
+        // ── the focus contract, which axe cannot judge ────────────────────────────────────────
+        //
+        // Worth stating why this is here and not left to the scan: axe's `aria-hidden-focus` rule
+        // excuses an aria-hidden page whenever a modal dialog is open, wherever focus actually sits.
+        // So it reported the DropdownMenu (whose trigger is focusable inside the hidden page, and
+        // unreachable) and said nothing about the Drawer (which left focus ON that trigger). The rule
+        // is a poor proxy in both directions; focus needs asking about directly.
+        if (surface.focusInAriaHidden) {
+          behaviourFailures.push(
+            `${where} focus-entry: focus is on ${surface.focusDescription}, inside an aria-hidden subtree — ` +
+              `the surface is open and assistive technology has been told that element does not exist`,
+          );
+        }
+        if (entry.modal && !surface.focusInside) {
+          behaviourFailures.push(`${where} focus-entry: focus is on ${surface.focusDescription}, outside the open surface`);
+        }
+        if (entry.modal) {
+          // Containment: Tab must not walk out of a modal surface. Eight presses is past the end of
+          // every one of these, so an escape would have shown itself.
+          for (let i = 0; i < 8; i++) {
+            await page.keyboard.press("Tab");
+            const inside = await page.evaluate((sel) => {
+              const el = document.querySelector(sel);
+              return Boolean(el && document.activeElement && el.contains(document.activeElement));
+            }, entry.surface);
+            if (!inside) {
+              behaviourFailures.push(`${where} focus-containment: Tab left the surface after ${i + 1} press(es)`);
+              break;
+            }
+          }
+        }
+        // Dismissal and return: Escape closes it, and focus goes back to where it came from.
+        const triggerSelector = entry.open.click ?? entry.open.rightClick ?? entry.open.focus;
+        await page.keyboard.press("Escape");
+        try {
+          await page.waitForSelector(entry.surface, { state: "detached", timeout: 10_000 });
+        } catch {
+          behaviourFailures.push(`${where} dismissal: Escape did not close the surface`);
+        }
+        // Waited for rather than read once: focus is restored a tick after the surface leaves, and
+        // sampling immediately made this report "elsewhere" in one theme and "trigger" in the other for
+        // the same component — a race in the check, not a difference in the component.
+        const restoration = await page.evaluate(
+          ([sel, deadline]) =>
+            new Promise((resolve) => {
+              const trigger = document.querySelector(sel);
+              // A span is a legitimate ContextMenu trigger and cannot hold focus; saying so is honest,
+              // where reporting it as a focus-return failure would not be.
+              const focusable = Boolean(trigger && (trigger.tabIndex >= 0 || /^(a|button|input|select|textarea)$/i.test(trigger.tagName)));
+              const check = () => {
+                if (!focusable) return resolve({ focusable, returned: false });
+                if (document.activeElement === trigger) return resolve({ focusable, returned: true });
+                if (Date.now() > deadline) return resolve({ focusable, returned: false });
+                requestAnimationFrame(check);
+              };
+              check();
+            }),
+          [triggerSelector, Date.now() + 2000],
+        );
+        if (restoration.focusable && !restoration.returned) {
+          behaviourFailures.push(`${where} focus-return: Escape did not put focus back on the trigger`);
+        }
+        focusContract.push(
+          `  ${entry.component.padEnd(14)} entry=${surface.focusInside ? "inside" : surface.focusDescription}` +
+            `${entry.modal ? " contained=yes" : " (non-modal)"} ` +
+            `return=${restoration.focusable ? (restoration.returned ? "trigger" : "NOT RETURNED") : "trigger not focusable"}`,
+        );
+
+        // Re-open for the scan: Escape left it closed, and the surface is what axe is here for.
+        await openSurface(page, entry);
+        await page.addStyleTag({ content: "*,*::before,*::after{transition:none!important;animation:none!important;caret-color:transparent!important}" });
+        await page.evaluate(() => document.fonts.ready);
+        if (!(await page.evaluate(() => Boolean(window.axe)))) await page.addScriptTag({ content: axeSource });
+        const violations = await page.evaluate(async () => {
+          const opts = { rules: { region: { enabled: false }, "landmark-one-main": { enabled: false }, "page-has-heading-one": { enabled: false } } };
+          for (let attempt = 0; ; attempt++) {
+            try {
+              const r = await window.axe.run(document, opts);
+              return r.violations.map((v) => ({ id: v.id, count: v.nodes.length, help: v.help, targets: v.nodes.slice(0, 2).map((n) => String(n.target)) }));
+            } catch (e) {
+              if (attempt >= 20 || !String(e).includes("already running")) throw e;
+              await new Promise((res) => setTimeout(res, 250));
+            }
+          }
+        });
+        for (const v of violations) {
+          found.set(`${entry.story}|${theme}|open:${entry.state}|${v.id}`, `${v.count}× ${v.help} (${v.targets.join(", ")})`);
+        }
+        openStateScans.push(`  ${entry.component.padEnd(14)} ${theme.padEnd(5)} ${String(surface.role).padEnd(11)} ${surface.w}x${surface.h}  "${surface.text}"${violations.length ? `  ${violations.map((v) => v.id).join(" ")}` : ""}`);
+      } catch (err) {
+        // Never a skip: a surface that would not open is a failure of this suite's own premise.
+        behaviourFailures.push(`${where} open-state: ${String(err.message).split("\n")[0]}`);
+      } finally {
+        await page.close();
+      }
+    }
+  }
+  await ctx.close();
+}
+
 await browser.close();
 server.close();
 
 // Nonzero means Storybook's spinner was still turning when a story was measured — the old
 // false-positive, now reported rather than fatal. Silent when it did not happen, which is most runs.
 if (harnessMotionIgnored) console.log(`reduced motion: ignored ${harnessMotionIgnored} Storybook harness animation(s)`);
+
+console.log(`open states — ${openStateScans.length} scan(s), each with its surface measured on screen:`);
+for (const line of openStateScans) console.log(line);
+console.log(`focus contract — entry, containment and return, on ${focusContract.length} open surface(s):`);
+for (const line of focusContract) console.log(line);
 
 if (failedToLoad.length) {
   console.error(`✗ ${failedToLoad.length} story render(s) failed:\n` + failedToLoad.map((f) => `  ${f}`).join("\n"));
@@ -366,16 +512,48 @@ if (behaviourFailures.length) {
 }
 
 const keys = [...found.keys()].sort();
+
+/**
+ * The baseline is a map from key to the reason that violation is accepted, not a list of keys.
+ *
+ * A list is how a baseline becomes permanent: six months on nobody can tell a finding that was
+ * investigated and judged a false positive from one that was inconvenient on a Friday. A reason is
+ * cheap to write when you have just done the investigation and impossible to reconstruct later, so
+ * the format asks for it at the only moment it is free — and `--update` leaves a TODO that fails the
+ * run until somebody replaces it, which makes "just baseline it" cost exactly one sentence.
+ */
+const TODO = "TODO: explain why this is accepted";
+const readBaseline = () => {
+  if (!existsSync(baselinePath)) return {};
+  const raw = JSON.parse(readFileSync(baselinePath, "utf8"));
+  // The older format was an array of keys; read it so a stale checkout still runs.
+  return Array.isArray(raw) ? Object.fromEntries(raw.map((k) => [k, TODO])) : raw;
+};
+
 if (UPDATE) {
-  writeFileSync(baselinePath, JSON.stringify(keys, null, 2) + "\n");
+  const previous = readBaseline();
+  const next = Object.fromEntries(keys.map((k) => [k, previous[k] ?? TODO]));
+  writeFileSync(baselinePath, JSON.stringify(next, null, 2) + "\n");
   console.log(`baseline written: ${keys.length} known violations across ${stories.length} stories × ${THEMES.length} themes`);
+  const unexplained = keys.filter((k) => next[k] === TODO);
+  if (unexplained.length) {
+    console.error(
+      `✗ ${unexplained.length} baselined violation(s) have no reason yet. Replace the TODO in ` +
+        `a11y-baseline.json with what you found:\n` + unexplained.map((k) => `  ${k}`).join("\n"),
+    );
+    process.exit(1);
+  }
   process.exit(0);
 }
 
-const known = new Set(existsSync(baselinePath) ? JSON.parse(readFileSync(baselinePath, "utf8")) : []);
+const baseline = readBaseline();
+const known = new Set(Object.keys(baseline));
 const fresh = keys.filter((k) => !known.has(k));
 const stale = [...known].filter((k) => !found.has(k));
+const unexplained = [...known].filter((k) => !baseline[k] || baseline[k] === TODO);
 if (fresh.length) console.error(`✗ ${fresh.length} new violation(s) (story|theme|rule):\n` + fresh.map((k) => `  ${k} — ${found.get(k)}`).join("\n"));
 if (stale.length) console.error(`✗ ${stale.length} baselined violation(s) no longer occur — run with --update:\n` + stale.map((k) => `  ${k}`).join("\n"));
-if (fresh.length || stale.length) process.exit(1);
-console.log(`a11y-browser ok — ${stories.length} stories × ${THEMES.length} themes, ${known.size} known violations, none new.`);
+if (unexplained.length) console.error(`✗ ${unexplained.length} baselined violation(s) carry no reason:\n` + unexplained.map((k) => `  ${k}`).join("\n"));
+if (fresh.length || stale.length || unexplained.length) process.exit(1);
+console.log(`a11y-browser ok — ${stories.length} stories × ${THEMES.length} themes, ${known.size} known violation(s), none new.`);
+for (const [key, why] of Object.entries(baseline)) console.log(`  accepted: ${key}\n            ${why}`);

@@ -1921,6 +1921,8 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -2357,6 +2359,8 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -2443,6 +2447,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published"
       ],
       "SwiftUI": [
@@ -2486,6 +2491,8 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
+        "largeText",
         "published"
       ],
       "SwiftUI": [
@@ -2505,7 +2512,9 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -2868,6 +2877,8 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -2925,6 +2936,8 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
+        "largeText",
         "published"
       ],
       "SwiftUI": [
@@ -3099,6 +3112,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -3311,6 +3325,8 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
+        "largeText",
         "published"
       ],
       "SwiftUI": [
@@ -3695,6 +3711,8 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -3753,10 +3771,10 @@
   "evidenceCounts": {
     "React": {
       "build": 98,
-      "interaction": 30,
+      "interaction": 37,
       "accessibility": 98,
-      "rtl": 17,
-      "largeText": 8,
+      "rtl": 18,
+      "largeText": 18,
       "visual": 0,
       "published": 98
     },

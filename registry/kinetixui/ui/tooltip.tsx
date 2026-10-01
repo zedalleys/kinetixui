@@ -17,7 +17,9 @@ const TooltipContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "z-overlay overflow-hidden rounded-md bg-action px-3 py-1.5 text-xs text-action-foreground font-sans",
+    // Capped to the room Radix reports it has, so large text cannot push the surface past the window —
+    // see the note in popover.tsx for the measurement that prompted it.
+        "z-overlay max-w-[var(--radix-popper-available-width)] overflow-hidden rounded-md bg-action px-3 py-1.5 text-xs text-action-foreground font-sans",
         // Timing stays in the same string as the animation it times, so a reader (and the motion
         // contract test) can see both at once.
         "animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 duration-instant ease-enter data-[state=closed]:ease-exit",

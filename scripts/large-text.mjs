@@ -65,6 +65,21 @@
  * using the scale has it — and converting the scale is a library-wide change whose consequences at 200%
  * are unverified for the other 89 components. It is recorded as a finding and left to its own slice.
  *
+ * ── Overlays, which have to be opened before there is anything to measure ───
+ *
+ * An overlay's geometry at 200% text is not a property of its trigger, so measuring the closed story
+ * would measure a button. Each surface is opened through the shared declaration in open-states.mjs —
+ * the same one the axe pass uses, so there is one definition of "open" and one place that waits for it —
+ * and then judged on whether it is still usable rather than on whether it grew:
+ *
+ *   the surface stays inside the viewport,         a dialog that grows off-screen loses its buttons
+ *   the page gains no horizontal scroll,           sideways scrolling to read a menu is not reading it
+ *   nothing inside it is clipped,                  a label cropped to "Cont…" is not a label
+ *   its own text actually grew.                    the type-scale rule from the form family, unchanged
+ *
+ * Measured at desktop width, at phone width, and under RTL — the last because an overlay is positioned,
+ * and a positioned surface is where mirroring goes wrong in a way no class check can see.
+ *
  * ── And once at phone width ─────────────────────────────────────────────────
  *
  * Every form control is also loaded at 390px and doubled there, because a control can absorb its text
@@ -78,6 +93,9 @@
  * them, and the check fails if one of them *starts* scaling — so the day the scale is fixed, this file is
  * forced to notice rather than being free to keep understating.
  *
+ * The overlay family is measured open too, through the declaration in open-states.mjs; its members are
+ * named beside the pass itself, below, for the same reason the other two families are.
+ *
  * kx-verify: largeText
  */
 
@@ -87,9 +105,14 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
+import { OPEN_STATES, openSurface } from "./open-states.mjs";
+import { coverageForRoot } from "./covered-slugs.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
+// The same extractor gen-verification awards the evidence with, built from the same manifest, so the
+// claim below is checked by the function that reads it rather than by a regex that resembles one.
+const { coveredSlugs } = coverageForRoot(root);
 
 if (!existsSync(join(staticDir, "index.json"))) {
   console.error("apps/docs/storybook-static not found — run `pnpm build-storybook` first.");
@@ -194,15 +217,27 @@ const base = `http://127.0.0.1:${server.address().port}`;
  * Nothing otherwise keeps the two in step, and a claim that outruns its measurement is the exact failure
  * this whole evidence model exists to prevent — so it is checked rather than trusted.
  */
+/** `Checkbox` -> `checkbox`, `InputOTP` -> `input-otp`: the manifest's spelling, which coveredSlugs returns. */
+const SLUG_OF = { InputOTP: "input-otp", RadioGroup: "radio-group", ToggleGroup: "toggle-group", MultiSelect: "multi-select", AlertDialog: "alert-dialog", DropdownMenu: "dropdown-menu", ContextMenu: "context-menu" };
+const slugOf = (name) => SLUG_OF[name] ?? name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+
 function assertClaimMatchesSubjects() {
   const self = readFileSync(fileURLToPath(import.meta.url), "utf8");
   // The same region gen-verification.mjs reads: a passage runs from its marker to the end of the file.
   const passage = self.slice(self.indexOf("kx-verify: largeText"));
-  const named = new Set([...passage.matchAll(/<([A-Z][A-Za-z0-9]*)>/g)].map((m) => m[1]));
+  // And read with the same function that awards the evidence, rather than a regex that resembles it.
+  // The earlier version here matched only `<Component>`, while gen-verification also reads `Kinetix*`
+  // and `Name(` — so a single word in a comment, "the direction provider", quietly credited
+  // direction-provider with a large-text measurement that had never been taken. A claim check that does
+  // not use the extractor is a second opinion about what the extractor will do.
+  const named = coveredSlugs(passage, "React");
   // The claim is what is measured AND passes the text-growth rule — a pending subject is measured in
-  // full but must not reach verification.json, so it must not appear in angle brackets.
+  // full but must not reach verification.json, so it must not be named in the passage at all.
   const claimed = new Set(
-    [...SUBJECTS, ...FORM_SUBJECTS].map((s) => s.component).filter((c) => !TEXT_SCALE_PENDING.has(c)),
+    [...SUBJECTS, ...FORM_SUBJECTS, ...OPEN_STATES]
+      .map((s) => s.component ?? s)
+      .filter((c) => !TEXT_SCALE_PENDING.has(c))
+      .map(slugOf),
   );
   const missing = [...claimed].filter((c) => !named.has(c));
   const extra = [...named].filter((c) => !claimed.has(c));
@@ -458,6 +493,73 @@ for (const name of TEXT_SCALE_PENDING) {
   }
 }
 
+/**
+ * Overlays: <Dialog>, <AlertDialog>, <Sheet>, <Drawer>, <Modal>, <Popover>, <Tooltip>, <DropdownMenu>,
+ * <ContextMenu> and <Menubar> — opened, then measured at 1x and 2x, at desktop and phone width, in both
+ * directions. Named here rather than in the file header because the claim is the passage from the marker
+ * to the end of the file, and the header is above it: names written there are read by nobody.
+ *
+ * `TEXT_SCALE_PENDING` applies here too — an overlay whose body copy is `text-body-md` cannot grow its
+ * text until the type scale is converted, and saying otherwise would be the same overstatement the form
+ * family's list exists to prevent. Which overlays those are is measured below rather than assumed.
+ */
+const VIEWPORTS = [
+  { label: "desktop", width: 1024, height: 768 },
+  { label: "phone", width: NARROW.width, height: NARROW.height },
+];
+const overlayRows = [];
+for (const entry of OPEN_STATES) {
+  for (const viewport of VIEWPORTS) {
+    for (const dir of ["ltr", "rtl"]) {
+      const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } });
+      const where = `${entry.component} (${viewport.label}/${dir})`;
+      try {
+        await page.goto(`${base}/iframe.html?id=${entry.story}&viewMode=story`, { waitUntil: "load" });
+        await page.waitForFunction(() => document.body.classList.contains("sb-show-main"), null, { timeout: 20_000 });
+        // Direction on the document element, which is where an RTL app sets it and the only place a
+        // portaled surface can inherit it from — it is a child of <body>, not of the component's tree.
+        await page.evaluate((d) => { document.documentElement.dir = d; }, dir);
+
+        const before = await openSurface(page, entry);
+        const beforeFont = await page.evaluate((sel) => parseFloat(getComputedStyle(document.querySelector(sel)).fontSize), entry.surface);
+        await page.keyboard.press("Escape");
+        await page.waitForSelector(entry.surface, { state: "detached", timeout: 10_000 });
+
+        await setRootFontSize(page, 16 * SCALE);
+        const after = await openSurface(page, entry);
+        const afterFont = await page.evaluate((sel) => parseFloat(getComputedStyle(document.querySelector(sel)).fontSize), entry.surface);
+        const computedDir = await page.evaluate((sel) => getComputedStyle(document.querySelector(sel)).direction, entry.surface);
+
+        const stampedDir = await page.evaluate((sel) => document.querySelector(sel).getAttribute("dir"), entry.surface);
+        if (entry.stampsDir) {
+          // These resolve direction from React context and write it onto the content, which overrides
+          // whatever the document says. With no direction provider wrapping the story there is nothing
+          // for them to read, so the correct expectation is the stamp itself — not the document's dir.
+          if (!stampedDir) {
+            problems.push(`${where}: expected this surface to carry its own dir attribute (see stampsDir in open-states.mjs); it has none.`);
+          }
+        } else if (computedDir !== dir) {
+          problems.push(`${where}: the portaled surface computes direction ${computedDir} with the document set to ${dir}.`);
+        }
+        if (after.overflowX !== 0) problems.push(`${where}: ${after.overflowX}px of horizontal page overflow at ${SCALE}x text.`);
+        if (after.offscreen) problems.push(`${where}: the open surface does not fit the viewport at ${SCALE}x text (${after.w}x${after.h}).`);
+        if (after.clipped) problems.push(`${where}: content inside the open surface is clipped at ${SCALE}x text.`);
+        if (!TEXT_SCALE_PENDING.has(entry.component) && afterFont < beforeFont * (MIN_RATIO - 1) + beforeFont - 0.5) {
+          problems.push(`${where}: the surface's own text did not grow — ${beforeFont}px -> ${afterFont}px.`);
+        }
+        overlayRows.push(
+          `  ${entry.component.padEnd(14)} ${viewport.label.padEnd(7)} ${dir}  ${before.w}x${before.h} -> ${after.w}x${after.h}  ` +
+            `text ${beforeFont}px -> ${afterFont}px  dir=${computedDir}${entry.stampsDir ? ` (stamped ${stampedDir})` : ""}  overflowX=${after.overflowX}px`,
+        );
+      } catch (err) {
+        problems.push(`${where}: ${String(err.message).split("\n")[0]}`);
+      } finally {
+        await page.close();
+      }
+    }
+  }
+}
+
 await browser.close();
 server.close();
 
@@ -468,6 +570,8 @@ for (const r of formRows) console.log(r);
 console.log(`  (* text pinned by the px type scale — measured, not claimed; see TEXT_SCALE_PENDING)`);
 console.log(`large-text — the same controls at ${NARROW.width}px wide and ${SCALE}x text:`);
 for (const r of narrowRows) console.log(r);
+console.log(`large-text — ${OPEN_STATES.length} overlays opened and measured at ${SCALE}x text, both widths, both directions:`);
+for (const r of overlayRows) console.log(r);
 
 if (problems.length) {
   console.error(`\nlarge-text FAILED:\n  ${problems.join("\n  ")}`);
