@@ -1,7 +1,7 @@
 ---
 type: distribution execution plan
 scope: the first 14 days of the existing 30-day calendar
-status: running — day 1 (LI-003) published 2026-09-29; nothing after it is published or scheduled in any tool
+status: running. register.json is the log of what actually went out; nothing is scheduled in any tool
 ---
 
 # First 14 days — distribution

@@ -1,7 +1,8 @@
 ---
 type: x assets
 month: first 30 days
-status: finished copy — nothing here is scheduled or published
+status: finished copy. Which of these has published is recorded per asset in register.json and
+  ../distribution/register.json, never restated here
 ---
 
 # X — finished assets
