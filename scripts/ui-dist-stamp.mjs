@@ -28,11 +28,25 @@
  *
  * mtime would answer a different question. A fresh `git checkout` gives every file the same mtime, a cache
  * restore gives `dist` whatever the cache preserved, and `touch` on a source file would condemn a build
- * that is in fact correct. A hash of the source that tsup bundles answers exactly the question asked: is
- * the artifact in `dist` the artifact this source produces?
+ * that is in fact correct. A hash of the inputs tsup bundles answers exactly the question asked: is the
+ * artifact in `dist` the artifact these inputs produce?
  *
- * Note what the stamp does *not* cover, deliberately: tests and stories are excluded, because neither ends
- * up in the bundle — editing a story must not invalidate a build that is still correct.
+ * ── Which inputs, and why source alone is not enough ────────────────────────
+ *
+ * Source is the input that changes most often, not the only one that changes the bundle. A dependency
+ * bumped in the lockfile, a `--external` added to the build script, a `target` changed in tsconfig — each
+ * produces different output from identical `src`, and a stamp over `src` alone would still match and let
+ * both browser scripts measure the old bundle. So the stamp covers what the build reads:
+ *
+ *   packages/ui/src/**        the modules, minus tests and stories (neither reaches the bundle, and
+ *                             editing a story must not condemn a build that is still correct)
+ *   packages/ui/package.json  the build command and the dependency ranges
+ *   packages/ui/tsconfig.json the compiler settings tsup inherits
+ *   pnpm-lock.yaml            which versions those ranges actually resolved to
+ *
+ * The lockfile is the coarsest of the four: an unrelated dependency anywhere in the workspace invalidates
+ * the stamp and asks for a rebuild. That is the right way round — a rebuild costs seconds, and a
+ * measurement of the wrong artifact costs a false claim on the website.
  *
  * Once the stamp matches, the source/dist split above stops mattering: both are then the same code, so a
  * story that reads the package and a story that reads the file next to it describe one library.
@@ -51,6 +65,13 @@ const srcDir = join(root, "packages/ui/src");
 const distDir = join(root, "packages/ui/dist");
 export const STAMP = join(distDir, "kx-src-hash.json");
 
+/**
+ * The inputs outside `src` that decide what the bundle looks like. A missing one is not an error — only
+ * `packages/ui/tsconfig.json` is optional in practice — so absence is hashed as absence rather than skipped,
+ * which is what makes "the file was deleted" a change the stamp notices.
+ */
+const BUILD_INPUTS = ["packages/ui/package.json", "packages/ui/tsconfig.json", "pnpm-lock.yaml"];
+
 /** Files tsup reaches from `src/index.ts`, approximated by "everything that is not a test or a story". */
 function bundledSources(dir = srcDir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
@@ -68,10 +89,10 @@ function bundledSources(dir = srcDir, out = []) {
 /** Path as well as content: moving a component to a new file changes the bundle even if nothing is edited. */
 export function sourceHash() {
   const hash = createHash("sha256");
-  for (const file of bundledSources()) {
+  for (const file of [...bundledSources(), ...BUILD_INPUTS.map((f) => join(root, f))]) {
     hash.update(relative(root, file));
     hash.update("\0");
-    hash.update(readFileSync(file));
+    hash.update(existsSync(file) ? readFileSync(file) : "\u0000absent");
     hash.update("\0");
   }
   return hash.digest("hex");
@@ -97,9 +118,11 @@ export function assertUiDistMatchesSource(context) {
   const actual = sourceHash();
   if (recorded !== actual) {
     console.error(
-      `${context}: packages/ui/dist was built from different source than the working tree.\n` +
+      `${context}: packages/ui/dist was built from different inputs than the working tree.\n` +
         `  dist was built from  ${recorded.slice(0, 12)}\n` +
-        `  the source here is   ${actual.slice(0, 12)}\n` +
+        `  the inputs here are  ${actual.slice(0, 12)}\n` +
+        `(the stamp covers packages/ui/src, its package.json and tsconfig.json, and pnpm-lock.yaml — a\n` +
+        `dependency bump or a build-flag change counts as much as an edited component.)\n` +
         `Most of Storybook's stories import the built package while Tailwind generates its classes from\n` +
         `source, so measuring now would describe a mixture of the two. Run \`pnpm -F @kinetixui/ui build\`\n` +
         `(and rebuild Storybook) before taking this as evidence.`,

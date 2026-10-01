@@ -349,11 +349,15 @@ describe("The form family under RTL", () => {
     );
     const slot = screen.getByTestId("slot-0");
     // The slots are a flex row, so RTL reverses them and the first slot moves to the right-hand end.
-    // With `border-r` / `rounded-l-md` the rounded corners and the open edge stayed on the left:
-    // measured in Chromium, both radii landed on the group's *inner* edges, the divider after the first
-    // slot doubled to 2px, and the left-hand outer edge had no border at all.
-    expect(slot).toHaveClass("border-e", "first:border-s", "first:rounded-s-md", "last:rounded-e-md");
-    expect(slot.className).not.toMatch(/\bborder-r\b|\bborder-l\b|\brounded-[lr]-/);
+    // With a physical divider and a physical radius the rounded corners and the open edge stayed on the
+    // left: measured in Chromium, both radii landed on the group's *inner* edges, the divider after the
+    // first slot doubled to 2px, and the left-hand outer edge had no border at all.
+    //
+    // Each slot is bordered on every side and pulled back a pixel, rather than sharing one neighbour's
+    // divider, so that a row which wraps is still closed at the end it starts from — see the comment in
+    // input-otp.tsx, and the geometry check in scripts/large-text.mjs.
+    expect(slot).toHaveClass("border", "[&:not(:first-child)]:-ms-px", "first:rounded-s-md", "last:rounded-e-md");
+    expect(slot.className).not.toMatch(/\bborder-[rl]\b|\brounded-[lr]-|\bborder-[ye]\b/);
   });
 
   it("aligns <MultiSelect>'s create row and its search icon to the inline start", async () => {

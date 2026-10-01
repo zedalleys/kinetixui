@@ -146,6 +146,9 @@ const FORM_SUBJECTS = [
     control: "[class*='size-9']",
     model: "control",
     text: "[class*='size-9']",
+    // At phone width and 2x text these wrap, and a row that wraps has to be closed at the end it starts
+    // from. The first spelling of the fix left the second row's outer start edge with no border at all.
+    closed: "[class*='size-9']",
   },
   {
     component: "MultiSelect",
@@ -413,16 +416,38 @@ for (const subject of FORM_SUBJECTS) {
   await page.waitForSelector(subject.control, { timeout: 15_000 });
   await setRootFontSize(page, 16 * SCALE);
   await page.waitForTimeout(200);
-  const overflowX = await page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  );
+  const { overflowX, open, rows } = await page.evaluate((closedSel) => {
+    const parts = closedSel ? [...document.querySelectorAll(closedSel)] : [];
+    // `:first-child` is the first element in the DOM, not the first on each visual row, so a wrapped row
+    // can begin with no border on the side it begins from. Every part must carry all four.
+    const open = parts.filter((el) => {
+      const cs = getComputedStyle(el);
+      return [cs.borderTopWidth, cs.borderRightWidth, cs.borderBottomWidth, cs.borderLeftWidth].some(
+        (w) => parseFloat(w) === 0,
+      );
+    }).length;
+    return {
+      overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      open,
+      rows: new Set(parts.map((el) => Math.round(el.getBoundingClientRect().y))).size,
+    };
+  }, subject.closed ?? null);
   if (overflowX > 0) {
     problems.push(
       `${subject.component} (${subject.story}): ${overflowX}px of horizontal page overflow at ` +
         `${NARROW.width}px wide and ${SCALE}x text.`,
     );
   }
-  narrowRows.push(`  ${subject.component.padEnd(12)} overflowX ${overflowX}px`);
+  if (open > 0) {
+    problems.push(
+      `${subject.component} (${subject.story}): ${open} part(s) have an unbordered edge at ` +
+        `${NARROW.width}px wide and ${SCALE}x text — a wrapped row is open at one end.`,
+    );
+  }
+  narrowRows.push(
+    `  ${subject.component.padEnd(12)} overflowX ${overflowX}px` +
+      (subject.closed ? `, ${rows} row(s), every edge bordered` : ""),
+  );
   await page.close();
 }
 
