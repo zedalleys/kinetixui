@@ -19,8 +19,12 @@ its own terms:
 
 - **Web** — `fontSize.*` and `lineHeight.*` are emitted in `rem`; every other dimension stays `px`.
   `--font-size-body-md: 14px` → `0.875rem`, `--text-body-md: 400 14px/20px …` → `400 0.875rem/1.25rem …`.
-- **Android resources** — the type scale moves from `dp` to `sp`. `dp` ignores the font-size setting in
-  Android's display options, which is the same defect in Android's spelling. Spacing and radii stay `dp`.
+- **Android resources** — unchanged, and deliberately so. `dp` looks like the Android spelling of the px
+  problem and is not: the Compose code reads these as `dimensionResource(id).value.sp`, and
+  `dimensionResource` already divides out density after `getDimension()` has applied the font scale to an
+  `sp` resource — so emitting `sp` here would apply the scale twice and render 14sp at roughly 56px
+  instead of 28 at a 2x font scale. With `dp` the scale is applied exactly once, by the `.sp` at the point
+  of use. This was changed to `sp` during review and reverted when that was measured.
 - **SwiftUI** — `Font.custom(_:size:)` → `Font.custom(_:size:relativeTo:)`. The two-argument form is a
   fixed size that opts out of Dynamic Type entirely; the three-argument form keeps the designed size at
   the default setting and scales from there. The text style per step is chosen by nearest default point
@@ -39,12 +43,14 @@ font size to make it relative to, and at 0.1–0.5px scaling it would not be leg
 default setting, but the *value representation* changes and that is visible to anyone reading tokens
 directly: `tokens.fontSize["body-md"]` is now `"0.875rem"` rather than `"14px"`, so code that does
 `parseInt(...)` on it gets `0.875`. The same applies to `--font-size-*` / `--line-height-*` in
-`globals.css` and to the `dp` → `sp` change in the Android resource table. `@kinetixui/tokens` is Beta
+`globals.css`. The native artifacts are unchanged. `@kinetixui/tokens` is Beta
 and documents that pre-1.0 it carries no compatibility guarantee, and in `0.y.z` semver a change of this
 kind is expressed as a minor — the same call the reduced-motion base layer took for the same reason.
 If you consume the token values as strings, check any arithmetic you do on them.
 
-`Select`'s value also now wraps instead of being clamped to one line. `line-clamp-1` was invisible while
+`Select`'s value also now wraps instead of being clamped to one line, and the value span gains `min-w-0`
+with `overflow-wrap: anywhere` so a value with no break opportunity — an identifier, a URL with no
+separators — breaks instead of overflowing the trigger and pushing the chevron out of it. `line-clamp-1` was invisible while
 the text could not grow; once it could, the span needed 80px and was given 40, with a computed
 `text-overflow` of `clip` rather than `ellipsis` — so "Select a fruit" rendered as "Select a" with
 nothing to say the rest existed. The trigger's `min-h` was always meant to absorb this.

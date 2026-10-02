@@ -60,11 +60,14 @@ export const androidDimen = {
   transform: (t) => {
     const n = Number(t.$value);
     if (!Number.isFinite(n)) return String(t.$value);
-    // sp for the type scale, dp for everything else: dp is a fixed density-independent pixel and
-    // ignores the font-size setting in Android's display options, so a text size emitted as dp is
-    // exactly the Android spelling of the web's px problem. Compose already uses .sp.
-    const unit = isTypeScaleDimension(t) ? 'sp' : 'dp';
-    return n === 0 ? `0${unit}` : `${n}${unit}`;
+    // dp for EVERY dimension, type scale included, and that is not the Android spelling of the web's px
+    // problem — it is correct for how these resources are consumed. The Compose code reads them as
+    // `dimensionResource(id).value.sp`. `dimensionResource` returns getDimension()/density, and
+    // getDimension() already multiplies an `sp` resource by the font scale; the trailing `.sp` then
+    // applies it a second time, so a 14sp resource renders at ~56px rather than 28 at a 2x font scale.
+    // With dp the scale is applied exactly once, by the `.sp` at the point of use. Emitting sp here was
+    // tried and reverted — see the note in the changeset.
+    return n === 0 ? '0dp' : `${n}dp`;
   },
 };
 
