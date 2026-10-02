@@ -10,20 +10,20 @@
   --shadow-focus-success: 0 0 0 1px #5d6d5c, 0 0 0 4px #5d6d5c33;
   --shadow-focus-warning: 0 0 0 1px #7f5b21, 0 0 0 4px #7f5b2133;
 
-  --text-display-lg: 500 57px/64px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-display-md: 500 45px/52px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-display-sm: 400 36px/44px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-headline-lg: 600 32px/40px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-headline-md: 400 28px/36px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-headline-sm: 400 24px/32px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-title-lg: 400 22px/28px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-title-md: 500 16px/24px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-title-sm: 500 14px/20px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-title-dialog: 600 18px/24px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-label-lg: 500 14px/20px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-label-md: 500 12px/16px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-label-sm: 500 11px/16px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-body-lg: 400 16px/24px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-body-md: 400 14px/20px Montserrat, ui-sans-serif, system-ui, sans-serif;
-  --text-body-sm: 400 12px/16px Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-display-lg: 500 3.5625rem/4rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-display-md: 500 2.8125rem/3.25rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-display-sm: 400 2.25rem/2.75rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-headline-lg: 600 2rem/2.5rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-headline-md: 400 1.75rem/2.25rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-headline-sm: 400 1.5rem/2rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-title-lg: 400 1.375rem/1.75rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-title-md: 500 1rem/1.5rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-title-sm: 500 0.875rem/1.25rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-title-dialog: 600 1.125rem/1.5rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-label-lg: 500 0.875rem/1.25rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-label-md: 500 0.75rem/1rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-label-sm: 500 0.6875rem/1rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-body-lg: 400 1rem/1.5rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-body-md: 400 0.875rem/1.25rem Montserrat, ui-sans-serif, system-ui, sans-serif;
+  --text-body-sm: 400 0.75rem/1rem Montserrat, ui-sans-serif, system-ui, sans-serif;
 }

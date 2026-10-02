@@ -310,40 +310,40 @@ declare const tokens: {
     }
   },
   "fontSize": {
-    "display-lg": "57px",
-    "display-md": "45px",
-    "display-sm": "36px",
-    "headline-lg": "32px",
-    "headline-md": "28px",
-    "headline-sm": "24px",
-    "title-lg": "22px",
-    "title-md": "16px",
-    "title-sm": "14px",
-    "title-dialog": "18px",
-    "label-lg": "14px",
-    "label-md": "12px",
-    "label-sm": "11px",
-    "body-lg": "16px",
-    "body-md": "14px",
-    "body-sm": "12px"
+    "display-lg": "3.5625rem",
+    "display-md": "2.8125rem",
+    "display-sm": "2.25rem",
+    "headline-lg": "2rem",
+    "headline-md": "1.75rem",
+    "headline-sm": "1.5rem",
+    "title-lg": "1.375rem",
+    "title-md": "1rem",
+    "title-sm": "0.875rem",
+    "title-dialog": "1.125rem",
+    "label-lg": "0.875rem",
+    "label-md": "0.75rem",
+    "label-sm": "0.6875rem",
+    "body-lg": "1rem",
+    "body-md": "0.875rem",
+    "body-sm": "0.75rem"
   },
   "lineHeight": {
-    "display-lg": "64px",
-    "display-md": "52px",
-    "display-sm": "44px",
-    "headline-lg": "40px",
-    "headline-md": "36px",
-    "headline-sm": "32px",
-    "title-lg": "28px",
-    "title-md": "24px",
-    "title-sm": "20px",
-    "title-dialog": "24px",
-    "label-lg": "20px",
-    "label-md": "16px",
-    "label-sm": "16px",
-    "body-lg": "24px",
-    "body-md": "20px",
-    "body-sm": "16px"
+    "display-lg": "4rem",
+    "display-md": "3.25rem",
+    "display-sm": "2.75rem",
+    "headline-lg": "2.5rem",
+    "headline-md": "2.25rem",
+    "headline-sm": "2rem",
+    "title-lg": "1.75rem",
+    "title-md": "1.5rem",
+    "title-sm": "1.25rem",
+    "title-dialog": "1.5rem",
+    "label-lg": "1.25rem",
+    "label-md": "1rem",
+    "label-sm": "1rem",
+    "body-lg": "1.5rem",
+    "body-md": "1.25rem",
+    "body-sm": "1rem"
   },
   "letterSpacing": {
     "tighter": "-0.25px",
@@ -481,113 +481,113 @@ declare const tokens: {
     "display-lg": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "500",
-      "fontSize": "57px",
-      "lineHeight": "64px",
+      "fontSize": "3.5625rem",
+      "lineHeight": "4rem",
       "letterSpacing": "-0.25px"
     },
     "display-md": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "500",
-      "fontSize": "45px",
-      "lineHeight": "52px",
+      "fontSize": "2.8125rem",
+      "lineHeight": "3.25rem",
       "letterSpacing": "0"
     },
     "display-sm": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "400",
-      "fontSize": "36px",
-      "lineHeight": "44px",
+      "fontSize": "2.25rem",
+      "lineHeight": "2.75rem",
       "letterSpacing": "0"
     },
     "headline-lg": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "600",
-      "fontSize": "32px",
-      "lineHeight": "40px",
+      "fontSize": "2rem",
+      "lineHeight": "2.5rem",
       "letterSpacing": "0"
     },
     "headline-md": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "400",
-      "fontSize": "28px",
-      "lineHeight": "36px",
+      "fontSize": "1.75rem",
+      "lineHeight": "2.25rem",
       "letterSpacing": "0"
     },
     "headline-sm": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "400",
-      "fontSize": "24px",
-      "lineHeight": "32px",
+      "fontSize": "1.5rem",
+      "lineHeight": "2rem",
       "letterSpacing": "0"
     },
     "title-lg": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "400",
-      "fontSize": "22px",
-      "lineHeight": "28px",
+      "fontSize": "1.375rem",
+      "lineHeight": "1.75rem",
       "letterSpacing": "0"
     },
     "title-md": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "500",
-      "fontSize": "16px",
-      "lineHeight": "24px",
+      "fontSize": "1rem",
+      "lineHeight": "1.5rem",
       "letterSpacing": "0.15px"
     },
     "title-sm": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "500",
-      "fontSize": "14px",
-      "lineHeight": "20px",
+      "fontSize": "0.875rem",
+      "lineHeight": "1.25rem",
       "letterSpacing": "0.1px"
     },
     "title-dialog": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "600",
-      "fontSize": "18px",
-      "lineHeight": "24px",
+      "fontSize": "1.125rem",
+      "lineHeight": "1.5rem",
       "letterSpacing": "0"
     },
     "label-lg": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "500",
-      "fontSize": "14px",
-      "lineHeight": "20px",
+      "fontSize": "0.875rem",
+      "lineHeight": "1.25rem",
       "letterSpacing": "0.1px"
     },
     "label-md": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "500",
-      "fontSize": "12px",
-      "lineHeight": "16px",
+      "fontSize": "0.75rem",
+      "lineHeight": "1rem",
       "letterSpacing": "0.5px"
     },
     "label-sm": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "500",
-      "fontSize": "11px",
-      "lineHeight": "16px",
+      "fontSize": "0.6875rem",
+      "lineHeight": "1rem",
       "letterSpacing": "0.5px"
     },
     "body-lg": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "400",
-      "fontSize": "16px",
-      "lineHeight": "24px",
+      "fontSize": "1rem",
+      "lineHeight": "1.5rem",
       "letterSpacing": "0.5px"
     },
     "body-md": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "400",
-      "fontSize": "14px",
-      "lineHeight": "20px",
+      "fontSize": "0.875rem",
+      "lineHeight": "1.25rem",
       "letterSpacing": "0.25px"
     },
     "body-sm": {
       "fontFamily": "Montserrat, ui-sans-serif, system-ui, sans-serif",
       "fontWeight": "400",
-      "fontSize": "12px",
-      "lineHeight": "16px",
+      "fontSize": "0.75rem",
+      "lineHeight": "1rem",
       "letterSpacing": "0"
     }
   }
