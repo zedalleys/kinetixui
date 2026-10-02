@@ -3511,6 +3511,7 @@
         "interaction",
         "largeText",
         "published",
+        "reducedMotion",
         "rtl"
       ],
       "Angular": [
@@ -3520,18 +3521,21 @@
         "published"
       ],
       "SwiftUI": [
-        "build"
+        "build",
+        "reducedMotion"
       ],
       "Compose": [
         "accessibility",
         "build",
-        "interaction"
+        "interaction",
+        "reducedMotion"
       ],
       "Flutter": [
         "accessibility",
         "build",
         "interaction",
         "largeText",
+        "reducedMotion",
         "rtl"
       ]
     },
@@ -3816,7 +3820,7 @@
       "accessibility": 98,
       "rtl": 18,
       "largeText": 23,
-      "reducedMotion": 2,
+      "reducedMotion": 3,
       "visual": 0,
       "published": 98
     },
@@ -3836,7 +3840,7 @@
       "accessibility": 0,
       "rtl": 0,
       "largeText": 0,
-      "reducedMotion": 2,
+      "reducedMotion": 3,
       "visual": 0,
       "published": 0
     },
@@ -3846,7 +3850,7 @@
       "accessibility": 4,
       "rtl": 1,
       "largeText": 0,
-      "reducedMotion": 2,
+      "reducedMotion": 3,
       "visual": 0,
       "published": 0
     },
@@ -3856,7 +3860,7 @@
       "accessibility": 5,
       "rtl": 58,
       "largeText": 58,
-      "reducedMotion": 2,
+      "reducedMotion": 3,
       "visual": 0,
       "published": 0
     }

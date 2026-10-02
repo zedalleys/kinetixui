@@ -12,6 +12,7 @@ import SwiftUI
 public struct KinetixSwitch: View {
     @Environment(\.kinetixColors) private var colors
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @Binding private var isOn: Bool
 
@@ -23,7 +24,7 @@ public struct KinetixSwitch: View {
         Button {
             isOn.toggle()
         } label: {
-            ZStack(alignment: isOn ? .trailing : .leading) {
+            ZStack(alignment: KinetixSwitchMotion.thumbAlignment(isOn: isOn)) {
                 Capsule()
                     .fill(isOn ? colors.action : colors.tertiary)
                     .frame(width: 48, height: 24)
@@ -36,7 +37,10 @@ public struct KinetixSwitch: View {
                     .shadow(color: .black.opacity(0.2), radius: 2, y: 1)
                     .padding(.horizontal, 2)
             }
-            .animation(.easeInOut(duration: 0.15), value: isOn)
+            // Was a literal 0.15s easeInOut while KinetixMotion.swift carried `instant` (100ms) and
+            // the `standard` curve the React port already uses. The thumb still lands on the correct
+            // side when motion is reduced — the position is the state — it just stops travelling.
+            .animation(KinetixSwitchMotion.animation(reduceMotion: reduceMotion), value: isOn)
         }
         .buttonStyle(.plain)
         .opacity(isEnabled ? 1 : 0.5)
