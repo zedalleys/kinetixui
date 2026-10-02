@@ -17,12 +17,28 @@ import 'kinetix_motion.dart';
 /// ## What suppression means
 ///
 /// Not "no state change". The content still appears and disappears and the
-/// chevron still ends up rotated — only the interpolation goes. `Duration.zero`
-/// is the framework's own way to say that: `AnimatedSize`, `AnimatedCrossFade`
-/// and `AnimatedRotation` all still run their state machines and still settle,
-/// so anything awaiting completion still completes. Removing the widgets
-/// instead would change the tree shape, which is a larger difference than the
-/// one the reader asked for.
+/// chevron still ends up rotated — only the interpolation goes. `AnimatedSize`,
+/// `AnimatedCrossFade` and `AnimatedRotation` all still run their state
+/// machines and still settle, so anything awaiting completion still completes.
+/// Removing the widgets instead would change the tree shape, which is a larger
+/// difference than the one the reader asked for.
+///
+/// The suppressed duration is the smallest non-zero one rather than
+/// `Duration.zero`, and that is not a cosmetic choice. `AnimationController`
+/// notifies its listeners SYNCHRONOUSLY when the duration is exactly zero,
+/// while `RenderAnimatedSize` restarts its controller from inside
+/// `performLayout` — so `Duration.zero` re-dirties the render object in the
+/// middle of its own layout and trips the framework's own assertion:
+///
+///     A RenderAnimatedSize was mutated in its own performLayout implementation.
+///
+/// CI caught this; it is a real defect in a reduced-motion path, not a test
+/// artefact, and it would have thrown for exactly the reader this exists for.
+/// One microsecond takes the ordinary scheduled path and still completes within
+/// the first frame, so nothing is perceptible. The web side floors reduced
+/// motion the same way and for a comparable reason: `animation-duration:
+/// 0.01ms` rather than `animation: none`, because Radix unmounts on
+/// `animationend` and a removed animation never fires it.
 ///
 /// ## Why the durations come from the tokens
 ///
@@ -37,9 +53,13 @@ class KinetixDisclosureMotion {
   /// True when the reader has asked the platform for no animation.
   static bool reduceMotionOf(BuildContext context) => MediaQuery.disableAnimationsOf(context);
 
-  /// How long a disclosure runs: the canonical token, or nothing when reduced.
+  /// The suppressed duration. Non-zero by necessity — see the class doc.
+  static const Duration suppressed = Duration(microseconds: 1);
+
+  /// How long a disclosure runs: the canonical token, or imperceptibly brief
+  /// when the reader has asked for no animation.
   static Duration durationOf(BuildContext context) =>
-      reduceMotionOf(context) ? Duration.zero : KinetixDuration.fast;
+      reduceMotionOf(context) ? suppressed : KinetixDuration.fast;
 
   /// Opening decelerates.
   static Curve get enterCurve => KinetixEasing.enter;

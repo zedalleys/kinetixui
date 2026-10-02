@@ -66,6 +66,18 @@ double _collapsibleHeight(WidgetTester tester) =>
     tester.getSize(find.byType(AnimatedSize)).height;
 
 void main() {
+  group('the suppressed duration', () {
+    test('is non-zero, which is load-bearing rather than fussy', () {
+      // `AnimationController` notifies listeners synchronously at exactly zero, and
+      // `RenderAnimatedSize` restarts its controller from inside `performLayout` — so
+      // `Duration.zero` re-dirties the render object mid-layout and throws. CI caught that on
+      // four reduced-motion tests. This pins the fix so it cannot be tidied back.
+      expect(KinetixDisclosureMotion.suppressed, greaterThan(Duration.zero));
+      expect(KinetixDisclosureMotion.suppressed.inMilliseconds, 0,
+          reason: 'and still well inside one frame, so no movement is perceptible');
+    });
+  });
+
   group('KinetixCollapsible — normal motion', () {
     testWidgets('expanding renders a real intermediate height between the ends', (tester) async {
       await tester.pumpWidget(_host(

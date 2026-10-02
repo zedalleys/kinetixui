@@ -745,7 +745,7 @@
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
         ],
         "reducedMotion": [
-          "packages/ui-flutter/test/disclosure_motion_test.dart:5-279"
+          "packages/ui-flutter/test/disclosure_motion_test.dart:5-291"
         ]
       }
     },
@@ -1643,7 +1643,7 @@
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
         ],
         "reducedMotion": [
-          "packages/ui-flutter/test/disclosure_motion_test.dart:5-279"
+          "packages/ui-flutter/test/disclosure_motion_test.dart:5-291"
         ]
       }
     },
