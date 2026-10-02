@@ -25,28 +25,60 @@ const repoRoot = resolve(process.cwd(), "../..");
 const preview = readFileSync(resolve(repoRoot, "apps/docs/.storybook/preview.ts"), "utf8");
 const siteGlobals = readFileSync(resolve(repoRoot, "apps/web/src/app/globals.css"), "utf8");
 
-/** Every `@kinetixui/tokens…` specifier a file pulls in, however it spells the import. */
-function tokenStylesheets(source: string): Set<string> {
-  return new Set([...source.matchAll(/["'](@kinetixui\/tokens(?:\/[a-z/]+)?)["']/g)].map((m) => m[1]));
+/**
+ * Every `@kinetixui/tokens…` stylesheet a file actually pulls in.
+ *
+ * Reads import STATEMENTS, not every quoted token-package string anywhere in the file. The first
+ * version of this helper did the latter, and review caught what that costs: comment out both imports
+ * during a refactor and the specifiers are still in the source, so all three tests below passed while
+ * Storybook once again shipped with no shadow or focus variables. A guard for a silent regression
+ * that is itself silent about the regression is worse than none.
+ *
+ * Block comments are stripped, and a statement must begin its line — which is what a commented-out
+ * import fails to do.
+ */
+function tokenStylesheets(source: string, kind: "ts" | "css"): Set<string> {
+  const live = source.replace(/\/\*[\s\S]*?\*\//g, "");
+  const statement =
+    kind === "ts"
+      ? /^[ \t]*import\s+["'](@kinetixui\/tokens(?:\/[a-z/]+)?)["']/gm
+      : /^[ \t]*@import\s+["'](@kinetixui\/tokens(?:\/[a-z/]+)?)["']/gm;
+  return new Set([...live.matchAll(statement)].map((m) => m[1]));
 }
+
+const docsSheets = tokenStylesheets(preview, "ts");
+const siteSheets = tokenStylesheets(siteGlobals, "css");
 
 describe("the docs and the product load the same token contract", () => {
   it("imports an identical set of token stylesheets", () => {
-    const docs = tokenStylesheets(preview);
-    const site = tokenStylesheets(siteGlobals);
-
     // Sorted arrays rather than set equality, so a failure names the missing sheet instead of
     // reporting that two opaque sets differ.
-    expect([...docs].sort()).toEqual([...site].sort());
+    expect([...docsSheets].sort()).toEqual([...siteSheets].sort());
   });
 
   it("loads the stylesheet that defines --shadow-*, in both themes", () => {
     // Named explicitly as well as by parity: if the site itself ever lost these, parity alone would
-    // pass while both environments were equally broken.
-    expect(preview).toContain("@kinetixui/tokens/css/extras");
-    expect(preview).toContain("@kinetixui/tokens/css/extras/dark");
-    expect(siteGlobals).toContain("@kinetixui/tokens/css/extras");
-    expect(siteGlobals).toContain("@kinetixui/tokens/css/extras/dark");
+    // pass while both environments were equally broken. Asserted against the parsed set, not against
+    // the raw text, so a commented-out import cannot satisfy it.
+    for (const sheets of [docsSheets, siteSheets]) {
+      expect(sheets).toContain("@kinetixui/tokens/css/extras");
+      expect(sheets).toContain("@kinetixui/tokens/css/extras/dark");
+    }
+  });
+
+  it("does not count a specifier that is not a live import", () => {
+    // The hole review found, pinned directly: prose and commented-out lines mention the specifier
+    // without importing it.
+    const commented = [
+      '// import "@kinetixui/tokens/css/extras";',
+      '/* import "@kinetixui/tokens/css/extras/dark"; */',
+      '// see "@kinetixui/tokens/css/extras" for the shadow composites',
+      'import "@kinetixui/tokens/css";',
+    ].join("\n");
+    expect([...tokenStylesheets(commented, "ts")]).toEqual(["@kinetixui/tokens/css"]);
+
+    const css = ['/* @import "@kinetixui/tokens/css/extras"; */', '@import "@kinetixui/tokens/css";'].join("\n");
+    expect([...tokenStylesheets(css, "css")]).toEqual(["@kinetixui/tokens/css"]);
   });
 
   it("is checking a real split — `extras` is where the shadow variables actually live", () => {
