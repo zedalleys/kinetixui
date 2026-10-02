@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -124,5 +125,81 @@ describe("components name their motion", () => {
         "transition-all",
       );
     }
+  });
+});
+
+/**
+ * The motion suite's inventory and its evidence claim.
+ *
+ * Read through a subprocess for the same reason `native-motion-guard.test.ts` does: the spec is ESM
+ * JavaScript, and importing it from TypeScript would either need a declaration file or become `any`
+ * under `pnpm typecheck`.
+ */
+function motionStates<T>(expr: string): T {
+  const states = resolve(repoRoot, "scripts/motion-states.mjs");
+  return JSON.parse(
+    execFileSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        `import * as m from ${JSON.stringify(states)};
+         import { readFileSync } from "node:fs";
+         const motionSource = readFileSync(${JSON.stringify(resolve(repoRoot, "scripts/motion.mjs"))}, "utf8");
+         process.stdout.write(JSON.stringify(${expr}));`,
+      ],
+      { encoding: "utf8" },
+    ),
+  ) as T;
+}
+
+describe("the motion inventory covers every family it claims", () => {
+  it("declares a state for every member of every family", () => {
+    expect(motionStates<string[]>("m.coverageErrors()")).toEqual([]);
+  });
+
+  it("fails when a family member has no declared state", () => {
+    // The hole review found: `coverageErrors` defaulted to the disclosure family alone, so deleting
+    // both switch states would have left this green while the evidence kept being awarded.
+    const errors = motionStates<string[]>(
+      "m.coverageErrors(m.MOTION_STATES.filter((s) => s.slug !== 'switch'))",
+    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatch(/switch: in the selection family with no declared motion state/);
+  });
+
+  it("checks families beyond the first, by name", () => {
+    // A regression guard on the shape of the fix rather than its effect: if `coverageErrors` ever
+    // went back to a single hard-coded family, this is what would notice.
+    const families = motionStates<Record<string, string[]>>("m.MOTION_FAMILIES");
+    expect(Object.keys(families).length).toBeGreaterThanOrEqual(2);
+    expect(families.selection).toContain("switch");
+  });
+});
+
+describe("the reducedMotion claim cannot drift from the work", () => {
+  it("names exactly the components it exercises", () => {
+    expect(motionStates<string[]>("m.subjectErrors(motionSource)")).toEqual([]);
+  });
+
+  it("fails when a named subject has no declared state", () => {
+    const errors = motionStates<string[]>(
+      "m.subjectErrors(motionSource, m.MOTION_STATES.filter((s) => s.slug !== 'switch'))",
+    );
+    expect(errors.join("\n")).toMatch(/switch: named as a subject .* but has no declared motion state/);
+  });
+
+  it("fails when an exercised component is not named as a subject", () => {
+    // The other direction: the gate proving something the ledger does not record. Both matter,
+    // because either way the words and the work have come apart.
+    const errors = motionStates<string[]>(
+      "m.subjectErrors(motionSource.replace(/<Switch>/g, 'Switch'))",
+    );
+    expect(errors.join("\n")).toMatch(/switch: has a declared motion state but is not named as a subject/);
+  });
+
+  it("fails when the evidence marker is gone altogether", () => {
+    const errors = motionStates<string[]>("m.subjectErrors('// no marker here')");
+    expect(errors.join("\n")).toMatch(/evidence marker is missing/);
   });
 });

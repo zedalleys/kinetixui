@@ -33,7 +33,7 @@ import { createServer } from "node:http";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { MOTION_STATES, coverageErrors, isIntermediate, MOTION_REQUIRED, PERCEPTIBLE_MS, SUPPRESSED_MS } from "./motion-states.mjs";
+import { MOTION_STATES, coverageErrors, subjectErrors, isIntermediate, MOTION_REQUIRED, PERCEPTIBLE_MS, SUPPRESSED_MS } from "./motion-states.mjs";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -44,7 +44,9 @@ if (process.argv.includes("--list")) {
   process.exit(0);
 }
 
-const coverage = coverageErrors();
+// Both run before the browser starts: a coverage or claim mismatch is a bookkeeping fault, and
+// there is no reason to boot Chromium to discover it.
+const coverage = [...coverageErrors(), ...subjectErrors(readFileSync(fileURLToPath(import.meta.url), "utf8"))];
 if (coverage.length) {
   console.error("motion: coverage gaps\n" + coverage.map((e) => "  ✗ " + e).join("\n"));
   process.exit(1);

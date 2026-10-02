@@ -105,6 +105,23 @@ export const SUPPRESSED_MS = 2;
  */
 export const DISCLOSURE_FAMILY = ["accordion", "collapsible"];
 
+/** The selection-control family. Switch only so far; the rest of it is not claimed. */
+export const SELECTION_FAMILY = ["switch"];
+
+/**
+ * Every family this suite is responsible for exercising, by name.
+ *
+ * `coverageErrors` used to default to `DISCLOSURE_FAMILY` alone, which review caught as a hole the
+ * moment a second family arrived: deleting both switch states would have left `check:motion` green
+ * while `motion.mjs` went on naming `<Switch>` as a subject, so the reducedMotion evidence would keep
+ * being awarded for a component nothing exercised any more. A family added here is a family whose
+ * members must each have a declared state.
+ */
+export const MOTION_FAMILIES = {
+  disclosure: DISCLOSURE_FAMILY,
+  selection: SELECTION_FAMILY,
+};
+
 /**
  * Each entry:
  *   slug            canonical manifest slug
@@ -208,9 +225,55 @@ export const MOTION_STATES = [
 ];
 
 /** A family member with no declared state is a coverage hole, not a pass. */
-export function coverageErrors(states = MOTION_STATES, family = DISCLOSURE_FAMILY) {
+export function coverageErrors(states = MOTION_STATES, families = MOTION_FAMILIES) {
   const covered = new Set(states.map((s) => s.slug));
-  return family.filter((slug) => !covered.has(slug)).map((slug) => `${slug}: in DISCLOSURE_FAMILY with no declared motion state.`);
+  // An array is accepted as a single unnamed family so a caller passing one cannot silently iterate
+  // its characters and report nothing.
+  const byName = Array.isArray(families) ? { "": families } : families;
+  return Object.entries(byName).flatMap(([name, slugs]) =>
+    slugs
+      .filter((slug) => !covered.has(slug))
+      .map((slug) => `${slug}: in the ${name || "declared"} family with no declared motion state.`),
+  );
+}
+
+/**
+ * The components `motion.mjs` names as subjects of its `reducedMotion` claim, cross-checked against
+ * the states declared here. Two directions, because the claim can drift either way:
+ *
+ *   a subject with no state   evidence awarded for something the gate never drives
+ *   a state with no subject   the gate proves something the ledger does not record
+ *
+ * This is the lock review's finding pointed at: the marker is a comment, so nothing but a check like
+ * this ties the words in it to the work the suite actually does.
+ */
+export function subjectErrors(markerSource, states = MOTION_STATES) {
+  const at = markerSource.indexOf("// kx-verify: reducedMotion");
+  if (at === -1) return ["motion.mjs: the reducedMotion evidence marker is missing."];
+  const header = markerSource.slice(at).split("\nimport ")[0];
+  const subjects = [
+    ...new Set(
+      [...header.matchAll(/<([A-Z][A-Za-z0-9]*)>/g)].map((m) =>
+        m[1].replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase(),
+      ),
+    ),
+  ];
+  const exercised = new Set(states.map((s) => s.slug));
+  const errors = [];
+  for (const slug of subjects) {
+    if (!exercised.has(slug)) {
+      errors.push(
+        `${slug}: named as a subject of the reducedMotion claim but has no declared motion state — ` +
+          `deleting a state has to withdraw the claim, not keep awarding it.`,
+      );
+    }
+  }
+  for (const slug of exercised) {
+    if (!subjects.includes(slug)) {
+      errors.push(`${slug}: has a declared motion state but is not named as a subject, so what it proves is not claimed.`);
+    }
+  }
+  return errors;
 }
 
 /**

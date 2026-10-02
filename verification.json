@@ -738,7 +738,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-298"
+          "scripts/motion.mjs:24-300"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1636,7 +1636,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-298"
+          "scripts/motion.mjs:24-300"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4155,7 +4155,7 @@
           "scripts/large-text.mjs:99-596"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-298"
+          "scripts/motion.mjs:24-300"
         ],
         "published": [
           "npm: @kinetixui/ui"
