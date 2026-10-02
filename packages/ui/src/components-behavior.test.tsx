@@ -12,6 +12,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "./components/accordion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./components/collapsible";
 
 // kx-verify: interaction
 
@@ -135,5 +136,78 @@ describe("Accordion", () => {
     expect(screen.queryByText("Answer text")).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Question" }));
     expect(screen.getByText("Answer text")).toBeVisible();
+  });
+});
+
+/**
+ * Collapsible's disclosure contract.
+ *
+ * These assert the behaviour and the structural prerequisites for the transition — that the content
+ * is clipped while its height animates, and that it carries the state attribute the animation is
+ * selected on. They deliberately do NOT assert that it moved: jsdom has no layout and no compositor,
+ * so a test here cannot tell a 200ms height animation from an instant one. That claim is made by
+ * `scripts/motion.mjs`, in a browser, by reading a rendered midpoint.
+ *
+ * The split matters because the component shipped with no tests at all and no motion, and a test
+ * asserting a class name would have gone on passing if the keyframes were deleted.
+ */
+describe("Collapsible", () => {
+  const Example = () => (
+    <Collapsible>
+      <CollapsibleTrigger>Toggle</CollapsibleTrigger>
+      <CollapsibleContent>Hidden detail</CollapsibleContent>
+    </Collapsible>
+  );
+
+  it("reveals and hides its content from the trigger", async () => {
+    render(<Example />);
+    expect(screen.queryByText("Hidden detail")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Toggle" }));
+    expect(screen.getByText("Hidden detail")).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: "Toggle" }));
+    expect(screen.queryByText("Hidden detail")).not.toBeInTheDocument();
+  });
+
+  it("opens from the keyboard, because the trigger is a real button", async () => {
+    render(<Example />);
+    await userEvent.tab();
+    expect(screen.getByRole("button", { name: "Toggle" })).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    expect(screen.getByText("Hidden detail")).toBeVisible();
+    await userEvent.keyboard(" ");
+    expect(screen.queryByText("Hidden detail")).not.toBeInTheDocument();
+  });
+
+  it("clips its content while the height animates", async () => {
+    render(<Example />);
+    await userEvent.click(screen.getByRole("button", { name: "Toggle" }));
+    // Without overflow-hidden the text is laid out at full height from the first frame and spills
+    // out of the box the animation is still collapsing.
+    //
+    // `getByText` returns the content element itself: unlike AccordionContent, this component wraps
+    // its children in nothing, so the animated element and the text's element are the same node.
+    expect(screen.getByText("Hidden detail")).toHaveClass("overflow-hidden");
+  });
+
+  it("carries the state attribute the disclosure animation is selected on", async () => {
+    render(<Example />);
+    const trigger = screen.getByRole("button", { name: "Toggle" });
+    await userEvent.click(trigger);
+    const content = screen.getByText("Hidden detail");
+    expect(content).toHaveAttribute("data-state", "open");
+    expect(content?.className).toContain("data-[state=open]:animate-collapsible-down");
+    expect(content?.className).toContain("data-[state=closed]:animate-collapsible-up");
+  });
+
+  it("merges a caller's className instead of dropping it", async () => {
+    render(
+      <Collapsible defaultOpen>
+        <CollapsibleTrigger>Toggle</CollapsibleTrigger>
+        <CollapsibleContent className="mt-4">Hidden detail</CollapsibleContent>
+      </Collapsible>,
+    );
+    const content = screen.getByText("Hidden detail");
+    expect(content).toHaveClass("mt-4");
+    expect(content).toHaveClass("overflow-hidden");
   });
 });

@@ -180,13 +180,38 @@ export default {
       keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
         "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
+        // Collapsible is the same disclosure gesture as Accordion on a different Radix primitive, so
+        // it reads its own measured height variable and is otherwise identical.
+        "collapsible-down": { from: { height: "0" }, to: { height: "var(--radix-collapsible-content-height)" } },
+        "collapsible-up": { from: { height: "var(--radix-collapsible-content-height)" }, to: { height: "0" } },
         "caret-blink": { "0%,70%,100%": { opacity: "1" }, "20%,50%": { opacity: "0" } },
         marquee: { from: { transform: "translateX(0)" }, to: { transform: "translateX(-50%)" } },
         "typing-dot": { "0%,60%,100%": { transform: "translateY(0)", opacity: "0.4" }, "30%": { transform: "translateY(-3px)", opacity: "1" } },
       },
+      /**
+       * Durations and easings come from the tokens, not from numbers typed here.
+       *
+       * `0.2s ease-out` happened to equal `--duration-fast` and to be the same curve as
+       * `--easing-enter`, so the values were right and the provenance was not — a change to the token
+       * would have moved every other transition in the system and left disclosure behind.
+       *
+       * Disclosure uses the directional pair the easing tokens exist for: opening decelerates
+       * (`enter`), closing accelerates (`exit`). The fallbacks match the token values and exist
+       * because `animation` is a shorthand — an undefined `var()` makes the whole declaration invalid,
+       * which would mean no animation at all rather than an un-themed one. `marquee` already
+       * establishes that pattern below.
+       *
+       * `caret-blink` and `typing-dot` keep their literal timings. They are looping affordances
+       * rather than state transitions, their rhythms were chosen for their own reasons, and
+       * `scripts/a11y-animations.mjs` documents caret-blink at 1.25s by name. Retiming them to the
+       * nearest token would change how they look to buy consistency nobody asked for, which is a
+       * separate decision from giving disclosure its provenance back.
+       */
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        "accordion-down": "accordion-down var(--duration-fast, 200ms) var(--easing-enter, cubic-bezier(0, 0, 0.2, 1))",
+        "accordion-up": "accordion-up var(--duration-fast, 200ms) var(--easing-exit, cubic-bezier(0.4, 0, 1, 1))",
+        "collapsible-down": "collapsible-down var(--duration-fast, 200ms) var(--easing-enter, cubic-bezier(0, 0, 0.2, 1))",
+        "collapsible-up": "collapsible-up var(--duration-fast, 200ms) var(--easing-exit, cubic-bezier(0.4, 0, 1, 1))",
         "caret-blink": "caret-blink 1.25s ease-out infinite",
         marquee: "marquee var(--marquee-duration, 32s) linear infinite",
         "typing-dot": "typing-dot 1.2s ease-in-out infinite",

@@ -4,7 +4,9 @@
   "title": "Collapsible",
   "description": "Ported onto the KinetixUI token contract.",
   "dependencies": [
-    "@radix-ui/react-collapsible"
+    "@radix-ui/react-collapsible",
+    "clsx",
+    "tailwind-merge"
   ],
   "registryDependencies": [
     "tokens"
@@ -12,9 +14,15 @@
   "files": [
     {
       "path": "registry/kinetixui/ui/collapsible.tsx",
-      "content": "\"use client\";\n\nimport * as CollapsiblePrimitive from \"@radix-ui/react-collapsible\";\n\nconst Collapsible = CollapsiblePrimitive.Root;\nconst CollapsibleTrigger = CollapsiblePrimitive.CollapsibleTrigger;\nconst CollapsibleContent = CollapsiblePrimitive.CollapsibleContent;\n\nexport { Collapsible, CollapsibleTrigger, CollapsibleContent };\n",
+      "content": "\"use client\";\n\nimport * as React from \"react\";\nimport * as CollapsiblePrimitive from \"@radix-ui/react-collapsible\";\nimport { cn } from \"@/lib/utils\";\n\nconst Collapsible = CollapsiblePrimitive.Root;\nconst CollapsibleTrigger = CollapsiblePrimitive.CollapsibleTrigger;\n\n/**\n * The disclosure transition, which this component shipped without.\n *\n * Collapsible was a bare re-export: three primitives passed through untouched. Its content appeared\n * and vanished in a single frame while `Accordion` — the same disclosure gesture on a sibling Radix\n * primitive — animated its height. Measured before this change, the content went 0px to 84px with no\n * animation at all, against the accordion's 0px → 24.64px → 36px over 200ms.\n *\n * Disclosure is the case where motion carries meaning rather than decorating it: the content growing\n * out of the trigger is what says it belongs to the thing you just pressed, and where it will go when\n * you press it again. Appearing instantly makes the page look like it was replaced instead.\n *\n * `overflow-hidden` is load-bearing, not cosmetic — the height animation clips its content as it\n * runs, and without it the text is laid out at full height from the first frame and simply spills\n * out of the collapsing box.\n *\n * Reduced motion needs nothing here. The package's base layer collapses `animation-duration` for\n * everything it ships, and the content still lands at its full height because the keyframe's end\n * state is unchanged — proven in both directions by `scripts/motion.mjs`.\n *\n * Wrapping the primitive rather than re-exporting it adds a `className` that merges with the\n * caller's, which is the convention every other component here follows. The props, the ref and the\n * data attributes are the primitive's own, so nothing a consumer passes today behaves differently.\n */\nconst CollapsibleContent = React.forwardRef<\n  React.ElementRef<typeof CollapsiblePrimitive.CollapsibleContent>,\n  React.ComponentPropsWithoutRef<typeof CollapsiblePrimitive.CollapsibleContent>\n>(({ className, ...props }, ref) => (\n  <CollapsiblePrimitive.CollapsibleContent\n    ref={ref}\n    className={cn(\n      \"overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down\",\n      className,\n    )}\n    {...props}\n  />\n));\nCollapsibleContent.displayName = CollapsiblePrimitive.CollapsibleContent.displayName;\n\nexport { Collapsible, CollapsibleTrigger, CollapsibleContent };\n",
       "type": "registry:ui",
       "target": "components/ui/collapsible.tsx"
+    },
+    {
+      "path": "registry/kinetixui/lib/utils.ts",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { extendTailwindMerge } from \"tailwind-merge\";\n\n// The Material type-scale utilities (`text-label-md`, `text-body-sm`, …) come\n// from `fontSize` in tailwind.config.ts. Without this, tailwind-merge reads them\n// as text *colours* and drops a real colour class (`text-primary-foreground`).\nconst twMerge = extendTailwindMerge({\n  extend: {\n    classGroups: {\n      \"font-size\": [\n        {\n          text: [\n            \"display-lg\", \"display-md\", \"display-sm\",\n            \"headline-lg\", \"headline-md\", \"headline-sm\",\n            \"title-lg\", \"title-md\", \"title-sm\", \"title-dialog\",\n            \"label-lg\", \"label-md\", \"label-sm\",\n            \"body-lg\", \"body-md\", \"body-sm\",\n          ],\n        },\n      ],\n    },\n  },\n});\n\n/** Merges Tailwind class names, resolving conflicts (clsx + tailwind-merge). */\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib",
+      "target": "lib/utils.ts"
     }
   ],
   "type": "registry:ui"
