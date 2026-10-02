@@ -53,7 +53,7 @@
     "Compose": {
       "build": 90,
       "interaction": 7,
-      "accessibility": 6,
+      "accessibility": 4,
       "rtl": 1,
       "largeText": 0,
       "reducedMotion": 2,
@@ -554,7 +554,6 @@
       {
         "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt",
         "kinds": [
-          "accessibility",
           "interaction",
           "reducedMotion"
         ],
@@ -729,13 +728,10 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-221"
-        ],
-        "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-221"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:63-248"
         ],
         "reducedMotion": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-221"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:63-248"
         ]
       },
       "Flutter": {
@@ -1630,13 +1626,10 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-221"
-        ],
-        "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-221"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:63-248"
         ],
         "reducedMotion": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-221"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:63-248"
         ]
       },
       "Flutter": {

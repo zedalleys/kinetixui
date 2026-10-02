@@ -93,11 +93,20 @@ public struct KinetixAccordionContent<Content: View>: View {
     }
 
     public var body: some View {
-        if isExpanded {
-            VStack(alignment: .leading, spacing: 0) { content }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.bottom, 16) // pb-4
-                .transition(KinetixDisclosureMotion.transition(reduceMotion: reduceMotion))
+        // Layout-neutral `Group` so the animation modifier survives both states — see Collapsible.swift.
+        // This view previously carried a transition and no animation of its own, leaving its duration and
+        // curve to whatever ambient animation the caller happened to have in scope rather than the tokens.
+        Group {
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 0) { content }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.bottom, 16) // pb-4
+                    .transition(KinetixDisclosureMotion.transition(reduceMotion: reduceMotion))
+            }
         }
+        .animation(
+            KinetixDisclosureMotion.animation(isExpanded ? .expanding : .collapsing, reduceMotion: reduceMotion),
+            value: isExpanded
+        )
     }
 }

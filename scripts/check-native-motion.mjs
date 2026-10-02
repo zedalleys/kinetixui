@@ -42,11 +42,16 @@ const PLATFORMS = {
     helper: "KinetixDisclosureMotion.swift",
     test: "packages/ui-swiftui/Tests/KinetixUITests/DisclosureMotionTests.swift",
     family: ["Accordion.swift", "Collapsible.swift"],
+    directions: [/\.expanding\b/, /\.collapsing\b/],
   },
   Compose: {
     dir: "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui",
     ext: ".kt",
-    animates: /animate[A-Z]\w*AsState|AnimatedVisibility|AnimatedContent|updateTransition|rememberInfiniteTransition|animateContentSize/,
+    // `animateScrollToPage` and friends are animations that match none of the patterns above: they are
+    // verbs on a state object, not composables or `animate*AsState` reads. Review caught Carousel
+    // animating its way past this guard entirely — the one thing the guard exists to notice.
+    animates:
+      /animate[A-Z]\w*AsState|AnimatedVisibility|AnimatedContent|updateTransition|rememberInfiniteTransition|animateContentSize|animateScroll[A-Z]\w*|\.animateTo\(/,
     preference: /ANIMATOR_DURATION_SCALE|rememberReduceMotion/,
     helper: "KinetixDisclosureMotion.kt",
     test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt",
@@ -94,6 +99,7 @@ const KNOWN_GAPS = {
     "Marquee.kt": "infinite scroll; needs a static fallback decision",
     "MessageBubble.kt": "typing indicator loop",
     "Progress.kt": "determinate bar — progress feedback family",
+    "Carousel.kt": "animated page scrolling via PagerState — carousel/pager family, its own slice",
     "Skeleton.kt": "loading shimmer loop",
     "Spinner.kt": "indeterminate loop",
     "Switch.kt": "selection-control family — next slice candidate",
@@ -181,13 +187,29 @@ for (const [name, p] of Object.entries(PLATFORMS)) {
     }
   }
 
-  // 4. The ledger must not go stale: a listed gap that no longer animates is a dead entry.
+  // 4. A family member that resolves an animation must choose its direction from state. SwiftUI's
+  //    Collapsible hardcoded `.expanding`, so the exit curve the resolver defines was unreachable and a
+  //    collapse was never animated at all — a gap no duration or preference check would have noticed.
+  for (const member of p.family) {
+    const src = read(`${p.dir}/${member}`);
+    if (src === null || !p.directions) continue;
+    const [forward, reverse] = p.directions;
+    if (forward.test(src) && !reverse.test(src)) {
+      errors.push(
+        `${name}/${member}: names the expanding direction but never the collapsing one.\n` +
+          `      Opening and closing have different curves; selecting one of them unconditionally means the\n` +
+          `      other is dead code. Choose the direction from state.`,
+      );
+    }
+  }
+
+  // 5. The ledger must not go stale: a listed gap that no longer animates is a dead entry.
   for (const f of Object.keys(gaps)) {
     if (!files.includes(f)) errors.push(`${name}: KNOWN_GAPS lists ${f}, which does not exist.`);
     else if (!animated.includes(f)) errors.push(`${name}: KNOWN_GAPS lists ${f}, but it no longer animates — remove the entry.`);
   }
 
-  // 5. The platform's test must exercise both directions.
+  // 6. The platform's test must exercise both directions.
   const test = read(p.test);
   if (test === null) {
     errors.push(`${name}: no reduced-motion test at ${p.test}.`);

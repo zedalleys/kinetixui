@@ -56,7 +56,11 @@ import org.robolectric.annotation.Config
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
-// kx-verify: interaction, accessibility, reducedMotion
+// The marker deliberately does NOT claim `accessibility`. The repository defines that kind as a test
+// asserting the semantics assistive technology receives, or running an accessibility engine; this suite
+// asserts animation specs, clicks and whether content exists, which is none of those. Claiming it would
+// have promoted these two components on an axis nothing here verifies.
+// kx-verify: interaction, reducedMotion
 class DisclosureMotionTest {
     @get:Rule
     val rule = createComposeRule()
@@ -208,6 +212,29 @@ class DisclosureMotionTest {
         rule.setContent { KinetixCollapsible(expanded = true) { Text("settled on") } }
         rule.waitForIdle()
         rule.onNodeWithText("settled on").assertExists()
+    }
+
+    @Test
+    fun theSettingIsObservedWhileTheScreenIsOpen() {
+        // The reader can turn animations off without the screen being recreated. This drives the
+        // notification the platform sends on that change and asserts the resolver re-reads.
+        //
+        // What it proves: the ContentObserver is registered on the right URI and updates snapshot
+        // state. What it does not prove: that the real framework notifies on this exact setting — that
+        // is the platform's contract, not something a JVM test can establish.
+        setAnimatorScale(1f)
+        val seen = mutableListOf<Boolean>()
+        rule.setContent { seen.add(KinetixDisclosureMotion.rememberReduceMotion()) }
+        rule.waitForIdle()
+        assertEquals(false, seen.last())
+
+        setAnimatorScale(0f)
+        RuntimeEnvironment.getApplication().contentResolver.notifyChange(
+            Settings.Global.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE),
+            null,
+        )
+        rule.waitForIdle()
+        assertEquals(true, seen.last())
     }
 
     @Test
