@@ -20,7 +20,7 @@
   "totals": {
     "React": {
       "build": 98,
-      "interaction": 37,
+      "interaction": 38,
       "accessibility": 98,
       "rtl": 18,
       "largeText": 23,
@@ -181,6 +181,7 @@
           "accordion",
           "badge",
           "button",
+          "collapsible",
           "input",
           "tag"
         ]
@@ -652,7 +653,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-behavior.test.tsx:16-140"
+          "packages/ui/src/components-behavior.test.tsx:17-214"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -979,7 +980,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-behavior.test.tsx:16-140"
+          "packages/ui/src/components-behavior.test.tsx:17-214"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -1109,7 +1110,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-behavior.test.tsx:16-140"
+          "packages/ui/src/components-behavior.test.tsx:17-214"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -1533,6 +1534,9 @@
       "React": {
         "build": [
           "packages/ui (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui/src/components-behavior.test.tsx:17-214"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -2382,7 +2386,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-behavior.test.tsx:16-140",
+          "packages/ui/src/components-behavior.test.tsx:17-214",
           "packages/ui/src/components-form.test.tsx:311-436",
           "packages/ui/src/components-form.test.tsx:39-310",
           "packages/ui/src/components-keyboard.test.tsx:1242-1654"
@@ -4272,7 +4276,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-behavior.test.tsx:16-140"
+          "packages/ui/src/components-behavior.test.tsx:17-214"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",

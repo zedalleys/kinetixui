@@ -38,6 +38,7 @@
     "check:flagship-examples": "node scripts/gen-flagship-examples.mjs --check",
     "check:a11y-browser": "node scripts/a11y-browser.mjs",
     "check:large-text": "node scripts/large-text.mjs",
+    "check:motion": "node scripts/motion.mjs",
     "check:a11y-site": "node scripts/a11y-site.mjs --base http://127.0.0.1:3000",
     "check:type-scale": "node scripts/check-type-scale.mjs",
     "check:typography": "node scripts/check-typography.mjs",

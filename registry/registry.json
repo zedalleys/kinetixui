@@ -519,7 +519,9 @@
       "title": "Collapsible",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
-        "@radix-ui/react-collapsible"
+        "@radix-ui/react-collapsible",
+        "clsx",
+        "tailwind-merge"
       ],
       "registryDependencies": [
         "tokens"
@@ -529,6 +531,11 @@
           "path": "registry/kinetixui/ui/collapsible.tsx",
           "type": "registry:ui",
           "target": "components/ui/collapsible.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
         }
       ]
     },

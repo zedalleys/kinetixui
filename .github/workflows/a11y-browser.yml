@@ -21,6 +21,8 @@ on:
       - "scripts/a11y-browser.mjs"
       - "scripts/a11y-animations.mjs"
       - "scripts/large-text.mjs"
+      - "scripts/motion.mjs"
+      - "scripts/motion-states.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -34,6 +36,8 @@ on:
       - "scripts/a11y-browser.mjs"
       - "scripts/a11y-animations.mjs"
       - "scripts/large-text.mjs"
+      - "scripts/motion.mjs"
+      - "scripts/motion-states.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -81,3 +85,11 @@ jobs:
       # exactly what it needs.
       - name: Large-text pass (selection controls at 2x the default font size)
         run: pnpm check:large-text
+
+      # Motion is the one claim a source grep cannot make: `transition` in a class string proves
+      # someone typed it, not that anything moves. This drives each declared interaction twice — once
+      # normally, once under prefers-reduced-motion — and reads a rendered midpoint out of the
+      # browser. Same job for the same reason as large-text: the Storybook build and the Chromium
+      # install above are exactly what it needs.
+      - name: Motion pass (rendered intermediate states, normal and reduced)
+        run: pnpm check:motion
