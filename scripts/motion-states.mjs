@@ -112,11 +112,25 @@ export const DISCLOSURE_FAMILY = ["accordion", "collapsible"];
  *   interaction     human name, used in the report and in the evidence
  *   classification  MOTION_REQUIRED | STATIC_BY_DESIGN | COMPOSITION_OWNED
  *   trigger         { action: "click" | "press", selector, key? }
+ *   prelude         optional { action, selector } performed first and allowed to settle, for a
+ *                   state whose starting point is not the one the story loads in — a collapse has
+ *                   to be measured from an open disclosure, and every story here loads closed
  *   target          "@aria-controls" resolves the element the trigger points at, which is how both
  *                   Radix disclosure primitives associate a trigger with its content and does not
  *                   depend on a class name the component may not set. Otherwise a CSS selector.
  *   targetBefore    optional selector for reading STATE A when `target` only exists once open
  *   property        the computed property sampled
+ *
+ * ── Why closing has its own entries ───────────────────────────────────────
+ *
+ * The first version of this file declared only expansion, because every story loads closed and one
+ * click opens it. That left `collapsible-up` — added by the same change — and `accordion-up`, whose
+ * timing the same change moved onto the tokens, completely unexercised. Codex caught it on review,
+ * and it reproduced: pointing both closing animations at a keyframe that does not exist left
+ * `check:motion` reporting ok while closing snapped instantly in both components.
+ *
+ * Opening and closing are separate animations with separate keyframes and deliberately different
+ * easings — `enter` decelerates, `exit` accelerates — so proving one says nothing about the other.
  */
 export const MOTION_STATES = [
   {
@@ -144,6 +158,26 @@ export const MOTION_STATES = [
     interaction: "expand",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: "button[data-state=closed]" },
+    target: "@aria-controls",
+    property: "height",
+  },
+  {
+    slug: "accordion",
+    story: "data-display-accordion--playground",
+    interaction: "collapse",
+    classification: MOTION_REQUIRED,
+    prelude: { action: "click", selector: "button[data-state=closed]" },
+    trigger: { action: "click", selector: "button[data-state=open]" },
+    target: "@aria-controls",
+    property: "height",
+  },
+  {
+    slug: "collapsible",
+    story: "data-display-collapsible--playground",
+    interaction: "collapse",
+    classification: MOTION_REQUIRED,
+    prelude: { action: "click", selector: "button[data-state=closed]" },
+    trigger: { action: "click", selector: "button[data-state=open]" },
     target: "@aria-controls",
     property: "height",
   },

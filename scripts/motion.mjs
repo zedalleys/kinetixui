@@ -73,51 +73,74 @@ const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_C
  * nothing was set up to move, reported separately from "moved, but not perceptibly".
  */
 async function sample(page, state) {
-  // STATE A. Disclosure content is unmounted while closed, so when the target only exists once open
-  // the pre-state is read from `targetBefore` if one is declared, and is otherwise the collapsed 0.
-  const beforeSel = state.targetBefore ?? (state.target === "@aria-controls" ? null : state.target);
-  const beforeEl = beforeSel ? await page.$(beforeSel) : null;
-  const a = beforeEl ? await beforeEl.evaluate((el, p) => getComputedStyle(el)[p], state.property) : "0px";
+  return page.evaluate(
+    async ({ preludeSel, preludeAction, triggerSel, action, key, wantsAriaControls, targetSel, targetBeforeSel, property }) => {
+      const fire = (el, how, k) => {
+        if (how === "press") {
+          el.focus();
+          for (const type of ["keydown", "keyup"]) el.dispatchEvent(new KeyboardEvent(type, { key: k ?? "Enter", bubbles: true }));
+        } else {
+          el.click();
+        }
+      };
+      const settle = async () => {
+        for (let i = 0; i < 180; i++) {
+          await new Promise((r) => requestAnimationFrame(r));
+          if (document.getAnimations().every((x) => x.playState !== "running")) return;
+        }
+      };
+      const byId = (id) => (id ? document.querySelector(`[id="${id}"]`) : null);
 
-  const triggerEl = await page.$(state.trigger.selector);
-  if (!triggerEl) return { error: `trigger not found: ${state.trigger.selector}` };
-
-  /**
-   * Trigger and measure inside ONE browser task.
-   *
-   * An earlier version clicked from Node, waited a macrotask, then came back for the animations.
-   * That is a race against a 200ms animation across a WebSocket, and it lost once on a cold first
-   * navigation: the accordion was reported as "nothing animates" in a run where it demonstrably did.
-   * A gate that fails one run in four is worse than no gate, so the round-trip is removed rather
-   * than padded with a longer sleep — the click, the two frames React needs to commit and mount the
-   * content, and the read all happen in the page.
-   *
-   * Two `requestAnimationFrame`s rather than a timer: they are tied to rendered frames, so this
-   * samples ~32ms into a 200ms animation regardless of how fast the machine is, instead of hoping a
-   * wall-clock delay lands inside the window.
-   */
-  const measured = await page.evaluate(
-    ({ triggerSel, action, key, wantsAriaControls, targetSel, property }) => {
-      const trigger = document.querySelector(triggerSel);
-      if (!trigger) return { error: `trigger vanished: ${triggerSel}` };
-      if (action === "press") {
-        trigger.focus();
-        for (const type of ["keydown", "keyup"]) trigger.dispatchEvent(new KeyboardEvent(type, { key: key ?? "Enter", bubbles: true }));
-      } else {
-        trigger.click();
+      // A collapse has to start from an open disclosure, and every story here loads closed. The
+      // prelude opens it and is then allowed to SETTLE — without waiting out the opening animation
+      // the collapse would be measured against a height still on its way up, so STATE A would be
+      // wrong and the midpoint test meaningless.
+      if (preludeSel) {
+        const pre = document.querySelector(preludeSel);
+        if (!pre) return { error: `prelude trigger not found: ${preludeSel}` };
+        fire(pre, preludeAction, null);
+        await settle();
       }
+
+      const trigger = document.querySelector(triggerSel);
+      if (!trigger) return { error: `trigger not found: ${triggerSel}` };
+
+      // STATE A, read after the prelude. On an expand the content is not mounted yet, so the
+      // starting height is the collapsed 0; on a collapse it is the settled open height.
+      const idBefore = wantsAriaControls ? trigger.getAttribute("aria-controls") : null;
+      const beforeEl = targetBeforeSel ? document.querySelector(targetBeforeSel) : wantsAriaControls ? byId(idBefore) : document.querySelector(targetSel);
+      const a = beforeEl ? getComputedStyle(beforeEl)[property] : "0px";
+
+      fire(trigger, action, key);
+
       return new Promise((resolve) => {
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
-            // Radix only points a disclosure trigger at its content once that content is mounted,
-            // so aria-controls is read here rather than before the trigger.
-            const id = wantsAriaControls ? trigger.getAttribute("aria-controls") : null;
-            if (wantsAriaControls && !id) return resolve({ error: `trigger has no aria-controls after opening: ${triggerSel}` });
-            const el = document.querySelector(id ? `[id="${id}"]` : targetSel);
+            // Radix points a disclosure trigger at its content only while that content is mounted:
+            // on an expand the attribute appears after the click, on a collapse it is on its way
+            // out. Take whichever of the two reads produced one.
+            const id = wantsAriaControls ? (trigger.getAttribute("aria-controls") ?? idBefore) : null;
+            if (wantsAriaControls && !id) return resolve({ error: `trigger has no aria-controls: ${triggerSel}` });
+            const el = wantsAriaControls ? byId(id) : document.querySelector(targetSel);
             if (!el) return resolve({ error: `target not found after trigger: ${id ? `#${id}` : targetSel}` });
 
+            // The rendered end state of a CLOSING disclosure is the content being gone, and the DOM
+            // says that three different ways: the node is detached, or it is still attached but
+            // `hidden` so it generates no layout box (height computes to "auto"), or it is detached
+            // mid-read and every property comes back "". All three are height 0 on screen, and
+            // reporting the natural height the element would have had if it were visible — which is
+            // what getComputedStyle gives once the animation stops applying — would be describing a
+            // box nobody can see.
+            const read = (node) => {
+              if (!node.isConnected || node.getClientRects().length === 0) return "0px";
+              const v = getComputedStyle(node)[property];
+              return v === "" ? "0px" : v;
+            };
+
             const running = el.getAnimations({ subtree: false }).filter((x) => Number(x.effect?.getComputedTiming?.().activeDuration) > 0);
-            if (running.length === 0) return resolve({ animations: 0, mid: null, b: getComputedStyle(el)[property], durationMs: 0 });
+            if (running.length === 0) {
+              return requestAnimationFrame(() => requestAnimationFrame(() => resolve({ a, animations: 0, mid: null, b: read(el), durationMs: 0 })));
+            }
 
             let longest = 0;
             for (const x of running) longest = Math.max(longest, Number(x.effect.getComputedTiming().activeDuration) || 0);
@@ -129,7 +152,7 @@ async function sample(page, state) {
                 /* a finished animation refuses a seek and contributes no midpoint */
               }
             }
-            const mid = getComputedStyle(el)[property];
+            const mid = read(el);
             for (const x of running) {
               try {
                 x.finish();
@@ -137,22 +160,29 @@ async function sample(page, state) {
                 /* an infinite animation cannot finish; it is not a disclosure transition */
               }
             }
-            resolve({ animations: running.length, mid, b: getComputedStyle(el)[property], durationMs: longest });
+            // Finishing an exit animation does not remove the content: Radix unmounts it on
+            // `animationend`, which is queued rather than synchronous. Give it two frames to land
+            // before reading STATE B, or a collapse would be measured while its content is still
+            // on screen at full height.
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => resolve({ a, animations: running.length, mid, b: read(el), durationMs: longest })),
+            );
           }),
         );
       });
     },
     {
+      preludeSel: state.prelude?.selector ?? null,
+      preludeAction: state.prelude?.action ?? "click",
       triggerSel: state.trigger.selector,
       action: state.trigger.action,
       key: state.trigger.key ?? null,
       wantsAriaControls: state.target === "@aria-controls",
       targetSel: state.target,
+      targetBeforeSel: state.targetBefore ?? null,
       property: state.property,
     },
   );
-
-  return measured.error ? measured : { a, ...measured };
 }
 
 async function runPass({ reduced }) {
