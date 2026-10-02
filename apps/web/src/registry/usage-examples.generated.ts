@@ -29,11 +29,17 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
     "kotlin": "Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {\n    KinetixBadge(\"Default\")\n    KinetixBadge(\"Secondary\", variant = KinetixBadgeVariant.Secondary)\n}",
     "dart": "Row(\n  mainAxisSize: MainAxisSize.min,\n  children: const <Widget>[\n    KinetixBadge('Default'),\n    SizedBox(width: 8),\n    KinetixBadge('Secondary', variant: KinetixBadgeVariant.secondary),\n  ],\n),",
   },
+  "banner-demo": {
+    "angular": "@Component({\n  selector: 'app-banner-demo',\n  imports: [KxBanner],\n  template: `\n    @if (!dismissed) {\n      <kx-banner variant=\"warning\" sticky dismissible (dismiss)=\"dismissed = true\">\n        Scheduled maintenance begins at 02:00 UTC.\n        <button kxBannerAction type=\"button\" (click)=\"details()\">Read more</button>\n      </kx-banner>\n    }\n  `,\n})\nexport class BannerDemo {\n  dismissed = false;\n  details(): void {}\n}",
+  },
   "button-demo": {
     "angular": "<button kxButton>Button</button>",
     "swift": "KinetixButton(action: save) {\n    Text(\"Button\")\n}",
     "kotlin": "KinetixButton(onClick = save) {\n    Text(\"Button\")\n}",
     "dart": "KinetixButton(\n  onPressed: save,\n  child: const Text('Button'),\n),",
+  },
+  "button-group-demo": {
+    "angular": "@Component({\n  selector: 'app-button-group-demo',\n  imports: [KxButton, KxButtonGroup, KxButtonGroupText],\n  template: `\n    <div kxButtonGroup>\n      <kx-button-group-text>Qty</kx-button-group-text>\n      <button kxButton variant=\"Outline\" type=\"button\" aria-label=\"Decrease\">&minus;</button>\n      <button kxButton variant=\"Outline\" type=\"button\" aria-label=\"Increase\">+</button>\n    </div>\n  `,\n})\nexport class ButtonGroupDemo {}",
   },
   "card-demo": {
     "angular": "<kx-card>\n  <kx-card-header>\n    <kx-card-title>Create project</kx-card-title>\n    <kx-card-description>Deploy your new project in one click.</kx-card-description>\n  </kx-card-header>\n  <kx-card-content>\n    <label kxLabel for=\"name\">Name</label>\n    <input kxInput id=\"name\" placeholder=\"Name of your project\" />\n  </kx-card-content>\n  <kx-card-footer>\n    <button kxButton variant=\"Outline\">Cancel</button>\n    <button kxButton>Deploy</button>\n  </kx-card-footer>\n</kx-card>",
@@ -44,6 +50,15 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   "checkbox-demo": {
     "angular": "<kx-checkbox [(checked)]=\"remember\" aria-label=\"Remember me\" />",
   },
+  "circular-progress-demo": {
+    "angular": "@Component({\n  selector: 'app-circular-progress-demo',\n  imports: [KxCircularProgress],\n  template: `\n    <kx-circular-progress [value]=\"72\" showValue [size]=\"56\" />\n    <kx-circular-progress aria-label=\"Loading\" />\n  `,\n})\nexport class CircularProgressDemo {}",
+  },
+  "code-block-demo": {
+    "angular": "@Component({\n  selector: 'app-code-block-demo',\n  imports: [KxCodeBlock],\n  template: ` <kx-code-block [code]=\"snippet\" filename=\"main.ts\" /> `,\n})\nexport class CodeBlockDemo {\n  readonly snippet = \"import { KxButton } from '@kinetixui/angular';\";\n}",
+  },
+  "description-list-demo": {
+    "angular": "@Component({\n  selector: 'app-description-list-demo',\n  imports: [KxDescriptionList, KxDescriptionListItem],\n  template: `\n    <dl kxDescriptionList>\n      <kx-description-list-item term=\"Status\">Active</kx-description-list-item>\n      <kx-description-list-item term=\"Plan\">Team &middot; annual</kx-description-list-item>\n      <kx-description-list-item term=\"Notes\" layout=\"stacked\">\n        Renews automatically unless cancelled 30 days before the term ends.\n      </kx-description-list-item>\n    </dl>\n  `,\n})\nexport class DescriptionListDemo {}",
+  },
   "direction-provider-demo": {
     "angular": "<!-- No provider: the DOM's own dir attribute cascades, and Angular CDK's Directionality reads it. -->\n<div dir=\"rtl\">\n  <input kxInput placeholder=\"ابحث\" />\n  <button kxButton>حفظ</button>\n</div>",
     "swift": "// No provider to port: layout direction is an environment value, and every view below reads it.\nVStack {\n    KinetixInput(text: $query, placeholder: \"Search\")\n    KinetixButton(action: save) { Text(\"Save\") }\n}\n.environment(\\.layoutDirection, .rightToLeft)",
@@ -53,11 +68,20 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   "empty-demo": {
     "angular": "<kx-empty>\n  <kx-empty-header>\n    <kx-empty-media variant=\"icon\">📁</kx-empty-media>\n    <kx-empty-title>No projects yet</kx-empty-title>\n    <kx-empty-description>Create one to get started.</kx-empty-description>\n  </kx-empty-header>\n  <kx-empty-content>\n    <button kxButton>New project</button>\n  </kx-empty-content>\n</kx-empty>",
   },
+  "fab-demo": {
+    "angular": "@Component({\n  selector: 'app-fab-demo',\n  imports: [KxFab],\n  template: `\n    <button kxFab type=\"button\" aria-label=\"New message\">+</button>\n    <button kxFab extended type=\"button\">New message</button>\n  `,\n})\nexport class FabDemo {}",
+  },
   "field-demo": {
     "angular": "<kx-field>\n  <label kxFieldLabel for=\"email\">Email</label>\n  <input kxInput id=\"email\" type=\"email\" aria-describedby=\"email-hint\" aria-invalid=\"true\" />\n  <p kxFieldDescription id=\"email-hint\">We only use this to sign you in.</p>\n  <kx-field-message variant=\"error\">Enter a valid address.</kx-field-message>\n</kx-field>",
   },
   "form-demo": {
     "angular": "@Component({\n  selector: 'app-signup',\n  imports: [ReactiveFormsModule, KxButton, KxField, KxFieldLabel, KxFieldMessage, KxInput],\n  template: `\n    <form [formGroup]=\"form\" (ngSubmit)=\"submit()\">\n      <kx-field>\n        <label kxFieldLabel for=\"email\">Email</label>\n        <input kxInput id=\"email\" formControlName=\"email\" [attr.aria-invalid]=\"email.invalid && email.touched\" />\n        @if (email.invalid && email.touched) {\n          <kx-field-message variant=\"error\">Enter a valid address.</kx-field-message>\n        }\n      </kx-field>\n      <button kxButton type=\"submit\" [disabled]=\"form.invalid\">Sign up</button>\n    </form>\n  `,\n})\nexport class SignupForm {\n  readonly form = new FormGroup({\n    email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),\n  });\n  get email() {\n    return this.form.controls.email;\n  }\n  submit(): void {\n    if (this.form.valid) console.log(this.form.getRawValue());\n  }\n}",
+  },
+  "image-demo": {
+    "angular": "@Component({\n  selector: 'app-image-demo',\n  imports: [KxImage],\n  template: `\n    <kx-image src=\"/cover.jpg\" alt=\"Harbour at dusk\" ratio=\"16:9\">\n      <span kxImageFallback>Unavailable</span>\n    </kx-image>\n  `,\n})\nexport class ImageDemo {}",
+  },
+  "inform-demo": {
+    "angular": "@Component({\n  selector: 'app-inform-demo',\n  imports: [KxInform],\n  template: `\n    <kx-inform variant=\"success\">Your changes were saved.</kx-inform>\n    <kx-inform variant=\"error\" dismissible (dismiss)=\"hidden = true\">\n      We could not reach the server.\n      <button kxInformAction type=\"button\" (click)=\"retry()\">Try again</button>\n    </kx-inform>\n  `,\n})\nexport class InformDemo {\n  hidden = false;\n  retry(): void {}\n}",
   },
   "input-demo": {
     "angular": "<input kxInput type=\"email\" placeholder=\"Email\" />",
@@ -68,6 +92,12 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   "label-demo": {
     "angular": "<label kxLabel for=\"terms\">Accept terms and conditions</label>",
   },
+  "list-demo": {
+    "angular": "@Component({\n  selector: 'app-list-demo',\n  imports: [KxList, KxListItem],\n  template: `\n    <ul kxList>\n      <li kxListItem title=\"Billing\" description=\"Invoices and payment method\" pressable (select)=\"open('billing')\">\n        <span kxListTrailing>&rsaquo;</span>\n      </li>\n      <li kxListItem title=\"Members\" description=\"12 people\" pressable (select)=\"open('members')\">\n        <span kxListTrailing>&rsaquo;</span>\n      </li>\n      <li kxListItem title=\"Audit log\" description=\"Enterprise plans only\" disabled></li>\n    </ul>\n  `,\n})\nexport class ListDemo {\n  open(_section: string): void {}\n}",
+  },
+  "marquee-demo": {
+    "angular": "@Component({\n  selector: 'app-marquee-demo',\n  imports: [KxMarquee, KxMarqueeContent],\n  template: `\n    <kx-marquee [durationSeconds]=\"24\" pauseOnHover>\n      <ng-template kxMarqueeContent>\n        <span>Ships to 48 countries</span>\n        <span>Free returns for 30 days</span>\n      </ng-template>\n    </kx-marquee>\n  `,\n})\nexport class MarqueeDemo {}",
+  },
   "metric-demo": {
     "angular": "<kx-metric label=\"Revenue\" value=\"$48,120\" trend=\"up\" change=\"+12.4%\" />",
   },
@@ -76,6 +106,9 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   },
   "number-input-demo": {
     "angular": "<kx-number-input [(value)]=\"quantity\" [min]=\"1\" [max]=\"99\" aria-label=\"Quantity\" />",
+  },
+  "page-header-demo": {
+    "angular": "@Component({\n  selector: 'app-page-header-demo',\n  imports: [KxButton, KxPageHeader],\n  template: `\n    <kx-page-header title=\"Billing\" description=\"Plan, invoices and payment method\">\n      <button kxButton kxPageHeaderActions type=\"button\" variant=\"Primary\">Upgrade</button>\n    </kx-page-header>\n  `,\n})\nexport class PageHeaderDemo {}",
   },
   "password-input-demo": {
     "angular": "<kx-password-input [(value)]=\"password\" aria-label=\"Password\" />",
@@ -118,6 +151,9 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   },
   "textarea-demo": {
     "angular": "<textarea kxTextarea rows=\"4\" placeholder=\"Type your message here.\"></textarea>",
+  },
+  "timeline-demo": {
+    "angular": "@Component({\n  selector: 'app-timeline-demo',\n  imports: [KxTimeline, KxTimelineItem],\n  template: `\n    <ol kxTimeline>\n      <li kxTimelineItem title=\"Order placed\" description=\"12 March, 09:14\" status=\"success\"></li>\n      <li kxTimelineItem title=\"Dispatched\" description=\"12 March, 17:02\" status=\"success\"></li>\n      <li kxTimelineItem title=\"In transit\" description=\"Expected 15 March\" status=\"active\"></li>\n      <li kxTimelineItem title=\"Delivered\"></li>\n    </ol>\n  `,\n})\nexport class TimelineDemo {}",
   },
   "toggle-demo": {
     "angular": "<button kxToggle [(pressed)]=\"bold\" aria-label=\"Bold\">B</button>",

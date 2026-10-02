@@ -78,7 +78,11 @@ export function buildSnapshot(dts) {
   );
 
   const own = new Map();
-  const pattern = /static ɵ(dir|cmp): i0\.ɵɵ(?:Directive|Component)Declaration<([\s\S]*?)>;/g;
+  // The namespace alias the Angular compiler emits for @angular/core is not stable: it was `i0` and is
+  // `_angular_core` in the current toolchain. Pinning it meant this regex quietly matched nothing, so the
+  // snapshot regenerated with zero declarations while `check:angular-api` kept passing against the last
+  // good committed file. Matching any alias is what keeps the snapshot a snapshot.
+  const pattern = /static ɵ(dir|cmp): [A-Za-z_$][\w$]*\.ɵɵ(?:Directive|Component)Declaration<([\s\S]*?)>;/g;
   for (const match of dts.matchAll(pattern)) {
     const args = splitGenerics(match[2]);
     const [cls, selector, , inputs, outputs, , projection, standalone] = args;

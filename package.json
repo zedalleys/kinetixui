@@ -58,6 +58,7 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "node scripts/release-publish.mjs",
+    "check:platform-completeness": "node scripts/check-platform-completeness.mjs",
     "check:platform-source": "node scripts/check-platform-source.mjs",
     "platform:matrix": "node scripts/check-platform-source.mjs --matrix",
     "report:beta": "node scripts/report-beta.mjs",

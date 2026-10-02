@@ -28,13 +28,13 @@
       "published": 98
     },
     "Angular": {
-      "build": 31,
-      "interaction": 31,
-      "accessibility": 31,
-      "rtl": 1,
+      "build": 43,
+      "interaction": 43,
+      "accessibility": 43,
+      "rtl": 2,
       "largeText": 0,
       "visual": 0,
-      "published": 31
+      "published": 43
     },
     "SwiftUI": {
       "build": 90,
@@ -433,6 +433,28 @@
       }
     ],
     "Angular": [
+      {
+        "file": "packages/ui-angular/src/lib/content.spec.ts",
+        "kinds": [
+          "accessibility",
+          "interaction",
+          "rtl"
+        ],
+        "components": [
+          "banner",
+          "button-group",
+          "circular-progress",
+          "code-block",
+          "description-list",
+          "fab",
+          "image",
+          "inform",
+          "list",
+          "marquee",
+          "page-header",
+          "timeline"
+        ]
+      },
       {
         "file": "packages/ui-angular/src/lib/display-forms.spec.ts",
         "kinds": [
@@ -1011,6 +1033,20 @@
           "npm: @kinetixui/ui"
         ]
       },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "accessibility": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
+        ]
+      },
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
@@ -1137,6 +1173,20 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "accessibility": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -1384,6 +1434,20 @@
           "npm: @kinetixui/ui"
         ]
       },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "accessibility": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
+        ]
+      },
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
@@ -1417,6 +1481,25 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-angular/src/lib/content.spec.ts:504-570",
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "accessibility": [
+          "packages/ui-angular/src/lib/content.spec.ts:504-570",
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "rtl": [
+          "packages/ui-angular/src/lib/content.spec.ts:504-570"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -1731,6 +1814,20 @@
           "npm: @kinetixui/ui"
         ]
       },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "accessibility": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
+        ]
+      },
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
@@ -1981,6 +2078,20 @@
           "npm: @kinetixui/ui"
         ]
       },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "accessibility": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
+        ]
+      },
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
@@ -2184,6 +2295,20 @@
           "npm: @kinetixui/ui"
         ]
       },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "accessibility": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
+        ]
+      },
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
@@ -2211,6 +2336,20 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "accessibility": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -2531,6 +2670,20 @@
           "npm: @kinetixui/ui"
         ]
       },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "accessibility": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
+        ]
+      },
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
@@ -2596,6 +2749,20 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "accessibility": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -2979,6 +3146,20 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "accessibility": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -4188,6 +4369,20 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "accessibility": [
+          "packages/ui-angular/src/lib/content.spec.ts:56-503"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {

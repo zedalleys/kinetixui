@@ -780,3 +780,362 @@
   .kx-radio__input,
   .kx-tag__remove { transition: none; }
 }
+
+/* ══ content wave ═════════════════════════════════════════════════════════
+   banner · button group · circular progress · code block · description list
+   fab · image · inform · list · marquee · page header · timeline
+
+   Logical properties throughout (padding-inline, inset-inline-start, margin-inline)
+   so every surface mirrors under dir="rtl" without a second rule.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── banner + inform: one intent palette, two containers ────────────────── */
+.kx-banner,
+.kx-inform {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  font: var(--text-body-sm);
+  font-family: var(--font-family-sans);
+}
+.kx-banner {
+  width: 100%;
+  border-block-end: var(--border-width-default) solid transparent;
+  padding: var(--spacing-3) var(--spacing-4);
+}
+.kx-banner--sticky { position: sticky; inset-block-start: 0; z-index: var(--z-index-sticky, 40); }
+.kx-inform { border-radius: var(--radius-md); padding: var(--spacing-3); }
+
+.kx-banner--information { background-color: hsl(var(--info) / 0.1); color: hsl(var(--semantic-on-info-container)); border-color: hsl(var(--info) / 0.2); }
+.kx-banner--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--warning)); border-color: hsl(var(--warning) / 0.25); }
+.kx-banner--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--success)); border-color: hsl(var(--success) / 0.25); }
+.kx-banner--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive)); border-color: hsl(var(--destructive) / 0.2); }
+.kx-banner--action      { background-color: hsl(var(--foreground)); color: hsl(var(--background)); }
+.kx-inform--information { background-color: hsl(var(--info) / 0.1); color: hsl(var(--semantic-on-info-container)); }
+.kx-inform--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--warning)); }
+.kx-inform--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--success)); }
+.kx-inform--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive)); }
+.kx-inform--action      { background-color: hsl(var(--foreground)); color: hsl(var(--background)); }
+
+.kx-banner__body {
+  display: flex;
+  flex: 1 1 0%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-1) var(--spacing-3);
+  min-width: 0;
+  margin-inline: auto;
+  max-width: 56rem;
+  text-align: center;
+}
+.kx-inform__body { flex: 1 1 0%; min-width: 0; }
+.kx-inform__message { margin: 0; }
+.kx-inform__message:not(:only-child) { margin-block-end: var(--spacing-2); }
+
+.kx-banner [kxBannerAction],
+.kx-inform [kxInformAction] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: var(--text-label-md);
+  font-weight: var(--font-weight-medium);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.kx-banner [kxBannerAction]:hover,
+.kx-banner [kxBannerAction]:focus-visible,
+.kx-inform [kxInformAction]:hover,
+.kx-inform [kxInformAction]:focus-visible { text-decoration: underline; outline: none; }
+
+.kx-banner__dismiss,
+.kx-inform__dismiss {
+  flex-shrink: 0;
+  background: none;
+  border: 0;
+  padding: 2px;
+  margin: -2px;
+  border-radius: 2px;
+  color: inherit;
+  opacity: var(--opacity-muted);
+  cursor: pointer;
+  transition: opacity var(--duration-fast) var(--easing-standard);
+}
+.kx-banner__dismiss:hover,
+.kx-banner__dismiss:focus-visible,
+.kx-inform__dismiss:hover,
+.kx-inform__dismiss:focus-visible { opacity: var(--opacity-visible); outline: var(--border-width-default) solid currentColor; }
+@media (prefers-reduced-motion: reduce) {
+  .kx-banner__dismiss, .kx-inform__dismiss { transition: none; }
+}
+
+/* ── button group ───────────────────────────────────────────────────────── */
+.kx-button-group { display: flex; width: fit-content; align-items: stretch; }
+.kx-button-group > * { position: relative; }
+.kx-button-group > *:focus-visible, .kx-button-group > *:focus-within { z-index: 10; }
+.kx-button-group--horizontal { flex-direction: row; }
+/* -1px on the inline start of every child but the first: one shared border, not two stacked. */
+.kx-button-group--horizontal > *:not(:first-child) { margin-inline-start: -1px; border-start-start-radius: 0; border-end-start-radius: 0; }
+.kx-button-group--horizontal > *:not(:last-child) { border-start-end-radius: 0; border-end-end-radius: 0; }
+.kx-button-group--vertical { flex-direction: column; }
+.kx-button-group--vertical > *:not(:first-child) { margin-block-start: -1px; border-start-start-radius: 0; border-start-end-radius: 0; }
+.kx-button-group--vertical > *:not(:last-child) { border-end-start-radius: 0; border-end-end-radius: 0; }
+
+.kx-button-group-separator { flex-shrink: 0; align-self: stretch; background-color: hsl(var(--border)); }
+.kx-button-group-separator--vertical { width: 1px; margin-block: var(--spacing-1); }
+.kx-button-group-separator--horizontal { height: 1px; margin-inline: var(--spacing-1); }
+
+.kx-button-group-text {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  border: var(--border-width-default) solid hsl(var(--input));
+  border-radius: var(--radius-control);
+  background-color: hsl(var(--muted));
+  padding-inline: var(--spacing-3);
+  color: hsl(var(--foreground));
+  font: var(--text-label-md);
+}
+
+/* ── circular progress ──────────────────────────────────────────────────── */
+.kx-circular-progress { position: relative; display: inline-grid; place-items: center; font-family: var(--font-family-sans); }
+.kx-circular-progress svg { grid-area: 1 / 1; transform: rotate(-90deg); }
+.kx-circular-progress__track { stroke: hsl(var(--muted)); }
+.kx-circular-progress__indicator {
+  stroke: hsl(var(--action));
+  transition: stroke-dashoffset var(--duration-base) var(--easing-standard);
+}
+.kx-circular-progress__value { grid-area: 1 / 1; font: var(--text-label-sm); color: hsl(var(--foreground)); }
+/* No value means indeterminate: spin the quarter arc rather than show a bar stuck at zero. */
+.kx-circular-progress:not([aria-valuenow]) svg { animation: kx-spin 1s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .kx-circular-progress__indicator { transition: none; }
+  .kx-circular-progress:not([aria-valuenow]) svg { animation-duration: 2.4s; }
+}
+
+/* ── code block ─────────────────────────────────────────────────────────── */
+.kx-code-block {
+  display: block;
+  overflow: hidden;
+  border: var(--border-width-default) solid hsl(var(--input));
+  border-radius: var(--radius-md);
+  background-color: hsl(var(--muted));
+  font-family: var(--font-family-sans);
+}
+.kx-code-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-block-end: var(--border-width-default) solid hsl(var(--input));
+  background-color: hsl(var(--background));
+  padding-inline: var(--spacing-2);
+}
+.kx-code-block__tabs { display: flex; }
+.kx-code-block__tab {
+  border: 0;
+  border-block-end: 2px solid transparent;
+  background: none;
+  padding: var(--spacing-2) var(--spacing-3);
+  color: hsl(var(--muted-foreground));
+  font: var(--text-body-sm);
+  cursor: pointer;
+}
+.kx-code-block__tab:hover { color: hsl(var(--foreground)); }
+.kx-code-block__tab--active { border-block-end-color: hsl(var(--action)); color: hsl(var(--foreground)); }
+.kx-code-block__tab:focus-visible { outline: var(--border-width-default) solid hsl(var(--ring)); outline-offset: -2px; }
+.kx-code-block__copy {
+  border: 0;
+  background: none;
+  border-radius: 2px;
+  padding: var(--spacing-1);
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+}
+.kx-code-block__copy:hover { color: hsl(var(--foreground)); }
+.kx-code-block__copy:focus-visible { outline: var(--border-width-default) solid currentColor; }
+.kx-code-block__pre {
+  overflow-x: auto;
+  margin: 0;
+  padding: var(--spacing-4);
+  font: var(--text-body-sm);
+  font-family: var(--font-family-mono, ui-monospace, monospace);
+  color: hsl(var(--foreground));
+}
+.kx-code-block__pre:focus-visible { outline: var(--border-width-default) solid hsl(var(--ring)); outline-offset: -2px; }
+
+/* ── description list ───────────────────────────────────────────────────── */
+.kx-description-list {
+  margin: 0;
+  border: var(--border-width-default) solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+  background-color: hsl(var(--muted) / 0.2);
+}
+.kx-description-list__item { display: flex; gap: var(--spacing-3); padding: var(--spacing-2) var(--spacing-3); }
+.kx-description-list__item:not(:first-child) { border-block-start: var(--border-width-default) solid hsl(var(--border)); }
+.kx-description-list__item--row { align-items: baseline; }
+.kx-description-list__item--stacked { flex-direction: column; }
+.kx-description-list__term {
+  flex-shrink: 0;
+  font-family: var(--font-family-mono, ui-monospace, monospace);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: hsl(var(--muted-foreground));
+}
+.kx-description-list__item--row .kx-description-list__term { width: 6rem; }
+.kx-description-list__value { margin: 0; min-width: 0; font: var(--text-body-sm); color: hsl(var(--foreground)); }
+
+/* ── fab ────────────────────────────────────────────────────────────────── */
+.kx-fab {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  border: 0;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg);
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--easing-standard);
+}
+.kx-fab:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.kx-fab:disabled { pointer-events: none; opacity: var(--opacity-disabled); }
+.kx-fab--default { width: 3.5rem; height: 3.5rem; }
+.kx-fab--sm { width: 2.75rem; height: 2.75rem; }
+.kx-fab--extended { width: auto; padding-inline: var(--spacing-5); }
+.kx-fab--Primary { background-color: hsl(var(--action)); color: hsl(var(--action-foreground)); }
+.kx-fab--Primary:hover { background-color: hsl(var(--action) / 0.9); }
+.kx-fab--Secondary { background-color: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+.kx-fab--Secondary:hover { background-color: hsl(var(--secondary) / 0.85); }
+@media (prefers-reduced-motion: reduce) { .kx-fab { transition: none; } }
+
+/* ── image ──────────────────────────────────────────────────────────────── */
+.kx-image { position: relative; display: block; inline-size: 100%; overflow: hidden; background-color: hsl(var(--muted)); aspect-ratio: var(--kx-image-ratio, 1); }
+.kx-image--rounded { border-radius: var(--radius-md); }
+.kx-image__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: var(--opacity-hidden);
+  transition: opacity var(--duration-base) var(--easing-standard);
+}
+.kx-image__img--loaded { opacity: var(--opacity-visible); }
+.kx-image__fallback { position: absolute; inset: 0; display: grid; place-items: center; color: hsl(var(--muted-foreground)); }
+@media (prefers-reduced-motion: reduce) { .kx-image__img { transition: none; } }
+
+/* ── list ───────────────────────────────────────────────────────────────── */
+.kx-list { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.kx-list__item { display: block; }
+.kx-list__item:not(:first-child) { border-block-start: var(--border-width-default) solid hsl(var(--border)); }
+.kx-list__row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  width: 100%;
+  padding: var(--spacing-3);
+  font-family: var(--font-family-sans);
+  text-align: start;
+}
+.kx-list__row--pressable {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+/* The ring, not only the fill: the accent background is under 3:1 against the surface in dark mode, so
+   hover and focus must not rely on it alone to be perceivable. */
+.kx-list__row--pressable:hover,
+.kx-list__row--pressable:focus-visible {
+  background-color: hsl(var(--accent));
+  outline: var(--border-width-default) solid hsl(var(--ring));
+  outline-offset: -1px;
+}
+.kx-list__row--pressable:disabled { pointer-events: none; }
+.kx-list__item--disabled { opacity: var(--opacity-disabled); }
+.kx-list__leading:empty, .kx-list__trailing:empty { display: none; }
+.kx-list__leading, .kx-list__trailing { display: flex; flex-shrink: 0; align-items: center; gap: var(--spacing-2); }
+.kx-list__text { display: flex; flex-direction: column; min-width: 0; flex: 1 1 0%; }
+.kx-list__title { font: var(--text-body-md); color: hsl(var(--foreground)); }
+.kx-list__description { font: var(--text-body-sm); color: hsl(var(--muted-foreground)); }
+
+/* ── marquee ────────────────────────────────────────────────────────────── */
+.kx-marquee { display: flex; overflow: hidden; width: 100%; }
+.kx-marquee__track { display: flex; flex-shrink: 0; animation: kx-marquee-scroll linear infinite; }
+.kx-marquee__group { display: flex; flex-shrink: 0; align-items: center; gap: var(--spacing-4); padding-inline-end: var(--spacing-4); }
+.kx-marquee--pause-on-hover:hover .kx-marquee__track { animation-play-state: paused; }
+@keyframes kx-marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+/* RTL: the same keyframes would scroll the wrong way, so the whole track is mirrored. */
+[dir='rtl'] .kx-marquee__track { animation-name: kx-marquee-scroll-rtl; }
+@keyframes kx-marquee-scroll-rtl {
+  from { transform: translateX(0); }
+  to { transform: translateX(50%); }
+}
+/* Continuous motion is WCAG 2.2.2's subject. With reduce, the animation stops and the strip stays
+   scrollable, so nothing becomes unreachable. */
+@media (prefers-reduced-motion: reduce) {
+  .kx-marquee { overflow-x: auto; }
+  .kx-marquee__track { animation: none; }
+  .kx-marquee__group[aria-hidden='true'] { display: none; }
+}
+
+/* ── page header ────────────────────────────────────────────────────────── */
+.kx-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  border-block-end: var(--border-width-default) solid hsl(var(--border));
+  padding-block-end: var(--spacing-6);
+  font-family: var(--font-family-sans);
+}
+.kx-page-header__breadcrumb:empty { display: none; }
+.kx-page-header__breadcrumb { font: var(--text-body-sm); }
+.kx-page-header__main { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--spacing-4); }
+.kx-page-header__titles { display: flex; flex-direction: column; gap: var(--spacing-1); min-width: 0; }
+.kx-page-header__title { font: var(--text-headline-sm); font-weight: var(--font-weight-medium); color: hsl(var(--foreground)); }
+.kx-page-header__description { margin: 0; font: var(--text-body-md); color: hsl(var(--muted-foreground)); }
+.kx-page-header__actions:empty { display: none; }
+.kx-page-header__actions { display: flex; flex-shrink: 0; flex-wrap: wrap; align-items: center; gap: var(--spacing-2); }
+
+/* ── timeline ───────────────────────────────────────────────────────────── */
+.kx-timeline { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.kx-timeline__item { position: relative; display: flex; gap: var(--spacing-3); padding-block-end: var(--spacing-5); }
+/* The connecting line sits on the inline start edge, so it mirrors with the marker under dir="rtl". */
+.kx-timeline__item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  inset-block: 1.25rem auto;
+  height: calc(100% - 1.25rem);
+  inset-inline-start: 0.4375rem;
+  width: 1px;
+  background-color: hsl(var(--border));
+}
+.kx-timeline__marker {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-block-start: 0.375rem;
+  border-radius: var(--radius-full);
+  border: 2px solid hsl(var(--background));
+  box-sizing: content-box;
+}
+.kx-timeline__marker--default { background-color: hsl(var(--muted-foreground)); }
+.kx-timeline__marker--active { background-color: hsl(var(--action)); }
+.kx-timeline__marker--success { background-color: hsl(var(--success)); }
+.kx-timeline__marker--error { background-color: hsl(var(--destructive)); }
+.kx-timeline__content { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kx-timeline__title { font: var(--text-body-md); color: hsl(var(--foreground)); }
+.kx-timeline__description { font: var(--text-body-sm); color: hsl(var(--muted-foreground)); }

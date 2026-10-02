@@ -184,19 +184,19 @@
         "Angular"
       ],
       "registry": false,
-      "platformNote": "standing non-port — re-wraps its children, not idiomatic on native platforms; compose an Avatar row directly",
+      "platformNote": "standing non-port — the React component re-wraps its children, which no native layout system does; compose an Avatar row directly. Its cap and +N marker would port to a data-driven native API, so this is a scope decision rather than an impossibility",
       "platformGuidance": {
         "SwiftUI": {
           "type": "composition",
-          "reason": "AvatarGroup re-wraps its children, which no native layout system does — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset."
+          "reason": "AvatarGroup's React implementation re-wraps each child to draw the ring, which is not how any native layout system composes — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset. Note that the component's actual value, the `max` cap and the \"+N\" overflow marker, would port cleanly to a native API that takes a list instead of children; this stays a composition because that API has not been designed, not because the platform cannot express it."
         },
         "Compose": {
           "type": "composition",
-          "reason": "AvatarGroup re-wraps its children, which no native layout system does — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset."
+          "reason": "AvatarGroup's React implementation re-wraps each child to draw the ring, which is not how any native layout system composes — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset. Note that the component's actual value, the `max` cap and the \"+N\" overflow marker, would port cleanly to a native API that takes a list instead of children; this stays a composition because that API has not been designed, not because the platform cannot express it."
         },
         "Flutter": {
           "type": "composition",
-          "reason": "AvatarGroup re-wraps its children, which no native layout system does — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset."
+          "reason": "AvatarGroup's React implementation re-wraps each child to draw the ring, which is not how any native layout system composes — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset. Note that the component's actual value, the `max` cap and the \"+N\" overflow marker, would port cleanly to a native API that takes a list instead of children; this stays a composition because that API has not been designed, not because the platform cannot express it."
         }
       }
     },
@@ -216,16 +216,11 @@
       "since": "0.10.0",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "primitives"
-        }
-      }
+      ]
     },
     "breadcrumb": {
       "status": "stable",
@@ -259,16 +254,11 @@
       "since": "0.9.0",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "primitives"
-        }
-      }
+      ]
     },
     "calendar": {
       "status": "stable",
@@ -345,32 +335,22 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "primitives"
-        }
-      }
+      ]
     },
     "code-block": {
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "primitives"
-        }
-      }
+      ]
     },
     "collapsible": {
       "status": "stable",
@@ -533,16 +513,11 @@
       "since": "0.10.0",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "primitives"
-        }
-      }
+      ]
     },
     "dialog": {
       "status": "stable",
@@ -650,16 +625,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "primitives"
-        }
-      }
+      ]
     },
     "field": {
       "status": "stable",
@@ -751,32 +721,22 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "primitives"
-        }
-      }
+      ]
     },
     "inform": {
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "primitives"
-        }
-      }
+      ]
     },
     "input": {
       "status": "stable",
@@ -893,16 +853,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "primitives"
-        }
-      }
+      ]
     },
     "markdown-editor": {
       "status": "stable",
@@ -925,16 +880,11 @@
       "since": "0.11.0",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "primitives"
-        }
-      }
+      ]
     },
     "menubar": {
       "status": "stable",
@@ -1115,16 +1065,11 @@
       "since": "0.11.0",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "primitives"
-        }
-      }
+      ]
     },
     "pagination": {
       "status": "stable",
@@ -1489,16 +1434,11 @@
       "since": "0.10.0",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "primitives"
-        }
-      }
+      ]
     },
     "toggle": {
       "status": "stable",

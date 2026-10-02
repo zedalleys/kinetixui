@@ -109,7 +109,7 @@
   },
   "coverage": {
     "React": 98,
-    "Angular": 31,
+    "Angular": 43,
     "SwiftUI": 90,
     "Compose": 90,
     "Flutter": 90
@@ -173,6 +173,7 @@
     ],
     "banner": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -192,6 +193,7 @@
     ],
     "button-group": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -230,12 +232,14 @@
     ],
     "circular-progress": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "code-block": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -293,6 +297,7 @@
     ],
     "description-list": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -333,6 +338,7 @@
     ],
     "fab": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -367,12 +373,14 @@
     ],
     "image": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "inform": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -421,6 +429,7 @@
     ],
     "list": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -433,6 +442,7 @@
     ],
     "marquee": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -496,6 +506,7 @@
     ],
     "page-header": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -671,6 +682,7 @@
     ],
     "timeline": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -712,7 +724,7 @@
     ]
   },
   "notes": {
-    "avatar-group": "standing non-port — re-wraps its children, not idiomatic on native platforms; compose an Avatar row directly",
+    "avatar-group": "standing non-port — the React component re-wraps its children, which no native layout system does; compose an Avatar row directly. Its cap and +N marker would port to a data-driven native API, so this is a scope decision rather than an impossibility",
     "combobox": "not a component — a documented composition of Command (CommandInput/CommandList/CommandItem). There is no Combobox export on any platform; the recipe is React-only because Command is.",
     "direction-provider": "React-only by design: the web needs a provider to thread direction through Radix, while SwiftUI (environment .layoutDirection), Compose (LocalLayoutDirection) and Flutter (Directionality) already carry layout direction in the framework itself. Nothing to port.",
     "form": "standing non-port",
@@ -750,33 +762,21 @@
     "avatar-group": {
       "SwiftUI": {
         "type": "composition",
-        "reason": "AvatarGroup re-wraps its children, which no native layout system does — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset."
+        "reason": "AvatarGroup's React implementation re-wraps each child to draw the ring, which is not how any native layout system composes — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset. Note that the component's actual value, the `max` cap and the \"+N\" overflow marker, would port cleanly to a native API that takes a list instead of children; this stays a composition because that API has not been designed, not because the platform cannot express it."
       },
       "Compose": {
         "type": "composition",
-        "reason": "AvatarGroup re-wraps its children, which no native layout system does — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset."
+        "reason": "AvatarGroup's React implementation re-wraps each child to draw the ring, which is not how any native layout system composes — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset. Note that the component's actual value, the `max` cap and the \"+N\" overflow marker, would port cleanly to a native API that takes a list instead of children; this stays a composition because that API has not been designed, not because the platform cannot express it."
       },
       "Flutter": {
         "type": "composition",
-        "reason": "AvatarGroup re-wraps its children, which no native layout system does — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset."
-      }
-    },
-    "banner": {
-      "Angular": {
-        "type": "planned",
-        "wave": "primitives"
+        "reason": "AvatarGroup's React implementation re-wraps each child to draw the ring, which is not how any native layout system composes — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset. Note that the component's actual value, the `max` cap and the \"+N\" overflow marker, would port cleanly to a native API that takes a list instead of children; this stays a composition because that API has not been designed, not because the platform cannot express it."
       }
     },
     "breadcrumb": {
       "Angular": {
         "type": "planned",
         "wave": "navigation"
-      }
-    },
-    "button-group": {
-      "Angular": {
-        "type": "planned",
-        "wave": "primitives"
       }
     },
     "calendar": {
@@ -795,18 +795,6 @@
       "Angular": {
         "type": "planned",
         "wave": "data"
-      }
-    },
-    "circular-progress": {
-      "Angular": {
-        "type": "planned",
-        "wave": "primitives"
-      }
-    },
-    "code-block": {
-      "Angular": {
-        "type": "planned",
-        "wave": "primitives"
       }
     },
     "collapsible": {
@@ -875,12 +863,6 @@
         "wave": "advanced"
       }
     },
-    "description-list": {
-      "Angular": {
-        "type": "planned",
-        "wave": "primitives"
-      }
-    },
     "dialog": {
       "Angular": {
         "type": "planned",
@@ -923,12 +905,6 @@
         "wave": "overlays"
       }
     },
-    "fab": {
-      "Angular": {
-        "type": "planned",
-        "wave": "primitives"
-      }
-    },
     "file-upload": {
       "Angular": {
         "type": "planned",
@@ -963,18 +939,6 @@
       "Angular": {
         "type": "planned",
         "wave": "overlays"
-      }
-    },
-    "image": {
-      "Angular": {
-        "type": "planned",
-        "wave": "primitives"
-      }
-    },
-    "inform": {
-      "Angular": {
-        "type": "planned",
-        "wave": "primitives"
       }
     },
     "input-group": {
@@ -1013,22 +977,10 @@
         "reason": "KanbanBoard is built on @dnd-kit's accessible multi-container drag and drop, which has no equivalent dependency in the native packages — compose columns of KinetixCard with the platform's own drag gesture."
       }
     },
-    "list": {
-      "Angular": {
-        "type": "planned",
-        "wave": "primitives"
-      }
-    },
     "markdown-editor": {
       "Angular": {
         "type": "planned",
         "wave": "advanced"
-      }
-    },
-    "marquee": {
-      "Angular": {
-        "type": "planned",
-        "wave": "primitives"
       }
     },
     "menubar": {
@@ -1097,12 +1049,6 @@
       "Angular": {
         "type": "planned",
         "wave": "overlays"
-      }
-    },
-    "page-header": {
-      "Angular": {
-        "type": "planned",
-        "wave": "primitives"
       }
     },
     "pagination": {
@@ -1181,12 +1127,6 @@
       "Angular": {
         "type": "planned",
         "wave": "navigation"
-      }
-    },
-    "timeline": {
-      "Angular": {
-        "type": "planned",
-        "wave": "primitives"
       }
     },
     "tooltip": {
@@ -1309,6 +1249,7 @@
     },
     "banner": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1328,6 +1269,7 @@
     },
     "button-group": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1366,12 +1308,14 @@
     },
     "circular-progress": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
     },
     "code-block": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1429,6 +1373,7 @@
     },
     "description-list": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1469,6 +1414,7 @@
     },
     "fab": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1503,12 +1449,14 @@
     },
     "image": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
     },
     "inform": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1557,6 +1505,7 @@
     },
     "list": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1569,6 +1518,7 @@
     },
     "marquee": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1632,6 +1582,7 @@
     },
     "page-header": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1807,6 +1758,7 @@
     },
     "timeline": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1852,7 +1804,7 @@
       "beta": 98
     },
     "Angular": {
-      "preview": 31
+      "preview": 43
     },
     "SwiftUI": {
       "experimental": 90
@@ -2066,6 +2018,12 @@
         "build",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -2127,6 +2085,12 @@
       "React": [
         "accessibility",
         "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
         "published"
       ],
       "SwiftUI": [
@@ -2251,6 +2215,12 @@
         "build",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -2268,6 +2238,13 @@
         "accessibility",
         "build",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -2432,6 +2409,12 @@
         "build",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -2554,6 +2537,12 @@
         "build",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -2657,6 +2646,12 @@
         "build",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -2671,6 +2666,12 @@
       "React": [
         "accessibility",
         "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
         "published"
       ],
       "SwiftUI": [
@@ -2828,6 +2829,12 @@
         "interaction",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -2861,6 +2868,12 @@
       "React": [
         "accessibility",
         "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
         "published"
       ],
       "SwiftUI": [
@@ -3053,6 +3066,12 @@
       "React": [
         "accessibility",
         "build",
+        "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
         "published"
       ],
       "SwiftUI": [
@@ -3642,6 +3661,12 @@
         "build",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "published"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -3779,13 +3804,13 @@
       "published": 98
     },
     "Angular": {
-      "build": 31,
-      "interaction": 31,
-      "accessibility": 31,
-      "rtl": 1,
+      "build": 43,
+      "interaction": 43,
+      "accessibility": 43,
+      "rtl": 2,
       "largeText": 0,
       "visual": 0,
-      "published": 31
+      "published": 43
     },
     "SwiftUI": {
       "build": 90,

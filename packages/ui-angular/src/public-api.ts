@@ -70,3 +70,24 @@ export {
   KxTextarea,
 } from './lib/forms';
 export { KxTab, KxTabList, KxTabPanel, KxTabs } from './lib/tabs';
+export type { KxCodeBlockFile } from './lib/content';
+export {
+  KxBanner,
+  KxButtonGroup,
+  KxButtonGroupSeparator,
+  KxButtonGroupText,
+  KxCircularProgress,
+  KxCodeBlock,
+  KxDescriptionList,
+  KxDescriptionListItem,
+  KxFab,
+  KxImage,
+  KxInform,
+  KxList,
+  KxListItem,
+  KxMarquee,
+  KxMarqueeContent,
+  KxPageHeader,
+  KxTimeline,
+  KxTimelineItem,
+} from './lib/content';
