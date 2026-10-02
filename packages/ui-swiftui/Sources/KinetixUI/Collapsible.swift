@@ -11,6 +11,7 @@
 import SwiftUI
 
 public struct KinetixCollapsible<Content: View>: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let isExpanded: Bool
     private let content: Content
 
@@ -20,9 +21,19 @@ public struct KinetixCollapsible<Content: View>: View {
     }
 
     public var body: some View {
-        if isExpanded {
-            content
-                .transition(.opacity.combined(with: .move(edge: .top)))
+        // `Group` is layout-neutral, and it is here so the animation modifier can live OUTSIDE the
+        // conditional. Attached inside it, the modifier was removed along with the branch on the way
+        // out: a collapse got no animation at all, and `.expanding` was hardcoded, so the resolver's
+        // exit curve was unreachable from this view. The direction now follows the state.
+        Group {
+            if isExpanded {
+                content
+                    .transition(KinetixDisclosureMotion.transition(reduceMotion: reduceMotion))
+            }
         }
+        .animation(
+            KinetixDisclosureMotion.animation(isExpanded ? .expanding : .collapsing, reduceMotion: reduceMotion),
+            value: isExpanded
+        )
     }
 }

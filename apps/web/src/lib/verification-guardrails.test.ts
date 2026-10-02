@@ -63,16 +63,33 @@ const MANIFEST = {
   },
 };
 
+/**
+ * The standalone gates the generator cites as evidence sources, read from its own `extra` lists so the
+ * fixture cannot drift out of step with them.
+ */
+function extraEvidenceScripts(): string[] {
+  const src = readFileSync(script, "utf8");
+  const found = new Set<string>();
+  for (const list of src.matchAll(/extra:\s*\[([^\]]*)\]/g)) {
+    for (const m of list[1].matchAll(/["']([^"']+)["']/g)) found.add(m[1]);
+  }
+  if (found.size === 0) throw new Error("no `extra` evidence sources found in gen-verification.mjs");
+  return [...found];
+}
+
 const temps: string[] = [];
 function fixture(files: Record<string, string>, manifest: unknown = MANIFEST) {
   const dir = mkdtempSync(join(tmpdir(), "kx-verify-"));
   temps.push(dir);
   writeFileSync(join(dir, "components.manifest.json"), JSON.stringify(manifest));
   // the generator treats a missing declared evidence source as an error — a renamed suite must not silently
-  // drop its evidence — so the fixture carries empty stand-ins for the suites listed outside the test tree
+  // drop its evidence — so the fixture carries empty stand-ins for the suites listed outside the test tree.
+  // Read out of the generator rather than restated here: a hardcoded pair went stale the moment a third
+  // gate was cited as evidence, and every file-level test then failed on the missing stand-in instead of
+  // the rule it was asserting.
   mkdirSync(join(dir, "scripts"), { recursive: true });
-  for (const script of ["a11y-browser.mjs", "large-text.mjs"]) {
-    writeFileSync(join(dir, "scripts", script), "// no markers\n");
+  for (const script of extraEvidenceScripts()) {
+    writeFileSync(join(dir, script), "// no markers\n");
   }
   for (const [rel, body] of Object.entries(files)) {
     const full = join(dir, rel);

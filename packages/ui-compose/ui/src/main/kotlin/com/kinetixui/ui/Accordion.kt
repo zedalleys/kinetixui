@@ -76,7 +76,18 @@ fun KinetixAccordionTrigger(
     modifier: Modifier = Modifier,
 ) {
     val colors = KinetixColorScheme.current
-    val rotation by animateFloatAsState(targetValue = if (expanded) 180f else 0f, label = "KinetixAccordionChevron")
+    // The angle is state: it still reaches 180° when the reader has animations off, it just gets
+    // there in one frame instead of sweeping.
+    val reduceMotion = KinetixDisclosureMotion.rememberReduceMotion()
+    val rotation by animateFloatAsState(
+        targetValue = KinetixDisclosureMotion.chevronDegrees(expanded),
+        animationSpec = if (expanded) {
+            KinetixDisclosureMotion.enterSpec(reduceMotion)
+        } else {
+            KinetixDisclosureMotion.exitSpec(reduceMotion)
+        },
+        label = "KinetixAccordionChevron",
+    )
 
     Row(
         modifier = modifier
@@ -106,7 +117,13 @@ fun KinetixAccordionContent(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    AnimatedVisibility(visible = expanded, modifier = modifier) {
+    val reduceMotion = KinetixDisclosureMotion.rememberReduceMotion()
+    AnimatedVisibility(
+        visible = expanded,
+        modifier = modifier,
+        enter = KinetixDisclosureMotion.enterTransition(reduceMotion),
+        exit = KinetixDisclosureMotion.exitTransition(reduceMotion),
+    ) {
         Column(modifier = Modifier.padding(bottom = dimensionResource(R.dimen.spacing_4))) {
             content()
         }

@@ -1831,17 +1831,22 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "published",
+        "reducedMotion"
       ],
       "SwiftUI": [
-        "build"
+        "build",
+        "reducedMotion"
       ],
       "Compose": [
-        "build"
+        "build",
+        "interaction",
+        "reducedMotion"
       ],
       "Flutter": [
         "build",
         "largeText",
+        "reducedMotion",
         "rtl"
       ]
     },
@@ -2263,17 +2268,22 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "published",
+        "reducedMotion"
       ],
       "SwiftUI": [
-        "build"
+        "build",
+        "reducedMotion"
       ],
       "Compose": [
-        "build"
+        "build",
+        "interaction",
+        "reducedMotion"
       ],
       "Flutter": [
         "build",
         "largeText",
+        "reducedMotion",
         "rtl"
       ]
     },
@@ -3806,6 +3816,7 @@
       "accessibility": 98,
       "rtl": 18,
       "largeText": 23,
+      "reducedMotion": 2,
       "visual": 0,
       "published": 98
     },
@@ -3815,6 +3826,7 @@
       "accessibility": 43,
       "rtl": 2,
       "largeText": 0,
+      "reducedMotion": 0,
       "visual": 0,
       "published": 43
     },
@@ -3824,15 +3836,17 @@
       "accessibility": 0,
       "rtl": 0,
       "largeText": 0,
+      "reducedMotion": 2,
       "visual": 0,
       "published": 0
     },
     "Compose": {
       "build": 90,
-      "interaction": 5,
+      "interaction": 7,
       "accessibility": 4,
       "rtl": 1,
       "largeText": 0,
+      "reducedMotion": 2,
       "visual": 0,
       "published": 0
     },
@@ -3842,6 +3856,7 @@
       "accessibility": 5,
       "rtl": 58,
       "largeText": 58,
+      "reducedMotion": 2,
       "visual": 0,
       "published": 0
     }

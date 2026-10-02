@@ -119,6 +119,13 @@ jobs:
       - name: Platform completeness (every catalogue/platform cell resolved)
         run: pnpm check:platform-completeness
 
+      # Bookkeeping, not accessibility verification: it catches a native component that starts
+      # animating without ever being wired to the reader's reduced-motion setting, a family member
+      # losing that contract, a suite testing only one direction, and a stale gap ledger. The
+      # behavioural proof lives in the three native suites, run by their own workflows.
+      - name: Native motion ledger (animated components answer to the reader's setting)
+        run: pnpm check:native-motion
+
       # A block may only advertise a platform it has real source for, and the snippets the site shows must
       # be the current contents of those files. React is structural (the same fixture renders the live
       # preview); the native sources are compiled by native-*.yml, not here.
