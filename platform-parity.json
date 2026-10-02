@@ -2262,6 +2262,7 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
         "published"
       ],
       "SwiftUI": [
@@ -3801,7 +3802,7 @@
   "evidenceCounts": {
     "React": {
       "build": 98,
-      "interaction": 37,
+      "interaction": 38,
       "accessibility": 98,
       "rtl": 18,
       "largeText": 23,
