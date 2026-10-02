@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'kinetix_disclosure_motion.dart';
 
 import 'app_text.dart';
 import 'theme.dart';
@@ -61,9 +62,11 @@ class KinetixAccordionTrigger extends StatelessWidget {
                 style: AppText.labelLg.copyWith(color: c.foreground),
               ),
             ),
+            // The angle is state: it still reaches half a turn with animations off.
             AnimatedRotation(
-              turns: expanded ? 0.5 : 0,
-              duration: const Duration(milliseconds: 200),
+              turns: KinetixDisclosureMotion.chevronTurns(expanded: expanded),
+              duration: KinetixDisclosureMotion.durationOf(context),
+              curve: expanded ? KinetixDisclosureMotion.enterCurve : KinetixDisclosureMotion.exitCurve,
               child: Icon(Icons.keyboard_arrow_down, size: 18, color: c.mutedForeground),
             ),
           ],
@@ -88,7 +91,9 @@ class KinetixAccordionContent extends StatelessWidget {
         child: child,
       ),
       crossFadeState: expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-      duration: const Duration(milliseconds: 200),
+      duration: KinetixDisclosureMotion.durationOf(context),
+      firstCurve: KinetixDisclosureMotion.exitCurve,
+      secondCurve: KinetixDisclosureMotion.enterCurve,
     );
   }
 }

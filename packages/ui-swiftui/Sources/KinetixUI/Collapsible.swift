@@ -11,6 +11,7 @@
 import SwiftUI
 
 public struct KinetixCollapsible<Content: View>: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let isExpanded: Bool
     private let content: Content
 
@@ -22,7 +23,11 @@ public struct KinetixCollapsible<Content: View>: View {
     public var body: some View {
         if isExpanded {
             content
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                .transition(KinetixDisclosureMotion.transition(reduceMotion: reduceMotion))
+                .animation(
+                    KinetixDisclosureMotion.animation(.expanding, reduceMotion: reduceMotion),
+                    value: isExpanded
+                )
         }
     }
 }

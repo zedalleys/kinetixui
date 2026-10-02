@@ -16,6 +16,15 @@
  * Why both a midpoint and a duration are asserted, rather than either alone, is explained in the
  * header of motion-states.mjs: seeking to 50% of a 0.01ms animation produces a midpoint too.
  */
+
+// This suite is what earns React its `reducedMotion` evidence: every declared interaction is driven
+// in both directions, under normal motion and under prefers-reduced-motion, and the end state is
+// compared across the two.
+//
+// kx-verify: reducedMotion
+// Subjects, named so the claim resolves to exactly what is proven rather than to every story:
+// <Accordion> and <Collapsible>. Adding an interaction to motion-states.mjs for another component
+// means naming it here too, which is the point — the evidence should not widen silently.
 import { chromium } from "playwright";
 import { createServer } from "node:http";
 import { existsSync, readFileSync, statSync } from "node:fs";

@@ -7,6 +7,7 @@
     "accessibility",
     "rtl",
     "largeText",
+    "reducedMotion",
     "visual",
     "published"
   ],
@@ -15,6 +16,7 @@
     "accessibility",
     "rtl",
     "largeText",
+    "reducedMotion",
     "visual"
   ],
   "totals": {
@@ -24,6 +26,7 @@
       "accessibility": 98,
       "rtl": 18,
       "largeText": 23,
+      "reducedMotion": 2,
       "visual": 0,
       "published": 98
     },
@@ -33,6 +36,7 @@
       "accessibility": 43,
       "rtl": 2,
       "largeText": 0,
+      "reducedMotion": 0,
       "visual": 0,
       "published": 43
     },
@@ -42,15 +46,17 @@
       "accessibility": 0,
       "rtl": 0,
       "largeText": 0,
+      "reducedMotion": 2,
       "visual": 0,
       "published": 0
     },
     "Compose": {
       "build": 90,
-      "interaction": 5,
-      "accessibility": 4,
+      "interaction": 7,
+      "accessibility": 6,
       "rtl": 1,
       "largeText": 0,
+      "reducedMotion": 2,
       "visual": 0,
       "published": 0
     },
@@ -60,6 +66,7 @@
       "accessibility": 5,
       "rtl": 58,
       "largeText": 58,
+      "reducedMotion": 2,
       "visual": 0,
       "published": 0
     }
@@ -436,6 +443,16 @@
           "toggle-group",
           "tooltip"
         ]
+      },
+      {
+        "file": "scripts/motion.mjs",
+        "kinds": [
+          "reducedMotion"
+        ],
+        "components": [
+          "accordion",
+          "collapsible"
+        ]
       }
     ],
     "Angular": [
@@ -512,7 +529,18 @@
         ]
       }
     ],
-    "SwiftUI": [],
+    "SwiftUI": [
+      {
+        "file": "packages/ui-swiftui/Tests/KinetixUITests/DisclosureMotionTests.swift",
+        "kinds": [
+          "reducedMotion"
+        ],
+        "components": [
+          "accordion",
+          "collapsible"
+        ]
+      }
+    ],
     "Compose": [
       {
         "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/AdaptivityTest.kt",
@@ -521,6 +549,18 @@
         ],
         "components": [
           "tabs"
+        ]
+      },
+      {
+        "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt",
+        "kinds": [
+          "accessibility",
+          "interaction",
+          "reducedMotion"
+        ],
+        "components": [
+          "accordion",
+          "collapsible"
         ]
       },
       {
@@ -618,6 +658,16 @@
         ]
       },
       {
+        "file": "packages/ui-flutter/test/disclosure_motion_test.dart",
+        "kinds": [
+          "reducedMotion"
+        ],
+        "components": [
+          "accordion",
+          "collapsible"
+        ]
+      },
+      {
         "file": "packages/ui-flutter/test/interaction_test.dart",
         "kinds": [
           "interaction"
@@ -659,6 +709,9 @@
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
         ],
+        "reducedMotion": [
+          "scripts/motion.mjs:24-295"
+        ],
         "published": [
           "npm: @kinetixui/ui"
         ]
@@ -666,11 +719,23 @@
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
+        ],
+        "reducedMotion": [
+          "packages/ui-swiftui/Tests/KinetixUITests/DisclosureMotionTests.swift:5-105"
         ]
       },
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-211"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-211"
+        ],
+        "reducedMotion": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-211"
         ]
       },
       "Flutter": {
@@ -682,6 +747,9 @@
         ],
         "largeText": [
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
+        ],
+        "reducedMotion": [
+          "packages/ui-flutter/test/disclosure_motion_test.dart:5-241"
         ]
       }
     },
@@ -1542,6 +1610,9 @@
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
         ],
+        "reducedMotion": [
+          "scripts/motion.mjs:24-295"
+        ],
         "published": [
           "npm: @kinetixui/ui"
         ]
@@ -1549,11 +1620,23 @@
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
+        ],
+        "reducedMotion": [
+          "packages/ui-swiftui/Tests/KinetixUITests/DisclosureMotionTests.swift:5-105"
         ]
       },
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-211"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-211"
+        ],
+        "reducedMotion": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-211"
         ]
       },
       "Flutter": {
@@ -1565,6 +1648,9 @@
         ],
         "largeText": [
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
+        ],
+        "reducedMotion": [
+          "packages/ui-flutter/test/disclosure_motion_test.dart:5-241"
         ]
       }
     },

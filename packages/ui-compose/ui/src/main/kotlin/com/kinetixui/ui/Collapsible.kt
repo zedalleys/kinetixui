@@ -20,7 +20,13 @@ fun KinetixCollapsible(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    AnimatedVisibility(visible = expanded, modifier = modifier) {
+    val reduceMotion = KinetixDisclosureMotion.rememberReduceMotion()
+    AnimatedVisibility(
+        visible = expanded,
+        modifier = modifier,
+        enter = KinetixDisclosureMotion.enterTransition(reduceMotion),
+        exit = KinetixDisclosureMotion.exitTransition(reduceMotion),
+    ) {
         content()
     }
 }

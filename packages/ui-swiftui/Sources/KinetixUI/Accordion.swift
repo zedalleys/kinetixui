@@ -42,6 +42,9 @@ public struct KinetixAccordionItem<Content: View>: View {
 
 public struct KinetixAccordionTrigger: View {
     @Environment(\.kinetixColors) private var colors
+    /// The reader's system setting. SwiftUI publishes it here; `KinetixDisclosureMotion` decides
+    /// what it means, so every disclosure surface answers to the same rule.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let text: String
     private let isExpanded: Bool
     private let action: () -> Void
@@ -62,17 +65,25 @@ public struct KinetixAccordionTrigger: View {
                 Image(systemName: "chevron.down")
                     .font(.kinetixBody)
                     .foregroundStyle(colors.mutedForeground)
-                    .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                    // The angle is state, not decoration — it still lands at 180° under Reduce
+                    // Motion, it just gets there without turning.
+                    .rotationEffect(.degrees(KinetixDisclosureMotion.chevronDegrees(isExpanded: isExpanded)))
             }
             .padding(.vertical, 16) // py-4
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .animation(.easeInOut(duration: 0.2), value: isExpanded)
+        // Was a literal `.easeInOut(duration: 0.2)` while KinetixMotion.swift carried the same 200ms
+        // as `KinetixDuration.fast`: the value was right and the provenance was not.
+        .animation(
+            KinetixDisclosureMotion.animation(isExpanded ? .expanding : .collapsing, reduceMotion: reduceMotion),
+            value: isExpanded
+        )
     }
 }
 
 public struct KinetixAccordionContent<Content: View>: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let isExpanded: Bool
     private let content: Content
 
@@ -86,7 +97,7 @@ public struct KinetixAccordionContent<Content: View>: View {
             VStack(alignment: .leading, spacing: 0) { content }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.bottom, 16) // pb-4
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                .transition(KinetixDisclosureMotion.transition(reduceMotion: reduceMotion))
         }
     }
 }

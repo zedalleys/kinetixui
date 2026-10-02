@@ -17,6 +17,7 @@ library;
 export 'src/theme.dart';
 export 'src/kinetix_type.dart';
 export 'src/kinetix_motion.dart';
+export 'src/kinetix_disclosure_motion.dart';
 export 'src/kinetix_shadows.dart';
 export 'src/kinetix_foundation.dart';
 export 'src/kinetix_material_theme.dart';

@@ -82,7 +82,15 @@ const platforms = Object.keys(defs);
  *                  declared distribution state — never from the network, which would make CI flaky, and
  *                  never from "a package file exists", which proves nothing.
  */
-export const KINDS = ["build", "interaction", "accessibility", "rtl", "largeText", "visual", "published"];
+/**
+ * `reducedMotion` means: this component has executable evidence that the reader's reduced-motion
+ * setting suppresses its movement, that the state change still lands on the correct final state, and
+ * that BOTH directions were exercised. It is one bit per component per platform, and the `sources`
+ * paths are what tell a reader how strong the evidence is — a Flutter widget test that measures
+ * rendered geometry and a SwiftUI unit test that asserts a resolver are both truthful entries and are
+ * not the same proof. See the headers of scripts/motion.mjs and scripts/check-native-motion.mjs.
+ */
+export const KINDS = ["build", "interaction", "accessibility", "rtl", "largeText", "reducedMotion", "visual", "published"];
 /** The kinds a test may claim. The other two are facts about the repository, not about a test. */
 const CLAIMABLE = KINDS.filter((k) => k !== "build" && k !== "published");
 
@@ -91,7 +99,7 @@ const COVERS = /kx-verify-covers:\s*(\S+)/;
 
 /** Where each platform's evidence lives. `extra` files are suites that are not themselves unit tests. */
 const TEST_SOURCES = {
-  React: { dirs: ["packages/ui/src"], match: /\.test\.tsx$/, extra: ["scripts/a11y-browser.mjs", "scripts/large-text.mjs"] },
+  React: { dirs: ["packages/ui/src"], match: /\.test\.tsx$/, extra: ["scripts/a11y-browser.mjs", "scripts/large-text.mjs", "scripts/motion.mjs"] },
   Angular: { dirs: ["packages/ui-angular/src"], match: /\.spec\.ts$/ },
   SwiftUI: { dirs: ["packages/ui-swiftui/Tests"], match: /\.swift$/ },
   Compose: { dirs: ["packages/ui-compose/ui/src/test"], match: /\.kt$/ },
