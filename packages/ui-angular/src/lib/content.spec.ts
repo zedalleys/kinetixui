@@ -87,6 +87,17 @@ describe('KxBanner', () => {
     expect(el.className).not.toContain('kx-banner--information');
   });
 
+  it('renders a visible dismiss glyph when the caller projects none', () => {
+    const f = render(Host);
+    f.componentInstance.dismissible.set(true);
+    f.detectChanges();
+    const button = f.nativeElement.querySelector('.kx-banner__dismiss')!;
+    // An empty button is a few pixels of nothing: only someone reading the aria-label could find it,
+    // which is precisely backwards. The glyph is ng-content FALLBACK, so projecting replaces it.
+    expect(button.querySelector('.kx-dismiss-glyph')).not.toBeNull();
+    expect(button.querySelector('svg')!.getAttribute('aria-hidden')).toBe('true');
+  });
+
   it('shows no dismiss control unless asked, and emits rather than hiding itself', () => {
     const f = render(Host);
     expect(f.nativeElement.querySelector('.kx-banner__dismiss')).toBeNull();
@@ -233,6 +244,23 @@ describe('KxCodeBlock', () => {
     expect(f.nativeElement.querySelector('pre > code')!.textContent).toBe('const a = 1;');
   });
 
+  it('offers the copy button with no filename and no tabs', async () => {
+    @Component({ imports: [KxCodeBlock], template: `<kx-code-block [code]="'const a = 1;'" />` })
+    class Bare {}
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    const f = render(Bare);
+    // The bare form is the documented basic usage; copying is the component's reason to exist beyond a
+    // <pre>, so it cannot depend on supplying optional metadata.
+    expect(f.nativeElement.querySelector('.kx-code-block__header')).toBeNull();
+    const copy = f.nativeElement.querySelector<HTMLButtonElement>('.kx-code-block__copy');
+    expect(copy).not.toBeNull();
+    expect(copy!.querySelector('.kx-copy-glyph')).not.toBeNull();
+    copy!.click();
+    await Promise.resolve();
+    expect(writeText).toHaveBeenCalledWith('const a = 1;');
+  });
+
   it('announces the copy result rather than only swapping an icon', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
@@ -264,12 +292,22 @@ describe('KxDescriptionList', () => {
     imports: [KxDescriptionList, KxDescriptionListItem],
     template: `
       <dl kxDescriptionList>
-        <kx-description-list-item term="Status">Active</kx-description-list-item>
-        <kx-description-list-item term="Notes" layout="stacked">Renews annually.</kx-description-list-item>
+        <div kxDescriptionListItem term="Status">Active</div>
+        <div kxDescriptionListItem term="Notes" layout="stacked">Renews annually.</div>
       </dl>
     `,
   })
   class Host {}
+
+  it('groups each pair in a div, which is the only wrapper a dl allows', () => {
+    const el = render(Host).nativeElement;
+    const dl = el.querySelector('dl')!;
+    // A dl's content model is dt/dd directly, or grouped in a div. A custom element is neither, and an
+    // earlier spelling used one — the grouping was invalid and the association left to chance.
+    for (const child of dl.children) expect(child.tagName.toLowerCase()).toBe('div');
+    expect(dl.querySelector('div > dt')).not.toBeNull();
+    expect(dl.querySelector('div > dd')).not.toBeNull();
+  });
 
   it('uses real dt/dd pairs inside a real dl', () => {
     const el = render(Host).nativeElement;
@@ -281,7 +319,7 @@ describe('KxDescriptionList', () => {
   });
 
   it('carries the layout as a modifier', () => {
-    const items = render(Host).nativeElement.querySelectorAll('kx-description-list-item');
+    const items = render(Host).nativeElement.querySelectorAll('[kxDescriptionListItem]');
     expect(items[0]!.className).toContain('kx-description-list__item--row');
     expect(items[1]!.className).toContain('kx-description-list__item--stacked');
   });
@@ -349,6 +387,20 @@ describe('KxImage', () => {
     f.detectChanges();
     expect(f.nativeElement.querySelector('img')).toBeNull();
     expect(f.nativeElement.querySelector('.kx-image__fallback')!.textContent).toContain('Unavailable');
+  });
+
+  it('forgets a failed source when a new one arrives', () => {
+    const f = render(Host);
+    f.nativeElement.querySelector('img')!.dispatchEvent(new Event('error'));
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('img')).toBeNull();
+    f.componentInstance.src.set('/other.jpg');
+    f.detectChanges();
+    // Without a reset the fallback stayed rendered for ever and the new URL was never requested.
+    const img = f.nativeElement.querySelector('img');
+    expect(img).not.toBeNull();
+    expect(img!.getAttribute('src')).toBe('/other.jpg');
+    expect(img!.className).not.toContain('kx-image__img--loaded');
   });
 
   it('marks the image loaded so the fade-in has something to key off', () => {

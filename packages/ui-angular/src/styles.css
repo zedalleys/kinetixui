@@ -957,6 +957,15 @@
 }
 .kx-code-block__copy:hover { color: hsl(var(--foreground)); }
 .kx-code-block__copy:focus-visible { outline: var(--border-width-default) solid currentColor; }
+/* The default glyphs. Sized here rather than on the SVG so a projected replacement inherits the same
+   box, and so a consumer restyling the package can reach them. */
+.kx-dismiss-glyph { width: 0.875rem; height: 0.875rem; display: block; }
+.kx-copy-glyph { width: 1rem; height: 1rem; display: block; }
+
+.kx-code-block__body { position: relative; }
+/* No filename and no tabs means no header to hold the copy button, so it sits over the code. */
+.kx-code-block__copy--floating { position: absolute; inset-block-start: var(--spacing-2); inset-inline-end: var(--spacing-2); }
+
 .kx-code-block__pre {
   overflow-x: auto;
   margin: 0;

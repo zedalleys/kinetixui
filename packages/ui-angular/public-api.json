@@ -389,7 +389,7 @@
     {
       "name": "KxDescriptionListItem",
       "kind": "component",
-      "selector": "kx-description-list-item",
+      "selector": "div[kxDescriptionListItem]",
       "inputs": [
         "layout",
         "term"

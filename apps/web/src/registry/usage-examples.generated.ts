@@ -57,7 +57,7 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
     "angular": "@Component({\n  selector: 'app-code-block-demo',\n  imports: [KxCodeBlock],\n  template: ` <kx-code-block [code]=\"snippet\" filename=\"main.ts\" /> `,\n})\nexport class CodeBlockDemo {\n  readonly snippet = \"import { KxButton } from '@kinetixui/angular';\";\n}",
   },
   "description-list-demo": {
-    "angular": "@Component({\n  selector: 'app-description-list-demo',\n  imports: [KxDescriptionList, KxDescriptionListItem],\n  template: `\n    <dl kxDescriptionList>\n      <kx-description-list-item term=\"Status\">Active</kx-description-list-item>\n      <kx-description-list-item term=\"Plan\">Team &middot; annual</kx-description-list-item>\n      <kx-description-list-item term=\"Notes\" layout=\"stacked\">\n        Renews automatically unless cancelled 30 days before the term ends.\n      </kx-description-list-item>\n    </dl>\n  `,\n})\nexport class DescriptionListDemo {}",
+    "angular": "@Component({\n  selector: 'app-description-list-demo',\n  imports: [KxDescriptionList, KxDescriptionListItem],\n  template: `\n    <dl kxDescriptionList>\n      <div kxDescriptionListItem term=\"Status\">Active</div>\n      <div kxDescriptionListItem term=\"Plan\">Team &middot; annual</div>\n      <div kxDescriptionListItem term=\"Notes\" layout=\"stacked\">\n        Renews automatically unless cancelled 30 days before the term ends.\n      </div>\n    </dl>\n  `,\n})\nexport class DescriptionListDemo {}",
   },
   "direction-provider-demo": {
     "angular": "<!-- No provider: the DOM's own dir attribute cascades, and Angular CDK's Directionality reads it. -->\n<div dir=\"rtl\">\n  <input kxInput placeholder=\"ابحث\" />\n  <button kxButton>حفظ</button>\n</div>",

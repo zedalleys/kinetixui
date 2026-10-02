@@ -20,7 +20,10 @@ semantics instead of restating them in ARIA, and it is why a pressable list row 
 a real `<li>` rather than a `<div role="button">`: the keyboard contract comes with the element.
 
 Two places where the Angular idiom differs from React's on purpose. Icons arrive by content projection
-rather than from an icon package, so using a banner does not pull a dependency into your bundle. Actions
+rather than from an icon package, so using a banner does not pull a dependency into your bundle — with
+one exception that matters: dismiss and copy buttons ship a built-in glyph as `<ng-content>` fallback,
+because an empty button is a few pixels of nothing and the only people who could find it are the ones
+reading its `aria-label`. Project `[kxDismissIcon]` or `[kxCopyIcon]` to replace the default. Actions
 arrive as content plus an `output()` rather than as an `action={{ label, onClick }}` object, because in
 Angular a label is content and a click is an event:
 
@@ -36,7 +39,10 @@ no value, because an indeterminate bar reporting 0 claims something different fr
 `KxCodeBlock`'s file switcher is a real tablist whose arrow keys resolve against the document direction, so
 ArrowLeft advances in an RTL page, and its copy button reports the result through a live region rather than
 only swapping an icon. `KxPageHeader` takes a heading `level` rather than hard-coding `<h1>`, so the
-document outline survives being used twice. `KxMarquee` renders its content twice for a seamless loop,
+document outline survives being used twice. `KxDescriptionListItem` is a component with an attribute
+selector on a `<div>`, so a list renders as `<dl><div><dt>…</dt><dd>…</dd></div></dl>` — a `dl`'s content
+model allows `dt`/`dd` directly or grouped in a `div`, and a custom element is neither. `KxImage` resets
+to loading whenever `src` changes, so a source that failed once does not keep its fallback for ever. `KxMarquee` renders its content twice for a seamless loop,
 hides the duplicate from assistive technology, and stops animating under `prefers-reduced-motion: reduce`
 while staying scrollable. Dismissible surfaces emit an event rather than hiding themselves — the caller owns
 that state — and their dismiss button takes its accessible name as an input, because this package ships no

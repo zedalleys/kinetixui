@@ -529,11 +529,11 @@ export class CodeBlockDemo {
   imports: [KxDescriptionList, KxDescriptionListItem],
   template: `
     <dl kxDescriptionList>
-      <kx-description-list-item term="Status">Active</kx-description-list-item>
-      <kx-description-list-item term="Plan">Team &middot; annual</kx-description-list-item>
-      <kx-description-list-item term="Notes" layout="stacked">
+      <div kxDescriptionListItem term="Status">Active</div>
+      <div kxDescriptionListItem term="Plan">Team &middot; annual</div>
+      <div kxDescriptionListItem term="Notes" layout="stacked">
         Renews automatically unless cancelled 30 days before the term ends.
-      </kx-description-list-item>
+      </div>
     </dl>
   `,
 })

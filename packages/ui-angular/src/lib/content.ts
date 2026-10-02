@@ -10,6 +10,7 @@ import {
   contentChild,
   inject,
   input,
+  linkedSignal,
   output,
   signal,
 } from '@angular/core';
@@ -29,7 +30,12 @@ import type {
  *
  * Two conventions this file follows, both inherited rather than invented:
  *
- * Icons arrive by projection, never by import. The React implementations reach for `lucide-react`, which is a
+ * Icons arrive by projection, never by import, with one exception that matters: the dismiss button
+ * carries a built-in glyph as `<ng-content>` fallback content. A projected slot that the caller leaves
+ * empty is fine for a decorative leading icon and is not fine for a control — an empty button is a few
+ * pixels of nothing, so the only people who could find it are the ones reading its `aria-label`. Project
+ * `[kxDismissIcon]` to replace the default; leave it out and the control is still visible.
+ * The React implementations reach for `lucide-react`, which is a
  * reasonable choice for a package that already depends on React's ecosystem. Adding an icon library to
  * `@kinetixui/angular` would make every consumer carry it to render a banner, so each surface here exposes a
  * slot and the application supplies whatever it already uses. Nothing is hard-coded and nothing is missing:
@@ -69,7 +75,11 @@ import type {
     </div>
     @if (dismissible()) {
       <button type="button" class="kx-banner__dismiss" [attr.aria-label]="dismissLabel()" (click)="dismiss.emit()">
-        <ng-content select="[kxDismissIcon]" />
+        <ng-content select="[kxDismissIcon]">
+          <svg class="kx-dismiss-glyph" viewBox="0 0 14 14" aria-hidden="true" focusable="false">
+            <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+        </ng-content>
       </button>
     }
   `,
@@ -249,12 +259,31 @@ export interface KxCodeBlockFile {
         </div>
         @if (!hideCopy()) {
           <button type="button" class="kx-code-block__copy" [attr.aria-label]="copyLabel()" (click)="copy()">
-            <ng-content select="[kxCopyIcon]" />
+            <ng-content select="[kxCopyIcon]">
+              <svg class="kx-copy-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <rect x="5.75" y="5.75" width="7.5" height="7.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+                <path d="M10.25 5.75V4.25a1.5 1.5 0 0 0-1.5-1.5h-4.5a1.5 1.5 0 0 0-1.5 1.5v4.5a1.5 1.5 0 0 0 1.5 1.5h1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+              </svg>
+            </ng-content>
           </button>
         }
       </div>
     }
-    <pre class="kx-code-block__pre" tabindex="0"><code>{{ current().code }}</code></pre>
+    <div class="kx-code-block__body">
+      @if (!hasHeader() && !hideCopy()) {
+        <!-- With no filename and no tabs there is no header to put the copy button in, and the button is
+             the component's whole reason for existing beyond a <pre>. It sits over the code instead. -->
+        <button type="button" class="kx-code-block__copy kx-code-block__copy--floating" [attr.aria-label]="copyLabel()" (click)="copy()">
+          <ng-content select="[kxCopyIcon]">
+            <svg class="kx-copy-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <rect x="5.75" y="5.75" width="7.5" height="7.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+              <path d="M10.25 5.75V4.25a1.5 1.5 0 0 0-1.5-1.5h-4.5a1.5 1.5 0 0 0-1.5 1.5v4.5a1.5 1.5 0 0 0 1.5 1.5h1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+          </ng-content>
+        </button>
+      }
+      <pre class="kx-code-block__pre" tabindex="0"><code>{{ current().code }}</code></pre>
+    </div>
     <span class="kx-sr-only" role="status">{{ copied() ? copiedLabel() : '' }}</span>
   `,
   host: { class: 'kx-code-block' },
@@ -325,8 +354,11 @@ export class KxCodeBlock {
  *     <kx-description-list-item term="Status">Active</kx-description-list-item>
  *   </dl>
  *
- * A directive on a real `<dl>`, and each item renders the `<dt>`/`<dd>` pair inside a wrapper — which is valid
- * since HTML allows `<div>` grouping inside `<dl>`. The term is an input rather than a slot because a `<dt>`
+ * A directive on a real `<dl>`, and each item is a component with an ATTRIBUTE selector on a `<div>`, so the
+ * rendered tree is `<dl><div><dt>…</dt><dd>…</dd></div></dl>`. That distinction is the whole point: a `dl`'s
+ * content model allows `dt`/`dd` directly or wrapped in a `div`, and nothing else. An earlier spelling used a
+ * `<kx-description-list-item>` element as the wrapper, which is neither — the grouping was invalid and the
+ * term/description association was left to chance. The term is an input rather than a slot because a `<dt>`
  * takes text, and two projection slots in one item would let a caller put the value in the term position.
  */
 @Directive({
@@ -336,7 +368,7 @@ export class KxCodeBlock {
 export class KxDescriptionList {}
 
 @Component({
-  selector: 'kx-description-list-item',
+  selector: 'div[kxDescriptionListItem]',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <dt class="kx-description-list__term">{{ term() }}</dt>
@@ -431,7 +463,15 @@ export class KxImage {
   /** Native lazy loading. Defaults to `lazy`; pass `eager` for an image above the fold. */
   readonly loading = input<'lazy' | 'eager'>('lazy');
 
-  protected readonly status = signal<'loading' | 'loaded' | 'error'>('loading');
+  /**
+   * Reset to `loading` whenever `src` changes. A plain signal kept the old verdict: once a source had
+   * failed, the fallback branch stayed rendered and a later, valid URL was never even requested — and a
+   * previously loaded image kept its loaded styling while its replacement was still arriving.
+   */
+  protected readonly status = linkedSignal<string, 'loading' | 'loaded' | 'error'>({
+    source: this.src,
+    computation: () => 'loading',
+  });
   protected readonly ratioValue = computed(() => {
     const r = this.ratio();
     return typeof r === 'number' ? r : (RATIOS[r] ?? 1);
@@ -457,7 +497,11 @@ export class KxImage {
     </div>
     @if (dismissible()) {
       <button type="button" class="kx-inform__dismiss" [attr.aria-label]="dismissLabel()" (click)="dismiss.emit()">
-        <ng-content select="[kxDismissIcon]" />
+        <ng-content select="[kxDismissIcon]">
+          <svg class="kx-dismiss-glyph" viewBox="0 0 14 14" aria-hidden="true" focusable="false">
+            <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+        </ng-content>
       </button>
     }
   `,
