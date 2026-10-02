@@ -23,8 +23,11 @@
 //
 // kx-verify: reducedMotion
 // Subjects, named so the claim resolves to exactly what is proven rather than to every story:
-// <Accordion> and <Collapsible>. Adding an interaction to motion-states.mjs for another component
-// means naming it here too, which is the point — the evidence should not widen silently.
+// <Accordion>, <Collapsible> and <Switch>. Adding an interaction to motion-states.mjs for another
+// component means naming it here too, which is the point — the evidence should not widen silently.
+// <Switch> was added by the selection-control slice, whose two declared states measure the thumb's
+// rendered transform in both directions (100ms, matrix translate 0 → 24 and back) and confirm each
+// collapses under prefers-reduced-motion while landing on the same end state.
 import { chromium } from "playwright";
 import { createServer } from "node:http";
 import { existsSync, readFileSync, statSync } from "node:fs";

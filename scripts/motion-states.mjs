@@ -172,6 +172,30 @@ export const MOTION_STATES = [
     property: "height",
   },
   {
+    slug: "switch",
+    story: "form-inputs-switch--playground",
+    interaction: "thumb travel OFF → ON",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: "button[role=switch][data-state=unchecked]" },
+    // The thumb is the only child of the track, and it is present in both states, so one selector
+    // reads STATE A and STATE B without a `targetBefore`.
+    target: "button[role=switch] > span",
+    property: "transform",
+  },
+  {
+    slug: "switch",
+    story: "form-inputs-switch--playground",
+    interaction: "thumb travel ON → OFF",
+    classification: MOTION_REQUIRED,
+    // Turning off is a separate transition of the same property in the opposite direction. The
+    // disclosure family shipped a gate blind to every collapse; a switch is symmetric, which makes
+    // that assumption even easier to make and no safer.
+    prelude: { action: "click", selector: "button[role=switch][data-state=unchecked]" },
+    trigger: { action: "click", selector: "button[role=switch][data-state=checked]" },
+    target: "button[role=switch] > span",
+    property: "transform",
+  },
+  {
     slug: "collapsible",
     story: "data-display-collapsible--playground",
     interaction: "collapse",

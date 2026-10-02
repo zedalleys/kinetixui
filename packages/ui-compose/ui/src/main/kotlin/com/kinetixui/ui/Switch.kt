@@ -34,7 +34,14 @@ fun KinetixSwitch(
 ) {
     val colors = KinetixColorScheme.current
     val trackColor = if (checked) colors.action else colors.tertiary
-    val thumbOffset by animateDpAsState(targetValue = if (checked) 24.dp else 0.dp, label = "KinetixSwitchThumb")
+    // The preference comes from the one shared reader; the timing comes from the tokens. This was on
+    // Compose's default spring, which is neither.
+    val reduceMotion = KinetixDisclosureMotion.rememberReduceMotion()
+    val thumbOffset by animateDpAsState(
+        targetValue = KinetixSwitchMotion.thumbOffset(checked),
+        animationSpec = KinetixSwitchMotion.spec(reduceMotion),
+        label = "KinetixSwitchThumb",
+    )
 
     Box(
         modifier = modifier

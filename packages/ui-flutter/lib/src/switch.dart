@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'kinetix_switch_motion.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/switch.tsx`. 48×24 track, 20pt
@@ -31,13 +32,15 @@ class KinetixSwitch extends StatelessWidget {
       child: GestureDetector(
         onTap: enabled ? () => onChanged!(!value) : null,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeInOut,
+          // Was a literal 150ms easeInOut; the tokens carry `instant` and `standard`, and the
+          // duration collapses when the reader has asked the platform for no animation.
+          duration: KinetixSwitchMotion.durationOf(context),
+          curve: KinetixSwitchMotion.curve,
           width: 48,
           height: 24,
           padding: const EdgeInsets.all(2),
           // "end" mirrors under RTL; centerRight/centerLeft would not
-          alignment: value ? AlignmentDirectional.centerEnd : AlignmentDirectional.centerStart,
+          alignment: KinetixSwitchMotion.thumbAlignment(value: value),
           decoration: BoxDecoration(
             color: value ? c.action : c.tertiary,
             borderRadius: BorderRadius.circular(9999),
