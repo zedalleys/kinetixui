@@ -116,6 +116,9 @@ jobs:
       - name: Declared platforms are backed by real source
         run: pnpm check:platform-source
 
+      - name: Platform completeness (every catalogue/platform cell resolved)
+        run: pnpm check:platform-completeness
+
       # A block may only advertise a platform it has real source for, and the snippets the site shows must
       # be the current contents of those files. React is structural (the same fixture renders the live
       # preview); the native sources are compiled by native-*.yml, not here.

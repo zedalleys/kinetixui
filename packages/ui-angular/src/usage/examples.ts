@@ -34,6 +34,26 @@ import {
   KxProgress,
   KxSeparator,
 } from '../lib/primitives';
+import {
+  KxBanner,
+  KxButtonGroup,
+  KxButtonGroupSeparator,
+  KxButtonGroupText,
+  KxCircularProgress,
+  KxCodeBlock,
+  KxDescriptionList,
+  KxDescriptionListItem,
+  KxFab,
+  KxImage,
+  KxInform,
+  KxList,
+  KxListItem,
+  KxMarquee,
+  KxMarqueeContent,
+  KxPageHeader,
+  KxTimeline,
+  KxTimelineItem,
+} from '../lib/content';
 import { KxTab, KxTabList, KxTabPanel, KxTabs } from '../lib/tabs';
 import {
   KxCheckbox,
@@ -444,4 +464,187 @@ export class SignupForm {
     if (this.form.valid) console.log(this.form.getRawValue());
   }
 }
+// kx-usage:end
+
+// kx-usage:banner-demo
+@Component({
+  selector: 'app-banner-demo',
+  imports: [KxBanner],
+  template: `
+    @if (!dismissed) {
+      <kx-banner variant="warning" sticky dismissible (dismiss)="dismissed = true">
+        Scheduled maintenance begins at 02:00 UTC.
+        <button kxBannerAction type="button" (click)="details()">Read more</button>
+      </kx-banner>
+    }
+  `,
+})
+export class BannerDemo {
+  dismissed = false;
+  details(): void {}
+}
+// kx-usage:end
+
+// kx-usage:button-group-demo
+@Component({
+  selector: 'app-button-group-demo',
+  imports: [KxButton, KxButtonGroup, KxButtonGroupText],
+  template: `
+    <div kxButtonGroup>
+      <kx-button-group-text>Qty</kx-button-group-text>
+      <button kxButton variant="Outline" type="button" aria-label="Decrease">&minus;</button>
+      <button kxButton variant="Outline" type="button" aria-label="Increase">+</button>
+    </div>
+  `,
+})
+export class ButtonGroupDemo {}
+// kx-usage:end
+
+// kx-usage:circular-progress-demo
+@Component({
+  selector: 'app-circular-progress-demo',
+  imports: [KxCircularProgress],
+  template: `
+    <kx-circular-progress [value]="72" showValue [size]="56" />
+    <kx-circular-progress aria-label="Loading" />
+  `,
+})
+export class CircularProgressDemo {}
+// kx-usage:end
+
+// kx-usage:code-block-demo
+@Component({
+  selector: 'app-code-block-demo',
+  imports: [KxCodeBlock],
+  template: ` <kx-code-block [code]="snippet" filename="main.ts" /> `,
+})
+export class CodeBlockDemo {
+  readonly snippet = "import { KxButton } from '@kinetixui/angular';";
+}
+// kx-usage:end
+
+// kx-usage:description-list-demo
+@Component({
+  selector: 'app-description-list-demo',
+  imports: [KxDescriptionList, KxDescriptionListItem],
+  template: `
+    <dl kxDescriptionList>
+      <div kxDescriptionListItem term="Status">Active</div>
+      <div kxDescriptionListItem term="Plan">Team &middot; annual</div>
+      <div kxDescriptionListItem term="Notes" layout="stacked">
+        Renews automatically unless cancelled 30 days before the term ends.
+      </div>
+    </dl>
+  `,
+})
+export class DescriptionListDemo {}
+// kx-usage:end
+
+// kx-usage:fab-demo
+@Component({
+  selector: 'app-fab-demo',
+  imports: [KxFab],
+  template: `
+    <button kxFab type="button" aria-label="New message">+</button>
+    <button kxFab extended type="button">New message</button>
+  `,
+})
+export class FabDemo {}
+// kx-usage:end
+
+// kx-usage:image-demo
+@Component({
+  selector: 'app-image-demo',
+  imports: [KxImage],
+  template: `
+    <kx-image src="/cover.jpg" alt="Harbour at dusk" ratio="16:9">
+      <span kxImageFallback>Unavailable</span>
+    </kx-image>
+  `,
+})
+export class ImageDemo {}
+// kx-usage:end
+
+// kx-usage:inform-demo
+@Component({
+  selector: 'app-inform-demo',
+  imports: [KxInform],
+  template: `
+    <kx-inform variant="success">Your changes were saved.</kx-inform>
+    <kx-inform variant="error" dismissible (dismiss)="hidden = true">
+      We could not reach the server.
+      <button kxInformAction type="button" (click)="retry()">Try again</button>
+    </kx-inform>
+  `,
+})
+export class InformDemo {
+  hidden = false;
+  retry(): void {}
+}
+// kx-usage:end
+
+// kx-usage:list-demo
+@Component({
+  selector: 'app-list-demo',
+  imports: [KxList, KxListItem],
+  template: `
+    <ul kxList>
+      <li kxListItem title="Billing" description="Invoices and payment method" pressable (select)="open('billing')">
+        <span kxListTrailing>&rsaquo;</span>
+      </li>
+      <li kxListItem title="Members" description="12 people" pressable (select)="open('members')">
+        <span kxListTrailing>&rsaquo;</span>
+      </li>
+      <li kxListItem title="Audit log" description="Enterprise plans only" disabled></li>
+    </ul>
+  `,
+})
+export class ListDemo {
+  open(_section: string): void {}
+}
+// kx-usage:end
+
+// kx-usage:marquee-demo
+@Component({
+  selector: 'app-marquee-demo',
+  imports: [KxMarquee, KxMarqueeContent],
+  template: `
+    <kx-marquee [durationSeconds]="24" pauseOnHover>
+      <ng-template kxMarqueeContent>
+        <span>Ships to 48 countries</span>
+        <span>Free returns for 30 days</span>
+      </ng-template>
+    </kx-marquee>
+  `,
+})
+export class MarqueeDemo {}
+// kx-usage:end
+
+// kx-usage:page-header-demo
+@Component({
+  selector: 'app-page-header-demo',
+  imports: [KxButton, KxPageHeader],
+  template: `
+    <kx-page-header title="Billing" description="Plan, invoices and payment method">
+      <button kxButton kxPageHeaderActions type="button" variant="Primary">Upgrade</button>
+    </kx-page-header>
+  `,
+})
+export class PageHeaderDemo {}
+// kx-usage:end
+
+// kx-usage:timeline-demo
+@Component({
+  selector: 'app-timeline-demo',
+  imports: [KxTimeline, KxTimelineItem],
+  template: `
+    <ol kxTimeline>
+      <li kxTimelineItem title="Order placed" description="12 March, 09:14" status="success"></li>
+      <li kxTimelineItem title="Dispatched" description="12 March, 17:02" status="success"></li>
+      <li kxTimelineItem title="In transit" description="Expected 15 March" status="active"></li>
+      <li kxTimelineItem title="Delivered"></li>
+    </ol>
+  `,
+})
+export class TimelineDemo {}
 // kx-usage:end

@@ -13,7 +13,11 @@
     "KxAvatarImage",
     "KxBadge",
     "KxBadgeVariant",
+    "KxBanner",
     "KxButton",
+    "KxButtonGroup",
+    "KxButtonGroupSeparator",
+    "KxButtonGroupText",
     "KxButtonSize",
     "KxButtonVariant",
     "KxCard",
@@ -23,7 +27,13 @@
     "KxCardHeader",
     "KxCardTitle",
     "KxCheckbox",
+    "KxCircularProgress",
+    "KxCodeBlock",
+    "KxCodeBlockFile",
     "KxCorners",
+    "KxDescriptionList",
+    "KxDescriptionListItem",
+    "KxDescriptionListLayout",
     "KxEmpty",
     "KxEmptyContent",
     "KxEmptyDescription",
@@ -31,19 +41,31 @@
     "KxEmptyMedia",
     "KxEmptyMediaVariant",
     "KxEmptyTitle",
+    "KxFab",
+    "KxFabSize",
+    "KxFabVariant",
     "KxField",
     "KxFieldDescription",
     "KxFieldLabel",
     "KxFieldMessage",
     "KxFieldMessageVariant",
+    "KxImage",
+    "KxImageRatio",
+    "KxInform",
+    "KxInformVariant",
     "KxInput",
     "KxKbd",
     "KxKbdGroup",
     "KxLabel",
+    "KxList",
+    "KxListItem",
+    "KxMarquee",
+    "KxMarqueeContent",
     "KxMetric",
     "KxNativeSelect",
     "KxNumberInput",
     "KxOrientation",
+    "KxPageHeader",
     "KxPasswordInput",
     "KxProgress",
     "KxQuote",
@@ -65,6 +87,9 @@
     "KxTag",
     "KxTagVariant",
     "KxTextarea",
+    "KxTimeline",
+    "KxTimelineItem",
+    "KxTimelineStatus",
     "KxToggle",
     "KxToggleGroup",
     "KxToggleGroupItem",
@@ -172,6 +197,23 @@
       "exported": true
     },
     {
+      "name": "KxBanner",
+      "kind": "component",
+      "selector": "kx-banner",
+      "inputs": [
+        "dismissLabel",
+        "dismissible",
+        "sticky",
+        "variant"
+      ],
+      "outputs": [
+        "dismiss"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
       "name": "KxButton",
       "kind": "directive",
       "selector": "button[kxButton], a[kxButton]",
@@ -182,6 +224,40 @@
       ],
       "outputs": [],
       "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxButtonGroup",
+      "kind": "directive",
+      "selector": "[kxButtonGroup]",
+      "inputs": [
+        "orientation"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxButtonGroupSeparator",
+      "kind": "component",
+      "selector": "kx-button-group-separator",
+      "inputs": [
+        "orientation"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxButtonGroupText",
+      "kind": "component",
+      "selector": "kx-button-group-text",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
       "standalone": true,
       "exported": true
     },
@@ -268,6 +344,62 @@
       "exported": true
     },
     {
+      "name": "KxCircularProgress",
+      "kind": "component",
+      "selector": "kx-circular-progress",
+      "inputs": [
+        "showValue",
+        "size",
+        "strokeWidth",
+        "value"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCodeBlock",
+      "kind": "component",
+      "selector": "kx-code-block",
+      "inputs": [
+        "code",
+        "copiedLabel",
+        "copyLabel",
+        "filename",
+        "files",
+        "hideCopy",
+        "language"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxDescriptionList",
+      "kind": "directive",
+      "selector": "dl[kxDescriptionList]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxDescriptionListItem",
+      "kind": "component",
+      "selector": "div[kxDescriptionListItem]",
+      "inputs": [
+        "layout",
+        "term"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
       "name": "KxEmpty",
       "kind": "component",
       "selector": "kx-empty",
@@ -332,6 +464,20 @@
       "exported": true
     },
     {
+      "name": "KxFab",
+      "kind": "directive",
+      "selector": "button[kxFab]",
+      "inputs": [
+        "extended",
+        "size",
+        "variant"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
       "name": "KxField",
       "kind": "component",
       "selector": "kx-field",
@@ -374,6 +520,38 @@
       "exported": true
     },
     {
+      "name": "KxImage",
+      "kind": "component",
+      "selector": "kx-image",
+      "inputs": [
+        "alt",
+        "loading",
+        "ratio",
+        "rounded",
+        "src"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxInform",
+      "kind": "component",
+      "selector": "kx-inform",
+      "inputs": [
+        "dismissLabel",
+        "dismissible",
+        "variant"
+      ],
+      "outputs": [
+        "dismiss"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
       "name": "KxInput",
       "kind": "directive",
       "selector": "input[kxInput]",
@@ -407,6 +585,56 @@
       "name": "KxLabel",
       "kind": "directive",
       "selector": "label[kxLabel]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxList",
+      "kind": "directive",
+      "selector": "ul[kxList], ol[kxList]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxListItem",
+      "kind": "component",
+      "selector": "li[kxListItem]",
+      "inputs": [
+        "description",
+        "disabled",
+        "pressable",
+        "title"
+      ],
+      "outputs": [
+        "select"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxMarquee",
+      "kind": "component",
+      "selector": "kx-marquee",
+      "inputs": [
+        "durationSeconds",
+        "pauseOnHover"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxMarqueeContent",
+      "kind": "directive",
+      "selector": "[kxMarqueeContent]",
       "inputs": [],
       "outputs": [],
       "projectsContent": false,
@@ -460,6 +688,20 @@
       "projectsContent": false,
       "standalone": true,
       "extends": "KxValueBase",
+      "exported": true
+    },
+    {
+      "name": "KxPageHeader",
+      "kind": "component",
+      "selector": "kx-page-header",
+      "inputs": [
+        "description",
+        "level",
+        "title"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
       "exported": true
     },
     {
@@ -729,6 +971,30 @@
       "exported": true
     },
     {
+      "name": "KxTimeline",
+      "kind": "directive",
+      "selector": "ol[kxTimeline]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxTimelineItem",
+      "kind": "component",
+      "selector": "li[kxTimelineItem]",
+      "inputs": [
+        "description",
+        "status",
+        "title"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
       "name": "KxToggle",
       "kind": "directive",
       "selector": "button[kxToggle]",
@@ -827,12 +1093,32 @@
       "definition": "'sharp' | 'default' | 'pill'"
     },
     {
+      "name": "KxDescriptionListLayout",
+      "definition": "'row' | 'stacked'"
+    },
+    {
       "name": "KxEmptyMediaVariant",
       "definition": "'default' | 'icon'"
     },
     {
+      "name": "KxFabSize",
+      "definition": "'default' | 'sm'"
+    },
+    {
+      "name": "KxFabVariant",
+      "definition": "'Primary' | 'Secondary'"
+    },
+    {
       "name": "KxFieldMessageVariant",
       "definition": "'error' | 'success' | 'warning' | 'info'"
+    },
+    {
+      "name": "KxImageRatio",
+      "definition": "'1:1' | '3:2' | '4:3' | '3:4' | '3:1' | '16:9'"
+    },
+    {
+      "name": "KxInformVariant",
+      "definition": "'information' | 'warning' | 'success' | 'error' | 'action'"
     },
     {
       "name": "KxOrientation",
@@ -849,6 +1135,10 @@
     {
       "name": "KxTagVariant",
       "definition": "'default' | 'secondary' | 'destructive' | 'warning' | 'outline'"
+    },
+    {
+      "name": "KxTimelineStatus",
+      "definition": "'default' | 'active' | 'success' | 'error'"
     },
     {
       "name": "KxToggleSize",

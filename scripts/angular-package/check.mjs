@@ -37,6 +37,15 @@ const contractOnly = process.argv.includes("--contract");
 const step = (message) => console.log(`\n▸ ${message}`);
 const detail = (message) => console.log(`  ${message}`);
 
+/**
+ * Angular's coverage, read from the canonical manifest rather than restated here. It was hard-coded as
+ * "31 of 98" and had already been overtaken — a number in a success message is still a published claim.
+ */
+const CATALOGUE = JSON.parse(readFileSync(new URL("../../components.manifest.json", import.meta.url), "utf8"));
+const CATALOGUE_SIZE = Object.keys(CATALOGUE.components).length;
+const ANGULAR_IMPLEMENTED = Object.values(CATALOGUE.components).filter((c) => (c.platforms ?? []).includes("Angular")).length;
+const ANGULAR_MATURITY = CATALOGUE.platformDefinitions.Angular.maturity;
+
 /** Paths a consumer must find inside the tarball, on top of everything the manifest declares. */
 const REQUIRE_FILES = ["styles.css", "fesm2022/kinetixui-angular.mjs", "types/kinetixui-angular.d.ts"];
 
@@ -295,7 +304,7 @@ function finish() {
           `  The clean-consumer build was skipped (--contract), so this does not prove a consumer can use it.`
       : `\n✓ @kinetixui/angular is publication-ready: the artifact is a valid npm package and a clean ` +
           `Angular application builds against it.\n` +
-          `  This says nothing about maturity: Angular is Preview, at 31 of 98 components. See RELEASING.md.`,
+          `  This says nothing about maturity: Angular is ${ANGULAR_MATURITY}, at ${ANGULAR_IMPLEMENTED} of ${CATALOGUE_SIZE} components. See RELEASING.md.`,
   );
   process.exit(0);
 }

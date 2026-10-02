@@ -496,7 +496,9 @@ npm actually has the package, in the same pull request that publishes it:
 - `apps/web/src/lib/releases.ts` — the release entry announcing availability
 
 Angular stays **Preview** through all of it. Publication is distribution, not maturity, and the
-catalogue is still 31 of 98 components.
+catalogue is incomplete — `pnpm check:platform-completeness` prints the current count rather than
+restating it here, because the last number written into this sentence went stale the moment a wave
+landed.
 
 ---
 
