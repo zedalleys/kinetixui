@@ -23,7 +23,19 @@ const SelectTrigger = React.forwardRef<
     className={cn(
       "flex min-h-[44px] w-full items-center justify-between rounded-sm border border-input bg-background px-3 py-3",
       "font-sans text-body-md text-foreground",
-      "data-[placeholder]:text-muted-foreground [&>span]:line-clamp-1",
+      // The value wraps rather than being clamped to one line. `line-clamp-1` was invisible while the
+      // type scale was px — the value always fitted — but once text follows the reader's setting a
+      // two-line value is cut off at 200% with no ellipsis (measured: span needs 80px, gets 40px, and
+      // computed `text-overflow` is `clip`, not `ellipsis`), so "Select a fruit" rendered as "Select a".
+      // The trigger is already `min-h`, so letting it grow is what it was built for, and it matches how
+      // Input and Textarea absorb their own text. WCAG 1.4.4 asks for no loss of content at 200%.
+      //
+      // `min-w-0` and `overflow-wrap: anywhere` are what make that safe. A flex child keeps its
+      // min-content width by default, so a value with no break opportunity — an identifier, a URL with
+      // no separators — would simply not shrink: measured at 282px inside a 220px trigger, overflowing
+      // it and pushing the chevron outside. `line-clamp-1` had been hiding that by clipping. Breaking
+      // the token is the behaviour that keeps both the value and the chevron inside the control.
+      "data-[placeholder]:text-muted-foreground [&>span]:min-w-0 [&>span]:[overflow-wrap:anywhere]",
       "outline-none transition-colors",
       "focus:border-action focus:shadow-focus",
       "data-[state=open]:border-action",

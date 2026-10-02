@@ -27,6 +27,7 @@ import {
   androidDimen,
   cssEasing,
   dimensionToPx,
+  dimensionToRem,
   extrasCssFormat,
   hslChannels,
   cssVarName,
@@ -43,6 +44,7 @@ import {
 } from './hooks.mjs';
 
 StyleDictionary.registerTransform(dimensionToPx);
+StyleDictionary.registerTransform(dimensionToRem);
 StyleDictionary.registerTransform(cssVarName);
 StyleDictionary.registerTransform(androidDimen);
 StyleDictionary.registerTransform(hslChannels);
@@ -101,6 +103,7 @@ export function getConfig(theme) {
           'kinetix/css-var-name',
           'kinetix/hsl-channels',
           'kinetix/dimension-px',
+          'kinetix/dimension-rem',
           'kinetix/css-easing',
         ],
         buildPath: `${DIST}/web/`,
@@ -124,7 +127,7 @@ export function getConfig(theme) {
          only (the focus rings are the sole theme-dependent shadows, and
          typography is theme-independent). */
       'css-extras': {
-        transforms: ['attribute/cti', 'kinetix/dimension-px'],
+        transforms: ['attribute/cti', 'kinetix/dimension-px', 'kinetix/dimension-rem'],
         buildPath: `${DIST}/web/`,
         options: { outputReferences: false },
         files: [
@@ -232,7 +235,7 @@ export function getConfig(theme) {
         ? {
             ts: {
               // custom format walks token.path, so only value transforms matter here
-              transforms: ['attribute/cti', 'name/camel', 'color/css', 'kinetix/dimension-px'],
+              transforms: ['attribute/cti', 'name/camel', 'color/css', 'kinetix/dimension-px', 'kinetix/dimension-rem'],
               buildPath: `${DIST}/web/`,
               files: [{ destination: 'tokens.ts', format: 'kinetix/ts-nested' }],
             },

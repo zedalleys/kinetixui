@@ -2632,6 +2632,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published"
       ]
     },
@@ -2688,6 +2689,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -2957,6 +2959,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -3282,6 +3285,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -3615,6 +3619,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -3774,7 +3779,7 @@
       "interaction": 37,
       "accessibility": 98,
       "rtl": 18,
-      "largeText": 18,
+      "largeText": 23,
       "visual": 0,
       "published": 98
     },

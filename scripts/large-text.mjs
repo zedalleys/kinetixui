@@ -139,11 +139,14 @@ const SUBJECTS = [
 ];
 
 /**
- * The form family. Claimed for `largeText`: <Slider>, <InputOTP> and <Label>.
+ * The form family. Claimed for `largeText`: <Slider>, <InputOTP>, <Label>, <Input>, <Textarea>,
+ * <Select>, <MultiSelect> and <Form>.
  *
- * Input, Textarea, Select, MultiSelect and Form are measured too, and named in `TEXT_SCALE_PENDING`
- * rather than in angle brackets, because `gen-verification.mjs` reads the bracketed names out of this
- * passage as the claim — a component whose text cannot grow must not appear in it.
+ * The last five were withheld until the type scale moved to rem. They were measured in full the whole
+ * time and failed on one rule only — their own text did not grow, because `text-body-md` compiled to
+ * `14px`. `TEXT_SCALE_PENDING` held them out of the claim, and it is now empty: the day the scale
+ * became relative this file failed, naming each of them and refusing to pass until they were promoted,
+ * which is the only reason they are claimed here. The counter moved because the pixels did.
  *
  * `control` is the box that must absorb its text, `text` the element that actually renders the
  * user-visible text (a trigger's font-size is inherited and says nothing about the span inside it).
@@ -187,11 +190,15 @@ const FORM_SUBJECTS = [
 ];
 
 /**
- * Form controls whose visible text is pinned by the px type scale described above. Every other rule is
- * asserted against them; they simply do not earn the `largeText` claim while their text cannot grow.
- * The list is checked in both directions, so it shrinks by failing rather than by being remembered.
+ * Form controls whose visible text is pinned by an absolute font size, and so cannot earn the
+ * `largeText` claim however well they behave otherwise. Every other rule is still asserted against
+ * them. The list is checked in BOTH directions — a component here whose text starts scaling fails the
+ * run and must be promoted — so it shrinks by failing rather than by being remembered.
+ *
+ * Empty since the type scale moved to rem. It stays as a mechanism, not a leftover: `check:type-scale`
+ * stops a token regressing, and this stops a component regressing behind a correct token.
  */
-const TEXT_SCALE_PENDING = new Set(["Input", "Textarea", "Select", "MultiSelect", "Form"]);
+const TEXT_SCALE_PENDING = new Set([]);
 
 /** 200% is the resize target WCAG 1.4.4 names, and the size at which a px control is unmistakably wrong. */
 const SCALE = 2;
@@ -567,7 +574,10 @@ console.log(`large-text — ${SUBJECTS.length} selection controls at ${SCALE}x t
 for (const r of rows) console.log(r);
 console.log(`large-text — ${FORM_SUBJECTS.length} form controls at ${SCALE}x the default font size:`);
 for (const r of formRows) console.log(r);
-console.log(`  (* text pinned by the px type scale — measured, not claimed; see TEXT_SCALE_PENDING)`);
+// the legend only earns its line while something is actually starred
+if (TEXT_SCALE_PENDING.size) {
+  console.log(`  (* text pinned by an absolute font size — measured, not claimed; see TEXT_SCALE_PENDING)`);
+}
 console.log(`large-text — the same controls at ${NARROW.width}px wide and ${SCALE}x text:`);
 for (const r of narrowRows) console.log(r);
 console.log(`large-text — ${OPEN_STATES.length} overlays opened and measured at ${SCALE}x text, both widths, both directions:`);
