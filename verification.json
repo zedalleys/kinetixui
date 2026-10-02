@@ -729,13 +729,13 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-211"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-221"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-211"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-221"
         ],
         "reducedMotion": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-211"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-221"
         ]
       },
       "Flutter": {
@@ -749,7 +749,7 @@
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
         ],
         "reducedMotion": [
-          "packages/ui-flutter/test/disclosure_motion_test.dart:5-241"
+          "packages/ui-flutter/test/disclosure_motion_test.dart:5-279"
         ]
       }
     },
@@ -1630,13 +1630,13 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-211"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-221"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-211"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-221"
         ],
         "reducedMotion": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-211"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:59-221"
         ]
       },
       "Flutter": {
@@ -1650,7 +1650,7 @@
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
         ],
         "reducedMotion": [
-          "packages/ui-flutter/test/disclosure_motion_test.dart:5-241"
+          "packages/ui-flutter/test/disclosure_motion_test.dart:5-279"
         ]
       }
     },

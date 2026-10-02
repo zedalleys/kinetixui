@@ -207,7 +207,10 @@ for (const [name, p] of Object.entries(PLATFORMS)) {
     }
   }
 
-  summary.push({ name, animated: animated.length, family: p.family.length, gaps: Object.keys(gaps).length });
+  // The resolver itself references the animation primitives, but it is not a component —
+  // counting it would inflate the inventory the PR reports.
+  const animatedComponents = animated.filter((f) => f !== p.helper);
+  summary.push({ name, animated: animatedComponents.length, family: p.family.length, gaps: Object.keys(gaps).length });
 }
 
 console.log("native motion — animated components, and who answers to the reader's setting\n");

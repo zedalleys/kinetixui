@@ -197,14 +197,24 @@ class DisclosureMotionTest {
         rule.onNodeWithText("answer text").assertDoesNotExist()
     }
 
+    // Two tests rather than one loop: `createComposeRule` accepts `setContent` once per
+    // test, and calling it a second time throws IllegalStateException — which is exactly
+    // how CI failed. The pair still asserts the same thing: the settled state does not
+    // depend on the reader's setting.
+
     @Test
-    fun theEndStateIsTheSameWhicheverWayTheSettingIsSet() {
-        for (scale in listOf(1f, 0f)) {
-            setAnimatorScale(scale)
-            var expanded by mutableStateOf(true)
-            rule.setContent { KinetixCollapsible(expanded = expanded) { Text("settled $scale") } }
-            rule.waitForIdle()
-            rule.onNodeWithText("settled $scale").assertExists()
-        }
+    fun theSettledStateIsCorrectWithAnimationsOn() {
+        setAnimatorScale(1f)
+        rule.setContent { KinetixCollapsible(expanded = true) { Text("settled on") } }
+        rule.waitForIdle()
+        rule.onNodeWithText("settled on").assertExists()
+    }
+
+    @Test
+    fun theSettledStateIsCorrectWithAnimationsOff() {
+        setAnimatorScale(0f)
+        rule.setContent { KinetixCollapsible(expanded = true) { Text("settled off") } }
+        rule.waitForIdle()
+        rule.onNodeWithText("settled off").assertExists()
     }
 }
