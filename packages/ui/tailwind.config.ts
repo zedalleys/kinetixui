@@ -17,23 +17,35 @@ export default {
       fontFamily: { sans: "var(--font-sans)" },
       // Material-3 type scale — `text-body-md`, `text-headline-lg`, … each carries
       // its line-height, tracking and weight. Mirrors tokens/semantic/typography.json.
+      //
+      // Sizes and line-heights are rem so that text follows the reader's browser font-size setting;
+      // the numbers are the canonical scale divided by the 16px root, so every step renders at exactly
+      // its old pixel size at the default setting (14px -> 0.875rem) and grows from there. They are not
+      // hand-maintained against the tokens any more: `check:type-scale` derives this table from
+      // tokens/semantic/typography.json and fails if the two disagree, which is how the px values here
+      // went on silently outliving the ones in globals.css.
+      //
+      // Letter-spacing stays in px deliberately. It is an optical constant of the typeface at a
+      // reference size rather than a size a reader asked to change, the primitive tokens are shared
+      // across steps so there is no one font size to make it relative to, and at 0.1-0.5px it is far
+      // below the threshold where scaling it would be legible.
       fontSize: {
-        "display-lg": ["57px", { lineHeight: "64px", letterSpacing: "-0.25px", fontWeight: "500" }],
-        "display-md": ["45px", { lineHeight: "52px", letterSpacing: "0", fontWeight: "500" }],
-        "display-sm": ["36px", { lineHeight: "44px", letterSpacing: "0", fontWeight: "400" }],
-        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "0", fontWeight: "600" }],
-        "headline-md": ["28px", { lineHeight: "36px", letterSpacing: "0", fontWeight: "400" }],
-        "headline-sm": ["24px", { lineHeight: "32px", letterSpacing: "0", fontWeight: "400" }],
-        "title-lg": ["22px", { lineHeight: "28px", letterSpacing: "0", fontWeight: "400" }],
-        "title-md": ["16px", { lineHeight: "24px", letterSpacing: "0.15px", fontWeight: "500" }],
-        "title-sm": ["14px", { lineHeight: "20px", letterSpacing: "0.1px", fontWeight: "500" }],
-        "title-dialog": ["18px", { lineHeight: "24px", letterSpacing: "0", fontWeight: "600" }],
-        "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.1px", fontWeight: "500" }],
-        "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.5px", fontWeight: "500" }],
-        "label-sm": ["11px", { lineHeight: "16px", letterSpacing: "0.5px", fontWeight: "500" }],
-        "body-lg": ["16px", { lineHeight: "24px", letterSpacing: "0.5px", fontWeight: "400" }],
-        "body-md": ["14px", { lineHeight: "20px", letterSpacing: "0.25px", fontWeight: "400" }],
-        "body-sm": ["12px", { lineHeight: "16px", letterSpacing: "0", fontWeight: "400" }],
+        "display-lg": ["3.5625rem", { lineHeight: "4rem", letterSpacing: "-0.25px", fontWeight: "500" }],
+        "display-md": ["2.8125rem", { lineHeight: "3.25rem", letterSpacing: "0", fontWeight: "500" }],
+        "display-sm": ["2.25rem", { lineHeight: "2.75rem", letterSpacing: "0", fontWeight: "400" }],
+        "headline-lg": ["2rem", { lineHeight: "2.5rem", letterSpacing: "0", fontWeight: "600" }],
+        "headline-md": ["1.75rem", { lineHeight: "2.25rem", letterSpacing: "0", fontWeight: "400" }],
+        "headline-sm": ["1.5rem", { lineHeight: "2rem", letterSpacing: "0", fontWeight: "400" }],
+        "title-lg": ["1.375rem", { lineHeight: "1.75rem", letterSpacing: "0", fontWeight: "400" }],
+        "title-md": ["1rem", { lineHeight: "1.5rem", letterSpacing: "0.15px", fontWeight: "500" }],
+        "title-sm": ["0.875rem", { lineHeight: "1.25rem", letterSpacing: "0.1px", fontWeight: "500" }],
+        "title-dialog": ["1.125rem", { lineHeight: "1.5rem", letterSpacing: "0", fontWeight: "600" }],
+        "label-lg": ["0.875rem", { lineHeight: "1.25rem", letterSpacing: "0.1px", fontWeight: "500" }],
+        "label-md": ["0.75rem", { lineHeight: "1rem", letterSpacing: "0.5px", fontWeight: "500" }],
+        "label-sm": ["0.6875rem", { lineHeight: "1rem", letterSpacing: "0.5px", fontWeight: "500" }],
+        "body-lg": ["1rem", { lineHeight: "1.5rem", letterSpacing: "0.5px", fontWeight: "400" }],
+        "body-md": ["0.875rem", { lineHeight: "1.25rem", letterSpacing: "0.25px", fontWeight: "400" }],
+        "body-sm": ["0.75rem", { lineHeight: "1rem", letterSpacing: "0", fontWeight: "400" }],
       },
       boxShadow: {
         sm: "var(--shadow-sm)",

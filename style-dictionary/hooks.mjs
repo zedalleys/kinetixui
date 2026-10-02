@@ -3,17 +3,51 @@
  * Registered on the StyleDictionary class in sd.config.mjs before build.
  */
 
-/** unitless dimension number -> "Npx" (web). Figma dimension tokens are plain numbers. */
+/**
+ * Type-scale dimensions: the font sizes and line heights under `fontSize.*` / `lineHeight.*`.
+ *
+ * These are the one dimension category that must follow the reader's text-size preference, so they
+ * are emitted in a relative unit on the web while every other dimension (spacing, radius, border,
+ * icon box) stays absolute. Keeping the split here, at the transform, is what lets the canonical
+ * token stay a plain unit-less number and each platform say what scalable means in its own terms.
+ */
+const TYPE_SCALE_ROOTS = new Set(['fontSize', 'lineHeight']);
+export const isTypeScaleDimension = (t) => t.$type === 'dimension' && TYPE_SCALE_ROOTS.has(t.path?.[0]);
+
+/** the CSS root font size a rem is relative to, and the size the scale's numbers were drawn at */
+export const REM_BASE = 16;
+
+/** unitless number -> "Nrem", exact at the default root size (14 -> 0.875rem). */
+export const toRem = (v) => {
+  const n = Number(String(v).replace('px', ''));
+  if (!Number.isFinite(n)) return String(v);
+  if (n === 0) return '0';
+  // 4 decimals covers the whole scale exactly (11/16 = 0.6875); trailing zeros are trimmed.
+  return `${Number((n / REM_BASE).toFixed(4))}rem`;
+};
+
+/** unitless dimension number -> "Npx" (web). Figma dimension tokens are plain numbers.
+ *  Type-scale dimensions are excluded and handled by `kinetix/dimension-rem`; the filters are
+ *  disjoint on purpose, so neither depends on which transform the platform lists first. */
 export const dimensionToPx = {
   name: 'kinetix/dimension-px',
   type: 'value',
   transitive: true,
-  filter: (t) => t.$type === 'dimension',
+  filter: (t) => t.$type === 'dimension' && !isTypeScaleDimension(t),
   transform: (t) => {
     const n = Number(t.$value);
     if (!Number.isFinite(n)) return String(t.$value);
     return n === 0 ? '0' : `${n}px`;
   },
+};
+
+/** unitless font-size / line-height number -> "Nrem" (web), so text follows the reader's setting. */
+export const dimensionToRem = {
+  name: 'kinetix/dimension-rem',
+  type: 'value',
+  transitive: true,
+  filter: isTypeScaleDimension,
+  transform: (t) => toRem(t.$value),
 };
 
 /** unitless dimension number -> "Ndp" for Android resource XML.
@@ -26,6 +60,13 @@ export const androidDimen = {
   transform: (t) => {
     const n = Number(t.$value);
     if (!Number.isFinite(n)) return String(t.$value);
+    // dp for EVERY dimension, type scale included, and that is not the Android spelling of the web's px
+    // problem — it is correct for how these resources are consumed. The Compose code reads them as
+    // `dimensionResource(id).value.sp`. `dimensionResource` returns getDimension()/density, and
+    // getDimension() already multiplies an `sp` resource by the font scale; the trailing `.sp` then
+    // applies it a second time, so a 14sp resource renders at ~56px rather than 28 at a 2x font scale.
+    // With dp the scale is applied exactly once, by the `.sp` at the point of use. Emitting sp here was
+    // tried and reverted — see the note in the changeset.
     return n === 0 ? '0dp' : `${n}dp`;
   },
 };
@@ -105,7 +146,9 @@ function shadowToCss(value) {
 /** DTCG typography object -> CSS `font` shorthand (letterSpacing is applied
  *  separately via the Tailwind `fontSize` preset) */
 function typographyToCss(v) {
-  return `${v.fontWeight ?? 400} ${px(v.fontSize)}/${px(v.lineHeight)} ${v.fontFamily ?? 'sans-serif'}`;
+  // size and line-height in rem so `font: var(--text-body-md)` scales with the reader's text too;
+  // the referenced tokens may already arrive as "0.875rem", which `toRem` passes through unchanged.
+  return `${v.fontWeight ?? 400} ${toRem(v.fontSize)}/${toRem(v.lineHeight)} ${v.fontFamily ?? 'sans-serif'}`;
 }
 
 /**
@@ -138,11 +181,37 @@ export const extrasCssFormat = {
 
 /* ── typography composites → mobile TextStyle emitters ──────────────────── */
 const family1 = (f) => (f ?? 'Montserrat').split(',')[0].replace(/['"]/g, '').trim();
-const num = (v) => Number(String(v).replace('px', '')) || 0;
+/** a token's numeric size, whatever unit it arrives in. Native emitters read the untransformed
+ *  number today, but `|| 0` would have turned a stray "0.875rem" into a silent 0 rather than a
+ *  failure, so rem is converted back rather than discarded. */
+const num = (v) => {
+  const t = String(v).trim();
+  if (t.endsWith('rem')) return (Number(t.slice(0, -3)) || 0) * REM_BASE;
+  return Number(t.replace('px', '')) || 0;
+};
 const typographyTokens = (dictionary) =>
   dictionary.allTokens.filter((t) => t.$type === 'typography').map((t) => ({ name: t.path.at(-1), v: t.$value ?? t.value }));
 
 const SWIFT_WEIGHT = { 400: '.regular', 500: '.medium', 600: '.semibold', 700: '.bold' };
+
+/**
+ * Apple's built-in text styles and their default point sizes at the Large content size.
+ *
+ * `Font.custom(_:size:)` is a fixed size: it ignores Dynamic Type entirely, so a reader who raises
+ * their text size in iOS Settings sees no change — the same defect as a px font-size on the web.
+ * `Font.custom(_:size:relativeTo:)` keeps the design's size at the default setting and scales from
+ * there at the chosen style's rate, which is what Dynamic Type support means for a custom face.
+ *
+ * The style for each token is picked by nearest default size rather than by a hand-written table,
+ * so the choice is derived from the scale and cannot drift as the scale changes.
+ */
+const SWIFT_TEXT_STYLES = [
+  ['.largeTitle', 34], ['.title', 28], ['.title2', 22], ['.title3', 20], ['.headline', 17],
+  ['.body', 17], ['.callout', 16], ['.subheadline', 15], ['.footnote', 13], ['.caption', 12],
+  ['.caption2', 11],
+];
+const nearestTextStyle = (size) =>
+  SWIFT_TEXT_STYLES.reduce((best, s) => (Math.abs(s[1] - size) < Math.abs(best[1] - size) ? s : best))[0];
 
 /** SwiftUI — a KinetixTextStyle struct table (font + lineHeight + tracking) */
 export const typeSwiftFormat = {
@@ -151,7 +220,8 @@ export const typeSwiftFormat = {
     const rows = typographyTokens(dictionary)
       .map(({ name, v }) => {
         const w = SWIFT_WEIGHT[num(v.fontWeight)] ?? '.regular';
-        return `    public static let ${camelize(name)} = KinetixTextStyle(font: .custom("${family1(v.fontFamily)}", size: ${num(v.fontSize)}).weight(${w}), lineHeight: ${num(v.lineHeight)}, tracking: ${num(v.letterSpacing)})`;
+        const size = num(v.fontSize);
+        return `    public static let ${camelize(name)} = KinetixTextStyle(font: .custom("${family1(v.fontFamily)}", size: ${size}, relativeTo: ${nearestTextStyle(size)}).weight(${w}), lineHeight: ${num(v.lineHeight)}, tracking: ${num(v.letterSpacing)})`;
       })
       .join('\n');
     return (

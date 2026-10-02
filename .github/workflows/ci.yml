@@ -80,6 +80,9 @@ jobs:
       - name: Typography alias guardrail
         run: pnpm check:typography
 
+      - name: Type scale stays relative and matches the canonical tokens
+        run: pnpm check:type-scale
+
       - name: Spatial grid guardrail (8-unit grid, 4-unit half-step)
         run: pnpm check:grid
 
