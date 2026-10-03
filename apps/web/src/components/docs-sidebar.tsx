@@ -10,6 +10,7 @@ import { docsNav } from "@/lib/site";
 export function DocsSidebar() {
   const pathname = usePathname();
   const [query, setQuery] = React.useState("");
+  const inputRef = React.useRef<HTMLInputElement>(null);
   const q = query.trim().toLowerCase();
 
   const groups = React.useMemo(() => {
@@ -18,6 +19,7 @@ export function DocsSidebar() {
       .map((g) => ({ ...g, items: g.items.filter((i) => i.title.toLowerCase().includes(q)) }))
       .filter((g) => g.items.length > 0);
   }, [q]);
+  const matches = groups.reduce((n, g) => n + g.items.length, 0);
 
   return (
     <aside className="hidden w-56 shrink-0 lg:block">
@@ -25,6 +27,7 @@ export function DocsSidebar() {
         <div className="relative mb-6 ml-2">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -36,7 +39,11 @@ export function DocsSidebar() {
           {query && (
             <button
               type="button"
-              onClick={() => setQuery("")}
+              // The button removes itself, so focus goes back to the field rather than falling to <body>.
+              onClick={() => {
+                setQuery("");
+                inputRef.current?.focus();
+              }}
               aria-label="Clear filter"
               className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
             >
@@ -45,7 +52,12 @@ export function DocsSidebar() {
           )}
         </div>
 
-        <nav className="min-h-0 flex-1 overflow-y-auto">
+        {/* Sighted readers see the list shrink; this is the same news for a screen reader. */}
+        <p role="status" className="sr-only">
+          {q ? (matches === 1 ? "1 page matches" : `${matches} pages match`) : ""}
+        </p>
+
+        <nav aria-label="Documentation" className="min-h-0 flex-1 overflow-y-auto">
           {groups.length === 0 && (
             <p className="px-3 text-sm text-muted-foreground">No matches.</p>
           )}
@@ -59,6 +71,7 @@ export function DocsSidebar() {
                     <li key={item.href}>
                       <Link
                         href={item.href}
+                        aria-current={active ? "page" : undefined}
                         className={cn(
                           "-ml-px flex items-center border-l-2 px-3 py-1.5 text-sm transition-colors",
                           active

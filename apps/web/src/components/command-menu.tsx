@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import * as Dialog from "@radix-ui/react-dialog";
 import { Command } from "cmdk";
 import { Circle, FileText, Laptop, Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -58,30 +59,30 @@ export function CommandMenu() {
     fn();
   }, []);
 
+  // A Radix modal, as in MobileNav: it traps Tab inside, makes the page behind inert, closes on Esc (which
+  // the footer below promises), names the dialog, and returns focus to the trigger on close. The hand-rolled
+  // overlay it replaces did none of those.
   return (
-    <>
-      <button
-        onClick={() => setOpen(true)}
-        className="inline-flex h-9 w-full items-center gap-2 rounded-md border border-input bg-muted/50 px-3 text-[13px] text-muted-foreground transition-colors hover:bg-muted sm:w-56"
-      >
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger className="inline-flex h-9 w-full items-center gap-2 rounded-md border border-input bg-muted/50 px-3 text-[13px] text-muted-foreground transition-colors hover:bg-muted sm:w-56">
         <Search className="size-4" />
         <span className="flex-1 text-left">Search…</span>
         <span className="pointer-events-none hidden items-center gap-1 sm:flex">
           <Kbd>{mod}</Kbd>
           <Kbd>K</Kbd>
         </span>
-      </button>
+      </Dialog.Trigger>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[20vh]" role="dialog" aria-modal>
-          <button
-            aria-label="Close"
-            className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-          />
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm" />
+        <Dialog.Content
+          aria-describedby={undefined}
+          className="fixed inset-x-4 top-[20vh] z-50 mx-auto max-w-lg focus:outline-none"
+        >
+          <Dialog.Title className="sr-only">Search the docs</Dialog.Title>
           <Command
             label="Command menu"
-            className="relative z-10 w-full max-w-lg overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl"
+            className="w-full overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl"
           >
             <div className="flex items-center gap-2 border-b border-border px-3">
               <Search className="size-4 text-muted-foreground" />
@@ -155,9 +156,9 @@ export function CommandMenu() {
               </span>
             </div>
           </Command>
-        </div>
-      )}
-    </>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
 

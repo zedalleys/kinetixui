@@ -419,6 +419,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* In-page anchor jumps (the skip link, the table of contents) are instant for readers who asked for less motion. */
+  html {
+    scroll-behavior: auto;
+  }
   .kx-underline::after,
   .kx-marquee-track,
   .kx-grid-bg,

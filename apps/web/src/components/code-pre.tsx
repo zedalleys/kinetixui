@@ -44,6 +44,7 @@ export function CodePre({ className, children, ...props }: React.ComponentPropsW
       >
         {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
       </button>
+      <span aria-live="polite" className="sr-only">{copied ? "Copied" : ""}</span>
       <pre
         ref={ref}
         // a code block scrolls sideways when a line is long, so the keyboard must be able to reach it
