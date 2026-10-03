@@ -139,7 +139,10 @@ export function DocsPageActions() {
       type="button"
       onClick={copy}
       className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors",
+        // No `shrink-0`: this is a button with a four-word label, and forbidding it to shrink made it push
+        // /docs/* sideways at the reader's doubled text size. `text-start` so the label reads correctly if it
+        // does wrap rather than being centred over two ragged lines.
+        "inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-start font-mono text-[11px] uppercase tracking-[0.1em] transition-colors",
         copied ? "border-primary/50 text-foreground" : "text-muted-foreground hover:text-foreground",
       )}
       aria-label="Copy this page as Markdown"

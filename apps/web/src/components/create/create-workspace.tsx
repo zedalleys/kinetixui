@@ -185,7 +185,7 @@ export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfi
                 </h2>
               </div>
 
-              <div role="group" aria-label="Preview scene" className="flex gap-1">
+              <div role="group" aria-label="Preview scene" className="flex flex-wrap gap-1">
                 {PREVIEW_SCENES.map((scene) => (
                   <button
                     key={scene}

@@ -568,7 +568,10 @@ export default function HomePage() {
                   Get started <ArrowUpRight className="size-4" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="Outline">
+              {/* `whitespace-normal` at the call site: Button is `whitespace-nowrap` by design, which at the
+                  reader's doubled text size makes this four-word label 317px wide — wider than a small phone.
+                  Overridden here rather than in the published component, where nowrap is the right default. */}
+              <Button asChild size="lg" variant="Outline" className="whitespace-normal">
                 <Link href={siteConfig.repo} {...ctaAttrs("homepage", "read_docs")}>
                   Read the source
                 </Link>

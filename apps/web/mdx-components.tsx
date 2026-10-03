@@ -41,7 +41,7 @@ import {
 function heading(Tag: "h2" | "h3" | "h4", base: string) {
   return function Heading({ id, children, className, ...p }: ComponentPropsWithoutRef<"h2">) {
     return (
-      <Tag id={id} className={cn("group scroll-mt-28 font-display", base, className)} {...p}>
+      <Tag id={id} className={cn("group scroll-mt-28 break-words font-display", base, className)} {...p}>
         {children}
         {id ? (
           <a

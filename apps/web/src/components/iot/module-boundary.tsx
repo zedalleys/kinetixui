@@ -69,7 +69,7 @@ export function ModuleBoundary({ className }: { className?: string }) {
         Where KinetixUI IoT sits, from the application down to the interface. Everything above the boundary is
         yours.
       </figcaption>
-      <ol className="grid gap-2">
+      <ol className="grid gap-2 [&_*]:min-w-0 [&_p]:break-words [&_span]:break-words">
         {LAYERS.map((layer, i) => (
           <li key={layer.title}>
             <div

@@ -202,7 +202,7 @@ export function PlatformSupportTable() {
         const key = (Object.keys(PLATFORM_DEFINITIONS) as Platform[]).find((k) => k.toLowerCase() === p.id);
         const maturity = key ? PLATFORM_DEFINITIONS[key].maturity : undefined;
         return (
-          <li key={p.id} className="rounded-lg border border-border">
+          <li key={p.id} className="min-w-0 rounded-lg border border-border">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border bg-muted/30 px-4 py-3">
               <p className="m-0 text-base font-medium">
                 {p.name}
@@ -217,7 +217,9 @@ export function PlatformSupportTable() {
                 {p.components} of {componentTotal} components
               </span>
             </div>
-            <dl className="m-0 grid gap-x-6 gap-y-4 px-4 py-4 text-sm sm:grid-cols-2">
+            {/* `[&>div]:min-w-0` and `break-words`: these cells are sized by their widest content, which is a
+                package name inside <Code> — one unbreakable token. A bare grid track cannot shrink below it. */}
+            <dl className="m-0 grid gap-x-6 gap-y-4 px-4 py-4 text-sm [&_dd]:break-words [&>div]:min-w-0 sm:grid-cols-2">
               <div>
                 <dt className={field}>Package · distribution</dt>
                 <dd className="m-0 mt-1">
