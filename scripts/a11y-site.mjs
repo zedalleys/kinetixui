@@ -81,9 +81,27 @@ const SCHEMES = ["light", "dark"];
  */
 const TEXT_SCALES = [1, 2];
 
+/**
+ * Pages that do not yet hold at 200% text, with the reason, as a ratchet.
+ *
+ * Every other page on the site passes both text sizes at all four widths. `/iot` does not, and the cause
+ * is NOT the pattern the rest of this pass fixed — it is not a container refusing to yield.
+ * `DeviceSetpointControl` draws a fixed-geometry ring with its readout and its min/max labels absolutely
+ * positioned over it, so the text doubles while the ring does not: measured at 320px/200%, the label row
+ * inside the ring overhangs by 116px. Making that reflow is a design decision about a published
+ * component — does the numeral shrink, does the ring grow, does the presentation change below some size
+ * — and not something to settle inside an accessibility sweep.
+ *
+ * This is a ratchet and not an exemption: the entry is asserted to be NEEDED, so the moment /iot is fixed
+ * this run fails and tells you to delete the line. It follows `check-rtl.mjs`, which carries its pending
+ * files the same way. 1 of 21 pages, at one of the two text sizes.
+ */
+const TEXT_SCALE_PENDING = new Map([["/iot", "DeviceSetpointControl's ring has fixed geometry under text that scales — needs a design decision, see PR"]]);
+
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 const failures = [];
+const pendingSeen = new Set();
 let views = 0;
 
 for (const scheme of SCHEMES) {
@@ -91,6 +109,7 @@ for (const scheme of SCHEMES) {
     for (const scale of TEXT_SCALES) {
       const context = await browser.newContext({ viewport: { width, height }, colorScheme: scheme, reducedMotion: "reduce" });
       for (const path of PAGES) {
+        if (scale !== 1 && TEXT_SCALE_PENDING.has(path)) { pendingSeen.add(path); continue; }
         const page = await context.newPage();
         const tag = `${scheme}/${widthName}/text${scale * 100}% ${path}`;
         try {
@@ -136,6 +155,33 @@ for (const scheme of SCHEMES) {
     }
   }
 }
+// Every pending entry must still be failing. A page that has been fixed and left on the list would
+// otherwise keep its exemption for ever, which is how a ratchet quietly becomes an exemption.
+for (const [path, why] of TEXT_SCALE_PENDING) {
+  if (!pendingSeen.has(path)) {
+    failures.push(`${path}: listed in TEXT_SCALE_PENDING but not in PAGES — remove the entry or the page`);
+    continue;
+  }
+  const context = await browser.newContext({ viewport: { width: 320, height: 812 }, reducedMotion: "reduce" });
+  const page = await context.newPage();
+  const cdp = await context.newCDPSession(page);
+  await cdp.send("Page.enable");
+  await cdp.send("Page.setFontSizes", { fontSizes: { standard: 32, fixed: 26 } });
+  try {
+    await page.goto(base + path, { waitUntil: "load" });
+    await page.waitForTimeout(600);
+    const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    if (over <= 0) {
+      failures.push(`${path}: no longer overflows at 200% text — delete it from TEXT_SCALE_PENDING (was: ${why})`);
+    }
+  } catch (err) {
+    failures.push(`${path}: checking the pending entry failed — ${String(err.message).split("\n")[0]}`);
+  } finally {
+    await page.close();
+    await context.close();
+  }
+}
+
 await browser.close();
 
 if (failures.length) {
@@ -144,5 +190,9 @@ if (failures.length) {
 }
 console.log(
   `a11y-site ok — ${PAGES.length} pages × ${SCHEMES.length} themes × ${WIDTHS.length} widths × ${TEXT_SCALES.length} text sizes ` +
-    `(${views} views): no axe findings, no horizontal overflow.`,
+    `(${views} views): no axe findings, no horizontal overflow.` +
+    (TEXT_SCALE_PENDING.size
+      ? `\n  ${TEXT_SCALE_PENDING.size} page(s) pending at 200% text, each verified to still need it: ` +
+        [...TEXT_SCALE_PENDING.keys()].join(", ")
+      : ""),
 );

@@ -67,6 +67,27 @@
   * {
     border-color: hsl(var(--border));
   }
+  /*
+    Display type has to be allowed to break.
+    A heading is usually a few words and often ONE long word, and `font-display` sizes are the largest
+    on the site — `text-4xl` is 2.25rem, which at the reader's doubled default text size is a 72px glyph
+    height. Measured: "Foundations" as an h1 needed 418px inside a 256px column at 320px/200% text, and
+    "Components" 356px, so each page pushed itself sideways by the difference. The default
+    `overflow-wrap: normal` has no break opportunity inside a word, so no amount of container fixing
+    helps — the word itself must be breakable.
+    Nothing moves at the default text size, where these words already fit. Stated as a base rule rather
+    than a `break-words` class on each of the dozen display headings, so a heading added later inherits
+    it instead of reintroducing the bug.
+  */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .font-display {
+    overflow-wrap: break-word;
+  }
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 6.5rem;

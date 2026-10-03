@@ -38,7 +38,10 @@ export function DepsBar() {
             >
               {r.name}
             </span>
-            <div className="flex items-center gap-2">
+            {/* `min-w-0`: this bar+figure row sits in a `minmax(0,1fr)` track, so the track yields but the
+                row inherited `min-width: auto` and could not, leaving the bar at 8px and the figure
+                overhanging by 28px. */}
+            <div className="flex min-w-0 items-center gap-2">
               <div
                 className={
                   "h-5 rounded-sm " + (r.self ? "bg-primary" : "bg-border")

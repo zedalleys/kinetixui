@@ -783,7 +783,7 @@ import { SensorReading, formatLastSeen } from "${IOT_PACKAGE}";`}
           </p>
         }
       >
-        <Reveal className="mt-10 grid gap-6 md:grid-cols-3">
+        <Reveal className="mt-10 grid gap-6 [&>*]:min-w-0 md:grid-cols-[repeat(3,minmax(0,1fr))]">
           {ROADMAP.map((column) => (
             <div key={column.when} className="rounded-xl border border-border bg-card p-5">
               <div className="flex items-center justify-between gap-3 border-b border-border pb-3">
