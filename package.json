@@ -39,6 +39,7 @@
     "check:a11y-browser": "node scripts/a11y-browser.mjs",
     "check:large-text": "node scripts/large-text.mjs",
     "check:motion": "node scripts/motion.mjs",
+    "check:card-visual": "node scripts/card-visual.mjs",
     "check:native-motion": "node scripts/check-native-motion.mjs",
     "check:a11y-site": "node scripts/a11y-site.mjs --base http://127.0.0.1:3000",
     "check:type-scale": "node scripts/check-type-scale.mjs",

@@ -152,9 +152,12 @@
   display: block;
   background-color: hsl(var(--card));
   color: hsl(var(--card-foreground));
-  border: var(--border-width-default) solid hsl(var(--border));
+  /* The surface model (TOKENS.md): a soft edge at half the strength of the controls' stroke, and the md
+     elevation step for lift — the same resting card React renders. Static only here; the interactive
+     states are React-first, see the Card section of TOKENS.md. */
+  border: var(--border-width-default) solid hsl(var(--border) / 0.5);
   border-radius: var(--radius-container);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
 }
 .kx-card-header { display: flex; flex-direction: column; gap: var(--spacing-1); padding: var(--spacing-6); }
 .kx-card-title { font: var(--text-title-md); font-weight: var(--font-weight-semibold); margin: 0; }

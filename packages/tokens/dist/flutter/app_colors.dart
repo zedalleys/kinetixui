@@ -175,6 +175,7 @@ class KinetixColors {
     static const colorStaticWhite = Color(0xFFFFFFFF);
     static const colorSuccess = Color(0xFF5D6D5C); /** synth: no Figma success token; green ramp step 6 (distinct from secondary) */
     static const colorSuccessForeground = Color(0xFFF1F3F1); /** synth */
+    static const colorSurfaceGrouped = Color(0xFFF6F6F6); /** A grouped section that raised content (Card) sits on. Light: the grey of `muted`. Its own role because dark `muted` is lighter than `card`, which made a card on a group read as recessed. Surface model: TOKENS.md. */
     static const colorTaupe0 = Color(0xFFFFFFFF);
     static const colorTaupe100 = Color(0xFFF6F3F0);
     static const colorTaupe1000 = Color(0xFF3C2E25);

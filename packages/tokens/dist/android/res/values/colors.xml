@@ -135,6 +135,7 @@
   <color name="color_secondary_foreground">#ff465245</color>
   <color name="color_muted">#fff6f6f6</color>
   <color name="color_muted_foreground">#ff6d6d6d</color>
+  <color name="color_surface_grouped">#fff6f6f6</color>
   <color name="color_accent">#fff0f7ff</color>
   <color name="color_accent_foreground">#ff1d4ed8</color>
   <color name="color_destructive">#ffc60a0a</color>

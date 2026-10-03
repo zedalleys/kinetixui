@@ -66,6 +66,9 @@ const TEXT_PAIRS = [
   ["info", "background"], // Alert/Field/Inform: text-info on the page
   ["accent-foreground", "accent"],
   ["card-foreground", "card"],
+  // the grouped section a Card sits on (surface model, TOKENS.md) carries section headings and helper text
+  ["foreground", "surface-grouped"],
+  ["muted-foreground", "surface-grouped"],
   ["popover-foreground", "popover"],
   ["sidebar-foreground", "sidebar"],
   ["sidebar-primary-foreground", "sidebar-primary"],

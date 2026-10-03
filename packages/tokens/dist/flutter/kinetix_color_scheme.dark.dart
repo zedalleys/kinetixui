@@ -19,6 +19,7 @@ class KinetixColorSchemeDark {
   static const secondaryForeground = Color(0xFFE3E7E3);
   static const muted = Color(0xFF102432);
   static const mutedForeground = Color(0xFF92B2C8);
+  static const surfaceGrouped = Color(0xFF081219);
   static const accent = Color(0xFF102432);
   static const accentForeground = Color(0xFFF0F7FF);
   static const destructive = Color(0xFFDD6A6A);

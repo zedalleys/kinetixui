@@ -17,6 +17,7 @@ public enum KinetixColorsSwiftUIDark {
     public static let secondaryForeground = Color(red: 0.89, green: 0.906, blue: 0.89)
     public static let muted = Color(red: 0.063, green: 0.141, blue: 0.196)
     public static let mutedForeground = Color(red: 0.573, green: 0.698, blue: 0.784)
+    public static let surfaceGrouped = Color(red: 0.031, green: 0.071, blue: 0.098)
     public static let accent = Color(red: 0.063, green: 0.141, blue: 0.196)
     public static let accentForeground = Color(red: 0.941, green: 0.969, blue: 1)
     public static let destructive = Color(red: 0.867, green: 0.416, blue: 0.416)

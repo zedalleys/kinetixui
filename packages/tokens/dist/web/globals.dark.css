@@ -17,6 +17,7 @@
   --secondary-foreground: 120 8% 90%;
   --muted: 205 52% 13%;
   --muted-foreground: 204 33% 68%;
+  --surface-grouped: 205 52% 6%; /** Between the page (blue.900) and `card` (blue.800), so a card on a grouped section reads as raised, as it does in light. Not an alias of `muted`: dark `muted` (blue.700) is lighter than `card`. */
   --accent: 205 52% 13%;
   --accent-foreground: 212 100% 97%;
   --destructive: 0 63% 64%;
