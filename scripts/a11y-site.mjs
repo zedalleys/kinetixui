@@ -98,47 +98,10 @@ const TEXT_SCALES = [1, 2];
  */
 const TEXT_SCALE_PENDING = new Map([["/iot", "DeviceSetpointControl's ring has fixed geometry under text that scales — needs a design decision, see PR"]]);
 
-/**
- * One axe rule, tolerated on the pages where a single known component defect produces it.
- *
- * `Table` in `packages/ui` renders `<div class="relative w-full overflow-auto">` around its table with
- * no `tabIndex`, no `role` and no accessible name, so a keyboard user cannot reach a table that
- * scrolls — WCAG 2.1.1. It only becomes visible at 200% text, because that is when these tables start
- * scrolling, which is why this axis found it and four years of the default-size sweep did not.
- *
- * It is NOT fixable from the call site: `Table` passes `className` to the `<table>`, not to the wrapper,
- * so no page can supply the attributes. The fix belongs in that component, with a changeset, and is
- * deliberately out of this slice.
- *
- * Like TEXT_SCALE_PENDING this is asserted rather than trusted: a tolerated (rule, page) pair that stops
- * firing fails the run and says to delete it. The rule stays enforced everywhere else, including on
- * every other page and at the default text size.
- */
-const AXE_PENDING = new Map([
-  [
-    "scrollable-region-focusable",
-    {
-      paths: new Set(["/blocks", "/create"]),
-      why: "packages/ui Table's scroll wrapper has no keyboard access — fix belongs in the component",
-      // The node shape this entry is allowed to excuse, matched in the page against the real element.
-      // Review caught that tolerating by rule id and path alone discards the WHOLE violation: axe groups
-      // every node failing a rule into one violation, so a second, unrelated inaccessible scroll region
-      // on the same page would have been swallowed while the known defect kept the ratchet satisfied.
-      // Matching axe's generated selector text would be brittle (it shortens `.overflow-auto` on one page
-      // and `.overflow-auto.relative.w-full` on another for the same component), so the element itself is
-      // identified instead: Table's wrapper is a div with exactly that class trio whose only element child
-      // is the table.
-      nodeShape: "div.relative.w-full.overflow-auto",
-      nodeChild: "table",
-    },
-  ],
-]);
-
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 const failures = [];
 const pendingSeen = new Set();
-const axeSeen = new Set();
 let views = 0;
 
 for (const scheme of SCHEMES) {
@@ -176,50 +139,20 @@ for (const scheme of SCHEMES) {
             continue;
           }
           await page.addScriptTag({ content: axeSource });
-          const result = await page.evaluate(async (pendingShapes) => {
+          const result = await page.evaluate(async () => {
             const r = await window.axe.run(document, { rules: { region: { enabled: false } } });
             return {
-              violations: r.violations.map((v) => {
-                const expected = pendingShapes.find((p) => p.id === v.id);
-                // Does EVERY failing node have the shape the ratchet is allowed to excuse? One node that
-                // does not is a different defect and must fail the run even while the known one persists.
-                let allKnown = false;
-                let unknown = [];
-                if (expected) {
-                  allKnown = true;
-                  for (const n of v.nodes) {
-                    const el = document.querySelector(n.target.join(" "));
-                    const ok =
-                      !!el &&
-                      el.matches(expected.nodeShape) &&
-                      el.children.length === 1 &&
-                      el.firstElementChild.matches(expected.nodeChild);
-                    if (!ok) { allKnown = false; unknown.push(n.target.join(" ")); }
-                  }
-                }
-                return {
-                  id: v.id,
-                  help: v.help,
-                  nodes: v.nodes.slice(0, 3).map((n) => n.target.join(" ")),
-                  count: v.nodes.length,
-                  allKnown,
-                  unknown: unknown.slice(0, 3),
-                };
-              }),
+              violations: r.violations.map((v) => ({
+                id: v.id,
+                help: v.help,
+                nodes: v.nodes.slice(0, 3).map((n) => n.target.join(" ")),
+                count: v.nodes.length,
+              })),
               overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
             };
-          }, [...AXE_PENDING].map(([id, v]) => ({ id, nodeShape: v.nodeShape, nodeChild: v.nodeChild })));
+          });
           views++;
           for (const v of result.violations) {
-            const entry = AXE_PENDING.get(v.id);
-            if (scale !== 1 && entry?.paths.has(path)) {
-              if (v.allKnown) { axeSeen.add(`${v.id}|${path}`); continue; }
-              failures.push(
-                `${tag}: ${v.id} ×${v.count} — ${v.help}; ${v.unknown.length} node(s) are NOT the tolerated ` +
-                  `${entry.nodeShape} > ${entry.nodeChild} shape (${v.unknown.join(" | ")})`,
-              );
-              continue;
-            }
             failures.push(`${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")})`);
           }
           if (result.overflow > 0) {
@@ -251,14 +184,6 @@ for (const [path, why] of TEXT_SCALE_PENDING) {
   }
 }
 
-for (const [id, { paths, why }] of AXE_PENDING) {
-  for (const path of paths) {
-    if (!axeSeen.has(`${id}|${path}`)) {
-      failures.push(`${path}: ${id} is tolerated here but no longer fires — delete it from AXE_PENDING (was: ${why})`);
-    }
-  }
-}
-
 await browser.close();
 
 if (failures.length) {
@@ -271,9 +196,5 @@ console.log(
     (TEXT_SCALE_PENDING.size
       ? `\n  ${TEXT_SCALE_PENDING.size} page(s) pending at 200% text, each verified to still need it: ` +
         [...TEXT_SCALE_PENDING.keys()].join(", ")
-      : "") +
-    (AXE_PENDING.size
-      ? `\n  tolerated at 200% text, each verified to still fire: ` +
-        [...AXE_PENDING].map(([id, v]) => `${id} on ${[...v.paths].join(" and ")}`).join("; ")
       : ""),
 );

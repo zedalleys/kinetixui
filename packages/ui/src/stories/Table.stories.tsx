@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@kinetixui/ui";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@kinetixui/ui";
 
 const Demo = () => (
     <Table>
@@ -40,3 +40,37 @@ const meta = {
 export default meta;
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const Overflowing: StoryObj<typeof meta> = { render: () => (
+    <div className="w-[22rem] max-w-full">
+      <Table>
+        <TableCaption>Settlement ledger, March</TableCaption>
+        <TableHeader>
+          <TableRow>
+            {["Reference", "Counterparty", "Instrument", "Booked", "Value date", "Currency", "Notional", "Status", "Desk"].map(
+              (h) => (
+                <TableHead key={h} className="whitespace-nowrap">
+                  {h}
+                </TableHead>
+              ),
+            )}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {[
+            ["STL-4471", "Northwind Trading", "FX forward", "02 Mar", "04 Mar", "EUR", "1,250,000", "Settled", "Rates"],
+            ["STL-4472", "Halvorsen Capital", "Interest swap", "03 Mar", "05 Mar", "USD", "4,000,000", "Pending", "Rates"],
+            ["STL-4473", "Keystone Mutual", "Equity basket", "03 Mar", "06 Mar", "GBP", "860,500", "Failed", "Cash"],
+          ].map((row) => (
+            <TableRow key={row[0]}>
+              {row.map((cell) => (
+                <TableCell key={cell} className="whitespace-nowrap">
+                  {cell}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  ) };
