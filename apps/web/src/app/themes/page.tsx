@@ -31,7 +31,7 @@ export default function ThemesPage() {
 
       <Link
         href="/create"
-        className="group mt-8 flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/20 px-4 py-3 transition-colors hover:border-primary/40"
+        className="group mt-8 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-border bg-muted/20 px-4 py-3 transition-colors hover:border-primary/40"
       >
         <span>
           <span className="font-medium">Want your own palette?</span>{" "}

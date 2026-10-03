@@ -18,13 +18,16 @@ const OUTPUTS = ["Web CSS", "tokens.ts", "SwiftUI", "Compose", "Flutter"] as con
 export function PipelineInfographic() {
   return (
     <div className="kx-frame w-full border border-border bg-background/60 p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+      {/* Three stages side by side from `md`, not `sm`: at 640 the row gave each card about 140px while
+          its own label and path needed more, and `flex-1` cannot shrink a card below its min-content.
+          `min-w-0` lets them yield where the row does apply. */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-stretch [&>*]:min-w-0">
         {STAGES.map((s, i) => (
           <React.Fragment key={s.n}>
             <div className="flex-1 rounded-md border border-border/70 bg-background p-3">
               <p className="font-mono text-[10px] text-primary">[{s.n}]</p>
               <p className="mt-1 font-display text-sm font-semibold text-foreground">{s.label}</p>
-              <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{s.sub}</p>
+              <p className="mt-0.5 break-words font-mono text-[10px] text-muted-foreground">{s.sub}</p>
               {i === STAGES.length - 1 && (
                 <div className="mt-2.5 flex flex-wrap gap-1">
                   {OUTPUTS.map((o) => (

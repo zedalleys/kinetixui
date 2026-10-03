@@ -86,7 +86,7 @@ export function IotExampleShowcase({
               <path d="m6 9 6 6 6-6" />
             </svg>
           </summary>
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 pb-1 md:pb-0">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 pb-1 [&_*]:break-words md:pb-0">
             <span className="hidden text-body-sm text-muted-foreground md:inline">Built from</span>
             <ul className="flex flex-wrap gap-x-3 gap-y-1">
               {uses.map((name) => (
@@ -101,7 +101,7 @@ export function IotExampleShowcase({
 
       <Tabs.Root defaultValue="preview" dir={dir} className="flex min-w-0 flex-col gap-4">
         <div className="flex items-center justify-between gap-2">
-          <Tabs.List aria-label={`${title}: preview or code`} className="inline-flex rounded-full bg-muted/70 p-1">
+          <Tabs.List aria-label={`${title}: preview or code`} className="inline-flex max-w-full flex-wrap rounded-full bg-muted/70 p-1">
             {(["preview", "code"] as const).map((value) => (
               <Tabs.Trigger
                 key={value}

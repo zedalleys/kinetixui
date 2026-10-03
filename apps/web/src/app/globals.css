@@ -67,6 +67,55 @@
   * {
     border-color: hsl(var(--border));
   }
+  /*
+    Display type has to be allowed to break.
+    A heading is usually a few words and often ONE long word, and `font-display` sizes are the largest
+    on the site — `text-4xl` is 2.25rem, which at the reader's doubled default text size is a 72px glyph
+    height. Measured: "Foundations" as an h1 needed 418px inside a 256px column at 320px/200% text, and
+    "Components" 356px, so each page pushed itself sideways by the difference. The default
+    `overflow-wrap: normal` has no break opportunity inside a word, so no amount of container fixing
+    helps — the word itself must be breakable.
+    Nothing moves at the default text size, where these words already fit. Stated as a base rule rather
+    than a `break-words` class on each of the dozen display headings, so a heading added later inherits
+    it instead of reintroducing the bug.
+  */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .font-display {
+    overflow-wrap: break-word;
+  }
+  /*
+    Body text, for the same reason. Proven by runtime mutation before being written here: adding this
+    one rule clears /docs, /docs/accessibility and /docs/cli at 320px/200% outright, and takes
+    /docs/changelog from 187px of overflow to 68px. Prose on this site is full of technical
+    identifiers — `components.manifest.json` measured 406px wide inside a 256px column and
+    `npx @kinetixui/cli list` 442px — and each is a single unbreakable run.
+    `pre` and its descendants are put back to `normal`: a code BLOCK must keep its own line structure
+    and scroll inside its keyboard-reachable region, and `overflow-wrap` would otherwise re-wrap code
+    lines even under `white-space: pre`.
+  */
+  body {
+    overflow-wrap: break-word;
+  }
+  pre,
+  pre * {
+    overflow-wrap: normal;
+  }
+  /*
+    Inline code, for the same reason and with the same measurement behind it. Docs prose is full of
+    flags, token names and package paths — `--platform=swiftui`, `bg-action`, `@kinetixui/iot/functions`
+    — and each is one unbreakable run. At 200% text a single such run was wider than the prose column,
+    so /docs/cli overflowed by 118px and /docs/changelog by 187px.
+    `:not(pre) > code` deliberately: a code BLOCK must NOT break, because it is inside a horizontally
+    scrollable, keyboard-reachable region and breaking it would corrupt the code's own line structure.
+  */
+  :not(pre) > code {
+    overflow-wrap: break-word;
+  }
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 6.5rem;

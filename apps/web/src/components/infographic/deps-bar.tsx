@@ -29,7 +29,7 @@ export function DepsBar() {
     <figure className="mt-5">
       <div className="space-y-2.5">
         {ROWS.map((r) => (
-          <div key={r.name} className="grid grid-cols-[7rem_1fr] items-center gap-3 sm:grid-cols-[11rem_1fr]">
+          <div key={r.name} className="grid grid-cols-[minmax(0,40%)_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)]">
             <span
               className={
                 "truncate text-right font-mono text-[11px] " +
@@ -38,7 +38,10 @@ export function DepsBar() {
             >
               {r.name}
             </span>
-            <div className="flex items-center gap-2">
+            {/* `min-w-0`: this bar+figure row sits in a `minmax(0,1fr)` track, so the track yields but the
+                row inherited `min-width: auto` and could not, leaving the bar at 8px and the figure
+                overhanging by 28px. */}
+            <div className="flex min-w-0 items-center gap-2">
               <div
                 className={
                   "h-5 rounded-sm " + (r.self ? "bg-primary" : "bg-border")
@@ -47,7 +50,7 @@ export function DepsBar() {
               />
               <span
                 className={
-                  "shrink-0 font-mono text-[11px] tabular-nums " +
+                  "font-mono text-[11px] tabular-nums " +
                   (r.self ? "font-semibold text-primary" : "text-muted-foreground")
                 }
               >

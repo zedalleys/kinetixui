@@ -8,8 +8,11 @@ import { STATUS } from "@/lib/component-status";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-baseline gap-3 px-3.5 py-2">
-      <dt className="w-20 shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+    <div className="flex flex-wrap items-baseline gap-x-3 px-3.5 py-2">
+      {/* The 5rem label column resolves to 160px at the reader's doubled text size and `shrink-0`
+          forbade it from yielding, so the row could not fit a narrow viewport. Below `sm` the label and
+          its value wrap instead; the aligned column returns where there is room for it. */}
+      <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground sm:w-20 sm:shrink-0">
         {label}
       </dt>
       <dd className="min-w-0 font-mono text-[12px]">{children}</dd>

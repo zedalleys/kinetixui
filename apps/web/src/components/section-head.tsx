@@ -16,7 +16,11 @@ export function SectionHead({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-baseline gap-4 border-t border-border pt-3", className)}>
+    // `flex-wrap`: the label is `rem` and the trailing note is `px`, so at the reader's doubled text size the
+    // label grows, the note does not, and `ml-auto` still asks for whatever is left — which was more than the
+    // viewport had. Wrapping drops the note onto its own line instead. `ml-auto` is kept so it stays
+    // right-aligned whenever the row does fit on one line.
+    <div className={cn("flex flex-wrap items-baseline gap-x-4 gap-y-1 border-t border-border pt-3", className)}>
       <span className="font-mono text-[11px] font-medium text-primary">[{index}]</span>
       <span className="eyebrow">{label}</span>
       {meta ? (

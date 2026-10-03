@@ -149,7 +149,13 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
                 tiles
                   ? "flex flex-col items-center justify-center gap-1.5 py-3 text-center"
                   : variant === "segmented"
-                  ? "flex flex-1 items-center justify-center gap-1.5 text-center"
+                  // `min-w-0` alongside `flex-1`. A flex item's `min-width` defaults to `auto`, which is its
+                  // min-content width, so without this the `truncate` on the label below is inert: the button
+                  // cannot be narrower than its own label, and a segmented group of several modes therefore
+                  // cannot fit a narrow viewport at all. Measured at the reader's doubled text size, the group
+                  // pushed its page 212px sideways at 320px. With `min-w-0` the tracks share the width and the
+                  // label truncates as it was always meant to.
+                  ? "flex min-w-0 flex-1 items-center justify-center gap-1.5 text-center"
                   : "flex flex-col items-start gap-0.5 py-2 text-start",
                 disabled && "cursor-not-allowed opacity-45",
                 // Selected = raised: a lighter surface, a shadow, heavier type and a tick. Four cues, so

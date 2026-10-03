@@ -6,10 +6,19 @@
  *
  * The Storybook pass (a11y-browser.mjs) covers the components; nothing covered the pages built from them, which is
  * how ~60 contrast / naming / heading findings and two phone-width overflows accumulated. This keeps the site at zero:
- * for every page, in light AND dark, at small-phone / phone / tablet / desktop width, it
+ * for every page, in light AND dark, at small-phone / phone / tablet / desktop width, AND at the reader's default
+ * text size and twice it, it
  *
  *   - runs axe-core with every rule on (except `region`, which is a page-structure heuristic), and
  *   - fails on horizontal page overflow (`scrollWidth > clientWidth`).
+ *
+ * THE TEXT-SIZE AXIS, AND WHY IT IS SEPARATE FROM WIDTH. Page zoom shrinks the CSS viewport, so zoom is already
+ * covered by the width list — 1280 at 200% zoom *is* a 640px viewport, and 1280 at 400% is the 320px entry, which is
+ * what WCAG 1.4.10 means by "320 CSS pixels". Raising the reader's font size is a different thing entirely: the
+ * viewport does not change, `rem` grows and `px` does not, so it catches the opposite class of bug — a container
+ * sized for text that is now bigger than it. This gate had widths but no text size, and consequently every page on
+ * the site overflowed sideways at 200% text while the run stayed green. WCAG 1.4.4 is an AA criterion and it was
+ * failing on all 21 pages.
  *
  * There is no baseline: a finding fails the run. To add a page, add it to PAGES and make it clean first.
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium (local runs); CI uses `playwright install chromium`.
@@ -60,49 +69,211 @@ const WIDTHS = [
   ["desktop", 1280, 900],
 ];
 const SCHEMES = ["light", "dark"];
+/**
+ * The reader's default text size, as a multiple of the browser's own default.
+ *
+ * Applied through CDP `Page.setFontSizes`, which is the knob Chrome's "Font size" preference actually turns, rather
+ * than an inline `font-size` on `<html>`. The two were compared on this site before choosing: both give a 32px root,
+ * a 28px nav label and the same 328px overflow, so the faithful one is used and the equivalence is recorded instead
+ * of assumed.
+ *
+ * 2 rather than 1.5 or 3 because 200% is the figure WCAG 1.4.4 names.
+ */
+const TEXT_SCALES = [1, 2];
+
+/**
+ * Pages that do not yet hold at 200% text, with the reason, as a ratchet.
+ *
+ * Every other page on the site passes both text sizes at all four widths. `/iot` does not, and the cause
+ * is NOT the pattern the rest of this pass fixed — it is not a container refusing to yield.
+ * `DeviceSetpointControl` draws a fixed-geometry ring with its readout and its min/max labels absolutely
+ * positioned over it, so the text doubles while the ring does not: measured at 320px/200%, the label row
+ * inside the ring overhangs by 116px. Making that reflow is a design decision about a published
+ * component — does the numeral shrink, does the ring grow, does the presentation change below some size
+ * — and not something to settle inside an accessibility sweep.
+ *
+ * This is a ratchet and not an exemption: the entry is asserted to be NEEDED, so the moment /iot is fixed
+ * this run fails and tells you to delete the line. It follows `check-rtl.mjs`, which carries its pending
+ * files the same way. 1 of 21 pages, at one of the two text sizes.
+ */
+const TEXT_SCALE_PENDING = new Map([["/iot", "DeviceSetpointControl's ring has fixed geometry under text that scales — needs a design decision, see PR"]]);
+
+/**
+ * One axe rule, tolerated on the pages where a single known component defect produces it.
+ *
+ * `Table` in `packages/ui` renders `<div class="relative w-full overflow-auto">` around its table with
+ * no `tabIndex`, no `role` and no accessible name, so a keyboard user cannot reach a table that
+ * scrolls — WCAG 2.1.1. It only becomes visible at 200% text, because that is when these tables start
+ * scrolling, which is why this axis found it and four years of the default-size sweep did not.
+ *
+ * It is NOT fixable from the call site: `Table` passes `className` to the `<table>`, not to the wrapper,
+ * so no page can supply the attributes. The fix belongs in that component, with a changeset, and is
+ * deliberately out of this slice.
+ *
+ * Like TEXT_SCALE_PENDING this is asserted rather than trusted: a tolerated (rule, page) pair that stops
+ * firing fails the run and says to delete it. The rule stays enforced everywhere else, including on
+ * every other page and at the default text size.
+ */
+const AXE_PENDING = new Map([
+  [
+    "scrollable-region-focusable",
+    {
+      paths: new Set(["/blocks", "/create"]),
+      why: "packages/ui Table's scroll wrapper has no keyboard access — fix belongs in the component",
+      // The node shape this entry is allowed to excuse, matched in the page against the real element.
+      // Review caught that tolerating by rule id and path alone discards the WHOLE violation: axe groups
+      // every node failing a rule into one violation, so a second, unrelated inaccessible scroll region
+      // on the same page would have been swallowed while the known defect kept the ratchet satisfied.
+      // Matching axe's generated selector text would be brittle (it shortens `.overflow-auto` on one page
+      // and `.overflow-auto.relative.w-full` on another for the same component), so the element itself is
+      // identified instead: Table's wrapper is a div with exactly that class trio whose only element child
+      // is the table.
+      nodeShape: "div.relative.w-full.overflow-auto",
+      nodeChild: "table",
+    },
+  ],
+]);
 
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 const failures = [];
+const pendingSeen = new Set();
+const axeSeen = new Set();
 let views = 0;
 
 for (const scheme of SCHEMES) {
   for (const [widthName, width, height] of WIDTHS) {
-    const context = await browser.newContext({ viewport: { width, height }, colorScheme: scheme, reducedMotion: "reduce" });
-    for (const path of PAGES) {
-      const page = await context.newPage();
-      const tag = `${scheme}/${widthName} ${path}`;
-      try {
-        const response = await page.goto(base + path, { waitUntil: "load" });
-        if (!response || !response.ok()) {
-          failures.push(`${tag}: HTTP ${response ? response.status() : "no response"}`);
-          continue;
+    for (const scale of TEXT_SCALES) {
+      const context = await browser.newContext({ viewport: { width, height }, colorScheme: scheme, reducedMotion: "reduce" });
+      for (const path of PAGES) {
+        // A pending page is still SWEPT. Review caught that skipping it before navigation also skipped
+        // the root-size assertion, axe and the overflow check at every width and theme, so its known
+        // overflow would have masked a new axe violation, or extra overflow at another width. Only the
+        // overflow finding itself is excused below, and only on a page named in the ratchet.
+        const overflowPending = scale !== 1 && TEXT_SCALE_PENDING.has(path);
+        const page = await context.newPage();
+        const tag = `${scheme}/${widthName}/text${scale * 100}% ${path}`;
+        try {
+          if (scale !== 1) {
+            // Per page, and before navigating: the setting belongs to the renderer, and a page that has already
+            // laid out at the default size would have to be reloaded for it to take effect.
+            const cdp = await context.newCDPSession(page);
+            await cdp.send("Page.enable");
+            await cdp.send("Page.setFontSizes", { fontSizes: { standard: 16 * scale, fixed: 13 * scale } });
+          }
+          const response = await page.goto(base + path, { waitUntil: "load" });
+          if (!response || !response.ok()) {
+            failures.push(`${tag}: HTTP ${response ? response.status() : "no response"}`);
+            continue;
+          }
+          await page.waitForTimeout(600); // hydration + reveal animations settle
+          // The root size is asserted rather than trusted: if `setFontSizes` ever stopped taking effect, every
+          // text200% view would quietly pass by measuring the default size again, which is the exact shape of
+          // false green this axis exists to remove.
+          const rootPx = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+          if (Math.abs(rootPx - 16 * scale) > 0.5) {
+            failures.push(`${tag}: root font-size is ${rootPx}px, expected ${16 * scale}px — the text-size axis is not being applied`);
+            continue;
+          }
+          await page.addScriptTag({ content: axeSource });
+          const result = await page.evaluate(async (pendingShapes) => {
+            const r = await window.axe.run(document, { rules: { region: { enabled: false } } });
+            return {
+              violations: r.violations.map((v) => {
+                const expected = pendingShapes.find((p) => p.id === v.id);
+                // Does EVERY failing node have the shape the ratchet is allowed to excuse? One node that
+                // does not is a different defect and must fail the run even while the known one persists.
+                let allKnown = false;
+                let unknown = [];
+                if (expected) {
+                  allKnown = true;
+                  for (const n of v.nodes) {
+                    const el = document.querySelector(n.target.join(" "));
+                    const ok =
+                      !!el &&
+                      el.matches(expected.nodeShape) &&
+                      el.children.length === 1 &&
+                      el.firstElementChild.matches(expected.nodeChild);
+                    if (!ok) { allKnown = false; unknown.push(n.target.join(" ")); }
+                  }
+                }
+                return {
+                  id: v.id,
+                  help: v.help,
+                  nodes: v.nodes.slice(0, 3).map((n) => n.target.join(" ")),
+                  count: v.nodes.length,
+                  allKnown,
+                  unknown: unknown.slice(0, 3),
+                };
+              }),
+              overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            };
+          }, [...AXE_PENDING].map(([id, v]) => ({ id, nodeShape: v.nodeShape, nodeChild: v.nodeChild })));
+          views++;
+          for (const v of result.violations) {
+            const entry = AXE_PENDING.get(v.id);
+            if (scale !== 1 && entry?.paths.has(path)) {
+              if (v.allKnown) { axeSeen.add(`${v.id}|${path}`); continue; }
+              failures.push(
+                `${tag}: ${v.id} ×${v.count} — ${v.help}; ${v.unknown.length} node(s) are NOT the tolerated ` +
+                  `${entry.nodeShape} > ${entry.nodeChild} shape (${v.unknown.join(" | ")})`,
+              );
+              continue;
+            }
+            failures.push(`${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")})`);
+          }
+          if (result.overflow > 0) {
+            if (overflowPending) pendingSeen.add(path);
+            else failures.push(`${tag}: page scrolls sideways by ${result.overflow}px`);
+          }
+        } catch (err) {
+          failures.push(`${tag}: ${String(err.message).split("\n")[0]}`);
+        } finally {
+          await page.close();
         }
-        await page.waitForTimeout(600); // hydration + reveal animations settle
-        await page.addScriptTag({ content: axeSource });
-        const result = await page.evaluate(async () => {
-          const r = await window.axe.run(document, { rules: { region: { enabled: false } } });
-          return {
-            violations: r.violations.map((v) => ({ id: v.id, help: v.help, nodes: v.nodes.slice(0, 3).map((n) => n.target.join(" ")), count: v.nodes.length })),
-            overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-          };
-        });
-        views++;
-        for (const v of result.violations) failures.push(`${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")})`);
-        if (result.overflow > 0) failures.push(`${tag}: page scrolls sideways by ${result.overflow}px`);
-      } catch (err) {
-        failures.push(`${tag}: ${String(err.message).split("\n")[0]}`);
-      } finally {
-        await page.close();
       }
+      await context.close();
     }
-    await context.close();
   }
 }
+// Every pending entry must still be earned. A page fixed and left on the list would otherwise keep its
+// exemption for ever, which is how a ratchet quietly becomes an exemption.
+//
+// `pendingSeen` is now populated by the sweep itself — the page is visited at every width and theme like
+// any other, and the entry is marked only when real overflow was actually observed. That is strictly
+// stronger than the earlier separate re-check at one width in one theme, and it means a pending page's
+// axe results and its other widths are no longer skipped.
+for (const [path, why] of TEXT_SCALE_PENDING) {
+  if (!PAGES.includes(path)) {
+    failures.push(`${path}: listed in TEXT_SCALE_PENDING but not in PAGES — remove the entry or the page`);
+  } else if (!pendingSeen.has(path)) {
+    failures.push(`${path}: no longer overflows at 200% text in any swept view — delete it from TEXT_SCALE_PENDING (was: ${why})`);
+  }
+}
+
+for (const [id, { paths, why }] of AXE_PENDING) {
+  for (const path of paths) {
+    if (!axeSeen.has(`${id}|${path}`)) {
+      failures.push(`${path}: ${id} is tolerated here but no longer fires — delete it from AXE_PENDING (was: ${why})`);
+    }
+  }
+}
+
 await browser.close();
 
 if (failures.length) {
   console.error(`✗ ${failures.length} finding(s) across ${views} page views:\n` + failures.map((f) => `  ${f}`).join("\n"));
   process.exit(1);
 }
-console.log(`a11y-site ok — ${PAGES.length} pages × ${SCHEMES.length} themes × ${WIDTHS.length} widths (${views} views): no axe findings, no horizontal overflow.`);
+console.log(
+  `a11y-site ok — ${PAGES.length} pages × ${SCHEMES.length} themes × ${WIDTHS.length} widths × ${TEXT_SCALES.length} text sizes ` +
+    `(${views} views): no axe findings, no horizontal overflow.` +
+    (TEXT_SCALE_PENDING.size
+      ? `\n  ${TEXT_SCALE_PENDING.size} page(s) pending at 200% text, each verified to still need it: ` +
+        [...TEXT_SCALE_PENDING.keys()].join(", ")
+      : "") +
+    (AXE_PENDING.size
+      ? `\n  tolerated at 200% text, each verified to still fire: ` +
+        [...AXE_PENDING].map(([id, v]) => `${id} on ${[...v.paths].join(" and ")}`).join("; ")
+      : ""),
+);

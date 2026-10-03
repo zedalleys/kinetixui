@@ -61,11 +61,11 @@ function Level({ level }: { level: VerificationLevel }) {
 function Evidence({ slug, platform }: { slug: string; platform: Platform }) {
   const held = new Set(evidenceFor(slug, platform));
   return (
-    <ul className="mt-2 grid gap-x-6 gap-y-1 sm:grid-cols-2">
+    <ul className="mt-2 grid gap-x-6 gap-y-1 [&>li]:min-w-0 sm:grid-cols-2">
       {EVIDENCE_KINDS.map((kind) => {
         const yes = held.has(kind);
         return (
-          <li key={kind} className="flex items-baseline justify-between gap-3 font-mono text-[11px]">
+          <li key={kind} className="flex flex-wrap items-baseline justify-between gap-x-3 font-mono text-[11px]">
             <span className="text-muted-foreground">{KIND_LABEL[kind]}</span>
             <span className={yes ? "text-foreground" : "text-muted-foreground"}>
               <span aria-hidden>{yes ? "✓" : "—"}</span>
@@ -90,7 +90,17 @@ export function PlatformVerification({ slug }: { slug: string }) {
           const guidance = state && state !== "implementation" ? state : null;
           return (
             <li key={platform} className="flex flex-wrap items-baseline gap-x-2 font-mono text-[12px]">
-              <span className="w-[8.5rem] shrink-0 text-foreground">{def.label}</span>
+              {/*
+                The aligned label column exists only from `sm` up.
+
+                It is a fixed `8.5rem`, which at the reader's doubled text size is 272px — wider than a 320px
+                viewport once the row's gutters are paid for, and the row pushed the page 197px sideways there.
+                Swapping `w` for `min-w` does NOT fix that, which was the first thing tried here and measured:
+                a `min-width` is itself a floor the box cannot shrink below, so the overflow was identical. The
+                column has to not apply at all at that width. Below `sm` the label and its value simply wrap,
+                which the `flex-wrap` on the row already supports.
+              */}
+              <span className="text-foreground sm:w-[8.5rem] sm:shrink-0">{def.label}</span>
               {on.has(platform) ? (
                 <span className="text-muted-foreground">Available</span>
               ) : (

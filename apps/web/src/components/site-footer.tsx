@@ -35,7 +35,16 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-border">
       <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-10 py-14 md:grid-cols-[1.5fr_repeat(3,1fr)]">
+        {/*
+          Four columns from `lg`, not `md`, and `minmax(0,1fr)` rather than `1fr`.
+
+          A bare `1fr` track has `min-width: auto`, so it cannot shrink below its own min-content. At 768 — which
+          is exactly where `md` turned this into four columns — the three link columns got about 133px each while a
+          single word like "Changelog" needs 144px at the reader's doubled text size, so the footer pushed every
+          page sideways by 176px. `minmax(0,1fr)` lets a track yield; moving the breakpoint to `lg` gives the
+          columns room to exist at all before they are asked to. Below `lg` the footer stacks, which reflows.
+        */}
+        <div className="grid gap-10 py-14 lg:grid-cols-[1.5fr_repeat(3,minmax(0,1fr))]">
           <div>
             <div className="flex items-center gap-2.5">
               <span className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground">

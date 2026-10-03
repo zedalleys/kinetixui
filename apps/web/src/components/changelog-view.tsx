@@ -91,7 +91,7 @@ function ComponentGroups({ groups }: { groups: NonNullable<ViewRelease["groups"]
       {groups.map((g) => (
         <div key={g.group}>
           <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{g.group}</p>
-          <ul className="mt-1.5 flex flex-wrap gap-2">
+          <ul className="mt-1.5 flex flex-wrap gap-2 [&>li]:min-w-0 [&>li]:flex-wrap [&>li]:break-words">
             {g.items.map((c) => (
               <li key={c.slug} className="flex items-center gap-2 rounded-md border border-border px-2.5 py-1 text-sm">
                 {c.href ? (

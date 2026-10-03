@@ -409,7 +409,7 @@ export default function HomePage() {
             {FEATURES.map((f, i) => (
               <div
                 key={f.title}
-                className="group grid gap-4 border-b border-border py-8 md:grid-cols-[5rem_1fr_1.4fr] md:gap-8 md:py-10"
+                className="group grid grid-cols-[minmax(0,1fr)] gap-4 border-b border-border py-8 md:grid-cols-[minmax(0,5rem)_1fr_1.4fr] md:gap-8 md:py-10"
               >
                 {/* decorative sequence marker (a 40% tint): generated content, not text — WCAG exempts decoration, and it
                     stays out of the accessibility tree; the heading beside it carries the meaning */}
@@ -418,11 +418,13 @@ export default function HomePage() {
                   data-n={String(i + 1).padStart(2, "0")}
                   className="font-display text-4xl font-bold leading-none text-muted-foreground/40 transition-colors before:content-[attr(data-n)] group-hover:text-primary md:text-5xl"
                 />
-                <div className="flex items-start gap-3">
+                <div className="flex min-w-0 items-start gap-3">
                   <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                     <f.icon className="size-5" />
                   </span>
-                  <h3 className="mt-1 font-display text-lg font-semibold">{f.title}</h3>
+                  {/* `min-w-0`: a flex item's `min-width` defaults to `auto`, i.e. its min-content
+                      width, so at doubled text this heading's longest word floored the row. */}
+                  <h3 className="mt-1 min-w-0 font-display text-lg font-semibold">{f.title}</h3>
                 </div>
                 <p className="text-sm leading-relaxed text-muted-foreground md:text-base">{f.body}</p>
               </div>
@@ -481,7 +483,10 @@ export default function HomePage() {
             </p>
           </Reveal>
 
-          <Reveal className="mt-12 grid gap-6 md:grid-cols-3">
+          {/* `[&>*]:min-w-0`: these cards are grid items, and a grid track with `min-width: auto` cannot
+              shrink below its content's min-content width. Proven by greedy mutation — this is the
+              element that takes the homepage from 26px of overflow to 0 at 320px/200% text. */}
+          <Reveal className="mt-12 grid gap-6 [&>*]:min-w-0 md:grid-cols-3">
             <div className="kx-frame flex flex-col border border-border p-6">
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                 Level 01 — tokens
@@ -562,13 +567,19 @@ export default function HomePage() {
               contract, a native implementation per platform, with documented exceptions where a
               platform-native pattern serves better than a forced port. MIT licensed, all of it.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button asChild size="lg">
+            {/* `[&>*]:max-w-full` on the row: Button is `whitespace-nowrap` by design, so at the reader's
+                doubled text size each label is wider than a 320px content column and the row could not wrap
+                its way out of it. Capping each child at the row's width is what lets the label itself wrap. */}
+            <div className="mt-8 flex flex-wrap items-center gap-3 [&>*]:max-w-full">
+              <Button asChild size="lg" className="whitespace-normal">
                 <Link href="/docs" {...ctaAttrs("homepage", "get_started")}>
                   Get started <ArrowUpRight className="size-4" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="Outline">
+              {/* `whitespace-normal` at the call site: Button is `whitespace-nowrap` by design, which at the
+                  reader's doubled text size makes this four-word label 317px wide — wider than a small phone.
+                  Overridden here rather than in the published component, where nowrap is the right default. */}
+              <Button asChild size="lg" variant="Outline" className="whitespace-normal">
                 <Link href={siteConfig.repo} {...ctaAttrs("homepage", "read_docs")}>
                   Read the source
                 </Link>
