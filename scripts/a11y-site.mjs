@@ -98,6 +98,49 @@ const TEXT_SCALES = [1, 2];
  */
 const TEXT_SCALE_PENDING = new Map([["/iot", "DeviceSetpointControl's ring has fixed geometry under text that scales — needs a design decision, see PR"]]);
 
+/**
+ * Per-page layout contracts: regions that must still be usable, not merely free of sideways scroll.
+ *
+ * #278 taught that a page can pass the overflow check and still be unusable, and /create proved it.
+ * At 1280px/200% text its two-column grid resolved to `[832px 256px]`, and inside that 254px pane the
+ * preview scene still laid itself out as a desktop app: its cards rendered **2px** wide around 299px
+ * of content, and the Table wrapper 0px. `document.scrollWidth === clientWidth` throughout — the page
+ * did not overflow, because the content was being crushed instead of pushed. An overflow check cannot
+ * see that, by construction: crushing is the opposite failure.
+ *
+ * The assertion is deliberately NOT a pixel minimum for cards in general. Different pages give a card
+ * different room for good reasons, and a universal floor would be a number invented here rather than a
+ * property of the page. What it asserts instead is a relationship the element states about itself:
+ *
+ *     a box that cannot scroll must show at least half of its own content.
+ *
+ * A Card is a content box, not a scroll container — nothing about it offers the reader a way to reach
+ * what it does not show, so content past its edge is content that does not exist for them. A scroll
+ * container is exempt by the same logic and is not matched here: `Table`'s wrapper is allowed to be
+ * narrower than its table, which is the whole point of the contract #279 established for it.
+ *
+ * Measured separation is wide, so the threshold is not doing delicate work: the collapse produced
+ * ratios of 0.00 (1280px and 1440px) and 0.26 (768px), while the same cards after the fix measure
+ * 0.79–1.00, as do all eight 100%-text views.
+ */
+const LAYOUT_CONTRACTS = new Map([
+  [
+    "/create",
+    {
+      // `.bg-card` is the Card component's own surface token, so this follows the component rather
+      // than a layout class someone might restyle. Selection is by class; the ASSERTION below is
+      // rendered geometry.
+      selector: "section[aria-labelledby='create-preview-heading'] .bg-card",
+      // The preview scene always draws several cards. Requiring a minimum match count is what stops
+      // this silently passing if the markup is reshaped and the selector stops matching — a guard
+      // that measures nothing would otherwise look exactly like a guard that found nothing wrong.
+      minMatches: 3,
+      minContentRatio: 0.5,
+      what: "a card in the Create preview must show at least half of its own content",
+    },
+  ],
+]);
+
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 const failures = [];
@@ -139,7 +182,7 @@ for (const scheme of SCHEMES) {
             continue;
           }
           await page.addScriptTag({ content: axeSource });
-          const result = await page.evaluate(async () => {
+          const result = await page.evaluate(async (contract) => {
             const r = await window.axe.run(document, { rules: { region: { enabled: false } } });
             return {
               violations: r.violations.map((v) => ({
@@ -149,11 +192,41 @@ for (const scheme of SCHEMES) {
                 count: v.nodes.length,
               })),
               overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+              layout: contract
+                ? (() => {
+                    const nodes = [...document.querySelectorAll(contract.selector)];
+                    const crushed = nodes
+                      .map((el) => ({
+                        client: el.clientWidth,
+                        content: el.scrollWidth,
+                        ratio: el.scrollWidth > 0 ? el.clientWidth / el.scrollWidth : 1,
+                        text: (el.textContent || "").trim().slice(0, 40),
+                      }))
+                      .filter((m) => m.content > 0 && m.ratio < contract.minContentRatio);
+                    return { matched: nodes.length, crushed: crushed.slice(0, 3), crushedCount: crushed.length };
+                  })()
+                : null,
             };
-          });
+          }, LAYOUT_CONTRACTS.get(path) ?? null);
           views++;
           for (const v of result.violations) {
             failures.push(`${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")})`);
+          }
+          const contract = LAYOUT_CONTRACTS.get(path);
+          if (contract && result.layout) {
+            if (result.layout.matched < contract.minMatches) {
+              failures.push(
+                `${tag}: layout contract matched only ${result.layout.matched} element(s) for \`${contract.selector}\`, ` +
+                  `expected at least ${contract.minMatches} — the guard is measuring nothing, which is not the same as passing`,
+              );
+            } else if (result.layout.crushedCount > 0) {
+              failures.push(
+                `${tag}: ${result.layout.crushedCount} of ${result.layout.matched} crushed — ${contract.what}; ` +
+                  result.layout.crushed
+                    .map((c) => `${c.client}px shown of ${c.content}px (${c.ratio.toFixed(2)}) "${c.text}"`)
+                    .join(" | "),
+              );
+            }
           }
           if (result.overflow > 0) {
             if (overflowPending) pendingSeen.add(path);
@@ -192,7 +265,7 @@ if (failures.length) {
 }
 console.log(
   `a11y-site ok — ${PAGES.length} pages × ${SCHEMES.length} themes × ${WIDTHS.length} widths × ${TEXT_SCALES.length} text sizes ` +
-    `(${views} views): no axe findings, no horizontal overflow.` +
+    `(${views} views): no axe findings, no horizontal overflow, ${LAYOUT_CONTRACTS.size} layout contract(s) held.` +
     (TEXT_SCALE_PENDING.size
       ? `\n  ${TEXT_SCALE_PENDING.size} page(s) pending at 200% text, each verified to still need it: ` +
         [...TEXT_SCALE_PENDING.keys()].join(", ")
