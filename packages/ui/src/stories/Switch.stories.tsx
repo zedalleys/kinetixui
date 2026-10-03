@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx · controls: scripts/gen-stories.mjs CONTROLS */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Label, Switch } from "@kinetixui/ui";
+import { Card, CardContent, Label, Switch } from "@kinetixui/ui";
 
 const Demo = () => (
     <div className="flex items-center gap-2">
@@ -27,3 +27,21 @@ export default meta;
 export const Playground: StoryObj<typeof meta> = { render: (args) => <Switch aria-label="Airplane mode" {...args} /> };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const States: StoryObj<typeof meta> = { render: () => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-4 p-6">
+        {([
+          ["off", "Push notifications", {}],
+          ["on", "Weekly digest", { defaultChecked: true }],
+          ["disabled", "SMS alerts (add a phone first)", { disabled: true }],
+          ["disabled-on", "Security emails (required)", { disabled: true, defaultChecked: true }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="flex items-center justify-between gap-4">
+            <Label htmlFor={`sw-${key}`}>{label}</Label>
+            <Switch id={`sw-${key}`} data-kx-case={key} {...props} />
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  ) };

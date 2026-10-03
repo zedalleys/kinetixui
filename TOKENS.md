@@ -99,6 +99,49 @@ lands on the same end state.
 | Angular | Resting surface only (`.kx-card`); interactive states not implemented |
 | SwiftUI, Compose, Flutter | Not changed in this slice — still `border` at full strength and `sm` elevation; `surface-grouped` is emitted to each port's colour constants but not yet in the themeable colour sets |
 
+### Selection controls
+
+Checkbox, RadioGroup, Switch and SegmentedControl share one state contract. It adds no token: every value
+below is an existing role, and the one new relationship — the state layer — is `foreground` at a fixed
+alpha, so it inverts with the theme on its own.
+
+Shared contract (every platform):
+
+| State | Trigger | Change | Not carried by colour alone |
+|---|---|---|---|
+| Rest | — | Unchecked checkbox / radio edge is `muted-foreground` (5.1:1 light, 8.1:1 dark on a card), not `input` (2.2:1). The box is the only thing that says the control is there, so it must clear SC 1.4.11's 3:1. The Switch's off track stays `tertiary` (a tracked exception in `check-contrast.mjs`): its thumb carries it | — |
+| Hover | a pointer that can hover | A **state layer**: `foreground` at 8% in a 5px halo around a checkbox, radio or switch, or filling an unchosen segment; an unchecked edge darkens to `foreground`; a checked fill steps to `action`/90 | a shape appears around the control |
+| Pressed | `:active` | The layer deepens to 14% (checked checkbox fill `action`/85) | layer depth |
+| Checked | `data-state` / `aria-checked` / `:checked` | `action` fill **and** a glyph (checkbox), a dot or ring (radio), the thumb's side (switch); a chosen segment is a small raised surface — `card`, the Card's half-strength `border` edge and `sm` depth — on a `surface-grouped` well | glyph / dot / position / surface + edge + depth |
+| Invalid | `aria-invalid="true"` | `destructive` edge (and fill when checked); hover does not replace it | the field's error text (SC 1.4.1) |
+| Focus | keyboard | The ring (`ring`, 2px, offset), declared so no hover or pressed layer can cover it | ring |
+| Disabled | `disabled` | `opacity-disabled`; hover and pressed are keyed on `:enabled`, so it never answers | inert |
+
+Why a halo and not a fill: an 18px box has no room inside it for a hover fill that is distinguishable from
+checked, and a darker edge alone is hard to see on a checked box. The halo is the same on every value, so
+hover means "this is the target" whether the control is on or off.
+
+Why the segment changed surface: the track was `muted` with a `background` segment. In dark mode
+`background` is the darkest surface, so the chosen segment sat *below* its track and read as a hole
+(measured: segment L 0.0031 vs track L 0.0160). It now follows the surface model — the track is an inset
+well (`surface-grouped`, below a Card in both themes) and the chosen segment is raised content on it.
+
+Motion:
+
+| Control | Trigger | Property | Purpose | Duration | Easing | Reduced motion |
+|---|---|---|---|---|---|---|
+| Checkbox, Radio, Switch | hover, press | `box-shadow` (layer), `border-color`, `background-color` | affordance: this is the target, and it registered the press | `duration-instant` (100ms) | `ease-standard` | collapses (the library floor in React, `transition: none` in Angular); same end state |
+| Switch thumb | on/off | `transform` / `translate` (unchanged) | state transition: where the value went | `duration-instant` | `ease-standard` | collapses; thumb lands on the same side |
+| Segment | hover, press, choose | `background-color`, `color`, `box-shadow` | selection | `duration-fast` (200ms) | `ease-standard` | collapses |
+
+Nothing scales, slides or bounces; the checked glyph does not animate.
+
+| Platform | Status |
+|---|---|
+| React | Implemented and verified on rendered pixels (`check:selection-visual`, light + dark) |
+| Angular | Implemented in `styles.css` for checkbox, radio, switch and segmented control, and verified on rendered pixels by the same gate (Angular renders the DOM, Chromium paints it). Not implemented: an invalid state — Angular's checkbox and radio have no invalid input, and adding one is API work for a later wave. The checkbox edge is 1px where React's is 2px |
+| SwiftUI, Compose, Flutter | Not changed. The shared contract is semantic (3:1 edge, a hover/press layer where the platform has hover, checked as a shape, focus on top); each port should express it with its own state-layer and focus APIs — Compose's `indication`/ripple and Material state layers, SwiftUI's `ButtonStyle` pressed state and focus effect, Flutter's `MaterialStateProperty`/`WidgetStateProperty`. Parity is not claimed |
+
 ## Role tokens (added on top of `primary`)
 
 `brand`, `action` (+ `action-foreground`), `link` and `focus` are **repo-owned** — none exist in Figma. `action`,

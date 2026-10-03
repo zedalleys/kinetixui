@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx · controls: scripts/gen-stories.mjs CONTROLS */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Label, RadioGroup, RadioGroupItem } from "@kinetixui/ui";
+import { Card, CardContent, Label, RadioGroup, RadioGroupItem } from "@kinetixui/ui";
 
 const Demo = () => (
     <RadioGroup defaultValue="comfortable">
@@ -43,3 +43,35 @@ export const Playground: StoryObj<typeof meta> = { render: (args) => (
   ) };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const States: StoryObj<typeof meta> = { render: () => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-6 p-6">
+        <RadioGroup defaultValue="weekly" aria-label="Digest frequency">
+          {([["daily", "Daily"], ["weekly", "Weekly"], ["never", "Never"]] as const).map(([v, label]) => (
+            <div key={v} className="flex items-center gap-3">
+              <RadioGroupItem value={v} id={`rg-${v}`} data-kx-case={v === "weekly" ? "checked" : v === "daily" ? "unchecked" : undefined} />
+              <Label htmlFor={`rg-${v}`}>{label}</Label>
+            </div>
+          ))}
+        </RadioGroup>
+        <RadioGroup aria-label="Billing plan" aria-describedby="rg-plan-error">
+          {([["starter", "Starter"], ["team", "Team"]] as const).map(([v, label]) => (
+            <div key={v} className="flex items-center gap-3">
+              <RadioGroupItem value={v} id={`rg-${v}`} aria-invalid data-kx-case={v === "starter" ? "invalid" : undefined} />
+              <Label htmlFor={`rg-${v}`}>{label}</Label>
+            </div>
+          ))}
+          <p id="rg-plan-error" className="text-body-sm text-destructive">Choose a plan to continue.</p>
+        </RadioGroup>
+        <RadioGroup defaultValue="eu" disabled aria-label="Data region (locked)">
+          {([["eu", "EU"], ["us", "US"]] as const).map(([v, label]) => (
+            <div key={v} className="flex items-center gap-3">
+              <RadioGroupItem value={v} id={`rg-${v}`} data-kx-case={v === "us" ? "disabled" : "disabled-checked"} />
+              <Label htmlFor={`rg-${v}`}>{label}</Label>
+            </div>
+          ))}
+        </RadioGroup>
+      </CardContent>
+    </Card>
+  ) };

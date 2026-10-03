@@ -197,6 +197,15 @@
 .kx-input[aria-invalid='true']:focus-visible { box-shadow: var(--shadow-focus-destructive); }
 
 /* ── checkbox / switch ──────────────────────────────────────────────────── */
+/* Selection-control state contract (TOKENS.md, "Selection controls"), shared with React:
+     rest      the unchecked box's edge is `--muted-foreground` — it is the only thing that says a checkbox is
+               there, so it clears SC 1.4.11's 3:1, which `--input` (2.2:1) does not
+     hover     a pointer that can hover: a `--foreground` state layer at 8% around the control; an unchecked
+               box's edge darkens to `--foreground`, a checked fill steps to `--primary` at 90%
+     pressed   the state layer deepens to 14%
+     focus     the shared focus shadow, declared after hover and pressed at the same specificity so neither
+               can cover it
+     disabled  the hover and pressed layers are keyed on `:enabled`, so a disabled control never answers */
 .kx-checkbox {
   display: inline-grid;
   place-items: center;
@@ -206,14 +215,23 @@
   padding: 0;
   background-color: hsl(var(--background));
   color: hsl(var(--primary-foreground));
-  border: var(--border-width-default) solid hsl(var(--input));
+  border: var(--border-width-default) solid hsl(var(--muted-foreground));
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background-color var(--duration-fast) var(--easing-standard), border-color var(--duration-fast) var(--easing-standard);
+  transition:
+    background-color var(--duration-instant) var(--easing-standard),
+    border-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard);
 }
-.kx-checkbox:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .kx-checkbox[aria-checked='true'],
 .kx-checkbox[aria-checked='mixed'] { background-color: hsl(var(--primary)); border-color: hsl(var(--primary)); }
+@media (hover: hover) {
+  .kx-checkbox:enabled:hover { box-shadow: 0 0 0 5px hsl(var(--foreground) / 0.08); }
+  .kx-checkbox:enabled:hover:not([aria-checked='true'], [aria-checked='mixed']) { border-color: hsl(var(--foreground)); }
+  .kx-checkbox:enabled:hover:is([aria-checked='true'], [aria-checked='mixed']) { background-color: hsl(var(--primary) / 0.9); }
+}
+.kx-checkbox:enabled:active { box-shadow: 0 0 0 5px hsl(var(--foreground) / 0.14); }
+.kx-checkbox:enabled:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .kx-checkbox:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
 .kx-checkbox > svg { inline-size: 14px; block-size: 14px; pointer-events: none; }
 
@@ -228,10 +246,17 @@
   border: var(--border-width-default) solid transparent;
   border-radius: var(--radius-full);
   cursor: pointer;
-  transition: background-color var(--duration-base) var(--easing-standard);
+  transition:
+    background-color var(--duration-base) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard);
 }
-.kx-switch:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .kx-switch[aria-checked='true'] { background-color: hsl(var(--primary)); }
+@media (hover: hover) {
+  .kx-switch:enabled:hover { box-shadow: 0 0 0 5px hsl(var(--foreground) / 0.08); }
+  .kx-switch:enabled:hover[aria-checked='true'] { background-color: hsl(var(--primary) / 0.9); }
+}
+.kx-switch:enabled:active { box-shadow: 0 0 0 5px hsl(var(--foreground) / 0.14); }
+.kx-switch:enabled:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .kx-switch:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
 .kx-switch__thumb {
   inline-size: 18px;
@@ -556,19 +581,28 @@
   inline-size: var(--spacing-5);
   block-size: var(--spacing-5);
   flex-shrink: 0;
-  border: var(--border-width-default) solid hsl(var(--input));
+  border: var(--border-width-default) solid hsl(var(--muted-foreground));
   border-radius: var(--radius-full);
   background-color: hsl(var(--background));
   cursor: pointer;
-  transition: border-color var(--duration-fast) var(--easing-standard), box-shadow var(--duration-fast) var(--easing-standard);
+  /* the selection-control contract (see checkbox): a 3:1 edge, an 8% / 14% state layer, focus on top */
+  --kx-radio-dot: 0 0 #0000;
+  --kx-radio-layer: 0 0 #0000;
+  box-shadow: var(--kx-radio-dot), var(--kx-radio-layer);
+  transition: border-color var(--duration-instant) var(--easing-standard), box-shadow var(--duration-instant) var(--easing-standard);
 }
-/* the dot is an inset ring rather than a pseudo-element, so it scales with the control */
+/* the dot is an inset ring rather than a pseudo-element, so it scales with the control — and it is its own
+   custom property so the hover and pressed layers add to it instead of replacing it */
 .kx-radio__input:checked {
   border-color: hsl(var(--primary));
-  box-shadow: inset 0 0 0 4px hsl(var(--primary));
+  --kx-radio-dot: inset 0 0 0 4px hsl(var(--primary));
 }
-.kx-radio__input:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
-.kx-radio__input:checked:focus-visible { box-shadow: inset 0 0 0 4px hsl(var(--primary)), var(--shadow-focus); }
+@media (hover: hover) {
+  .kx-radio__input:enabled:hover { --kx-radio-layer: 0 0 0 5px hsl(var(--foreground) / 0.08); }
+  .kx-radio__input:enabled:hover:not(:checked) { border-color: hsl(var(--foreground)); }
+}
+.kx-radio__input:enabled:active { --kx-radio-layer: 0 0 0 5px hsl(var(--foreground) / 0.14); }
+.kx-radio__input:enabled:focus-visible { outline: none; --kx-radio-layer: var(--shadow-focus); }
 .kx-radio__input:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
 .kx-radio__label { font: var(--text-body-md); font-family: var(--font-family-sans); color: hsl(var(--foreground)); cursor: pointer; }
 .kx-radio__input:disabled + .kx-radio__label { opacity: var(--opacity-disabled); cursor: not-allowed; }
@@ -745,7 +779,8 @@
   align-items: stretch;
   padding: var(--spacing-1);
   border-radius: var(--radius-md);
-  background-color: hsl(var(--muted));
+  /* an inset well; the chosen segment is a small raised surface on it (TOKENS.md, "Surface model") */
+  background-color: hsl(var(--surface-grouped));
 }
 .kx-segmented__item { display: inline-flex; }
 .kx-segmented__radio { position: absolute; opacity: 0; pointer-events: none; }
@@ -760,12 +795,27 @@
   font-weight: var(--font-weight-medium);
   color: hsl(var(--muted-foreground));
   cursor: pointer;
-  transition: background-color var(--duration-fast) var(--easing-standard), color var(--duration-fast) var(--easing-standard);
+  transition:
+    background-color var(--duration-fast) var(--easing-standard),
+    color var(--duration-fast) var(--easing-standard),
+    box-shadow var(--duration-fast) var(--easing-standard);
 }
+/* chosen: surface + half-strength edge + depth + text — the Card's raised contract at control scale, so it
+   sits ABOVE its track in both themes (a `--background` segment sank below a dark `--muted` track) */
 .kx-segmented__radio:checked + .kx-segmented__label {
-  background-color: hsl(var(--background));
+  background-color: hsl(var(--card));
   color: hsl(var(--foreground));
-  box-shadow: var(--shadow-sm);
+  box-shadow: inset 0 0 0 1px hsl(var(--border) / 0.5), var(--shadow-sm);
+}
+@media (hover: hover) {
+  .kx-segmented__radio:enabled:not(:checked) + .kx-segmented__label:hover {
+    background-color: hsl(var(--foreground) / 0.08);
+    color: hsl(var(--foreground));
+  }
+}
+.kx-segmented__radio:enabled:not(:checked) + .kx-segmented__label:active {
+  background-color: hsl(var(--foreground) / 0.14);
+  color: hsl(var(--foreground));
 }
 .kx-segmented__radio:focus-visible + .kx-segmented__label { box-shadow: var(--shadow-focus); }
 .kx-segmented__radio:disabled + .kx-segmented__label { opacity: var(--opacity-disabled); cursor: not-allowed; }
@@ -781,6 +831,9 @@
   .kx-textarea,
   .kx-native-select,
   .kx-radio__input,
+  .kx-checkbox,
+  .kx-switch,
+  .kx-switch__thumb,
   .kx-tag__remove { transition: none; }
 }
 
