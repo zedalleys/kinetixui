@@ -1,7 +1,8 @@
 ---
 type: linkedin assets
 month: first 30 days
-status: finished copy — LI-003 published 2026-09-29; the rest is neither scheduled nor published
+status: finished copy. Which of these has published is recorded per asset in register.json and
+  ../distribution/register.json, never restated here
 ---
 
 # LinkedIn — finished posts
