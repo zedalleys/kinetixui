@@ -115,9 +115,24 @@ const TEXT_SCALE_PENDING = new Map([["/iot", "DeviceSetpointControl's ring has f
  * every other page and at the default text size.
  */
 const AXE_PENDING = new Map([
-  ["scrollable-region-focusable", { paths: new Set(["/blocks", "/create"]), why: "packages/ui Table's scroll wrapper has no keyboard access — fix belongs in the component" }],
+  [
+    "scrollable-region-focusable",
+    {
+      paths: new Set(["/blocks", "/create"]),
+      why: "packages/ui Table's scroll wrapper has no keyboard access — fix belongs in the component",
+      // The node shape this entry is allowed to excuse, matched in the page against the real element.
+      // Review caught that tolerating by rule id and path alone discards the WHOLE violation: axe groups
+      // every node failing a rule into one violation, so a second, unrelated inaccessible scroll region
+      // on the same page would have been swallowed while the known defect kept the ratchet satisfied.
+      // Matching axe's generated selector text would be brittle (it shortens `.overflow-auto` on one page
+      // and `.overflow-auto.relative.w-full` on another for the same component), so the element itself is
+      // identified instead: Table's wrapper is a div with exactly that class trio whose only element child
+      // is the table.
+      nodeShape: "div.relative.w-full.overflow-auto",
+      nodeChild: "table",
+    },
+  ],
 ]);
-const axeTolerated = (path, id) => AXE_PENDING.get(id)?.paths.has(path) ?? false;
 
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
@@ -131,7 +146,11 @@ for (const scheme of SCHEMES) {
     for (const scale of TEXT_SCALES) {
       const context = await browser.newContext({ viewport: { width, height }, colorScheme: scheme, reducedMotion: "reduce" });
       for (const path of PAGES) {
-        if (scale !== 1 && TEXT_SCALE_PENDING.has(path)) { pendingSeen.add(path); continue; }
+        // A pending page is still SWEPT. Review caught that skipping it before navigation also skipped
+        // the root-size assertion, axe and the overflow check at every width and theme, so its known
+        // overflow would have masked a new axe violation, or extra overflow at another width. Only the
+        // overflow finding itself is excused below, and only on a page named in the ratchet.
+        const overflowPending = scale !== 1 && TEXT_SCALE_PENDING.has(path);
         const page = await context.newPage();
         const tag = `${scheme}/${widthName}/text${scale * 100}% ${path}`;
         try {
@@ -157,19 +176,56 @@ for (const scheme of SCHEMES) {
             continue;
           }
           await page.addScriptTag({ content: axeSource });
-          const result = await page.evaluate(async () => {
+          const result = await page.evaluate(async (pendingShapes) => {
             const r = await window.axe.run(document, { rules: { region: { enabled: false } } });
             return {
-              violations: r.violations.map((v) => ({ id: v.id, help: v.help, nodes: v.nodes.slice(0, 3).map((n) => n.target.join(" ")), count: v.nodes.length })),
+              violations: r.violations.map((v) => {
+                const expected = pendingShapes.find((p) => p.id === v.id);
+                // Does EVERY failing node have the shape the ratchet is allowed to excuse? One node that
+                // does not is a different defect and must fail the run even while the known one persists.
+                let allKnown = false;
+                let unknown = [];
+                if (expected) {
+                  allKnown = true;
+                  for (const n of v.nodes) {
+                    const el = document.querySelector(n.target.join(" "));
+                    const ok =
+                      !!el &&
+                      el.matches(expected.nodeShape) &&
+                      el.children.length === 1 &&
+                      el.firstElementChild.matches(expected.nodeChild);
+                    if (!ok) { allKnown = false; unknown.push(n.target.join(" ")); }
+                  }
+                }
+                return {
+                  id: v.id,
+                  help: v.help,
+                  nodes: v.nodes.slice(0, 3).map((n) => n.target.join(" ")),
+                  count: v.nodes.length,
+                  allKnown,
+                  unknown: unknown.slice(0, 3),
+                };
+              }),
               overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
             };
-          });
+          }, [...AXE_PENDING].map(([id, v]) => ({ id, nodeShape: v.nodeShape, nodeChild: v.nodeChild })));
           views++;
           for (const v of result.violations) {
-            if (scale !== 1 && axeTolerated(path, v.id)) { axeSeen.add(`${v.id}|${path}`); continue; }
+            const entry = AXE_PENDING.get(v.id);
+            if (scale !== 1 && entry?.paths.has(path)) {
+              if (v.allKnown) { axeSeen.add(`${v.id}|${path}`); continue; }
+              failures.push(
+                `${tag}: ${v.id} ×${v.count} — ${v.help}; ${v.unknown.length} node(s) are NOT the tolerated ` +
+                  `${entry.nodeShape} > ${entry.nodeChild} shape (${v.unknown.join(" | ")})`,
+              );
+              continue;
+            }
             failures.push(`${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")})`);
           }
-          if (result.overflow > 0) failures.push(`${tag}: page scrolls sideways by ${result.overflow}px`);
+          if (result.overflow > 0) {
+            if (overflowPending) pendingSeen.add(path);
+            else failures.push(`${tag}: page scrolls sideways by ${result.overflow}px`);
+          }
         } catch (err) {
           failures.push(`${tag}: ${String(err.message).split("\n")[0]}`);
         } finally {
@@ -180,30 +236,18 @@ for (const scheme of SCHEMES) {
     }
   }
 }
-// Every pending entry must still be failing. A page that has been fixed and left on the list would
-// otherwise keep its exemption for ever, which is how a ratchet quietly becomes an exemption.
+// Every pending entry must still be earned. A page fixed and left on the list would otherwise keep its
+// exemption for ever, which is how a ratchet quietly becomes an exemption.
+//
+// `pendingSeen` is now populated by the sweep itself — the page is visited at every width and theme like
+// any other, and the entry is marked only when real overflow was actually observed. That is strictly
+// stronger than the earlier separate re-check at one width in one theme, and it means a pending page's
+// axe results and its other widths are no longer skipped.
 for (const [path, why] of TEXT_SCALE_PENDING) {
-  if (!pendingSeen.has(path)) {
+  if (!PAGES.includes(path)) {
     failures.push(`${path}: listed in TEXT_SCALE_PENDING but not in PAGES — remove the entry or the page`);
-    continue;
-  }
-  const context = await browser.newContext({ viewport: { width: 320, height: 812 }, reducedMotion: "reduce" });
-  const page = await context.newPage();
-  const cdp = await context.newCDPSession(page);
-  await cdp.send("Page.enable");
-  await cdp.send("Page.setFontSizes", { fontSizes: { standard: 32, fixed: 26 } });
-  try {
-    await page.goto(base + path, { waitUntil: "load" });
-    await page.waitForTimeout(600);
-    const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-    if (over <= 0) {
-      failures.push(`${path}: no longer overflows at 200% text — delete it from TEXT_SCALE_PENDING (was: ${why})`);
-    }
-  } catch (err) {
-    failures.push(`${path}: checking the pending entry failed — ${String(err.message).split("\n")[0]}`);
-  } finally {
-    await page.close();
-    await context.close();
+  } else if (!pendingSeen.has(path)) {
+    failures.push(`${path}: no longer overflows at 200% text in any swept view — delete it from TEXT_SCALE_PENDING (was: ${why})`);
   }
 }
 
