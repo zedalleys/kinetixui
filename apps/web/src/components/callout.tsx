@@ -11,7 +11,7 @@ export function Callout({
   return (
     <div
       className={cn(
-        "my-6 flex gap-3 rounded-lg border border-border bg-muted/40 p-4 text-sm [&>p]:m-0",
+        "my-6 flex gap-3 rounded-lg border border-border bg-muted/40 p-4 text-sm [&>*]:min-w-0 [&>p]:m-0",
         className,
       )}
     >

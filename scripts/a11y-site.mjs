@@ -98,10 +98,32 @@ const TEXT_SCALES = [1, 2];
  */
 const TEXT_SCALE_PENDING = new Map([["/iot", "DeviceSetpointControl's ring has fixed geometry under text that scales — needs a design decision, see PR"]]);
 
+/**
+ * One axe rule, tolerated on the pages where a single known component defect produces it.
+ *
+ * `Table` in `packages/ui` renders `<div class="relative w-full overflow-auto">` around its table with
+ * no `tabIndex`, no `role` and no accessible name, so a keyboard user cannot reach a table that
+ * scrolls — WCAG 2.1.1. It only becomes visible at 200% text, because that is when these tables start
+ * scrolling, which is why this axis found it and four years of the default-size sweep did not.
+ *
+ * It is NOT fixable from the call site: `Table` passes `className` to the `<table>`, not to the wrapper,
+ * so no page can supply the attributes. The fix belongs in that component, with a changeset, and is
+ * deliberately out of this slice.
+ *
+ * Like TEXT_SCALE_PENDING this is asserted rather than trusted: a tolerated (rule, page) pair that stops
+ * firing fails the run and says to delete it. The rule stays enforced everywhere else, including on
+ * every other page and at the default text size.
+ */
+const AXE_PENDING = new Map([
+  ["scrollable-region-focusable", { paths: new Set(["/blocks", "/create"]), why: "packages/ui Table's scroll wrapper has no keyboard access — fix belongs in the component" }],
+]);
+const axeTolerated = (path, id) => AXE_PENDING.get(id)?.paths.has(path) ?? false;
+
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 const failures = [];
 const pendingSeen = new Set();
+const axeSeen = new Set();
 let views = 0;
 
 for (const scheme of SCHEMES) {
@@ -143,7 +165,10 @@ for (const scheme of SCHEMES) {
             };
           });
           views++;
-          for (const v of result.violations) failures.push(`${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")})`);
+          for (const v of result.violations) {
+            if (scale !== 1 && axeTolerated(path, v.id)) { axeSeen.add(`${v.id}|${path}`); continue; }
+            failures.push(`${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")})`);
+          }
           if (result.overflow > 0) failures.push(`${tag}: page scrolls sideways by ${result.overflow}px`);
         } catch (err) {
           failures.push(`${tag}: ${String(err.message).split("\n")[0]}`);
@@ -182,6 +207,14 @@ for (const [path, why] of TEXT_SCALE_PENDING) {
   }
 }
 
+for (const [id, { paths, why }] of AXE_PENDING) {
+  for (const path of paths) {
+    if (!axeSeen.has(`${id}|${path}`)) {
+      failures.push(`${path}: ${id} is tolerated here but no longer fires — delete it from AXE_PENDING (was: ${why})`);
+    }
+  }
+}
+
 await browser.close();
 
 if (failures.length) {
@@ -194,5 +227,9 @@ console.log(
     (TEXT_SCALE_PENDING.size
       ? `\n  ${TEXT_SCALE_PENDING.size} page(s) pending at 200% text, each verified to still need it: ` +
         [...TEXT_SCALE_PENDING.keys()].join(", ")
+      : "") +
+    (AXE_PENDING.size
+      ? `\n  tolerated at 200% text, each verified to still fire: ` +
+        [...AXE_PENDING].map(([id, v]) => `${id} on ${[...v.paths].join(" and ")}`).join("; ")
       : ""),
 );

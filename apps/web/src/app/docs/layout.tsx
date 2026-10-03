@@ -12,7 +12,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         <article data-docs-content className="min-w-0 max-w-3xl flex-1">
           <div
             data-docs-chrome
-            className="mb-8 flex items-start justify-between gap-4 border-b border-border pb-4"
+            className="mb-8 flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b border-border pb-4"
           >
             <DocsBreadcrumb />
             <DocsPageActions />

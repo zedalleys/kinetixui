@@ -88,6 +88,17 @@
   .font-display {
     overflow-wrap: break-word;
   }
+  /*
+    Inline code, for the same reason and with the same measurement behind it. Docs prose is full of
+    flags, token names and package paths — `--platform=swiftui`, `bg-action`, `@kinetixui/iot/functions`
+    — and each is one unbreakable run. At 200% text a single such run was wider than the prose column,
+    so /docs/cli overflowed by 118px and /docs/changelog by 187px.
+    `:not(pre) > code` deliberately: a code BLOCK must NOT break, because it is inside a horizontally
+    scrollable, keyboard-reachable region and breaking it would corrupt the code's own line structure.
+  */
+  :not(pre) > code {
+    overflow-wrap: break-word;
+  }
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 6.5rem;
