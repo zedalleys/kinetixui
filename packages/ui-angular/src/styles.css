@@ -214,7 +214,7 @@
   flex-shrink: 0;
   padding: 0;
   background-color: hsl(var(--background));
-  color: hsl(var(--primary-foreground));
+  color: hsl(var(--action-foreground));
   border: var(--border-width-default) solid hsl(var(--muted-foreground));
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -224,11 +224,11 @@
     box-shadow var(--duration-instant) var(--easing-standard);
 }
 .kx-checkbox[aria-checked='true'],
-.kx-checkbox[aria-checked='mixed'] { background-color: hsl(var(--primary)); border-color: hsl(var(--primary)); }
+.kx-checkbox[aria-checked='mixed'] { background-color: hsl(var(--action)); border-color: hsl(var(--action)); }
 @media (hover: hover) {
   .kx-checkbox:enabled:hover { box-shadow: 0 0 0 5px hsl(var(--foreground) / 0.08); }
   .kx-checkbox:enabled:hover:not([aria-checked='true'], [aria-checked='mixed']) { border-color: hsl(var(--foreground)); }
-  .kx-checkbox:enabled:hover:is([aria-checked='true'], [aria-checked='mixed']) { background-color: hsl(var(--primary) / 0.9); }
+  .kx-checkbox:enabled:hover:is([aria-checked='true'], [aria-checked='mixed']) { background-color: hsl(var(--action) / 0.9); }
 }
 .kx-checkbox:enabled:active { box-shadow: 0 0 0 5px hsl(var(--foreground) / 0.14); }
 .kx-checkbox:enabled:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
@@ -250,10 +250,10 @@
     background-color var(--duration-base) var(--easing-standard),
     box-shadow var(--duration-instant) var(--easing-standard);
 }
-.kx-switch[aria-checked='true'] { background-color: hsl(var(--primary)); }
+.kx-switch[aria-checked='true'] { background-color: hsl(var(--action)); }
 @media (hover: hover) {
   .kx-switch:enabled:hover { box-shadow: 0 0 0 5px hsl(var(--foreground) / 0.08); }
-  .kx-switch:enabled:hover[aria-checked='true'] { background-color: hsl(var(--primary) / 0.9); }
+  .kx-switch:enabled:hover[aria-checked='true'] { background-color: hsl(var(--action) / 0.9); }
 }
 .kx-switch:enabled:active { box-shadow: 0 0 0 5px hsl(var(--foreground) / 0.14); }
 .kx-switch:enabled:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
@@ -594,8 +594,8 @@
 /* the dot is an inset ring rather than a pseudo-element, so it scales with the control — and it is its own
    custom property so the hover and pressed layers add to it instead of replacing it */
 .kx-radio__input:checked {
-  border-color: hsl(var(--primary));
-  --kx-radio-dot: inset 0 0 0 4px hsl(var(--primary));
+  border-color: hsl(var(--action));
+  --kx-radio-dot: inset 0 0 0 4px hsl(var(--action));
 }
 @media (hover: hover) {
   .kx-radio__input:enabled:hover { --kx-radio-layer: 0 0 0 5px hsl(var(--foreground) / 0.08); }
