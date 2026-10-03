@@ -1,5 +1,9 @@
 # @kinetixui/cli
 
+## 0.24.0
+
+No changes in this release.
+
 ## 0.23.3
 
 ### Patch Changes

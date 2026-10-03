@@ -1,5 +1,114 @@
 # @kinetixui/tokens
 
+## 0.24.0
+
+### Minor Changes
+
+- 476f316: Establish the surface model, and give Card a finished resting state and an opt-in interactive contract.
+  
+  **New token: `surface-grouped`.** The grouped section raised content sits on — a settings group, a dashboard
+  region. Light is the grey of `muted` (`#f6f6f6`); dark is `blue.850` (`#081219`), between the page and
+  `card`. It is its own role because dark `muted` is lighter than `card`, so a card placed on a `muted`
+  section read as recessed in dark mode. Emitted to every platform output (`--surface-grouped`,
+  `KinetixColors.surfaceGrouped`, `color_surface_grouped`, `KinetixColorScheme.surfaceGrouped`) and mapped in
+  the Tailwind preset as `bg-surface-grouped`. `muted-foreground` clears AA on it in both themes (4.79:1 / 8.48:1).
+  
+  **Card looks raised without a heavy stroke.** Its edge is now `--border` at half strength, so it no longer
+  draws the same line as the inputs and buttons inside it, and it rests on the `md` step of the elevation
+  ladder instead of `sm`, whose 5% shadow did not visibly render. Both stay on tokens, so Create's surface
+  treatments still apply. Visual change only; no class a consumer passes is overridden. `.kx-card` in
+  `@kinetixui/angular` takes the same resting treatment.
+  
+  **`Card` gains `asChild`.** A Card stays static by default — no hover, no pointer cursor. Rendered as an
+  `<a href>` or `<button>` through `asChild`, it takes interactive states keyed on that element: hover (on
+  pointers that can hover) strengthens the edge and lifts to `lg`; pressed drops to `sm` with a `muted` wash;
+  `aria-pressed="true"` or `aria-current` draws a 2px `--primary` edge; keyboard focus shows the shared
+  `shadow-focus` ring above every other state. The hover elevation transitions over `duration-fast` and is
+  removed under `prefers-reduced-motion`. `CardProps` is exported. Additive; existing usage is unchanged in API.
+- aff358a: Make the type scale follow the reader's text size, on every platform.
+  
+  A font size in `px` does not respond when someone raises their browser's default text size, so the
+  KinetixUI type scale could not be made bigger. Measured across all 206 Storybook stories before this
+  change: **1,357 rendered elements** carrying a type-scale class, across 115 stories and 13 of the 16
+  steps, every one of them unchanged at 200% text. Components that mixed `text-body-md` with Tailwind's
+  own `text-sm` showed the inconsistency directly — one half of a page doubled and the other did not.
+  
+  **The canonical tokens were never wrong.** `tokens/primitives/typography.json` stores plain unit-less
+  numbers, which is the right thing for a source that feeds five platforms. `px` was added by a transform
+  that appended it to every `$type: dimension` token, so a font size was treated exactly like a border
+  width. The split now happens at the transform instead, and each platform says what scalable means in
+  its own terms:
+  
+  - **Web** — `fontSize.*` and `lineHeight.*` are emitted in `rem`; every other dimension stays `px`.
+    `--font-size-body-md: 14px` → `0.875rem`, `--text-body-md: 400 14px/20px …` → `400 0.875rem/1.25rem …`.
+  - **Android resources** — unchanged, and deliberately so. `dp` looks like the Android spelling of the px
+    problem and is not: the Compose code reads these as `dimensionResource(id).value.sp`, and
+    `dimensionResource` already divides out density after `getDimension()` has applied the font scale to an
+    `sp` resource — so emitting `sp` here would apply the scale twice and render 14sp at roughly 56px
+    instead of 28 at a 2x font scale. With `dp` the scale is applied exactly once, by the `.sp` at the point
+    of use. This was changed to `sp` during review and reverted when that was measured.
+  - **SwiftUI** — `Font.custom(_:size:)` → `Font.custom(_:size:relativeTo:)`. The two-argument form is a
+    fixed size that opts out of Dynamic Type entirely; the three-argument form keeps the designed size at
+    the default setting and scales from there. The text style per step is chosen by nearest default point
+    size, so it is derived from the scale rather than hand-assigned.
+  - **Compose and Flutter** were already correct (`.sp`, and `TextStyle` under `TextScaler`) and their
+    generated output is byte-identical after this change.
+  
+  **Default appearance is unchanged.** Every conversion is exact, because the scale is all sixteenths:
+  14 → `0.875rem`, 11 → `0.6875rem`, 57 → `3.5625rem`. At the default 16px root every step computes to
+  the pixel size it always did, and measured rendered dimensions are identical — delta 0.0px across the
+  representative components. Letter-spacing deliberately stays in `px`: it is an optical constant rather
+  than a size the reader asked to change, the primitive tokens are shared across steps so there is no one
+  font size to make it relative to, and at 0.1–0.5px scaling it would not be legible.
+  
+  **Why minor, and what is observable.** No token is renamed or removed and nothing rendered moves at the
+  default setting, but the *value representation* changes and that is visible to anyone reading tokens
+  directly: `tokens.fontSize["body-md"]` is now `"0.875rem"` rather than `"14px"`, so code that does
+  `parseInt(...)` on it gets `0.875`. The same applies to `--font-size-*` / `--line-height-*` in
+  `globals.css`. The native artifacts are unchanged. `@kinetixui/tokens` is Beta
+  and documents that pre-1.0 it carries no compatibility guarantee, and in `0.y.z` semver a change of this
+  kind is expressed as a minor — the same call the reduced-motion base layer took for the same reason.
+  If you consume the token values as strings, check any arithmetic you do on them.
+  
+  `Select`'s value also now wraps instead of being clamped to one line, and the value span gains `min-w-0`
+  with `overflow-wrap: anywhere` so a value with no break opportunity — an identifier, a URL with no
+  separators — breaks instead of overflowing the trigger and pushing the chevron out of it. `line-clamp-1` was invisible while
+  the text could not grow; once it could, the span needed 80px and was given 40, with a computed
+  `text-overflow` of `clip` rather than `ellipsis` — so "Select a fruit" rendered as "Select a" with
+  nothing to say the rest existed. The trigger's `min-h` was always meant to absorb this.
+
+### Patch Changes
+
+- ded4054: Fix five accessibility defects on IoT surfaces: contrast on tinted cards, and duplicate landmark names.
+  
+  A real-browser axe pass over the IoT stories found nine colour-contrast failures and two duplicated
+  navigation landmarks. Both are genuine WCAG failures, not false positives, and both predate the pull
+  request that surfaced them.
+  
+  **Contrast.** `--muted-foreground` is tuned against `--background` and `--muted`, where it clears AA
+  at 5.17:1. IoT device, group and activity cards tint their surface to carry state, and a 10% tint
+  spends the whole margin: secondary text landed at 4.43:1 on `bg-primary/10` and 4.33:1 on
+  `bg-destructive/10`, under the 4.5:1 that WCAG 1.4.3 requires. The token itself is not wrong —
+  `neutral.600` is a published Figma value — so the fix is a new semantic token for the surfaces that
+  tint, `--semantic-muted-on-container`, exposed as `text-muted-on-container`. This follows
+  `--semantic-on-info-container`, which exists for the same reason on `bg-info/10`. It clears AA on
+  every tint those cards use, worst case 4.79:1, and stays visibly lighter than `--foreground` so the
+  type hierarchy is unchanged. Dark mode needed no new value and reuses `--muted-foreground`: a tint
+  lightens a dark surface away from its text rather than toward it, so dark was already at 6.9–8.4:1.
+  
+  `DeviceControlCard`, `DeviceGroupCard`, `DeviceIdentity` and `ActivityTimeline` now use it for the
+  text that sits on those surfaces. Nothing is restyled beyond the colour of that text.
+  
+  **Landmarks.** `SpaceBreadcrumb` named its `<nav>` "Location" for every instance, so a screen
+  listing several places produced several identically-named navigation landmarks — which is no more
+  useful than none when picking one from a landmark list. The accessible name now defaults to
+  `Location: <current place>`, taken from the last item in `path`, and remains overridable with
+  `label`. A breadcrumb rendered without a path still falls back to "Location".
+  
+  Patch rather than minor: the new token and utility exist only to carry the correction. Nothing is
+  removed or renamed, no consumer has to adopt anything, and upgrading changes what was already wrong
+  rather than adding capability to take up.
+
 ## 0.23.3
 
 No changes in this release.

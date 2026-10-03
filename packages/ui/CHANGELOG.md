@@ -1,5 +1,337 @@
 # @kinetixui/ui
 
+## 0.24.0
+
+### Minor Changes
+
+- de94621: Give Collapsible the disclosure motion it shipped without, and put Accordion's timing back under the tokens.
+  
+  `Collapsible` was three Radix primitives re-exported untouched. Its content appeared and vanished in
+  a single frame while `Accordion` — the same disclosure gesture on a sibling primitive — animated its
+  height. Measured in a browser before this change, the content went 0px to 84px with no animation at
+  all, against the accordion's 0px → 24.64px → 36px over 200ms. Disclosure is the case where motion
+  carries meaning rather than decorating it: content growing out of the trigger is what says it belongs
+  to the control you just pressed and where it will go when you press it again.
+  
+  `CollapsibleContent` is now wrapped rather than re-exported, so it carries `overflow-hidden` and the
+  open/closed animation and merges a caller's `className` the way every other component here does. The
+  props, the ref and the data attributes are still the primitive's own.
+  
+  **Accordion's timing was hard-coded.** `0.2s ease-out` happened to equal `--duration-fast` and to be
+  the same curve as `--easing-enter`, so the values were right and the provenance was not: changing the
+  token would have moved every other transition in the system and left disclosure behind. Both
+  disclosure animations now read the tokens, and use the directional pair those easings exist for —
+  opening decelerates, closing accelerates. Nothing moves at a different speed than before.
+  
+  The preset gains `animate-collapsible-down` / `animate-collapsible-up` and the keyframes behind them,
+  which is additive and the reason this is a minor rather than a patch. `caret-blink` and `typing-dot`
+  deliberately keep their literal timings: they are looping affordances rather than state transitions,
+  and retiming them to the nearest token would change how they look to buy a consistency nobody asked
+  for.
+  
+  **What a consumer sees.** A Collapsible that previously snapped now takes 200ms to open and close,
+  and its content is clipped while it does. Under `prefers-reduced-motion` it lands instantly on the
+  same end state, as it did before. Nothing else in the catalogue changes: Accordion renders
+  identically, and no other component's timing moved.
+- 93f21e7: Wire the unreachable motion tokens, and give every component a reduced-motion floor.
+  
+  Four motion tokens were defined in `tokens/primitives/motion.json` and emitted into `globals.css`,
+  but never mapped in the Tailwind preset, so no class could reach them: `--duration-instant` and the
+  `--easing-enter` / `--easing-exit` / `--easing-emphasized` trio. The preset now exposes them as
+  `duration-instant`, `ease-enter`, `ease-exit` and `ease-emphasized`, added alongside Tailwind's own
+  scales rather than replacing them. Directional easing is the point of the enter/exit pair — a
+  surface that opens should decelerate and one that closes should accelerate — and until now you
+  could not say that in a utility.
+  
+  The preset also emits a `prefers-reduced-motion: reduce` base layer. This package ships no CSS of
+  its own, so the preset is the only place a library-wide guarantee can live, and it was missing:
+  `tailwindcss-animate` emits no reduced-motion rule, so every `animate-in` / `animate-out` on Dialog,
+  Sheet, Popover, Dropdown, Tooltip and the rest ran at full motion in a consumer's app no matter what
+  the operating system asked for. The rule shortens durations to `0.01ms` rather than removing motion,
+  which is the safety property: the end state still arrives, so a Switch thumb is still translated and
+  a checked box is still checked, and Radix still gets the `animationend` it unmounts overlays on.
+  `animation: none` would strand those overlays in the tree.
+  
+  Twenty components were then moved off untokenised values onto the scale — overlays adopt a
+  consistent open/close pairing (`duration-fast ease-enter` in, `duration-instant ease-exit` out), and
+  press-feedback controls adopt `duration-instant`. Several `transition-all` declarations were
+  narrowed to the properties that actually animate, so a transition no longer fires on layout and
+  paint properties it was never meant to touch. `Tour` additionally checks the preference in
+  JavaScript before calling `scrollIntoView`, because an explicit `behavior: "smooth"` overrides the
+  CSS `scroll-behavior` the base layer sets.
+  
+  Consumers inherit the base layer by extending the preset; no configuration or migration is needed.
+- 476f316: Establish the surface model, and give Card a finished resting state and an opt-in interactive contract.
+  
+  **New token: `surface-grouped`.** The grouped section raised content sits on — a settings group, a dashboard
+  region. Light is the grey of `muted` (`#f6f6f6`); dark is `blue.850` (`#081219`), between the page and
+  `card`. It is its own role because dark `muted` is lighter than `card`, so a card placed on a `muted`
+  section read as recessed in dark mode. Emitted to every platform output (`--surface-grouped`,
+  `KinetixColors.surfaceGrouped`, `color_surface_grouped`, `KinetixColorScheme.surfaceGrouped`) and mapped in
+  the Tailwind preset as `bg-surface-grouped`. `muted-foreground` clears AA on it in both themes (4.79:1 / 8.48:1).
+  
+  **Card looks raised without a heavy stroke.** Its edge is now `--border` at half strength, so it no longer
+  draws the same line as the inputs and buttons inside it, and it rests on the `md` step of the elevation
+  ladder instead of `sm`, whose 5% shadow did not visibly render. Both stay on tokens, so Create's surface
+  treatments still apply. Visual change only; no class a consumer passes is overridden. `.kx-card` in
+  `@kinetixui/angular` takes the same resting treatment.
+  
+  **`Card` gains `asChild`.** A Card stays static by default — no hover, no pointer cursor. Rendered as an
+  `<a href>` or `<button>` through `asChild`, it takes interactive states keyed on that element: hover (on
+  pointers that can hover) strengthens the edge and lifts to `lg`; pressed drops to `sm` with a `muted` wash;
+  `aria-pressed="true"` or `aria-current` draws a 2px `--primary` edge; keyboard focus shows the shared
+  `shadow-focus` ring above every other state. The hover elevation transitions over `duration-fast` and is
+  removed under `prefers-reduced-motion`. `CardProps` is exported. Additive; existing usage is unchanged in API.
+- aff358a: Make the type scale follow the reader's text size, on every platform.
+  
+  A font size in `px` does not respond when someone raises their browser's default text size, so the
+  KinetixUI type scale could not be made bigger. Measured across all 206 Storybook stories before this
+  change: **1,357 rendered elements** carrying a type-scale class, across 115 stories and 13 of the 16
+  steps, every one of them unchanged at 200% text. Components that mixed `text-body-md` with Tailwind's
+  own `text-sm` showed the inconsistency directly — one half of a page doubled and the other did not.
+  
+  **The canonical tokens were never wrong.** `tokens/primitives/typography.json` stores plain unit-less
+  numbers, which is the right thing for a source that feeds five platforms. `px` was added by a transform
+  that appended it to every `$type: dimension` token, so a font size was treated exactly like a border
+  width. The split now happens at the transform instead, and each platform says what scalable means in
+  its own terms:
+  
+  - **Web** — `fontSize.*` and `lineHeight.*` are emitted in `rem`; every other dimension stays `px`.
+    `--font-size-body-md: 14px` → `0.875rem`, `--text-body-md: 400 14px/20px …` → `400 0.875rem/1.25rem …`.
+  - **Android resources** — unchanged, and deliberately so. `dp` looks like the Android spelling of the px
+    problem and is not: the Compose code reads these as `dimensionResource(id).value.sp`, and
+    `dimensionResource` already divides out density after `getDimension()` has applied the font scale to an
+    `sp` resource — so emitting `sp` here would apply the scale twice and render 14sp at roughly 56px
+    instead of 28 at a 2x font scale. With `dp` the scale is applied exactly once, by the `.sp` at the point
+    of use. This was changed to `sp` during review and reverted when that was measured.
+  - **SwiftUI** — `Font.custom(_:size:)` → `Font.custom(_:size:relativeTo:)`. The two-argument form is a
+    fixed size that opts out of Dynamic Type entirely; the three-argument form keeps the designed size at
+    the default setting and scales from there. The text style per step is chosen by nearest default point
+    size, so it is derived from the scale rather than hand-assigned.
+  - **Compose and Flutter** were already correct (`.sp`, and `TextStyle` under `TextScaler`) and their
+    generated output is byte-identical after this change.
+  
+  **Default appearance is unchanged.** Every conversion is exact, because the scale is all sixteenths:
+  14 → `0.875rem`, 11 → `0.6875rem`, 57 → `3.5625rem`. At the default 16px root every step computes to
+  the pixel size it always did, and measured rendered dimensions are identical — delta 0.0px across the
+  representative components. Letter-spacing deliberately stays in `px`: it is an optical constant rather
+  than a size the reader asked to change, the primitive tokens are shared across steps so there is no one
+  font size to make it relative to, and at 0.1–0.5px scaling it would not be legible.
+  
+  **Why minor, and what is observable.** No token is renamed or removed and nothing rendered moves at the
+  default setting, but the *value representation* changes and that is visible to anyone reading tokens
+  directly: `tokens.fontSize["body-md"]` is now `"0.875rem"` rather than `"14px"`, so code that does
+  `parseInt(...)` on it gets `0.875`. The same applies to `--font-size-*` / `--line-height-*` in
+  `globals.css`. The native artifacts are unchanged. `@kinetixui/tokens` is Beta
+  and documents that pre-1.0 it carries no compatibility guarantee, and in `0.y.z` semver a change of this
+  kind is expressed as a minor — the same call the reduced-motion base layer took for the same reason.
+  If you consume the token values as strings, check any arithmetic you do on them.
+  
+  `Select`'s value also now wraps instead of being clamped to one line, and the value span gains `min-w-0`
+  with `overflow-wrap: anywhere` so a value with no break opportunity — an identifier, a URL with no
+  separators — breaks instead of overflowing the trigger and pushing the chevron out of it. `line-clamp-1` was invisible while
+  the text could not grow; once it could, the span needed 80px and was given 40, with a computed
+  `text-overflow` of `clip` rather than `ellipsis` — so "Select a fruit" rendered as "Select a" with
+  nothing to say the rest existed. The trigger's `min-h` was always meant to absorb this.
+
+### Patch Changes
+
+- 74688da: Fix the form family under RTL, and give MultiSelect the arrow key that opens it.
+  
+  **InputOTP was broken in every RTL locale.** The slots are a flex row, so `dir="rtl"` reverses them and the
+  first slot moves to the right-hand end — but their divider, their outer border and their two rounded corners
+  were physical. Measured in Chromium at `dir="rtl"`, with six slots: both rounded corners sat on the group's
+  *inner* edges, the divider after the first slot doubled to 2px, and the outer edge at the far end had no
+  border at all. The slot now uses `border-e`, `first:border-s`, `first:rounded-s-md` and `last:rounded-e-md`,
+  and measures as the exact mirror of LTR in either direction.
+  
+  **MultiSelect, and the Command and Tag it composes.** The "Create …" row was `text-left`, `CommandInput`'s
+  magnifier was `mr-2` — a gap on the far side of the icon and none between it and the field — and `Tag`'s
+  remove control was nudged with `-mr-0.5 ml-0.5`, toward the right-hand edge of a chip whose end is on the
+  left. All four are now logical. `CommandShortcut` moves from `ml-auto` to `ms-auto` at the same time, so a
+  shortcut in a Command list sits at the inline end.
+  
+  **MultiSelect did not open on Down Arrow.** WAI-ARIA's combobox pattern lists it as a way to open the popup
+  and it is the first thing a keyboard user tries; the handler recognised only Enter and Space, so both
+  vertical arrows did nothing at all. They now open the list, which Enter and Space already did.
+  
+  Patch rather than minor: no API is added, removed or renamed, nothing new is available to adopt, and each
+  change corrects behaviour that was already wrong. Upgrading changes how these controls render in an RTL
+  locale and adds a key that should always have worked, and changes nothing in an LTR app.
+  
+  One packaging note: the build now writes `dist/kx-src-hash.json`, a hash of the source the artifact was
+  built from. It is inert at runtime — nothing imports it — and exists so the repository's browser checks can
+  refuse to measure a `dist` that no longer matches its source.
+- ded4054: Fix five accessibility defects on IoT surfaces: contrast on tinted cards, and duplicate landmark names.
+  
+  A real-browser axe pass over the IoT stories found nine colour-contrast failures and two duplicated
+  navigation landmarks. Both are genuine WCAG failures, not false positives, and both predate the pull
+  request that surfaced them.
+  
+  **Contrast.** `--muted-foreground` is tuned against `--background` and `--muted`, where it clears AA
+  at 5.17:1. IoT device, group and activity cards tint their surface to carry state, and a 10% tint
+  spends the whole margin: secondary text landed at 4.43:1 on `bg-primary/10` and 4.33:1 on
+  `bg-destructive/10`, under the 4.5:1 that WCAG 1.4.3 requires. The token itself is not wrong —
+  `neutral.600` is a published Figma value — so the fix is a new semantic token for the surfaces that
+  tint, `--semantic-muted-on-container`, exposed as `text-muted-on-container`. This follows
+  `--semantic-on-info-container`, which exists for the same reason on `bg-info/10`. It clears AA on
+  every tint those cards use, worst case 4.79:1, and stays visibly lighter than `--foreground` so the
+  type hierarchy is unchanged. Dark mode needed no new value and reuses `--muted-foreground`: a tint
+  lightens a dark surface away from its text rather than toward it, so dark was already at 6.9–8.4:1.
+  
+  `DeviceControlCard`, `DeviceGroupCard`, `DeviceIdentity` and `ActivityTimeline` now use it for the
+  text that sits on those surfaces. Nothing is restyled beyond the colour of that text.
+  
+  **Landmarks.** `SpaceBreadcrumb` named its `<nav>` "Location" for every instance, so a screen
+  listing several places produced several identically-named navigation landmarks — which is no more
+  useful than none when picking one from a landmark list. The accessible name now defaults to
+  `Location: <current place>`, taken from the last item in `path`, and remains overridable with
+  `label`. A breadcrumb rendered without a path still falls back to "Location".
+  
+  Patch rather than minor: the new token and utility exist only to carry the correction. Nothing is
+  removed or renamed, no consumer has to adopt anything, and upgrading changes what was already wrong
+  rather than adding capability to take up.
+- 8ecbad9: Update lucide-react to ^1.48.0.
+- 6aadc97: Fix three overlay defects found by scanning and measuring the surfaces while they were open.
+  
+  **Popover shipped an unnamed dialog.** Radix gives `PopoverContent` `role="dialog"`, and nothing named it,
+  so a screen reader announced the single word "dialog" — WCAG 4.1.2, on every Popover in the library. There
+  is now a fallback accessible name. It is only a fallback: an `aria-label` you pass wins, and
+  `aria-labelledby` suppresses it entirely so a heading you point at is not shadowed. Naming your own
+  popover is still better than the fallback, which says what kind of thing opened and nothing about what is
+  in it.
+  
+  **Drawer left focus on its trigger.** Measured in Chromium with the drawer open: focus was still on the
+  button, which by then sits inside a subtree the drawer marks `aria-hidden` — so a screen-reader user was
+  left on an element their software had just been told does not exist. The panel now takes focus on open.
+  The panel itself, not the first control inside it: `vaul` suppresses auto-focus deliberately so that a
+  drawer containing a text field does not summon a mobile keyboard, and a container opens no keyboard while
+  still giving the screen reader the drawer's heading to announce.
+  
+  **Popover, the three menus and Tooltip could grow wider than the window.** At 390px with the reader's
+  default font size doubled the popover measured 576px — `w-72` is `rem`, so it doubles with the text — and
+  the context menu 416px, pushing the page 186px sideways. Each surface is now capped with
+  `max-w-[var(--radix-popper-available-width)]`, which is Radix's own measurement of the space it has rather
+  than a viewport guess, and binds only when the surface would otherwise overflow.
+  
+  The cap alone was not enough, which is worth knowing if you have written one yourself: `min-width` beats
+  `max-width` in CSS, and the menus carried a `rem` minimum. At 2x text `min-w-[8rem]` is 256px, so the
+  context menu stayed 256px wide against a cap that had correctly resolved to 193px, with its right edge
+  63px past the window and those items unreachable. The three menus' minimums now yield —
+  `min-w-[min(8rem,var(--radix-popper-available-width))]` — keeping the comfortable width wherever there is
+  room for it.
+  
+  **Both fixes compose with your own props.** The Popover name and the Drawer's focus entry were each set
+  *before* the trailing `{...props}` spread, which meant the most ordinary call site undid them. Passing an
+  optional name the usual way, `aria-label={maybe}` with `maybe` undefined, spread that undefined back over
+  the fallback and deleted the attribute, so the unnamed dialog returned. Passing any `onOpenAutoFocus` to
+  `DrawerContent` — even one that only logs — replaced the handler that moves focus, and since `vaul`
+  suppresses auto-focus otherwise, focus was left on the hidden trigger again. Both props are now handled
+  explicitly instead of being read back off the spread: your `aria-label` and `aria-labelledby` still win,
+  your `onOpenAutoFocus` is still called, and calling `preventDefault` in it is how you take focus
+  placement over yourself.
+  
+  Patch rather than minor: no API is added, removed or renamed, and nothing new is available to adopt. Each
+  change corrects behaviour that was already wrong — an upgrade names a dialog that had no name, moves focus
+  somewhere reachable, and keeps a surface inside the window at large text; in a desktop LTR app at the
+  default font size it changes nothing.
+  
+  The `ContextMenu` example in the component registry also gets a responsive trigger (`w-full max-w-64`
+  instead of `w-64`), so copying it into an app does not produce a box wider than a phone at 200% text.
+- e367937: Update react-resizable-panels to ^4.13.3.
+- 7de2a49: Mirror the rest of the overlay family under `dir="rtl"`.
+  
+  Slice 1 of the RTL conversion took Dialog, Sheet, Drawer, DropdownMenu and Select onto logical
+  properties and stopped there, which left an app in Arabic or Hebrew with half a mirrored overlay set:
+  open a Dialog and it reads correctly, open the ContextMenu behind it and the inset indent, the
+  check gutter and the keyboard shortcut all sit on the wrong side.
+  
+  `ContextMenu` and `Menubar` now indent inset items with `ps-8`, place the check and radio gutter at
+  `start-2`, push shortcuts with `ms-auto`, and mirror the submenu chevron with `rtl:-scale-x-100`.
+  `AlertDialog` aligns its header with `sm:text-start`. `NavigationMenu` spaces its disclosure chevron
+  with `ms-1` and anchors both panels at `start-0`.
+  
+  Two deliberate non-conversions, marked `// rtl-ok` with their reason rather than silently left:
+  the `left-1/2` centring trick in `AlertDialog` and `Modal` is direction-agnostic by construction, and
+  `Popover` and `Tooltip` keep their physical `data-[side=…]:slide-in-from-…` pairs because Radix has
+  already resolved `data-side` to a physical side after flipping for direction and collisions — a
+  logical class there would invert the animation under RTL and throw the surface the wrong way.
+  
+  `check-rtl.mjs` proves no physical class is left behind; it cannot prove the replacement is the right
+  one or that the Radix primitive flips, which is the failure the first slice spent a pass discovering.
+  `components-rtl.test.tsx` covers that half, asserting the rendered classes and the
+  direction-dependent key handling. The conversion ratchet drops from 29 pending files to 22.
+- 6d5c32e: Fix two defects in the selection controls: the Switch thumb under RTL, and controls that did not grow with the reader's text.
+  
+  **Switch, under `dir="rtl"`.** The thumb's travel used `translate-x`, which is physical. In an RTL locale the
+  thumb correctly starts against the right edge — that is the start — and then moved further right: measured in
+  Chromium, its left edge went from 26px to 50px on a 48px track. A switch turned on rendered as a filled pill
+  with no thumb visible in it at all. It now mirrors with `rtl:data-[state=checked]:-translate-x-6`, travelling
+  26px → 2px, the mirror image of the LTR 2px → 26px.
+  
+  **Checkbox and RadioGroupItem, at large text.** Both were sized `size-[18px]`. A reader who raises their
+  browser's default font size scales `rem` and not `px`, so at 200% their labels doubled and the controls did
+  not — 18×18 before and after, halving the control relative to its own text and taking its touch target with
+  it, below the 24px WCAG 2.5.8 minimum. Both are now `size-[1.125rem]`: identical at the default font size,
+  and scaling from there. Switch, Toggle and ToggleGroup were already rem-based and are unchanged.
+  
+  Patch rather than minor: no API is added, removed or renamed, and no consumer has to adopt anything. Both
+  changes correct behaviour that was already wrong — an upgrade changes what a control does at a text size or
+  in a direction where it was previously broken, and changes nothing otherwise.
+- fca1e21: Make a table that scrolls reachable by keyboard.
+  
+  `Table` renders its own scroll container — `<div class="relative w-full overflow-auto">` — around the
+  `<table>`. A container that scrolls and has no tab stop cannot be reached without a mouse, so a reader
+  using a keyboard could see the first few columns of a wide table and had no way to get to the rest.
+  That is WCAG 2.1.1, and axe reports it as `scrollable-region-focusable`.
+  
+  It was invisible for as long as it was, because these tables only start scrolling once something makes
+  them wider than their column. The site's accessibility sweep gained a text-size axis in the previous
+  change, and at 200% text the finding appeared immediately on the two pages that render this component:
+  `/blocks` at 320px and `/create` at 1280px. The default-size sweep had never produced it.
+  
+  **It was not fixable from the call site.** `Table` forwards `className` and `ref` to the `<table>`, not
+  to the wrapper, so no consumer could supply the attributes even knowing they were missing. The wrapper
+  is the component's own, so the fix is too.
+  
+  **The contract is conditional, not blanket.** Adding `tabindex="0"` to every table wrapper would trade
+  one defect for another: a tab stop on a container that cannot scroll is a stop that does nothing, and
+  most tables in most layouts fit. The wrapper now measures itself — `scrollWidth > clientWidth`, with a
+  1px tolerance so sub-pixel rounding does not mint a useless stop — and takes a tab stop only while that
+  holds. A `ResizeObserver` watches the wrapper and the table, so a viewport change, a content change or
+  the reader raising their text size all re-decide it, in both directions. This reuses the approach
+  already proven in the docs site's own `useScrollable` rather than introducing a second way to answer the
+  same question.
+  
+  **The accessible name comes from the table, or there is none.** When the table has a `<caption>`, the
+  wrapper is `role="group"` labelled by it, so the focus stop is announced as the thing it actually
+  contains. When there is no caption there is nothing truthful to call it, so it gets a tab stop and no
+  name — a generic "Scrollable table" on every table in a page of tables tells a screen-reader user
+  nothing they could act on. `role="group"` rather than `region`, because a landmark per table would
+  clutter the landmark list. `TableCaption` now carries a generated id (`React.useId`, so it is stable
+  across SSR and unique on a page with several tables) unless the caller supplies their own, which still
+  wins.
+  
+  Measured in Chromium against the built site, on both pages, at 320px and 1440px, at 100% and 200% text,
+  in light and dark, and with the document in LTR and RTL: the container is reached by Tab exactly when it
+  scrolls, an arrow key scrolls it — negative `scrollLeft` where the element itself resolves to RTL — the
+  focus ring is visible in both themes, and Tab moves on rather than trapping. The 20 views where the
+  table fits its column correctly have no tab stop at all.
+  
+  The `scrollable-region-focusable` exception the previous change recorded against these two pages is
+  removed, with no replacement: the rule is enforced everywhere again. The gate was run against the old
+  component with the exception already gone, and it reported the finding on exactly those two pages; the
+  same gate against the fixed component reports nothing.
+  
+  Patch rather than minor: no API is added, removed or renamed, nothing new is available to adopt, and the
+  change corrects behaviour that was already wrong. The visible difference for a consumer is that a table
+  too wide for its space now takes a focus ring when tabbed to, and that `TableCaption` renders an `id`
+  when it was not given one.
+- Updated dependencies [ded4054]
+- Updated dependencies [476f316]
+- Updated dependencies [aff358a]
+  - @kinetixui/tokens@0.24.0
+
 ## 0.23.3
 
 ### Patch Changes
