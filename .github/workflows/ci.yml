@@ -193,6 +193,12 @@ jobs:
       - name: Angular public API snapshot is current
         run: pnpm check:angular-api
 
+      # Preview → Stable is a contract, not a count (ANGULAR-GRADUATION.md). This fails if Angular is
+      # declared stable while any graduation criterion is unmet, if catalogComplete is claimed with planned
+      # entries, or if the package README's published numbers drift from the manifest and the evidence.
+      - name: Angular graduation contract (Preview stays Preview until it is earned)
+        run: pnpm check:angular-graduation
+
       - name: Test (@kinetixui/angular)
         run: pnpm test:angular
 

@@ -4,7 +4,7 @@ KinetixUI for Angular — standalone directives and components built on the same
 contract as the other KinetixUI implementations.
 
 > **Preview.** This package is published so it can be used and reported on, and publication is
-> distribution, not maturity. It carries **31 of the 98 entries in the KinetixUI catalogue** and is
+> distribution, not maturity. It carries **43 of the 98 entries in the KinetixUI catalogue** and is
 > rolling out in waves. Expect gaps, and expect APIs to move within `0.x`. If you need the full
 > catalogue today, that is the React implementation (`@kinetixui/ui`).
 
@@ -14,13 +14,15 @@ npm install @kinetixui/angular @kinetixui/tokens
 
 ## What it currently provides
 
-31 components, as **69 exported symbols** (a component plus its parts and variant types count
+43 components, as **94 exported symbols** (a component plus its parts and variant types count
 separately). Present today:
 
-`alert` · `aspect-ratio` · `avatar` · `avatar-group` · `badge` · `button` · `card` · `checkbox` ·
-`empty` · `field` · `input` · `kbd` · `label` · `metric` · `native-select` · `number-input` ·
-`password-input` · `progress` · `quote` · `radio-group` · `segmented-control` · `separator` ·
-`skeleton` · `slider` · `spinner` · `switch` · `tabs` · `tag` · `textarea` · `toggle` · `toggle-group`
+`alert` · `aspect-ratio` · `avatar` · `avatar-group` · `badge` · `banner` · `button` · `button-group` ·
+`card` · `checkbox` · `circular-progress` · `code-block` · `description-list` · `empty` · `fab` ·
+`field` · `image` · `inform` · `input` · `kbd` · `label` · `list` · `marquee` · `metric` ·
+`native-select` · `number-input` · `page-header` · `password-input` · `progress` · `quote` ·
+`radio-group` · `segmented-control` · `separator` · `skeleton` · `slider` · `spinner` · `switch` ·
+`tabs` · `tag` · `textarea` · `timeline` · `toggle` · `toggle-group`
 
 Not present: overlays (dialog, popover, dropdown, tooltip, sheet, drawer), data display (table, data
 grid, data table), navigation (breadcrumb, pagination, menubar, navigation menu), and the rest of the
@@ -76,24 +78,26 @@ in your editor if you are unsure: `KxButton` is a directive, `KxCard` is a compo
 ## Environment
 
 - **Angular 21** — `@angular/core` and `@angular/forms` are peers at `^21.0.0`
-- **`@kinetixui/tokens`** is a peer at `^0.23.0`; install it alongside this package
+- **`@kinetixui/tokens`** is a peer at `>=0.23.0 <0.25.0`; install it alongside this package
 - Standalone APIs only — no NgModules are exported
 - Built with ng-packagr; ships `fesm2022` plus types, and is compiled and strict-template-typechecked in
   CI on every change
 
 ## Accessibility
 
-What is verified is published rather than asserted. For this package: **31 of 31 implementations have
-interaction and accessibility verification**, which is the highest per-component evidence ratio of any
-KinetixUI platform — a consequence of the catalogue being small, not of it being better. One component
-has RTL verification. There is no visual-regression suite, here or anywhere in KinetixUI.
+What is verified is published rather than asserted. For this package: **43 of 43 implementations have
+interaction and accessibility verification**, from unit suites in jsdom — which asserts semantics and
+behaviour but has no layout and runs no browser accessibility engine. 2 components have RTL verification;
+none yet has large-text or reduced-motion verification. The selection controls (checkbox, radio group,
+switch, segmented control) have their visual states measured on rendered pixels in Chromium by
+`check:selection-visual`; there is no snapshot visual-regression suite, here or anywhere in KinetixUI.
 
 The per-component, per-kind evidence table is at
 [kinetixui.com/docs/platforms](https://kinetixui.com/docs/platforms).
 
 ## Limitations
 
-- **Preview, and 31 of 98 entries.** Do not plan around a component that is not in the list above.
+- **Preview, and 43 of 98 entries.** Do not plan around a component that is not in the list above.
 - Versioned independently of `@kinetixui/{ui,tokens,cli}` — its version number does not track theirs.
 - The token peer range is a deliberate compatibility claim, widened only after the package is verified
   against a new token version. It will not silently follow the token package.

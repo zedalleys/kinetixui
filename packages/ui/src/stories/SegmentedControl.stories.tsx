@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { List, SegmentedControl, SegmentedControlItem } from "@kinetixui/ui";
+import { Card, CardContent, List, SegmentedControl, SegmentedControlItem } from "@kinetixui/ui";
 
 const Demo = () => (
     <SegmentedControl defaultValue="grid" className="w-full max-w-xs">
@@ -23,3 +23,23 @@ const meta = {
 export default meta;
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const States: StoryObj<typeof meta> = { render: () => (
+    <div className="grid w-[24rem] max-w-full gap-6">
+      <SegmentedControl defaultValue="week" aria-label="Range" data-kx-case="page">
+        <SegmentedControlItem value="day">Day</SegmentedControlItem>
+        <SegmentedControlItem value="week">Week</SegmentedControlItem>
+        <SegmentedControlItem value="month">Month</SegmentedControlItem>
+        <SegmentedControlItem value="year" disabled>Year</SegmentedControlItem>
+      </SegmentedControl>
+      <Card>
+        <CardContent className="p-4">
+          <SegmentedControl defaultValue="grid" aria-label="Layout" data-kx-case="card" className="w-full">
+            <SegmentedControlItem value="list">List</SegmentedControlItem>
+            <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
+            <SegmentedControlItem value="board">Board</SegmentedControlItem>
+          </SegmentedControl>
+        </CardContent>
+      </Card>
+    </div>
+  ) };
