@@ -97,7 +97,16 @@ export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfi
   );
 
   return (
-    <div className="mx-auto w-full max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-8">
+    /*
+      `max-w-[96rem]` rather than `max-w-screen-2xl`. Both are 1536px for a reader who has not changed
+      their text size, so nothing moves at 100%. They diverge above it, and that divergence is the
+      other half of this page's defect: `screen-2xl` is a FIXED PIXEL cap, and the grid tracks inside
+      it are `rem`. At 200% text on a 2560px screen the cap still allowed 1536px while the
+      configuration track had grown to 832px, so the preview was left 512px and its cards measured a
+      0.07 content ratio — a worse collapse than the one at 1280px, on a bigger screen. Capping in the
+      reader's own unit lets the container grow with what it has to hold.
+    */
+    <div className="mx-auto w-full max-w-[96rem] px-4 py-8 sm:px-6 lg:px-8">
       {/* ── header ───────────────────────────────────────────────────────── */}
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-6">
         <div>
@@ -141,7 +150,7 @@ export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfi
         </div>
       )}
 
-      <div className="mt-6 lg:hidden">
+      <div className="mt-6 lg-rem:hidden">
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <Button size="sm" variant="Outline" className="w-full">
@@ -164,17 +173,33 @@ export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfi
       </div>
 
       {/* ── workspace ────────────────────────────────────────────────────── */}
-      <div className="mt-6 grid gap-8 lg:grid-cols-[22rem_minmax(0,1fr)] xl:grid-cols-[26rem_minmax(0,1fr)]">
+      {/*
+        `lg-rem`/`xl-rem` rather than `lg`/`xl`: the configuration column is a FIXED track sized in
+        `rem`, so it doubles with the reader's text while a `px` breakpoint does not notice. Measured
+        at 1280px/200% before this change, the grid resolved to `[832px 256px]` — the fixed column
+        took everything and the preview absorbed the whole loss, ending at 254px with its scene's
+        cards 2px wide. The page never scrolled sideways, so the overflow gate stayed green while the
+        preview was unusable.
+
+        These breakpoints are the same widths at the default text size, so nothing moves for a reader
+        who has not changed it. At 200% text `lg-rem` needs 2048px, so a 1280px or 1440px screen
+        stacks instead: the controls go back to the sheet the narrow layout already uses, and the
+        preview gets the full column. That is the right trade — the composition is worth less than
+        the thing it is composing.
+      */}
+      <div className="mt-6 grid gap-8 lg-rem:grid-cols-[22rem_minmax(0,1fr)] xl-rem:grid-cols-[26rem_minmax(0,1fr)]">
         {/* The configuration panel keeps the SITE's theme — see create-preview.tsx. Hidden rather than
-            unmounted below lg so the sheet owns a single copy of the controls, not a second one. */}
-        <aside aria-label="Configuration" className="hidden min-w-0 lg:block">
+            unmounted below the two-column breakpoint so the sheet owns a single copy of the controls,
+            not a second one. It switches on the same breakpoint as the grid, so the two can never
+            disagree about whether there is a second column to put it in. */}
+        <aside aria-label="Configuration" className="hidden min-w-0 lg-rem:block">
           {sidebar}
         </aside>
 
         <section aria-labelledby="create-preview-heading" className="min-w-0">
           {/* Sticky on desktop only, and only as tall as the viewport: the panel is long now, and a
               preview that scrolled away would mean judging a colour from memory. */}
-          <div className="lg:sticky lg:top-20">
+          <div className="lg-rem:sticky lg-rem:top-20">
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
               <div className="flex items-baseline gap-4">
                 <span className="font-mono text-[11px] font-medium text-primary">[08]</span>

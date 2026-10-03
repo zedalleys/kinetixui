@@ -56,10 +56,24 @@ export function DashboardScene() {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col sm:flex-row">
+      {/*
+        `sm-rem` rather than `sm` throughout this scene.
+
+        The scene is drawn inside the preview pane, which is narrower than the viewport and narrower
+        still once the reader's text grows — so a `px` breakpoint reads the wrong room. Measured at
+        768px/200% before this change, the pane was 670px while `sm` (640px) was comfortably true, so
+        the scene laid itself out as a desktop app: a 320px sidebar took half of it and the three
+        stat cards were left 79px each for 299px of content.
+
+        `sm-rem` asks for 40rem of reader-measured width, which at the default text size is the same
+        640px this always used. At 200% it needs 1280px, so the scene stacks: the sidebar becomes a
+        wrapping row above the content and the stats become one column. Nothing is hidden and no text
+        is made smaller — the composition gives way instead, which is what it is for.
+      */}
+      <div className="flex flex-1 flex-col sm-rem:flex-row">
         {/* sidebar — `accent` on the selected row, `muted-foreground` on the rest */}
-        <nav aria-label="Preview sections" className="shrink-0 border-border sm:w-40 sm:border-e">
-          <ul className="flex flex-wrap gap-1 p-2 sm:block sm:space-y-1">
+        <nav aria-label="Preview sections" className="shrink-0 border-border sm-rem:w-40 sm-rem:border-e">
+          <ul className="flex flex-wrap gap-1 p-2 sm-rem:block sm-rem:space-y-1">
             {[
               { label: "Overview", active: true },
               { label: "Reports", active: false },
@@ -108,7 +122,7 @@ export function DashboardScene() {
           </div>
 
           {/* stats */}
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm-rem:grid-cols-3">
             <Card>
               <CardContent className="p-4">
                 <Metric label="Active users" value="8,420" trend="up" change="12%" />
