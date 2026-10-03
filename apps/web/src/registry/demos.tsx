@@ -156,11 +156,11 @@ add(
   () => (
     <div className="flex w-full max-w-sm flex-col gap-3">
       <Input placeholder="Default" />
-      <Input state="Error" defaultValue="Not quite right" />
+      <Input state="Error" defaultValue="Not quite right" aria-label="Username" />
       <Input state="Disabled" placeholder="Disabled" />
     </div>
   ),
-  `<Input placeholder="Default" />\n<Input state="Error" defaultValue="Not quite right" />\n<Input state="Disabled" placeholder="Disabled" />`,
+  `<Input placeholder="Default" />\n<Input state="Error" defaultValue="Not quite right" aria-label="Username" />\n<Input state="Disabled" placeholder="Disabled" />`,
 );
 add(
   "textarea-demo",

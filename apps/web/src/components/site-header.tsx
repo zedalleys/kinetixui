@@ -79,6 +79,8 @@ export function SiteHeader() {
             <Link
               key={item.href}
               href={item.href}
+              // "page" only on the page itself; "Docs" is marked as the current section on every /docs/* page.
+              aria-current={pathname === item.href ? "page" : active ? "true" : undefined}
               className={cn(
                 // px-2 at md, not px-3: the bar shows every primary nav item from 768px up, and at exactly that
                 // width eight items at px-3 overflowed the viewport by 12px — which showed up as sideways scroll

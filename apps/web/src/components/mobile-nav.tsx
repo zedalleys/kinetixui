@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Menu, X } from "lucide-react";
 import { docsNav, mainNav } from "@/lib/site";
@@ -15,6 +16,7 @@ const iconButton =
 // own close button.
 export function MobileNav() {
   const [open, setOpen] = React.useState(false);
+  const pathname = usePathname();
   const close = () => setOpen(false);
 
   return (
@@ -39,6 +41,7 @@ export function MobileNav() {
                 <Link
                   key={i.href}
                   href={i.href}
+                  aria-current={pathname === i.href ? "page" : undefined}
                   onClick={close}
                   className="flex items-center gap-2 rounded px-2 py-2 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
@@ -58,6 +61,7 @@ export function MobileNav() {
                     <Link
                       key={i.href}
                       href={i.href}
+                      aria-current={pathname === i.href ? "page" : undefined}
                       onClick={close}
                       className="block rounded px-2 py-1.5 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >

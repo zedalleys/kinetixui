@@ -134,21 +134,25 @@ export function DocsPageActions() {
     }
   };
 
+  // The fixed aria-label hides the visible "Copied", so the live region is what announces it.
   return (
-    <button
-      type="button"
-      onClick={copy}
-      className={cn(
-        // No `shrink-0`: this is a button with a four-word label, and forbidding it to shrink made it push
-        // /docs/* sideways at the reader's doubled text size. `text-start` so the label reads correctly if it
-        // does wrap rather than being centred over two ragged lines.
-        "inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-start font-mono text-[11px] uppercase tracking-[0.1em] transition-colors",
-        copied ? "border-primary/50 text-foreground" : "text-muted-foreground hover:text-foreground",
-      )}
-      aria-label="Copy this page as Markdown"
-    >
-      {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
-      {copied ? "Copied" : "Copy as Markdown"}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={copy}
+        className={cn(
+          // No `shrink-0`: this is a button with a four-word label, and forbidding it to shrink made it push
+          // /docs/* sideways at the reader's doubled text size. `text-start` so the label reads correctly if it
+          // does wrap rather than being centred over two ragged lines.
+          "inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-start font-mono text-[11px] uppercase tracking-[0.1em] transition-colors",
+          copied ? "border-primary/50 text-foreground" : "text-muted-foreground hover:text-foreground",
+        )}
+        aria-label="Copy this page as Markdown"
+      >
+        {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
+        {copied ? "Copied" : "Copy as Markdown"}
+      </button>
+      <span aria-live="polite" className="sr-only">{copied ? "Copied" : ""}</span>
+    </>
   );
 }

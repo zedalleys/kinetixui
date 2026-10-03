@@ -11,27 +11,31 @@ import { cn } from "@/lib/utils";
 export function CopyButton({ value, className, onCopy }: { value: string; className?: string; onCopy?: () => void }) {
   const [copied, setCopied] = React.useState(false);
 
+  // The icon swap is visual only; the live region is what tells a screen reader the copy happened.
   return (
-    <button
-      type="button"
-      aria-label="Copy"
-      onClick={() => {
-        navigator.clipboard.writeText(value).then(
-          () => {
-            onCopy?.();
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-          },
-          // clipboard blocked (permissions, insecure context): nothing was copied, so nothing is reported
-          () => {},
-        );
-      }}
-      className={cn(
-        "inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-        className,
-      )}
-    >
-      {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-    </button>
+    <>
+      <button
+        type="button"
+        aria-label="Copy"
+        onClick={() => {
+          navigator.clipboard.writeText(value).then(
+            () => {
+              onCopy?.();
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            },
+            // clipboard blocked (permissions, insecure context): nothing was copied, so nothing is reported
+            () => {},
+          );
+        }}
+        className={cn(
+          "inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+          className,
+        )}
+      >
+        {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+      </button>
+      <span aria-live="polite" className="sr-only">{copied ? "Copied" : ""}</span>
+    </>
   );
 }

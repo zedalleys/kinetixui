@@ -11,7 +11,7 @@ export function DocsBreadcrumb() {
   if (pathname === "/docs") {
     return (
       <nav
-        aria-label="Breadcrumb"
+        aria-label="Docs breadcrumb"
         className="font-mono text-[11px] uppercase tracking-[0.14em] text-foreground"
       >
         Docs
@@ -34,7 +34,7 @@ export function DocsBreadcrumb() {
 
   return (
     <nav
-      aria-label="Breadcrumb"
+      aria-label="Docs breadcrumb"
       className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground"
     >
       <Link href="/docs" className="transition-colors hover:text-foreground">
