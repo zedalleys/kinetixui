@@ -90,7 +90,13 @@ export function PlatformVerification({ slug }: { slug: string }) {
           const guidance = state && state !== "implementation" ? state : null;
           return (
             <li key={platform} className="flex flex-wrap items-baseline gap-x-2 font-mono text-[12px]">
-              <span className="w-[8.5rem] shrink-0 text-foreground">{def.label}</span>
+              {/*
+                `min-w` rather than a fixed `w`, so the column can still align the labels at the default text size
+                but is not a hard 8.5rem once that unit grows. At 200% text the fixed width resolved to 272px and
+                `shrink-0` forbade it from yielding, pushing the page 197px sideways at 320px. `basis-*` would have
+                done the same; the width being in `rem` was never the problem, refusing to give it up was.
+              */}
+              <span className="min-w-[8.5rem] text-foreground">{def.label}</span>
               {on.has(platform) ? (
                 <span className="text-muted-foreground">Available</span>
               ) : (
