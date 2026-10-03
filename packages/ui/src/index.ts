@@ -46,6 +46,7 @@ export {
   CardTitle,
   CardDescription,
   CardContent,
+  type CardProps,
 } from "./components/card";
 export { Checkbox } from "./components/checkbox";
 export { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./components/collapsible";

@@ -436,6 +436,102 @@ const CONTROLS = {
  * assembled to make a rule fire. `imports` names identifiers the render needs beyond the demo's own.
  */
 const EXTRA = {
+  // The surface model (TOKENS.md) in the three places a card actually lives, so both axe passes and
+  // `check:card-visual` see the states a tidy single-card demo never reaches.
+  card: [
+    {
+      name: "Grouped",
+      // Cards on a grouped section — a settings page's region. This is the arrangement that inverted in dark
+      // mode while the group was `bg-muted`, which is lighter than `card` there.
+      render: `() => (
+    <section aria-labelledby="card-grouped-heading" className="w-[36rem] max-w-full rounded-xl bg-surface-grouped p-4 sm:p-6">
+      <h2 id="card-grouped-heading" className="mb-4 text-title-md text-foreground">Workspace settings</h2>
+      <div className="grid gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Notifications</CardTitle>
+            <CardDescription>Choose what reaches your inbox.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between gap-4">
+              <Label htmlFor="card-grouped-digest">Weekly digest</Label>
+              <Switch id="card-grouped-digest" defaultChecked />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Danger zone</CardTitle>
+            <CardDescription>Archiving hides the workspace from every member.</CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button variant="Outline" size="sm">Archive workspace</Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </section>
+  )`,
+      imports: "Label Switch",
+    },
+    {
+      name: "Dense",
+      // A dashboard's KPI row: small padding, numbers first, three abreast on a page.
+      render: `() => (
+    <div className="grid w-[40rem] max-w-full gap-3 sm:grid-cols-3">
+      {[
+        ["Revenue", "$45,231", "+12.5% this month"],
+        ["Active users", "2,420", "+8.1% this month"],
+        ["Churn", "1.2%", "−0.3% this month"],
+      ].map(([label, value, change]) => (
+        <Card key={label}>
+          <CardContent className="flex flex-col gap-1 p-4">
+            <span className="text-body-sm text-muted-foreground">{label}</span>
+            <span className="text-headline-sm font-medium tabular-nums">{value}</span>
+            <span className="text-body-sm text-muted-foreground">{change}</span>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )`,
+    },
+    {
+      name: "Interactive",
+      // The opt-in contract: the element is the action. Links are navigation (one is the current page), the
+      // buttons are toggles. A <button> may only hold phrasing content, so its card uses spans, not CardHeader.
+      render: `() => (
+    <div className="grid w-[40rem] max-w-full gap-4 sm:grid-cols-2">
+      <Card asChild>
+        <a href="#reports-q3">
+          <CardHeader>
+            <CardTitle>Q3 report</CardTitle>
+            <CardDescription>Revenue, churn and cohort retention.</CardDescription>
+          </CardHeader>
+        </a>
+      </Card>
+      <Card asChild>
+        <a href="#reports-q4" aria-current="page">
+          <CardHeader>
+            <CardTitle>Q4 report</CardTitle>
+            <CardDescription>The report you are viewing.</CardDescription>
+          </CardHeader>
+        </a>
+      </Card>
+      <Card asChild>
+        <button type="button" aria-pressed="true" className="p-6">
+          <span className="block font-semibold leading-none tracking-tight">Daily backups</span>
+          <span className="mt-1.5 block text-sm text-muted-foreground">Included in this plan.</span>
+        </button>
+      </Card>
+      <Card asChild>
+        <button type="button" aria-pressed="false" className="p-6">
+          <span className="block font-semibold leading-none tracking-tight">Audit log</span>
+          <span className="mt-1.5 block text-sm text-muted-foreground">Add to this plan.</span>
+        </button>
+      </Card>
+    </div>
+  )`,
+    },
+  ],
   table: [
     {
       name: "Overflowing",

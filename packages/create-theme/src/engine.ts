@@ -303,6 +303,9 @@ const NEUTRAL_LADDER: Record<Mode, Record<string, number>> = {
     card: 1,
     popover: 1,
     muted: 0.975,
+    // The grouped section a card sits on. Light shares `muted`'s step; dark sits between the page and
+    // `card`, because dark `muted` is above `card` and a card on it would read as recessed.
+    "surface-grouped": 0.975,
     border: 0.86,
     input: 0.86,
     "muted-foreground": 0.535,
@@ -313,6 +316,7 @@ const NEUTRAL_LADDER: Record<Mode, Record<string, number>> = {
     card: 0.22,
     popover: 0.22,
     muted: 0.27,
+    "surface-grouped": 0.19,
     border: 0.4,
     input: 0.4,
     "muted-foreground": 0.72,

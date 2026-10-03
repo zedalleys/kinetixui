@@ -32,6 +32,73 @@
 | Primitives — opacity | `tokens/primitives/opacity.json` | not from Figma — grounded in the dominant `opacity-0/50/70/100` usages already in components |
 | Primitives — z-index | `tokens/primitives/z-index.json` | not from Figma — grounded in the `z-[1]/z-10/z-20/z-40/z-50` usages already in components |
 
+## Surface model
+
+Hierarchy comes from surface, spacing, type and restrained elevation, not from a stroke around everything.
+The model is the smallest set of roles that says where content sits; most of it already existed under
+other names, and one role was missing.
+
+| Role | Token(s) | Light | Dark |
+|---|---|---|---|
+| Page | `background` | `#ffffff` | `#050c11` |
+| Grouped section | `surface-grouped` (**new**) | `#f6f6f6` | `#081219` |
+| Raised content | `card` + edge `border` @ 50% + `shadow-md` | `#ffffff` | `#0b1821` |
+| Inset / fill inside content | `muted` | `#f6f6f6` | `#102432` |
+| Overlay | `popover` + `border` + elevation | `#ffffff` | `#0b1821` |
+
+Interactive and selected are **states of a raised surface**, not surfaces of their own, so they are not
+tokens: they are expressed with `border`, `primary`, `muted` and the elevation ladder (see Card below).
+Seven explicit surface tokens (base / subtle / raised / interactive / selected / inset / overlay) were
+considered and rejected as over-modelling: five would have been aliases of existing roles.
+
+**Why `surface-grouped` exists.** `muted` cannot be the grouped section in dark mode: dark `muted`
+(blue.700) is *lighter* than `card` (blue.800), so a card on a `muted` section read as recessed. In light
+the two share a value. `pnpm check:card-visual` asserts card-above-group on rendered pixels in both themes,
+and fails if the dark value is pointed back at `muted`'s.
+
+### Elevation contract
+
+The ladder itself (`shadow.sm/md/lg/xl`) is unchanged — Create's surface treatments (`flat`, `bordered`,
+`elevated`) remap it, and the native ports and Create fixtures carry its values. What changed is which
+step a role uses:
+
+| Role | Step | Notes |
+|---|---|---|
+| Depth inside a control (segment thumb, pressed toggle) | `sm` | as before |
+| Raised content, resting (Card) | `md` | was `sm`, whose 5% shadow did not visibly render (measured 1.02:1 under the card) |
+| Raised content, hovered (interactive Card) | `lg` | |
+| Overlay (popover, menus, select, hover card) | `md` today | should sit above raised content — follow-up |
+| Modal (dialog, alert dialog, sheet) | `lg` today | Modal uses a literal equal to `xl` — follow-up |
+
+In dark mode a black shadow on a near-black page has almost nothing to darken, so dark elevation is
+carried by the surface step (`card` over `background` / `surface-grouped`) and the edge, and the gate
+asserts that rather than pretending the shadow does.
+
+### Card
+
+Shared contract (every platform): a Card is a raised surface. **Surface** `card`; **edge** `border` at
+half strength, softer than the controls inside it; **elevation** `md` at rest; **radius** `surface`
+(`radius.xl`). A Card is **static**: no hover, no pressed state, no pointer affordance. Interaction is
+opt-in and comes from the element's own semantics — the card IS the action (a link or a button), so it
+holds no other controls.
+
+| State | Trigger | Change | Not carried by colour alone |
+|---|---|---|---|
+| Hover | pointer that can hover | edge → full `border`, `md` → `lg` | depth |
+| Pressed | `:active` | `lg` → `sm`, `muted` wash | depth + fill |
+| Selected | `aria-pressed="true"` / `aria-current` | 2px `primary` edge | edge weight 1px → 2px |
+| Focus | keyboard | shared `shadow-focus` ring, above every other state | ring |
+
+Motion: `box-shadow`, `border-color`, `background-color` over `duration-fast` (200ms) with
+`ease-standard`, on hover/press only; nothing moves or resizes. Reduced motion removes the transition and
+lands on the same end state.
+
+| Platform | Status |
+|---|---|
+| React | Implemented and verified on rendered pixels (`check:card-visual`, light + dark) |
+| Angular | Resting surface only (`.kx-card`); interactive states not implemented |
+| SwiftUI, Compose, Flutter | Not changed in this slice — still `border` at full strength and `sm` elevation; `surface-grouped` is emitted to each port's colour constants but not yet in the themeable colour sets |
+
 ## Role tokens (added on top of `primary`)
 
 `brand`, `action` (+ `action-foreground`), `link` and `focus` are **repo-owned** — none exist in Figma. `action`,

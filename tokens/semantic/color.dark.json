@@ -50,6 +50,11 @@
       "$value": "{color.blue.100}",
       "$type": "color"
     },
+    "surface-grouped": {
+      "$value": "{color.blue.850}",
+      "$type": "color",
+      "$description": "Between the page (blue.900) and `card` (blue.800), so a card on a grouped section reads as raised, as it does in light. Not an alias of `muted`: dark `muted` (blue.700) is lighter than `card`."
+    },
     "accent": {
       "$value": "{color.blue.700}",
       "$type": "color"

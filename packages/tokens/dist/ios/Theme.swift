@@ -68,6 +68,7 @@ public class KinetixTheme {
     public static let colorSidebarRing = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1)
     public static let colorSuccess = UIColor(red: 0.365, green: 0.427, blue: 0.361, alpha: 1) /** synth: no Figma success token; green ramp step 6 (distinct from secondary) */
     public static let colorSuccessForeground = UIColor(red: 0.945, green: 0.953, blue: 0.945, alpha: 1) /** synth */
+    public static let colorSurfaceGrouped = UIColor(red: 0.965, green: 0.965, blue: 0.965, alpha: 1) /** A grouped section that raised content (Card) sits on. Light: the grey of `muted`. Its own role because dark `muted` is lighter than `card`, which made a card on a group read as recessed. Surface model: TOKENS.md. */
     public static let colorTertiary = UIColor(red: 0.690, green: 0.690, blue: 0.690, alpha: 1) /** figma: tertiary — switch off-track */
     public static let colorTertiaryForeground = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
     public static let colorWarning = UIColor(red: 0.498, green: 0.357, blue: 0.129, alpha: 1) /** a11y: Figma onWarningContainer #f97907 is 2.7:1 as text on the page / 2.6:1 in the Tag warning variant — fails WCAG AA. amber.800 #7f5b21 clears 6.1:1 / 5.8:1. Dark --warning stays bright (amber.400). See ACCESSIBILITY-AUDIT.md. */
