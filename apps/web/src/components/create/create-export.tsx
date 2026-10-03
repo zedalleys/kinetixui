@@ -146,7 +146,15 @@ export function CreateExport({
               onChange={(event) => setSymbols((prev) => ({ ...prev, [target]: event.target.value }))}
               aria-invalid={result.error ? true : undefined}
               aria-describedby={result.error ? `${id}-symbol-error` : undefined}
-              className="mt-1 w-56 font-mono text-xs"
+              // `w-full max-w-[14rem]` rather than `w-56`: the same 224px wherever there is room for
+              // it, but a maximum instead of a fixed size. `w-56` is 14rem, so at 200% text it became a
+              // 448px field inside a 311px column and pushed /create 105px sideways on a phone — the
+              // `min-w-0` on its wrapper cannot help, because the width is on the input itself. This is
+              // the same defect family as the collapse this change fixes (a `rem` length that doubles
+              // while the viewport does not); it is only visible after selecting SwiftUI, Compose or
+              // Flutter, because Web CSS has no symbol to name, which is why the site sweep — which
+              // measures each page in its default state — never saw it.
+              className="mt-1 w-full max-w-[14rem] font-mono text-xs"
             />
           </div>
         ) : null}
