@@ -306,3 +306,58 @@ describe("the existing public contract is unchanged", () => {
     expect(wrapperOf(screen.getByRole("table")).className).toContain("focus-visible:ring-ring");
   });
 });
+
+describe("the label reference survives a caption id change", () => {
+  it("follows a caller's id when it changes without the table resizing", async () => {
+    function Fixture2({ captionId }: { captionId: string }) {
+      return (
+        <Table>
+          <TableCaption id={captionId}>Q3 invoices</TableCaption>
+          <TableBody>
+            <TableRow>
+              <TableCell>INV-001</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      );
+    }
+    const { rerender } = render(<Fixture2 captionId="first" />);
+    const wrapper = wrapperOf(screen.getByRole("table"));
+    setGeometry(wrapper, { scrollWidth: 900, clientWidth: 400 });
+    resize();
+    await waitFor(() => expect(wrapper).toHaveAttribute("aria-labelledby", "first"));
+
+    // The id changes but nothing moves — no resize, so no ResizeObserver callback. A cached id read
+    // only during measurement would be left pointing at an element that no longer exists.
+    rerender(<Fixture2 captionId="second" />);
+    await waitFor(() => expect(wrapper).toHaveAttribute("aria-labelledby", "second"));
+    expect(screen.getByText("Q3 invoices").id).toBe("second");
+    expect(wrapper).toHaveAccessibleName("Q3 invoices");
+  });
+
+  it("drops the name when the caption goes away without a resize", async () => {
+    function Fixture3({ withCaption }: { withCaption: boolean }) {
+      return (
+        <Table>
+          {withCaption ? <TableCaption>Q3 invoices</TableCaption> : null}
+          <TableBody>
+            <TableRow>
+              <TableCell>INV-001</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      );
+    }
+    const { rerender } = render(<Fixture3 withCaption />);
+    const wrapper = wrapperOf(screen.getByRole("table"));
+    setGeometry(wrapper, { scrollWidth: 900, clientWidth: 400 });
+    resize();
+    await waitFor(() => expect(wrapper).toHaveAttribute("role", "group"));
+
+    rerender(<Fixture3 withCaption={false} />);
+    // Still reachable — it still scrolls — but no longer claiming a name that is not in the document.
+    await waitFor(() => expect(wrapper).not.toHaveAttribute("aria-labelledby"));
+    expect(wrapper).not.toHaveAttribute("role");
+    expect(wrapper).toHaveAttribute("tabindex", "0");
+  });
+});

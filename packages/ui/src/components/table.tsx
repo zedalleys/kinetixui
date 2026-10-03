@@ -4,13 +4,26 @@ import * as React from "react";
 import { cn } from "../lib/utils";
 
 /**
- * The id `Table` offers its own `<caption>`, so the scroll container can be named by it.
+ * How `TableCaption` and `Table` agree on the id that names the scroll container.
  *
- * `useId` rather than a counter: it is stable across server and client render, so the `aria-labelledby`
- * the wrapper emits cannot disagree with the `id` the caption emits, and two tables on one page cannot
- * collide. A caption that was given an explicit `id` by the caller keeps it.
+ * `fallbackId` is a `useId` rather than a counter: stable across server and client render, and unique
+ * when several tables share a page. A caption given an explicit `id` by the caller keeps it.
+ *
+ * `register` is what keeps the two in step. The caption tells `Table` the id it actually ended up with,
+ * on mount, whenever that id changes, and again with `undefined` when it unmounts. The alternative —
+ * reading the caption's id out of the DOM while measuring — was wrong in a way review caught: a caller
+ * can change an `id` without changing any dimension (one derived from state, with the caption's text
+ * unchanged), no `ResizeObserver` callback fires, and the wrapper is left pointing `aria-labelledby` at
+ * an element that no longer exists. A dangling reference names nothing, so the focus stop goes
+ * unannounced. Registration follows the render that changed it, which is the thing that actually
+ * happened.
  */
-const TableCaptionIdContext = React.createContext<string | undefined>(undefined);
+type TableCaptionRegistration = {
+  fallbackId: string;
+  register: (id: string | undefined) => void;
+};
+
+const TableCaptionContext = React.createContext<TableCaptionRegistration | undefined>(undefined);
 
 /**
  * True only while the scroll container can actually scroll horizontally.
@@ -30,22 +43,13 @@ const TableCaptionIdContext = React.createContext<string | undefined>(undefined)
  * otherwise mint a useless focus stop.
  */
 function useHorizontalScrollState(ref: React.RefObject<HTMLElement | null>) {
-  const [state, setState] = React.useState<{ scrollable: boolean; captionId?: string }>({ scrollable: false });
+  const [scrollable, setScrollable] = React.useState(false);
 
   React.useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
-    const measure = () => {
-      const table = el.firstElementChild;
-      // The caption is read rather than tracked through context presence: a `<caption>` is always a direct
-      // child of its `<table>`, so this is exact, and it avoids making `TableCaption` register itself.
-      const caption =
-        table instanceof HTMLTableElement
-          ? Array.from(table.children).find((c): c is HTMLTableCaptionElement => c.tagName === "CAPTION")
-          : undefined;
-      setState({ scrollable: el.scrollWidth > el.clientWidth + 1, captionId: caption?.id || undefined });
-    };
+    const measure = () => setScrollable(el.scrollWidth > el.clientWidth + 1);
 
     measure();
     // ResizeObserver, not polling: the wrapper changes size when the viewport does, and the table changes
@@ -57,14 +61,20 @@ function useHorizontalScrollState(ref: React.RefObject<HTMLElement | null>) {
     return () => observer.disconnect();
   }, [ref]);
 
-  return state;
+  return scrollable;
 }
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => {
     const wrapper = React.useRef<HTMLDivElement>(null);
-    const captionId = React.useId();
-    const { scrollable, captionId: labelledBy } = useHorizontalScrollState(wrapper);
+    const fallbackId = React.useId();
+    const [labelledBy, setLabelledBy] = React.useState<string>();
+    const scrollable = useHorizontalScrollState(wrapper);
+    // `setLabelledBy` is stable, so this is created once per table and never re-provides needlessly.
+    const caption = React.useMemo<TableCaptionRegistration>(
+      () => ({ fallbackId, register: setLabelledBy }),
+      [fallbackId],
+    );
 
     return (
       <div
@@ -84,9 +94,9 @@ const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableE
             }
           : {})}
       >
-        <TableCaptionIdContext.Provider value={captionId}>
+        <TableCaptionContext.Provider value={caption}>
           <table ref={ref} className={cn("w-full caption-bottom text-sm font-sans", className)} {...props} />
-        </TableCaptionIdContext.Provider>
+        </TableCaptionContext.Provider>
       </div>
     );
   },
@@ -145,11 +155,23 @@ const TableCaption = React.forwardRef<HTMLTableCaptionElement, React.HTMLAttribu
   ({ className, id, ...props }, ref) => {
     // Falls back to the id `Table` generated, so the scroll container has something real to point
     // `aria-labelledby` at. A caller-supplied `id` always wins, so nothing that already sets one changes.
-    const fallbackId = React.useContext(TableCaptionIdContext);
+    const context = React.useContext(TableCaptionContext);
+    const effectiveId = id ?? context?.fallbackId;
+    const register = context?.register;
+
+    // Report the id upward after every render that changes it, and withdraw it on unmount so a table
+    // whose caption is removed stops claiming a name instead of pointing at a missing element. A
+    // `TableCaption` rendered outside a `Table` has nothing to register with and simply renders.
+    React.useEffect(() => {
+      if (!register) return;
+      register(effectiveId);
+      return () => register(undefined);
+    }, [register, effectiveId]);
+
     return (
       <caption
         ref={ref}
-        id={id ?? fallbackId}
+        id={effectiveId}
         className={cn("mt-4 text-sm text-muted-foreground", className)}
         {...props}
       />
