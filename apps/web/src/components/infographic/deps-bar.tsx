@@ -29,7 +29,7 @@ export function DepsBar() {
     <figure className="mt-5">
       <div className="space-y-2.5">
         {ROWS.map((r) => (
-          <div key={r.name} className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)]">
+          <div key={r.name} className="grid grid-cols-[minmax(0,40%)_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)]">
             <span
               className={
                 "truncate text-right font-mono text-[11px] " +

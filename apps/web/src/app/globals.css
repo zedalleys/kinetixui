@@ -89,6 +89,23 @@
     overflow-wrap: break-word;
   }
   /*
+    Body text, for the same reason. Proven by runtime mutation before being written here: adding this
+    one rule clears /docs, /docs/accessibility and /docs/cli at 320px/200% outright, and takes
+    /docs/changelog from 187px of overflow to 68px. Prose on this site is full of technical
+    identifiers — `components.manifest.json` measured 406px wide inside a 256px column and
+    `npx @kinetixui/cli list` 442px — and each is a single unbreakable run.
+    `pre` and its descendants are put back to `normal`: a code BLOCK must keep its own line structure
+    and scroll inside its keyboard-reachable region, and `overflow-wrap` would otherwise re-wrap code
+    lines even under `white-space: pre`.
+  */
+  body {
+    overflow-wrap: break-word;
+  }
+  pre,
+  pre * {
+    overflow-wrap: normal;
+  }
+  /*
     Inline code, for the same reason and with the same measurement behind it. Docs prose is full of
     flags, token names and package paths — `--platform=swiftui`, `bg-action`, `@kinetixui/iot/functions`
     — and each is one unbreakable run. At 200% text a single such run was wider than the prose column,

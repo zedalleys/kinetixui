@@ -422,7 +422,9 @@ export default function HomePage() {
                   <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                     <f.icon className="size-5" />
                   </span>
-                  <h3 className="mt-1 font-display text-lg font-semibold">{f.title}</h3>
+                  {/* `min-w-0`: a flex item's `min-width` defaults to `auto`, i.e. its min-content
+                      width, so at doubled text this heading's longest word floored the row. */}
+                  <h3 className="mt-1 min-w-0 font-display text-lg font-semibold">{f.title}</h3>
                 </div>
                 <p className="text-sm leading-relaxed text-muted-foreground md:text-base">{f.body}</p>
               </div>
@@ -481,7 +483,10 @@ export default function HomePage() {
             </p>
           </Reveal>
 
-          <Reveal className="mt-12 grid gap-6 md:grid-cols-3">
+          {/* `[&>*]:min-w-0`: these cards are grid items, and a grid track with `min-width: auto` cannot
+              shrink below its content's min-content width. Proven by greedy mutation — this is the
+              element that takes the homepage from 26px of overflow to 0 at 320px/200% text. */}
+          <Reveal className="mt-12 grid gap-6 [&>*]:min-w-0 md:grid-cols-3">
             <div className="kx-frame flex flex-col border border-border p-6">
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                 Level 01 — tokens
