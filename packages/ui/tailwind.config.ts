@@ -73,6 +73,9 @@ export default {
           // is tuned against `--background` and `--muted`; a 10% tint drops it to 4.33:1.
           "on-container": c("--semantic-muted-on-container"),
         },
+        // The grouped section raised content sits on (TOKENS.md, surface model). Not `muted`: dark `muted` is
+        // lighter than `card`, so a card on it read as recessed.
+        surface: { grouped: c("--surface-grouped") },
         accent: { DEFAULT: c("--accent"), foreground: c("--accent-foreground") },
         destructive: { DEFAULT: c("--destructive"), foreground: c("--destructive-foreground") },
         success: { DEFAULT: c("--success"), foreground: c("--success-foreground") },

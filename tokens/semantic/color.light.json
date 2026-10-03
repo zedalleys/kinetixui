@@ -60,6 +60,11 @@
       "$type": "color",
       "$description": "figma: onSurfaceVariant #6d6d6d"
     },
+    "surface-grouped": {
+      "$value": "{color.neutral.100}",
+      "$type": "color",
+      "$description": "A grouped section that raised content (Card) sits on. Light: the grey of `muted`. Its own role because dark `muted` is lighter than `card`, which made a card on a group read as recessed. Surface model: TOKENS.md."
+    },
     "accent": {
       "$value": "{color.blue.50}",
       "$type": "color",

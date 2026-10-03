@@ -69,6 +69,7 @@ object KinetixTheme {
   val colorSidebarRing = Color(0xff1d4ed8)
   val colorSuccess = Color(0xff5d6d5c)
   val colorSuccessForeground = Color(0xfff1f3f1)
+  val colorSurfaceGrouped = Color(0xfff6f6f6)
   val colorTertiary = Color(0xffb0b0b0)
   val colorTertiaryForeground = Color(0xfff0f7ff)
   val colorWarning = Color(0xff7f5b21)

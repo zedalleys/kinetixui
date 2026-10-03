@@ -15,7 +15,14 @@
   "components": [
     {
       "name": "Card",
-      "props": []
+      "props": [
+        {
+          "name": "asChild",
+          "type": "boolean",
+          "required": false,
+          "description": "Render as the single child element (Radix Slot) instead of a `<div>` — e.g. `<Card asChild><a href=\"/reports/q3\">…</a></Card>`. When that element is an `<a href>` or a `<button>`, the card takes the …"
+        }
+      ]
     },
     {
       "name": "CardHeader",

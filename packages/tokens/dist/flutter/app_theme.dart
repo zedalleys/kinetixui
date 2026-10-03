@@ -71,6 +71,7 @@ class KinetixTheme {
     static const colorSidebarRing = Color(0xFF1D4ED8);
     static const colorSuccess = Color(0xFF5D6D5C); /** synth: no Figma success token; green ramp step 6 (distinct from secondary) */
     static const colorSuccessForeground = Color(0xFFF1F3F1); /** synth */
+    static const colorSurfaceGrouped = Color(0xFFF6F6F6); /** A grouped section that raised content (Card) sits on. Light: the grey of `muted`. Its own role because dark `muted` is lighter than `card`, which made a card on a group read as recessed. Surface model: TOKENS.md. */
     static const colorTertiary = Color(0xFFB0B0B0); /** figma: tertiary — switch off-track */
     static const colorTertiaryForeground = Color(0xFFF0F7FF);
     static const colorWarning = Color(0xFF7F5B21); /** a11y: Figma onWarningContainer #f97907 is 2.7:1 as text on the page / 2.6:1 in the Tag warning variant — fails WCAG AA. amber.800 #7f5b21 clears 6.1:1 / 5.8:1. Dark --warning stays bright (amber.400). See ACCESSIBILITY-AUDIT.md. */

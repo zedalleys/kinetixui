@@ -23,6 +23,7 @@ on:
       - "scripts/large-text.mjs"
       - "scripts/motion.mjs"
       - "scripts/motion-states.mjs"
+      - "scripts/card-visual.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -38,6 +39,7 @@ on:
       - "scripts/large-text.mjs"
       - "scripts/motion.mjs"
       - "scripts/motion-states.mjs"
+      - "scripts/card-visual.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -93,3 +95,10 @@ jobs:
       # install above are exactly what it needs.
       - name: Motion pass (rendered intermediate states, normal and reduced)
         run: pnpm check:motion
+
+      # Card's surface and state contract, read off rendered pixels in light and dark: the resting edge
+      # is softer than the controls inside it, the card is lifted and sits above a grouped section, a static
+      # card ignores the pointer, and an interactive one has distinct hover, pressed, selected and focus
+      # states plus a hover transition that reduced motion removes. Same Storybook and Chromium as above.
+      - name: Card visual contract (surface + states, light and dark)
+        run: pnpm check:card-visual

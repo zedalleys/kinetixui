@@ -150,6 +150,7 @@ export const tokens = {
     "secondary-foreground": "#465245",
     "muted": "#f6f6f6",
     "muted-foreground": "#6d6d6d",
+    "surface-grouped": "#f6f6f6",
     "accent": "#f0f7ff",
     "accent-foreground": "#1d4ed8",
     "destructive": "#c60a0a",
