@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx · controls: scripts/gen-stories.mjs CONTROLS */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Checkbox, Label } from "@kinetixui/ui";
+import { Card, CardContent, Checkbox, Label, Select } from "@kinetixui/ui";
 
 const Demo = () => (
     <div className="flex items-center gap-2">
@@ -27,3 +27,25 @@ export default meta;
 export const Playground: StoryObj<typeof meta> = { render: (args) => <Checkbox aria-label="Accept terms" {...args} /> };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const States: StoryObj<typeof meta> = { render: () => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-4 p-6">
+        {([
+          ["unchecked", "Email me about product updates", {}],
+          ["checked", "Email me about security alerts", { defaultChecked: true }],
+          ["mixed", "Select all regions", { checked: "indeterminate" }],
+          ["invalid", "I accept the terms of service", { "aria-invalid": true, "aria-describedby": "cb-terms-error" }],
+          ["invalid-checked", "I accept the data processing terms", { "aria-invalid": true, defaultChecked: true }],
+          ["disabled", "Archive automatically (admins only)", { disabled: true }],
+          ["disabled-checked", "Keep an audit log (always on)", { disabled: true, defaultChecked: true }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="flex items-center gap-3">
+            <Checkbox id={`cb-${key}`} data-kx-case={key} {...props} />
+            <Label htmlFor={`cb-${key}`}>{label}</Label>
+          </div>
+        ))}
+        <p id="cb-terms-error" className="text-body-sm text-destructive">Accept the terms to continue.</p>
+      </CardContent>
+    </Card>
+  ) };

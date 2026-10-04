@@ -24,6 +24,11 @@ on:
       - "scripts/motion.mjs"
       - "scripts/motion-states.mjs"
       - "scripts/card-visual.mjs"
+      - "scripts/selection-visual.mjs"
+      - "scripts/visual-harness.mjs"
+      - "scripts/visual-gates.mjs"
+      - "packages/ui-angular/src/styles.css"
+      - "packages/ui-angular/src/lib/selection-render.spec.ts"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -40,6 +45,11 @@ on:
       - "scripts/motion.mjs"
       - "scripts/motion-states.mjs"
       - "scripts/card-visual.mjs"
+      - "scripts/selection-visual.mjs"
+      - "scripts/visual-harness.mjs"
+      - "scripts/visual-gates.mjs"
+      - "packages/ui-angular/src/styles.css"
+      - "packages/ui-angular/src/lib/selection-render.spec.ts"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -102,3 +112,11 @@ jobs:
       # states plus a hover transition that reduced motion removes. Same Storybook and Chromium as above.
       - name: Card visual contract (surface + states, light and dark)
         run: pnpm check:card-visual
+
+      # The selection-control state contract (TOKENS.md, "Selection controls") on rendered pixels, for React
+      # (the States stories) and Angular (the DOM Angular renders for the same states, painted with the
+      # package's styles.css): a 3:1 unchecked edge, hover and press as distinct state layers, checked as a
+      # shape, a focus ring nothing covers, invalid that survives hover, inert disabled, the chosen segment
+      # above its track in both themes, and a state-layer transition that reduced motion removes.
+      - name: Selection-control visual contract (React + Angular, light and dark)
+        run: pnpm check:selection-visual

@@ -532,6 +532,124 @@ const EXTRA = {
   )`,
     },
   ],
+  // The selection-control state contract (TOKENS.md, "Selection controls"). Each control's demo shows one
+  // resting value; these show every value and condition a real form produces side by side — unchecked,
+  // checked, mixed, invalid (a required consent the user skipped), disabled — so both axe passes and
+  // `check:selection-visual` measure them, and in a raised Card, which is where a settings form puts them.
+  checkbox: [
+    {
+      name: "States",
+      imports: "Card CardContent Label",
+      render: `() => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-4 p-6">
+        {([
+          ["unchecked", "Email me about product updates", {}],
+          ["checked", "Email me about security alerts", { defaultChecked: true }],
+          ["mixed", "Select all regions", { checked: "indeterminate" }],
+          ["invalid", "I accept the terms of service", { "aria-invalid": true, "aria-describedby": "cb-terms-error" }],
+          ["invalid-checked", "I accept the data processing terms", { "aria-invalid": true, defaultChecked: true }],
+          ["disabled", "Archive automatically (admins only)", { disabled: true }],
+          ["disabled-checked", "Keep an audit log (always on)", { disabled: true, defaultChecked: true }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="flex items-center gap-3">
+            <Checkbox id={\`cb-\${key}\`} data-kx-case={key} {...props} />
+            <Label htmlFor={\`cb-\${key}\`}>{label}</Label>
+          </div>
+        ))}
+        <p id="cb-terms-error" className="text-body-sm text-destructive">Accept the terms to continue.</p>
+      </CardContent>
+    </Card>
+  )`,
+    },
+  ],
+  "radio-group": [
+    {
+      name: "States",
+      imports: "Card CardContent Label",
+      render: `() => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-6 p-6">
+        <RadioGroup defaultValue="weekly" aria-label="Digest frequency">
+          {([["daily", "Daily"], ["weekly", "Weekly"], ["never", "Never"]] as const).map(([v, label]) => (
+            <div key={v} className="flex items-center gap-3">
+              <RadioGroupItem value={v} id={\`rg-\${v}\`} data-kx-case={v === "weekly" ? "checked" : v === "daily" ? "unchecked" : undefined} />
+              <Label htmlFor={\`rg-\${v}\`}>{label}</Label>
+            </div>
+          ))}
+        </RadioGroup>
+        <RadioGroup aria-label="Billing plan" aria-describedby="rg-plan-error">
+          {([["starter", "Starter"], ["team", "Team"]] as const).map(([v, label]) => (
+            <div key={v} className="flex items-center gap-3">
+              <RadioGroupItem value={v} id={\`rg-\${v}\`} aria-invalid data-kx-case={v === "starter" ? "invalid" : undefined} />
+              <Label htmlFor={\`rg-\${v}\`}>{label}</Label>
+            </div>
+          ))}
+          <p id="rg-plan-error" className="text-body-sm text-destructive">Choose a plan to continue.</p>
+        </RadioGroup>
+        <RadioGroup defaultValue="eu" disabled aria-label="Data region (locked)">
+          {([["eu", "EU"], ["us", "US"]] as const).map(([v, label]) => (
+            <div key={v} className="flex items-center gap-3">
+              <RadioGroupItem value={v} id={\`rg-\${v}\`} data-kx-case={v === "us" ? "disabled" : "disabled-checked"} />
+              <Label htmlFor={\`rg-\${v}\`}>{label}</Label>
+            </div>
+          ))}
+        </RadioGroup>
+      </CardContent>
+    </Card>
+  )`,
+    },
+  ],
+  switch: [
+    {
+      name: "States",
+      imports: "Card CardContent Label",
+      render: `() => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-4 p-6">
+        {([
+          ["off", "Push notifications", {}],
+          ["on", "Weekly digest", { defaultChecked: true }],
+          ["disabled", "SMS alerts (add a phone first)", { disabled: true }],
+          ["disabled-on", "Security emails (required)", { disabled: true, defaultChecked: true }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="flex items-center justify-between gap-4">
+            <Label htmlFor={\`sw-\${key}\`}>{label}</Label>
+            <Switch id={\`sw-\${key}\`} data-kx-case={key} {...props} />
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )`,
+    },
+  ],
+  "segmented-control": [
+    {
+      name: "States",
+      imports: "Card CardContent",
+      // On the page and inside a raised Card: the track is an inset well in both, and the chosen segment
+      // must sit above its track in both themes — the arrangement that inverted in dark mode.
+      render: `() => (
+    <div className="grid w-[24rem] max-w-full gap-6">
+      <SegmentedControl defaultValue="week" aria-label="Range" data-kx-case="page">
+        <SegmentedControlItem value="day">Day</SegmentedControlItem>
+        <SegmentedControlItem value="week">Week</SegmentedControlItem>
+        <SegmentedControlItem value="month">Month</SegmentedControlItem>
+        <SegmentedControlItem value="year" disabled>Year</SegmentedControlItem>
+      </SegmentedControl>
+      <Card>
+        <CardContent className="p-4">
+          <SegmentedControl defaultValue="grid" aria-label="Layout" data-kx-case="card" className="w-full">
+            <SegmentedControlItem value="list">List</SegmentedControlItem>
+            <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
+            <SegmentedControlItem value="board">Board</SegmentedControlItem>
+          </SegmentedControl>
+        </CardContent>
+      </Card>
+    </div>
+  )`,
+    },
+  ],
   table: [
     {
       name: "Overflowing",
