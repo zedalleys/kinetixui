@@ -147,7 +147,7 @@
       "communityReuse": "COM-002 draws on the same argument \u2014 not within 48 hours",
       "metricToWatch": "replies; the most quotable asset in week 1",
       "status": "published",
-      "result": "Posted 2026-10-04, on its scheduled day 6. No counts are recorded yet: this row was logged the same day it went out, so the honest result is none observed so far, to be replaced with absolute counts (replies first, since that is the metric to watch, then sessions carrying kx_p1_c_manifest with utm_content=x_single) at the next close-out. Organic only \u2014 no amplification. COM-002 must not go out before 2026-10-06 (48-hour rule). Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
+      "result": "Posted 2026-10-04, on its scheduled day 6. No counts are recorded yet: this row was logged the same day it went out, so the honest result is none observed so far, to be replaced with absolute counts (replies first, since that is the metric to watch, then sessions carrying kx_p1_c_manifest with utm_content=x_single) at the next close-out. Organic only \u2014 no amplification. The exact posting time is not recorded, so to keep COM-002 a full 48 hours clear it should not go out before 2026-10-07. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {
       "date": null,
