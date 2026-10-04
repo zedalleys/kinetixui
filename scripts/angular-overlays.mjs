@@ -449,6 +449,8 @@ const BEHAVIOUR = [
         await settled(page);
         const r = await rectOf(page, surface);
         t(edges[side](r), `${side}: attached to the ${side} edge (LTR page)`, `${r.left.toFixed(0)},${r.top.toFixed(0)} ${r.width.toFixed(0)}x${r.height.toFixed(0)}`);
+        const ids = await page.evaluate((s) => ({ controls: document.getElementById(`sheet-${s}-trigger`).getAttribute("aria-controls"), panel: document.querySelector(`#sheet-${s} dialog`).id, labelledby: document.querySelector(`#sheet-${s} dialog`).getAttribute("aria-labelledby") }), side);
+        t(ids.controls === `sheet-${side}-panel` && ids.panel === ids.controls && ids.labelledby === `sheet-${side}-title`, `${side}: bound ids on the panel and title are the ids the trigger and the panel point at`, JSON.stringify(ids));
         const full = side === "start" || side === "end" ? Math.abs(r.height - vp.height) <= 1 : Math.abs(r.width - vp.width) <= 1;
         t(full, `${side}: full length along its edge`);
         t((await page.getByRole("dialog", { name: "Filters" }).count()) === 1, `${side}: named by its title`);
@@ -571,6 +573,16 @@ const BEHAVIOUR = [
       t(tip.bottom <= tr.top && centredOrShifted(tip, tr, vw), "above its trigger, centred on it (shifted to stay 8px inside the viewport)", `trigger ${tr.left.toFixed(0)}–${tr.right.toFixed(0)}, tooltip ${tip.left.toFixed(0)}–${tip.right.toFixed(0)}`);
       await press(page, "Escape");
       t(!(await showing(page, "#tip-content")) && (await active(page)) === "tip-trigger", "Escape closes it, focus stays on the trigger", await active(page));
+      // keyboard focus and hover are separate reasons to stay open: the pointer passing over and away does not
+      // close a tooltip whose trigger still has keyboard focus
+      await page.locator("#pop-after").focus();
+      await page.keyboard.press("Shift");
+      await focus(page, "#tip-trigger");
+      await page.locator("#tip-trigger").hover();
+      await page.mouse.move(600, 780);
+      await page.waitForTimeout(300);
+      await idle(page);
+      t(await showing(page, "#tip-content") && (await active(page)) === "tip-trigger", "the pointer leaving does not close it while the trigger has keyboard focus");
       await press(page, "Tab");
       t((await active(page)) === "tip-described-trigger", "it is never a Tab stop: Tab goes to the next control", await active(page));
       t(!(await showing(page, "#tip-content")) && (await showing(page, "#tip-described-content")), "blur closes it; the next trigger's opens");
@@ -620,6 +632,11 @@ const BEHAVIOUR = [
       t(await showing(page, "#hc-content"), "keyboard focus opens it");
       await press(page, "Tab");
       t((await active(page)) === "hc-link" && (await showing(page, "#hc-content")), "Tab walks into its link, and it stays open", await active(page));
+      await trigger.hover();
+      await page.mouse.move(600, 780);
+      await page.waitForTimeout(500);
+      await idle(page);
+      t((await active(page)) === "hc-link" && (await showing(page, "#hc-content")), "the pointer leaving does not take it away from keyboard focus on its link", await active(page));
       await press(page, "Tab");
       t((await active(page)) === "hc-after" && !(await showing(page, "#hc-content")), "Tab on out of it closes it", await active(page));
       await focus(page, "#hc-trigger");
@@ -630,6 +647,8 @@ const BEHAVIOUR = [
       await page.mouse.move(2, 2);
       await idle(page);
       t(!(await showing(page, "#hc-content")), "closed once focus and pointer are both elsewhere", String(await out(page, "hover-card")));
+      // pointer only from here: keyboard focus left on the trigger would (rightly) keep it open
+      await page.evaluate(() => document.activeElement?.blur());
       await trigger.hover();
       await page.waitForTimeout(800);
       await idle(page);

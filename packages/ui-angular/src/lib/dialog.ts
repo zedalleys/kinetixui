@@ -5,8 +5,8 @@ import {
   DestroyRef,
   Directive,
   ElementRef,
-  HostAttributeToken,
   InjectionToken,
+  type Signal,
   afterRenderEffect,
   booleanAttribute,
   computed,
@@ -17,6 +17,7 @@ import {
   input,
   model,
   output,
+  signal,
   untracked,
 } from '@angular/core';
 import { KxButton } from './button';
@@ -68,6 +69,8 @@ import { KxOverlayStack, activeElement, isFocusTarget, tabbables, wrapTab, type 
 
 export const KX_DIALOG = new InjectionToken<KxDialogRoot>('KxDialogRoot');
 
+type IdSource = Signal<string | undefined> | null;
+
 /** The state every member of the family shares. */
 @Directive()
 export abstract class KxDialogRoot {
@@ -79,11 +82,15 @@ export abstract class KxDialogRoot {
    */
   readonly returnFocus = input<HTMLElement | null>(null);
 
-  private readonly id = disclosureId('dialog');
-  /** Generated, unless the part carries an `id` of its own — then that one is used, and the references follow. */
-  contentId = `${this.id}-content`;
-  titleId = `${this.id}-title`;
-  descriptionId = `${this.id}-description`;
+  private readonly base = disclosureId('dialog');
+  /** Each part's own `id` input, static or bound, registered by the part as it is created. */
+  readonly contentIdFrom = signal<IdSource>(null);
+  readonly titleIdFrom = signal<IdSource>(null);
+  readonly descriptionIdFrom = signal<IdSource>(null);
+  /** Generated, unless the part has an `id` of its own (`id="…"` or `[id]="…"`) — then that one, as it changes. */
+  readonly contentId = computed(() => this.contentIdFrom()?.() || `${this.base}-content`);
+  readonly titleId = computed(() => this.titleIdFrom()?.() || `${this.base}-title`);
+  readonly descriptionId = computed(() => this.descriptionIdFrom()?.() || `${this.base}-description`);
   /** The trigger, when there is one: a fallback focus target on close. */
   trigger: HTMLElement | null = null;
 
@@ -161,7 +168,7 @@ export class KxDrawer extends KxDialogRoot {}
     type: 'button',
     'aria-haspopup': 'dialog',
     '[attr.aria-expanded]': 'root.open()',
-    '[attr.aria-controls]': 'root.contentId',
+    '[attr.aria-controls]': 'root.contentId()',
     '(click)': 'root.show()',
   },
 })
@@ -191,25 +198,27 @@ export class KxDialogClose {
  */
 @Directive({
   selector: '[kxDialogTitle]',
-  host: { class: 'kx-dialog__title', '[id]': 'root.titleId' },
+  host: { class: 'kx-dialog__title', '[id]': 'root.titleId()' },
 })
 export class KxDialogTitle {
   readonly root = inject(KX_DIALOG);
+  /** Your own id for the title, static or bound; the surface's `aria-labelledby` follows it. */
+  readonly id = input<string | undefined>(undefined);
   constructor() {
-    const own = inject(new HostAttributeToken('id'), { optional: true });
-    if (own) this.root.titleId = own;
+    this.root.titleIdFrom.set(this.id);
   }
 }
 
 @Directive({
   selector: '[kxDialogDescription]',
-  host: { class: 'kx-dialog__description', '[id]': 'root.descriptionId' },
+  host: { class: 'kx-dialog__description', '[id]': 'root.descriptionId()' },
 })
 export class KxDialogDescription {
   readonly root = inject(KX_DIALOG);
+  /** Your own id for the description, static or bound; the surface's `aria-describedby` follows it. */
+  readonly id = input<string | undefined>(undefined);
   constructor() {
-    const own = inject(new HostAttributeToken('id'), { optional: true });
-    if (own) this.root.descriptionId = own;
+    this.root.descriptionIdFrom.set(this.id);
   }
 }
 
@@ -240,9 +249,9 @@ export class KxDialogFooter {}
 @Directive({
   host: {
     tabindex: '-1',
-    '[id]': 'root.contentId',
-    '[attr.aria-labelledby]': 'hasTitle() ? root.titleId : null',
-    '[attr.aria-describedby]': 'hasDescription() ? root.descriptionId : null',
+    '[id]': 'root.contentId()',
+    '[attr.aria-labelledby]': 'hasTitle() ? root.titleId() : null',
+    '[attr.aria-describedby]': 'hasDescription() ? root.descriptionId() : null',
     '[attr.aria-label]': 'hasTitle() ? null : label()',
     '[attr.data-state]': 'root.open() ? "open" : "closed"',
     '(cancel)': 'onCancel($event)',
@@ -258,6 +267,8 @@ export abstract class KxModalSurface implements KxLayer {
 
   /** The accessible name when there is no `kxDialogTitle` inside. */
   readonly label = input<string | null>(null);
+  /** Your own id for the surface, static or bound; the trigger's `aria-controls` follows it. */
+  readonly id = input<string | undefined>(undefined);
 
   readonly modal = true;
   readonly closesOnFocusOutside = false;
@@ -274,8 +285,7 @@ export abstract class KxModalSurface implements KxLayer {
   private parent: KxLayer | null = null;
 
   constructor() {
-    const own = inject(new HostAttributeToken('id'), { optional: true });
-    if (own) this.root.contentId = own;
+    this.root.contentIdFrom.set(this.id);
     afterRenderEffect({
       write: () => {
         const open = this.root.open();

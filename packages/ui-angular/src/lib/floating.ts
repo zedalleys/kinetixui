@@ -6,11 +6,14 @@ import {
   Directive,
   ElementRef,
   HostAttributeToken,
+  type Signal,
   afterRenderEffect,
+  computed,
   inject,
   input,
   model,
   numberAttribute,
+  signal,
   untracked,
 } from '@angular/core';
 import { disclosureId } from './disclosure';
@@ -67,8 +70,11 @@ type CloseReason = KxDismissReason | 'close' | 'blur' | 'pointer' | 'press' | 'p
 export abstract class KxFloatingRoot {
   /** Two-way: whether the surface is showing. */
   readonly open = model(false);
-  /** Generated, unless the content carries an `id` of its own — then that one is used. */
-  contentId = `${disclosureId('floating')}-content`;
+  private readonly generatedId = `${disclosureId('floating')}-content`;
+  /** The content's own `id` input, static or bound, once the content exists. */
+  readonly contentIdFrom = signal<Signal<string | undefined> | null>(null);
+  /** Generated, unless the content has an `id` of its own (`id="…"` or `[id]="…"`) — then that one, as it changes. */
+  readonly contentId = computed(() => this.contentIdFrom()?.() || this.generatedId);
   trigger: HTMLElement | null = null;
   anchor: HTMLElement | null = null;
   /** The last reason it closed for; `programmatic` when `open` was set from outside. */
@@ -84,10 +90,9 @@ export abstract class KxFloatingRoot {
   }
 }
 
-/** The surface's root, adopting the surface's own `id` (if it has one) as the id every reference uses. */
-function adopt<T extends KxFloatingRoot>(root: T): T {
-  const own = inject(new HostAttributeToken('id'), { optional: true });
-  if (own) root.contentId = own;
+/** The surface's root, following the surface's own `id` input as the id every reference uses. */
+function adopt<T extends KxFloatingRoot>(root: T, id: Signal<string | undefined>): T {
+  root.contentIdFrom.set(id);
   return root;
 }
 
@@ -95,13 +100,15 @@ function adopt<T extends KxFloatingRoot>(root: T): T {
 @Directive({
   host: {
     popover: 'manual',
-    '[id]': 'root.contentId',
+    '[id]': 'root.contentId()',
     '[attr.data-state]': 'root.open() ? "open" : "closed"',
   },
 })
 export abstract class KxFloatingSurface implements KxLayer {
   abstract readonly root: KxFloatingRoot;
   abstract readonly side: () => KxSide;
+  /** Your own id for the surface, static or bound; the trigger's references follow it. Generated when absent. */
+  readonly id = input<string | undefined>(undefined);
   /** Alignment along the trigger, logical. */
   readonly align = input<KxAlign>('center');
   /** The gap between the trigger and the surface, in px. */
@@ -213,7 +220,7 @@ export class KxPopover extends KxFloatingRoot {
     type: 'button',
     'aria-haspopup': 'dialog',
     '[attr.aria-expanded]': 'root.open()',
-    '[attr.aria-controls]': 'root.contentId',
+    '[attr.aria-controls]': 'root.contentId()',
     '[attr.data-state]': 'root.open() ? "open" : "closed"',
     '(click)': 'root.toggle()',
   },
@@ -266,7 +273,7 @@ export class KxPopoverClose {
   },
 })
 export class KxPopoverContent extends KxFloatingSurface {
-  readonly root = adopt(inject(KxPopover));
+  readonly root = adopt(inject(KxPopover), this.id);
   readonly side = input<KxSide>('bottom');
   readonly label = input('Popover');
   /** The id of an element inside that names the popover (a heading); preferred over `label`. */
@@ -329,7 +336,24 @@ export abstract class KxHoverRoot extends KxFloatingRoot {
     this.openTimer = undefined;
     if (!this.open()) return;
     clearTimeout(this.closeTimer);
-    this.closeTimer = setTimeout(() => this.hide('pointer'), this.closeDelay());
+    this.closeTimer = setTimeout(() => {
+      this.closeTimer = undefined;
+      // Hover and keyboard focus are separate reasons to stay open: the pointer leaving does not take a
+      // surface away from someone still on it with the keyboard (focus on the trigger, or on a link inside).
+      if (!this.keyboardFocusWithin()) this.hide('pointer');
+    }, this.closeDelay());
+  }
+  private keyboardFocusWithin(): boolean {
+    const trigger = this.trigger;
+    if (!trigger) return false;
+    const doc = trigger.ownerDocument;
+    const focused = activeElement(doc);
+    if (!focused || !(trigger.contains(focused) || doc.getElementById(this.contentId())?.contains(focused))) return false;
+    try {
+      return focused.matches(':focus-visible');
+    } catch {
+      return true;
+    }
   }
   /** The pointer is on the surface: stay. */
   hold(): void {
@@ -418,7 +442,7 @@ export class KxTooltipTrigger {
   private readonly own = inject(new HostAttributeToken('aria-describedby'), { optional: true });
   /** The caller's own description, if the element had one, and then the tooltip. */
   protected describedby(): string {
-    return [this.own, this.root.contentId].filter(Boolean).join(' ');
+    return [this.own, this.root.contentId()].filter(Boolean).join(' ');
   }
   constructor() {
     registerTrigger(this.root);
@@ -432,7 +456,7 @@ export class KxTooltipTrigger {
   host: { ...HOVER_SURFACE, class: 'kx-floating kx-tooltip', role: 'tooltip' },
 })
 export class KxTooltipContent extends KxFloatingSurface {
-  readonly root = adopt(inject(KxTooltip));
+  readonly root = adopt(inject(KxTooltip), this.id);
   readonly side = input<KxSide>('top');
   readonly closesOnFocusOutside = false;
 }
@@ -483,7 +507,7 @@ export class KxHoverCardTrigger {
   host: { ...HOVER_SURFACE, class: 'kx-floating kx-hover-card' },
 })
 export class KxHoverCardContent extends KxFloatingSurface {
-  readonly root = adopt(inject(KxHoverCard));
+  readonly root = adopt(inject(KxHoverCard), this.id);
   readonly side = input<KxSide>('bottom');
   readonly closesOnFocusOutside = true;
 }

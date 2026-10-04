@@ -24,6 +24,9 @@ Wave C1: the overlay layer and the dialog family. The Angular catalogue goes fro
 - `kx-hover-card` with `kxHoverCardTrigger` and `kx-hover-card-content`: a preview on hover intent or keyboard
   focus whose own links stay reachable.
 
+Every surface, title and description takes an `id` input, static or bound; `aria-controls`, `aria-labelledby`
+and `aria-describedby` follow it, and a generated id is used when there is none.
+
 **One overlay layer underneath them all.** Surfaces render in the browser's top layer (`showModal()` and
 `popover="manual"`) instead of being moved to a portal, so they keep their injector, styles and direction and
 need no z-index. One stack decides what Escape and an outside press close (only the topmost surface; a press

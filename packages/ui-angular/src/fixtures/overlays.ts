@@ -174,9 +174,10 @@ import {
         @for (side of sides; track side) {
           <kx-sheet [id]="'sheet-' + side">
             <button kxButton kxDialogTrigger variant="Outline" [id]="'sheet-' + side + '-trigger'">Sheet {{ side }}</button>
-            <dialog kxSheetContent [side]="side">
+            <!-- bound ids: aria-controls and aria-labelledby follow them -->
+            <dialog kxSheetContent [side]="side" [id]="'sheet-' + side + '-panel'">
               <kx-dialog-header>
-                <h2 kxDialogTitle>Filters</h2>
+                <h2 kxDialogTitle [id]="'sheet-' + side + '-title'">Filters</h2>
                 <p kxDialogDescription>Narrow the list. Nothing changes until you apply.</p>
               </kx-dialog-header>
               <label kxLabel [for]="'sheet-' + side + '-input'">Owner</label>
@@ -271,7 +272,8 @@ import {
         <p id="tip-own-help">Saved to your library.</p>
         <kx-tooltip id="tip-described">
           <button kxButton kxTooltipTrigger variant="Outline" id="tip-described-trigger" aria-describedby="tip-own-help">Save</button>
-          <kx-tooltip-content id="tip-described-content">Ctrl+S</kx-tooltip-content>
+          <!-- a bound id: the trigger's aria-describedby follows it -->
+          <kx-tooltip-content [id]="'tip-described-content'">Ctrl+S</kx-tooltip-content>
         </kx-tooltip>
         <button kxButton variant="Outline" id="tip-next">Next control</button>
         <output data-kx-out="tooltip">{{ tooltip() }}</output>
