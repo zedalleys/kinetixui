@@ -6,16 +6,16 @@ CI — and this document describes it; where the two disagree, the script is rig
 
 Publication is distribution, not maturity. The package is on npm and stays Preview.
 
-## Current truth (computed, 2026-10-04, main `7ea47f0` + Wave A)
+## Current truth (computed, 2026-10-04, main `076fd5c` + Wave B)
 
 | | Count | Source |
 |---|---|---|
-| Implemented | 46 of 98 | `components.manifest.json` |
+| Implemented | 56 of 98 | `components.manifest.json` |
 | Native-equivalent | 2 (`direction-provider`, `form`) | manifest `platformGuidance`, each with its reason |
-| Planned | 50 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
+| Planned | 40 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
 | `catalogComplete` | false | manifest |
-| Evidence (verification.json) | build 46 · interaction 46 · accessibility 46 · rtl 14 · largeText 19 · reducedMotion 1 · visual 0 | generated from the tests |
-| Rendered visual/state gate | 14 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs; `check:composite-visual`: input-group, number-input, input-otp, password-input), no `partial` marks | `scripts/visual-gates.mjs` |
+| Evidence (verification.json) | build 56 · interaction 56 · accessibility 56 · rtl 23 · largeText 29 · reducedMotion 4 · visual 0 | generated from the tests |
+| Rendered visual/state gate | 21 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs; `check:composite-visual`: input-group, number-input, input-otp, password-input; `check:navigation-visual`, Angular only: breadcrumb, pagination, table-of-contents, tab-bar, app-bar, footer, accordion), no `partial` marks | `scripts/visual-gates.mjs` |
 
 Wave A moved Angular's evidence into a real browser. `check:angular-browser` (scripts/angular-browser.mjs)
 builds the package's fixtures AOT and bootstraps them as a live, zoneless Angular application in Chromium,
@@ -41,28 +41,28 @@ maturity — they are statements about today, and CI fails the moment one is fal
 
 | Dimension | Criterion | Kind | Today |
 |---|---|---|---|
-| Catalogue | No Angular entry is still planned | gate | **open** — 50 planned |
+| Catalogue | No Angular entry is still planned | gate | **open** — 40 planned |
 | Catalogue | Every native-equivalent / composition entry carries its reason | always | met |
 | Catalogue | `catalogComplete` is true only when nothing is planned | always | met |
-| Build / distribution | Every implemented component compiles in CI (ng-packagr, strict templates) | gate | met — 46/46 |
+| Build / distribution | Every implemented component compiles in CI (ng-packagr, strict templates) | gate | met — 56/56 |
 | Build / distribution | CI builds the package, checks the public API snapshot, runs the tests and this guard; the clean-consumer install + AOT build runs (`angular-package.yml`) | always | met |
-| Behaviour | Every implemented component has `interaction` evidence | gate | met — 46/46 (jsdom, and a real keyboard in Chromium for the 27 interactive components) |
-| Behaviour | `interaction` wherever React has it | gate | met — 15/15 |
-| Accessibility | Every implemented component has `accessibility` evidence | gate | met — 46/46 |
-| Accessibility | `accessibility` wherever React has it | gate | met — 46/46 |
-| Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | met — 46/46 (`angular-browser.mjs`: axe over every usage example and state fixture, light and dark, plus forced colours and reduced motion) |
-| RTL | `rtl` wherever React has it | gate | met — 7/7 (Angular measures 14 in four direction cases) |
-| Large text | `largeText` wherever React has it | gate | met — 14/14 (React's bar rose to include input-group and input-otp when Angular implemented them; Angular measures 19) |
+| Behaviour | Every implemented component has `interaction` evidence | gate | met — 56/56 (jsdom, and a real keyboard in Chromium for the 36 interactive components; the stepper, which is display, by its state following `current`) |
+| Behaviour | `interaction` wherever React has it | gate | met — 17/17 (accordion and collapsible added) |
+| Accessibility | Every implemented component has `accessibility` evidence | gate | met — 56/56 |
+| Accessibility | `accessibility` wherever React has it | gate | met — 56/56 |
+| Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | met — 56/56 (`angular-browser.mjs`: axe over every usage example and state fixture, light and dark, plus forced colours and reduced motion) |
+| RTL | `rtl` wherever React has it | gate | met — 7/7 (Angular measures 23 in four direction cases) |
+| Large text | `largeText` wherever React has it | gate | met — 14/14 (React's bar rose to include input-group and input-otp when Angular implemented them; Angular measures 29) |
 | Large text | …from a real browser (`large-text.mjs`) | gate | met — 14/14 |
-| Motion | `reducedMotion` wherever React has it | gate | met — 1/1 (switch) |
-| Motion | …from a real browser (`motion.mjs`) | gate | met — 1/1 |
+| Motion | `reducedMotion` wherever React has it | gate | met — 3/3 (switch, accordion, collapsible) |
+| Motion | …from a real browser (`motion.mjs`) | gate | met — 3/3 (Angular's in `angular-browser.mjs`, which also measures the app bar's menu) |
 | Visual | A rendered visual/state gate covers Angular wherever one covers React | gate | met — 12/12: the interactive Card (`kxCard` on a link or button) and `kx-number-input`'s `readonly` closed the two `partial` marks, and input-group and input-otp arrived measured. password-input is measured too but not owed (React's PasswordInput is not separately gated) |
 | Visual | Every registered visual gate exists and runs in CI | always | met |
 | Visual | A visual gate claims Angular only for components Angular implements | always | met |
 | Documentation | The package README's counts, component list and Preview label match the manifest and evidence | always | met (it was stale — 31 components, 69 symbols — and is corrected in this change) |
 | CI | The guard itself: fails if `maturity` is `stable` with any gate criterion open | — | in `ci.yml` |
 
-12 of 13 gate criteria are met; only the catalogue is open (50 planned). Angular stays Preview.
+12 of 13 gate criteria are met; only the catalogue is open (40 planned). Angular stays Preview.
 
 `published` is reported but is not a criterion. Neither is `visual` from verification.json: that kind
 means comparison against stored reference images, which KinetixUI does not keep on any platform.
@@ -101,11 +101,28 @@ Run against deliberately broken inputs during this change (none committed):
   - `check:angular-browser` removed from `a11y-browser.yml` → `gen:verification --check` fails: the
     browser evidence no longer counts.
   - The number-input `partial` mark re-added → the visual criterion drops to 11/12 and the score to 11/13.
+- Wave B, 10 controls, each a one-line break restored straight after and checked by hash (logs:
+  `/mnt/project-files/angular-wave-b/negative-controls/`). Every one was caught by the gate named:
+  - Accordion arrow keys disabled → `check:angular-browser` keyboard pass: "ArrowDown moves to the next
+    enabled trigger" and "wraps to the first" fail.
+  - Accordion `aria-expanded` pinned to false → "Enter opens its item" fails.
+  - Pagination `aria-current` removed → "the current page is aria-current=page" fails (first run timed out
+    instead of failing; the read was made non-waiting so it fails by name).
+  - Table-of-contents bar drawn with `border-left` → the RTL pass fails in the RTL page (first run MISSED it:
+    the check read the border's width but not its colour; it now reads both), and `check:navigation-visual`.
+  - Tab-bar label pinned to 12px → the 200% pass: "its text grows" (12px → 12px).
+  - Table-of-contents current bar removed → `check:navigation-visual`: bar 1.00:1, light and dark.
+  - Disclosure height transition set to 0s → reduced-motion pass: "travels through a rendered midpoint"
+    fails, 36px → none → 0px over 0ms.
+  - Disclosure removed from the reduced-motion rule → "no perceptible motion" fails (200ms).
+  - Disclosure body clipped with `overflow: hidden` → "a focus ring flush with the content's edge is not
+    clipped" fails.
+  - Pressed layer equal to hover → `check:navigation-visual`: pagination and app bar "press deepens it".
 
 ## The waves
 
-Derived from the manifest's own `wave` tags (now `layout` 11, `navigation` 8, `overlays` 17, `data` 7,
-`advanced` 7 — the `inputs` tag closed with Wave A), reordered by dependency. The evidence instrument came
+Derived from the manifest's own `wave` tags (now `overlays` 17, `layout` 7, `data` 7, `advanced` 7,
+`navigation` 2 — the `inputs` tag closed with Wave A), reordered by dependency. The evidence instrument came
 first, before more unverified components were added; every later wave arrives through it.
 
 "Owed" below is computed from the current bar, not estimated: the evidence kinds React already has for that
@@ -129,27 +146,44 @@ Closed 7 criteria (5/13 → 12/13).
 | Visual | Card and number-input `partial` marks removed: interactive `kxCard` and `readonly` number-input |
 | Defects it found and fixed | unnamed toggle-group radios; tab panels with no `id`; no focus indicator in forced colours; px-sized controls that ignored 200% text; missing `border-box`; slider fill from the wrong end in RTL; circular progress faster than the reduced-motion floor |
 
-### Wave B — navigation and disclosure (no overlays)
+### Wave B — navigation and disclosure (done)
 
-**Components:** `breadcrumb`, `pagination`, `stepper`, `tab-bar`, `table-of-contents`, `navigation-bar`,
-`accordion`, `collapsible`, `app-bar`, `footer`, `scroll-area`, `resizable`, `carousel`,
-`comparison-slider` (14).
+**Components:** `accordion`, `collapsible`, `breadcrumb`, `pagination`, `table-of-contents`, `tab-bar`,
+`stepper`, `navigation-bar`, `app-bar`, `footer` (10). 12/13 held; Angular 46 → 56.
 
-**Why here:** none needs a floating layer, but they introduce roving focus, `aria-current` and disclosure
-motion, which the overlay wave builds on.
+**Scope, recomputed from the live manifest.** This file's earlier Wave B list had 14. The four left out —
+`scroll-area`, `resizable`, `carousel`, `comparison-slider` — carry the manifest's `layout` tag, not
+`navigation`, and are a different interaction model (pointer drag, keyboard resize, scroll containers,
+autoplay) with no disclosure or `aria-current`; they are ranked below. `menubar` and `navigation-menu` are
+tagged `navigation` but open floating menus, so they wait for the overlay primitive.
 
 | | |
 |---|---|
-| Behavioural contracts | roving tabindex and arrow keys (tab-bar, stepper, carousel), `aria-current="page"` (breadcrumb, pagination, navigation-bar), `aria-expanded` + region (accordion, collapsible), keyboard resize (resizable, comparison-slider) |
-| Accessibility | landmarks and names (nav, contentinfo), live region for carousel position, axe in browser |
-| RTL | chevrons and carousel/comparison direction flip; pagination order; resizable handle direction |
-| Large text | breadcrumb and pagination wrap without overlap at 200%; app-bar does not clip its title |
-| Motion | accordion/collapsible height animation with a rendered midpoint and reduced-motion collapse (React's `motion.mjs` contract); carousel autoplay off under reduced motion |
-| Visual | selected/current states for tab-bar, pagination, stepper on the shared contract (Visual Slice 3 measured Tabs on both platforms: `check:entry-visual`) |
-| Proof it creates | a docs-site layout built entirely in Angular |
+| Behavioural contracts | accordion (APG: heading + button, `aria-expanded`/`aria-controls`, single / collapsible / multiple, ArrowUp/ArrowDown/Home/End between triggers, arrows never open); collapsible (on the caller's own button); `aria-current="page"` on breadcrumb, pagination, tab bar and app bar, `location` on the table of contents, `step` on the stepper; pagination and tab bar as links or buttons, with a disabled link that leaves the tab order and is not followed; app bar's narrow menu (one `<nav>`, Escape and following a link close it, focus returns) |
+| Accessibility | landmarks and names (`nav` per component, footer `contentinfo` with columns as named groups), axe over every new usage example and the navigation fixture, light and dark, forced colours (current destinations keep an outline there) |
+| RTL | 9 components in four direction cases, chevrons read off pixels: the breadcrumb separator and pagination/Back glyphs mirror (`Bidi_Mirrored` text, no `:dir()`), the accordion chevron does not |
+| Large text | 10 components at 2× text; the stepper reflows to a list in a narrow container; its connector no longer reaches into a neighbour's box |
+| Motion | accordion (height and chevron), collapsible and app-bar menu: a rendered midpoint and a perceptible duration, open and closed, LTR and RTL; under reduced motion `transition: none` and the same end state |
+| Visual | `check:navigation-visual` (new, Angular only): rest, hover, pressed, focus, current (a shape, not hue alone), disabled, chevron direction, the current bar's side in RTL, light and dark |
+| Defects it found and fixed | tab-bar badge read before its label ("3Inbox"); words broken mid-glyph at 390px; pagination's current edge under 3:1; table of contents' pressed equal to hover; dark tab-bar current quieter than rest; app-bar current bar floating 1px off its edge; stepper connector overflowing its step |
 
-**Owed (React has it):** interaction 2 (accordion, collapsible) · reducedMotion 2 (accordion, collapsible) ·
-rtl 0 · largeText 0 · browser axe 14 · no visual gate.
+### What remains after Wave B, ranked
+
+40 planned. Ranked by what each group unblocks and by the evidence React already holds for it (which Angular
+will owe the moment it implements the component):
+
+1. **Overlays (Wave C, below)** — 17 `overlays` + `menubar`, `navigation-menu` (`navigation`) + `sidebar`.
+   Owes the most (interaction 13, rtl 9, largeText 12) and builds the one primitive (a positioned,
+   focus-managed layer) that `select`, `combobox`, `command`, `sidebar`, `date-picker` and `data-table`'s
+   menus all need. Large enough to split: **C1** the layer with the dialog family (`dialog`, `alert-dialog`,
+   `modal`, `sheet`, `drawer`, `popover`, `tooltip`, `hover-card`), then **C2** menus and listboxes
+   (`dropdown-menu`, `context-menu`, `menubar`, `navigation-menu`, `select`, `combobox`, `multi-select`,
+   `command`) and notifications (`sonner`, `notification-center`, `tour`), then `sidebar`.
+2. **Layout, pointer and scroll** — `scroll-area`, `resizable`, `carousel`, `comparison-slider`. Owes only
+   browser axe, so it is cheap, but it brings drag with a keyboard alternative and direction-dependent
+   handles, which no implemented Angular component has yet. `table` and `virtual-list` (also `layout`) go
+   with the data wave.
+3. **Data and advanced (Wave D)** — composes 1 and 2.
 
 ### Wave C — overlays and complex interaction
 

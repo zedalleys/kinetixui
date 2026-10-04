@@ -4,7 +4,7 @@ KinetixUI for Angular — standalone directives and components built on the same
 contract as the other KinetixUI implementations.
 
 > **Preview.** This package is published so it can be used and reported on, and publication is
-> distribution, not maturity. It carries **46 of the 98 entries in the KinetixUI catalogue** and is
+> distribution, not maturity. It carries **56 of the 98 entries in the KinetixUI catalogue** and is
 > rolling out in waves. Expect gaps, and expect APIs to move within `0.x`. If you need the full
 > catalogue today, that is the React implementation (`@kinetixui/ui`).
 
@@ -14,18 +14,20 @@ npm install @kinetixui/angular @kinetixui/tokens
 
 ## What it currently provides
 
-46 components, as **101 exported symbols** (a component plus its parts and variant types count
+56 components, as **138 exported symbols** (a component plus its parts and variant types count
 separately). Present today:
 
-`alert` · `aspect-ratio` · `avatar` · `avatar-group` · `badge` · `banner` · `button` · `button-group` ·
-`card` · `checkbox` · `circular-progress` · `code-block` · `description-list` · `empty` · `fab` ·
-`field` · `image` · `inform` · `input` · `input-group` · `input-otp` · `kbd` · `label` · `list` ·
-`marquee` · `metric` · `native-select` · `number-input` · `page-header` · `password-input` ·
-`progress` · `quote` · `radio-group` · `rating` · `segmented-control` · `separator` · `skeleton` ·
-`slider` · `spinner` · `switch` · `tabs` · `tag` · `textarea` · `timeline` · `toggle` · `toggle-group`
+`accordion` · `alert` · `app-bar` · `aspect-ratio` · `avatar` · `avatar-group` · `badge` · `banner` ·
+`breadcrumb` · `button` · `button-group` · `card` · `checkbox` · `circular-progress` · `code-block` ·
+`collapsible` · `description-list` · `empty` · `fab` · `field` · `footer` · `image` · `inform` · `input` ·
+`input-group` · `input-otp` · `kbd` · `label` · `list` · `marquee` · `metric` · `native-select` ·
+`navigation-bar` · `number-input` · `page-header` · `pagination` · `password-input` · `progress` ·
+`quote` · `radio-group` · `rating` · `segmented-control` · `separator` · `skeleton` · `slider` ·
+`spinner` · `stepper` · `switch` · `tab-bar` · `table-of-contents` · `tabs` · `tag` · `textarea` ·
+`timeline` · `toggle` · `toggle-group`
 
 Not present: overlays (dialog, popover, dropdown, tooltip, sheet, drawer), data display (table, data
-grid, data table), navigation (breadcrumb, pagination, menubar, navigation menu), and the rest of the
+grid, data table), menu-driven navigation (menubar, navigation menu, sidebar), and the rest of the
 catalogue. The authoritative, always-current list — and the reason each absent component is absent — is
 at [kinetixui.com/docs/platforms](https://kinetixui.com/docs/platforms), generated from the same manifest
 this package is built against.
@@ -85,15 +87,17 @@ in your editor if you are unsure: `KxButton` is a directive, `KxCard` is a compo
 
 ## Accessibility
 
-What is verified is published rather than asserted. For this package: **46 of 46 implementations have
+What is verified is published rather than asserted. For this package: **56 of 56 implementations have
 interaction and accessibility verification** — from unit suites in jsdom, and from `check:angular-browser`,
 which runs the package as a live Angular application in Chromium: every usage example and state fixture
 under axe in light and dark, forced colours and reduced motion, and every interactive component driven by a
-real keyboard. 14 components have RTL verification (measured in an LTR page, an RTL page, and each nested in
-the other); 19 have large-text verification at 200% text, at desktop and phone width; the switch has
-reduced-motion verification. Visual states are measured on rendered pixels by `check:selection-visual`
+real keyboard. 23 components have RTL verification (measured in an LTR page, an RTL page, and each nested in
+the other); 29 have large-text verification at 200% text, at desktop and phone width; the switch, accordion,
+collapsible and app bar have reduced-motion verification (motion runs at normal settings, and is
+suppressed with the same end state under reduced motion). Visual states are measured on rendered pixels by `check:selection-visual`
 (checkbox, radio group, switch, segmented control), `check:entry-visual` (input, textarea, native select,
-tabs), `check:composite-visual` (input group, number input, one-time code, password input) and
+tabs), `check:composite-visual` (input group, number input, one-time code, password input),
+`check:navigation-visual` (breadcrumb, pagination, table of contents, tab bar, app bar, footer, accordion) and
 `check:card-visual` (the card at rest, and as a link or button). This is evidence for the behaviours
 listed, not an accessibility certification. There is no snapshot visual-regression suite, here or anywhere
 in KinetixUI.
@@ -103,7 +107,7 @@ The per-component, per-kind evidence table is at
 
 ## Limitations
 
-- **Preview, and 46 of 98 entries.** Do not plan around a component that is not in the list above.
+- **Preview, and 56 of 98 entries.** Do not plan around a component that is not in the list above.
 - Versioned independently of `@kinetixui/{ui,tokens,cli}` — its version number does not track theirs.
 - The token peer range is a deliberate compatibility claim, widened only after the package is verified
   against a new token version. It will not silently follow the token package.

@@ -84,16 +84,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "layout"
-        }
-      }
+      ]
     },
     "alert": {
       "status": "stable",
@@ -127,16 +122,11 @@
       "since": "0.6.0",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "layout"
-        }
-      }
+      ]
     },
     "aspect-ratio": {
       "status": "stable",
@@ -227,16 +217,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "navigation"
-        }
-      }
+      ]
     },
     "button": {
       "status": "stable",
@@ -357,16 +342,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "layout"
-        }
-      }
+      ]
     },
     "color-picker": {
       "status": "stable",
@@ -663,16 +643,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "layout"
-        }
-      }
+      ]
     },
     "form": {
       "status": "stable",
@@ -982,16 +957,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "navigation"
-        }
-      }
+      ]
     },
     "navigation-menu": {
       "status": "stable",
@@ -1066,16 +1036,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "navigation"
-        }
-      }
+      ]
     },
     "password-input": {
       "status": "stable",
@@ -1311,16 +1276,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "navigation"
-        }
-      }
+      ]
     },
     "switch": {
       "status": "stable",
@@ -1338,16 +1298,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "navigation"
-        }
-      }
+      ]
     },
     "table": {
       "status": "stable",
@@ -1370,16 +1325,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "navigation"
-        }
-      }
+      ]
     },
     "tabs": {
       "status": "stable",

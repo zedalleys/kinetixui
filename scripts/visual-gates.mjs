@@ -46,6 +46,15 @@ export const VISUAL_GATES = [
       Angular: ["input-group", "number-input", "input-otp", "password-input"],
     },
   },
+  {
+    script: "scripts/navigation-visual.mjs",
+    command: "check:navigation-visual",
+    contract: "TOKENS.md — Navigation and disclosure",
+    // Angular only: React's navigation components are not changed by Angular Wave B and are not measured here
+    covers: {
+      Angular: ["breadcrumb", "pagination", "table-of-contents", "tab-bar", "app-bar", "footer", "accordion"],
+    },
+  },
 ];
 
 /** The registry entry for a gate script, by its path relative to the repository root. */

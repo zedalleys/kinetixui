@@ -2,7 +2,9 @@ import type { Type } from '@angular/core';
 import { BehaviourFixture } from './behaviour';
 import { CardStates } from './card';
 import { CompositeStates } from './composite';
+import { CompositionsFixture } from './compositions';
 import { EntryStates } from './entry';
+import { NavigationFixture } from './navigation';
 import { SelectionStates } from './selection';
 import { UsageExamples } from './usage';
 
@@ -17,7 +19,9 @@ export const FIXTURES: Record<string, Type<unknown>> = {
   behaviour: BehaviourFixture,
   card: CardStates,
   composite: CompositeStates,
+  compositions: CompositionsFixture,
   entry: EntryStates,
+  navigation: NavigationFixture,
   selection: SelectionStates,
   usage: UsageExamples,
 };

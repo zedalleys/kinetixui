@@ -31,6 +31,7 @@ on:
       - "scripts/selection-visual.mjs"
       - "scripts/entry-visual.mjs"
       - "scripts/composite-visual.mjs"
+      - "scripts/navigation-visual.mjs"
       - "scripts/visual-harness.mjs"
       - "scripts/visual-gates.mjs"
       - "packages/ui-angular/src/**"
@@ -55,6 +56,7 @@ on:
       - "scripts/selection-visual.mjs"
       - "scripts/entry-visual.mjs"
       - "scripts/composite-visual.mjs"
+      - "scripts/navigation-visual.mjs"
       - "scripts/visual-harness.mjs"
       - "scripts/visual-gates.mjs"
       - "packages/ui-angular/src/**"
@@ -149,9 +151,16 @@ jobs:
       - name: Composite-field visual contract (React + Angular, light and dark)
         run: pnpm check:composite-visual
 
+      # The navigation and disclosure state contract (TOKENS.md, "Navigation and disclosure") on rendered
+      # pixels, Angular only: every destination's rest, hover, pressed, focus, current (a shape cue, not hue
+      # alone) and disabled states, the accordion's chevron and locked/disabled triggers, the current bar's side
+      # in RTL, and the hover colour transition with and without reduced motion.
+      - name: Navigation and disclosure visual contract (Angular, light and dark)
+        run: pnpm check:navigation-visual
+
       # @kinetixui/angular as a live Angular application in this Chromium: every usage example and state
       # fixture under axe (light and dark, forced colours, reduced motion), every interactive component driven
-      # by a real keyboard, direction in four cases, 200% text, and the switch's motion. verification.json
+      # by a real keyboard, direction in four cases, 200% text, and the motion of the switch and the disclosures. verification.json
       # publishes Angular's browser evidence off this script, so it runs wherever the Angular sources change.
       - name: Angular in the browser (axe, keyboard, RTL, 200% text, reduced motion)
         run: pnpm check:angular-browser
