@@ -96,7 +96,7 @@ lands on the same end state.
 | Platform | Status |
 |---|---|
 | React | Implemented and verified on rendered pixels (`check:card-visual`, light + dark) |
-| Angular | Resting surface only (`.kx-card`); interactive states not implemented |
+| Angular | Resting surface only (`.kx-card`), verified on rendered pixels by the same gate for the rows it implements — edge, lift, grouped, static (Angular renders the DOM, Chromium paints it). Interactive states are not implemented, so they are not measured; `scripts/visual-gates.mjs` records the coverage as partial |
 | SwiftUI, Compose, Flutter | Not changed in this slice — still `border` at full strength and `sm` elevation; `surface-grouped` is emitted to each port's colour constants but not yet in the themeable colour sets |
 
 ### Selection controls
@@ -131,7 +131,7 @@ Motion:
 | Control | Trigger | Property | Purpose | Duration | Easing | Reduced motion |
 |---|---|---|---|---|---|---|
 | Checkbox, Radio, Switch | hover, press | `box-shadow` (layer), `border-color`, `background-color` | affordance: this is the target, and it registered the press | `duration-instant` (100ms) | `ease-standard` | collapses (the library floor in React, `transition: none` in Angular); same end state |
-| Switch thumb | on/off | `transform` / `translate` (unchanged) | state transition: where the value went | `duration-instant` | `ease-standard` | collapses; thumb lands on the same side |
+| Switch thumb | on/off | `inset-inline-start` (a relative, logical offset — was a physical `translate`; see "Text entry and navigation" → Switch direction) | state transition: where the value went | `duration-instant` | `ease-standard` | collapses; thumb lands on the same side |
 | Segment | hover, press, choose | `background-color`, `color`, `box-shadow` | selection | `duration-fast` (200ms) | `ease-standard` | collapses |
 
 Nothing scales, slides or bounces; the checked glyph does not animate.
@@ -141,6 +141,72 @@ Nothing scales, slides or bounces; the checked glyph does not animate.
 | React | Implemented and verified on rendered pixels (`check:selection-visual`, light + dark) |
 | Angular | Implemented in `styles.css` for checkbox, radio, switch and segmented control, and verified on rendered pixels by the same gate (Angular renders the DOM, Chromium paints it). Not implemented: an invalid state — Angular's checkbox and radio have no invalid input, and adding one is API work for a later wave. The checkbox edge is 1px where React's is 2px |
 | SwiftUI, Compose, Flutter | Not changed. The shared contract is semantic (3:1 edge, a hover/press layer where the platform has hover, checked as a shape, focus on top); each port should express it with its own state-layer and focus APIs — Compose's `indication`/ripple and Material state layers, SwiftUI's `ButtonStyle` pressed state and focus effect, Flutter's `MaterialStateProperty`/`WidgetStateProperty`. Parity is not claimed |
+
+### Text entry and navigation
+
+Input, Textarea, Select, NativeSelect and Tabs share one interaction language with the selection controls.
+It adds no token: the field edge is `muted-foreground` at a fixed 80% alpha, composited over the field's own
+`background`, and every other value is an existing role.
+
+Measured before (main at `f9ccf75`, Chromium, on a Card): the resting field edge was `input` at **2.21:1**
+light / **2.44:1** dark — the only thing marking where an empty field is, below SC 1.4.11's 3:1; hover changed
+**no pixel** on any of the four fields or on Tabs (1.00); read-only looked exactly like editable (fill 1.00);
+NativeSelect's placeholder rendered in the value's colour; and in dark mode the selected tab sat **below** its
+list (tab L 0.0031, list L 0.0167) — the inversion SegmentedControl had.
+
+Text entry (Input, Textarea, Select's trigger, NativeSelect):
+
+| State | Trigger | Change | Not carried by colour alone |
+|---|---|---|---|
+| Rest | — | Edge `muted-foreground`/80: **3.41:1** light, **5.40:1** dark on a card | — |
+| Hover | a pointer that can hover | Edge steps to full `muted-foreground` (1.50:1 against rest). Never on a focused, open, invalid, read-only or disabled field | — |
+| Focus | keyboard, or a click into a text field | `action` edge + the `--shadow-focus` ring (6.70:1 light, 7.02:1 dark); the pointer does not change it | ring |
+| Invalid | `aria-invalid="true"` | `destructive` edge and `--shadow-focus-destructive` ring; kept under the pointer and when focused | the field's error text (SC 1.4.1) |
+| Read-only | `readonly` (Input, Textarea) | Inset `muted` fill, full-strength text, no hover — readable and selectable, not editable, not disabled | fill |
+| Placeholder | empty field | `muted-foreground` (5.10:1 light, 8.95:1 dark), below the value's `foreground`. NativeSelect: while the empty-valued option is chosen | — |
+| Disabled | `disabled` | `opacity-disabled`, inert | inert |
+
+A field is an inset, interactive control, not raised content: no elevation, at rest or on hover. There is no
+pressed state: pressing a text field places the caret and focuses it, and pressing a select opens it.
+
+Navigation (Tabs):
+
+| State | Trigger | Change | Not carried by colour alone |
+|---|---|---|---|
+| Rest | — | One group: React's tabs sit in an inset `surface-grouped` well (below a Card in both themes); Angular's strip is underlined | — |
+| Hover | a pointer that can hover, unselected and enabled | The selection controls' `foreground` state layer at 8% (1.16–1.19:1 against rest) and `foreground` text | fill |
+| Selected | `aria-selected="true"` | React: a small raised surface on the well — `card`, the Card's half-strength `border` edge (1.33:1 light, 1.59:1 dark) and `sm` depth, above the well in both themes. Angular: a 2px `primary` indicator (6.66:1 light, 7.86:1 dark) | surface + edge + depth / indicator |
+| Focus | keyboard | The ring (`ring`, 2px), drawn above the selected surface, which stays under it | ring |
+| Disabled | `disabled` | `opacity-disabled`, inert | inert |
+
+There is no pressed state: both Radix and Angular select a tab on press. At 200% text the tabs wrap inside the
+list rather than running off the page (`check:large-text`, 390px wide).
+
+Switch direction. The thumb travels along the inline axis of the switch's **own** direction. It was a physical
+`translate-x` flipped by Tailwind's `rtl:` (React) or `[dir='rtl'] …` (Angular), and both match ANY rtl
+ancestor, so a switch in an LTR section of an RTL page was flipped too: its thumb rendered 22px outside the
+track, over its own focus ring. `:dir()` is the selector answer, but Vite 8's Lightning CSS lowers
+`:dir(ltr)` for its default browser targets into `:not(:lang(ar, he, …))` — a guess from the page's language
+— which broke every RTL switch in the built Storybook. So the thumb is now offset with `inset-inline-start`,
+a logical property the browser resolves against the nearest `dir`, with no selector for a build step to
+rewrite. `check:selection-visual` measures all four page/subtree direction pairs, on and off, under normal
+and reduced motion.
+
+Motion:
+
+| Control | Trigger | Property | Purpose | Duration | Easing | Reduced motion |
+|---|---|---|---|---|---|---|
+| Input, Textarea, Select, NativeSelect | hover, focus, invalid | `border-color`, `box-shadow`, `background-color` | affordance: this field is the target | `duration-instant` (100ms) | `ease-standard` | collapses (the library floor in React, `transition: none` in Angular); same end state |
+| Tabs | hover, select | `color`, `background-color`, `box-shadow` | navigation state | `duration-fast` (200ms) | `ease-standard` | collapses |
+| Switch thumb | on/off | `inset-inline-start` | where the value went | `duration-instant` | `ease-standard` | collapses; same side |
+
+Nothing scales or slides; no field or tab changes size between states.
+
+| Platform | Status |
+|---|---|
+| React | Implemented and verified on rendered pixels (`check:entry-visual`, light + dark) for all five |
+| Angular | Implemented in `styles.css` for `kxInput`, `kxTextarea`, `kxNativeSelect` and the tabs, and verified by the same gate. Angular has no Select (its catalogue entry is NativeSelect). Its tab strip keeps its underlined shape; the gate makes the same semantic assertions through an adapter |
+| SwiftUI, Compose, Flutter | Not changed. The shared contract is semantic (a 3:1 field boundary, hover where the platform has a pointer, focus above hover, invalid that survives the pointer, read-only distinct from disabled, a selected tab that is more than a text colour); each port should use its own text-field and tab APIs. Parity is not claimed |
 
 ## Role tokens (added on top of `primary`)
 

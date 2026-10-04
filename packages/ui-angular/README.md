@@ -90,7 +90,10 @@ interaction and accessibility verification**, from unit suites in jsdom — whic
 behaviour but has no layout and runs no browser accessibility engine. 2 components have RTL verification;
 none yet has large-text or reduced-motion verification. The selection controls (checkbox, radio group,
 switch, segmented control) have their visual states measured on rendered pixels in Chromium by
-`check:selection-visual`; there is no snapshot visual-regression suite, here or anywhere in KinetixUI.
+`check:selection-visual`, which also measures the switch thumb in mixed-direction pages; input, textarea,
+native select and tabs by `check:entry-visual`; and the card's resting surface — not interactive cards, which
+this package does not have — by `check:card-visual`. There is no snapshot visual-regression suite, here or
+anywhere in KinetixUI.
 
 The per-component, per-kind evidence table is at
 [kinetixui.com/docs/platforms](https://kinetixui.com/docs/platforms).

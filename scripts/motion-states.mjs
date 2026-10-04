@@ -197,7 +197,9 @@ export const MOTION_STATES = [
     // The thumb is the only child of the track, and it is present in both states, so one selector
     // reads STATE A and STATE B without a `targetBefore`.
     target: "button[role=switch] > span",
-    property: "transform",
+    // The thumb's logical offset (it was a physical `translate-x`, which went the wrong way in an LTR
+    // section of an RTL page — see switch.tsx).
+    property: "insetInlineStart",
   },
   {
     slug: "switch",
@@ -210,7 +212,7 @@ export const MOTION_STATES = [
     prelude: { action: "click", selector: "button[role=switch][data-state=unchecked]" },
     trigger: { action: "click", selector: "button[role=switch][data-state=checked]" },
     target: "button[role=switch] > span",
-    property: "transform",
+    property: "insetInlineStart",
   },
   {
     slug: "collapsible",

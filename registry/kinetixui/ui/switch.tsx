@@ -38,12 +38,19 @@ const Switch = React.forwardRef<
   >
     <SwitchPrimitive.Thumb
       className={cn(
-        "pointer-events-none block size-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-instant ease-standard",
-        // `translate-x` is physical, so under `dir="rtl"` the thumb travelled the same way as in LTR —
-        // away from the start edge it already sat against, and straight off a 48px track (measured: thumb
-        // left edge at 50px). An RTL switch turned on showed a filled pill with no thumb in it at all.
-        "data-[state=checked]:translate-x-6 data-[state=unchecked]:translate-x-0",
-        "rtl:data-[state=checked]:-translate-x-6",
+        "pointer-events-none relative block size-5 rounded-full bg-background shadow-lg ring-0",
+        // The thumb travels along the INLINE axis of the switch's own direction: `inset-inline-start` is
+        // logical, so the browser resolves start against the direction the switch is laid out in — the
+        // nearest `dir`, in an LTR section of an RTL page as much as anywhere else. It used to be a physical
+        // `translate-x` flipped by `rtl:`, and Tailwind 3's `rtl:` is `[dir=rtl] *` — ANY rtl ancestor — so
+        // a switch in an LTR section of an RTL page was flipped too and its thumb landed 22px outside the
+        // track, over its own focus ring (check:selection-visual, "direction"). `:dir()` would have been the
+        // selector answer, but Vite 8's Lightning CSS lowers `:dir(ltr)` for its default targets to a
+        // `:not(:lang(ar, he, …))` guess about the page's LANGUAGE, which broke every RTL switch in the built
+        // Storybook — a consumer's toolchain can do the same. A logical property needs no selector at all.
+        // The offset is relative, so nothing around the switch reflows while it moves.
+        "transition-[inset-inline-start] duration-instant ease-standard",
+        "start-0 data-[state=checked]:start-6",
       )}
     />
   </SwitchPrimitive.Root>

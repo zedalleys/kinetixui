@@ -45,3 +45,21 @@ export const States: StoryObj<typeof meta> = { render: () => (
       </CardContent>
     </Card>
   ) };
+
+export const Direction: StoryObj<typeof meta> = { render: () => (
+    <div className="grid w-[22rem] max-w-full gap-4">
+      {([
+        ["inherit", undefined, "Follows the page"],
+        ["ltr", "ltr", "Left-to-right section"],
+        ["rtl", "rtl", "Right-to-left section"],
+      ] as const).map(([key, dir, label]) => (
+        <div key={key} dir={dir} data-kx-dir={key} className="flex items-center justify-between gap-4">
+          <Label htmlFor={`sw-dir-${key}`}>{label}</Label>
+          <div className="flex items-center gap-3">
+            <Switch id={`sw-dir-${key}`} data-kx-case={`${key}-off`} />
+            <Switch aria-label={`${label}, on`} data-kx-case={`${key}-on`} defaultChecked />
+          </div>
+        </div>
+      ))}
+    </div>
+  ) };

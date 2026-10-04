@@ -12,12 +12,20 @@ import { cn } from "../lib/utils";
  * Matches Input's `inputVariants` styling 1:1 so the two are drop-in
  * interchangeable in a Field. Gap-fill addition (not in the original
  * Figma source) — matches the shadcn/ui Native Select API shape.
+ *
+ * Same text-entry state contract as Input (TOKENS.md, "Text entry and navigation") — rest edge, hover,
+ * focus, invalid, disabled — minus read-only, which `<select>` does not have. Its placeholder is the
+ * empty-valued option: while it is the selection the field's text is `--muted-foreground`, so an unanswered
+ * select reads as unanswered next to a filled one (it used to render in the value's colour). The options in
+ * the open picker keep `--foreground`.
  */
 const nativeSelectVariants = cva(
   [
-    "flex w-full appearance-none border border-input bg-background px-3 py-3 pe-9",
+    "flex w-full appearance-none border border-muted-foreground/80 bg-background px-3 py-3 pe-9",
     "font-sans text-body-md text-foreground",
-    "outline-none transition-colors",
+    "[&:has(option[value='']:checked)]:text-muted-foreground [&_option]:text-foreground",
+    "outline-none transition-[border-color,box-shadow,background-color] duration-instant ease-standard",
+    "[@media(hover:hover)]:enabled:hover:[&:not(:focus):not([aria-invalid=true]):not([readonly]):not([data-state=focus])]:border-muted-foreground",
     "focus-visible:border-action focus-visible:shadow-focus",
     "disabled:cursor-not-allowed disabled:opacity-disabled",
     "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:border-destructive aria-[invalid=true]:focus-visible:shadow-focus-destructive",

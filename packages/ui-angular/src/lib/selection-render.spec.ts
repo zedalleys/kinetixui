@@ -52,6 +52,17 @@ import { KxCheckbox, KxSegment, KxSegmentedControl, KxSwitch } from './toggles';
           <div class="kx-render-row"><span>SMS alerts</span><kx-switch data-kx-case="disabled" disabled aria-label="SMS alerts" /></div>
         </kx-card-content>
       </kx-card>
+      <div class="kx-render-stack" data-kx-group="direction">
+        @for (d of directions; track d.key) {
+          <div class="kx-render-row" [attr.dir]="d.dir">
+            <span>{{ d.label }}</span>
+            <span class="kx-render-row">
+              <kx-switch [attr.data-kx-case]="d.key + '-off'" [aria-label]="d.label" />
+              <kx-switch [attr.data-kx-case]="d.key + '-on'" [checked]="true" [aria-label]="d.label + ', on'" />
+            </span>
+          </div>
+        }
+      </div>
       <kx-segmented-control value="week" aria-label="Range" data-kx-case="page">
         <kx-segment value="day">Day</kx-segment>
         <kx-segment value="week">Week</kx-segment>
@@ -70,7 +81,14 @@ import { KxCheckbox, KxSegment, KxSegmentedControl, KxSwitch } from './toggles';
     </div>
   `,
 })
-class SelectionStates {}
+class SelectionStates {
+  /** The switch in a subtree that follows the page, overrides it to ltr, and overrides it to rtl (React: `Direction`). */
+  readonly directions = [
+    { key: 'inherit', dir: null, label: 'Follows the page' },
+    { key: 'ltr', dir: 'ltr', label: 'Left-to-right section' },
+    { key: 'rtl', dir: 'rtl', label: 'Right-to-left section' },
+  ];
+}
 
 /**
  * A property is not an attribute. Angular binds `[checked]` and `[disabled]` on a native input as
@@ -109,6 +127,16 @@ describe('selection controls — rendered subject for check:selection-visual', (
     expect(at('kx-switch[data-kx-case="on"] button').getAttribute('aria-checked')).toBe('true');
     expect(at('kx-switch[data-kx-case="off"] button').getAttribute('aria-checked')).toBe('false');
     expect((at('kx-switch[data-kx-case="disabled"] button') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('renders the direction cases on and off, each in its own subtree', () => {
+    for (const key of ['inherit', 'ltr', 'rtl']) {
+      expect(at(`kx-switch[data-kx-case="${key}-on"] button`).getAttribute('aria-checked'), key).toBe('true');
+      expect(at(`kx-switch[data-kx-case="${key}-off"] button`).getAttribute('aria-checked'), key).toBe('false');
+    }
+    expect(at('kx-switch[data-kx-case="ltr-on"]').closest('[dir]')?.getAttribute('dir')).toBe('ltr');
+    expect(at('kx-switch[data-kx-case="rtl-on"]').closest('[dir]')?.getAttribute('dir')).toBe('rtl');
+    expect(at('kx-switch[data-kx-case="inherit-on"]').closest('[dir]')).toBeNull();
   });
 
   it('renders one chosen segment per control and a disabled one', () => {

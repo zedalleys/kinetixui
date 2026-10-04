@@ -135,14 +135,18 @@ for (const kind of CLAIMABLE) {
 }
 // VISUAL — the rendered state gates
 const visuallyCovered = (platform) => new Set(VISUAL_GATES.flatMap((g) => g.covers[platform] ?? []));
+// Coverage a gate records as narrower than React's (visual-gates.mjs `partial`) is measured, but is not parity.
+const partially = (platform) => new Set(VISUAL_GATES.flatMap((g) => Object.keys(g.partial?.[platform] ?? {})));
 const reactVisual = visuallyCovered("React");
-const angularVisual = visuallyCovered("Angular");
+const angularClaimed = visuallyCovered("Angular");
+const angularPartial = partially("Angular");
+const angularVisual = new Set([...angularClaimed].filter((s) => !angularPartial.has(s)));
 const visualOwed = implemented.filter((s) => reactVisual.has(s));
 criterion(
   "Visual",
   "visual-state-parity",
   `A rendered visual/state gate covers Angular wherever one covers React (${VISUAL_GATES.map((g) => g.command).join(", ")})`,
-  visualOwed.filter((s) => !angularVisual.has(s)),
+  visualOwed.filter((s) => !angularVisual.has(s)).map((s) => (angularPartial.has(s) ? `${s} (partial: ${VISUAL_GATES.map((g) => g.partial?.Angular?.[s]).find(Boolean)})` : s)),
   { have: visualOwed.filter((s) => angularVisual.has(s)).length, need: visualOwed.length },
 );
 criterion(
@@ -156,7 +160,7 @@ criterion(
   "Visual",
   "visual-only-implemented",
   "A visual gate claims Angular only for components Angular implements",
-  [...angularVisual].filter((s) => !implemented.includes(s)),
+  [...angularClaimed].filter((s) => !implemented.includes(s)),
   { always: true },
 );
 

@@ -140,7 +140,10 @@ const SUBJECTS = [
 
 /**
  * The form family. Claimed for `largeText`: <Slider>, <InputOTP>, <Label>, <Input>, <Textarea>,
- * <Select>, <MultiSelect> and <Form>.
+ * <Select>, <NativeSelect>, <MultiSelect>, <Tabs> and <Form>.
+ *
+ * <NativeSelect> and <Tabs> joined in Visual Slice 3, measured before they were named: the tab strip is a
+ * fixed-height well (`h-9`), which is exactly the shape that clips at 200% if its height were px.
  *
  * The last five were withheld until the type scale moved to rem. They were measured in full the whole
  * time and failed on one rule only — their own text did not grow, because `text-body-md` compiled to
@@ -183,6 +186,8 @@ const FORM_SUBJECTS = [
     text: "[role=combobox] span",
     inside: "[role=combobox] > *",
   },
+  { component: "NativeSelect", story: "form-inputs-nativeselect--default", control: "select", text: "select" },
+  { component: "Tabs", story: "navigation-tabs--states", control: "[role=tablist]", text: "[role=tab]", inside: "[role=tablist] > *" },
   { component: "Label", story: "foundations-label--default", control: "label", text: "label" },
   // The Form story is the one place a label, a control, its help text and its error message share a
   // column, which is where 200% text makes them collide if anything in that stack is sized in px.
@@ -225,7 +230,7 @@ const base = `http://127.0.0.1:${server.address().port}`;
  * this whole evidence model exists to prevent — so it is checked rather than trusted.
  */
 /** `Checkbox` -> `checkbox`, `InputOTP` -> `input-otp`: the manifest's spelling, which coveredSlugs returns. */
-const SLUG_OF = { InputOTP: "input-otp", RadioGroup: "radio-group", ToggleGroup: "toggle-group", MultiSelect: "multi-select", AlertDialog: "alert-dialog", DropdownMenu: "dropdown-menu", ContextMenu: "context-menu" };
+const SLUG_OF = { NativeSelect: "native-select", InputOTP: "input-otp", RadioGroup: "radio-group", ToggleGroup: "toggle-group", MultiSelect: "multi-select", AlertDialog: "alert-dialog", DropdownMenu: "dropdown-menu", ContextMenu: "context-menu" };
 const slugOf = (name) => SLUG_OF[name] ?? name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
 
 function assertClaimMatchesSubjects() {

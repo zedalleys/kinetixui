@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { NativeSelect, NativeSelectOptGroup, NativeSelectOption, Select } from "@kinetixui/ui";
+import { Card, CardContent, Label, NativeSelect, NativeSelectOptGroup, NativeSelectOption, Select } from "@kinetixui/ui";
 
 const Demo = () => (
     <NativeSelect aria-label="Fruit" className="max-w-xs" defaultValue="">
@@ -31,3 +31,26 @@ const meta = {
 export default meta;
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const EntryStates: StoryObj<typeof meta> = { render: () => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-5 p-6">
+        {([
+          ["rest", "Country", { defaultValue: "" }],
+          ["filled", "Time zone", { defaultValue: "utc" }],
+          ["invalid", "Plan", { defaultValue: "", "aria-invalid": true, "aria-describedby": "nsel-invalid-error" }],
+          ["disabled", "Data region (locked)", { defaultValue: "utc", disabled: true }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="grid gap-2">
+            <Label htmlFor={`nsel-${key}`}>{label}</Label>
+            <NativeSelect id={`nsel-${key}`} data-kx-case={key} {...props}>
+              <NativeSelectOption value="" disabled>Choose one</NativeSelectOption>
+              <NativeSelectOption value="utc">UTC</NativeSelectOption>
+              <NativeSelectOption value="cet">Central European Time</NativeSelectOption>
+            </NativeSelect>
+            {key === "invalid" ? <p id="nsel-invalid-error" className="text-body-sm text-destructive">Choose a plan to continue.</p> : null}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  ) };

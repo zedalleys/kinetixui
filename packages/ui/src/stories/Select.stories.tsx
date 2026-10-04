@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx · controls: scripts/gen-stories.mjs CONTROLS */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@kinetixui/ui";
+import { Card, CardContent, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@kinetixui/ui";
 
 const Demo = () => (
     <Select>
@@ -44,3 +44,30 @@ export const Playground: StoryObj<typeof meta> = { render: (args) => (
   ) };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const EntryStates: StoryObj<typeof meta> = { render: () => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-5 p-6">
+        {([
+          ["rest", "Country", {}, {}],
+          ["filled", "Time zone", { defaultValue: "utc" }, {}],
+          ["invalid", "Plan", {}, { "aria-invalid": true, "aria-describedby": "sel-invalid-error" }],
+          ["disabled", "Data region (locked)", { defaultValue: "utc", disabled: true }, {}],
+        ] as const).map(([key, label, root, trigger]) => (
+          <div key={key} className="grid gap-2">
+            <Label htmlFor={`sel-${key}`}>{label}</Label>
+            <Select {...root}>
+              <SelectTrigger id={`sel-${key}`} data-kx-case={key} {...trigger}>
+                <SelectValue placeholder="Choose one" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="utc">UTC</SelectItem>
+                <SelectItem value="cet">Central European Time</SelectItem>
+              </SelectContent>
+            </Select>
+            {key === "invalid" ? <p id="sel-invalid-error" className="text-body-sm text-destructive">Choose a plan to continue.</p> : null}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  ) };

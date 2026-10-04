@@ -88,6 +88,9 @@ const PADDED = new Set([
   // thumb was visible, which is also all the axe pass and the large-text pass had ever been looking at.
   // Both of these demos are `w-[60%]`, which is right on the website, where the column has a width.
   "slider", "progress",
+  // The Tabs `States` story is `max-w-full`, which only means something inside a wrapper with a width: the
+  // large-text pass measures it at 390px with 2x text, where a tab strip that cannot wrap overflows the page.
+  "tabs",
 ]);
 
 /**
@@ -622,6 +625,32 @@ const EXTRA = {
     </Card>
   )`,
     },
+    {
+      name: "Direction",
+      imports: "Label",
+      // The thumb travels to the inline END of the switch's OWN direction — the closest `dir`, not whichever
+      // ancestor happens to say rtl. A settings page in Arabic embeds an English-only section (a code
+      // sample's options, a brand name's preferences) and the reverse; both are real. `check:selection-visual`
+      // renders this with the page itself set to ltr and to rtl, so the three rows cover all four cases:
+      // LTR in LTR, RTL in RTL, LTR inside an RTL page, RTL inside an LTR page.
+      render: `() => (
+    <div className="grid w-[22rem] max-w-full gap-4">
+      {([
+        ["inherit", undefined, "Follows the page"],
+        ["ltr", "ltr", "Left-to-right section"],
+        ["rtl", "rtl", "Right-to-left section"],
+      ] as const).map(([key, dir, label]) => (
+        <div key={key} dir={dir} data-kx-dir={key} className="flex items-center justify-between gap-4">
+          <Label htmlFor={\`sw-dir-\${key}\`}>{label}</Label>
+          <div className="flex items-center gap-3">
+            <Switch id={\`sw-dir-\${key}\`} data-kx-case={\`\${key}-off\`} />
+            <Switch aria-label={\`\${label}, on\`} data-kx-case={\`\${key}-on\`} defaultChecked />
+          </div>
+        </div>
+      ))}
+    </div>
+  )`,
+    },
   ],
   "segmented-control": [
     {
@@ -646,6 +675,103 @@ const EXTRA = {
           </SegmentedControl>
         </CardContent>
       </Card>
+    </div>
+  )`,
+    },
+  ],
+  // The text-entry state contract (TOKENS.md, "Text entry and navigation"). The demos show one empty field;
+  // a real form also has a filled one, an invalid one with its error text, a read-only one and a disabled
+  // one, side by side inside a raised Card — so both axe passes and `check:entry-visual` measure them where
+  // forms actually live. Input and Textarea carry the same story by hand (their stories are hand-written).
+  select: [
+    {
+      name: "EntryStates",
+      imports: "Card CardContent Label SelectContent SelectItem SelectTrigger SelectValue",
+      render: `() => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-5 p-6">
+        {([
+          ["rest", "Country", {}, {}],
+          ["filled", "Time zone", { defaultValue: "utc" }, {}],
+          ["invalid", "Plan", {}, { "aria-invalid": true, "aria-describedby": "sel-invalid-error" }],
+          ["disabled", "Data region (locked)", { defaultValue: "utc", disabled: true }, {}],
+        ] as const).map(([key, label, root, trigger]) => (
+          <div key={key} className="grid gap-2">
+            <Label htmlFor={\`sel-\${key}\`}>{label}</Label>
+            <Select {...root}>
+              <SelectTrigger id={\`sel-\${key}\`} data-kx-case={key} {...trigger}>
+                <SelectValue placeholder="Choose one" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="utc">UTC</SelectItem>
+                <SelectItem value="cet">Central European Time</SelectItem>
+              </SelectContent>
+            </Select>
+            {key === "invalid" ? <p id="sel-invalid-error" className="text-body-sm text-destructive">Choose a plan to continue.</p> : null}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )`,
+    },
+  ],
+  "native-select": [
+    {
+      name: "EntryStates",
+      imports: "Card CardContent Label",
+      render: `() => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-5 p-6">
+        {([
+          ["rest", "Country", { defaultValue: "" }],
+          ["filled", "Time zone", { defaultValue: "utc" }],
+          ["invalid", "Plan", { defaultValue: "", "aria-invalid": true, "aria-describedby": "nsel-invalid-error" }],
+          ["disabled", "Data region (locked)", { defaultValue: "utc", disabled: true }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="grid gap-2">
+            <Label htmlFor={\`nsel-\${key}\`}>{label}</Label>
+            <NativeSelect id={\`nsel-\${key}\`} data-kx-case={key} {...props}>
+              <NativeSelectOption value="" disabled>Choose one</NativeSelectOption>
+              <NativeSelectOption value="utc">UTC</NativeSelectOption>
+              <NativeSelectOption value="cet">Central European Time</NativeSelectOption>
+            </NativeSelect>
+            {key === "invalid" ? <p id="nsel-invalid-error" className="text-body-sm text-destructive">Choose a plan to continue.</p> : null}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )`,
+    },
+  ],
+  // The navigation state contract: a selected tab, an unselected one and a disabled one, on the page and
+  // inside a raised Card — the two places a tab list sits, and the arrangement that inverts in dark mode
+  // if the selected tab is the page colour.
+  tabs: [
+    {
+      name: "States",
+      imports: "Card CardContent",
+      render: `() => (
+    <div className="grid w-[26rem] max-w-full gap-6">
+      {(["page", "card"] as const).map((where) => {
+        const tabs = (
+          <Tabs defaultValue="overview">
+            <TabsList data-kx-case={where} aria-label={where === "page" ? "Project" : "Workspace"}>
+              <TabsTrigger value="overview" data-kx-case="selected">Overview</TabsTrigger>
+              <TabsTrigger value="activity" data-kx-case="unselected">Activity</TabsTrigger>
+              <TabsTrigger value="billing" data-kx-case="disabled" disabled>Billing</TabsTrigger>
+            </TabsList>
+            <TabsContent value="overview" className="text-sm text-muted-foreground">Three deployments this week.</TabsContent>
+            <TabsContent value="activity" className="text-sm text-muted-foreground">No new activity.</TabsContent>
+          </Tabs>
+        );
+        return where === "page" ? (
+          <div key={where}>{tabs}</div>
+        ) : (
+          <Card key={where}>
+            <CardContent className="p-4">{tabs}</CardContent>
+          </Card>
+        );
+      })}
     </div>
   )`,
     },

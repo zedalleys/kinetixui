@@ -175,7 +175,16 @@
 /* the control is disabled, not the label — so the label follows via the group, never its own attribute */
 .kx-label[data-disabled='true'] { opacity: var(--opacity-disabled); cursor: not-allowed; }
 
-/* ── input / textarea ───────────────────────────────────────────────────── */
+/* ── input / textarea / native select ───────────────────────────────────── */
+/* Text-entry state contract (TOKENS.md, "Text entry and navigation"), shared with React:
+   rest       edge `--muted-foreground` at 80% (3.4:1 light / 5.4:1 dark on a card; `--input` was 2.2 / 2.4)
+   hover      a pointer that can hover: full `--muted-foreground` — never over focus, invalid, read-only or
+              disabled, so hover cannot take over a stronger state
+   focus      `--action` edge + `--shadow-focus`, the strongest signal
+   invalid    `aria-invalid="true"` → `--destructive` edge and ring
+   read-only  an inset `--muted` fill and full-strength text; no hover
+   disabled   `--opacity-disabled`, inert
+   Motion: border-color, box-shadow and background-color over `--duration-instant`; none under reduce. */
 .kx-input {
   display: block;
   inline-size: 100%;
@@ -183,11 +192,14 @@
   padding: var(--spacing-2) var(--spacing-3);
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  border: var(--border-width-default) solid hsl(var(--input));
+  border: var(--border-width-default) solid hsl(var(--muted-foreground) / 0.8);
   border-radius: var(--radius-field);
   font: var(--text-body-md);
   font-family: var(--font-family-sans);
-  transition: border-color var(--duration-fast) var(--easing-standard), box-shadow var(--duration-fast) var(--easing-standard);
+  transition:
+    border-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard),
+    background-color var(--duration-instant) var(--easing-standard);
 }
 .kx-input::placeholder { color: hsl(var(--muted-foreground)); }
 .kx-input:focus-visible { outline: none; border-color: hsl(var(--ring)); box-shadow: var(--shadow-focus); }
@@ -195,6 +207,13 @@
 /* aria-invalid is the source of truth for the error state — the styling follows the semantics, not the reverse */
 .kx-input[aria-invalid='true'] { border-color: hsl(var(--destructive)); }
 .kx-input[aria-invalid='true']:focus-visible { box-shadow: var(--shadow-focus-destructive); }
+.kx-input[readonly],
+.kx-textarea[readonly] { background-color: hsl(var(--muted)); }
+@media (hover: hover) {
+  .kx-input:enabled:not(:focus):not([readonly]):not([aria-invalid='true']):hover,
+  .kx-textarea:enabled:not(:focus):not([readonly]):not([aria-invalid='true']):hover,
+  .kx-native-select:enabled:not(:focus):not([aria-invalid='true']):hover { border-color: hsl(var(--muted-foreground)); }
+}
 
 /* ── checkbox / switch ──────────────────────────────────────────────────── */
 /* Selection-control state contract (TOKENS.md, "Selection controls"), shared with React:
@@ -259,16 +278,21 @@
 .kx-switch:enabled:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .kx-switch:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
 .kx-switch__thumb {
+  position: relative;
+  inset-inline-start: 0;
   inline-size: 18px;
   block-size: 18px;
   border-radius: var(--radius-full);
   background-color: hsl(var(--static-white));
   box-shadow: var(--shadow-sm);
-  transition: translate var(--duration-base) var(--easing-standard);
+  transition: inset-inline-start var(--duration-base) var(--easing-standard);
 }
-/* `translate` with a logical sign flip: in RTL the thumb travels the other way without a second rule */
-.kx-switch[aria-checked='true'] .kx-switch__thumb { translate: 20px 0; }
-[dir='rtl'] .kx-switch[aria-checked='true'] .kx-switch__thumb { translate: -20px 0; }
+/* The thumb travels along the inline axis of the switch's OWN direction: `inset-inline-start` is logical, so
+   the browser resolves it against the nearest `dir`. It used to be `translate` flipped by `[dir='rtl'] …`,
+   which matches ANY rtl ancestor — a switch in an LTR section of an RTL page was flipped too and its thumb
+   landed outside the track (check:selection-visual, "direction"). A logical property needs no selector, so
+   no build step can rewrite the direction test into a guess (see the React Switch). */
+.kx-switch[aria-checked='true'] .kx-switch__thumb { inset-inline-start: 20px; }
 
 /* ── separator ──────────────────────────────────────────────────────────── */
 .kx-separator { display: block; flex-shrink: 0; background-color: hsl(var(--border)); border: 0; margin: 0; }
@@ -334,10 +358,21 @@
   font: var(--text-label-md);
   font-weight: var(--font-weight-medium);
   color: hsl(var(--muted-foreground));
+  border-start-start-radius: var(--radius-sm);
+  border-start-end-radius: var(--radius-sm);
   cursor: pointer;
-  transition: color var(--duration-fast) var(--easing-standard), border-color var(--duration-fast) var(--easing-standard);
+  transition:
+    color var(--duration-fast) var(--easing-standard),
+    background-color var(--duration-fast) var(--easing-standard),
+    border-color var(--duration-fast) var(--easing-standard);
 }
-.kx-tab:hover { color: hsl(var(--foreground)); }
+/* Navigation state contract (TOKENS.md, "Text entry and navigation"). Angular's strip is underlined rather
+   than React's segmented well — the shape differs, the semantics do not: hover is the selection controls'
+   8% `--foreground` layer on an unselected, enabled tab (a disabled one used to answer with a colour change);
+   selected is `--foreground` text AND the 2px `--primary` indicator; focus is the ring. */
+@media (hover: hover) {
+  .kx-tab:enabled:not([aria-selected='true']):hover { color: hsl(var(--foreground)); background-color: hsl(var(--foreground) / 0.08); }
+}
 .kx-tab:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .kx-tab[aria-selected='true'] { color: hsl(var(--foreground)); border-block-end-color: hsl(var(--primary)); }
 .kx-tab:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
@@ -534,14 +569,17 @@
   min-block-size: 100px;
   resize: vertical;
   padding: var(--spacing-3);
-  border: var(--border-width-default) solid hsl(var(--input));
+  border: var(--border-width-default) solid hsl(var(--muted-foreground) / 0.8);
   border-radius: var(--radius-field);
   background-color: hsl(var(--background));
   font: var(--text-body-md);
   font-family: var(--font-family-sans);
   color: hsl(var(--foreground));
   outline: none;
-  transition: border-color var(--duration-fast) var(--easing-standard), box-shadow var(--duration-fast) var(--easing-standard);
+  transition:
+    border-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard),
+    background-color var(--duration-instant) var(--easing-standard);
 }
 .kx-textarea::placeholder { color: hsl(var(--muted-foreground)); }
 .kx-textarea:focus-visible { border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
@@ -554,14 +592,20 @@
   inline-size: 100%;
   padding: var(--spacing-3);
   padding-inline-end: var(--spacing-8);
-  border: var(--border-width-default) solid hsl(var(--input));
+  border: var(--border-width-default) solid hsl(var(--muted-foreground) / 0.8);
   background-color: hsl(var(--background));
   font: var(--text-body-md);
   font-family: var(--font-family-sans);
   color: hsl(var(--foreground));
   outline: none;
-  transition: border-color var(--duration-fast) var(--easing-standard), box-shadow var(--duration-fast) var(--easing-standard);
+  transition:
+    border-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard);
 }
+/* The placeholder is the empty-valued option: while it is chosen the field reads as unanswered. The options
+   in the open picker keep the value colour. */
+.kx-native-select:has(option[value='']:checked) { color: hsl(var(--muted-foreground)); }
+.kx-native-select option { color: hsl(var(--foreground)); }
 .kx-native-select--sharp { border-radius: var(--radius-none); }
 .kx-native-select--default { border-radius: var(--radius-field); }
 .kx-native-select--rounded { border-radius: var(--radius-md); }
@@ -569,6 +613,9 @@
 .kx-native-select:focus-visible { border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
 .kx-native-select:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
 .kx-native-select[aria-invalid='true'] { border-color: hsl(var(--destructive)); }
+/* Input and Textarea already turned the ring destructive on an invalid field; the select drew the default
+   ring, so a focused invalid select lost its error colour to the focus colour. */
+.kx-native-select[aria-invalid='true']:focus-visible { box-shadow: var(--shadow-focus-destructive); }
 
 /* ── radio group ────────────────────────────────────────────────────────── */
 .kx-radio-group { display: flex; flex-direction: column; gap: var(--spacing-2); }
@@ -834,6 +881,8 @@
   .kx-checkbox,
   .kx-switch,
   .kx-switch__thumb,
+  .kx-input,
+  .kx-tab,
   .kx-tag__remove { transition: none; }
 }
 

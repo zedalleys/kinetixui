@@ -145,8 +145,14 @@ describe("disabled", () => {
  * the thumb's left edge went from 26px to 50px on a 48px track, so a switch turned on in an RTL locale
  * rendered as a filled pill with no thumb visible in it at all.
  *
- * jsdom cannot see that, so what is held here is the class that makes the geometry right. The pixel
- * measurement lives in the browser pass; this is what fails first if the mirror is dropped.
+ * The first fix flipped the translate with Tailwind's `rtl:`, which matches ANY rtl ancestor — so a switch
+ * in an LTR section of an RTL page was flipped as well, and its thumb landed 22px outside the track. The
+ * travel is now `inset-inline-start`, a logical offset the browser resolves against the switch's own
+ * direction.
+ *
+ * jsdom cannot see that, so what is held here is the class that makes the geometry right. The geometry
+ * itself — all four page/subtree direction pairs, checked and unchecked — is measured in Chromium by
+ * check:selection-visual; this is what fails first if the logical offset is dropped.
  */
 describe("Switch under RTL", () => {
   const thumbOf = (container: HTMLElement) =>
@@ -159,9 +165,12 @@ describe("Switch under RTL", () => {
       </KinetixDirectionProvider>,
     );
     const cls = thumbOf(container)?.getAttribute("class") ?? "";
-    expect(cls, "the thumb must translate the other way under RTL").toContain("rtl:data-[state=checked]:-translate-x-6");
-    // And the LTR travel is still there — the mirror is an addition, not a replacement.
-    expect(cls).toContain("data-[state=checked]:translate-x-6");
+    // The travel is a logical offset, so the browser mirrors it against the switch's OWN direction — no
+    // ancestor selector decides it. A physical translate flipped by `rtl:` matched any rtl ancestor and pushed
+    // the thumb off the track in an LTR section of an RTL page (check:selection-visual, "direction").
+    expect(cls, "the thumb must travel along the inline axis").toContain("data-[state=checked]:start-6");
+    expect(cls).toContain("relative");
+    expect(cls, "no physical travel that rtl: would have to flip").not.toMatch(/translate-x|rtl:/);
   });
 
   it("still toggles from the keyboard under RTL", async () => {
