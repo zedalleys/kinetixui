@@ -457,8 +457,18 @@ const BEHAVIOUR = [
       t((await page.locator("#ig-clear").getAttribute("type")) === "button", "the add-on button is type=button (never submits a form)");
       await press(page, "Enter");
       t((await out(page, "site")) === "", "Enter activates it", `model "${await out(page, "site")}"`);
+      // With nothing to clear the button disables itself. That is the button's state, not the field's: the group
+      // must not dim, because its input still takes typing.
+      const look = await page.locator("#ig-clear").evaluate((b) => ({
+        disabled: b.disabled,
+        button: Number(getComputedStyle(b).opacity),
+        group: Number(getComputedStyle(b.closest("kx-input-group")).opacity),
+        cursor: getComputedStyle(b.closest("kx-input-group").querySelector("input")).cursor,
+      }));
+      t(look.disabled && look.button < 1 && look.group === 1 && look.cursor !== "not-allowed", "a disabled add-on dims itself, not the field", `button ${look.button}, group ${look.group}, input cursor ${look.cursor}`);
+      await focus(page, "#ig-site");
       await press(page, "Tab");
-      t((await activeId(page)) === "ig-weight", "a text add-on is not a stop", `focus on #${await activeId(page)}`);
+      t((await activeId(page)) === "ig-weight", "a disabled add-on and a text add-on are not stops", `focus on #${await activeId(page)}`);
     },
   },
   {

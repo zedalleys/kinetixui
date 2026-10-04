@@ -105,6 +105,16 @@ describe('KxInputOtp', () => {
     expect(Array.from(el.querySelectorAll('.kx-input-otp__slot')).map((s) => s.textContent!.trim())).toEqual(['1', '2', '3', '4']);
   });
 
+  it('holds a value written by the form to the same rules as typing', () => {
+    const control = new FormControl('12a3-4567');
+    const { el, fixture } = host(`<kx-input-otp aria-label="Code" [length]="6" [formControl]="control" />`, imports, { control });
+    const input = el.querySelector('input') as HTMLInputElement;
+    expect(input.value).toBe('123456');
+    control.setValue('9x8');
+    fixture.detectChanges();
+    expect(input.value).toBe('98');
+  });
+
   it('splits the cells into the requested groups', () => {
     const { el } = host(`<kx-input-otp aria-label="Code" [groups]="[3, 3]" />`, imports);
     expect(Array.from(el.querySelectorAll('.kx-input-otp__group')).map((g) => g.children.length)).toEqual([3, 3]);

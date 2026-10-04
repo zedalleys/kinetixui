@@ -114,9 +114,14 @@ export class KxInputOtp extends KxValueBase<string> {
   /** The cell the next character goes into — the last one once the code is full — while the field has focus. */
   protected readonly active = computed(() => (this.focused() ? Math.min(this.value().length, this.length() - 1) : -1));
 
+  /** What the field accepts: only allowed characters, at most `length` of them. */
+  private clean(raw: string): string {
+    const reject = this.allow() === 'digits' ? /[^0-9]/g : /[^0-9a-z]/gi;
+    return raw.replace(reject, '').slice(0, this.length());
+  }
+
   protected commit(el: HTMLInputElement): void {
-    const accept = this.allow() === 'digits' ? /[^0-9]/g : /[^0-9a-z]/gi;
-    const next = el.value.replace(accept, '').slice(0, this.length());
+    const next = this.clean(el.value);
     // write the cleaned value back, so a rejected character never shows in the field it was typed into
     if (el.value !== next) el.value = next;
     this.value.set(next);
@@ -131,7 +136,8 @@ export class KxInputOtp extends KxValueBase<string> {
     if (el.selectionStart !== end || el.selectionEnd !== end) el.setSelectionRange(end, end);
   }
 
+  /** A value written by the form is held to the same rules as typing, so the field never holds more than its cells show. */
   override writeValue(value: string): void {
-    this.value.set(value ?? '');
+    this.value.set(this.clean(String(value ?? '')));
   }
 }

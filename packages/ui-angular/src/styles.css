@@ -903,7 +903,10 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
 .kx-input-group:has(.kx-input-group__input:focus) { border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
 .kx-input-group:has(.kx-input-group__input[aria-invalid='true']) { border-color: hsl(var(--destructive)); }
 .kx-input-group:has(.kx-input-group__input[aria-invalid='true']:focus) { box-shadow: var(--shadow-focus-destructive); }
-.kx-input-group:has(:disabled) { opacity: var(--opacity-disabled); cursor: not-allowed; }
+/* The field is disabled when its input is. An add-on button disabled on its own (Copy with nothing to copy) dims
+   only itself: the input beside it still takes typing, so the group must not read as disabled. */
+.kx-input-group:has(.kx-input-group__input:disabled) { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.kx-input-group:not(:has(.kx-input-group__input:disabled)) .kx-input-group__button:disabled { opacity: var(--opacity-disabled); }
 .kx-input-group__input {
   flex: 1 1 0;
   min-inline-size: 0;

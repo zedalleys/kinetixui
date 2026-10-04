@@ -172,7 +172,7 @@ import { KxCheckbox, KxSegment, KxSegmentedControl, KxSwitch, KxToggle, KxToggle
         <kx-input-group>
           <kx-input-group-text>https://</kx-input-group-text>
           <input kxInputGroupInput id="ig-site" [(ngModel)]="site" />
-          <button kxInputGroupButton id="ig-clear" (click)="site = ''">Clear</button>
+          <button kxInputGroupButton id="ig-clear" [disabled]="!site" (click)="site = ''">Clear</button>
         </kx-input-group>
         <label kxLabel for="ig-weight">Weight</label>
         <kx-input-group>
