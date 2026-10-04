@@ -309,7 +309,7 @@
       "icp": "p1",
       "pillar": "c",
       "stage": "evaluation",
-      "status": "ready",
+      "status": "published",
       "file": "marketing/content/x.md",
       "day": 6,
       "destination": "/docs/platforms",

@@ -44,7 +44,7 @@ appears, which is why they carry no fixed day.
 | 1 | **LI-003** | LinkedIn | post | P2 | A | Awareness | *"Six months later, they don't"* — drift as a mechanism problem | See the coverage → `/docs/platforms` | `kx_p2_a_drift` | — | **Published** 2026-09-29 |
 | 2 | **X-005** | X | single | P2 | A | Awareness | Drift is not a discipline problem | — | `kx_p2_a_drift` | LI-003 | **Published** 2026-09-30 |
 | 4 | **LI-004** | LinkedIn | post | P1 | C | Evaluation | The manifest, and the check that reads it back | See the coverage → `/docs/platforms` | `kx_p1_c_manifest` | — | **Published** 2026-10-03 |
-| 6 | **X-003** | X | single | P1 | C | Evaluation | No source, no claim, build fails | — | `kx_p1_c_manifest` | LI-004 | Ready |
+| 6 | **X-003** | X | single | P1 | C | Evaluation | No source, no claim, build fails | — | `kx_p1_c_manifest` | LI-004 | **Published** 2026-10-04 |
 | — | **COM-002** | community | comment | P1 | A | Awareness | How to verify a coverage claim | opportunistic | — | ART-001 | Brief |
 | **Week 2 — architecture** |
 | 8 | **ART-002** | dev.to | article | NEUTRAL | B | Awareness | *Your design tokens stop at the web boundary* | Token contract → `/docs/tokens` | `kx_p2_b_token_boundary` | — | **Drafted** |
