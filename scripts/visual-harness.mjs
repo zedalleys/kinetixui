@@ -1,15 +1,20 @@
 /**
  * visual-harness.mjs — the shared instrument behind the rendered visual gates (`check:card-visual`,
- * `check:selection-visual`): a static server for a built directory, WCAG relative luminance and contrast,
- * and a dependency-free PNG decoder for Playwright screenshots.
+ * `check:selection-visual`, `check:entry-visual`): a static server for a built directory, WCAG relative luminance and contrast,
+ * a dependency-free PNG decoder for Playwright screenshots, and the page that paints an Angular subject.
  *
  * It holds only the measuring instrument. What each gate asserts — and why it samples where it does —
  * stays in the gate, next to the contract it checks.
  */
 import { createServer } from "node:http";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { extname, join, normalize } from "node:path";
+import { fileURLToPath } from "node:url";
 import { inflateSync } from "node:zlib";
+
+const root = fileURLToPath(new URL("..", import.meta.url));
 
 const MIME = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".woff": "font/woff", ".png": "image/png", ".ico": "image/x-icon" };
 
@@ -89,4 +94,44 @@ export function decode(png) {
     prev = line;
   }
   return { w, h, data: out };
+}
+
+/* ── Angular subjects ───────────────────────────────────────────────────── */
+/**
+ * Render an Angular subject for a gate: run the spec that mounts it with KX_ANGULAR_RENDER_OUT set, then wrap
+ * the DOM it wrote in one page per theme that loads exactly what a consumer loads — the generated token CSS
+ * and the package's styles.css. `layout` is the only local CSS: it places the subject's groups on the page and
+ * styles no control. The markup is Angular's own output, not a hand-written imitation of it.
+ *
+ * Returns the directory holding `light.html` and `dark.html`, for `serveStatic`.
+ */
+export function buildAngularSubject(spec, { name, layout }) {
+  const dir = mkdtempSync(join(tmpdir(), `kx-${name}-ng-`));
+  const out = join(dir, "subject.html");
+  execFileSync("pnpm", ["--filter", "@kinetixui/angular", "exec", "vitest", "run", spec], {
+    cwd: root,
+    env: { ...process.env, KX_ANGULAR_RENDER_OUT: out },
+    stdio: ["ignore", "ignore", "inherit"],
+  });
+  if (!existsSync(out)) throw new Error(`${name}: the Angular render spec ${spec} did not write its subject`);
+  const css = {
+    "globals.css": "packages/tokens/dist/web/globals.css",
+    "globals.dark.css": "packages/tokens/dist/web/globals.dark.css",
+    "extras.css": "packages/tokens/dist/web/extras.css",
+    "extras.dark.css": "packages/tokens/dist/web/extras.dark.css",
+    "styles.css": "packages/ui-angular/src/styles.css",
+  };
+  for (const [file, from] of Object.entries(css)) {
+    if (!existsSync(join(root, from))) throw new Error(`${name}: ${from} missing — run pnpm build:tokens first`);
+    copyFileSync(join(root, from), join(dir, file));
+  }
+  const links = Object.keys(css).map((n) => `<link rel="stylesheet" href="${n}">`).join("");
+  const body = readFileSync(out, "utf8");
+  for (const theme of ["light", "dark"]) {
+    writeFileSync(
+      join(dir, `${theme}.html`),
+      `<!doctype html><html lang="en" class="${theme === "dark" ? "dark" : ""}"><head><meta charset="utf-8">${links}<style>${layout}</style></head><body>${body}</body></html>`,
+    );
+  }
+  return dir;
 }

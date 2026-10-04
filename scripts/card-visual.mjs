@@ -1,7 +1,8 @@
 /**
  * card-visual.mjs — the Card's visual contract, measured on rendered pixels in a real browser.
  *
- *   pnpm build:ui && pnpm build-storybook && node scripts/card-visual.mjs
+ *   pnpm build:ui && pnpm build-storybook && pnpm build:tokens && node scripts/card-visual.mjs
+ *   node scripts/card-visual.mjs --platform=React     one platform only (React | Angular)
  *
  * The surface slice (TOKENS.md, "Surface model") made claims about how a Card LOOKS: that its edge is
  * softer than the stroke of the controls inside it, that it is lifted off the page, that it sits above a
@@ -35,43 +36,75 @@
  *   motion    hover runs a box-shadow transition with a rendered midpoint over a perceptible duration;
  *             under prefers-reduced-motion it runs none and lands on the same end state
  *
+ * ── Two platforms, and what each one is held to ──────────────────────────
+ *
+ *   React     every row above, on the Card stories in the built Storybook
+ *   Angular   the RESTING rows only — edge, lift, grouped, static — on the DOM Angular renders
+ *             (src/lib/card-render.spec.ts), painted with the package's styles.css and the token CSS.
+ *             Angular's `kx-card` is the static Card: it has no interactive form (no link or button card),
+ *             so there is no hover, pressed, selected or focus state to measure, and none is claimed.
+ *             visual-gates.mjs records that as partial coverage, which keeps the Angular graduation
+ *             guard's visual-parity criterion open for card until interactive cards exist.
+ *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary for local runs.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { PERCEPTIBLE_MS, SUPPRESSED_MS } from "./motion-states.mjs";
-import { contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
+import { buildAngularSubject, contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
 import { gate } from "./visual-gates.mjs";
 
-// This gate measures React's Card only; visual-gates.mjs records that, and the Angular graduation guard
-// reads it. Adding an Angular pass here means adding Angular to its `covers` entry.
-if (Object.keys(gate("scripts/card-visual.mjs").covers).join() !== "React") throw new Error("card-visual: visual-gates.mjs disagrees with what this gate runs");
+// The platforms come from visual-gates.mjs — the registry the Angular graduation guard reads — so the two
+// cannot disagree about what this gate measures.
+const GATE = gate("scripts/card-visual.mjs");
+const only = process.argv.find((a) => a.startsWith("--platform="))?.slice("--platform=".length);
+if (only && !GATE.covers[only]) {
+  console.error(`card-visual: --platform=${only} is not one this gate covers (${Object.keys(GATE.covers).join(", ")})`);
+  process.exit(2);
+}
+const PLATFORMS = only ? [only] : Object.keys(GATE.covers);
+if (Object.keys(GATE.covers).join() !== "React,Angular" || GATE.partial?.Angular?.card === undefined) {
+  throw new Error("card-visual: visual-gates.mjs disagrees with what this gate runs (React in full, Angular resting only)");
+}
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
-if (!existsSync(join(staticDir, "index.json"))) {
+if (PLATFORMS.includes("React") && !existsSync(join(staticDir, "index.json"))) {
   console.error("apps/docs/storybook-static not found — run `pnpm build-storybook` first.");
   process.exit(2);
 }
-assertUiDistMatchesSource("card-visual");
+if (PLATFORMS.includes("React")) assertUiDistMatchesSource("card-visual");
 
 const STORY = {
   default: "data-display-card--default",
   grouped: "data-display-card--grouped",
   interactive: "data-display-card--interactive",
 };
-const index = JSON.parse(readFileSync(join(staticDir, "index.json"), "utf8"));
-for (const id of Object.values(STORY)) {
-  if (!index.entries[id]) {
-    console.error(`card-visual: story ${id} is not in the built Storybook — gen:stories and build-storybook first.`);
-    process.exit(2);
+if (PLATFORMS.includes("React")) {
+  const index = JSON.parse(readFileSync(join(staticDir, "index.json"), "utf8"));
+  for (const id of Object.values(STORY)) {
+    if (!index.entries[id]) {
+      console.error(`card-visual: story ${id} is not in the built Storybook — gen:stories and build-storybook first.`);
+      process.exit(2);
+    }
   }
 }
 
-const { base, close } = await serveStatic(staticDir);
+const { base, close } = PLATFORMS.includes("React") ? await serveStatic(staticDir) : { base: null, close: () => {} };
+const angularDir = PLATFORMS.includes("Angular")
+  ? buildAngularSubject("src/lib/card-render.spec.ts", {
+      name: "card-visual",
+      layout: `
+    body { margin: 0; padding: 48px; background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-family-sans); }
+    .kx-render-grid { display: grid; gap: 48px; inline-size: 20rem; }
+    .kx-render-grouped { display: grid; gap: 16px; padding: 24px; border-radius: var(--radius-container); background: hsl(var(--surface-grouped)); }
+    .kx-render-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }`,
+    })
+  : null;
+const angular = angularDir ? await serveStatic(angularDir) : null;
 
 const DPR = 2;
 /** a settle long enough for the 200ms `duration-fast` transition to finish */
@@ -176,8 +209,8 @@ async function open(context, id, theme) {
 }
 const rectOf = (page, sel) => page.locator(sel).first().boundingBox();
 
-for (const theme of ["light", "dark"]) {
-  report.push(`\n${theme}`);
+for (const theme of PLATFORMS.includes("React") ? ["light", "dark"] : []) {
+  report.push(`\nReact · ${theme}`);
   const context = await browser.newContext({ viewport: { width: 1000, height: 760 }, deviceScaleFactor: DPR });
 
   // ── default: edge, lift, static ──
@@ -321,11 +354,68 @@ for (const theme of ["light", "dark"]) {
   await context.close();
 }
 
+/* ── Angular: the resting contract ──────────────────────────────────────── */
+async function openAngular(context, theme) {
+  const page = await context.newPage();
+  await page.route((url) => !url.href.startsWith(angular.base) && !url.href.startsWith("data:"), (route) => route.abort());
+  await page.goto(`${angular.base}/${theme}.html`, { waitUntil: "load" });
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(SETTLE);
+  return page;
+}
+for (const theme of PLATFORMS.includes("Angular") ? ["light", "dark"] : []) {
+  report.push(`\nAngular · ${theme} (resting Card only — Angular has no interactive Card)`);
+  const context = await browser.newContext({ viewport: { width: 1000, height: 760 }, deviceScaleFactor: DPR });
+  const page = await openAngular(context, theme);
+  const cardSel = 'kx-card[data-kx-case="default"]';
+  const card = await rectOf(page, cardSel);
+  const input = await rectOf(page, `${cardSel} input`);
+  const rest = await frame(page, card);
+  const pageColour = rest.corner();
+
+  const e = edge(rest, card, pageColour);
+  const ie = inputEdge(rest, input, pageColour);
+  check(e.max < ie, `Angular ${theme} edge softer than the controls' stroke`, `card ${r2(e.max)}:1 vs input ${r2(ie)}:1`);
+  if (theme === "light") {
+    const lift = (lum(pageColour) + 0.05) / (band(rest, card) + 0.05);
+    check(lift >= 1.05, `Angular ${theme} lifted off the page`, `band under the card ${r2(lift)}:1 against the page (needs 1.05)`);
+  } else {
+    const step = contrast(surface(rest, card), pageColour);
+    check(step >= 1.05, `Angular ${theme} surface lifted off the page`, `card surface ${r2(step)}:1 against the page (needs 1.05)`);
+  }
+
+  const section = await rectOf(page, 'section[data-kx-case="grouped"]');
+  const inner = await rectOf(page, 'section[data-kx-case="grouped"] kx-card');
+  const g = await frame(page, section);
+  const group = g.at(section.x + 6, section.y + section.height - 6);
+  const cardSurface = surface(g, inner);
+  check(lum(cardSurface) > lum(group), `Angular ${theme} card above its grouped section`, `card L ${lum(cardSurface).toFixed(4)} vs group L ${lum(group).toFixed(4)}`);
+
+  // Static: hovering the card body (its header, away from the field and buttons) changes no pixel.
+  await page.mouse.move(card.x + card.width / 2, card.y + 12);
+  await page.waitForTimeout(SETTLE);
+  const hovered = await frame(page, card);
+  let changed = 0;
+  for (let y = card.y - 8; y <= card.y + card.height + 8; y += 2) {
+    for (let x = card.x - 8; x <= card.x + card.width + 8; x += 2) if (!same(rest.at(x, y), hovered.at(x, y))) changed++;
+  }
+  const cursor = await page.locator(cardSel).evaluate((el) => getComputedStyle(el).cursor);
+  check(changed === 0 && cursor === "auto", `Angular ${theme} static card ignores the pointer`, `${changed} sampled pixel(s) changed, cursor ${cursor}`);
+  report.push(`  —    Angular ${theme} hover / pressed / selected / focus / motion       not implemented in Angular (no interactive Card), not measured`);
+  await page.close();
+  await context.close();
+}
+
 await browser.close();
 close();
+angular?.close();
+if (angularDir) rmSync(angularDir, { recursive: true, force: true });
 console.log(report.join("\n"));
 if (failures.length) {
   console.error(`\n✗ card-visual: ${failures.length} contract failure(s)\n` + failures.map((f) => `  ${f}`).join("\n"));
   process.exit(1);
 }
-console.log("\ncard-visual ok — Card's surface and state contract holds in light and dark, on rendered pixels.");
+console.log(
+  `\ncard-visual ok — Card's surface and state contract holds in light and dark, on rendered pixels` +
+    (PLATFORMS.includes("Angular") ? " (React: every state; Angular: the resting contract, which is all it implements)." : "."),
+);

@@ -7,8 +7,10 @@ import { cn } from "../lib/utils";
 
 /**
  * Select — reconciled 1:1 with the KinetixUI design source, node 54855:13882.
- * The trigger mirrors Input: `rounded-sm`, `border-input`, `--spacing-3` pad,
- * Body Medium text, a soft `--shadow-focus` glow, `--destructive` on aria-invalid.
+ * The trigger mirrors Input: `rounded-sm`, `--spacing-3` pad, Body Medium text, a soft `--shadow-focus`
+ * glow, `--destructive` on aria-invalid — and Input's text-entry state contract (TOKENS.md, "Text entry and
+ * navigation"): an 80% `--muted-foreground` edge at rest, full strength under a hovering pointer, and hover
+ * never over focus, an open list, invalid or disabled. Select has no read-only state.
  */
 const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
@@ -21,7 +23,7 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex min-h-[44px] w-full items-center justify-between rounded-sm border border-input bg-background px-3 py-3",
+      "flex min-h-[44px] w-full items-center justify-between rounded-sm border border-muted-foreground/80 bg-background px-3 py-3",
       "font-sans text-body-md text-foreground",
       // The value wraps rather than being clamped to one line. `line-clamp-1` was invisible while the
       // type scale was px — the value always fitted — but once text follows the reader's setting a
@@ -36,7 +38,8 @@ const SelectTrigger = React.forwardRef<
       // it and pushing the chevron outside. `line-clamp-1` had been hiding that by clipping. Breaking
       // the token is the behaviour that keeps both the value and the chevron inside the control.
       "data-[placeholder]:text-muted-foreground [&>span]:min-w-0 [&>span]:[overflow-wrap:anywhere]",
-      "outline-none transition-colors",
+      "outline-none transition-[border-color,box-shadow,background-color] duration-instant ease-standard",
+      "[@media(hover:hover)]:enabled:hover:[&:not(:focus):not([aria-invalid=true]):not([data-state=open])]:border-muted-foreground",
       "focus:border-action focus:shadow-focus",
       "data-[state=open]:border-action",
       "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus:border-destructive aria-[invalid=true]:focus:shadow-focus-destructive",

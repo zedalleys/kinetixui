@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx · controls: scripts/gen-stories.mjs CONTROLS */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@kinetixui/ui";
+import { Card, CardContent, Tabs, TabsContent, TabsList, TabsTrigger } from "@kinetixui/ui";
 
 const Demo = () => (
     <Tabs defaultValue="account" className="w-[360px]">
@@ -25,7 +25,7 @@ const meta = {
   args: { defaultValue: "account" },
   argTypes: { defaultValue: { control: "inline-radio", options: ["account", "password"] } },
   parameters: {
-    layout: "centered",
+    layout: "padded",
     docs: { source: { code: "<Tabs defaultValue=\"account\">\\n  <TabsList>\\n    <TabsTrigger value=\"account\">Account</TabsTrigger>\\n    <TabsTrigger value=\"password\">Password</TabsTrigger>\\n  </TabsList>\\n  <TabsContent value=\"account\">…</TabsContent>\\n</Tabs>", language: "tsx" } },
   },
 } satisfies Meta;
@@ -48,3 +48,28 @@ export const Playground: StoryObj<typeof meta> = { render: (args) => (
   ) };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const States: StoryObj<typeof meta> = { render: () => (
+    <div className="grid w-[26rem] max-w-full gap-6">
+      {(["page", "card"] as const).map((where) => {
+        const tabs = (
+          <Tabs defaultValue="overview">
+            <TabsList data-kx-case={where} aria-label={where === "page" ? "Project" : "Workspace"}>
+              <TabsTrigger value="overview" data-kx-case="selected">Overview</TabsTrigger>
+              <TabsTrigger value="activity" data-kx-case="unselected">Activity</TabsTrigger>
+              <TabsTrigger value="billing" data-kx-case="disabled" disabled>Billing</TabsTrigger>
+            </TabsList>
+            <TabsContent value="overview" className="text-sm text-muted-foreground">Three deployments this week.</TabsContent>
+            <TabsContent value="activity" className="text-sm text-muted-foreground">No new activity.</TabsContent>
+          </Tabs>
+        );
+        return where === "page" ? (
+          <div key={where}>{tabs}</div>
+        ) : (
+          <Card key={where}>
+            <CardContent className="p-4">{tabs}</CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  ) };

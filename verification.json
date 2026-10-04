@@ -25,7 +25,7 @@
       "interaction": 38,
       "accessibility": 98,
       "rtl": 18,
-      "largeText": 23,
+      "largeText": 25,
       "reducedMotion": 3,
       "visual": 0,
       "published": 98
@@ -432,12 +432,14 @@
           "menubar",
           "modal",
           "multi-select",
+          "native-select",
           "popover",
           "radio-group",
           "select",
           "sheet",
           "slider",
           "switch",
+          "tabs",
           "textarea",
           "toggle",
           "toggle-group",
@@ -843,7 +845,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1466,7 +1468,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1797,7 +1799,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1975,7 +1977,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2041,7 +2043,7 @@
           "packages/ui/src/components-form.test.tsx:311-436",
           "packages/ui/src/components-keyboard.test.tsx:259-314",
           "packages/ui/src/components-overlay.test.tsx:324-382",
-          "packages/ui/src/components-selection.test.tsx:138-199"
+          "packages/ui/src/components-selection.test.tsx:138-208"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -2052,7 +2054,7 @@
           "packages/ui/src/components-keyboard.test.tsx:259-314",
           "packages/ui/src/components-overlay.test.tsx:324-382",
           "packages/ui/src/components-rtl.test.tsx:60-259",
-          "packages/ui/src/components-selection.test.tsx:138-199"
+          "packages/ui/src/components-selection.test.tsx:138-208"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2072,7 +2074,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2117,7 +2119,7 @@
           "packages/ui/src/components-overlay.test.tsx:324-382"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2366,7 +2368,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2507,7 +2509,7 @@
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2605,7 +2607,7 @@
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2735,7 +2737,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2920,7 +2922,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3034,7 +3036,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3081,7 +3083,7 @@
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3111,6 +3113,9 @@
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3407,7 +3412,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3534,7 +3539,7 @@
         ],
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:315-544",
-          "packages/ui/src/components-selection.test.tsx:138-199",
+          "packages/ui/src/components-selection.test.tsx:138-208",
           "packages/ui/src/components-selection.test.tsx:27-137"
         ],
         "accessibility": [
@@ -3542,10 +3547,10 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
-          "packages/ui/src/components-selection.test.tsx:138-199"
+          "packages/ui/src/components-selection.test.tsx:138-208"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3753,7 +3758,7 @@
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3844,7 +3849,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3973,7 +3978,7 @@
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4141,7 +4146,7 @@
         ],
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:315-544",
-          "packages/ui/src/components-selection.test.tsx:138-199",
+          "packages/ui/src/components-selection.test.tsx:138-208",
           "packages/ui/src/components-selection.test.tsx:27-137"
         ],
         "accessibility": [
@@ -4149,10 +4154,10 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
-          "packages/ui/src/components-selection.test.tsx:138-199"
+          "packages/ui/src/components-selection.test.tsx:138-208"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-300"
@@ -4333,6 +4338,9 @@
         "rtl": [
           "packages/ui/src/components-keyboard.test.tsx:259-314"
         ],
+        "largeText": [
+          "scripts/large-text.mjs:99-601"
+        ],
         "published": [
           "npm: @kinetixui/ui"
         ]
@@ -4461,7 +4469,7 @@
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4560,7 +4568,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4625,7 +4633,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4684,7 +4692,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-596"
+          "scripts/large-text.mjs:99-601"
         ],
         "published": [
           "npm: @kinetixui/ui"

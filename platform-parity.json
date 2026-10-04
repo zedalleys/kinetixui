@@ -3001,6 +3001,7 @@
       "React": [
         "accessibility",
         "build",
+        "largeText",
         "published"
       ],
       "Angular": [
@@ -3596,6 +3597,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -3819,7 +3821,7 @@
       "interaction": 38,
       "accessibility": 98,
       "rtl": 18,
-      "largeText": 23,
+      "largeText": 25,
       "reducedMotion": 3,
       "visual": 0,
       "published": 98

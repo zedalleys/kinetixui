@@ -42,18 +42,21 @@
  *              segment answers hover and press
  *   motion     hover runs a box-shadow transition over a perceptible duration; under prefers-reduced-motion
  *              it runs none and lands on the same end state
+ *   direction  a switch's thumb stays inside its track and sits at the inline END of the switch's OWN
+ *              direction when on, the inline start when off — with the page ltr and rtl, and the switch in a
+ *              subtree that follows the page, overrides it to ltr, or overrides it to rtl. That covers LTR in
+ *              LTR, RTL in RTL, LTR inside an RTL page and RTL inside an LTR page; the same holds under reduced
+ *              motion, and a focused switch in an LTR subtree of an RTL page still shows its ring
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary for local runs.
  */
-import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { execFileSync } from "node:child_process";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { PERCEPTIBLE_MS, SUPPRESSED_MS } from "./motion-states.mjs";
-import { contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
+import { buildAngularSubject, contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
 import { gate } from "./visual-gates.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -80,6 +83,7 @@ const STORY = {
   radio: "form-inputs-radiogroup--states",
   switch: "form-inputs-switch--states",
   segment: "controls-actions-segmentedcontrol--states",
+  direction: "form-inputs-switch--direction",
 };
 
 /**
@@ -96,6 +100,8 @@ const ADAPTERS = {
     track: (where) => `[data-kx-case="${where}"]`,
     card: ".bg-card",
     hasInvalid: true,
+    // the switch's own box, and the thumb inside it
+    switchParts: (c) => ({ track: `[data-kx-case="${c}"]`, thumb: `[data-kx-case="${c}"] > span` }),
   },
   Angular: {
     control: (kind, c) => ({ visual: `kx-${kind}[data-kx-case="${c}"] ${kind === "radio" ? "input" : "button"}` }),
@@ -106,6 +112,7 @@ const ADAPTERS = {
     track: (where) => `[data-kx-case="${where}"]`,
     card: "kx-card",
     hasInvalid: false,
+    switchParts: (c) => ({ track: `kx-switch[data-kx-case="${c}"] button`, thumb: `kx-switch[data-kx-case="${c}"] .kx-switch__thumb` }),
   },
 };
 
@@ -117,42 +124,16 @@ function reactUrl(kind, theme) {
 }
 
 let angular = null;
-/**
- * Render the Angular subject: run the spec that mounts the states with KX_ANGULAR_RENDER_OUT set, then wrap
- * the DOM it wrote in a page that loads exactly what a consumer loads — the token CSS and the package's
- * styles.css. The only local CSS lays the four groups out on the page; it styles no control.
- */
+/** The Angular subject (visual-harness.mjs): only the four groups' layout is local CSS. */
 function buildAngularPage() {
-  const dir = mkdtempSync(join(tmpdir(), "kx-selection-ng-"));
-  const out = join(dir, "subject.html");
-  execFileSync("pnpm", ["--filter", "@kinetixui/angular", "exec", "vitest", "run", "src/lib/selection-render.spec.ts"], {
-    cwd: root,
-    env: { ...process.env, KX_ANGULAR_RENDER_OUT: out },
-    stdio: ["ignore", "ignore", "inherit"],
-  });
-  if (!existsSync(out)) throw new Error("selection-visual: the Angular render spec did not write its subject");
-  const css = {
-    "globals.css": "packages/tokens/dist/web/globals.css",
-    "globals.dark.css": "packages/tokens/dist/web/globals.dark.css",
-    "extras.css": "packages/tokens/dist/web/extras.css",
-    "extras.dark.css": "packages/tokens/dist/web/extras.dark.css",
-    "styles.css": "packages/ui-angular/src/styles.css",
-  };
-  for (const [name, from] of Object.entries(css)) {
-    if (!existsSync(join(root, from))) throw new Error(`selection-visual: ${from} missing — run pnpm build:tokens first`);
-    copyFileSync(join(root, from), join(dir, name));
-  }
-  const links = Object.keys(css).map((n) => `<link rel="stylesheet" href="${n}">`).join("");
-  const layout = `<style>
+  return buildAngularSubject("src/lib/selection-render.spec.ts", {
+    name: "selection-visual",
+    layout: `
     body { margin: 0; padding: 24px; background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-family-sans); }
     .kx-render-grid { display: grid; gap: 24px; inline-size: 22rem; }
     .kx-render-stack { display: grid; gap: 16px; padding-block-start: 24px; }
-    .kx-render-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  </style>`;
-  for (const theme of ["light", "dark"]) {
-    writeFileSync(join(dir, `${theme}.html`), `<!doctype html><html lang="en" class="${theme === "dark" ? "dark" : ""}"><head><meta charset="utf-8">${links}${layout}</head><body>${readFileSync(out, "utf8")}</body></html>`);
-  }
-  return dir;
+    .kx-render-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }`,
+  });
 }
 
 async function open(context, platform, kind, theme) {
@@ -411,6 +392,81 @@ async function switchControl(context, platform, theme) {
   await p.close();
 }
 
+/**
+ * Mixed direction. The thumb is moved with a transform, which is physical, so the rule that flips it has to
+ * key on the direction the switch itself resolves to. Geometry here is the browser's own layout (bounding
+ * rects include the transform), read after the thumb has settled.
+ */
+async function switchDirection(platform, theme) {
+  const A = ADAPTERS[platform];
+  const name = `${platform} ${theme} switch`;
+  const ends = {};
+  let reducedFailures = 0;
+  for (const reduced of [false, true]) {
+    const ctx = await browser.newContext({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 1, reducedMotion: reduced ? "reduce" : "no-preference" });
+    for (const pageDir of ["ltr", "rtl"]) {
+      const page = await open(ctx, platform, "direction", theme);
+      await page.evaluate((d) => document.documentElement.setAttribute("dir", d), pageDir);
+      await page.waitForTimeout(SETTLE);
+      for (const sub of ["inherit", "ltr", "rtl"]) {
+        for (const state of ["off", "on"]) {
+          const c = `${sub}-${state}`;
+          const parts = A.switchParts(c);
+          const m = await page.evaluate(({ track, thumb }) => {
+            const t = document.querySelector(track);
+            const r = t.getBoundingClientRect();
+            const h = document.querySelector(thumb).getBoundingClientRect();
+            return { dir: getComputedStyle(t).direction, track: [r.left, r.right], thumb: [h.left, h.right] };
+          }, parts);
+          const inside = m.thumb[0] >= m.track[0] - 0.5 && m.thumb[1] <= m.track[1] + 0.5;
+          const thumbMid = (m.thumb[0] + m.thumb[1]) / 2;
+          const trackMid = (m.track[0] + m.track[1]) / 2;
+          // the inline end is the right in ltr and the left in rtl
+          const atEnd = m.dir === "rtl" ? thumbMid < trackMid : thumbMid > trackMid;
+          const want = sub === "inherit" ? pageDir : sub;
+          const ok = inside && m.dir === want && atEnd === (state === "on");
+          const where = `${pageDir} page, ${sub === "inherit" ? "following it" : `${sub} subtree`}`;
+          const label = `${name} thumb ${state} (${where})${reduced ? " reduced" : ""}`;
+          const detail = `dir ${m.dir}, thumb ${m.thumb.map((v) => v.toFixed(1)).join("–")} in track ${m.track.map((v) => v.toFixed(1)).join("–")}${inside ? "" : " — OUTSIDE"}, at the inline ${atEnd ? "end" : "start"}`;
+          // Report every case under normal motion; under reduced motion only a failure or a moved end state.
+          if (!reduced) {
+            check(ok, label, detail);
+            ends[`${pageDir}/${c}`] = m.thumb.join();
+          } else if (!ok || ends[`${pageDir}/${c}`] !== m.thumb.join()) {
+            reducedFailures++;
+            check(false, label, `${detail}${ends[`${pageDir}/${c}`] !== m.thumb.join() ? ", end state DIFFERS from normal motion" : ""}`);
+          }
+        }
+      }
+      if (!reduced && pageDir === "rtl") {
+        // Focus in the mixed case: the ring is drawn around the track, not lost with the thumb.
+        const parts = A.switchParts("ltr-on");
+        const focused = await keyboardFocus(page, parts.track);
+        const box = await page.locator(parts.track).first().boundingBox();
+        const f = decode(await page.screenshot({ clip: { x: box.x - PAD, y: box.y - PAD, width: box.width + 2 * PAD, height: box.height + 2 * PAD } }));
+        const px = (x, y) => {
+          const i = (Math.round(y) * f.w + Math.round(x)) * 4;
+          return [f.data[i], f.data[i + 1], f.data[i + 2]];
+        };
+        const cy = PAD + box.height / 2;
+        const surface = px(2, cy);
+        // Both sides: an escaped thumb paints over the ring on the side it escaped to.
+        const side = (x0) => {
+          let ring = 1;
+          for (let x = x0; x <= x0 + 4; x++) ring = Math.max(ring, contrast(px(x, cy), surface));
+          return ring;
+        };
+        const start = side(PAD - 5);
+        const end = side(PAD + box.width);
+        check(focused && Math.min(start, end) >= 3, `${name} focus ring in an ltr subtree of an rtl page`, `${focused ? "" : "NOT FOCUSED, "}ring ${r2(start)}:1 left, ${r2(end)}:1 right of the track`);
+      }
+      await page.close();
+    }
+    await ctx.close();
+  }
+  if (!reducedFailures) report.push(`  ok   ${`${name} reduced motion lands on the same side`.padEnd(52)} all 12 cases, checked again under reduce`);
+}
+
 async function segmentControl(context, platform, theme) {
   const A = ADAPTERS[platform];
   const name = `${platform} ${theme} segment`;
@@ -520,6 +576,7 @@ for (const platform of PLATFORMS) {
     await switchControl(context, platform, theme);
     await segmentControl(context, platform, theme);
     await context.close();
+    await switchDirection(platform, theme);
     await motion(platform, theme);
   }
 }

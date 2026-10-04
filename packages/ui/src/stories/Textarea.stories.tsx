@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Textarea } from "../components/textarea";
+import { Card, CardContent } from "../components/card";
+import { Label } from "../components/label";
 
 const STATES = ["Default", "Focus", "Error", "Disabled"] as const;
 
@@ -44,6 +46,38 @@ export const States: Story = {
         </label>
       ))}
     </div>
+  ),
+};
+
+/**
+ * The text-entry state contract (TOKENS.md, "Text entry and navigation") as a real form produces it: empty
+ * with a placeholder, filled, invalid with its error text, read-only and disabled, side by side in a raised
+ * Card. Real states, not the `state` prop's pinned ones — `check:entry-visual` drives hover and focus on
+ * these with a real pointer and keyboard, and both axe passes read them.
+ */
+export const EntryStates: Story = {
+  render: () => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-5 p-6">
+        {([
+          ["rest", "Bio", { placeholder: "A sentence or two about you" }],
+          ["filled", "Shipping notes", { defaultValue: "Leave at the side door." }],
+          ["invalid", "Reason for refund", { defaultValue: "No", "aria-invalid": true, "aria-describedby": "ta-invalid-error" }],
+          ["readonly", "Signed agreement", { readOnly: true, defaultValue: "Accepted on 2 October." }],
+          ["disabled", "Admin note", { disabled: true, defaultValue: "Only admins can edit this." }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="grid gap-2">
+            <Label htmlFor={`ta-${key}`}>{label}</Label>
+            <Textarea id={`ta-${key}`} data-kx-case={key} rows={3} {...props} />
+            {key === "invalid" ? (
+              <p id="ta-invalid-error" className="text-body-sm text-destructive">
+                Tell us a little more, at least 20 characters.
+              </p>
+            ) : null}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   ),
 };
 

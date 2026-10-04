@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Input } from "../components/input";
+import { Card, CardContent } from "../components/card";
+import { Label } from "../components/label";
 
 const STATES = ["Default", "Focus", "Error", "Disabled"] as const;
 
@@ -48,6 +50,38 @@ export const States: Story = {
 };
 
 /** reproduces the full Figma field: label + control + helper, colour tracks state */
+/**
+ * The text-entry state contract (TOKENS.md, "Text entry and navigation") as a real form produces it: empty
+ * with a placeholder, filled, invalid with its error text, read-only and disabled, side by side in a raised
+ * Card. Real states, not the `state` prop's pinned ones — `check:entry-visual` drives hover and focus on
+ * these with a real pointer and keyboard, and both axe passes read them.
+ */
+export const EntryStates: Story = {
+  render: () => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-5 p-6">
+        {([
+          ["rest", "Display name", { placeholder: "e.g. Ada Lovelace" }],
+          ["filled", "Email", { type: "email", defaultValue: "ada@example.com" }],
+          ["invalid", "Username", { defaultValue: "ada lovelace", "aria-invalid": true, "aria-describedby": "in-invalid-error" }],
+          ["readonly", "Account ID", { readOnly: true, defaultValue: "acct_7Q2X9" }],
+          ["disabled", "Organisation", { disabled: true, defaultValue: "Managed by your admin" }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="grid gap-2">
+            <Label htmlFor={`in-${key}`}>{label}</Label>
+            <Input id={`in-${key}`} data-kx-case={key} {...props} />
+            {key === "invalid" ? (
+              <p id="in-invalid-error" className="text-body-sm text-destructive">
+                Use letters, numbers and dashes only.
+              </p>
+            ) : null}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  ),
+};
+
 export const WithFieldChrome: Story = {
   render: (args) => (
     <div className="flex flex-col gap-6">
