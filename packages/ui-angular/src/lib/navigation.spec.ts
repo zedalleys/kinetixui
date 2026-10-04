@@ -127,6 +127,32 @@ describe('KxAccordion', () => {
   });
 });
 
+describe('KxAccordion nested', () => {
+  it("arrow keys on an outer trigger stay among the outer accordion's own triggers", () => {
+    const { el } = host(
+      `<kx-accordion type="multiple" [value]="['a']">
+        <kx-accordion-item value="a">
+          <kx-accordion-trigger>Outer A</kx-accordion-trigger>
+          <kx-accordion-content>
+            <kx-accordion><kx-accordion-item value="x"><kx-accordion-trigger>Inner X</kx-accordion-trigger><kx-accordion-content>x</kx-accordion-content></kx-accordion-item></kx-accordion>
+          </kx-accordion-content>
+        </kx-accordion-item>
+        <kx-accordion-item value="b"><kx-accordion-trigger>Outer B</kx-accordion-trigger><kx-accordion-content>b</kx-accordion-content></kx-accordion-item>
+      </kx-accordion>`,
+      [KxAccordion, KxAccordionItem, KxAccordionTrigger, KxAccordionContent],
+    );
+    const button = (name: string) => [...el.querySelectorAll('button')].find((b) => b.textContent!.trim() === name)!;
+    button('Outer A').focus();
+    button('Outer A').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    expect(document.activeElement!.textContent!.trim()).toBe('Outer B');
+    button('Outer B').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    expect(document.activeElement!.textContent!.trim()).toBe('Outer A');
+    button('Inner X').focus();
+    button('Inner X').dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    expect(document.activeElement!.textContent!.trim()).toBe('Inner X');
+  });
+});
+
 describe('KxCollapsible', () => {
   it('the trigger is the caller’s button, wired to content it controls', async () => {
     const { el, fixture, state } = host(

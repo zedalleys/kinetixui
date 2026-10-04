@@ -123,7 +123,8 @@ export class KxAccordion {
 
   /** APG accordion keys, on the triggers: focus moves, nothing opens. */
   onKeydown(event: KeyboardEvent, from: KxAccordionTrigger): void {
-    const enabled = this.triggers().filter((t) => !t.item.isDisabled());
+    // the query reaches into nested accordions too; only this accordion's own triggers are its siblings
+    const enabled = this.triggers().filter((t) => t.item.accordion === this && !t.item.isDisabled());
     const at = enabled.indexOf(from);
     if (at === -1 || enabled.length === 0) return;
     let next: number | null = null;

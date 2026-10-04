@@ -955,6 +955,9 @@ const BEHAVIOUR = [
       await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
       t((await toggle.isVisible()) && (await toggle.getAttribute("aria-expanded")) === "false" && (await toggle.getAttribute("aria-controls")) === (await scope.locator("nav[kxAppBarNav]").getAttribute("id")), "narrow: a Menu button that controls the navigation, collapsed");
       t(!(await nav.getByRole("link", { name: "Reports" }).isVisible()), "narrow and closed: the links are not shown");
+      // Tab order is brand, menu button, links, actions; the screen must read in the same order
+      const [tg, act] = [await toggle.boundingBox(), await page.locator("#app-bar-new").boundingBox()];
+      t(act.y >= tg.y + tg.height - 1, "narrow: the actions sit after the menu button on screen, as they do in Tab order", `button bottom ${(tg.y + tg.height).toFixed(1)}, actions top ${act.y.toFixed(1)}`);
       await toggle.focus();
       await press(page, "Tab");
       t((await activeId(page)) === "app-bar-new", "narrow and closed: Tab skips the hidden links", `focus on #${await activeId(page)}`);
