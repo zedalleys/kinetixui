@@ -58,7 +58,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { PERCEPTIBLE_MS, SUPPRESSED_MS } from "./motion-states.mjs";
-import { buildAngularSubject, contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
+import { buildAngularSubject, waitForAngular, contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
 import { gate } from "./visual-gates.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -119,7 +119,7 @@ const ADAPTERS = {
 let storybook = null;
 let angular = null;
 function buildAngularPage() {
-  return buildAngularSubject("src/lib/entry-render.spec.ts", {
+  return buildAngularSubject("entry", {
     name: "entry-visual",
     layout: `
     body { margin: 0; padding: 24px; background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-family-sans); }
@@ -140,6 +140,7 @@ async function open(context, platform, kind, theme) {
     { waitUntil: "load" },
   );
   if (platform === "React") await page.waitForSelector("#storybook-root > *");
+  else await waitForAngular(page);
   await page.mouse.move(0, 0);
   await page.waitForTimeout(SETTLE);
   return page;

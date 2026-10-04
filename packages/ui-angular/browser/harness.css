@@ -1,0 +1,10 @@
+/* The harness page's own layout: a page background and a column for the fixture. It styles no component —
+   every control on the page is painted by the package's styles.css alone. A gate that needs a different
+   arrangement injects its own layout (scripts/visual-harness.mjs, `buildAngularSubject`). */
+body {
+  margin: 0;
+  padding: 24px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-family-sans);
+}

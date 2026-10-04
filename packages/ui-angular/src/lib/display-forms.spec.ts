@@ -430,6 +430,8 @@ describe('KxToggleGroup', () => {
     const inputs = Array.from(el.querySelectorAll('input')) as HTMLInputElement[];
     expect(inputs.map((i) => i.type)).toEqual(['radio', 'radio']);
     expect(inputs[0]!.checked).toBe(true);
+    // Each radio is named by the item's own content, which must survive the switch from the button branch.
+    expect(inputs.map((i) => el.querySelector(`label[for="${i.id}"]`)?.textContent?.trim())).toEqual(['B', 'I']);
   });
 });
 

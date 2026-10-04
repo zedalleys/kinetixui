@@ -82,6 +82,7 @@ export class KxTabList {}
   host: {
     class: 'kx-tab-panel',
     role: 'tabpanel',
+    '[id]': 'panelId()',
     '[attr.tabindex]': 'active() ? 0 : null',
     '[attr.aria-labelledby]': 'labelledBy()',
     '[hidden]': '!active()',
@@ -96,6 +97,13 @@ export class KxTabPanel {
   }
   labelledBy(): string | null {
     return this.tabs.tabFor(this.value())?.id ?? null;
+  }
+  /**
+   * The id its tab's `aria-controls` names. The tab always pointed here, but the panel never carried the id, so
+   * every tab referenced an element that did not exist (axe `aria-valid-attr-value`, check:angular-browser).
+   */
+  panelId(): string | null {
+    return this.tabs.tabFor(this.value())?.panelId ?? null;
   }
 }
 

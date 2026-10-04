@@ -29,6 +29,16 @@
  * tokens do, which is the entire point of the architecture.
  */
 
+/* ── box model ──────────────────────────────────────────────────────────── */
+/* Every size in this file is a border-box size, as it is in React (Tailwind's preflight sets it globally). An
+   Angular application has no such reset by default, and under content-box a 44px input with its padding and
+   border rendered 62px tall — and then did not grow at 200% text, because the extra 18px was already spent.
+   Scoped to KinetixUI's own classes and wrapped in :where() so it carries no specificity: an application's
+   own box-sizing rule, and any part here that opts out (the timeline marker), still win. */
+:where([class^='kx-'], [class*=' kx-']),
+:where([class^='kx-'], [class*=' kx-'])::before,
+:where([class^='kx-'], [class*=' kx-'])::after { box-sizing: border-box; }
+
 /* ── button ─────────────────────────────────────────────────────────────── */
 .kx-btn {
   display: inline-flex;
@@ -228,8 +238,9 @@
 .kx-checkbox {
   display: inline-grid;
   place-items: center;
-  inline-size: 18px;
-  block-size: 18px;
+  /* rem, not px: a selection control has no text of its own, so its box is what must grow at 200% text */
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
   flex-shrink: 0;
   padding: 0;
   background-color: hsl(var(--background));
@@ -252,15 +263,15 @@
 .kx-checkbox:enabled:active { box-shadow: 0 0 0 5px hsl(var(--foreground) / 0.14); }
 .kx-checkbox:enabled:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .kx-checkbox:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
-.kx-checkbox > svg { inline-size: 14px; block-size: 14px; pointer-events: none; }
+.kx-checkbox > svg { inline-size: 0.875rem; block-size: 0.875rem; pointer-events: none; }
 
 .kx-switch {
   display: inline-flex;
   align-items: center;
-  inline-size: 44px;
-  block-size: 24px;
+  inline-size: 2.75rem;
+  block-size: 1.5rem;
   flex-shrink: 0;
-  padding: 2px;
+  padding: 0.125rem;
   background-color: hsl(var(--tertiary));
   border: var(--border-width-default) solid transparent;
   border-radius: var(--radius-full);
@@ -280,8 +291,8 @@
 .kx-switch__thumb {
   position: relative;
   inset-inline-start: 0;
-  inline-size: 18px;
-  block-size: 18px;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
   border-radius: var(--radius-full);
   background-color: hsl(var(--static-white));
   box-shadow: var(--shadow-sm);
@@ -292,7 +303,7 @@
    which matches ANY rtl ancestor — a switch in an LTR section of an RTL page was flipped too and its thumb
    landed outside the track (check:selection-visual, "direction"). A logical property needs no selector, so
    no build step can rewrite the direction test into a guess (see the React Switch). */
-.kx-switch[aria-checked='true'] .kx-switch__thumb { inset-inline-start: 20px; }
+.kx-switch[aria-checked='true'] .kx-switch__thumb { inset-inline-start: 1.25rem; }
 
 /* ── separator ──────────────────────────────────────────────────────────── */
 .kx-separator { display: block; flex-shrink: 0; background-color: hsl(var(--border)); border: 0; margin: 0; }
@@ -344,6 +355,9 @@
 .kx-tabs { display: block; }
 .kx-tab-list {
   display: inline-flex;
+  /* wraps inside its own width rather than running off a phone at 200% text (React's TabsList does the same) */
+  flex-wrap: wrap;
+  max-inline-size: 100%;
   align-items: center;
   gap: var(--spacing-1);
   border-block-end: var(--border-width-default) solid hsl(var(--border));
@@ -625,8 +639,9 @@
 .kx-radio__input {
   appearance: none;
   margin: 0;
-  inline-size: var(--spacing-5);
-  block-size: var(--spacing-5);
+  /* 1.25rem is --spacing-5 at the default text size; the spacing scale is px, so it would not grow at 200% */
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
   flex-shrink: 0;
   border: var(--border-width-default) solid hsl(var(--muted-foreground));
   border-radius: var(--radius-full);
@@ -642,7 +657,7 @@
    custom property so the hover and pressed layers add to it instead of replacing it */
 .kx-radio__input:checked {
   border-color: hsl(var(--action));
-  --kx-radio-dot: inset 0 0 0 4px hsl(var(--action));
+  --kx-radio-dot: inset 0 0 0 0.25rem hsl(var(--action));
 }
 @media (hover: hover) {
   .kx-radio__input:enabled:hover { --kx-radio-layer: 0 0 0 5px hsl(var(--foreground) / 0.08); }
@@ -655,47 +670,61 @@
 .kx-radio__input:disabled + .kx-radio__label { opacity: var(--opacity-disabled); cursor: not-allowed; }
 
 /* ── slider ─────────────────────────────────────────────────────────────── */
-.kx-slider { display: block; inline-size: 100%; }
+.kx-slider { position: relative; display: block; inline-size: 100%; }
+/* The visible track and fill sit behind a transparent native track. They are placed with logical properties,
+   so the fill grows from the inline start of the slider's own direction (see KxSlider). */
+.kx-slider__track {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 50%;
+  block-size: 0.5rem;
+  margin-block-start: -0.25rem;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background-color: hsl(var(--muted));
+  pointer-events: none;
+}
+.kx-slider__fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: var(--kx-slider-fill, 0%);
+  background-color: hsl(var(--primary));
+}
+.kx-slider:has(.kx-slider__input:disabled) .kx-slider__track { opacity: var(--opacity-disabled); }
 .kx-slider__input {
+  position: relative;
+  display: block;
   appearance: none;
   inline-size: 100%;
-  block-size: var(--spacing-5);
+  /* rem throughout (the px spacing scale's 20 / 8 at the default text size), so the hit area grows with text */
+  block-size: 1.25rem;
   margin: 0;
   background: transparent;
   cursor: pointer;
 }
-/* the filled portion is a gradient stop driven by --kx-slider-fill, so the track follows the real value */
 .kx-slider__input::-webkit-slider-runnable-track {
-  block-size: var(--spacing-2);
+  block-size: 0.5rem;
   border-radius: var(--radius-full);
-  background: linear-gradient(
-    to right,
-    hsl(var(--primary)) var(--kx-slider-fill, 0%),
-    hsl(var(--muted)) var(--kx-slider-fill, 0%)
-  );
+  background: transparent;
 }
 .kx-slider__input::-moz-range-track {
-  block-size: var(--spacing-2);
+  block-size: 0.5rem;
   border-radius: var(--radius-full);
-  background-color: hsl(var(--muted));
-}
-.kx-slider__input::-moz-range-progress {
-  block-size: var(--spacing-2);
-  border-radius: var(--radius-full);
-  background-color: hsl(var(--primary));
+  background: transparent;
 }
 .kx-slider__input::-webkit-slider-thumb {
   appearance: none;
-  margin-block-start: -6px;
-  inline-size: var(--spacing-5);
-  block-size: var(--spacing-5);
+  margin-block-start: -0.375rem;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
   border: var(--border-width-default) solid hsl(var(--primary));
   border-radius: var(--radius-full);
   background-color: hsl(var(--background));
 }
 .kx-slider__input::-moz-range-thumb {
-  inline-size: var(--spacing-5);
-  block-size: var(--spacing-5);
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
   border: var(--border-width-default) solid hsl(var(--primary));
   border-radius: var(--radius-full);
   background-color: hsl(var(--background));
@@ -828,9 +857,10 @@
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--easing-standard), color var(--duration-fast) var(--easing-standard);
 }
-.kx-toggle--sm { min-inline-size: var(--spacing-8); block-size: var(--spacing-8); padding-inline: var(--spacing-2); }
-.kx-toggle--md { min-inline-size: var(--spacing-10); block-size: var(--spacing-10); padding-inline: var(--spacing-3); }
-.kx-toggle--lg { min-inline-size: var(--spacing-12); block-size: var(--spacing-12); padding-inline: var(--spacing-4); }
+/* the square is rem (--spacing-8 / 10 / 12 at the default text size): it holds the label, so it grows with it */
+.kx-toggle--sm { min-inline-size: 2rem; block-size: 2rem; padding-inline: var(--spacing-2); }
+.kx-toggle--md { min-inline-size: 2.5rem; block-size: 2.5rem; padding-inline: var(--spacing-3); }
+.kx-toggle--lg { min-inline-size: 3rem; block-size: 3rem; padding-inline: var(--spacing-4); }
 .kx-toggle--outline { border-color: hsl(var(--input)); }
 .kx-toggle:hover { background-color: hsl(var(--muted)); }
 .kx-toggle:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
@@ -849,6 +879,8 @@
 /* ── segmented control ──────────────────────────────────────────────────── */
 .kx-segmented {
   display: inline-flex;
+  flex-wrap: wrap;
+  max-inline-size: 100%;
   align-items: stretch;
   padding: var(--spacing-1);
   border-radius: var(--radius-md);
@@ -1047,7 +1079,9 @@
 .kx-circular-progress:not([aria-valuenow]) svg { animation: kx-spin 1s linear infinite; }
 @media (prefers-reduced-motion: reduce) {
   .kx-circular-progress__indicator { transition: none; }
-  .kx-circular-progress:not([aria-valuenow]) svg { animation-duration: 2.4s; }
+  /* 3s, as the spinner: it keeps turning so the page does not read as hung, but no faster than the 3s
+     reduced-motion floor (check:angular-browser, "reduced motion") — it was 2.4s */
+  .kx-circular-progress:not([aria-valuenow]) svg { animation-duration: 3s; }
 }
 
 /* ── code block ─────────────────────────────────────────────────────────── */
@@ -1281,3 +1315,29 @@
 .kx-timeline__content { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .kx-timeline__title { font: var(--text-body-md); color: hsl(var(--foreground)); }
 .kx-timeline__description { font: var(--text-body-sm); color: hsl(var(--muted-foreground)); }
+
+/* ── forced colours ─────────────────────────────────────────────────────── */
+/* Every focus ring above is a box-shadow, and a forced palette (Windows contrast themes, `forced-colors:
+   active`) removes box-shadow entirely. With one on, the keyboard had no visible position on any control
+   (check:angular-browser, "forced colours": every button, field, tab, toggle and selection control). An
+   outline survives the mode and is painted in a system colour, so it is the indicator here; nothing changes
+   outside it. Parts clipped by their field's `overflow: hidden` (composite inputs, the reveal toggle) draw it
+   inset, and the visually hidden radios of a segment or single-select toggle group draw it on their label. */
+@media (forced-colors: active) {
+  :is(
+      .kx-btn, .kx-fab, .kx-input, .kx-textarea, .kx-native-select, .kx-checkbox, .kx-switch, .kx-radio__input,
+      .kx-slider__input, .kx-tab, .kx-tab-panel, .kx-toggle, .kx-tag__remove, .kx-banner [kxBannerAction],
+      .kx-inform [kxInformAction]
+    ):focus-visible,
+  :is(.kx-segmented__radio, .kx-toggle-group__radio):focus-visible + label {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+  :is(.kx-number-input__input, .kx-password-input__input, .kx-password-input__reveal):focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+  /* the slider's track and fill are plain elements, whose backgrounds the mode would flatten to Canvas */
+  .kx-slider__track { forced-color-adjust: none; background-color: GrayText; }
+  .kx-slider__fill { background-color: Highlight; }
+}

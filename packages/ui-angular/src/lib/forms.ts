@@ -207,12 +207,18 @@ export class KxRadio {
  * the RTL direction flip and touch dragging are all the browser's, and all of them are things hand-rolled
  * sliders routinely lose. The filled track is drawn with a CSS custom property set from the value, so the
  * visual follows the real control rather than the other way round.
+ *
+ * The track and its fill are elements behind the input rather than a gradient on the input's own track: a
+ * gradient has no logical direction (`to right` stays right in RTL), so the fill grew from the wrong end in
+ * an RTL page while the browser moved the thumb correctly. An element placed with `inset-inline-start`
+ * follows the slider's own direction, nested or not (scripts/angular-browser.mjs, rtl).
  */
 @Component({
   selector: 'kx-slider',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => KxSlider), multi: true }],
   template: `
+    <span class="kx-slider__track" aria-hidden="true"><span class="kx-slider__fill"></span></span>
     <input
       type="range"
       class="kx-slider__input"

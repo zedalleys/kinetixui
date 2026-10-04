@@ -166,7 +166,7 @@ import {
     <!-- kx-usage:end -->
 
     <!-- kx-usage:progress-demo -->
-    <kx-progress [value]="62" />
+    <kx-progress [value]="62" aria-label="Upload progress" />
     <!-- kx-usage:end -->
 
     <!-- kx-usage:separator-demo -->
@@ -505,7 +505,7 @@ export class ButtonGroupDemo {}
   selector: 'app-circular-progress-demo',
   imports: [KxCircularProgress],
   template: `
-    <kx-circular-progress [value]="72" showValue [size]="56" />
+    <kx-circular-progress [value]="72" showValue [size]="56" aria-label="Storage used" />
     <kx-circular-progress aria-label="Loading" />
   `,
 })

@@ -54,7 +54,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { PERCEPTIBLE_MS, SUPPRESSED_MS } from "./motion-states.mjs";
-import { buildAngularSubject, contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
+import { buildAngularSubject, waitForAngular, contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
 import { gate } from "./visual-gates.mjs";
 
 // The platforms come from visual-gates.mjs — the registry the Angular graduation guard reads — so the two
@@ -95,7 +95,7 @@ if (PLATFORMS.includes("React")) {
 
 const { base, close } = PLATFORMS.includes("React") ? await serveStatic(staticDir) : { base: null, close: () => {} };
 const angularDir = PLATFORMS.includes("Angular")
-  ? buildAngularSubject("src/lib/card-render.spec.ts", {
+  ? buildAngularSubject("card", {
       name: "card-visual",
       layout: `
     body { margin: 0; padding: 48px; background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-family-sans); }
@@ -359,6 +359,7 @@ async function openAngular(context, theme) {
   const page = await context.newPage();
   await page.route((url) => !url.href.startsWith(angular.base) && !url.href.startsWith("data:"), (route) => route.abort());
   await page.goto(`${angular.base}/${theme}.html`, { waitUntil: "load" });
+  await waitForAngular(page);
   await page.mouse.move(0, 0);
   await page.waitForTimeout(SETTLE);
   return page;

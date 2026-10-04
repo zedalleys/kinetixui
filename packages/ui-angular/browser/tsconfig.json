@@ -1,0 +1,8 @@
+{
+  "extends": "../tsconfig.lib.json",
+  "compilerOptions": { "declaration": false },
+  "angularCompilerOptions": { "compilationMode": "full" },
+  "files": ["main.ts"],
+  "include": ["main.ts", "../src/**/*.ts"],
+  "exclude": ["../src/**/*.spec.ts", "../src/test-setup.ts"]
+}
