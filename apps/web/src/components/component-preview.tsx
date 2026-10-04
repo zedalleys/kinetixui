@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { CopyButton } from "./copy-button";
 import { PreviewEnvironment } from "./preview-environment";
 import { analytics } from "@/lib/analytics";
+import { useDocumentDirection } from "@/lib/use-document-direction";
 import { PLATFORM_FROM_CODE_TAB, componentSlugFor } from "@/lib/analytics-surfaces";
 import { demoRegistry } from "@/registry/demos";
 import { platformCode } from "@/registry/platform-code";
@@ -29,7 +30,7 @@ function CodePane({ code, onCopy }: { code: string; onCopy?: () => void }) {
   return (
     <div className="relative">
       <CopyButton value={code} onCopy={onCopy} className="absolute right-3 top-3 z-10" />
-      <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed">
+      <pre dir="ltr" className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed">
         <code>{code}</code>
       </pre>
     </div>
@@ -68,6 +69,8 @@ export function ComponentPreview({
   // hooks first: an early return below must not change how many hooks run
   const [platform, setPlatform] = React.useState<CodeTab>("react");
   const pathname = usePathname();
+  // the preview / code strip follows the page (the stage below carries the same direction); source stays LTR
+  const dir = useDocumentDirection();
   const entry = demoRegistry[name];
   // the component whose page this is — from the route, validated against the docs' own component list. A demo
   // shown anywhere else (no component page) has no known component, so it reports nothing.
@@ -142,7 +145,7 @@ export function ComponentPreview({
       data-cp
       className={cn("my-6 overflow-hidden rounded-xl border border-border", className)}
     >
-      <Tabs.Root defaultValue="preview">
+      <Tabs.Root defaultValue="preview" dir={dir}>
         <Tabs.List aria-label="View preview or code" className="flex items-center gap-1 bg-muted/30 px-2">
           {["preview", "code"].map((v) => (
             <Tabs.Trigger key={v} value={v} className={tabTrigger}>
@@ -161,6 +164,7 @@ export function ComponentPreview({
           <div className="border-t border-border bg-muted/40">
             {tabs.length > 1 ? (
               <Tabs.Root
+                dir={dir}
                 value={platform}
                 onValueChange={(v) => {
                   const next = v as CodeTab;

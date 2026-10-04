@@ -41,6 +41,18 @@ export const VISUAL_GATES = [
       Angular: ["input", "textarea", "native-select", "tabs"],
     },
   },
+  {
+    script: "scripts/composite-visual.mjs",
+    command: "check:composite-visual",
+    contract: "TOKENS.md — Composite fields",
+    covers: {
+      React: ["input-group", "number-input", "multi-select", "input-otp"],
+      Angular: ["number-input", "password-input"],
+    },
+    // kx-number-input has no read-only input (React's NumberInput has `readOnly`, and the gate measures it),
+    // so Angular's number field is held to every row but that one — narrower than React's, so not parity.
+    partial: { Angular: { "number-input": "no read-only state — kx-number-input has no readonly input" } },
+  },
 ];
 
 /** The registry entry for a gate script, by its path relative to the repository root. */

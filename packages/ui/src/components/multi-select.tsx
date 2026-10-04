@@ -85,14 +85,19 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
               }
             }}
             className={cn(
-              "flex min-h-11 w-full flex-wrap items-center gap-1.5 border border-input bg-background px-3 py-2 font-sans",
-              "outline-none focus-visible:border-action focus-visible:shadow-focus",
+              // The text-entry state contract (TOKENS.md, "Composite fields"): one field, whose chips sit inside
+              // its edge. `rounded-sm` is the field radius Input and Select already use; this was square.
+              "flex min-h-11 w-full flex-wrap items-center gap-1.5 rounded-sm border border-muted-foreground/80 bg-background px-3 py-2 font-sans",
+              "outline-none transition-[border-color,box-shadow] duration-instant ease-standard",
+              "[@media(hover:hover)]:hover:[&:not(:focus):not([aria-expanded=true]):not([aria-invalid=true])]:border-muted-foreground",
+              "focus-visible:border-action focus-visible:shadow-focus",
               "aria-expanded:border-action aria-expanded:shadow-focus",
+              "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:shadow-focus-destructive aria-[invalid=true]:aria-expanded:shadow-focus-destructive",
               className,
             )}
             {...props}
           >
-            {current.length === 0 && <span className="text-body-sm text-muted-foreground">{placeholder}</span>}
+            {current.length === 0 && <span className="text-body-md text-muted-foreground">{placeholder}</span>}
             {current.map((v) => (
               <Tag key={v} variant="secondary" onRemove={() => remove(v)} onClick={(e) => e.stopPropagation()}>
                 {labelFor(v)}

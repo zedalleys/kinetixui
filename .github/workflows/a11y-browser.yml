@@ -26,11 +26,13 @@ on:
       - "scripts/card-visual.mjs"
       - "scripts/selection-visual.mjs"
       - "scripts/entry-visual.mjs"
+      - "scripts/composite-visual.mjs"
       - "scripts/visual-harness.mjs"
       - "scripts/visual-gates.mjs"
       - "packages/ui-angular/src/styles.css"
       - "packages/ui-angular/src/lib/selection-render.spec.ts"
       - "packages/ui-angular/src/lib/entry-render.spec.ts"
+      - "packages/ui-angular/src/lib/composite-render.spec.ts"
       - "packages/ui-angular/src/lib/card-render.spec.ts"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
@@ -50,11 +52,13 @@ on:
       - "scripts/card-visual.mjs"
       - "scripts/selection-visual.mjs"
       - "scripts/entry-visual.mjs"
+      - "scripts/composite-visual.mjs"
       - "scripts/visual-harness.mjs"
       - "scripts/visual-gates.mjs"
       - "packages/ui-angular/src/styles.css"
       - "packages/ui-angular/src/lib/selection-render.spec.ts"
       - "packages/ui-angular/src/lib/entry-render.spec.ts"
+      - "packages/ui-angular/src/lib/composite-render.spec.ts"
       - "packages/ui-angular/src/lib/card-render.spec.ts"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
@@ -136,3 +140,10 @@ jobs:
       # reduced motion removes.
       - name: Text-entry and navigation visual contract (React + Angular, light and dark)
         run: pnpm check:entry-visual
+
+      # The composite-field state contract (TOKENS.md, "Composite fields") on rendered pixels: InputGroup,
+      # NumberInput, MultiSelect and InputOTP in React, and Angular's number and password inputs. The text-entry
+      # contract above, held by the wrapper the reader sees as the field — plus one edge (no part doubles the
+      # boundary), quieter internal dividers, and focus owned by the part that has it.
+      - name: Composite-field visual contract (React + Angular, light and dark)
+        run: pnpm check:composite-visual

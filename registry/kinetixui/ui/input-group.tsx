@@ -10,6 +10,18 @@ import { cn } from "@/lib/utils";
  * source's "Fixed Add-on" pattern. Border / focus glow / invalid state apply to
  * the whole group.
  *
+ * The shell follows the text-entry state contract (TOKENS.md, "Composite fields"): it is ONE field, so it
+ * carries the field's edge, hover, focus, invalid, read-only and disabled states, read from the input inside
+ * it. Add-ons draw no border of their own except an `InputGroupButton`'s quiet internal divider.
+ *
+ *   rest       edge `--muted-foreground` at 80% (3:1 on a card; `--input` was 2.2:1)
+ *   hover      the edge steps to full `--muted-foreground` — never over focus, invalid, read-only or disabled
+ *   focus      the INPUT focused → `--action` edge + `--shadow-focus` on the shell. An add-on button focused
+ *              → that button's own inset ring, and the shell stays at rest: the ring says which part has focus
+ *   invalid    `aria-invalid="true"` on the input → `--destructive` edge, kept under the pointer and focus
+ *   read-only  `readonly` on the input → the inset `--muted` fill
+ *   disabled   a disabled input → `--opacity-disabled`, inert
+ *
  * <InputGroup>
  *   <InputGroupText>https://</InputGroupText>
  *   <InputGroupInput placeholder="kinetixui.com" />
@@ -21,9 +33,12 @@ const InputGroup = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
       ref={ref}
       data-slot="input-group"
       className={cn(
-        "flex w-full items-center overflow-hidden rounded-sm border border-input bg-background font-sans transition-colors",
-        "focus-within:border-action focus-within:shadow-focus",
-        "has-[[aria-invalid=true]]:border-destructive has-[[aria-invalid=true]]:focus-within:shadow-focus-destructive",
+        "flex w-full items-center overflow-hidden rounded-sm border border-muted-foreground/80 bg-background font-sans",
+        "transition-[border-color,box-shadow,background-color] duration-instant ease-standard",
+        "[@media(hover:hover)]:hover:[&:not(:has([data-slot=input-group-input]:is(:focus,:disabled,[readonly],[aria-invalid=true])))]:border-muted-foreground",
+        "has-[[data-slot=input-group-input][readonly]]:bg-muted",
+        "has-[[data-slot=input-group-input]:focus:not([aria-invalid=true])]:border-action has-[[data-slot=input-group-input]:focus]:shadow-focus",
+        "has-[[aria-invalid=true]]:border-destructive has-[[aria-invalid=true]]:has-[[data-slot=input-group-input]:focus]:shadow-focus-destructive",
         "has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-disabled",
         className,
       )}
@@ -83,9 +98,16 @@ const InputGroupButton = React.forwardRef<
     ref={ref}
     type={type}
     className={cn(
+      // The divider is internal structure, deliberately quieter than the shell's edge: the shell is the one
+      // boundary of the field, the divider only says where the button begins.
       "flex h-full shrink-0 items-center gap-1.5 self-stretch border-s border-input bg-muted px-3 text-label-md text-foreground",
-      // base is bg-muted and muted==accent on dark, so the fill is a no-op there — the ring carries it
-      "outline-none transition-colors hover:bg-accent hover:ring-1 hover:ring-inset hover:ring-ring focus-visible:bg-accent focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-disabled",
+      // Hover is the selection controls' `foreground` state layer (8%), which reads on `muted` in both themes —
+      // `accent` equals `muted` in dark, so an accent fill changed nothing there. Focus is the inset ring, and
+      // only focus draws it: a ring on hover made the pointer look exactly like keyboard focus.
+      "outline-none transition-[background-color,box-shadow] duration-instant ease-standard",
+      // (an inset shadow, so it layers over `muted` and composes with the ring instead of replacing either)
+      "[@media(hover:hover)]:enabled:hover:shadow-[inset_0_0_0_100vmax_hsl(var(--foreground)/0.08)]",
+      "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-disabled",
       "[&_svg]:size-4 [&_svg]:shrink-0",
       className,
     )}

@@ -673,6 +673,8 @@
       "kind": "component",
       "selector": "kx-number-input",
       "inputs": [
+        "aria-describedby",
+        "aria-invalid",
         "aria-label",
         "aria-labelledby",
         "disabled",
@@ -709,6 +711,8 @@
       "kind": "component",
       "selector": "kx-password-input",
       "inputs": [
+        "aria-describedby",
+        "aria-invalid",
         "aria-label",
         "aria-labelledby",
         "autocomplete",

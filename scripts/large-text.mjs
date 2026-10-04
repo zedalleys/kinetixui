@@ -140,7 +140,11 @@ const SUBJECTS = [
 
 /**
  * The form family. Claimed for `largeText`: <Slider>, <InputOTP>, <Label>, <Input>, <Textarea>,
- * <Select>, <NativeSelect>, <MultiSelect>, <Tabs> and <Form>.
+ * <Select>, <NativeSelect>, <MultiSelect>, <Tabs>, <Form>, <InputGroup> and <NumberInput>.
+ *
+ * <InputGroup> and <NumberInput> joined in Visual Slice 4 (composite fields), measured before they were
+ * named. Both wrappers must absorb their input's text; InputGroup's demo needed a story frame with a width
+ * (gen-stories PADDED) before the 390px pass measured the component rather than the frame.
  *
  * <NativeSelect> and <Tabs> joined in Visual Slice 3, measured before they were named: the tab strip is a
  * fixed-height well (`h-9`), which is exactly the shape that clips at 200% if its height were px.
@@ -187,6 +191,20 @@ const FORM_SUBJECTS = [
     inside: "[role=combobox] > *",
   },
   { component: "NativeSelect", story: "form-inputs-nativeselect--default", control: "select", text: "select" },
+  {
+    component: "InputGroup",
+    story: "form-inputs-inputgroup--default",
+    control: "[data-slot=input-group]",
+    text: "[data-slot=input-group-input]",
+    inside: "[data-slot=input-group] > *",
+  },
+  {
+    component: "NumberInput",
+    story: "form-inputs-numberinput--default",
+    control: "div:has(> input[type=number])",
+    text: "input[type=number]",
+    inside: "div:has(> input[type=number]) > *",
+  },
   { component: "Tabs", story: "navigation-tabs--states", control: "[role=tablist]", text: "[role=tab]", inside: "[role=tablist] > *" },
   { component: "Label", story: "foundations-label--default", control: "label", text: "label" },
   // The Form story is the one place a label, a control, its help text and its error message share a
@@ -230,7 +248,7 @@ const base = `http://127.0.0.1:${server.address().port}`;
  * this whole evidence model exists to prevent — so it is checked rather than trusted.
  */
 /** `Checkbox` -> `checkbox`, `InputOTP` -> `input-otp`: the manifest's spelling, which coveredSlugs returns. */
-const SLUG_OF = { NativeSelect: "native-select", InputOTP: "input-otp", RadioGroup: "radio-group", ToggleGroup: "toggle-group", MultiSelect: "multi-select", AlertDialog: "alert-dialog", DropdownMenu: "dropdown-menu", ContextMenu: "context-menu" };
+const SLUG_OF = { NativeSelect: "native-select", InputOTP: "input-otp", InputGroup: "input-group", NumberInput: "number-input", RadioGroup: "radio-group", ToggleGroup: "toggle-group", MultiSelect: "multi-select", AlertDialog: "alert-dialog", DropdownMenu: "dropdown-menu", ContextMenu: "context-menu" };
 const slugOf = (name) => SLUG_OF[name] ?? name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
 
 function assertClaimMatchesSubjects() {

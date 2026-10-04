@@ -11,7 +11,9 @@ const InputOTP = React.forwardRef<
 >(({ className, containerClassName, ...props }, ref) => (
   <OTPInput
     ref={ref}
-    containerClassName={cn("flex flex-wrap items-center gap-2 has-[:disabled]:opacity-disabled", containerClassName)}
+    // `group/otp`: the slots read the field's state from the one real input inside this container — see
+    // InputOTPSlot.
+    containerClassName={cn("group/otp flex flex-wrap items-center gap-2 has-[:disabled]:opacity-disabled", containerClassName)}
     className={cn("disabled:cursor-not-allowed", className)}
     {...props}
   />
@@ -58,13 +60,28 @@ const InputOTPSlot = React.forwardRef<
         // Two consequences, both deliberate: the rounded corners still belong to the DOM's first and last
         // slot, so a wrapped row has square outer corners; and two wrapped rows meet in a 2px seam, since
         // no selector can pull a row that only exists at one viewport width. A seam is not an open edge.
-        "relative flex size-9 items-center justify-center border border-input text-sm shadow-sm",
+        //
+        // The slots together are one field and follow the text-entry state contract (TOKENS.md, "Composite
+        // fields"), reading its state from the hidden input through `group/otp`:
+        //   rest      edge `--muted-foreground` at 80% — 3:1 where `--input` was 2.2:1 — and no elevation: a
+        //             field is inset, so the per-slot `shadow-sm` is gone
+        //   hover     every slot's edge steps to full `--muted-foreground`; not while focused, invalid or disabled
+        //   focus     the ACTIVE slot (where the next character goes) takes `--action` + `--shadow-focus`, the
+        //             strongest state, drawn above its neighbours
+        //   invalid   `aria-invalid="true"` on InputOTP → `--destructive` edges, kept under pointer and focus
+        //   disabled  the container's `--opacity-disabled`; no hover
+        "relative flex size-9 items-center justify-center border border-muted-foreground/80 bg-background text-sm",
         "[&:not(:first-child)]:-ms-px first:rounded-s-md last:rounded-e-md",
-        "transition-[color,border-color,box-shadow] duration-instant",
+        "transition-[color,border-color,box-shadow] duration-instant ease-standard",
+        "[@media(hover:hover)]:group-[:hover:not(:has(input:is(:focus,:disabled,[aria-invalid=true])))]/otp:border-muted-foreground",
+        "group-has-[input[aria-invalid=true]]/otp:border-destructive",
         // ring is a box-shadow, which forced-colors mode strips; the outline survives it
-        isActive && "z-docked ring-1 ring-ring forced-colors:[outline:2px_solid] forced-colors:[outline-offset:-2px]",
+        isActive &&
+          "z-docked border-action shadow-focus group-has-[input[aria-invalid=true]]/otp:shadow-focus-destructive forced-colors:[outline:2px_solid] forced-colors:[outline-offset:-2px]",
         className,
       )}
+      // A stable hook for the active slot, so tests and gates don't have to read its styling.
+      data-active={isActive ? "" : undefined}
       {...props}
     >
       {char}

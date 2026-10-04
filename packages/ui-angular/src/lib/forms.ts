@@ -288,6 +288,8 @@ export class KxSlider extends KxValueBase<number> {
       [disabled]="isDisabled()"
       [attr.aria-label]="ariaLabel()"
       [attr.aria-labelledby]="ariaLabelledby()"
+      [attr.aria-invalid]="ariaInvalid()"
+      [attr.aria-describedby]="ariaDescribedby()"
       (input)="commit($any($event.target).valueAsNumber)"
       (blur)="onTouched()"
     />
@@ -302,6 +304,10 @@ export class KxNumberInput extends KxValueBase<number | null> {
   readonly step = input(1);
   readonly ariaLabel = input<string | null>(null, { alias: 'aria-label' });
   readonly ariaLabelledby = input<string | null>(null, { alias: 'aria-labelledby' });
+  /** Forwarded to the inner input, which is what assistive technology reads and what the field's error state keys on. */
+  readonly ariaInvalid = input<'true' | 'false' | null>(null, { alias: 'aria-invalid' });
+  /** Forwarded to the inner input, so an error or hint is announced with the field. */
+  readonly ariaDescribedby = input<string | null>(null, { alias: 'aria-describedby' });
   readonly changed = output<number | null>();
 
   protected nudge(direction: 1 | -1): void {
@@ -351,6 +357,8 @@ export class KxNumberInput extends KxValueBase<number | null> {
       [attr.autocomplete]="autocomplete()"
       [attr.aria-label]="ariaLabel()"
       [attr.aria-labelledby]="ariaLabelledby()"
+      [attr.aria-invalid]="ariaInvalid()"
+      [attr.aria-describedby]="ariaDescribedby()"
       (input)="commit($any($event.target).value)"
       (blur)="onTouched()"
     />
@@ -372,6 +380,10 @@ export class KxPasswordInput extends KxValueBase<string> {
   readonly autocomplete = input<'current-password' | 'new-password'>('current-password');
   readonly ariaLabel = input<string | null>(null, { alias: 'aria-label' });
   readonly ariaLabelledby = input<string | null>(null, { alias: 'aria-labelledby' });
+  /** Forwarded to the inner input, which is what assistive technology reads and what the field's error state keys on. */
+  readonly ariaInvalid = input<'true' | 'false' | null>(null, { alias: 'aria-invalid' });
+  /** Forwarded to the inner input, so an error or hint is announced with the field. */
+  readonly ariaDescribedby = input<string | null>(null, { alias: 'aria-describedby' });
 
   protected readonly revealed = signal(false);
 

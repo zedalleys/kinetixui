@@ -1445,9 +1445,8 @@ describe("InputOTP", () => {
     );
   }
   const chars = () => [0, 1, 2, 3].map((i) => screen.getByTestId(`slot-${i}`).textContent);
-  /** The slot the caret is in carries the focus ring; there is one real input behind all four. */
-  const caretAt = () =>
-    [0, 1, 2, 3].findIndex((i) => /\bring-1\b/.test(screen.getByTestId(`slot-${i}`).className));
+  /** The slot the caret is in is marked active (and carries the focus ring); there is one real input behind all four. */
+  const caretAt = () => [0, 1, 2, 3].findIndex((i) => screen.getByTestId(`slot-${i}`).hasAttribute("data-active"));
 
   it("fills one slot per keystroke and advances the caret", async () => {
     const user = userEvent.setup();

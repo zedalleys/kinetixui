@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGroupText } from "@kinetixui/ui";
+import { Card, CardContent, CardHeader, CardTitle, InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGroupText, InputOTP, InputOTPGroup, InputOTPSlot, Label, MultiSelect, NumberInput, PasswordInput } from "@kinetixui/ui";
 import { Search } from "lucide-react";
 
 const Demo = () => (
@@ -26,7 +26,7 @@ const Demo = () => (
 const meta = {
   title: "Form Inputs/InputGroup",
   parameters: {
-    layout: "centered",
+    layout: "padded",
     docs: { source: { code: "<InputGroup>\\n  <InputGroupText>https://</InputGroupText>\\n  <InputGroupInput placeholder=\"kinetixui.com\" />\\n</InputGroup>\\n\\n<InputGroup>\\n  <InputGroupAddon align=\"start\">$</InputGroupAddon>\\n  <InputGroupInput placeholder=\"0.00\" />\\n  <InputGroupText>USD</InputGroupText>\\n</InputGroup>", language: "tsx" } },
   },
 } satisfies Meta;
@@ -34,3 +34,97 @@ const meta = {
 export default meta;
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const EntryStates: StoryObj<typeof meta> = { render: () => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-5 p-6">
+        {([
+          ["rest", "Website", {}],
+          ["filled", "Docs site", { defaultValue: "docs.kinetixui.com" }],
+          ["invalid", "Status page", { defaultValue: "status page", "aria-invalid": true, "aria-describedby": "ig-invalid-error" }],
+          ["readonly", "Workspace URL", { defaultValue: "acme.kinetixui.com", readOnly: true }],
+          ["disabled", "Custom domain (Pro)", { defaultValue: "app.acme.com", disabled: true }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="grid gap-2">
+            <Label htmlFor={`ig-${key}`}>{label}</Label>
+            <InputGroup data-kx-case={key}>
+              <InputGroupText>https://</InputGroupText>
+              <InputGroupInput id={`ig-${key}`} placeholder="example.com" {...props} />
+            </InputGroup>
+            {key === "invalid" ? <p id="ig-invalid-error" className="text-body-sm text-destructive">Use a domain, like status.example.com.</p> : null}
+          </div>
+        ))}
+        <div className="grid gap-2">
+          <Label htmlFor="ig-button">Invite link</Label>
+          <InputGroup data-kx-case="with-button">
+            <InputGroupInput id="ig-button" defaultValue="kx.link/j/7Q2X9" readOnly />
+            <InputGroupButton data-kx-part="button">Copy</InputGroupButton>
+          </InputGroup>
+        </div>
+      </CardContent>
+    </Card>
+  ) };
+
+export const Compositions: StoryObj<typeof meta> = { render: () => (
+    <div className="grid w-[40rem] max-w-[calc(100vw-4rem)] gap-6">
+      <Card data-kx-composition="account">
+        <CardHeader><CardTitle>Create your account</CardTitle></CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="cmp-site">Website</Label>
+            <InputGroup>
+              <InputGroupText>https://</InputGroupText>
+              <InputGroupInput id="cmp-site" placeholder="example.com" />
+            </InputGroup>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cmp-password">Password</Label>
+            <PasswordInput id="cmp-password" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cmp-code">Verification code</Label>
+            <InputOTP id="cmp-code" maxLength={6} aria-describedby="cmp-code-hint">
+              <InputOTPGroup>
+                {[0, 1, 2, 3, 4, 5].map((i) => <InputOTPSlot key={i} index={i} />)}
+              </InputOTPGroup>
+            </InputOTP>
+            <p id="cmp-code-hint" className="text-body-sm text-muted-foreground">We sent six digits to ada@example.com.</p>
+          </div>
+        </CardContent>
+      </Card>
+      <div data-kx-composition="filter" role="search" aria-label="Filter orders" className="flex flex-wrap items-end gap-3 rounded-md bg-surface-grouped p-3">
+        <div className="grid min-w-[12rem] flex-1 gap-1.5">
+          <Label htmlFor="cmp-search">Search</Label>
+          <InputGroup>
+            <InputGroupAddon><Search aria-hidden="true" /></InputGroupAddon>
+            <InputGroupInput id="cmp-search" placeholder="Order, customer or SKU" />
+          </InputGroup>
+        </div>
+        <div className="grid min-w-[12rem] flex-1 gap-1.5">
+          <Label id="cmp-status-label">Status</Label>
+          <MultiSelect aria-labelledby="cmp-status-label" defaultValue={["paid", "shipped"]} options={[{ value: "paid", label: "Paid" }, { value: "shipped", label: "Shipped" }, { value: "refunded", label: "Refunded" }]} />
+        </div>
+        <div className="grid gap-1.5">
+          <Label id="cmp-min-label">Min. items</Label>
+          <NumberInput aria-labelledby="cmp-min-label" defaultValue={1} min={0} className="w-32" />
+        </div>
+      </div>
+      <Card data-kx-composition="settings">
+        <CardHeader><CardTitle>Workspace limits</CardTitle></CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <Label id="cmp-seats-label">Seats</Label>
+            <NumberInput aria-labelledby="cmp-seats-label" defaultValue={12} min={1} max={500} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cmp-domain">Sign-in domain</Label>
+            <InputGroup>
+              <InputGroupText>@</InputGroupText>
+              <InputGroupInput id="cmp-domain" defaultValue="acme.com" aria-invalid aria-describedby="cmp-domain-error" />
+            </InputGroup>
+            <p id="cmp-domain-error" className="text-body-sm text-destructive">Verify this domain before limiting sign-in to it.</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  ) };

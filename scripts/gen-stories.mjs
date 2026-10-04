@@ -91,6 +91,11 @@ const PADDED = new Set([
   // The Tabs `States` story is `max-w-full`, which only means something inside a wrapper with a width: the
   // large-text pass measures it at 390px with 2x text, where a tab strip that cannot wrap overflows the page.
   "tabs",
+  // InputGroup's demo is `w-full max-w-sm`, a width that only means something inside a wrapper with one. In a
+  // centered (shrink-to-fit) story the column sized itself to the input's intrinsic width instead — 212px
+  // wider than a 390px viewport at 2x text, measured by the large-text pass in Visual Slice 4 — which is a
+  // property of the story frame, not of a form column on a page.
+  "input-group",
 ]);
 
 /**
@@ -773,6 +778,197 @@ const EXTRA = {
         );
       })}
     </div>
+  )`,
+    },
+  ],
+  // Composite fields (TOKENS.md, "Composite fields"): one field whose parts — an add-on, a button, steppers,
+  // chips, code slots — sit inside a single edge. The demos show one field at rest; a real form also has a
+  // filled one, an invalid one with its error text, a read-only one and a disabled one, inside a raised Card —
+  // so both axe passes and `check:composite-visual` measure them where forms live. `data-kx-case` names the
+  // state; the gate finds each field's own wrapper from it.
+  "input-group": [
+    {
+      name: "EntryStates",
+      imports: "Card CardContent Label InputGroupText InputGroupInput InputGroupButton",
+      render: `() => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-5 p-6">
+        {([
+          ["rest", "Website", {}],
+          ["filled", "Docs site", { defaultValue: "docs.kinetixui.com" }],
+          ["invalid", "Status page", { defaultValue: "status page", "aria-invalid": true, "aria-describedby": "ig-invalid-error" }],
+          ["readonly", "Workspace URL", { defaultValue: "acme.kinetixui.com", readOnly: true }],
+          ["disabled", "Custom domain (Pro)", { defaultValue: "app.acme.com", disabled: true }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="grid gap-2">
+            <Label htmlFor={\`ig-\${key}\`}>{label}</Label>
+            <InputGroup data-kx-case={key}>
+              <InputGroupText>https://</InputGroupText>
+              <InputGroupInput id={\`ig-\${key}\`} placeholder="example.com" {...props} />
+            </InputGroup>
+            {key === "invalid" ? <p id="ig-invalid-error" className="text-body-sm text-destructive">Use a domain, like status.example.com.</p> : null}
+          </div>
+        ))}
+        <div className="grid gap-2">
+          <Label htmlFor="ig-button">Invite link</Label>
+          <InputGroup data-kx-case="with-button">
+            <InputGroupInput id="ig-button" defaultValue="kx.link/j/7Q2X9" readOnly />
+            <InputGroupButton data-kx-part="button">Copy</InputGroupButton>
+          </InputGroup>
+        </div>
+      </CardContent>
+    </Card>
+  )`,
+    },
+    {
+      name: "Compositions",
+      imports: "Card CardContent CardHeader CardTitle Label InputGroupAddon InputGroupText InputGroupInput NumberInput MultiSelect PasswordInput InputOTP InputOTPGroup InputOTPSlot Search",
+      // The three places the composite fields actually live together: an account form, a dense filter bar
+      // above a table, and a settings surface inside a raised Card. \`check:large-text\` and the Slice 4
+      // composition capture render this in light, dark, 200% text, RTL and mixed direction.
+      render: `() => (
+    <div className="grid w-[40rem] max-w-[calc(100vw-4rem)] gap-6">
+      <Card data-kx-composition="account">
+        <CardHeader><CardTitle>Create your account</CardTitle></CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="cmp-site">Website</Label>
+            <InputGroup>
+              <InputGroupText>https://</InputGroupText>
+              <InputGroupInput id="cmp-site" placeholder="example.com" />
+            </InputGroup>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cmp-password">Password</Label>
+            <PasswordInput id="cmp-password" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cmp-code">Verification code</Label>
+            <InputOTP id="cmp-code" maxLength={6} aria-describedby="cmp-code-hint">
+              <InputOTPGroup>
+                {[0, 1, 2, 3, 4, 5].map((i) => <InputOTPSlot key={i} index={i} />)}
+              </InputOTPGroup>
+            </InputOTP>
+            <p id="cmp-code-hint" className="text-body-sm text-muted-foreground">We sent six digits to ada@example.com.</p>
+          </div>
+        </CardContent>
+      </Card>
+      <div data-kx-composition="filter" role="search" aria-label="Filter orders" className="flex flex-wrap items-end gap-3 rounded-md bg-surface-grouped p-3">
+        <div className="grid min-w-[12rem] flex-1 gap-1.5">
+          <Label htmlFor="cmp-search">Search</Label>
+          <InputGroup>
+            <InputGroupAddon><Search aria-hidden="true" /></InputGroupAddon>
+            <InputGroupInput id="cmp-search" placeholder="Order, customer or SKU" />
+          </InputGroup>
+        </div>
+        <div className="grid min-w-[12rem] flex-1 gap-1.5">
+          <Label id="cmp-status-label">Status</Label>
+          <MultiSelect aria-labelledby="cmp-status-label" defaultValue={["paid", "shipped"]} options={[{ value: "paid", label: "Paid" }, { value: "shipped", label: "Shipped" }, { value: "refunded", label: "Refunded" }]} />
+        </div>
+        <div className="grid gap-1.5">
+          <Label id="cmp-min-label">Min. items</Label>
+          <NumberInput aria-labelledby="cmp-min-label" defaultValue={1} min={0} className="w-32" />
+        </div>
+      </div>
+      <Card data-kx-composition="settings">
+        <CardHeader><CardTitle>Workspace limits</CardTitle></CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <Label id="cmp-seats-label">Seats</Label>
+            <NumberInput aria-labelledby="cmp-seats-label" defaultValue={12} min={1} max={500} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cmp-domain">Sign-in domain</Label>
+            <InputGroup>
+              <InputGroupText>@</InputGroupText>
+              <InputGroupInput id="cmp-domain" defaultValue="acme.com" aria-invalid aria-describedby="cmp-domain-error" />
+            </InputGroup>
+            <p id="cmp-domain-error" className="text-body-sm text-destructive">Verify this domain before limiting sign-in to it.</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )`,
+    },
+  ],
+  "number-input": [
+    {
+      name: "EntryStates",
+      imports: "Card CardContent Label",
+      render: `() => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-5 p-6">
+        {([
+          ["rest", "Seats", { defaultValue: 4, min: 1 }],
+          ["invalid", "Guests", { defaultValue: 12, "aria-invalid": true, "aria-describedby": "ni-invalid-error" }],
+          ["readonly", "Plan seats", { defaultValue: 25, readOnly: true }],
+          ["disabled", "Admins (locked)", { defaultValue: 2, disabled: true }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="grid gap-2">
+            <Label id={\`ni-\${key}-label\`}>{label}</Label>
+            <NumberInput data-kx-case={key} aria-labelledby={\`ni-\${key}-label\`} {...props} />
+            {key === "invalid" ? <p id="ni-invalid-error" className="text-body-sm text-destructive">This room holds 10 people at most.</p> : null}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )`,
+    },
+  ],
+  "multi-select": [
+    {
+      name: "EntryStates",
+      imports: "Card CardContent Label",
+      render: `() => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-5 p-6">
+        {([
+          ["rest", "Labels", {}],
+          ["filled", "Teams", { defaultValue: ["design", "web"] }],
+          ["invalid", "Reviewers", { "aria-invalid": true, "aria-describedby": "ms-invalid-error" }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="grid gap-2">
+            <Label id={\`ms-\${key}-label\`}>{label}</Label>
+            <MultiSelect
+              data-kx-case={key}
+              aria-labelledby={\`ms-\${key}-label\`}
+              placeholder="Choose some"
+              options={[{ value: "design", label: "Design" }, { value: "web", label: "Web" }, { value: "mobile", label: "Mobile" }]}
+              {...props}
+            />
+            {key === "invalid" ? <p id="ms-invalid-error" className="text-body-sm text-destructive">Pick at least one reviewer.</p> : null}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )`,
+    },
+  ],
+  "input-otp": [
+    {
+      name: "EntryStates",
+      imports: "Card CardContent Label InputOTPGroup InputOTPSlot",
+      render: `() => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-5 p-6">
+        {([
+          ["rest", "Verification code", {}],
+          ["filled", "Backup code", { defaultValue: "482913" }],
+          ["invalid", "Authenticator code", { defaultValue: "000000", "aria-invalid": true, "aria-describedby": "otp-invalid-error" }],
+          ["disabled", "Recovery code (used)", { defaultValue: "771204", disabled: true }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="grid gap-2">
+            <Label htmlFor={\`otp-\${key}\`}>{label}</Label>
+            <InputOTP id={\`otp-\${key}\`} data-kx-case={key} maxLength={6} {...props}>
+              <InputOTPGroup>
+                {[0, 1, 2, 3, 4, 5].map((i) => <InputOTPSlot key={i} index={i} />)}
+              </InputOTPGroup>
+            </InputOTP>
+            {key === "invalid" ? <p id="otp-invalid-error" className="text-body-sm text-destructive">That code has expired. Request a new one.</p> : null}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   )`,
     },
   ],

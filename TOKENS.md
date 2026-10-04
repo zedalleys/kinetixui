@@ -208,6 +208,47 @@ Nothing scales or slides; no field or tab changes size between states.
 | Angular | Implemented in `styles.css` for `kxInput`, `kxTextarea`, `kxNativeSelect` and the tabs, and verified by the same gate. Angular has no Select (its catalogue entry is NativeSelect). Its tab strip keeps its underlined shape; the gate makes the same semantic assertions through an adapter |
 | SwiftUI, Compose, Flutter | Not changed. The shared contract is semantic (a 3:1 field boundary, hover where the platform has a pointer, focus above hover, invalid that survives the pointer, read-only distinct from disabled, a selected tab that is more than a text colour); each port should use its own text-field and tab APIs. Parity is not claimed |
 
+### Composite fields
+
+InputGroup, NumberInput, MultiSelect and InputOTP (and Angular's number and password inputs) are text entry
+built from parts: an add-on, a button, steppers, chips, code slots. Each is **one field**, so the text-entry
+contract above applies to the wrapper the reader sees as the field, and reads its state from the input
+inside it. No token is added.
+
+Measured before (main at `7ffccd3`, Chromium, on a Card, `check:composite-visual`): every wrapper's edge was
+`input` at **2.21:1** light / **2.44:1** dark; hover changed no pixel on any of them; NumberInput,
+MultiSelect and InputOTP (and both Angular composites) had no invalid state, so an `aria-invalid` field
+looked valid; NumberInput and InputGroup showed read-only exactly like editable (fill 1.00:1), and
+NumberInput's steppers still changed a read-only value; a focused add-on button lit the field's own focus
+ring as well as its own, so two rings claimed the keyboard, and Angular's password reveal toggle drew its
+ring outside a wrapper that clips it (1.00:1 — invisible). 64 contract failures across React and Angular;
+0 after.
+
+| State | Trigger | Change |
+|---|---|---|
+| Rest | — | The wrapper's edge `muted-foreground`/80 (3.41:1 light, 5.40:1 dark on a card). One edge: no part draws a border along it |
+| Internal divider | InputGroupButton, NumberInput's steppers | `input` (2.0–2.2:1) — visible structure, deliberately quieter than the field's edge |
+| Hover | a pointer that can hover | The wrapper's edge steps to full `muted-foreground` (1.50:1). Never while the input is focused, invalid, read-only or disabled |
+| Focus | the field's input focused | `action` edge + `--shadow-focus` on the wrapper (6.70:1 light, 7.02:1 dark); InputOTP draws it on the active slot |
+| Part focus | a button inside the field focused | That part's own inset `ring` (6.1–7.1:1); the wrapper's ring stays off, so one ring says where the keyboard is |
+| Invalid | `aria-invalid="true"` on the input (Angular: the component's `aria-invalid` input, forwarded) | `destructive` edge, kept under the pointer and when focused |
+| Read-only | `readonly` on the input (InputGroup, NumberInput) | The inset `muted` fill; NumberInput's steppers are disabled too |
+| Disabled | a disabled input | `opacity-disabled` on the whole field, inert |
+
+Two shape changes come with it. MultiSelect takes the field radius (`rounded-sm`, as Input and Select) — it
+was square — and its placeholder the field's `body-md`. NumberInput loses its fixed 40px height and is sized
+by its input's padding, so in a row with Input or InputGroup it is the same 46px. InputOTP's slots drop
+`shadow-sm`: a field is inset, not raised.
+
+Motion: the wrapper's `border-color` and `box-shadow` over `duration-instant` with `ease-standard`; collapses
+under reduced motion, same end state.
+
+| Platform | Status |
+|---|---|
+| React | InputGroup, NumberInput, MultiSelect, InputOTP: implemented and verified on rendered pixels (`check:composite-visual`, light + dark). PasswordInput composes InputGroup and inherits it (not separately gated). MultiSelect has no read-only or disabled prop; that is an API gap, not part of this contract |
+| Angular | `kx-number-input` and `kx-password-input`: implemented in `styles.css` and verified by the same gate. Both gained `aria-invalid` and `aria-describedby` inputs forwarded to the inner input — before, an Angular composite could not be marked invalid accessibly at all. Neither has a read-only input, so number-input is recorded as `partial` coverage. input-group, input-otp and multi-select are still planned (Wave A / overlays) |
+| SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
+
 ## Role tokens (added on top of `primary`)
 
 `brand`, `action` (+ `action-foreground`), `link` and `focus` are **repo-owned** — none exist in Figma. `action`,

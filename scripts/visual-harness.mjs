@@ -135,3 +135,44 @@ export function buildAngularSubject(spec, { name, layout }) {
   }
   return dir;
 }
+
+/* ── frames ─────────────────────────────────────────────────────────────── */
+/**
+ * A screenshot of the region around `rect` (CSS pixels, padded by `pad`), with accessors in page CSS pixels:
+ * `at(x, y)`, `row(y, x0, x1)` / `column(x, y0, y1)` (every device pixel along the line), and
+ * `changed(other)` — how many sampled pixels differ from another frame of the same region by more than 1.03:1.
+ * `check:composite-visual` uses it; the older gates still carry their own copy of the same few lines.
+ */
+export const framer =
+  ({ dpr, pad }) =>
+  async (page, rect) => {
+    const clip = { x: rect.x - pad, y: rect.y - pad, width: rect.width + 2 * pad, height: rect.height + 2 * pad };
+    const img = decode(await page.screenshot({ clip }));
+    const idx = (x, y) => (Math.round((y - clip.y) * dpr) * img.w + Math.round((x - clip.x) * dpr)) * 4;
+    return {
+      at(x, y) {
+        const i = idx(x, y);
+        return [img.data[i], img.data[i + 1], img.data[i + 2]];
+      },
+      row(y, x0, x1) {
+        const out = [];
+        for (let x = x0; x <= x1; x += 1 / dpr) out.push(this.at(x, y));
+        return out;
+      },
+      column(x, y0, y1) {
+        const out = [];
+        for (let y = y0; y <= y1; y += 1 / dpr) out.push(this.at(x, y));
+        return out;
+      },
+      changed(other, min = 1.03) {
+        let n = 0;
+        for (let i = 0; i < img.data.length; i += 4 * 3) {
+          const a = [img.data[i], img.data[i + 1], img.data[i + 2]];
+          const b = [other.img.data[i], other.img.data[i + 1], other.img.data[i + 2]];
+          if (contrast(a, b) > min) n++;
+        }
+        return n;
+      },
+      img,
+    };
+  };
