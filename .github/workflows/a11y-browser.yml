@@ -9,6 +9,9 @@ name: Accessibility (browser)
 # run — five real violations sat on main for a day before a `packages/ui` change surfaced them.
 # `scripts/check-a11y-coverage.mjs` now fails CI if a package with stories is absent from this
 # list, so the filter cannot silently fall behind the story directory again.
+#
+# The Angular visual gates render the real component templates from `packages/ui-angular/src/lib`,
+# so the whole folder is listed, not only the render specs: a template change on its own must run them.
 on:
   push:
     branches: [main]
@@ -30,10 +33,7 @@ on:
       - "scripts/visual-harness.mjs"
       - "scripts/visual-gates.mjs"
       - "packages/ui-angular/src/styles.css"
-      - "packages/ui-angular/src/lib/selection-render.spec.ts"
-      - "packages/ui-angular/src/lib/entry-render.spec.ts"
-      - "packages/ui-angular/src/lib/composite-render.spec.ts"
-      - "packages/ui-angular/src/lib/card-render.spec.ts"
+      - "packages/ui-angular/src/lib/**"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -56,10 +56,7 @@ on:
       - "scripts/visual-harness.mjs"
       - "scripts/visual-gates.mjs"
       - "packages/ui-angular/src/styles.css"
-      - "packages/ui-angular/src/lib/selection-render.spec.ts"
-      - "packages/ui-angular/src/lib/entry-render.spec.ts"
-      - "packages/ui-angular/src/lib/composite-render.spec.ts"
-      - "packages/ui-angular/src/lib/card-render.spec.ts"
+      - "packages/ui-angular/src/lib/**"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
