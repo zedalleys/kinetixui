@@ -128,7 +128,7 @@
       "result": "Posted 2026-10-03, one day after its scheduled day 4 (2026-10-02); the day offset stays 4 because it is the schedule slot, and the date is when it actually went out. No counts are recorded yet: this row was logged minutes after posting, so the honest result is none observed so far, to be replaced with absolute counts at the next close-out. Organic only \u2014 no amplification. Comparison caveat stands: LI-003 (kx_p2_a_drift) took a four-day paid boost (amp-001) and this did not, so any gap between kx_p1_c_manifest and kx_p2_a_drift is message and paid reach together and must not be attributed to the message. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {
-      "date": null,
+      "date": "2026-10-04",
       "day": 6,
       "asset": "X-003",
       "channel": "x",
@@ -146,8 +146,8 @@
       "secondary": null,
       "communityReuse": "COM-002 draws on the same argument \u2014 not within 48 hours",
       "metricToWatch": "replies; the most quotable asset in week 1",
-      "status": "planned",
-      "result": null
+      "status": "published",
+      "result": "Posted 2026-10-04, on its scheduled day 6. No counts are recorded yet: this row was logged the same day it went out, so the honest result is none observed so far, to be replaced with absolute counts (replies first, since that is the metric to watch, then sessions carrying kx_p1_c_manifest with utm_content=x_single) at the next close-out. Organic only \u2014 no amplification. COM-002 must not go out before 2026-10-06 (48-hour rule). Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {
       "date": null,
