@@ -14,8 +14,8 @@
  * It measures two platforms with one set of assertions:
  *
  *   React     the `States` stories in the built Storybook
- *   Angular   the DOM Angular itself renders for the same states (src/lib/selection-render.spec.ts, run
- *             with KX_ANGULAR_RENDER_OUT), painted with the package's own styles.css and the generated
+ *   Angular   the same states, live in the Angular browser harness (packages/ui-angular/browser, fixture
+ *             src/fixtures/selection.ts), painted with the package's own styles.css and the generated
  *             token CSS. The markup is the package's output, not a hand-written imitation of it.
  *
  * ── Method ───────────────────────────────────────────────────────────────
@@ -56,7 +56,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { PERCEPTIBLE_MS, SUPPRESSED_MS } from "./motion-states.mjs";
-import { buildAngularSubject, contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
+import { buildAngularSubject, waitForAngular, contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
 import { gate } from "./visual-gates.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -126,7 +126,7 @@ function reactUrl(kind, theme) {
 let angular = null;
 /** The Angular subject (visual-harness.mjs): only the four groups' layout is local CSS. */
 function buildAngularPage() {
-  return buildAngularSubject("src/lib/selection-render.spec.ts", {
+  return buildAngularSubject("selection", {
     name: "selection-visual",
     layout: `
     body { margin: 0; padding: 24px; background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-family-sans); }
@@ -143,6 +143,7 @@ async function open(context, platform, kind, theme) {
   await page.route((url) => !url.href.startsWith(base) && !url.href.startsWith("data:"), (route) => route.abort());
   await page.goto(platform === "React" ? reactUrl(kind, theme) : `${angular.base}/${theme}.html`, { waitUntil: "load" });
   if (platform === "React") await page.waitForSelector("#storybook-root > *");
+  else await waitForAngular(page);
   await page.mouse.move(0, 0);
   await page.waitForTimeout(SETTLE);
   return page;

@@ -1,14 +1,14 @@
 /**
  * visual-harness.mjs — the shared instrument behind the rendered visual gates (`check:card-visual`,
  * `check:selection-visual`, `check:entry-visual`): a static server for a built directory, WCAG relative luminance and contrast,
- * a dependency-free PNG decoder for Playwright screenshots, and the page that paints an Angular subject.
+ * a dependency-free PNG decoder for Playwright screenshots, and the live Angular page a gate measures.
  *
  * It holds only the measuring instrument. What each gate asserts — and why it samples where it does —
  * stays in the gate, next to the contract it checks.
  */
 import { createServer } from "node:http";
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -98,43 +98,63 @@ export function decode(png) {
 
 /* ── Angular subjects ───────────────────────────────────────────────────── */
 /**
- * Render an Angular subject for a gate: run the spec that mounts it with KX_ANGULAR_RENDER_OUT set, then wrap
- * the DOM it wrote in one page per theme that loads exactly what a consumer loads — the generated token CSS
- * and the package's styles.css. `layout` is the only local CSS: it places the subject's groups on the page and
- * styles no control. The markup is Angular's own output, not a hand-written imitation of it.
- *
- * Returns the directory holding `light.html` and `dark.html`, for `serveStatic`.
+ * Build the Angular browser harness (packages/ui-angular/browser) into a fresh directory: the fixtures compiled
+ * AOT with strict templates, bootstrapped as a live, zoneless Angular application, with the generated token
+ * CSS and the package's styles.css linked byte for byte. `KX_ANGULAR_HARNESS_DIR` points at one already built
+ * (CI builds it once and every gate reuses it); otherwise each caller builds its own.
  */
-export function buildAngularSubject(spec, { name, layout }) {
-  const dir = mkdtempSync(join(tmpdir(), `kx-${name}-ng-`));
-  const out = join(dir, "subject.html");
-  execFileSync("pnpm", ["--filter", "@kinetixui/angular", "exec", "vitest", "run", spec], {
-    cwd: root,
-    env: { ...process.env, KX_ANGULAR_RENDER_OUT: out },
-    stdio: ["ignore", "ignore", "inherit"],
-  });
-  if (!existsSync(out)) throw new Error(`${name}: the Angular render spec ${spec} did not write its subject`);
-  const css = {
-    "globals.css": "packages/tokens/dist/web/globals.css",
-    "globals.dark.css": "packages/tokens/dist/web/globals.dark.css",
-    "extras.css": "packages/tokens/dist/web/extras.css",
-    "extras.dark.css": "packages/tokens/dist/web/extras.dark.css",
-    "styles.css": "packages/ui-angular/src/styles.css",
-  };
-  for (const [file, from] of Object.entries(css)) {
-    if (!existsSync(join(root, from))) throw new Error(`${name}: ${from} missing — run pnpm build:tokens first`);
-    copyFileSync(join(root, from), join(dir, file));
+export function buildAngularHarness(name = "angular") {
+  const prebuilt = process.env.KX_ANGULAR_HARNESS_DIR;
+  if (prebuilt) {
+    if (!existsSync(join(prebuilt, "index.html"))) throw new Error(`${name}: KX_ANGULAR_HARNESS_DIR=${prebuilt} holds no built harness`);
+    const dir = mkdtempSync(join(tmpdir(), `kx-${name}-ng-`));
+    cpSync(prebuilt, dir, { recursive: true });
+    return dir;
   }
-  const links = Object.keys(css).map((n) => `<link rel="stylesheet" href="${n}">`).join("");
-  const body = readFileSync(out, "utf8");
+  const dir = mkdtempSync(join(tmpdir(), `kx-${name}-ng-`));
+  execFileSync("node", [join(root, "packages/ui-angular/browser/build.mjs"), dir], { cwd: root, stdio: ["ignore", "ignore", "inherit"] });
+  if (!existsSync(join(dir, "index.html"))) throw new Error(`${name}: the Angular harness did not build`);
+  return dir;
+}
+
+/**
+ * The page a visual gate measures for Angular: the live harness mounting one fixture (src/fixtures/<fixture>),
+ * written as `light.html` and `dark.html`. `layout` is the only local CSS: it places the fixture's groups on
+ * the page and styles no control. Angular renders the components in the browser, so hover, focus, keyboard
+ * and state changes run through the package's own templates and bindings — the subject is the application,
+ * not a copy of its markup.
+ *
+ * Returns the directory, for `serveStatic`. A page is usable once `waitForAngular` resolves.
+ */
+export function buildAngularSubject(fixture, { name, layout }) {
+  const dir = buildAngularHarness(name);
+  const index = readFileSync(join(dir, "index.html"), "utf8");
   for (const theme of ["light", "dark"]) {
     writeFileSync(
       join(dir, `${theme}.html`),
-      `<!doctype html><html lang="en" class="${theme === "dark" ? "dark" : ""}"><head><meta charset="utf-8">${links}<style>${layout}</style></head><body>${body}</body></html>`,
+      index
+        .replace('<html lang="en">', `<html lang="en" data-kx-fixture="${fixture}" data-kx-theme="${theme}"${theme === "dark" ? ' class="dark"' : ""}>`)
+        .replace("</head>", `<style>${layout}</style></head>`),
     );
   }
   return dir;
 }
+
+/** Wait until the harness has bootstrapped and Angular is stable; fail loudly if it could not. */
+export async function waitForAngular(page) {
+  await page.waitForSelector("html[data-kx-ready], html[data-kx-error]", { state: "attached", timeout: 20_000 });
+  const { error, ngVersion } = await page.evaluate(() => ({
+    error: document.documentElement.dataset.kxError,
+    // Angular stamps the root component's host with the runtime version when it bootstraps the application.
+    ngVersion: document.querySelector("kx-fixture")?.getAttribute("ng-version") ?? null,
+  }));
+  if (error) throw new Error(`Angular harness: ${error}`);
+  if (!ngVersion) throw new Error("Angular harness: the fixture has no ng-version — Angular did not bootstrap it");
+  return ngVersion;
+}
+
+/** After an interaction: let Angular's change detection run before reading the DOM back. */
+export const settleAngular = (page) => page.evaluate(() => window.kxHarness.settle());
 
 /* ── frames ─────────────────────────────────────────────────────────────── */
 /**

@@ -109,7 +109,7 @@
   },
   "coverage": {
     "React": 98,
-    "Angular": 43,
+    "Angular": 46,
     "SwiftUI": 90,
     "Compose": 90,
     "Flutter": 90
@@ -394,12 +394,14 @@
     ],
     "input-group": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "input-otp": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -553,6 +555,7 @@
     ],
     "rating": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -941,18 +944,6 @@
         "wave": "overlays"
       }
     },
-    "input-group": {
-      "Angular": {
-        "type": "planned",
-        "wave": "inputs"
-      }
-    },
-    "input-otp": {
-      "Angular": {
-        "type": "planned",
-        "wave": "inputs"
-      }
-    },
     "json-viewer": {
       "Angular": {
         "type": "planned",
@@ -1061,12 +1052,6 @@
       "Angular": {
         "type": "planned",
         "wave": "overlays"
-      }
-    },
-    "rating": {
-      "Angular": {
-        "type": "planned",
-        "wave": "inputs"
       }
     },
     "resizable": {
@@ -1470,12 +1455,14 @@
     },
     "input-group": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
     },
     "input-otp": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1629,6 +1616,7 @@
     },
     "rating": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1804,7 +1792,7 @@
       "beta": 98
     },
     "Angular": {
-      "preview": 43
+      "preview": 46
     },
     "SwiftUI": {
       "experimental": 90
@@ -2068,6 +2056,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published"
       ],
       "SwiftUI": [
@@ -2196,6 +2185,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published"
       ],
       "SwiftUI": [
@@ -2576,6 +2566,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published"
       ],
       "SwiftUI": [
@@ -2709,7 +2700,9 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -2731,6 +2724,14 @@
         "largeText",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -2745,6 +2746,14 @@
     },
     "input-otp": {
       "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
+      ],
+      "Angular": [
         "accessibility",
         "build",
         "interaction",
@@ -2822,6 +2831,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published"
       ],
       "SwiftUI": [
@@ -3009,6 +3019,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published"
       ]
     },
@@ -3065,7 +3076,9 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3129,7 +3142,9 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3223,7 +3238,9 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3242,6 +3259,14 @@
         "accessibility",
         "build",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3301,7 +3326,9 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3433,7 +3460,9 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3521,7 +3550,10 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
       ],
       "SwiftUI": [
         "build",
@@ -3607,6 +3639,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published",
         "rtl"
       ],
@@ -3665,7 +3698,9 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3713,6 +3748,7 @@
         "accessibility",
         "build",
         "interaction",
+        "largeText",
         "published"
       ],
       "SwiftUI": [
@@ -3742,7 +3778,9 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3829,14 +3867,14 @@
       "published": 98
     },
     "Angular": {
-      "build": 43,
-      "interaction": 43,
-      "accessibility": 43,
-      "rtl": 2,
-      "largeText": 0,
-      "reducedMotion": 0,
+      "build": 46,
+      "interaction": 46,
+      "accessibility": 46,
+      "rtl": 14,
+      "largeText": 19,
+      "reducedMotion": 1,
       "visual": 0,
-      "published": 43
+      "published": 46
     },
     "SwiftUI": {
       "build": 90,

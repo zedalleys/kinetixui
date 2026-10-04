@@ -39,12 +39,9 @@
  * ── Two platforms, and what each one is held to ──────────────────────────
  *
  *   React     every row above, on the Card stories in the built Storybook
- *   Angular   the RESTING rows only — edge, lift, grouped, static — on the DOM Angular renders
- *             (src/lib/card-render.spec.ts), painted with the package's styles.css and the token CSS.
- *             Angular's `kx-card` is the static Card: it has no interactive form (no link or button card),
- *             so there is no hover, pressed, selected or focus state to measure, and none is claimed.
- *             visual-gates.mjs records that as partial coverage, which keeps the Angular graduation
- *             guard's visual-parity criterion open for card until interactive cards exist.
+ *   Angular   every row above, on the live Angular application (packages/ui-angular/browser, fixture
+ *             src/fixtures/card.ts): the static `kx-card`, and `kxCard` on a real link and button — the
+ *             same arrangement as React's Interactive story, with the package's styles.css and the token CSS.
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary for local runs.
  */
@@ -54,7 +51,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { PERCEPTIBLE_MS, SUPPRESSED_MS } from "./motion-states.mjs";
-import { buildAngularSubject, contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
+import { buildAngularSubject, waitForAngular, contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
 import { gate } from "./visual-gates.mjs";
 
 // The platforms come from visual-gates.mjs — the registry the Angular graduation guard reads — so the two
@@ -66,8 +63,8 @@ if (only && !GATE.covers[only]) {
   process.exit(2);
 }
 const PLATFORMS = only ? [only] : Object.keys(GATE.covers);
-if (Object.keys(GATE.covers).join() !== "React,Angular" || GATE.partial?.Angular?.card === undefined) {
-  throw new Error("card-visual: visual-gates.mjs disagrees with what this gate runs (React in full, Angular resting only)");
+if (Object.keys(GATE.covers).join() !== "React,Angular" || GATE.partial?.Angular?.card !== undefined) {
+  throw new Error("card-visual: visual-gates.mjs disagrees with what this gate runs (every row, on both platforms)");
 }
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -95,13 +92,17 @@ if (PLATFORMS.includes("React")) {
 
 const { base, close } = PLATFORMS.includes("React") ? await serveStatic(staticDir) : { base: null, close: () => {} };
 const angularDir = PLATFORMS.includes("Angular")
-  ? buildAngularSubject("src/lib/card-render.spec.ts", {
+  ? buildAngularSubject("card", {
       name: "card-visual",
       layout: `
     body { margin: 0; padding: 48px; background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-family-sans); }
     .kx-render-grid { display: grid; gap: 48px; inline-size: 20rem; }
     .kx-render-grouped { display: grid; gap: 16px; padding: 24px; border-radius: var(--radius-container); background: hsl(var(--surface-grouped)); }
-    .kx-render-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }`,
+    .kx-render-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .kx-render-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; inline-size: 40rem; }
+    .kx-render-toggle-card { padding: var(--spacing-6); }
+    .kx-render-card-title { display: block; font: var(--text-title-md); font-weight: var(--font-weight-semibold); }
+    .kx-render-card-description { display: block; margin-block-start: 6px; font: var(--text-body-sm); color: hsl(var(--muted-foreground)); }`,
     })
   : null;
 const angular = angularDir ? await serveStatic(angularDir) : null;
@@ -209,6 +210,106 @@ async function open(context, id, theme) {
 }
 const rectOf = (page, sel) => page.locator(sel).first().boundingBox();
 
+/**
+ * The interactive rows — hover, pressed, selected, focus and motion — on a page holding React's Interactive
+ * arrangement: a link card (`a[href="#reports-q3"]`, first in the tab order), a current link and a pressed
+ * toggle. `openPage(context)` opens that page; `gridSel` is the region that holds the cards.
+ */
+async function interactiveRows(context, name, openPage, gridSel) {
+  let normalEnd = null;
+  // ── interactive: hover, pressed, selected, focus ──
+  {
+    const page = await openPage(context);
+    const link = 'a[href="#reports-q3"]';
+    const current = 'a[aria-current="page"]';
+    const pressedOn = 'button[aria-pressed="true"]';
+    const card = await rectOf(page, link);
+    const grid = await rectOf(page, gridSel);
+    const shot = () => frame(page, grid);
+    const rest = await shot();
+    const pageColour = rest.corner();
+    const restEdge = edge(rest, card, pageColour);
+
+    await page.mouse.move(card.x + card.width / 2, card.y + card.height / 2);
+    await page.waitForTimeout(SETTLE);
+    const hover = await shot();
+    const hoverEdge = edge(hover, card, pageColour);
+    check(hoverEdge.max > restEdge.max * 1.1, `${name} hover strengthens the edge`, `${r2(restEdge.max)}:1 → ${r2(hoverEdge.max)}:1`);
+    const cursor = await page.locator(link).evaluate((el) => getComputedStyle(el).cursor);
+    check(cursor === "pointer", `${name} interactive card has a pointer cursor`, cursor);
+
+    await page.mouse.down();
+    await page.waitForTimeout(SETTLE);
+    const pressed = await shot();
+    const fillShift = contrast(surface(pressed, card), surface(hover, card));
+    check(fillShift >= 1.02, `${name} pressed differs from hover`, `fill ${r2(fillShift)}:1 against hover's`);
+    await page.mouse.up();
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(SETTLE);
+
+    const settled = await shot();
+    for (const sel of [current, pressedOn]) {
+      const r = await rectOf(page, sel);
+      // Weight, not only hue: the selected edge is 2 CSS px where the resting one is 1, and it clears 3:1.
+      const selected = edge(settled, r, pageColour);
+      const resting = edge(settled, card, pageColour);
+      check(
+        selected.max >= 3 && selected.thick >= 2 * DPR && selected.thick >= 2 * Math.max(1, resting.thick) - 1,
+        `${name} selected ${sel.startsWith("a") ? "link (aria-current)" : "toggle (aria-pressed)"}`,
+        `edge ${r2(selected.max)}:1, ${selected.thick} device px thick vs resting ${resting.thick}`,
+      );
+    }
+
+    await page.close();
+
+    // A fresh page, so the press above has not already moved focus: the first Tab lands on the first card.
+    const kb = await openPage(context);
+    await kb.keyboard.press("Tab");
+    await kb.waitForTimeout(SETTLE);
+    const focused = await kb.evaluate((s) => document.activeElement === document.querySelector(s), link);
+    const ring = edge(await frame(kb, grid), card, pageColour);
+    check(focused && ring.max >= 3 && ring.max > hoverEdge.max, `${name} focus ring out-contrasts hover`, `${focused ? "" : "NOT FOCUSED, "}ring ${r2(ring.max)}:1 vs hover ${r2(hoverEdge.max)}:1`);
+    await kb.close();
+  }
+
+  // ── motion: a rendered midpoint, and none under reduced motion ──
+  for (const reduced of [false, true]) {
+    const ctx = await browser.newContext({ viewport: { width: 1000, height: 760 }, deviceScaleFactor: 1, reducedMotion: reduced ? "reduce" : "no-preference" });
+    const page = await openPage(ctx);
+    const sel = 'a[href="#reports-q3"]';
+    const box = await rectOf(page, sel);
+    const before = await page.locator(sel).evaluate((el) => getComputedStyle(el).boxShadow);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    const m = await page.locator(sel).evaluate((el) => {
+      const t = el.getAnimations().find((a) => a.transitionProperty === "box-shadow");
+      if (!t) return { none: true, end: null };
+      const duration = t.effect.getComputedTiming().duration;
+      t.pause();
+      t.currentTime = duration / 2;
+      const mid = getComputedStyle(el).boxShadow;
+      t.finish();
+      return { none: false, duration, mid, end: getComputedStyle(el).boxShadow };
+    });
+    await page.waitForTimeout(SETTLE);
+    const end = await page.locator(sel).evaluate((el) => getComputedStyle(el).boxShadow);
+    if (!reduced) {
+      check(
+        !m.none && m.duration >= PERCEPTIBLE_MS && m.mid !== before && m.mid !== end,
+        `${name} hover elevation animates`,
+        m.none ? "no box-shadow transition ran" : `${Math.round(m.duration)}ms, midpoint ${m.mid === before || m.mid === end ? "equals an end state" : "between the two"}`,
+      );
+      normalEnd = end;
+    } else {
+      check(
+        (m.none || m.duration <= SUPPRESSED_MS) && end === normalEnd,
+        `${name} reduced motion lands without animating`,
+        `${m.none ? "no transition" : `${m.duration}ms transition`}, end state ${end === normalEnd ? "matches" : "DIFFERS from"} normal motion`,
+      );
+    }
+    await ctx.close();
+  }
+}
+
 for (const theme of PLATFORMS.includes("React") ? ["light", "dark"] : []) {
   report.push(`\nReact · ${theme}`);
   const context = await browser.newContext({ viewport: { width: 1000, height: 760 }, deviceScaleFactor: DPR });
@@ -260,112 +361,23 @@ for (const theme of PLATFORMS.includes("React") ? ["light", "dark"] : []) {
     await page.close();
   }
 
-  // ── interactive: hover, pressed, selected, focus ──
-  {
-    const page = await open(context, STORY.interactive, theme);
-    const link = 'a[href="#reports-q3"]';
-    const current = 'a[aria-current="page"]';
-    const pressedOn = 'button[aria-pressed="true"]';
-    const card = await rectOf(page, link);
-    const grid = await rectOf(page, "#storybook-root > div");
-    const shot = () => frame(page, grid);
-    const rest = await shot();
-    const pageColour = rest.corner();
-    const restEdge = edge(rest, card, pageColour);
-
-    await page.mouse.move(card.x + card.width / 2, card.y + card.height / 2);
-    await page.waitForTimeout(SETTLE);
-    const hover = await shot();
-    const hoverEdge = edge(hover, card, pageColour);
-    check(hoverEdge.max > restEdge.max * 1.1, `${theme} hover strengthens the edge`, `${r2(restEdge.max)}:1 → ${r2(hoverEdge.max)}:1`);
-    const cursor = await page.locator(link).evaluate((el) => getComputedStyle(el).cursor);
-    check(cursor === "pointer", `${theme} interactive card has a pointer cursor`, cursor);
-
-    await page.mouse.down();
-    await page.waitForTimeout(SETTLE);
-    const pressed = await shot();
-    const fillShift = contrast(surface(pressed, card), surface(hover, card));
-    check(fillShift >= 1.02, `${theme} pressed differs from hover`, `fill ${r2(fillShift)}:1 against hover's`);
-    await page.mouse.up();
-    await page.mouse.move(0, 0);
-    await page.waitForTimeout(SETTLE);
-
-    const settled = await shot();
-    for (const sel of [current, pressedOn]) {
-      const r = await rectOf(page, sel);
-      // Weight, not only hue: the selected edge is 2 CSS px where the resting one is 1, and it clears 3:1.
-      const selected = edge(settled, r, pageColour);
-      const resting = edge(settled, card, pageColour);
-      check(
-        selected.max >= 3 && selected.thick >= 2 * DPR && selected.thick >= 2 * Math.max(1, resting.thick) - 1,
-        `${theme} selected ${sel.startsWith("a") ? "link (aria-current)" : "toggle (aria-pressed)"}`,
-        `edge ${r2(selected.max)}:1, ${selected.thick} device px thick vs resting ${resting.thick}`,
-      );
-    }
-
-    await page.close();
-
-    // A fresh page, so the press above has not already moved focus: the first Tab lands on the first card.
-    const kb = await open(context, STORY.interactive, theme);
-    await kb.keyboard.press("Tab");
-    await kb.waitForTimeout(SETTLE);
-    const focused = await kb.evaluate((s) => document.activeElement === document.querySelector(s), link);
-    const ring = edge(await frame(kb, grid), card, pageColour);
-    check(focused && ring.max >= 3 && ring.max > hoverEdge.max, `${theme} focus ring out-contrasts hover`, `${focused ? "" : "NOT FOCUSED, "}ring ${r2(ring.max)}:1 vs hover ${r2(hoverEdge.max)}:1`);
-    await kb.close();
-  }
-
-  // ── motion: a rendered midpoint, and none under reduced motion ──
-  for (const reduced of [false, true]) {
-    const ctx = await browser.newContext({ viewport: { width: 1000, height: 760 }, deviceScaleFactor: 1, reducedMotion: reduced ? "reduce" : "no-preference" });
-    const page = await open(ctx, STORY.interactive, theme);
-    const sel = 'a[href="#reports-q3"]';
-    const box = await rectOf(page, sel);
-    const before = await page.locator(sel).evaluate((el) => getComputedStyle(el).boxShadow);
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    const m = await page.locator(sel).evaluate((el) => {
-      const t = el.getAnimations().find((a) => a.transitionProperty === "box-shadow");
-      if (!t) return { none: true, end: null };
-      const duration = t.effect.getComputedTiming().duration;
-      t.pause();
-      t.currentTime = duration / 2;
-      const mid = getComputedStyle(el).boxShadow;
-      t.finish();
-      return { none: false, duration, mid, end: getComputedStyle(el).boxShadow };
-    });
-    await page.waitForTimeout(SETTLE);
-    const end = await page.locator(sel).evaluate((el) => getComputedStyle(el).boxShadow);
-    if (!reduced) {
-      check(
-        !m.none && m.duration >= PERCEPTIBLE_MS && m.mid !== before && m.mid !== end,
-        `${theme} hover elevation animates`,
-        m.none ? "no box-shadow transition ran" : `${Math.round(m.duration)}ms, midpoint ${m.mid === before || m.mid === end ? "equals an end state" : "between the two"}`,
-      );
-      report.normalEnd = end;
-    } else {
-      check(
-        (m.none || m.duration <= SUPPRESSED_MS) && end === report.normalEnd,
-        `${theme} reduced motion lands without animating`,
-        `${m.none ? "no transition" : `${m.duration}ms transition`}, end state ${end === report.normalEnd ? "matches" : "DIFFERS from"} normal motion`,
-      );
-    }
-    await ctx.close();
-  }
+  await interactiveRows(context, theme, (ctx) => open(ctx, STORY.interactive, theme), "#storybook-root > div");
   await context.close();
 }
 
-/* ── Angular: the resting contract ──────────────────────────────────────── */
+/* ── Angular: the same contract, on the live Angular page ───────────────── */
 async function openAngular(context, theme) {
   const page = await context.newPage();
   await page.route((url) => !url.href.startsWith(angular.base) && !url.href.startsWith("data:"), (route) => route.abort());
   await page.goto(`${angular.base}/${theme}.html`, { waitUntil: "load" });
+  await waitForAngular(page);
   await page.mouse.move(0, 0);
   await page.waitForTimeout(SETTLE);
   return page;
 }
 for (const theme of PLATFORMS.includes("Angular") ? ["light", "dark"] : []) {
-  report.push(`\nAngular · ${theme} (resting Card only — Angular has no interactive Card)`);
-  const context = await browser.newContext({ viewport: { width: 1000, height: 760 }, deviceScaleFactor: DPR });
+  report.push(`\nAngular · ${theme}`);
+  const context = await browser.newContext({ viewport: { width: 1000, height: 1400 } /* one page holds every arrangement */, deviceScaleFactor: DPR });
   const page = await openAngular(context, theme);
   const cardSel = 'kx-card[data-kx-case="default"]';
   const card = await rectOf(page, cardSel);
@@ -401,8 +413,8 @@ for (const theme of PLATFORMS.includes("Angular") ? ["light", "dark"] : []) {
   }
   const cursor = await page.locator(cardSel).evaluate((el) => getComputedStyle(el).cursor);
   check(changed === 0 && cursor === "auto", `Angular ${theme} static card ignores the pointer`, `${changed} sampled pixel(s) changed, cursor ${cursor}`);
-  report.push(`  —    Angular ${theme} hover / pressed / selected / focus / motion       not implemented in Angular (no interactive Card), not measured`);
   await page.close();
+  await interactiveRows(context, `Angular ${theme}`, (ctx) => openAngular(ctx, theme), '[data-kx-case="interactive"]');
   await context.close();
 }
 
@@ -417,5 +429,5 @@ if (failures.length) {
 }
 console.log(
   `\ncard-visual ok — Card's surface and state contract holds in light and dark, on rendered pixels` +
-    (PLATFORMS.includes("Angular") ? " (React: every state; Angular: the resting contract, which is all it implements)." : "."),
+    (PLATFORMS.length > 1 ? ", on both platforms." : "."),
 );

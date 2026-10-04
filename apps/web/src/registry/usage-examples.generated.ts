@@ -42,7 +42,7 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
     "angular": "@Component({\n  selector: 'app-button-group-demo',\n  imports: [KxButton, KxButtonGroup, KxButtonGroupText],\n  template: `\n    <div kxButtonGroup>\n      <kx-button-group-text>Qty</kx-button-group-text>\n      <button kxButton variant=\"Outline\" type=\"button\" aria-label=\"Decrease\">&minus;</button>\n      <button kxButton variant=\"Outline\" type=\"button\" aria-label=\"Increase\">+</button>\n    </div>\n  `,\n})\nexport class ButtonGroupDemo {}",
   },
   "card-demo": {
-    "angular": "<kx-card>\n  <kx-card-header>\n    <kx-card-title>Create project</kx-card-title>\n    <kx-card-description>Deploy your new project in one click.</kx-card-description>\n  </kx-card-header>\n  <kx-card-content>\n    <label kxLabel for=\"name\">Name</label>\n    <input kxInput id=\"name\" placeholder=\"Name of your project\" />\n  </kx-card-content>\n  <kx-card-footer>\n    <button kxButton variant=\"Outline\">Cancel</button>\n    <button kxButton>Deploy</button>\n  </kx-card-footer>\n</kx-card>",
+    "angular": "<kx-card>\n  <kx-card-header>\n    <kx-card-title>Create project</kx-card-title>\n    <kx-card-description>Deploy your new project in one click.</kx-card-description>\n  </kx-card-header>\n  <kx-card-content>\n    <label kxLabel for=\"name\">Name</label>\n    <input kxInput id=\"name\" placeholder=\"Name of your project\" />\n  </kx-card-content>\n  <kx-card-footer>\n    <button kxButton variant=\"Outline\">Cancel</button>\n    <button kxButton>Deploy</button>\n  </kx-card-footer>\n</kx-card>\n\n<!-- A card that is one action: kxCard on a real link (or button) gives it hover, pressed, focus and selected. -->\n<a kxCard href=\"#reports-q3\">\n  <kx-card-header>\n    <kx-card-title>Q3 report</kx-card-title>\n    <kx-card-description>Revenue, churn and cohort retention.</kx-card-description>\n  </kx-card-header>\n</a>",
   },
   "chart-demo": {
     "kotlin": "KinetixChart(\n    points = listOf(\n        KinetixChartPoint(\"Jan\", 186f),\n        KinetixChartPoint(\"Feb\", 305f),\n        KinetixChartPoint(\"Mar\", 237f),\n    ),\n    description = \"Monthly visitors: January 186, February 305, March 237\",\n)",
@@ -51,7 +51,7 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
     "angular": "<kx-checkbox [(checked)]=\"remember\" aria-label=\"Remember me\" />",
   },
   "circular-progress-demo": {
-    "angular": "@Component({\n  selector: 'app-circular-progress-demo',\n  imports: [KxCircularProgress],\n  template: `\n    <kx-circular-progress [value]=\"72\" showValue [size]=\"56\" />\n    <kx-circular-progress aria-label=\"Loading\" />\n  `,\n})\nexport class CircularProgressDemo {}",
+    "angular": "@Component({\n  selector: 'app-circular-progress-demo',\n  imports: [KxCircularProgress],\n  template: `\n    <kx-circular-progress [value]=\"72\" showValue [size]=\"56\" aria-label=\"Storage used\" />\n    <kx-circular-progress aria-label=\"Loading\" />\n  `,\n})\nexport class CircularProgressDemo {}",
   },
   "code-block-demo": {
     "angular": "@Component({\n  selector: 'app-code-block-demo',\n  imports: [KxCodeBlock],\n  template: ` <kx-code-block [code]=\"snippet\" filename=\"main.ts\" /> `,\n})\nexport class CodeBlockDemo {\n  readonly snippet = \"import { KxButton } from '@kinetixui/angular';\";\n}",
@@ -86,6 +86,12 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   "input-demo": {
     "angular": "<input kxInput type=\"email\" placeholder=\"Email\" />",
   },
+  "input-group-demo": {
+    "angular": "<kx-input-group>\n  <kx-input-group-text>https://</kx-input-group-text>\n  <input kxInputGroupInput aria-label=\"Website\" placeholder=\"kinetixui.com\" />\n</kx-input-group>\n<kx-input-group>\n  <kx-input-group-addon>$</kx-input-group-addon>\n  <input kxInputGroupInput aria-label=\"Amount\" placeholder=\"0.00\" inputmode=\"decimal\" />\n  <kx-input-group-text>USD</kx-input-group-text>\n</kx-input-group>\n<kx-input-group>\n  <input kxInputGroupInput aria-label=\"Invite link\" value=\"https://kinetixui.com/invite/7Q2X\" readonly />\n  <button kxInputGroupButton>Copy</button>\n</kx-input-group>",
+  },
+  "input-otp-demo": {
+    "angular": "<kx-input-otp [(value)]=\"code\" [length]=\"6\" [groups]=\"[3, 3]\" aria-label=\"One-time code\" />",
+  },
   "kbd-demo": {
     "angular": "<kbd kxKbdGroup>\n  <kbd kxKbd>Ctrl</kbd>\n  <kbd kxKbd>K</kbd>\n</kbd>",
   },
@@ -114,13 +120,16 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
     "angular": "<kx-password-input [(value)]=\"password\" aria-label=\"Password\" />",
   },
   "progress-demo": {
-    "angular": "<kx-progress [value]=\"62\" />",
+    "angular": "<kx-progress [value]=\"62\" aria-label=\"Upload progress\" />",
   },
   "quote-demo": {
     "angular": "<kx-quote author=\"Ada Lovelace\" authorTitle=\"Mathematician\">\n  The Analytical Engine weaves algebraic patterns.\n</kx-quote>",
   },
   "radio-group-demo": {
     "angular": "<kx-radio-group [(value)]=\"plan\" aria-label=\"Plan\">\n  <kx-radio value=\"free\">Free</kx-radio>\n  <kx-radio value=\"pro\">Pro</kx-radio>\n  <kx-radio value=\"team\">Team</kx-radio>\n</kx-radio-group>",
+  },
+  "rating-demo": {
+    "angular": "<kx-rating [(value)]=\"rating\" aria-label=\"Rate this article\" />\n<kx-rating [value]=\"4\" readonly size=\"sm\" />",
   },
   "segmented-control-demo": {
     "angular": "<kx-segmented-control [(value)]=\"range\" aria-label=\"Range\">\n  <kx-segment value=\"7d\">7 days</kx-segment>\n  <kx-segment value=\"30d\">30 days</kx-segment>\n  <kx-segment value=\"90d\">90 days</kx-segment>\n</kx-segmented-control>",

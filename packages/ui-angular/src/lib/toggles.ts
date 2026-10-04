@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, Directive, booleanAttribute, forwardRef, input, model, output, signal } from '@angular/core';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
+import { NgTemplateOutlet } from '@angular/common';
 import type { KxToggleSize, KxToggleVariant } from './types';
 
 /**
@@ -236,19 +237,23 @@ export class KxToggleGroup {
         [disabled]="disabled() || group.disabled()"
         (change)="group.toggle(value())"
       />
-      <label class="kx-toggle kx-toggle--group" [for]="id()"><ng-content /></label>
+      <label class="kx-toggle kx-toggle--md kx-toggle--group" [for]="id()"><ng-container [ngTemplateOutlet]="content" /></label>
     } @else {
       <button
         type="button"
-        class="kx-toggle kx-toggle--group"
+        class="kx-toggle kx-toggle--md kx-toggle--group"
         [attr.aria-pressed]="group.isOn(value())"
         [disabled]="disabled() || group.disabled()"
         (click)="group.toggle(value())"
       >
-        <ng-content />
+        <ng-container [ngTemplateOutlet]="content" />
       </button>
     }
+    <!-- One projection slot for both branches: Angular projects default content into a single <ng-content>,
+         so a slot per branch left the single-mode label empty and its radio unnamed. -->
+    <ng-template #content><ng-content /></ng-template>
   `,
+  imports: [NgTemplateOutlet],
   host: { class: 'kx-toggle-group__item' },
 })
 export class KxToggleGroupItem {

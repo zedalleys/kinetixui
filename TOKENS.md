@@ -96,7 +96,7 @@ lands on the same end state.
 | Platform | Status |
 |---|---|
 | React | Implemented and verified on rendered pixels (`check:card-visual`, light + dark) |
-| Angular | Resting surface only (`.kx-card`), verified on rendered pixels by the same gate for the rows it implements — edge, lift, grouped, static (Angular renders the DOM, Chromium paints it). Interactive states are not implemented, so they are not measured; `scripts/visual-gates.mjs` records the coverage as partial |
+| Angular | Implemented in `styles.css` and verified on rendered pixels by the same gate, every row, on the live Angular application: `kx-card` at rest (edge, lift, grouped, static), and `kxCard` on a real `<a href>` or `<button>` for hover, pressed, selected (`aria-current` / `aria-pressed`), focus and motion — the same element-keyed rule as React's `asChild`, so a static card cannot look clickable |
 | SwiftUI, Compose, Flutter | Not changed in this slice — still `border` at full strength and `sm` elevation; `surface-grouped` is emitted to each port's colour constants but not yet in the themeable colour sets |
 
 ### Selection controls
@@ -246,7 +246,7 @@ under reduced motion, same end state.
 | Platform | Status |
 |---|---|
 | React | InputGroup, NumberInput, MultiSelect, InputOTP: implemented and verified on rendered pixels (`check:composite-visual`, light + dark). PasswordInput composes InputGroup and inherits it (not separately gated). MultiSelect has no read-only or disabled prop; that is an API gap, not part of this contract |
-| Angular | `kx-number-input` and `kx-password-input`: implemented in `styles.css` and verified by the same gate. Both gained `aria-invalid` and `aria-describedby` inputs forwarded to the inner input — before, an Angular composite could not be marked invalid accessibly at all. Neither has a read-only input, so number-input is recorded as `partial` coverage. input-group, input-otp and multi-select are still planned (Wave A / overlays) |
+| Angular | `kx-input-group`, `kx-number-input`, `kx-input-otp` and `kx-password-input`: implemented in `styles.css` and verified by the same gate on the live Angular application. The composites forward `aria-invalid` and `aria-describedby` to their inner input; `kx-number-input` has a `readonly` input (read-only fill sampled inside the input, since its start stepper is always muted); `kx-password-input` has no read-only state. InputOTP's caret is static in Angular, so it has no motion. multi-select is still planned (overlays) |
 | SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
 
 ## Role tokens (added on top of `primary`)

@@ -97,6 +97,9 @@ import {
   KxSlider,
   KxTextarea,
 } from '../lib/forms';
+import { KxInputGroup, KxInputGroupAddon, KxInputGroupButton, KxInputGroupInput, KxInputGroupText } from '../lib/input-group';
+import { KxInputOtp } from '../lib/input-otp';
+import { KxRating } from '../lib/rating';
 
 /* ── primitives ─────────────────────────────────────────────────────────── */
 
@@ -155,6 +158,14 @@ import {
         <button kxButton>Deploy</button>
       </kx-card-footer>
     </kx-card>
+
+    <!-- A card that is one action: kxCard on a real link (or button) gives it hover, pressed, focus and selected. -->
+    <a kxCard href="#reports-q3">
+      <kx-card-header>
+        <kx-card-title>Q3 report</kx-card-title>
+        <kx-card-description>Revenue, churn and cohort retention.</kx-card-description>
+      </kx-card-header>
+    </a>
     <!-- kx-usage:end -->
 
     <!-- kx-usage:input-demo -->
@@ -166,7 +177,7 @@ import {
     <!-- kx-usage:end -->
 
     <!-- kx-usage:progress-demo -->
-    <kx-progress [value]="62" />
+    <kx-progress [value]="62" aria-label="Upload progress" />
     <!-- kx-usage:end -->
 
     <!-- kx-usage:separator-demo -->
@@ -310,12 +321,19 @@ export class KxUsageDisplay {
     KxFieldLabel,
     KxFieldMessage,
     KxInput,
+    KxInputGroup,
+    KxInputGroupAddon,
+    KxInputGroupButton,
+    KxInputGroupInput,
+    KxInputGroupText,
+    KxInputOtp,
     KxLabel,
     KxNativeSelect,
     KxNumberInput,
     KxPasswordInput,
     KxRadio,
     KxRadioGroup,
+    KxRating,
     KxSlider,
     KxSwitch,
     KxTextarea,
@@ -360,6 +378,31 @@ export class KxUsageDisplay {
     <kx-password-input [(value)]="password" aria-label="Password" />
     <!-- kx-usage:end -->
 
+    <!-- kx-usage:input-group-demo -->
+    <kx-input-group>
+      <kx-input-group-text>https://</kx-input-group-text>
+      <input kxInputGroupInput aria-label="Website" placeholder="kinetixui.com" />
+    </kx-input-group>
+    <kx-input-group>
+      <kx-input-group-addon>$</kx-input-group-addon>
+      <input kxInputGroupInput aria-label="Amount" placeholder="0.00" inputmode="decimal" />
+      <kx-input-group-text>USD</kx-input-group-text>
+    </kx-input-group>
+    <kx-input-group>
+      <input kxInputGroupInput aria-label="Invite link" value="https://kinetixui.com/invite/7Q2X" readonly />
+      <button kxInputGroupButton>Copy</button>
+    </kx-input-group>
+    <!-- kx-usage:end -->
+
+    <!-- kx-usage:input-otp-demo -->
+    <kx-input-otp [(value)]="code" [length]="6" [groups]="[3, 3]" aria-label="One-time code" />
+    <!-- kx-usage:end -->
+
+    <!-- kx-usage:rating-demo -->
+    <kx-rating [(value)]="rating" aria-label="Rate this article" />
+    <kx-rating [value]="4" readonly size="sm" />
+    <!-- kx-usage:end -->
+
     <!-- kx-usage:field-demo -->
     <kx-field>
       <label kxFieldLabel for="email">Email</label>
@@ -377,6 +420,8 @@ export class KxUsageForms {
   volume = 40;
   quantity: number | null = 1;
   password = '';
+  code = '';
+  rating = 3;
 }
 
 /* ── toggles ────────────────────────────────────────────────────────────── */
@@ -505,7 +550,7 @@ export class ButtonGroupDemo {}
   selector: 'app-circular-progress-demo',
   imports: [KxCircularProgress],
   template: `
-    <kx-circular-progress [value]="72" showValue [size]="56" />
+    <kx-circular-progress [value]="72" showValue [size]="56" aria-label="Storage used" />
     <kx-circular-progress aria-label="Loading" />
   `,
 })

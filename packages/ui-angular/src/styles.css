@@ -29,6 +29,16 @@
  * tokens do, which is the entire point of the architecture.
  */
 
+/* ── box model ──────────────────────────────────────────────────────────── */
+/* Every size in this file is a border-box size, as it is in React (Tailwind's preflight sets it globally). An
+   Angular application has no such reset by default, and under content-box a 44px input with its padding and
+   border rendered 62px tall — and then did not grow at 200% text, because the extra 18px was already spent.
+   Scoped to KinetixUI's own classes and wrapped in :where() so it carries no specificity: an application's
+   own box-sizing rule, and any part here that opts out (the timeline marker), still win. */
+:where([class^='kx-'], [class*=' kx-']),
+:where([class^='kx-'], [class*=' kx-'])::before,
+:where([class^='kx-'], [class*=' kx-'])::after { box-sizing: border-box; }
+
 /* ── button ─────────────────────────────────────────────────────────────── */
 .kx-btn {
   display: inline-flex;
@@ -153,11 +163,54 @@
   background-color: hsl(var(--card));
   color: hsl(var(--card-foreground));
   /* The surface model (TOKENS.md): a soft edge at half the strength of the controls' stroke, and the md
-     elevation step for lift — the same resting card React renders. Static only here; the interactive
-     states are React-first, see the Card section of TOKENS.md. */
+     elevation step for lift — the same resting card React renders. */
   border: var(--border-width-default) solid hsl(var(--border) / 0.5);
   border-radius: var(--radius-container);
   box-shadow: var(--shadow-md);
+}
+/* The interactive card (TOKENS.md, "Card"): only on an element that IS interactive — `a[href]` or `button`
+   carrying kxCard — so a static card can never look clickable.
+     hover     a pointer that can hover: edge to full `--border`, lifted to `--shadow-lg`
+     pressed   `:active`: down to `--shadow-sm` with a `--muted` wash, so it differs from hover in depth AND fill
+     selected  `aria-pressed="true"` or `aria-current`: a 2px `--primary` edge (the border plus an inset 1px) —
+               weight as well as hue — alongside the elevation of whichever state it is in
+     focus     the shared focus ring replaces the elevation and is the strongest edge the card shows
+   box-shadow, border-color and background-color over `--duration-fast`; nothing moves or resizes. */
+:where(a[href], button).kx-card {
+  display: block;
+  appearance: none;
+  padding: 0;
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  transition:
+    box-shadow var(--duration-fast) var(--easing-standard),
+    border-color var(--duration-fast) var(--easing-standard),
+    background-color var(--duration-fast) var(--easing-standard);
+}
+@media (hover: hover) {
+  :is(a[href], button).kx-card:hover { border-color: hsl(var(--border)); box-shadow: var(--shadow-lg); }
+}
+:is(a[href], button).kx-card:active { box-shadow: var(--shadow-sm); background-color: hsl(var(--muted) / 0.4); }
+:is(a[href], button).kx-card:is([aria-pressed='true'], [aria-current]:not([aria-current='false'])) {
+  border-color: hsl(var(--primary));
+  box-shadow: inset 0 0 0 1px hsl(var(--primary)), var(--shadow-md);
+}
+@media (hover: hover) {
+  :is(a[href], button).kx-card:is([aria-pressed='true'], [aria-current]:not([aria-current='false'])):hover {
+    box-shadow: inset 0 0 0 1px hsl(var(--primary)), var(--shadow-lg);
+  }
+}
+:is(a[href], button).kx-card:is([aria-pressed='true'], [aria-current]:not([aria-current='false'])):active {
+  box-shadow: inset 0 0 0 1px hsl(var(--primary)), var(--shadow-sm);
+}
+/* declared last at the highest specificity above, so no hover or selected shadow can hide it */
+:is(a[href], button).kx-card:is(*, [aria-pressed], [aria-current]):focus-visible { box-shadow: var(--shadow-focus); }
+button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled); }
+@media (prefers-reduced-motion: reduce) {
+  :where(a[href], button).kx-card { transition: none; }
 }
 .kx-card-header { display: flex; flex-direction: column; gap: var(--spacing-1); padding: var(--spacing-6); }
 .kx-card-title { font: var(--text-title-md); font-weight: var(--font-weight-semibold); margin: 0; }
@@ -228,8 +281,9 @@
 .kx-checkbox {
   display: inline-grid;
   place-items: center;
-  inline-size: 18px;
-  block-size: 18px;
+  /* rem, not px: a selection control has no text of its own, so its box is what must grow at 200% text */
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
   flex-shrink: 0;
   padding: 0;
   background-color: hsl(var(--background));
@@ -252,15 +306,15 @@
 .kx-checkbox:enabled:active { box-shadow: 0 0 0 5px hsl(var(--foreground) / 0.14); }
 .kx-checkbox:enabled:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .kx-checkbox:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
-.kx-checkbox > svg { inline-size: 14px; block-size: 14px; pointer-events: none; }
+.kx-checkbox > svg { inline-size: 0.875rem; block-size: 0.875rem; pointer-events: none; }
 
 .kx-switch {
   display: inline-flex;
   align-items: center;
-  inline-size: 44px;
-  block-size: 24px;
+  inline-size: 2.75rem;
+  block-size: 1.5rem;
   flex-shrink: 0;
-  padding: 2px;
+  padding: 0.125rem;
   background-color: hsl(var(--tertiary));
   border: var(--border-width-default) solid transparent;
   border-radius: var(--radius-full);
@@ -280,8 +334,8 @@
 .kx-switch__thumb {
   position: relative;
   inset-inline-start: 0;
-  inline-size: 18px;
-  block-size: 18px;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
   border-radius: var(--radius-full);
   background-color: hsl(var(--static-white));
   box-shadow: var(--shadow-sm);
@@ -292,7 +346,7 @@
    which matches ANY rtl ancestor — a switch in an LTR section of an RTL page was flipped too and its thumb
    landed outside the track (check:selection-visual, "direction"). A logical property needs no selector, so
    no build step can rewrite the direction test into a guess (see the React Switch). */
-.kx-switch[aria-checked='true'] .kx-switch__thumb { inset-inline-start: 20px; }
+.kx-switch[aria-checked='true'] .kx-switch__thumb { inset-inline-start: 1.25rem; }
 
 /* ── separator ──────────────────────────────────────────────────────────── */
 .kx-separator { display: block; flex-shrink: 0; background-color: hsl(var(--border)); border: 0; margin: 0; }
@@ -344,6 +398,9 @@
 .kx-tabs { display: block; }
 .kx-tab-list {
   display: inline-flex;
+  /* wraps inside its own width rather than running off a phone at 200% text (React's TabsList does the same) */
+  flex-wrap: wrap;
+  max-inline-size: 100%;
   align-items: center;
   gap: var(--spacing-1);
   border-block-end: var(--border-width-default) solid hsl(var(--border));
@@ -625,8 +682,9 @@
 .kx-radio__input {
   appearance: none;
   margin: 0;
-  inline-size: var(--spacing-5);
-  block-size: var(--spacing-5);
+  /* 1.25rem is --spacing-5 at the default text size; the spacing scale is px, so it would not grow at 200% */
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
   flex-shrink: 0;
   border: var(--border-width-default) solid hsl(var(--muted-foreground));
   border-radius: var(--radius-full);
@@ -642,7 +700,7 @@
    custom property so the hover and pressed layers add to it instead of replacing it */
 .kx-radio__input:checked {
   border-color: hsl(var(--action));
-  --kx-radio-dot: inset 0 0 0 4px hsl(var(--action));
+  --kx-radio-dot: inset 0 0 0 0.25rem hsl(var(--action));
 }
 @media (hover: hover) {
   .kx-radio__input:enabled:hover { --kx-radio-layer: 0 0 0 5px hsl(var(--foreground) / 0.08); }
@@ -655,47 +713,61 @@
 .kx-radio__input:disabled + .kx-radio__label { opacity: var(--opacity-disabled); cursor: not-allowed; }
 
 /* ── slider ─────────────────────────────────────────────────────────────── */
-.kx-slider { display: block; inline-size: 100%; }
+.kx-slider { position: relative; display: block; inline-size: 100%; }
+/* The visible track and fill sit behind a transparent native track. They are placed with logical properties,
+   so the fill grows from the inline start of the slider's own direction (see KxSlider). */
+.kx-slider__track {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 50%;
+  block-size: 0.5rem;
+  margin-block-start: -0.25rem;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background-color: hsl(var(--muted));
+  pointer-events: none;
+}
+.kx-slider__fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: var(--kx-slider-fill, 0%);
+  background-color: hsl(var(--primary));
+}
+.kx-slider:has(.kx-slider__input:disabled) .kx-slider__track { opacity: var(--opacity-disabled); }
 .kx-slider__input {
+  position: relative;
+  display: block;
   appearance: none;
   inline-size: 100%;
-  block-size: var(--spacing-5);
+  /* rem throughout (the px spacing scale's 20 / 8 at the default text size), so the hit area grows with text */
+  block-size: 1.25rem;
   margin: 0;
   background: transparent;
   cursor: pointer;
 }
-/* the filled portion is a gradient stop driven by --kx-slider-fill, so the track follows the real value */
 .kx-slider__input::-webkit-slider-runnable-track {
-  block-size: var(--spacing-2);
+  block-size: 0.5rem;
   border-radius: var(--radius-full);
-  background: linear-gradient(
-    to right,
-    hsl(var(--primary)) var(--kx-slider-fill, 0%),
-    hsl(var(--muted)) var(--kx-slider-fill, 0%)
-  );
+  background: transparent;
 }
 .kx-slider__input::-moz-range-track {
-  block-size: var(--spacing-2);
+  block-size: 0.5rem;
   border-radius: var(--radius-full);
-  background-color: hsl(var(--muted));
-}
-.kx-slider__input::-moz-range-progress {
-  block-size: var(--spacing-2);
-  border-radius: var(--radius-full);
-  background-color: hsl(var(--primary));
+  background: transparent;
 }
 .kx-slider__input::-webkit-slider-thumb {
   appearance: none;
-  margin-block-start: -6px;
-  inline-size: var(--spacing-5);
-  block-size: var(--spacing-5);
+  margin-block-start: -0.375rem;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
   border: var(--border-width-default) solid hsl(var(--primary));
   border-radius: var(--radius-full);
   background-color: hsl(var(--background));
 }
 .kx-slider__input::-moz-range-thumb {
-  inline-size: var(--spacing-5);
-  block-size: var(--spacing-5);
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
   border: var(--border-width-default) solid hsl(var(--primary));
   border-radius: var(--radius-full);
   background-color: hsl(var(--background));
@@ -712,6 +784,7 @@
               draws its own ring and leaves the wrapper at rest, so the ring says which part has focus
    invalid    `aria-invalid="true"` on the inner input (the `aria-invalid` input) → `--destructive`, kept under
               the pointer and when focused
+   read-only  `readonly` on the inner input (kx-number-input's `readonly`) → the inset `--muted` fill, no hover
    disabled   `--opacity-disabled` on the whole field, inert */
 .kx-number-input,
 .kx-password-input {
@@ -724,9 +797,10 @@
     box-shadow var(--duration-instant) var(--easing-standard);
 }
 @media (hover: hover) {
-  .kx-number-input:not(:has(input:is(:focus, :disabled, [aria-invalid='true']))):hover,
-  .kx-password-input:not(:has(input:is(:focus, :disabled, [aria-invalid='true']))):hover { border-color: hsl(var(--muted-foreground)); }
+  .kx-number-input:not(:has(input:is(:focus, :disabled, [readonly], [aria-invalid='true']))):hover,
+  .kx-password-input:not(:has(input:is(:focus, :disabled, [readonly], [aria-invalid='true']))):hover { border-color: hsl(var(--muted-foreground)); }
 }
+.kx-number-input:has(.kx-number-input__input[readonly]) { background-color: hsl(var(--muted)); }
 .kx-number-input:has(.kx-number-input__input:focus),
 .kx-password-input:has(.kx-password-input__input:focus) { border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
 /* after focus and at least as specific, so a focused invalid field keeps its destructive edge */
@@ -802,6 +876,172 @@
 /* inset: the wrapper clips with overflow:hidden, so an outer ring would be cut off at the field's edge */
 .kx-password-input__reveal:focus-visible { outline: none; box-shadow: inset 0 0 0 2px hsl(var(--ring)); }
 
+/* ── input group ────────────────────────────────────────────────────────── */
+/* The same composite-field contract as the number and password inputs above, read from the group's input:
+   rest `--muted-foreground` at 80%; hover the full colour, never over focus, invalid, read-only or disabled;
+   the INPUT focused → `--action` edge and `--shadow-focus` on the shell (a focused add-on button draws its own
+   inset ring instead and leaves the shell at rest); `aria-invalid` → `--destructive`, kept under the pointer
+   and focus; `readonly` → the inset `--muted` fill; a disabled input → the whole group at `--opacity-disabled`. */
+.kx-input-group {
+  display: flex;
+  align-items: center;
+  inline-size: 100%;
+  overflow: hidden;
+  border: var(--border-width-default) solid hsl(var(--muted-foreground) / 0.8);
+  border-radius: var(--radius-field);
+  background-color: hsl(var(--background));
+  font-family: var(--font-family-sans);
+  transition:
+    border-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard),
+    background-color var(--duration-instant) var(--easing-standard);
+}
+@media (hover: hover) {
+  .kx-input-group:not(:has(.kx-input-group__input:is(:focus, :disabled, [readonly], [aria-invalid='true']))):hover { border-color: hsl(var(--muted-foreground)); }
+}
+.kx-input-group:has(.kx-input-group__input[readonly]) { background-color: hsl(var(--muted)); }
+.kx-input-group:has(.kx-input-group__input:focus) { border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
+.kx-input-group:has(.kx-input-group__input[aria-invalid='true']) { border-color: hsl(var(--destructive)); }
+.kx-input-group:has(.kx-input-group__input[aria-invalid='true']:focus) { box-shadow: var(--shadow-focus-destructive); }
+/* The field is disabled when its input is. An add-on button disabled on its own (Copy with nothing to copy) dims
+   only itself: the input beside it still takes typing, so the group must not read as disabled. */
+.kx-input-group:has(.kx-input-group__input:disabled) { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.kx-input-group:not(:has(.kx-input-group__input:disabled)) .kx-input-group__button:disabled { opacity: var(--opacity-disabled); }
+.kx-input-group__input {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  border: 0;
+  padding: var(--spacing-3);
+  background: transparent;
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+  color: hsl(var(--foreground));
+  outline: none;
+}
+.kx-input-group__input::placeholder { color: hsl(var(--muted-foreground)); }
+.kx-input-group__input:disabled { cursor: not-allowed; }
+.kx-input-group__addon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--spacing-2);
+  color: hsl(var(--muted-foreground));
+}
+.kx-input-group__addon--start { padding-inline-start: var(--spacing-3); }
+.kx-input-group__addon--end { padding-inline-end: var(--spacing-3); }
+.kx-input-group__addon > svg { inline-size: 1rem; block-size: 1rem; flex-shrink: 0; }
+.kx-input-group__text {
+  padding-inline: var(--spacing-3);
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+  color: hsl(var(--muted-foreground));
+  white-space: nowrap;
+  user-select: none;
+}
+/* the divider is internal structure, deliberately quieter than the shell's edge */
+.kx-input-group__button {
+  display: flex;
+  flex-shrink: 0;
+  align-self: stretch;
+  align-items: center;
+  gap: var(--spacing-2);
+  appearance: none;
+  margin: 0;
+  border: 0;
+  border-inline-start: var(--border-width-default) solid hsl(var(--input));
+  padding-inline: var(--spacing-3);
+  background-color: hsl(var(--muted));
+  font: var(--text-label-md);
+  font-family: var(--font-family-sans);
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--duration-instant) var(--easing-standard), box-shadow var(--duration-instant) var(--easing-standard);
+}
+/* the selection controls' `--foreground` state layer, as an inset shadow so it composes with the focus ring */
+@media (hover: hover) {
+  .kx-input-group__button:enabled:hover { box-shadow: inset 0 0 0 100vmax hsl(var(--foreground) / 0.08); }
+}
+.kx-input-group__button:focus-visible { box-shadow: inset 0 0 0 2px hsl(var(--ring)); }
+.kx-input-group__button:disabled { cursor: not-allowed; }
+
+/* ── one-time code ──────────────────────────────────────────────────────── */
+/* The cells are decoration of one transparent input laid over them (KxInputOtp). Every cell owns its whole
+   border and each after the first in a group is pulled back a pixel, so a group that wraps at 200% text is
+   still closed at the end it starts from (React's InputOTP learned this the hard way). The cells follow the
+   composite-field contract, read from the input: rest `--muted-foreground` at 80%; hover the full colour, not
+   while focused, invalid or disabled; the ACTIVE cell (where the next character goes) takes `--action` and the
+   focus shadow, drawn above its neighbours; `aria-invalid` → `--destructive` edges; disabled → dimmed, inert. */
+.kx-input-otp {
+  position: relative;
+  display: inline-flex;
+  max-inline-size: 100%;
+}
+.kx-input-otp__cells { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-2); }
+.kx-input-otp__group { display: flex; flex-wrap: wrap; align-items: center; }
+.kx-input-otp__slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border: var(--border-width-default) solid hsl(var(--muted-foreground) / 0.8);
+  background-color: hsl(var(--background));
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+  color: hsl(var(--foreground));
+  transition:
+    border-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard);
+}
+.kx-input-otp__slot:not(:first-child) { margin-inline-start: -1px; }
+.kx-input-otp__slot:first-child { border-start-start-radius: var(--radius-md); border-end-start-radius: var(--radius-md); }
+.kx-input-otp__slot:last-child { border-start-end-radius: var(--radius-md); border-end-end-radius: var(--radius-md); }
+@media (hover: hover) {
+  .kx-input-otp:not(:has(.kx-input-otp__input:is(:focus, :disabled, [aria-invalid='true']))):hover .kx-input-otp__slot { border-color: hsl(var(--muted-foreground)); }
+}
+.kx-input-otp:has(.kx-input-otp__input[aria-invalid='true']) .kx-input-otp__slot { border-color: hsl(var(--destructive)); }
+.kx-input-otp__slot[data-active] { z-index: 1; border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
+.kx-input-otp:has(.kx-input-otp__input[aria-invalid='true']) .kx-input-otp__slot[data-active] { border-color: hsl(var(--destructive)); box-shadow: var(--shadow-focus-destructive); }
+.kx-input-otp:has(.kx-input-otp__input:disabled) { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.kx-input-otp__caret { position: absolute; inline-size: 1px; block-size: 1rem; background-color: hsl(var(--foreground)); pointer-events: none; }
+.kx-input-otp__separator { inline-size: var(--spacing-3); block-size: 2px; border-radius: var(--radius-full); background-color: hsl(var(--muted-foreground)); }
+/* the real input: over the cells, receiving every keystroke, paste and autofill, painting nothing itself */
+.kx-input-otp__input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  font: var(--text-body-md);
+  letter-spacing: -0.5em;
+  outline: none;
+}
+.kx-input-otp__input::selection { background: transparent; }
+.kx-input-otp__input:disabled { cursor: not-allowed; }
+
+/* ── rating ─────────────────────────────────────────────────────────────── */
+/* Each star is a real radio, visually hidden and kept in the tab order, painted through its label (KxRating).
+   The stars are rem-sized, so they grow with the reader's text; a chosen or previewed star is `--warning`
+   filled, an empty one a `--muted-foreground` outline (3:1 against the page, SC 1.4.11). */
+.kx-rating { display: inline-flex; align-items: center; gap: 0.125rem; }
+.kx-rating__item { position: relative; display: inline-flex; padding: 0.125rem; border-radius: var(--radius-sm); }
+label.kx-rating__item { cursor: pointer; }
+.kx-rating__radio { position: absolute; inset: 0; margin: 0; opacity: 0; pointer-events: none; }
+.kx-rating__star { inline-size: 1.25rem; block-size: 1.25rem; fill: transparent; stroke: hsl(var(--muted-foreground)); stroke-width: 1.5; stroke-linejoin: round; }
+.kx-rating--sm .kx-rating__star { inline-size: 1rem; block-size: 1rem; }
+.kx-rating--lg .kx-rating__star { inline-size: 1.5rem; block-size: 1.5rem; }
+.kx-rating__star--on { fill: hsl(var(--warning)); stroke: hsl(var(--warning)); }
+.kx-rating__item:has(.kx-rating__radio:focus-visible) { box-shadow: var(--shadow-focus); }
+.kx-rating[aria-disabled='true'] { opacity: var(--opacity-disabled); }
+.kx-rating[aria-disabled='true'] .kx-rating__item { cursor: not-allowed; }
+
 /* ── field ──────────────────────────────────────────────────────────────── */
 .kx-field { display: flex; flex-direction: column; gap: var(--spacing-2); }
 .kx-field__description { margin: 0; font: var(--text-body-sm); font-family: var(--font-family-sans); color: hsl(var(--muted-foreground)); }
@@ -828,9 +1068,10 @@
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--easing-standard), color var(--duration-fast) var(--easing-standard);
 }
-.kx-toggle--sm { min-inline-size: var(--spacing-8); block-size: var(--spacing-8); padding-inline: var(--spacing-2); }
-.kx-toggle--md { min-inline-size: var(--spacing-10); block-size: var(--spacing-10); padding-inline: var(--spacing-3); }
-.kx-toggle--lg { min-inline-size: var(--spacing-12); block-size: var(--spacing-12); padding-inline: var(--spacing-4); }
+/* the square is rem (--spacing-8 / 10 / 12 at the default text size): it holds the label, so it grows with it */
+.kx-toggle--sm { min-inline-size: 2rem; block-size: 2rem; padding-inline: var(--spacing-2); }
+.kx-toggle--md { min-inline-size: 2.5rem; block-size: 2.5rem; padding-inline: var(--spacing-3); }
+.kx-toggle--lg { min-inline-size: 3rem; block-size: 3rem; padding-inline: var(--spacing-4); }
 .kx-toggle--outline { border-color: hsl(var(--input)); }
 .kx-toggle:hover { background-color: hsl(var(--muted)); }
 .kx-toggle:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
@@ -849,6 +1090,8 @@
 /* ── segmented control ──────────────────────────────────────────────────── */
 .kx-segmented {
   display: inline-flex;
+  flex-wrap: wrap;
+  max-inline-size: 100%;
   align-items: stretch;
   padding: var(--spacing-1);
   border-radius: var(--radius-md);
@@ -910,6 +1153,9 @@
   .kx-input,
   .kx-number-input,
   .kx-password-input,
+  .kx-input-group,
+  .kx-input-group__button,
+  .kx-input-otp__slot,
   .kx-tab,
   .kx-tag__remove { transition: none; }
 }
@@ -1047,7 +1293,9 @@
 .kx-circular-progress:not([aria-valuenow]) svg { animation: kx-spin 1s linear infinite; }
 @media (prefers-reduced-motion: reduce) {
   .kx-circular-progress__indicator { transition: none; }
-  .kx-circular-progress:not([aria-valuenow]) svg { animation-duration: 2.4s; }
+  /* 3s, as the spinner: it keeps turning so the page does not read as hung, but no faster than the 3s
+     reduced-motion floor (check:angular-browser, "reduced motion") — it was 2.4s */
+  .kx-circular-progress:not([aria-valuenow]) svg { animation-duration: 3s; }
 }
 
 /* ── code block ─────────────────────────────────────────────────────────── */
@@ -1281,3 +1529,31 @@
 .kx-timeline__content { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .kx-timeline__title { font: var(--text-body-md); color: hsl(var(--foreground)); }
 .kx-timeline__description { font: var(--text-body-sm); color: hsl(var(--muted-foreground)); }
+
+/* ── forced colours ─────────────────────────────────────────────────────── */
+/* Every focus ring above is a box-shadow, and a forced palette (Windows contrast themes, `forced-colors:
+   active`) removes box-shadow entirely. With one on, the keyboard had no visible position on any control
+   (check:angular-browser, "forced colours": every button, field, tab, toggle and selection control). An
+   outline survives the mode and is painted in a system colour, so it is the indicator here; nothing changes
+   outside it. Parts clipped by their field's `overflow: hidden` (composite inputs, the reveal toggle) draw it
+   inset, and the visually hidden radios of a segment or single-select toggle group draw it on their label. */
+@media (forced-colors: active) {
+  :is(
+      .kx-btn, .kx-fab, .kx-input, .kx-textarea, .kx-native-select, .kx-checkbox, .kx-switch, .kx-radio__input,
+      .kx-slider__input, .kx-tab, .kx-tab-panel, .kx-toggle, .kx-tag__remove, .kx-banner [kxBannerAction],
+      .kx-inform [kxInformAction], a.kx-card, button.kx-card
+    ):focus-visible,
+  :is(.kx-segmented__radio, .kx-toggle-group__radio):focus-visible + label,
+  .kx-rating__item:has(.kx-rating__radio:focus-visible),
+  .kx-input-otp:has(.kx-input-otp__input:focus-visible) .kx-input-otp__slot[data-active] {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+  :is(.kx-number-input__input, .kx-password-input__input, .kx-password-input__reveal, .kx-input-group__input, .kx-input-group__button):focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+  /* the slider's track and fill are plain elements, whose backgrounds the mode would flatten to Canvas */
+  .kx-slider__track { forced-color-adjust: none; background-color: GrayText; }
+  .kx-slider__fill { background-color: Highlight; }
+}

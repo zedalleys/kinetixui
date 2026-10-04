@@ -69,6 +69,9 @@ export {
   KxSlider,
   KxTextarea,
 } from './lib/forms';
+export { KxInputGroup, KxInputGroupAddon, KxInputGroupButton, KxInputGroupInput, KxInputGroupText } from './lib/input-group';
+export { KxInputOtp } from './lib/input-otp';
+export { KxRating } from './lib/rating';
 export { KxTab, KxTabList, KxTabPanel, KxTabs } from './lib/tabs';
 export type { KxCodeBlockFile } from './lib/content';
 export {

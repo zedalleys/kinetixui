@@ -54,6 +54,12 @@
     "KxInform",
     "KxInformVariant",
     "KxInput",
+    "KxInputGroup",
+    "KxInputGroupAddon",
+    "KxInputGroupButton",
+    "KxInputGroupInput",
+    "KxInputGroupText",
+    "KxInputOtp",
     "KxKbd",
     "KxKbdGroup",
     "KxLabel",
@@ -71,6 +77,7 @@
     "KxQuote",
     "KxRadio",
     "KxRadioGroup",
+    "KxRating",
     "KxSegment",
     "KxSegmentedControl",
     "KxSeparator",
@@ -264,7 +271,7 @@
     {
       "name": "KxCard",
       "kind": "component",
-      "selector": "kx-card",
+      "selector": "kx-card, a[kxCard], button[kxCard]",
       "inputs": [],
       "outputs": [],
       "projectsContent": true,
@@ -562,6 +569,84 @@
       "exported": true
     },
     {
+      "name": "KxInputGroup",
+      "kind": "component",
+      "selector": "kx-input-group",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxInputGroupAddon",
+      "kind": "component",
+      "selector": "kx-input-group-addon",
+      "inputs": [
+        "align"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxInputGroupButton",
+      "kind": "directive",
+      "selector": "button[kxInputGroupButton]",
+      "inputs": [
+        "type"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxInputGroupInput",
+      "kind": "directive",
+      "selector": "input[kxInputGroupInput]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxInputGroupText",
+      "kind": "component",
+      "selector": "kx-input-group-text",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxInputOtp",
+      "kind": "component",
+      "selector": "kx-input-otp",
+      "inputs": [
+        "allow",
+        "aria-describedby",
+        "aria-invalid",
+        "aria-label",
+        "aria-labelledby",
+        "disabled",
+        "groups",
+        "length",
+        "value"
+      ],
+      "outputs": [
+        "completed",
+        "valueChange"
+      ],
+      "projectsContent": false,
+      "standalone": true,
+      "extends": "KxValueBase",
+      "exported": true
+    },
+    {
       "name": "KxKbd",
       "kind": "directive",
       "selector": "kbd[kxKbd]",
@@ -680,6 +765,7 @@
         "disabled",
         "max",
         "min",
+        "readonly",
         "step",
         "value"
       ],
@@ -783,6 +869,28 @@
         "valueChange"
       ],
       "projectsContent": true,
+      "standalone": true,
+      "extends": "KxValueBase",
+      "exported": true
+    },
+    {
+      "name": "KxRating",
+      "kind": "component",
+      "selector": "kx-rating",
+      "inputs": [
+        "aria-label",
+        "aria-labelledby",
+        "disabled",
+        "max",
+        "readonly",
+        "size",
+        "value"
+      ],
+      "outputs": [
+        "changed",
+        "valueChange"
+      ],
+      "projectsContent": false,
       "standalone": true,
       "extends": "KxValueBase",
       "exported": true
