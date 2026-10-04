@@ -142,6 +142,37 @@ import {
   type KxTocItem,
 } from '../lib/navigation';
 
+import {
+  KxAlertDialog,
+  KxAlertDialogAction,
+  KxAlertDialogCancel,
+  KxAlertDialogContent,
+  KxDialog,
+  KxDialogClose,
+  KxDialogContent,
+  KxDialogDescription,
+  KxDialogFooter,
+  KxDialogHeader,
+  KxDialogTitle,
+  KxDialogTrigger,
+  KxDrawer,
+  KxDrawerContent,
+  KxModal,
+  KxSheet,
+  KxSheetContent,
+} from '../lib/dialog';
+import {
+  KxHoverCard,
+  KxHoverCardContent,
+  KxHoverCardTrigger,
+  KxPopover,
+  KxPopoverContent,
+  KxPopoverTrigger,
+  KxTooltip,
+  KxTooltipContent,
+  KxTooltipTrigger,
+} from '../lib/floating';
+
 /* ── primitives ─────────────────────────────────────────────────────────── */
 
 @Component({
@@ -929,4 +960,161 @@ export class AppBarDemo {}
   `,
 })
 export class FooterDemo {}
+// kx-usage:end
+
+/* ── overlays ───────────────────────────────────────────────────────────── */
+
+// kx-usage:dialog-demo
+@Component({
+  selector: 'app-dialog-demo',
+  imports: [KxButton, KxInput, KxLabel, KxDialog, KxDialogTrigger, KxDialogContent, KxDialogHeader, KxDialogTitle, KxDialogDescription, KxDialogFooter, KxDialogClose],
+  template: `
+    <kx-dialog [(open)]="open">
+      <button kxButton kxDialogTrigger variant="Outline">Edit profile</button>
+      <dialog kxDialogContent>
+        <kx-dialog-header>
+          <h2 kxDialogTitle>Edit profile</h2>
+          <p kxDialogDescription>Make changes to your profile here.</p>
+        </kx-dialog-header>
+        <label kxLabel for="dialog-name">Name</label>
+        <input kxInput id="dialog-name" value="KinetixUI" />
+        <kx-dialog-footer>
+          <button kxButton kxDialogClose variant="Outline">Cancel</button>
+          <button kxButton type="button" (click)="open = false">Save changes</button>
+        </kx-dialog-footer>
+      </dialog>
+    </kx-dialog>
+  `,
+})
+export class DialogDemo {
+  open = false;
+}
+// kx-usage:end
+
+// kx-usage:alert-dialog-demo
+@Component({
+  selector: 'app-alert-dialog-demo',
+  imports: [KxButton, KxAlertDialog, KxDialogTrigger, KxAlertDialogContent, KxDialogHeader, KxDialogTitle, KxDialogDescription, KxDialogFooter, KxAlertDialogCancel, KxAlertDialogAction],
+  template: `
+    <kx-alert-dialog>
+      <button kxButton kxDialogTrigger variant="Outline">Delete account</button>
+      <dialog kxAlertDialogContent>
+        <kx-dialog-header>
+          <h2 kxDialogTitle>Delete your account?</h2>
+          <p kxDialogDescription>Your projects and files are removed for everyone. This cannot be undone.</p>
+        </kx-dialog-header>
+        <kx-dialog-footer>
+          <button kxButton kxAlertDialogCancel variant="Outline">Cancel</button>
+          <button kxButton kxAlertDialogAction variant="Destructive" (click)="deleteAccount()">Delete account</button>
+        </kx-dialog-footer>
+      </dialog>
+    </kx-alert-dialog>
+  `,
+})
+export class AlertDialogDemo {
+  deleteAccount(): void {}
+}
+// kx-usage:end
+
+// kx-usage:modal-demo
+@Component({
+  selector: 'app-modal-demo',
+  imports: [KxButton, KxModal, KxDialogTrigger],
+  template: `
+    <kx-modal type="Confirmation" title="Publish this report?" description="Everyone in the workspace can see it once it is published." (action)="publish()">
+      <button kxButton kxDialogTrigger variant="Outline">Publish</button>
+    </kx-modal>
+  `,
+})
+export class ModalDemo {
+  publish(): void {}
+}
+// kx-usage:end
+
+// kx-usage:sheet-demo
+@Component({
+  selector: 'app-sheet-demo',
+  imports: [KxButton, KxSheet, KxDialogTrigger, KxSheetContent, KxDialogHeader, KxDialogTitle, KxDialogDescription, KxDialogFooter, KxDialogClose],
+  template: `
+    <kx-sheet>
+      <button kxButton kxDialogTrigger variant="Outline">Open</button>
+      <dialog kxSheetContent side="end">
+        <kx-dialog-header>
+          <h2 kxDialogTitle>Edit profile</h2>
+          <p kxDialogDescription>Make changes to your profile here.</p>
+        </kx-dialog-header>
+        <kx-dialog-footer><button kxButton kxDialogClose>Done</button></kx-dialog-footer>
+      </dialog>
+    </kx-sheet>
+  `,
+})
+export class SheetDemo {}
+// kx-usage:end
+
+// kx-usage:drawer-demo
+@Component({
+  selector: 'app-drawer-demo',
+  imports: [KxButton, KxDrawer, KxDialogTrigger, KxDrawerContent, KxDialogHeader, KxDialogTitle, KxDialogDescription, KxDialogFooter, KxDialogClose],
+  template: `
+    <kx-drawer>
+      <button kxButton kxDialogTrigger variant="Outline">Open drawer</button>
+      <dialog kxDrawerContent>
+        <kx-dialog-header>
+          <h2 kxDialogTitle>Move goal</h2>
+          <p kxDialogDescription>Set your daily activity goal.</p>
+        </kx-dialog-header>
+        <kx-dialog-footer>
+          <button kxButton kxDialogClose variant="Outline">Cancel</button>
+          <button kxButton kxDialogClose>Submit</button>
+        </kx-dialog-footer>
+      </dialog>
+    </kx-drawer>
+  `,
+})
+export class DrawerDemo {}
+// kx-usage:end
+
+// kx-usage:popover-demo
+@Component({
+  selector: 'app-popover-demo',
+  imports: [KxButton, KxPopover, KxPopoverTrigger, KxPopoverContent],
+  template: `
+    <kx-popover>
+      <button kxButton kxPopoverTrigger variant="Outline">Open popover</button>
+      <kx-popover-content labelledby="popover-demo-title">
+        <p id="popover-demo-title"><strong>Dimensions</strong></p>
+        <p>Set the dimensions for the layer.</p>
+      </kx-popover-content>
+    </kx-popover>
+  `,
+})
+export class PopoverDemo {}
+// kx-usage:end
+
+// kx-usage:tooltip-demo
+@Component({
+  selector: 'app-tooltip-demo',
+  imports: [KxButton, KxTooltip, KxTooltipTrigger, KxTooltipContent],
+  template: `
+    <kx-tooltip>
+      <button kxButton kxTooltipTrigger variant="Outline" type="button">Hover</button>
+      <kx-tooltip-content>Add to library</kx-tooltip-content>
+    </kx-tooltip>
+  `,
+})
+export class TooltipDemo {}
+// kx-usage:end
+
+// kx-usage:hover-card-demo
+@Component({
+  selector: 'app-hover-card-demo',
+  imports: [KxHoverCard, KxHoverCardTrigger, KxHoverCardContent],
+  template: `
+    <kx-hover-card>
+      <a kxHoverCardTrigger href="/about">@kinetixui</a>
+      <kx-hover-card-content>One token architecture, in motion across every platform.</kx-hover-card-content>
+    </kx-hover-card>
+  `,
+})
+export class HoverCardDemo {}
 // kx-usage:end

@@ -90,7 +90,9 @@ nothing different in it. Import it after `@kinetixui/tokens/css` and after
   `<button kxButton>`, `<input kxInput>`, `<label kxLabel>`,
   `<input kxInputGroupInput>`, `<a kxCard>` / `<button kxCard>` for a card
   that is one action, and `<nav kxBreadcrumb>`, `<nav kxPagination>`,
-  `<header kxAppBar>`, `<footer kxFooter>` for navigation landmarks.
+  `<header kxAppBar>`, `<footer kxFooter>` for navigation landmarks, and
+  `<dialog kxDialogContent>` (or `kxAlertDialogContent`, `kxSheetContent`,
+  `kxDrawerContent`) for a modal surface, which is a real `<dialog>`.
 - **Components where KinetixUI generates the markup**: `<kx-card>`,
   `<kx-badge>`, `<kx-tabs>`.
 - **`ControlValueAccessor`** on form controls, so `[(ngModel)]`,
@@ -147,6 +149,19 @@ suite, so it can't drift from the real API.
   triggers and never open one. Expanding and collapsing animate the content's
   height on the motion tokens, and under reduced motion land on the same state
   without animating.
+- **Overlays use the browser's top layer, not a portal.** Dialog, alert
+  dialog, modal, sheet and drawer are a native `<dialog>` opened with
+  `showModal()`, so the page behind is inert; popover, tooltip and hover card
+  use the `popover` attribute. Nothing moves in the DOM, so a surface inside an
+  RTL region opens right-to-left. One stack decides what Escape and an outside
+  press close: only the topmost surface, and a press inside a popover nested
+  in a dialog is inside both. Focus moves in, Tab stays inside a modal
+  surface, and on close focus returns to the trigger, or, when the trigger is
+  gone, to the surface that contained it. The page stops scrolling while any
+  modal surface is open, and starts again only when the last one closes.
+  Floating surfaces take a logical side (`start`, `end`), flip and shift to
+  stay on screen, follow their trigger through scrolling containers, and
+  scroll inside themselves at 200% text.
 
 These behaviours are covered by unit tests in jsdom and by
 `check:angular-browser`, which runs the package as a live Angular application
@@ -171,11 +186,12 @@ example. Where Angular or the DOM already provides the concept — Direction
 Provider, Form — the tab shows that idiom, labelled **Native equivalent**,
 and it is not counted as Angular coverage.
 
-**Overlays are deliberately one wave.** Dialog, Alert Dialog, Select, Popover,
-Tooltip, Dropdown Menu, Context Menu, Hover Card, Sheet and Drawer need one
-shared overlay and focus-management architecture. Implementing them
-individually would mean building that architecture five times and getting it
-subtly different each time, so they arrive together.
+**Overlays share one architecture.** Every overlay needs the same layer:
+stacking, focus, dismissal, scroll locking and positioning. Building that
+separately per component would mean getting it subtly different each time, so
+it was built once, with the dialog family (dialog, alert dialog, modal, sheet,
+drawer, popover, tooltip, hover card), and the menus, listboxes and
+notifications still to come are built on it.
 
 ## What Stable would require
 
@@ -186,7 +202,9 @@ not by itself change the label, and nothing here is graded on a curve:
 1. **Catalogue target reached** — the waves above complete, or every remaining
    gap reclassified as a native equivalent or a composition with a reason.
 2. **Overlays complete**, on one shared architecture with focus trapping,
-   scroll locking, dismissal and return-focus behaviour.
+   scroll locking, dismissal and return-focus behaviour. The architecture and
+   the dialog family are in place; menus, listboxes and notifications are
+   not.
 3. **Forms complete** — every control a `ControlValueAccessor`, validation
    states wired to `aria-invalid`, and error messaging tested.
 4. **Documentation complete** — every shipped component reachable from its own

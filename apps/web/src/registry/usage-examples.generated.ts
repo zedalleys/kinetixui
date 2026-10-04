@@ -17,6 +17,9 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   "alert-demo": {
     "angular": "<kx-alert>\n  <kx-alert-title>Heads up!</kx-alert-title>\n  <kx-alert-description>You can add components to your app using the CLI.</kx-alert-description>\n</kx-alert>",
   },
+  "alert-dialog-demo": {
+    "angular": "@Component({\n  selector: 'app-alert-dialog-demo',\n  imports: [KxButton, KxAlertDialog, KxDialogTrigger, KxAlertDialogContent, KxDialogHeader, KxDialogTitle, KxDialogDescription, KxDialogFooter, KxAlertDialogCancel, KxAlertDialogAction],\n  template: `\n    <kx-alert-dialog>\n      <button kxButton kxDialogTrigger variant=\"Outline\">Delete account</button>\n      <dialog kxAlertDialogContent>\n        <kx-dialog-header>\n          <h2 kxDialogTitle>Delete your account?</h2>\n          <p kxDialogDescription>Your projects and files are removed for everyone. This cannot be undone.</p>\n        </kx-dialog-header>\n        <kx-dialog-footer>\n          <button kxButton kxAlertDialogCancel variant=\"Outline\">Cancel</button>\n          <button kxButton kxAlertDialogAction variant=\"Destructive\" (click)=\"deleteAccount()\">Delete account</button>\n        </kx-dialog-footer>\n      </dialog>\n    </kx-alert-dialog>\n  `,\n})\nexport class AlertDialogDemo {\n  deleteAccount(): void {}\n}",
+  },
   "app-bar-demo": {
     "angular": "@Component({\n  selector: 'app-app-bar-demo',\n  imports: [KxButton, KxAppBar, KxAppBarBrand, KxAppBarNav, KxAppBarLink, KxAppBarActions],\n  template: `\n    <header kxAppBar [sticky]=\"false\">\n      <a kxAppBarBrand href=\"/\">Acme</a>\n      <nav kxAppBarNav aria-label=\"Primary\">\n        <a kxAppBarLink href=\"/\" active>Overview</a>\n        <a kxAppBarLink href=\"/reports\">Reports</a>\n        <a kxAppBarLink href=\"/settings\">Settings</a>\n      </nav>\n      <div kxAppBarActions><button kxButton type=\"button\" size=\"sm\">New report</button></div>\n    </header>\n  `,\n})\nexport class AppBarDemo {}",
   },
@@ -71,11 +74,17 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   "description-list-demo": {
     "angular": "@Component({\n  selector: 'app-description-list-demo',\n  imports: [KxDescriptionList, KxDescriptionListItem],\n  template: `\n    <dl kxDescriptionList>\n      <div kxDescriptionListItem term=\"Status\">Active</div>\n      <div kxDescriptionListItem term=\"Plan\">Team &middot; annual</div>\n      <div kxDescriptionListItem term=\"Notes\" layout=\"stacked\">\n        Renews automatically unless cancelled 30 days before the term ends.\n      </div>\n    </dl>\n  `,\n})\nexport class DescriptionListDemo {}",
   },
+  "dialog-demo": {
+    "angular": "@Component({\n  selector: 'app-dialog-demo',\n  imports: [KxButton, KxInput, KxLabel, KxDialog, KxDialogTrigger, KxDialogContent, KxDialogHeader, KxDialogTitle, KxDialogDescription, KxDialogFooter, KxDialogClose],\n  template: `\n    <kx-dialog [(open)]=\"open\">\n      <button kxButton kxDialogTrigger variant=\"Outline\">Edit profile</button>\n      <dialog kxDialogContent>\n        <kx-dialog-header>\n          <h2 kxDialogTitle>Edit profile</h2>\n          <p kxDialogDescription>Make changes to your profile here.</p>\n        </kx-dialog-header>\n        <label kxLabel for=\"dialog-name\">Name</label>\n        <input kxInput id=\"dialog-name\" value=\"KinetixUI\" />\n        <kx-dialog-footer>\n          <button kxButton kxDialogClose variant=\"Outline\">Cancel</button>\n          <button kxButton type=\"button\" (click)=\"open = false\">Save changes</button>\n        </kx-dialog-footer>\n      </dialog>\n    </kx-dialog>\n  `,\n})\nexport class DialogDemo {\n  open = false;\n}",
+  },
   "direction-provider-demo": {
     "angular": "<!-- No provider: the DOM's own dir attribute cascades, and Angular CDK's Directionality reads it. -->\n<div dir=\"rtl\">\n  <input kxInput placeholder=\"ابحث\" />\n  <button kxButton>حفظ</button>\n</div>",
     "swift": "// No provider to port: layout direction is an environment value, and every view below reads it.\nVStack {\n    KinetixInput(text: $query, placeholder: \"Search\")\n    KinetixButton(action: save) { Text(\"Save\") }\n}\n.environment(\\.layoutDirection, .rightToLeft)",
     "kotlin": "// No provider to port: layout direction is a CompositionLocal, and every composable below reads it.\nCompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {\n    Column {\n        KinetixInput(value = query, onValueChange = { query = it }, placeholder = \"Search\")\n        KinetixButton(onClick = save) { Text(\"Save\") }\n    }\n}",
     "dart": "// No provider to port: Directionality is inherited by every widget below it.\nDirectionality(\n  textDirection: TextDirection.rtl,\n  child: Column(\n    mainAxisSize: MainAxisSize.min,\n    children: <Widget>[\n      const KinetixInput(placeholder: 'Search'),\n      KinetixButton(onPressed: save, child: const Text('Save')),\n    ],\n  ),\n),",
+  },
+  "drawer-demo": {
+    "angular": "@Component({\n  selector: 'app-drawer-demo',\n  imports: [KxButton, KxDrawer, KxDialogTrigger, KxDrawerContent, KxDialogHeader, KxDialogTitle, KxDialogDescription, KxDialogFooter, KxDialogClose],\n  template: `\n    <kx-drawer>\n      <button kxButton kxDialogTrigger variant=\"Outline\">Open drawer</button>\n      <dialog kxDrawerContent>\n        <kx-dialog-header>\n          <h2 kxDialogTitle>Move goal</h2>\n          <p kxDialogDescription>Set your daily activity goal.</p>\n        </kx-dialog-header>\n        <kx-dialog-footer>\n          <button kxButton kxDialogClose variant=\"Outline\">Cancel</button>\n          <button kxButton kxDialogClose>Submit</button>\n        </kx-dialog-footer>\n      </dialog>\n    </kx-drawer>\n  `,\n})\nexport class DrawerDemo {}",
   },
   "empty-demo": {
     "angular": "<kx-empty>\n  <kx-empty-header>\n    <kx-empty-media variant=\"icon\">📁</kx-empty-media>\n    <kx-empty-title>No projects yet</kx-empty-title>\n    <kx-empty-description>Create one to get started.</kx-empty-description>\n  </kx-empty-header>\n  <kx-empty-content>\n    <button kxButton>New project</button>\n  </kx-empty-content>\n</kx-empty>",
@@ -91,6 +100,9 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   },
   "form-demo": {
     "angular": "@Component({\n  selector: 'app-signup',\n  imports: [ReactiveFormsModule, KxButton, KxField, KxFieldLabel, KxFieldMessage, KxInput],\n  template: `\n    <form [formGroup]=\"form\" (ngSubmit)=\"submit()\">\n      <kx-field>\n        <label kxFieldLabel for=\"email\">Email</label>\n        <input kxInput id=\"email\" formControlName=\"email\" [attr.aria-invalid]=\"email.invalid && email.touched\" />\n        @if (email.invalid && email.touched) {\n          <kx-field-message variant=\"error\">Enter a valid address.</kx-field-message>\n        }\n      </kx-field>\n      <button kxButton type=\"submit\" [disabled]=\"form.invalid\">Sign up</button>\n    </form>\n  `,\n})\nexport class SignupForm {\n  readonly form = new FormGroup({\n    email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),\n  });\n  get email() {\n    return this.form.controls.email;\n  }\n  submit(): void {\n    if (this.form.valid) console.log(this.form.getRawValue());\n  }\n}",
+  },
+  "hover-card-demo": {
+    "angular": "@Component({\n  selector: 'app-hover-card-demo',\n  imports: [KxHoverCard, KxHoverCardTrigger, KxHoverCardContent],\n  template: `\n    <kx-hover-card>\n      <a kxHoverCardTrigger href=\"/about\">@kinetixui</a>\n      <kx-hover-card-content>One token architecture, in motion across every platform.</kx-hover-card-content>\n    </kx-hover-card>\n  `,\n})\nexport class HoverCardDemo {}",
   },
   "image-demo": {
     "angular": "@Component({\n  selector: 'app-image-demo',\n  imports: [KxImage],\n  template: `\n    <kx-image src=\"/cover.jpg\" alt=\"Harbour at dusk\" ratio=\"16:9\">\n      <span kxImageFallback>Unavailable</span>\n    </kx-image>\n  `,\n})\nexport class ImageDemo {}",
@@ -122,6 +134,9 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   "metric-demo": {
     "angular": "<kx-metric label=\"Revenue\" value=\"$48,120\" trend=\"up\" change=\"+12.4%\" />",
   },
+  "modal-demo": {
+    "angular": "@Component({\n  selector: 'app-modal-demo',\n  imports: [KxButton, KxModal, KxDialogTrigger],\n  template: `\n    <kx-modal type=\"Confirmation\" title=\"Publish this report?\" description=\"Everyone in the workspace can see it once it is published.\" (action)=\"publish()\">\n      <button kxButton kxDialogTrigger variant=\"Outline\">Publish</button>\n    </kx-modal>\n  `,\n})\nexport class ModalDemo {\n  publish(): void {}\n}",
+  },
   "native-select-demo": {
     "angular": "<select kxNativeSelect aria-label=\"Country\">\n  <option value=\"pt\">Portugal</option>\n  <option value=\"es\">Spain</option>\n</select>",
   },
@@ -140,6 +155,9 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   "password-input-demo": {
     "angular": "<kx-password-input [(value)]=\"password\" aria-label=\"Password\" />",
   },
+  "popover-demo": {
+    "angular": "@Component({\n  selector: 'app-popover-demo',\n  imports: [KxButton, KxPopover, KxPopoverTrigger, KxPopoverContent],\n  template: `\n    <kx-popover>\n      <button kxButton kxPopoverTrigger variant=\"Outline\">Open popover</button>\n      <kx-popover-content labelledby=\"popover-demo-title\">\n        <p id=\"popover-demo-title\"><strong>Dimensions</strong></p>\n        <p>Set the dimensions for the layer.</p>\n      </kx-popover-content>\n    </kx-popover>\n  `,\n})\nexport class PopoverDemo {}",
+  },
   "progress-demo": {
     "angular": "<kx-progress [value]=\"62\" aria-label=\"Upload progress\" />",
   },
@@ -157,6 +175,9 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   },
   "separator-demo": {
     "angular": "<kx-separator />\n<kx-separator orientation=\"vertical\" />",
+  },
+  "sheet-demo": {
+    "angular": "@Component({\n  selector: 'app-sheet-demo',\n  imports: [KxButton, KxSheet, KxDialogTrigger, KxSheetContent, KxDialogHeader, KxDialogTitle, KxDialogDescription, KxDialogFooter, KxDialogClose],\n  template: `\n    <kx-sheet>\n      <button kxButton kxDialogTrigger variant=\"Outline\">Open</button>\n      <dialog kxSheetContent side=\"end\">\n        <kx-dialog-header>\n          <h2 kxDialogTitle>Edit profile</h2>\n          <p kxDialogDescription>Make changes to your profile here.</p>\n        </kx-dialog-header>\n        <kx-dialog-footer><button kxButton kxDialogClose>Done</button></kx-dialog-footer>\n      </dialog>\n    </kx-sheet>\n  `,\n})\nexport class SheetDemo {}",
   },
   "skeleton-demo": {
     "angular": "<kx-skeleton style=\"block-size: 1rem; inline-size: 60%\" />",
@@ -199,5 +220,8 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   },
   "toggle-group-demo": {
     "angular": "<kx-toggle-group [(value)]=\"marks\" aria-label=\"Text style\">\n  <kx-toggle-group-item value=\"bold\">B</kx-toggle-group-item>\n  <kx-toggle-group-item value=\"italic\">I</kx-toggle-group-item>\n  <kx-toggle-group-item value=\"underline\">U</kx-toggle-group-item>\n</kx-toggle-group>",
+  },
+  "tooltip-demo": {
+    "angular": "@Component({\n  selector: 'app-tooltip-demo',\n  imports: [KxButton, KxTooltip, KxTooltipTrigger, KxTooltipContent],\n  template: `\n    <kx-tooltip>\n      <button kxButton kxTooltipTrigger variant=\"Outline\" type=\"button\">Hover</button>\n      <kx-tooltip-content>Add to library</kx-tooltip-content>\n    </kx-tooltip>\n  `,\n})\nexport class TooltipDemo {}",
   },
 };

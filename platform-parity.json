@@ -109,7 +109,7 @@
   },
   "coverage": {
     "React": 98,
-    "Angular": 56,
+    "Angular": 64,
     "SwiftUI": 90,
     "Compose": 90,
     "Flutter": 90
@@ -131,6 +131,7 @@
     ],
     "alert-dialog": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -308,6 +309,7 @@
     ],
     "dialog": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -323,6 +325,7 @@
     ],
     "drawer": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -372,6 +375,7 @@
     ],
     "hover-card": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -475,6 +479,7 @@
     ],
     "modal": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -535,6 +540,7 @@
     ],
     "popover": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -601,6 +607,7 @@
     ],
     "sheet": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -716,6 +723,7 @@
     ],
     "tooltip": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -748,12 +756,6 @@
   },
   "platformNotes": {},
   "guidance": {
-    "alert-dialog": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
-      }
-    },
     "audio-player": {
       "Angular": {
         "type": "planned",
@@ -852,12 +854,6 @@
         "wave": "advanced"
       }
     },
-    "dialog": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
-      }
-    },
     "diff-viewer": {
       "Angular": {
         "type": "planned",
@@ -880,12 +876,6 @@
       "Flutter": {
         "type": "native-equivalent",
         "reason": "Flutter carries layout direction in the widget tree. Wrap a subtree in Directionality and every widget below reads it — there is no provider to port."
-      }
-    },
-    "drawer": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
       }
     },
     "dropdown-menu": {
@@ -916,12 +906,6 @@
       "Flutter": {
         "type": "composition",
         "reason": "Form is react-hook-form glue with no native analogue. KinetixField and the platform's own state hold the same job."
-      }
-    },
-    "hover-card": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
       }
     },
     "json-viewer": {
@@ -964,12 +948,6 @@
       "Angular": {
         "type": "planned",
         "wave": "data"
-      }
-    },
-    "modal": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
       }
     },
     "multi-select": {
@@ -1016,12 +994,6 @@
         "wave": "overlays"
       }
     },
-    "popover": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
-      }
-    },
     "resizable": {
       "Angular": {
         "type": "planned",
@@ -1035,12 +1007,6 @@
       }
     },
     "select": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
-      }
-    },
-    "sheet": {
       "Angular": {
         "type": "planned",
         "wave": "overlays"
@@ -1062,12 +1028,6 @@
       "Angular": {
         "type": "planned",
         "wave": "layout"
-      }
-    },
-    "tooltip": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
       }
     },
     "tour": {
@@ -1142,6 +1102,7 @@
     },
     "alert-dialog": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1319,6 +1280,7 @@
     },
     "dialog": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1334,6 +1296,7 @@
     },
     "drawer": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1383,6 +1346,7 @@
     },
     "hover-card": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1486,6 +1450,7 @@
     },
     "modal": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1546,6 +1511,7 @@
     },
     "popover": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1612,6 +1578,7 @@
     },
     "sheet": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1727,6 +1694,7 @@
     },
     "tooltip": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1752,7 +1720,7 @@
       "beta": 98
     },
     "Angular": {
-      "preview": 56
+      "preview": 64
     },
     "SwiftUI": {
       "experimental": 90
@@ -1840,6 +1808,15 @@
         "published",
         "rtl"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -2428,6 +2405,15 @@
         "largeText",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -2472,6 +2458,15 @@
         "interaction",
         "largeText",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -2634,6 +2629,15 @@
         "accessibility",
         "build",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -2979,6 +2983,15 @@
         "largeText",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -3183,6 +3196,15 @@
         "interaction",
         "largeText",
         "published",
+        "rtl"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
         "rtl"
       ],
       "SwiftUI": [
@@ -3410,6 +3432,15 @@
         "interaction",
         "largeText",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3845,6 +3876,15 @@
         "published",
         "rtl"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -3909,14 +3949,14 @@
       "published": 98
     },
     "Angular": {
-      "build": 56,
-      "interaction": 56,
-      "accessibility": 56,
-      "rtl": 23,
-      "largeText": 29,
-      "reducedMotion": 4,
+      "build": 64,
+      "interaction": 64,
+      "accessibility": 64,
+      "rtl": 31,
+      "largeText": 37,
+      "reducedMotion": 12,
       "visual": 0,
-      "published": 56
+      "published": 64
     },
     "SwiftUI": {
       "build": 90,

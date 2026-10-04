@@ -491,7 +491,9 @@ async function segmentControl(context, platform, theme) {
         return { x: c.x, y: c.y, width: c.width, height: c.height };
       }, A.card);
       const cf = await frame(page, cardBox);
-      const cardPx = cf.at(cardBox.x + 8, cardBox.y + cardBox.height - 4);
+      // the card's own fill beside the track, at the track's height: a card taller than the viewport has no
+      // bottom edge on screen to sample
+      const cardPx = cf.at(cardBox.x + 8, cy);
       check(lum(trackPx) < lum(cardPx), `${name} track is an inset well in the Card`, `track L ${lum(trackPx).toFixed(4)} vs card L ${lum(cardPx).toFixed(4)}`);
     }
     await page.close();

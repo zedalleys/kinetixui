@@ -215,7 +215,8 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
 .kx-card-header { display: flex; flex-direction: column; gap: var(--spacing-1); padding: var(--spacing-6); }
 .kx-card-title { font: var(--text-title-md); font-weight: var(--font-weight-semibold); margin: 0; }
 .kx-card-description { font: var(--text-body-sm); color: hsl(var(--muted-foreground)); margin: 0; }
-.kx-card-content { padding: 0 var(--spacing-6) var(--spacing-6); }
+/* a custom element is inline by default, and an inline box drops its inline padding around the blocks inside it */
+.kx-card-content { display: block; padding: 0 var(--spacing-6) var(--spacing-6); }
 .kx-card-footer { display: flex; align-items: center; gap: var(--spacing-2); padding: 0 var(--spacing-6) var(--spacing-6); }
 
 /* ── label ──────────────────────────────────────────────────────────────── */
@@ -1882,8 +1883,12 @@ label.kx-rating__item { cursor: pointer; }
 }
 
 /* ── navigation bar ─────────────────────────────────────────────────────── */
+/* Wraps rather than squeezing: when the actions leave the titles less than about five characters (two text
+   actions at 200% text on a phone), the actions move to a second row at the inline end instead of the title
+   being broken one letter per line (found composing it with a sheet and a drawer, Wave C1). */
 .kx-navigation-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--spacing-2);
   inline-size: 100%;
@@ -1918,10 +1923,10 @@ label.kx-rating__item { cursor: pointer; }
 }
 .kx-navigation-bar__back:active { background-color: hsl(var(--foreground) / 0.12); }
 .kx-navigation-bar__back:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
-.kx-navigation-bar__titles { display: flex; flex: 1 1 auto; flex-direction: column; min-inline-size: 0; overflow-wrap: break-word; }
+.kx-navigation-bar__titles { display: flex; flex: 1 1 5em; flex-direction: column; min-inline-size: 0; overflow-wrap: break-word; }
 .kx-navigation-bar__title { font: var(--text-body-lg); font-weight: var(--font-weight-medium); color: hsl(var(--foreground)); }
 .kx-navigation-bar__info { font: var(--text-body-sm); color: hsl(var(--muted-foreground)); }
-.kx-navigation-bar__actions { display: flex; flex-shrink: 0; align-items: center; gap: var(--spacing-1); }
+.kx-navigation-bar__actions { display: flex; flex-shrink: 0; align-items: center; gap: var(--spacing-1); margin-inline-start: auto; }
 .kx-navigation-bar__actions:empty { display: none; }
 
 /* ── app bar ────────────────────────────────────────────────────────────── */
@@ -2067,6 +2072,307 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
   .kx-footer__link { transition: none; }
 }
 
+/* ── overlays: dialog family and floating surfaces ───────────────────────── */
+/* TOKENS.md, "Overlays". Every surface here renders in the browser's top layer (overlay.ts), so none of them
+   carries a z-index: stacking is the order surfaces opened in. Both box types arrive with user-agent styles
+   (`dialog` and `[popover]` are centred, bordered, painted `Canvas`); each is reset to the token contract.
+
+   Elevation (TOKENS.md, "Elevation contract"): a floating surface is `shadow-lg`, one step above a resting
+   card's `md`, so a popover over a card reads as above it; a modal surface is `shadow-xl` over a scrim.
+
+   Motion: the open state is reached through `@starting-style` and left through `transition-behavior:
+   allow-discrete` on `display` and `overlay`, so a closing surface keeps painting for its exit while it is
+   already closed to the accessibility tree, the keyboard and the pointer. */
+
+.kx-overlay-root { display: contents; }
+
+/* modal surfaces: dialog, alert dialog, modal, sheet, drawer */
+.kx-dialog {
+  position: fixed;
+  margin: auto;
+  padding: var(--spacing-6);
+  inline-size: min(32rem, 100% - 2 * var(--spacing-4));
+  max-inline-size: none;
+  max-block-size: calc(100% - 2 * var(--spacing-4));
+  overflow: auto;
+  overscroll-behavior: contain;
+  container-type: inline-size;
+  border: var(--border-width-default) solid hsl(var(--border));
+  border-radius: var(--radius-surface);
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  box-shadow: var(--shadow-xl);
+  font-family: var(--font-family-sans);
+  outline: none;
+  /* closed, and where opening starts from */
+  opacity: 0;
+  scale: 0.95;
+  transition:
+    opacity var(--duration-instant) var(--easing-exit),
+    scale var(--duration-instant) var(--easing-exit),
+    overlay var(--duration-instant) var(--easing-exit) allow-discrete,
+    display var(--duration-instant) var(--easing-exit) allow-discrete;
+}
+.kx-dialog:not([open]) { pointer-events: none; }
+.kx-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  opacity: 1;
+  scale: 1;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-enter);
+}
+@starting-style {
+  .kx-dialog[open] { opacity: 0; scale: 0.95; }
+}
+/* The scrim. Black at 40% in light and 60% in dark — not `foreground`, which is near-white in dark and would
+   lift the page behind the dialog toward the dialog's own surface instead of setting it back. */
+.kx-dialog::backdrop {
+  background-color: hsl(var(--static-black) / 0.4);
+  opacity: 0;
+  transition:
+    opacity var(--duration-instant) var(--easing-exit),
+    overlay var(--duration-instant) var(--easing-exit) allow-discrete,
+    display var(--duration-instant) var(--easing-exit) allow-discrete;
+}
+.dark .kx-dialog::backdrop { background-color: hsl(var(--static-black) / 0.6); }
+.kx-dialog[open]::backdrop { opacity: 1; transition-duration: var(--duration-fast); transition-timing-function: var(--easing-enter); }
+@starting-style {
+  .kx-dialog[open]::backdrop { opacity: 0; }
+}
+
+.kx-dialog__header { display: flex; flex-direction: column; gap: var(--spacing-2); }
+.kx-dialog:has(> .kx-dialog__close) .kx-dialog__header { padding-inline-end: var(--spacing-8); }
+.kx-dialog__title { margin: 0; font: var(--text-title-dialog); color: hsl(var(--popover-foreground)); overflow-wrap: break-word; }
+.kx-dialog__description { margin: 0; font: var(--text-body-md); color: hsl(var(--muted-foreground)); overflow-wrap: break-word; }
+/* Actions toward the inline end, in DOM order. In a narrow surface they stack — in the same order, so the
+   order on screen is the order Tab takes (React reverses them visually; this does not). */
+.kx-dialog__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--spacing-2);
+  margin-block-start: var(--spacing-2);
+}
+@container (max-width: 24rem) {
+  .kx-dialog__footer { flex-direction: column; align-items: stretch; }
+  .kx-dialog__footer > .kx-btn { white-space: normal; }
+}
+
+/* The built-in close button: last in the DOM, drawn at the inline-end of the top edge. */
+.kx-dialog__close {
+  position: absolute;
+  inset-block-start: var(--spacing-4);
+  inset-inline-end: var(--spacing-4);
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--easing-standard),
+    color var(--duration-fast) var(--easing-standard),
+    box-shadow var(--duration-fast) var(--easing-standard);
+}
+.kx-dialog__close svg { inline-size: 1rem; block-size: 1rem; }
+@media (hover: hover) {
+  .kx-dialog__close:hover { background-color: hsl(var(--foreground) / 0.08); color: hsl(var(--foreground)); }
+}
+.kx-dialog__close:active { background-color: hsl(var(--foreground) / 0.12); }
+.kx-dialog__close:focus-visible { outline: none; box-shadow: var(--shadow-focus); color: hsl(var(--foreground)); }
+
+/* modal: header (title + close), divider, body, divider, footer — React's Modal */
+.kx-modal { padding: 0; gap: 0; inline-size: min(30rem, 100% - 2 * var(--spacing-4)); }
+.kx-modal[open] { gap: 0; }
+.kx-modal__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-5) var(--spacing-6) var(--spacing-3);
+}
+.kx-modal__title { flex: 1; min-inline-size: 0; }
+.kx-modal__close { position: static; flex: none; }
+.kx-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: var(--spacing-5) var(--spacing-6);
+  border-block: var(--border-width-default) solid hsl(var(--border));
+}
+.kx-modal__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4) var(--spacing-6);
+}
+@container (max-width: 24rem) {
+  .kx-modal__footer { flex-direction: column; align-items: stretch; }
+  .kx-modal__footer > .kx-btn { white-space: normal; }
+}
+
+/* sheet: a panel against one edge. `start` / `end` are logical, so the edge is chosen by the direction the
+   sheet's own element resolves to, with no direction selector anywhere. The inline sides slide by animating
+   their own logical margin (out past the edge by exactly their size); top and bottom slide by translation. */
+.kx-sheet {
+  --kx-sheet-size: min(24rem, 100% - 3rem);
+  margin: 0;
+  inset: auto;
+  max-inline-size: none;
+  max-block-size: none;
+  border-radius: 0;
+  border-width: 0;
+  opacity: 1;
+  scale: none;
+  transition:
+    margin var(--duration-base) var(--easing-exit),
+    translate var(--duration-base) var(--easing-exit),
+    overlay var(--duration-base) var(--easing-exit) allow-discrete,
+    display var(--duration-base) var(--easing-exit) allow-discrete;
+}
+.kx-sheet[open] { opacity: 1; scale: none; transition-duration: var(--duration-slow); transition-timing-function: var(--easing-enter); }
+.kx-sheet:is([data-side='start'], [data-side='end']) {
+  inset-block: 0;
+  block-size: 100%;
+  inline-size: var(--kx-sheet-size);
+  padding-block: max(var(--spacing-6), env(safe-area-inset-top)) max(var(--spacing-6), env(safe-area-inset-bottom));
+}
+.kx-sheet[data-side='end'] {
+  inset-inline-end: 0;
+  border-inline-start-width: var(--border-width-default);
+  margin-inline-end: calc(-1 * var(--kx-sheet-size));
+}
+.kx-sheet[data-side='start'] {
+  inset-inline-start: 0;
+  border-inline-end-width: var(--border-width-default);
+  margin-inline-start: calc(-1 * var(--kx-sheet-size));
+}
+.kx-sheet[data-side='end'][open] { margin-inline-end: 0; }
+.kx-sheet[data-side='start'][open] { margin-inline-start: 0; }
+@starting-style {
+  .kx-sheet[data-side='end'][open] { margin-inline-end: calc(-1 * var(--kx-sheet-size)); }
+  .kx-sheet[data-side='start'][open] { margin-inline-start: calc(-1 * var(--kx-sheet-size)); }
+}
+.kx-sheet:is([data-side='top'], [data-side='bottom']) {
+  inset-inline: 0;
+  inline-size: 100%;
+  max-block-size: 85dvh;
+}
+.kx-sheet[data-side='top'] {
+  inset-block-start: 0;
+  border-block-end-width: var(--border-width-default);
+  translate: 0 -100%;
+  padding-block-start: max(var(--spacing-6), env(safe-area-inset-top));
+}
+.kx-sheet[data-side='bottom'] {
+  inset-block-end: 0;
+  border-block-start-width: var(--border-width-default);
+  translate: 0 100%;
+  padding-block-end: max(var(--spacing-6), env(safe-area-inset-bottom));
+}
+.kx-sheet:is([data-side='top'], [data-side='bottom'])[open] { translate: 0 0; }
+@starting-style {
+  .kx-sheet[data-side='top'][open] { translate: 0 -100%; }
+  .kx-sheet[data-side='bottom'][open] { translate: 0 100%; }
+}
+
+/* drawer: a bottom sheet with rounded top corners and a grab handle */
+.kx-drawer {
+  padding-block-start: var(--spacing-3);
+  border-start-start-radius: var(--radius-xxl);
+  border-start-end-radius: var(--radius-xxl);
+}
+.kx-drawer__handle {
+  flex: none;
+  align-self: center;
+  inline-size: 6.25rem;
+  block-size: var(--spacing-2);
+  border-radius: var(--radius-full);
+  background-color: hsl(var(--muted-foreground) / 0.4);
+}
+
+/* floating surfaces: popover, hover card, tooltip — placed by overlay.ts, which publishes the room each one
+   has as --kx-available-width / --kx-available-height. Larger text grows the surface until it meets that
+   room, and then it scrolls inside itself rather than running off the screen. */
+.kx-floating {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  max-inline-size: var(--kx-available-width, calc(100vw - 2 * var(--spacing-2)));
+  max-block-size: var(--kx-available-height, calc(100vh - 2 * var(--spacing-2)));
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: var(--spacing-4);
+  border: var(--border-width-default) solid hsl(var(--border));
+  border-radius: var(--radius-control);
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  box-shadow: var(--shadow-lg);
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+  overflow-wrap: break-word;
+  outline: none;
+  opacity: 0;
+  translate: var(--kx-from, 0 0);
+  transition:
+    opacity var(--duration-instant) var(--easing-exit),
+    translate var(--duration-instant) var(--easing-exit),
+    overlay var(--duration-instant) var(--easing-exit) allow-discrete,
+    display var(--duration-instant) var(--easing-exit) allow-discrete;
+}
+/* where it settles from: 4px back toward its trigger, on the side it actually opened on (after direction and
+   collisions — `data-placement` is that resolved, physical side) */
+.kx-floating[data-placement='bottom'] { --kx-from: 0 -4px; }
+.kx-floating[data-placement='top'] { --kx-from: 0 4px; }
+.kx-floating[data-placement='left'] { --kx-from: 4px 0; }
+.kx-floating[data-placement='right'] { --kx-from: -4px 0; }
+.kx-floating:popover-open {
+  opacity: 1;
+  translate: 0 0;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-enter);
+}
+@starting-style {
+  .kx-floating:popover-open { opacity: 0; translate: var(--kx-from, 0 0); }
+}
+.kx-popover { inline-size: 18rem; }
+.kx-hover-card { inline-size: 16rem; }
+/* content stacks with the token gap; the surface owns the spacing, so its children carry no margins of their own */
+.kx-popover:popover-open,
+.kx-hover-card:popover-open { display: flex; flex-direction: column; gap: var(--spacing-2); }
+.kx-popover > *,
+.kx-hover-card > * { margin: 0; }
+/* The tooltip is the inverse surface (`action`), small and quick: it labels, it does not hold content. Its
+   transparent edge costs nothing here and becomes a visible outline under a forced palette, where its fill is
+   flattened to Canvas and the edge is the only thing that says where it is. */
+.kx-tooltip {
+  inline-size: max-content;
+  max-inline-size: min(20rem, var(--kx-available-width, 20rem));
+  padding: var(--spacing-1) var(--spacing-3);
+  border-color: transparent;
+  background-color: hsl(var(--action));
+  color: hsl(var(--action-foreground));
+  box-shadow: none;
+  font: var(--text-body-sm);
+  font-family: var(--font-family-sans);
+}
+.kx-tooltip:popover-open { transition-duration: var(--duration-instant); }
+
+/* Overlay motion tells the reader where a surface came from; under reduced motion it simply appears and
+   disappears, in the same open and closed states (the discrete `display` / `overlay` hand-off goes with it). */
+@media (prefers-reduced-motion: reduce) {
+  .kx-dialog,
+  .kx-dialog::backdrop,
+  .kx-dialog__close,
+  .kx-floating { transition: none; }
+}
+
 /* ── forced colours ─────────────────────────────────────────────────────── */
 /* Every focus ring above is a box-shadow, and a forced palette (Windows contrast themes, `forced-colors:
    active`) removes box-shadow entirely. With one on, the keyboard had no visible position on any control
@@ -2080,7 +2386,7 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
       .kx-slider__input, .kx-tab, .kx-tab-panel, .kx-toggle, .kx-tag__remove, .kx-banner [kxBannerAction],
       .kx-inform [kxInformAction], a.kx-card, button.kx-card, .kx-accordion__trigger, .kx-breadcrumb__link,
       .kx-pagination__link, .kx-toc__link, .kx-tab-bar__item, .kx-navigation-bar__back, .kx-app-bar__toggle,
-      .kx-app-bar__link, a.kx-app-bar__brand, .kx-footer__link
+      .kx-app-bar__link, a.kx-app-bar__brand, .kx-footer__link, .kx-dialog__close
     ):focus-visible,
   :is(.kx-segmented__radio, .kx-toggle-group__radio):focus-visible + label,
   .kx-rating__item:has(.kx-rating__radio:focus-visible),

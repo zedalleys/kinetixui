@@ -31,14 +31,14 @@
       "published": 98
     },
     "Angular": {
-      "build": 56,
-      "interaction": 56,
-      "accessibility": 56,
-      "rtl": 23,
-      "largeText": 29,
-      "reducedMotion": 4,
+      "build": 64,
+      "interaction": 64,
+      "accessibility": 64,
+      "rtl": 31,
+      "largeText": 37,
+      "reducedMotion": 12,
       "visual": 0,
-      "published": 56
+      "published": 64
     },
     "SwiftUI": {
       "build": 90,
@@ -577,6 +577,7 @@
         "components": [
           "accordion",
           "alert",
+          "alert-dialog",
           "app-bar",
           "aspect-ratio",
           "avatar",
@@ -592,10 +593,13 @@
           "code-block",
           "collapsible",
           "description-list",
+          "dialog",
+          "drawer",
           "empty",
           "fab",
           "field",
           "footer",
+          "hover-card",
           "image",
           "inform",
           "input",
@@ -606,18 +610,21 @@
           "list",
           "marquee",
           "metric",
+          "modal",
           "native-select",
           "navigation-bar",
           "number-input",
           "page-header",
           "pagination",
           "password-input",
+          "popover",
           "progress",
           "quote",
           "radio-group",
           "rating",
           "segmented-control",
           "separator",
+          "sheet",
           "skeleton",
           "slider",
           "spinner",
@@ -630,7 +637,28 @@
           "textarea",
           "timeline",
           "toggle",
-          "toggle-group"
+          "toggle-group",
+          "tooltip"
+        ]
+      },
+      {
+        "file": "scripts/angular-overlays.mjs",
+        "kinds": [
+          "accessibility",
+          "interaction",
+          "largeText",
+          "reducedMotion",
+          "rtl"
+        ],
+        "components": [
+          "alert-dialog",
+          "dialog",
+          "drawer",
+          "hover-card",
+          "modal",
+          "popover",
+          "sheet",
+          "tooltip"
         ]
       }
     ],
@@ -978,6 +1006,30 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "rtl": [
+          "scripts/angular-overlays.mjs:751-916"
+        ],
+        "largeText": [
+          "scripts/angular-overlays.mjs:917-1013"
+        ],
+        "reducedMotion": [
+          "scripts/angular-overlays.mjs:1014-1146"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -2215,6 +2267,30 @@
           "npm: @kinetixui/ui"
         ]
       },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "rtl": [
+          "scripts/angular-overlays.mjs:751-916"
+        ],
+        "largeText": [
+          "scripts/angular-overlays.mjs:917-1013"
+        ],
+        "reducedMotion": [
+          "scripts/angular-overlays.mjs:1014-1146"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
+        ]
+      },
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
@@ -2310,6 +2386,30 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "rtl": [
+          "scripts/angular-overlays.mjs:751-916"
+        ],
+        "largeText": [
+          "scripts/angular-overlays.mjs:917-1013"
+        ],
+        "reducedMotion": [
+          "scripts/angular-overlays.mjs:1014-1146"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -2651,6 +2751,30 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "rtl": [
+          "scripts/angular-overlays.mjs:751-916"
+        ],
+        "largeText": [
+          "scripts/angular-overlays.mjs:917-1013"
+        ],
+        "reducedMotion": [
+          "scripts/angular-overlays.mjs:1014-1146"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -3381,6 +3505,30 @@
           "npm: @kinetixui/ui"
         ]
       },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "rtl": [
+          "scripts/angular-overlays.mjs:751-916"
+        ],
+        "largeText": [
+          "scripts/angular-overlays.mjs:917-1013"
+        ],
+        "reducedMotion": [
+          "scripts/angular-overlays.mjs:1014-1146"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
+        ]
+      },
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
@@ -3831,6 +3979,30 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "rtl": [
+          "scripts/angular-overlays.mjs:751-916"
+        ],
+        "largeText": [
+          "scripts/angular-overlays.mjs:917-1013"
+        ],
+        "reducedMotion": [
+          "scripts/angular-overlays.mjs:1014-1146"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -4312,6 +4484,30 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "rtl": [
+          "scripts/angular-overlays.mjs:751-916"
+        ],
+        "largeText": [
+          "scripts/angular-overlays.mjs:917-1013"
+        ],
+        "reducedMotion": [
+          "scripts/angular-overlays.mjs:1014-1146"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -5280,6 +5476,30 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-overlays.mjs:190-750"
+        ],
+        "rtl": [
+          "scripts/angular-overlays.mjs:751-916"
+        ],
+        "largeText": [
+          "scripts/angular-overlays.mjs:917-1013"
+        ],
+        "reducedMotion": [
+          "scripts/angular-overlays.mjs:1014-1146"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
