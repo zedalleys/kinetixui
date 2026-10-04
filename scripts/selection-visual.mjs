@@ -14,8 +14,8 @@
  * It measures two platforms with one set of assertions:
  *
  *   React     the `States` stories in the built Storybook
- *   Angular   the DOM Angular itself renders for the same states (src/lib/selection-render.spec.ts, run
- *             with KX_ANGULAR_RENDER_OUT), painted with the package's own styles.css and the generated
+ *   Angular   the same states, live in the Angular browser harness (packages/ui-angular/browser, fixture
+ *             src/fixtures/selection.ts), painted with the package's own styles.css and the generated
  *             token CSS. The markup is the package's output, not a hand-written imitation of it.
  *
  * ── Method ───────────────────────────────────────────────────────────────

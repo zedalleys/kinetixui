@@ -5,15 +5,16 @@ import { KxInputGroup, KxInputGroupButton, KxInputGroupInput, KxInputGroupText }
 import { KxInputOtp } from '../lib/input-otp';
 
 /**
- * InputGroup, InputOTP, NumberInput and PasswordInput — Angular's composite fields — rendered by Angular in every state
- * the composite-field contract names (TOKENS.md, "Composite fields"): the subject
+ * InputGroup, InputOTP, NumberInput and PasswordInput — Angular's composite fields — rendered by Angular in
+ * every state the composite-field contract names (TOKENS.md, "Composite fields"): the subject
  * `scripts/composite-visual.mjs` paints in Chromium.
  *
  * This component is mounted twice. `browser/` bootstraps it as a live Angular application in Chromium — the page
- * `scripts/composite-visual.mjs` measures, with the package's styles.css and the generated token CSS and nothing else — so
- * hover, focus, keyboard and state changes run through the real templates, bindings and change detection.
- * `src/lib/*-render.spec.ts` mounts the same class in jsdom and asserts the semantics the gate's selectors rely
- * on, so a selector that stops matching fails there first, with a readable message. Each field carries `data-kx-case` — the same keys the React `EntryStates` stories use.
+ * `scripts/composite-visual.mjs` measures, with the package's styles.css and the generated token CSS and nothing
+ * else — so hover, focus, keyboard and state changes run through the real templates, bindings and change
+ * detection. `src/lib/*-render.spec.ts` mounts the same class in jsdom and asserts the semantics the gate's
+ * selectors rely on, so a selector that stops matching fails there first, with a readable message. Each field
+ * carries `data-kx-case` — the same keys the React `EntryStates` stories use.
  *
  * The invalid state is the inner input's `aria-invalid`, forwarded from the component, with the error text it
  * describes.

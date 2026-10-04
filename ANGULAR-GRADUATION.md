@@ -6,20 +6,22 @@ CI — and this document describes it; where the two disagree, the script is rig
 
 Publication is distribution, not maturity. The package is on npm and stays Preview.
 
-## Current truth (computed, 2026-10-03, main `476f316` + this change)
+## Current truth (computed, 2026-10-04, main `7ea47f0` + Wave A)
 
 | | Count | Source |
 |---|---|---|
-| Implemented | 43 of 98 | `components.manifest.json` |
+| Implemented | 46 of 98 | `components.manifest.json` |
 | Native-equivalent | 2 (`direction-provider`, `form`) | manifest `platformGuidance`, each with its reason |
-| Planned | 53 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
+| Planned | 50 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
 | `catalogComplete` | false | manifest |
-| Evidence (verification.json) | build 43 · interaction 43 · accessibility 43 · rtl 2 · largeText 0 · reducedMotion 0 · visual 0 | generated from the tests |
-| Rendered visual/state gate | 8 components in full (`check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs) and card partially (`check:card-visual`, resting surface only) | `scripts/visual-gates.mjs` |
+| Evidence (verification.json) | build 46 · interaction 46 · accessibility 46 · rtl 14 · largeText 19 · reducedMotion 1 · visual 0 | generated from the tests |
+| Rendered visual/state gate | 14 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs; `check:composite-visual`: input-group, number-input, input-otp, password-input), no `partial` marks | `scripts/visual-gates.mjs` |
 
-The counts the brief remembered (43 / 2 / 53, Preview, catalogue incomplete) are still current. Every
-interaction and accessibility claim comes from jsdom unit suites; Angular has no real-browser accessibility
-(axe), RTL, large-text or reduced-motion evidence yet.
+Wave A moved Angular's evidence into a real browser. `check:angular-browser` (scripts/angular-browser.mjs)
+builds the package's fixtures AOT and bootstraps them as a live, zoneless Angular application in Chromium,
+and the four visual gates measure that same live application instead of serialised jsdom DOM. Every page
+proves it is Angular before it is measured (the root carries `ng-version`, and every public directive's
+compiled selector must match the live DOM somewhere).
 
 ## What Stable means
 
@@ -39,28 +41,28 @@ maturity — they are statements about today, and CI fails the moment one is fal
 
 | Dimension | Criterion | Kind | Today |
 |---|---|---|---|
-| Catalogue | No Angular entry is still planned | gate | **open** — 53 planned |
+| Catalogue | No Angular entry is still planned | gate | **open** — 50 planned |
 | Catalogue | Every native-equivalent / composition entry carries its reason | always | met |
 | Catalogue | `catalogComplete` is true only when nothing is planned | always | met |
-| Build / distribution | Every implemented component compiles in CI (ng-packagr, strict templates) | gate | met — 43/43 |
+| Build / distribution | Every implemented component compiles in CI (ng-packagr, strict templates) | gate | met — 46/46 |
 | Build / distribution | CI builds the package, checks the public API snapshot, runs the tests and this guard; the clean-consumer install + AOT build runs (`angular-package.yml`) | always | met |
-| Behaviour | Every implemented component has `interaction` evidence | gate | met — 43/43 |
-| Behaviour | `interaction` wherever React has it | gate | met — 14/14 |
-| Accessibility | Every implemented component has `accessibility` evidence | gate | met — 43/43 (jsdom) |
-| Accessibility | `accessibility` wherever React has it | gate | met — 43/43 |
-| Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | **open** — 0/43 |
-| RTL | `rtl` wherever React has it | gate | **open** — 1/6 (input, radio-group, slider, switch, textarea missing) |
-| Large text | `largeText` wherever React has it | gate | **open** — 0/12 (React gained native-select and tabs in Visual Slice 3, and number-input in Visual Slice 4, so the bar rose; React's input-group is not owed — Angular's is still planned) |
-| Large text | …from a real browser (`large-text.mjs`) | gate | **open** — 0/12 |
-| Motion | `reducedMotion` wherever React has it | gate | **open** — 0/1 (switch) |
-| Motion | …from a real browser (`motion.mjs`) | gate | **open** — 0/1 |
-| Visual | A rendered visual/state gate covers Angular wherever one covers React | gate | **open** — 8/10: card and number-input are measured for Angular but recorded as `partial` in `visual-gates.mjs`, which the guard does not count — card for its resting surface only (no interactive Card), number-input for every row except read-only (`kx-number-input` has no readonly input). Visual Slice 4 added number-input to the bar and measured it the same day; password-input is measured for Angular too, but React's PasswordInput is not separately gated, so it is not owed |
+| Behaviour | Every implemented component has `interaction` evidence | gate | met — 46/46 (jsdom, and a real keyboard in Chromium for the 27 interactive components) |
+| Behaviour | `interaction` wherever React has it | gate | met — 15/15 |
+| Accessibility | Every implemented component has `accessibility` evidence | gate | met — 46/46 |
+| Accessibility | `accessibility` wherever React has it | gate | met — 46/46 |
+| Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | met — 46/46 (`angular-browser.mjs`: axe over every usage example and state fixture, light and dark, plus forced colours and reduced motion) |
+| RTL | `rtl` wherever React has it | gate | met — 7/7 (Angular measures 14 in four direction cases) |
+| Large text | `largeText` wherever React has it | gate | met — 14/14 (React's bar rose to include input-group and input-otp when Angular implemented them; Angular measures 19) |
+| Large text | …from a real browser (`large-text.mjs`) | gate | met — 14/14 |
+| Motion | `reducedMotion` wherever React has it | gate | met — 1/1 (switch) |
+| Motion | …from a real browser (`motion.mjs`) | gate | met — 1/1 |
+| Visual | A rendered visual/state gate covers Angular wherever one covers React | gate | met — 12/12: the interactive Card (`kxCard` on a link or button) and `kx-number-input`'s `readonly` closed the two `partial` marks, and input-group and input-otp arrived measured. password-input is measured too but not owed (React's PasswordInput is not separately gated) |
 | Visual | Every registered visual gate exists and runs in CI | always | met |
 | Visual | A visual gate claims Angular only for components Angular implements | always | met |
 | Documentation | The package README's counts, component list and Preview label match the manifest and evidence | always | met (it was stale — 31 components, 69 symbols — and is corrected in this change) |
 | CI | The guard itself: fails if `maturity` is `stable` with any gate criterion open | — | in `ci.yml` |
 
-5 of 13 gate criteria are met. Angular stays Preview.
+12 of 13 gate criteria are met; only the catalogue is open (50 planned). Angular stays Preview.
 
 `published` is reported but is not a criterion. Neither is `visual` from verification.json: that kind
 means comparison against stored reference images, which KinetixUI does not keep on any platform.
@@ -79,33 +81,53 @@ Run against deliberately broken inputs during this change (none committed):
   it, 8/9.
 - Visual Slice 4: `check:composite-visual` claims Angular number-input with a `partial` mark (no read-only
   state). Without the mark the visual-parity criterion would read 9/10 — an over-claim; with it, 8/10.
+- Wave A, 15 controls, each a one-line break restored straight after (logs: the Wave A report). Every one
+  was caught by the gate named:
+  - `maturity: "stable"` → `check:angular-graduation` fails on the one open criterion (catalogue, 48 of 98
+    covered) and the README label.
+  - The switch dropped from the `reducedMotion` passage → `check:angular-browser` fails: "named but not
+    measured: switch" (a claim without its subject).
+  - Slider fill placed with `left` → the RTL pass fails in both RTL cases.
+  - Checkbox sized in px → the 200% pass fails (does not scale, target under 24px).
+  - The `border-box` reset removed → the 200% pass fails (input 62px tall, page no longer fits 390px).
+  - Forced-colours outlines removed → every Tab stop fails "visible focus indicator".
+  - Progress example unlabelled → axe `aria-progressbar-name`, light and dark.
+  - Rating Home/End removed → the keyboard pass fails both.
+  - Toggle-group label content removed → "each radio is named by its label" fails.
+  - Switch removed from the reduced-motion list → 300ms of motion under reduced motion fails.
+  - Interactive card focus ring removed → `check:card-visual` (Angular) fails "focus out-contrasts hover".
+  - Number-input read-only fill removed → `check:composite-visual` (Angular) fails "read-only is distinct".
+  - OTP active-cell ring removed → `check:composite-visual` (Angular) fails "focus is the strongest state".
+  - `check:angular-browser` removed from `a11y-browser.yml` → `gen:verification --check` fails: the
+    browser evidence no longer counts.
+  - The number-input `partial` mark re-added → the visual criterion drops to 11/12 and the score to 11/13.
 
 ## The waves
 
-Derived from the manifest's own `wave` tags (`inputs` 3, `layout` 11, `navigation` 8, `overlays` 17,
-`data` 7, `advanced` 7), reordered by dependency. The single largest block of open criteria is about the
-43 components that already exist, not the 53 that do not — so the evidence instrument comes first, before
-more unverified components are added.
+Derived from the manifest's own `wave` tags (now `layout` 11, `navigation` 8, `overlays` 17, `data` 7,
+`advanced` 7 — the `inputs` tag closed with Wave A), reordered by dependency. The evidence instrument came
+first, before more unverified components were added; every later wave arrives through it.
 
-### Wave A — browser evidence for what exists, plus the remaining inputs
+"Owed" below is computed from the current bar, not estimated: the evidence kinds React already has for that
+wave's components (verification.json), which the criteria will require of Angular the moment each component
+is implemented. Every component also owes `build`, `interaction` and `accessibility` (always required) and
+browser axe evidence (React has it for all 98).
 
-**Components:** `input-group`, `input-otp`, `rating` (3), and evidence for the existing 43.
+### Wave A — browser evidence for what exists, plus the remaining inputs (done)
 
-**Why first:** 7 of the 8 open criteria are evidence gaps on implemented components. The rendered-subject
-pattern this change introduced (`selection-render.spec.ts`: Angular renders the DOM, Chromium paints it
-with the package stylesheet) generalises to an Angular browser harness: render every implemented
-component's usage examples, then run axe, the large-text pass, an RTL pass and the motion pass over them.
+**Components:** `input-group`, `input-otp`, `rating` (3), and browser evidence for the existing 43.
+Closed 7 criteria (5/13 → 12/13).
 
 | | |
 |---|---|
-| Behavioural contracts | input-group: addon focus delegates to the input; input-otp: one slot per character, paste fills, Backspace walks back, arrow keys move; rating: a radiogroup, arrows change the value, Home/End |
-| Accessibility | axe in Chromium over every implemented component, light and dark (closes 43 browser-a11y gaps) |
-| RTL | rendered `dir="rtl"` checks for input, radio-group, slider, switch, textarea (React's set) — slider value direction, switch thumb side |
-| Large text | the 9 controls React measures at 2× default font size: no clipping, control scales with its label |
-| Motion | switch thumb: rendered midpoint, collapses under reduced motion (Angular now suppresses it in CSS) |
-| Visual | Angular interactive Card (a link or button card with hover, pressed, selected and focus), then drop `partial` for card in `visual-gates.mjs` — `check:card-visual` already measures Angular's resting card (Visual Slice 3). A `readonly` input on `kx-number-input` drops its `partial` in `check:composite-visual` (Visual Slice 4). input-group and input-otp, when built, should be written against "Composite fields" in TOKENS.md and join `composite-render.spec.ts`, so they arrive with the gate rather than after it |
-| Verification | new `kx-verify:` markers only on passages that drive Angular symbols, so verification.json counts what is proven |
-| Proof it creates | "every Angular component is axe-clean in a real browser"; a light/dark/RTL/200% Angular gallery |
+| Harness | `check:angular-browser`: the fixtures and every usage example compiled AOT and bootstrapped as one zoneless Angular application in Chromium. The four visual gates measure the same live application |
+| Behavioural contracts | 27 interactive components driven with a real keyboard, including input-group (the input is the one control; add-on buttons never submit), input-otp (one field, one-time-code autofill, paste, Backspace, completion fires once) and rating (radiogroup of radios, arrows mirrored in RTL, Home/End, read-only image) |
+| Accessibility | axe over every usage example and state fixture, light and dark; a visible focus indicator at every Tab stop under forced colours |
+| RTL | 14 components in four direction cases (LTR page, RTL page, LTR region in RTL, RTL region in LTR) |
+| Large text | 19 components at 2× root font size: growth, clipping, collisions, 24px targets, focus rings, operable, 390px fit |
+| Motion | switch thumb: a rendered midpoint, both directions, both page directions, collapsed under reduced motion |
+| Visual | Card and number-input `partial` marks removed: interactive `kxCard` and `readonly` number-input |
+| Defects it found and fixed | unnamed toggle-group radios; tab panels with no `id`; no focus indicator in forced colours; px-sized controls that ignored 200% text; missing `border-box`; slider fill from the wrong end in RTL; circular progress faster than the reduced-motion floor |
 
 ### Wave B — navigation and disclosure (no overlays)
 
@@ -125,6 +147,9 @@ motion, which the overlay wave builds on.
 | Motion | accordion/collapsible height animation with a rendered midpoint and reduced-motion collapse (React's `motion.mjs` contract); carousel autoplay off under reduced motion |
 | Visual | selected/current states for tab-bar, pagination, stepper on the shared contract (Visual Slice 3 measured Tabs on both platforms: `check:entry-visual`) |
 | Proof it creates | a docs-site layout built entirely in Angular |
+
+**Owed (React has it):** interaction 2 (accordion, collapsible) · reducedMotion 2 (accordion, collapsible) ·
+rtl 0 · largeText 0 · browser axe 14 · no visual gate.
 
 ### Wave C — overlays and complex interaction
 
@@ -147,6 +172,9 @@ below its breakpoint.
 | Visual | overlay elevation above raised cards (the slice 1 follow-up), focus ring inside overlays |
 | Proof it creates | a settings flow with dialogs and menus in Angular; overlay parity table |
 
+**Owed (React has it):** interaction 13 · rtl 9 · largeText 12 · browser axe 20 · visual gate 2 (select and
+multi-select, in `check:entry-visual` and `check:composite-visual`).
+
 ### Wave D — data and advanced
 
 **Components:** `table`, `data-table`, `data-grid`, `virtual-list`, `tree-view`, `chart`, `json-viewer`,
@@ -165,6 +193,9 @@ dropdown-menu and pagination, `kanban-board` needs drag with a keyboard alternat
 | Motion | none required beyond overlays; virtual scrolling must not animate |
 | Visual | selected row/cell and focus inside dense surfaces |
 | Proof it creates | an Angular admin dashboard; the IoT examples' Angular host (IoT itself stays React unless a product needs it) |
+
+**Owed (React has it):** interaction 6 (data-grid, tree-view, json-viewer, color-picker, file-upload,
+markdown-editor) · rtl 1 (data-grid) · browser axe 16.
 
 ### Wave E — graduation
 

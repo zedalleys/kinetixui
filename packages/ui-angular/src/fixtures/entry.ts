@@ -9,11 +9,12 @@ import { KxTab, KxTabList, KxTabPanel, KxTabs } from '../lib/tabs';
  * Chromium.
  *
  * This component is mounted twice. `browser/` bootstraps it as a live Angular application in Chromium — the page
- * `scripts/entry-visual.mjs` measures, with the package's styles.css and the generated token CSS and nothing else — so
- * hover, focus, keyboard and state changes run through the real templates, bindings and change detection.
- * `src/lib/*-render.spec.ts` mounts the same class in jsdom and asserts the semantics the gate's selectors rely
- * on, so a selector that stops matching fails there first, with a readable message. Each field carries `data-kx-case`, the same keys the React `EntryStates` stories use,
- * inside a group named by `data-kx-kind`, so one gate can address both platforms.
+ * `scripts/entry-visual.mjs` measures, with the package's styles.css and the generated token CSS and nothing
+ * else — so hover, focus, keyboard and state changes run through the real templates, bindings and change
+ * detection. `src/lib/*-render.spec.ts` mounts the same class in jsdom and asserts the semantics the gate's
+ * selectors rely on, so a selector that stops matching fails there first, with a readable message. Each field
+ * carries `data-kx-case`, the same keys the React `EntryStates` stories use, inside a group named by
+ * `data-kx-kind`, so one gate can address both platforms.
  */
 @Component({
   selector: 'kx-fixture',

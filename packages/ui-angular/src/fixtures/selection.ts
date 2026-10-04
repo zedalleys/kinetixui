@@ -4,15 +4,15 @@ import { KxRadio, KxRadioGroup } from '../lib/forms';
 import { KxCheckbox, KxSegment, KxSegmentedControl, KxSwitch } from '../lib/toggles';
 
 /**
- * The selection controls, rendered by Angular, in every state the selection-control contract names
- * (TOKENS.md, "Selection controls") — the subject `scripts/selection-visual.mjs` paints in Chromium.
+ * The selection controls, rendered by Angular, in every state the selection-control contract names (TOKENS.md,
+ * "Selection controls") — the subject `scripts/selection-visual.mjs` paints in Chromium.
  *
  * This component is mounted twice. `browser/` bootstraps it as a live Angular application in Chromium — the page
- * `scripts/selection-visual.mjs` measures, with the package's styles.css and the generated token CSS and nothing else — so
- * hover, focus, keyboard and state changes run through the real templates, bindings and change detection.
- * `src/lib/*-render.spec.ts` mounts the same class in jsdom and asserts the semantics the gate's selectors rely
- * on, so a selector that stops matching fails there first, with a readable message. Each control carries `data-kx-case`, the same keys the React `States` stories use, so
- * one gate can address both.
+ * `scripts/selection-visual.mjs` measures, with the package's styles.css and the generated token CSS and nothing
+ * else — so hover, focus, keyboard and state changes run through the real templates, bindings and change
+ * detection. `src/lib/*-render.spec.ts` mounts the same class in jsdom and asserts the semantics the gate's
+ * selectors rely on, so a selector that stops matching fails there first, with a readable message. Each control
+ * carries `data-kx-case`, the same keys the React `States` stories use, so one gate can address both.
  */
 @Component({
   selector: 'kx-fixture',
