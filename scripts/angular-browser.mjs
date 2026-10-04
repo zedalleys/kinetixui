@@ -121,6 +121,8 @@ async function focus(page, selector) {
   await page.locator(selector).first().focus();
   await settle(page);
 }
+/** One subject's region in the behaviour fixture. */
+const S = (subject) => `section[data-kx-subject=${subject}]`;
 const out = (page, key) => page.locator(`output[data-kx-out="${key}"]`).innerText();
 const activeId = (page) => page.evaluate(() => document.activeElement?.closest("[id]")?.id ?? null);
 
@@ -131,7 +133,7 @@ async function axe(page, scope = "kx-fixture") {
     // whole page's landmarks and heading outline, which a fixture showing one component does not have.
     const opts = { rules: { region: { enabled: false }, "landmark-one-main": { enabled: false }, "page-has-heading-one": { enabled: false } } };
     const r = await window.axe.run(sel, opts);
-    return r.violations.map((v) => ({ id: v.id, help: v.help, targets: v.nodes.slice(0, 3).map((n) => String(n.target)) }));
+    return r.violations.map((v) => ({ id: v.id, help: v.help, targets: v.nodes.map((n) => String(n.target)) }));
   }, scope);
 }
 
@@ -152,6 +154,22 @@ async function liveAnimations(page) {
 }
 
 const STATE_FIXTURES = ["selection", "entry", "composite", "card", "behaviour"];
+
+/**
+ * axe findings that are correct for axe and wrong for WCAG, each with the reason — the same mechanism and the
+ * same single finding as React's a11y-baseline.json. Keyed `<page>|<theme>|<rule>|<target>`, and checked in both
+ * directions: an entry that stops occurring fails the run, so it is removed rather than left to hide a
+ * different node later.
+ */
+const AXE_BASELINE = {
+  'composite|light|color-contrast|kx-input-group[data-kx-case="disabled"] > kx-input-group-text':
+    "The \"https://\" text add-on of the disabled InputGroup. The group's input is disabled, so the whole field takes " +
+    "--opacity-disabled, and the add-on dims with it. WCAG 1.4.3 exempts text that is part of an inactive user " +
+    "interface component; axe exempts only text inside a disabled control, and the add-on is a sibling of the input. " +
+    "Dimming it is deliberate: a disabled field whose prefix stayed at full strength would read as half-enabled. " +
+    "React carries the same entry (form-inputs-inputgroup--entry-states).",
+  'composite|dark|color-contrast|kx-input-group[data-kx-case="disabled"] > kx-input-group-text': "Same finding as the light entry.",
+};
 
 /* ════════════════════════════════════════════════════════════════════════════
  * kx-verify: accessibility
@@ -185,6 +203,7 @@ if (runs("accessibility")) {
   report.push(`\naccessibility — ${demos.length} usage examples, Angular ${ngVersion}, ${publicExports.length} public directives/components`);
 
   const rendered = new Map(publicExports.map((e) => [e.name, 0]));
+  const seenBaseline = new Set();
   const subjects = [...demos.map((demo) => ({ fixture: "usage", demo })), ...STATE_FIXTURES.map((fixture) => ({ fixture }))];
   for (const theme of ["light", "dark"]) {
     const context = await browser.newContext({ viewport: { width: 1024, height: 900 }, colorScheme: theme });
@@ -195,12 +214,17 @@ if (runs("accessibility")) {
         window.kxHarness.exports.map((e) => ({ name: e.name, n: e.selector ? document.querySelectorAll(`kx-fixture :is(${e.selector})`).length : 0 })),
       );
       for (const c of counts) rendered.set(c.name, rendered.get(c.name) + c.n);
-      const violations = await axe(page);
-      check(violations.length === 0, `axe ${name}`, violations.map((v) => `${v.id} (${v.targets.join(" | ")})`).join("; "));
+      const found = (await axe(page)).flatMap((v) => v.targets.map((target) => `${s.demo ?? s.fixture}|${theme}|${v.id}|${target}`));
+      for (const key of found.filter((k) => AXE_BASELINE[k])) seenBaseline.add(key);
+      const violations = found.filter((k) => !AXE_BASELINE[k]);
+      check(violations.length === 0, `axe ${name}`, violations.map((k) => k.split("|").slice(2).join(" ")).join("; "));
       await page.close();
     }
     await context.close();
   }
+
+  const stale = Object.keys(AXE_BASELINE).filter((k) => !seenBaseline.has(k));
+  check(stale.length === 0, `every axe baseline entry still occurs (${Object.keys(AXE_BASELINE).length})`, stale.join("; "));
 
   // What rendered, not what was imported: every public directive matched the live DOM somewhere, and every
   // implemented component had at least one of its directives on a page axe read. A directive that sits on an
@@ -235,12 +259,15 @@ if (runs("accessibility")) {
       const missing = new Set();
       let stops = 0;
       for (let i = 0; i < 40; i++) {
-        await page.keyboard.press("Tab");
+        await press(page, "Tab");
         const stop = await page.evaluate(() => {
           const el = document.activeElement;
           if (!el || el === document.body || !el.closest("kx-fixture")) return null;
-          // A visually hidden native control (a radio inside a segment or toggle) draws its ring on its label.
-          const shown = el.matches("input[type=radio]") && getComputedStyle(el).opacity === "0" ? el.nextElementSibling ?? el : el;
+          // A visually hidden native control (a radio inside a segment, toggle or rating) draws its ring on its
+          // label; the one-time-code input, which paints nothing, draws it on the cell the next character goes in.
+          const shown = el.matches(".kx-input-otp__input")
+            ? el.closest("kx-input-otp").querySelector("[data-active]") ?? el
+            : el.matches("input[type=radio]") && getComputedStyle(el).opacity === "0" ? el.labels?.[0] ?? el.nextElementSibling ?? el : el;
           const cs = getComputedStyle(shown);
           const visible = cs.outlineStyle !== "none" && parseFloat(cs.outlineWidth) > 0 && cs.outlineColor !== "rgba(0, 0, 0, 0)";
           const name = `${el.tagName.toLowerCase()}${el.className && typeof el.className === "string" ? `.${el.className.split(" ")[0]}` : ""}`;
@@ -267,11 +294,12 @@ if (runs("accessibility")) {
  *
  * Subjects, named so the claim resolves to exactly what is driven:
  *   actions      KxButton, KxFab, KxButtonGroup
- *   text entry   KxInput, KxLabel, KxField, KxTextarea, KxNativeSelect, KxNumberInput, KxPasswordInput
- *   selection    KxCheckbox, KxSwitch, KxRadioGroup, KxSegmentedControl, KxSlider, KxToggle, KxToggleGroup
+ *   text entry   KxInput, KxLabel, KxField, KxTextarea, KxNativeSelect, KxNumberInput, KxPasswordInput,
+ *                KxInputGroup, KxInputOtp
+ *   selection    KxCheckbox, KxSwitch, KxRadioGroup, KxSegmentedControl, KxSlider, KxToggle, KxToggleGroup, KxRating
  *   navigation   KxTabs, KxCodeBlock
  *   disclosure   KxBanner, KxInform, KxTag, KxList (dismiss, remove and press — Angular has no accordion yet)
- *   surface      KxCard (static: not a stop, no role)
+ *   surface      KxCard (static: not a stop, no role; on a link or button: one stop, the element's own action)
  * ════════════════════════════════════════════════════════════════════════════ */
 const BEHAVIOUR = [
   {
@@ -411,6 +439,85 @@ const BEHAVIOUR = [
       t(
         (await input.getAttribute("type")) === "text" && (await scope.getByRole("button", { name: "Hide password" }).getAttribute("aria-pressed")) === "true",
         "Space reveals, and the toggle says so",
+      );
+    },
+  },
+  {
+    component: "KxInputGroup",
+    async run(page, t) {
+      await page.locator("label[for=ig-site]").click();
+      t((await activeId(page)) === "ig-site", "its label reaches the group's input");
+      t((await page.getByRole("textbox", { name: "Website" }).count()) === 1, "the input is named by the label; the add-on text is not part of it");
+      await page.keyboard.press("End");
+      await page.keyboard.type("/docs");
+      await settle(page);
+      t((await out(page, "site")) === "kinetixui.com/docs", "typing reaches the bound model", `model ${await out(page, "site")}`);
+      await press(page, "Tab");
+      t((await activeId(page)) === "ig-clear", "Tab reaches the add-on button, a stop of its own", `focus on #${await activeId(page)}`);
+      t((await page.locator("#ig-clear").getAttribute("type")) === "button", "the add-on button is type=button (never submits a form)");
+      await press(page, "Enter");
+      t((await out(page, "site")) === "", "Enter activates it", `model "${await out(page, "site")}"`);
+      await press(page, "Tab");
+      t((await activeId(page)) === "ig-weight", "a text add-on is not a stop", `focus on #${await activeId(page)}`);
+    },
+  },
+  {
+    component: "KxInputOtp",
+    async run(page, t) {
+      const field = page.getByRole("textbox", { name: "Verification code" });
+      t((await field.count()) === 1 && (await page.locator(`${S("input-otp")} input`).count()) === 1, "one named text field, not a row of boxes");
+      t((await field.getAttribute("autocomplete")) === "one-time-code" && (await field.getAttribute("inputmode")) === "numeric", "offers one-time-code autofill and the number pad");
+      await field.focus();
+      await settle(page);
+      const activeCell = () => page.locator(`${S("input-otp")} .kx-input-otp__slot`).evaluateAll((cells) => cells.findIndex((c) => c.hasAttribute("data-active")));
+      t((await activeCell()) === 0, "focused and empty, the first cell is the active one");
+      await page.keyboard.type("12a3");
+      await settle(page);
+      t((await out(page, "code")) === "123" && (await field.inputValue()) === "123", "a character it does not accept is dropped", `model ${await out(page, "code")}`);
+      t((await activeCell()) === 3, "the active cell follows the code", `cell ${await activeCell()}`);
+      await press(page, "Backspace");
+      t((await out(page, "code")) === "12", "Backspace removes the last character");
+      await page.keyboard.insertText("3456789");
+      await settle(page);
+      t((await out(page, "code")) === "123456" && (await out(page, "completed")) === "123456", "a pasted code fills it to its length, and completes it", `model ${await out(page, "code")}`);
+      const cells = await page.locator(`${S("input-otp")} .kx-input-otp__slot`).allInnerTexts();
+      t(cells.join("") === "123456", "every cell shows its character", JSON.stringify(cells));
+    },
+  },
+  {
+    component: "KxRating",
+    async run(page, t) {
+      const group = page.getByRole("radiogroup", { name: "Rate this article" });
+      t((await group.getByRole("radio").count()) === 5, "a named radiogroup of five stars");
+      t((await group.getByRole("radio", { name: "3 stars" }).count()) === 1, "each star is named by its count");
+      await focus(page, "#ig-weight");
+      for (let i = 0; i < 20 && !(await page.evaluate(() => !!document.activeElement?.closest("kx-rating"))); i++) await press(page, "Tab");
+      t((await group.getByRole("radio", { name: "1 star" }).evaluate((el) => el === document.activeElement)), "Tab lands on the first star when none is chosen");
+      await press(page, "Space");
+      t((await out(page, "stars")) === "1", "Space chooses it", `model ${await out(page, "stars")}`);
+      await press(page, "ArrowRight");
+      t((await out(page, "stars")) === "2", "an arrow moves and chooses", `model ${await out(page, "stars")}`);
+      await press(page, "End");
+      t((await out(page, "stars")) === "5" && (await group.getByRole("radio", { name: "5 stars" }).evaluate((el) => el === document.activeElement)), "End chooses the highest", `model ${await out(page, "stars")}`);
+      await press(page, "Home");
+      t((await out(page, "stars")) === "1", "Home chooses the lowest", `model ${await out(page, "stars")}`);
+      await press(page, "Tab");
+      t(!(await page.evaluate(() => document.activeElement?.closest("kx-rating")?.getAttribute("aria-label") === "Rate this article")), "one tab stop for the whole rating");
+      t((await page.getByRole("radiogroup", { name: "Rate the venue" }).getByRole("radio").evaluateAll((rs) => rs.every((r) => r.disabled))), "a disabled rating's stars are disabled");
+      const shown = () => group.locator(".kx-rating__star--on").count();
+      await group.locator("label").nth(2).click();
+      await settle(page);
+      t((await out(page, "stars")) === "3", "clicking a star chooses it");
+      await group.locator("label").nth(3).hover();
+      await settle(page);
+      const previewed = await shown();
+      await page.mouse.move(0, 0);
+      await settle(page);
+      t(previewed === 4 && (await shown()) === 3 && (await out(page, "stars")) === "3", "hovering previews without choosing", `${previewed} shown under the pointer, ${await shown()} after`);
+      const still = page.locator("#rating-static");
+      t(
+        (await still.getAttribute("role")) === "img" && (await still.getAttribute("aria-label")) === "Rated 4 out of 5" && (await still.locator("input, [tabindex]").count()) === 0,
+        "read-only is one image named by its score, with no stops",
       );
     },
   },
@@ -601,6 +708,15 @@ const BEHAVIOUR = [
       const semantics = await card.evaluate((el) => ({ role: el.getAttribute("role"), tabIndex: el.tabIndex }));
       t(semantics.role === null && semantics.tabIndex === -1, "a static card is not a stop and claims no role", JSON.stringify(semantics));
       t((await card.getByRole("heading", { name: "Usage", level: 3 }).count()) === 1, "its title is a heading");
+      const link = page.getByRole("link", { name: /Q3 report/ });
+      await link.focus();
+      await press(page, "Enter");
+      t((await out(page, "cardOpened")) === "q3", "a link card is a link, and Enter follows it");
+      const toggle = page.getByRole("button", { name: "Daily backups" });
+      await press(page, "Tab");
+      t((await toggle.evaluate((el) => el === document.activeElement)) && (await toggle.getAttribute("aria-pressed")) === "false", "a button card is the next stop, not pressed");
+      await press(page, "Space");
+      t((await toggle.getAttribute("aria-pressed")) === "true" && (await out(page, "backups")) === "true", "Space toggles it, and says so");
     },
   },
 ];
@@ -631,15 +747,17 @@ if (runs("interaction")) {
  * focus with a visible indicator, still answers its key, and its label still reaches it.
  *
  *   selection controls (no text of their own: the box itself must scale ≥1.8x)
- *     KxCheckbox, KxRadioGroup, KxSwitch, KxToggle, KxToggleGroup, KxSlider
+ *     KxCheckbox, KxRadioGroup, KxSwitch, KxToggle, KxToggleGroup, KxSlider, KxRating, and KxInputOtp's cells
  *   text-bearing controls (their text grows ≥1.8x and the box absorbs all of it, nothing truncated)
- *     KxInput, KxTextarea, KxNativeSelect, KxNumberInput, KxPasswordInput, KxTabs, KxLabel, KxField,
- *     KxSegmentedControl, KxButton
+ *     KxInput, KxTextarea, KxNativeSelect, KxNumberInput, KxPasswordInput, KxInputGroup, KxTabs, KxLabel,
+ *     KxField, KxSegmentedControl, KxButton
+ *
+ * A one-time code wraps at 390px and 2x; every cell must then still carry all four borders, so a wrapped row is
+ * closed at the end it starts from (React's InputOTP rule).
  *
  * Every subject, both kinds: no clipping ancestor, no part escaping its container, no colliding label / control
  * / help / error boxes, no horizontal page overflow at 1024px or at 390px, a target of at least 24px.
  * ════════════════════════════════════════════════════════════════════════════ */
-const S = (subject) => `section[data-kx-subject=${subject}]`;
 const LARGE = [
   { component: "KxCheckbox", control: "#cb-updates .kx-checkbox", focus: "#cb-updates .kx-checkbox", key: "Space", out: "updates" },
   { component: "KxRadioGroup", control: `${S("radio-group")} .kx-radio__input`, focus: `${S("radio-group")} input:checked`, key: "ArrowDown", out: "plan", label: `${S("radio-group")} .kx-radio__label` },
@@ -689,6 +807,25 @@ const LARGE = [
   },
   { component: "KxField", control: "#fld-email", text: "#fld-email", stack: `${S("field")} kx-field`, label: "label[for=fld-email]", focus: "#fld-email", type: "a", out: "email" },
   { component: "KxButton", control: "#btn-save", text: "#btn-save", focus: "#btn-save", key: "Enter", out: "clicks" },
+  {
+    component: "KxInputGroup",
+    control: `${S("input-group")} kx-input-group`,
+    text: "#ig-site",
+    inside: `${S("input-group")} kx-input-group:first-of-type > *`,
+    label: "label[for=ig-site]",
+    focus: "#ig-site",
+    type: "a",
+    out: "site",
+  },
+  {
+    component: "KxInputOtp",
+    control: `${S("input-otp")} .kx-input-otp__slot`,
+    closed: `${S("input-otp")} .kx-input-otp__slot`,
+    focus: `${S("input-otp")} input`,
+    type: "4",
+    out: "code",
+  },
+  { component: "KxRating", control: `${S("rating")} label.kx-rating__item`, focus: `${S("rating")} kx-rating input`, key: "Space", out: "stars" },
 ];
 const SCALE = 2;
 const MIN_RATIO = 1.8;
@@ -744,10 +881,11 @@ const focusIndicator = (page) =>
   page.evaluate(() => {
     const el = document.activeElement;
     // A composite field (number, password) is one field: its ring is on the wrapper, around the focused input.
-    const shown =
-      el.matches("input[type=radio]") && getComputedStyle(el).opacity === "0"
-        ? el.nextElementSibling ?? el
-        : el.matches("input") ? el.closest(".kx-number-input, .kx-password-input") ?? el : el;
+    const shown = el.matches(".kx-input-otp__input")
+      ? el.closest("kx-input-otp").querySelector("[data-active]") ?? el
+      : el.matches("input[type=radio]") && getComputedStyle(el).opacity === "0"
+        ? el.labels?.[0] ?? el.nextElementSibling ?? el
+        : el.matches("input") ? el.closest(".kx-number-input, .kx-password-input, .kx-input-group") ?? el : el;
     const cs = getComputedStyle(shown);
     return (cs.outlineStyle !== "none" && parseFloat(cs.outlineWidth) > 0) || cs.boxShadow !== "none";
   });
@@ -778,6 +916,17 @@ if (runs("largeText")) {
               .map((n) => n.className || n.tagName.toLowerCase());
           }, subject.control);
           check(escaped.length === 0, `${name}: fits a ${viewport.width}px viewport at ${SCALE}x text`, escaped.slice(0, 3).join(", "));
+          if (subject.closed) {
+            const { open, rows } = await page.evaluate((sel) => {
+              const parts = [...document.querySelectorAll(sel)];
+              const open = parts.filter((el) => {
+                const cs = getComputedStyle(el);
+                return [cs.borderTopWidth, cs.borderRightWidth, cs.borderBottomWidth, cs.borderLeftWidth].some((w) => parseFloat(w) === 0);
+              }).length;
+              return { open, rows: new Set(parts.map((el) => Math.round(el.getBoundingClientRect().y))).size };
+            }, subject.closed);
+            check(open === 0, `${name}: every cell keeps all four edges when it wraps`, `${rows} row(s), ${open} open cell(s)`);
+          }
           continue;
         }
         check(after.overflowX <= 0, `${name}: no horizontal page overflow`, `${after.overflowX}px`);
@@ -850,6 +999,10 @@ if (runs("largeText")) {
  *   KxNumberInput              decrease at the inline start, increase at the inline end
  *   KxPasswordInput            the reveal control at the inline end
  *   KxSegmentedControl, KxToggleGroup   the first item at the inline start
+ *   KxInputGroup               a leading text add-on at the inline start, a button at the inline end
+ *   KxInputOtp                 the first cell at the inline start, and it is the one the first character fills
+ *   KxRating                   the first star at the inline start; the arrow pointing toward the inline end
+ *                              raises the rating
  * ════════════════════════════════════════════════════════════════════════════ */
 /** Positive when `a` lies further toward the inline end than `b`, in `dir`. */
 const towardEnd = (dir, a, b) => (dir === "rtl" ? b - a : a - b);
@@ -887,6 +1040,7 @@ const RTL = [
     region: S("slider"),
     async run(page, dir, t) {
       const sel = `${S("slider")} .kx-slider__input`;
+      await page.locator(sel).scrollIntoViewIfNeeded();
       const r = await rectOf(page, sel);
       const [primary, muted] = await page.evaluate(() =>
         ["--primary", "--muted"].map((v) => {
@@ -977,6 +1131,43 @@ const RTL = [
     },
   })),
 ];
+RTL.push(
+  {
+    component: "KxInputGroup",
+    region: S("input-group"),
+    async run(page, dir, t) {
+      const scope = `${S("input-group")} kx-input-group >> nth=0`;
+      const [text, input, button] = await Promise.all(["kx-input-group-text", "input", "button"].map((p) => rectOf(page, `${scope} >> ${p}`)));
+      t(towardEnd(dir, mid(input), mid(text)) > 0 && towardEnd(dir, mid(button), mid(input)) > 0, "text add-on at the inline start, button at the inline end");
+    },
+  },
+  {
+    component: "KxInputOtp",
+    region: S("input-otp"),
+    async run(page, dir, t) {
+      const cells = `${S("input-otp")} .kx-input-otp__slot`;
+      const [first, second] = [await rectOf(page, `${cells} >> nth=0`), await rectOf(page, `${cells} >> nth=1`)];
+      t(towardEnd(dir, mid(second), mid(first)) > 0, "the first cell sits at the inline start");
+      await page.locator(`${S("input-otp")} input`).focus();
+      await page.keyboard.type("7");
+      await settle(page);
+      t((await page.locator(`${cells} >> nth=0`).innerText()) === "7", "and the first character fills it");
+    },
+  },
+  {
+    component: "KxRating",
+    region: S("rating"),
+    async run(page, dir, t) {
+      const stars = `${S("rating")} kx-rating >> nth=0 >> label`;
+      const [first, second] = [await rectOf(page, `${stars} >> nth=0`), await rectOf(page, `${stars} >> nth=1`)];
+      t(towardEnd(dir, mid(second), mid(first)) > 0, "the first star sits at the inline start");
+      await page.locator(`${S("rating")} kx-rating >> nth=0 >> input >> nth=1`).focus();
+      await press(page, "Space");
+      await press(page, endKey(dir));
+      t((await out(page, "stars")) === "3", `${endKey(dir)} (toward the inline end) raises the rating`, `model ${await out(page, "stars")}`);
+    },
+  },
+);
 const DIRECTION_CASES = [
   { page: "ltr", region: null },
   { page: "rtl", region: null },

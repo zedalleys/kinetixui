@@ -89,6 +89,7 @@
     "gen:angular-api": "node scripts/angular-package/api-snapshot.mjs",
     "check:angular-api": "node scripts/angular-package/api-snapshot.mjs --check",
     "check:angular-graduation": "node scripts/check-angular-graduation.mjs",
+    "check:angular-browser": "node scripts/angular-browser.mjs",
     "check:content": "node scripts/check-content-register.mjs",
     "check:distribution": "node scripts/check-distribution.mjs",
     "gen:visuals": "node scripts/gen-marketing-visuals.mjs",

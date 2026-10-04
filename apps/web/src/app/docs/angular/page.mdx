@@ -87,7 +87,9 @@ nothing different in it. Import it after `@kinetixui/tokens/css` and after
 - **`OnPush`** change detection throughout.
 - **Signal APIs**: `input()`, `model()` for two-way values, `output()` for events.
 - **Directives where the native element should stay the semantic element**:
-  `<button kxButton>`, `<input kxInput>`, `<label kxLabel>`.
+  `<button kxButton>`, `<input kxInput>`, `<label kxLabel>`,
+  `<input kxInputGroupInput>`, and `<a kxCard>` / `<button kxCard>` for a card
+  that is one action.
 - **Components where KinetixUI generates the markup**: `<kx-card>`,
   `<kx-badge>`, `<kx-tabs>`.
 - **`ControlValueAccessor`** on form controls, so `[(ngModel)]`,
@@ -130,9 +132,17 @@ suite, so it can't drift from the real API.
   `role="switch"`, and the error state follows `aria-invalid`.
 - **Tabs** implement the APG keyboard pattern — arrow keys, Home and End,
   one tab stop — with arrow direction reversed in right-to-left documents.
+- **Composite fields are one control.** A one-time code is one labelled
+  input with `autocomplete="one-time-code"` under its cells; an input group's
+  input is a real `<input>`; a rating is a radiogroup of real radios.
 
-These behaviours are covered by unit tests. That is not an accessibility
-certification, and there is no browser-level axe suite for Angular yet.
+These behaviours are covered by unit tests in jsdom and by
+`check:angular-browser`, which runs the package as a live Angular application
+in Chromium: axe over every usage example and state fixture in light and dark,
+every interactive component driven by a real keyboard, direction in an LTR
+page, an RTL page and each nested in the other, 200% text at desktop and phone
+width, forced colours and reduced motion. That is evidence for those
+behaviours, not an accessibility certification.
 
 ## What is left, by wave
 
@@ -169,10 +179,12 @@ not by itself change the label, and nothing here is graded on a curve:
    states wired to `aria-invalid`, and error messaging tested.
 4. **Documentation complete** — every shipped component reachable from its own
    page with a compiled example.
-5. **Accessibility suite** — an automated axe pass over the Angular
-   components, not unit tests alone.
-6. **Browser tests** — real-browser keyboard and focus coverage, matching what
-   `@kinetixui/ui` already has.
+5. ~~**Accessibility suite**~~ — an automated axe pass over the Angular
+   components in a real browser: in place (`check:angular-browser`).
+6. ~~**Browser tests**~~ — real-browser keyboard, focus, direction, 200% text
+   and motion coverage wherever `@kinetixui/ui` has it: in place for every
+   component Angular implements. Both stay requirements: each new component
+   has to arrive with the same evidence.
 7. **Distribution ready** — the built package verified by
    `scripts/check-dist.mjs`, including the stylesheet.
 8. ~~**Published** to npm~~ — done in 0.24.0. Availability was never the
@@ -190,5 +202,6 @@ not by itself change the label, and nothing here is graded on a curve:
 - **Published, not settled.** Being installable from npm says nothing about the
   API having stopped moving — the maturity label above is the thing to read,
   and it is independent of distribution.
-- **No Angular browser axe suite** yet — accessibility is covered by unit
-  tests only for now.
+- **Browser evidence covers what exists.** Every implemented Angular
+  component is measured in Chromium; the planned ones are not, and nothing here
+  claims parity with React beyond the behaviours those passes assert.

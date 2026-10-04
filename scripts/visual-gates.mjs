@@ -18,10 +18,6 @@ export const VISUAL_GATES = [
     command: "check:card-visual",
     contract: "TOKENS.md — Surface model / Card",
     covers: { React: ["card"], Angular: ["card"] },
-    // Measured, but not the whole contract React is held to. Angular's kx-card is static — it has no link or
-    // button card — so only the resting rows (edge, lift, grouped, static) run for it. A partial entry does
-    // not count toward the graduation guard's visual parity: that needs the interactive states.
-    partial: { Angular: { card: "resting surface only — Angular has no interactive Card (hover, pressed, selected, focus)" } },
   },
   {
     script: "scripts/selection-visual.mjs",
@@ -47,11 +43,8 @@ export const VISUAL_GATES = [
     contract: "TOKENS.md — Composite fields",
     covers: {
       React: ["input-group", "number-input", "multi-select", "input-otp"],
-      Angular: ["number-input", "password-input"],
+      Angular: ["input-group", "number-input", "input-otp", "password-input"],
     },
-    // kx-number-input has no read-only input (React's NumberInput has `readOnly`, and the gate measures it),
-    // so Angular's number field is held to every row but that one — narrower than React's, so not parity.
-    partial: { Angular: { "number-input": "no read-only state — kx-number-input has no readonly input" } },
   },
 ];
 

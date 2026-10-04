@@ -17,8 +17,8 @@
  * Two platforms, one set of assertions:
  *
  *   React     the `EntryStates` stories for InputGroup, NumberInput, MultiSelect and InputOTP
- *   Angular   the DOM Angular renders for kx-number-input and kx-password-input (its implemented composites;
- *             input-group, input-otp and multi-select are planned there) — src/lib/composite-render.spec.ts,
+ *   Angular   kx-input-group, kx-number-input, kx-input-otp and kx-password-input (its implemented composites;
+ *             multi-select is planned there), live in the Angular browser harness (src/fixtures/composite.ts),
  *             painted with the package's own styles.css and the generated token CSS (visual-harness.mjs)
  *
  * ── Method ───────────────────────────────────────────────────────────────
@@ -48,8 +48,9 @@
  *
  * A component that has no such state is skipped for that row, and the report says so: MultiSelect has no
  * read-only or disabled prop; InputOTP has no read-only and its slots are cells, not a divided control;
- * Angular's kx-number-input and kx-password-input have no read-only input, and kx-number-input's steppers are
- * deliberately not keyboard stops (they duplicate the input's own arrow keys), so it has no part to own focus.
+ * Angular's kx-password-input has no read-only input, and kx-number-input's steppers are deliberately not
+ * keyboard stops (they duplicate the input's own arrow keys), so it has no part to own focus. Angular's number
+ * input opens with a stepper, which is always muted, so its read-only fill is sampled inside the input.
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary for local runs.
  */
@@ -133,13 +134,32 @@ const ADAPTERS = {
     },
   },
   Angular: {
+    "input-group": {
+      shell: (c) => `kx-input-group[data-kx-case="${c}"]`,
+      input: (c) => `kx-input-group[data-kx-case="${c}"] input`,
+      part: { case: "with-button", sel: `kx-input-group[data-kx-case="with-button"] [data-kx-part=button]` },
+      divider: { case: "with-button", sel: `kx-input-group[data-kx-case="with-button"] [data-kx-part=button]` },
+      placeholder: "placeholder",
+      readonly: true,
+      disabled: true,
+    },
+    "input-otp": {
+      // one transparent input laid over the cells; the host holds both
+      shell: (c) => `kx-input-otp[data-kx-case="${c}"]`,
+      input: (c) => `kx-input-otp[data-kx-case="${c}"] input`,
+      edge: (c) => `kx-input-otp[data-kx-case="${c}"] .kx-input-otp__slot`,
+      placeholder: null,
+      readonly: false,
+      disabled: true,
+    },
     "number-input": {
       shell: (c) => `kx-number-input[data-kx-case="${c}"]`,
       input: (c) => `kx-number-input[data-kx-case="${c}"] input`,
       divider: null,
       steppers: (c) => `kx-number-input[data-kx-case="${c}"] button`,
+      fill: (c) => `kx-number-input[data-kx-case="${c}"] input`,
       placeholder: null,
-      readonly: false,
+      readonly: true,
       disabled: true,
     },
     "password-input": {
@@ -383,8 +403,12 @@ async function composite(context, platform, kind, theme) {
     const p = await open(context, platform, kind, theme);
     const ro = await p.locator(A.shell("readonly")).first().boundingBox();
     const fr = await frame(p, ro);
-    const fill = fr.at(ro.x + 3, ro.y + 3);
-    const editable = rest.at(rr.x + 3, rr.y + 3);
+    // Where the field's own fill is: its corner, unless a part that is always filled sits there (Angular's
+    // number input opens with a muted stepper), in which case the corner of the input itself.
+    const at = async (c, shellBox) => (A.fill ? await p.locator(A.fill(c)).first().boundingBox() : shellBox);
+    const [roFill, restFill] = [await at("readonly", ro), await at("rest", rr)];
+    const fill = fr.at(roFill.x + 3, roFill.y + 3);
+    const editable = (A.fill ? await frame(p, rr) : rest).at(restFill.x + 3, restFill.y + 3);
     const fillStep = contrast(fill, editable);
     await hoverCentre(p, ro);
     const moved = (await frame(p, ro)).changed(fr);
@@ -420,7 +444,7 @@ async function motion(platform, theme, kind) {
     const shell = page.locator(A.shell("rest")).first();
     const box = await shell.boundingBox();
     // InputOTP draws its edge on the slots, not on the container the pointer is over
-    const el = kind === "input-otp" ? shell.locator(":scope > div:first-child > div:first-child") : shell;
+    const el = kind !== "input-otp" ? shell : A.edge ? page.locator(A.edge("rest")).first() : shell.locator(":scope > div:first-child > div:first-child");
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     const m = await el.evaluate((node) => {
       const t = node.getAnimations().find((a) => a.transitionProperty === "border-left-color");

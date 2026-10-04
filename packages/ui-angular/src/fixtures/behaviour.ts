@@ -26,7 +26,10 @@ import {
   KxSlider,
   KxTextarea,
 } from '../lib/forms';
-import { KxCard, KxCardContent, KxCardHeader, KxCardTitle, KxInput, KxLabel } from '../lib/primitives';
+import { KxInputGroup, KxInputGroupAddon, KxInputGroupButton, KxInputGroupInput, KxInputGroupText } from '../lib/input-group';
+import { KxInputOtp } from '../lib/input-otp';
+import { KxCard, KxCardContent, KxCardDescription, KxCardHeader, KxCardTitle, KxInput, KxLabel } from '../lib/primitives';
+import { KxRating } from '../lib/rating';
 import { KxTab, KxTabList, KxTabPanel, KxTabs } from '../lib/tabs';
 import { KxCheckbox, KxSegment, KxSegmentedControl, KxSwitch, KxToggle, KxToggleGroup, KxToggleGroupItem } from '../lib/toggles';
 
@@ -50,6 +53,7 @@ import { KxCheckbox, KxSegment, KxSegmentedControl, KxSwitch, KxToggle, KxToggle
     KxButtonGroupText,
     KxCard,
     KxCardContent,
+    KxCardDescription,
     KxCardHeader,
     KxCardTitle,
     KxCheckbox,
@@ -61,6 +65,12 @@ import { KxCheckbox, KxSegment, KxSegmentedControl, KxSwitch, KxToggle, KxToggle
     KxFieldMessage,
     KxInform,
     KxInput,
+    KxInputGroup,
+    KxInputGroupAddon,
+    KxInputGroupButton,
+    KxInputGroupInput,
+    KxInputGroupText,
+    KxInputOtp,
     KxLabel,
     KxList,
     KxListItem,
@@ -69,6 +79,7 @@ import { KxCheckbox, KxSegment, KxSegmentedControl, KxSwitch, KxToggle, KxToggle
     KxPasswordInput,
     KxRadio,
     KxRadioGroup,
+    KxRating,
     KxSegment,
     KxSegmentedControl,
     KxSlider,
@@ -154,6 +165,36 @@ import { KxCheckbox, KxSegment, KxSegmentedControl, KxSwitch, KxToggle, KxToggle
         <span kxLabel id="pw-label">Password</span>
         <kx-password-input aria-labelledby="pw-label" [(ngModel)]="password" />
         <output data-kx-out="password">{{ password }}</output>
+      </section>
+
+      <section data-kx-subject="input-group">
+        <label kxLabel for="ig-site">Website</label>
+        <kx-input-group>
+          <kx-input-group-text>https://</kx-input-group-text>
+          <input kxInputGroupInput id="ig-site" [(ngModel)]="site" />
+          <button kxInputGroupButton id="ig-clear" (click)="site = ''">Clear</button>
+        </kx-input-group>
+        <label kxLabel for="ig-weight">Weight</label>
+        <kx-input-group>
+          <input kxInputGroupInput id="ig-weight" inputmode="decimal" [(ngModel)]="weight" />
+          <kx-input-group-addon align="end">kg</kx-input-group-addon>
+        </kx-input-group>
+        <output data-kx-out="site">{{ site }}</output>
+        <output data-kx-out="weight">{{ weight }}</output>
+      </section>
+
+      <section data-kx-subject="input-otp">
+        <span kxLabel id="otp-label">Verification code</span>
+        <kx-input-otp aria-labelledby="otp-label" [groups]="[3, 3]" [(ngModel)]="code" (completed)="completedCode.set($event)" />
+        <output data-kx-out="code">{{ code }}</output>
+        <output data-kx-out="completed">{{ completedCode() }}</output>
+      </section>
+
+      <section data-kx-subject="rating">
+        <kx-rating aria-label="Rate this article" [(ngModel)]="stars" />
+        <kx-rating aria-label="Rate the venue" [value]="2" disabled />
+        <kx-rating id="rating-static" [value]="4" readonly />
+        <output data-kx-out="stars">{{ stars }}</output>
       </section>
 
       <section data-kx-subject="checkbox">
@@ -264,6 +305,17 @@ import { KxCheckbox, KxSegment, KxSegmentedControl, KxSwitch, KxToggle, KxToggle
       </section>
 
       <section data-kx-subject="card">
+        <a kxCard id="card-link" href="#reports-q3" (click)="$event.preventDefault(); cardOpened.set('q3')">
+          <kx-card-header>
+            <kx-card-title>Q3 report</kx-card-title>
+            <kx-card-description>Revenue, churn and cohort retention.</kx-card-description>
+          </kx-card-header>
+        </a>
+        <button kxCard id="card-toggle" type="button" [attr.aria-pressed]="backups()" (click)="backups.set(!backups())">
+          <span>Daily backups</span>
+        </button>
+        <output data-kx-out="cardOpened">{{ cardOpened() }}</output>
+        <output data-kx-out="backups">{{ backups() }}</output>
         <kx-card id="card-static">
           <kx-card-header><kx-card-title>Usage</kx-card-title></kx-card-header>
           <kx-card-content>12 of 20 seats in use.</kx-card-content>
@@ -301,6 +353,13 @@ export class BehaviourFixture {
   marks: string | string[] | null = ['bold'];
   align: string | string[] | null = 'start';
   tab = 'overview';
+  site = 'kinetixui.com';
+  weight = '';
+  code = '';
+  readonly completedCode = signal('');
+  stars = 0;
+  readonly cardOpened = signal('');
+  readonly backups = signal(false);
   readonly files = [
     { name: 'main.ts', code: "bootstrapApplication(App);", language: 'ts' },
     { name: 'app.html', code: '<button kxButton>Save</button>', language: 'html' },

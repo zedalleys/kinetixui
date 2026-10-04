@@ -4,7 +4,7 @@ KinetixUI for Angular — standalone directives and components built on the same
 contract as the other KinetixUI implementations.
 
 > **Preview.** This package is published so it can be used and reported on, and publication is
-> distribution, not maturity. It carries **43 of the 98 entries in the KinetixUI catalogue** and is
+> distribution, not maturity. It carries **46 of the 98 entries in the KinetixUI catalogue** and is
 > rolling out in waves. Expect gaps, and expect APIs to move within `0.x`. If you need the full
 > catalogue today, that is the React implementation (`@kinetixui/ui`).
 
@@ -14,15 +14,15 @@ npm install @kinetixui/angular @kinetixui/tokens
 
 ## What it currently provides
 
-43 components, as **94 exported symbols** (a component plus its parts and variant types count
+46 components, as **101 exported symbols** (a component plus its parts and variant types count
 separately). Present today:
 
 `alert` · `aspect-ratio` · `avatar` · `avatar-group` · `badge` · `banner` · `button` · `button-group` ·
 `card` · `checkbox` · `circular-progress` · `code-block` · `description-list` · `empty` · `fab` ·
-`field` · `image` · `inform` · `input` · `kbd` · `label` · `list` · `marquee` · `metric` ·
-`native-select` · `number-input` · `page-header` · `password-input` · `progress` · `quote` ·
-`radio-group` · `segmented-control` · `separator` · `skeleton` · `slider` · `spinner` · `switch` ·
-`tabs` · `tag` · `textarea` · `timeline` · `toggle` · `toggle-group`
+`field` · `image` · `inform` · `input` · `input-group` · `input-otp` · `kbd` · `label` · `list` ·
+`marquee` · `metric` · `native-select` · `number-input` · `page-header` · `password-input` ·
+`progress` · `quote` · `radio-group` · `rating` · `segmented-control` · `separator` · `skeleton` ·
+`slider` · `spinner` · `switch` · `tabs` · `tag` · `textarea` · `timeline` · `toggle` · `toggle-group`
 
 Not present: overlays (dialog, popover, dropdown, tooltip, sheet, drawer), data display (table, data
 grid, data table), navigation (breadcrumb, pagination, menubar, navigation menu), and the rest of the
@@ -85,22 +85,25 @@ in your editor if you are unsure: `KxButton` is a directive, `KxCard` is a compo
 
 ## Accessibility
 
-What is verified is published rather than asserted. For this package: **43 of 43 implementations have
-interaction and accessibility verification**, from unit suites in jsdom — which asserts semantics and
-behaviour but has no layout and runs no browser accessibility engine. 2 components have RTL verification;
-none yet has large-text or reduced-motion verification. The selection controls (checkbox, radio group,
-switch, segmented control) have their visual states measured on rendered pixels in Chromium by
-`check:selection-visual`, which also measures the switch thumb in mixed-direction pages; input, textarea,
-native select and tabs by `check:entry-visual`; and the card's resting surface — not interactive cards, which
-this package does not have — by `check:card-visual`. There is no snapshot visual-regression suite, here or
-anywhere in KinetixUI.
+What is verified is published rather than asserted. For this package: **46 of 46 implementations have
+interaction and accessibility verification** — from unit suites in jsdom, and from `check:angular-browser`,
+which runs the package as a live Angular application in Chromium: every usage example and state fixture
+under axe in light and dark, forced colours and reduced motion, and every interactive component driven by a
+real keyboard. 14 components have RTL verification (measured in an LTR page, an RTL page, and each nested in
+the other); 19 have large-text verification at 200% text, at desktop and phone width; the switch has
+reduced-motion verification. Visual states are measured on rendered pixels by `check:selection-visual`
+(checkbox, radio group, switch, segmented control), `check:entry-visual` (input, textarea, native select,
+tabs), `check:composite-visual` (input group, number input, one-time code, password input) and
+`check:card-visual` (the card at rest, and as a link or button). This is evidence for the behaviours
+listed, not an accessibility certification. There is no snapshot visual-regression suite, here or anywhere
+in KinetixUI.
 
 The per-component, per-kind evidence table is at
 [kinetixui.com/docs/platforms](https://kinetixui.com/docs/platforms).
 
 ## Limitations
 
-- **Preview, and 43 of 98 entries.** Do not plan around a component that is not in the list above.
+- **Preview, and 46 of 98 entries.** Do not plan around a component that is not in the list above.
 - Versioned independently of `@kinetixui/{ui,tokens,cli}` — its version number does not track theirs.
 - The token peer range is a deliberate compatibility claim, widened only after the package is verified
   against a new token version. It will not silently follow the token package.

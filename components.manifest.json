@@ -754,32 +754,22 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "inputs"
-        }
-      }
+      ]
     },
     "input-otp": {
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
       ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "inputs"
-        }
-      },
       "sourceNames": {
         "React": "InputOTP"
       }
@@ -1152,16 +1142,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "inputs"
-        }
-      }
+      ]
     },
     "resizable": {
       "status": "stable",

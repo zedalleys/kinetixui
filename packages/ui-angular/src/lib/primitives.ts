@@ -29,8 +29,23 @@ export class KxBadge {
 
 /* ── card ───────────────────────────────────────────────────────────────── */
 
+/**
+ *   <kx-card>…</kx-card>                                       a static surface
+ *   <a kxCard href="/reports/q3">…</a>                         a card that is a link
+ *   <button kxCard type="button" [attr.aria-pressed]="on">…</button>   a card that is a toggle
+ *
+ * A raised surface (TOKENS.md, "Surface model"). `kx-card` is static: no hover, no pressed state, no pointer
+ * cursor, because a surface that reacts to the pointer reads as clickable.
+ *
+ * Interaction is opt-in through the element, as in React (`<Card asChild>`): put `kxCard` on a real `<a href>`
+ * or `<button>` and the card takes the interactive states — hover, pressed, focus and selected
+ * (`aria-pressed="true"` on a button, `aria-current` on a link). The states are keyed on the element being
+ * interactive, so they cannot drift from what it does, and the element's own semantics (link, button, pressed,
+ * current) are what assistive technology reads. One action per card: it must not contain other controls, and a
+ * button card holds phrasing content only (no headings).
+ */
 @Component({
-  selector: 'kx-card',
+  selector: 'kx-card, a[kxCard], button[kxCard]',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<ng-content />',
   host: { class: 'kx-card' },

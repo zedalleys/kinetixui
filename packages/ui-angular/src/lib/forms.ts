@@ -42,7 +42,7 @@ const uid = () => ++seq;
  * legal on a class the Angular compiler knows about, and an undecorated base fails the build with NG8110.
  */
 @Directive()
-abstract class KxValueBase<T> implements ControlValueAccessor {
+export abstract class KxValueBase<T> implements ControlValueAccessor {
   readonly disabled = input(false, { transform: booleanAttribute });
   protected readonly formDisabled = signal(false);
   protected isDisabled(): boolean {
@@ -277,13 +277,16 @@ export class KxSlider extends KxValueBase<number> {
  *
  * The buttons are `aria-hidden` and `tabindex="-1"`: they duplicate keyboard behaviour the input already has,
  * so exposing them adds two stops to the tab order that do nothing new.
+ *
+ * `readonly` keeps the value readable, focusable and submitted but unchangeable: the input is `readonly` (so the
+ * browser's own arrow-key stepping stops too) and both steppers are disabled.
  */
 @Component({
   selector: 'kx-number-input',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => KxNumberInput), multi: true }],
   template: `
-    <button type="button" class="kx-number-input__step" tabindex="-1" aria-hidden="true" [disabled]="isDisabled()" (click)="nudge(-1)">−</button>
+    <button type="button" class="kx-number-input__step" tabindex="-1" aria-hidden="true" [disabled]="isDisabled() || readonly()" (click)="nudge(-1)">−</button>
     <input
       type="number"
       class="kx-number-input__input"
@@ -292,6 +295,7 @@ export class KxSlider extends KxValueBase<number> {
       [step]="step()"
       [value]="value()"
       [disabled]="isDisabled()"
+      [readOnly]="readonly()"
       [attr.aria-label]="ariaLabel()"
       [attr.aria-labelledby]="ariaLabelledby()"
       [attr.aria-invalid]="ariaInvalid()"
@@ -299,7 +303,7 @@ export class KxSlider extends KxValueBase<number> {
       (input)="commit($any($event.target).valueAsNumber)"
       (blur)="onTouched()"
     />
-    <button type="button" class="kx-number-input__step" tabindex="-1" aria-hidden="true" [disabled]="isDisabled()" (click)="nudge(1)">+</button>
+    <button type="button" class="kx-number-input__step" tabindex="-1" aria-hidden="true" [disabled]="isDisabled() || readonly()" (click)="nudge(1)">+</button>
   `,
   host: { class: 'kx-number-input' },
 })
@@ -308,6 +312,7 @@ export class KxNumberInput extends KxValueBase<number | null> {
   readonly min = input<number | null>(null);
   readonly max = input<number | null>(null);
   readonly step = input(1);
+  readonly readonly = input(false, { transform: booleanAttribute });
   readonly ariaLabel = input<string | null>(null, { alias: 'aria-label' });
   readonly ariaLabelledby = input<string | null>(null, { alias: 'aria-labelledby' });
   /** Forwarded to the inner input, which is what assistive technology reads and what the field's error state keys on. */
@@ -317,6 +322,7 @@ export class KxNumberInput extends KxValueBase<number | null> {
   readonly changed = output<number | null>();
 
   protected nudge(direction: 1 | -1): void {
+    if (this.readonly()) return;
     this.commit((this.value() ?? 0) + direction * this.step());
   }
 

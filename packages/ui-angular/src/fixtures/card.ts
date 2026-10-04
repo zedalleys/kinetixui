@@ -4,21 +4,43 @@ import { KxCard, KxCardContent, KxCardDescription, KxCardFooter, KxCardHeader, K
 import { KxSwitch } from '../lib/toggles';
 
 /**
- * Angular's Card, rendered by Angular, in the arrangements the resting half of the Card contract names
- * (TOKENS.md, "Surface model" / "Card") — the subject `scripts/card-visual.mjs` paints in Chromium.
+ * Angular's Card, rendered by Angular in every arrangement the Card contract names (TOKENS.md, "Surface model"
+ * and "Card") — the subject `scripts/card-visual.mjs` paints in Chromium. `browser/` bootstraps it as a live
+ * Angular application, so hover, press and focus run through the real templates; `card-render.spec.ts` mounts
+ * the same class in jsdom and asserts the semantics the gate's selectors rely on.
  *
- * Angular's `kx-card` is the static, resting Card: it has no interactive form (no link or button card, no
- * pressed or selected state), so this renders only what it implements — a card holding a field, on the page,
- * and cards on a grouped section — and the gate asserts only the resting contract for it.
- *
- * jsdom has no pixels; this contributes the DOM Angular actually produces. Run with `KX_ANGULAR_RENDER_OUT` set
- * to a path, it writes that DOM out for the gate. `data-kx-case` names each arrangement.
+ * The interactive cards come first so the page's first Tab stop is the first link card, as in React's
+ * Interactive story, whose hrefs and states these mirror: a link card, a link card that is the current page
+ * (`aria-current`), and toggle cards on and off (`aria-pressed`). Then a static card holding a field, and
+ * static cards on a grouped section. `data-kx-case` names each arrangement.
  */
 @Component({
   selector: 'kx-fixture',
   imports: [KxCard, KxCardHeader, KxCardTitle, KxCardDescription, KxCardContent, KxCardFooter, KxInput, KxLabel, KxSwitch, KxButton],
   template: `
     <div class="kx-render-grid">
+      <div data-kx-case="interactive" class="kx-render-cards">
+        <a kxCard href="#reports-q3">
+          <kx-card-header>
+            <kx-card-title>Q3 report</kx-card-title>
+            <kx-card-description>Revenue, churn and cohort retention.</kx-card-description>
+          </kx-card-header>
+        </a>
+        <a kxCard href="#reports-q4" aria-current="page">
+          <kx-card-header>
+            <kx-card-title>Q4 report</kx-card-title>
+            <kx-card-description>The report you are viewing.</kx-card-description>
+          </kx-card-header>
+        </a>
+        <button kxCard type="button" aria-pressed="true" class="kx-render-toggle-card">
+          <span class="kx-render-card-title">Daily backups</span>
+          <span class="kx-render-card-description">Included in this plan.</span>
+        </button>
+        <button kxCard type="button" aria-pressed="false" class="kx-render-toggle-card">
+          <span class="kx-render-card-title">Audit log</span>
+          <span class="kx-render-card-description">Add to this plan.</span>
+        </button>
+      </div>
       <kx-card data-kx-case="default">
         <kx-card-header>
           <kx-card-title>Create project</kx-card-title>
