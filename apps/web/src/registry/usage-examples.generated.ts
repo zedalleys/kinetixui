@@ -11,8 +11,14 @@
  * packages/ui-flutter/test/usage/usage_examples_test.dart
  */
 export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | "kotlin" | "dart", string>>> = {
+  "accordion-demo": {
+    "angular": "@Component({\n  selector: 'app-accordion-demo',\n  imports: [KxAccordion, KxAccordionItem, KxAccordionTrigger, KxAccordionContent],\n  template: `\n    <kx-accordion type=\"single\" collapsible [(value)]=\"open\">\n      <kx-accordion-item value=\"shipping\">\n        <kx-accordion-trigger>When will my order ship?</kx-accordion-trigger>\n        <kx-accordion-content>Orders leave the warehouse within two working days.</kx-accordion-content>\n      </kx-accordion-item>\n      <kx-accordion-item value=\"returns\">\n        <kx-accordion-trigger>Can I return an item?</kx-accordion-trigger>\n        <kx-accordion-content>Yes, within 30 days, in its original packaging.</kx-accordion-content>\n      </kx-accordion-item>\n    </kx-accordion>\n  `,\n})\nexport class AccordionDemo {\n  open: readonly string[] = ['shipping'];\n}",
+  },
   "alert-demo": {
     "angular": "<kx-alert>\n  <kx-alert-title>Heads up!</kx-alert-title>\n  <kx-alert-description>You can add components to your app using the CLI.</kx-alert-description>\n</kx-alert>",
+  },
+  "app-bar-demo": {
+    "angular": "@Component({\n  selector: 'app-app-bar-demo',\n  imports: [KxButton, KxAppBar, KxAppBarBrand, KxAppBarNav, KxAppBarLink, KxAppBarActions],\n  template: `\n    <header kxAppBar [sticky]=\"false\">\n      <a kxAppBarBrand href=\"/\">Acme</a>\n      <nav kxAppBarNav aria-label=\"Primary\">\n        <a kxAppBarLink href=\"/\" active>Overview</a>\n        <a kxAppBarLink href=\"/reports\">Reports</a>\n        <a kxAppBarLink href=\"/settings\">Settings</a>\n      </nav>\n      <div kxAppBarActions><button kxButton type=\"button\" size=\"sm\">New report</button></div>\n    </header>\n  `,\n})\nexport class AppBarDemo {}",
   },
   "aspect-ratio-demo": {
     "angular": "<kx-aspect-ratio [ratio]=\"16 / 9\">\n  <img src=\"/cover.jpg\" alt=\"\" />\n</kx-aspect-ratio>",
@@ -31,6 +37,9 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   },
   "banner-demo": {
     "angular": "@Component({\n  selector: 'app-banner-demo',\n  imports: [KxBanner],\n  template: `\n    @if (!dismissed) {\n      <kx-banner variant=\"warning\" sticky dismissible (dismiss)=\"dismissed = true\">\n        Scheduled maintenance begins at 02:00 UTC.\n        <button kxBannerAction type=\"button\" (click)=\"details()\">Read more</button>\n      </kx-banner>\n    }\n  `,\n})\nexport class BannerDemo {\n  dismissed = false;\n  details(): void {}\n}",
+  },
+  "breadcrumb-demo": {
+    "angular": "@Component({\n  selector: 'app-breadcrumb-demo',\n  imports: [KxBreadcrumb, KxBreadcrumbList, KxBreadcrumbItem, KxBreadcrumbLink, KxBreadcrumbPage, KxBreadcrumbSeparator],\n  template: `\n    <nav kxBreadcrumb>\n      <ol kxBreadcrumbList>\n        <li kxBreadcrumbItem><a kxBreadcrumbLink href=\"/\">Home</a></li>\n        <li kxBreadcrumbSeparator></li>\n        <li kxBreadcrumbItem><a kxBreadcrumbLink href=\"/settings\">Settings</a></li>\n        <li kxBreadcrumbSeparator></li>\n        <li kxBreadcrumbItem><span kxBreadcrumbPage>Billing</span></li>\n      </ol>\n    </nav>\n  `,\n})\nexport class BreadcrumbDemo {}",
   },
   "button-demo": {
     "angular": "<button kxButton>Button</button>",
@@ -56,6 +65,9 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   "code-block-demo": {
     "angular": "@Component({\n  selector: 'app-code-block-demo',\n  imports: [KxCodeBlock],\n  template: ` <kx-code-block [code]=\"snippet\" filename=\"main.ts\" /> `,\n})\nexport class CodeBlockDemo {\n  readonly snippet = \"import { KxButton } from '@kinetixui/angular';\";\n}",
   },
+  "collapsible-demo": {
+    "angular": "@Component({\n  selector: 'app-collapsible-demo',\n  imports: [KxButton, KxCollapsible, KxCollapsibleTrigger, KxCollapsibleContent],\n  template: `\n    <kx-collapsible [(open)]=\"showAdvanced\">\n      <button kxButton kxCollapsibleTrigger variant=\"Ghost\" size=\"sm\">Advanced settings</button>\n      <kx-collapsible-content>\n        <p>Webhooks retry failed deliveries three times, an hour apart.</p>\n      </kx-collapsible-content>\n    </kx-collapsible>\n  `,\n})\nexport class CollapsibleDemo {\n  showAdvanced = false;\n}",
+  },
   "description-list-demo": {
     "angular": "@Component({\n  selector: 'app-description-list-demo',\n  imports: [KxDescriptionList, KxDescriptionListItem],\n  template: `\n    <dl kxDescriptionList>\n      <div kxDescriptionListItem term=\"Status\">Active</div>\n      <div kxDescriptionListItem term=\"Plan\">Team &middot; annual</div>\n      <div kxDescriptionListItem term=\"Notes\" layout=\"stacked\">\n        Renews automatically unless cancelled 30 days before the term ends.\n      </div>\n    </dl>\n  `,\n})\nexport class DescriptionListDemo {}",
   },
@@ -73,6 +85,9 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   },
   "field-demo": {
     "angular": "<kx-field>\n  <label kxFieldLabel for=\"email\">Email</label>\n  <input kxInput id=\"email\" type=\"email\" aria-describedby=\"email-hint\" aria-invalid=\"true\" />\n  <p kxFieldDescription id=\"email-hint\">We only use this to sign you in.</p>\n  <kx-field-message variant=\"error\">Enter a valid address.</kx-field-message>\n</kx-field>",
+  },
+  "footer-demo": {
+    "angular": "@Component({\n  selector: 'app-footer-demo',\n  imports: [KxFooter, KxFooterColumns, KxFooterColumn, KxFooterLink, KxFooterBottom],\n  template: `\n    <footer kxFooter>\n      <div kxFooterColumns>\n        <kx-footer-column title=\"Product\">\n          <a kxFooterLink href=\"/pricing\">Pricing</a>\n          <a kxFooterLink href=\"/changelog\">Changelog</a>\n        </kx-footer-column>\n        <kx-footer-column title=\"Company\">\n          <a kxFooterLink href=\"/about\">About</a>\n          <a kxFooterLink href=\"/careers\">Careers</a>\n        </kx-footer-column>\n      </div>\n      <div kxFooterBottom>\n        <span>&copy; 2026 Acme, Inc.</span>\n        <a kxFooterLink href=\"/privacy\">Privacy</a>\n      </div>\n    </footer>\n  `,\n})\nexport class FooterDemo {}",
   },
   "form-demo": {
     "angular": "@Component({\n  selector: 'app-signup',\n  imports: [ReactiveFormsModule, KxButton, KxField, KxFieldLabel, KxFieldMessage, KxInput],\n  template: `\n    <form [formGroup]=\"form\" (ngSubmit)=\"submit()\">\n      <kx-field>\n        <label kxFieldLabel for=\"email\">Email</label>\n        <input kxInput id=\"email\" formControlName=\"email\" [attr.aria-invalid]=\"email.invalid && email.touched\" />\n        @if (email.invalid && email.touched) {\n          <kx-field-message variant=\"error\">Enter a valid address.</kx-field-message>\n        }\n      </kx-field>\n      <button kxButton type=\"submit\" [disabled]=\"form.invalid\">Sign up</button>\n    </form>\n  `,\n})\nexport class SignupForm {\n  readonly form = new FormGroup({\n    email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),\n  });\n  get email() {\n    return this.form.controls.email;\n  }\n  submit(): void {\n    if (this.form.valid) console.log(this.form.getRawValue());\n  }\n}",
@@ -110,11 +125,17 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   "native-select-demo": {
     "angular": "<select kxNativeSelect aria-label=\"Country\">\n  <option value=\"pt\">Portugal</option>\n  <option value=\"es\">Spain</option>\n</select>",
   },
+  "navigation-bar-demo": {
+    "angular": "@Component({\n  selector: 'app-navigation-bar-demo',\n  imports: [KxButton, KxNavigationBar],\n  template: `\n    <header kxNavigationBar title=\"Inbox\" infoText=\"3 unread\" backButton (back)=\"goBack()\">\n      <button kxButton kxNavigationBarActions type=\"button\" variant=\"Ghost\" size=\"sm\">Edit</button>\n    </header>\n  `,\n})\nexport class NavigationBarDemo {\n  goBack(): void {}\n}",
+  },
   "number-input-demo": {
     "angular": "<kx-number-input [(value)]=\"quantity\" [min]=\"1\" [max]=\"99\" aria-label=\"Quantity\" />",
   },
   "page-header-demo": {
     "angular": "@Component({\n  selector: 'app-page-header-demo',\n  imports: [KxButton, KxPageHeader],\n  template: `\n    <kx-page-header title=\"Billing\" description=\"Plan, invoices and payment method\">\n      <button kxButton kxPageHeaderActions type=\"button\" variant=\"Primary\">Upgrade</button>\n    </kx-page-header>\n  `,\n})\nexport class PageHeaderDemo {}",
+  },
+  "pagination-demo": {
+    "angular": "@Component({\n  selector: 'app-pagination-demo',\n  imports: [KxPagination, KxPaginationContent, KxPaginationItem, KxPaginationLink, KxPaginationPrevious, KxPaginationNext, KxPaginationEllipsis],\n  template: `\n    <nav kxPagination>\n      <ul kxPaginationContent>\n        <li kxPaginationItem><a kxPaginationPrevious href=\"?page=1\">Previous</a></li>\n        <li kxPaginationItem><a kxPaginationLink href=\"?page=1\">1</a></li>\n        <li kxPaginationItem><a kxPaginationLink href=\"?page=2\" current>2</a></li>\n        <li kxPaginationItem><a kxPaginationLink href=\"?page=3\">3</a></li>\n        <li kxPaginationItem><kx-pagination-ellipsis /></li>\n        <li kxPaginationItem><a kxPaginationNext href=\"?page=3\">Next</a></li>\n      </ul>\n    </nav>\n  `,\n})\nexport class PaginationDemo {}",
   },
   "password-input-demo": {
     "angular": "<kx-password-input [(value)]=\"password\" aria-label=\"Password\" />",
@@ -146,11 +167,20 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   "spinner-demo": {
     "angular": "<kx-spinner size=\"lg\" label=\"Loading projects…\" />",
   },
+  "stepper-demo": {
+    "angular": "@Component({\n  selector: 'app-stepper-demo',\n  imports: [KxStepper],\n  template: ` <ol kxStepper [steps]=\"steps\" [current]=\"1\"></ol> `,\n})\nexport class StepperDemo {\n  readonly steps: KxStep[] = [\n    { label: 'Account', description: 'Email and password' },\n    { label: 'Workspace', description: 'Name and region' },\n    { label: 'Invite', description: 'Add your team' },\n  ];\n}",
+  },
   "switch-demo": {
     "angular": "<kx-switch [(checked)]=\"notifications\" aria-label=\"Notifications\" />",
     "swift": "HStack {\n    KinetixSwitch(isOn: $airplane)\n    Text(\"Airplane mode\")\n}",
     "kotlin": "Row(verticalAlignment = Alignment.CenterVertically) {\n    KinetixSwitch(checked = airplane, onCheckedChange = { airplane = it })\n    Text(\"  Airplane mode\")\n}",
     "dart": "Row(\n  mainAxisSize: MainAxisSize.min,\n  children: <Widget>[\n    KinetixSwitch(value: airplane, onChanged: (bool v) => setState(() => airplane = v)),\n    const SizedBox(width: 8),\n    const Text('Airplane mode'),\n  ],\n),",
+  },
+  "tab-bar-demo": {
+    "angular": "@Component({\n  selector: 'app-tab-bar-demo',\n  imports: [KxTabBar, KxTabBarItem],\n  template: `\n    <nav kxTabBar aria-label=\"Primary\">\n      <a kxTabBarItem href=\"/home\" active>\n        <svg kxTabBarIcon viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 11l8-7 8 7v9h-5v-6H9v6H4z\" fill=\"currentColor\" /></svg>\n        Home\n      </a>\n      <a kxTabBarItem href=\"/inbox\" badge=\"3\">\n        <svg kxTabBarIcon viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 5h16v14H4zM4 13h5l1 2h4l1-2h5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" /></svg>\n        Inbox\n      </a>\n      <a kxTabBarItem href=\"/account\">\n        <svg kxTabBarIcon viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"8\" r=\"4\" fill=\"currentColor\" /><path d=\"M4 21a8 8 0 0116 0\" fill=\"currentColor\" /></svg>\n        Account\n      </a>\n    </nav>\n  `,\n})\nexport class TabBarDemo {}",
+  },
+  "table-of-contents-demo": {
+    "angular": "@Component({\n  selector: 'app-table-of-contents-demo',\n  imports: [KxTableOfContents],\n  template: ` <nav kxTableOfContents [items]=\"sections\" [(active)]=\"section\"></nav> `,\n})\nexport class TableOfContentsDemo {\n  readonly sections: KxTocItem[] = [\n    { id: 'install', label: 'Installation' },\n    { id: 'tokens', label: 'Load the tokens', level: 2 },\n    { id: 'usage', label: 'Usage' },\n  ];\n  section: string | null = 'install';\n}",
   },
   "tabs-demo": {
     "angular": "<kx-tabs [(value)]=\"tab\">\n  <kx-tab-list aria-label=\"Settings\">\n    <button kxTab value=\"account\">Account</button>\n    <button kxTab value=\"password\">Password</button>\n  </kx-tab-list>\n  <kx-tab-panel value=\"account\">Make changes to your account here.</kx-tab-panel>\n  <kx-tab-panel value=\"password\">Change your password here.</kx-tab-panel>\n</kx-tabs>",

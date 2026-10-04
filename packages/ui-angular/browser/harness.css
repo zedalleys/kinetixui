@@ -8,3 +8,9 @@ body {
   color: hsl(var(--foreground));
   font-family: var(--font-family-sans);
 }
+
+/* Prose links the fixtures place inside a component's content (a link in an accordion panel) are the page's
+   to colour, as any app colours its own body text — the user agent's #0000ee fails contrast on the dark theme. */
+a:not([class]) {
+  color: hsl(var(--primary));
+}

@@ -109,7 +109,7 @@
   },
   "coverage": {
     "React": 98,
-    "Angular": 46,
+    "Angular": 56,
     "SwiftUI": 90,
     "Compose": 90,
     "Flutter": 90
@@ -117,6 +117,7 @@
   "components": {
     "accordion": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -136,6 +137,7 @@
     ],
     "app-bar": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -180,6 +182,7 @@
     ],
     "breadcrumb": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -246,6 +249,7 @@
     ],
     "collapsible": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -358,6 +362,7 @@
     ],
     "footer": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -486,6 +491,7 @@
     ],
     "navigation-bar": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -515,6 +521,7 @@
     ],
     "pagination": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -633,6 +640,7 @@
     ],
     "stepper": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -646,6 +654,7 @@
     ],
     "tab-bar": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -658,6 +667,7 @@
     ],
     "table-of-contents": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -738,22 +748,10 @@
   },
   "platformNotes": {},
   "guidance": {
-    "accordion": {
-      "Angular": {
-        "type": "planned",
-        "wave": "layout"
-      }
-    },
     "alert-dialog": {
       "Angular": {
         "type": "planned",
         "wave": "overlays"
-      }
-    },
-    "app-bar": {
-      "Angular": {
-        "type": "planned",
-        "wave": "layout"
       }
     },
     "audio-player": {
@@ -776,12 +774,6 @@
         "reason": "AvatarGroup's React implementation re-wraps each child to draw the ring, which is not how any native layout system composes — compose KinetixAvatar directly in an HStack / Row / Row of widgets with a negative offset. Note that the component's actual value, the `max` cap and the \"+N\" overflow marker, would port cleanly to a native API that takes a list instead of children; this stays a composition because that API has not been designed, not because the platform cannot express it."
       }
     },
-    "breadcrumb": {
-      "Angular": {
-        "type": "planned",
-        "wave": "navigation"
-      }
-    },
     "calendar": {
       "Angular": {
         "type": "planned",
@@ -798,12 +790,6 @@
       "Angular": {
         "type": "planned",
         "wave": "data"
-      }
-    },
-    "collapsible": {
-      "Angular": {
-        "type": "planned",
-        "wave": "layout"
       }
     },
     "color-picker": {
@@ -914,12 +900,6 @@
         "wave": "advanced"
       }
     },
-    "footer": {
-      "Angular": {
-        "type": "planned",
-        "wave": "layout"
-      }
-    },
     "form": {
       "Angular": {
         "type": "native-equivalent",
@@ -1012,12 +992,6 @@
         "reason": "NativeSelect wraps the browser's own <select>, a web-only escape hatch — KinetixSelect already renders each platform's native picker."
       }
     },
-    "navigation-bar": {
-      "Angular": {
-        "type": "planned",
-        "wave": "navigation"
-      }
-    },
     "navigation-menu": {
       "Angular": {
         "type": "planned",
@@ -1040,12 +1014,6 @@
       "Angular": {
         "type": "planned",
         "wave": "overlays"
-      }
-    },
-    "pagination": {
-      "Angular": {
-        "type": "planned",
-        "wave": "navigation"
       }
     },
     "popover": {
@@ -1090,28 +1058,10 @@
         "wave": "overlays"
       }
     },
-    "stepper": {
-      "Angular": {
-        "type": "planned",
-        "wave": "navigation"
-      }
-    },
-    "tab-bar": {
-      "Angular": {
-        "type": "planned",
-        "wave": "navigation"
-      }
-    },
     "table": {
       "Angular": {
         "type": "planned",
         "wave": "layout"
-      }
-    },
-    "table-of-contents": {
-      "Angular": {
-        "type": "planned",
-        "wave": "navigation"
       }
     },
     "tooltip": {
@@ -1178,6 +1128,7 @@
   "verification": {
     "accordion": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1197,6 +1148,7 @@
     },
     "app-bar": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1241,6 +1193,7 @@
     },
     "breadcrumb": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1307,6 +1260,7 @@
     },
     "collapsible": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1419,6 +1373,7 @@
     },
     "footer": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1547,6 +1502,7 @@
     },
     "navigation-bar": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1576,6 +1532,7 @@
     },
     "pagination": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1694,6 +1651,7 @@
     },
     "stepper": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1707,6 +1665,7 @@
     },
     "tab-bar": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1719,6 +1678,7 @@
     },
     "table-of-contents": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1792,7 +1752,7 @@
       "beta": 98
     },
     "Angular": {
-      "preview": 46
+      "preview": 56
     },
     "SwiftUI": {
       "experimental": 90
@@ -1821,6 +1781,15 @@
         "interaction",
         "published",
         "reducedMotion"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
       ],
       "SwiftUI": [
         "build",
@@ -1888,6 +1857,15 @@
         "accessibility",
         "build",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -2032,6 +2010,14 @@
         "accessibility",
         "build",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -2258,6 +2244,14 @@
         "accessibility",
         "build",
         "interaction",
+        "published",
+        "reducedMotion"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
         "published",
         "reducedMotion"
       ],
@@ -2605,6 +2599,14 @@
         "accessibility",
         "build",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3029,6 +3031,14 @@
         "build",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -3119,6 +3129,14 @@
         "accessibility",
         "build",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3524,6 +3542,14 @@
         "build",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -3580,6 +3606,14 @@
         "build",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -3613,6 +3647,14 @@
         "accessibility",
         "build",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3867,14 +3909,14 @@
       "published": 98
     },
     "Angular": {
-      "build": 46,
-      "interaction": 46,
-      "accessibility": 46,
-      "rtl": 14,
-      "largeText": 19,
-      "reducedMotion": 1,
+      "build": 56,
+      "interaction": 56,
+      "accessibility": 56,
+      "rtl": 23,
+      "largeText": 29,
+      "reducedMotion": 4,
       "visual": 0,
-      "published": 46
+      "published": 56
     },
     "SwiftUI": {
       "build": 90,

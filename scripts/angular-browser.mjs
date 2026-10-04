@@ -153,7 +153,7 @@ async function liveAnimations(page) {
   );
 }
 
-const STATE_FIXTURES = ["selection", "entry", "composite", "card", "behaviour"];
+const STATE_FIXTURES = ["selection", "entry", "composite", "card", "behaviour", "navigation", "compositions"];
 
 /**
  * axe findings that are correct for axe and wrong for WCAG, each with the reason — the same mechanism and the
@@ -258,7 +258,7 @@ if (runs("accessibility")) {
       const page = await open(context, s.fixture, { demo: s.demo });
       const missing = new Set();
       let stops = 0;
-      for (let i = 0; i < 40; i++) {
+      for (let i = 0; i < 80; i++) {
         await press(page, "Tab");
         const stop = await page.evaluate(() => {
           const el = document.activeElement;
@@ -297,9 +297,17 @@ if (runs("accessibility")) {
  *   text entry   KxInput, KxLabel, KxField, KxTextarea, KxNativeSelect, KxNumberInput, KxPasswordInput,
  *                KxInputGroup, KxInputOtp
  *   selection    KxCheckbox, KxSwitch, KxRadioGroup, KxSegmentedControl, KxSlider, KxToggle, KxToggleGroup, KxRating
- *   navigation   KxTabs, KxCodeBlock
- *   disclosure   KxBanner, KxInform, KxTag, KxList (dismiss, remove and press — Angular has no accordion yet)
+ *   navigation   KxTabs, KxCodeBlock, KxBreadcrumb, KxPagination, KxTableOfContents, KxTabBar, KxNavigationBar,
+ *                KxAppBar (inline links when wide; below 48rem a Menu disclosure: aria-expanded, Escape, focus),
+ *                KxFooter — links stay links, `aria-current` marks where you are, one Tab stop per destination
+ *   disclosure   KxAccordion (heading + button, aria-expanded/-controls, single / collapsible / multiple,
+ *                ArrowUp/ArrowDown/Home/End between triggers, closed content out of the tab order),
+ *                KxCollapsible (the same contract on the caller's button; a focus ring flush with the content
+ *                edge is not clipped), and KxBanner, KxInform, KxTag, KxList (dismiss, remove and press)
  *   surface      KxCard (static: not a stop, no role; on a link or button: one stop, the element's own action)
+ *
+ * The stepper is not here: it is display, with no key to press. Its semantics are asserted in jsdom
+ * (navigation.spec.ts) and by axe below, and its layout by the RTL and 200% passes.
  * ════════════════════════════════════════════════════════════════════════════ */
 const BEHAVIOUR = [
   {
@@ -729,6 +737,259 @@ const BEHAVIOUR = [
       t((await toggle.getAttribute("aria-pressed")) === "true" && (await out(page, "backups")) === "true", "Space toggles it, and says so");
     },
   },
+  {
+    component: "KxAccordion",
+    fixture: "navigation",
+    async run(page, t) {
+      const faq = page.locator("#faq");
+      const trigger = (name) => faq.getByRole("button", { name });
+      const focused = (name) => trigger(name).evaluate((el) => el === document.activeElement);
+      t((await faq.getByRole("heading", { level: 3 }).count()) === 4, "each trigger sits in a heading at the level the page set");
+      const returns = trigger("Can I return an item after thirty days?");
+      const region = await returns.getAttribute("aria-controls");
+      t((await page.locator(`#${region}`).getAttribute("role")) === "region" && (await page.locator(`#${region}`).getAttribute("aria-labelledby")) === (await returns.getAttribute("id")), "aria-controls names a region labelled by its trigger");
+      await focus(page, "#faq kx-accordion-item:nth-child(2) button");
+      await press(page, "Enter");
+      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+      t(
+        (await out(page, "faq")) === "returns" && (await returns.getAttribute("aria-expanded")) === "true" && (await trigger("When will my order ship?").getAttribute("aria-expanded")) === "false",
+        "Enter opens its item and, in a single accordion, closes the other",
+        `model ${await out(page, "faq")}`,
+      );
+      t(await focused("Can I return an item after thirty days?"), "focus stays on the trigger");
+      t(await page.locator(`#${region}`).isVisible(), "its region is shown");
+      await press(page, "Space");
+      t((await out(page, "faq")) === "" && (await returns.getAttribute("aria-expanded")) === "false", "Space closes it again (collapsible)", `model "${await out(page, "faq")}"`);
+      await press(page, "ArrowDown");
+      t(await focused("What does the warranty cover?"), "ArrowDown moves to the next enabled trigger, skipping a disabled one");
+      t((await out(page, "faq")) === "", "an arrow moves focus and opens nothing");
+      await press(page, "ArrowDown");
+      t(await focused("When will my order ship?"), "ArrowDown from the last wraps to the first");
+      await press(page, "ArrowUp");
+      t(await focused("What does the warranty cover?"), "ArrowUp from the first wraps to the last");
+      await press(page, "Home");
+      t(await focused("When will my order ship?"), "Home moves to the first trigger");
+      await press(page, "End");
+      t(await focused("What does the warranty cover?"), "End moves to the last enabled trigger");
+      t(await trigger("Gift wrapping").isDisabled(), "a disabled item's trigger is a disabled button");
+      // Closed content leaves the tab order: with the shipping item closed, Tab from its trigger skips its link.
+      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+      await focus(page, "#faq kx-accordion-item:nth-child(1) button");
+      await press(page, "Tab");
+      t((await activeId(page)) !== "faq-link" && (await focused("Can I return an item after thirty days?")), "closed content is not reachable: Tab goes to the next trigger", `focus on #${await activeId(page)}`);
+      await focus(page, "#faq kx-accordion-item:nth-child(1) button");
+      await press(page, "Enter");
+      await press(page, "Tab");
+      t((await activeId(page)) === "faq-link", "open content is: Tab goes from the trigger into it", `focus on #${await activeId(page)}`);
+      // Single, not collapsible: the open trigger cannot close, and says so.
+      const team = page.locator("#plan").getByRole("button", { name: "Team plan" });
+      t((await team.getAttribute("aria-disabled")) === "true" && (await team.getAttribute("tabindex")) !== "-1", "single, not collapsible: the open trigger reports aria-disabled and stays focusable");
+      await team.focus();
+      await press(page, "Enter");
+      t((await out(page, "plan")) === "team", "and Enter does not close it", `model ${await out(page, "plan")}`);
+      t((await page.locator("#plan").getByRole("heading", { level: 4 }).count()) === 2, "headingLevel sets the level");
+      await press(page, "ArrowDown");
+      await press(page, "Enter");
+      t((await out(page, "plan")) === "enterprise", "another item opens and takes over", `model ${await out(page, "plan")}`);
+      // Multiple: independent.
+      const topics = page.locator("#topics");
+      await topics.getByRole("button", { name: "Alerts" }).focus();
+      await press(page, "Enter");
+      await press(page, "ArrowDown");
+      await press(page, "Enter");
+      t((await out(page, "topics")) === "a,b", "multiple: items open independently", `model ${await out(page, "topics")}`);
+    },
+  },
+  {
+    component: "KxCollapsible",
+    fixture: "navigation",
+    async run(page, t) {
+      const trigger = page.locator("#advanced-trigger");
+      const content = await trigger.getAttribute("aria-controls");
+      t(!!content && (await page.locator(`#${content}`).count()) === 1, "aria-controls names content that exists while closed");
+      t((await trigger.getAttribute("aria-expanded")) === "false" && !(await page.locator("#advanced-link").isVisible()), "closed: not expanded, content not shown");
+      await focus(page, "#advanced-trigger");
+      await press(page, "Enter");
+      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+      t((await out(page, "advanced")) === "true" && (await trigger.getAttribute("aria-expanded")) === "true", "Enter opens it, and the model follows");
+      t((await activeId(page)) === "advanced-trigger", "focus stays on the trigger");
+      await press(page, "Tab");
+      t((await activeId(page)) === "advanced-link", "Tab goes from the trigger into the content", `focus on #${await activeId(page)}`);
+      // The content clips while it animates; a focus ring flush with its edge must still be drawn whole.
+      const ring = await page.locator("#advanced-link").evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        // the UA ring this link draws: a 1px offset, then the ring itself — its centre lies 2px outside the box
+        return { x: r.left - 2, y: r.top + r.height / 2 };
+      });
+      const shot = await framer({ dpr: 1, pad: 0 })(page, { x: ring.x - 1, y: ring.y - 1, width: 3, height: 3 });
+      const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor.match(/\d+/g).slice(0, 3).map(Number));
+      t(contrast(shot.at(ring.x, ring.y), bg) > 1.05, "a focus ring flush with the content's edge is not clipped", `pixel ${shot.at(ring.x, ring.y)} vs background ${bg}`);
+      await focus(page, "#advanced-trigger");
+      await press(page, "Space");
+      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+      t((await out(page, "advanced")) === "false", "Space closes it");
+      await press(page, "Tab");
+      t((await activeId(page)) !== "advanced-link" && (await activeId(page)) !== "locked-trigger", "closed content and a disabled trigger are not stops", `focus on #${await activeId(page)}`);
+      t(await page.locator("#locked-trigger").isDisabled(), "a disabled collapsible's trigger is disabled");
+    },
+  },
+  {
+    component: "KxBreadcrumb",
+    fixture: "navigation",
+    async run(page, t) {
+      const nav = page.getByRole("navigation", { name: "Breadcrumb" });
+      t((await nav.count()) === 1 && (await nav.getByRole("list").count()) === 1, "a navigation landmark named Breadcrumb, around a list");
+      t((await nav.getByRole("link").count()) === 2, "the crumbs above the current page are links");
+      const current = nav.locator("[aria-current=page]");
+      t((await current.count()) === 1 && (await current.evaluate((el) => el.tagName)) === "SPAN" && (await current.innerText()) === "Billing and invoices", "the current page is aria-current=page, and not a link");
+      await focus(page, "#crumb-home");
+      await press(page, "Tab");
+      t((await activeId(page)) === "crumb-settings", "Tab moves crumb to crumb; separators are not stops", `focus on #${await activeId(page)}`);
+      await press(page, "Tab");
+      t(!(await page.evaluate(() => !!document.activeElement?.closest(".kx-breadcrumb"))), "the current page is not a stop");
+      await focus(page, "#crumb-settings");
+      await press(page, "Enter");
+      t((await page.evaluate(() => location.hash)) === "#settings", "Enter follows the link");
+    },
+  },
+  {
+    component: "KxPagination",
+    fixture: "navigation",
+    async run(page, t) {
+      const nav = page.getByRole("navigation", { name: "Results pages" });
+      // read without waiting: a page with no current entry must fail here, not time out
+      const current = async () => ((await nav.locator("[aria-current=page]").count()) === 1 ? nav.locator("[aria-current=page]").innerText() : "no current page");
+      t((await current()) === "1", "the current page is aria-current=page");
+      t(await page.locator("#page-prev").isDisabled(), "Previous is disabled on the first page");
+      await focus(page, "#page-prev");
+      t((await activeId(page)) !== "page-prev", "a disabled Previous is not a stop");
+      await nav.getByRole("button", { name: "3", exact: true }).focus();
+      await press(page, "Enter");
+      t((await out(page, "page")) === "3" && (await current()) === "3", "Enter on a page selects it, and aria-current moves", `model ${await out(page, "page")}`);
+      t((await nav.getByRole("button", { name: "3", exact: true }).evaluate((el) => el === document.activeElement)), "focus stays where it was");
+      await page.locator("#page-next").focus();
+      await press(page, "Enter");
+      t((await out(page, "page")) === "4" && (await page.locator("#page-next").isDisabled()), "Next steps forward, and disables itself on the last page", `model ${await out(page, "page")}`);
+      t((await page.getByRole("button", { name: "Previous" }).first().isEnabled()), "Previous is enabled once there is a previous page");
+      // As links: real links, a current link, and a disabled link that cannot be followed.
+      const archive = page.getByRole("navigation", { name: "Archive pages" });
+      t((await archive.getByRole("link").count()) === 4, "as anchors, every entry is still a link");
+      t((await page.locator("#archive-1").getAttribute("aria-current")) === "page", "the current link is aria-current=page");
+      const prev = page.locator("#archive-prev");
+      t((await prev.getAttribute("aria-disabled")) === "true" && (await prev.evaluate((el) => el.tabIndex)) === -1, "a disabled link says so and leaves the tab order");
+      // force: Playwright would wait for an aria-disabled element to become enabled; a person can still click it
+      await prev.click({ force: true });
+      t((await page.evaluate(() => location.hash)) !== "#archive-0", "a disabled link is not followed");
+      await page.locator("#archive-2").focus();
+      await press(page, "Enter");
+      t((await page.evaluate(() => location.hash)) === "#archive-2", "Enter follows a page link");
+    },
+  },
+  {
+    component: "KxTableOfContents",
+    fixture: "navigation",
+    async run(page, t) {
+      const nav = page.getByRole("navigation", { name: "On this page" });
+      const links = nav.getByRole("link");
+      t((await links.count()) === 3 && (await links.first().getAttribute("href")) === "#install", "in-page anchors in a named landmark");
+      t((await nav.locator("[aria-current=location]").innerText()) === "Installation", "the section being read is aria-current=location");
+      await links.first().focus();
+      await press(page, "Tab");
+      await press(page, "Tab");
+      t((await links.nth(2).evaluate((el) => el === document.activeElement)), "every entry is a Tab stop, in order");
+      await press(page, "Enter");
+      t(
+        (await out(page, "section")) === "usage" && (await nav.locator("[aria-current=location]").innerText()) === "Usage" && (await page.evaluate(() => location.hash)) === "#usage",
+        "Enter follows the anchor and marks its entry current",
+        `model ${await out(page, "section")}`,
+      );
+    },
+  },
+  {
+    component: "KxTabBar",
+    fixture: "navigation",
+    async run(page, t) {
+      const nav = page.getByRole("navigation", { name: "Primary sections" });
+      t((await nav.getByRole("button", { name: "Inbox (3)", exact: true }).count()) === 1, "each destination is named by its label, the badge read after it");
+      t((await page.locator("#tb-home").getAttribute("aria-current")) === "page", "the current destination is aria-current=page");
+      await focus(page, "#tb-home");
+      await press(page, "Tab");
+      t((await activeId(page)) === "tb-inbox", "each destination is its own Tab stop (a navigation, not a tablist)");
+      await press(page, "Enter");
+      t((await out(page, "destination")) === "inbox" && (await page.locator("#tb-inbox").getAttribute("aria-current")) === "page" && !(await page.locator("#tb-home").getAttribute("aria-current")), "Enter selects it, and aria-current moves", `model ${await out(page, "destination")}`);
+      t((await nav.getByRole("tablist").count()) === 0, "no tab semantics are claimed");
+    },
+  },
+  {
+    component: "KxNavigationBar",
+    fixture: "navigation",
+    async run(page, t) {
+      const scope = page.locator(S("navigation-bar"));
+      t((await scope.getByRole("heading", { level: 2, name: /regional support team/ }).count()) === 1, "the title is a heading at the level the page set");
+      const back = scope.getByRole("button", { name: "Back" });
+      t((await back.count()) === 1, "Back is a button named Back");
+      await back.focus();
+      await press(page, "Enter");
+      t((await out(page, "backs")) === "1", "Enter activates it");
+      await press(page, "Tab");
+      t((await activeId(page)) === "nb-edit", "Tab goes from Back to the trailing action", `focus on #${await activeId(page)}`);
+    },
+  },
+  {
+    component: "KxAppBar",
+    fixture: "navigation",
+    async run(page, t) {
+      const scope = page.locator(S("app-bar"));
+      const nav = scope.getByRole("navigation", { name: "Primary" });
+      const toggle = scope.getByRole("button", { name: "Menu" });
+      t((await nav.getByRole("link", { name: "Overview" }).getAttribute("aria-current")) === "page", "the current destination is aria-current=page");
+      // Wide: the links are simply there, and the menu button is not.
+      t(!(await toggle.isVisible()) && (await nav.getByRole("link", { name: "Reports" }).isVisible()), "wide: links shown inline, no menu button");
+      await focus(page, `${S("app-bar")} [kxAppBarBrand]`);
+      await press(page, "Tab");
+      t((await page.evaluate(() => document.activeElement?.textContent?.trim())) === "Overview", "wide: Tab goes from the brand to the first link");
+      // Narrow: a disclosure.
+      await page.setViewportSize({ width: 390, height: 1400 });
+      await settle(page);
+      // crossing the breakpoint, the wide layout's always-shown links collapse with the disclosure's own motion
+      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+      t((await toggle.isVisible()) && (await toggle.getAttribute("aria-expanded")) === "false" && (await toggle.getAttribute("aria-controls")) === (await scope.locator("nav[kxAppBarNav]").getAttribute("id")), "narrow: a Menu button that controls the navigation, collapsed");
+      t(!(await nav.getByRole("link", { name: "Reports" }).isVisible()), "narrow and closed: the links are not shown");
+      // Tab order is brand, menu button, links, actions; the screen must read in the same order
+      const [tg, act] = [await toggle.boundingBox(), await page.locator("#app-bar-new").boundingBox()];
+      t(act.y >= tg.y + tg.height - 1, "narrow: the actions sit after the menu button on screen, as they do in Tab order", `button bottom ${(tg.y + tg.height).toFixed(1)}, actions top ${act.y.toFixed(1)}`);
+      await toggle.focus();
+      await press(page, "Tab");
+      t((await activeId(page)) === "app-bar-new", "narrow and closed: Tab skips the hidden links", `focus on #${await activeId(page)}`);
+      await toggle.focus();
+      await press(page, "Enter");
+      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+      t((await toggle.getAttribute("aria-expanded")) === "true" && (await out(page, "menu")) === "true", "Enter opens it, and says so");
+      await press(page, "Tab");
+      t((await page.evaluate(() => document.activeElement?.textContent?.trim())) === "Overview", "Tab goes from the button straight into the links");
+      await press(page, "Escape");
+      t((await out(page, "menu")) === "false" && (await toggle.evaluate((el) => el === document.activeElement)), "Escape closes it and returns focus to the button");
+      await press(page, "Enter");
+      await nav.getByRole("link", { name: "Reports" }).focus();
+      await press(page, "Enter");
+      t((await out(page, "followed")) === "reports" && (await out(page, "menu")) === "false", "following a link closes the menu");
+    },
+  },
+  {
+    component: "KxFooter",
+    fixture: "navigation",
+    async run(page, t) {
+      const scope = page.locator(S("footer"));
+      t((await scope.getByRole("group", { name: "Product" }).getByRole("link").count()) === 2, "each column is a group named by its title");
+      await focus(page, "#ft-pricing");
+      await press(page, "Tab");
+      await press(page, "Tab");
+      t((await page.evaluate(() => document.activeElement?.textContent?.trim())) === "About", "Tab runs down a column, then into the next");
+      await focus(page, "#ft-privacy");
+      await press(page, "Enter");
+      t((await page.evaluate(() => location.hash)) === "#privacy", "Enter follows a link");
+    },
+  },
 ];
 if (runs("interaction")) {
   assertClaims("interaction, accessibility", BEHAVIOUR);
@@ -736,7 +997,7 @@ if (runs("interaction")) {
   for (const theme of ["light"]) {
     for (const subject of BEHAVIOUR) {
       const context = await browser.newContext({ viewport: { width: 1024, height: 1400 } });
-      const page = await open(context, "behaviour", { theme });
+      const page = await open(context, subject.fixture ?? "behaviour", { theme });
       const name = subject.component;
       try {
         await subject.run(page, (ok, what, detail) => check(ok, `${name}: ${what}`, detail));
@@ -761,6 +1022,11 @@ if (runs("interaction")) {
  *   text-bearing controls (their text grows ≥1.8x and the box absorbs all of it, nothing truncated)
  *     KxInput, KxTextarea, KxNativeSelect, KxNumberInput, KxPasswordInput, KxInputGroup, KxTabs, KxLabel,
  *     KxField, KxSegmentedControl, KxButton
+ *   navigation and disclosure (src/fixtures/navigation.ts), text-bearing
+ *     KxAccordion (a trigger, and open content: still reachable, nothing clipped by the disclosure's own clip),
+ *     KxCollapsible, KxBreadcrumb and KxPagination (rows that wrap rather than overflow), KxTableOfContents,
+ *     KxTabBar, KxStepper (a horizontal stepper reflows into a list), KxNavigationBar (the title wraps, it is
+ *     not truncated), KxAppBar, KxFooter. A link is "operable" when Enter still follows it.
  *
  * A one-time code wraps at 390px and 2x; every cell must then still carry all four borders, so a wrapped row is
  * closed at the end it starts from (React's InputOTP rule).
@@ -835,7 +1101,18 @@ const LARGE = [
     type: "4",
     out: "code",
   },
-  { component: "KxRating", control: `${S("rating")} label.kx-rating__item`, focus: `${S("rating")} kx-rating input`, key: "Space", out: "stars" },
+  { component: "KxRating", control: `${S("rating")} label.kx-rating__item`, focus: `${S("rating")} kx-rating input`, key: "Space", out: "stars" },  // Navigation and disclosure (src/fixtures/navigation.ts)
+  { component: "KxAccordion", fixture: "navigation", control: "#faq kx-accordion-item:nth-child(2) button", text: "#faq kx-accordion-item:nth-child(2) button", inside: "#faq kx-accordion-item:nth-child(2) button > *", focus: "#faq kx-accordion-item:nth-child(2) button", key: "Enter", out: "faq" },
+  { component: "KxAccordion", fixture: "navigation", control: "#faq kx-accordion-item:nth-child(1) .kx-accordion__inner", text: "#faq kx-accordion-item:nth-child(1) .kx-accordion__inner" },
+  { component: "KxCollapsible", fixture: "navigation", control: "#advanced-trigger", text: "#advanced-trigger", focus: "#advanced-trigger", key: "Enter", out: "advanced" },
+  { component: "KxBreadcrumb", fixture: "navigation", control: `${S("breadcrumb")} .kx-breadcrumb__list`, text: "#crumb-settings", inside: `${S("breadcrumb")} .kx-breadcrumb__list > *`, focus: "#crumb-settings", key: "Enter", hash: "#settings" },
+  { component: "KxPagination", fixture: "navigation", control: `${S("pagination")} .kx-pagination__content`, text: "#page-next", inside: `${S("pagination")} .kx-pagination__content > *`, focus: "#page-next", key: "Enter", out: "page" },
+  { component: "KxTableOfContents", fixture: "navigation", control: `${S("table-of-contents")} li:nth-child(2) a`, text: `${S("table-of-contents")} li:nth-child(2) a`, focus: `${S("table-of-contents")} li:nth-child(3) a`, key: "Enter", out: "section" },
+  { component: "KxTabBar", fixture: "navigation", control: "#tb-inbox", text: "#tb-inbox .kx-tab-bar__label", inside: "#tb-inbox > *", focus: "#tb-inbox", key: "Enter", out: "destination" },
+  { component: "KxStepper", fixture: "navigation", control: `${S("stepper")} ol:first-of-type li:nth-child(2)`, text: `${S("stepper")} ol:first-of-type li:nth-child(2) .kx-stepper__label`, inside: `${S("stepper")} ol:first-of-type li:nth-child(2) > *` },
+  { component: "KxNavigationBar", fixture: "navigation", control: `${S("navigation-bar")} header`, text: `${S("navigation-bar")} .kx-navigation-bar__title`, inside: `${S("navigation-bar")} header > *`, focus: `${S("navigation-bar")} .kx-navigation-bar__back`, key: "Enter", out: "backs" },
+  { component: "KxAppBar", fixture: "navigation", control: `${S("app-bar")} header`, text: `${S("app-bar")} [data-kx-case=current]`, inside: `${S("app-bar")} header > :not(.kx-app-bar__toggle)`, focus: `${S("app-bar")} [data-kx-case=rest]`, key: "Enter", out: "followed" },
+  { component: "KxFooter", fixture: "navigation", control: "#ft-pricing", text: "#ft-pricing", focus: "#ft-pricing", key: "Enter", hash: "#pricing" },
 ];
 const SCALE = 2;
 const MIN_RATIO = 1.8;
@@ -909,7 +1186,7 @@ if (runs("largeText")) {
     for (const viewport of [{ width: 1024, height: 1400 }, { width: 390, height: 1400 }]) {
       const narrow = viewport.width < 1024;
       const context = await browser.newContext({ viewport });
-      const page = await open(context, "behaviour");
+      const page = await open(context, subject.fixture ?? "behaviour");
       try {
         const before = await measureLarge(page, subject);
         await setRootFontSize(page, 16 * SCALE);
@@ -969,6 +1246,7 @@ if (runs("largeText")) {
           else if (subject.key) await page.keyboard.press(subject.key);
           await settle(page);
           if (subject.out) check((await out(page, subject.out)) !== was, `${name}: still operable from the keyboard`, `${was} -> ${await out(page, subject.out)}`);
+          if (subject.hash) check((await page.evaluate(() => location.hash)) === subject.hash, `${name}: still operable from the keyboard (the link is followed)`, await page.evaluate(() => location.hash));
         }
       } catch (err) {
         check(false, `${name}: ran to completion`, String(err.message).split("\n")[0]);
@@ -976,17 +1254,17 @@ if (runs("largeText")) {
       await context.close();
     }
   }
-  // And the page as a whole: nothing on it, claimed here or not, makes a phone scroll sideways at 200%.
-  {
+  // And each page as a whole: nothing on it, claimed here or not, makes a phone scroll sideways at 200%.
+  for (const fixture of ["behaviour", "navigation"]) {
     const context = await browser.newContext({ viewport: { width: 390, height: 1400 } });
-    const page = await open(context, "behaviour");
+    const page = await open(context, fixture);
     await setRootFontSize(page, 16 * SCALE);
     await settle(page);
     const overflowX = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     const wide = await page.evaluate(() =>
       [...document.querySelectorAll("section[data-kx-subject]")].filter((s) => s.scrollWidth > s.clientWidth + 1).map((s) => s.dataset.kxSubject),
     );
-    check(overflowX <= 0 && wide.length === 0, `the whole page fits 390px at ${SCALE}x text`, `${overflowX}px; ${wide.join(", ")}`);
+    check(overflowX <= 0 && wide.length === 0, `the whole ${fixture} page fits 390px at ${SCALE}x text`, `${overflowX}px; ${wide.join(", ")}`);
     await context.close();
   }
 }
@@ -1013,6 +1291,18 @@ if (runs("largeText")) {
  *   KxInputOtp                 the first cell at the inline start, and it is the one the first character fills
  *   KxRating                   the first star at the inline start; the arrow pointing toward the inline end
  *                              raises the rating
+ *   KxBreadcrumb               the path runs from the inline start; the separator glyph, read from its
+ *                              pixels, points toward the inline end
+ *   KxPagination               Previous at the inline start pointing back, Next at the end pointing on,
+ *                              numbers ascending toward the end
+ *   KxTableOfContents          nesting indents from the inline start; the current bar is on that edge
+ *   KxTabBar, KxFooter         the first destination / column at the inline start
+ *   KxStepper                  step 1 at the inline start, the connector between steps 1 and 2; vertical:
+ *                              the marker at the inline start of its text
+ *   KxNavigationBar            Back at the inline start, pointing that way; actions at the inline end
+ *   KxAppBar                   brand, links in order, then actions, from the inline start
+ *   KxAccordion                label at the inline start, chevron at the end (it points down, so it does not
+ *                              mirror); ArrowDown still moves down
  * ════════════════════════════════════════════════════════════════════════════ */
 /** Positive when `a` lies further toward the inline end than `b`, in `dir`. */
 const towardEnd = (dir, a, b) => (dir === "rtl" ? b - a : a - b);
@@ -1178,6 +1468,155 @@ RTL.push(
     },
   },
 );
+/**
+ * Which way a rendered glyph points, read from its pixels: the ink of an angle mark (‹ ›) is furthest toward its
+ * tip in its middle rows and furthest from it at its top and bottom. Returns "right" or "left" — what a reader
+ * sees, whatever the source character was.
+ */
+async function glyphPoints(page, selector) {
+  await page.locator(selector).first().scrollIntoViewIfNeeded();
+  const r = await rectOf(page, selector);
+  const dpr = await page.evaluate(() => devicePixelRatio);
+  const frame = await framer({ dpr, pad: 2 })(page, r);
+  const bg = frame.at(r.left - 1, r.top - 1);
+  // Only the glyph's ink decides: its line box carries empty leading above and below.
+  // Ink is relative to the glyph's own darkest pixel, so a disabled (deliberately faint) glyph still reads.
+  const px = [];
+  for (let y = r.top; y <= r.bottom; y += 1 / dpr) for (let x = r.left; x <= r.right; x += 1 / dpr) px.push([x, y, contrast(frame.at(x, y), bg)]);
+  const peak = Math.max(...px.map((p) => p[2]));
+  if (peak < 1.3) return "unreadable";
+  const ink = px.filter((p) => p[2] > 1 + (peak - 1) * 0.4);
+  if (ink.length < 6) return "unreadable";
+  const [top, bottom] = [Math.min(...ink.map((p) => p[1])), Math.max(...ink.map((p) => p[1]))];
+  const third = (bottom - top) / 3;
+  const centroid = (y0, y1) => {
+    const xs = ink.filter((p) => p[1] >= y0 && p[1] <= y1).map((p) => p[0]);
+    return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+  };
+  const middle = centroid(top + third, bottom - third);
+  const ends = [centroid(top, top + third), centroid(bottom - third, bottom)].filter((v) => v != null);
+  if (middle == null || !ends.length) return "unreadable";
+  // A chevron's tip is its middle; the arms trail behind it. The tip is the side it points to.
+  return middle > ends.reduce((a, b) => a + b, 0) / ends.length ? "right" : "left";
+}
+const pointsToward = (dir, seen) => (seen === "unreadable" ? "unreadable" : (seen === "right") === (dir === "ltr") ? "inline end" : "inline start");
+RTL.push(
+  {
+    component: "KxBreadcrumb",
+    fixture: "navigation",
+    region: S("breadcrumb"),
+    async run(page, dir, t) {
+      const [home, settings] = [await rectOf(page, "#crumb-home"), await rectOf(page, "#crumb-settings")];
+      t(towardEnd(dir, mid(settings), mid(home)) > 0, "the path runs from the inline start");
+      const seen = await glyphPoints(page, `${S("breadcrumb")} .kx-breadcrumb__separator`);
+      t(pointsToward(dir, seen) === "inline end", "the separator points along the reading direction", `points ${seen}`);
+    },
+  },
+  {
+    component: "KxPagination",
+    fixture: "navigation",
+    region: S("pagination"),
+    async run(page, dir, t) {
+      const [prev, next] = [await rectOf(page, "#page-prev"), await rectOf(page, "#page-next")];
+      t(towardEnd(dir, mid(next), mid(prev)) > 0, "Previous at the inline start, Next at the inline end");
+      const [p, n] = [await glyphPoints(page, "#page-prev .kx-pagination__glyph"), await glyphPoints(page, "#page-next .kx-pagination__glyph")];
+      t(pointsToward(dir, p) === "inline start" && pointsToward(dir, n) === "inline end", "Previous points back, Next points on, in reading terms", `previous ${p}, next ${n}`);
+      const [one, two] = [await rectOf(page, `${S("pagination")} .kx-pagination__link[data-kx-case=current]`), await rectOf(page, `${S("pagination")} li:nth-child(3) button`)];
+      t(towardEnd(dir, mid(two), mid(one)) > 0, "page numbers ascend toward the inline end");
+    },
+  },
+  {
+    component: "KxTableOfContents",
+    fixture: "navigation",
+    region: S("table-of-contents"),
+    async run(page, dir, t) {
+      const startOf = async (sel) => page.locator(sel).evaluate((el, d) => {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const r = range.getBoundingClientRect();
+        return d === "rtl" ? r.right : r.left;
+      }, dir);
+      const [top, nested] = [await startOf(`${S("table-of-contents")} li:nth-child(1) a`), await startOf(`${S("table-of-contents")} li:nth-child(2) a`)];
+      t(towardEnd(dir, nested, top) > 4, "a nested entry is indented from the inline start", `level 1 text at ${top.toFixed(1)}, level 2 at ${nested.toFixed(1)}`);
+      // a bar is a width AND a colour that is not transparent, on the physical side the direction resolves to
+      const bar = await page.locator(`${S("table-of-contents")} [aria-current]`).evaluate((el) => {
+        const cs = getComputedStyle(el);
+        const seen = (w, c) => parseFloat(w) >= 2 && !/rgba\(.*,\s*0\)$/.test(c) && c !== "transparent";
+        return { left: seen(cs.borderLeftWidth, cs.borderLeftColor), right: seen(cs.borderRightWidth, cs.borderRightColor), lc: cs.borderLeftColor, rc: cs.borderRightColor };
+      });
+      const [start, end] = dir === "rtl" ? [bar.right, bar.left] : [bar.left, bar.right];
+      t(start && !end, "the current indicator is on the inline-start edge", `left ${bar.left ? "drawn" : "none"} (${bar.lc}), right ${bar.right ? "drawn" : "none"} (${bar.rc})`);
+    },
+  },
+  {
+    component: "KxTabBar",
+    fixture: "navigation",
+    region: S("tab-bar"),
+    async run(page, dir, t) {
+      const [home, inbox] = [await rectOf(page, "#tb-home"), await rectOf(page, "#tb-inbox")];
+      t(towardEnd(dir, mid(inbox), mid(home)) > 0, "the first destination sits at the inline start");
+    },
+  },
+  {
+    component: "KxStepper",
+    fixture: "navigation",
+    region: S("stepper"),
+    async run(page, dir, t) {
+      const marker = (n) => rectOf(page, `${S("stepper")} ol:first-of-type li:nth-child(${n}) .kx-stepper__marker`);
+      const [one, two] = [await marker(1), await marker(2)];
+      t(towardEnd(dir, mid(two), mid(one)) > 0, "step 1 sits at the inline start");
+      const line = await rectOf(page, `${S("stepper")} ol:first-of-type li:nth-child(1) .kx-stepper__connector`);
+      const [lo, hi] = [Math.min(mid(one), mid(two)), Math.max(mid(one), mid(two))];
+      t(line.left >= lo && line.right <= hi && line.width > 0, "the connector runs between step 1 and step 2", `${line.left.toFixed(0)}–${line.right.toFixed(0)} within ${lo.toFixed(0)}–${hi.toFixed(0)}`);
+      const [vMarker, vText] = [await rectOf(page, "#stepper-vertical li:nth-child(1) .kx-stepper__marker"), await rectOf(page, "#stepper-vertical li:nth-child(1) .kx-stepper__text")];
+      t(towardEnd(dir, mid(vText), mid(vMarker)) > 0, "vertical: the marker sits at the inline start of its text");
+    },
+  },
+  {
+    component: "KxNavigationBar",
+    fixture: "navigation",
+    region: S("navigation-bar"),
+    async run(page, dir, t) {
+      const [back, title, edit] = [await rectOf(page, `${S("navigation-bar")} .kx-navigation-bar__back`), await rectOf(page, `${S("navigation-bar")} .kx-navigation-bar__title`), await rectOf(page, "#nb-edit")];
+      t(towardEnd(dir, mid(title), mid(back)) > 0 && towardEnd(dir, mid(edit), mid(title)) > 0, "Back at the inline start, actions at the inline end");
+      const seen = await glyphPoints(page, `${S("navigation-bar")} .kx-navigation-bar__glyph`);
+      t(pointsToward(dir, seen) === "inline start", "Back points toward the inline start", `points ${seen}`);
+    },
+  },
+  {
+    component: "KxAppBar",
+    fixture: "navigation",
+    region: S("app-bar"),
+    async run(page, dir, t) {
+      const [brand, overview, reports, action] = [await rectOf(page, `${S("app-bar")} [kxAppBarBrand]`), await rectOf(page, `${S("app-bar")} [data-kx-case=current]`), await rectOf(page, `${S("app-bar")} [data-kx-case=rest]`), await rectOf(page, "#app-bar-new")];
+      t(towardEnd(dir, mid(overview), mid(brand)) > 0 && towardEnd(dir, mid(reports), mid(overview)) > 0 && towardEnd(dir, mid(action), mid(reports)) > 0, "brand, links in order, then actions, from the inline start");
+    },
+  },
+  {
+    component: "KxAccordion",
+    fixture: "navigation",
+    region: S("accordion"),
+    async run(page, dir, t) {
+      const trigger = "#faq kx-accordion-item:nth-child(2) button";
+      const [label, chevron] = [await rectOf(page, `${trigger} .kx-accordion__label`), await rectOf(page, `${trigger} .kx-accordion__chevron`)];
+      t(towardEnd(dir, mid(chevron), mid(label)) > 0, "the label at the inline start, the chevron at the inline end");
+      const align = await page.locator(`${trigger}`).evaluate((el) => getComputedStyle(el).textAlign);
+      t(["start", dir === "rtl" ? "right" : "left"].includes(align), "the label aligns to the inline start", align);
+      await focus(page, trigger);
+      await press(page, "ArrowDown");
+      t((await page.evaluate(() => document.activeElement?.textContent?.trim())) === "What does the warranty cover?", "ArrowDown still moves down: block-axis keys do not mirror");
+    },
+  },
+  {
+    component: "KxFooter",
+    fixture: "navigation",
+    region: S("footer"),
+    async run(page, dir, t) {
+      const [product, company] = [await rectOf(page, `${S("footer")} kx-footer-column:nth-child(1)`), await rectOf(page, `${S("footer")} kx-footer-column:nth-child(2)`)];
+      t(towardEnd(dir, mid(company), mid(product)) > 0, "the first column sits at the inline start");
+    },
+  },
+);
 const DIRECTION_CASES = [
   { page: "ltr", region: null },
   { page: "rtl", region: null },
@@ -1191,8 +1630,8 @@ if (runs("rtl")) {
     const want = c.region ?? c.page;
     const label = c.region ? `${c.region} region in an ${c.page} page` : `${c.page} page`;
     for (const subject of RTL) {
-      const context = await browser.newContext({ viewport: { width: 1024, height: 1400 } });
-      const page = await open(context, "behaviour", { dir: c.page });
+      const context = await browser.newContext({ viewport: subject.viewport ?? { width: 1024, height: 1400 } });
+      const page = await open(context, subject.fixture ?? "behaviour", { dir: c.page });
       const name = `${subject.component} (${label})`;
       try {
         if (c.region) await page.locator(subject.region).first().evaluate((el, d) => el.closest("section").setAttribute("dir", d), c.region);
@@ -1211,14 +1650,33 @@ if (runs("rtl")) {
 /* ════════════════════════════════════════════════════════════════════════════
  * kx-verify: reducedMotion
  *
- * React's motion contract (scripts/motion.mjs, motion-states.mjs), on the one Angular component that owes it:
- * KxSwitch, whose thumb travels along `inset-inline-start`. Both directions of travel, in an LTR and an RTL
- * page, twice: with normal motion the thumb passes a rendered midpoint strictly between its end states over a
- * duration a person can see (≥ PERCEPTIBLE_MS); under `prefers-reduced-motion` it arrives with no animation
- * longer than SUPPRESSED_MS, at the same end state. Nothing else in the Angular catalogue animates on
- * interaction (the looping indicators are held to the 3s floor in the accessibility pass above).
+ * React's motion contract (scripts/motion.mjs, motion-states.mjs), on every Angular component that animates on
+ * interaction. Each declared motion runs in both directions of travel, in an LTR and an RTL page, twice: with
+ * normal motion the property passes a rendered midpoint strictly between its end states over a duration a
+ * person can see (≥ PERCEPTIBLE_MS); under `prefers-reduced-motion` it arrives with no animation longer than
+ * SUPPRESSED_MS, at the same end state. The midpoint is obtained by pausing and seeking the running
+ * transitions (Web Animations), never by sleeping.
+ *
+ *   KxSwitch        the thumb along `inset-inline-start`, off → on and on → off
+ *   KxAccordion     the content's block size, expand and collapse; and the chevron's rotation
+ *   KxCollapsible   the content's block size, expand and collapse
+ *   KxAppBar        below 48rem, the menu panel's block size, open and close
+ *
+ * A disclosure is also checked for where it LANDS, in both modes, after every animation has finished: open is
+ * taller than zero, visible and `aria-expanded="true"`; closed is zero, `visibility: hidden` (out of the tab
+ * order and the accessibility tree) and `aria-expanded="false"`. Reduced motion must change how it gets there,
+ * not where it ends up — so a collapse that skipped its transition but left the content reachable fails.
+ * Nothing else in the Angular catalogue animates on interaction (the looping indicators are held to the 3s
+ * floor in the accessibility pass above).
  * ════════════════════════════════════════════════════════════════════════════ */
-const MOTION = [{ component: "KxSwitch", control: "#sw-push .kx-switch", target: "#sw-push .kx-switch__thumb", property: "insetInlineStart" }];
+const DISCLOSURE_LANDING = { expand: "open", collapse: "closed" };
+const MOTION = [
+  { component: "KxSwitch", control: "#sw-push .kx-switch", target: "#sw-push .kx-switch__thumb", property: "insetInlineStart" },
+  { component: "KxAccordion", fixture: "navigation", travels: ["expand", "collapse"], control: "#faq kx-accordion-item:nth-child(2) button", target: "#faq kx-accordion-item:nth-child(2) kx-accordion-content", property: "height", landing: true },
+  { component: "KxAccordion", fixture: "navigation", travels: ["expand", "collapse"], what: "chevron", control: "#faq kx-accordion-item:nth-child(4) button", target: "#faq kx-accordion-item:nth-child(4) .kx-accordion__chevron", property: "transform" },
+  { component: "KxCollapsible", fixture: "navigation", travels: ["expand", "collapse"], control: "#advanced-trigger", target: "#advanced kx-collapsible-content", property: "height", landing: true },
+  { component: "KxAppBar", fixture: "navigation", travels: ["expand", "collapse"], viewport: { width: 390, height: 1400 }, control: `${S("app-bar")} .kx-app-bar__toggle`, target: `${S("app-bar")} nav`, property: "height", landing: true },
+];
 
 /** Trigger, then read STATE A, the midpoint of every running transition on the target, and STATE B. */
 function sampleMotion(page, { control, target, property }) {
@@ -1226,7 +1684,14 @@ function sampleMotion(page, { control, target, property }) {
     ({ control, target, property }) =>
       new Promise((resolve) => {
         const el = document.querySelector(target);
-        const a = getComputedStyle(el)[property];
+        // A rotation is read as its angle: a matrix string has no "between".
+        const read = () => {
+          const v = getComputedStyle(el)[property];
+          if (property !== "transform") return v;
+          const m = v === "none" ? [1, 0] : v.match(/matrix\(([^)]+)\)/)[1].split(",").map(Number);
+          return `${((Math.atan2(m[1], m[0]) * 180) / Math.PI + 360) % 360}deg`;
+        };
+        const a = read();
         document.querySelector(control).click();
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
@@ -1234,37 +1699,66 @@ function sampleMotion(page, { control, target, property }) {
             const longest = Math.max(0, ...running.map((x) => Number(x.effect.getComputedTiming().activeDuration)));
             running.forEach((x) => x.pause());
             running.forEach((x) => (x.currentTime = longest / 2));
-            const mid = running.length ? getComputedStyle(el)[property] : null;
+            const mid = running.length ? read() : null;
             running.forEach((x) => x.finish());
-            requestAnimationFrame(() => resolve({ a, mid, b: getComputedStyle(el)[property], durationMs: longest }));
+            requestAnimationFrame(() => resolve({ a, mid, b: read(), durationMs: longest }));
           }),
         );
       }),
     { control, target, property },
   );
 }
+/** Where a disclosure came to rest, once every transition (including the delayed visibility) has finished. */
+async function landed(page, { control, target }) {
+  await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+  return page.evaluate(
+    ({ control, target }) => {
+      const el = document.querySelector(target);
+      return {
+        height: el.getBoundingClientRect().height,
+        visibility: getComputedStyle(el).visibility,
+        expanded: document.querySelector(control).getAttribute("aria-expanded"),
+      };
+    },
+    { control, target },
+  );
+}
 if (runs("reducedMotion")) {
   assertClaims("reducedMotion", MOTION);
   const { PERCEPTIBLE_MS, SUPPRESSED_MS } = await import("./motion-states.mjs");
-  report.push(`\nreducedMotion — ${MOTION.length} component, both directions of travel, normal and reduced`);
+  report.push(`\nreducedMotion — ${MOTION.length} motions on ${new Set(MOTION.map((m) => m.component)).size} components, both directions of travel, normal and reduced`);
   for (const subject of MOTION) {
+    const travels = subject.travels ?? ["off → on", "on → off"];
+    const label = `${subject.component}${subject.what ? ` ${subject.what}` : ""}`;
     for (const dir of ["ltr", "rtl"]) {
       const ends = {};
       for (const reduced of [false, true]) {
-        const context = await browser.newContext({ viewport: { width: 1024, height: 1400 }, reducedMotion: reduced ? "reduce" : "no-preference" });
-        const page = await open(context, "behaviour", { dir });
-        for (const travel of ["off → on", "on → off"]) {
-          const name = `${subject.component} ${travel} (${dir}, ${reduced ? "reduced" : "normal"} motion)`;
-          const m = await sampleMotion(page, subject);
-          await settle(page);
-          const [a, mid, b] = [m.a, m.mid, m.b].map((v) => (v == null ? null : parseFloat(v)));
-          if (!reduced) {
-            ends[travel] = b;
-            const between = mid != null && Math.min(a, b) < mid && mid < Math.max(a, b);
-            check(m.durationMs >= PERCEPTIBLE_MS && between, `${name}: travels through a rendered midpoint`, `${m.a} → ${m.mid} → ${m.b} over ${m.durationMs}ms`);
-          } else {
-            check(m.durationMs <= SUPPRESSED_MS, `${name}: no perceptible motion`, `${m.durationMs}ms`);
-            check(Math.abs(b - ends[travel]) <= 1, `${name}: lands on the same end state`, `${m.b} (normal: ${ends[travel]}px)`);
+        const context = await browser.newContext({ viewport: subject.viewport ?? { width: 1024, height: 1400 }, reducedMotion: reduced ? "reduce" : "no-preference" });
+        const page = await open(context, subject.fixture ?? "behaviour", { dir });
+        for (const travel of travels) {
+          const name = `${label} ${travel} (${dir}, ${reduced ? "reduced" : "normal"} motion)`;
+          try {
+            const m = await sampleMotion(page, subject);
+            await settle(page);
+            const [a, mid, b] = [m.a, m.mid, m.b].map((v) => (v == null ? null : parseFloat(v)));
+            if (!reduced) {
+              ends[travel] = b;
+              const between = mid != null && Math.min(a, b) < mid && mid < Math.max(a, b);
+              check(m.durationMs >= PERCEPTIBLE_MS && between, `${name}: travels through a rendered midpoint`, `${m.a} → ${m.mid} → ${m.b} over ${m.durationMs}ms`);
+            } else {
+              check(m.durationMs <= SUPPRESSED_MS, `${name}: no perceptible motion`, `${m.durationMs}ms`);
+              check(Math.abs(b - ends[travel]) <= 1, `${name}: lands on the same end state`, `${m.b} (normal: ${ends[travel]})`);
+            }
+            if (subject.landing) {
+              const at = await landed(page, subject);
+              const want = DISCLOSURE_LANDING[travel];
+              const ok = want === "open" ? at.height > 0 && at.visibility === "visible" && at.expanded === "true" : at.height === 0 && at.visibility === "hidden" && at.expanded === "false";
+              check(ok, `${name}: comes to rest ${want}`, `${at.height.toFixed(1)}px, ${at.visibility}, aria-expanded=${at.expanded}`);
+            } else {
+              await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+            }
+          } catch (err) {
+            check(false, `${name}: ran to completion`, String(err.message).split("\n")[0]);
           }
         }
         await context.close();

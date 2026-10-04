@@ -100,6 +100,47 @@ import {
 import { KxInputGroup, KxInputGroupAddon, KxInputGroupButton, KxInputGroupInput, KxInputGroupText } from '../lib/input-group';
 import { KxInputOtp } from '../lib/input-otp';
 import { KxRating } from '../lib/rating';
+import {
+  KxAccordion,
+  KxAccordionContent,
+  KxAccordionItem,
+  KxAccordionTrigger,
+  KxCollapsible,
+  KxCollapsibleContent,
+  KxCollapsibleTrigger,
+} from '../lib/disclosure';
+import {
+  KxAppBar,
+  KxAppBarActions,
+  KxAppBarBrand,
+  KxAppBarLink,
+  KxAppBarNav,
+  KxBreadcrumb,
+  KxBreadcrumbItem,
+  KxBreadcrumbLink,
+  KxBreadcrumbList,
+  KxBreadcrumbPage,
+  KxBreadcrumbSeparator,
+  KxFooter,
+  KxFooterBottom,
+  KxFooterColumn,
+  KxFooterColumns,
+  KxFooterLink,
+  KxNavigationBar,
+  KxPagination,
+  KxPaginationContent,
+  KxPaginationEllipsis,
+  KxPaginationItem,
+  KxPaginationLink,
+  KxPaginationNext,
+  KxPaginationPrevious,
+  KxStepper,
+  KxTabBar,
+  KxTabBarItem,
+  KxTableOfContents,
+  type KxStep,
+  type KxTocItem,
+} from '../lib/navigation';
 
 /* ── primitives ─────────────────────────────────────────────────────────── */
 
@@ -692,4 +733,200 @@ export class PageHeaderDemo {}
   `,
 })
 export class TimelineDemo {}
+// kx-usage:end
+
+/* ── navigation and disclosure ──────────────────────────────────────────── */
+
+// kx-usage:accordion-demo
+@Component({
+  selector: 'app-accordion-demo',
+  imports: [KxAccordion, KxAccordionItem, KxAccordionTrigger, KxAccordionContent],
+  template: `
+    <kx-accordion type="single" collapsible [(value)]="open">
+      <kx-accordion-item value="shipping">
+        <kx-accordion-trigger>When will my order ship?</kx-accordion-trigger>
+        <kx-accordion-content>Orders leave the warehouse within two working days.</kx-accordion-content>
+      </kx-accordion-item>
+      <kx-accordion-item value="returns">
+        <kx-accordion-trigger>Can I return an item?</kx-accordion-trigger>
+        <kx-accordion-content>Yes, within 30 days, in its original packaging.</kx-accordion-content>
+      </kx-accordion-item>
+    </kx-accordion>
+  `,
+})
+export class AccordionDemo {
+  open: readonly string[] = ['shipping'];
+}
+// kx-usage:end
+
+// kx-usage:collapsible-demo
+@Component({
+  selector: 'app-collapsible-demo',
+  imports: [KxButton, KxCollapsible, KxCollapsibleTrigger, KxCollapsibleContent],
+  template: `
+    <kx-collapsible [(open)]="showAdvanced">
+      <button kxButton kxCollapsibleTrigger variant="Ghost" size="sm">Advanced settings</button>
+      <kx-collapsible-content>
+        <p>Webhooks retry failed deliveries three times, an hour apart.</p>
+      </kx-collapsible-content>
+    </kx-collapsible>
+  `,
+})
+export class CollapsibleDemo {
+  showAdvanced = false;
+}
+// kx-usage:end
+
+// kx-usage:breadcrumb-demo
+@Component({
+  selector: 'app-breadcrumb-demo',
+  imports: [KxBreadcrumb, KxBreadcrumbList, KxBreadcrumbItem, KxBreadcrumbLink, KxBreadcrumbPage, KxBreadcrumbSeparator],
+  template: `
+    <nav kxBreadcrumb>
+      <ol kxBreadcrumbList>
+        <li kxBreadcrumbItem><a kxBreadcrumbLink href="/">Home</a></li>
+        <li kxBreadcrumbSeparator></li>
+        <li kxBreadcrumbItem><a kxBreadcrumbLink href="/settings">Settings</a></li>
+        <li kxBreadcrumbSeparator></li>
+        <li kxBreadcrumbItem><span kxBreadcrumbPage>Billing</span></li>
+      </ol>
+    </nav>
+  `,
+})
+export class BreadcrumbDemo {}
+// kx-usage:end
+
+// kx-usage:pagination-demo
+@Component({
+  selector: 'app-pagination-demo',
+  imports: [KxPagination, KxPaginationContent, KxPaginationItem, KxPaginationLink, KxPaginationPrevious, KxPaginationNext, KxPaginationEllipsis],
+  template: `
+    <nav kxPagination>
+      <ul kxPaginationContent>
+        <li kxPaginationItem><a kxPaginationPrevious href="?page=1">Previous</a></li>
+        <li kxPaginationItem><a kxPaginationLink href="?page=1">1</a></li>
+        <li kxPaginationItem><a kxPaginationLink href="?page=2" current>2</a></li>
+        <li kxPaginationItem><a kxPaginationLink href="?page=3">3</a></li>
+        <li kxPaginationItem><kx-pagination-ellipsis /></li>
+        <li kxPaginationItem><a kxPaginationNext href="?page=3">Next</a></li>
+      </ul>
+    </nav>
+  `,
+})
+export class PaginationDemo {}
+// kx-usage:end
+
+// kx-usage:table-of-contents-demo
+@Component({
+  selector: 'app-table-of-contents-demo',
+  imports: [KxTableOfContents],
+  template: ` <nav kxTableOfContents [items]="sections" [(active)]="section"></nav> `,
+})
+export class TableOfContentsDemo {
+  readonly sections: KxTocItem[] = [
+    { id: 'install', label: 'Installation' },
+    { id: 'tokens', label: 'Load the tokens', level: 2 },
+    { id: 'usage', label: 'Usage' },
+  ];
+  section: string | null = 'install';
+}
+// kx-usage:end
+
+// kx-usage:tab-bar-demo
+@Component({
+  selector: 'app-tab-bar-demo',
+  imports: [KxTabBar, KxTabBarItem],
+  template: `
+    <nav kxTabBar aria-label="Primary">
+      <a kxTabBarItem href="/home" active>
+        <svg kxTabBarIcon viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z" fill="currentColor" /></svg>
+        Home
+      </a>
+      <a kxTabBarItem href="/inbox" badge="3">
+        <svg kxTabBarIcon viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM4 13h5l1 2h4l1-2h5" fill="none" stroke="currentColor" stroke-width="2" /></svg>
+        Inbox
+      </a>
+      <a kxTabBarItem href="/account">
+        <svg kxTabBarIcon viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="currentColor" /><path d="M4 21a8 8 0 0116 0" fill="currentColor" /></svg>
+        Account
+      </a>
+    </nav>
+  `,
+})
+export class TabBarDemo {}
+// kx-usage:end
+
+// kx-usage:stepper-demo
+@Component({
+  selector: 'app-stepper-demo',
+  imports: [KxStepper],
+  template: ` <ol kxStepper [steps]="steps" [current]="1"></ol> `,
+})
+export class StepperDemo {
+  readonly steps: KxStep[] = [
+    { label: 'Account', description: 'Email and password' },
+    { label: 'Workspace', description: 'Name and region' },
+    { label: 'Invite', description: 'Add your team' },
+  ];
+}
+// kx-usage:end
+
+// kx-usage:navigation-bar-demo
+@Component({
+  selector: 'app-navigation-bar-demo',
+  imports: [KxButton, KxNavigationBar],
+  template: `
+    <header kxNavigationBar title="Inbox" infoText="3 unread" backButton (back)="goBack()">
+      <button kxButton kxNavigationBarActions type="button" variant="Ghost" size="sm">Edit</button>
+    </header>
+  `,
+})
+export class NavigationBarDemo {
+  goBack(): void {}
+}
+// kx-usage:end
+
+// kx-usage:app-bar-demo
+@Component({
+  selector: 'app-app-bar-demo',
+  imports: [KxButton, KxAppBar, KxAppBarBrand, KxAppBarNav, KxAppBarLink, KxAppBarActions],
+  template: `
+    <header kxAppBar [sticky]="false">
+      <a kxAppBarBrand href="/">Acme</a>
+      <nav kxAppBarNav aria-label="Primary">
+        <a kxAppBarLink href="/" active>Overview</a>
+        <a kxAppBarLink href="/reports">Reports</a>
+        <a kxAppBarLink href="/settings">Settings</a>
+      </nav>
+      <div kxAppBarActions><button kxButton type="button" size="sm">New report</button></div>
+    </header>
+  `,
+})
+export class AppBarDemo {}
+// kx-usage:end
+
+// kx-usage:footer-demo
+@Component({
+  selector: 'app-footer-demo',
+  imports: [KxFooter, KxFooterColumns, KxFooterColumn, KxFooterLink, KxFooterBottom],
+  template: `
+    <footer kxFooter>
+      <div kxFooterColumns>
+        <kx-footer-column title="Product">
+          <a kxFooterLink href="/pricing">Pricing</a>
+          <a kxFooterLink href="/changelog">Changelog</a>
+        </kx-footer-column>
+        <kx-footer-column title="Company">
+          <a kxFooterLink href="/about">About</a>
+          <a kxFooterLink href="/careers">Careers</a>
+        </kx-footer-column>
+      </div>
+      <div kxFooterBottom>
+        <span>&copy; 2026 Acme, Inc.</span>
+        <a kxFooterLink href="/privacy">Privacy</a>
+      </div>
+    </footer>
+  `,
+})
+export class FooterDemo {}
 // kx-usage:end

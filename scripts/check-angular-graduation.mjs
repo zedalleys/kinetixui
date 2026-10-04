@@ -179,7 +179,11 @@ say(/carries \*\*(\d+) of the \d+ entries/, implemented.length, "catalogue entri
 say(/^(\d+) components, as/m, implemented.length, "components (What it provides)");
 say(/as \*\*(\d+) exported symbols\*\*/, api.exportedSymbols.length, "exported symbols");
 say(/\*\*Preview, and (\d+) of \d+ entries/, implemented.length, "entries (Limitations)");
-say(/\*\*(\d+) of \d+ implementations have\s+interaction and accessibility/, implemented.length, "implementations with interaction + accessibility evidence");
+// counted from the evidence, not assumed from the implementation count: a display-only component (the stepper)
+// has accessibility evidence and, honestly, no interaction evidence
+const bothCount = implemented.filter((s) => evidence("Angular", s, "interaction").length && evidence("Angular", s, "accessibility").length).length;
+say(/\*\*(\d+) of \d+ implementations have\s+interaction and accessibility/, bothCount, "implementations with interaction + accessibility evidence");
+say(/\*\*\d+ of (\d+) implementations have\s+interaction and accessibility/, implemented.length, "implementations (the evidence sentence's denominator)");
 say(/(\d+) components? (?:has|have) RTL verification/, rtlCount, "components with RTL verification");
 const missing = implemented.filter((s) => !listed.includes(s));
 if (missing.length) docGaps.push(`README "Present today" list omits ${missing.join(", ")}`);

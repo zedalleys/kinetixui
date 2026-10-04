@@ -249,6 +249,54 @@ under reduced motion, same end state.
 | Angular | `kx-input-group`, `kx-number-input`, `kx-input-otp` and `kx-password-input`: implemented in `styles.css` and verified by the same gate on the live Angular application. The composites forward `aria-invalid` and `aria-describedby` to their inner input; `kx-number-input` has a `readonly` input (read-only fill sampled inside the input, since its start stepper is always muted); `kx-password-input` has no read-only state. InputOTP's caret is static in Angular, so it has no motion. multi-select is still planned (overlays) |
 | SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
 
+### Navigation and disclosure
+
+Angular Wave B (`@kinetixui/angular`: breadcrumb, pagination, table of contents, tab bar, stepper, navigation
+bar, app bar, footer, accordion, collapsible). Every destination and every disclosure trigger uses one state
+language, built from roles that already exist. No token is added.
+
+| State | Trigger | Change | Not carried by colour alone |
+|---|---|---|---|
+| Rest | — | `muted-foreground` text, no surface (5.10:1 light, 8.95:1 dark): navigation recedes behind content | — |
+| Hover | a pointer that can hover | The tabs' `foreground` state layer at 8% (1.16–1.18:1 against rest) and `foreground` text; prose-style links (breadcrumb, footer) turn `foreground` and show their underline instead | layer / underline |
+| Pressed | `:active` | The layer deepens to 12% (1.31:1 against rest), so a press is seen before the page changes | layer |
+| Current | `aria-current` | `foreground` text (18–20:1) AND a shape: the table of contents' 2px `primary` bar on the inline-start edge (6.66:1 / 7.86:1); pagination's outlined surface, edge `muted-foreground`/80 (3.41:1 / 5.98:1) plus `sm` lift; the tab bar's `action` pill behind an `action` icon; the app bar's `accent` surface with a 2px `primary` bar flush with its block-end edge (6.17:1 / 6.32:1 against that surface); the breadcrumb's current page in medium weight | bar / edge / pill / weight |
+| Focus | keyboard | The shared `--shadow-focus` ring (6.70:1 light, 7.78:1 dark), which no other state draws | ring |
+| Disabled | `disabled`, or `aria-disabled` on a link | `opacity-disabled`, no answer to the pointer; a disabled link leaves the tab order and is not followed | inert |
+
+Disclosure triggers (the accordion's buttons) take the same layer, pressed and focus states. Their chevron
+points down when collapsed and turns to point up when open; down is down in both directions, so it does not
+mirror. A single accordion whose open item cannot close reports `aria-disabled` on that trigger and does not
+answer the pointer. Direction glyphs that do mean reading order — the breadcrumb separator, pagination's
+Previous and Next, the navigation bar's Back — are the Unicode angle quotes, which are `Bidi_Mirrored`: the
+text engine flips them by the direction their own element resolves to, including an LTR region inside an RTL
+page, with no selector for a build step to rewrite.
+
+Measured before (the first build of these components, Chromium, `check:navigation-visual`): pagination's
+current page was outlined in `input` (2.21:1 light, 2.70:1 dark), under SC 1.4.11's 3:1; the table of
+contents' pressed state equalled its hover (1.18:1), because the hover rule out-specified `:active`; the tab
+bar's current label was `action`, which in dark (7.86:1) read **quieter** than the resting `muted-foreground`
+(8.95:1); and the app bar's current indicator, an inset shadow, started inside the link's 1px border and
+floated 1px above its edge. Each was fixed in `styles.css`, not in the gate.
+
+Motion:
+
+| Control | Trigger | Property | Purpose | Duration | Easing | Reduced motion |
+|---|---|---|---|---|---|---|
+| Accordion, collapsible, app bar menu (narrow) | open / close | `grid-template-rows` 0fr ↔ 1fr, with `visibility` switched discretely | where the content came from and where it goes | `duration-fast` (200ms) | `ease-enter` opening, `ease-exit` closing | `transition: none`; the same open or closed end state |
+| Accordion chevron | open / close | `transform` (a half turn) | state of the trigger | `duration-fast` | `ease-standard` | `transition: none`; same final direction |
+| Every destination | hover, press, current | `color`, `background-color`, `box-shadow`, `border-color` | affordance | `duration-fast` | `ease-standard` | `transition: none`; same colours |
+
+Nothing slides or changes size between destination states. The disclosure body clips with `overflow: clip`
+and a 4px `overflow-clip-margin` (the focus ring's outer spread), so content can be cut while it animates
+without cutting a focus ring flush with its edge.
+
+| Platform | Status |
+|---|---|
+| Angular | Implemented in `styles.css` and verified on rendered pixels by `check:navigation-visual` (light + dark): every destination family above, the accordion, and the table of contents' bar side in RTL. Expand and collapse in both directions, under normal and reduced motion, are measured on the live application by `check:angular-browser` |
+| React | Not changed by this contract. React's navigation components keep their current styling; parity is not claimed |
+| SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
+
 ## Role tokens (added on top of `primary`)
 
 `brand`, `action` (+ `action-foreground`), `link` and `focus` are **repo-owned** — none exist in Figma. `action`,
