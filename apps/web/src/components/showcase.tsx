@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { CopyButton } from "./copy-button";
 import { analytics } from "@/lib/analytics";
 import { analyticsPlatformFor } from "@/lib/analytics-surfaces";
+import { useDocumentDirection } from "@/lib/use-document-direction";
 
 /**
  * The real source for the same example on each platform that implements it, keyed by platform name. Only
@@ -91,6 +92,9 @@ export function Showcase({
   const previewScrollable = useScrollable(previewRef);
   const active = langs.find((l) => l.key === lang) ?? langs[0];
   const multi = langs.length > 1;
+  // The preview and the controls around it follow the page; only the source stays LTR (the <pre> below).
+  // Without `dir`, Radix Tabs stamps dir="ltr" on its root and forces the whole showcase LTR on an RTL page.
+  const dir = useDocumentDirection();
 
   return (
     // min-w-0: this is a grid item, and grid items default to min-width:auto — a wide demo would otherwise stretch
@@ -111,7 +115,7 @@ export function Showcase({
       )}
 
       <div className="mt-3 overflow-hidden rounded-xl border border-border">
-        <Tabs.Root defaultValue="preview">
+        <Tabs.Root defaultValue="preview" dir={dir}>
           <Tabs.List className="flex items-center gap-1 bg-muted/30 px-2" aria-label={`${title} — preview or source`}>
             {["preview", "code"].map((v) => (
               <Tabs.Trigger
@@ -153,6 +157,7 @@ export function Showcase({
               */}
               {multi && (
                 <Tabs.Root
+                  dir={dir}
                   value={lang}
                   onValueChange={(next) => {
                     setLang(next);
@@ -188,6 +193,7 @@ export function Showcase({
               )}
               {active && (
                 <>
+                  {/* rtl-ok: physical on purpose — the button sits over the source, which is always LTR */}
                   <CopyButton
                     value={active.value}
                     onCopy={
@@ -203,6 +209,8 @@ export function Showcase({
                     className={cn("absolute right-3 z-10", multi ? "top-11" : "top-3")}
                   />
                   <pre
+                    // source code reads left to right whatever the page direction
+                    dir="ltr"
                     // a code block scrolls sideways when a long Kotlin or Dart line overflows, so the keyboard
                     // must be able to reach it (WCAG 2.1.1 / axe scrollable-region-focusable)
                     tabIndex={0}

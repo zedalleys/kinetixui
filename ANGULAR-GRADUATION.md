@@ -50,11 +50,11 @@ maturity — they are statements about today, and CI fails the moment one is fal
 | Accessibility | `accessibility` wherever React has it | gate | met — 43/43 |
 | Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | **open** — 0/43 |
 | RTL | `rtl` wherever React has it | gate | **open** — 1/6 (input, radio-group, slider, switch, textarea missing) |
-| Large text | `largeText` wherever React has it | gate | **open** — 0/11 (React gained native-select and tabs in Visual Slice 3, so the bar rose) |
-| Large text | …from a real browser (`large-text.mjs`) | gate | **open** — 0/11 |
+| Large text | `largeText` wherever React has it | gate | **open** — 0/12 (React gained native-select and tabs in Visual Slice 3, and number-input in Visual Slice 4, so the bar rose; React's input-group is not owed — Angular's is still planned) |
+| Large text | …from a real browser (`large-text.mjs`) | gate | **open** — 0/12 |
 | Motion | `reducedMotion` wherever React has it | gate | **open** — 0/1 (switch) |
 | Motion | …from a real browser (`motion.mjs`) | gate | **open** — 0/1 |
-| Visual | A rendered visual/state gate covers Angular wherever one covers React | gate | **open** — 8/9: card is measured for Angular, but only its resting surface (Angular has no interactive Card), which `visual-gates.mjs` records as `partial` and the guard does not count |
+| Visual | A rendered visual/state gate covers Angular wherever one covers React | gate | **open** — 8/10: card and number-input are measured for Angular but recorded as `partial` in `visual-gates.mjs`, which the guard does not count — card for its resting surface only (no interactive Card), number-input for every row except read-only (`kx-number-input` has no readonly input). Visual Slice 4 added number-input to the bar and measured it the same day; password-input is measured for Angular too, but React's PasswordInput is not separately gated, so it is not owed |
 | Visual | Every registered visual gate exists and runs in CI | always | met |
 | Visual | A visual gate claims Angular only for components Angular implements | always | met |
 | Documentation | The package README's counts, component list and Preview label match the manifest and evidence | always | met (it was stale — 31 components, 69 symbols — and is corrected in this change) |
@@ -77,6 +77,8 @@ Run against deliberately broken inputs during this change (none committed):
   ("Every visual gate the registry lists exists and is run in CI"), which is how the step was added. Card
   registered for Angular without the `partial` mark → the visual-parity criterion would have read 9/9; with
   it, 8/9.
+- Visual Slice 4: `check:composite-visual` claims Angular number-input with a `partial` mark (no read-only
+  state). Without the mark the visual-parity criterion would read 9/10 — an over-claim; with it, 8/10.
 
 ## The waves
 
@@ -101,7 +103,7 @@ component's usage examples, then run axe, the large-text pass, an RTL pass and t
 | RTL | rendered `dir="rtl"` checks for input, radio-group, slider, switch, textarea (React's set) — slider value direction, switch thumb side |
 | Large text | the 9 controls React measures at 2× default font size: no clipping, control scales with its label |
 | Motion | switch thumb: rendered midpoint, collapses under reduced motion (Angular now suppresses it in CSS) |
-| Visual | Angular interactive Card (a link or button card with hover, pressed, selected and focus), then drop `partial` for card in `visual-gates.mjs` — `check:card-visual` already measures Angular's resting card (Visual Slice 3), so this closes the last visual gap |
+| Visual | Angular interactive Card (a link or button card with hover, pressed, selected and focus), then drop `partial` for card in `visual-gates.mjs` — `check:card-visual` already measures Angular's resting card (Visual Slice 3). A `readonly` input on `kx-number-input` drops its `partial` in `check:composite-visual` (Visual Slice 4). input-group and input-otp, when built, should be written against "Composite fields" in TOKENS.md and join `composite-render.spec.ts`, so they arrive with the gate rather than after it |
 | Verification | new `kx-verify:` markers only on passages that drive Angular symbols, so verification.json counts what is proven |
 | Proof it creates | "every Angular component is axe-clean in a real browser"; a light/dark/RTL/200% Angular gallery |
 

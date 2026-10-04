@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@kinetixui/ui";
+import { Card, CardContent, InputOTP, InputOTPGroup, InputOTPSlot, Label } from "@kinetixui/ui";
 
 const Demo = () => (
     <InputOTP maxLength={6} aria-label="One-time code">
@@ -25,3 +25,26 @@ const meta = {
 export default meta;
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const EntryStates: StoryObj<typeof meta> = { render: () => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-5 p-6">
+        {([
+          ["rest", "Verification code", {}],
+          ["filled", "Backup code", { defaultValue: "482913" }],
+          ["invalid", "Authenticator code", { defaultValue: "000000", "aria-invalid": true, "aria-describedby": "otp-invalid-error" }],
+          ["disabled", "Recovery code (used)", { defaultValue: "771204", disabled: true }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="grid gap-2">
+            <Label htmlFor={`otp-${key}`}>{label}</Label>
+            <InputOTP id={`otp-${key}`} data-kx-case={key} maxLength={6} {...props}>
+              <InputOTPGroup>
+                {[0, 1, 2, 3, 4, 5].map((i) => <InputOTPSlot key={i} index={i} />)}
+              </InputOTPGroup>
+            </InputOTP>
+            {key === "invalid" ? <p id="otp-invalid-error" className="text-body-sm text-destructive">That code has expired. Request a new one.</p> : null}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  ) };

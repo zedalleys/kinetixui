@@ -224,7 +224,7 @@ await Promise.all(
               const el = document.activeElement;
               if (!el || el === document.body || !el.closest("#storybook-root")) return null;
               // The real input behind InputOTP is transparent; focus is drawn on its active slot, so check that instead.
-              const target = el.hasAttribute("data-input-otp") ? document.querySelector('#storybook-root [class*="z-docked"][class*="ring-ring"]') || el : el;
+              const target = el.hasAttribute("data-input-otp") ? el.closest("[data-input-otp-container], #storybook-root").querySelector("[data-active]") || el : el;
               const cs = getComputedStyle(target);
               const visible = cs.outlineStyle !== "none" && parseFloat(cs.outlineWidth) > 0 && cs.outlineColor !== "rgba(0, 0, 0, 0)";
               return { visible, name: el.tagName.toLowerCase() + (el.getAttribute("role") ? "[" + el.getAttribute("role") + "]" : "") };

@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx · controls: scripts/gen-stories.mjs CONTROLS */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { NumberInput } from "@kinetixui/ui";
+import { Card, CardContent, Label, NumberInput } from "@kinetixui/ui";
 
 const Demo = () => {
     const [v, setV] = React.useState(2);
@@ -27,3 +27,22 @@ export default meta;
 export const Playground: StoryObj<typeof meta> = { render: (args) => <NumberInput aria-label="Quantity" {...args} className="w-32" /> };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const EntryStates: StoryObj<typeof meta> = { render: () => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-5 p-6">
+        {([
+          ["rest", "Seats", { defaultValue: 4, min: 1 }],
+          ["invalid", "Guests", { defaultValue: 12, "aria-invalid": true, "aria-describedby": "ni-invalid-error" }],
+          ["readonly", "Plan seats", { defaultValue: 25, readOnly: true }],
+          ["disabled", "Admins (locked)", { defaultValue: 2, disabled: true }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="grid gap-2">
+            <Label id={`ni-${key}-label`}>{label}</Label>
+            <NumberInput data-kx-case={key} aria-labelledby={`ni-${key}-label`} {...props} />
+            {key === "invalid" ? <p id="ni-invalid-error" className="text-body-sm text-destructive">This room holds 10 people at most.</p> : null}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  ) };

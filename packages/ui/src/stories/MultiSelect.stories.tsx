@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { MultiSelect, Select } from "@kinetixui/ui";
+import { Card, CardContent, Label, MultiSelect, Select } from "@kinetixui/ui";
 
 const Demo = () => {
     const [value, setValue] = React.useState(["react", "swiftui"]);
@@ -34,3 +34,27 @@ const meta = {
 export default meta;
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const EntryStates: StoryObj<typeof meta> = { render: () => (
+    <Card className="w-[22rem] max-w-full">
+      <CardContent className="grid gap-5 p-6">
+        {([
+          ["rest", "Labels", {}],
+          ["filled", "Teams", { defaultValue: ["design", "web"] }],
+          ["invalid", "Reviewers", { "aria-invalid": true, "aria-describedby": "ms-invalid-error" }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="grid gap-2">
+            <Label id={`ms-${key}-label`}>{label}</Label>
+            <MultiSelect
+              data-kx-case={key}
+              aria-labelledby={`ms-${key}-label`}
+              placeholder="Choose some"
+              options={[{ value: "design", label: "Design" }, { value: "web", label: "Web" }, { value: "mobile", label: "Mobile" }]}
+              {...props}
+            />
+            {key === "invalid" ? <p id="ms-invalid-error" className="text-body-sm text-destructive">Pick at least one reviewer.</p> : null}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  ) };

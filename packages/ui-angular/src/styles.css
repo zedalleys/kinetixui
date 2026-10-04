@@ -703,16 +703,45 @@
 .kx-slider__input:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-full); }
 .kx-slider__input:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
 
+/* ── composite fields: number input, password input ─────────────────────── */
+/* The text-entry state contract (TOKENS.md, "Composite fields"), shared with React's NumberInput and
+   InputGroup: the wrapper is ONE field, and it reads its state from the input inside it.
+   rest       edge `--muted-foreground` at 80% (3:1 on a card; `--input` was 2.2:1)
+   hover      full `--muted-foreground` — never over focus, invalid or disabled
+   focus      the INPUT focused → `--action` edge + `--shadow-focus`. A focused part button (the reveal toggle)
+              draws its own ring and leaves the wrapper at rest, so the ring says which part has focus
+   invalid    `aria-invalid="true"` on the inner input (the `aria-invalid` input) → `--destructive`, kept under
+              the pointer and when focused
+   disabled   `--opacity-disabled` on the whole field, inert */
+.kx-number-input,
+.kx-password-input {
+  border: var(--border-width-default) solid hsl(var(--muted-foreground) / 0.8);
+  border-radius: var(--radius-field);
+  background-color: hsl(var(--background));
+  overflow: hidden;
+  transition:
+    border-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard);
+}
+@media (hover: hover) {
+  .kx-number-input:not(:has(input:is(:focus, :disabled, [aria-invalid='true']))):hover,
+  .kx-password-input:not(:has(input:is(:focus, :disabled, [aria-invalid='true']))):hover { border-color: hsl(var(--muted-foreground)); }
+}
+.kx-number-input:has(.kx-number-input__input:focus),
+.kx-password-input:has(.kx-password-input__input:focus) { border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
+/* after focus and at least as specific, so a focused invalid field keeps its destructive edge */
+.kx-number-input:has(.kx-number-input__input[aria-invalid='true']),
+.kx-password-input:has(.kx-password-input__input[aria-invalid='true']) { border-color: hsl(var(--destructive)); }
+.kx-number-input:has(.kx-number-input__input[aria-invalid='true']:focus),
+.kx-password-input:has(.kx-password-input__input[aria-invalid='true']:focus) { box-shadow: var(--shadow-focus-destructive); }
+.kx-number-input:has(input:disabled),
+.kx-password-input:has(input:disabled) { opacity: var(--opacity-disabled); cursor: not-allowed; }
+
 /* ── number input ───────────────────────────────────────────────────────── */
 .kx-number-input {
   display: inline-flex;
   align-items: stretch;
-  border: var(--border-width-default) solid hsl(var(--input));
-  border-radius: var(--radius-field);
-  background-color: hsl(var(--background));
-  overflow: hidden;
 }
-.kx-number-input:focus-within { border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
 .kx-number-input__input {
   inline-size: var(--spacing-16);
   min-inline-size: 0;
@@ -738,20 +767,16 @@
   font: var(--text-body-md);
   cursor: pointer;
 }
-.kx-number-input__step:hover { color: hsl(var(--foreground)); }
-.kx-number-input__step:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.kx-number-input__step:enabled:hover { color: hsl(var(--foreground)); }
+/* the field's own opacity already says disabled — a step dimmed again inside it would read as more disabled */
+.kx-number-input__step:disabled { cursor: not-allowed; }
 
 /* ── password input ─────────────────────────────────────────────────────── */
 .kx-password-input {
   display: inline-flex;
   align-items: stretch;
   inline-size: 100%;
-  border: var(--border-width-default) solid hsl(var(--input));
-  border-radius: var(--radius-field);
-  background-color: hsl(var(--background));
-  overflow: hidden;
 }
-.kx-password-input:focus-within { border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
 .kx-password-input__input {
   flex: 1;
   min-inline-size: 0;
@@ -773,8 +798,9 @@
   font-family: var(--font-family-sans);
   cursor: pointer;
 }
-.kx-password-input__reveal:hover { color: hsl(var(--foreground)); }
-.kx-password-input__reveal:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.kx-password-input__reveal:enabled:hover { color: hsl(var(--foreground)); }
+/* inset: the wrapper clips with overflow:hidden, so an outer ring would be cut off at the field's edge */
+.kx-password-input__reveal:focus-visible { outline: none; box-shadow: inset 0 0 0 2px hsl(var(--ring)); }
 
 /* ── field ──────────────────────────────────────────────────────────────── */
 .kx-field { display: flex; flex-direction: column; gap: var(--spacing-2); }
@@ -882,6 +908,8 @@
   .kx-switch,
   .kx-switch__thumb,
   .kx-input,
+  .kx-number-input,
+  .kx-password-input,
   .kx-tab,
   .kx-tag__remove { transition: none; }
 }
