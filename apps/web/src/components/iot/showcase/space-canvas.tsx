@@ -199,11 +199,19 @@ export function phonePlanLayout(input: {
   /** Plan aspect, used to turn a percent of the height into pixels. */
   viewBox: { width: number; height: number };
   planWidth?: number;
+  /**
+   * Root font size over 16. The marker (`size-11`), the name chip and the caption are sized in `rem`, so at 200%
+   * text they are twice as big on a plan that is not; collisions are judged at the size actually drawn.
+   */
+  textScale?: number;
 }): PhonePlanLayout {
   const { hotspots, selectedRoomId = null, selectedHotspotId = null, captionWidth = null, viewBox } = input;
   const width = input.planWidth ?? PHONE_PLAN_WIDTH;
+  const k = input.textScale ?? 1;
+  const MARKER = MARKER_PX * k;
+  const LABEL = { width: SELECTED_LABEL.width * k, height: SELECTED_LABEL.height * k, offset: SELECTED_LABEL.offset * k };
   const height = (width * viewBox.height) / viewBox.width;
-  const marker = (h: PlanHotspot): Box => ({ cx: (h.x / 100) * width, cy: (h.y / 100) * height, w: MARKER_PX, h: MARKER_PX });
+  const marker = (h: PlanHotspot): Box => ({ cx: (h.x / 100) * width, cy: (h.y / 100) * height, w: MARKER, h: MARKER });
 
   const order = hotspots
     .map((h, index) => ({ h, index, rank: rankOf(h, selectedRoomId, selectedHotspotId) }))
@@ -220,8 +228,8 @@ export function phonePlanLayout(input: {
     const box = marker(chosen.h);
     taken.push(box);
     const align = selectedLabelAlign(chosen.h.x);
-    const shift = align === "start" ? (SELECTED_LABEL.width - MARKER_PX) / 2 : align === "end" ? -(SELECTED_LABEL.width - MARKER_PX) / 2 : 0;
-    taken.push({ cx: box.cx + shift, cy: box.cy + SELECTED_LABEL.offset, w: SELECTED_LABEL.width, h: SELECTED_LABEL.height });
+    const shift = align === "start" ? (LABEL.width - MARKER) / 2 : align === "end" ? -(LABEL.width - MARKER) / 2 : 0;
+    taken.push({ cx: box.cx + shift, cy: box.cy + LABEL.offset, w: LABEL.width, h: LABEL.height });
   }
 
   // Anything needing attention goes down next: an alert outranks the room's name, which is also in the hidden
@@ -237,10 +245,10 @@ export function phonePlanLayout(input: {
   let caption = true;
   if (captionWidth !== null) {
     const box: Box = {
-      cx: ROOM_CAPTION.inset + captionWidth / 2,
-      cy: ROOM_CAPTION.inset + ROOM_CAPTION.height / 2,
-      w: captionWidth,
-      h: ROOM_CAPTION.height,
+      cx: ROOM_CAPTION.inset + (captionWidth * k) / 2,
+      cy: ROOM_CAPTION.inset + (ROOM_CAPTION.height * k) / 2,
+      w: captionWidth * k,
+      h: ROOM_CAPTION.height * k,
     };
     caption = free(box);
     if (caption) taken.push(box);
@@ -337,6 +345,7 @@ function Hotspot({
   selected,
   labelled,
   phone,
+  culled = false,
   onSelect,
 }: {
   hotspot: PlanHotspot;
@@ -344,6 +353,8 @@ function Hotspot({
   labelled: boolean;
   /** Drawn below `sm` too. When false the marker only appears from `sm` up. */
   phone: boolean;
+  /** Held back at every width, not only below `sm`: the measured plan has no room for it (see `SpaceCanvas`). */
+  culled?: boolean;
   onSelect?: (id: string) => void;
 }) {
   const { state } = hotspot;
@@ -351,7 +362,7 @@ function Hotspot({
   const align = selectedLabelAlign(hotspot.x);
   return (
     <div
-      className={cn("absolute", CENTRE, selected ? "z-focus" : "z-raised", !phone && "hidden sm:block")}
+      className={cn("absolute", CENTRE, selected ? "z-focus" : "z-raised", culled ? "hidden" : !phone && "hidden sm:block")}
       data-phone-hotspot={phone ? "" : undefined}
       style={{ insetInlineStart: `${hotspot.x}%`, insetBlockStart: `${hotspot.y}%` }}
     >
@@ -507,6 +518,30 @@ export function SpaceCanvas({
   const labelMode = hotspotLabels === "auto" ? (inSelectedRoom <= 3 ? "room" : "selected") : hotspotLabels;
 
   const selectedRoom = level.rooms.find((r) => r.id === selectedRoomId) ?? null;
+  // The first render (server and hydration) judges collisions on the constant phone plan, below `sm` only, so
+  // nothing jumps on hydration. Once mounted, the plan is MEASURED: the same pass runs on the width the plan
+  // really has and at the text size really in use, at every width. Before, the markers were sized in `rem` and
+  // the plan in pixels, so at 200% text from `sm` up nothing thinned them out and 44px targets sat on top of
+  // each other (measured in Chromium at 1280 px / 200%: 16 overlapping pairs on the operations plan). A marker
+  // held back this way is still named in the hidden list and still in the composition's device list.
+  const planRef = React.useRef<HTMLDivElement>(null);
+  const [measured, setMeasured] = React.useState<{ width: number; textScale: number; wide: boolean } | null>(null);
+  React.useEffect(() => {
+    const el = planRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const read = () => {
+      const width = el.getBoundingClientRect().width;
+      if (!width) return;
+      const textScale = parseFloat(getComputedStyle(document.documentElement).fontSize) / 16 || 1;
+      const wide = window.matchMedia("(min-width: 640px)").matches;
+      setMeasured((prev) => (prev && prev.width === width && prev.textScale === textScale && prev.wide === wide ? prev : { width, textScale, wide }));
+    };
+    read();
+    const observer = new ResizeObserver(read);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   // Cheap (at most a couple of dozen markers) and pure, so it is recomputed rather than memoised.
   const phone: { shown: ReadonlySet<string> | null; dropped: readonly PlanHotspot[]; caption: boolean } =
     markerDensity === "all"
@@ -515,9 +550,14 @@ export function SpaceCanvas({
           hotspots: visibleHotspots,
           selectedRoomId,
           selectedHotspotId,
-          captionWidth: selectedRoom ? roomCaptionWidth(selectedRoom.label) : null,
+          // the room caption is only pinned into the plan below `sm`
+          captionWidth: selectedRoom && !measured?.wide ? roomCaptionWidth(selectedRoom.label) : null,
           viewBox: plan.viewBox,
+          planWidth: measured?.width,
+          textScale: measured?.textScale,
         });
+  /** Whether a held-back marker is held back at every width (measured) or only below `sm` (first render). */
+  const everywhere = measured !== null && markerDensity !== "all";
 
   const chooseLevel = (id: string) => {
     setManual({ forRoom: selectedRoomId, level: id });
@@ -550,7 +590,7 @@ export function SpaceCanvas({
 
       {/* the ground: a tonal step below the card, so the drawing reads as lifted */}
       <div className="rounded-xl bg-muted/60 p-2 sm:p-3">
-        <div className="relative w-full" style={{ aspectRatio: `${vw} / ${vh}` }}>
+        <div ref={planRef} className="relative w-full" style={{ aspectRatio: `${vw} / ${vh}` }}>
           <svg
             viewBox={`0 0 ${vw} ${vh}`}
             aria-hidden="true"
@@ -644,6 +684,7 @@ export function SpaceCanvas({
               selected={h.id === selectedHotspotId}
               labelled={labelMode === "all" || h.id === selectedHotspotId || (labelMode === "room" && h.roomId === selectedRoomId)}
               phone={phone.shown === null || phone.shown.has(h.id)}
+              culled={everywhere && phone.shown !== null && !phone.shown.has(h.id)}
               onSelect={onSelectHotspot}
             />
           ))}
@@ -664,7 +705,7 @@ export function SpaceCanvas({
           reading-order equivalent of the plan stays complete. From `sm` up they are buttons again and this
           list is gone, so nothing is said twice at any one width. */}
       {phone.dropped.length ? (
-        <ul className="sr-only sm:hidden" aria-label={`${level.label} devices not shown on the plan at this width`}>
+        <ul className={cn("sr-only", !everywhere && "sm:hidden")} aria-label={`${level.label} devices not shown on the plan at this width`}>
           {phone.dropped.map((h) => (
             <li key={h.id}>{hotspotName(h)}</li>
           ))}
