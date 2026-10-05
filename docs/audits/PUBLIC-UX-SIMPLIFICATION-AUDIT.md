@@ -45,7 +45,11 @@ Nothing found requires removing a capability. Most fixes are REMOVE, COMBINE and
 finding is P0: two loops that never stop (WCAG 2.2.2), already known from the 2026-10-03 accessibility audit. Half of
 it, the platform ticker, is being fixed in the separate motion thread.
 
-**Counts:** P0 **1** · P1 **7** · P2 **12** · P3 **6**. Section 23 lists them.
+**Counts:** P0 **1** · P1 **8** · P2 **12** · P3 **6**. Section 23 lists them.
+
+**Demo state isolation (section 27):** the Fields preview RTL toggle does flip the whole site. It's a deliberate
+`<html dir>` write in the shared preview harness, made to cover a real library gap: `@kinetixui/ui` overlays don't
+carry direction into their portals. P1, fixed centrally in two layers.
 
 ---
 
@@ -696,7 +700,7 @@ Why: the proof P2 came for is the first thing they see.
   in its failing baseline). Known from the 2026-10-03 a11y audit item 8. → R1 for the typing loop, section 20 for the
   ticker.
 
-**P1 — major evaluation/adoption friction (7)**
+**P1 — major evaluation/adoption friction (8)**
 
 - **P1-1** Seven cross-surface truth contradictions (section 17, rows 1–7). Includes CLAIMS B2 drift on `/components`
   and `/docs/platforms`.
@@ -708,6 +712,8 @@ Why: the proof P2 came for is the first thing they see.
   the lede.
 - **P1-6** Gallery platform filter excludes Angular, the only platform with significant gaps (64/98).
 - **P1-7** Mobile: no search at any width below 640px. 127-link, 4,657px menu.
+- **P1-8** Preview direction leaks to the whole site (every component page). It masks a library gap: 10 of 13
+  overlay families lose RTL in their portal when direction is scoped. Section 27.
 
 **P2 — meaningful simplification or hierarchy (12)**
 
@@ -782,7 +788,7 @@ Three slices, each independently shippable. None changes positioning, QE, Adopti
 distribution.
 
 ### Slice 1: Truthful, proof-first evaluation journey
-*Findings: P0-1 (typing loop half), P1-1, P1-3, P1-4, P1-5, P2-2, P2-3, P2-12*
+*Findings: P1-8 (first PR: overlay portal direction in `packages/ui` + preview-scoped direction; section 27), P0-1 (typing loop half), P1-1, P1-3, P1-4, P1-5, P2-2, P2-3, P2-12*
 
 - Fix the seven contradictions, derive them, and extend the existing claim guards to the newly covered files.
 - Static hero command (R1). Remove homepage §03 (R2). Flagship demo before its paragraphs.
@@ -870,3 +876,177 @@ The ticker itself (logos, pause, seam, single AT copy) is **not** in these slice
 - Not re-audited: WCAG conformance beyond what bears on simplification (see the 2026-10-03 a11y audit), and motion
   timing (the motion thread).
 - The production deployment was not checked. This audit describes `main`, which may differ from kinetixui.com.
+
+---
+
+## 27. Demo State Isolation
+
+Added at Ziad's request on 2026-10-05. It starts from the reported Fields defect: switching the Fields preview to RTL
+appears to flip the whole website. The evidence was measured in Chromium on the same local build of `5db94f0`.
+Scripts' output and screenshots are in the shared folder under `ux-simplification-audit/demo-isolation/`
+(`fields-journey.json`, `portal-matrix*.json`, `01–06-*.png`, `portal-*.png`).
+
+### Summary
+
+| Item | Result |
+| --- | --- |
+| **Fields reproduction** | **FAIL.** The LTR/RTL toggle on `/docs/components/field` sets `<html dir="rtl">`. The header, primary nav, docs sidebar, breadcrumb, meta panel, TOC and the toggle itself all mirror |
+| **Root cause** | Deliberate, not accidental. `PreviewEnvironment` keeps one module-level direction store and writes it to the document: `document.documentElement.setAttribute("dir", next)` (`apps/web/src/components/preview-environment.tsx:65`). It was introduced in #268, and a unit test locks it in (`preview-environment.test.tsx:40`, "mirrors the document, not just the preview box, so portaled overlays follow") |
+| **Why it was built that way** | `@kinetixui/ui` overlays portal to `document.body` and do not carry the preview's direction with them. Scoping `dir` to the preview made a "RTL" Dialog render LTR, so the page was mirrored to make portals inherit RTL. Measured below: that portal gap is real |
+| **Affected architecture** | Shared preview infrastructure (`PreviewEnvironment`, used by `ComponentPreview` on every component page), **and** the library's overlay components. It is not Fields-specific |
+| **Other affected components** | Every component page with a preview: 98/98 (`<ComponentMeta />` + `ComponentPreview`). On pages with several previews (Button has 3), one toggle switches all of them and the page together |
+| **Portal behaviour** | Current (global): all overlays RTL, because they inherit `<html>`. Preview-scoped (simulated): **10 of 13 overlay families fall back to LTR.** Only Select, DropdownMenu and Menubar keep RTL |
+| **Persistence** | None, which is correct. Direction resets on client-side navigation, reload, back/forward. Nothing is written to localStorage, sessionStorage, cookies or the URL |
+| **Accessibility impact** | Moderate, not a blocker (see severity). English page content rendered `dir="rtl"` with `lang="en"` gets bidi-reordered punctuation ("…Search", "r/field.json/", ".state)"). The toggle the user just pressed moves 713px out from under the pointer (RTL button x=344 → x=1057). Screen-reader reading order is unchanged |
+| **Severity** | **P1** (P1-8): preview state leaks to the whole site, and the leak hides a real library directionality gap. Not P0: no content is lost, keyboard and SR order are intact, it is one click to undo, and nothing persists |
+| **Recommended fix boundary** | Central, in two layers: (1) `@kinetixui/ui` overlays carry direction into their portal; (2) `PreviewEnvironment` scopes `dir` to the preview and stops writing `<html>`. Don't patch Fields |
+| **Regression tests required** | Listed under "Regression protection" below |
+
+### Reproduction (Fields), step by step
+
+FACT, from `fields-journey.json` (1440×900):
+
+| Step | `<html dir>` | Header / sidebar / article (computed) | First nav link x | Preview stage(s) |
+| --- | --- | --- | --- | --- |
+| 1 Load `/docs/components/field` | ltr | ltr / ltr / ltr | 32 | ltr |
+| 2 Toggle the Fields preview to RTL | **rtl** | **rtl / rtl / rtl** | **1322** | rtl |
+| 11 Toggle back to LTR | ltr | ltr / ltr / ltr | 32 | ltr |
+| 12a RTL, then client-nav to `/docs/components/input` (sidebar) | ltr | ltr | 32 | ltr, ltr |
+| 12b → `/blocks` (header) | ltr | ltr | 32 | — |
+| 14 Back / forward | ltr | ltr | 32 | ltr / — |
+| 13 RTL, then reload | ltr | ltr | 32 | ltr |
+| 12c RTL, then client-nav to `/` via logo, then `/iot` | ltr | ltr | 32 | — |
+| 9 `/docs/components/button` (3 previews): toggle the first | **rtl** | **rtl** | **1322** | **rtl, rtl, rtl** |
+
+Screenshot `02-field-after-preview-rtl.png` shows the mirrored header, sidebar, breadcrumb and meta panel, and the
+bidi-reordered English punctuation.
+
+Where state is written, checked one by one:
+
+| Location | Written? |
+| --- | --- |
+| `document.documentElement.dir` | **Yes**, the only write (`preview-environment.tsx:65`) |
+| `document.body.dir` | No |
+| Global React context | No. `KinetixDirectionProvider` wraps only the stage. Note that `useDocumentDirection()` (`lib/use-document-direction.ts`) makes `ComponentPreview`'s tabs, Blocks (`showcase.tsx`) and the IoT showcase *read* `<html dir>`, so they follow the leak |
+| Module-level store | **Yes**, `let direction` shared by every preview on the page |
+| localStorage / sessionStorage / cookies / URL | No |
+| Global CSS selectors | No new ones. Existing `[dir=rtl]` / logical properties respond because `<html>` changed |
+| Portal roots | Inherit `<html>`. No container of their own (Dialog: `DialogPrimitive.Portal` with no `container`, `packages/ui/src/components/dialog.tsx:32`) |
+
+### Portal and overlay isolation
+
+FACT, `portal-matrix.json` (current) and `portal-matrix-scoped.json`. "Scoped" is simulated by toggling RTL and then
+resetting `<html dir>` to `ltr`, so the stage and `KinetixDirectionProvider` stay RTL, which is what a preview-scoped
+implementation would produce:
+
+| Component | Current (html mirrored) | Preview-scoped | Why |
+| --- | --- | --- | --- |
+| Dialog | rtl | **ltr** | Portal to body, Content does not read direction context |
+| Alert Dialog | rtl | **ltr** | same |
+| Modal | rtl | **ltr** | same |
+| Sheet | rtl | **ltr** | same (and its side would not flip) |
+| Drawer | rtl | **ltr** | same |
+| Popover | rtl | **ltr** | same |
+| Tooltip | rtl | **ltr** | same |
+| Date Picker (popover) | rtl | **ltr** | same |
+| Tour | rtl | **ltr** | same |
+| Multi Select (popover) | rtl | **ltr** | same |
+| Select | rtl | rtl | Radix stamps `dir` from `DirectionProvider` on the content |
+| Dropdown Menu | rtl | rtl | same |
+| Menubar | rtl | rtl | same |
+| Hover Card, Combobox, Command, Navigation Menu | rtl | rtl | Rendered inline inside the stage in their demos (no portal observed) |
+| Context Menu, Color Picker | not measured | not measured | Automation did not open them reliably. Listed, not claimed |
+
+**Architectural finding:** this is a library directionality-isolation problem, not only a docs problem. An application
+that renders an RTL region inside an LTR page (a mixed-language editor, an Arabic widget in an English console) and
+wraps it in `KinetixDirectionProvider dir="rtl"` gets LTR dialogs, sheets, popovers and tooltips from it today. The
+docs site hid this by mirroring the page. The existing ui tests (`components-rtl.test.tsx`) run with a document-level
+direction, so they cannot see it (INF from the test setup; not exhaustively read).
+
+### Demo control matrix
+
+| Demo | Control | Expected scope | Actual scope | Leakage? | Severity |
+| --- | --- | --- | --- | --- | --- |
+| Every component preview (98) | LTR / RTL | That preview | **Whole page + every preview on it** | **Yes** | **P1** |
+| Every component preview | Reduced motion | Read-only status | Read-only status | No | — |
+| Every component preview | Preview / Code tab | That preview | That preview (Radix Tabs) | No | — |
+| Every component preview | Platform code tab | That preview | That preview (`useState`, `component-preview.tsx:70`) | No | — |
+| Homepage flagship | Platform tab | That demo | That demo (`useState`, `cross-platform-flagship.tsx:52`) | No | — |
+| Blocks | Preview / Code, platform tab | That block | That block (`useState`, `showcase.tsx:90`) | No | — |
+| Blocks / IoT showcase | Direction | — (no control) | Follows `<html dir>` | Inherits the leak only while on a page that set it. Direction resets on navigation, so measured no | — |
+| `/create` | Appearance Light / Dark | Preview | Preview only. `<html>` class unchanged (measured) | No | — |
+| `/create` | Style, colour, radius, surface, chart | Preview + export | Preview + export. Nothing in storage | No | — |
+| `/create` | (after back navigation) | — | Configuration is lost on back (OBS) | Not a leak | P3 note |
+| Site header | Theme toggle | Whole site (documented global) | Whole site | No (by design) | — |
+| Demos with internal state (variants, sizes, disabled, loading) | Built-in demo state | That demo | That demo (local React state) | None found | — |
+| Density, orientation, viewport simulation | — | — | No such controls exist (`preview-environment.tsx` documents why width is absent) | — | — |
+
+Only one control leaks: direction.
+
+### Directionality architecture
+
+| Concern | Today | Coupled to |
+| --- | --- | --- |
+| **Site direction** (the docs' own direction) | No independent concept. `<html dir>` is hard-coded `ltr` in `layout.tsx:85` and overwritten by the preview | Preview direction |
+| **Preview direction** | Module store + `<html dir>` | Site direction, and every other preview on the page |
+| **Component direction** | `KinetixDirectionProvider` on the stage (Radix `DirectionProvider`) + CSS from the nearest `[dir]` ancestor | Correctly scoped for inline content |
+| **Portal direction** | Inherited from `<html>` (CSS), plus Radix's context for menus and select only | Site direction |
+
+**Nested boundaries:**
+- LTR site → RTL preview → RTL component: works for inline content. Portals only work by also mirroring the site.
+- RTL site → LTR preview → LTR component: **not possible today.** Choosing LTR in a preview sets `<html dir="ltr">`.
+
+RTL functional checks (padding, chevrons, adornments, focus rings, arrow keys, sheet sides, motion direction) aren't
+re-run here. They are owned by the existing gates (`check:rtl`, `components-rtl.test.tsx`, the visual-maturity
+slices' RTL screenshots), and all of those run with document-level direction. Any fix has to re-run them in the
+nested, preview-scoped configuration, because that is the configuration they've never seen.
+
+### Recommended fix boundary
+
+Central, not per component. In this order:
+
+1. **Library (`packages/ui`)**: every portaled overlay Content (Dialog, AlertDialog, Modal, Sheet, Drawer, Popover,
+   Tooltip, HoverCard, Tour, and the popovers used by DatePicker, MultiSelect, Combobox, ColorPicker) reads Radix
+   `useDirection()` and sets `dir` on its portaled root, the way Radix Menu and Select already do. Sheet and Drawer
+   resolve their `side` logically from that direction. This is a behaviour fix with no API change: components already
+   accept `dir` through the provider. It's a library change, so it gets a changeset and a test, and it should be the
+   first PR.
+2. **Docs (`PreviewEnvironment`)**: remove the `<html dir>` write and the module-level store. Each preview owns its
+   direction (`dir` + `KinetixDirectionProvider` on the stage). Rename the screen-reader text from "applies to the
+   whole page". `ComponentPreview`, `showcase.tsx` and the IoT showcase take direction from the nearest boundary
+   (context) instead of `useDocumentDirection()`.
+3. **Replace, don't delete,** the unit test that asserts the leak (`preview-environment.test.tsx:40`, `:70`, `:92`).
+   Its purpose, "portaled overlays follow the preview direction", stays the requirement, asserted on the portal, not
+   on `<html>`.
+4. Optional, later: a documented site-direction preference, if KinetixUI ever wants the docs readable RTL. It would be
+   a separate, global control.
+
+Not acceptable: patching Fields, keeping `<html dir>` and hiding the chrome with CSS, or adding `dir="ltr"` to the
+header and sidebar to mask the leak.
+
+### Regression protection
+
+Browser tests (Playwright, real layout), extending the existing `a11y-browser` / `large-text` harness pattern:
+
+1. Fields: RTL changes only the preview stage. `getComputedStyle(stage).direction === "rtl"`.
+2. `<html dir>` stays `ltr` and `<body>` has no `dir` after the toggle.
+3. Header, primary nav and docs sidebar keep `direction: ltr`. The first nav link's x position is unchanged.
+4. On a page with several previews (Button), toggling one leaves the others `ltr`.
+5. Toggling back to LTR restores only that preview.
+6. Client-side navigation, reload and back/forward don't carry preview direction (keep today's correct behaviour).
+7. Portals: for each overlay in the matrix, opened from an RTL preview on an LTR page, the portaled content computes
+   `direction: rtl`. **Negative control:** remove the library `dir` propagation and the Dialog, Sheet, Popover and
+   Tooltip rows must fail.
+8. Nested: an RTL preview containing an explicit `KinetixDirectionProvider dir="ltr"` subtree renders that subtree LTR,
+   including its portals.
+9. Coexistence: two previews on one page, one RTL and one LTR, each open a Dialog. Each dialog matches its preview.
+10. Unit (`packages/ui`): overlay Content renders `dir` from `DirectionProvider` (jsdom proves the attribute, not the
+    layout; the browser tests above prove layout).
+
+### Effect on the rest of this audit
+
+- Adds **P1-8** (section 23). Counts become P0 1 · P1 8 · P2 12 · P3 6.
+- Slice 1 gains the fix as its **first** PR, because it changes `packages/ui` (changeset) and the docs' preview
+  harness, which every later evaluation-journey change sits on.
+- Reinforces section 15.5: the preview is the evaluator's main instrument, and today its direction switch rearranges
+  the instrument panel.
