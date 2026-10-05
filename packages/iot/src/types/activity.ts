@@ -40,6 +40,8 @@ export type KinetixActivityEvent = {
   /** Already-localised text from the product. */
   message: string;
   detail?: string;
+  /** Product data carried for the product's own use (a command id, a zone). Never read by this package. */
+  metadata?: Record<string, unknown>;
 };
 
 export type KinetixActivityDayGroup = {

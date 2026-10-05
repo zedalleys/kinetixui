@@ -85,10 +85,53 @@ export type KinetixDeviceHealth = {
 };
 
 /**
- * What a capability *is*, as an interaction shape. Mirrors the control affordances plus the two a
- * state model needs that a control does not: reading a metric, and firing a one-shot action.
+ * What a capability *is*, as an interaction shape. Mirrors the control affordances plus the ones a
+ * state model needs that a control does not: reading a metric, firing a one-shot action, a colour
+ * value (a structured value, not a number on a range), and a media surface — a camera preview or
+ * live stream the **product** renders. This package carries no stream, player or codec; `media` only
+ * says the device offers one, so a UI can reserve a place for it and say when it is unavailable.
  */
-export type KinetixDeviceCapabilityKind = "power" | "level" | "setpoint" | "mode" | "telemetry" | "action";
+export type KinetixDeviceCapabilityKind = "power" | "level" | "setpoint" | "mode" | "telemetry" | "action" | "color" | "media";
+
+export const KINETIX_CAPABILITY_KINDS: readonly KinetixDeviceCapabilityKind[] = [
+  "power",
+  "level",
+  "setpoint",
+  "mode",
+  "color",
+  "telemetry",
+  "media",
+  "action",
+] as const;
+
+/**
+ * What a capability *means*, separate from its shape: a lamp's brightness and a speaker's volume are
+ * both `level`. Suggested roles keep autocomplete; `(string & {})` lets a product name its own
+ * ("irrigation-zone", "infusion-rate") without a cast. A role is a label for grouping, docs and
+ * analytics — no function in this package changes behaviour by role.
+ */
+export type KinetixCapabilityRole =
+  | "power"
+  | "brightness"
+  | "color"
+  | "color-temperature"
+  | "temperature-setpoint"
+  | "humidity"
+  | "fan-speed"
+  | "operating-mode"
+  | "battery"
+  | "media-playback"
+  | "volume"
+  | "camera-preview"
+  | "live-stream"
+  | "recording"
+  | "motion-detection"
+  | "privacy"
+  | "lock"
+  | (string & {});
+
+/** Whether a device offers a capability. `unsupported` is a result, not an absence to guess around. */
+export type KinetixCapabilitySupport = "supported" | "read-only" | "unsupported";
 
 /**
  * Something a device can do or report. Ranges, steps, units and modes are **product-supplied** — a
@@ -97,6 +140,8 @@ export type KinetixDeviceCapabilityKind = "power" | "level" | "setpoint" | "mode
 export type KinetixDeviceCapability = {
   id: string;
   kind: KinetixDeviceCapabilityKind;
+  /** What it means. Optional; see {@link KinetixCapabilityRole}. */
+  role?: KinetixCapabilityRole;
   label?: string;
   min?: number;
   max?: number;
