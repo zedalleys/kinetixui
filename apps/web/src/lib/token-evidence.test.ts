@@ -17,9 +17,15 @@ const read = (p: string) => readFileSync(join(root, p), "utf8");
 
 type Rgb = [number, number, number];
 const hex = (h: string): Rgb => {
-  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(h);
-  if (!m) throw new Error(`not a #rrggbb colour: ${h}`);
+  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})(?:[0-9a-f]{2})?$/i.exec(h);
+  if (!m) throw new Error(`not a #rrggbb[aa] colour: ${h}`);
   return [parseInt(m[1]!, 16), parseInt(m[2]!, 16), parseInt(m[3]!, 16)];
+};
+
+/** The alpha of a `#rrggbbaa` source value as the generators print it (two decimals), or null for an opaque one. */
+const alphaOf = (h: string): number | null => {
+  const m = /^#[0-9a-f]{6}([0-9a-f]{2})$/i.exec(h);
+  return m ? Math.round((parseInt(m[1]!, 16) / 255) * 100) / 100 : null;
 };
 
 /**
@@ -57,13 +63,19 @@ function expectHolds(line: string, vars: Map<string, string>, want: string, what
       if (!ref) break;
       value = vars.get(ref[1]!) ?? `(undefined ${ref[1]})`;
     }
-    expect(value, what).toBe(hslChannels(hex(want)));
+    const a = alphaOf(want);
+    expect(value, what).toBe(`${hslChannels(hex(want))}${a === null ? "" : ` / ${a}`}`);
     return;
   }
   let got: Rgb;
-  let m = /Color\(red: ([\d.]+), green: ([\d.]+), blue: ([\d.]+)\)/.exec(line);
+  const a = alphaOf(want);
+  let m = /Color\(red: ([\d.]+), green: ([\d.]+), blue: ([\d.]+)(?:, opacity: ([\d.]+))?\)/.exec(line);
+  if (m && a !== null) expect(Number(m[4]), `${what} opacity`).toBeCloseTo(a, 2);
   if (m) got = [m[1], m[2], m[3]].map((v) => Math.round(Number(v) * 255)) as Rgb;
-  else if ((m = /Color\(0x[0-9a-f]{2}([0-9a-f]{6})\)/i.exec(line))) got = hex(`#${m[1]}`);
+  else if ((m = /Color\(0x([0-9a-f]{2})([0-9a-f]{6})\)/i.exec(line))) {
+    if (a !== null) expect(parseInt(m[1]!, 16) / 255, `${what} alpha`).toBeCloseTo(a, 2);
+    got = hex(`#${m[2]}`);
+  }
   else throw new Error(`no colour literal in ${JSON.stringify(line)}`);
   got.forEach((c, i) => expect(Math.abs(c - hex(want)[i]!), `${what} channel ${i}: ${got} vs ${hex(want)}`).toBeLessThanOrEqual(1));
 }

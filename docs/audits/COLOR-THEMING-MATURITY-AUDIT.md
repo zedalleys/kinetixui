@@ -413,16 +413,21 @@ platform output (token-evidence.test.ts), malformed preset (preset codec tests).
 **P0 — 1 (fixed)**
 - P0-1 Keyboard focus ring ignored the theme; reachable invisible focus with no warning. §16.
 
-**P1 — 5 (2 fixed, 3 open)**
+**P1 — 5 (all fixed; 2 in this audit PR, 3 in Slice 1)**
 - P1-1 *(fixed)* Light previews on a dark page rendered dark action/focus/brand/surface tokens and rings. §10.
 - P1-2 *(fixed)* /docs/theming's retheme recipe produced sub-AA text; table and claims wrong. §27.
-- P1-3 *(open)* Create: an Advanced `primary` override is previewed (action stays generated), exported for web
-  (`--action: var(--primary)` follows it) and exported for native (action stays shipped blue) as three
-  different themes. Source + engine run (subagent); not rendered. Needs a decision: should a `primary` pin
-  cascade to `action`/`link`, or should `primary` leave the Advanced list.
-- P1-4 *(open)* Native Banner/Inform info text at ~4.15:1 (no `onInfoContainer` in native `KinetixColors`).
-  Source evidence. Fix spans three ports + three exporters.
-- P1-5 *(open, unmeasured)* NavigationMenu trigger focus is background + text colour only. Measure first.
+- P1-3 *(fixed in Slice 1)* An Advanced `primary` pin previewed, exported for web and exported for native as three
+  different themes. Decision: a `primary`/`primary-foreground`/`ring` pin cascades to `action`, `action-foreground`,
+  `link`, `focus` (`ROLE_DEFAULTS`, the token source's own alias graph), applied once in the resolver so preview, CSS and
+  the three native exports agree; a role pinned itself still wins; hover/pressed regenerate. `role-equivalence.test.ts`.
+- P1-4 *(fixed in Slice 1)* Native `onInfoContainer` added (top-level `color.on-info-container`, 4.19:1 -> 6.47:1 light);
+  Banner/Inform on SwiftUI, Compose and Flutter read it. Success/warning/error containers have no consumer and are deferred.
+- P1-5 *(fixed in Slice 1, measured)* NavigationMenu trigger focus was background-only (1.08:1 light, 1.24:1 dark); it now
+  draws `ring-ring` like every other `ring-ring` control. Gated in `check:theme-isolation`.
+
+**Slice 1 also closed** (from P2/P3): status focus rings now follow their roles (light destructive ring #ec5047 -> role
+#c60a0a, 3.62 -> 6.09:1); a `scrim` role replaces the four scrim recipes; `modal.tsx` shadow literal -> `shadow-xl`;
+`check:component-colors` guards component source against primitives and literals.
 
 **P2 — 14**: `blue` ramp misnamed/discontinuous; `cream` unusable steps; inconsistent step sets; `semantic.*`
 legacy group without dark values; status focus rings baked (light destructive ring ≠ role); React/native

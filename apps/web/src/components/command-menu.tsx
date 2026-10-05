@@ -74,7 +74,7 @@ export function CommandMenu() {
       </Dialog.Trigger>
 
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-scrim backdrop-blur-sm" />
         <Dialog.Content
           aria-describedby={undefined}
           className="fixed inset-x-4 top-[20vh] z-50 mx-auto max-w-lg focus:outline-none"

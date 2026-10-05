@@ -58,6 +58,13 @@ public struct KinetixColors {
     public let infoForeground: Color
     public let popover: Color
     public let popoverForeground: Color
+    /// Text and icons on a tinted `info` surface — Banner and Inform `.information`. `info` itself is 4.19:1 on
+    /// its own 10% tint in light; this role clears AA. A theme built before the role existed gets `info`, which
+    /// is what those views drew before.
+    public let onInfoContainer: Color
+    /// The dimming layer behind a modal surface: Dialog, Sheet, Sidebar. Carries its own alpha, so draw it as
+    /// is. A theme built before the role existed gets black at 40%, which is what those views drew before.
+    public let scrim: Color
     /// The 5-stop categorical chart palette (`--chart-1` … `--chart-5`).
     public let chart: [Color]
 
@@ -97,6 +104,8 @@ public struct KinetixColors {
         infoForeground: Color,
         popover: Color,
         popoverForeground: Color,
+        onInfoContainer: Color? = nil,
+        scrim: Color? = nil,
         chart: [Color]
     ) {
         self.primary = primary
@@ -134,6 +143,8 @@ public struct KinetixColors {
         self.infoForeground = infoForeground
         self.popover = popover
         self.popoverForeground = popoverForeground
+        self.onInfoContainer = onInfoContainer ?? info
+        self.scrim = scrim ?? Color.black.opacity(0.4)
         self.chart = chart
     }
 }
@@ -176,6 +187,8 @@ public extension KinetixColors {
         infoForeground: KinetixColorsSwiftUI.infoForeground,
         popover: KinetixColorsSwiftUI.popover,
         popoverForeground: KinetixColorsSwiftUI.popoverForeground,
+        onInfoContainer: KinetixColorsSwiftUI.onInfoContainer,
+        scrim: KinetixColorsSwiftUI.scrim,
         chart: [
             KinetixColorsSwiftUI.chart1,
             KinetixColorsSwiftUI.chart2,
@@ -223,6 +236,8 @@ public extension KinetixColors {
         infoForeground: KinetixColorsSwiftUIDark.infoForeground,
         popover: KinetixColorsSwiftUIDark.popover,
         popoverForeground: KinetixColorsSwiftUIDark.popoverForeground,
+        onInfoContainer: KinetixColorsSwiftUIDark.onInfoContainer,
+        scrim: KinetixColorsSwiftUIDark.scrim,
         chart: [
             KinetixColorsSwiftUIDark.chart1,
             KinetixColorsSwiftUIDark.chart2,

@@ -1,0 +1,180 @@
+{
+  "source": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Theme.kt",
+  "parameters": [
+    {
+      "name": "primary",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "primaryForeground",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "action",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "actionForeground",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "actionHover",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "actionPressed",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "link",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "focus",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "brand",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "brandForeground",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "secondary",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "secondaryForeground",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "destructive",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "destructiveForeground",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "foreground",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "background",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "border",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "muted",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "mutedForeground",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "accent",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "accentForeground",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "tertiary",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "warning",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "warningForeground",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "card",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "cardForeground",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "success",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "successForeground",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "info",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "infoForeground",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "popover",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "popoverForeground",
+      "type": "Color",
+      "defaulted": false
+    },
+    {
+      "name": "onInfoContainer",
+      "type": "Color",
+      "defaulted": true
+    },
+    {
+      "name": "scrim",
+      "type": "Color",
+      "defaulted": true
+    },
+    {
+      "name": "chart",
+      "type": "List<Color>",
+      "defaulted": false
+    }
+  ]
+}

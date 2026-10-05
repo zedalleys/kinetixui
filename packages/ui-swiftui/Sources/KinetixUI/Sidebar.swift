@@ -30,7 +30,7 @@ public struct KinetixSidebar<Content: View>: View {
     public var body: some View {
         if isOpen {
             ZStack(alignment: .leading) {
-                Color.black.opacity(0.4)
+                colors.scrim
                     .ignoresSafeArea()
                     .onTapGesture { isOpen = false }
 

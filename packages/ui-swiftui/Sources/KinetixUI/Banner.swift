@@ -63,7 +63,7 @@ public struct KinetixBanner: View {
 
     private var tint: (container: Color, content: Color) {
         switch variant {
-        case .information: return (colors.info.opacity(0.1), colors.info)
+        case .information: return (colors.info.opacity(0.1), colors.onInfoContainer)
         case .warning: return (colors.warning.opacity(0.15), colors.warning)
         case .success: return (colors.success.opacity(0.15), colors.success)
         case .error: return (colors.destructive.opacity(0.1), colors.destructive)

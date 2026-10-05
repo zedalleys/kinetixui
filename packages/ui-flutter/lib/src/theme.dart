@@ -50,8 +50,11 @@ class KinetixColors {
     required this.infoForeground,
     required this.popover,
     required this.popoverForeground,
+    Color? onInfoContainer,
+    Color? scrim,
     required this.chart,
-  });
+  })  : onInfoContainer = onInfoContainer ?? info,
+        scrim = scrim ?? const Color(0x66000000);
 
   final Color primary;
   final Color primaryForeground;
@@ -88,6 +91,15 @@ class KinetixColors {
   final Color infoForeground;
   final Color popover;
   final Color popoverForeground;
+
+  /// Text and icons on a tinted `info` surface — Banner and Inform `information`. `info` itself is 4.19:1 on
+  /// its own 10% tint in light; this role clears AA. A theme built before the role existed gets `info`, which
+  /// is what those widgets drew before.
+  final Color onInfoContainer;
+
+  /// The dimming layer behind a modal surface: Dialog, Sheet, Sidebar. Carries its own alpha, so draw it as
+  /// is. A theme built before the role existed gets black at 40%, which is what those widgets drew before.
+  final Color scrim;
 
   /// The 5-stop categorical chart palette (`--chart-1` … `--chart-5`).
   final List<Color> chart;
@@ -129,6 +141,8 @@ class KinetixColors {
     infoForeground: KinetixColorScheme.infoForeground,
     popover: KinetixColorScheme.popover,
     popoverForeground: KinetixColorScheme.popoverForeground,
+    onInfoContainer: KinetixColorScheme.onInfoContainer,
+    scrim: KinetixColorScheme.scrim,
     chart: <Color>[
       KinetixColorScheme.chart1,
       KinetixColorScheme.chart2,
@@ -176,6 +190,8 @@ class KinetixColors {
     infoForeground: KinetixColorSchemeDark.infoForeground,
     popover: KinetixColorSchemeDark.popover,
     popoverForeground: KinetixColorSchemeDark.popoverForeground,
+    onInfoContainer: KinetixColorSchemeDark.onInfoContainer,
+    scrim: KinetixColorSchemeDark.scrim,
     chart: <Color>[
       KinetixColorSchemeDark.chart1,
       KinetixColorSchemeDark.chart2,

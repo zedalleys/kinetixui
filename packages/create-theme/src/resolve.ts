@@ -33,6 +33,7 @@ import {
   type PresetConfig,
 } from "@kinetixui/create-preset";
 import {
+  ROLE_DEFAULTS,
   SHIPPED_ELEVATION,
   SHIPPED_RADIUS,
   TOKEN_CONTRACT,
@@ -48,8 +49,10 @@ import {
   deriveRadius,
   deriveSurfaceBorder,
   foregroundFor,
+  interactionStates,
   type Mode,
 } from "./engine";
+import { hexToOklch } from "./oklch";
 import { CONTRAST_PAIRS, checkContrast, type ContrastResult } from "./palette";
 
 /**
@@ -96,6 +99,8 @@ const ALIASED_FROM: Partial<Record<AcceptedToken, AcceptedToken>> = {
 
 /** Base → its foreground, for regenerating a text colour when only the surface was overridden. */
 const FOREGROUND_OF: Record<string, string> = Object.fromEntries(CONTRAST_PAIRS);
+/** Foreground → its base, the same pairs read the other way. */
+const BASE_OF: Record<string, string> = Object.fromEntries(CONTRAST_PAIRS.map(([base, fg]) => [fg, base]));
 
 function shippedColorsFor(mode: Mode): Record<string, string> {
   const out: Record<string, string> = {};
@@ -141,6 +146,9 @@ function resolveMode(design: PresetConfig, mode: Mode): ResolvedThemeMode {
   const border = deriveSurfaceBorder(design.surface, mode, colors.border ?? "#000000");
   if (border) colors.border = border;
 
+  const generatedAction = colors.action;
+  const pinned = design.manualOverrides as Partial<Record<string, string>>;
+
   // Manual overrides last — nothing generated can displace them.
   for (const [token, hex] of Object.entries(design.manualOverrides)) {
     if (hex) colors[token] = hex;
@@ -148,9 +156,34 @@ function resolveMode(design: PresetConfig, mode: Mode): ResolvedThemeMode {
   // A surface overridden without its text colour gets a readable one. This is not repairing the user's
   // choice: they did not make one. A foreground they DID set is left exactly as typed, pass or fail.
   for (const [base, fg] of Object.entries(FOREGROUND_OF)) {
-    if (design.manualOverrides[base as AcceptedToken] && !design.manualOverrides[fg as AcceptedToken]) {
+    if (pinned[base] && !pinned[fg]) {
       colors[fg] = foregroundFor(colors[base]!);
     }
+  }
+  // A role that defaults to another one follows it when the user moved the source by hand and left the
+  // role alone: pin `primary` and `action` and `link` are that colour, pin `ring` and `focus` is. This is
+  // what the token source says (`action` = `{color.primary}`) and what a web stylesheet already did, so
+  // writing it into the resolved theme is what makes the preview and the native exports mean the same
+  // thing as the CSS (audit P1-3). "Moved by hand" includes a foreground regenerated because its base
+  // was pinned; a foreground whose own base the user pinned keeps the colour picked for that base.
+  for (const [role, source] of Object.entries(ROLE_DEFAULTS)) {
+    if (pinned[role]) continue;
+    if (BASE_OF[role] && pinned[BASE_OF[role]!]) continue;
+    const sourceMoved = Boolean(pinned[source] || (BASE_OF[source] && pinned[BASE_OF[source]!]));
+    if (sourceMoved && colors[source]) colors[role] = colors[source]!;
+  }
+  // Native ports draw hover and pressed from explicit fields, the web from `action` itself. When the
+  // action colour came from a hand-set value, regenerate the two fills from it with the same rule a
+  // generated action uses — otherwise a native button keeps the shipped blue hover under a green action.
+  const action = colors.action ? hexToOklch(colors.action) : null;
+  if (action && colors.action !== generatedAction) {
+    const states = interactionStates(action, mode);
+    colors["action-hover"] = states.hover;
+    colors["action-pressed"] = states.pressed;
+    // The label has to stay readable on all three fills, which a foreground chosen against the resting
+    // colour alone does not promise (a mid-green pressed fill falls below AA under it). A foreground the
+    // user set themselves, on `action` or on `primary`, is left exactly as typed.
+    if (!pinned["action-foreground"] && !pinned["primary-foreground"]) colors["action-foreground"] = states.foreground;
   }
 
   return {

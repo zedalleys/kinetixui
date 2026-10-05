@@ -32,7 +32,7 @@ public struct KinetixSheet<Content: View>: View {
     public var body: some View {
         if isPresented {
             ZStack(alignment: .bottom) {
-                Color.black.opacity(0.4)
+                colors.scrim
                     .ignoresSafeArea()
                     .onTapGesture { isPresented = false }
 

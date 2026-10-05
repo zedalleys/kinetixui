@@ -45,7 +45,7 @@ fun KinetixBanner(
 ) {
     val colors = KinetixColorScheme.current
     val (container, content) = when (variant) {
-        KinetixBannerVariant.Information -> colors.info.copy(alpha = 0.1f) to colors.info
+        KinetixBannerVariant.Information -> colors.info.copy(alpha = 0.1f) to colors.onInfoContainer
         KinetixBannerVariant.Warning -> colors.warning.copy(alpha = 0.15f) to colors.warning
         KinetixBannerVariant.Success -> colors.success.copy(alpha = 0.15f) to colors.success
         KinetixBannerVariant.Error -> colors.destructive.copy(alpha = 0.1f) to colors.destructive
