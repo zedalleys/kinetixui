@@ -45,6 +45,23 @@ struct UsageExamplesView: View {
             }
             .environment(\.layoutDirection, .rightToLeft)
             // kx-usage:end
+
+            // kx-usage:icons-dismiss-icon
+            VStack(spacing: 8) {
+                // Default: the xmark SF Symbol.
+                KinetixBanner("Changes saved.", onDismiss: save)
+
+                // Another SF Symbol: tinted and sized by the banner, labelled "Dismiss".
+                KinetixBanner("Changes saved.", onDismiss: save) {
+                    Image(systemName: "xmark.circle")
+                }
+
+                // Your own view or asset: laid out in the same 14×14 frame.
+                KinetixBanner("Changes saved.", onDismiss: save) {
+                    Image("company-close").resizable().scaledToFit()
+                }
+            }
+            // kx-usage:end
         }
     }
 }

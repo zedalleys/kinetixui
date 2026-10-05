@@ -280,6 +280,11 @@ import { KxCheckbox, KxSegment, KxSegmentedControl, KxSwitch, KxToggle, KxToggle
           <kx-banner variant="warning" dismissible (dismiss)="bannerGone.set(true)">Scheduled maintenance at 02:00 UTC.</kx-banner>
         }
         <output data-kx-out="banner">{{ bannerGone() ? 'dismissed' : 'shown' }}</output>
+        <!-- An application's own icon in the dismiss slot: no width, no height, no aria — the slot supplies them. -->
+        <kx-banner id="banner-own-icon" variant="information" dismissible>
+          Your own icon, same box.
+          <svg kxDismissIcon viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" /></svg>
+        </kx-banner>
       </section>
 
       <section data-kx-subject="inform">

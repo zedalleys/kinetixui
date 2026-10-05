@@ -24,23 +24,27 @@ const OUT = "apps/web/src/registry/usage-examples.generated.ts";
 
 /** Platform tab key → where that platform's usage examples live, and the file extension. */
 const SOURCES = {
+  // React's component-page snippet is the demo's own source; this directory holds only examples that are not
+  // a component demo (the /docs/icons customization examples), keyed by something other than `<slug>-demo`.
+  react: { dir: "packages/ui/src/usage", ext: ".tsx" },
   angular: { dir: "packages/ui-angular/src/usage", ext: ".ts" },
   swift: { dir: "packages/ui-swiftui/Tests/KinetixUITests/Usage", ext: ".swift" },
   kotlin: { dir: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/usage", ext: ".kt" },
   dart: { dir: "packages/ui-flutter/test/usage", ext: ".dart" },
 };
 /** Tab order on the site — React is the canonical snippet and comes from the demo registry, not from here. */
-const ORDER = ["angular", "swift", "kotlin", "dart"];
+const ORDER = ["react", "angular", "swift", "kotlin", "dart"];
 
 /**
- * Two marker spellings. An Angular example's useful part is its TEMPLATE, and inside a template literal a
+ * Three marker spellings. An Angular example's useful part is its TEMPLATE, and inside a template literal a
  * `//` line is markup, not a comment — `<!-- … -->` is a real HTML comment there, renders as nothing, and
- * lets the region be exactly the lines a reader would type.
+ * lets the region be exactly the lines a reader would type. Inside JSX the same is true of `//`, so a React
+ * example marks its region with a JSX comment, `{/* kx-usage:<key> *\/}`.
  *
  * (?!end) so the closing marker is never read as a region named "end".
  */
-const START = /(?:\/\/|<!--) kx-usage:(?!end\b)([a-z0-9-]+)\s*(?:-->)?\s*$/;
-const END = /(?:\/\/|<!--) kx-usage:end\s*(?:-->)?\s*$/;
+const START = /(?:\/\/|<!--|\{\/\*) kx-usage:(?!end\b)([a-z0-9-]+)\s*(?:-->|\*\/\})?\s*$/;
+const END = /(?:\/\/|<!--|\{\/\*) kx-usage:end\s*(?:-->|\*\/\})?\s*$/;
 
 /**
  * Strip the indentation a region carries only because it sits inside a class body or a template literal. The
@@ -111,7 +115,7 @@ const body = `/**
  *
 ${files.map((f) => ` * ${f}`).join("\n")}
  */
-export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | "kotlin" | "dart", string>>> = {
+export const usageExamples: Record<string, Partial<Record<"react" | "angular" | "swift" | "kotlin" | "dart", string>>> = {
 ${keys
   .map(
     (k) =>

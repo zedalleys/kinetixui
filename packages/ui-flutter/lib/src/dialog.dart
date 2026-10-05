@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_text.dart';
+import 'icon_control.dart';
 import 'theme.dart';
 import 'util.dart';
 
@@ -64,12 +65,13 @@ class KinetixDialog extends StatelessWidget {
                         Positioned(
                           right: 8,
                           top: 8,
-                          child: GestureDetector(
+                          child: IconControl(
+                            label: 'Close',
                             onTap: onDismiss,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Icon(Icons.close, size: 18, color: c.mutedForeground),
-                            ),
+                            size: 18,
+                            color: c.mutedForeground,
+                            padding: const EdgeInsets.all(8),
+                            child: const Icon(Icons.close),
                           ),
                         ),
                     ],

@@ -30,4 +30,12 @@ component is built on a primitive; the hand-built widgets (DataGrid, TreeView,
 ColorPicker, MultiSelect, Tour, KanbanBoard) have their own documented interaction
 models — see [Accessibility](/docs/accessibility).
 
+## Dismiss icon
+
+The dismiss button shows each platform's own close mark by default (Lucide's `X`, the `xmark` SF Symbol,
+Material's Close) and takes your own icon instead: `dismissIcon` on React, Compose and Flutter, a
+`dismissIcon:` view builder on SwiftUI, and an element with `kxDismissIcon` projected into `kx-inform` on
+Angular. The inform sizes it to 14 px, colours it and keeps the button named "Dismiss", so your icon
+needs no size or label of its own. Leave it out to keep the default. See [Icons](/docs/icons).
+
 <ComponentApi slug="inform" />

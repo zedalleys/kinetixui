@@ -3,6 +3,7 @@ package com.kinetixui.ui.usage
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -11,14 +12,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.kinetixui.ui.KinetixBadge
 import com.kinetixui.ui.KinetixBadgeVariant
+import com.kinetixui.ui.KinetixBanner
 import com.kinetixui.ui.KinetixButton
 import com.kinetixui.ui.KinetixChart
 import com.kinetixui.ui.KinetixChartPoint
@@ -83,7 +91,27 @@ fun UsageExamples(save: () -> Unit = {}) {
             }
         }
         // kx-usage:end
+
+        // kx-usage:icons-dismiss-icon
+        // Default: Material's Close, drawn by KinetixUI.
+        KinetixBanner("Changes saved.", onDismiss = save)
+
+        // Yours: any composable. The banner sizes it (14dp), tints it through LocalContentColor and names
+        // the button "Dismiss" — so pass contentDescription = null.
+        KinetixBanner(
+            "Changes saved.",
+            onDismiss = save,
+            dismissIcon = { Icon(imageVector = CompanyIcons.Close, contentDescription = null) },
+        )
+        // kx-usage:end
     }
+}
+
+/** Stands in for an application's own icon set in the icons example: one vector, no KinetixUI involved. */
+private object CompanyIcons {
+    val Close: ImageVector = ImageVector.Builder("CompanyClose", 24.dp, 24.dp, 24f, 24f)
+        .addPath(PathParser().parsePathString("M6,6L18,18M18,6L6,18").toNodes(), stroke = SolidColor(Color.Black), strokeLineWidth = 2f)
+        .build()
 }
 
 @RunWith(RobolectricTestRunner::class)
@@ -102,5 +130,7 @@ class UsageExamplesTest {
         // the chart is a Canvas: its contentDescription is the only thing assistive technology can read, so
         // that is what the test asserts rather than any drawn pixel
         rule.onNodeWithContentDescription("Monthly visitors", substring = true).assertExists()
+        // both banners in the icons example: the default mark and the application's own, each a named button
+        rule.onAllNodesWithContentDescription("Dismiss").assertCountEquals(2)
     }
 }

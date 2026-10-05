@@ -4,7 +4,7 @@
 // Mirrors packages/ui/src/components/breadcrumb.tsx. Slot-shaped (same
 // convention as KinetixCard / KinetixAlert) rather than an items-list
 // API. `gap-1.5` (6) is off the shared spacing scale. `BreadcrumbEllipsis`
-// isn't ported (rare); the separator is the `chevron.right` SF Symbol
+// isn't ported (rare); the separator is the `chevron.forward` SF Symbol (it flips in RTL)
 // (the React source's lucide `ChevronRight`).
 //
 
@@ -65,7 +65,7 @@ public struct KinetixBreadcrumbSeparator: View {
 
     private let symbol: String
 
-    public init(_ symbol: String = "chevron.right") {
+    public init(_ symbol: String = "chevron.forward") {
         self.symbol = symbol
     }
 

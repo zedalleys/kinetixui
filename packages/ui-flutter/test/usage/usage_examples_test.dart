@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kinetix_ui/kinetix_ui.dart';
@@ -72,11 +73,32 @@ class _UsageExamplesState extends State<UsageExamples> {
           ),
         ),
         // kx-usage:end
+        const SizedBox(height: 16),
+
+        // kx-usage:icons-dismiss-icon
+        // Default: Material's Icons.close.
+        KinetixBanner('Changes saved.', onDismiss: save),
+
+        // A Cupertino icon (add the cupertino_icons font package): sized to 14 and tinted by the banner.
+        KinetixBanner('Changes saved.', onDismiss: save, dismissIcon: const Icon(CupertinoIcons.xmark_circle)),
+
+        // Any widget — an SVG widget, your company's icon. Laid out at 14×14, named "Dismiss".
+        KinetixBanner('Changes saved.', onDismiss: save, dismissIcon: const CompanyCloseIcon()),
+        // kx-usage:end
       ],
     );
   }
 
   void save() => widget.save?.call();
+}
+
+/// Stands in for an application's own icon widget in the icons example: no KinetixUI, no icon font.
+class CompanyCloseIcon extends StatelessWidget {
+  const CompanyCloseIcon({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      DecoratedBox(decoration: BoxDecoration(color: IconTheme.of(context).color, shape: BoxShape.circle));
 }
 
 void main() {
@@ -94,5 +116,8 @@ void main() {
     expect(find.text('Default'), findsOneWidget);
     expect(find.text('Airplane mode'), findsOneWidget);
     expect(find.text('Save'), findsOneWidget);
+    // the icons example: three banners, the last two with the application's own icon in the dismiss slot
+    expect(find.byIcon(CupertinoIcons.xmark_circle), findsOneWidget);
+    expect(tester.getSize(find.byType(CompanyCloseIcon)), const Size(14, 14));
   });
 }

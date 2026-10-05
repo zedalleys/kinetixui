@@ -37,8 +37,9 @@ import kotlin.math.min
  * (wire it to an `ActivityResultContracts.GetContent` launcher yourself).
  * The dashed border is drawn with a `PathEffect.dashPathEffect` `Stroke`
  * (Compose has no dashed `BorderStroke`), same "draw it yourself" approach
- * `KinetixInputGroupButton`'s single-side border uses. Status/remove
- * glyphs are plain text — no icon library wired in.
+ * `KinetixInputGroupButton`'s single-side border uses. Remove is a named
+ * button with Material's Close icon; the drop-zone and status marks are
+ * still text glyphs (icons/mapping.json, composeGlyphs).
  */
 enum class KinetixUploadStatus { Loading, Uploaded, Error }
 
@@ -202,11 +203,12 @@ fun KinetixFileUploadItem(
             )
         }
         if (onRemove != null) {
-            Text(
-                text = "×",
-                color = colors.mutedForeground,
-                modifier = Modifier.clickable { onRemove(file.id) },
-            )
+            KinetixIconControl(
+                label = "Remove ${file.name}",
+                onClick = { onRemove(file.id) },
+                iconSize = 14.dp,
+                tint = colors.mutedForeground,
+            ) { KinetixIcon(KinetixIcons.Close, 14.dp) }
         }
     }
 }

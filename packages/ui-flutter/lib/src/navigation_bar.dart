@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_text.dart';
+import 'icon_control.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/navigation-bar.tsx`: a mobile top
@@ -74,14 +75,15 @@ class KinetixNavigationBackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
-    return GestureDetector(
+    // Icons.chevron_left is declared with matchTextDirection, so it points to the inline start in an RTL
+    // Directionality without any code here.
+    return IconControl(
+      label: 'Back',
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 36,
-        height: 36,
-        child: Icon(Icons.chevron_left, size: 24, color: c.foreground),
-      ),
+      size: 24,
+      color: c.foreground,
+      padding: const EdgeInsets.all(6),
+      child: const Icon(Icons.chevron_left),
     );
   }
 }

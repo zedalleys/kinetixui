@@ -29,6 +29,7 @@ on:
       - "scripts/motion-states.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/card-visual.mjs"
+      - "scripts/icon-direction.mjs"
       - "scripts/selection-visual.mjs"
       - "scripts/entry-visual.mjs"
       - "scripts/composite-visual.mjs"
@@ -57,6 +58,7 @@ on:
       - "scripts/motion-states.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/card-visual.mjs"
+      - "scripts/icon-direction.mjs"
       - "scripts/selection-visual.mjs"
       - "scripts/entry-visual.mjs"
       - "scripts/composite-visual.mjs"
@@ -178,6 +180,12 @@ jobs:
       # and the tooltip's edge under forced colours.
       - name: Overlay visual contract (Angular, light and dark)
         run: pnpm check:overlay-visual
+
+      # Which way React's component-owned directional icons point, read from ink in LTR and in an RTL preview
+      # scoped to the story root (never <html>): Back, Previous / Next and the breadcrumb separator mirror; a
+      # collapsed disclosure mirrors; an expanded disclosure and the accordion chevron do not (/docs/icons).
+      - name: Icon direction (React, LTR and scoped RTL)
+        run: pnpm check:icon-direction
 
       # @kinetixui/angular as a live Angular application in this Chromium: every usage example and state
       # fixture under axe (light and dark, forced colours, reduced motion), every interactive component driven

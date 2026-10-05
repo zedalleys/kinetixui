@@ -48,12 +48,18 @@ export interface BannerProps
     VariantProps<typeof bannerVariants> {
   hideIcon?: boolean;
   onDismiss?: () => void;
+  /**
+   * Replaces the default dismiss mark (lucide's `X`) with your own icon — any icon library or SVG.
+   * The button keeps its accessible name ("Dismiss") and sizes any SVG inside it to 14px, so the icon
+   * needs no size, colour or aria attributes of its own. See /docs/icons.
+   */
+  dismissIcon?: React.ReactNode;
   /** optional CTA rendered inline after the message */
   action?: { label: React.ReactNode; onClick?: () => void };
 }
 
 const Banner = React.forwardRef<HTMLDivElement, BannerProps>(
-  ({ className, variant = "information", sticky, hideIcon, onDismiss, action, children, ...props }, ref) => {
+  ({ className, variant = "information", sticky, hideIcon, onDismiss, dismissIcon, action, children, ...props }, ref) => {
     const Icon = ICON[variant ?? "information"];
     return (
       <div ref={ref} className={cn(bannerVariants({ variant, sticky }), className)} {...props}>
@@ -75,9 +81,9 @@ const Banner = React.forwardRef<HTMLDivElement, BannerProps>(
             type="button"
             onClick={onDismiss}
             aria-label="Dismiss"
-            className="-m-0.5 shrink-0 rounded-[2px] p-0.5 opacity-muted outline-none transition-opacity hover:opacity-visible focus-visible:opacity-visible focus-visible:ring-1 focus-visible:ring-current"
+            className="-m-0.5 shrink-0 rounded-[2px] p-0.5 opacity-muted outline-none transition-opacity hover:opacity-visible focus-visible:opacity-visible focus-visible:ring-1 focus-visible:ring-current [&_svg]:size-3.5 [&_svg]:shrink-0"
           >
-            <X className="size-3.5" />
+            {dismissIcon ?? <X className="size-3.5" />}
           </button>
         )}
       </div>
