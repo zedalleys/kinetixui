@@ -58,7 +58,7 @@ const BatteryIndicator = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
           aria-label={resolveLabel(label, describeBattery(value))}
           data-level={level}
           data-presentation="pill"
-          className={cn("inline-flex items-center gap-3 rounded-full bg-muted/60 py-1.5 ps-4 pe-3 font-sans text-foreground", className)}
+          className={cn("inline-flex max-w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-full bg-muted/60 py-1.5 ps-4 pe-3 font-sans text-foreground", className)}
           {...props}
         >
           {hideValue ? null : (
