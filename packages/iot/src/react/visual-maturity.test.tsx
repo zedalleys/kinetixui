@@ -272,6 +272,23 @@ describe("reference-driven presentations", () => {
     expect(container.querySelectorAll("[aria-live]")).toHaveLength(1);
   });
 
+  it("ring: the steppers sit outside the gauge's face, pulled into the band under the arc's ends by geometry", () => {
+    const { container } = render(<DeviceSetpointControl presentation="ring" target={21} min={16} max={30} label="Room" />);
+    const ring = container.querySelector("[data-presentation='ring']")!;
+    const face = ring.querySelector("[data-ring-face]")!;
+    const row = ring.querySelector<HTMLElement>("[data-ring-steppers]")!;
+    // not inside the face, where they used to be pinned to its corners over the arc's ends
+    expect(face.querySelectorAll("button")).toHaveLength(0);
+    expect(row.querySelectorAll("button")).toHaveLength(2);
+    // painted above the positioned face it tucks into, so the face cannot take its clicks
+    expect(row.className).toContain("relative");
+    // the pull is the arc's empty band (a % of the ring's width) less one spacing step; 14.8% for this geometry
+    expect(row.style.marginBlockStart).toMatch(/^calc\(-14\.80% \+ var\(--spacing-2, 0\.5rem\)\)$/);
+    // the ring is a size container, and the drawing only appears where the numeral fits inside it
+    expect(ring.className).toContain("[container-type:inline-size]");
+    expect(ring.querySelector("svg")!.getAttribute("class")).toContain("[@container(min-width:12rem)]:block");
+  });
+
   it("setpoint ring nudges through the ± buttons only", () => {
     let got = 0;
     render(<DeviceSetpointControl presentation="ring" target={21} min={16} max={30} step={1} label="Room" control={READY} onCommit={(n) => (got = n)} />);

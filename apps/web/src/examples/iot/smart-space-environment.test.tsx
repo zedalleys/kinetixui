@@ -49,6 +49,22 @@ describe("smart space: connected space", () => {
     expect(rail().getByRole("button", { name: /Living room/ })).toHaveAttribute("aria-current", "true");
   });
 
+  it("draws the lock from the same confirmed value as its word, in the panel and in the whole-home tile", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    const panel = document.querySelector('[data-device="lock-front"]')!;
+    expect(panel.querySelector(".text-headline-lg")!.textContent).toBe("Locked");
+    expect(panel.querySelector('svg[data-illustration="lock"]')!.getAttribute("data-state")).toBe("locked");
+    // a request moves neither the word nor the bolt
+    fireEvent.click(within(panel as HTMLElement).getByRole("radio", { name: /Unlocked/ }));
+    expect(panel.querySelector('svg[data-illustration="lock"]')!.getAttribute("data-state")).toBe("locked");
+    fireEvent.click(screen.getByRole("button", { name: "Show the whole home" }));
+    const tileArt = document.querySelector('svg[data-illustration="lock"]')!;
+    let tile: Element | null = tileArt.parentElement;
+    while (tile && !tile.querySelector(".text-headline-sm")) tile = tile.parentElement;
+    expect(tile!.querySelector(".text-headline-sm")!.textContent).toBe("Locked");
+    expect(tileArt.getAttribute("data-state")).toBe("locked");
+  });
+
   it("keeps a request unconfirmed and worded until the device reports it", () => {
     render(<SmartSpaceEnvironmentExample />);
     fireEvent.click(rail().getByRole("button", { name: /Living room/ }));

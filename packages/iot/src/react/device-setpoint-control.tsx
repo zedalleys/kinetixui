@@ -210,6 +210,8 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
               <div className="flex items-center justify-center [@container(min-width:12rem)]:absolute [@container(min-width:12rem)]:inset-0 [@container(min-width:12rem)]:px-8 [@container(min-width:12rem)]:pb-4">
                 {numeralBlock}
               </div>
+              {/* Stacked only: gives back the band the stepper row is pulled up by, so there it sits one step below. */}
+              <div aria-hidden="true" className="[@container(min-width:12rem)]:hidden" style={{ paddingBlockEnd: `${RING_OPEN_BAND.toFixed(2)}%` }} />
             </div>
             {/*
               CONTROL CLEARANCE, derived rather than guessed. The steppers used to be pinned to the ring's
@@ -217,7 +219,8 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
               buttons sat on the arc (measured in Chromium: 7–17px into the end markers). The arc's ends are
               its lowest points, so everything below RING_FLOOR is empty from edge to edge. The row is pulled
               up into that band by its height as a percentage of the ring's width (a percentage margin
-              resolves against width), and then pushed back down by one spacing step, which is the room a
+              resolves against width; it is geometry, so it is computed here rather than a token), and then
+              pushed back down by one spacing step (`--spacing-2`), which is the room a
               2px focus ring with a 2px offset needs. So the buttons never meet the arc at any size, and they
               read as part of the gauge rather than a row bolted under it. The row is `relative` so it paints
               above the face it tucks into: the face is positioned, and without this its numeral layer took
@@ -225,8 +228,8 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
             */}
             <div
               data-ring-steppers=""
-              className="relative mt-3 flex items-center justify-center gap-4 [@container(min-width:12rem)]:mt-[calc(var(--kx-ring-tuck)+0.5rem)]"
-              style={{ ["--kx-ring-tuck" as string]: `-${RING_OPEN_BAND.toFixed(2)}%` }}
+              className="relative flex items-center justify-center gap-4"
+              style={{ marginBlockStart: `calc(-${RING_OPEN_BAND.toFixed(2)}% + var(--spacing-2, 0.5rem))` }}
             >
           <button
             type="button"
