@@ -225,6 +225,12 @@ jobs:
       - name: Test (@kinetixui/web - changelog search, URL state, release notes)
         run: pnpm --filter @kinetixui/web test
 
+      # The distribution register is where campaign results are written down. This holds it to analytics.md
+      # §10 (absolute counts, no verdict, before a baseline exists) and to the content register and route list.
+      # It used to run only by hand at close-out, so nothing enforced the baseline rule on a PR.
+      - name: Distribution register (campaign results, baseline rule)
+        run: pnpm check:distribution
+
       - name: Generated files in sync
         run: |
           # The native packages carry vendored copies of packages/tokens/dist/{android,ios,flutter};

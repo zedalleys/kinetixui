@@ -73,6 +73,13 @@ and that is a fact we want in the denominator of everything else.
 **Excluded on purpose:** homepage `$pageview`, scroll depth, time on page, `external_link_clicked`,
 `changelog_viewed`, and every `preset_*` event from `/create` (a theming toy, not product evaluation).
 
+**A campaign landing is not a signal by itself.** Arriving on `/docs/platforms` or `/docs/tokens` emits
+`docs_viewed`, which is in neither list: "Read platform coverage" counts the homepage CTA *click*, not the page.
+So a campaign that lands on a docs page reaches Qualified Evaluation only through what the visitor does next.
+That is the definition as written, recorded here so a low campaign rate is not read as a broken pipeline —
+see [`measurement/WEEK-1-INTEGRITY-AUDIT.md`](./measurement/WEEK-1-INTEGRITY-AUDIT.md). Changing it is a strategy
+decision, made here, not in a query.
+
 **Derived, not emitted.** This is a PostHog-side definition over existing events. Emitting a
 `qualified_evaluation` event would create a second source of truth that could disagree with its own inputs.
 
@@ -205,6 +212,13 @@ but invisible failure, so links are worth checking.
 Stored per session and first touch: `kx_source`, `kx_medium`, `kx_campaign`, `kx_content`, `kx_referrer`,
 `kx_landing_page`. No personal identifiers, no raw URLs.
 
+**"Session" here is a browser tab; every rate in this file counts PostHog sessions (`$session_id`), which span
+tabs.** A page opened in a new tab from a campaign landing starts its own session entry (`kx_source=direct`, no
+`kx_campaign`) inside the same PostHog session. So a session is **attributed when any of its events carries
+`kx_campaign`** — never filter evaluation events on `kx_campaign` one by one, which drops the new-tab ones.
+Observed live on 2026-09-30, and the rule in code is `summarizeSessions` in
+`apps/web/src/lib/analytics-measurement.ts`.
+
 ### Canonical campaign name
 
 ```
@@ -278,7 +292,11 @@ maintenance burden. The spec below stays canonical; the dashboard is built from 
 
 **Two things about it are worth knowing before reading any tile.**
 
-**A. Five tiles cannot receive data yet.** The deployed site runs `main`, and the Phase 2–6 analytics
+**A. Five tiles cannot receive data yet.** *Resolved — superseded 2026-10-05.* The vocabulary below is on
+`main` and deployed: the event table shows `platform_selected` (`homepage_flagship`, 2026-09-30;
+`component_page`, 2026-10-02) and `cta_clicked` → `browse_components` (2026-10-01). A tile that is still empty is
+empty because nobody used that surface in the window, not because it cannot fire — reachability is now tested
+(`analytics-measurement.test.tsx`). The original note, kept as the record of what was true on 2026-09-29: The deployed site runs `main`, and the Phase 2–6 analytics
 vocabulary is on an unmerged branch. `platform_coverage`, `view_verification`, `adopt_tokens`,
 `adopt_components`, `adopt_blocks`, `block_code_copied`, `platform_selected` and `blocks_gallery` have
 **never fired in the project**, verified against the event table. Insights 7 and 9 are empty by

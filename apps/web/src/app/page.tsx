@@ -579,8 +579,11 @@ export default function HomePage() {
               {/* `whitespace-normal` at the call site: Button is `whitespace-nowrap` by design, which at the
                   reader's doubled text size makes this four-word label 317px wide — wider than a small phone.
                   Overridden here rather than in the published component, where nowrap is the right default. */}
+              {/* No ctaAttrs: this is the repository, not the docs. Unmarked, the provider reports it as
+                  github_clicked (source homepage, location content); marked `read_docs` it was counted as a
+                  docs CTA and never as a GitHub click. */}
               <Button asChild size="lg" variant="Outline" className="whitespace-normal">
-                <Link href={siteConfig.repo} {...ctaAttrs("homepage", "read_docs")}>
+                <Link href={siteConfig.repo}>
                   Read the source
                 </Link>
               </Button>

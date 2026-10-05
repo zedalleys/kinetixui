@@ -95,6 +95,7 @@
     "check:angular-overlays": "node scripts/angular-overlays.mjs",
     "check:content": "node scripts/check-content-register.mjs",
     "check:distribution": "node scripts/check-distribution.mjs",
+    "check:analytics-browser": "node scripts/analytics-browser.mjs --base http://127.0.0.1:3100",
     "gen:visuals": "node scripts/gen-marketing-visuals.mjs",
     "render:visuals": "node scripts/render-marketing-visuals.mjs"
   },

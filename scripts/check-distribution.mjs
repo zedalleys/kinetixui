@@ -63,6 +63,17 @@ const SOURCES = new Set(sourceBlock ? [...sourceBlock[1].matchAll(/"([a-z]+)"/g)
 const mediumBlock = /export const ATTRIBUTION_MEDIUMS = \[([^\]]+)\]/.exec(attribution);
 const MEDIUMS = new Set(mediumBlock ? [...mediumBlock[1].matchAll(/"([a-z]+)"/g)].map((m) => m[1]) : []);
 
+/* ---------------------------------------------- the baseline rule */
+
+/**
+ * analytics.md §10: no success or failure is declared until 6 weeks of real distribution OR 300 sessions with
+ * ≥30 qualified evaluations, whichever is later. Flipping this is that decision, made deliberately — it is not
+ * derived from a date, because sample size overrides the calendar in both directions.
+ */
+const BASELINE_ESTABLISHED = false;
+/** Words that turn an observation into a verdict. "failed to resolve" (a pipeline observation) is not one. */
+const PERFORMANCE_VERDICT = /\b(?:winn(?:er|ers|ing)|los(?:er|ers|ing)|outperform\w*|underperform\w*|statistically|significan(?:t|tly|ce)|conclusive\w*|success(?:ful|fully)?|a failure|did(?:n't| not) work|(?:works?|worked|converts?|converted|performs?|performed) (?:better|worse))\b/i;
+
 /* ---------------------------------------------- the register */
 
 const CHANNELS = new Set(register.channels);
@@ -87,6 +98,14 @@ for (const row of register.rows ?? []) {
     if (!row.date) fail(where, "published with no date");
     else if (!/^\d{4}-\d{2}-\d{2}$/.test(row.date)) fail(where, `date "${row.date}" is not YYYY-MM-DD`);
     if (!row.result) fail(where, "published with no result — an unrecorded outcome is why the log exists");
+    else if (!BASELINE_ESTABLISHED) {
+      // analytics.md §10: until the baseline window closes, results are absolute counts — an operational or
+      // directional observation, never a rate and never a verdict on the campaign.
+      const rate = /\d\s*%|\bper ?cent\b/i.exec(row.result);
+      if (rate) fail(where, `result reports a percentage ("${rate[0]}") before analytics.md §10's baseline exists — absolute counts only`);
+      const verdict = PERFORMANCE_VERDICT.exec(row.result);
+      if (verdict) fail(where, `result reads as a performance verdict ("${verdict[0]}") before analytics.md §10's baseline exists — record what was observed, not whether it won`);
+    }
   } else if (row.date) {
     fail(where, `status is "${row.status}" but a date is set — fill the date after publishing, not before`);
   }
