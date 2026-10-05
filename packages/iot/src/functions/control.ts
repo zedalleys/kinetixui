@@ -7,6 +7,7 @@
  */
 
 import type { KinetixCommandLifecycle } from "../types/command";
+import type { KinetixConnectivityState } from "../types/device-state";
 import type {
   KinetixControlAvailability,
   KinetixControlOutcome,
@@ -19,7 +20,7 @@ import type {
   ResolveControlStateInput,
 } from "../types/control";
 import { isCommandInFlight, isCommandUnsuccessful, isSameDeviceValue, lifecycleToCommandStatus, presentCommandValue, startCommandLifecycle } from "./commands";
-import { normalizeDeviceStatus } from "./status";
+import { isKnownDeviceStatus, normalizeDeviceStatus } from "./status";
 
 /**
  * Device statuses that make a control inoperable, and the availability each maps to.
@@ -40,15 +41,48 @@ const STATUS_AVAILABILITY: Partial<Record<string, KinetixControlAvailability>> =
   syncing: "pending",
 };
 
+/** Connectivity states that, when supplied, decide reachability on their own. */
+const LINK_AVAILABILITY: Partial<Record<KinetixConnectivityState, KinetixControlAvailability>> = {
+  offline: "offline",
+  unreachable: "unreachable",
+  connecting: "connecting",
+  stale: "stale",
+};
+
+/** Availabilities where the value shown is the last one reported before the link went or aged. */
+const LAST_KNOWN: readonly KinetixControlAvailability[] = ["offline", "unreachable", "connecting", "stale"];
+
+/** Availabilities that refuse input. `stale` accepts it: sending a command is how you find out. */
+const INOPERABLE: readonly KinetixControlAvailability[] = ["offline", "unreachable", "connecting", "unknown", "unavailable", "pending"];
+
+/**
+ * Reachability from what the caller supplied, before any command is considered.
+ *
+ * A missing or unrecognised `deviceStatus` is `unknown`, not `offline` (audit G12):
+ * `normalizeDeviceStatus` falls back to `offline` for a status badge, but a control's claim needs
+ * evidence. The spelling `unreachable` keeps its own word, as it does in `deriveDeviceConnectivity`.
+ */
+function deviceAvailability(input: ResolveControlStateInput): KinetixControlAvailability | "reachable" {
+  const link = typeof input.connectivity === "string" ? input.connectivity : input.connectivity?.state;
+  const fromLink = link ? LINK_AVAILABILITY[link] : undefined;
+  if (fromLink) return fromLink;
+  if (isKnownDeviceStatus(input.deviceStatus)) {
+    if (typeof input.deviceStatus === "string" && input.deviceStatus.trim().toLowerCase() === "unreachable") return "unreachable";
+    return STATUS_AVAILABILITY[normalizeDeviceStatus(input.deviceStatus)] ?? "reachable";
+  }
+  return link === "online" ? "reachable" : "unknown";
+}
+
 /**
  * Resolve what a control should show and whether it can be operated.
  *
- * Precedence, highest first: an explicit `disabled`, then the device's status, then the command's.
- * Device status wins over command status because a command to an offline device is not "pending",
- * it is "going nowhere" — and a spinner that never resolves is the worst of both.
+ * Precedence, highest first: an explicit `disabled`, then the link and the device's status, then the
+ * command's. Device status wins over command status because a command to an offline device is not
+ * "pending", it is "going nowhere" — and a spinner that never resolves is the worst of both. A command
+ * in flight does outrank `unknown`: the request is a fact we hold even when the device's status is not.
  */
 export function resolveControlState(input: ResolveControlStateInput = {}): KinetixControlState {
-  const status = normalizeDeviceStatus(input.deviceStatus);
+  const device = deviceAvailability(input);
   const commandStatus =
     typeof input.commandStatus === "string"
       ? input.commandStatus
@@ -59,13 +93,11 @@ export function resolveControlState(input: ResolveControlStateInput = {}): Kinet
   const inFlight = isCommandInFlight(commandStatus as never);
   const unsuccessful = isCommandUnsuccessful(commandStatus as never);
 
-  const statusAvailability = STATUS_AVAILABILITY[status];
-
   let availability: KinetixControlAvailability;
   if (input.disabled) availability = "unavailable";
-  else if (statusAvailability && statusAvailability !== "pending") availability = statusAvailability;
-  else if (inFlight) availability = "pending";
-  else if (statusAvailability === "pending") availability = "pending";
+  else if (device !== "reachable" && device !== "pending" && device !== "unknown") availability = device;
+  else if (inFlight || device === "pending") availability = "pending";
+  else if (device === "unknown") availability = "unknown";
   else availability = "ready";
 
   let phase: KinetixControlPhase = "idle";
@@ -76,9 +108,10 @@ export function resolveControlState(input: ResolveControlStateInput = {}): Kinet
   // Pending is interactive-false on purpose: a second press while the first is unresolved is how
   // users end up toggling a device twice. Offline and stale differ — stale still accepts input,
   // because sending a command is exactly how you find out whether the device is still there.
-  const interactive = !input.disabled && availability !== "offline" && availability !== "unavailable" && availability !== "pending";
+  // `unknown` refuses input as the old fallback did: the claim changed, the fail-safe did not.
+  const interactive = !input.disabled && !INOPERABLE.includes(availability);
 
-  const lastKnown = availability === "offline" || availability === "stale";
+  const lastKnown = LAST_KNOWN.includes(availability);
 
   return { availability, phase, interactive, lastKnown, description: describeControlState(availability, phase) };
 }
@@ -88,15 +121,27 @@ export function resolveControlState(input: ResolveControlStateInput = {}): Kinet
  *
  * These are read aloud, so they are written as things a person would say. In particular the pending
  * wording never claims the device did anything — "requested" and "not confirmed" are both in it,
- * because a screen-reader user gets no visual pending affordance to disambiguate.
+ * because a screen-reader user gets no visual pending affordance to disambiguate. No sentence but the
+ * `offline` one says "offline".
  */
 export function describeControlState(availability: KinetixControlAvailability, phase: KinetixControlPhase = "idle"): string {
   if (availability === "pending" || phase === "requested") return "Change requested, not yet confirmed by the device";
-  if (availability === "offline") return "Device offline. Showing the last known setting";
-  if (availability === "unavailable") return "Control unavailable";
-  if (availability === "stale") return "Device data is out of date. Showing the last known setting";
-  if (phase === "failed") return "The last change failed. Showing the device's current setting";
-  return "Ready";
+  switch (availability) {
+    case "offline":
+      return "Device offline. Showing the last known setting";
+    case "unreachable":
+      return "Device unreachable. Showing the last known setting";
+    case "connecting":
+      return "Connecting to the device. Showing the last known setting";
+    case "unavailable":
+      return "Control unavailable";
+    case "stale":
+      return "Device data is out of date. Showing the last known setting";
+    case "unknown":
+      return "Device status unknown";
+    case "ready":
+      return phase === "failed" ? "The last change failed. Showing the device's current setting" : "Ready";
+  }
 }
 
 /** Normalise anything into a {@link KinetixPowerState}. Booleans are convenient and common. */

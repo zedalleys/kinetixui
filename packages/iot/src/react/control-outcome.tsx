@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { KinetixCommandLifecycle, KinetixCommandStrategy } from "../types/command";
-import type { KinetixControlPresentation, KinetixControlState } from "../types/control";
+import type { KinetixControlAvailability, KinetixControlPresentation, KinetixControlState } from "../types/control";
 import { cn } from "./cn";
 import { describeControlOutcome, resolveControlPresentation, resolveControlState, type DescribeControlOutcomeOptions } from "../functions/control";
 
@@ -81,5 +81,43 @@ export function ControlOutcomeNote({ presentation, sentence, className }: { pres
     >
       {describeControlOutcome(presentation, sentence)}
     </span>
+  );
+}
+
+/**
+ * Availabilities where the device cannot be operated because of its link, or because nothing is known
+ * about it. Controls draw these muted and dashed; each still has its own word (below), so `unknown` is
+ * never shown as `offline`.
+ */
+export function isDisconnected(availability: KinetixControlAvailability | undefined): boolean {
+  return availability === "offline" || availability === "unreachable" || availability === "connecting" || availability === "unknown";
+}
+
+/** The short chip word for an inoperable availability. */
+export function availabilityWord(availability: KinetixControlAvailability | undefined): string {
+  switch (availability) {
+    case "offline":
+      return "Offline";
+    case "unreachable":
+      return "Unreachable";
+    case "connecting":
+      return "Connecting";
+    case "unknown":
+      return "Status unknown";
+    default:
+      return "Unavailable";
+  }
+}
+
+/**
+ * What a control renders for a capability the device does not have (`resolveCapabilitySupport` →
+ * `unsupported`): one sentence, no disabled widget. A disabled control reads as "not now"; this says
+ * "not on this device", which is a different answer and a different next step.
+ */
+export function SupportNote({ label, nodeRef, className, ...props }: React.HTMLAttributes<HTMLDivElement> & { label: string; nodeRef?: React.Ref<HTMLDivElement> }) {
+  return (
+    <div ref={nodeRef} data-support="unsupported" className={cn("rounded-xl bg-muted/60 px-3 py-2 text-label-md text-muted-foreground", className)} {...props}>
+      {label}: not supported by this device
+    </div>
   );
 }

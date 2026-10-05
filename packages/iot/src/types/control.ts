@@ -17,6 +17,7 @@
 
 import type { KinetixCommandLifecycle, KinetixCommandPresentation, KinetixCommandStatus, KinetixCommandStrategy } from "./command";
 import type { KinetixDeviceStatus } from "./device";
+import type { KinetixConnectivityState, KinetixDeviceConnectivity } from "./device-state";
 
 /**
  * Whether a control can be operated, and if not, why.
@@ -25,25 +26,38 @@ import type { KinetixDeviceStatus } from "./device";
  * and the value shown is the last one we were told — it is probably still true of the physical
  * thing. Unavailable means the control itself does not apply right now (the device is disabled, or
  * in an error state that makes the command meaningless), and no last-known value should be implied.
+ *
+ * `unknown` is neither (M2B, audit G12): nobody told us anything about the device, so the control
+ * claims nothing about it. "We were not told" is not "it is gone". `unreachable` and `connecting`
+ * keep the connectivity layer's words rather than collapsing into `offline`.
  */
 export type KinetixControlAvailability =
   /** Device reachable, no command in flight. The control works. */
   | "ready"
   /** A command has been sent and not yet settled. The control shows the requested value as requested. */
   | "pending"
-  /** Device unreachable. Last-known value may be shown, clearly labelled as last-known. */
+  /** Affirmative evidence the device is gone. Last-known value may be shown, clearly labelled as last-known. */
   | "offline"
+  /** An attempt to reach the device was made and failed. Last-known value, labelled as such. */
+  | "unreachable"
+  /** A connection is being established. Not operable yet; the value shown is the last one reported. */
+  | "connecting"
   /** Reachable, but the value behind the control is old enough not to be trusted as current. */
   | "stale"
+  /** No device status or connectivity was supplied, or it could not be read. Nothing is claimed. */
+  | "unknown"
   /** The control does not apply: device disabled, or in an error state. No value is implied. */
   | "unavailable";
 
 /** Every availability, in the order a UI would rank them when several could apply. */
 export const KINETIX_CONTROL_AVAILABILITIES: readonly KinetixControlAvailability[] = [
   "unavailable",
+  "unreachable",
   "offline",
+  "connecting",
   "pending",
   "stale",
+  "unknown",
   "ready",
 ] as const;
 
@@ -105,8 +119,18 @@ export type KinetixDeviceMode = {
 
 /** Inputs to {@link KinetixControlState} resolution. */
 export type ResolveControlStateInput = {
-  /** The device's status. The dominant input: an offline device disables every control on it. */
+  /**
+   * The device's status. The dominant input: an offline device disables every control on it. A missing
+   * or unrecognised status resolves to `unknown`, never to `offline` (audit G12).
+   */
   deviceStatus?: KinetixDeviceStatus | string | null;
+  /**
+   * The link, from `deriveDeviceConnectivity` or the product's own transport layer. When it says
+   * `offline`, `unreachable`, `connecting` or `stale` it wins over `deviceStatus`, because it is the
+   * fresher, more specific claim; `online` counts as evidence of reachability when no status is given;
+   * `unknown` adds nothing.
+   */
+  connectivity?: KinetixConnectivityState | Pick<KinetixDeviceConnectivity, "state"> | null;
   /** The status of the command this control sent, if the product is tracking one. */
   commandStatus?: KinetixCommandStatus | string | null;
   /**
@@ -158,3 +182,49 @@ export type KinetixControlPresentation<T = unknown> = KinetixCommandPresentation
   fromLifecycle: boolean;
 };
 
+
+// ---------------------------------------------------------------------------------------------
+// M2B: colour, lock and media values. Plain data, so every platform can carry them.
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * A colour a device reports or is asked for.
+ *
+ * This is **device data, not a design token**: the product's lamp may be any colour, and KinetixUI
+ * renders it as data (a swatch fill) while everything around it — borders, focus, labels, state —
+ * stays on the token contract. Two shapes, because those are the two that devices across domains
+ * agree on: an sRGB triple and a white-point temperature. A product whose devices speak HSV, CIE xy or
+ * a vendor scale converts at its boundary, as it does for every other payload.
+ *
+ * Compare with `isSameDeviceValue`, never with `===`: a reported colour is a new object.
+ */
+export type KinetixDeviceColor =
+  /** sRGB, 0–255 per channel. */
+  | { mode: "rgb"; r: number; g: number; b: number }
+  /** A white point, in kelvin (a warm 2700, a daylight 6500). */
+  | { mode: "temperature"; kelvin: number };
+
+/**
+ * A lock as the device reports it. `jammed` is a reported fact (the bolt did not travel), not a
+ * request; `unknown` is reported-nothing, never "unlocked".
+ */
+export type KinetixLockState = "locked" | "unlocked" | "jammed" | "unknown";
+
+/** What a person can ask a lock to do. */
+export type KinetixLockRequest = "locked" | "unlocked";
+
+/**
+ * The strategies a lock accepts. `optimistic` is excluded by type, and coerced to `confirmed` at
+ * runtime by `resolveLockStrategy`, because drawing "locked" before the device says so is the one
+ * claim a lock control must never make.
+ */
+export type KinetixLockStrategy = Exclude<KinetixCommandStrategy, "optimistic">;
+
+/**
+ * A media endpoint's playback, as it reports it. `buffering` is the device trying to play;
+ * `unknown` is reported-nothing, never "paused".
+ */
+export type KinetixMediaPlaybackState = "playing" | "paused" | "stopped" | "buffering" | "unknown";
+
+/** What a person can ask a media endpoint to do with playback. */
+export type KinetixMediaPlaybackRequest = "playing" | "paused";

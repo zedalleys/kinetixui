@@ -11,7 +11,7 @@ npm install @kinetixui/iot
 ## What it is
 
 A product semantic layer for connected devices: the models, the classification rules, eight React
-primitives, four device controls, and twenty-seven composed product patterns built from them. Deliberately
+primitives, seven device controls, and twenty-seven composed product patterns built from them. Deliberately
 generic — the same vocabulary suits smart agriculture, medical devices, smart home, industrial
 dashboards, and fleet and logistics.
 
@@ -59,7 +59,8 @@ Some things to know before relying on them:
 - **Live regions are rare.** `CommandLifecycle` and `AutomationBuilder` each have one polite
   `role="status"`; `PairingFailure` is a `role="alert"`; `DeviceSetpointControl` has one polite
   sentence. A device control given a `lifecycle` announces its change in one polite `role="status"`
-  (turn it off with `announce={false}` when `CommandLifecycle` shows the same change). Nothing else announces.
+  (turn it off with `announce={false}` when `CommandLifecycle` shows the same change);
+  `DeviceMediaControl` has one per command it tracks (play, seek, volume, mute). Nothing else announces.
 
 ## What it is not
 
@@ -76,10 +77,23 @@ capability-oriented devices are specified in
 [`docs/iot/DEVICE-INTERACTION-CONTRACT.md`](../../docs/iot/DEVICE-INTERACTION-CONTRACT.md). They are
 React-free and live in `@kinetixui/iot/functions`.
 
-The four controls take a command `lifecycle` and a `strategy` (`confirmed` by default, `optimistic`,
+The controls take a command `lifecycle` and a `strategy` (`confirmed` by default, `optimistic`,
 `hybrid`) and draw what `presentCommandValue` decides; a strategy changes what is shown, never what the
 lifecycle says about the device. Connectivity separates `unknown` and `connecting` from `offline`: a
-device nobody has reported on is not a device that is gone.
+device nobody has reported on is not a device that is gone — and since M2B a control given no device
+status says "Device status unknown", never "Device offline".
+
+M2B added three controls on the same contract:
+
+- **`DeviceColorControl`** — the colours a product offers for a device (RGB or a white point), as a
+  named radiogroup with a preview. Colours are compared by value (`isSameDeviceValue`), and the
+  device's colour is rendered as data, never as a token. `hybrid` suits it; the default stays `confirmed`.
+- **`DeviceLockControl`** — never says "Locked" before the device does. `confirmed` (default) or
+  `hybrid` only: `optimistic` is excluded by type and drawn as `confirmed` at runtime.
+- **`DeviceMediaControl`** — play/pause, previous/next, a scrubber, volume and mute for any playback
+  endpoint. Every action is a callback; there is no `<audio>`, `<video>`, stream, codec or player in
+  the package. Seek and volume are `DeviceLevelControl`, so a requested position or level is drawn
+  apart from the reported one.
 
 ## The recurring design rule
 
