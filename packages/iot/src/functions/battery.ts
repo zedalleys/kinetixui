@@ -1,4 +1,4 @@
-import type { KinetixBatteryLevel } from "../types/device";
+import type { KinetixBatteryLevel, KinetixBatteryState, KinetixBatteryStatus } from "../types/device";
 
 /**
  * Battery classification.
@@ -62,4 +62,22 @@ export function describeBattery(value: number | null | undefined): string {
 export function formatBatteryPercent(value: number): string {
   const percent = clampBatteryLevel(value);
   return String(Math.round(percent * 10) / 10);
+}
+
+/**
+ * A battery's level, availability and charging state in one value.
+ *
+ * Charging does not soften a low or critical band: a phone at 4 % on a charger is still at 4 %, and
+ * a UI decides whether charging changes the urgency it shows.
+ */
+export function resolveBatteryState(state: KinetixBatteryState | null | undefined): KinetixBatteryStatus {
+  const level = classifyBatteryLevel(state?.percent ?? null);
+  const charging = typeof state?.charging === "boolean" ? state.charging : "unknown";
+  return {
+    level,
+    available: level !== "unknown",
+    charging,
+    low: level === "low" || level === "critical",
+    critical: level === "critical",
+  };
 }

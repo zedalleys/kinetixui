@@ -2,7 +2,9 @@ import type {
   KinetixCommandLifecycle,
   KinetixCommandLifecycleEvent,
   KinetixCommandLifecycleStage,
+  KinetixCommandPresentation,
   KinetixCommandStatus,
+  KinetixCommandStrategy,
   KinetixDeviceCommand,
   KinetixLifecycleTransition,
 } from "../types/command";
@@ -113,6 +115,8 @@ export type StartCommandLifecycleInput<T = unknown> = {
   requested?: T;
   /** Sends allowed before a retry is refused. Defaults to 3; a non-positive or non-finite value falls back to it. */
   maxAttempts?: number;
+  /** Correlation id for the first send. A `sent` event's own `commandId` overrides it. */
+  commandId?: string;
 };
 
 const DEFAULT_MAX_ATTEMPTS = 3;
@@ -120,13 +124,37 @@ const DEFAULT_MAX_ATTEMPTS = 3;
 /** A fresh lifecycle at `idle`. Nothing has been sent, so nothing is pending. */
 export function startCommandLifecycle<T = unknown>(input: StartCommandLifecycleInput<T> = {}): KinetixCommandLifecycle<T> {
   const max = input.maxAttempts;
-  return {
+  const state: KinetixCommandLifecycle<T> = {
     confirmedValue: input.confirmed,
     requestedValue: input.requested,
     stage: "idle",
     attempts: 0,
     maxAttempts: typeof max === "number" && Number.isFinite(max) && max >= 1 ? Math.floor(max) : DEFAULT_MAX_ATTEMPTS,
   };
+  if (input.commandId !== undefined) state.commandId = input.commandId;
+  return state;
+}
+
+/**
+ * Structural equality for reported values, so a report of `{ r: 255, g: 0, b: 0 }` matches a request
+ * for the same colour. Plain data only (primitives, arrays, plain objects), which is what a device
+ * value is on every platform; anything else falls back to identity.
+ */
+export function isSameDeviceValue(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a)) {
+    const other = b as unknown[];
+    return a.length === other.length && a.every((item, i) => isSameDeviceValue(item, other[i]));
+  }
+  if (Object.getPrototypeOf(a) !== Object.prototype || Object.getPrototypeOf(b) !== Object.prototype) return false;
+  const ka = Object.keys(a);
+  const kb = Object.keys(b);
+  return (
+    ka.length === kb.length &&
+    ka.every((key) => Object.prototype.hasOwnProperty.call(b, key) && isSameDeviceValue((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]))
+  );
 }
 
 type EventType = KinetixCommandLifecycleEvent["type"];
@@ -174,18 +202,68 @@ const TRANSITIONS: Readonly<Record<KinetixCommandLifecycleStage, Partial<Record<
   cancelled: {},
 };
 
+const RESPONSES: readonly EventType[] = ["acknowledge", "confirm", "fail"];
+
+/**
+ * Apply a `report`: the device's own account of its value, which is not necessarily an answer.
+ *
+ * It always becomes `confirmedValue` (it is what the device says), and then:
+ *
+ * - while pending, or after `failed`, `timed-out` or `unreachable`: a report **equal to the request**
+ *   settles the lifecycle as `confirmed`, because the thing the user asked for has happened;
+ * - after `unreachable`, a report that differs settles it as `failed`: the device is evidently
+ *   reachable again and not in the requested state, so "unreachable" would no longer be true;
+ * - otherwise the stage is kept. A pending request is not failed by an intermediate report, a
+ *   timeout stays a timeout, and `idle`, `confirmed` and `cancelled` simply track the new value.
+ *
+ * A report whose `observedAt` is older than the last accepted one is refused, so a delayed delivery
+ * cannot overwrite a newer reading. Reports without `observedAt` are not ordered.
+ */
+function applyReport<T>(
+  state: KinetixCommandLifecycle<T>,
+  event: Extract<KinetixCommandLifecycleEvent, { type: "report" }>,
+  at: string,
+): KinetixLifecycleTransition<T> {
+  const observed = parseTimestamp(event.observedAt ?? null);
+  const last = parseTimestamp(state.reportedAt ?? null);
+  if (observed && last && observed.getTime() < last.getTime()) {
+    return {
+      ok: false,
+      state,
+      rejection: { code: "stale-report", message: `A report observed at ${observed.toISOString()} is older than the last one (${last.toISOString()}).` },
+    };
+  }
+  const draft: KinetixCommandLifecycle<T> = { ...state, confirmedValue: event.value as T };
+  if (observed) draft.reportedAt = observed.toISOString();
+
+  const matches = state.requestedValue !== undefined && isSameDeviceValue(event.value, state.requestedValue);
+  const open = isLifecyclePending(state) || state.stage === "failed" || state.stage === "timed-out" || state.stage === "unreachable";
+  if (open && matches) {
+    draft.stage = "confirmed";
+    draft.settledAt = at;
+    draft.reason = undefined;
+    draft.reasonCode = undefined;
+  } else if (state.stage === "unreachable") {
+    draft.stage = "failed";
+    draft.settledAt = at;
+  }
+  return { ok: true, state: draft };
+}
+
 /**
  * Apply an event, returning a typed result. The state is never mutated and this never throws.
  *
  * A refused event returns `ok: false` with the **same state object**, so a caller feeding it from an
  * unreliable source (duplicate deliveries, a late ack after a cancel) can ignore rejections and keep
- * rendering. `retry` past `maxAttempts` is refused with its own code.
+ * rendering. `retry` past `maxAttempts` is refused with its own code; a response tagged with another
+ * send's `commandId` is refused as `stale-response`; an out-of-order `report` as `stale-report`.
  */
 export function transitionCommandLifecycle<T = unknown>(
   state: KinetixCommandLifecycle<T>,
   event: KinetixCommandLifecycleEvent,
   now?: string | Date | number | null,
 ): KinetixLifecycleTransition<T> {
+  if (event?.type === "report") return applyReport(state, event, new Date(resolveNow(now)).toISOString());
   const next = TRANSITIONS[state.stage]?.[event?.type];
   if (!next) {
     return {
@@ -205,9 +283,22 @@ export function transitionCommandLifecycle<T = unknown>(
     };
   }
 
+  const responseId = RESPONSES.includes(event.type) && "commandId" in event ? event.commandId : undefined;
+  if (responseId !== undefined && state.commandId !== undefined && responseId !== state.commandId) {
+    return {
+      ok: false,
+      state,
+      rejection: {
+        code: "stale-response",
+        message: `A "${event.type}" for command ${responseId} does not answer the current request (${state.commandId}).`,
+      },
+    };
+  }
+
   const at = new Date(resolveNow(now)).toISOString();
   const draft: KinetixCommandLifecycle<T> = { ...state, stage: next };
   const reason = "reason" in event ? event.reason : undefined;
+  const code = "code" in event ? event.code : undefined;
 
   switch (event.type) {
     case "sent":
@@ -217,6 +308,8 @@ export function transitionCommandLifecycle<T = unknown>(
       draft.ackAt = undefined;
       draft.settledAt = undefined;
       draft.reason = undefined;
+      draft.reasonCode = undefined;
+      if (event.commandId !== undefined) draft.commandId = event.commandId;
       break;
     case "acknowledge":
       draft.ackAt = at;
@@ -227,10 +320,12 @@ export function transitionCommandLifecycle<T = unknown>(
       draft.confirmedValue = "value" in event && event.value !== undefined ? (event.value as T) : state.requestedValue;
       draft.settledAt = at;
       draft.reason = undefined;
+      draft.reasonCode = undefined;
       break;
     default:
       draft.settledAt = at;
       draft.reason = reason;
+      draft.reasonCode = code;
   }
   return { ok: true, state: draft };
 }
@@ -390,4 +485,45 @@ export function lifecycleToControlPhase(state: Pick<KinetixCommandLifecycle, "st
     case "cancelled":
       return "idle";
   }
+}
+
+const ROLLBACK_STAGES: readonly KinetixCommandLifecycleStage[] = ["failed", "timed-out", "unreachable", "cancelled"];
+
+/**
+ * What a control should draw for a lifecycle under a {@link KinetixCommandStrategy}.
+ *
+ * The lifecycle is the truth and does not change with the strategy; this only decides which value a
+ * control positions itself at and whether it must mark that value as unconfirmed. An unrecognised
+ * strategy is treated as `confirmed`, the one that cannot overclaim.
+ *
+ * | stage            | `confirmed`             | `optimistic`                 | `hybrid`                      |
+ * | ---------------- | ----------------------- | ---------------------------- | ----------------------------- |
+ * | pending          | reported, mark pending  | requested, tracked silently  | requested as target, mark pending |
+ * | confirmed / idle | reported                | reported                     | reported                      |
+ * | failed, timed-out, unreachable, cancelled | reported | reported, `rolledBack` | reported, `rolledBack` |
+ */
+export function presentCommandValue<T = unknown>(
+  state: KinetixCommandLifecycle<T>,
+  strategy: KinetixCommandStrategy = "confirmed",
+): KinetixCommandPresentation<T> {
+  const chosen: KinetixCommandStrategy = strategy === "optimistic" || strategy === "hybrid" ? strategy : "confirmed";
+  const pending = isLifecyclePending(state);
+  const hasRequest = state.requestedValue !== undefined;
+  const showRequested = pending && hasRequest && chosen !== "confirmed";
+  const rolledBack =
+    chosen !== "confirmed" &&
+    ROLLBACK_STAGES.includes(state.stage) &&
+    hasRequest &&
+    !isSameDeviceValue(state.requestedValue, state.confirmedValue);
+  return {
+    strategy: chosen,
+    value: showRequested ? state.requestedValue : state.confirmedValue,
+    valueSource: showRequested ? "requested" : "reported",
+    reportedValue: state.confirmedValue,
+    pendingValue: pending ? state.requestedValue : undefined,
+    pending,
+    indicatePending: pending && chosen !== "optimistic",
+    rolledBack,
+    stage: state.stage,
+  };
 }
