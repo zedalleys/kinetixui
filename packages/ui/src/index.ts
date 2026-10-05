@@ -26,6 +26,7 @@ export {
 export { AspectRatio } from "./components/aspect-ratio";
 export {
   KinetixDirectionProvider,
+  useKinetixPortalContainer,
   type KinetixDirectionProviderProps,
 } from "./components/direction-provider";
 export { Avatar, AvatarImage, AvatarFallback, AvatarGroup, type AvatarGroupProps } from "./components/avatar";
