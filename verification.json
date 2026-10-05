@@ -53,7 +53,7 @@
     "Compose": {
       "build": 90,
       "interaction": 7,
-      "accessibility": 11,
+      "accessibility": 4,
       "rtl": 1,
       "largeText": 0,
       "reducedMotion": 7,
@@ -746,21 +746,6 @@
         ]
       },
       {
-        "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/IconContractTest.kt",
-        "kinds": [
-          "accessibility"
-        ],
-        "components": [
-          "accordion",
-          "audio-player",
-          "banner",
-          "dialog",
-          "inform",
-          "navigation-bar",
-          "notification-center"
-        ]
-      },
-      {
         "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt",
         "kinds": [
           "interaction"
@@ -996,9 +981,6 @@
         ],
         "interaction": [
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:63-248"
-        ],
-        "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/IconContractTest.kt:37-134"
         ],
         "reducedMotion": [
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt:63-248"
@@ -1270,9 +1252,6 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
-        ],
-        "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/IconContractTest.kt:37-134"
         ]
       },
       "Flutter": {
@@ -1457,9 +1436,6 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
-        ],
-        "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/IconContractTest.kt:37-134"
         ]
       },
       "Flutter": {
@@ -2393,9 +2369,6 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
-        ],
-        "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/IconContractTest.kt:37-134"
         ]
       },
       "Flutter": {
@@ -2977,9 +2950,6 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
-        ],
-        "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/IconContractTest.kt:37-134"
         ]
       },
       "Flutter": {
@@ -3797,9 +3767,6 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
-        ],
-        "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/IconContractTest.kt:37-134"
         ]
       },
       "Flutter": {
@@ -3852,9 +3819,6 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
-        ],
-        "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/IconContractTest.kt:37-134"
         ]
       },
       "Flutter": {
