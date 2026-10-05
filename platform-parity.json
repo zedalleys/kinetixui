@@ -2403,7 +2403,8 @@
         "build",
         "interaction",
         "largeText",
-        "published"
+        "published",
+        "rtl"
       ],
       "Angular": [
         "accessibility",
@@ -2457,7 +2458,8 @@
         "build",
         "interaction",
         "largeText",
-        "published"
+        "published",
+        "rtl"
       ],
       "Angular": [
         "accessibility",
@@ -3431,7 +3433,8 @@
         "build",
         "interaction",
         "largeText",
-        "published"
+        "published",
+        "rtl"
       ],
       "Angular": [
         "accessibility",
@@ -3900,7 +3903,8 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "published",
+        "rtl"
       ]
     },
     "tree-view": {
@@ -3942,7 +3946,7 @@
       "build": 98,
       "interaction": 38,
       "accessibility": 98,
-      "rtl": 18,
+      "rtl": 22,
       "largeText": 27,
       "reducedMotion": 3,
       "visual": 0,

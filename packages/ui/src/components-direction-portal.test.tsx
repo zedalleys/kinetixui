@@ -311,7 +311,7 @@ describe("direction boundaries", () => {
   });
 
   it("follows the provider when its direction changes", async () => {
-    function Switchable() {
+    function FlippingSection() {
       const [dir, setDir] = React.useState<"ltr" | "rtl">("ltr");
       return (
         <KinetixDirectionProvider dir={dir}>
@@ -323,7 +323,7 @@ describe("direction boundaries", () => {
         </KinetixDirectionProvider>
       );
     }
-    render(<Switchable />);
+    render(<FlippingSection />);
     const body = await screen.findByText("Body");
     expect(dirOf(body)).toBe("ltr");
     act(() => void fireEvent.click(screen.getByRole("button", { name: "flip" })));
