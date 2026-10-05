@@ -24,7 +24,7 @@
       "build": 98,
       "interaction": 38,
       "accessibility": 98,
-      "rtl": 18,
+      "rtl": 22,
       "largeText": 27,
       "reducedMotion": 3,
       "visual": 0,
@@ -191,6 +191,26 @@
           "collapsible",
           "input",
           "tag"
+        ]
+      },
+      {
+        "file": "packages/ui/src/components-direction-portal.test.tsx",
+        "kinds": [
+          "rtl"
+        ],
+        "components": [
+          "alert-dialog",
+          "context-menu",
+          "dialog",
+          "direction-provider",
+          "drawer",
+          "dropdown-menu",
+          "menubar",
+          "popover",
+          "select",
+          "sheet",
+          "tooltip",
+          "tour"
         ]
       },
       {
@@ -1044,6 +1064,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
+          "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
@@ -2124,6 +2145,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
+          "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
@@ -2305,6 +2327,9 @@
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
         ],
+        "rtl": [
+          "packages/ui/src/components-direction-portal.test.tsx:48-483"
+        ],
         "largeText": [
           "scripts/large-text.mjs:99-619"
         ],
@@ -2403,6 +2428,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
+          "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-form.test.tsx:311-436",
           "packages/ui/src/components-keyboard.test.tsx:259-314",
           "packages/ui/src/components-overlay.test.tsx:324-382",
@@ -2425,6 +2451,9 @@
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-direction-portal.test.tsx:48-483"
         ],
         "largeText": [
           "scripts/large-text.mjs:99-619"
@@ -2493,6 +2522,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
+          "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-overlay.test.tsx:324-382"
         ],
         "largeText": [
@@ -3435,6 +3465,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
+          "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
@@ -4034,6 +4065,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
+          "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-overlay.test.tsx:324-382",
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
@@ -4448,6 +4480,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
+          "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
@@ -4541,6 +4574,9 @@
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-direction-portal.test.tsx:48-483"
         ],
         "largeText": [
           "scripts/large-text.mjs:99-619"
@@ -5551,6 +5587,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
+          "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
@@ -5611,6 +5648,9 @@
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-direction-portal.test.tsx:48-483"
         ],
         "published": [
           "npm: @kinetixui/ui"

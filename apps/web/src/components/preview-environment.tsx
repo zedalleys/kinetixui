@@ -3,6 +3,7 @@
 import * as React from "react";
 import { KinetixDirectionProvider } from "@kinetixui/ui";
 import { cn } from "@/lib/utils";
+import { useDocumentDirection, type Direction } from "@/lib/use-document-direction";
 
 /**
  * The environment controls above a component preview.
@@ -17,14 +18,17 @@ import { cn } from "@/lib/utils";
  * Only controls that change the real thing. A control that looks like it switches an environment but does
  * not is worse than no control, because the reader believes the result.
  *
- * DIRECTION — real, and here, and applied to the page rather than to the preview box. That is not the
- *   obvious design and it is the only correct one: Radix portals an overlay to `document.body`, OUTSIDE
- *   the preview, so with `dir` on the stage alone a reader could switch to RTL, open the Dialog demo, and
- *   watch an unmirrored dialog appear — measured, `direction: ltr` on the portaled node while the stage
- *   said `rtl`. They would conclude the library's RTL support is broken when what was broken was the
- *   control. Setting `dir` on `<html>` and wrapping in `KinetixDirectionProvider` is both the fix and
- *   exactly the integration an application performs, so the preview demonstrates RTL instead of
- *   simulating it. The whole page mirrors, which is honest about what the switch does.
+ * DIRECTION — real, and scoped to this preview. The stage carries `dir` and a `KinetixDirectionProvider`, and
+ *   that provider is also where the library's overlays portal to (a `<div dir>` under `<body>`, see
+ *   direction-provider.tsx), so a Dialog, Sheet, Popover or Tooltip opened from an RTL preview is RTL even
+ *   though it renders outside the box. That is the same integration an application performs for a section
+ *   of its own, which is what makes the preview a demonstration rather than a simulation.
+ *
+ *   It used to set `<html dir>` instead, because the overlays had nowhere else to inherit from. That mirrored
+ *   the whole documentation site from a control inside one demo — header, sidebar and the toggle itself
+ *   jumped across the page — and made every preview on the page switch together (PR #300, §27). The page's
+ *   own direction is never written here; a preview starts in it, and the reader can take one preview away
+ *   from it without touching the others.
  *
  * MOTION — reported, not switched. The reduced-motion contract is `@media (prefers-reduced-motion: reduce)`
  *   and Tailwind's `motion-reduce:` variant, both media queries. No class, attribute or context can turn a
@@ -44,42 +48,6 @@ import { cn } from "@/lib/utils";
  */
 
 const MOTION_QUERY = "(prefers-reduced-motion: reduce)";
-
-type Direction = "ltr" | "rtl";
-
-/**
- * One direction for the page, shared by every preview on it.
- *
- * A component page can hold three previews (Button has preview, variants and sizes). Per-preview state
- * would let two toolbars disagree while the thing they both control — `<html dir>` — can only hold one
- * value, so a reader would see a toolbar that says `ltr` above a mirrored component. A module-level store
- * read through `useSyncExternalStore` keeps every toolbar showing the truth, without threading context
- * through MDX that neither the pages nor the demos know anything about.
- */
-let direction: Direction = "ltr";
-const listeners = new Set<() => void>();
-
-function setDirection(next: Direction) {
-  if (direction === next) return;
-  direction = next;
-  document.documentElement.setAttribute("dir", next);
-  for (const l of listeners) l();
-}
-
-function subscribeDirection(onChange: () => void) {
-  listeners.add(onChange);
-  return () => {
-    listeners.delete(onChange);
-  };
-}
-
-function useDirection() {
-  return React.useSyncExternalStore(
-    subscribeDirection,
-    () => direction,
-    () => "ltr" as Direction,
-  );
-}
 
 function subscribe(onChange: () => void) {
   if (typeof window === "undefined" || !window.matchMedia) return () => {};
@@ -118,17 +86,13 @@ export function PreviewEnvironment({
   children: React.ReactNode;
   align?: "center" | "start";
 }) {
-  const dir = useDirection();
+  // Each preview owns its direction. Until the reader picks one it follows the page, so an application-level
+  // RTL page shows RTL previews; picking one never leaves this preview, and nothing is stored, so a new page
+  // or a reload starts from the page's direction again.
+  const pageDir = useDocumentDirection();
+  const [chosen, setChosen] = React.useState<Direction | null>(null);
+  const dir = chosen ?? pageDir;
   const reduced = usePrefersReducedMotion();
-
-  // Leaving the page mirrored after navigating away from the docs would be a bug the reader cannot explain,
-  // so the last preview to unmount puts it back.
-  React.useEffect(
-    () => () => {
-      if (listeners.size <= 1) setDirection("ltr");
-    },
-    [],
-  );
 
   return (
     <>
@@ -141,12 +105,12 @@ export function PreviewEnvironment({
               key={d}
               type="button"
               aria-pressed={dir === d}
-              onClick={() => setDirection(d)}
+              onClick={() => setChosen(d)}
               className={toggle}
             >
               {d}
               <span className="sr-only">
-                {d === "ltr" ? " — left to right" : " — right to left"}, applies to the whole page
+                {d === "ltr" ? " — left to right" : " — right to left"}, this preview only
               </span>
             </button>
           ))}
