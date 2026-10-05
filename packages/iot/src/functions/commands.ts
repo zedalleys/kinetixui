@@ -217,7 +217,8 @@ const RESPONSES: readonly EventType[] = ["acknowledge", "confirm", "fail"];
  *   timeout stays a timeout, and `idle`, `confirmed` and `cancelled` simply track the new value.
  *
  * A report whose `observedAt` is older than the last accepted one is refused, so a delayed delivery
- * cannot overwrite a newer reading. Reports without `observedAt` are not ordered.
+ * cannot overwrite a newer reading. A report observed before the current send is recorded as the
+ * reported value but never settles the request. Reports without `observedAt` are not ordered.
  */
 function applyReport<T>(
   state: KinetixCommandLifecycle<T>,
@@ -235,6 +236,12 @@ function applyReport<T>(
   }
   const draft: KinetixCommandLifecycle<T> = { ...state, confirmedValue: event.value as T };
   if (observed) draft.reportedAt = observed.toISOString();
+
+  // An observation made before the current send cannot be evidence about it, whatever its value.
+  // `observedAt` and `sentAt` are compared directly, so a product passing device timestamps must
+  // put them on the same clock basis as the `now` it gives this machine.
+  const sent = parseTimestamp(state.sentAt ?? null);
+  if (observed && sent && observed.getTime() < sent.getTime()) return { ok: true, state: draft };
 
   const matches = state.requestedValue !== undefined && isSameDeviceValue(event.value, state.requestedValue);
   const open = isLifecyclePending(state) || state.stage === "failed" || state.stage === "timed-out" || state.stage === "unreachable";

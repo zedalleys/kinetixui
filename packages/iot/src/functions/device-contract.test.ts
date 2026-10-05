@@ -141,6 +141,15 @@ describe("desired vs reported: the brief's ten cases", () => {
       expect(late.state.confirmedValue).toBe(true);
     });
 
+    it("a report observed before the current send is recorded but never settles it", () => {
+      const s = run(startCommandLifecycle({ confirmed: 20, requested: 50 }), [{ type: "sent" }, 10_000]);
+      const early = run(s, [{ type: "report", value: 50, observedAt: 5_000 }, 11_000]);
+      expect(early.stage).toBe("requested");
+      expect(early.confirmedValue).toBe(50);
+      const lost = run(startCommandLifecycle({ confirmed: false, requested: true }), [{ type: "sent" }, 10_000], [{ type: "deviceUnreachable" }, 12_000]);
+      expect(run(lost, [{ type: "report", value: false, observedAt: 5_000 }, 13_000]).stage).toBe("unreachable");
+    });
+
     it("uncorrelated callers keep the previous behaviour", () => {
       const s = run(startCommandLifecycle({ confirmed: 20, requested: 80 }), [{ type: "sent" }, 0], [{ type: "confirm", value: 50 }, 10]);
       expect(s.stage).toBe("confirmed");
