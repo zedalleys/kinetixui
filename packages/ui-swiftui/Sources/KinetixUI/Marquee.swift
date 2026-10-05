@@ -45,6 +45,13 @@ public struct KinetixMarquee<Content: View>: View {
         } else {
             ScrollView(.horizontal, showsIndicators: false) { content }
         }
+        // The ticker's measured width and offset outlive the branch that built them. Without a reset, turning
+        // Reduce Motion off again rebuilds the ticker at `offset == -width` with `contentWidth` already set,
+        // so the one-shot guard in `onPreferenceChange` never installs a new loop and it stays frozen.
+        .onChange(of: reduceMotion) { _ in
+            contentWidth = 0
+            offset = 0
+        }
     }
 
     private var ticker: some View {
