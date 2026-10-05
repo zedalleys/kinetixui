@@ -40,10 +40,12 @@ public struct KinetixMarquee<Content: View>: View {
     }
 
     public var body: some View {
-        if KinetixLoopMotion.runs(reduceMotion: reduceMotion) {
-            ticker
-        } else {
-            ScrollView(.horizontal, showsIndicators: false) { content }
+        Group {
+            if KinetixLoopMotion.runs(reduceMotion: reduceMotion) {
+                ticker
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) { content }
+            }
         }
         // The ticker's measured width and offset outlive the branch that built them. Without a reset, turning
         // Reduce Motion off again rebuilds the ticker at `offset == -width` with `contentWidth` already set,
