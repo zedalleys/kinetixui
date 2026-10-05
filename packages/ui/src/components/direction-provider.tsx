@@ -22,9 +22,17 @@ export interface KinetixDirectionProviderProps {
  * host is a plain block with no styles, so it creates no stacking context or containing block — fixed
  * overlays position against the viewport exactly as they did from `<body>`.
  *
- * `null` outside any provider, so overlays fall back to `<body>` and keep inheriting `<html dir>` as before.
+ * Three states, so nothing is ever committed into a host that is not in the document:
+ *   `undefined`  no provider: overlays portal to `<body>` and inherit `<html dir>`, as before.
+ *   `null`       a provider whose host is not attached yet (its first render, and the server): portals render
+ *                nothing. Descendants' layout effects run before the provider's, so publishing the host
+ *                earlier would let an overlay that mounts with the provider (an open Dialog, say) commit its DOM
+ *                into a detached node, where native `autoFocus` and layout measurements are lost.
+ *   an element   attached: portals render into it.
+ * The switch from `null` to the element happens in the provider's layout effect, so it is applied before the
+ * browser paints.
  */
-const PortalContainerContext = React.createContext<HTMLElement | null>(null);
+const PortalContainerContext = React.createContext<HTMLElement | null | undefined>(undefined);
 
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
 
@@ -47,15 +55,21 @@ const useIsomorphicLayoutEffect = typeof window === "undefined" ? React.useEffec
  * touching `<html>`. The nearest provider wins.
  */
 export function KinetixDirectionProvider({ dir, children }: KinetixDirectionProviderProps) {
-  // Created on the client's first render, attached in a layout effect. Portals render nothing on the server
-  // and wait for their own mount effect on the client, so nothing is portaled into it before it is attached.
+  // Created on the client's first render, attached in a layout effect.
   const [host] = React.useState(() => (typeof document === "undefined" ? null : document.createElement("div")));
+  const [attached, setAttached] = React.useState(false);
 
   useIsomorphicLayoutEffect(() => {
     if (!host) return;
     host.setAttribute("data-kinetix-portal", "");
+    host.setAttribute("dir", dir);
     document.body.appendChild(host);
-    return () => host.remove();
+    setAttached(true);
+    return () => {
+      host.remove();
+      setAttached(false);
+    };
+    // `dir` is applied by the effect below; this one only attaches, once.
   }, [host]);
 
   useIsomorphicLayoutEffect(() => {
@@ -64,18 +78,19 @@ export function KinetixDirectionProvider({ dir, children }: KinetixDirectionProv
 
   return (
     <RadixDirectionProvider dir={dir}>
-      <PortalContainerContext.Provider value={host}>{children}</PortalContainerContext.Provider>
+      <PortalContainerContext.Provider value={attached ? host : null}>{children}</PortalContainerContext.Provider>
     </RadixDirectionProvider>
   );
 }
 
 /**
- * The element the nearest `KinetixDirectionProvider` wants overlays portaled into, or `undefined` outside
- * one (portal to `<body>` as usual). Every overlay in this library passes it as its portal `container`; use
- * it for a custom portal so it gets the same direction.
+ * The element the nearest `KinetixDirectionProvider` wants overlays portaled into. `undefined` outside one
+ * (portal to `<body>` as usual); `null` inside one whose host is not attached yet, in which case render
+ * nothing and try again, which happens before paint. Every overlay in this library follows this; use it for a
+ * custom portal so it gets the same direction.
  */
-export function useKinetixPortalContainer(): HTMLElement | undefined {
-  return React.useContext(PortalContainerContext) ?? undefined;
+export function useKinetixPortalContainer(): HTMLElement | null | undefined {
+  return React.useContext(PortalContainerContext);
 }
 
 /**
@@ -88,6 +103,7 @@ export function withDirectionalPortal<P extends { container?: Element | Document
 ) {
   function DirectionalPortal({ container, ...props }: P) {
     const host = useKinetixPortalContainer();
+    if (host === null && !container) return null;
     return <Portal {...(props as unknown as P)} container={container ?? host} />;
   }
   DirectionalPortal.displayName = `Directional(${Portal.displayName ?? Portal.name ?? "Portal"})`;

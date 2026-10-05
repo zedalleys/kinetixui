@@ -58,7 +58,8 @@ const Tour: React.FC<TourProps> = ({
   doneLabel = "Done",
 }) => {
   const [mounted, setMounted] = React.useState(false);
-  // Portaled like every other overlay here: into the nearest direction provider's host, else <body>.
+  // Portaled like every other overlay here: into the nearest direction provider's host, else <body>. `null`
+  // is a provider whose host is not attached yet: render nothing until it is.
   const portalHost = useKinetixPortalContainer();
   const [rect, setRect] = React.useState<DOMRect | null>(null);
   const step = steps[stepIndex];
@@ -135,7 +136,7 @@ const Tour: React.FC<TourProps> = ({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open, onOpenChange]);
 
-  if (!mounted || !open || !step) return null;
+  if (!mounted || !open || !step || portalHost === null) return null;
 
   const isFirst = stepIndex === 0;
   const isLast = stepIndex === steps.length - 1;

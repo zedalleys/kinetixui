@@ -348,6 +348,31 @@ describe("direction boundaries", () => {
     own.remove();
   });
 
+  it("never commits portal content into a host that is not attached yet", () => {
+    // A provider and an already-open overlay mounting in the same commit: descendants' layout effects run
+    // before the provider's, so a host published too early would receive the portal's DOM while detached.
+    const connected: boolean[] = [];
+    function Probe() {
+      const ref = React.useRef<HTMLSpanElement>(null);
+      React.useLayoutEffect(() => {
+        connected.push(!!ref.current?.isConnected);
+      }, []);
+      return <span ref={ref}>probe</span>;
+    }
+    render(
+      <KinetixDirectionProvider dir="rtl">
+        <Popover open>
+          <PopoverTrigger>Anchor</PopoverTrigger>
+          <PopoverContent>
+            <Probe />
+          </PopoverContent>
+        </Popover>
+      </KinetixDirectionProvider>,
+    );
+    expect(connected).toEqual([true]);
+    expect(dirOf(screen.getByText("probe"))).toBe("rtl");
+  });
+
   it("exposes the host to custom portals, and removes it when the provider unmounts", () => {
     let seen: HTMLElement | undefined;
     function Probe() {
