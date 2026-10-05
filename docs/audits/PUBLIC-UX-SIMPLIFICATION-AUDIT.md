@@ -184,7 +184,7 @@ Main sources, most costly first:
 | R2 | **Homepage §03 "Why KinetixUI" (four principles)** | FACT `page.tsx:55-78, 399-434`. Principle 1 says "Style Dictionary v4" (repo: 5.5.5). Principle 2 repeats §01's paragraph. Principle 3 says "No runtime dependency", which §05 contradicts ("resolves the npm packages those files import"). Principle 4 repeats "verified" from §02 | Everything true in it is already said better elsewhere on the page. It is 964px of desktop height | §01 (mechanism), §02 (verification), §05 (adoption) |
 | R3 | **"Infographic" from primary navigation** | FACT `infographic/page.tsx`: "0 to install", "KinetixUI isn't an installed package" (`deps-bar.tsx`), "Published package ◐ partial" for natives that are unpublished, "Native mobile libraries ●", a four-column matrix that omits Angular, unsourced competitor claims | It contradicts the homepage's own corrections, and it is the only primary destination with zero links out (`metrics.json`: 0 links in main) | The route can stay for now. REC: fix or retire it in a separate decision |
 | R4 | **Figma provenance in component ledes and meta descriptions** ("Generated 1:1 from Figma node 54863:351") | FACT 3 pages: button, input, textarea. Button is the page `/docs/tokens` sends evaluators to (PR #299 bridge) | "Generated" contradicts "components are hand-written per platform", and node ids are maintainer data | Move to a "Design source" footnote or the component spec. Don't delete the traceability |
-| R5 | **The duplicate CLI command on component pages** | FACT 98/98 pages show `npx @kinetixui/cli add <slug>` in the meta panel *and* under `## Installation` | One copyable command is enough | The Installation section |
+| R5 | **The duplicate CLI command on component pages** | FACT 98/98 pages show `npx @kinetixui/cli add <slug>` in the meta panel *and* under `## Installation`. FACT the Combobox page's command, `npx @kinetixui/cli add combobox`, has no registry entry behind it (`registry: false`; the manifest lists Combobox as a recipe composed from Command), so it fails today | One copyable command is enough. Before removing either copy, every page's surviving command must be one the registry serves | The Installation section. For Combobox, replace the command with the constituents' install (`npx @kinetixui/cli add command popover button`, the three its Usage imports; all three have registry files) plus the recipe code, not a `cli add combobox` line |
 | R6 | **"Beta 1" filter chip on the gallery** | FACT: one component carries `beta`; the chip filters to one card | A filter that returns one result is a label, not a filter | The card's own `beta` tag |
 
 ## 10. AUTOMATE
@@ -202,7 +202,7 @@ Main sources, most costly first:
 | # | Combine | Into | Why |
 | --- | --- | --- | --- |
 | C1 | **`/docs/platforms`: support cards (5) + verification cards (5) + the three-axis explainer** | One comparison row per platform: *Components n of 97 · Install from (npm / build from source) · Verified to (level) · RTL · Details ›*, with the current cards and explainer under it as detail | Each platform currently appears twice, about 2,200px apart (FACT: support cards y≈490–2,260, verification cards y≈2,714–3,800 at 1440px) |
-| C2 | **Component meta panel rows** (Category, Platforms list, Verification details, CLI, Registry, A11y) | One line under the title, e.g. *"On React, Angular, SwiftUI, Jetpack Compose, Flutter · Verified to beta · Accessibility ›"*, with the full panel behind "Details" | The panel is about 310px before the description and preview (OBS, screenshot) |
+| C2 | **Component meta panel rows** (Category, Platforms list, Verification details, CLI, Registry, A11y) | One line under the title, e.g. *"On React, Angular, SwiftUI, Jetpack Compose, Flutter · Verified: React beta, Angular preview, SwiftUI experimental, Compose beta, Flutter beta · Accessibility ›"* (Button's real levels), with the full panel behind "Details". Never collapse verification to one level unless it is the weakest one, labelled as such ("verified to at least experimental"); a single "beta" would overstate SwiftUI and Angular | The panel is about 310px before the description and preview (OBS, screenshot) |
 | C3 | **Themes + Create** | One destination, Create. Themes' "the contract" content belongs in `/docs/theming` | Two nav items for "see and change the theme". Themes is 174 words (FACT) |
 | C4 | **Charts into Components** | `/charts` stays as the Chart component's gallery, linked from `/docs/components/chart` and from the gallery card | A single component should not be a primary destination |
 | C5 | **`/create` Style + Radius + Surface** | "Style" (Default/Soft/Sharp) as the visible control. Radius and Surface as "Adjust shape" under it | The copy admits the overlap: "Change either afterwards and this simply stops naming a preset" (FACT `create-sidebar.tsx`) |
@@ -239,8 +239,12 @@ The full list is in section 17. The most important:
   label it "four implementations shown".
 - **"Package maturity: … the others are Stable packages"** (`/docs/platforms`) sits beside three native packages that
   are not published, a catalogue verification of "experimental" for all three natives (FACT `platform-parity.json`
-  `catalogueVerification`), and "Nothing is verified Stable today". REC: lead with what you can *do*
-  ("Install from npm" / "Build from source"), which `MESSAGING.md` §5 already prefers ("source you build").
+  `catalogueVerification`), and "Nothing is verified Stable today". FACT the page already keeps availability,
+  maturity and verification as separate axes, and the manifest's maturity for the natives is "stable". INFERENCE: the
+  confusion is that "Stable packages" reads as "a stable package you can install", and distribution is the missing
+  fourth fact. REC: keep the maturity axis and its value; add distribution beside it, in the words of what you can
+  *do* ("install from npm" / "build from source"), which `MESSAGING.md` §5 already prefers ("source you build").
+  Do not replace maturity with distribution, and do not let either stand in for verification.
 - **Gallery intro** says "React, SwiftUI, Jetpack Compose and Flutter snippets ship with every one" (FACT: 90/98 on each
   native) and "the RE SW JC FL tags", while every card renders five tags including NG.
 
@@ -532,7 +536,7 @@ search. Changelog search. REC: P1-7 (mobile search). Platform names as search ke
 | "spec" panel | (fold into C6) | Internal |
 | "Connected Product Lab" | "IoT module" | Module is MESSAGING's term |
 | "Explore IoT" (on `/iot`, to `/docs/iot`) | "Read the IoT docs" | Same label, two destinations |
-| "Package maturity … the others are Stable packages" | "React: stable package on npm. SwiftUI, Compose, Flutter: build from source." | Unpublished; catalogue verification "experimental" |
+| "Package maturity … the others are Stable packages" | "…the others are Stable. Distribution is separate: React installs from npm; SwiftUI, Compose and Flutter are built from source (not yet published)." | Keeps maturity "stable" (manifest) and adds the distribution fact; verification stays its own axis ("experimental" for natives) |
 | "See what is verified, platform by platform" | KEEP | Verb + outcome |
 | "See what each platform covers" | KEEP | Verb + outcome, MESSAGING §H |
 | "Explore components" | KEEP | Primary CTA, do not change |
@@ -761,7 +765,7 @@ Nav: Components · Blocks · Platforms · Docs · Create      [Search]
 Component page
   Button
   Trigger an action.
-  On React, Angular, SwiftUI, Jetpack Compose, Flutter · verified to beta · Details ▸
+  On React, Angular, SwiftUI, Jetpack Compose, Flutter · Verified per platform (React beta … SwiftUI experimental) · Details ▸
   [ live preview ]                 [ code: React | Angular | SwiftUI | Compose | Flutter ]
   Install  npx @kinetixui/cli add button
   Usage · Variants · API · Accessibility
