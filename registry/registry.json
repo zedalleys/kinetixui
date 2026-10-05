@@ -55,6 +55,7 @@
       ],
       "registryDependencies": [
         "tokens",
+        "direction-provider",
         "button"
       ],
       "files": [
@@ -636,7 +637,8 @@
         "tailwind-merge"
       ],
       "registryDependencies": [
-        "tokens"
+        "tokens",
+        "direction-provider"
       ],
       "files": [
         {
@@ -771,7 +773,8 @@
         "tailwind-merge"
       ],
       "registryDependencies": [
-        "tokens"
+        "tokens",
+        "direction-provider"
       ],
       "files": [
         {
@@ -841,7 +844,8 @@
         "vaul"
       ],
       "registryDependencies": [
-        "tokens"
+        "tokens",
+        "direction-provider"
       ],
       "files": [
         {
@@ -868,7 +872,8 @@
         "tailwind-merge"
       ],
       "registryDependencies": [
-        "tokens"
+        "tokens",
+        "direction-provider"
       ],
       "files": [
         {
@@ -1401,7 +1406,8 @@
         "tailwind-merge"
       ],
       "registryDependencies": [
-        "tokens"
+        "tokens",
+        "direction-provider"
       ],
       "files": [
         {
@@ -1751,7 +1757,8 @@
         "tailwind-merge"
       ],
       "registryDependencies": [
-        "tokens"
+        "tokens",
+        "direction-provider"
       ],
       "files": [
         {
@@ -1962,7 +1969,8 @@
         "tailwind-merge"
       ],
       "registryDependencies": [
-        "tokens"
+        "tokens",
+        "direction-provider"
       ],
       "files": [
         {
@@ -2016,7 +2024,8 @@
         "tailwind-merge"
       ],
       "registryDependencies": [
-        "tokens"
+        "tokens",
+        "direction-provider"
       ],
       "files": [
         {
@@ -2459,7 +2468,8 @@
         "tailwind-merge"
       ],
       "registryDependencies": [
-        "tokens"
+        "tokens",
+        "direction-provider"
       ],
       "files": [
         {
@@ -2482,7 +2492,8 @@
       "dependencies": [],
       "registryDependencies": [
         "tokens",
-        "button"
+        "button",
+        "direction-provider"
       ],
       "files": [
         {

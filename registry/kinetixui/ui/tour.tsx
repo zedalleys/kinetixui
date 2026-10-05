@@ -3,6 +3,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { useKinetixPortalContainer } from "@/components/ui/direction-provider";
 
 /**
  * Tour — sequenced spotlight popovers over real elements (onboarding
@@ -57,6 +58,8 @@ const Tour: React.FC<TourProps> = ({
   doneLabel = "Done",
 }) => {
   const [mounted, setMounted] = React.useState(false);
+  // Portaled like every other overlay here: into the nearest direction provider's host, else <body>.
+  const portalHost = useKinetixPortalContainer();
   const [rect, setRect] = React.useState<DOMRect | null>(null);
   const step = steps[stepIndex];
 
@@ -203,7 +206,7 @@ const Tour: React.FC<TourProps> = ({
         </div>
       </div>
     </>,
-    document.body,
+    portalHost ?? document.body,
   );
 };
 

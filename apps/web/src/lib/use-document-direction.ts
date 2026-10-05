@@ -13,9 +13,10 @@ export type Direction = "ltr" | "rtl";
  * not see a block in RTL at all, and a direction-sensitive defect inside it (the Switch thumb in #285) was
  * only ever shown as a mixed-direction case. The site's own shells pass this to `dir` instead.
  *
- * `<html dir>` is the source because it is what the docs' direction control sets (preview-environment.tsx) and
- * what an application integrating KinetixUI sets. The server and the first client render say "ltr", which is
- * what the root layout renders.
+ * `<html dir>` is the source because it is what an application integrating KinetixUI sets. Nothing on the docs
+ * site writes it: a component preview's own direction control is scoped to that preview (preview-environment.tsx),
+ * and this hook is how a preview learns the page's direction to start from. The server and the first client
+ * render say "ltr", which is what the root layout renders.
  */
 export function useDocumentDirection(): Direction {
   return React.useSyncExternalStore(subscribe, read, () => "ltr");
