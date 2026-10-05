@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/lib/utils";
 
 /** Fades + lifts its child into view once, on scroll. Respects reduced-motion (CSS). */
 export function Reveal({
@@ -44,32 +43,5 @@ export function Reveal({
     >
       {children}
     </Tag>
-  );
-}
-
-/** Horizontal ticker — children scroll left forever; pauses on hover. */
-export function Marquee({
-  children,
-  className,
-  durationSeconds = 32,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  durationSeconds?: number;
-}) {
-  return (
-    <div
-      className={cn(
-        "kx-marquee group relative flex overflow-hidden",
-        "[mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]",
-        className,
-      )}
-      style={{ ["--marquee-duration" as string]: `${durationSeconds}s` }}
-    >
-      <div className="kx-marquee-track" aria-hidden="true">
-        <div className="flex shrink-0 items-center">{children}</div>
-        <div className="flex shrink-0 items-center">{children}</div>
-      </div>
-    </div>
   );
 }

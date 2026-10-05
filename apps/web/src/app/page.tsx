@@ -4,21 +4,16 @@ import { Button } from "@kinetixui/ui";
 import { CrossPlatformFlagship } from "@/components/cross-platform-flagship";
 import { HeroCommand } from "@/components/hero-command";
 import { HeroTokenFan } from "@/components/hero-token-fan";
-import { Marquee, Reveal } from "@/components/reveal";
+import { PlatformTicker } from "@/components/platform-ticker";
+import { Reveal } from "@/components/reveal";
 import { SectionHead } from "@/components/section-head";
 import { StructuredData } from "@/components/structured-data";
 import { ctaAttrs } from "@/lib/analytics-surfaces";
 import { IOT_MATURITY_LABEL } from "@/lib/iot";
 import { componentCount, componentTotal, recipes } from "@/lib/platform-support";
-import { PLATFORMS as COMPONENT_PLATFORMS } from "@/lib/platform-parity";
 import { installableSentence, platformSentence, sourceOnlySentence } from "@/lib/platform-prose";
 import { componentPlatformCount, projectLicense, projectVersion } from "@/lib/project-stats";
 import { siteConfig } from "@/lib/site";
-
-// "Compose" is the manifest's short platform name; the marketing ticker uses the fuller, more recognisable name.
-// Any OTHER platform in PLATFORMS renders under its own name — nothing here can silently misname a real platform.
-const PLATFORM_DISPLAY_NAME: Partial<Record<string, string>> = { Compose: "Jetpack Compose" };
-const PLATFORM_TICKER = COMPONENT_PLATFORMS.map((p) => PLATFORM_DISPLAY_NAME[p] ?? p);
 
 /*
  * The spec panel, derived.
@@ -235,17 +230,7 @@ export default function HomePage() {
             <span className="hidden shrink-0 items-center border-r border-border px-4 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground sm:flex sm:px-6 lg:px-8">
               Targets&nbsp;→
             </span>
-            <Marquee durationSeconds={26} className="flex-1 py-4">
-              {PLATFORM_TICKER.map((p) => (
-                <span
-                  key={p}
-                  className="flex items-center gap-3 px-6 font-display text-sm text-muted-foreground"
-                >
-                  <span className="size-1.5 rounded-full bg-primary" />
-                  {p}
-                </span>
-              ))}
-            </Marquee>
+            <PlatformTicker />
           </div>
         </div>
       </section>

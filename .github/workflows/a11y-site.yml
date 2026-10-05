@@ -13,6 +13,7 @@ on:
       - "tokens/**"
       - "registry/**"
       - "scripts/a11y-site.mjs"
+      - "scripts/platform-ticker.mjs"
       - ".github/workflows/a11y-site.yml"
   pull_request:
     paths:
@@ -22,6 +23,7 @@ on:
       - "tokens/**"
       - "registry/**"
       - "scripts/a11y-site.mjs"
+      - "scripts/platform-ticker.mjs"
       - ".github/workflows/a11y-site.yml"
 
 permissions:
@@ -74,3 +76,10 @@ jobs:
 
       - name: Axe + overflow pass (every page, light + dark, phone / tablet / desktop)
         run: pnpm check:a11y-site
+
+      # The homepage platform ticker moves, so its contract is geometric and needs the same running site: one
+      # accessible list of the canonical platforms with decorative marks, a seamless gap-free loop in LTR and RTL,
+      # a keyboard pause (WCAG 2.2.2), and a static wrapping list under reduced motion, at phone to wide widths and
+      # 200% text.
+      - name: Platform ticker (loop, pause, reduced motion, RTL, 200% text)
+        run: pnpm check:platform-ticker
