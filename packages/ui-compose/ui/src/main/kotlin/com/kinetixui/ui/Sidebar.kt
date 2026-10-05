@@ -47,7 +47,7 @@ fun KinetixSidebar(
     ModalNavigationDrawer(
         drawerState = drawerState,
         modifier = modifier,
-        scrimColor = colors.foreground.copy(alpha = 0.4f),
+        scrimColor = colors.scrim,
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = colors.background,

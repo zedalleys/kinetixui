@@ -49,6 +49,8 @@ public enum KinetixColorsSwiftUIDark {
     public static let tertiaryForeground = Color(red: 0.941, green: 0.969, blue: 1)
     public static let info = Color(red: 0.573, green: 0.698, blue: 0.784)
     public static let infoForeground = Color(red: 0.02, green: 0.047, blue: 0.067)
+    public static let scrim = Color(red: 0, green: 0, blue: 0, opacity: 0.6)
+    public static let onInfoContainer = Color(red: 0.573, green: 0.698, blue: 0.784)
     public static let brand = Color(red: 0.455, green: 0.584, blue: 0.671)
     public static let brandForeground = Color(red: 0.02, green: 0.047, blue: 0.067)
     public static let action = Color(red: 0.376, green: 0.647, blue: 0.98)

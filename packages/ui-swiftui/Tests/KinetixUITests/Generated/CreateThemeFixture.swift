@@ -63,6 +63,8 @@ public enum CreateThemeFixture {
         infoForeground: KinetixColorsSwiftUI.infoForeground,
         popover: Color(red: 1, green: 1, blue: 0.996),
         popoverForeground: Color(red: 0.055, green: 0.039, blue: 0.024),
+        onInfoContainer: KinetixColorsSwiftUI.onInfoContainer,
+        scrim: KinetixColorsSwiftUI.scrim,
         chart: [
             Color(red: 0.741, green: 0.251, blue: 0.286),
             Color(red: 0.882, green: 0.475, blue: 0.106),
@@ -108,6 +110,8 @@ public enum CreateThemeFixture {
         infoForeground: KinetixColorsSwiftUIDark.infoForeground,
         popover: Color(red: 0.118, green: 0.102, blue: 0.082),
         popoverForeground: Color(red: 0.984, green: 0.957, blue: 0.929),
+        onInfoContainer: KinetixColorsSwiftUIDark.onInfoContainer,
+        scrim: KinetixColorsSwiftUIDark.scrim,
         chart: [
             Color(red: 0.945, green: 0.439, blue: 0.455),
             Color(red: 0.792, green: 0.408, blue: 0),

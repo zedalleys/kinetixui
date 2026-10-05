@@ -197,6 +197,8 @@ export const tokens = {
     "tertiary-foreground": "#f0f7ff",
     "info": "#57778d",
     "info-foreground": "#f0f7ff",
+    "scrim": "rgba(0, 0, 0, 0.4)",
+    "on-info-container": "#395a70",
     "brand": "#1b3c53",
     "brand-foreground": "#f0f7ff",
     "action": "#1d4ed8",
@@ -432,14 +434,14 @@ export const tokens = {
     ],
     "focus-destructive": [
       {
-        "color": "#ec5047",
+        "color": "#c60a0a",
         "offsetX": "0",
         "offsetY": "0",
         "blur": "0",
         "spread": "1px"
       },
       {
-        "color": "#ec504733",
+        "color": "#c60a0a33",
         "offsetX": "0",
         "offsetY": "0",
         "blur": "0",

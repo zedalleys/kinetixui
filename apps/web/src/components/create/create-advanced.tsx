@@ -4,7 +4,7 @@ import * as React from "react";
 import { Button, Label, Textarea } from "@kinetixui/ui";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { hexToOklch, type AcceptedToken } from "@kinetixui/create-theme";
+import { ROLE_DEFAULTS, hexToOklch, type AcceptedToken } from "@kinetixui/create-theme";
 import type { CreateAction, CreateConfig } from "@/lib/create/config";
 import { overridesToText, textToOverrides, type CreateTheme } from "@/lib/create/theme-adapter";
 
@@ -52,6 +52,15 @@ const GROUPS: { title: string; hint: string; tokens: [AcceptedToken, string][] }
   },
 ];
 
+/**
+ * The role a field is following because the user pinned that role instead, e.g. `primary` set in the text
+ * editor below moves Action and Link. Shown so a field never says "generated" about a colour the user typed.
+ */
+function followedSource(config: CreateConfig, token: AcceptedToken): AcceptedToken | undefined {
+  const source = (ROLE_DEFAULTS as Partial<Record<AcceptedToken, AcceptedToken>>)[token];
+  return source && !config.manualOverrides[token] && config.manualOverrides[source] ? source : undefined;
+}
+
 export function CreateAdvanced({
   config,
   theme,
@@ -78,6 +87,7 @@ export function CreateAdvanced({
                 token={token}
                 resolved={theme.active.colors[token] ?? "#000000"}
                 manual={config.manualOverrides[token]}
+                follows={followedSource(config, token)}
                 dispatch={dispatch}
               />
             ))}
@@ -102,6 +112,7 @@ function SemanticField({
   token,
   resolved,
   manual,
+  follows,
   dispatch,
 }: {
   id: string;
@@ -109,6 +120,7 @@ function SemanticField({
   token: AcceptedToken;
   resolved: string;
   manual?: string;
+  follows?: AcceptedToken;
   dispatch: React.Dispatch<CreateAction>;
 }) {
   const [draft, setDraft] = React.useState<string | null>(null);
@@ -128,7 +140,7 @@ function SemanticField({
         <label htmlFor={id} className="flex items-baseline gap-2 text-sm">
           {label}
           <span className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
-            {manual ? "manual" : "generated"}
+            {manual ? "manual" : follows ? `from ${follows}` : "generated"}
           </span>
         </label>
         <input
@@ -189,7 +201,9 @@ function RawEditor({ config, dispatch }: { config: CreateConfig; dispatch: React
       <p className="mt-1 text-sm text-muted-foreground">
         One <code className="rounded bg-muted px-1 font-mono text-xs text-foreground">name, colour</code> per
         line. This is the same editor the old theme builder had, and it writes the same overrides as the
-        fields above.
+        fields above. Setting <code className="rounded bg-muted px-1 font-mono text-xs text-foreground">primary</code> also
+        sets Action and Link, and <code className="rounded bg-muted px-1 font-mono text-xs text-foreground">ring</code> sets
+        the focus ring, unless you set those too: the same on the web and in every native export.
       </p>
       <Textarea
         id={id}

@@ -4,7 +4,7 @@
  * ## What it writes, and why that is all it writes
  *
  * `packages/ui-swiftui` is themeable along three axes, and this writes all three. `KinetixColors` is a
- * public struct of 35 semantic colours plus a five-stop chart palette; `KinetixRadii` is four corners
+ * public struct of 37 semantic colours plus a five-stop chart palette; `KinetixRadii` is four corners
  * named by role; `KinetixElevations` is a four-step shadow ladder whose steps are ordered layer lists.
  * Every `Kinetix*` view reads all three through `@Environment`.
  *
@@ -20,7 +20,8 @@
  *
  * ## Complete file, changed values only
  *
- * `KinetixColors` has a memberwise initializer that demands all 35 arguments, so a partial theme is not
+ * `KinetixColors` has a memberwise initializer that demands 35 of its 37 colours (`onInfoContainer` and `scrim` default,
+ * so a theme written before they existed still compiles), so a partial theme is not
  * expressible and this file is always complete — unlike the CSS exporter, which emits a diff and nothing
  * at all for the default design. But a field the design did not change is written as a reference to the
  * shipped token (`KinetixColorsSwiftUI.tertiary`) rather than as a literal. That keeps both ideas: a
@@ -28,8 +29,8 @@
  * field without anyone re-exporting, and the default design exports a file that is all references —
  * which is exactly what "this design changes nothing" should look like.
  *
- * Six of the 35 — `tertiary`, `tertiaryForeground`, `successForeground`, `warningForeground`, `info` and
- * `infoForeground` — are not in the Create token contract at all, so they are always references. So is
+ * Eight of the 37 — `tertiary`, `tertiaryForeground`, `successForeground`, `warningForeground`, `info`,
+ * `infoForeground`, `onInfoContainer` and `scrim` — are not in the Create token contract at all, so they are always references. So is
  * the chart palette at the `kinetix` default, which generates nothing.
  *
  * Pure, like every exporter here: no file system, no process, no CLI formatting.
@@ -250,7 +251,7 @@ export const SWIFT_COLOR_FIELDS = [
   "destructive-foreground", "foreground", "background", "border", "input", "ring", "muted",
   "muted-foreground", "accent", "accent-foreground", "tertiary", "tertiary-foreground", "warning",
   "warning-foreground", "card", "card-foreground", "success", "success-foreground", "info",
-  "info-foreground", "popover", "popover-foreground",
+  "info-foreground", "popover", "popover-foreground", "on-info-container", "scrim",
 ] as const;
 
 /** The chart stops `KinetixColors.chart` carries. The shipped enum has eight; the struct exposes five. */
@@ -268,7 +269,7 @@ type Appearance = keyof typeof SHIPPED_ENUM;
  * Every field is written, so the file is complete and compiles — but a field the design left alone keeps
  * following the library rather than freezing today's number into someone's app. That is the same
  * "only what changed" principle the CSS exporter applies, expressed the way Swift allows: `KinetixColors`
- * has a memberwise initializer that demands all 35 arguments, so a partial theme is not expressible and a
+ * has a memberwise initializer that demands 35 of its 37 colours, so a partial theme is not expressible and a
  * reference is how a field says "unchanged".
  *
  * It also fixes a small infidelity that the first version of this exporter had. `destructive-foreground`

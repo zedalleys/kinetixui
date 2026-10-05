@@ -68,7 +68,8 @@
     `theme-light-parity.test.ts` now fails if a `.dark` token is missing here or disagrees with `:root`.
   */
   --surface-grouped: var(--neutral-100);
-  --semantic-on-info-container: 204 33% 33%;
+  --on-info-container: 204 33% 33%;
+  --semantic-on-info-container: var(--on-info-container);
   --semantic-muted-on-container: 0 0% 38%;
   --brand: var(--blue-500);
   --brand-foreground: var(--blue-50);
@@ -79,9 +80,10 @@
   --focus: var(--ring);
   --link: var(--primary);
   --shadow-focus: 0 0 0 1px hsl(var(--focus)), 0 0 0 4px hsl(var(--focus) / 0.2);
-  --shadow-focus-destructive: 0 0 0 1px #ec5047, 0 0 0 4px #ec504733;
-  --shadow-focus-success: 0 0 0 1px #5d6d5c, 0 0 0 4px #5d6d5c33;
-  --shadow-focus-warning: 0 0 0 1px #7f5b21, 0 0 0 4px #7f5b2133;
+  --shadow-focus-destructive: 0 0 0 1px hsl(var(--destructive)), 0 0 0 4px hsl(var(--destructive) / 0.2);
+  --shadow-focus-success: 0 0 0 1px hsl(var(--success)), 0 0 0 4px hsl(var(--success) / 0.2);
+  --shadow-focus-warning: 0 0 0 1px hsl(var(--warning)), 0 0 0 4px hsl(var(--warning) / 0.2);
+  --scrim: 0 0% 0% / 0.4;
 }
 
 @layer base {

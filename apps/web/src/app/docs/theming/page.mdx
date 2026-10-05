@@ -19,8 +19,9 @@ component           Button → bg-action, focus ring → --focus, Input border �
 ```
 
 Components reference **semantic roles** — no component in `@kinetixui/ui`, `@kinetixui/angular` or the
-native ports reads a colour ramp directly (the one primitive read is `static.white` / `static.black`, for
-the Angular switch thumb and modal scrim). That is what makes a rebrand a theme change rather than
+native ports reads a colour ramp directly (the one primitive read is `static.white`, for the Angular
+switch thumb; the colour-picker visualisation is the other reviewed exception, and
+`pnpm check:component-colors` holds the line). That is what makes a rebrand a theme change rather than
 a component change: you move `--primary`, and every button, checkbox, tab and focus ring that means
 "interactive" moves with it. Edit a component instead and the next one you forget keeps the old colour.
 
@@ -105,7 +106,11 @@ changes. Set the role **and** its foreground, and set it for both modes:
 
 `--ring` is not derived from `--primary` — it is its own role, so a theme that changes only `--primary`
 keeps the azure focus ring. Set both. Every Kinetix focus ring (the `shadow-focus` utility, Angular's
-`.kx-*:focus-visible`) reads `--focus`, which defaults to `--ring`.
+`.kx-*:focus-visible`) reads `--focus`, which defaults to `--ring`. The error, success and warning focus
+rings (`shadow-focus-destructive`, `-success`, `-warning`) read `--destructive`, `--success` and
+`--warning` the same way, so a theme that recolours a status role recolours its focus ring with it.
+Controls that draw their ring with `ring-ring` (the NavigationMenu trigger among them) follow `--ring`.
+Both mechanisms are deliberate: one is a two-layer composite, the other a single utility.
 
 Contrast is yours to keep when you write values by hand. Check them with `pnpm check:contrast`'s rules
 in mind, or paste them into Create's Advanced panel, which reports every text pair at 4.5:1 and the focus
@@ -227,6 +232,16 @@ still recolours them via the default and overriding `--action` recolours only th
 Contrast is on you when you split them: `kinetixui theme build` reports `action` / `action-foreground`
 and `brand` / `brand-foreground` when you set them.
 
+**What pinning `primary` means in Create.** The table above is one rule, not a default that happens to
+hold on the web: `action`, `action-foreground` and `link` follow `primary` / `primary-foreground`, and
+`focus` follows `ring` — in light and in dark, in the token source and in every export. In Create's
+Advanced panel, pinning `primary` therefore moves Action and Link too, and the row says so
+("from primary") until you pin that role yourself, which always wins. The preview, the CSS block and the
+SwiftUI, Compose and Flutter files all say the same thing; `role-equivalence.test.ts` pins that. To keep
+buttons on the old colour while changing `primary`, pin `action` (and `action-foreground`). Hover and
+pressed are regenerated from whichever `action` results, so they never lag behind it. `brand` is
+identity and is never derived from `primary`.
+
 **Hover and pressed.** On the web the Button derives its states from `action` (`bg-action/90`,
 `bg-action/85`), so they follow whatever you set. The contract also carries explicit
 `--action-hover` / `--action-pressed` values — the same two colours, precomputed over the page
@@ -243,11 +258,27 @@ button label at 3.4:1 while pressed, which is what this used to do.
 **Native.** The SwiftUI, Compose and Flutter components read the same role tokens: `KinetixColors` has
 `action`, `actionForeground`, `actionHover`, `actionPressed`, `link`, `focus`, `brand` and
 `brandForeground` alongside `primary` / `ring`, and the components use the role fields (the Button's
-Link variant reads `link`; focus rings read `focus`). The primary Button uses `actionHover` on pointer hover and `actionPressed` while pressed; other components keep the platform's own interaction feedback. `primary` remains as the source they default to.
+Link variant reads `link`; focus rings read `focus`). Two roles exist so the native Banner/Inform and
+the overlays do not need a literal: `onInfoContainer` is the text colour on a tinted `info` container
+(the plain `info` role is 4.19:1 there; `onInfoContainer` clears AA), and `scrim` is the backdrop behind
+Dialog, Sheet and Sidebar. The Compose `Dialog` keeps the platform's own window dim, which cannot be
+recoloured; its Sheet and Sidebar read `scrim`. The primary Button uses `actionHover` on pointer hover and `actionPressed` while pressed; other components keep the platform's own interaction feedback. `primary` remains as the source they default to.
 
 **Upgrading:** components that use `bg-action` / `text-link` need the matching
 `@kinetixui/ui/tailwind.config` preset (it defines the new colours) — update the package when you
 re-add components with the CLI.
+
+### Scrim and container text
+
+| Token | Meaning | Light | Dark |
+|---|---|---|---|
+| `--scrim` (`bg-scrim`) | the veil behind a modal: Dialog, Alert dialog, Sheet, Drawer, command menu, Tour, Angular `<dialog>` | black 40% | black 60% |
+| `--on-info-container` (`text-info-on-container`) | text on `bg-info/10`: Banner and Inform "information" | `blue.400` | `blue.100` |
+
+The scrim is black in both themes and denser in dark, because black over a dark page needs more opacity
+to set the dialog back. It was `foreground` at 40%, which is near-white in dark mode and lifted the page
+toward the dialog instead. A theme can override `--scrim` like any other role; it is a role, not a
+palette step, and is not exposed as one.
 
 ## Primitive ramps
 

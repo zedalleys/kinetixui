@@ -157,6 +157,8 @@ export const COMPOSE_COLOR_FIELDS: readonly (readonly [field: string, token: str
   ["infoForeground", "info-foreground"],
   ["popover", "popover"],
   ["popoverForeground", "popover-foreground"],
+  ["onInfoContainer", "on-info-container"],
+  ["scrim", "scrim"],
 ] as const;
 
 /** The chart stops `KinetixColors.chart` carries, in series order. */

@@ -51,6 +51,17 @@ data class KinetixColors(
     val popover: Color,
     val popoverForeground: Color,
     /**
+     * Text and icons on a tinted `info` surface — Banner and Inform `Information`. `info` itself is 4.19:1 on
+     * its own 10% tint in light; this role clears AA. A set built before the role existed gets `info`, which
+     * is what those composables drew before.
+     */
+    val onInfoContainer: Color = info,
+    /**
+     * The dimming layer behind a modal surface: ModalBottomSheet and Sidebar. Carries its own alpha, so draw
+     * it as is. A set built before the role existed gets black at 40%, which is what Sidebar drew before.
+     */
+    val scrim: Color = Color.Black.copy(alpha = 0.4f),
+    /**
      * The categorical chart palette, in order. A list rather than five named fields because callers index
      * into it by series — `chart[series % chart.size]` — which is what makes a chart with six series wrap
      * instead of crashing. Same shape as SwiftUI's `KinetixColors.chart`.
@@ -105,6 +116,8 @@ val LightKinetixColors = KinetixColors(
     infoForeground = GeneratedLight.colorInfoForeground,
     popover = GeneratedLight.colorPopover,
     popoverForeground = GeneratedLight.colorPopoverForeground,
+    onInfoContainer = GeneratedLight.colorOnInfoContainer,
+    scrim = GeneratedLight.colorScrim,
 )
 
 /** The shipped dark value set — the real dark pass, same as the web `.dark` selector. */
@@ -148,6 +161,8 @@ val DarkKinetixColors = KinetixColors(
     infoForeground = GeneratedDark.colorInfoForeground,
     popover = GeneratedDark.colorPopover,
     popoverForeground = GeneratedDark.colorPopoverForeground,
+    onInfoContainer = GeneratedDark.colorOnInfoContainer,
+    scrim = GeneratedDark.colorScrim,
 )
 
 private val LocalKinetixColors = compositionLocalOf { LightKinetixColors }

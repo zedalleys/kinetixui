@@ -83,10 +83,14 @@ export default {
         info: {
           DEFAULT: c("--info"),
           foreground: c("--info-foreground"),
-          // text on a tinted info surface (bg-info/10) — --info alone is 4.15:1 there
-          "on-container": c("--semantic-on-info-container"),
+          // text on a tinted info surface (bg-info/10) — --info alone is 4.15:1 there. The top-level role
+          // every platform shares; `--semantic-on-info-container` is its legacy alias.
+          "on-container": c("--on-info-container"),
         },
         tertiary: { DEFAULT: c("--tertiary"), foreground: c("--tertiary-foreground") },
+        // The modal backdrop. The role carries its own alpha (black at 40% light, 60% dark), so it is mapped
+        // without `<alpha-value>`: `bg-scrim`, not `bg-scrim/40`.
+        scrim: "hsl(var(--scrim))",
         // Role tokens layered over `primary` (which stays the shadcn-compatible source). `action`, `link`
         // and `focus` default to it, so a theme that only sets `--primary` still works; override them
         // individually to split the interactive colour, link colour and focus colour. `brand` is identity

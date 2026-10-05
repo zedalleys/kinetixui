@@ -53,6 +53,24 @@ export const TOKEN_CONTRACT: TokenRow[] = [
 
 export type TokenRow = { token: string; light: string; dark: string; note?: string };
 
+/**
+ * Roles that default to another role, exactly as the token source states it: `color.action` is
+ * `{color.primary}`, `color.link` is `{color.primary}`, `color.action-foreground` is
+ * `{color.primary-foreground}`, `color.focus` is `{color.ring}` — in light and in dark.
+ * `contract.test.ts` reads tokens/semantic/color.{light,dark}.json and fails if this drifts.
+ *
+ * This is the one rule for what pinning `primary` or `ring` means, and the resolver applies it so every
+ * output agrees. On the web the rule was already true by accident of the cascade (`--action:
+ * var(--primary)`), while the scoped preview and the three native exporters write every role as a value
+ * and so never followed — one design, three themes (audit P1-3). A role the user pinned itself still wins.
+ */
+export const ROLE_DEFAULTS = {
+  action: "primary",
+  "action-foreground": "primary-foreground",
+  link: "primary",
+  focus: "ring",
+} as const;
+
 /** hex (case-insensitive) -> the semantic token it backs, light theme. Built from TOKEN_CONTRACT above. */
 export function tokenNameForHex(hex: string): string | undefined {
   const h = hex.toLowerCase();

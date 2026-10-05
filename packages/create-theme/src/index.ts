@@ -49,6 +49,7 @@ export {
 
 export {
   TOKEN_CONTRACT,
+  ROLE_DEFAULTS,
   tokenNameForHex,
   SHIPPED_RADIUS,
   SHIPPED_ELEVATION,

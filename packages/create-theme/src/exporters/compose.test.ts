@@ -54,7 +54,7 @@ describe("it targets the real Compose API", () => {
     // only thing keeping them in step. A missing argument is a file that does not compile, and the
     // Android runner would say so — a long way from the cause.
     const body = themeKt.slice(themeKt.indexOf("data class KinetixColors("), themeKt.indexOf("private val LocalKinetixColors"));
-    const declared = [...body.matchAll(/^ {4}val ([a-zA-Z0-9]+): (?:Color|List<Color>),$/gm)].map((m) => m[1]!);
+    const declared = [...body.matchAll(/^ {4}val ([a-zA-Z0-9]+): (?:Color|List<Color>)(?: = [^,]+)?,$/gm)].map((m) => m[1]!);
 
     expect(declared).toEqual([...COMPOSE_COLOR_FIELDS.map(([field]) => field), "chart"]);
   });

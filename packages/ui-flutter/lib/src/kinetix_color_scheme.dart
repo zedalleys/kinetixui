@@ -51,6 +51,8 @@ class KinetixColorScheme {
   static const tertiaryForeground = Color(0xFFF0F7FF);
   static const info = Color(0xFF57778D);
   static const infoForeground = Color(0xFFF0F7FF);
+  static const scrim = Color(0x66000000);
+  static const onInfoContainer = Color(0xFF395A70);
   static const brand = Color(0xFF1B3C53);
   static const brandForeground = Color(0xFFF0F7FF);
   static const action = Color(0xFF1D4ED8);
