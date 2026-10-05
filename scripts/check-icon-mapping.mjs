@@ -119,7 +119,9 @@ const NATIVE = [
 const GLYPH = /[\p{So}\p{Sm}\p{Pi}\p{Pf}\p{Po}]/u;
 const EMOJI = /\p{Emoji_Presentation}/u;
 const isComment = (line) => /^\s*(\/\/|\*|\/\*)/.test(line);
-const literals = (line) => [...line.matchAll(/"((?:[^"\\]|\\.)*)"/g)].map((m) => m[1]);
+// Double-quoted (Kotlin, Swift, TypeScript) and single-quoted (Dart, TypeScript) literals; Dart and Angular
+// sources use the single-quoted form almost exclusively.
+const literals = (line) => [...line.matchAll(/"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'/g)].map((m) => m[1] ?? m[2]);
 
 const found = new Map(); // "file\u0000glyph" -> count
 let emoji = 0;
