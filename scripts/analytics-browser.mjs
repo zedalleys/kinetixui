@@ -20,6 +20,9 @@
  *     then to installation, copy the CLI command. The campaign must be on every event of the one session.
  *  2. HOMEPAGE, KEYBOARD — reach the verification CTA with the keyboard and press Enter.
  *  3. BLOCKS, TOUCH — on a phone-sized, touch-only context, open a block's code, switch platform, copy.
+ *  4. TOKENS BRIDGE — land on the ART-002 destination, which alone must send nothing that qualifies; copy its
+ *     install command; follow the in-page evaluation link (not the sidebar) to the component it names. The
+ *     campaign must survive the navigation, and each action must produce exactly one semantic event.
  * Each asserts the exact event sequence, so a duplicate capture or an event fired on render fails the run.
  */
 import { gunzipSync } from "node:zlib";
@@ -169,6 +172,46 @@ const evidence = {};
   await context.close();
 }
 
+/* ---------------------------------------------------------------- 4. /docs/tokens → evaluation, through the page's own bridge */
+{
+  const flow = "tokens-bridge";
+  const { context, page, settle } = await visitor(browser, { viewport: { width: 1280, height: 900 } });
+  await page.goto(base + CAMPAIGN_URL, { referer: "https://lnkd.in/secret-path?trk=abc", waitUntil: "networkidle" });
+
+  // The landing alone: a pageview and docs_viewed, neither of which is Qualified Evaluation or Adoption Intent.
+  const landed = await settle(2);
+  expectSequence(flow, landed, ["$pageview", "docs_viewed"]);
+
+  const install = page.locator("pre", { hasText: "npm install @kinetixui/tokens" });
+  const installBlock = page.locator("main div.group", { has: install }).first();
+  await installBlock.hover();
+  await installBlock.getByRole("button", { name: "Copy code" }).click();
+
+  // The evaluation link in the page body — main content, not the sidebar, which flow 1 already covers.
+  const bridge = page.locator('main a[href="/docs/components/button"]').first();
+  await bridge.scrollIntoViewIfNeeded();
+  await bridge.click();
+  await page.waitForURL("**/docs/components/button");
+
+  const events = await settle(5);
+  expectSequence(flow, events, ["$pageview", "docs_viewed", "install_command_copied", "$pageview", "component_viewed"]);
+  const copy = events.find((e) => e.event === "install_command_copied");
+  if (copy && (copy.properties.package !== "@kinetixui/tokens" || copy.properties.source !== "docs_page")) fail(flow, `install copy props ${JSON.stringify({ package: copy.properties.package, source: copy.properties.source })}`);
+  const view = events.find((e) => e.event === "component_viewed");
+  if (view && view.properties.component !== "button") fail(flow, `component_viewed for ${view.properties.component}`);
+  for (const e of events) {
+    const p = e.properties;
+    if (p.kx_campaign !== "kx_p2_b_token_boundary" || p.kx_source !== "linkedin" || p.kx_landing_page !== "/docs/tokens") {
+      fail(flow, `${e.event} lost its attribution: ${JSON.stringify({ kx_campaign: p.kx_campaign, kx_source: p.kx_source, kx_landing_page: p.kx_landing_page })}`);
+    }
+  }
+  const sessions = new Set(events.map((e) => e.properties.$session_id));
+  if (sessions.size !== 1 || [...sessions][0] == null) fail(flow, `expected one $session_id, got ${[...sessions].join(", ")}`);
+  expectClean(flow, events);
+  evidence[flow] = events.map((e) => ({ event: e.event, page: e.properties.page, component: e.properties.component, package: e.properties.package, kx_campaign: e.properties.kx_campaign, kx_landing_page: e.properties.kx_landing_page, session: e.properties.$session_id, url: e.properties.$current_url }));
+  await context.close();
+}
+
 await browser.close();
 
 console.log(JSON.stringify(evidence, null, 2));
@@ -176,4 +219,4 @@ if (problems.length) {
   console.error(`\nanalytics-browser: ${problems.length} problem(s)\n  - ${problems.join("\n  - ")}`);
   process.exit(1);
 }
-console.log("\nanalytics-browser: OK — campaign → evaluation → intent, keyboard CTA and touch block copy all sent exactly the expected events");
+console.log("\nanalytics-browser: OK — campaign → evaluation → intent, keyboard CTA, touch block copy and the /docs/tokens bridge all sent exactly the expected events");

@@ -95,14 +95,17 @@ A ramp of primitives is not a design system. It is a palette with build tooling.
 The layer that makes tokens survive a redesign is the **semantic** one:
 
 ```
-primitive:  color.blue.500   = #1b3c53
-semantic:   color.primary    = {color.blue.500}
-            color.focus-ring = {color.blue.500}
+primitive:  color.azure.700  = #1d4ed8
+semantic:   color.primary    = {color.azure.700}
+            color.ring       = {color.azure.700}
+            color.brand      = {color.blue.500}
 ```
 
-Now `color.primary` and `color.focus-ring` happen to be the same value, and the day they need to stop being
-the same value, that is a one-line change rather than an archaeology project. Components refer only to
-semantics. Primitives are an implementation detail of the semantic layer.
+Now `color.primary` and `color.ring` (the focus ring) happen to be the same value, and the day they need to
+stop being the same value, that is a one-line change rather than an archaeology project. It has already
+happened once: `primary` used to be the navy that `color.brand` still is, and moving it to a brighter blue for
+contrast changed an alias, not the components. Components refer only to semantics. Primitives are an
+implementation detail of the semantic layer.
 
 The practical test: **can you answer "what is this colour for?" from the token name alone?** If the answer is
 "it's blue", you have a palette.
@@ -159,7 +162,8 @@ After that, stock Material widgets inherit the design system. An `ElevatedButton
 the right colour, radius and type scale, and there is not a single custom widget in the tree.
 
 The equivalent exists for Cupertino, and the same idea generalises: on Android, a Compose `MaterialTheme`
-wrapper; on iOS, an environment-injected theme.
+wrapper; on iOS, an environment-injected theme. In KinetixUI those two are not built yet: today the
+stock-widget adapters are Flutter's, and the Compose and SwiftUI themes style KinetixUI's own components.
 
 What this changes strategically is the size of the first step. Adoption stops being a migration and becomes
 an afternoon. And the thing that actually drifts — the values, not the markup — gets fixed first.
@@ -176,9 +180,12 @@ part of that build.
 **A no-hand-editing check.** Either regenerate in CI and fail on a dirty diff, or check the generated files
 against a fresh generation. This is the one that protects you from the urgent hotfix.
 
-In our repository both run on every commit, alongside a contrast check over the generated colour pairs. The
-contrast one has an interesting property: because it runs against the generated output rather than the
-source, it catches a bad *transform* as well as a bad value.
+In our repository both run on every pull request: a test that finds every role in the semantic colour
+contract in each platform's generated output and resolves it back to the source, and a regenerate-and-diff
+step. Alongside them is a contrast check over the colour pairs components render. That one resolves the
+source; the SwiftUI package repeats it against the generated Swift colours, which is the version with the
+interesting property: run against the output rather than the source, it catches a bad *transform* as well
+as a bad value.
 
 ## What this does not solve
 
@@ -211,8 +218,9 @@ legitimate outcome of reading this, and the Style Dictionary configuration is th
 
 ## Notes for publication
 
-- **Numbers:** this article deliberately contains almost none. The one to re-check before publishing is the
-  `#1b3c53` example value against `pnpm marketing:stats` / the token source.
+- **Numbers:** this article deliberately contains almost none. The primitive/semantic example's values are
+  checked against the token source by `apps/web/src/lib/tokens-page.test.tsx` (it used to show
+  `primary = {color.blue.500}`, which stopped being true when `primary` moved to `azure.700`).
 - **Claims check:** tokens generated (A1) ✅ · components hand-written, stated explicitly in *What this does
   not solve* (A2) ✅ · no install command for an undistributed platform ✅ · no activation promise (D1) ✅ ·
   no accessibility claim beyond the contrast gate ✅.

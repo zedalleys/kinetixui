@@ -1,16 +1,39 @@
 export const metadata = {
   title: "Tokens",
-  description: "How the token engine works: DTCG source files compiled by Style Dictionary into CSS variables, a typed TypeScript object, and native colour, type, spacing and motion constants for SwiftUI, Compose and Flutter.",
+  description: "How the token engine works: one DTCG source compiled by Style Dictionary into CSS variables and a typed TypeScript object for the web, and colour, type, spacing and motion constants for SwiftUI, Compose and Flutter. Includes one token traced through every platform's generated output, and what you can install today.",
 };
 
 # Tokens
 
-## Source
+KinetixUI's design decisions (colour, spacing, radius, type, motion) live in one set of DTCG token files.
+Style Dictionary compiles them into each platform's own idiom: CSS custom properties and a typed object for
+the web, Swift for iOS, Kotlin for Android and Dart for Flutter. The generated files are committed, so you
+can read every platform's output without building anything.
 
+Tokens are generated; components are not. Each platform's components are written natively against the same
+token contract, which is why a SwiftUI button behaves like a SwiftUI button. See [Platforms](/docs/platforms)
+for what is implemented where.
+
+## Architecture
+
+```text
+tokens/**/*.json            DTCG source: the only place a value is written
+  │
+  ▼  style-dictionary/build.mjs   (Style Dictionary, once per theme)
+  │
+packages/tokens/dist/
+  ├─ web/       CSS custom properties + typed TypeScript object
+  ├─ ios/       Swift
+  ├─ android/   Kotlin + Android XML resources
+  └─ flutter/   Dart
 ```
+
+The source is organised in two layers:
+
+```text
 tokens/
 ├─ primitives/
-│  ├─ color.json        6 brand ramps + synthesized neutral, 0–1000
+│  ├─ color.json        6 brand ramps + azure action ramp + synthesized neutral, 0–1000
 │  ├─ dimension.json    spacing, radius, border width
 │  ├─ typography.json   Material-3 scale, Montserrat
 │  ├─ motion.json       duration + easing (cubicBezier)
@@ -19,40 +42,170 @@ tokens/
 │  └─ z-index.json      base/raised/docked/focus/sticky/overlay scale
 └─ semantic/
    ├─ color.light.json  aliases → semantic contract
-   ├─ color.dark.json   synthesized
-   └─ typography.json    composite text styles
+   ├─ color.dark.json   the same names, dark values
+   ├─ shadow.json       elevation + focus ring (+ shadow.dark.json)
+   └─ typography.json   composite text styles
 ```
 
-All DTCG format (`$value` / `$type`), extracted from Figma variables.
+All DTCG format (`$value` / `$type`). The palette, spacing and type scale originate in the KinetixUI Figma
+file; once a value is in these files it is authoritative, and the dark theme, motion, opacity and z-index
+are owned here rather than in Figma ([`TOKENS.md`](https://github.com/zedalleys/kinetixui/blob/main/TOKENS.md)
+records every decision).
 
-## Build
+The build is a repository step, not something you run to use the tokens:
 
 ```bash
-pnpm build:tokens   # node style-dictionary/build.mjs
+pnpm build:tokens   # node style-dictionary/build.mjs — maintainers, inside this repository
 ```
 
-Style Dictionary v4 runs **once per theme** because two files defining the same
-token path would collide in a single run. The light pass emits every platform;
-the dark pass emits the web `globals.dark.css` **and** the native semantic
-theme files that a `KinetixTheme` needs real dark values for — `Theme.dark.kt`
-(Compose), `KinetixColorsSwiftUI.dark.swift` (SwiftUI) and
-`kinetix_color_scheme.dark.dart` (Flutter).
+CI runs the same build and fails if the committed output differs from a fresh generation, so a generated
+file cannot be hand-edited without the pull request going red.
 
-## Output
+## Primitive and semantic tokens
+
+**Primitives** are the palette and scales: `color.azure.700`, `spacing.4`, `radius.md`. They say *what* a
+value is.
+
+**Semantic tokens** say what a value is *for*: `color.primary`, `color.card`, `color.border`,
+`color.ring`. Components read only semantic tokens. A semantic token is usually an alias of a primitive,
+which is how two roles can share a value today and diverge later with a one-line change. The light theme's
+`primary` and `ring` both resolve to `color.azure.700`; `brand` is the navy `color.blue.500` that `primary`
+was moved off when the interactive colour needed more contrast.
+
+## One token on every platform
+
+Here is `color.primary`, the interactive colour, from its source definition to the declaration each
+platform's generated file contains. Every line below is read from the repository's DTCG source and from
+`packages/tokens/dist` when this page is built (excerpts: each file holds the full set).
+
+<TokenAcrossPlatforms />
+
+The names follow each language's convention and the values follow each platform's colour type: an HSL
+channel triplet for CSS, sRGB components for SwiftUI, ARGB integers for Compose and Flutter. They are the
+same colour. A test resolves every one of them back to the source hex and fails if a platform disagrees.
+
+## Light and dark
+
+Dark is a second set of values for the same semantic names, not a second set of names. `primary` means
+"interactive colour" in both themes; only its value changes, from `azure.700` to the lighter `azure.400`
+that holds contrast on a dark surface.
+
+Style Dictionary runs **once per theme**, because two files defining the same token path would collide in a
+single run. The light pass emits every platform; the dark pass emits the web `globals.dark.css` **and** the
+native semantic theme files that need real dark values: `Theme.dark.kt` (Compose),
+`KinetixColorsSwiftUI.dark.swift` (SwiftUI) and `kinetix_color_scheme.dark.dart` (Flutter).
+
+On the web, dark applies under a `.dark` ancestor; see [Dark mode](/docs/dark-mode). The semantic
+foreground and background pairs components render are checked against WCAG AA contrast in CI
+(`check:contrast`, on the resolved source values), in both themes; on iOS, `swift test` repeats the check on
+the generated Swift colour sets themselves.
+
+## Platform outputs
 
 | Platform | Files |
 | --- | --- |
-| Web | `web/globals.css`, `web/globals.dark.css`, `web/tokens.ts` |
+| Web | `web/globals.css`, `web/globals.dark.css`, `web/tokens.ts`; `web/extras.css` + `.dark.css` (shadows, text styles) |
 | iOS | `ios/KinetixColors.swift`, `ios/Theme.swift` (UIColor), `ios/KinetixType.swift`; `ios/KinetixColorsSwiftUI.swift` + `.dark.swift` (SwiftUI `Color`, for `packages/ui-swiftui`); `ios/KinetixMotion.swift` |
 | Android | `android/Color.kt`, `android/Theme.kt` + `Theme.dark.kt`, `android/KinetixType.kt`, `res/values/{colors,dimens}.xml`; `android/KinetixMotion.kt` |
-| Flutter | `flutter/app_colors.dart`, `flutter/app_theme.dart`, `flutter/app_text.dart`; `flutter/kinetix_color_scheme.dart` + `.dark.dart` (for `packages/ui-flutter`); `flutter/kinetix_motion.dart` |
+| Flutter | `flutter/app_colors.dart`, `flutter/app_theme.dart`, `flutter/app_text.dart`; `flutter/kinetix_color_scheme.dart` + `.dark.dart` (for `packages/ui-flutter`); `flutter/kinetix_shadow.dart` + `.dark.dart`; `flutter/kinetix_motion.dart` |
 
-The `KinetixColorsSwiftUI` / `KinetixColorScheme` pairs are **additive** — the
-older `Theme.swift` / `app_theme.dart` outputs (light-only, colliding class
-names) are untouched. See [SwiftUI](/docs/swiftui) and [Flutter](/docs/flutter)
-for why.
+The `KinetixColorsSwiftUI` / `KinetixColorScheme` pairs are **additive**: the older `Theme.swift` /
+`app_theme.dart` outputs (light-only, colliding class names) are untouched. See [SwiftUI](/docs/swiftui)
+and [Flutter](/docs/flutter) for why.
 
-## Motion + scale
+## Using the tokens
+
+What you can adopt today depends on the platform. Generated output exists for all four; a package you can
+install exists for the web only.
+
+| Platform | Generated output | How you get it today | Package registry | Adapter for stock UI |
+| --- | --- | --- | --- | --- |
+| Web | Yes | `@kinetixui/tokens` from npm | npm | Tailwind preset in `@kinetixui/ui` |
+| iOS (SwiftUI) | Yes | Copy the Swift files from `dist/ios` into your project | None: not on Swift Package Manager or CocoaPods | None for stock SwiftUI views |
+| Android (Compose) | Yes | Copy the Kotlin files from `dist/android` into your project | None: not on Maven Central | None for stock Material components |
+| Flutter | Yes | Copy the Dart files from `dist/flutter`, or depend on `kinetix_ui` from a repository checkout | None: not on pub.dev | `KinetixMaterialTheme`, `KinetixCupertinoTheme` (in `kinetix_ui`) |
+
+### Web
+
+```bash
+npm install @kinetixui/tokens
+```
+
+Import the stylesheets once, globally. Light is the base; dark applies under a `.dark` ancestor.
+
+```css
+@import "@kinetixui/tokens/css";
+@import "@kinetixui/tokens/css/dark";
+```
+
+Then refer to semantic roles, never to a raw value:
+
+```css
+.panel {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-control);
+}
+```
+
+The typed object is `import { tokens } from "@kinetixui/tokens"`. Tailwind projects should use the preset
+from `@kinetixui/ui/tailwind.config`, which maps these variables onto Tailwind's scales. The
+[Installation](/docs/installation) page covers the other web route, the CLI, which writes the same
+variables into your own stylesheet.
+
+This page is built from the repository's current output. The npm package carries the output of its last
+release and can trail it in between; the [changelog](/docs/changelog) lists what each release contains.
+
+### iOS, Android and Flutter
+
+The generated Swift, Kotlin and Dart files are real, and they are the same values as the web output. What
+does not exist yet is a native package: none of them is on Swift Package Manager, Maven Central or pub.dev.
+To use them today you vendor the files: copy them from `dist/ios`, `dist/android` or `dist/flutter`, which
+are in the repository and inside the `@kinetixui/tokens` npm tarball. You then update them by copying again.
+
+Two things change that on Flutter. `KinetixMaterialTheme` and `KinetixCupertinoTheme` turn the tokens into a
+Material `ThemeData` or a `CupertinoThemeData`, so stock widgets you already use take on the colours, radius
+and type scale without any Kinetix widget in the tree; see
+[Using KinetixUI without Kinetix widgets](/docs/flutter#using-kinetixui-without-kinetix-widgets). They live
+in the `kinetix_ui` package, which is consumed from a repository checkout, not from pub.dev.
+
+SwiftUI and Compose have no equivalent adapter for stock controls yet. Their `KinetixTheme` supplies the
+token colours to KinetixUI's own native components; see [SwiftUI](/docs/swiftui) and
+[Jetpack Compose](/docs/compose).
+
+## See the tokens in a component
+
+The [Button](/docs/components/button) is the most direct place to watch this token at work. Its primary
+variant fills with `action`, which aliases `primary`; its label is `action-foreground`; its keyboard focus is
+the `shadow.focus` ring, drawn in the same blue; its corners are the `md` radius and its padding comes from
+the spacing scale. On its page:
+
+- **Toggle the site theme** and the fill moves from `azure.700` to `azure.400` with no change to the
+  component, because only the token's value changed.
+- **Tab to a button** to see the focus ring, and hover or press it to see the fill step down to `action` at
+  90% and 85%, values bounded by the contrast check rather than chosen by eye.
+- **Open the Code tab and switch platform** to read the SwiftUI, Compose and Flutter implementations. Each is
+  written natively, and each reads the same `action` role from its platform's generated tokens.
+
+## Next steps
+
+- [**Explore Button, built on these tokens**](/docs/components/button): the token above, in a component, on
+  every platform.
+- [View the generated platform outputs](https://github.com/zedalleys/kinetixui/tree/main/packages/tokens/dist):
+  every file in `packages/tokens/dist`, as committed.
+- [View the token source on GitHub](https://github.com/zedalleys/kinetixui/tree/main/tokens): the DTCG
+  files everything above is generated from.
+
+## Reference
+
+### Semantic contract
+
+The values every component actually resolves to, in both themes:
+
+<TokenTable />
+
+### Motion and scale
 
 `duration`, `easing`, `opacity`, and `z-index` are theme-independent, like
 typography — defined once, the same in light and dark. Each platform's output
@@ -73,7 +226,7 @@ larger spacing steps (`spacing.10`–`spacing.32`, 40–128) and `radius.xxl` (2
 and generated for every platform, but no component reads them yet and there are no Tailwind utilities for
 the new curves — adopting them is incremental, component by component.
 
-## Interaction tokens
+### Interaction tokens
 
 Behavioral values, not visual ones — how big a target has to be, how far a
 focus ring sits, how a press or a drag reads. Theme-independent, like motion:
@@ -90,13 +243,7 @@ focus ring sits, how a press or a drag reads. Theme-independent, like motion:
 Web-only in this slice — none of the native platform ports (`ui-compose`,
 `ui-swiftui`, `ui-flutter`) consume `interaction.*` yet.
 
-## Semantic contract
-
-The values every component actually resolves to, in both themes:
-
-<TokenTable />
-
-## Deviations from raw Figma
+### Deviations from raw Figma
 
 The build fixes the `Primay` typo, rounds `letterSpacing` float artifacts, and
 synthesizes what Figma lacks (`--card`, `--popover`, `--ring`, the neutral ramp,
