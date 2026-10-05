@@ -56,7 +56,7 @@ class IconContractTest {
                 KinetixBanner("Saved", onDismiss = {}, dismissIcon = { Box(Modifier.testTag("company-close")) })
             }
         }
-        rule.onNodeWithTag("company-close").assertWidthIsEqualTo(14.dp).assertHeightIsEqualTo(14.dp)
+        rule.onNodeWithTag("company-close", useUnmergedTree = true).assertWidthIsEqualTo(14.dp).assertHeightIsEqualTo(14.dp)
         rule.onNodeWithContentDescription("Dismiss").assert(hasRole(Role.Button))
     }
 
@@ -68,7 +68,7 @@ class IconContractTest {
                 KinetixInform("Saved", onDismiss = { dismissed++ }, dismissIcon = { Box(Modifier.testTag("company-close")) })
             }
         }
-        rule.onNodeWithTag("company-close").assertWidthIsEqualTo(14.dp)
+        rule.onNodeWithTag("company-close", useUnmergedTree = true).assertWidthIsEqualTo(14.dp)
         rule.onNodeWithContentDescription("Dismiss").assert(hasRole(Role.Button)).performClick()
         assertEquals(1, dismissed)
     }
