@@ -729,5 +729,26 @@ describe("focus ring visibility", () => {
     const ring = rows.find((r) => r.pair[0] === "background" && r.pair[1] === "ring")!;
     expect(ring.min).toBe(3);
     expect(ring.pass).toBe(false);
+    // only the ring rows fail: the check is attributed to the token that is wrong
+    expect(rows.filter((r) => r.pair[1] === "ring").every((r) => !r.pass)).toBe(true);
+  });
+
+  it("holds `focus` and `ring` to the bar independently, and passes valid combinations", () => {
+    const rowsFor = (overrides: Record<string, string>) => contrastOf(theme({ manualOverrides: overrides }).light);
+    const passing = (rows: ReturnType<typeof contrastOf>, token: string) =>
+      rows.filter((r) => r.pair[1] === token).every((r) => r.pass);
+
+    // both pinned apart, both readable: every ring row passes
+    const valid = rowsFor({ focus: "#0a6e5a", ring: "#0b3d91" });
+    expect(passing(valid, "focus")).toBe(true);
+    expect(passing(valid, "ring")).toBe(true);
+
+    // a bad `focus` does not fail `ring`, and a bad `ring` does not fail `focus`
+    const badFocus = rowsFor({ focus: "#fafafa", ring: "#0b3d91" });
+    expect(passing(badFocus, "focus")).toBe(false);
+    expect(passing(badFocus, "ring")).toBe(true);
+    const badRing = rowsFor({ focus: "#0a6e5a", ring: "#fafafa" });
+    expect(passing(badRing, "focus")).toBe(true);
+    expect(passing(badRing, "ring")).toBe(false);
   });
 });
