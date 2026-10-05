@@ -1,8 +1,11 @@
+import { readFileSync } from "node:fs";
 import posthog, { type CaptureResult } from "posthog-js";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { analytics, attachAnalytics, resetAnalyticsForTests, startAnalytics } from "./analytics";
 import { getAttributionContext, initAttribution, resetAttributionForTests } from "./analytics-attribution";
+import { isAdoptionIntent, isQualifiedEvaluation } from "./analytics-measurement";
 import { createPostHogClient, posthogOptions, sanitizeCapture } from "./analytics-posthog";
+import { trackFenceCopy, trackRouteView } from "./analytics-surfaces";
 
 /**
  * The REAL SDK, configured exactly as production, on a URL full of things that must never leave the browser, with
@@ -281,5 +284,78 @@ describe("attribution at the analytics/adapter boundary (real SDK)", () => {
       hostname: "kinetixui.com",
     });
     expect(getAttributionContext()).toMatchObject({ kx_source: "devto", kx_medium: "community", kx_campaign: "kx_design_tokens_article" });
+  });
+});
+
+/**
+ * The next campaign end to end: kx_p2_b_token_boundary (ART-002 and its posts) lands on /docs/tokens. What has to
+ * hold for a Week 2 reading to mean anything is that the campaign is still on the evaluation and adoption-intent
+ * events that happen AFTER the landing, in the same PostHog session. The tagged URLs are read from the content
+ * register, so this follows the links that will actually be posted.
+ */
+describe("campaign landing → navigation → evaluation → adoption intent (kx_p2_b_token_boundary)", () => {
+  const CAMPAIGN = "kx_p2_b_token_boundary";
+  const register = JSON.parse(readFileSync("../../marketing/content/register.json", "utf8")) as { assets: { id: string; campaign?: string; url?: string }[] };
+  const urls = register.assets.filter((a) => a.campaign === CAMPAIGN && a.url).map((a) => [a.id, a.url!] as const);
+
+  /** One client-side navigation, as AnalyticsProvider performs it: $pageview, then the route's semantic event. */
+  const navigate = (path: string) => {
+    window.history.pushState({}, "", path);
+    analytics.pageview(path);
+    trackRouteView(path);
+  };
+
+  it("finds the campaign's tagged links in the register", () => {
+    expect(urls.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it.each(urls)("%s: the campaign survives to the evaluation and the intent signal, in one session", async (_id, url) => {
+    const u = new URL(url);
+    await visit(u.pathname + u.search, "https://t.co/abc");
+    analytics.pageview(u.pathname);
+    trackRouteView(u.pathname);
+    navigate("/docs/components/button");
+    navigate("/docs/installation");
+    trackFenceCopy("npx @kinetixui/cli@latest add button", "bash", "/docs/installation");
+
+    const names = seen.map((e) => e.event);
+    expect(names).toEqual(["$pageview", "docs_viewed", "$pageview", "component_viewed", "$pageview", "installation_viewed", "cli_command_copied"]);
+    // the landing alone is neither: analytics.md §3/§4 do not list docs_viewed
+    expect(isQualifiedEvaluation({ event: "docs_viewed" }) || isAdoptionIntent({ event: "docs_viewed" })).toBe(false);
+    expect(seen.filter((e) => isQualifiedEvaluation({ event: e.event, target: e.properties.target as string | undefined })).length).toBe(2);
+    expect(seen.filter((e) => isAdoptionIntent({ event: e.event, target: e.properties.target as string | undefined })).length).toBe(2);
+
+    const source = new URLSearchParams(u.search).get("utm_source"); // linkedin, x and devto are already canonical
+    for (const e of seen) {
+      expect(e.properties, e.event).toMatchObject({ kx_campaign: CAMPAIGN, kx_source: source, kx_landing_page: "/docs/tokens", kx_content: new URLSearchParams(u.search).get("utm_content") });
+    }
+    expect(new Set(seen.map((e) => e.properties.$session_id)).size).toBe(1);
+    expect(wire()).not.toMatch(/utm_|t\.co\/abc|\?/);
+  });
+
+  it("a full reload in the same tab keeps the campaign (sessionStorage)", async () => {
+    await visit(`/docs/tokens?utm_source=devto&utm_medium=referral&utm_campaign=${CAMPAIGN}&utm_content=art_primary`, "https://dev.to/");
+    resetAnalyticsForTests();
+    resetAttributionForTests();
+    seen.length = 0;
+    await visit("/docs/components/button", "https://kinetixui.com/docs/tokens");
+    analytics.track("component_viewed", { component: "button", source: "component_page" });
+    expect(byEvent("component_viewed")[0]!.properties).toMatchObject({ kx_campaign: CAMPAIGN, kx_source: "devto", kx_landing_page: "/docs/tokens" });
+  });
+
+  it("a NEW tab starts its own session entry: its events carry no campaign (documented caveat, not a leak)", async () => {
+    // A new tab has empty sessionStorage. Its referrer is our own page, so it is classified direct — while
+    // PostHog's $session_id, kept in localStorage, can still be the campaign tab's session. Session-level
+    // queries must therefore attribute a session by ANY event carrying kx_campaign (analytics-measurement.ts).
+    await visit(`/docs/tokens?utm_source=linkedin&utm_medium=social&utm_campaign=${CAMPAIGN}&utm_content=li_primary`);
+    resetAnalyticsForTests();
+    resetAttributionForTests();
+    window.sessionStorage.clear();
+    seen.length = 0;
+    await visit("/docs/components/button", "https://kinetixui.com/docs/tokens");
+    analytics.track("component_viewed", { component: "button", source: "component_page" });
+    const props = byEvent("component_viewed")[0]!.properties;
+    expect(props).toMatchObject({ kx_source: "direct", kx_first_campaign: CAMPAIGN });
+    expect(props.kx_campaign).toBeUndefined();
   });
 });

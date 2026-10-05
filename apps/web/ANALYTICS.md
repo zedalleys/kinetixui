@@ -53,16 +53,22 @@ One user action produces one semantic event. `$pageview` (navigation, from `Anal
 unchanged. Rules live in [`src/lib/analytics-surfaces.ts`](src/lib/analytics-surfaces.ts), which is where to look
 first — and to change — when a surface changes.
 
-**High-intent activation events** (Developer Activation Rate = visitors with at least one of these ÷ visitors;
-there is deliberately no `activated` event, derive it in PostHog):
+**What the marketing metrics are built from** is decided in [`marketing/analytics.md`](../../marketing/analytics.md)
+§3 (Qualified Evaluation) and §4 (Adoption Intent), not here. Their executable form is
+[`src/lib/analytics-measurement.ts`](src/lib/analytics-measurement.ts), and `analytics-measurement.test.tsx` fails when
+the strategy, that module and the emitters disagree. None of these events measures activation: analytics.md §5 is
+explicit that installs are not measurable on-site, and there is deliberately no `activated` event.
+
+**Copy events:**
 
 | Event | Fires when | Owner |
 | --- | --- | --- |
 | `cli_command_copied` | a `npx @kinetixui/cli …` command is copied | `HeroCommand` (homepage) and `CodePre` (any docs fence) |
 | `install_command_copied` | an `npm i @kinetixui/…` (or pnpm / yarn / bun add) command is copied | `CodePre` |
 | `component_code_copied` | a component's code is copied, with its component and platform | `ComponentPreview` code tabs and `CodePre` on a component page |
+| `block_code_copied` | a block's source is copied on `/blocks`, with its block and platform | `Showcase` (`analyticsBlock` set by the blocks gallery only) |
 
-**Supporting events** (never count as activation):
+**View, navigation and selection events:**
 
 | Event | Fires when | Owner |
 | --- | --- | --- |
@@ -71,17 +77,17 @@ there is deliberately no `activated` event, derive it in PostHog):
 | `component_viewed` | a component's docs page is viewed | `AnalyticsProvider` |
 | `changelog_viewed` | `/docs/changelog` is viewed | `AnalyticsProvider` |
 | `cta_clicked` | a link marked with `ctaAttrs(source, target)` is clicked | `AnalyticsProvider` listener; markup on the homepage |
-| `platform_selected` | the user switches the platform tab in a component's code view | `ComponentPreview` |
+| `platform_selected` | the user switches a platform tab: in a component's code view, a block's code view on `/blocks` (with `block`), or the homepage cross-platform example | `ComponentPreview`, `Showcase`, `CrossPlatformFlagship` |
 | `github_clicked` | a link into our GitHub repository is clicked | `AnalyticsProvider` listener |
 | `npm_clicked` | a link to one of our npm packages is clicked | `AnalyticsProvider` listener |
 | `external_link_clicked` | a link to a listed external host with no more specific event (today: the Figma file) | `AnalyticsProvider` listener |
 | `iot_example_copied` | an IoT example's source is copied from `/iot` | `IotExampleShowcase` |
 
 `iot_example_copied` is deliberately **not** `component_code_copied`, and the distinction is the reason the
-activation metric still means something. `component_code_copied` says a component from the 98-component
-catalogue was activated; an IoT example is a whole composition copied off a marketing page, from a separate
-Experimental module that is not in that catalogue. Folding the two together would inflate Developer Activation
-Rate with a different kind of action and make its trend unreadable in both directions — a rise could be either
+component signal still means something. `component_code_copied` says code for a component from the 98-component
+catalogue was copied; an IoT example is a whole composition copied off a marketing page, from a separate
+Experimental module that is not in that catalogue. Folding the two together would inflate every measure built
+on `component_code_copied` with a different kind of action and make its trend unreadable in both directions — a rise could be either
 thing, and so could a fall. Adding an `example` property to the existing event was considered and rejected for
 the same reason: a metric that needs a filter to mean what it used to mean has already changed.
 
@@ -109,10 +115,11 @@ GitHub click is `github_clicked` and never also `external_link_clicked` or `cta_
 
 ### Not instrumented on purpose
 
-Copy buttons on `/blocks`, `/charts`, `/docs/colors`, `/create` and "copy page as markdown" (no component +
-platform to attribute, or not code); ordinary navigation, the docs search palette, gallery search and filters
-(their text must never be sent); attribution links (Radix, Lucide, Recharts); `platform_selected` on the
-homepage (there is no platform selector there). `npm_clicked` has no surface yet — the site links to no npm page —
+Copy buttons on `/charts`, `/docs/colors` and "copy page as markdown" (no component + platform to attribute, or not
+code), and the homepage cross-platform example's copy button (a composed example, not a catalogue component —
+`cross-platform-flagship.test.tsx` asserts the silence); `/create` reports only its own `preset_*` / `create_export_*`
+events; ordinary navigation, the docs search palette, gallery search and filters (their text must never be sent);
+attribution links (Radix, Lucide, Recharts). `npm_clicked` has no surface yet — the site links to no npm page —
 but any link to one of our packages on npmjs.com is reported the moment it is added.
 
 ## Acquisition attribution
@@ -209,18 +216,20 @@ omitted (the source and medium still count).
 - Clearing site data, private windows and another browser or device all start a new "first touch".
 - Only KinetixUI-tagged campaigns are named. Untagged shares appear as their referrer or as `other`/`direct`.
 
-### Developer Activation Rate
+- **Session entry is per tab; PostHog's `$session_id` is not.** `kx_*` lives in the tab's sessionStorage, while the
+  SDK's session id (localStorage) spans every tab of the browser. A component opened in a new tab from a campaign
+  landing carries `kx_source=direct` and no `kx_campaign` — still in the campaign's PostHog session, and still with
+  `kx_first_campaign` if that was the first touch. So attribute a SESSION by any of its events carrying a campaign,
+  never by filtering individual evaluation events on `kx_campaign`; `summarizeSessions` in
+  `src/lib/analytics-measurement.ts` is the rule in code, and `analytics-posthog.attribution.test.ts` pins the tab
+  behaviour.
 
-Derived in PostHog — never in application code, and there is deliberately no `activated` event:
+### Marketing metrics
 
-```
-Developer Activation Rate
-  = unique anonymous visitors with at least one of
-      cli_command_copied, install_command_copied, component_code_copied
-  ÷ unique anonymous visitors
-```
-
-Break it down by `kx_source`, `kx_medium`, `kx_campaign`, or `kx_first_source` to compare channels.
+Defined in [`marketing/analytics.md`](../../marketing/analytics.md) — Qualified Evaluation Rate, Adoption Intent
+Rate and Evaluation → Intent Progression, all derived in PostHog and counted in **sessions** (`$session_id`), never in
+events. The "Developer Activation Rate" this section used to define (copy events ÷ visitors) is retired: analytics.md
+§5 rules out reporting any on-site signal as activation.
 
 ## Page leave, session duration and bounce rate
 
@@ -236,6 +245,6 @@ for us because our page views are manual, so it has to be set explicitly.)
 - **Attribution reaches it because it is attached in `before_send`**, for every event, not at the call sites. The SDK
   creates `$pageleave` itself and it never passes through our `capture` wrapper, so enrichment there would have missed it.
 - **Volume:** roughly one extra event per page view. Keep that in mind against your PostHog event quota.
-- **Activation is unaffected:** `$pageleave` is not one of the three activation events, and it is not a product event.
+- **The marketing metrics are unaffected:** `$pageleave` is in neither definition, and it is not a product event.
   Exclude it from any breakdown that counts "events per visitor".
 - Do Not Track still applies: with it on, nothing is captured, `$pageleave` included.
