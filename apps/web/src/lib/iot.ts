@@ -68,7 +68,7 @@ export const IOT_RUNTIME_DEPENDENCY_COUNT: number = Object.keys(
  * disagree. So the page states a number, and the barrel is what makes it true — the same arrangement the
  * package README already has with `catalogue.test.ts`.
  */
-export const IOT_CATALOGUE = { primitives: 8, controls: 4, patterns: 27 } as const;
+export const IOT_CATALOGUE = { primitives: 8, controls: 7, patterns: 27 } as const;
 
 /**
  * The three reference environments, in the order the switcher shows them. Each `slug` is an entry in

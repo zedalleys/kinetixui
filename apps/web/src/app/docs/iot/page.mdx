@@ -43,7 +43,8 @@ npm install @kinetixui/iot
 <Callout>
   **Part of this page is ahead of the published package.** `npm install` today gives you the state model
   and the fourteen primitives. The **control layer** (`DevicePowerControl`, `DeviceLevelControl`,
-  `DeviceSetpointControl`, `DeviceModeControl`, `resolveControlState`), the **identity and card
+  `DeviceSetpointControl`, `DeviceModeControl`, `DeviceColorControl`, `DeviceLockControl`,
+  `DeviceMediaControl`, `resolveControlState`), the **identity and card
   compositions** (`DeviceIcon`, `DeviceIdentity`, `DeviceControlCard`, `DeviceGroupCard`, `RoutineCard`)
   and the control-state, device-category and automation-timing helpers in `@kinetixui/iot/functions` are
   in this repository's `main` but **not in the version npm serves**, so the sections documenting them are
@@ -99,7 +100,7 @@ The `functions` subpath needs none of that.
 
 - a state model — device, health, command lifecycle, telemetry, alert, activity, automation rule, pairing flow,
   space hierarchy and energy types — with pure functions for each
-- 8 React primitives, 4 device controls and 27 patterns
+- 8 React primitives, 7 device controls and 27 patterns
 - a device taxonomy and a metric registry, so a category and a metric mean the same thing everywhere
 - control-state resolution: `resolveControlState` turns a device status and a command lifecycle into one answer
   about whether a control is operable, and whether what you are looking at is confirmed
@@ -786,7 +787,7 @@ product's decisions live and importing someone else's is rarely the shortcut it 
   [Install](#install).
 </Callout>
 
-A control is the part that makes this a connected-device system rather than a dashboard. All four
+A control is the part that makes this a connected-device system rather than a dashboard. All seven
 share one rule, and it is the rule most device UIs get wrong:
 
 > **What the user asked for is drawn differently from what the device has confirmed.**
@@ -801,6 +802,12 @@ and the user finds out minutes later. So a requested state and a confirmed state
 | `DeviceLevelControl` | Solid fill to the value | Hatched fill to the requested value, solid fill left at the confirmed one |
 | `DeviceSetpointControl` | Target shown plainly | Target tinted, with the current reading still visible beneath it |
 | `DeviceModeControl` | Mode filled | Mode outlined and dashed, never filled |
+| `DeviceColorControl` | Preview and checked swatch are the reported colour | Requested swatch dashed and named "requested, not yet confirmed" |
+| `DeviceLockControl` | "Locked" and a closed padlock — only when the device reports locked | The reported state, with "Locking, not yet confirmed" beside it. `optimistic` is not accepted |
+| `DeviceMediaControl` | Playback, position and volume as the device reports them | "Starting playback, not yet confirmed"; a requested seek or volume drawn apart from the reported one |
+
+`DeviceMediaControl` carries no media: every action — play, pause, seek, volume, mute, previous, next —
+is a callback to your code, and there is no `<audio>`, `<video>`, stream or player in the package.
 
 The same distinction reaches assistive technology rather than being a visual flourish:
 `aria-checked` on the power switch reports the **confirmed** state while a request is open, and the
@@ -832,8 +839,9 @@ Its precedence is fixed so that five controls on one screen cannot disagree:
 4. `stale` stays interactive. Sending a command is exactly how you find out whether a quiet device is
    still there, so stale must not lock the control the way offline does.
 
-An unreported status resolves to `offline`, inherited from `normalizeDeviceStatus` — a control for a
-device nothing is known about should not look live.
+An unreported or unreadable status resolves to `unknown` — "Device status unknown", never "Device
+offline" — and an unknown control still does not accept input. `unreachable` and `connecting` keep
+their own words, and an optional `connectivity` input lets the link's own state decide.
 
 ### Composition over configuration
 

@@ -1,4 +1,4 @@
-# `@kinetixui/iot` maturity audit — M1 contract foundation, M2A controls
+# `@kinetixui/iot` maturity audit — M1 contract foundation, M2A controls, M2B colour/lock/media
 
 Audited at `main` `3eaf2c3` (2026-10-05). This is the record of what existed before the M1 contract
 slice, what was measured, and what the slice was allowed to change. The contract itself is documented
@@ -237,9 +237,92 @@ accessibility-tree check; **no manual screen-reader testing was done.**
 
 ## 12. Not done in M2A
 
-- G12 above (`resolveControlState` without a device status).
+- G12 above (`resolveControlState` without a device status). Fixed in M2B (§14).
 - No connectivity UI component exists to give `connecting` or `unknown` a glyph; the words come from
   `describeConnectivity`, and `DeviceStatusBadge` renders device status, not connectivity.
 - Pending stays non-interactive in `resolveControlState`, so superseding a request from the control
   itself needs the product to pass its own `control` (the level demo does).
 - Angular, SwiftUI, Compose and Flutter have no IoT controls.
+
+---
+
+# M2B — G12, colour, lock and media
+
+Started from `main` **`f512e62`** (2026-10-05: #308 merged as `20f725d`, #309 as `f512e62`). `@kinetixui/iot`
+**0.2.0** in source (the 0.3.0 release PR #251 is untouched). Scope: fix G12 first, then three controls on
+the M1/M2A contract. No transport, no camera or live video, no Angular or native code, no M3.
+
+## 13. Repository truth before M2B edits
+
+| Fact | Evidence |
+| --- | --- |
+| M1/M2A present | `KinetixCommandStrategy`, `resolveControlPresentation`, `supersedeCommandLifecycle`, connectivity `connecting` / `unknown` all exported from `@kinetixui/iot/functions` |
+| Controls | `DevicePowerControl`, `DeviceLevelControl`, `DeviceSetpointControl`, `DeviceModeControl` (README: "four device controls") |
+| Capabilities | `color` kind (M1), `media` kind = a preview/stream surface; the M1 speaker is `mode`/`media-playback` + `level`/`volume`; the M1 door lock is `mode`/`lock` |
+| `resolveControlState` consumers | Only inside `packages/iot` (stories, tests, `DeviceControlCard` and the controls); none in `apps/web` |
+| Tests | 32 files, 903 tests, all passing |
+| Browser gate | `pnpm check:iot-strategies`: 9 demos × 7 conditions, 63 runs, 586 checks |
+
+## 14. G12 reproduced, then fixed
+
+A throwaway probe (not committed) against unmodified `f512e62`:
+
+```text
+resolveControlState()                         → offline, interactive false, lastKnown true, "Device offline. Showing the last known setting"
+resolveControlState({ deviceStatus: null })    → offline, same sentence
+resolveControlState({ deviceStatus: "" })      → offline, same sentence
+resolveControlState({ deviceStatus: "weird" }) → offline, same sentence
+resolveControlState({ deviceStatus: "unreachable" }) → offline (the word is lost)
+resolveControlState({ commandStatus: "sent" }) → offline, phase "requested"
+```
+
+Root cause: `resolveControlState` read `normalizeDeviceStatus(input.deviceStatus)`, whose documented
+fallback for a status *badge* is `offline`, and a test pinned it as "fails safe". The fail-safe (no input)
+was right; the claim was not.
+
+Fix: availability is decided from evidence. A missing or unreadable status is `unknown` ("Device status
+unknown", not interactive, not last-known); the spelling `unreachable` keeps its word; an optional
+`connectivity` input lets the link's own claim (`offline`, `unreachable`, `connecting`, `stale`) win, and
+`online` counts as reachability when no status is given. `KinetixControlAvailability` gains `unknown`,
+`unreachable` and `connecting`; `describeControlState` gives each its own sentence and only `offline`'s
+says "offline". `DeviceControlCard`'s chip says "Status unknown", "Unreachable" or "Connecting", and
+"last known value" only where something was known. Contract §6.2 has the before/after table.
+
+## 15. Decisions
+
+| Question | Decision | Why |
+| --- | --- | --- |
+| Default strategy for colour | `confirmed`, `hybrid` documented as the recommendation | Every control defaults to `confirmed`; a per-control default would make "the default" mean different things |
+| Lock and `optimistic` | Excluded by type (`KinetixLockStrategy`), coerced to `confirmed` at runtime | Optimistic's purpose is to draw the request as the state; for a lock that is "Locked" before the bolt moved |
+| Lock and `hybrid` | Allowed | The lock draws the request as a *direction* ("Locking", a dashed in-progress mark), never as the secure state |
+| Lock widget | Named buttons ("Lock Front door"), not a switch | An action whose result may not arrive; a jammed or unknown lock offers both |
+| Colour choices | `DeviceModeControl` in `tiles`, driven with option ids | Reuses the radiogroup, roving tab stop and arrow keys; the colour control keeps the one lifecycle, announcer and outcome |
+| Seek and volume | `DeviceLevelControl`; a module-private format context writes time ("1:05") and speaks it ("1 minute 5 seconds") | Level semantics without a copy, and no new public prop on the level |
+| Media capability | `mode`/`media-playback` + `level`/`volume`; `media` stays the preview surface | No taxonomy change; a playback endpoint and a picture are different shapes |
+| Media direction | Transport and scrubber stay LTR in RTL | Playback controls and progress are not mirrored on any major platform; the text is |
+| Colour model | `{ mode: "rgb" }` or `{ mode: "temperature" }` | The two shapes devices across domains share; HSV, CIE xy and vendor scales convert at the product's boundary |
+
+## 16. Evidence
+
+**Tests.** `functions/control-availability.test.ts` (G12 1–3), `functions/m2b-controls.test.ts` (colour
+4–10, lock 11–17, media 18–21 at the contract level), `react/m2b-controls.test.tsx` (G12 in the
+components; 4–24 through the rendered controls; axe). The M1-era test that pinned G12 now asserts
+`unknown`. iot suite: 35 files, 961 tests.
+
+**Browser.** `pnpm check:iot-strategies` gains eleven demos — G12, colour × 3 strategies, lock success,
+lock failure, lock unreachable + stale reply + reconnect, media play success, play failure, seek + volume,
+and unknown/unsupported media — in the same seven conditions: 140 runs, 1598 checks, green. It reads back
+roles, names, `aria-checked`/`aria-pressed`/`aria-busy`/`aria-valuetext`, the status sentences and visible
+outcomes, the forced-colours fill of the colour preview, the media transport order under RTL, and runs
+axe-core. An automated accessibility-tree check; **no manual screen-reader testing was done.**
+
+**Negative controls.** NEGATIVE_CONTROLS_TABLE
+
+## 17. Not done in M2B
+
+- Manual screen readers (VoiceOver, NVDA, TalkBack) and real hardware.
+- `connectivity` is accepted by `resolveControlState`, but no shipped component derives it for you yet.
+- A colour picker beyond the product's own options (wheels, sliders, HSV) — deliberately not built.
+- Lock access (who may unlock, PIN, audit trail) is application logic on top of the activity log.
+- Previous/next are callbacks without a lifecycle; their result is the next title the product reports.
+- Angular, SwiftUI, Compose and Flutter have no IoT controls; nothing in this slice changes that.
