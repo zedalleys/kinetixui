@@ -8,8 +8,13 @@
     "KxAccordionTrigger",
     "KxAlert",
     "KxAlertDescription",
+    "KxAlertDialog",
+    "KxAlertDialogAction",
+    "KxAlertDialogCancel",
+    "KxAlertDialogContent",
     "KxAlertTitle",
     "KxAlertVariant",
+    "KxAlign",
     "KxAppBar",
     "KxAppBarActions",
     "KxAppBarBrand",
@@ -52,6 +57,16 @@
     "KxDescriptionList",
     "KxDescriptionListItem",
     "KxDescriptionListLayout",
+    "KxDialog",
+    "KxDialogClose",
+    "KxDialogContent",
+    "KxDialogDescription",
+    "KxDialogFooter",
+    "KxDialogHeader",
+    "KxDialogTitle",
+    "KxDialogTrigger",
+    "KxDrawer",
+    "KxDrawerContent",
     "KxEmpty",
     "KxEmptyContent",
     "KxEmptyDescription",
@@ -72,6 +87,9 @@
     "KxFooterColumn",
     "KxFooterColumns",
     "KxFooterLink",
+    "KxHoverCard",
+    "KxHoverCardContent",
+    "KxHoverCardTrigger",
     "KxImage",
     "KxImageRatio",
     "KxInform",
@@ -91,6 +109,8 @@
     "KxMarquee",
     "KxMarqueeContent",
     "KxMetric",
+    "KxModal",
+    "KxModalType",
     "KxNativeSelect",
     "KxNavigationBar",
     "KxNumberInput",
@@ -104,6 +124,11 @@
     "KxPaginationNext",
     "KxPaginationPrevious",
     "KxPasswordInput",
+    "KxPopover",
+    "KxPopoverAnchor",
+    "KxPopoverClose",
+    "KxPopoverContent",
+    "KxPopoverTrigger",
     "KxProgress",
     "KxQuote",
     "KxRadio",
@@ -112,6 +137,10 @@
     "KxSegment",
     "KxSegmentedControl",
     "KxSeparator",
+    "KxSheet",
+    "KxSheetContent",
+    "KxSheetSide",
+    "KxSide",
     "KxSkeleton",
     "KxSlider",
     "KxSpinner",
@@ -139,6 +168,9 @@
     "KxToggleGroupItem",
     "KxToggleSize",
     "KxToggleVariant",
+    "KxTooltip",
+    "KxTooltipContent",
+    "KxTooltipTrigger",
     "KxTrend"
   ],
   "declarations": [
@@ -213,6 +245,56 @@
       "outputs": [],
       "projectsContent": true,
       "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxAlertDialog",
+      "kind": "component",
+      "selector": "kx-alert-dialog",
+      "inputs": [
+        "open",
+        "returnFocus"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxDialogRoot",
+      "exported": true
+    },
+    {
+      "name": "KxAlertDialogAction",
+      "kind": "directive",
+      "selector": "button[kxAlertDialogAction]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxAlertDialogCancel",
+      "kind": "directive",
+      "selector": "button[kxAlertDialogCancel]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxAlertDialogContent",
+      "kind": "component",
+      "selector": "dialog[kxAlertDialogContent]",
+      "inputs": [
+        "id",
+        "label"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxModalSurface",
       "exported": true
     },
     {
@@ -662,6 +744,147 @@
       "exported": false
     },
     {
+      "name": "KxDialog",
+      "kind": "component",
+      "selector": "kx-dialog",
+      "inputs": [
+        "open",
+        "returnFocus"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxDialogRoot",
+      "exported": true
+    },
+    {
+      "name": "KxDialogClose",
+      "kind": "directive",
+      "selector": "button[kxDialogClose]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxDialogContent",
+      "kind": "component",
+      "selector": "dialog[kxDialogContent]",
+      "inputs": [
+        "closeButton",
+        "closeLabel",
+        "id",
+        "label"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxModalSurface",
+      "exported": true
+    },
+    {
+      "name": "KxDialogDescription",
+      "kind": "directive",
+      "selector": "[kxDialogDescription]",
+      "inputs": [
+        "id"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxDialogFooter",
+      "kind": "component",
+      "selector": "kx-dialog-footer",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxDialogHeader",
+      "kind": "component",
+      "selector": "kx-dialog-header",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxDialogRoot",
+      "kind": "directive",
+      "selector": null,
+      "inputs": [
+        "open",
+        "returnFocus"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": false
+    },
+    {
+      "name": "KxDialogTitle",
+      "kind": "directive",
+      "selector": "[kxDialogTitle]",
+      "inputs": [
+        "id"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxDialogTrigger",
+      "kind": "directive",
+      "selector": "button[kxDialogTrigger]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxDrawer",
+      "kind": "component",
+      "selector": "kx-drawer",
+      "inputs": [
+        "open",
+        "returnFocus"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxDialogRoot",
+      "exported": true
+    },
+    {
+      "name": "KxDrawerContent",
+      "kind": "component",
+      "selector": "dialog[kxDrawerContent]",
+      "inputs": [
+        "id",
+        "label"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxModalSurface",
+      "exported": true
+    },
+    {
       "name": "KxEmpty",
       "kind": "component",
       "selector": "kx-empty",
@@ -782,6 +1005,34 @@
       "exported": true
     },
     {
+      "name": "KxFloatingRoot",
+      "kind": "directive",
+      "selector": null,
+      "inputs": [
+        "open"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": false
+    },
+    {
+      "name": "KxFloatingSurface",
+      "kind": "directive",
+      "selector": null,
+      "inputs": [
+        "align",
+        "id",
+        "offset"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": false
+    },
+    {
       "name": "KxFooter",
       "kind": "directive",
       "selector": "footer[kxFooter]",
@@ -832,6 +1083,64 @@
       "projectsContent": false,
       "standalone": true,
       "exported": true
+    },
+    {
+      "name": "KxHoverCard",
+      "kind": "component",
+      "selector": "kx-hover-card",
+      "inputs": [
+        "closeDelay",
+        "open",
+        "openDelay"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxHoverRoot",
+      "exported": true
+    },
+    {
+      "name": "KxHoverCardContent",
+      "kind": "component",
+      "selector": "kx-hover-card-content",
+      "inputs": [
+        "align",
+        "id",
+        "offset",
+        "side"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxFloatingSurface",
+      "exported": true
+    },
+    {
+      "name": "KxHoverCardTrigger",
+      "kind": "directive",
+      "selector": "[kxHoverCardTrigger]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxHoverRoot",
+      "kind": "directive",
+      "selector": null,
+      "inputs": [
+        "open"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": false,
+      "standalone": true,
+      "extends": "KxFloatingRoot",
+      "exported": false
     },
     {
       "name": "KxImage",
@@ -1049,6 +1358,43 @@
       "exported": true
     },
     {
+      "name": "KxModal",
+      "kind": "component",
+      "selector": "kx-modal",
+      "inputs": [
+        "actionLabel",
+        "cancelLabel",
+        "closeLabel",
+        "description",
+        "open",
+        "returnFocus",
+        "title",
+        "type"
+      ],
+      "outputs": [
+        "action",
+        "cancel",
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxDialogRoot",
+      "exported": true
+    },
+    {
+      "name": "KxModalSurface",
+      "kind": "directive",
+      "selector": null,
+      "inputs": [
+        "id",
+        "label"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": false
+    },
+    {
       "name": "KxNativeSelect",
       "kind": "directive",
       "selector": "select[kxNativeSelect]",
@@ -1221,6 +1567,69 @@
       "exported": true
     },
     {
+      "name": "KxPopover",
+      "kind": "component",
+      "selector": "kx-popover",
+      "inputs": [
+        "open"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxFloatingRoot",
+      "exported": true
+    },
+    {
+      "name": "KxPopoverAnchor",
+      "kind": "directive",
+      "selector": "[kxPopoverAnchor]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxPopoverClose",
+      "kind": "directive",
+      "selector": "button[kxPopoverClose]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxPopoverContent",
+      "kind": "component",
+      "selector": "kx-popover-content",
+      "inputs": [
+        "align",
+        "id",
+        "label",
+        "labelledby",
+        "offset",
+        "side"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxFloatingSurface",
+      "exported": true
+    },
+    {
+      "name": "KxPopoverTrigger",
+      "kind": "directive",
+      "selector": "button[kxPopoverTrigger]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
       "name": "KxProgress",
       "kind": "component",
       "selector": "kx-progress",
@@ -1344,6 +1753,39 @@
       "outputs": [],
       "projectsContent": false,
       "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSheet",
+      "kind": "component",
+      "selector": "kx-sheet",
+      "inputs": [
+        "open",
+        "returnFocus"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxDialogRoot",
+      "exported": true
+    },
+    {
+      "name": "KxSheetContent",
+      "kind": "component",
+      "selector": "dialog[kxSheetContent]",
+      "inputs": [
+        "closeButton",
+        "closeLabel",
+        "id",
+        "label",
+        "side"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxModalSurface",
       "exported": true
     },
     {
@@ -1634,6 +2076,49 @@
       "exported": true
     },
     {
+      "name": "KxTooltip",
+      "kind": "component",
+      "selector": "kx-tooltip",
+      "inputs": [
+        "closeDelay",
+        "open",
+        "openDelay"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxHoverRoot",
+      "exported": true
+    },
+    {
+      "name": "KxTooltipContent",
+      "kind": "component",
+      "selector": "kx-tooltip-content",
+      "inputs": [
+        "align",
+        "id",
+        "offset",
+        "side"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxFloatingSurface",
+      "exported": true
+    },
+    {
+      "name": "KxTooltipTrigger",
+      "kind": "directive",
+      "selector": "[kxTooltipTrigger]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
       "name": "KxValueBase",
       "kind": "directive",
       "selector": null,
@@ -1650,6 +2135,10 @@
     {
       "name": "KxAlertVariant",
       "definition": "'default' | 'destructive' | 'success' | 'warning' | 'info'"
+    },
+    {
+      "name": "KxAlign",
+      "definition": "'start' | 'center' | 'end'"
     },
     {
       "name": "KxBadgeVariant",
@@ -1670,6 +2159,10 @@
     {
       "name": "KxDescriptionListLayout",
       "definition": "'row' | 'stacked'"
+    },
+    {
+      "name": "KxDismissReason",
+      "definition": "'escape' | 'outside' | 'focus-outside' | 'parent'"
     },
     {
       "name": "KxEmptyMediaVariant",
@@ -1696,8 +2189,20 @@
       "definition": "'information' | 'warning' | 'success' | 'error' | 'action'"
     },
     {
+      "name": "KxModalType",
+      "definition": "'Info' | 'Confirmation' | 'Warning' | 'Destructive'"
+    },
+    {
       "name": "KxOrientation",
       "definition": "'horizontal' | 'vertical'"
+    },
+    {
+      "name": "KxSheetSide",
+      "definition": "'top' | 'bottom' | 'start' | 'end'"
+    },
+    {
+      "name": "KxSide",
+      "definition": "'top' | 'bottom' | 'start' | 'end'"
     },
     {
       "name": "KxSpinnerSize",

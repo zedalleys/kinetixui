@@ -106,16 +106,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "overlays"
-        }
-      }
+      ]
     },
     "app-bar": {
       "status": "stable",
@@ -504,16 +499,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "overlays"
-        }
-      }
+      ]
     },
     "diff-viewer": {
       "status": "stable",
@@ -562,16 +552,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "overlays"
-        }
-      }
+      ]
     },
     "dropdown-menu": {
       "status": "stable",
@@ -680,16 +665,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "overlays"
-        }
-      }
+      ]
     },
     "image": {
       "status": "stable",
@@ -902,16 +882,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "overlays"
-        }
-      }
+      ]
     },
     "multi-select": {
       "status": "stable",
@@ -1058,16 +1033,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "overlays"
-        }
-      }
+      ]
     },
     "progress": {
       "status": "stable",
@@ -1191,16 +1161,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "overlays"
-        }
-      }
+      ]
     },
     "sidebar": {
       "status": "stable",
@@ -1402,16 +1367,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "overlays"
-        }
-      }
+      ]
     },
     "tour": {
       "status": "stable",

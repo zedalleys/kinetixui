@@ -67,8 +67,8 @@ step a role uses:
 | Depth inside a control (segment thumb, pressed toggle) | `sm` | as before |
 | Raised content, resting (Card) | `md` | was `sm`, whose 5% shadow did not visibly render (measured 1.02:1 under the card) |
 | Raised content, hovered (interactive Card) | `lg` | |
-| Overlay (popover, menus, select, hover card) | `md` today | should sit above raised content — follow-up |
-| Modal (dialog, alert dialog, sheet) | `lg` today | Modal uses a literal equal to `xl` — follow-up |
+| Overlay (popover, menus, select, hover card) | `lg` in Angular (Wave C1); `md` in React today | one step above a resting card, so a popover over a card reads as above it; React follows up |
+| Modal (dialog, alert dialog, modal, sheet, drawer) | `xl` in Angular (Wave C1); `lg` in React today (its Modal uses a literal equal to `xl`) | over a scrim; React follows up |
 
 In dark mode a black shadow on a near-black page has almost nothing to darken, so dark elevation is
 carried by the surface step (`card` over `background` / `surface-grouped`) and the edge, and the gate
@@ -295,6 +295,51 @@ without cutting a focus ring flush with its edge.
 |---|---|
 | Angular | Implemented in `styles.css` and verified on rendered pixels by `check:navigation-visual` (light + dark): every destination family above, the accordion, and the table of contents' bar side in RTL. Expand and collapse in both directions, under normal and reduced motion, are measured on the live application by `check:angular-browser` |
 | React | Not changed by this contract. React's navigation components keep their current styling; parity is not claimed |
+| SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
+
+### Overlays
+
+Angular Wave C1 (`@kinetixui/angular`: dialog, alert dialog, modal, sheet, drawer, popover, tooltip, hover
+card). One contract for every surface that sits above the page, built from roles that already exist. No token
+is added.
+
+| Part | Token(s) | Notes |
+|---|---|---|
+| Modal surface (dialog, alert dialog, modal, sheet, drawer) | `popover` fill, `popover-foreground` text, full `border` edge, `shadow-xl`, radius `surface` | sheets are square; the drawer rounds only its top corners (`radius-xxl`) |
+| Scrim | `static-black` at 40% light, 60% dark | not `foreground`, which is near-white in dark and would lift the page toward the dialog instead of setting it back |
+| Floating surface (popover, hover card) | `popover` fill, full `border` edge, `shadow-lg`, radius `control` | capped to the room the placement leaves (`--kx-available-width/height`), then scrolls inside itself |
+| Tooltip | `action` fill, `action-foreground` text, `text-body-sm`, no shadow | the inverse surface: it labels, it holds no content. A transparent edge becomes its outline under forced colours |
+| Description text inside a surface | `muted-foreground` | at least 4.5:1 against `popover` in both themes (gate) |
+| Close button (dialog, sheet, drawer) | rest `muted-foreground`; hover `foreground` layer at 8%, pressed 12%; focus the shared `--shadow-focus` | inset `spacing-4` from the corner, so the surface's own clip never cuts its ring |
+
+Dark elevation follows the elevation contract above: a black shadow cannot darken a near-black page, so in
+dark the gate asserts the surface step (the surface is lighter than the scrim, and than the page around a
+floating surface) and the edge instead of the shadow.
+
+Stacking has no z-index anywhere. Modal surfaces are a native `<dialog>` opened with `showModal()` and floating
+surfaces use `popover="manual"`, so every surface renders in the browser's top layer, in the order it opened,
+without leaving its place in the DOM: it keeps its injector, its styles and the direction its own element
+resolves to.
+
+Motion:
+
+| Surface | Trigger | Property | Duration | Easing | Reduced motion |
+|---|---|---|---|---|---|
+| Dialog, alert dialog, modal | open / close | `opacity`, `scale` 0.95 → 1; scrim `opacity` | `duration-fast` in, `duration-instant` out | `ease-enter` / `ease-exit` | `transition: none`; same open and closed states |
+| Sheet, drawer | open / close | the logical margin of its edge (inline sides) or `translate` (top, bottom) | `duration-slow` in, `duration-base` out | `ease-enter` / `ease-exit` | `transition: none`; same states |
+| Popover, hover card | open / close | `opacity`, 4px `translate` from the side it actually opened on | `duration-fast` in, `duration-instant` out | `ease-enter` / `ease-exit` | `transition: none`; same states |
+| Tooltip | open / close | `opacity`, 4px `translate` | `duration-instant` | `ease-enter` / `ease-exit` | `transition: none`; same states |
+| Close button | hover, press, focus | `background-color`, `color`, `box-shadow` | `duration-fast` | `ease-standard` | `transition: none` |
+
+Opening starts from `@starting-style`; closing keeps painting through `transition-behavior: allow-discrete` on
+`display` and `overlay` while the surface is already closed to the accessibility tree, the keyboard and the
+pointer. Nothing waits on a 0.01ms duration: reduced motion removes the transition, and close completes
+because it never depended on a transition ending.
+
+| Platform | Status |
+|---|---|
+| Angular | Implemented in `styles.css` and verified on rendered pixels by `check:overlay-visual` (light + dark): fills, edges, shadow or dark surface step, scrim, corners, description and tooltip contrast, the close button's focus ring on all four sides and its hover layer, a clipped popover escaping its container, the end sheet's edge in LTR and RTL, and the tooltip's forced-colours edge. Behaviour, direction, 200% text and motion are measured on the live application by `check:angular-overlays` |
+| React | Not changed by this contract. React's overlays keep their current styling (sheet sides are physical, the tooltip has no forced-colours edge, Modal reverses its footer); parity is not claimed |
 | SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
 
 ## Role tokens (added on top of `primary`)

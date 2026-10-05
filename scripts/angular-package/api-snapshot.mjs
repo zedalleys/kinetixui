@@ -72,9 +72,10 @@ export function buildSnapshot(dts) {
   // Angular records a binding on the class that declares it, so a subclass's own declaration does
   // not repeat what it inherits — `KxSwitch` carries `aria-label` and gets `checked` from
   // `KxToggleBase`. Following `extends` is what makes the recorded contract the one a template
-  // actually sees.
+  // actually sees. An intermediate base can be abstract (`KxHoverRoot` between `KxFloatingRoot` and
+  // `KxTooltip`), and its link has to be followed too, or the chain stops there.
   const inheritance = new Map(
-    [...dts.matchAll(/^declare class (Kx[A-Za-z0-9]+) extends (Kx[A-Za-z0-9]+)/gm)].map(([, child, parent]) => [child, parent]),
+    [...dts.matchAll(/^declare (?:abstract )?class (Kx[A-Za-z0-9]+) extends (Kx[A-Za-z0-9]+)/gm)].map(([, child, parent]) => [child, parent]),
   );
 
   const own = new Map();

@@ -153,7 +153,7 @@ async function liveAnimations(page) {
   );
 }
 
-const STATE_FIXTURES = ["selection", "entry", "composite", "card", "behaviour", "navigation", "compositions"];
+const STATE_FIXTURES = ["selection", "entry", "composite", "card", "behaviour", "navigation", "compositions", "overlays", "overlay-compositions"];
 
 /**
  * axe findings that are correct for axe and wrong for WCAG, each with the reason — the same mechanism and the

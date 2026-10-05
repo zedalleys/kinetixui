@@ -55,6 +55,15 @@ export const VISUAL_GATES = [
       Angular: ["breadcrumb", "pagination", "table-of-contents", "tab-bar", "app-bar", "footer", "accordion"],
     },
   },
+  {
+    script: "scripts/overlay-visual.mjs",
+    command: "check:overlay-visual",
+    contract: "TOKENS.md — Overlays",
+    // Angular only: React's overlays are not changed by Angular Wave C1 and are not measured here
+    covers: {
+      Angular: ["dialog", "alert-dialog", "modal", "sheet", "drawer", "popover", "tooltip", "hover-card"],
+    },
+  },
 ];
 
 /** The registry entry for a gate script, by its path relative to the repository root. */

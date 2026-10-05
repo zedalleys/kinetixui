@@ -90,9 +90,13 @@ describe("/docs/angular", () => {
     expect(page).toMatch(/versions independently/i);
   });
 
-  it("does not ship an overlay component the page says is deferred", () => {
-    for (const slug of ["dialog", "select", "popover", "tooltip", "dropdown-menu", "sheet"]) {
+  it("does not ship an overlay component the page says is still to come, and ships the ones it says are built", () => {
+    expect(page).toMatch(/menus, listboxes and\s+notifications still to come/);
+    for (const slug of ["select", "dropdown-menu", "context-menu", "combobox", "command", "sonner"]) {
       expect(platformsFor(slug)).not.toContain("Angular");
+    }
+    for (const slug of ["dialog", "alert-dialog", "modal", "sheet", "drawer", "popover", "tooltip", "hover-card"]) {
+      expect(platformsFor(slug)).toContain("Angular");
     }
   });
 });

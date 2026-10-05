@@ -134,3 +134,37 @@ export {
   KxTabBarItem,
   KxTableOfContents,
 } from './lib/navigation';
+export type { KxModalType, KxSheetSide } from './lib/dialog';
+export {
+  KxAlertDialog,
+  KxAlertDialogAction,
+  KxAlertDialogCancel,
+  KxAlertDialogContent,
+  KxDialog,
+  KxDialogClose,
+  KxDialogContent,
+  KxDialogDescription,
+  KxDialogFooter,
+  KxDialogHeader,
+  KxDialogTitle,
+  KxDialogTrigger,
+  KxDrawer,
+  KxDrawerContent,
+  KxModal,
+  KxSheet,
+  KxSheetContent,
+} from './lib/dialog';
+export type { KxAlign, KxSide } from './lib/overlay';
+export {
+  KxHoverCard,
+  KxHoverCardContent,
+  KxHoverCardTrigger,
+  KxPopover,
+  KxPopoverAnchor,
+  KxPopoverClose,
+  KxPopoverContent,
+  KxPopoverTrigger,
+  KxTooltip,
+  KxTooltipContent,
+  KxTooltipTrigger,
+} from './lib/floating';

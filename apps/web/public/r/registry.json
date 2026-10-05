@@ -28,6 +28,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -367,6 +368,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -400,6 +402,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -497,6 +500,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -696,6 +700,7 @@
       "description": "Generated 1:1 from the KinetixUI design source, node 54857:1322.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -817,6 +822,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -943,6 +949,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -1160,6 +1167,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"

@@ -32,11 +32,13 @@ on:
       - "scripts/entry-visual.mjs"
       - "scripts/composite-visual.mjs"
       - "scripts/navigation-visual.mjs"
+      - "scripts/overlay-visual.mjs"
       - "scripts/visual-harness.mjs"
       - "scripts/visual-gates.mjs"
       - "packages/ui-angular/src/**"
       - "packages/ui-angular/browser/**"
       - "scripts/angular-browser.mjs"
+      - "scripts/angular-overlays.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -57,11 +59,13 @@ on:
       - "scripts/entry-visual.mjs"
       - "scripts/composite-visual.mjs"
       - "scripts/navigation-visual.mjs"
+      - "scripts/overlay-visual.mjs"
       - "scripts/visual-harness.mjs"
       - "scripts/visual-gates.mjs"
       - "packages/ui-angular/src/**"
       - "packages/ui-angular/browser/**"
       - "scripts/angular-browser.mjs"
+      - "scripts/angular-overlays.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -76,7 +80,7 @@ concurrency:
 jobs:
   axe:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -158,9 +162,25 @@ jobs:
       - name: Navigation and disclosure visual contract (Angular, light and dark)
         run: pnpm check:navigation-visual
 
+      # The overlay surface contract (TOKENS.md, "Overlays") on rendered pixels, Angular only: every surface
+      # open — the scrim, the popover fill and full border edge, elevation (a shadow in light, the surface step
+      # in dark), corner shapes, focus rings that the surface's own clip does not cut, the close button's hover
+      # and its motion, a popover painted beyond a clipped card, an end sheet on the correct edge in LTR and RTL,
+      # and the tooltip's edge under forced colours.
+      - name: Overlay visual contract (Angular, light and dark)
+        run: pnpm check:overlay-visual
+
       # @kinetixui/angular as a live Angular application in this Chromium: every usage example and state
       # fixture under axe (light and dark, forced colours, reduced motion), every interactive component driven
       # by a real keyboard, direction in four cases, 200% text, and the motion of the switch and the disclosures. verification.json
       # publishes Angular's browser evidence off this script, so it runs wherever the Angular sources change.
       - name: Angular in the browser (axe, keyboard, RTL, 200% text, reduced motion)
         run: pnpm check:angular-browser
+
+      # The overlay family as a live Angular application: each overlay driven alone and nested (dialog →
+      # popover → tooltip, dialog → dialog, sheet → popover) by keyboard and pointer — Escape one layer at a
+      # time, outside presses, focus in, held and restored, the page scroll lock, the stack's listeners — then
+      # axe on every surface OPEN, forced colours, four direction cases, 200% text at 1024px and 390px, and the
+      # open/close motion with and without reduced motion. verification.json publishes this evidence.
+      - name: Angular overlays in the browser (nesting, focus, axe open, RTL, 200% text, motion)
+        run: pnpm check:angular-overlays

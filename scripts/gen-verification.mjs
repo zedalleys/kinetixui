@@ -100,7 +100,7 @@ const COVERS = /kx-verify-covers:\s*(\S+)/;
 /** Where each platform's evidence lives. `extra` files are suites that are not themselves unit tests. */
 const TEST_SOURCES = {
   React: { dirs: ["packages/ui/src"], match: /\.test\.tsx$/, extra: ["scripts/a11y-browser.mjs", "scripts/large-text.mjs", "scripts/motion.mjs"] },
-  Angular: { dirs: ["packages/ui-angular/src"], match: /\.spec\.ts$/, extra: ["scripts/angular-browser.mjs"] },
+  Angular: { dirs: ["packages/ui-angular/src"], match: /\.spec\.ts$/, extra: ["scripts/angular-browser.mjs", "scripts/angular-overlays.mjs"] },
   SwiftUI: { dirs: ["packages/ui-swiftui/Tests"], match: /\.swift$/ },
   Compose: { dirs: ["packages/ui-compose/ui/src/test"], match: /\.kt$/ },
   Flutter: { dirs: ["packages/ui-flutter/test"], match: /_test\.dart$/ },
