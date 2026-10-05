@@ -336,6 +336,20 @@ describe("focus ring contrast", () => {
     const failing = within(sidebar()).getAllByText("Fail").map((el) => el.closest("div")!.textContent ?? "");
     expect(failing.some((row) => /Background.*focus/i.test(row) && /needs 3:1/.test(row))).toBe(true);
   });
+
+  it("also fails a `ring` pinned apart from `focus`, which Checkbox, Radio, Switch and Tabs draw", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+    await openAdvanced(user);
+
+    await user.click(within(sidebar()).getByLabelText("All overrides, as text"));
+    await user.paste("ring,#fafafa");
+
+    const failing = within(sidebar()).getAllByText("Fail").map((el) => el.closest("div")!.textContent ?? "");
+    expect(failing.some((row) => /Background.*ring/i.test(row) && /needs 3:1/.test(row))).toBe(true);
+    // the `focus` pairs are untouched and still pass, which is why `ring` needed its own rows
+    expect(failing.some((row) => /Background.*focus/i.test(row))).toBe(false);
+  });
 });
 
 describe("preview scenes", () => {

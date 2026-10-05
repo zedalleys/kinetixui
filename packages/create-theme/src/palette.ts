@@ -57,6 +57,11 @@ export const CONTRAST_PAIRS: [AcceptedToken, AcceptedToken][] = [
 export const NON_TEXT_PAIRS: [AcceptedToken, AcceptedToken][] = [
   ["background", "focus"],
   ["card", "focus"],
+  // Two focus mechanisms ship: `shadow-focus` reads `focus`, and Checkbox, Radio, Switch, Tabs, Badge and
+  // Sidebar draw `ring-ring`. `ring` is its own accepted override, so a theme can pin it apart from `focus`
+  // and leave those controls with an invisible ring while the `focus` pairs above still pass.
+  ["background", "ring"],
+  ["card", "ring"],
 ];
 
 /** WCAG minimums: AA body text, and SC 1.4.11 for non-text UI such as the focus ring. */

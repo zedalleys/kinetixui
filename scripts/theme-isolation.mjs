@@ -180,9 +180,16 @@ try {
     await setHex(page, GREEN);
     await page.goto(`${base}/docs/components/button`, { waitUntil: "networkidle" });
     const elsewhere = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--action").trim());
-    const designStored = await page.evaluate(() => Object.keys(localStorage).filter((k) => k !== "theme"));
+    // The site keeps unrelated caches of its own (the GitHub star count); what must not be there is the design.
+    const designStored = await page.evaluate((hex) => {
+      const hsl = "143 82% 35%";
+      return Object.keys(localStorage).concat(Object.keys(sessionStorage)).filter((k) => {
+        const v = (localStorage.getItem(k) ?? sessionStorage.getItem(k) ?? "").toLowerCase();
+        return /kx1_|preset/i.test(k) || v.includes(hex) || v.includes("kx1_") || v.includes(hsl);
+      });
+    }, GREEN);
     check(JSON.parse(shellBefore).vars[1] === elsewhere, "navigation: another page renders the shipped --action", elsewhere);
-    check(designStored.length === 0, "navigation: no design is persisted in storage", designStored.join(", "));
+    check(designStored.length === 0, "navigation: the design is not persisted in browser storage", designStored.join(", "));
 
     // ── the Theming page's light panel ──────────────────────────────────────
     await page.goto(`${base}/docs/theming`, { waitUntil: "networkidle" });

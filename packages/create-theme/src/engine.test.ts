@@ -706,8 +706,8 @@ describe("focus ring visibility", () => {
 
   it.each(MODES)("a generated theme keeps the ring at 3:1 on the page and on cards (%s), for every hue", (mode) => {
     for (const brand of [...BRANDS, ...hues]) {
-      const focusRows = contrastOf(theme({ brand })[mode]).filter((r) => r.pair[1] === "focus");
-      expect(focusRows.map((r) => r.pair[0]).sort()).toEqual(["background", "card"]);
+      const focusRows = contrastOf(theme({ brand })[mode]).filter((r) => r.pair[1] === "focus" || r.pair[1] === "ring");
+      expect(focusRows.map((r) => r.pair.join("/")).sort()).toEqual(["background/focus", "background/ring", "card/focus", "card/ring"]);
       for (const row of focusRows) expect(row.ratio, `${brand} ${row.pair.join("/")} ${mode}`).toBeGreaterThanOrEqual(3);
     }
   });
@@ -719,5 +719,15 @@ describe("focus ring visibility", () => {
     expect(ring.pass).toBe(false);
     // text pairs keep the AA bar
     expect(rows.find((r) => r.pair[1] === "foreground")!.min).toBe(4.5);
+  });
+
+  it("reports a ring-ring control the user made invisible by pinning `ring` apart from `focus`", () => {
+    // `focus` stays the readable brand ring, so every `focus` pair passes; Checkbox, Radio, Switch, Tabs and
+    // Badge draw `ring`, and a white ring on a white page is invisible.
+    const rows = contrastOf(theme({ manualOverrides: { ring: "#fafafa" } }).light);
+    expect(rows.filter((r) => r.pair[1] === "focus").every((r) => r.pass)).toBe(true);
+    const ring = rows.find((r) => r.pair[0] === "background" && r.pair[1] === "ring")!;
+    expect(ring.min).toBe(3);
+    expect(ring.pass).toBe(false);
   });
 });
