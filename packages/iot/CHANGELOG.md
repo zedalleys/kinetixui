@@ -1,5 +1,130 @@
 # @kinetixui/iot
 
+## 0.3.0
+
+### Minor Changes
+
+- eeff208: Add a device control layer, and make the React entry point tree-shake per component.
+  
+  `@kinetixui/iot` could display a device but not operate one. Four controls —
+  `DevicePowerControl`, `DeviceLevelControl`, `DeviceSetpointControl` and
+  `DeviceModeControl` — now cover power, level, setpoint and mode, and they share one rule: what the
+  user asked for is drawn, and announced, differently from what the device has confirmed.
+  `resolveControlState` derives that from a device status and a command status so controls on one
+  screen cannot disagree; pending is non-interactive so a second press cannot queue a duplicate, while
+  stale stays operable because sending a command is how you find out whether a quiet device is there.
+  
+  Also new: `DeviceIcon` and `DeviceIdentity` (twelve device categories), `DeviceControlCard` and
+  `DeviceGroupCard` (composition via slots rather than a prop per control), `RoutineCard` for scenes,
+  routines and schedules, and React-free helpers for control state, device category and automation
+  timing in `@kinetixui/iot/functions`.
+  
+  Packaging: importing one component used to cost 45.91 KB of a 46.54 KB library, because
+  `Component.displayName = "…"` is a top-level assignment a bundler cannot prove is safe to drop.
+  Moving it into a `/* @__PURE__ */`-annotated call restores per-component tree-shaking — one control
+  now bundles to 4.03 KB, and `DeviceCard` alone to 10.25 KB against 22.01 KB before this release.
+  
+  No transport is added. Nothing here opens a connection or speaks MQTT, BLE, Matter or WebSockets.
+- f512e62: Mature the existing device controls (M2A).
+  
+  - **Connectivity truth.** `KinetixConnectivityState` gains `connecting` and `unknown`. Missing connectivity now summarises as `unknown` instead of `offline`; a missing or unrecognised device status derives `unknown` connectivity and no longer adds an "offline" health reason; a backend status of `unreachable` stays `unreachable`. `describeConnectivity` says "Connecting" and "Connection unknown". `normalizeDeviceStatus` is unchanged.
+  - **Controls on the lifecycle.** `DevicePowerControl`, `DeviceLevelControl`, `DeviceSetpointControl` and `DeviceModeControl` accept optional `lifecycle`, `strategy` (`confirmed` default, `optimistic`, `hybrid`) and `announce` props. With a lifecycle they announce each stage once in a polite `role="status"` region, set `aria-busy` while a request is open, and say in words when a request did not happen (rolling back under `optimistic`/`hybrid`).
+  - **New functions:** `resolveControlPresentation`, `describeControlOutcome` and `supersedeCommandLifecycle`. Superseding a request records the one it replaced in `supersededCommandIds`, so a late reply to it is refused as `stale-response` even when the new request carries no id of its own.
+  
+  Migration: nothing is required, and the value props still work (they are now optional). Two things to know: an exhaustive `switch` over `KinetixConnectivityState` needs `connecting` and `unknown` arms; and `DevicePowerControl` with `requested` now keeps its knob at the reported state by default (`confirmed`). Pass `strategy="hybrid"` for the previous moving-track drawing.
+- 20f725d: Device interaction contract (M1), all in `@kinetixui/iot/functions` and additive:
+  
+  - Command lifecycle: optional `commandId` correlation (a reply to a superseded request is refused as `stale-response`), a `report` event for reported state that is not an answer (reconnects, physical switches; out-of-order reports with `observedAt` are refused as `stale-report`), and a machine-readable `reasonCode` from `code` on `fail`/`timeout`/`deviceUnreachable`/`cancel`.
+  - Interaction strategies: `KinetixCommandStrategy` (`confirmed` default, `optimistic`, `hybrid`) and `presentCommandValue`, which decides what a control draws without changing the lifecycle.
+  - Capabilities: kinds `color` and `media`, an optional open-vocabulary `role`, `resolveCapabilitySupport` (`supported` / `read-only` / `unsupported`) and `findCapabilitiesByRole`.
+  - `resolveBatteryState` (level, availability, charging), `isSameDeviceValue`, and optional `metadata` on activity events.
+  
+  Type-level note: `KinetixCommandLifecycleEvent`, `KinetixLifecycleRejection["code"]` and `KinetixDeviceCapabilityKind` gain members, so an exhaustive `switch` over them in consumer code needs a new arm. No runtime behaviour changes for existing callers.
+
+### Patch Changes
+
+- ded4054: Fix five accessibility defects on IoT surfaces: contrast on tinted cards, and duplicate landmark names.
+  
+  A real-browser axe pass over the IoT stories found nine colour-contrast failures and two duplicated
+  navigation landmarks. Both are genuine WCAG failures, not false positives, and both predate the pull
+  request that surfaced them.
+  
+  **Contrast.** `--muted-foreground` is tuned against `--background` and `--muted`, where it clears AA
+  at 5.17:1. IoT device, group and activity cards tint their surface to carry state, and a 10% tint
+  spends the whole margin: secondary text landed at 4.43:1 on `bg-primary/10` and 4.33:1 on
+  `bg-destructive/10`, under the 4.5:1 that WCAG 1.4.3 requires. The token itself is not wrong —
+  `neutral.600` is a published Figma value — so the fix is a new semantic token for the surfaces that
+  tint, `--semantic-muted-on-container`, exposed as `text-muted-on-container`. This follows
+  `--semantic-on-info-container`, which exists for the same reason on `bg-info/10`. It clears AA on
+  every tint those cards use, worst case 4.79:1, and stays visibly lighter than `--foreground` so the
+  type hierarchy is unchanged. Dark mode needed no new value and reuses `--muted-foreground`: a tint
+  lightens a dark surface away from its text rather than toward it, so dark was already at 6.9–8.4:1.
+  
+  `DeviceControlCard`, `DeviceGroupCard`, `DeviceIdentity` and `ActivityTimeline` now use it for the
+  text that sits on those surfaces. Nothing is restyled beyond the colour of that text.
+  
+  **Landmarks.** `SpaceBreadcrumb` named its `<nav>` "Location" for every instance, so a screen
+  listing several places produced several identically-named navigation landmarks — which is no more
+  useful than none when picking one from a landmark list. The accessible name now defaults to
+  `Location: <current place>`, taken from the last item in `path`, and remains overridable with
+  `label`. A breadcrumb rendered without a path still falls back to "Location".
+  
+  Patch rather than minor: the new token and utility exist only to carry the correction. Nothing is
+  removed or renamed, no consumer has to adopt anything, and upgrading changes what was already wrong
+  rather than adding capability to take up.
+- 83be817: Animate the command lifecycle's stage changes.
+  
+  `CommandLifecycle` is the component whose entire job is communicating a command moving through
+  requested → pending → acknowledged → confirmed, or failing. Every one of those transitions snapped:
+  the step row's text colour, the marker's fill, ring and border, and the dimming of a glyph for a
+  stage still ahead all changed with no transition on any of them. Measured in a real browser, the
+  lifecycle had **zero** elements with a transition.
+  
+  The four stage-bearing nodes now carry `transition-colors` / `transition-opacity` at `duration-fast`
+  with the usual `motion-reduce:transition-none`. Driving a stage change in a browser now catches the
+  colour mid-interpolation — `rgb(110,110,110)` → `rgb(63,66,68)` at 40 ms → `rgb(5,11,16)` — where
+  before it jumped. Under `prefers-reduced-motion: reduce` the stage still advances and the colour
+  arrives immediately, with no animation running.
+  
+  No new token, no new value: this uses the existing semantic motion scale the rest of the module
+  already uses. Nothing else about the component changed.
+- eef85f2: Let `DeviceModeControl`'s segmented group fit a narrow viewport at large text.
+  
+  Each segment is a flex item with `flex-1` and a `truncate` label, but a flex item's `min-width`
+  defaults to `auto` — its min-content width — so the `truncate` was inert and a segment could never be
+  narrower than its own label. A group of several modes therefore could not fit a narrow viewport at all.
+  It is visible at the default text size only on a very small screen; it is unmissable once the reader
+  raises their text size, because the labels grow while the viewport does not. Measured in Chromium at
+  200% text on a 320px viewport, the climate mode group pushed its page 212px sideways.
+  
+  The segment now carries `min-w-0`, so the segments share the available width and the label truncates
+  as it was always meant to. Nothing changes at the default text size on a screen with room for the
+  group: the segments were already `flex-1` and already sized themselves to the container.
+  
+  Patch rather than minor: no API is added, removed or renamed, nothing new is available to adopt, and
+  the change corrects behaviour that was already wrong.
+- cd2893f: `DeviceSetpointControl`'s `ring` presentation keeps its ± buttons clear of the gauge. They were pinned to the ring's
+  bottom corners with fixed insets, directly under the arc's two ends: measured in Chromium, 6.6–16.7px into the end
+  markers at every width. They now sit in a row pulled into the empty band below the arc's ends by a margin derived from
+  the arc's own geometry, so the gap holds at any size (19–28px). The ring is a size container: narrower than 12rem
+  (a phone at 200% text, browser zoom) the decoration steps aside and the numeral and buttons stack, where before the
+  numeral overflowed the ring and the 88px buttons covered it. The current reading wraps instead of truncating.
+  Buttons keep their 44px targets, labels and order.
+  
+  `BatteryIndicator`'s `pill` presentation wraps inside its container instead of overflowing it at 200% text.
+  
+  Verified by the new `check:iot-state-spatial` browser gate.
+- 38a2802: `DeviceSetpointControl`'s ring now animates to a new target instead of jumping to it.
+  
+  The filled arc was drawn as a path of exactly the confirmed length and the marker placed at computed
+  `cx`/`cy`. Neither is a property a browser can interpolate, so the ring snapped while the numeral beside it
+  changed in the same frame — measured in Chromium, `transition-duration` was `0s` with nothing running 45ms
+  after the device confirmed. The arc is now one fixed path revealed by `stroke-dashoffset` (`pathLength="1"`,
+  so the offset is the fraction itself) and the marker is drawn once and rotated into place, both over
+  `duration-base` from the existing scale with `motion-reduce:transition-none`. No new token, no new value, and
+  no change to the component's API or to what it draws at rest.
+- 6b1be4e: Motion correctness. `Spinner` and the `FileUpload` loader now rest as a static ring under `prefers-reduced-motion` instead of carrying a "slow to three seconds" class the reduced-motion floor made dead; the ring keeps its `role="status"` name and survives forced colours (the open side is `Canvas`, since forced colours closes a transparent border). `InputOTP`'s caret states its reduced form explicitly. `@kinetixui/iot` swaps CSS-default `ease-out` for the `ease-enter` token (the identical curve) and `pairing-method-picker`'s `transition-all` for the three properties that change.
+
 ## 0.2.0
 
 ### Minor Changes
