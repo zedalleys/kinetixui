@@ -1,3 +1,4 @@
+import type * as React from "react";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fireEvent, render, screen } from "@testing-library/react";
@@ -8,7 +9,7 @@ import { DateStrip, DeviceIllustration, HouseMark, IconButton, IconCluster, Pill
 afterEach(() => document.documentElement.removeAttribute("dir"));
 
 describe("DeviceIllustration", () => {
-  it("draws every category (and the speaker) as decorative SVG, and only `on` changes the art", () => {
+  it("draws every category (and the speaker) as decorative SVG, and only `on` changes the art (a lock reads `locked`)", () => {
     for (const category of [...KINETIX_DEVICE_CATEGORIES, "speaker" as const]) {
       const { container, unmount } = render(<DeviceIllustration category={category} on />);
       const off = render(<DeviceIllustration category={category} />);
@@ -16,10 +17,36 @@ describe("DeviceIllustration", () => {
       expect(svg.getAttribute("aria-hidden"), category).toBe("true");
       expect(svg.children.length, category).toBeGreaterThan(0);
       expect(svg.querySelector("video, canvas, image, foreignObject"), category).toBeNull();
-      if (category !== "unknown" && category !== "speaker") expect(svg.innerHTML === off.container.querySelector("svg")!.innerHTML, category).toBe(false);
+      if (category !== "unknown" && category !== "speaker" && category !== "lock") expect(svg.innerHTML === off.container.querySelector("svg")!.innerHTML, category).toBe(false);
       off.unmount();
       unmount();
     }
+  });
+
+  it("draws a lock from `locked`, not `on`: the bolt is thrown or withdrawn, and an unknown lock draws no bolt", () => {
+    const at = (el: React.ReactElement) => render(el).container.querySelector("svg")!;
+    const locked = at(<DeviceIllustration category="lock" locked />);
+    const unlocked = at(<DeviceIllustration category="lock" locked={false} />);
+    const unknown = at(<DeviceIllustration category="lock" />);
+    expect(locked.getAttribute("data-state")).toBe("locked");
+    expect(locked.querySelector("[data-bolt]")!.getAttribute("data-bolt")).toBe("thrown");
+    expect(unlocked.getAttribute("data-state")).toBe("unlocked");
+    expect(unlocked.querySelector("[data-bolt]")!.getAttribute("data-bolt")).toBe("withdrawn");
+    // the state is the bolt's POSITION, not a colour
+    expect((locked.querySelector("[data-bolt]") as SVGElement).style.transform).toBe("");
+    expect((unlocked.querySelector("[data-bolt]") as SVGElement).style.transform).toMatch(/translateX\(-\d+px\)/);
+    expect(unknown.getAttribute("data-state")).toBe("unknown");
+    expect(unknown.querySelector("[data-bolt]")).toBeNull();
+    // `on` says nothing about a lock
+    expect(at(<DeviceIllustration category="lock" on locked={false} />).getAttribute("data-state")).toBe("unlocked");
+    // and the bolt has its reduced-motion opt-out
+    expect(locked.querySelector("[data-bolt]")!.getAttribute("class")).toContain("motion-reduce:transition-none");
+  });
+
+  it("an unlit lamp shade steps down in dark mode, where the lit one stays bright", () => {
+    const shade = (on: boolean) => render(<DeviceIllustration category="light" on={on} />).container.querySelector('[data-part="shade"]')!.getAttribute("class")!;
+    expect(shade(false)).toContain("dark:fill-muted-foreground/45");
+    expect(shade(true)).not.toContain("dark:fill-muted-foreground");
   });
 
   it("maps size to a token size class", () => {

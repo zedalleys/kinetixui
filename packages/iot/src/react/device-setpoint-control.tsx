@@ -57,12 +57,23 @@ export interface DeviceSetpointControlProps extends Omit<React.HTMLAttributes<HT
 const ARC_START = 135;
 const ARC_SWEEP = 270;
 const RING = 100;
+const ARC_RADIUS = 84;
+const MARKER_RADIUS = 9;
+const MARKER_STROKE = 4;
 
 /** Point on the ring at a 0–1 fraction of the arc, in a 200×200 box. */
 function ringPoint(f: number, r: number): [number, number] {
   const a = ((ARC_START + ARC_SWEEP * f) * Math.PI) / 180;
   return [RING + r * Math.cos(a), RING + r * Math.sin(a)];
 }
+
+/**
+ * The lowest point anything on the ring reaches: the arc's ends (start and end of the sweep sit at the same
+ * height) plus a marker drawn there at the range's limits. Below it the 200×200 box is empty edge to edge.
+ */
+const RING_FLOOR = ringPoint(0, ARC_RADIUS)[1] + MARKER_RADIUS + MARKER_STROKE / 2;
+/** That empty band, as a percentage of the ring's width (the box is square). */
+const RING_OPEN_BAND = ((2 * RING - RING_FLOOR) / (2 * RING)) * 100;
 
 /** An SVG arc path between two fractions. */
 function ringArc(from: number, to: number, r: number): string {
@@ -127,7 +138,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
           </span>
             ) : null}
             {secondary ? <span className="text-body-sm text-muted-foreground">{secondary}</span> : null}
-            <span className="max-w-full truncate text-body-sm text-muted-foreground">
+            <span className="max-w-full text-center text-body-sm text-muted-foreground [overflow-wrap:anywhere]">
           {current === null || current === undefined
             ? "Current unknown"
             : `Now ${current}${unit}`}
@@ -139,59 +150,87 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
     return (
       <div ref={ref} className={cn("flex flex-col gap-3", className)} data-pending={pending ? "" : undefined} {...props}>
         {ring ? (
-          <div data-presentation="ring" className="relative mx-auto aspect-square w-full max-w-64">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 200 200" className="absolute inset-0 size-full rtl:-scale-x-100">
-              <path d={ringArc(0, 1, 84)} fill="none" strokeWidth={14} strokeLinecap="round" className="stroke-muted" />
-              {confirmed !== null ? (
-                // An arc's `d` is not a property a browser can interpolate, so a confirmed target used to
-                // jump to its new length: measured in Chromium, `transition-duration` was `0s` and nothing
-                // was running 45ms after the device agreed. Drawing the WHOLE arc once and revealing a
-                // fraction of it with `stroke-dashoffset` moves the same pixels over a property that does
-                // interpolate. `pathLength={1}` normalises the geometry so the offset is the fraction
-                // itself, with no arc-length arithmetic to keep in step with `ringArc`.
-                <path
-                  data-ring-confirmed=""
-                  d={ringArc(0, 1, 84)}
-                  pathLength={1}
-                  strokeDasharray="1 1"
-                  strokeDashoffset={1 - frac(confirmed)}
-                  fill="none"
-                  strokeWidth={14}
-                  // Butt at the bottom of the range: a round cap on a zero-length dash draws a dot, which
-                  // reads as a value where there is none.
-                  strokeLinecap={frac(confirmed) > 0.005 ? "round" : "butt"}
-                  className="stroke-primary transition-[stroke-dashoffset] duration-base ease-out motion-reduce:transition-none"
-                />
-              ) : null}
-              {pending && confirmed !== null ? (
-                <path
-                  data-ring-requested=""
-                  d={ringArc(Math.min(frac(confirmed), frac(requested!)), Math.max(frac(confirmed), frac(requested!)), 84)}
-                  fill="none"
-                  strokeWidth={14}
-                  strokeDasharray="3 7"
-                  className="stroke-primary"
-                />
-              ) : null}
-              {confirmed !== null ? (
-                // Same reason, different property: `cx`/`cy` are recomputed per value, so the marker
-                // teleported while the arc under it travelled. Every point on the ring is the same point
-                // rotated, so the marker is drawn once at the arc's start and rotated into place — and
-                // `transform` is a property the browser interpolates.
-                <g
-                  data-ring-marker=""
-                  className="transition-transform duration-base ease-out motion-reduce:transition-none"
-                  style={{ transform: `rotate(${ARC_SWEEP * frac(confirmed)}deg)`, transformOrigin: `${RING}px ${RING}px` }}
-                >
-                  <circle cx={ringPoint(0, 84)[0]} cy={ringPoint(0, 84)[1]} r={9} strokeWidth={4} className="fill-background stroke-primary" />
-                </g>
-              ) : null}
-              {pending ? (
-                <circle cx={ringPoint(frac(requested!), 84)[0]} cy={ringPoint(frac(requested!), 84)[1]} r={9} strokeWidth={3} strokeDasharray="3 3" className="fill-background stroke-primary" />
-              ) : null}
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center px-8 pb-4">{numeralBlock}</div>
-            <div className="absolute inset-x-4 bottom-1 flex items-center justify-between">
+          // The ring is a container so its layout can follow the room it actually has. When the ring is at
+          // least 12rem wide the numeral sits inside the gauge and the steppers tuck into the band under the
+          // arc's open ends. Narrower than that (a phone at 200% text, browser zoom) the numeral cannot fit
+          // inside the arc, so the decoration steps aside: the numeral and the steppers stack in normal flow
+          // and every word and control stays. `rem` in the query scales with text, `%` with the ring.
+          <div data-presentation="ring" className="mx-auto w-full max-w-64 [container-type:inline-size]">
+            <div data-ring-face="" className="relative [@container(min-width:12rem)]:aspect-square">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 200 200" className="absolute inset-0 hidden size-full rtl:-scale-x-100 [@container(min-width:12rem)]:block">
+                <path d={ringArc(0, 1, ARC_RADIUS)} fill="none" strokeWidth={14} strokeLinecap="round" className="stroke-muted" />
+                {confirmed !== null ? (
+                  // An arc's `d` is not a property a browser can interpolate, so a confirmed target used to
+                  // jump to its new length: measured in Chromium, `transition-duration` was `0s` and nothing
+                  // was running 45ms after the device agreed. Drawing the WHOLE arc once and revealing a
+                  // fraction of it with `stroke-dashoffset` moves the same pixels over a property that does
+                  // interpolate. `pathLength={1}` normalises the geometry so the offset is the fraction
+                  // itself, with no arc-length arithmetic to keep in step with `ringArc`.
+                  <path
+                    data-ring-confirmed=""
+                    d={ringArc(0, 1, ARC_RADIUS)}
+                    pathLength={1}
+                    strokeDasharray="1 1"
+                    strokeDashoffset={1 - frac(confirmed)}
+                    fill="none"
+                    strokeWidth={14}
+                    // Butt at the bottom of the range: a round cap on a zero-length dash draws a dot, which
+                    // reads as a value where there is none.
+                    strokeLinecap={frac(confirmed) > 0.005 ? "round" : "butt"}
+                    className="stroke-primary transition-[stroke-dashoffset] duration-base ease-out motion-reduce:transition-none"
+                  />
+                ) : null}
+                {pending && confirmed !== null ? (
+                  <path
+                    data-ring-requested=""
+                    d={ringArc(Math.min(frac(confirmed), frac(requested!)), Math.max(frac(confirmed), frac(requested!)), ARC_RADIUS)}
+                    fill="none"
+                    strokeWidth={14}
+                    strokeDasharray="3 7"
+                    className="stroke-primary"
+                  />
+                ) : null}
+                {confirmed !== null ? (
+                  // Same reason, different property: `cx`/`cy` are recomputed per value, so the marker
+                  // teleported while the arc under it travelled. Every point on the ring is the same point
+                  // rotated, so the marker is drawn once at the arc's start and rotated into place — and
+                  // `transform` is a property the browser interpolates.
+                  <g
+                    data-ring-marker=""
+                    className="transition-transform duration-base ease-out motion-reduce:transition-none"
+                    style={{ transform: `rotate(${ARC_SWEEP * frac(confirmed)}deg)`, transformOrigin: `${RING}px ${RING}px` }}
+                  >
+                    <circle cx={ringPoint(0, ARC_RADIUS)[0]} cy={ringPoint(0, ARC_RADIUS)[1]} r={MARKER_RADIUS} strokeWidth={MARKER_STROKE} className="fill-background stroke-primary" />
+                  </g>
+                ) : null}
+                {pending ? (
+                  <circle cx={ringPoint(frac(requested!), ARC_RADIUS)[0]} cy={ringPoint(frac(requested!), ARC_RADIUS)[1]} r={MARKER_RADIUS} strokeWidth={3} strokeDasharray="3 3" className="fill-background stroke-primary" />
+                ) : null}
+              </svg>
+              <div className="flex items-center justify-center [@container(min-width:12rem)]:absolute [@container(min-width:12rem)]:inset-0 [@container(min-width:12rem)]:px-8 [@container(min-width:12rem)]:pb-4">
+                {numeralBlock}
+              </div>
+              {/* Stacked only: gives back the band the stepper row is pulled up by, so there it sits one step below. */}
+              <div aria-hidden="true" className="[@container(min-width:12rem)]:hidden" style={{ paddingBlockEnd: `${RING_OPEN_BAND.toFixed(2)}%` }} />
+            </div>
+            {/*
+              CONTROL CLEARANCE, derived rather than guessed. The steppers used to be pinned to the ring's
+              bottom corners with fixed insets — exactly under the arc's two ends — so at every width the
+              buttons sat on the arc (measured in Chromium: 7–17px into the end markers). The arc's ends are
+              its lowest points, so everything below RING_FLOOR is empty from edge to edge. The row is pulled
+              up into that band by its height as a percentage of the ring's width (a percentage margin
+              resolves against width; it is geometry, so it is computed here rather than a token), and then
+              pushed back down by one spacing step (`--spacing-2`), which is the room a
+              2px focus ring with a 2px offset needs. So the buttons never meet the arc at any size, and they
+              read as part of the gauge rather than a row bolted under it. The row is `relative` so it paints
+              above the face it tucks into: the face is positioned, and without this its numeral layer took
+              the clicks aimed at the top half of each button.
+            */}
+            <div
+              data-ring-steppers=""
+              className="relative flex items-center justify-center gap-4"
+              style={{ marginBlockStart: `calc(-${RING_OPEN_BAND.toFixed(2)}% + var(--spacing-2, 0.5rem))` }}
+            >
           <button
             type="button"
             aria-label={`Decrease ${label}`}

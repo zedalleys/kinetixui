@@ -4,11 +4,12 @@ import * as React from "react";
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import { Check, ChevronRight, Circle } from "lucide-react";
 import { cn } from "../lib/utils";
+import { withDirectionalPortal } from "./direction-provider";
 
 const ContextMenu = ContextMenuPrimitive.Root;
 const ContextMenuTrigger = ContextMenuPrimitive.Trigger;
 const ContextMenuGroup = ContextMenuPrimitive.Group;
-const ContextMenuPortal = ContextMenuPrimitive.Portal;
+const ContextMenuPortal = withDirectionalPortal(ContextMenuPrimitive.Portal);
 const ContextMenuSub = ContextMenuPrimitive.Sub;
 const ContextMenuRadioGroup = ContextMenuPrimitive.RadioGroup;
 
@@ -51,9 +52,9 @@ const ContextMenuContent = React.forwardRef<
   React.ElementRef<typeof ContextMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Content>
 >(({ className, ...props }, ref) => (
-  <ContextMenuPrimitive.Portal>
+  <ContextMenuPortal>
     <ContextMenuPrimitive.Content ref={ref} className={cn(contentCls, className)} {...props} />
-  </ContextMenuPrimitive.Portal>
+  </ContextMenuPortal>
 ));
 ContextMenuContent.displayName = ContextMenuPrimitive.Content.displayName;
 

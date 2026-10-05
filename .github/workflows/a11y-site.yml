@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - "apps/web/**"
+      - "packages/iot/**"
       - "packages/ui/**"
       - "packages/tokens/**"
       - "tokens/**"
@@ -17,10 +18,12 @@ on:
       - "style-dictionary/**"
       - "scripts/a11y-site.mjs"
       - "scripts/theme-isolation.mjs"
+      - "scripts/iot-state-spatial.mjs"
       - ".github/workflows/a11y-site.yml"
   pull_request:
     paths:
       - "apps/web/**"
+      - "packages/iot/**"
       - "packages/ui/**"
       - "packages/tokens/**"
       - "tokens/**"
@@ -30,6 +33,7 @@ on:
       - "style-dictionary/**"
       - "scripts/a11y-site.mjs"
       - "scripts/theme-isolation.mjs"
+      - "scripts/iot-state-spatial.mjs"
       - ".github/workflows/a11y-site.yml"
 
 permissions:
@@ -42,7 +46,7 @@ concurrency:
 jobs:
   axe:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
 
@@ -87,3 +91,7 @@ jobs:
       # focus ring follows a custom theme's --focus (docs/audits/COLOR-THEMING-MATURITY-AUDIT.md).
       - name: Theme isolation + themed focus ring (light + dark site)
         run: pnpm check:theme-isolation
+      # The /iot demos' state fidelity and control clearance: relations between rendered things (a stepper and
+      # the arc it sits under, a lock's word and its drawing, two plan markers) that axe and overflow cannot see.
+      - name: IoT state and spatial pass (ring clearance, lock/light fidelity, plan markers)
+        run: pnpm check:iot-state-spatial

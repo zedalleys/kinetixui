@@ -5,6 +5,15 @@
  *
  * `on` drives a warm glow, an accent tint or a filled level, never as the only carrier of state. The shapes are
  * deliberately generic (a pendant, a sphere, a dome, a keypad slab) and do not depict any real product.
+ *
+ * A lock is not on or off, so it does not read `on`: it reads `locked`, and draws it as the deadbolt — thrown
+ * across into the strike plate, or drawn back into the body with a gap where it was. That is the lock's own
+ * mechanism changing shape, so the state survives without colour and without the door having to open: an
+ * unlocked door is still a closed door, and the model has no open/closed state to draw. `locked` left out
+ * draws no bolt at all, rather than guessing. The bolt is physical, like a hinge, so it does not mirror in RTL.
+ *
+ * `data-state` says which state was drawn, in the same words the tile says it in, so a test can hold the
+ * drawing and the words to one source.
  */
 import * as React from "react";
 import type { KinetixDeviceCategory } from "@kinetixui/iot/functions";
@@ -21,7 +30,10 @@ const DARK = "fill-foreground/85 stroke-none";
 const SOFT = "fill-muted stroke-muted-foreground/45";
 const LINE = "fill-none stroke-muted-foreground/50";
 
-function art(kind: IllustrationKind, on: boolean): React.ReactNode {
+/** How far the bolt travels back into the body when unlocked: its whole reach past the body's edge. */
+const BOLT_THROW = 18;
+
+function art(kind: IllustrationKind, on: boolean, locked: boolean | undefined): React.ReactNode {
   const accent = on ? "fill-primary stroke-none" : "fill-muted-foreground/40 stroke-none";
   const accentStroke = on ? "stroke-primary" : "stroke-muted-foreground/40";
   switch (kind) {
@@ -30,13 +42,14 @@ function art(kind: IllustrationKind, on: boolean): React.ReactNode {
         <>
           {on ? (
             <>
-              <path d="M32 66 20 92H76L64 66Z" className="fill-warning/20 stroke-none" />
-              <circle cx="48" cy="68" r="22" className="fill-warning/20 stroke-none" />
+              <path d="M32 66 20 92H76L64 66Z" className="fill-warning/20 stroke-none dark:fill-warning/30" />
+              <circle cx="48" cy="68" r="22" className="fill-warning/20 stroke-none dark:fill-warning/30" />
             </>
           ) : null}
           <path d="M48 0V22" className={LINE} strokeWidth={2} />
           <rect x="43" y="20" width="10" height="9" rx="3" className={DARK} />
-          <path d="M24 64C24 44 34 32 48 30C62 32 72 44 72 64Z" className={DARK} />
+          {/* In dark mode `DARK` is a light fill, so an unlit shade would glow; off, it steps down to a muted one. */}
+          <path data-part="shade" d="M24 64C24 44 34 32 48 30C62 32 72 44 72 64Z" className={on ? DARK : cn(DARK, "dark:fill-muted-foreground/45")} />
           <path d="M24 64H72" className="stroke-background/40" strokeWidth={2} />
           <circle cx="48" cy="68" r="6" className={on ? "fill-warning stroke-none" : "fill-muted-foreground/40 stroke-none"} />
         </>
@@ -70,10 +83,25 @@ function art(kind: IllustrationKind, on: boolean): React.ReactNode {
     case "lock":
       return (
         <>
+          {/* strike plate in the frame, then the bolt, then the body over the bolt's tail */}
+          <rect x="78" y="30" width="12" height="30" rx="3" className={SOFT} strokeWidth={2.5} />
+          {locked === undefined ? null : (
+            <rect
+              data-bolt={locked ? "thrown" : "withdrawn"}
+              x="48"
+              y="39"
+              width="38"
+              height="11"
+              rx="5.5"
+              className="fill-muted-foreground/80 stroke-none transition-transform duration-base ease-out motion-reduce:transition-none"
+              style={{ transform: locked ? undefined : `translateX(-${BOLT_THROW}px)` }}
+            />
+          )}
+          {/* `DARK` is translucent; an opaque underlay keeps the withdrawn bolt from showing through the body */}
+          <rect x="28" y="8" width="40" height="80" rx="12" className="fill-card stroke-none" />
           <rect x="28" y="8" width="40" height="80" rx="12" className={DARK} />
-          <circle cx="48" cy="20" r="3.5" className={on ? "fill-primary stroke-none" : "fill-background/40 stroke-none"} />
+          <circle cx="48" cy="20" r="3.5" className={locked ? "fill-primary stroke-none" : "fill-background/40 stroke-none"} />
           {[34, 46, 58, 70].flatMap((y) => [38, 48, 58].map((x) => <circle key={`${x}-${y}`} cx={x} cy={y} r="2.6" className="fill-background/55 stroke-none" />))}
-          <rect x="66" y="40" width="22" height="9" rx="4.5" className={SOFT} strokeWidth={2.5} />
         </>
       );
     case "thermostat":
@@ -202,10 +230,24 @@ function art(kind: IllustrationKind, on: boolean): React.ReactNode {
   }
 }
 
-export function DeviceIllustration({ category, on = false, size = "md", className }: { category: IllustrationKind; on?: boolean; size?: keyof typeof SIZE; className?: string }) {
+export function DeviceIllustration({
+  category,
+  on = false,
+  locked,
+  size = "md",
+  className,
+}: {
+  category: IllustrationKind;
+  on?: boolean;
+  /** A lock's confirmed state. Only `lock` reads it; every other kind reads `on`. */
+  locked?: boolean;
+  size?: keyof typeof SIZE;
+  className?: string;
+}) {
+  const state = category === "lock" ? (locked === undefined ? "unknown" : locked ? "locked" : "unlocked") : on ? "on" : "off";
   return (
-    <svg viewBox="0 0 96 96" aria-hidden="true" focusable="false" data-illustration={category} data-on={on ? "true" : "false"} className={cn("shrink-0", SIZE[size], className)}>
-      {art(category, on)}
+    <svg viewBox="0 0 96 96" aria-hidden="true" focusable="false" data-illustration={category} data-on={on ? "true" : "false"} data-state={state} className={cn("shrink-0", SIZE[size], className)}>
+      {art(category, on, locked)}
     </svg>
   );
 }
