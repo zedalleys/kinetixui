@@ -6,15 +6,19 @@
  * `functions/`.
  */
 
+import type { KinetixCommandLifecycle } from "../types/command";
 import type {
   KinetixControlAvailability,
+  KinetixControlOutcome,
   KinetixControlPhase,
+  KinetixControlPresentation,
   KinetixControlState,
   KinetixDeviceMode,
   KinetixPowerState,
+  ResolveControlPresentationInput,
   ResolveControlStateInput,
 } from "../types/control";
-import { isCommandInFlight, isCommandUnsuccessful, lifecycleToCommandStatus } from "./commands";
+import { isCommandInFlight, isCommandUnsuccessful, isSameDeviceValue, lifecycleToCommandStatus, presentCommandValue, startCommandLifecycle } from "./commands";
 import { normalizeDeviceStatus } from "./status";
 
 /**
@@ -148,3 +152,104 @@ export function resolveActiveMode(
   const active = modes.find((m) => m.id === confirmedId);
   return { active, pendingId };
 }
+
+// ---------------------------------------------------------------------------------------------
+// Control presentation: one lifecycle, one strategy, one answer for every control.
+// ---------------------------------------------------------------------------------------------
+
+const UNSUCCESSFUL_OUTCOMES: readonly KinetixControlOutcome[] = ["failed", "timed-out", "unreachable", "cancelled"];
+
+/**
+ * What a control draws, from a lifecycle (or the legacy value props) and a strategy.
+ *
+ * This is the only place the four controls learn what to show. It wraps {@link presentCommandValue}
+ * and adds the request and the outcome, so a control never re-derives "is this pending" or "did this
+ * fail" from its own props. The legacy props are turned into a lifecycle first — an open request when
+ * `requested` differs from `reported`, otherwise idle — so both paths go through the same rules.
+ */
+export function resolveControlPresentation<T = unknown>(input: ResolveControlPresentationInput<T> = {}): KinetixControlPresentation<T> {
+  const fromLifecycle = !!input.lifecycle;
+  const lifecycle: KinetixCommandLifecycle<T> = input.lifecycle ?? legacyLifecycle(input.reported, input.requested);
+  const presentation = presentCommandValue(lifecycle, input.strategy);
+  const outcome = outcomeOf(lifecycle);
+  const unsuccessful =
+    UNSUCCESSFUL_OUTCOMES.includes(outcome) &&
+    lifecycle.requestedValue !== undefined &&
+    !isSameDeviceValue(lifecycle.requestedValue, lifecycle.confirmedValue);
+  return { ...presentation, requestedValue: lifecycle.requestedValue, outcome, unsuccessful, fromLifecycle };
+}
+
+function legacyLifecycle<T>(reported: T | null | undefined, requested: T | null | undefined): KinetixCommandLifecycle<T> {
+  const confirmed = reported === null ? undefined : reported;
+  const open = requested !== undefined && requested !== null && !isSameDeviceValue(requested, confirmed);
+  const state = startCommandLifecycle<T>({ confirmed, requested: open ? requested : undefined });
+  // `requested` is the one in-flight stage; the legacy props carry no more detail than "asked, not confirmed".
+  return open ? { ...state, stage: "requested", attempts: 1 } : state;
+}
+
+function outcomeOf(lifecycle: Pick<KinetixCommandLifecycle, "stage">): KinetixControlOutcome {
+  switch (lifecycle.stage) {
+    case "requested":
+    case "acknowledged":
+    case "retrying":
+      return "pending";
+    case "confirmed":
+      return "confirmed";
+    case "failed":
+      return "failed";
+    case "timed-out":
+      return "timed-out";
+    case "unreachable":
+      return "unreachable";
+    case "cancelled":
+      return "cancelled";
+    case "idle":
+      return "idle";
+  }
+}
+
+export type DescribeControlOutcomeOptions = {
+  /** How a value reads in a sentence: `(v) => v === "on" ? "on" : "off"`, `(v) => `${v}%``. Defaults to `String`. */
+  formatValue?: (value: unknown) => string;
+  /** The in-progress phrase for a request: "Turning on". Defaults to `Changing to <value>`. */
+  pendingPhrase?: (requested: unknown) => string;
+  /** The unsuccessful phrase for a request: "Could not turn on". Defaults to `Could not change to <value>`. */
+  failedPhrase?: (requested: unknown) => string;
+};
+
+const capitalise = (text: string) => (text ? text[0]!.toUpperCase() + text.slice(1) : text);
+
+/**
+ * The one sentence a control announces for where its change stands, or `""` when there is nothing to
+ * announce.
+ *
+ * Written to be heard once, politely, at the moments that matter: the request going out, the device
+ * agreeing, or the request not happening. "Turning on, waiting for the device." then "On." — or
+ * "Could not turn on. The device still reports off." Under `optimistic` the pending sentence is
+ * withheld, because the strategy chose not to mark the wait; the outcome is still announced, and a
+ * rollback always is.
+ */
+export function describeControlOutcome(presentation: KinetixControlPresentation, options: DescribeControlOutcomeOptions = {}): string {
+  const format = (value: unknown) => (value === undefined || value === null ? "unknown" : (options.formatValue ?? String)(value));
+  const want = presentation.requestedValue;
+  const have = format(presentation.reportedValue);
+  const pendingPhrase = options.pendingPhrase ?? ((v: unknown) => `Changing to ${format(v)}`);
+  const failedPhrase = options.failedPhrase ?? ((v: unknown) => `Could not change to ${format(v)}`);
+  switch (presentation.outcome) {
+    case "idle":
+      return "";
+    case "pending":
+      return presentation.indicatePending ? `${pendingPhrase(want)}, waiting for the device.` : "";
+    case "confirmed":
+      return `${capitalise(have)}.`;
+    case "failed":
+      return `${failedPhrase(want)}. The device still reports ${have}.`;
+    case "timed-out":
+      return `${failedPhrase(want)}: the device did not answer. It last reported ${have}.`;
+    case "unreachable":
+      return `${failedPhrase(want)}: the device is unreachable. It last reported ${have}.`;
+    case "cancelled":
+      return `Cancelled. The device still reports ${have}.`;
+  }
+}
+

@@ -135,6 +135,37 @@ export function startCommandLifecycle<T = unknown>(input: StartCommandLifecycleI
   return state;
 }
 
+export type SupersedeCommandLifecycleOptions = {
+  /** Correlation id for the new request's first send. */
+  commandId?: string;
+  /** Sends allowed for the new request. Defaults to the previous lifecycle's limit. */
+  maxAttempts?: number;
+};
+
+/**
+ * A new request that replaces an open one: a dimmer dragged to 40 and then to 80 before 40 confirmed.
+ *
+ * The result is a fresh `idle` lifecycle for `requested` that keeps what is still true from the
+ * previous one: the device's reported value and when it was observed, so a report older than the
+ * last accepted one is still refused. The previous request's correlation id is dropped, so a late
+ * reply tagged with it is refused as `stale-response` and can never confirm the newer request. Send
+ * it with a `sent` event, as with {@link startCommandLifecycle}.
+ */
+export function supersedeCommandLifecycle<T = unknown>(
+  previous: KinetixCommandLifecycle<T>,
+  requested: T,
+  options: SupersedeCommandLifecycleOptions = {},
+): KinetixCommandLifecycle<T> {
+  const next = startCommandLifecycle<T>({
+    confirmed: previous.confirmedValue,
+    requested,
+    maxAttempts: options.maxAttempts ?? previous.maxAttempts,
+    ...(options.commandId !== undefined ? { commandId: options.commandId } : {}),
+  });
+  if (previous.reportedAt !== undefined) next.reportedAt = previous.reportedAt;
+  return next;
+}
+
 /**
  * Structural equality for reported values, so a report of `{ r: 255, g: 0, b: 0 }` matches a request
  * for the same colour. Plain data only (primitives, arrays, plain objects), which is what a device

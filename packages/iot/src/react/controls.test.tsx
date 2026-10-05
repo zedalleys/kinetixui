@@ -122,8 +122,14 @@ describe("DevicePowerControl", () => {
     });
 
     it("marks the CONFIRMED state, so a request in flight is not drawn as a result", () => {
-      // off → on in flight: no mark at all. A tick here would be the component claiming success.
-      expect(mark(<DevicePowerControl state="off" requested="on" control={PENDING} label="Lamp" />)).toBeNull();
+      // off → on in flight. Under `confirmed` (the default) the knob has not moved, so it keeps the mark
+      // of what the device reports: off. Never a tick, which would be the component claiming success.
+      expect(mark(<DevicePowerControl state="off" requested="on" control={PENDING} label="Lamp" />)).toHaveAttribute("data-mark", "off");
+      cleanup();
+      // Under `hybrid` the knob travels to the request, so it carries no mark at all.
+      expect(mark(<DevicePowerControl state="off" requested="on" strategy="hybrid" control={PENDING} label="Lamp" />)).toBeNull();
+      cleanup();
+      expect(mark(<DevicePowerControl state="off" requested="on" strategy="optimistic" control={PENDING} label="Lamp" />)).toBeNull();
     });
 
     it("gives the knob a border under forced-colors so its position survives", () => {

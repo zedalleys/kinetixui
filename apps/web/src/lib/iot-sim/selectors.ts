@@ -43,7 +43,8 @@ export function selectDevices(sim: Simulation): KinetixDevice[] {
 
 export function selectConnectivity(sim: Simulation, deviceId: string): KinetixDeviceConnectivity {
   const rt = sim.devices[deviceId];
-  if (!rt) return { state: "offline" };
+  // No runtime means the sim knows nothing about this device: that is `unknown`, not `offline`.
+  if (!rt) return { state: "unknown" };
   const base = deriveDeviceConnectivity(rt.device, { now: sim.now, staleAfterMs: SIM_STALE_AFTER_MS });
   // Only a failed attempt to reach the device can say "unreachable"; the sim records that on the runtime.
   return rt.unreachable ? { ...base, state: "unreachable" } : base;

@@ -70,19 +70,24 @@ export {
   lifecycleToControlPhase,
   presentCommandValue,
   startCommandLifecycle,
+  supersedeCommandLifecycle,
   transitionCommandLifecycle,
   type BuildDeviceCommandInput,
   type DescribeLifecycleOptions,
   type StartCommandLifecycleInput,
+  type SupersedeCommandLifecycleOptions,
 } from "./commands";
 export {
   clampLevel,
+  describeControlOutcome,
   describeControlState,
   describePowerState,
   normalizePowerState,
   resolveActiveMode,
+  resolveControlPresentation,
   resolveControlState,
   snapToStep,
+  type DescribeControlOutcomeOptions,
 } from "./control";
 export {
   assessDevices,

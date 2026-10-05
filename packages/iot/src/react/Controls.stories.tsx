@@ -64,10 +64,15 @@ export const Power: Story = {
       <Row label="Confirmed off">
         <DevicePowerControl state="off" control={READY} label="Packing line lamp" />
       </Row>
-      <Row label="Requested on, not yet confirmed">
-        {/* The track moves because the user asked; the knob stays hollow because the device has not
-            agreed. That gap is the entire point of the layer. */}
+      <Row label="Requested on, not yet confirmed (confirmed, the default)">
+        {/* The switch stays where the device reports it; the dashed track and "Turning on" carry the
+            request. Nothing is drawn as having happened. */}
         <DevicePowerControl state="off" requested="on" control={PENDING} label="Packing line lamp" />
+      </Row>
+      <Row label="Requested on, not yet confirmed (hybrid)">
+        {/* The track moves because the user asked; the knob stays hollow because the device has not
+            agreed. See "IoT/Control strategies" for all three strategies driven by a lifecycle. */}
+        <DevicePowerControl state="off" requested="on" strategy="hybrid" control={PENDING} label="Packing line lamp" />
       </Row>
       <Row label="Confirmed on">
         <DevicePowerControl state="on" control={READY} label="Packing line lamp" />

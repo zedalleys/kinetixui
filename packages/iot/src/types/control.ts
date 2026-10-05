@@ -15,7 +15,7 @@
  * the product supplies one, the status of the command it sent. This package never sends anything.
  */
 
-import type { KinetixCommandLifecycle, KinetixCommandStatus } from "./command";
+import type { KinetixCommandLifecycle, KinetixCommandPresentation, KinetixCommandStatus, KinetixCommandStrategy } from "./command";
 import type { KinetixDeviceStatus } from "./device";
 
 /**
@@ -120,3 +120,41 @@ export type ResolveControlStateInput = {
    */
   disabled?: boolean;
 };
+
+/**
+ * Where a control's change stands, as a person would read it. `idle` means there is nothing to say;
+ * the three unsuccessful endings are kept apart because each one asks for a different next step.
+ */
+export type KinetixControlOutcome = "idle" | "pending" | "confirmed" | "failed" | "timed-out" | "unreachable" | "cancelled";
+
+/** Inputs to {@link KinetixControlPresentation} resolution: a lifecycle, or the legacy pair of values. */
+export type ResolveControlPresentationInput<T = unknown> = {
+  /** The change's lifecycle. When given it is the only source of truth and the value props are ignored. */
+  lifecycle?: KinetixCommandLifecycle<T> | null;
+  /** How the value is drawn while a change is open. Defaults to `confirmed`. Never changes the lifecycle. */
+  strategy?: KinetixCommandStrategy;
+  /** Legacy: what the device last reported. Used only without a lifecycle. */
+  reported?: T | null;
+  /** Legacy: what the user asked for, while unconfirmed. Used only without a lifecycle. */
+  requested?: T | null;
+};
+
+/**
+ * What a control draws, derived from one lifecycle by one strategy.
+ *
+ * Every field of {@link KinetixCommandPresentation}, plus the request itself (kept after it settles,
+ * so a failure can name what did not happen) and the outcome. No control decides any of this itself.
+ */
+export type KinetixControlPresentation<T = unknown> = KinetixCommandPresentation<T> & {
+  /** What was asked for, open or settled. `undefined` when nothing was. */
+  requestedValue: T | undefined;
+  outcome: KinetixControlOutcome;
+  /**
+   * The request ended without happening and the device reports something else. The UI must say so
+   * in words, under every strategy: under `confirmed` nothing moved back, but the user still asked.
+   */
+  unsuccessful: boolean;
+  /** True when a lifecycle was supplied; false on the legacy value props, which carry no outcome. */
+  fromLifecycle: boolean;
+};
+

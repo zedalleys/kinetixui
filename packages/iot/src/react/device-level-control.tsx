@@ -2,8 +2,9 @@
 
 import * as React from "react";
 import type { KinetixControlState } from "../types/control";
-import { clampLevel, snapToStep } from "../functions/control";
+import { clampLevel, snapToStep, type DescribeControlOutcomeOptions } from "../functions/control";
 import { cn } from "./cn";
+import { ControlAnnouncer, ControlOutcomeNote, useControlContract, type ControlContractProps } from "./control-outcome";
 import { withDisplayName } from "./display-name";
 
 /**
@@ -21,13 +22,25 @@ import { withDisplayName } from "./display-name";
  * hatched extension with a marker — so a dimmer ramping from 20% to 80% shows both the 20 it is at
  * and the 80 it is going to, which is exactly what a user watching a slow bulb needs to see.
  *
+ * **The strategy decides which one leads.** Under `confirmed` (default) the numeral and the solid fill
+ * are the reported level and the request is the hatched extension and the chip. Under `hybrid` the
+ * numeral shows the request and the chip names what the device still reports. Under `optimistic` the
+ * numeral and fill move to the request with no chip, and roll back in words if it does not happen.
+ * Pass a `lifecycle` and a late reply to a superseded request (40, after 80 was asked for) cannot
+ * confirm anything: the lifecycle refuses it.
+ *
  * `value` may be `null`, meaning the device has never reported a level. That renders as an empty
  * track with "—", not as zero: a dimmer that has not reported is not a dimmer that is off.
  */
-export interface DeviceLevelControlProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type" | "size"> {
-  /** The device's confirmed level. `null` means never reported — rendered as unknown, not as 0. */
-  value: number | null | undefined;
-  /** The requested level while unconfirmed. Omit when there is nothing in flight. */
+export interface DeviceLevelControlProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type" | "size">,
+    ControlContractProps<number> {
+  /**
+   * The device's confirmed level. `null` means never reported — rendered as unknown, not as 0.
+   * Ignored when a `lifecycle` is passed.
+   */
+  value?: number | null;
+  /** The requested level while unconfirmed. Omit when there is nothing in flight. Ignored with a `lifecycle`. */
   target?: number | null;
   min?: number;
   max?: number;
@@ -58,12 +71,44 @@ const THUMB_PILL = 44;
 
 const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLInputElement, DeviceLevelControlProps>(
   (
-    { value, target, min = 0, max = 100, step = 1, unit = "%", label, control, onCommit, onPreview, showValue = true, size = "md", variant = "track", className, disabled, ...props },
+    {
+      value,
+      target,
+      min = 0,
+      max = 100,
+      step = 1,
+      unit = "%",
+      label,
+      control: controlProp,
+      lifecycle,
+      strategy,
+      announce,
+      onCommit,
+      onPreview,
+      showValue = true,
+      size = "md",
+      variant = "track",
+      className,
+      disabled,
+      ...props
+    },
     ref,
   ) => {
-    const confirmed = clampLevel(value, min, max);
-    const requested = target === undefined || target === null ? null : clampLevel(target, min, max);
+    const sentence: DescribeControlOutcomeOptions = { formatValue: (v) => `${String(v)}${unit}` };
+    const { presentation, control, announcement } = useControlContract<number>(
+      { lifecycle, strategy, announce, control: controlProp, reported: value, requested: target },
+      sentence,
+    );
+    const confirmed = clampLevel(presentation.reportedValue, min, max);
+    const requested = presentation.pending && presentation.pendingValue !== undefined ? clampLevel(presentation.pendingValue, min, max) : null;
     const pending = requested !== null && requested !== confirmed;
+    // Marked = drawn as not yet confirmed: the hatch, the marker, the dashed thumb and the chip.
+    const marked = pending && presentation.indicatePending;
+    // Read off the presentation, never off the strategy's name. The numeral leads with the request when
+    // the presentation draws it (`hybrid`, `optimistic`); the solid fill follows it only when the request
+    // is also unmarked (`optimistic`), because then nothing else on the track shows it.
+    const shown = pending && presentation.valueSource === "requested" ? requested : confirmed;
+    const filled = pending && !marked ? requested : confirmed;
 
     const interactive = control ? control.interactive : true;
     const isDisabled = disabled || !interactive;
@@ -92,7 +137,7 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
     const pill = variant === "pill";
     const thumb = pill ? THUMB_PILL : THUMB;
     const edge = (n: number) => `calc(${(ratio(n) * 100).toFixed(2)}% + ${((0.5 - ratio(n)) * thumb).toFixed(2)}px)`;
-    const valueText = confirmed === null ? "—" : `${confirmed}${unit}`;
+    const valueText = shown === null ? "—" : `${shown}${unit}`;
     // Label and value inside the pill. Drawn twice — dark on the track, light inside the fill — so the text
     // is legible on both sides of the thumb.
     const pillText = (
@@ -105,33 +150,26 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
     const descriptionId = React.useId();
 
     return (
-      <div className={cn("flex flex-col gap-1", className)} data-pending={pending ? "" : undefined}>
+      <div className={cn("flex flex-col gap-1", className)} data-pending={pending ? "" : undefined} data-strategy={presentation.strategy}>
         {showValue && !pill ? (
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <span className="text-label-lg text-muted-foreground">{label}</span>
             <span className="ms-auto flex flex-wrap items-baseline justify-end gap-x-2 gap-y-1">
-              {/* The confirmed level is the big, solid number. It never shows the request. */}
+              {/* The big number. Under `confirmed` it is the reported level and never shows the request;
+                  `data-value-source` says which one it is under the other strategies. */}
               <span
-                data-confirmed=""
+                data-confirmed={shown === confirmed ? "" : undefined}
+                data-value-source={shown === confirmed ? "reported" : "requested"}
                 className={cn(
                   "tabular-nums leading-none",
                   size === "lg" ? "text-display-sm" : "text-headline-sm",
-                  confirmed === null ? "text-muted-foreground" : "text-foreground",
+                  shown === null ? "text-muted-foreground" : "text-foreground",
                 )}
               >
-                {confirmed === null ? "—" : confirmed}
-                {confirmed === null ? null : <span className="ms-0.5 text-title-md text-muted-foreground">{unit}</span>}
+                {shown === null ? "—" : shown}
+                {shown === null ? null : <span className="ms-0.5 text-title-md text-muted-foreground">{unit}</span>}
               </span>
-              {pending ? (
-                // A dashed chip in words, not an arrow: an arrow would flip under RTL and read backwards.
-                <span
-                  data-requested=""
-                  className="inline-flex animate-pulse items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md tabular-nums text-foreground motion-reduce:animate-none"
-                >
-                  Requested {requested}
-                  {unit}, not yet confirmed
-                </span>
-              ) : null}
+              {marked ? <RequestChip requested={requested!} confirmed={confirmed} unit={unit} leadsWithRequest={shown !== confirmed} /> : null}
             </span>
           </div>
         ) : null}
@@ -158,25 +196,26 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
                 </span>
               </span>
             ) : null}
-            {confirmed !== null ? (
+            {filled !== null ? (
               <div
+                data-fill=""
                 className="absolute inset-y-0 start-0 overflow-hidden rounded-full bg-primary transition-[width] duration-base ease-enter motion-reduce:transition-none"
-                style={{ width: edge(confirmed) }}
+                style={{ width: edge(filled) }}
               >
-                {pill && ratio(confirmed) > 0 ? (
+                {pill && ratio(filled) > 0 ? (
                   <span
                     aria-hidden="true"
                     className="absolute inset-y-0 start-0 flex items-center justify-between gap-3 ps-14 pe-14 text-primary-foreground"
                     // Full track width, whatever the fill's own width is: the fill's width is
                     // `p·W + (½−p)·thumb`, so W = (fill − (½−p)·thumb) / p.
-                    style={{ width: `calc((100% - ${((0.5 - ratio(confirmed)) * thumb).toFixed(2)}px) / ${ratio(confirmed).toFixed(4)})` }}
+                    style={{ width: `calc((100% - ${((0.5 - ratio(filled)) * thumb).toFixed(2)}px) / ${ratio(filled).toFixed(4)})` }}
                   >
                     {pillText}
                   </span>
                 ) : null}
               </div>
             ) : null}
-            {pending ? (
+            {marked ? (
               // The requested extension, hatched so it is distinguishable from the confirmed fill
               // without relying on the two blues being told apart.
               <div
@@ -189,7 +228,7 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
               />
             ) : null}
           </div>
-          {pending ? (
+          {marked ? (
             // The requested marker: a solid tick standing proud of the track at the asked-for level.
             <span
               aria-hidden="true"
@@ -209,12 +248,13 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
             disabled={isDisabled}
             aria-label={label}
             aria-describedby={control?.description ? descriptionId : undefined}
+            aria-busy={pending || undefined}
             aria-valuetext={
-              pending
+              marked
                 ? `${confirmed ?? "unknown"}${unit}, changing to ${requested}${unit}`
-                : confirmed === null
+                : shown === null
                   ? "Not reported"
-                  : `${confirmed}${unit}`
+                  : `${shown}${unit}`
             }
             onChange={(e) => {
               const next = Number(e.currentTarget.value);
@@ -247,30 +287,44 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
               "[&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:bg-background [&::-moz-range-thumb]:shadow-md",
               "focus-visible:[&::-webkit-slider-thumb]:ring-2 focus-visible:[&::-webkit-slider-thumb]:ring-ring",
               "focus-visible:[&::-webkit-slider-thumb]:ring-offset-2 focus-visible:[&::-webkit-slider-thumb]:ring-offset-background",
-              pending && "[&::-webkit-slider-thumb]:border-dashed [&::-moz-range-thumb]:border-dashed",
+              marked && "[&::-webkit-slider-thumb]:border-dashed [&::-moz-range-thumb]:border-dashed",
             )}
             {...props}
           />
         </div>
 
-        {pill && pending ? (
-          <span
-            data-requested=""
-            className="inline-flex w-fit max-w-full animate-pulse items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md tabular-nums text-foreground motion-reduce:animate-none"
-          >
-            Requested {requested}
-            {unit}, not yet confirmed
-          </span>
-        ) : null}
+        {pill && marked ? <RequestChip requested={requested!} confirmed={confirmed} unit={unit} leadsWithRequest={shown !== confirmed} className="w-fit max-w-full" /> : null}
 
         {control?.description && control.availability !== "ready" ? (
           <span id={descriptionId} className="text-label-md text-muted-foreground">
             {control.description}
           </span>
         ) : null}
+        <ControlOutcomeNote presentation={presentation} sentence={sentence} />
+        <ControlAnnouncer announcement={announcement} />
       </div>
     );
   },
 ), "DeviceLevelControl");
+
+/**
+ * The request, in words, in a dashed chip — not an arrow, which would flip under RTL and read backwards.
+ * When the numeral already shows the request (`hybrid`) the chip names what the device still reports.
+ */
+function RequestChip({ requested, confirmed, unit, leadsWithRequest, className }: { requested: number; confirmed: number | null; unit: string; leadsWithRequest: boolean; className?: string }) {
+  return (
+    <span
+      data-requested=""
+      className={cn(
+        "inline-flex animate-pulse items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md tabular-nums text-foreground motion-reduce:animate-none",
+        className,
+      )}
+    >
+      {leadsWithRequest
+        ? `Requested, not yet confirmed. Device reports ${confirmed === null ? "unknown" : `${confirmed}${unit}`}`
+        : `Requested ${requested}${unit}, not yet confirmed`}
+    </span>
+  );
+}
 
 export { DeviceLevelControl };

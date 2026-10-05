@@ -18,16 +18,29 @@ import type { KinetixDevice } from "./device";
 /**
  * Whether we can reach the device, as a claim about the link rather than the device's condition.
  *
- * `unreachable` is stronger than `offline`: offline is "it told us it is gone (or went quiet)",
- * unreachable is "we tried and could not get there" — the state a timed-out command lands in.
- * `stale` means a link story exists but the data behind it is old.
+ * Each state needs its own evidence, and the absence of evidence is a state of its own:
+ *
+ * - `online` — reachable, per the current evidence.
+ * - `offline` — affirmative evidence that the device is gone: it told us, or the product's own rule
+ *   for "went quiet" fired.
+ * - `unreachable` — an attempt to reach it was made and failed. Stronger than `offline`, and never
+ *   derived from a status: only the layer that made the attempt knows it happened.
+ * - `stale` — a link story exists, but the evidence behind it is too old to trust.
+ * - `connecting` — an attempt or a session is being established and has not resolved yet.
+ * - `unknown` — not enough information to say anything. Missing connection data is this, never
+ *   `offline`: "we were not told" is not "it is gone".
+ *
+ * `unknown`, `connecting`, `unreachable` and `stale` are each distinct from `offline`.
  */
-export type KinetixConnectivityState = "online" | "offline" | "unreachable" | "stale";
+export type KinetixConnectivityState = "online" | "offline" | "unreachable" | "stale" | "connecting" | "unknown";
 
+/** Descending concern: what most needs a person's attention first. */
 export const KINETIX_CONNECTIVITY_STATES: readonly KinetixConnectivityState[] = [
   "unreachable",
   "offline",
   "stale",
+  "connecting",
+  "unknown",
   "online",
 ] as const;
 
