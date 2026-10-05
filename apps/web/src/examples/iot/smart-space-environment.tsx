@@ -104,6 +104,12 @@ function Glyph({ name, size = 20 }: { name: IconName; size?: number }) {
   );
 }
 
+/**
+ * Mode tiles get as many columns as fit at their minimum, in `rem`, so at 200% text they wrap instead of
+ * truncating "Heat" to "Hea" inside a fixed three-column grid.
+ */
+const TILE_COLUMNS: React.CSSProperties = { gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 3.5rem), 1fr))" };
+
 const MODE_ICONS: Record<string, IconName> = { heat: "flame", eco: "leaf", off: "power", locked: "lock", unlocked: "unlock" };
 const withIcons = (modes: readonly { id: string; label: string }[]) => modes.map((m) => ({ ...m, icon: MODE_ICONS[m.id] ? <Glyph name={MODE_ICONS[m.id]!} size={22} /> : undefined }));
 
@@ -143,6 +149,8 @@ type DeviceView = {
   /** The value asked for and not yet confirmed. */
   requested?: string;
   on: boolean;
+  /** A lock's CONFIRMED state, from the same binding as `value`, so the drawing and the word cannot disagree. */
+  locked?: boolean;
   power?: ControlBinding;
 };
 
@@ -161,6 +169,7 @@ function deviceView(iot: UseIotSimulation, id: string): DeviceView {
   let value: string | undefined;
   let requested: string | undefined;
   let on = false;
+  let locked: boolean | undefined;
   if (device.type === "light" && power) {
     on = power.confirmed === "on";
     value = on && level ? `${shown(level.confirmed)}%` : onOff(power.confirmed);
@@ -170,11 +179,14 @@ function deviceView(iot: UseIotSimulation, id: string): DeviceView {
     value = onOff(power.confirmed);
     requested = power.requested !== undefined ? onOff(power.requested) : undefined;
   } else if (setpoint) {
-    on = bind("mode")?.confirmed === "heat";
+    // Eco is a running mode too; only Off is off. Heat-only, it drew an Eco thermostat as switched off.
+    const mode = bind("mode")?.confirmed;
+    on = mode !== undefined && mode !== "off";
     value = `${shown(setpoint.confirmed)} °C`;
     requested = setpoint.requested !== undefined ? `${shown(setpoint.requested)} °C` : undefined;
   } else if (lock) {
     value = lock.format(lock.confirmed);
+    locked = lock.confirmed === "locked" ? true : lock.confirmed === "unlocked" ? false : undefined;
     requested = lock.requested !== undefined ? lock.format(lock.requested) : undefined;
   } else {
     const sensor = sim.scenario.sensors.find((s) => s.deviceId === id && (s.metric === "air-quality" || s.metric === "temperature"));
@@ -190,7 +202,7 @@ function deviceView(iot: UseIotSimulation, id: string): DeviceView {
   else if (controls.some((b) => b.control.availability === "pending")) [state, statusWord] = ["pending", "Waiting for the device"];
   else if (controls.some((b) => b.unsettled)) [state, statusWord] = ["warning", "Request did not land"];
   else if (device.status === "stale" || reading.some((r) => r === "stale" || r === "warning" || r === "critical") || alerted) [state, statusWord] = ["warning", device.status === "stale" ? "Stale" : "Needs attention"];
-  return { id, device, category: resolveDeviceCategory(device), roomId: room?.id ?? HOME, roomName: room?.name ?? "Home", state, statusWord, value, requested, on, power };
+  return { id, device, category: resolveDeviceCategory(device), roomId: room?.id ?? HOME, roomName: room?.name ?? "Home", state, statusWord, value, requested, on, locked, power };
 }
 
 /** Temperature and humidity readings for the devices in a room, as words. `stale` is said, not implied. */
@@ -280,7 +292,7 @@ function ClimateHero({ iot, id, roomName }: { iot: UseIotSimulation; id: string;
             control={mode.control}
             label={`${target.device.name} mode`}
             onSelect={mode.send}
-            style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}
+            style={TILE_COLUMNS}
           />
           <Battery value={battery} name={target.device.name} />
         </div>
@@ -340,16 +352,26 @@ function PlugTile({ iot, id }: { iot: UseIotSimulation; id: string }) {
   );
 }
 
-/** The door: locked or unlocked as icon tiles. The lock is slow on purpose, so the gap between asking and locked is visible. */
+/**
+ * The door: the lock itself, the confirmed word, and locked or unlocked as icon tiles. The lock is slow on purpose,
+ * so the gap between asking and locked is visible — and the bolt in the drawing moves when the device CONFIRMS,
+ * like the word, never on the request. Word, tile, bolt and the radio's checked state all read `lock.confirmed`.
+ */
 function LockPanel({ iot, id }: { iot: UseIotSimulation; id: string }) {
   const lock = controlOf(iot, id, "lock");
+  const locked = lock.confirmed === "locked" ? true : lock.confirmed === "unlocked" ? false : undefined;
   return (
     <Panel title={lock.device.name} description={statusLineOf(lock)} as="h5" data-device={id}>
-      <div className="flex min-w-0 flex-wrap items-center gap-4">
-        <p className="text-headline-lg text-foreground">{lock.format(lock.confirmed)}</p>
-        <Battery value={lock.device.battery} name={lock.device.name} />
+      <div className="flex min-w-0 items-center gap-4">
+        <span className="shrink-0 rounded-2xl bg-muted/60 p-2">
+          <DeviceIllustration category="lock" locked={locked} size="lg" />
+        </span>
+        <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
+          <p className="text-headline-lg text-foreground">{lock.format(lock.confirmed)}</p>
+          <Battery value={lock.device.battery} name={lock.device.name} />
+        </div>
       </div>
-      <DeviceModeControl presentation="tiles" modes={withIcons(lock.capability.modes ?? [])} value={lock.confirmed as string} requested={lock.requested as string | undefined} control={lock.control} label="Front door lock" onSelect={lock.send} style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }} />
+      <DeviceModeControl presentation="tiles" modes={withIcons(lock.capability.modes ?? [])} value={lock.confirmed as string} requested={lock.requested as string | undefined} control={lock.control} label="Front door lock" onSelect={lock.send} style={TILE_COLUMNS} />
       <Lifecycle binding={lock} />
     </Panel>
   );
@@ -639,7 +661,7 @@ export function SmartSpaceEnvironmentExample() {
             value={v.value}
             requested={v.requested !== undefined}
             requestedWord={`Requested ${v.requested}, not yet confirmed`}
-            visual={<DeviceIllustration category={v.category} on={v.on && v.state !== "offline"} size="md" />}
+            visual={<DeviceIllustration category={v.category} on={v.on && v.state !== "offline"} locked={v.locked} size="md" />}
             onSelect={() => selectDevice(v.id)}
             control={
               v.power ? (
