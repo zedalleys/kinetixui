@@ -692,3 +692,63 @@ describe("status colours", () => {
     expect(theme({ manualOverrides: { destructive: "#00ff00" } }).light.colors.destructive).toBe("#00ff00");
   });
 });
+
+/* ------------------------------------------------------------------ focus visibility */
+
+/**
+ * The focus ring is a non-text indicator (SC 1.4.11, 3:1). The brand seed writes `focus`, and since the
+ * web ring now reads `--focus` (LIVE_SHADOW_ROLES in style-dictionary/hooks.mjs) the seed is what keyboard
+ * users see. Before, the panel checked text pairs only, so a theme that put the ring within a shade of its
+ * surface reported nothing.
+ */
+describe("focus ring visibility", () => {
+  const hues = Array.from({ length: 24 }, (_, i) => atHue(i * 15));
+
+  it.each(MODES)("a generated theme keeps the ring at 3:1 on the page and on cards (%s), for every hue", (mode) => {
+    for (const brand of [...BRANDS, ...hues]) {
+      const focusRows = contrastOf(theme({ brand })[mode]).filter((r) => r.pair[1] === "focus" || r.pair[1] === "ring");
+      expect(focusRows.map((r) => r.pair.join("/")).sort()).toEqual(["background/focus", "background/ring", "card/focus", "card/ring"]);
+      for (const row of focusRows) expect(row.ratio, `${brand} ${row.pair.join("/")} ${mode}`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("reports a ring the user made invisible by hand, against the 3:1 non-text bar", () => {
+    const rows = contrastOf(theme({ manualOverrides: { background: "#1d4ed8" } }).light);
+    const ring = rows.find((r) => r.pair[0] === "background" && r.pair[1] === "focus")!;
+    expect(ring.min).toBe(3);
+    expect(ring.pass).toBe(false);
+    // text pairs keep the AA bar
+    expect(rows.find((r) => r.pair[1] === "foreground")!.min).toBe(4.5);
+  });
+
+  it("reports a ring-ring control the user made invisible by pinning `ring` apart from `focus`", () => {
+    // `focus` stays the readable brand ring, so every `focus` pair passes; Checkbox, Radio, Switch, Tabs and
+    // Badge draw `ring`, and a white ring on a white page is invisible.
+    const rows = contrastOf(theme({ manualOverrides: { ring: "#fafafa" } }).light);
+    expect(rows.filter((r) => r.pair[1] === "focus").every((r) => r.pass)).toBe(true);
+    const ring = rows.find((r) => r.pair[0] === "background" && r.pair[1] === "ring")!;
+    expect(ring.min).toBe(3);
+    expect(ring.pass).toBe(false);
+    // only the ring rows fail: the check is attributed to the token that is wrong
+    expect(rows.filter((r) => r.pair[1] === "ring").every((r) => !r.pass)).toBe(true);
+  });
+
+  it("holds `focus` and `ring` to the bar independently, and passes valid combinations", () => {
+    const rowsFor = (overrides: Record<string, string>) => contrastOf(theme({ manualOverrides: overrides }).light);
+    const passing = (rows: ReturnType<typeof contrastOf>, token: string) =>
+      rows.filter((r) => r.pair[1] === token).every((r) => r.pass);
+
+    // both pinned apart, both readable: every ring row passes
+    const valid = rowsFor({ focus: "#0a6e5a", ring: "#0b3d91" });
+    expect(passing(valid, "focus")).toBe(true);
+    expect(passing(valid, "ring")).toBe(true);
+
+    // a bad `focus` does not fail `ring`, and a bad `ring` does not fail `focus`
+    const badFocus = rowsFor({ focus: "#fafafa", ring: "#0b3d91" });
+    expect(passing(badFocus, "focus")).toBe(false);
+    expect(passing(badFocus, "ring")).toBe(true);
+    const badRing = rowsFor({ focus: "#0a6e5a", ring: "#fafafa" });
+    expect(passing(badRing, "focus")).toBe(true);
+    expect(passing(badRing, "ring")).toBe(false);
+  });
+});

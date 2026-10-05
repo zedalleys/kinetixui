@@ -157,6 +157,43 @@ function typographyToCss(v) {
  * The light run writes the full `:root` set; the dark run writes only the
  * theme-dependent focus rings under `.dark` (see sd.config.mjs `css-extras`).
  */
+/**
+ * Shadow composites the web emits as a LIVE reference to a colour role rather than a baked hex.
+ *
+ * `--shadow-focus` is the keyboard focus ring of Button, Input, Textarea, NativeSelect, MultiSelect,
+ * NumberInput, InputGroup, InputOTP, Fab and interactive Card. Baked, it stayed the shipped azure whatever
+ * a theme did to `--focus` / `--ring`: a Create theme with a green brand still drew a blue ring, and one
+ * whose background was close to that blue drew an invisible one. Emitted as `hsl(var(--focus) / a)`, it
+ * follows the `focus` role the contract already documents as "override to theme focus separately".
+ *
+ * The source keeps the resolved hex because the native shadow outputs (Flutter BoxShadow) and
+ * `check:contrast` read it; `check:contrast` asserts that hex equals the resolved `focus` role in each
+ * theme, so the default rendering is unchanged and the two cannot drift. The alpha of each layer is read
+ * from the source hex (`#1d4ed833` -> 0.2), so the halo keeps its per-theme weight.
+ *
+ * The status rings (focus-destructive / -success / -warning) stay baked: their light source colours are
+ * not all equal to their roles today (focus-destructive is the Figma error red, not `--destructive`), so
+ * making them live is a visual change, tracked in docs/audits/COLOR-THEMING-MATURITY-AUDIT.md.
+ */
+export const LIVE_SHADOW_ROLES = { 'shadow.focus': 'focus' };
+
+const alphaOf = (hex) => {
+  const h = String(hex).replace('#', '');
+  return h.length === 8 ? Math.round((parseInt(h.slice(6, 8), 16) / 255) * 100) / 100 : 1;
+};
+
+/** DTCG shadow array -> `box-shadow` string whose colours are `hsl(var(--role) / a)`. */
+export function liveShadowToCss(value, role) {
+  const layers = Array.isArray(value) ? value : [value];
+  return layers
+    .map((l) => {
+      const a = alphaOf(l.color);
+      const colour = a === 1 ? `hsl(var(--${role}))` : `hsl(var(--${role}) / ${a})`;
+      return `${px(l.offsetX)} ${px(l.offsetY)} ${px(l.blur)} ${px(l.spread)} ${colour}`;
+    })
+    .join(', ');
+}
+
 export const extrasCssFormat = {
   name: 'kinetix/extras-css',
   format: ({ dictionary, options }) => {
@@ -165,7 +202,8 @@ export const extrasCssFormat = {
     const type = [];
     for (const t of dictionary.allTokens) {
       const v = t.$value ?? t.value;
-      if (t.$type === 'shadow') shadows.push(`  --${t.path.join('-')}: ${shadowToCss(v)};`);
+      const role = LIVE_SHADOW_ROLES[t.path.join('.')];
+      if (t.$type === 'shadow') shadows.push(`  --${t.path.join('-')}: ${role ? liveShadowToCss(v, role) : shadowToCss(v)};`);
       else if (t.$type === 'typography') type.push(`  --text-${t.path.at(-1)}: ${typographyToCss(v)};`);
     }
     return (

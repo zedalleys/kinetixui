@@ -9,10 +9,11 @@ The dark theme is a `.dark` class on `<html>`. `@kinetixui/tokens/css/dark`
 redefines the semantic contract under that selector — primitives are unchanged.
 
 <Callout>
-  The dark palette is currently **generated**, not hand-designed: `color.dark.json`
-  is derived by walking each ramp toward its dark end and swapping foreground /
-  background roles. It is production-usable and will be refined against a
-  hand-tuned dark source.
+  The dark theme is its own palette, not a flip of the light one: each role in
+  `tokens/semantic/color.dark.json` is mapped to a primitive step chosen for the dark
+  surface (`--primary` is `azure.400` in dark and `azure.700` in light), and
+  `pnpm check:contrast` holds both modes to the same WCAG targets. A custom theme
+  needs a dark value for every role it overrides — see [Theming](/docs/theming).
 </Callout>
 
 ## Next.js

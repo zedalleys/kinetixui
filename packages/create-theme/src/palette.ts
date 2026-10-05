@@ -44,6 +44,30 @@ export const CONTRAST_PAIRS: [AcceptedToken, AcceptedToken][] = [
   ["brand", "brand-foreground"],
 ];
 
+/**
+ * Non-text pairs held to SC 1.4.11 (3:1) rather than AA text contrast.
+ *
+ * Kept apart from CONTRAST_PAIRS on purpose: that list is also the base -> foreground map the resolver
+ * regenerates text colours from, and the focus ring is not the "foreground" of the page.
+ *
+ * The focus ring is drawn on the page and on cards. A theme that moves `background` (Advanced) or
+ * `focus` (the brand seed) could put the two within a shade of each other and leave keyboard users with
+ * no visible focus — and nothing said so, because only text pairs were checked.
+ */
+export const NON_TEXT_PAIRS: [AcceptedToken, AcceptedToken][] = [
+  ["background", "focus"],
+  ["card", "focus"],
+  // Two focus mechanisms ship: `shadow-focus` reads `focus`, and Checkbox, Radio, Switch, Tabs, Badge and
+  // Sidebar draw `ring-ring`. `ring` is its own accepted override, so a theme can pin it apart from `focus`
+  // and leave those controls with an invisible ring while the `focus` pairs above still pass.
+  ["background", "ring"],
+  ["card", "ring"],
+];
+
+/** WCAG minimums: AA body text, and SC 1.4.11 for non-text UI such as the focus ring. */
+export const TEXT_MIN = 4.5;
+export const NON_TEXT_MIN = 3;
+
 export type ParsedPalette = {
   values: Partial<Record<AcceptedToken, string>>;
   errors: string[];
@@ -113,7 +137,13 @@ export function toCssBlock(values: Partial<Record<AcceptedToken, string>>): stri
   return `:root {\n${lines.join("\n")}\n}`;
 }
 
-export type ContrastResult = { pair: [AcceptedToken, AcceptedToken]; ratio: number; pass: boolean };
+export type ContrastResult = {
+  pair: [AcceptedToken, AcceptedToken];
+  ratio: number;
+  pass: boolean;
+  /** The ratio this pair has to reach: 4.5 for text, 3 for a non-text pair such as the focus ring. */
+  min: number;
+};
 
 /**
  * Only pairs where both sides were actually supplied (explicitly or derived).
@@ -124,8 +154,12 @@ export type ContrastResult = { pair: [AcceptedToken, AcceptedToken]; ratio: numb
  * beside it. A contrast panel that disagrees with its own preview is worse than none.
  */
 export function checkContrast(values: Partial<Record<AcceptedToken, string>>): ContrastResult[] {
-  return CONTRAST_PAIRS.filter(([bg, fg]) => values[bg] && values[fg]).map(([bg, fg]) => {
-    const ratio = guaranteedContrast(values[bg]!, values[fg]!);
-    return { pair: [bg, fg], ratio, pass: ratio >= 4.5 };
-  });
+  const measure = (pairs: [AcceptedToken, AcceptedToken][], min: number): ContrastResult[] =>
+    pairs
+      .filter(([bg, fg]) => values[bg] && values[fg])
+      .map(([bg, fg]) => {
+        const ratio = guaranteedContrast(values[bg]!, values[fg]!);
+        return { pair: [bg, fg], ratio, pass: ratio >= min, min };
+      });
+  return [...measure(CONTRAST_PAIRS, TEXT_MIN), ...measure(NON_TEXT_PAIRS, NON_TEXT_MIN)];
 }
