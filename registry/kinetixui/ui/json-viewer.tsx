@@ -125,7 +125,7 @@ function JsonNode({
           aria-label={expanded ? "Collapse" : "Expand"}
           className="mt-0.5 inline-flex size-4 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground"
         >
-          <ChevronRight className={cn("size-3 transition-transform", expanded && "rotate-90")} />
+          <ChevronRight className={cn("size-3 transition-transform", expanded ? "rotate-90" : "rtl:-scale-x-100")} />
         </button>
         <span>
           {name !== undefined && <span className="text-muted-foreground">{JSON.stringify(name)}: </span>}

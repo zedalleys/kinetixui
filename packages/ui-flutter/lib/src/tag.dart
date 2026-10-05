@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_text.dart';
+import 'icon_control.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/tag.tsx` (`tagVariants`). A
@@ -53,16 +54,15 @@ class KinetixTag extends StatelessWidget {
           ),
           if (onRemove != null) ...[
             const SizedBox(width: 4),
-            // Semantics, not a bare GestureDetector: without it the control has no name and no button
-            // role, so a screen reader cannot find it or say what it does.
-            Semantics(
+            // A named button, not a bare GestureDetector: without a name and a role a screen reader cannot
+            // find the control or say what it does — and without a semantics tap action (which the
+            // `excludeSemantics` this used to carry dropped), it cannot activate it either.
+            IconControl(
               label: removeLabel ?? 'Remove $label',
-              button: true,
-              excludeSemantics: true,
-              child: GestureDetector(
-                onTap: onRemove,
-                child: Icon(Icons.close, size: 14, color: fg),
-              ),
+              onTap: onRemove,
+              size: 14,
+              color: fg,
+              child: const Icon(Icons.close),
             ),
           ],
         ],

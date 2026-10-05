@@ -29,6 +29,8 @@ public struct KinetixNotificationCenterTrigger: View {
                 .frame(width: 36, height: 36)
         }
         .buttonStyle(.plain)
+        // The unread dot is drawn, not spoken; the label carries it, as React's aria-label does.
+        .accessibilityLabel(unreadCount > 0 ? "Notifications, \(unreadCount) unread" : "Notifications")
         .overlay(alignment: .topTrailing) {
             if unreadCount > 0 {
                 Circle()

@@ -684,10 +684,16 @@ const BEHAVIOUR = [
   {
     component: "KxBanner",
     async run(page, t) {
-      const dismiss = page.locator("section[data-kx-subject=banner]").getByRole("button", { name: "Dismiss" });
+      const dismiss = page.locator("section[data-kx-subject=banner] kx-banner:not(#banner-own-icon)").getByRole("button", { name: "Dismiss" });
       await dismiss.focus();
       await press(page, "Enter");
       t((await out(page, "banner")) === "dismissed", "its dismiss control is a named button that works from the keyboard");
+      // A projected [kxDismissIcon] replaces the glyph and gets the glyph's box — the icon contract's size rule.
+      const own = page.locator("#banner-own-icon");
+      const button = own.getByRole("button", { name: "Dismiss" });
+      const icon = await button.locator("svg").evaluateAll((svgs) => svgs.map((s) => [s.getBoundingClientRect().width, s.getBoundingClientRect().height, s.classList.contains("kx-dismiss-glyph")]));
+      t(icon.length === 1 && !icon[0][2], "a projected dismiss icon replaces the built-in glyph", JSON.stringify(icon));
+      t(icon.length === 1 && Math.abs(icon[0][0] - 14) < 0.5 && Math.abs(icon[0][1] - 14) < 0.5, "and is sized by the slot, not by the icon (14×14 CSS px)", JSON.stringify(icon));
     },
   },
   {

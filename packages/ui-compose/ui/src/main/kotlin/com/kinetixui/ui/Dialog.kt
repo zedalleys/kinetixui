@@ -2,7 +2,6 @@ package com.kinetixui.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -76,14 +75,17 @@ fun KinetixDialog(
                 }
             }
             if (dismissible) {
-                Text(
-                    text = "×",
-                    color = colors.mutedForeground,
+                // A named button (was a bare clickable "×" that TalkBack read as "multiplication sign").
+                KinetixIconControl(
+                    label = "Close",
+                    onClick = onDismissRequest,
+                    iconSize = 16.dp,
+                    tint = colors.mutedForeground,
+                    padding = dimensionResource(R.dimen.spacing_2),
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(dimensionResource(R.dimen.spacing_4))
-                        .clickable(onClick = onDismissRequest),
-                )
+                        .padding(dimensionResource(R.dimen.spacing_2)),
+                ) { KinetixIcon(KinetixIcons.Close, 16.dp) }
             }
         }
     }

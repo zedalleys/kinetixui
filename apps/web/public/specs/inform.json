@@ -35,6 +35,12 @@
           "required": false
         },
         {
+          "name": "dismissIcon",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Replaces the default dismiss mark (lucide's `X`) with your own icon — any icon library or SVG. The button keeps its accessible name (\"Dismiss\") and sizes any SVG inside it to 14px, so the icon needs …"
+        },
+        {
           "name": "action",
           "type": "{ label: React.ReactNode; onClick?: () => void; icon?: React.ReactNode; }",
           "required": false,

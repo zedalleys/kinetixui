@@ -19,7 +19,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -36,7 +40,8 @@ import kotlin.math.roundToInt
  * library is pulled into this package. The scrubber reuses [KinetixSlider]
  * outright. `44dp`/`36dp`/`32dp` control sizes are Figma-literal, off the
  * shared `spacing_*` scale — hardcoded, same reasoning as `KinetixFab`.
- * Transport glyphs are plain text ("▶"/"⏸"/"⏮"/"⏭") — no icon library.
+ * Transport controls are named buttons drawing Material's transport icons
+ * ([KinetixIcons]); they name a time direction, so they do not mirror.
  */
 enum class KinetixAudioPlayerVariant { Full, Mini }
 
@@ -97,7 +102,7 @@ fun KinetixAudioPlayer(
                         )
                     }
                 }
-                TransportGlyph(text = "⏭", onClick = { onSeek((positionMs + skipByMs).coerceAtMost(durationMs)) })
+                TransportControl(KinetixIcons.FastForward, "Forward ${skipByMs / 1000}s", onClick = { onSeek((positionMs + skipByMs).coerceAtMost(durationMs)) })
                 PlayPauseButton(isPlaying = isPlaying, onClick = onPlayPause, diameter = 36.dp)
             }
             Box(
@@ -128,11 +133,11 @@ fun KinetixAudioPlayer(
             horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_3), Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TransportGlyph(text = "⏮", onClick = { onPrev?.invoke() }, enabled = onPrev != null)
-            TransportGlyph(text = "⏪", onClick = { onSeek((positionMs - skipByMs).coerceAtLeast(0L)) })
+            TransportControl(KinetixIcons.SkipPrevious, "Previous track", onClick = { onPrev?.invoke() }, enabled = onPrev != null)
+            TransportControl(KinetixIcons.FastRewind, "Back ${skipByMs / 1000}s", onClick = { onSeek((positionMs - skipByMs).coerceAtLeast(0L)) })
             PlayPauseButton(isPlaying = isPlaying, onClick = onPlayPause, diameter = 44.dp)
-            TransportGlyph(text = "⏩", onClick = { onSeek((positionMs + skipByMs).coerceAtMost(durationMs)) })
-            TransportGlyph(text = "⏭", onClick = { onNext?.invoke() }, enabled = onNext != null)
+            TransportControl(KinetixIcons.FastForward, "Forward ${skipByMs / 1000}s", onClick = { onSeek((positionMs + skipByMs).coerceAtMost(durationMs)) })
+            TransportControl(KinetixIcons.SkipNext, "Next track", onClick = { onNext?.invoke() }, enabled = onNext != null)
         }
     }
 }
@@ -145,27 +150,27 @@ private fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit, diameter: D
             .size(diameter)
             .clip(CircleShape)
             .background(colors.action)
-            .clickable(onClick = onClick),
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = if (isPlaying) "Pause" else "Play" },
         contentAlignment = Alignment.Center,
     ) {
-        Text(text = if (isPlaying) "⏸" else "▶", color = colors.actionForeground)
+        KinetixIcon(if (isPlaying) KinetixIcons.Pause else KinetixIcons.PlayArrow, diameter / 2, tint = colors.actionForeground)
     }
 }
 
 @Composable
-private fun RowScope.TransportGlyph(text: String, onClick: () -> Unit, enabled: Boolean = true) {
+private fun RowScope.TransportControl(icon: ImageVector, label: String, onClick: () -> Unit, enabled: Boolean = true) {
+    // Was a Unicode glyph per control ("⏮", "⏪", "⏩", "⏭"): unnamed for TalkBack, and "⏪" / "⏩" render as
+    // colour emoji on Android, ignoring the tint and the disabled alpha below. Now a named button with a
+    // Material vector, as React names them (`aria-label="Previous track"`, "Back 10s", …).
     val colors = KinetixColorScheme.current
-    Box(
-        modifier = Modifier
-            .size(32.dp)
-            .clip(CircleShape)
-            .clickable(enabled = enabled, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = text,
-            color = if (enabled) colors.mutedForeground else colors.mutedForeground.copy(alpha = 0.4f),
-            fontSize = dimensionResource(R.dimen.font_size_body_md).value.sp,
-        )
-    }
+    KinetixIconControl(
+        label = label,
+        onClick = onClick,
+        enabled = enabled,
+        iconSize = 20.dp,
+        tint = if (enabled) colors.mutedForeground else colors.mutedForeground.copy(alpha = 0.4f),
+        padding = 6.dp,
+        modifier = Modifier.clip(CircleShape),
+    ) { KinetixIcon(icon, 20.dp) }
 }

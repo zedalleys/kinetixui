@@ -51,6 +51,9 @@ class KinetixNumberInput extends StatelessWidget {
           button: true,
           label: label,
           enabled: active,
+          // excludeSemantics drops the GestureDetector's tap action along with the icon, so the action is
+          // declared here — otherwise a screen reader finds a named button its activate gesture cannot press.
+          onTap: active ? onTap : null,
           excludeSemantics: true,
           child: Opacity(
             opacity: active ? 1 : 0.4,

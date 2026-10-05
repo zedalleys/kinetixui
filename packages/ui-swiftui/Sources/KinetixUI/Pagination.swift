@@ -74,7 +74,7 @@ public struct KinetixPaginationPrevious: View {
     public var body: some View {
         Button(action: action) {
             HStack(spacing: 4) {
-                Image(systemName: "chevron.left")
+                Image(systemName: "chevron.backward") // flips in RTL; chevron.left does not
                 Text("Previous")
             }
             .font(.kinetixLabelLg)
@@ -100,7 +100,7 @@ public struct KinetixPaginationNext: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Text("Next")
-                Image(systemName: "chevron.right")
+                Image(systemName: "chevron.forward") // flips in RTL; chevron.right does not
             }
             .font(.kinetixLabelLg)
             .foregroundStyle(colors.foreground)

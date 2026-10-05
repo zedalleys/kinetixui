@@ -1,9 +1,9 @@
 {
   "$schema": "https://kinetixui.com/schema/icon-mapping.json",
-  "description": "Cross-platform mapping for icons KinetixUI COMPONENTS render internally (their own expand chevron, checkmark, close button, etc.) — not icons a caller passes in as a prop/children, which stay free-form per platform by design and are out of scope here. lucide-react remains the single React icon source; native ports each use their own platform-native icon mechanism (Material Icons on Flutter, SF Symbols on SwiftUI) or, on Jetpack Compose, plain Unicode glyphs — Compose uses ZERO `Icons.*` (Material Icons) references anywhere in this codebase today, confirmed by exhaustive grep across every port file. This file only covers icon names reused across two or more components; single-component icons (e.g. Rating's Star, ColorPicker's Pipette) aren't covered by this slice — see /docs/icons for the full list of what's not yet mapped.",
+  "description": "Cross-platform mapping for icons KinetixUI COMPONENTS render internally (their own expand chevron, checkmark, close button, etc.) — not icons a caller passes in as a prop/children/slot, which stay free-form per platform by design. lucide-react is the React source; each native port uses its platform's own icon mechanism: Material Icons on Flutter, SF Symbols on SwiftUI, and on Jetpack Compose Material icons drawn from the module's internal KinetixIcons vectors (material3 Icon, no material-icons dependency). Until the 2026-10-05 icon audit (docs/audits/ICON-ARCHITECTURE-AUDIT.md) every Compose component-owned icon was a Unicode glyph in a Text; the ones that remain are listed, with their reason, in composeGlyphs below, and `pnpm check:icons` fails on any glyph not listed there. `rtl` is the direction rule per icon: 'mirrors' icons must use each platform's direction-aware variant (checked), 'fixed' ones must not turn around. This file only covers icon names reused across two or more components; /docs/icons is the user-facing guide.",
   "types": {
-    "icon-ref": "a named icon reference from the platform's own built-in icon set (Flutter Icons.*, SwiftUI SF Symbol systemName)",
-    "glyph": "a literal Unicode character rendered as plain text (e.g. Compose's Text(text = \"▾\")), not a named icon asset",
+    "icon-ref": "a named icon reference: Flutter Icons.*, a SwiftUI SF Symbol systemName, or a Compose KinetixIcons.* vector (Material icon path data, internal to the module)",
+    "glyph": "a literal Unicode character rendered as plain text (e.g. Compose's Text(text = \"✓\")), not a named icon asset. TalkBack reads it aloud and its shape depends on the device font, so each remaining one is recorded in composeGlyphs with its reason.",
     "shape": "a custom-drawn shape (Circle(), CircleShape, BoxShape.circle, Canvas), not an icon or a text glyph",
     "absent": "no hardcoded icon-like element found in this platform's port of this component — verified by grep, not assumed. Usually means the platform's own built-in widget draws its own affordance (e.g. a native context-menu's checkmark), or the element genuinely isn't rendered on that platform."
   },
@@ -11,26 +11,28 @@
     {
       "name": "ChevronDown",
       "reactImport": "lucide-react",
+      "rtl": "fixed",
       "components": [
         {
           "component": "accordion",
           "react": { "file": "packages/ui/src/components/accordion.tsx" },
           "flutter": { "type": "icon-ref", "value": "Icons.keyboard_arrow_down", "file": "packages/ui-flutter/lib/src/accordion.dart" },
           "swiftui": { "type": "icon-ref", "value": "chevron.down", "file": "packages/ui-swiftui/Sources/KinetixUI/Accordion.swift" },
-          "compose": { "type": "glyph", "value": "▾", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Accordion.kt", "note": "rotated 180° when open" }
+          "compose": { "type": "icon-ref", "value": "KinetixIcons.ExpandMore", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Accordion.kt", "note": "rotated 180° when open; was the glyph ▾ (read aloud by TalkBack) until the icon audit" }
         },
         {
           "component": "select",
           "react": { "file": "packages/ui/src/components/select.tsx" },
           "flutter": { "type": "icon-ref", "value": "Icons.keyboard_arrow_down", "file": "packages/ui-flutter/lib/src/select.dart" },
           "swiftui": { "type": "icon-ref", "value": "chevron.down", "file": "packages/ui-swiftui/Sources/KinetixUI/Select.swift" },
-          "compose": { "type": "glyph", "value": "▾", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Select.kt", "note": "now matches Accordion's glyph — was a different ⌄ before, fixed for consistency" }
+          "compose": { "type": "icon-ref", "value": "KinetixIcons.ExpandMore", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Select.kt", "note": "was the glyph ▾" }
         }
       ]
     },
     {
       "name": "ChevronLeft",
       "reactImport": "lucide-react",
+      "rtl": "mirrors",
       "components": [
         {
           "component": "calendar",
@@ -41,26 +43,27 @@
         {
           "component": "navigation-bar",
           "flutter": { "type": "icon-ref", "value": "Icons.chevron_left", "file": "packages/ui-flutter/lib/src/navigation_bar.dart" },
-          "swiftui": { "type": "icon-ref", "value": "chevron.left", "file": "packages/ui-swiftui/Sources/KinetixUI/NavigationBar.swift" },
-          "compose": { "type": "glyph", "value": "‹", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/NavigationBar.kt" }
+          "swiftui": { "type": "icon-ref", "value": "chevron.backward", "file": "packages/ui-swiftui/Sources/KinetixUI/NavigationBar.swift", "note": "flips in RTL; was chevron.left, which does not" },
+          "compose": { "type": "icon-ref", "value": "KinetixIcons.ChevronStart", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/NavigationBar.kt", "note": "auto-mirrored vector; was the glyph ‹ in an unnamed clickable" }
         },
         {
           "component": "pagination",
           "flutter": { "type": "icon-ref", "value": "Icons.chevron_left", "file": "packages/ui-flutter/lib/src/pagination.dart" },
-          "swiftui": { "type": "icon-ref", "value": "chevron.left", "file": "packages/ui-swiftui/Sources/KinetixUI/Pagination.swift" },
-          "compose": { "type": "absent" }
+          "swiftui": { "type": "icon-ref", "value": "chevron.backward", "file": "packages/ui-swiftui/Sources/KinetixUI/Pagination.swift", "note": "flips in RTL; was chevron.left" },
+          "compose": { "type": "icon-ref", "value": "KinetixIcons.ChevronStart", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Pagination.kt", "note": "was the glyph ‹ (recorded here as absent before the icon audit, which it was not)" }
         }
       ]
     },
     {
       "name": "ChevronRight",
       "reactImport": "lucide-react",
+      "rtl": "mirrors",
       "components": [
         {
           "component": "breadcrumb",
           "flutter": { "type": "icon-ref", "value": "Icons.chevron_right", "file": "packages/ui-flutter/lib/src/breadcrumb.dart" },
-          "swiftui": { "type": "absent", "note": "no systemName found in Breadcrumb.swift" },
-          "compose": { "type": "absent" }
+          "swiftui": { "type": "icon-ref", "value": "chevron.forward", "file": "packages/ui-swiftui/Sources/KinetixUI/Breadcrumb.swift", "note": "the default of the separator's symbol parameter; a direction-aware SF Symbol, so it flips in RTL" },
+          "compose": { "type": "glyph", "value": "\"›\"", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Breadcrumb.kt", "note": "a text default of KinetixBreadcrumbSeparator(text); '›' is Bidi_Mirrored, so it turns around in RTL. Listed in composeGlyphs." }
         },
         {
           "component": "calendar",
@@ -83,8 +86,8 @@
         {
           "component": "json-viewer",
           "flutter": { "type": "icon-ref", "value": "Icons.chevron_right", "file": "packages/ui-flutter/lib/src/json_viewer.dart" },
-          "swiftui": { "type": "icon-ref", "value": "chevron.right", "file": "packages/ui-swiftui/Sources/KinetixUI/JsonViewer.swift" },
-          "compose": { "type": "absent" }
+          "swiftui": { "type": "icon-ref", "value": "chevron.forward", "file": "packages/ui-swiftui/Sources/KinetixUI/JsonViewer.swift", "note": "collapsed points to the inline end; expanded turns to point down in both directions" },
+          "compose": { "type": "glyph", "value": "\"▸\"", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/JsonViewer.kt", "rtlException": "'▸' is not Bidi_Mirrored, so the collapsed disclosure keeps pointing right in RTL. It is also the only state cue; it waits on expanded-state semantics (composeGlyphs, audit P2).", "note": "was recorded as absent" }
         },
         {
           "component": "menubar",
@@ -95,26 +98,27 @@
         {
           "component": "pagination",
           "flutter": { "type": "icon-ref", "value": "Icons.chevron_right", "file": "packages/ui-flutter/lib/src/pagination.dart" },
-          "swiftui": { "type": "icon-ref", "value": "chevron.right", "file": "packages/ui-swiftui/Sources/KinetixUI/Pagination.swift" },
-          "compose": { "type": "absent" }
+          "swiftui": { "type": "icon-ref", "value": "chevron.forward", "file": "packages/ui-swiftui/Sources/KinetixUI/Pagination.swift", "note": "flips in RTL; was chevron.right" },
+          "compose": { "type": "icon-ref", "value": "KinetixIcons.ChevronEnd", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Pagination.kt", "note": "was the glyph › (recorded here as absent before the icon audit)" }
         },
         {
           "component": "tree-view",
           "flutter": { "type": "icon-ref", "value": "Icons.chevron_right", "file": "packages/ui-flutter/lib/src/tree_view.dart" },
-          "swiftui": { "type": "icon-ref", "value": "chevron.right", "file": "packages/ui-swiftui/Sources/KinetixUI/TreeView.swift" },
-          "compose": { "type": "absent" }
+          "swiftui": { "type": "icon-ref", "value": "chevron.forward", "file": "packages/ui-swiftui/Sources/KinetixUI/TreeView.swift", "note": "collapsed points to the inline end; expanded turns to point down in both directions" },
+          "compose": { "type": "glyph", "value": "\"▸\"", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/TreeView.kt", "rtlException": "'▸' is not Bidi_Mirrored, so the collapsed disclosure keeps pointing right in RTL. It is also the only state cue; it waits on expanded-state semantics (composeGlyphs, audit P2).", "note": "was recorded as absent" }
         }
       ]
     },
     {
       "name": "Check",
       "reactImport": "lucide-react",
+      "rtl": "fixed",
       "components": [
         {
           "component": "checkbox",
           "flutter": { "type": "icon-ref", "value": "Icons.check", "file": "packages/ui-flutter/lib/src/checkbox.dart" },
           "swiftui": { "type": "icon-ref", "value": "checkmark", "file": "packages/ui-swiftui/Sources/KinetixUI/Checkbox.swift" },
-          "compose": { "type": "glyph", "value": "✓", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Checkbox.kt" }
+          "compose": { "type": "icon-ref", "value": "KinetixIcons.Check", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Checkbox.kt", "note": "was the glyph ✓" }
         },
         {
           "component": "code-block",
@@ -175,6 +179,7 @@
     {
       "name": "X",
       "reactImport": "lucide-react",
+      "rtl": "fixed",
       "components": [
         {
           "component": "app-bar",
@@ -185,26 +190,26 @@
         {
           "component": "banner",
           "flutter": { "type": "icon-ref", "value": "Icons.close", "file": "packages/ui-flutter/lib/src/banner.dart" },
-          "swiftui": { "type": "absent" },
-          "compose": { "type": "glyph", "value": "×", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Banner.kt" }
+          "swiftui": { "type": "icon-ref", "value": "xmark", "file": "packages/ui-swiftui/Sources/KinetixUI/Banner.swift", "note": "named \"Dismiss\"; replaceable through the dismissIcon view builder" },
+          "compose": { "type": "icon-ref", "value": "KinetixIcons.Close", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Banner.kt", "note": "a named button; replaceable through dismissIcon" }
         },
         {
           "component": "dialog",
           "flutter": { "type": "icon-ref", "value": "Icons.close", "file": "packages/ui-flutter/lib/src/dialog.dart" },
           "swiftui": { "type": "icon-ref", "value": "xmark", "file": "packages/ui-swiftui/Sources/KinetixUI/Dialog.swift" },
-          "compose": { "type": "absent" }
+          "compose": { "type": "icon-ref", "value": "KinetixIcons.Close", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Dialog.kt", "note": "was an unnamed clickable × (recorded here as absent before the icon audit)" }
         },
         {
           "component": "file-upload",
           "flutter": { "type": "icon-ref", "value": "Icons.close", "file": "packages/ui-flutter/lib/src/file_upload.dart" },
           "swiftui": { "type": "icon-ref", "value": "xmark", "file": "packages/ui-swiftui/Sources/KinetixUI/FileUpload.swift" },
-          "compose": { "type": "glyph", "value": "×", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/FileUpload.kt" }
+          "compose": { "type": "icon-ref", "value": "KinetixIcons.Close", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/FileUpload.kt", "note": "was an unnamed clickable ×" }
         },
         {
           "component": "inform",
-          "flutter": { "type": "absent", "note": "packages/ui-flutter/lib/src/inform.dart does not exist — Inform is not ported to Flutter. Not on the documented \"seven standing non-ports\" list at /docs/contributing; worth a follow-up to either port it or add it to that list." },
-          "swiftui": { "type": "absent", "note": "packages/ui-swiftui/Sources/KinetixUI/Inform.swift does not exist — same gap as Flutter." },
-          "compose": { "type": "glyph", "value": "×", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Inform.kt", "note": "Compose is the ONLY native platform with an Inform port" }
+          "flutter": { "type": "icon-ref", "value": "Icons.close", "file": "packages/ui-flutter/lib/src/inform.dart", "note": "named \"Dismiss\"; replaceable through dismissIcon" },
+          "swiftui": { "type": "icon-ref", "value": "xmark", "file": "packages/ui-swiftui/Sources/KinetixUI/Inform.swift", "note": "named \"Dismiss\"; replaceable through the dismissIcon view builder" },
+          "compose": { "type": "icon-ref", "value": "KinetixIcons.Close", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Inform.kt", "note": "a named button; replaceable through dismissIcon" }
         },
         {
           "component": "modal",
@@ -222,13 +227,14 @@
           "component": "tag",
           "flutter": { "type": "icon-ref", "value": "Icons.close", "file": "packages/ui-flutter/lib/src/tag.dart" },
           "swiftui": { "type": "icon-ref", "value": "xmark", "file": "packages/ui-swiftui/Sources/KinetixUI/Tag.swift" },
-          "compose": { "type": "absent" }
+          "compose": { "type": "icon-ref", "value": "KinetixIcons.Close", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Tag.kt", "note": "was the glyph ×" }
         }
       ]
     },
     {
       "name": "Circle",
       "reactImport": "lucide-react",
+      "rtl": "fixed",
       "components": [
         {
           "component": "radio-group",
@@ -259,12 +265,13 @@
     {
       "name": "Minus",
       "reactImport": "lucide-react",
+      "rtl": "fixed",
       "components": [
         {
           "component": "checkbox",
           "flutter": { "type": "icon-ref", "value": "Icons.remove", "file": "packages/ui-flutter/lib/src/checkbox.dart", "note": "indeterminate state" },
           "swiftui": { "type": "icon-ref", "value": "minus", "file": "packages/ui-swiftui/Sources/KinetixUI/Checkbox.swift" },
-          "compose": { "type": "glyph", "value": "−", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Checkbox.kt" }
+          "compose": { "type": "icon-ref", "value": "KinetixIcons.Remove", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Checkbox.kt", "note": "was the glyph −" }
         },
         {
           "component": "input-otp",
@@ -276,13 +283,14 @@
           "component": "number-input",
           "flutter": { "type": "icon-ref", "value": "Icons.remove", "file": "packages/ui-flutter/lib/src/number_input.dart" },
           "swiftui": { "type": "icon-ref", "value": "minus", "file": "packages/ui-swiftui/Sources/KinetixUI/NumberInput.swift" },
-          "compose": { "type": "glyph", "value": "−", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/NumberInput.kt" }
+          "compose": { "type": "icon-ref", "value": "KinetixIcons.Remove", "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/NumberInput.kt", "note": "was the glyph −" }
         }
       ]
     },
     {
       "name": "MoreHorizontal",
       "reactImport": "lucide-react",
+      "rtl": "fixed",
       "components": [
         {
           "component": "breadcrumb",
@@ -301,6 +309,7 @@
     {
       "name": "GripVertical",
       "reactImport": "lucide-react",
+      "rtl": "fixed",
       "components": [
         {
           "component": "comparison-slider",
@@ -319,6 +328,7 @@
     {
       "name": "CircleAlert / CircleCheck / Info / TriangleAlert",
       "reactImport": "lucide-react",
+      "rtl": "fixed",
       "note": "This four-icon 'severity' cluster is always used together (error/success/info/warning) by the same component, so it's grouped as one entry rather than four repetitive ones. Component-level type/value pairs below list all four in Flutter's actual naming, which doesn't line up 1:1 with the lucide names (e.g. TriangleAlert -> warning_amber_outlined, CircleCheck -> check_circle_outline) — that's expected, not a mismatch, since each platform's icon set draws severity differently.",
       "components": [
         {
@@ -345,5 +355,31 @@
         }
       ]
     }
+  ],
+  "composeGlyphs": [
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Breadcrumb.kt", "glyph": "›", "role": "separator", "why": "public API: KinetixBreadcrumbSeparator(text: String = \"›\") takes a string, so the separator stays text until a slot replaces the parameter (additive overload, not in this audit). Bidi-mirrored in RTL." },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/DataGrid.kt", "glyph": "▲", "role": "sort direction", "why": "part of the header's text; replacing it means giving the header a sort state in semantics first" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/DataGrid.kt", "glyph": "▼", "role": "sort direction", "why": "as above" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/DataTable.kt", "glyph": "↑", "role": "sort direction", "why": "as above" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/DataTable.kt", "glyph": "↓", "role": "sort direction", "why": "as above" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/DiffViewer.kt", "glyph": "−", "role": "content, not an icon", "why": "the diff's own +/− marker is text the reader should be able to copy" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/DropdownMenu.kt", "glyph": "✓", "role": "checked state", "why": "the glyph is the menu item's only state cue to TalkBack today; replacing it with a decorative icon would remove the state, so semantics (toggleableState) come first" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/DropdownMenu.kt", "glyph": "●", "role": "selected state", "why": "as above (radio item)" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/FileUpload.kt", "glyph": "⬆", "role": "upload prompt", "why": "decorative drop-zone glyph; candidate for KinetixIcons in a follow-up" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/FileUpload.kt", "glyph": "…", "role": "upload status", "why": "status glyph next to the file name; status needs a text alternative before the glyph can become decorative" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/FileUpload.kt", "glyph": "•", "role": "upload status", "why": "as above" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/JsonViewer.kt", "glyph": "▸", "role": "disclosure state", "why": "the glyph changes with expanded state and is the only state cue; expanded semantics come first" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/MarkdownEditor.kt", "glyph": "•", "role": "toolbar label", "why": "the toolbar button's visible label; naming the buttons (\"Bulleted list\") comes first" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/MarkdownEditor.kt", "glyph": "“”", "role": "toolbar label", "why": "as above (\"Quote\")" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/MarkdownEditor.kt", "glyph": "•", "role": "content, not an icon", "why": "the rendered preview's list bullet" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/MessageBubble.kt", "glyph": "✓", "role": "delivery status", "why": "sent / delivered status text; needs a text alternative first" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/MessageBubble.kt", "glyph": "✓✓", "role": "delivery status", "why": "as above" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Metric.kt", "glyph": "↑", "role": "trend", "why": "read as part of the delta (\"↑ 12%\"); a decorative icon needs the trend in words first" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Metric.kt", "glyph": "↓", "role": "trend", "why": "as above" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/MultiSelect.kt", "glyph": "✓", "role": "selected state", "why": "the row's only state cue; selected semantics come first" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Select.kt", "glyph": "✓", "role": "selected state", "why": "in KinetixSelectItem's leadingIcon; the item's only state cue; selected semantics come first" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/Stepper.kt", "glyph": "✓", "role": "completed step", "why": "replaces the step number; the completed state needs a text alternative first" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/TreeView.kt", "glyph": "⌄", "role": "disclosure state", "why": "changes with expanded state and is the only state cue; expanded semantics come first" },
+    { "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/TreeView.kt", "glyph": "▸", "role": "disclosure state", "why": "as above" }
   ]
 }

@@ -19,6 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -31,8 +33,8 @@ import androidx.compose.ui.unit.sp
  * action. Built directly on [KinetixDropdownMenu] — the same "it's
  * already the thing we built" reuse [KinetixSelect] made — with the
  * caller owning `expanded`/`onDismissRequest`, same convention as every
- * other anchored-popover composable here. No icon library wired in yet
- * (same documented gap as [KinetixInform]) — the bell is a plain glyph.
+ * other anchored-popover composable here. The bell is Material's
+ * Notifications icon, named "Notifications" (with the unread count) for TalkBack.
  */
 @Composable
 fun KinetixNotificationCenterTrigger(
@@ -43,7 +45,14 @@ fun KinetixNotificationCenterTrigger(
     val colors = KinetixColorScheme.current
     Box(modifier = modifier) {
         KinetixButton(onClick, variant = KinetixButtonVariant.Ghost, size = KinetixButtonSize.Icon) {
-            Text("🔔", fontSize = 18.sp)
+            // Was the emoji "🔔": a colour emoji ignores the theme's tint, and TalkBack read it as "bell".
+            KinetixIcon(
+                KinetixIcons.Notifications,
+                18.dp,
+                modifier = Modifier.semantics {
+                    contentDescription = if (unreadCount > 0) "Notifications, $unreadCount unread" else "Notifications"
+                },
+            )
         }
         if (unreadCount > 0) {
             Box(

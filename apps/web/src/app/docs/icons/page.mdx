@@ -1,103 +1,142 @@
 export const metadata = {
   title: "Icons",
-  description: "What KinetixUI's icon story actually is today — lucide-react on React, each native port's own icon mechanism, and a checked mapping for the icons components render internally.",
+  description: "How icons work in KinetixUI: each platform's own icon source as the default, components that own an icon's size, colour, name and direction, and slots that take your product's icons.",
 };
 
 # Icons
 
-KinetixUI does **not** ship a canonical cross-platform icon compiler. This
-page documents the actual, current icon story — a deliberate choice, not a
-gap waiting to be filled — and the one piece of it that's a real, checked
-contract: the icons components render as part of their own implementation.
+**KinetixUI provides the layout and a sensible default. Your application can provide the icon.**
 
-## Two different kinds of icon
+KinetixUI does not ship its own icon set, and it does not translate icon names between platforms. Each
+platform draws its components' icons from the icon system developers on that platform already use. Where a
+component has an icon a product team would reasonably want to change, it offers a slot for it, and the
+component keeps owning everything around the icon: its size, its colour in every state, its accessible
+name and which way it points in a right-to-left layout.
 
-**Caller-supplied icons** — an icon you pass into a component as a prop or
-`children` (a custom icon inside a `Button`, an `icon` prop on a `ListItem`)
-— are free-form on every platform, by design. React consumers reach for
-`lucide-react` (or anything else); native consumers reach for their
-platform's own icon set. There's nothing to standardize here: the component
-never inspects what you handed it, so there's no contract to keep in sync.
+## At a glance
 
-**Component-owned icons** — an icon a component imports and renders
-*itself*, as part of its own implementation (`Accordion`'s expand chevron,
-`Checkbox`'s checkmark, `Dialog`'s close button) — are different: the same
-component needs to be recognizable as itself on every platform, so what
-each platform renders for these is worth tracking. This is the only part of
-"icons" this page, and `icons/mapping.json`, actually cover.
+| Platform | Default source | Your own icon | Extra package |
+| --- | --- | --- | --- |
+| React | [`lucide-react`](https://lucide.dev) | any `ReactNode` (Lucide, Heroicons, Phosphor, an inline SVG, your icon component) | none: `lucide-react` is already a dependency of `@kinetixui/ui` |
+| Angular | inline SVG drawn by the component | content projection: any element carrying the slot's attribute, such as `kxDismissIcon` | none |
+| SwiftUI | SF Symbols | a `@ViewBuilder` closure: an SF Symbol, an asset `Image`, any `View` | none |
+| Jetpack Compose | Material icons, drawn by KinetixUI from Material's own vector paths | a `@Composable () -> Unit` slot: Material Icons, a vector asset, any composable | none: no `material-icons` artifact is needed |
+| Flutter | Material `Icons` | a `Widget?` parameter: Material or Cupertino icons, an SVG widget, any widget | none (the Material icon font comes with `uses-material-design: true`, the `flutter create` default) |
 
-## The source per platform
+So, briefly: there is no universal KinetixUI icon set; your platform's familiar icons are the default; your
+company's icon library works wherever a component has a slot; and nothing extra needs installing.
 
-- **React** — [`lucide-react`](https://lucide.dev). Stays the source; there's
-  no plan to replace it with a custom SVG set.
-- **Flutter** — Material's built-in `Icons.*` constants, used directly.
-- **SwiftUI** — SF Symbols (`Image(systemName:)`), used directly.
-- **Jetpack Compose** — **not** Compose Material Icons. A full grep across
-  every file in `packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/`
-  found **zero** uses of `Icons.*` anywhere. Every component-owned "icon" on
-  this platform is either a plain Unicode glyph rendered via `Text(text =
-  "▾")`, or a custom-drawn shape (`CircleShape`, `Canvas`) — never a named
-  icon asset. This wasn't previously written down anywhere; it's a real
-  finding, not a design decision this page is merely restating.
+## Why not one icon set everywhere
 
-Each of these is already free, maintained, and idiomatic on its own
-platform — building a shared compiler on top would mean maintaining a
-private icon set as good as three actively-maintained ones combined, for a
-component library that already ships without one. That's the reasoning for
-not building it, not a resource constraint.
+- **Familiarity.** An iOS user expects SF Symbols and an Android user expects Material's shapes. The same
+  close button drawn identically on every platform would look foreign on most of them.
+- **Ecosystems.** Each of these sources is maintained, licensed for use and already in your toolchain.
+- **Maintenance.** A shared set, or a table mapping `"search"` to five libraries' names, is a contract that
+  has to be kept true forever, for libraries whose names, variants and meanings do not line up.
+- **Your product.** Teams bring their own icons. A slot that takes any icon serves them better than a name
+  KinetixUI has to know about.
 
-## The checked mapping
+Icons mean the same thing on every platform; they are not required to look the same. A close button closes
+whether it shows Lucide's `X`, the `xmark` symbol or Material's `Close`.
 
-`icons/mapping.json` records, for icon names reused across **two or more**
-components, exactly what each native port renders — verified against source,
-not assumed. `pnpm check:icons` (`scripts/check-icon-mapping.mjs`, wired
-into CI) re-checks every recorded value still appears in its file, so this
-table can't silently go stale the way a hand-written doc could.
+## Replacing a component's icon
 
-Single-component icons (`Rating`'s `Star`, `ColorPicker`'s `Pipette`,
-`AudioPlayer`'s transport controls, `MarkdownEditor`'s toolbar, and others)
-aren't covered — a contract matters most where a shape needs to agree with
-itself across components and platforms, and these only need to agree with
-themselves. That's future scope, not silently skipped.
+`Banner` and `Inform` take a replacement for their dismiss mark on every platform. The example below is
+the same on each: the default, a different icon from the platform's usual source, and an icon of your own.
+Each snippet is compiled and tested by that platform's CI.
 
-| Icon | Used in | Flutter | SwiftUI | Compose |
-| --- | --- | --- | --- | --- |
-| `ChevronDown` | Accordion, Select | `Icons.keyboard_arrow_down` | `chevron.down` | glyph `▾` |
-| `ChevronLeft` | NavigationBar, Pagination | `Icons.chevron_left` | `chevron.left` | glyph `‹` (NavigationBar only) |
-| `ChevronRight` | Breadcrumb, JsonViewer, Pagination, TreeView | `Icons.chevron_right` | `chevron.right` | not hardcoded |
-| `Check` | Checkbox, CodeBlock, Select, Stepper | `Icons.check` | `checkmark` | glyph `✓` (Checkbox, Select only) |
-| `X` | Banner, Dialog, FileUpload, Tag | `Icons.close` | `xmark` | glyph `×` (Banner, FileUpload only) |
-| `Circle` | RadioGroup | custom shape (`BoxShape.circle`) | custom shape (`Circle()`) | custom shape (`CircleShape`) |
-| `Minus` | Checkbox (indeterminate), NumberInput | `Icons.remove` | `minus` | glyph `−` |
-| `MoreHorizontal` | Pagination | `Icons.more_horiz` | `ellipsis` | not hardcoded |
-| `GripVertical` | Resizable | `Icons.more_horiz` ⚠️ | `ellipsis` ⚠️ | not hardcoded |
-| Severity cluster (`CircleAlert`/`CircleCheck`/`Info`/`TriangleAlert`) | Field | `error_outline` / `check_circle_outline` / `info_outline` / `warning_amber_outlined` | not hardcoded | not hardcoded |
+<UsageExampleTabs name="icons-dismiss-icon" />
 
-Full per-component detail, including every `context-menu`/`dropdown-menu`/
-`menubar` entry (their check/chevron/radio indicators aren't hardcoded on
-any native platform — they rely on each OS's own native menu widget drawing
-its own affordance), is in
-[`icons/mapping.json`](https://github.com/zedalleys/kinetixui/blob/main/icons/mapping.json).
+What the component does with whatever you pass:
 
-### Real findings worth flagging, not just table cells
+- **Size.** It lays your icon out in the slot's box: 14 px (pt, dp) for a dismiss mark. You do not size it.
+- **Colour.** Your icon inherits the component's colour: `currentColor` on the web, the foreground style
+  on SwiftUI, `LocalContentColor` on Compose, `IconTheme` on Flutter. Draw with those rather than a fixed
+  colour and it follows the theme, dark mode and the disabled state.
+- **Name.** The button stays named "Dismiss". Your icon is decorative inside it, so it needs no label of
+  its own (on Compose, pass `contentDescription = null`).
+- **Removal.** Leaving the slot out gives you the default. The control itself only exists when you handle
+  the action (`onDismiss`, or `dismissible` on Angular), so there is no way to show a dismiss button with no icon in it.
 
-- **`Resizable`'s grip, mid-flight**: React's `resizable.tsx` renders a
-  vertical grip-dots icon (`GripVertical`); Flutter and SwiftUI both render
-  a horizontal three-dot ellipsis instead — a genuinely different shape, not
-  just a differently-named asset for the same one. Worth reconciling in a
-  follow-up.
-- **`Banner`'s severity icons are a documented, self-acknowledged Flutter
-  gap** — `banner.dart`'s own doc comment already says "not yet ported to
-  Flutter... No icon library wired in yet." This page didn't discover that;
-  it's confirming what the source already says.
-- **`Inform` was missing on Flutter and SwiftUI** when this page first
-  shipped — flagged here as a real, previously-undocumented gap (not on the
-  ["standing non-ports"](/docs/contributing) list, and no architectural
-  reason for the omission). It's since been closed: `Inform.dart`/
-  `Inform.swift` now exist, so this finding is fixed, not open.
-- **`Select`'s Compose glyph used to differ from `Accordion`'s** (`⌄` vs.
-  `▾`) for the same semantic "chevron pointing down" — fixed; `Select.kt` now
-  renders `▾` too, and `icons/mapping.json` reflects it.
+Other icons a component draws, such as a dialog's close button, an accordion's chevron or a checkbox's mark,
+are part of the component and not replaceable today. Icons you pass into a component (an icon inside a
+`Button`, a `Metric`'s `icon`, a `TreeItem`'s `icon`) were always yours to choose.
 
-None of these are contradictions in the mapping — they're exactly the kind
-of thing a checked contract is supposed to surface.
+Each component's own API table lists its icon props. On React the prop is `dismissIcon`; on Angular the
+`kxDismissIcon` projection slot; on SwiftUI a trailing `dismissIcon:` view builder; on Compose and Flutter a
+`dismissIcon` parameter. Angular's `CodeBlock` also takes a `kxCopyIcon`.
+
+## Icons the components draw
+
+| Role | React | Angular | SwiftUI | Compose | Flutter | In RTL |
+| --- | --- | --- | --- | --- | --- | --- |
+| Close, dismiss | `X` | SVG | `xmark` | `Close` | `Icons.close` | does not mirror |
+| Back, previous | `ChevronLeft` | `‹` | `chevron.backward` | `ChevronStart` | `Icons.chevron_left` | mirrors |
+| Next, breadcrumb separator | `ChevronRight` | `›` | `chevron.forward` | `ChevronEnd` | `Icons.chevron_right` | mirrors |
+| Collapsed disclosure (tree, JSON) | `ChevronRight` | n/a | `chevron.forward` | text glyph (debt) | `Icons.chevron_right` | mirrors |
+| Expanded disclosure, accordion, select | `ChevronDown` | SVG | `chevron.down` | `ExpandMore` | `Icons.keyboard_arrow_down` | does not mirror |
+| Checked | `Check` | SVG | `checkmark` | `Check` | `Icons.check` | does not mirror |
+| Indeterminate, decrease | `Minus` | SVG | `minus` | `Remove` | `Icons.remove` | does not mirror |
+| Media transport | `SkipBack`, `Rewind`, … | n/a | `backward.end.fill`, … | `SkipPrevious`, … | `Icons.skip_previous`, … | does not mirror |
+
+The full, per-component record is [`icons/mapping.json`](https://github.com/zedalleys/kinetixui/blob/main/icons/mapping.json).
+`pnpm check:icons` fails CI if a recorded icon disappears from its source, if a directional icon stops using
+its platform's direction-aware variant, or if a new Unicode character is used as an icon on Compose.
+
+## Icon-only controls
+
+A button with only an icon in it still needs a name: the name of the action, not of the picture.
+"Delete draft", not "trash can".
+
+<UsageExampleTabs name="icons-icon-only-button" />
+
+- **React.** `Button` with `size="icon"` keeps its SVG visible and makes any other child screen-reader only,
+  so the text inside it is the name. Lucide icons are hidden from assistive technology automatically.
+- **SwiftUI** `.accessibilityLabel("Delete draft")`; **Compose** `Modifier.semantics { contentDescription =
+  "Delete draft" }` on the clickable, with `contentDescription = null` on the `Icon`; **Flutter**
+  `IconButton(tooltip: 'Delete draft', …)` or `Semantics(label:, button: true)`.
+- Add a tooltip with the same words when the icon could be read more than one way. A tooltip is a hint for
+  sighted pointer users, not a replacement for the name.
+- Keep the whole control a comfortable target, not just the icon: `size="icon"` pads an 18 px icon to a
+  42 px square. Focus shows on the control, like any other button.
+- If the meaning is not obvious from the icon, show the text. An icon-only control is a space saving, not a
+  goal.
+
+## Icons in RTL interfaces
+
+An icon mirrors when it points along the reading direction, and keeps its shape when it does not.
+
+- **Mirrors:** back, previous and next, breadcrumb separators, a collapsed disclosure chevron. KinetixUI
+  handles these on every platform: React flips them with `rtl:-scale-x-100`, SwiftUI uses
+  `chevron.backward` and `chevron.forward`, Compose uses auto-mirrored vectors, Flutter's chevrons follow
+  `Directionality`, and Angular's `‹` and `›` are characters the browser mirrors itself.
+- **Does not mirror:** close, check, minus, an accordion's down chevron, an expanded disclosure (it points
+  down in both directions), and media controls, which name a direction in time rather than on the page.
+- **Your own icons.** An icon you pass into a slot is drawn as you give it. If it is directional, use the
+  direction-aware form of your icon set: SF Symbols' `.backward` and `.forward` names, an auto-mirrored
+  vector on Compose, `matchTextDirection` on a Flutter `Icon`, or the `rtl:` variant on the web.
+
+The RTL switch on this site's component previews currently changes the direction of the whole page, not just
+the preview. That is a known issue with the preview, not with the components, and it is being fixed
+separately. To check your own screens, set the direction on your app's root (see [RTL](/docs/rtl)).
+
+## Don't
+
+- **Don't use a text character as a UI icon.** Its shape depends on the device font, some render as colour
+  emoji that ignore your theme, and screen readers read them out ("multiplication sign").
+- **Don't put your own SVG next to a component's icon** when the component has a slot for it. Use the slot,
+  so the size, colour and name stay right.
+- **Don't label a decorative icon.** Inside a named button, or next to text that says the same thing, the
+  icon adds nothing to what a screen reader should hear.
+- **Don't colour a slotted icon by hand.** A fixed colour stays the same when the component is disabled or
+  the theme changes. Draw with the inherited colour.
+- **Don't mirror every icon in RTL.** Only the ones that point along the reading direction.
+- **Don't assume an icon name exists everywhere.** `X`, `xmark`, `Close` and `Icons.close` are four
+  different libraries. Pick from your platform's source.
+
+## Related
+
+- [Theming](/docs/theming): the colour roles icons inherit.
+- [RTL](/docs/rtl): setting the direction your icons follow.
+- [Accessibility](/docs/accessibility): the conventions icon-only controls follow.
+- [Banner](/docs/components/banner) and [Inform](/docs/components/inform): the dismiss icon slot.
