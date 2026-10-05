@@ -1090,7 +1090,7 @@
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
+      "Compose": "beta",
       "Flutter": "experimental"
     },
     "alert": {
@@ -1124,7 +1124,7 @@
     "audio-player": {
       "React": "beta",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
+      "Compose": "beta",
       "Flutter": "experimental"
     },
     "avatar": {
@@ -1149,7 +1149,7 @@
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
+      "Compose": "beta",
       "Flutter": "experimental"
     },
     "breadcrumb": {
@@ -1282,7 +1282,7 @@
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
+      "Compose": "beta",
       "Flutter": "experimental"
     },
     "diff-viewer": {
@@ -1362,7 +1362,7 @@
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
+      "Compose": "beta",
       "Flutter": "experimental"
     },
     "input": {
@@ -1469,7 +1469,7 @@
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
+      "Compose": "beta",
       "Flutter": "experimental"
     },
     "navigation-menu": {
@@ -1478,7 +1478,7 @@
     "notification-center": {
       "React": "beta",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
+      "Compose": "beta",
       "Flutter": "experimental"
     },
     "number-input": {
@@ -1726,8 +1726,8 @@
       "experimental": 90
     },
     "Compose": {
-      "experimental": 86,
-      "beta": 4
+      "experimental": 79,
+      "beta": 11
     },
     "Flutter": {
       "experimental": 85,
@@ -1764,6 +1764,7 @@
         "reducedMotion"
       ],
       "Compose": [
+        "accessibility",
         "build",
         "interaction",
         "reducedMotion"
@@ -1890,6 +1891,7 @@
         "build"
       ],
       "Compose": [
+        "accessibility",
         "build"
       ],
       "Flutter": [
@@ -1976,6 +1978,7 @@
         "build"
       ],
       "Compose": [
+        "accessibility",
         "build"
       ],
       "Flutter": [
@@ -2419,6 +2422,7 @@
         "build"
       ],
       "Compose": [
+        "accessibility",
         "build"
       ],
       "Flutter": [
@@ -2689,6 +2693,7 @@
         "build"
       ],
       "Compose": [
+        "accessibility",
         "build"
       ],
       "Flutter": [
@@ -3064,6 +3069,7 @@
         "build"
       ],
       "Compose": [
+        "accessibility",
         "build"
       ],
       "Flutter": [
@@ -3090,6 +3096,7 @@
         "build"
       ],
       "Compose": [
+        "accessibility",
         "build"
       ],
       "Flutter": [
@@ -3987,7 +3994,7 @@
     "Compose": {
       "build": 90,
       "interaction": 7,
-      "accessibility": 4,
+      "accessibility": 11,
       "rtl": 1,
       "largeText": 0,
       "reducedMotion": 7,
