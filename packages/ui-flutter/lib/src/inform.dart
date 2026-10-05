@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_text.dart';
+import 'icon_control.dart';
 import 'theme.dart';
 
 enum KinetixInformVariant { information, warning, success, error, action }
@@ -21,6 +22,7 @@ class KinetixInform extends StatelessWidget {
     this.actionLabel,
     this.onAction,
     this.onDismiss,
+    this.dismissIcon,
   });
 
   final String text;
@@ -28,6 +30,12 @@ class KinetixInform extends StatelessWidget {
   final String? actionLabel;
   final VoidCallback? onAction;
   final VoidCallback? onDismiss;
+
+  /// Replaces the default dismiss mark (`Icons.close`). Pass any widget: an `Icon` from Material or
+  /// Cupertino icons, an SVG widget, your company's icon widget. The control sizes it to 14 logical pixels,
+  /// tints an `Icon` with the banner's content colour through [IconTheme], and keeps the "Dismiss" name and
+  /// button role, so the widget needs no size, colour or semantics of its own. See /docs/icons.
+  final Widget? dismissIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -75,9 +83,12 @@ class KinetixInform extends StatelessWidget {
             ),
             if (onDismiss != null) ...[
               const SizedBox(width: 10),
-              GestureDetector(
+              IconControl(
+                label: 'Dismiss',
                 onTap: onDismiss,
-                child: Icon(Icons.close, size: 14, color: content.withValues(alpha: 0.7)),
+                size: 14,
+                color: content.withValues(alpha: 0.7),
+                child: dismissIcon ?? const Icon(Icons.close),
               ),
             ],
           ],

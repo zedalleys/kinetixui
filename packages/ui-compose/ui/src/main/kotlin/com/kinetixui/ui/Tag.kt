@@ -2,7 +2,6 @@ package com.kinetixui.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -14,10 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
@@ -29,8 +26,8 @@ import androidx.compose.ui.unit.sp
  * following the usual foreground-on-color pattern — a deliberate "soft"
  * treatment, not a bug.
  *
- * `onRemove` renders a plain "×" glyph rather than pulling in an icon-font
- * dependency for one glyph (the React source uses lucide's `X`).
+ * `onRemove` renders Material's Close icon (React uses lucide's `X`) — a
+ * vector from the module's internal [KinetixIcons], not an icon-font dependency.
  */
 enum class KinetixTagVariant { Default, Secondary, Destructive, Warning, Outline }
 
@@ -104,14 +101,12 @@ fun KinetixTag(
         if (onRemove != null) {
             // role + contentDescription, not a bare clickable: without them TalkBack announces the glyph
             // itself and gives it no button role, so the control is unreachable by role and unnamed.
-            Text(
-                text = "×",
-                color = content,
-                fontSize = fontSize,
-                modifier = Modifier
-                    .clickable(role = Role.Button, onClick = onRemove)
-                    .semantics { contentDescription = removeLabel ?: "Remove $text" },
-            )
+            KinetixIconControl(
+                label = removeLabel ?: "Remove $text",
+                onClick = onRemove,
+                iconSize = 14.dp,
+                tint = content,
+            ) { KinetixIcon(KinetixIcons.Close, 14.dp) }
         }
     }
 }

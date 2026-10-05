@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.triStateToggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,7 +14,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 /**
  * KinetixCheckbox — mirrors `packages/ui/src/components/checkbox.tsx`.
@@ -27,9 +25,9 @@ import androidx.compose.ui.unit.sp
  *
  * Radix's tri-state model (`checked | unchecked | indeterminate`) maps onto
  * Compose's built-in [ToggleableState] + `Modifier.triStateToggleable`
- * directly — no need to invent a parallel enum. The check/dash glyphs are
- * plain Unicode `Text`, same call made for [KinetixTag]'s remove glyph (no
- * icon library dependency in this package yet). The focus ring
+ * directly — no need to invent a parallel enum. The check/dash marks are
+ * Material's Check/Remove ([KinetixIcons]), decorative: the state is
+ * announced by `triStateToggleable`. The focus ring
  * (`focus-visible:ring-2 ring-ring ring-offset-2`) isn't ported — same
  * "no hover/focus states" gap noted on [KinetixButton]; Compose's own
  * focus indication covers the interaction cue instead.
@@ -68,8 +66,9 @@ fun KinetixCheckbox(
         contentAlignment = Alignment.Center,
     ) {
         when (state) {
-            ToggleableState.On -> Text(text = "✓", color = glyphColor, fontSize = 12.sp)
-            ToggleableState.Indeterminate -> Text(text = "−", color = glyphColor, fontSize = 14.sp)
+            // Decorative: the state is triStateToggleable's to announce, not a glyph's.
+            ToggleableState.On -> KinetixIcon(KinetixIcons.Check, 12.dp, tint = glyphColor)
+            ToggleableState.Indeterminate -> KinetixIcon(KinetixIcons.Remove, 12.dp, tint = glyphColor)
             ToggleableState.Off -> {}
         }
     }

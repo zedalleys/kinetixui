@@ -66,6 +66,14 @@ that parses or executes a device payload. Nothing in this package opens a connec
 credential. It models what a device *is*, so the layer that talks to one has something honest to
 render into.
 
+## The device interaction contract
+
+Desired vs reported state, the command lifecycle (including correlation of replies and reports that
+arrive out of order), the `confirmed` / `optimistic` / `hybrid` presentation strategies and
+capability-oriented devices are specified in
+[`docs/iot/DEVICE-INTERACTION-CONTRACT.md`](../../docs/iot/DEVICE-INTERACTION-CONTRACT.md). They are
+React-free and live in `@kinetixui/iot/functions`. The shipped controls use the `confirmed` strategy.
+
 ## The recurring design rule
 
 Every classifier separates "we do not know" from a value. A device that does not report a battery is

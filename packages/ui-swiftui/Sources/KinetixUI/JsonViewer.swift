@@ -47,6 +47,7 @@ public struct KinetixJsonViewer: View {
 
 private struct JsonNode: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.layoutDirection) private var layoutDirection
     let name: String?
     let value: KinetixJSONValue
     let depth: Int
@@ -130,10 +131,12 @@ private struct JsonNode: View {
                     expanded.toggle()
                 } label: {
                     HStack(spacing: 4) {
-                        Image(systemName: "chevron.right")
+                        Image(systemName: "chevron.forward")
                             .font(.system(size: 9))
                             .foregroundStyle(colors.mutedForeground)
-                            .rotationEffect(.degrees(expanded ? 90 : 0))
+                            // Collapsed points to the inline end (`chevron.forward` flips in RTL); expanded points
+                            // down in both directions: clockwise from right, counter-clockwise from left.
+                            .rotationEffect(.degrees(expanded ? (layoutDirection == .rightToLeft ? -90 : 90) : 0))
                         if let name {
                             Text("\"\(name)\": ").foregroundStyle(colors.mutedForeground)
                         }

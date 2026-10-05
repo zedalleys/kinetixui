@@ -72,5 +72,28 @@ export type KinetixDevice = {
  */
 export type KinetixBatteryLevel = "unknown" | "critical" | "low" | "medium" | "high" | "full";
 
+/**
+ * A battery as a device reports it. Both fields optional: many devices report a percentage and no
+ * charging flag, and a mains-powered device reports neither.
+ */
+export type KinetixBatteryState = {
+  /** 0–100. Absent means not reported. */
+  percent?: number | null;
+  /** Absent means not reported, which is not the same as "not charging". */
+  charging?: boolean | null;
+};
+
+/** A battery reduced to the facts a UI branches on. Returned by `resolveBatteryState`. */
+export type KinetixBatteryStatus = {
+  level: KinetixBatteryLevel;
+  /** False when no usable percentage was reported. */
+  available: boolean;
+  /** `unknown` when the device does not report charging. */
+  charging: boolean | "unknown";
+  /** At or below the `low` band (includes critical). */
+  low: boolean;
+  critical: boolean;
+};
+
 /** Signal bands. `none` means "reported, and it is zero"; `unknown` means "not reported". */
 export type KinetixSignalLevel = "unknown" | "none" | "weak" | "fair" | "good" | "excellent";

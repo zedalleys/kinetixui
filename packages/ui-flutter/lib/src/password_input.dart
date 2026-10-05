@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'icon_control.dart';
 import 'input.dart';
 import 'theme.dart';
 
@@ -39,13 +40,12 @@ class _KinetixPasswordInputState extends State<KinetixPasswordInput> {
       isError: widget.isError,
       enabled: widget.enabled,
       obscureText: !_visible,
-      trailing: GestureDetector(
-        onTap: () => setState(() => _visible = !_visible),
-        child: Icon(
-          _visible ? Icons.visibility_off : Icons.visibility,
-          size: 18,
-          color: c.mutedForeground,
-        ),
+      trailing: IconControl(
+        label: _visible ? 'Hide password' : 'Show password',
+        onTap: widget.enabled ? () => setState(() => _visible = !_visible) : null,
+        size: 18,
+        color: c.mutedForeground,
+        child: Icon(_visible ? Icons.visibility_off : Icons.visibility),
       ),
     );
   }

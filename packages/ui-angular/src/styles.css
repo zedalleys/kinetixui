@@ -1343,10 +1343,17 @@ label.kx-rating__item { cursor: pointer; }
 }
 .kx-code-block__copy:hover { color: hsl(var(--foreground)); }
 .kx-code-block__copy:focus-visible { outline: var(--border-width-default) solid currentColor; }
-/* The default glyphs. Sized here rather than on the SVG so a projected replacement inherits the same
-   box, and so a consumer restyling the package can reach them. */
-.kx-dismiss-glyph { width: 0.875rem; height: 0.875rem; display: block; }
-.kx-copy-glyph { width: 1rem; height: 1rem; display: block; }
+/* The default glyphs, and whatever an application projects in their place (`[kxDismissIcon]`,
+   `[kxCopyIcon]` — an <svg>, or an icon component whose host wraps one). Sized here rather than on the SVG
+   so a projected replacement gets the same box without carrying a size of its own, and so a consumer
+   restyling the package can reach them. Until this rule named the projected slots, only the built-in glyph
+   was sized: a projected <svg> with no width rendered at the browser's default 300×150. */
+.kx-dismiss-glyph,
+[kxDismissIcon],
+[kxDismissIcon] > svg { width: 0.875rem; height: 0.875rem; display: block; flex-shrink: 0; }
+.kx-copy-glyph,
+[kxCopyIcon],
+[kxCopyIcon] > svg { width: 1rem; height: 1rem; display: block; flex-shrink: 0; }
 
 .kx-code-block__body { position: relative; }
 /* No filename and no tabs means no header to hold the copy button, so it sits over the code. */

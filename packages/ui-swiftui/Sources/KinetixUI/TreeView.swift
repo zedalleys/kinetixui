@@ -70,6 +70,7 @@ public struct KinetixTreeView: View {
 
 private struct KinetixTreeItemRow: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.kinetixRadii) private var radii
 
     let node: KinetixTreeNode
@@ -88,10 +89,12 @@ private struct KinetixTreeItemRow: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 6) {
                 if hasChildren {
-                    Image(systemName: "chevron.right")
+                    Image(systemName: "chevron.forward")
                         .font(.system(size: 12))
                         .foregroundStyle(colors.mutedForeground)
-                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                        // Collapsed points to the inline end (`chevron.forward` flips in RTL); expanded points down in both
+                        // directions, so the turn toward "down" is clockwise from right and counter-clockwise from left.
+                        .rotationEffect(.degrees(isExpanded ? (layoutDirection == .rightToLeft ? -90 : 90) : 0))
                         .frame(width: 16, height: 16)
                         .contentShape(Rectangle())
                         .onTapGesture {

@@ -27,7 +27,9 @@ on:
       - "scripts/large-text.mjs"
       - "scripts/motion.mjs"
       - "scripts/motion-states.mjs"
+      - "scripts/loop-motion.mjs"
       - "scripts/card-visual.mjs"
+      - "scripts/icon-direction.mjs"
       - "scripts/selection-visual.mjs"
       - "scripts/entry-visual.mjs"
       - "scripts/composite-visual.mjs"
@@ -54,7 +56,9 @@ on:
       - "scripts/large-text.mjs"
       - "scripts/motion.mjs"
       - "scripts/motion-states.mjs"
+      - "scripts/loop-motion.mjs"
       - "scripts/card-visual.mjs"
+      - "scripts/icon-direction.mjs"
       - "scripts/selection-visual.mjs"
       - "scripts/entry-visual.mjs"
       - "scripts/composite-visual.mjs"
@@ -122,6 +126,13 @@ jobs:
       - name: Motion pass (rendered intermediate states, normal and reduced)
         run: pnpm check:motion
 
+      # Loops are the case the pass above cannot express: nothing to click, no destination to seek to.
+      # This reads whether each loop is really running normally and really stopped under reduced motion
+      # (including the Spinner, whose "slow to 3s" class was dead behind the floor), and that the stopped
+      # form still has its ring, its role and name, and survives forced colours.
+      - name: Loop motion (running normally, stopped and still legible under reduced motion)
+        run: pnpm check:loop-motion
+
       # Card's surface and state contract, read off rendered pixels in light and dark: the resting edge
       # is softer than the controls inside it, the card is lifted and sits above a grouped section, a static
       # card ignores the pointer, and an interactive one has distinct hover, pressed, selected and focus
@@ -169,6 +180,12 @@ jobs:
       # and the tooltip's edge under forced colours.
       - name: Overlay visual contract (Angular, light and dark)
         run: pnpm check:overlay-visual
+
+      # Which way React's component-owned directional icons point, read from ink in LTR and in an RTL preview
+      # scoped to the story root (never <html>): Back, Previous / Next and the breadcrumb separator mirror; a
+      # collapsed disclosure mirrors; an expanded disclosure and the accordion chevron do not (/docs/icons).
+      - name: Icon direction (React, LTR and scoped RTL)
+        run: pnpm check:icon-direction
 
       # @kinetixui/angular as a live Angular application in this Chromium: every usage example and state
       # fixture under axe (light and dark, forced colours, reduced motion), every interactive component driven

@@ -17,8 +17,8 @@ import androidx.compose.ui.unit.dp
  * directly through [KinetixButton] rather than re-deriving the same
  * colors/padding. `size-9` (36dp) isn't on the shared `spacing_*` scale —
  * hardcoded, same reasoning as `KinetixToggle`'s off-scale sizes. The
- * chevrons on Previous/Next are plain "‹"/"›" glyphs, not lucide icons —
- * no icon library wired in yet, same as `KinetixBreadcrumbSeparator`.
+ * chevrons on Previous/Next are Material chevrons ([KinetixIcons],
+ * autoMirror), so they point the reading direction's way in RTL.
  */
 @Composable
 fun KinetixPagination(
@@ -64,7 +64,7 @@ fun KinetixPaginationPrevious(
 ) {
     KinetixButton(onClick = onClick, modifier = modifier, variant = KinetixButtonVariant.Ghost, size = KinetixButtonSize.Icon) {
         Row(horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_1))) {
-            Text("‹")
+            KinetixIcon(KinetixIcons.ChevronStart, 16.dp)
             Text("Previous")
         }
     }
@@ -78,7 +78,7 @@ fun KinetixPaginationNext(
     KinetixButton(onClick = onClick, modifier = modifier, variant = KinetixButtonVariant.Ghost, size = KinetixButtonSize.Icon) {
         Row(horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_1))) {
             Text("Next")
-            Text("›")
+            KinetixIcon(KinetixIcons.ChevronEnd, 16.dp)
         }
     }
 }

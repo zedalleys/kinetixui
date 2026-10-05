@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_text.dart';
+import 'icon_control.dart';
 import 'theme.dart';
 
 enum KinetixFileStatus { pending, uploading, done, error }
@@ -100,9 +101,12 @@ class KinetixFileUpload extends StatelessWidget {
                   ),
                 ),
                 if (onRemove != null)
-                  GestureDetector(
+                  IconControl(
+                    label: 'Remove ${file.name}',
                     onTap: () => onRemove!(file),
-                    child: Icon(Icons.close, size: 12, color: c.mutedForeground),
+                    size: 12,
+                    color: c.mutedForeground,
+                    child: const Icon(Icons.close),
                   ),
               ],
             ),

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
  * dependency; `size` sets the diameter, `variant` swaps the indicator
  * colour for on-color surfaces.
  */
-const spinnerVariants = cva("inline-block animate-spin motion-reduce:animate-[spin_3s_linear_infinite] rounded-full border-2 border-current border-t-transparent", {
+const spinnerVariants = cva("inline-block animate-spin motion-reduce:animate-none rounded-full border-2 border-current border-t-transparent forced-colors:border-t-[Canvas]", {
   variants: {
     size: {
       sm: "size-4",

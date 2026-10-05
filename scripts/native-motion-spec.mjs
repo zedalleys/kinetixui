@@ -32,6 +32,25 @@ export const PLATFORMS = {
         members: ["Switch.swift"],
         test: "packages/ui-swiftui/Tests/KinetixUITests/SwitchMotionTests.swift",
       },
+      slide: {
+        // A panel that slides across the screen is positional movement, which is what Reduce Motion
+        // exists to remove. The reduced form is a cross-fade. See the helper's header.
+        // `strict`: the member must read the setting itself AND call the helper. A view can name a helper in a
+        // comment or declare the environment value and never use either, so for the families whose whole job
+        // is the reduced form, mere mention is not routing.
+        strict: true,
+        helper: "KinetixSlideMotion.swift",
+        members: ["Sheet.swift", "Sidebar.swift", "Toaster.swift"],
+        test: "packages/ui-swiftui/Tests/KinetixUITests/SlideMotionTests.swift",
+      },
+      loop: {
+        // A loop has no destination to keep, so its reduced form is not a shorter duration but no loop
+        // at all plus a static state that says the same thing. See the helper's header.
+        strict: true,
+        helper: "KinetixLoopMotion.swift",
+        members: ["Spinner.swift", "Skeleton.swift", "Marquee.swift", "MessageBubble.swift"],
+        test: "packages/ui-swiftui/Tests/KinetixUITests/LoopMotionTests.swift",
+      },
     },
   },
   Compose: {
@@ -54,13 +73,21 @@ export const PLATFORMS = {
         members: ["Switch.kt"],
         test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt",
       },
+      loop: {
+        // A loop has no destination to keep, so its reduced form is not a shorter duration but no loop
+        // at all plus a static state that says the same thing. See the helper's header.
+        strict: true,
+        helper: "KinetixLoopMotion.kt",
+        members: ["Spinner.kt", "Skeleton.kt", "Marquee.kt", "MessageBubble.kt"],
+        test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/LoopMotionTest.kt",
+      },
     },
   },
   Flutter: {
     dir: "packages/ui-flutter/lib/src",
     ext: ".dart",
     animates: /Animated[A-Z]\w+|AnimationController|Tween|CurvedAnimation/,
-    preference: /disableAnimationsOf|disableAnimations|reduceMotionOf/,
+    preference: /disableAnimationsOf|disableAnimations|reduceMotionOf|runsOf/,
     families: {
       disclosure: {
         helper: "kinetix_disclosure_motion.dart",
@@ -71,6 +98,14 @@ export const PLATFORMS = {
         helper: "kinetix_switch_motion.dart",
         members: ["switch.dart"],
         test: "packages/ui-flutter/test/switch_motion_test.dart",
+      },
+      loop: {
+        // A loop has no destination to keep, so its reduced form is not a shorter duration but no loop
+        // at all plus a static state that says the same thing. See the helper's header.
+        strict: true,
+        helper: "kinetix_loop_motion.dart",
+        members: ["spinner.dart", "skeleton.dart", "marquee.dart", "message_bubble.dart"],
+        test: "packages/ui-flutter/test/loop_motion_test.dart",
       },
     },
   },
@@ -89,33 +124,18 @@ export const PLATFORMS = {
 export const KNOWN_GAPS = {
   SwiftUI: {
     "CircularProgress.swift": "determinate ring sweep — progress feedback family, not this slice",
-    "Dialog.swift": "overlay family: presentation transition, separate slice",
+    "Dialog.swift": "opacity fade only: positional movement is what Reduce Motion removes, and a fade is the accepted replacement, so there is nothing concrete to fix",
     "Input.swift": "focus ring transition — feedback family",
-    "Marquee.swift": "infinite scroll; suppressing it needs a static fallback decision, not a duration",
-    "MessageBubble.swift": "typing indicator loop; same open design question as Marquee",
     "Progress.swift": "determinate bar — progress feedback family",
-    "Sheet.swift": "overlay family",
-    "Sidebar.swift": "layout family: collapse width transition",
-    "Skeleton.swift": "loading shimmer loop; needs an accessible static alternative",
-    "Spinner.swift": "indeterminate loop; a spinner with no motion communicates nothing",
     "Textarea.swift": "focus ring transition — feedback family",
-    "Toaster.swift": "overlay family",
   },
   Compose: {
     "CircularProgress.kt": "determinate ring sweep — progress feedback family",
-    "Marquee.kt": "infinite scroll; needs a static fallback decision",
-    "MessageBubble.kt": "typing indicator loop",
     "Progress.kt": "determinate bar — progress feedback family",
     "Carousel.kt": "animated page scrolling via PagerState — carousel/pager family, its own slice",
-    "Skeleton.kt": "loading shimmer loop",
-    "Spinner.kt": "indeterminate loop",
   },
   Flutter: {
     "json_viewer.dart": "disclosure-shaped, but a data-viewer concern; its own slice",
-    "marquee.dart": "infinite scroll; needs a static fallback decision",
-    "message_bubble.dart": "typing indicator loop",
-    "skeleton.dart": "loading shimmer loop",
-    "spinner.dart": "indeterminate loop",
   },
 };
 
@@ -140,6 +160,18 @@ export const DIRECTION_TERMS = {
   selection: {
     forward: /off\s*(?:→|->|to)\s*on/i,
     reverse: /on\s*(?:→|->|to)\s*off/i,
+  },
+  // A loop has no two directions; it has two MODES, and both must be named. "normal" is the loop
+  // running, "reduced" is it stopped with its information intact. Anchored on the mode words so a test
+  // named only for the component ("spinner renders") satisfies neither.
+  // A slide has two modes as well: sliding normally, fading when reduced.
+  slide: {
+    forward: /normal motion|slides/i,
+    reverse: /reduced motion|fades/i,
+  },
+  loop: {
+    forward: /normal motion|runs|rotates|pulses|moves|translates/i,
+    reverse: /reduced motion|do not run|does not rotate|rests|stopped/i,
   },
 };
 

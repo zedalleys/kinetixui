@@ -183,7 +183,7 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                     "flex w-full min-w-0 items-center sm:w-auto",
                     // The row's own text colour carries the stage too: muted while ahead, full once
                     // reached, destructive on failure. Without this the word snaps while the marker fades.
-                    "transition-colors duration-fast ease-out motion-reduce:transition-none",
+                    "transition-colors duration-fast ease-enter motion-reduce:transition-none",
                     compact ? "min-h-11 gap-1.5 text-label-lg sm:min-h-0" : "min-h-10 gap-2 text-label-lg sm:min-h-0",
                     step.state === "upcoming" ? "text-muted-foreground" : "text-foreground",
                     failed && "text-destructive",
@@ -193,7 +193,7 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                     <span
                       className={cn(
                         "inline-flex min-w-0 items-center gap-1.5 rounded-full px-2 py-0.5",
-                        "transition-colors duration-fast ease-out motion-reduce:transition-none",
+                        "transition-colors duration-fast ease-enter motion-reduce:transition-none",
                         step.state === "current" && (failed ? "bg-destructive/10 font-semibold" : "bg-primary/10 font-semibold"),
                       )}
                     >
@@ -201,7 +201,7 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                         name={STAGE_GLYPH[step.stage]}
                         size={14}
                         className={cn(
-                          "transition-opacity duration-fast ease-out motion-reduce:transition-none",
+                          "transition-opacity duration-fast ease-enter motion-reduce:transition-none",
                           step.state === "upcoming" && "opacity-60",
                           step.stage === "retrying" && pending && "animate-spin motion-reduce:animate-none",
                         )}
@@ -217,7 +217,7 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                           // Not `transition-colors`: the `current` marker's ring is a Tailwind `ring-*`,
                           // which compiles to box-shadow, and box-shadow is not in that utility's property
                           // list — the fill would fade while the ring snapped on.
-                          "transition-[background-color,border-color,box-shadow] duration-fast ease-out motion-reduce:transition-none",
+                          "transition-[background-color,border-color,box-shadow] duration-fast ease-enter motion-reduce:transition-none",
                           step.state === "done" && "bg-muted",
                           step.state === "current" && (failed ? "bg-destructive/10 ring-1 ring-inset ring-destructive/40" : "bg-primary/10 ring-1 ring-inset ring-primary/40"),
                           step.state === "upcoming" && "border border-dashed border-border",
@@ -227,7 +227,7 @@ const CommandLifecycle = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
                           name={STAGE_GLYPH[step.stage]}
                           size={16}
                           className={cn(
-                          "transition-opacity duration-fast ease-out motion-reduce:transition-none",
+                          "transition-opacity duration-fast ease-enter motion-reduce:transition-none",
                           step.state === "upcoming" && "opacity-60",
                           step.stage === "retrying" && pending && "animate-spin motion-reduce:animate-none",
                         )}

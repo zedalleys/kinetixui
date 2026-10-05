@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,8 +33,8 @@ import androidx.compose.ui.unit.sp
  * simpler, and matches the overwhelmingly common use case; a fractional
  * variant is a mechanical follow-up if ever needed. `h-10`/`w-9`
  * (40dp/36dp) aren't on the shared `spacing_*` scale — hardcoded, same
- * reasoning as `KinetixToggle`'s off-scale sizes. Buttons use plain "−"/"+"
- * glyphs, not lucide's `Minus`/`Plus` — no icon library wired in yet.
+ * reasoning as `KinetixToggle`'s off-scale sizes. Buttons draw Material's
+ * Remove/Add ([KinetixIcons]), the counterparts of lucide's `Minus`/`Plus`.
  */
 @Composable
 fun KinetixNumberInput(
@@ -76,7 +75,7 @@ fun KinetixNumberInput(
                 .semantics { contentDescription = "Decrease" },
             contentAlignment = Alignment.Center,
         ) {
-            Text(text = "−", color = colors.mutedForeground)
+            KinetixIcon(KinetixIcons.Remove, 16.dp, tint = colors.mutedForeground)
         }
 
         Box(
@@ -110,7 +109,7 @@ fun KinetixNumberInput(
                 .semantics { contentDescription = "Increase" },
             contentAlignment = Alignment.Center,
         ) {
-            Text(text = "+", color = colors.mutedForeground)
+            KinetixIcon(KinetixIcons.Add, 16.dp, tint = colors.mutedForeground)
         }
     }
 }

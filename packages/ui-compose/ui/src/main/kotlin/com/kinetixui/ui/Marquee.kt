@@ -6,7 +6,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -28,6 +30,10 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
  * from TalkBack via `clearAndSetSemantics`, same accessibility fix as the
  * web port. `pauseOnHover` isn't ported — hover isn't a primary Android
  * interaction, unlike the web (and desktop-pointer) case it's built for.
+ *
+ * With animations off it does not scroll by itself ([KinetixLoopMotion]): it composes one copy of
+ * `content` in a row the reader scrolls by hand. Stopping the ticker in place would leave whatever
+ * sat past the edge unreachable.
  */
 @Composable
 fun KinetixMarquee(
@@ -35,6 +41,12 @@ fun KinetixMarquee(
     durationMillis: Int = 32000,
     content: @Composable () -> Unit,
 ) {
+    val reduceMotion = KinetixDisclosureMotion.rememberReduceMotion()
+    if (!KinetixLoopMotion.runs(reduceMotion)) {
+        Row(modifier = modifier.horizontalScroll(rememberScrollState())) { content() }
+        return
+    }
+
     var trackWidthPx by remember { mutableIntStateOf(0) }
     val transition = rememberInfiniteTransition(label = "kinetix-marquee")
     val progress by transition.animateFloat(
