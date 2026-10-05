@@ -63,6 +63,9 @@ export {
 export {
   ACCEPTED_TOKENS,
   CONTRAST_PAIRS,
+  NON_TEXT_PAIRS,
+  TEXT_MIN,
+  NON_TEXT_MIN,
   parsePaletteText,
   deriveForegrounds,
   toCssVarStyle,

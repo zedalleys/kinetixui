@@ -53,7 +53,7 @@ describe("first load", () => {
 
   it("summarises contrast rather than listing twelve identical passes", () => {
     render(<CreateWorkspace />);
-    expect(within(sidebar()).getByText(/pairs meet WCAG AA/)).toBeTruthy();
+    expect(within(sidebar()).getByText(/pairs meet WCAG \(4\.5:1 text, 3:1 focus ring\)/)).toBeTruthy();
     expect(within(sidebar()).queryAllByText("Fail")).toHaveLength(0);
   });
 
@@ -319,6 +319,22 @@ describe("advanced", () => {
     expect(varOf("--card-foreground")).toBe("0 0% 79%");
     // Copy is not blocked by a failing manual override — a warning is shown instead (§75).
     expect(copyCode()).toBeEnabled();
+  });
+});
+
+describe("focus ring contrast", () => {
+  it("fails a background the focus ring cannot be seen on, at the 3:1 non-text bar", async () => {
+    const user = userEvent.setup();
+    render(<CreateWorkspace />);
+    await openAdvanced(user);
+
+    const raw = within(sidebar()).getByLabelText("All overrides, as text");
+    await user.click(raw);
+    // the shipped focus blue, as the page itself
+    await user.paste("background,#1d4ed8");
+
+    const failing = within(sidebar()).getAllByText("Fail").map((el) => el.closest("div")!.textContent ?? "");
+    expect(failing.some((row) => /Background.*focus/i.test(row) && /needs 3:1/.test(row))).toBe(true);
   });
 });
 

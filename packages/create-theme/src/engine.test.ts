@@ -692,3 +692,32 @@ describe("status colours", () => {
     expect(theme({ manualOverrides: { destructive: "#00ff00" } }).light.colors.destructive).toBe("#00ff00");
   });
 });
+
+/* ------------------------------------------------------------------ focus visibility */
+
+/**
+ * The focus ring is a non-text indicator (SC 1.4.11, 3:1). The brand seed writes `focus`, and since the
+ * web ring now reads `--focus` (LIVE_SHADOW_ROLES in style-dictionary/hooks.mjs) the seed is what keyboard
+ * users see. Before, the panel checked text pairs only, so a theme that put the ring within a shade of its
+ * surface reported nothing.
+ */
+describe("focus ring visibility", () => {
+  const hues = Array.from({ length: 24 }, (_, i) => atHue(i * 15));
+
+  it.each(MODES)("a generated theme keeps the ring at 3:1 on the page and on cards (%s), for every hue", (mode) => {
+    for (const brand of [...BRANDS, ...hues]) {
+      const focusRows = contrastOf(theme({ brand })[mode]).filter((r) => r.pair[1] === "focus");
+      expect(focusRows.map((r) => r.pair[0]).sort()).toEqual(["background", "card"]);
+      for (const row of focusRows) expect(row.ratio, `${brand} ${row.pair.join("/")} ${mode}`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("reports a ring the user made invisible by hand, against the 3:1 non-text bar", () => {
+    const rows = contrastOf(theme({ manualOverrides: { background: "#1d4ed8" } }).light);
+    const ring = rows.find((r) => r.pair[0] === "background" && r.pair[1] === "focus")!;
+    expect(ring.min).toBe(3);
+    expect(ring.pass).toBe(false);
+    // text pairs keep the AA bar
+    expect(rows.find((r) => r.pair[1] === "foreground")!.min).toBe(4.5);
+  });
+});

@@ -61,6 +61,27 @@
   --sidebar-accent-foreground: 224 76% 48%;
   --sidebar-border: var(--neutral-300);
   --sidebar-ring: 224 76% 48%;
+  /*
+    Every token `.dark` redefines needs its light value here, or a light preview on a dark page shows the
+    dark one. These were missing, and it was visible: on a dark page the Theming page's light preview drew
+    its buttons in the dark `--action`, and Create's light preview drew the dark focus ring.
+    `theme-light-parity.test.ts` now fails if a `.dark` token is missing here or disagrees with `:root`.
+  */
+  --surface-grouped: var(--neutral-100);
+  --semantic-on-info-container: 204 33% 33%;
+  --semantic-muted-on-container: 0 0% 38%;
+  --brand: var(--blue-500);
+  --brand-foreground: var(--blue-50);
+  --action: var(--primary);
+  --action-foreground: var(--primary-foreground);
+  --action-hover: 224 71% 53%;
+  --action-pressed: 224 71% 56%;
+  --focus: var(--ring);
+  --link: var(--primary);
+  --shadow-focus: 0 0 0 1px hsl(var(--focus)), 0 0 0 4px hsl(var(--focus) / 0.2);
+  --shadow-focus-destructive: 0 0 0 1px #ec5047, 0 0 0 4px #ec504733;
+  --shadow-focus-success: 0 0 0 1px #5d6d5c, 0 0 0 4px #5d6d5c33;
+  --shadow-focus-warning: 0 0 0 1px #7f5b21, 0 0 0 4px #7f5b2133;
 }
 
 @layer base {
