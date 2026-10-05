@@ -10,6 +10,7 @@ import { Callout } from "@/components/callout";
 import { Steps, Step } from "@/components/steps";
 import { CodePre } from "@/components/code-pre";
 import { TokenTable } from "@/components/token-table";
+import { TokenAcrossPlatforms } from "@/components/token-evidence";
 import { ThemePreview } from "@/components/theme-preview";
 import {
   ComponentGapsTable,
@@ -98,6 +99,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Steps,
     Step,
     TokenTable,
+    TokenAcrossPlatforms,
     ThemePreview,
     ComponentGapsTable,
     ComponentTotalInline,
