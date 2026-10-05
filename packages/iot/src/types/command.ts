@@ -126,6 +126,13 @@ export type KinetixCommandLifecycle<T = unknown> = {
   reasonCode?: string;
   /** Correlation id of the most recent send, when the product supplies one. */
   commandId?: string;
+  /**
+   * Correlation ids of requests this one replaced (see `supersedeCommandLifecycle`). A response tagged
+   * with any of them is refused as `stale-response`, whether or not the current request has an id of
+   * its own: a reply to a request the user has already replaced cannot settle the one that replaced it.
+   * Bounded to the most recent few.
+   */
+  supersededCommandIds?: string[];
   /** When the device observed `confirmedValue`, from the last accepted `report`. Orders reports. */
   reportedAt?: string;
 };
@@ -135,7 +142,8 @@ export type KinetixLifecycleRejection = {
   /**
    * - `illegal-transition` — the event is not valid at this stage (this is how duplicates are absorbed)
    * - `max-attempts` — a retry past `maxAttempts`
-   * - `stale-response` — a response tagged with a different `commandId` than the current send
+   * - `stale-response` — a response tagged with a different `commandId` than the current send, or with
+   *   the id of a request this one superseded
    * - `stale-report` — a `report` observed before the last accepted one
    */
   code: "illegal-transition" | "max-attempts" | "stale-response" | "stale-report";

@@ -243,6 +243,20 @@ describe("DeviceSetpointControl", () => {
     expect(legacy.container.querySelector("[data-control-announcer]")).toBeNull();
   });
 
+  it("marks a pending setpoint as busy on the container and both steppers", () => {
+    // Under `optimistic` the chip is withheld and nothing is announced while it waits, so `aria-busy` is
+    // the only programmatic sign that the numeral is a request rather than the device's target.
+    for (const strategy of ["confirmed", "hybrid", "optimistic"] as const) {
+      const { container } = render(<DeviceSetpointControl lifecycle={heating()} strategy={strategy} control={READY} min={10} max={30} label="Living room" />);
+      expect(container.firstElementChild).toHaveAttribute("aria-busy", "true");
+      for (const name of ["Decrease Living room", "Increase Living room"]) expect(screen.getByRole("button", { name })).toHaveAttribute("aria-busy", "true");
+      cleanup();
+    }
+    const settled = render(<DeviceSetpointControl lifecycle={run(heating(), [{ type: "confirm", commandId: "t1" }, 10])} control={READY} min={10} max={30} label="Living room" />);
+    expect(settled.container.firstElementChild).not.toHaveAttribute("aria-busy");
+    expect(screen.getByRole("button", { name: "Increase Living room" })).not.toHaveAttribute("aria-busy");
+  });
+
   it("steps from the latest intent, not from what is drawn", () => {
     const onCommit = vi.fn();
     render(<DeviceSetpointControl lifecycle={run(heating(), [{ type: "confirm", commandId: "t1" }, 10])} control={READY} min={10} max={30} step={0.5} label="Living room" onCommit={onCommit} />);

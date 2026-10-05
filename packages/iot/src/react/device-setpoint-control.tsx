@@ -192,7 +192,11 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
     );
 
     return (
-      <div ref={ref} className={cn("flex flex-col gap-3", className)} data-pending={pending ? "" : undefined} data-strategy={view.strategy} {...props}>
+      // `aria-busy` on the container, as the other three controls set it on their widget: under
+      // `optimistic` the chip is withheld and nothing is announced while it waits, so this is the only
+      // programmatic sign that the numeral is a request. The steppers carry it too, because that is
+      // where a keyboard or screen-reader user actually is.
+      <div ref={ref} aria-busy={pending || undefined} className={cn("flex flex-col gap-3", className)} data-pending={pending ? "" : undefined} data-strategy={view.strategy} {...props}>
         {ring ? (
           // The ring is a container so its layout can follow the room it actually has. When the ring is at
           // least 12rem wide the numeral sits inside the gauge and the steppers tuck into the band under the
@@ -279,6 +283,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
           <button
             type="button"
             aria-label={`Decrease ${label}`}
+            aria-busy={pending || undefined}
             disabled={!interactive || atMin || shown === null}
             onClick={() => nudge(-step)}
             className={STEP_BUTTON}
@@ -291,6 +296,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
           <button
             type="button"
             aria-label={`Increase ${label}`}
+            aria-busy={pending || undefined}
             disabled={!interactive || atMax || shown === null}
             onClick={() => nudge(step)}
             className={STEP_BUTTON}
@@ -307,6 +313,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
           <button
             type="button"
             aria-label={`Decrease ${label}`}
+            aria-busy={pending || undefined}
             disabled={!interactive || atMin || shown === null}
             onClick={() => nudge(-step)}
             className={STEP_BUTTON}
@@ -320,6 +327,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
           <button
             type="button"
             aria-label={`Increase ${label}`}
+            aria-busy={pending || undefined}
             disabled={!interactive || atMax || shown === null}
             onClick={() => nudge(step)}
             className={STEP_BUTTON}

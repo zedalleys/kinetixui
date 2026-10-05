@@ -193,6 +193,7 @@ replaces an open request (20 → 40 → 80) while keeping report ordering.
 | Setpoint | Numeral = reported target; chip; ring with dashed request | Unchanged; #307 ring motion intact | Numeral = request; chip names the device target; ring unchanged | Numeral and arc = request |
 | Mode | Reported mode checked; request dashed, named "requested, not yet confirmed" | Unchanged | Request raised and dashed; reported stays checked | Request checked without the tick; rolls back in words |
 
+Every control sets `aria-busy` while a request is open (the setpoint on its container and both steppers).
 With a `lifecycle`, every control also renders a polite `role="status"` region (present before its first
 message) and, after a request that did not happen, a visible sentence (`data-outcome`). Setpoint's older
 `aria-live` sentence is replaced by the announcer when a lifecycle is passed, so there is one region.
@@ -218,12 +219,21 @@ strategy, compatibility). iot suite: 32 files, 901 tests.
 | Correlation check disabled | 5 fail, incl. (11), both (14) |
 | Pending sentence removed from `describeControlOutcome` | 10 fail, incl. (19) |
 | `aria-busy` removed from power | 3 fail, incl. (19) |
+| Superseded ids not recorded, or their guard removed (review round 2) | 1 fail each: the ID-less supersede case |
+| `aria-busy` removed from the setpoint container (review round 2) | 1 fail |
 
 **Browser.** `pnpm check:iot-strategies` drives the nine `IoT/Control strategies` Storybook demos through
 light, dark, keyboard-only, reduced motion, forced colours, RTL and 390px at 200% text, reading back
 roles, `aria-checked`/`aria-busy`/`aria-valuetext`, the status sentence and the visible outcome, and
 running axe-core. 63 scenario runs, 565 checks; three consecutive green runs. This is an automated
 accessibility-tree check; **no manual screen-reader testing was done.**
+
+### Review findings fixed on this branch
+
+| Finding | Fix |
+| --- | --- |
+| **P1** (Codex). `supersedeCommandLifecycle` without a new `commandId` dropped the previous id, and the mismatch guard only fires when the current request has an id — so a late `confirm` tagged with the superseded id settled the newer request (reproduced: a reply for 40 confirmed 80). | The superseded id moves to a new bounded `supersededCommandIds` on the lifecycle, and a response tagged with any of them is refused as `stale-response` whether or not the current request has an id. An id deliberately reused by the new request is not listed. |
+| **P2** (Codex). `DeviceSetpointControl` never set `aria-busy`, unlike the other three and the documented contract — worst under `optimistic`, which withholds the chip and announces nothing while it waits. | `aria-busy` on the container and both steppers while a request is open. |
 
 ## 12. Not done in M2A
 

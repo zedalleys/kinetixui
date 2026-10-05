@@ -144,6 +144,28 @@ describe("level: rapid commands", () => {
     expect(describeControlOutcome(view(done), PERCENT)).toBe("80%.");
   });
 
+  it("a reply to a superseded request is refused even when the new request was sent without an id", () => {
+    // Without this, the mismatch guard had nothing to compare against — the new request had no id — and a
+    // late `confirm` for 40 settled the request for 80, reporting a value the device never sent.
+    const first = run(startCommandLifecycle<number>({ confirmed: 20, requested: 40, commandId: "c40" }), [{ type: "sent" }, 0]);
+    const second = run(supersedeCommandLifecycle(first, 80), [{ type: "sent" }, 100]);
+    expect(second.supersededCommandIds).toEqual(["c40"]);
+    const late = transitionCommandLifecycle(second, { type: "confirm", commandId: "c40" }, 200);
+    expect(late.ok).toBe(false);
+    expect(late.ok ? null : late.rejection.code).toBe("stale-response");
+    expect(view(late.state)).toMatchObject({ outcome: "pending", value: 20, pendingValue: 80 });
+    // And it stays refused after another ID-less supersede, with the list bounded.
+    const third = run(supersedeCommandLifecycle(second, 60), [{ type: "sent" }, 300]);
+    expect(transitionCommandLifecycle(third, { type: "confirm", commandId: "c40" }, 400).ok).toBe(false);
+    let chain = third;
+    for (let i = 0; i < 12; i++) chain = run(supersedeCommandLifecycle(chain, i, { commandId: `x${i}` }), [{ type: "sent" }, 500 + i]);
+    expect(chain.supersededCommandIds!.length).toBeLessThanOrEqual(8);
+    // A request that deliberately reuses an id is not poisoned by its own predecessor.
+    const reused = supersedeCommandLifecycle(first, 80, { commandId: "c40" });
+    expect(reused.supersededCommandIds).toBeUndefined();
+    expect(run(reused, [{ type: "sent" }, 600], [{ type: "confirm", commandId: "c40" }, 700]).stage).toBe("confirmed");
+  });
+
   it("superseding keeps report ordering, so a report older than the last accepted one is still refused", () => {
     const first = run(
       startCommandLifecycle<number>({ confirmed: 20, requested: 40, commandId: "c40" }),

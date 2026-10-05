@@ -135,8 +135,15 @@ export function startCommandLifecycle<T = unknown>(input: StartCommandLifecycleI
   return state;
 }
 
+/** How many superseded correlation ids a lifecycle remembers. A drag emits a handful, not a history. */
+const SUPERSEDED_LIMIT = 8;
+
 export type SupersedeCommandLifecycleOptions = {
-  /** Correlation id for the new request's first send. */
+  /**
+   * Correlation id for the new request's first send. Optional, but a product that gives its requests ids
+   * should give this one too: without it the new request has no id of its own, and only the superseded
+   * list below can tell a late reply apart from an answer.
+   */
   commandId?: string;
   /** Sends allowed for the new request. Defaults to the previous lifecycle's limit. */
   maxAttempts?: number;
@@ -147,9 +154,10 @@ export type SupersedeCommandLifecycleOptions = {
  *
  * The result is a fresh `idle` lifecycle for `requested` that keeps what is still true from the
  * previous one: the device's reported value and when it was observed, so a report older than the
- * last accepted one is still refused. The previous request's correlation id is dropped, so a late
- * reply tagged with it is refused as `stale-response` and can never confirm the newer request. Send
- * it with a `sent` event, as with {@link startCommandLifecycle}.
+ * last accepted one is still refused. The previous request's correlation id moves to
+ * `supersededCommandIds`, so a late reply tagged with it is refused as `stale-response` and can never
+ * confirm the newer request — including when the new request is sent without an id of its own. Send it
+ * with a `sent` event, as with {@link startCommandLifecycle}.
  */
 export function supersedeCommandLifecycle<T = unknown>(
   previous: KinetixCommandLifecycle<T>,
@@ -163,6 +171,10 @@ export function supersedeCommandLifecycle<T = unknown>(
     ...(options.commandId !== undefined ? { commandId: options.commandId } : {}),
   });
   if (previous.reportedAt !== undefined) next.reportedAt = previous.reportedAt;
+  const superseded = [...(previous.supersededCommandIds ?? []), ...(previous.commandId !== undefined ? [previous.commandId] : [])].filter(
+    (id) => id !== options.commandId,
+  );
+  if (superseded.length > 0) next.supersededCommandIds = superseded.slice(-SUPERSEDED_LIMIT);
   return next;
 }
 
@@ -322,6 +334,16 @@ export function transitionCommandLifecycle<T = unknown>(
   }
 
   const responseId = RESPONSES.includes(event.type) && "commandId" in event ? event.commandId : undefined;
+  if (responseId !== undefined && state.supersededCommandIds?.includes(responseId)) {
+    return {
+      ok: false,
+      state,
+      rejection: {
+        code: "stale-response",
+        message: `A "${event.type}" for command ${responseId} answers a request that has been superseded.`,
+      },
+    };
+  }
   if (responseId !== undefined && state.commandId !== undefined && responseId !== state.commandId) {
     return {
       ok: false,

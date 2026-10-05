@@ -296,12 +296,17 @@ const SCENARIOS = {
     expectThat(tag, (await page.locator("[data-requested]").textContent()) === "Requested, not yet confirmed. Device target 20°C", `chip: ${await page.locator("[data-requested]").textContent()}`);
     expectThat(tag, (await page.getByText(/^Now 18\.5°C/).count()) === 1, "the current measurement is missing");
     expectThat(tag, (await announcer(page)) === "Chamber target: Changing the target to 22°C, waiting for the device.", `pending: "${await announcer(page)}"`);
+    // Under `optimistic` the chip is withheld and nothing is announced, so this is the only programmatic
+    // sign that the numeral is a request; it is asserted under every strategy so they cannot drift apart.
+    expectThat(tag, (await page.locator("[data-strategy][aria-busy=true]").count()) === 1, "pending: the setpoint container is not aria-busy");
+    expectThat(tag, (await button(page, "Increase Chamber target").getAttribute("aria-busy")) === "true", "pending: the stepper is not aria-busy");
     if (cond.width >= 390 && !cond.scale) expectThat(tag, (await page.locator("[data-ring-requested]").count()) === 1, "ring: no dashed request segment");
     await conditionChecks(page, `${tag} pending`, cond);
     await axe(page, `${tag} pending`, cond);
     await press(page, cond, button(page, "Device confirms"));
     expectThat(tag, (await page.locator("[data-confirmed]").first().textContent()) === "22°C", "confirmed numeral");
     expectThat(tag, (await announcer(page)) === "Chamber target: 22°C.", `confirmed: "${await announcer(page)}"`);
+    expectThat(tag, (await page.locator("[aria-busy=true]").count()) === 0, "confirmed: something is still aria-busy");
   },
 
   "mode-pending-failure": async (page, tag, cond) => {

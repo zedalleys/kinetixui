@@ -156,8 +156,10 @@ const [lifecycle, setLifecycle] = useState(() => startCommandLifecycle({ confirm
 ```
 
 `supersedeCommandLifecycle(previous, requested, { commandId })` replaces an open request (a dimmer
-dragged 20 → 40 → 80): it keeps the reported value and `reportedAt`, so report ordering survives, and drops
-the old correlation id, so a late reply to 40 is refused as `stale-response`.
+dragged 20 → 40 → 80): it keeps the reported value and `reportedAt`, so report ordering survives, and
+moves the old correlation id to `supersededCommandIds`, so a late reply to 40 is refused as
+`stale-response` — including when the new request is sent without an id of its own, where there would
+otherwise be nothing to compare it against.
 
 | | `confirmed` | `hybrid` | `optimistic` |
 | --- | --- | --- | --- |
@@ -166,7 +168,9 @@ the old correlation id, so a late reply to 40 is refused as `stale-response`.
 | Setpoint | Numeral = reported target; chip; ring with a dashed request | Numeral = request; chip names the device's target | Numeral and arc = request |
 | Mode | Reported mode checked; request dashed and named "requested, not yet confirmed" | Request raised and dashed; reported mode stays checked | Request checked, without the confirmed tick |
 
-Every strategy sets `aria-busy` while a request is open, and after a request that did not happen shows
+Every control sets `aria-busy` while a request is open, under every strategy — on the widget, and on the
+setpoint's container and its two steppers. It is the one programmatic sign `optimistic` keeps, since it
+draws no pending mark and announces nothing while it waits. After a request that did not happen, a control shows
 and announces a sentence such as "Could not turn on. The device still reports off." (`data-outcome`;
 `data-rolled-back` when the display moved back).
 
