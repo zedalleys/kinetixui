@@ -28,6 +28,7 @@ on:
       - "scripts/motion.mjs"
       - "scripts/motion-states.mjs"
       - "scripts/loop-motion.mjs"
+      - "scripts/iot-control-strategies.mjs"
       - "scripts/card-visual.mjs"
       - "scripts/icon-direction.mjs"
       - "scripts/selection-visual.mjs"
@@ -57,6 +58,7 @@ on:
       - "scripts/motion.mjs"
       - "scripts/motion-states.mjs"
       - "scripts/loop-motion.mjs"
+      - "scripts/iot-control-strategies.mjs"
       - "scripts/card-visual.mjs"
       - "scripts/icon-direction.mjs"
       - "scripts/selection-visual.mjs"
@@ -132,6 +134,12 @@ jobs:
       # form still has its ring, its role and name, and survives forced colours.
       - name: Loop motion (running normally, stopped and still legible under reduced motion)
         run: pnpm check:loop-motion
+
+      # The IoT control contract (M2A), pressed through: each `IoT/Control strategies` story is a
+      # deterministic device script, played in light, dark, keyboard-only, reduced motion, forced colours,
+      # RTL and 390px at 200% text, reading back the accessible state, the announced sentence and axe.
+      - name: IoT control strategies (lifecycle + strategy, seven browser conditions)
+        run: pnpm check:iot-strategies
 
       # Card's surface and state contract, read off rendered pixels in light and dark: the resting edge
       # is softer than the controls inside it, the card is lifted and sits above a grouped section, a static

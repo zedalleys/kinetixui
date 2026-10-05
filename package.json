@@ -51,6 +51,7 @@
     "check:a11y-site": "node scripts/a11y-site.mjs --base http://127.0.0.1:3000",
     "check:theme-isolation": "node scripts/theme-isolation.mjs --base http://127.0.0.1:3000",
     "check:iot-state-spatial": "node scripts/iot-state-spatial.mjs --base http://127.0.0.1:3000",
+    "check:iot-strategies": "node scripts/iot-control-strategies.mjs",
     "check:type-scale": "node scripts/check-type-scale.mjs",
     "check:typography": "node scripts/check-typography.mjs",
     "check:grid": "node scripts/check-grid.mjs",

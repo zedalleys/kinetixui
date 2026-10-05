@@ -8,12 +8,10 @@ import {
   resolveBatteryState,
   resolveCapabilitySupport,
   startCommandLifecycle,
-  summarizeDeviceState,
   transitionCommandLifecycle,
   type KinetixCommandLifecycle,
   type KinetixCommandLifecycleEvent,
   type KinetixDeviceCapability,
-  type KinetixDeviceState,
 } from "./index";
 
 /**
@@ -327,22 +325,5 @@ describe("battery state", () => {
     expect(resolveBatteryState({ percent: 4, charging: true })).toEqual({ level: "critical", available: true, charging: true, low: true, critical: true });
     expect(resolveBatteryState({ percent: 20 })).toMatchObject({ level: "low", low: true, critical: false, charging: "unknown" });
     expect(resolveBatteryState({ percent: 80, charging: false })).toMatchObject({ level: "high", low: false, charging: false });
-  });
-});
-
-describe("known limitation, recorded rather than fixed in M1", () => {
-  it("summarizeDeviceState still reports missing connectivity as offline (gap G4)", () => {
-    // Fixing this needs an `unknown` connectivity state, which widens an exported union that React
-    // components switch over. See docs/iot/IOT-MATURITY-AUDIT.md §5. When that lands, this flips.
-    const state = {
-      device: { id: "p1", name: "Pump", type: "pump", status: "online" },
-      capabilities: [],
-      confirmedValues: {},
-      requestedValues: {},
-      pendingCommands: [],
-      faults: [],
-      alerts: [],
-    } as unknown as KinetixDeviceState;
-    expect(summarizeDeviceState(state).connectivity).toBe("offline");
   });
 });

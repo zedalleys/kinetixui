@@ -2,8 +2,9 @@
 
 import * as React from "react";
 import type { KinetixControlState } from "../types/control";
-import { snapToStep } from "../functions/control";
+import { snapToStep, type DescribeControlOutcomeOptions } from "../functions/control";
 import { cn } from "./cn";
+import { ControlAnnouncer, ControlOutcomeNote, useControlContract, type ControlContractProps } from "./control-outcome";
 import { withDisplayName } from "./display-name";
 
 /**
@@ -20,18 +21,24 @@ import { withDisplayName } from "./display-name";
  * "it's cold" from "it's heading there" — which is the single most common complaint about
  * thermostat UIs.
  *
+ * **Three numbers, never confused.** The current measurement, the target the device reports and a
+ * requested target are each drawn and worded as what they are. The `strategy` decides only which
+ * target the large numeral leads with while a change is open: the reported one under `confirmed`
+ * (default), the requested one under `hybrid` (with a chip naming the device's target) and
+ * `optimistic` (with no chip, rolled back in words if the change does not happen).
+ *
  * Stepping is by button, not a slider: setpoints are adjusted in small deliberate increments and a
  * drag across a 10-degree range is a fat-finger hazard on a device that costs money to run. The
  * buttons are real buttons with real labels, so keyboard and screen reader work without anything
  * extra, and holding one does not auto-repeat — a deliberate omission, since an unnoticed repeat on
  * a setpoint is expensive.
  */
-export interface DeviceSetpointControlProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
+export interface DeviceSetpointControlProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange">, ControlContractProps<number> {
   /** What the device is measuring now. `null` renders as unknown rather than as the target. */
   current?: number | null;
-  /** The confirmed target. */
-  target: number | null | undefined;
-  /** A requested target that the device has not confirmed. */
+  /** The confirmed target. Ignored when a `lifecycle` is passed. */
+  target?: number | null;
+  /** A requested target that the device has not confirmed. Ignored with a `lifecycle`. */
   requestedTarget?: number | null;
   min: number;
   max: number;
@@ -85,12 +92,47 @@ function ringArc(from: number, to: number, r: number): string {
 
 const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceSetpointControlProps>(
   (
-    { current, target, requestedTarget, min, max, step = 0.5, unit = "°", label, control, onCommit, activity, presentation = "numeral", secondary, className, ...props },
+    {
+      current,
+      target,
+      requestedTarget,
+      min,
+      max,
+      step = 0.5,
+      unit = "°",
+      label,
+      control: controlProp,
+      lifecycle,
+      strategy,
+      announce,
+      onCommit,
+      activity,
+      presentation = "numeral",
+      secondary,
+      className,
+      ...props
+    },
     ref,
   ) => {
-    const confirmed = typeof target === "number" && Number.isFinite(target) ? target : null;
-    const requested = requestedTarget === undefined || requestedTarget === null ? null : requestedTarget;
+    const sentence: DescribeControlOutcomeOptions = {
+      formatValue: (v) => `${String(v)}${unit}`,
+      pendingPhrase: (v) => `Changing the target to ${String(v)}${unit}`,
+      failedPhrase: (v) => `Could not change the target to ${String(v)}${unit}`,
+    };
+    const contract = useControlContract<number>({ lifecycle, strategy, announce, control: controlProp, reported: target, requested: requestedTarget }, sentence);
+    const { control } = contract;
+    const view = contract.presentation;
+    const reportedTarget = view.reportedValue;
+    const confirmed = typeof reportedTarget === "number" && Number.isFinite(reportedTarget) ? reportedTarget : null;
+    const requested = view.pending && typeof view.pendingValue === "number" ? view.pendingValue : null;
     const pending = requested !== null && requested !== confirmed;
+    const marked = pending && view.indicatePending;
+    // Read off the presentation, never off the strategy's name. The large numeral leads with the request
+    // when the presentation draws it; the arc's solid part follows it only when it is also unmarked.
+    const lead = pending && view.valueSource === "requested" ? requested : confirmed;
+    const arc = pending && !marked ? requested : confirmed;
+    // Stepping starts from the latest intent, whatever is drawn: a second press after asking for 21
+    // asks for 21.5, not for the reported 20 plus one step.
     const shown = pending ? requested! : confirmed;
 
     const interactive = control ? control.interactive : true;
@@ -122,19 +164,21 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
           // with its context ("target 21, currently 19"); making this one live as well had a
           // screen reader read the bare number first and the sentence straight after.
           // The big number is the CONFIRMED target; a request never replaces it.
-          data-confirmed=""
-          className={cn("tabular-nums leading-none text-display-sm", confirmed === null ? "text-muted-foreground" : "text-foreground")}
+          data-confirmed={lead === confirmed ? "" : undefined}
+          data-value-source={lead === confirmed ? "reported" : "requested"}
+          className={cn("tabular-nums leading-none text-display-sm", lead === null ? "text-muted-foreground" : "text-foreground")}
             >
-          {confirmed === null ? "—" : confirmed}
-          {confirmed === null ? null : <span className="ms-0.5 align-top text-title-md text-muted-foreground">{unit}</span>}
+          {lead === null ? "—" : lead}
+          {lead === null ? null : <span className="ms-0.5 align-top text-title-md text-muted-foreground">{unit}</span>}
             </span>
-            {pending ? (
+            {marked ? (
           <span
             data-requested=""
             className="inline-flex max-w-full animate-pulse items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md tabular-nums text-foreground motion-reduce:animate-none"
           >
-            Requested {requested}
-            {unit}, not yet confirmed
+            {lead === confirmed
+              ? `Requested ${requested}${unit}, not yet confirmed`
+              : `Requested, not yet confirmed. Device target ${confirmed === null ? "unknown" : `${confirmed}${unit}`}`}
           </span>
             ) : null}
             {secondary ? <span className="text-body-sm text-muted-foreground">{secondary}</span> : null}
@@ -148,7 +192,11 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
     );
 
     return (
-      <div ref={ref} className={cn("flex flex-col gap-3", className)} data-pending={pending ? "" : undefined} {...props}>
+      // `aria-busy` on the container, as the other three controls set it on their widget: under
+      // `optimistic` the chip is withheld and nothing is announced while it waits, so this is the only
+      // programmatic sign that the numeral is a request. The steppers carry it too, because that is
+      // where a keyboard or screen-reader user actually is.
+      <div ref={ref} aria-busy={pending || undefined} className={cn("flex flex-col gap-3", className)} data-pending={pending ? "" : undefined} data-strategy={view.strategy} {...props}>
         {ring ? (
           // The ring is a container so its layout can follow the room it actually has. When the ring is at
           // least 12rem wide the numeral sits inside the gauge and the steppers tuck into the band under the
@@ -159,7 +207,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
             <div data-ring-face="" className="relative [@container(min-width:12rem)]:aspect-square">
               <svg aria-hidden="true" focusable="false" viewBox="0 0 200 200" className="absolute inset-0 hidden size-full rtl:-scale-x-100 [@container(min-width:12rem)]:block">
                 <path d={ringArc(0, 1, ARC_RADIUS)} fill="none" strokeWidth={14} strokeLinecap="round" className="stroke-muted" />
-                {confirmed !== null ? (
+                {arc !== null ? (
                   // An arc's `d` is not a property a browser can interpolate, so a confirmed target used to
                   // jump to its new length: measured in Chromium, `transition-duration` was `0s` and nothing
                   // was running 45ms after the device agreed. Drawing the WHOLE arc once and revealing a
@@ -168,19 +216,20 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
                   // itself, with no arc-length arithmetic to keep in step with `ringArc`.
                   <path
                     data-ring-confirmed=""
+                    data-value-source={arc === confirmed ? "reported" : "requested"}
                     d={ringArc(0, 1, ARC_RADIUS)}
                     pathLength={1}
                     strokeDasharray="1 1"
-                    strokeDashoffset={1 - frac(confirmed)}
+                    strokeDashoffset={1 - frac(arc)}
                     fill="none"
                     strokeWidth={14}
                     // Butt at the bottom of the range: a round cap on a zero-length dash draws a dot, which
                     // reads as a value where there is none.
-                    strokeLinecap={frac(confirmed) > 0.005 ? "round" : "butt"}
+                    strokeLinecap={frac(arc) > 0.005 ? "round" : "butt"}
                     className="stroke-primary transition-[stroke-dashoffset] duration-base ease-enter motion-reduce:transition-none"
                   />
                 ) : null}
-                {pending && confirmed !== null ? (
+                {marked && confirmed !== null ? (
                   <path
                     data-ring-requested=""
                     d={ringArc(Math.min(frac(confirmed), frac(requested!)), Math.max(frac(confirmed), frac(requested!)), ARC_RADIUS)}
@@ -190,7 +239,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
                     className="stroke-primary"
                   />
                 ) : null}
-                {confirmed !== null ? (
+                {arc !== null ? (
                   // Same reason, different property: `cx`/`cy` are recomputed per value, so the marker
                   // teleported while the arc under it travelled. Every point on the ring is the same point
                   // rotated, so the marker is drawn once at the arc's start and rotated into place — and
@@ -198,12 +247,12 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
                   <g
                     data-ring-marker=""
                     className="transition-transform duration-base ease-enter motion-reduce:transition-none"
-                    style={{ transform: `rotate(${ARC_SWEEP * frac(confirmed)}deg)`, transformOrigin: `${RING}px ${RING}px` }}
+                    style={{ transform: `rotate(${ARC_SWEEP * frac(arc)}deg)`, transformOrigin: `${RING}px ${RING}px` }}
                   >
                     <circle cx={ringPoint(0, ARC_RADIUS)[0]} cy={ringPoint(0, ARC_RADIUS)[1]} r={MARKER_RADIUS} strokeWidth={MARKER_STROKE} className="fill-background stroke-primary" />
                   </g>
                 ) : null}
-                {pending ? (
+                {marked ? (
                   <circle cx={ringPoint(frac(requested!), ARC_RADIUS)[0]} cy={ringPoint(frac(requested!), ARC_RADIUS)[1]} r={MARKER_RADIUS} strokeWidth={3} strokeDasharray="3 3" className="fill-background stroke-primary" />
                 ) : null}
               </svg>
@@ -234,6 +283,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
           <button
             type="button"
             aria-label={`Decrease ${label}`}
+            aria-busy={pending || undefined}
             disabled={!interactive || atMin || shown === null}
             onClick={() => nudge(-step)}
             className={STEP_BUTTON}
@@ -246,6 +296,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
           <button
             type="button"
             aria-label={`Increase ${label}`}
+            aria-busy={pending || undefined}
             disabled={!interactive || atMax || shown === null}
             onClick={() => nudge(step)}
             className={STEP_BUTTON}
@@ -262,6 +313,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
           <button
             type="button"
             aria-label={`Decrease ${label}`}
+            aria-busy={pending || undefined}
             disabled={!interactive || atMin || shown === null}
             onClick={() => nudge(-step)}
             className={STEP_BUTTON}
@@ -275,6 +327,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
           <button
             type="button"
             aria-label={`Increase ${label}`}
+            aria-busy={pending || undefined}
             disabled={!interactive || atMax || shown === null}
             onClick={() => nudge(step)}
             className={STEP_BUTTON}
@@ -292,17 +345,24 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
           stepping the target hears this and nothing else. "Target 21, currently 19" is usable;
           "21" is not.
         */}
-        <span className="sr-only" aria-live="polite">
-          {label}: target {shown === null ? "unknown" : `${shown}${unit}`}
-          {pending ? ", requested, not yet confirmed" : ""}
-          {current === null || current === undefined ? "" : `, currently ${current}${unit}`}
-        </span>
+        {contract.announcement === null ? (
+          <span className="sr-only" aria-live="polite">
+            {label}: target {shown === null ? "unknown" : `${shown}${unit}`}
+            {pending ? ", requested, not yet confirmed" : ""}
+            {current === null || current === undefined ? "" : `, currently ${current}${unit}`}
+          </span>
+        ) : (
+          // With a lifecycle the control announces the change itself, once per stage, in place of the
+          // sentence above: two polite regions would read the same change twice.
+          <ControlAnnouncer announcement={contract.announcement ? `${label}: ${contract.announcement}` : ""} />
+        )}
 
         {control?.description && control.availability !== "ready" ? (
           <span id={descriptionId} className="text-center text-label-md text-muted-foreground">
             {control.description}
           </span>
         ) : null}
+        <ControlOutcomeNote presentation={view} sentence={sentence} className="text-center" />
       </div>
     );
   },

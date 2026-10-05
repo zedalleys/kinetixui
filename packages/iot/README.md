@@ -57,7 +57,9 @@ Some things to know before relying on them:
 - **`EnergySummary` is display only** — no billing, cost, carbon or forecast.
 - **Pairing components are UI state.** No Bluetooth, Wi-Fi or discovery lives here.
 - **Live regions are rare.** `CommandLifecycle` and `AutomationBuilder` each have one polite
-  `role="status"`; `PairingFailure` is a `role="alert"`. Nothing else announces.
+  `role="status"`; `PairingFailure` is a `role="alert"`; `DeviceSetpointControl` has one polite
+  sentence. A device control given a `lifecycle` announces its change in one polite `role="status"`
+  (turn it off with `announce={false}` when `CommandLifecycle` shows the same change). Nothing else announces.
 
 ## What it is not
 
@@ -72,7 +74,12 @@ Desired vs reported state, the command lifecycle (including correlation of repli
 arrive out of order), the `confirmed` / `optimistic` / `hybrid` presentation strategies and
 capability-oriented devices are specified in
 [`docs/iot/DEVICE-INTERACTION-CONTRACT.md`](../../docs/iot/DEVICE-INTERACTION-CONTRACT.md). They are
-React-free and live in `@kinetixui/iot/functions`. The shipped controls use the `confirmed` strategy.
+React-free and live in `@kinetixui/iot/functions`.
+
+The four controls take a command `lifecycle` and a `strategy` (`confirmed` by default, `optimistic`,
+`hybrid`) and draw what `presentCommandValue` decides; a strategy changes what is shown, never what the
+lifecycle says about the device. Connectivity separates `unknown` and `connecting` from `offline`: a
+device nobody has reported on is not a device that is gone.
 
 ## The recurring design rule
 

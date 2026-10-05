@@ -35,10 +35,13 @@ export type {
 export { KINETIX_COMMAND_LIFECYCLE_STAGES, KINETIX_COMMAND_STRATEGIES } from "./command";
 export type {
   KinetixControlAvailability,
+  KinetixControlOutcome,
   KinetixControlPhase,
+  KinetixControlPresentation,
   KinetixControlState,
   KinetixDeviceMode,
   KinetixPowerState,
+  ResolveControlPresentationInput,
   ResolveControlStateInput,
 } from "./control";
 export { KINETIX_CONTROL_AVAILABILITIES } from "./control";
