@@ -19,6 +19,7 @@ public struct KinetixSheet<Content: View>: View {
     @Environment(\.kinetixColors) private var colors
     @Environment(\.kinetixElevations) private var elevations
     @Environment(\.kinetixRadii) private var radii
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @Binding private var isPresented: Bool
     private let content: Content
@@ -54,7 +55,7 @@ public struct KinetixSheet<Content: View>: View {
                 }
                 .kinetixElevation(elevations.xl.flippedVertically)
                 .ignoresSafeArea(edges: .bottom)
-                .transition(.move(edge: .bottom))
+                .transition(KinetixSlideMotion.transition(from: .bottom, reduceMotion: reduceMotion))
             }
         }
     }

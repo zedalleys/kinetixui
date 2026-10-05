@@ -46,7 +46,7 @@
       "accessibility": 0,
       "rtl": 0,
       "largeText": 0,
-      "reducedMotion": 3,
+      "reducedMotion": 7,
       "visual": 0,
       "published": 0
     },
@@ -56,7 +56,7 @@
       "accessibility": 4,
       "rtl": 1,
       "largeText": 0,
-      "reducedMotion": 3,
+      "reducedMotion": 7,
       "visual": 0,
       "published": 0
     },
@@ -66,7 +66,7 @@
       "accessibility": 5,
       "rtl": 58,
       "largeText": 58,
-      "reducedMotion": 3,
+      "reducedMotion": 7,
       "visual": 0,
       "published": 0
     }
@@ -674,6 +674,27 @@
         ]
       },
       {
+        "file": "packages/ui-swiftui/Tests/KinetixUITests/LoopMotionTests.swift",
+        "kinds": [
+          "reducedMotion"
+        ],
+        "components": [
+          "marquee",
+          "message-bubble",
+          "skeleton",
+          "spinner"
+        ]
+      },
+      {
+        "file": "packages/ui-swiftui/Tests/KinetixUITests/SlideMotionTests.swift",
+        "kinds": [
+          "reducedMotion"
+        ],
+        "components": [
+          "switch"
+        ]
+      },
+      {
         "file": "packages/ui-swiftui/Tests/KinetixUITests/SwitchMotionTests.swift",
         "kinds": [
           "reducedMotion"
@@ -715,6 +736,18 @@
           "switch",
           "tabs",
           "toggle"
+        ]
+      },
+      {
+        "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/LoopMotionTest.kt",
+        "kinds": [
+          "reducedMotion"
+        ],
+        "components": [
+          "marquee",
+          "message-bubble",
+          "skeleton",
+          "spinner"
         ]
       },
       {
@@ -830,6 +863,18 @@
           "switch",
           "tabs",
           "toggle"
+        ]
+      },
+      {
+        "file": "packages/ui-flutter/test/loop_motion_test.dart",
+        "kinds": [
+          "reducedMotion"
+        ],
+        "components": [
+          "marquee",
+          "message-bubble",
+          "skeleton",
+          "spinner"
         ]
       },
       {
@@ -3355,16 +3400,25 @@
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
+        ],
+        "reducedMotion": [
+          "packages/ui-swiftui/Tests/KinetixUITests/LoopMotionTests.swift:5-68"
         ]
       },
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "reducedMotion": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/LoopMotionTest.kt:46-144"
         ]
       },
       "Flutter": {
         "build": [
           "packages/ui-flutter (compiled by CI)"
+        ],
+        "reducedMotion": [
+          "packages/ui-flutter/test/loop_motion_test.dart:5-215"
         ]
       }
     },
@@ -3422,16 +3476,25 @@
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
+        ],
+        "reducedMotion": [
+          "packages/ui-swiftui/Tests/KinetixUITests/LoopMotionTests.swift:5-68"
         ]
       },
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "reducedMotion": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/LoopMotionTest.kt:46-144"
         ]
       },
       "Flutter": {
         "build": [
           "packages/ui-flutter (compiled by CI)"
+        ],
+        "reducedMotion": [
+          "packages/ui-flutter/test/loop_motion_test.dart:5-215"
         ]
       }
     },
@@ -4598,11 +4661,17 @@
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
+        ],
+        "reducedMotion": [
+          "packages/ui-swiftui/Tests/KinetixUITests/LoopMotionTests.swift:5-68"
         ]
       },
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "reducedMotion": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/LoopMotionTest.kt:46-144"
         ]
       },
       "Flutter": {
@@ -4614,6 +4683,9 @@
         ],
         "largeText": [
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
+        ],
+        "reducedMotion": [
+          "packages/ui-flutter/test/loop_motion_test.dart:5-215"
         ]
       }
     },
@@ -4751,11 +4823,17 @@
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
+        ],
+        "reducedMotion": [
+          "packages/ui-swiftui/Tests/KinetixUITests/LoopMotionTests.swift:5-68"
         ]
       },
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "reducedMotion": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/LoopMotionTest.kt:46-144"
         ]
       },
       "Flutter": {
@@ -4767,6 +4845,9 @@
         ],
         "largeText": [
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
+        ],
+        "reducedMotion": [
+          "packages/ui-flutter/test/loop_motion_test.dart:5-215"
         ]
       }
     },
@@ -4884,6 +4965,7 @@
           "packages/ui-swiftui (compiled by CI)"
         ],
         "reducedMotion": [
+          "packages/ui-swiftui/Tests/KinetixUITests/SlideMotionTests.swift:5-38",
           "packages/ui-swiftui/Tests/KinetixUITests/SwitchMotionTests.swift:5-108"
         ]
       },

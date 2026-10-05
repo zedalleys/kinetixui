@@ -168,6 +168,12 @@ jobs:
       - name: Registry dependency completeness
         run: pnpm check:registry-deps
 
+      # The registry does not deliver the preset's global reduced-motion floor, so the one promise a delivered
+      # file can keep itself is that every loop it ships states its own reduced form. Reads the same served
+      # payloads as the check above, because those are what a consumer receives.
+      - name: Registry reduced-motion floor
+        run: pnpm check:registry-motion
+
       # `pnpm typecheck` type-checks the IoT source, which is not the same as proving it bundles: the
       # three entry points, the .d.ts rollup and the `exports` map's paths are all produced here. Without
       # this step a broken build would first appear during a release, which is the worst place for it.

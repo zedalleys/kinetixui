@@ -181,7 +181,7 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
         data-availability={control?.availability}
         data-variant={variant}
         className={cn(
-          "flex flex-col rounded-2xl font-sans text-card-foreground transition-colors duration-base ease-out motion-reduce:transition-none",
+          "flex flex-col rounded-2xl font-sans text-card-foreground transition-colors duration-base ease-enter motion-reduce:transition-none",
           PAD[variant],
           // No border on an ordinary card: the surface is a tier, not an outline. Active is a tint.
           quiet ? "bg-muted/40" : "bg-card shadow-sm",

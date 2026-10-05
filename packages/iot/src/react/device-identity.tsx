@@ -67,7 +67,7 @@ const DeviceIdentity = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
           className={cn(
             // No border on the ordinary tiles: tone is a fill. Only "offline" is drawn with an edge,
             // because a dashed outline MEANS something (absent) and survives greyscale.
-            "grid shrink-0 place-items-center transition-colors duration-base ease-out motion-reduce:transition-none",
+            "grid shrink-0 place-items-center transition-colors duration-base ease-enter motion-reduce:transition-none",
             TILE_SIZES[size],
             tone === "active" && "bg-primary text-primary-foreground shadow-sm",
             tone === "attention" && "bg-destructive/10 text-destructive ring-1 ring-inset ring-destructive/40",

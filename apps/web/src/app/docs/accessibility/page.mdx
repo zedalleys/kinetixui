@@ -39,8 +39,11 @@ written out under [Hand-built widgets](#hand-built-widgets) below, and every one
 - **Labels** — icon-only controls (`Button size="icon"`, `Fab`, close buttons)
   require an `aria-label`; the components don't render without one where it
   matters.
-- **Reduced motion** — transitions are short and `transition-colors` only;
-  nothing animates position or opacity on a loop.
+- **Reduced motion** — most transitions are short colour, border and shadow changes. Some things do
+  move: overlays and disclosures open and close, a progress fill's width follows its value, and a few
+  indicators loop (`Spinner`, `Skeleton`, `MessageBubble`'s typing dots, `Marquee`, the `InputOTP`
+  caret). Under `prefers-reduced-motion` the transitions collapse to near-instant and every loop stops;
+  see below for exactly what each one becomes.
 
 ## Forced colors and reduced motion
 
@@ -49,10 +52,16 @@ Both are checked in a real browser on every story, not just documented:
 - **Forced colors** (Windows High Contrast): Tailwind's `ring` utilities are box-shadows, which the
   mode strips. Every focus stop across all stories must keep a visible outline, so focus is never
   drawn by a shadow alone.
-- **Reduced motion:** with `prefers-reduced-motion: reduce`, nothing may loop faster than three
-  seconds. `Skeleton`, the chart loading placeholder, `MessageBubble`'s typing dots and `Marquee`
-  stop; `Spinner` (and the `FileUpload` spinner) slow to one turn per three seconds rather than
-  stopping, because a frozen spinner no longer says "working".
+- **Reduced motion:** with `prefers-reduced-motion: reduce`, loops stop and keep what they said.
+  `Skeleton` rests at full opacity, `MessageBubble`'s typing dots rest at the muted opacity, `Marquee`
+  stays still, and `Spinner` (and the `FileUpload` spinner) rest as a three-quarter ring that is still
+  `role="status"` with its accessible name, so "loading" is carried by the name and the ring rather than
+  by the rotation. A slowed spinner is not the answer: the preset's reduced-motion floor turns any
+  infinite animation into one frozen frame, so a "slow to three seconds" class never ran and the spinner
+  simply stopped without anyone choosing what it should look like. `pnpm check:loop-motion` reads this
+  off a real browser (running normally, stopped under reduced motion, ring intact in dark and forced
+  colours), and `pnpm check:a11y-browser` still asserts that nothing loops faster than three seconds.
+  Angular's spinner is the exception: it slows to one turn per three seconds and keeps turning.
 
 ## Hand-built widgets
 

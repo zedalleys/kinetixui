@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'app_text.dart';
+import 'kinetix_loop_motion.dart';
 import 'theme.dart';
 
 enum KinetixMessageVariant { sent, received }
@@ -50,9 +51,13 @@ class KinetixMessageBubble extends StatelessWidget {
 
     final bubble = Container(
       constraints: const BoxConstraints(maxWidth: 280),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), // px-3.5/spacing-2, off-scale
-      decoration: BoxDecoration(color: sent ? c.action : c.muted, borderRadius: borderRadius),
-      child: Text(text, style: AppText.bodySm.copyWith(color: sent ? c.actionForeground : c.foreground)),
+      padding: const EdgeInsets.symmetric(
+          horizontal: 14, vertical: 8), // px-3.5/spacing-2, off-scale
+      decoration: BoxDecoration(
+          color: sent ? c.action : c.muted, borderRadius: borderRadius),
+      child: Text(text,
+          style: AppText.bodySm
+              .copyWith(color: sent ? c.actionForeground : c.foreground)),
     );
 
     final Widget? meta = (timestamp != null || (sent && status != null))
@@ -61,13 +66,18 @@ class KinetixMessageBubble extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (timestamp != null) Text(timestamp!, style: AppText.labelSm.copyWith(color: c.mutedForeground)),
+                if (timestamp != null)
+                  Text(timestamp!,
+                      style:
+                          AppText.labelSm.copyWith(color: c.mutedForeground)),
                 if (sent && status != null) ...[
                   if (timestamp != null) const SizedBox(width: 4),
                   Text(
                     status == KinetixMessageStatus.sent ? '✓' : '✓✓',
                     style: AppText.labelSm.copyWith(
-                      color: status == KinetixMessageStatus.read ? c.action : c.mutedForeground,
+                      color: status == KinetixMessageStatus.read
+                          ? c.action
+                          : c.mutedForeground,
                     ),
                   ),
                 ],
@@ -80,10 +90,12 @@ class KinetixMessageBubble extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (!sent && avatar != null) Padding(padding: const EdgeInsets.only(right: 8), child: avatar),
+        if (!sent && avatar != null)
+          Padding(padding: const EdgeInsets.only(right: 8), child: avatar),
         Flexible(
           child: Column(
-            crossAxisAlignment: sent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            crossAxisAlignment:
+                sent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               bubble,
@@ -96,20 +108,38 @@ class KinetixMessageBubble extends StatelessWidget {
   }
 }
 
+/// Three bouncing dots, announced as [label]. With animations removed the
+/// dots rest at the muted opacity and do not move ([KinetixLoopMotion]), which
+/// is React's `motion-reduce:animate-none motion-reduce:opacity-70`. The label
+/// carries "someone is typing" in both modes.
 class KinetixTypingIndicator extends StatefulWidget {
-  const KinetixTypingIndicator({super.key});
+  const KinetixTypingIndicator({super.key, this.label = 'Typing'});
+
+  /// What assistive technology announces. React's `aria-label="Typing"`.
+  final String label;
 
   @override
   State<KinetixTypingIndicator> createState() => _KinetixTypingIndicatorState();
 }
 
-class _KinetixTypingIndicatorState extends State<KinetixTypingIndicator> with SingleTickerProviderStateMixin {
+class _KinetixTypingIndicatorState extends State<KinetixTypingIndicator>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..repeat();
+    _controller = AnimationController(
+        vsync: this, duration: KinetixLoopMotion.typingPeriod);
+  }
+
+  bool _runs = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _runs = KinetixLoopMotion.runsOf(context);
+    KinetixLoopMotion.sync(_controller, runs: _runs);
   }
 
   @override
@@ -121,32 +151,42 @@ class _KinetixTypingIndicatorState extends State<KinetixTypingIndicator> with Si
   @override
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(16)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var i = 0; i < 3; i++) ...[
-            if (i > 0) const SizedBox(width: 4),
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (context, _) {
-                final phase = (i * 150) / 1200;
-                final t = (_controller.value + phase) % 1.0;
-                final bounce = t < 0.3 ? t / 0.3 : (1 - t) / 0.7;
-                return Transform.translate(
-                  offset: Offset(0, -3 * bounce),
-                  child: Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: c.mutedForeground),
-                  ),
-                );
-              },
-            ),
+    final dot = Container(
+      width: 6,
+      height: 6,
+      decoration:
+          BoxDecoration(shape: BoxShape.circle, color: c.mutedForeground),
+    );
+    return Semantics(
+      label: widget.label,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+            color: c.muted, borderRadius: BorderRadius.circular(16)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < 3; i++) ...[
+              if (i > 0) const SizedBox(width: 4),
+              if (!_runs)
+                Opacity(
+                    opacity: KinetixLoopMotion.restingDotOpacity, child: dot)
+              else
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, _) {
+                    final phase =
+                        (i * KinetixLoopMotion.typingStagger.inMilliseconds) /
+                            KinetixLoopMotion.typingPeriod.inMilliseconds;
+                    final t = (_controller.value + phase) % 1.0;
+                    final bounce = t < 0.3 ? t / 0.3 : (1 - t) / 0.7;
+                    return Transform.translate(
+                        offset: Offset(0, -3 * bounce), child: dot);
+                  },
+                ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

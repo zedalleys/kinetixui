@@ -157,7 +157,7 @@ const PairingMethodPicker = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Reac
                 }
               }}
               className={cn(
-                "relative flex min-h-11 w-full min-w-0 flex-col items-start gap-3 rounded-2xl p-4 text-start transition-all duration-base ease-out motion-reduce:transition-none",
+                "relative flex min-h-11 w-full min-w-0 flex-col items-start gap-3 rounded-2xl p-4 text-start transition-[background-color,border-color,box-shadow] duration-base ease-enter motion-reduce:transition-none",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 selected ? "bg-background shadow-md ring-2 ring-primary" : "bg-muted/50 hover:bg-muted",
                 blocked && "cursor-not-allowed border border-dashed border-muted-foreground bg-transparent shadow-none hover:bg-transparent",

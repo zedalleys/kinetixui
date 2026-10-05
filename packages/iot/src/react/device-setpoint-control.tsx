@@ -160,7 +160,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
                   // Butt at the bottom of the range: a round cap on a zero-length dash draws a dot, which
                   // reads as a value where there is none.
                   strokeLinecap={frac(confirmed) > 0.005 ? "round" : "butt"}
-                  className="stroke-primary transition-[stroke-dashoffset] duration-base ease-out motion-reduce:transition-none"
+                  className="stroke-primary transition-[stroke-dashoffset] duration-base ease-enter motion-reduce:transition-none"
                 />
               ) : null}
               {pending && confirmed !== null ? (
@@ -180,7 +180,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
                 // `transform` is a property the browser interpolates.
                 <g
                   data-ring-marker=""
-                  className="transition-transform duration-base ease-out motion-reduce:transition-none"
+                  className="transition-transform duration-base ease-enter motion-reduce:transition-none"
                   style={{ transform: `rotate(${ARC_SWEEP * frac(confirmed)}deg)`, transformOrigin: `${RING}px ${RING}px` }}
                 >
                   <circle cx={ringPoint(0, 84)[0]} cy={ringPoint(0, 84)[1]} r={9} strokeWidth={4} className="fill-background stroke-primary" />

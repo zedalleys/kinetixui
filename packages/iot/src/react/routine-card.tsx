@@ -75,7 +75,7 @@ const RoutineCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwar
         data-enabled={automation.enabled ? "" : undefined}
         className={cn(
           "relative flex flex-col gap-3 overflow-hidden rounded-container p-5 font-sans",
-          "transition-colors duration-base ease-out motion-reduce:transition-none",
+          "transition-colors duration-base ease-enter motion-reduce:transition-none",
           // The off state is a quieter surface, not faded text: opacity would multiply through to every
           // descendant and pull the words below the contrast threshold.
           failed ? "bg-destructive/5" : running ? "bg-primary/5" : off ? "bg-muted/25" : "bg-muted/40",

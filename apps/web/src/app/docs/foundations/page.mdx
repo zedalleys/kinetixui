@@ -123,8 +123,46 @@ why the rule is not `animation: none`: Radix unmounts an overlay when its exit a
 for exactly the people who asked for less motion. Components that need more than this floor still say so at
 their own call site with `motion-reduce:`, as the IoT package does where a pulse carries meaning.
 
-Native platforms have their own Reduce Motion settings; honoring them in the native components has not been
-audited yet, and this pass did not change any native implementation.
+Loops are the one case the floor cannot handle, because it turns an infinite animation into a single frozen
+frame. So a loop states its own reduced form with `motion-reduce:animate-none`, and what that form is depends
+on what the loop was saying: a `Spinner` rests as a ring that keeps its `role="status"` and name, a `Skeleton`
+rests at full opacity, a `Marquee` stays still. A source check refuses a loop that does not say so.
+
+**Registry consumers.** The preset above is not part of `npx @kinetixui/cli add`. A component copied that way
+carries its own `motion-reduce:` classes, so its loops stop, but the global floor, `tailwindcss-animate` and
+the custom keyframes come only from the `@kinetixui/ui` preset. Without it `animate-in` and the token
+utilities are unknown classes, so those animations do not run at all, and a bare `transition-*` keeps
+Tailwind's default timing. `pnpm check:registry-motion` checks the loops and the delivered token stylesheet;
+it does not, and the registry cannot, promise that reduced motion shortens every transition.
+
+### Where each platform stands
+
+Four different things get called "supported", so they are kept apart. **Defined**: the value exists in the
+token source. **Generated**: it reaches the platform's own code. **Consumed**: a component reads it.
+**Verified**: a check shows reduced motion changes the behaviour.
+
+| Platform | Defined and generated | Consumed by | Reduced motion |
+| --- | --- | --- | --- |
+| React | CSS variables, Tailwind utilities | every component with a transition | Global floor in the preset; loops state their own form. Verified in a real browser for Accordion, Collapsible, Switch, Spinner and Skeleton. |
+| Angular | CSS variables | `styles.css` | Handled per component, with no global floor. The spinner slows to three seconds rather than stopping. |
+| SwiftUI | `KinetixDuration`, `KinetixEasing` | disclosure and Switch; loops use their own periods | Reads Reduce Motion for disclosure, Switch, the four loops and the Sheet, Sidebar and Toaster slide. Tests cover the resolver only, since that package cannot render a view. |
+| Compose | `KinetixDuration`, `KinetixEasing` | disclosure and Switch; loops use their own periods | Reads the system animator scale for the same set, except the slides. Tested through Robolectric composition, which asserts what the component exposes and not the motion itself. |
+| Flutter | `KinetixDuration`, `KinetixEasing` | disclosure and Switch; loops use their own periods | Reads `MediaQuery.disableAnimations` for the same set. Widget tests sample rendered values over time. |
+
+The native overlays other than the SwiftUI slides, and the native progress and focus-ring transitions, are
+not covered by this statement. SwiftUI's `Dialog` only fades, and a fade is the accepted replacement for a
+slide, so nothing was changed there.
+
+### Pairings that are proven
+
+Only two duration and easing pairings have repeated use **and** a check behind them, so only those are
+documented as pairings. Everything else reads the tokens individually, and no semantic motion layer sits on
+top of them.
+
+- **Disclosure** — `fast` with `enter` to open and `exit` to close. Accordion and Collapsible on React,
+  SwiftUI, Compose and Flutter.
+- **Selection control** — `instant` with `standard`. Switch on React, SwiftUI, Compose and Flutter. Angular's
+  Switch thumb currently uses `base`, so it does not follow this pairing.
 
 ## On every platform
 

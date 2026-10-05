@@ -28,6 +28,7 @@ public struct KinetixToaster: View {
     @Environment(\.kinetixColors) private var colors
     @Environment(\.kinetixElevations) private var elevations
     @Environment(\.kinetixRadii) private var radii
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @Binding private var toast: KinetixToast?
     private let duration: Double
@@ -68,10 +69,10 @@ public struct KinetixToaster: View {
                 }
                 .kinetixElevation(elevations.lg)
                 .padding(16)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(KinetixSlideMotion.transition(from: .bottom, reduceMotion: reduceMotion).combined(with: .opacity))
                 .task(id: toast.message) {
                     try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
-                    withAnimation { self.toast = nil }
+                    withAnimation(KinetixSlideMotion.dismissAnimation(reduceMotion: reduceMotion)) { self.toast = nil }
                 }
             }
         }

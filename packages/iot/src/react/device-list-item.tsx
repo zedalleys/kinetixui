@@ -51,7 +51,7 @@ const DeviceListItem = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
         data-status={status}
         className={cn(
           "flex min-h-14 items-center gap-3 border-b border-border/60 px-4 py-3 font-sans last:border-b-0",
-          "transition-colors duration-base ease-out motion-reduce:transition-none",
+          "transition-colors duration-base ease-enter motion-reduce:transition-none",
           className,
         )}
         {...props}

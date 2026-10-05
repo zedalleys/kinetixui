@@ -77,7 +77,7 @@ const TelemetryCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forw
         data-quality={quality}
         className={cn(
           "flex flex-col gap-4 rounded-2xl bg-card p-4 font-sans text-card-foreground shadow-sm sm:p-5",
-          "transition-colors duration-base ease-out motion-reduce:transition-none",
+          "transition-colors duration-base ease-enter motion-reduce:transition-none",
           className,
         )}
         {...props}

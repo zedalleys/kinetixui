@@ -22,8 +22,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -106,37 +109,59 @@ fun KinetixMessageBubble(
     }
 }
 
+/**
+ * Three bouncing dots, described to TalkBack as [label]. With animations off the dots rest at the
+ * muted opacity and do not move ([KinetixLoopMotion]), which is React's
+ * `motion-reduce:animate-none motion-reduce:opacity-70`. The label carries "someone is typing" in
+ * both modes.
+ */
 @Composable
-fun KinetixTypingIndicator(modifier: Modifier = Modifier) {
+fun KinetixTypingIndicator(modifier: Modifier = Modifier, label: String = "Typing") {
     val colors = KinetixColorScheme.current
     val shape = RoundedCornerShape(16.dp)
+    val runs = KinetixLoopMotion.runs(KinetixDisclosureMotion.rememberReduceMotion())
 
     Row(
         modifier = modifier
+            .semantics { contentDescription = label }
             .clip(shape)
             .background(colors.muted, shape)
             .padding(horizontal = dimensionResource(R.dimen.spacing_3), vertical = dimensionResource(R.dimen.spacing_2)),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         repeat(3) { i ->
-            val transition = rememberInfiniteTransition(label = "kinetix-typing-dot-$i")
-            val offset by transition.animateFloat(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(durationMillis = 1200, delayMillis = i * 150, easing = LinearEasing),
-                    repeatMode = RepeatMode.Restart,
-                ),
-                label = "kinetix-typing-dot-offset-$i",
-            )
-            // 0 -> 3dp up -> back down, matching the web's typing-dot keyframe
-            val bounce = if (offset < 0.3f) offset / 0.3f else (1f - offset) / 0.7f
-            Box(
-                modifier = Modifier
-                    .padding(top = (3 * (1 - bounce)).dp)
-                    .size(6.dp)
-                    .background(colors.mutedForeground, CircleShape),
-            )
+            if (!runs) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 3.dp)
+                        .size(6.dp)
+                        .alpha(KinetixLoopMotion.restingDotOpacity)
+                        .background(colors.mutedForeground, CircleShape),
+                )
+            } else {
+                val transition = rememberInfiniteTransition(label = "kinetix-typing-dot-$i")
+                val offset by transition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(
+                            durationMillis = KinetixLoopMotion.typingPeriodMillis,
+                            delayMillis = i * KinetixLoopMotion.typingStaggerMillis,
+                            easing = LinearEasing,
+                        ),
+                        repeatMode = RepeatMode.Restart,
+                    ),
+                    label = "kinetix-typing-dot-offset-$i",
+                )
+                // 0 -> 3dp up -> back down, matching the web's typing-dot keyframe
+                val bounce = if (offset < 0.3f) offset / 0.3f else (1f - offset) / 0.7f
+                Box(
+                    modifier = Modifier
+                        .padding(top = (3 * (1 - bounce)).dp)
+                        .size(6.dp)
+                        .background(colors.mutedForeground, CircleShape),
+                )
+            }
         }
     }
 }

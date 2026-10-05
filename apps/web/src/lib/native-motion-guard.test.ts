@@ -25,7 +25,7 @@ const repoRoot = join(process.cwd(), "../..");
 const script = join(repoRoot, "scripts/check-native-motion.mjs");
 const specPath = join(repoRoot, "scripts/native-motion-spec.mjs");
 
-type Family = { helper: string; members: string[]; test: string; directional: boolean };
+type Family = { helper: string; members: string[]; test: string; directional: boolean; strict: boolean };
 type Platform = { dir: string; ext: string; families: Record<string, Family> };
 type Spec = { platforms: Record<string, Platform>; gaps: Record<string, string[]> };
 
@@ -47,7 +47,7 @@ const spec: Spec = JSON.parse(
        const platforms = Object.fromEntries(Object.entries(s.PLATFORMS).map(([n, p]) => [n, {
          dir: p.dir, ext: p.ext,
          families: Object.fromEntries(Object.entries(p.families).map(([fn, f]) => [fn, {
-           helper: f.helper, members: f.members, test: f.test, directional: Boolean(f.directions),
+           helper: f.helper, members: f.members, test: f.test, directional: Boolean(f.directions), strict: Boolean(f.strict),
          }])),
        }]));
        const gaps = Object.fromEntries(Object.entries(s.KNOWN_GAPS).map(([n, g]) => [n, Object.keys(g)]));
@@ -77,19 +77,31 @@ const ANIMATES: Record<string, string> = {
 
 /** A wired family member: it animates, reaches its helper, and names both directions if asked to. */
 function member(platform: string, p: Platform, family: Family, directions = family.directional) {
+  const helper = family.helper.replace(p.ext, "");
   return (
     ANIMATES[platform] +
     (directions ? "// .expanding / .collapsing chosen from state\n" : "") +
-    `// routes through ${family.helper.replace(p.ext, "")}\n`
+    `// routes through ${helper}\n` +
+    // A strict family must read the setting and CALL the helper, not just mention it.
+    (family.strict ? `${PREFERENCE[platform]}\n${helper}.runs(reduceMotion)\n` : "")
   );
 }
+
+/** A line each platform's `preference` pattern matches. */
+const PREFERENCE: Record<string, string> = {
+  SwiftUI: "@Environment(\\.accessibilityReduceMotion) var reduceMotion",
+  Compose: "val reduce = KinetixDisclosureMotion.rememberReduceMotion()",
+  Flutter: "final reduce = KinetixDisclosureMotion.reduceMotionOf(context);",
+};
 
 /** Test declarations covering both directions in a family's own vocabulary. */
 function suite(platform: string, familyName: string, only?: "forward" | "reverse") {
   const pair =
     familyName === "selection"
       ? { forward: "offToOnIsSuppressed", reverse: "onToOffIsSuppressed" }
-      : { forward: "expandsTheContent", reverse: "collapsesTheContent" };
+      : familyName === "loop" || familyName === "slide"
+        ? { forward: "runsWithNormalMotion", reverse: "stopsWithReducedMotion" }
+        : { forward: "expandsTheContent", reverse: "collapsesTheContent" };
   const names = only ? [pair[only]] : [pair.forward, pair.reverse];
   if (platform === "SwiftUI") return names.map((n) => `func test${n[0].toUpperCase()}${n.slice(1)}() { }\n`).join("");
   if (platform === "Compose") return names.map((n) => `fun ${n}() { }\n`).join("");
@@ -237,6 +249,41 @@ describe("both directions must be named, in the family's own vocabulary", () => 
     const { ok, output } = run(dir);
     expect(ok).toBe(false);
     expect(output).toMatch(/is NAMED for the (forward|reverse) direction/);
+  });
+
+  it("fails a loop suite that names only the running mode, or only the reduced one", () => {
+    // A loop has two modes rather than two directions. A suite proving only that it runs says nothing
+    // about reduced motion, and one proving only that it stops says nothing about normal motion.
+    const dir = fixture();
+    const [name, p] = first();
+    const family = p.families.loop;
+    expect(family, "the spec must declare a loop family").toBeTruthy();
+    write(dir, family.test, suite(name, "loop", "forward"));
+    let r = run(dir);
+    expect(r.ok).toBe(false);
+    expect(r.output).toMatch(/is NAMED for the reverse direction/);
+    write(dir, family.test, suite(name, "loop", "reverse"));
+    r = run(dir);
+    expect(r.ok).toBe(false);
+    expect(r.output).toMatch(/is NAMED for the forward direction/);
+  });
+
+  it("fails a strict family member that names its helper but never calls it, or never reads the setting", () => {
+    const dir = fixture();
+    const [name, p] = first();
+    const family = p.families.loop;
+    expect(family.strict, "the loop family must be strict").toBe(true);
+    const helper = family.helper.replace(p.ext, "");
+    // Mentions the helper in a comment only: the old check accepted exactly this.
+    write(dir, join(p.dir, family.members[0]), `${ANIMATES[name]}// routes through ${helper}\n${PREFERENCE[name]}\n`);
+    let r = run(dir);
+    expect(r.ok).toBe(false);
+    expect(r.output).toMatch(/strict loop family but never calls/);
+    // Calls the helper but never reads the platform setting.
+    write(dir, join(p.dir, family.members[0]), `${ANIMATES[name]}${helper}.runs(reduceMotion)\n`);
+    r = run(dir);
+    expect(r.ok).toBe(false);
+    expect(r.output).toMatch(/strict loop family but never reads the platform preference/);
   });
 
   it("fails when a suite declares no recognisable tests at all", () => {
