@@ -102,7 +102,7 @@ const DevicePowerControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
           <span
             aria-hidden="true"
             className={cn(
-              "relative inline-flex shrink-0 items-center rounded-full border-2 p-1 transition-colors duration-base ease-out motion-reduce:transition-none",
+              "relative inline-flex shrink-0 items-center rounded-full border-2 p-1 transition-colors duration-base ease-enter motion-reduce:transition-none",
               TRACK[size],
               shown === "on" ? "border-primary bg-primary" : "border-input bg-muted",
               // A dashed track is the offline tell that survives greyscale and colour-blindness.
@@ -113,7 +113,7 @@ const DevicePowerControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
           >
             <span
               className={cn(
-                "grid place-items-center rounded-full shadow-sm transition-transform duration-base ease-out motion-reduce:transition-none",
+                "grid place-items-center rounded-full shadow-sm transition-transform duration-base ease-enter motion-reduce:transition-none",
                 // In forced-colors the knob is otherwise invisible: its fill is forced to the system
                 // background and its shadow is dropped, so the one thing left saying which end it sits
                 // at disappears. A border is not overridden away, so the knob keeps its silhouette —

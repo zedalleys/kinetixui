@@ -24,10 +24,23 @@ const repo = (p: string) => resolve(repoRoot, p);
 
 const config = readFileSync(root("tailwind.config.ts"), "utf8");
 const motion = JSON.parse(readFileSync(repo("tokens/primitives/motion.json"), "utf8"));
-const componentDir = root("src/components");
-const components = readdirSync(componentDir)
-  .filter((f) => f.endsWith(".tsx"))
-  .map((f) => [f, readFileSync(`${componentDir}/${f}`, "utf8")] as const);
+
+/**
+ * Every package that ships components with motion in its class strings. `packages/iot` was NOT in this
+ * list, so ~18 literal `ease-out` utilities and a `transition-all` sat outside a contract that every
+ * `@kinetixui/ui` component was held to — the audit's negative control 11 added `transition-all` to an
+ * IoT control and nothing noticed. Listing the directory here, rather than scanning the repo, keeps the
+ * gate narrow: it reads component sources, not tests, stories or docs.
+ */
+const SCANNED = [
+  ["ui", root("src/components")],
+  ["iot", repo("packages/iot/src/react")],
+] as const;
+const components = SCANNED.flatMap(([pkg, dir]) =>
+  readdirSync(dir)
+    .filter((f) => f.endsWith(".tsx") && !/\.(test|stories)\./.test(f))
+    .map((f) => [`${pkg}/${f}`, readFileSync(`${dir}/${f}`, "utf8")] as const),
+);
 
 describe("motion tokens reach the utilities", () => {
   /**
@@ -80,6 +93,110 @@ describe("reduced motion", () => {
     const block = config.slice(config.indexOf("@media (prefers-reduced-motion: reduce)"));
     expect(block).not.toMatch(/"?animation"?\s*:\s*"none/);
     expect(block).not.toMatch(/"?transition"?\s*:\s*"none/);
+  });
+});
+
+/**
+ * Easing provenance. A duration is held to the token contract above; an easing curve was not, so a
+ * hand-written `cubic-bezier(...)` could replace the enter/exit pair and every gate stayed green
+ * (negative control 06). The rule is the same one: a curve either IS a token, or it is a keyword on a
+ * loop (a loop is not a transition and its easing is local), or it is not allowed.
+ */
+describe("easing comes from the tokens", () => {
+  const easing = motion.easing as Record<string, { $value: string | number[] }>;
+  const curveOf = (name: string) => {
+    const v = easing[name].$value;
+    return Array.isArray(v) ? v.join(", ") : String(v).replace(/^cubic-bezier\(|\)$/g, "");
+  };
+
+  it("keeps every curve in a Tailwind animation either a token or a loop's keyword", () => {
+    const animations = config.slice(config.indexOf("animation: {"), config.indexOf("plugins: ["));
+    for (const [, key, value] of animations.matchAll(/^\s+"?([\w-]+)"?:\s*"([^"]+)"/gm)) {
+      // `var(--easing-NAME, cubic-bezier(...))` is the token with its fallback: the fallback must equal the token.
+      const rest = value.replace(/var\(--easing-([a-z]+),\s*cubic-bezier\(([^)]*)\)\)/g, (_m, name: string, curve: string) => {
+        expect(easing[name], `${key}: --easing-${name} is not a motion token`).toBeTruthy();
+        expect(curve.replace(/\s/g, ""), `${key}: the fallback for --easing-${name} drifted from the token`).toBe(
+          curveOf(name).replace(/\s/g, ""),
+        );
+        return "";
+      });
+      expect(rest, `${key} hand-writes a cubic-bezier instead of naming an easing token`).not.toContain("cubic-bezier(");
+      if (/\bease(-in|-out|-in-out)?\b/.test(rest)) {
+        expect(rest, `${key} uses a keyword easing on something that is not a loop`).toContain("infinite");
+      }
+    }
+  });
+
+  it("uses no CSS-default or arbitrary easing utilities in any component", () => {
+    for (const [file, src] of components) {
+      const bad = src.match(/\bease-(?:in-out|in|out)\b|\bease-\[[^\]]*\]/g);
+      expect(bad, `${file} names ${bad?.join(", ")}; use ease-standard / ease-enter / ease-exit / ease-emphasized / ease-linear`).toBeNull();
+    }
+  });
+});
+
+/**
+ * Named layout-property transitions. `transition-all` was already banned; `transition-[width,height]`
+ * is the same cost spelled differently, and nothing caught it (negative control 07). Layout properties
+ * are not banned outright, because some are the right answer: a determinate progress fill's width IS
+ * its value, the sidebar's collapse is a layout change, the tour spotlight is geometry, and Switch's
+ * thumb moves on a logical `inset-inline-start` precisely so it mirrors under RTL, which a `transform`
+ * cannot do. Each is listed with why, and the list cannot go stale: an entry that no longer matches
+ * fails too.
+ */
+describe("layout-property transitions are deliberate", () => {
+  const LAYOUT = /^(?:width|height|min-width|min-height|max-width|max-height|top|left|right|bottom|inset(?:-[a-z]+)*|margin(?:-[a-z]+)*|padding(?:-[a-z]+)*|gap|flex(?:-[a-z]+)?)$/;
+  const ALLOWED: Record<string, string> = {
+    "ui/sidebar.tsx": "the collapse is a layout change: width, left and right are what move",
+    "ui/tour.tsx": "the spotlight animates between target rectangles, which is geometry",
+    "ui/file-upload.tsx": "determinate progress: the fill's width is the value",
+    "ui/audio-player.tsx": "determinate progress: the fill's width is the value",
+    "ui/switch.tsx": "inset-inline-start so the thumb mirrors under RTL; transform is physical",
+    "iot/device-level-control.tsx": "determinate level: the fill's width is the value",
+  };
+
+  const found = new Map<string, string[]>();
+  for (const [file, src] of components) {
+    for (const [, list] of src.matchAll(/transition-\[([^\]]+)\]/g)) {
+      const layout = list.split(",").map((p) => p.trim()).filter((p) => LAYOUT.test(p));
+      if (layout.length) found.set(file, [...(found.get(file) ?? []), ...layout]);
+    }
+  }
+
+  it("lets no component transition a layout property without a recorded reason", () => {
+    for (const [file, props] of found) {
+      expect(ALLOWED, `${file} transitions ${props.join(", ")}; use transform/opacity, or record why layout is the point`).toHaveProperty([file]);
+    }
+  });
+
+  it("keeps the allowlist honest: every entry still transitions a layout property", () => {
+    for (const file of Object.keys(ALLOWED)) {
+      expect(found.has(file), `${file} is allowlisted but no longer transitions a layout property; remove the entry`).toBe(true);
+    }
+  });
+});
+
+/**
+ * A loop must not rely on the reduced-motion floor. The floor turns an infinite animation into one frozen
+ * frame (iteration-count 1, 0.01ms), so a `motion-reduce:animate-[spin_3s_linear_infinite]` "slowdown"
+ * is dead code and the indicator just stops, without anyone having decided what it should look like.
+ */
+describe("loops state their reduced form", () => {
+  it("gives every looping utility an explicit motion-reduce:animate-none", () => {
+    for (const [file, src] of components) {
+      for (const literal of src.match(/"[^"\n]*"/g) ?? []) {
+        if (!/\banimate-(spin|pulse|ping|bounce|marquee|typing-dot|caret-blink)\b/.test(literal)) continue;
+        expect(literal, `${file}: a loop with no stated reduced form: ${literal.slice(0, 100)}`).toContain("motion-reduce:animate-none");
+      }
+    }
+  });
+
+  it("never writes an infinite motion-reduce animation, which the floor would freeze", () => {
+    for (const [file, src] of components) {
+      expect(src, `${file} slows a loop under reduced motion; the floor freezes it instead`).not.toMatch(
+        /motion-reduce:animate-\[[^\]]*infinite/,
+      );
+    }
   });
 });
 

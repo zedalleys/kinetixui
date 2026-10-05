@@ -78,7 +78,7 @@ const DeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forward
           // A device changing state settles rather than snapping, so the change is legible as a
           // change. 300ms is the `motion.duration.base` token; `motion-reduce:` is Tailwind's own
           // variant, so this needs no stylesheet from the consumer and no page-level rule.
-          "transition-colors duration-base ease-out motion-reduce:transition-none",
+          "transition-colors duration-base ease-enter motion-reduce:transition-none",
           className,
         )}
         {...props}

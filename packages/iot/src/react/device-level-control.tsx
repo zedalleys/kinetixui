@@ -160,7 +160,7 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
             ) : null}
             {confirmed !== null ? (
               <div
-                className="absolute inset-y-0 start-0 overflow-hidden rounded-full bg-primary transition-[width] duration-base ease-out motion-reduce:transition-none"
+                className="absolute inset-y-0 start-0 overflow-hidden rounded-full bg-primary transition-[width] duration-base ease-enter motion-reduce:transition-none"
                 style={{ width: edge(confirmed) }}
               >
                 {pill && ratio(confirmed) > 0 ? (
@@ -180,7 +180,7 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
               // The requested extension, hatched so it is distinguishable from the confirmed fill
               // without relying on the two blues being told apart.
               <div
-                className={cn("absolute inset-y-0 start-0 rounded-full transition-[width] duration-base ease-out motion-reduce:transition-none", pill ? "opacity-30" : "opacity-60")}
+                className={cn("absolute inset-y-0 start-0 rounded-full transition-[width] duration-base ease-enter motion-reduce:transition-none", pill ? "opacity-30" : "opacity-60")}
                 style={{
                   width: edge(requested!),
                   backgroundImage:

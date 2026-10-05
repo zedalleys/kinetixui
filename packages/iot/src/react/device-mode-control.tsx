@@ -142,7 +142,7 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
                 }
               }}
               className={cn(
-                "relative rounded-lg px-3 text-label-lg transition-colors duration-fast ease-out",
+                "relative rounded-lg px-3 text-label-lg transition-colors duration-fast ease-enter",
                 tiles ? "min-h-20 rounded-xl" : "min-h-11 md:min-h-9",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                 "focus-visible:ring-offset-background motion-reduce:transition-none",

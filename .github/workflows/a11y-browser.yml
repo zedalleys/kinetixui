@@ -27,6 +27,7 @@ on:
       - "scripts/large-text.mjs"
       - "scripts/motion.mjs"
       - "scripts/motion-states.mjs"
+      - "scripts/loop-motion.mjs"
       - "scripts/card-visual.mjs"
       - "scripts/selection-visual.mjs"
       - "scripts/entry-visual.mjs"
@@ -54,6 +55,7 @@ on:
       - "scripts/large-text.mjs"
       - "scripts/motion.mjs"
       - "scripts/motion-states.mjs"
+      - "scripts/loop-motion.mjs"
       - "scripts/card-visual.mjs"
       - "scripts/selection-visual.mjs"
       - "scripts/entry-visual.mjs"
@@ -121,6 +123,13 @@ jobs:
       # install above are exactly what it needs.
       - name: Motion pass (rendered intermediate states, normal and reduced)
         run: pnpm check:motion
+
+      # Loops are the case the pass above cannot express: nothing to click, no destination to seek to.
+      # This reads whether each loop is really running normally and really stopped under reduced motion
+      # (including the Spinner, whose "slow to 3s" class was dead behind the floor), and that the stopped
+      # form still has its ring, its role and name, and survives forced colours.
+      - name: Loop motion (running normally, stopped and still legible under reduced motion)
+        run: pnpm check:loop-motion
 
       # Card's surface and state contract, read off rendered pixels in light and dark: the resting edge
       # is softer than the controls inside it, the card is lifted and sits above a grouped section, a static

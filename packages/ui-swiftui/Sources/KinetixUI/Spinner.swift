@@ -8,6 +8,8 @@
 // `border-t-transparent`), rotating continuously — same approach as the
 // Compose port.
 //
+// With Reduce Motion on the arc rests (KinetixLoopMotion); the accessibility label carries "loading".
+//
 
 import SwiftUI
 
@@ -21,14 +23,17 @@ public enum KinetixSpinnerVariant {
 
 public struct KinetixSpinner: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var spinning = false
 
     private let size: KinetixSpinnerSize
     private let variant: KinetixSpinnerVariant
+    private let label: String
 
-    public init(size: KinetixSpinnerSize = .md, variant: KinetixSpinnerVariant = .default) {
+    public init(size: KinetixSpinnerSize = .md, variant: KinetixSpinnerVariant = .default, label: String = "Loading") {
         self.size = size
         self.variant = variant
+        self.label = label
     }
 
     private var diameter: CGFloat {
@@ -52,9 +57,16 @@ public struct KinetixSpinner: View {
             .trim(from: 0, to: 0.75) // border-t-transparent → one quadrant open
             .stroke(color, lineWidth: 2) // border-2
             .frame(width: diameter, height: diameter)
-            .rotationEffect(.degrees(spinning ? 360 : 0))
-            .animation(.linear(duration: 0.8).repeatForever(autoreverses: false), value: spinning)
+            .rotationEffect(.degrees(spinning && !reduceMotion ? 360 : 0))
+            .animation(
+                KinetixLoopMotion.loop(
+                    .linear(duration: KinetixLoopMotion.spinnerPeriodSeconds),
+                    reduceMotion: reduceMotion,
+                    autoreverses: false
+                ),
+                value: spinning
+            )
             .onAppear { spinning = true }
-            .accessibilityLabel("Loading")
+            .accessibilityLabel(label)
     }
 }
