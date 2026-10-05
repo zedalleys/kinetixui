@@ -187,6 +187,8 @@ const DeviceMediaControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
     const descriptionId = React.useId();
     const described = control?.description && control.availability !== "ready";
     const hasDuration = typeof duration === "number" && Number.isFinite(duration) && duration > 0;
+    // Without a duration there is no scrubber, only the elapsed time: the lifecycle's when given, as everywhere.
+    const elapsed = seekLifecycle ? seekLifecycle.confirmedValue : position;
     const hasVolume = volumeLifecycle != null || volume !== undefined || onVolumeChange !== undefined;
     const hasMute = muteLifecycle != null || muted !== undefined || onMuteChange !== undefined;
 
@@ -293,9 +295,9 @@ const DeviceMediaControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
             </LevelFormatContext.Provider>
             <span className="text-label-md tabular-nums text-muted-foreground">Duration {formatMediaTime(duration)}</span>
           </div>
-        ) : position !== undefined && position !== null ? (
+        ) : typeof elapsed === "number" ? (
           <span data-media-part="elapsed" className="text-label-md tabular-nums text-muted-foreground">
-            Elapsed {formatMediaTime(seekLifecycle?.confirmedValue ?? position)}
+            Elapsed {formatMediaTime(elapsed)}
           </span>
         ) : null}
 

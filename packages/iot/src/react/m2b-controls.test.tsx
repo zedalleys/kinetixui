@@ -357,3 +357,46 @@ describe("DeviceMediaControl", () => {
     expect(container.querySelector("[data-media-part=scrubber]")).toHaveAttribute("dir", "ltr");
   });
 });
+
+describe("a device state and a command in flight together (PR #310 review)", () => {
+  it("a ready `control` does not make a pending command pressable again", () => {
+    const seek = run(startCommandLifecycle<number>({ confirmed: 65, requested: 120, commandId: "s1" }), { type: "sent" });
+    const volume = run(startCommandLifecycle<number>({ confirmed: 40, requested: 60, commandId: "v1" }), { type: "sent" });
+    const muting = run(startCommandLifecycle<boolean>({ confirmed: false, requested: true, commandId: "m1" }), { type: "sent" });
+    render(
+      <DeviceMediaControl
+        label="Kitchen speaker"
+        duration={200}
+        control={READY}
+        playbackLifecycle={playPending()}
+        seekLifecycle={seek}
+        volumeLifecycle={volume}
+        muteLifecycle={muting}
+        onPlaybackRequest={() => {}}
+        onPrevious={() => {}}
+        onNext={() => {}}
+        onSeek={() => {}}
+        onVolumeChange={() => {}}
+        onMuteChange={() => {}}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Play" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Mute" })).toBeDisabled();
+    expect(screen.getByRole("slider", { name: "Position" })).toBeDisabled();
+    expect(screen.getByRole("slider", { name: "Volume" })).toBeDisabled();
+    // The device itself is ready: the commands with nothing in flight stay available.
+    expect(screen.getByRole("button", { name: "Next" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Previous" })).toBeEnabled();
+  });
+
+  it("a ready `control` does not re-enable Lock while a lock request is open", () => {
+    render(<DeviceLockControl label="Front door" lifecycle={lockPending()} control={READY} onRequest={() => {}} />);
+    expect(screen.getByRole("button", { name: "Lock Front door" })).toBeDisabled();
+  });
+
+  it("shows the lifecycle's reported position when the duration is unknown", () => {
+    const seek = startCommandLifecycle<number>({ confirmed: 65 });
+    const { container } = render(<DeviceMediaControl label="Radio" playback="playing" seekLifecycle={seek} onPlaybackRequest={() => {}} />);
+    expect(container.querySelector("[data-media-part=elapsed]")?.textContent).toBe("Elapsed 1:05");
+  });
+});

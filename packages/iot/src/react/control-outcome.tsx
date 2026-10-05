@@ -4,6 +4,7 @@ import * as React from "react";
 import type { KinetixCommandLifecycle, KinetixCommandStrategy } from "../types/command";
 import type { KinetixControlAvailability, KinetixControlPresentation, KinetixControlState } from "../types/control";
 import { cn } from "./cn";
+import { isLifecyclePending } from "../functions/commands";
 import { describeControlOutcome, resolveControlPresentation, resolveControlState, type DescribeControlOutcomeOptions } from "../functions/control";
 
 /**
@@ -44,13 +45,24 @@ export function useControlContract<T>(
   // Without a `control`, a lifecycle still decides interactivity (a pending change is not pressable) —
   // but it says nothing about the device's own status, so none is assumed: availability is the
   // caller's to supply, and an absent one is not turned into "offline".
-  const resolved = control ?? (lifecycle ? resolveControlState({ deviceStatus: "online", lifecycle }) : undefined);
+  const resolved = control ? withCommand(control, lifecycle) : lifecycle ? resolveControlState({ deviceStatus: "online", lifecycle }) : undefined;
   const announcing = announce ?? !!lifecycle;
   return {
     presentation,
     control: resolved,
     announcement: announcing ? describeControlOutcome(presentation, sentence) : null,
   };
+}
+
+/**
+ * A device's `control` state with this control's own command folded in. A caller's `control` describes
+ * the device; it cannot know about a lifecycle the control was handed separately (a media control has
+ * four), so a ready device with a command in flight is `pending` and not pressable, exactly as
+ * `resolveControlState` would say given both. Any other availability already decides on its own.
+ */
+function withCommand(control: KinetixControlState, lifecycle: KinetixCommandLifecycle<unknown> | null | undefined): KinetixControlState {
+  if (!lifecycle || control.availability !== "ready" || !isLifecyclePending(lifecycle)) return control;
+  return resolveControlState({ deviceStatus: "online", lifecycle });
 }
 
 /**
