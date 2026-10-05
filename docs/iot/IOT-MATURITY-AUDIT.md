@@ -316,7 +316,26 @@ roles, names, `aria-checked`/`aria-pressed`/`aria-busy`/`aria-valuetext`, the st
 outcomes, the forced-colours fill of the colour preview, the media transport order under RTL, and runs
 axe-core. An automated accessibility-tree check; **no manual screen-reader testing was done.**
 
-**Negative controls.** NEGATIVE_CONTROLS_TABLE
+**Negative controls.** Each mutation was applied to the working tree, run against the iot unit suite and the
+browser gate (`--only` its scenarios, on a fresh Storybook build), then restored; none was committed.
+Logs and the runner: `/mnt/project-files/iot-m2b/negative-controls/`.
+
+| # | Mutation | Unit tests failing | Browser gate (scenario runs red) |
+| - | -------- | ------------------ | -------------------------------- |
+| 1 | A missing status maps back to `offline` (G12) | 8 | 14 of 14 (unknown-status, media-unavailable) |
+| 2 | Colour lookup and pending check by reference | 1 | 14 of 14 (colour-confirmed, colour-hybrid) |
+| 3 | Lock headline and `data-lock-state` follow the request | 5 | 14 of 14 (lock-confirmed, lock-unreachable-stale) |
+| 4 | Stale-response (`commandId`) guard removed | 10 | 7 of 7 (lock-unreachable-stale) |
+| 5 | Media headline follows the request, not the device | 2 | 14 of 14 (media-play-confirmed, media-play-failure) |
+| 6 | `aria-busy` removed from the lock | 1 | 14 of 14 (lock-confirmed, lock-failure) |
+| 7 | `presentCommandValue` keeps the request after failure | 5 | **0 of 14**: the colour, mode and media controls only draw a request while it is pending, so the UI still rolled back |
+| 8 | 7, plus the colour and mode controls drop their pending guard | 7 | 7 of 7 (colour-optimistic-failure) |
+
+Mutation 7 is the one browser survivor, reported rather than hidden: rollback is guarded twice (in
+`presentCommandValue` and in each control), the unit suite pins the function layer, and mutation 8 shows
+the browser gate catches the regression once it reaches what is drawn. (The gate's "N of M checks" line
+counts a run that throws as one failure and stops counting that run's checks, so it is not a ratio; runs
+are the honest unit here.)
 
 ## 17. Not done in M2B
 
