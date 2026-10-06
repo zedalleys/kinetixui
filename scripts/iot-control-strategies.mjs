@@ -1,9 +1,10 @@
 /**
- * iot-control-strategies.mjs — the M2A control contract, played through in a real browser.
+ * iot-control-strategies.mjs — the M2A/M2B control contract, played through in a real browser.
  *
  *   pnpm build-storybook && node scripts/iot-control-strategies.mjs [--only=power-confirmed-success,...]
  *
- * The unit tests prove what the four controls render for a given lifecycle. This proves what a person
+ * The unit tests prove what the controls render for a given lifecycle (M2A: power, level, setpoint,
+ * mode; M2B: colour, lock, media, and G12 — no status is not "offline"). This proves what a person
  * gets when they use them: each `IoT/Control strategies` story is a deterministic script (no timers,
  * no hardware) with buttons that play the device's side, and every scenario below is pressed through
  * in each of these browser conditions:
@@ -344,7 +345,224 @@ const SCENARIOS = {
     await conditionChecks(page, tag, cond);
     await axe(page, tag, cond);
   },
+
+  // ------------------------------------------------------------------ M2B
+
+  "unknown-status": async (page, tag, cond) => {
+    const text = await page.locator("#storybook-root").innerText();
+    expectThat(tag, !/offline/i.test(text), `a device with no status reads as offline: ${text.match(/.{0,30}offline.{0,30}/i)?.[0]}`);
+    expectThat(tag, (await page.locator("[data-state-chip]").textContent()).includes("Status unknown"), "the card chip does not say 'Status unknown'");
+    expectThat(tag, (await page.getByText("Device status unknown").count()) >= 2, "the controls do not describe the status as unknown");
+    expectThat(tag, await SWITCH(page).isDisabled(), "an unknown-status switch accepts input");
+    expectThat(tag, (await page.locator("[data-lock-headline]").textContent()) === "Lock state unknown", "the lock does not say its state is unknown");
+    await conditionChecks(page, tag, cond);
+    await axe(page, tag, cond);
+  },
+
+  ...colourScenario("colour-confirmed", "confirmed"),
+  ...colourScenario("colour-optimistic-failure", "optimistic"),
+  ...colourScenario("colour-hybrid", "hybrid"),
+
+  "lock-confirmed": async (page, tag, cond) => {
+    await press(page, cond, LOCK(page));
+    await lockPendingChecks(page, tag, cond, "confirmed");
+    await press(page, cond, button(page, "Device confirms"));
+    expectThat(tag, (await lockAttrs(page)).state === "locked", "confirmed: data-lock-state is not locked");
+    expectThat(tag, (await page.locator("[data-lock-headline]").textContent()) === "Locked", "confirmed: the headline is not 'Locked'");
+    expectThat(tag, (await page.locator("[data-lock-glyph=locked]").count()) === 1, "confirmed: no closed lock");
+    expectThat(tag, (await announcer(page)) === "Locked.", `confirmed: "${await announcer(page)}"`);
+    expectThat(tag, (await page.getByRole("button", { name: "Unlock Front door" }).count()) === 1, "confirmed: no Unlock action");
+    await conditionChecks(page, `${tag} locked`, cond);
+    await axe(page, `${tag} locked`, cond);
+  },
+
+  "lock-failure": async (page, tag, cond) => {
+    await press(page, cond, LOCK(page));
+    await lockPendingChecks(page, tag, cond, "confirmed");
+    await press(page, cond, button(page, "Device fails"));
+    expectThat(tag, (await lockAttrs(page)).state === "unlocked", "failed: data-lock-state is not unlocked");
+    expectThat(tag, (await page.locator("[data-lock-headline]").textContent()) === "Unlocked", "failed: the headline is not 'Unlocked'");
+    expectThat(tag, (await outcome(page).textContent()) === "Could not lock. The device still reports unlocked.", `failed: "${await outcome(page).textContent()}"`);
+    expectThat(tag, (await announcer(page)) === "Could not lock. The device still reports unlocked.", `failed announcement: "${await announcer(page)}"`);
+    expectThat(tag, !(await LOCK(page).isDisabled()), "failed: the Lock action is not offered again");
+    await conditionChecks(page, `${tag} failed`, cond);
+    await axe(page, `${tag} failed`, cond);
+  },
+
+  "lock-unreachable-stale": async (page, tag, cond) => {
+    await lockPendingChecks(page, tag, cond, "hybrid");
+    await press(page, cond, button(page, "Late reply for an earlier request"));
+    expectThat(tag, (await page.locator("[data-script-stage]").textContent()).includes("stale-response"), "the late reply was not refused");
+    expectThat(tag, (await lockAttrs(page)).state === "unlocked", "a stale reply locked the door");
+    expectThat(tag, (await page.locator("[data-lock-glyph=locked]").count()) === 0, "a stale reply drew the closed lock");
+    await press(page, cond, button(page, "Connection lost"));
+    expectThat(tag, (await announcer(page)) === "Could not lock: the device is unreachable. It last reported unlocked.", `unreachable: "${await announcer(page)}"`);
+    expectThat(tag, (await outcome(page).getAttribute("data-outcome")) === "unreachable", "unreachable: no visible outcome");
+    expectThat(tag, (await page.locator("[data-lock-headline]").textContent()) === "Unlocked", "unreachable: the headline is not the reported 'Unlocked'");
+    await conditionChecks(page, `${tag} unreachable`, cond);
+    await axe(page, `${tag} unreachable`, cond);
+    await press(page, cond, button(page, "Device returns: locked"));
+    expectThat(tag, (await stage(page)) === "confirmed", `reconnect: stage ${await stage(page)}`);
+    expectThat(tag, (await announcer(page)) === "Locked.", `reconnect: "${await announcer(page)}"`);
+  },
+
+  "media-play-confirmed": async (page, tag, cond) => {
+    await press(page, cond, button(page, "Play"));
+    await mediaPendingChecks(page, tag, cond);
+    await press(page, cond, button(page, "Device confirms"));
+    expectThat(tag, (await page.locator("[data-playback-headline]").textContent()) === "Playing", "confirmed: headline");
+    expectThat(tag, (await page.locator("[role=group][data-playback]").getAttribute("data-playback")) === "playing", "confirmed: data-playback");
+    expectThat(tag, (await button(page, "Pause").count()) === 1, "confirmed: no Pause action");
+    expectThat(tag, (await announcer(page)) === "Playing.", `confirmed: "${await announcer(page)}"`);
+    // Transport is not mirrored: Previous stays on the left in every direction.
+    const prev = await button(page, "Previous").boundingBox();
+    const next = await button(page, "Next").boundingBox();
+    expectThat(tag, prev && next && prev.x < next.x, "transport order is mirrored");
+  },
+
+  "media-play-failure": async (page, tag, cond) => {
+    await press(page, cond, button(page, "Play"));
+    await mediaPendingChecks(page, tag, cond);
+    await press(page, cond, button(page, "Device fails"));
+    expectThat(tag, (await page.locator("[data-playback-headline]").textContent()) === "Paused", "failed: headline");
+    expectThat(tag, (await outcome(page).textContent()) === "Could not start playback. The device still reports paused.", `failed: "${await outcome(page).textContent()}"`);
+    expectThat(tag, (await announcer(page)) === "Could not start playback. The device still reports paused.", `failed announcement: "${await announcer(page)}"`);
+    expectThat(tag, !(await button(page, "Play").isDisabled()), "failed: Play is not offered again");
+    await conditionChecks(page, `${tag} failed`, cond);
+    await axe(page, `${tag} failed`, cond);
+  },
+
+  "media-seek-volume": async (page, tag, cond) => {
+    const scrub = page.locator("[data-media-part=scrubber]");
+    const position = page.getByRole("slider", { name: "Position" });
+    const volume = page.getByRole("slider", { name: "Volume" });
+    await press(page, cond, button(page, "Seek to 2:00"));
+    expectThat(tag, (await position.getAttribute("aria-valuetext")) === "1 minute 5 seconds, changing to 2 minutes", `seek valuetext: ${await position.getAttribute("aria-valuetext")}`);
+    expectThat(tag, (await position.getAttribute("aria-busy")) === "true", "seek: the scrubber is not aria-busy");
+    expectThat(tag, (await position.getAttribute("min")) === "0" && (await position.getAttribute("max")) === "1800", "seek: min/max");
+    expectThat(tag, (await scrub.locator("[data-confirmed]").textContent()) === "1:05", "seek: the numeral is not the reported 1:05");
+    expectThat(tag, (await scrub.locator("[data-requested]").textContent()) === "Requested 2:00, not yet confirmed", "seek: no request chip");
+    expectThat(tag, (await scrub.locator("[data-control-announcer]").textContent()) === "Seeking to 2 minutes, waiting for the device.", "seek: announcement");
+    await press(page, cond, button(page, "Device reports 1:06"));
+    expectThat(tag, (await scrub.locator("[data-confirmed]").textContent()) === "1:06", "an intermediate position was not shown as reported");
+    expectThat(tag, (await stage(page)).startsWith("requested"), `an intermediate position settled the seek (${await stage(page)})`);
+    await press(page, cond, button(page, "Volume to 60"));
+    expectThat(tag, (await volume.getAttribute("aria-valuetext")) === "40%, changing to 60%", `volume valuetext: ${await volume.getAttribute("aria-valuetext")}`);
+    expectThat(tag, (await page.locator("[data-media-part=volume] [data-requested]").textContent()) === "Requested 60%, not yet confirmed", "volume: no request chip");
+    await conditionChecks(page, `${tag} pending`, cond);
+    await axe(page, `${tag} pending`, cond);
+    await press(page, cond, button(page, "Device confirms the seek"));
+    expectThat(tag, (await scrub.locator("[data-confirmed]").textContent()) === "2:00", "seek confirmed: numeral");
+    expectThat(tag, (await scrub.locator("[data-control-announcer]").textContent()) === "2 minutes.", "seek confirmed: announcement");
+    await press(page, cond, button(page, "Device confirms the volume"));
+    expectThat(tag, (await volume.getAttribute("aria-valuetext")) === "60%", "volume confirmed: valuetext");
+  },
+
+  "media-unavailable": async (page, tag, cond) => {
+    const text = await page.locator("#storybook-root").innerText();
+    expectThat(tag, !/offline/i.test(text), "an unknown media device reads as offline");
+    expectThat(tag, (await page.getByText("Device status unknown").count()) === 1, "the unknown status is not said exactly once");
+    for (const name of ["Previous", "Play", "Next"]) expectThat(tag, await button(page, name).isDisabled(), `${name} accepts input on an unknown device`);
+    expectThat(tag, (await page.locator("[data-support=unsupported]").textContent()) === "Doorbell: not supported by this device", "unsupported is not said");
+    await conditionChecks(page, tag, cond);
+    await axe(page, tag, cond);
+  },
 };
+
+/** One colour scenario per strategy: Warm white reported, Ocean requested, then confirmed or failed. */
+function colourScenario(id, strategy) {
+  return {
+    [id]: async (page, tag, cond) => {
+      const checked = () => page.locator("[role=radio][aria-checked=true]").getAttribute("data-mode-id");
+      const shown = page.locator("[data-color-shown]");
+      if (cond.keyboard) {
+        await page.getByRole("radio", { name: "Warm white" }).focus();
+        await page.keyboard.press("ArrowRight");
+        await page.waitForTimeout(60);
+      } else {
+        await page.getByRole("radio", { name: "Ocean" }).click();
+      }
+      expectThat(tag, (await page.locator("[data-strategy][aria-busy=true]").count()) >= 1, "pending: nothing is aria-busy");
+      if (strategy === "optimistic") {
+        expectThat(tag, (await checked()) === "ocean", `optimistic pending: checked ${await checked()}`);
+        expectThat(tag, (await shown.textContent()) === "Ocean (#2563EB)", `optimistic pending: shown ${await shown.textContent()}`);
+        expectThat(tag, (await page.locator("[data-requested]").count()) === 0, "optimistic pending: a request chip was drawn");
+        expectThat(tag, (await announcer(page)) === "", `optimistic pending should announce nothing, got "${await announcer(page)}"`);
+      } else {
+        expectThat(tag, (await checked()) === "warm", `${strategy} pending: checked ${await checked()}`);
+        expectThat(tag, (await page.getByRole("radio", { name: "Ocean, requested, not yet confirmed" }).count()) === 1, "pending: the request is not named on its swatch");
+        expectThat(tag, (await announcer(page)) === "Changing to Ocean (#2563EB), waiting for the device.", `pending: "${await announcer(page)}"`);
+        if (strategy === "confirmed") {
+          expectThat(tag, (await shown.textContent()) === "Warm white (2700 K)" && (await shown.getAttribute("data-value-source")) === "reported", "confirmed pending: the preview is not the reported colour");
+          expectThat(tag, (await page.locator("[data-requested]").textContent()) === "Requested Ocean (#2563EB), not yet confirmed", "confirmed pending: chip");
+        } else {
+          expectThat(tag, (await shown.textContent()) === "Ocean (#2563EB)" && (await shown.getAttribute("data-value-source")) === "requested", "hybrid pending: the preview is not the target");
+          expectThat(tag, (await page.locator("[data-requested]").textContent()) === "Requested, not yet confirmed. Device reports Warm white (2700 K)", "hybrid pending: chip");
+          const edge = await page.evaluate(() => getComputedStyle(document.querySelector("[data-color-preview]")).borderTopStyle);
+          expectThat(tag, edge === "dashed", `hybrid pending: the target preview is not dashed (${edge})`);
+        }
+      }
+      if (cond.forcedColors) {
+        // Device colour is content: forced colours keep it, as they keep a photo.
+        const fill = await page.evaluate(() => getComputedStyle(document.querySelector("[data-color-preview]")).backgroundColor);
+        expectThat(tag, fill !== "rgba(0, 0, 0, 0)" && fill !== "transparent", `forced colours: the colour preview lost its fill (${fill})`);
+      }
+      await conditionChecks(page, `${tag} pending`, cond);
+      await axe(page, `${tag} pending`, cond);
+      if (strategy === "optimistic") {
+        await press(page, cond, button(page, "Device fails"));
+        expectThat(tag, (await checked()) === "warm", `rollback: checked ${await checked()}`);
+        expectThat(tag, (await shown.textContent()) === "Warm white (2700 K)", "rollback: the preview did not return");
+        expectThat(tag, (await outcome(page).getAttribute("data-rolled-back")) === "", "rollback: not marked as rolled back");
+        const sentence = "Could not change to Ocean (#2563EB). The device still reports Warm white (2700 K).";
+        expectThat(tag, (await outcome(page).textContent()) === sentence, `rollback sentence: "${await outcome(page).textContent()}"`);
+        expectThat(tag, (await announcer(page)) === sentence, `rollback announcement: "${await announcer(page)}"`);
+        await conditionChecks(page, `${tag} rolled back`, cond);
+        await axe(page, `${tag} rolled back`, cond);
+      } else {
+        // The device reports a new object with its keys in another order: equality is by value.
+        await press(page, cond, button(page, "Device reports Ocean"));
+        expectThat(tag, (await stage(page)) === "confirmed", `confirmed: stage ${await stage(page)}`);
+        expectThat(tag, (await checked()) === "ocean", `confirmed: checked ${await checked()}`);
+        expectThat(tag, (await announcer(page)) === "Ocean (#2563EB).", `confirmed: "${await announcer(page)}"`);
+      }
+    },
+  };
+}
+
+const LOCK = (page) => page.getByRole("button", { name: "Lock Front door" });
+const lockAttrs = (page) => page.locator("[role=group][data-lock-state]").evaluate((el) => ({ state: el.getAttribute("data-lock-state"), busy: el.getAttribute("aria-busy") }));
+
+/** A lock request is open: never "Locked", busy, worded as pending, not pressable. */
+async function lockPendingChecks(page, tag, cond, strategy) {
+  const attrs = await lockAttrs(page);
+  expectThat(tag, attrs.state === "unlocked" && attrs.busy === "true", `pending: ${JSON.stringify(attrs)}`);
+  expectThat(tag, (await page.locator("[data-lock-glyph=locked]").count()) === 0, "pending: the closed lock was drawn");
+  expectThat(tag, (await page.getByText("Locked", { exact: true }).count()) === 0, "pending: 'Locked' is on screen");
+  const headline = await page.locator("[data-lock-headline]").textContent();
+  expectThat(tag, headline === (strategy === "hybrid" ? "Locking" : "Unlocked"), `pending headline: ${headline}`);
+  const chip = await page.locator("[data-requested]").textContent();
+  expectThat(tag, chip === (strategy === "hybrid" ? "Waiting for the device. It still reports unlocked" : "Locking, not yet confirmed"), `pending chip: ${chip}`);
+  expectThat(tag, (await announcer(page)) === "Locking, waiting for the device.", `pending announcement: "${await announcer(page)}"`);
+  expectThat(tag, await LOCK(page).isDisabled(), "pending: Lock can be pressed again");
+  await conditionChecks(page, `${tag} pending`, cond);
+  await axe(page, `${tag} pending`, cond);
+}
+
+/** A play request is open: the headline stays at the reported "Paused", and only Play is busy. */
+async function mediaPendingChecks(page, tag, cond) {
+  const group = page.locator("[role=group][data-playback]");
+  expectThat(tag, (await group.getAttribute("data-playback")) === "paused", "pending: data-playback is not the reported paused");
+  expectThat(tag, (await group.getAttribute("aria-busy")) === "true", "pending: the media group is not aria-busy");
+  expectThat(tag, (await page.locator("[data-playback-headline]").textContent()) === "Paused", "pending: headline");
+  expectThat(tag, (await page.locator("[data-requested]").first().textContent()) === "Starting playback, not yet confirmed", "pending: chip");
+  const play = button(page, "Play");
+  expectThat(tag, (await play.getAttribute("aria-busy")) === "true" && (await play.isDisabled()), "pending: Play is not busy and disabled");
+  expectThat(tag, !(await button(page, "Next").isDisabled()), "pending: a pending play locked Next");
+  expectThat(tag, (await announcer(page)) === "Starting playback, waiting for the device.", `pending announcement: "${await announcer(page)}"`);
+  await conditionChecks(page, `${tag} pending`, cond);
+  await axe(page, `${tag} pending`, cond);
+}
 
 const results = [];
 for (const [story, play] of Object.entries(SCENARIOS)) {

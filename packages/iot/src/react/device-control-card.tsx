@@ -7,6 +7,7 @@ import type { KinetixDeviceCategory } from "../types/identity";
 import { resolveDeviceCategory } from "../functions/identity";
 import { DeviceIdentity } from "./device-identity";
 import { cn } from "./cn";
+import { availabilityWord, isDisconnected } from "./control-outcome";
 import { withDisplayName } from "./display-name";
 
 /**
@@ -113,7 +114,7 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
     };
 
     const resolved = category ?? resolveDeviceCategory(device);
-    const unreachable = control?.availability === "offline" || control?.availability === "unavailable";
+    const unreachable = isDisconnected(control?.availability) || control?.availability === "unavailable";
     const pending = !unreachable && (requestedValue !== undefined || control?.availability === "pending");
     const hasValue = value !== undefined && value !== null;
     const panelId = React.useId();
@@ -145,8 +146,9 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
           <circle cx="8" cy="8" r="6.25" strokeDasharray="2 2" />
           <path d="M5.5 8h5" />
         </svg>
-        {control?.availability === "offline" ? "Offline" : "Unavailable"}
-        {hasValue ? " — last known value" : ""}
+        {availabilityWord(control?.availability)}
+        {/* "Last known" only where something was known: an unknown status has no "before". */}
+        {hasValue && control?.lastKnown ? " — last known value" : ""}
       </span>
     ) : pending ? (
       <span

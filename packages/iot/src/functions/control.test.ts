@@ -26,11 +26,11 @@ const NOW = "2026-09-27T12:00:00.000Z";
 const at = (offsetMs: number) => new Date(Date.parse(NOW) + offsetMs).toISOString();
 
 describe("resolveControlState", () => {
-  it("fails safe when the device status is unreported", () => {
-    // `normalizeDeviceStatus` maps an absent status to "offline" package-wide, and this inherits it
-    // rather than inventing a second rule: a control for a device nothing is known about should not
-    // look live. An explicitly online device is what produces a ready control.
-    expect(resolveControlState()).toMatchObject({ availability: "offline", interactive: false });
+  it("claims nothing when the device status is unreported, and still refuses input (G12)", () => {
+    // Before M2B this resolved to "offline" by inheriting `normalizeDeviceStatus`'s badge fallback, which
+    // told the user the device was gone when nobody had said anything about it. The fail-safe — not
+    // interactive — is kept; only the claim changed. An explicitly online device produces a ready control.
+    expect(resolveControlState()).toMatchObject({ availability: "unknown", interactive: false, lastKnown: false, description: "Device status unknown" });
     expect(resolveControlState({ deviceStatus: "online" })).toMatchObject({
       availability: "ready",
       phase: "idle",

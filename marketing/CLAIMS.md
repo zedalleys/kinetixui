@@ -163,7 +163,8 @@ source is named instead.
   there, never from here. Main carries more than that version ships: the control layer
   (`DevicePowerControl`, `DeviceLevelControl`, `DeviceSetpointControl`, `DeviceModeControl`,
   `resolveControlState`) sits behind an **unpublished** changeset,
-  `.changeset/iot-control-layer.md`, and #259 added the `/iot` Connected Space showcase and the expanded
+  `.changeset/iot-control-layer.md`, and so do the colour, lock and media controls
+  (`.changeset/iot-controls-m2b.md`), and #259 added the `/iot` Connected Space showcase and the expanded
   reference — website work, not package work. Publishing is a separate decision and has not been made.
 - **Approved wording:** "`@kinetixui/iot` on npm is an experimental, React-only module. The connected-product
   showcase at `/iot` is a deterministic simulation — no network, no device, no video — and some of what it

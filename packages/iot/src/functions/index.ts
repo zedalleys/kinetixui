@@ -52,6 +52,7 @@ export {
   resolveBatteryState,
 } from "./battery";
 export { findCapabilitiesByRole, resolveCapabilitySupport } from "./capabilities";
+export { describeDeviceColor, findDeviceColorOption, formatDeviceColorHex, normalizeDeviceColor, previewDeviceColor } from "./color";
 export {
   advanceCommandLifecycle,
   buildDeviceCommand,
@@ -134,6 +135,18 @@ export {
   resolveDeviceDomain,
   type KinetixDomainGroup,
 } from "./identity";
+export { LOCK_SENTENCE, describeLockOutcome, describeLockState, lockActions, normalizeLockState, resolveLockStrategy } from "./lock";
+export {
+  MUTE_SENTENCE,
+  PLAYBACK_SENTENCE,
+  SEEK_SENTENCE,
+  describeMediaTime,
+  describePlaybackOutcome,
+  describePlaybackState,
+  formatMediaTime,
+  nextPlaybackRequest,
+  normalizeMediaPlaybackState,
+} from "./media";
 export { describeLastSeen, formatLastSeen, millisecondsSince, type FormatLastSeenOptions } from "./last-seen";
 export {
   KINETIX_METRIC_IDS,

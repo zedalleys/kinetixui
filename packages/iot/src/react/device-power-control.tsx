@@ -4,7 +4,7 @@ import * as React from "react";
 import type { KinetixControlState, KinetixPowerState } from "../types/control";
 import { describePowerState, normalizePowerState, type DescribeControlOutcomeOptions } from "../functions/control";
 import { cn } from "./cn";
-import { ControlAnnouncer, ControlOutcomeNote, useControlContract, type ControlContractProps } from "./control-outcome";
+import { ControlAnnouncer, ControlOutcomeNote, isDisconnected, useControlContract, type ControlContractProps } from "./control-outcome";
 import { withDisplayName } from "./display-name";
 
 /**
@@ -150,7 +150,7 @@ const DevicePowerControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
               TRACK[size],
               shown === "on" ? "border-primary bg-primary" : "border-input bg-muted",
               // A dashed track is the offline tell that survives greyscale and colour-blindness.
-              control?.availability === "offline" && "border-dashed border-border bg-muted/50",
+              isDisconnected(control?.availability) && "border-dashed border-border bg-muted/50",
               // Asked for, not confirmed: the track is outlined dashed, wherever the strategy puts the knob.
               marked && "border-dashed border-primary",
             )}

@@ -6,7 +6,7 @@
  * **Primitives** render one fact: a status, a battery, a signal, a timestamp, a reading, a device's
  * identity. They compose nothing and they are the vocabulary everything else is written in.
  *
- * **Controls** operate a device: power, level, setpoint, mode. They are the layer that makes this a
+ * **Controls** operate a device: power, level, setpoint, mode, colour, lock and media. They are the layer that makes this a
  * connected-device system rather than a dashboard, and they all share one rule — **a request the user
  * has made looks different from a state the device has confirmed.** A control that fills in the
  * instant you touch it is lying until the device agrees, and on a lock or a valve that lie matters.
@@ -51,7 +51,10 @@ export { SensorReading, type SensorReadingProps } from "./sensor-reading";
 export { SignalStrength, type SignalStrengthProps } from "./signal-strength";
 
 /* ------------------------------------------------------------------ controls */
+export { DeviceColorControl, type DeviceColorControlProps, type DeviceColorOption } from "./device-color-control";
 export { DeviceLevelControl, type DeviceLevelControlProps } from "./device-level-control";
+export { DeviceLockControl, type DeviceLockControlProps } from "./device-lock-control";
+export { DeviceMediaControl, type DeviceMediaControlProps } from "./device-media-control";
 export { DeviceModeControl, type DeviceModeControlProps, type DeviceModeOption } from "./device-mode-control";
 export { DevicePowerControl, type DevicePowerControlProps } from "./device-power-control";
 export { DeviceSetpointControl, type DeviceSetpointControlProps } from "./device-setpoint-control";

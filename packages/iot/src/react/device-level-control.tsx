@@ -65,6 +65,21 @@ export interface DeviceLevelControlProps
   variant?: "track" | "pill";
 }
 
+/**
+ * How a level's value is written, when a unit suffix is not enough. Internal: a composing control (the
+ * media scrubber, whose value is a time) provides it; it is not part of the public props.
+ */
+export type LevelFormat = {
+  /** Visible text: the numeral and the request chip. */
+  value: (n: number) => string;
+  /** Spoken text: `aria-valuetext`. */
+  valueText: (n: number) => string;
+  /** The announced sentence. */
+  sentence: DescribeControlOutcomeOptions;
+};
+
+export const LevelFormatContext = /* @__PURE__ */ React.createContext<LevelFormat | null>(null);
+
 /** The native thumb's diameter in px (track / pill). The drawn fill is inset by it so the fill ends under the thumb's centre. */
 const THUMB = 28;
 const THUMB_PILL = 44;
@@ -94,7 +109,10 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
     },
     ref,
   ) => {
-    const sentence: DescribeControlOutcomeOptions = { formatValue: (v) => `${String(v)}${unit}` };
+    const format = React.useContext(LevelFormatContext);
+    const sentence: DescribeControlOutcomeOptions = format?.sentence ?? { formatValue: (v) => `${String(v)}${unit}` };
+    const said = (n: number) => (format ? format.valueText(n) : `${n}${unit}`);
+    const written = (n: number) => (format ? format.value(n) : `${n}${unit}`);
     const { presentation, control, announcement } = useControlContract<number>(
       { lifecycle, strategy, announce, control: controlProp, reported: value, requested: target },
       sentence,
@@ -137,7 +155,7 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
     const pill = variant === "pill";
     const thumb = pill ? THUMB_PILL : THUMB;
     const edge = (n: number) => `calc(${(ratio(n) * 100).toFixed(2)}% + ${((0.5 - ratio(n)) * thumb).toFixed(2)}px)`;
-    const valueText = shown === null ? "—" : `${shown}${unit}`;
+    const valueText = shown === null ? "—" : written(shown);
     // Label and value inside the pill. Drawn twice — dark on the track, light inside the fill — so the text
     // is legible on both sides of the thumb.
     const pillText = (
@@ -166,10 +184,10 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
                   shown === null ? "text-muted-foreground" : "text-foreground",
                 )}
               >
-                {shown === null ? "—" : shown}
-                {shown === null ? null : <span className="ms-0.5 text-title-md text-muted-foreground">{unit}</span>}
+                {shown === null ? "—" : format ? format.value(shown) : shown}
+                {shown === null || format ? null : <span className="ms-0.5 text-title-md text-muted-foreground">{unit}</span>}
               </span>
-              {marked ? <RequestChip requested={requested!} confirmed={confirmed} unit={unit} leadsWithRequest={shown !== confirmed} /> : null}
+              {marked ? <RequestChip requested={requested!} confirmed={confirmed} write={written} leadsWithRequest={shown !== confirmed} /> : null}
             </span>
           </div>
         ) : null}
@@ -251,10 +269,10 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
             aria-busy={pending || undefined}
             aria-valuetext={
               marked
-                ? `${confirmed ?? "unknown"}${unit}, changing to ${requested}${unit}`
+                ? `${confirmed === null ? "unknown" : said(confirmed)}, changing to ${said(requested!)}`
                 : shown === null
                   ? "Not reported"
-                  : `${shown}${unit}`
+                  : said(shown)
             }
             onChange={(e) => {
               const next = Number(e.currentTarget.value);
@@ -293,7 +311,7 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
           />
         </div>
 
-        {pill && marked ? <RequestChip requested={requested!} confirmed={confirmed} unit={unit} leadsWithRequest={shown !== confirmed} className="w-fit max-w-full" /> : null}
+        {pill && marked ? <RequestChip requested={requested!} confirmed={confirmed} write={written} leadsWithRequest={shown !== confirmed} className="w-fit max-w-full" /> : null}
 
         {control?.description && control.availability !== "ready" ? (
           <span id={descriptionId} className="text-label-md text-muted-foreground">
@@ -311,7 +329,7 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
  * The request, in words, in a dashed chip — not an arrow, which would flip under RTL and read backwards.
  * When the numeral already shows the request (`hybrid`) the chip names what the device still reports.
  */
-function RequestChip({ requested, confirmed, unit, leadsWithRequest, className }: { requested: number; confirmed: number | null; unit: string; leadsWithRequest: boolean; className?: string }) {
+function RequestChip({ requested, confirmed, write, leadsWithRequest, className }: { requested: number; confirmed: number | null; write: (n: number) => string; leadsWithRequest: boolean; className?: string }) {
   return (
     <span
       data-requested=""
@@ -321,8 +339,8 @@ function RequestChip({ requested, confirmed, unit, leadsWithRequest, className }
       )}
     >
       {leadsWithRequest
-        ? `Requested, not yet confirmed. Device reports ${confirmed === null ? "unknown" : `${confirmed}${unit}`}`
-        : `Requested ${requested}${unit}, not yet confirmed`}
+        ? `Requested, not yet confirmed. Device reports ${confirmed === null ? "unknown" : write(confirmed)}`
+        : `Requested ${write(requested)}, not yet confirmed`}
     </span>
   );
 }

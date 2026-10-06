@@ -1,6 +1,10 @@
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { DeviceColorControl } from "./device-color-control";
+import { DeviceControlCard } from "./device-control-card";
 import { DeviceLevelControl } from "./device-level-control";
+import { DeviceLockControl } from "./device-lock-control";
+import { DeviceMediaControl } from "./device-media-control";
 import { DeviceModeControl } from "./device-mode-control";
 import { DevicePowerControl } from "./device-power-control";
 import { DeviceSetpointControl } from "./device-setpoint-control";
@@ -15,11 +19,12 @@ import {
   type KinetixCommandLifecycle,
   type KinetixCommandLifecycleEvent,
   type KinetixCommandStrategy,
+  type KinetixDeviceColor,
   type KinetixDeviceState,
 } from "../functions";
 
 /**
- * M2A: the four controls driven by a command lifecycle and a strategy, as deterministic scripts.
+ * M2A and M2B: the controls driven by a command lifecycle and a strategy, as deterministic scripts.
  *
  * Nothing here talks to hardware and nothing runs on a timer. Each story holds one lifecycle and a
  * row of buttons that play the device's side — confirm, fail, a late reply, a report from the
@@ -262,6 +267,195 @@ export const ConnectivityStates: Story = {
           </dd>
         </div>
       </dl>
+    </>
+  ),
+};
+
+// ---------------------------------------------------------------------------------------------
+// M2B: G12, colour, lock and media.
+// ---------------------------------------------------------------------------------------------
+
+export const UnknownStatus: Story = {
+  name: "G12: no device status reads as unknown",
+  render: () => (
+    <>
+      <Label>No status was reported for either device</Label>
+      <DevicePowerControl state="off" control={resolveControlState()} label="Workshop lamp" size="lg" />
+      <DeviceControlCard device={{ id: "p1", name: "Feed pump", type: "pump", status: "online" }} control={resolveControlState()} value={40} unit="%" />
+      <DeviceLockControl state={null} control={resolveControlState()} label="Back gate" />
+    </>
+  ),
+};
+
+const WARM: KinetixDeviceColor = { mode: "temperature", kelvin: 2700 };
+const COLOURS = [
+  { id: "warm", label: "Warm white", value: WARM },
+  { id: "ocean", label: "Ocean", value: { mode: "rgb", r: 37, g: 99, b: 235 } as KinetixDeviceColor },
+  { id: "daylight", label: "Daylight", value: { mode: "temperature", kelvin: 6500 } as KinetixDeviceColor },
+  { id: "amber", label: "Amber", value: { mode: "rgb", r: 245, g: 158, b: 11 } as KinetixDeviceColor },
+];
+
+function ColourScript({ strategy, ending }: { strategy: KinetixCommandStrategy; ending: "confirm" | "fail" }) {
+  const s = useScript(() => startCommandLifecycle<KinetixDeviceColor>({ confirmed: WARM }));
+  return (
+    <>
+      <Label>{`Colour · ${strategy}`}</Label>
+      <DeviceColorControl
+        options={COLOURS}
+        lifecycle={s.lifecycle}
+        strategy={strategy}
+        label="Desk lamp colour"
+        // A structurally equal copy, never the option object itself: equality must be by value.
+        onChange={(next) => s.replace((l) => run(supersedeCommandLifecycle(l, JSON.parse(JSON.stringify(next)) as KinetixDeviceColor, { commandId: "k1" }), { type: "sent" }, s.at + 100))}
+      />
+      <Script stage={s.lifecycle.stage} refused={s.refused}>
+        {ending === "confirm" ? (
+          <Step onClick={() => s.apply({ type: "report", value: { mode: "rgb", b: 235, g: 99, r: 37 }, observedAt: s.observed() })}>Device reports Ocean</Step>
+        ) : (
+          <Step onClick={() => s.apply({ type: "fail", commandId: "k1", reason: "Bulb rejected the colour." })}>Device fails</Step>
+        )}
+        <Step onClick={s.reset}>Reset</Step>
+      </Script>
+    </>
+  );
+}
+
+export const ColourConfirmed: Story = { name: "Colour: confirmed, success", render: () => <ColourScript strategy="confirmed" ending="confirm" /> };
+export const ColourOptimisticFailure: Story = { name: "Colour: optimistic, failure and rollback", render: () => <ColourScript strategy="optimistic" ending="fail" /> };
+export const ColourHybrid: Story = { name: "Colour: hybrid, target vs reported", render: () => <ColourScript strategy="hybrid" ending="confirm" /> };
+
+function LockScript({ ending }: { ending: "confirm" | "fail" }) {
+  const s = useScript(() => startCommandLifecycle<"locked" | "unlocked">({ confirmed: "unlocked" }));
+  return (
+    <>
+      <Label>Lock · confirmed</Label>
+      <DeviceLockControl
+        lifecycle={s.lifecycle}
+        label="Front door"
+        onRequest={(next) => s.replace((l) => run(supersedeCommandLifecycle(l, next, { commandId: "l1" }), { type: "sent" }, s.at + 100))}
+      />
+      <Script stage={s.lifecycle.stage} refused={s.refused}>
+        {ending === "confirm" ? (
+          <Step onClick={() => s.apply({ type: "confirm", commandId: "l1" })}>Device confirms</Step>
+        ) : (
+          <Step onClick={() => s.apply({ type: "fail", commandId: "l1", code: "jammed", reason: "The bolt did not travel." })}>Device fails</Step>
+        )}
+        <Step onClick={s.reset}>Reset</Step>
+      </Script>
+    </>
+  );
+}
+
+export const LockConfirmed: Story = { name: "Lock: lock pending, then locked", render: () => <LockScript ending="confirm" /> };
+export const LockFailure: Story = { name: "Lock: lock pending, then failure", render: () => <LockScript ending="fail" /> };
+
+export const LockUnreachableStale: Story = {
+  name: "Lock: unreachable, a stale reply, a reconnect",
+  render: function Render() {
+    // An earlier request (l0) was replaced by this one (l1) before l0 was answered.
+    const s = useScript(() =>
+      run(
+        supersedeCommandLifecycle(run(startCommandLifecycle<"locked" | "unlocked">({ confirmed: "unlocked", requested: "locked", commandId: "l0" }), { type: "sent" }, 0), "locked", { commandId: "l1" }),
+        { type: "sent" },
+        0,
+      ),
+    );
+    return (
+      <>
+        <Label>Lock · hybrid · the hub drops off</Label>
+        <DeviceLockControl lifecycle={s.lifecycle} strategy="hybrid" label="Front door" />
+        <Script stage={s.lifecycle.stage} refused={s.refused}>
+          <Step onClick={() => s.apply({ type: "confirm", value: "locked", commandId: "l0" })}>Late reply for an earlier request</Step>
+          <Step onClick={() => s.apply({ type: "deviceUnreachable", reason: "No route to the hub." })}>Connection lost</Step>
+          <Step onClick={() => s.apply({ type: "report", value: "locked", observedAt: s.observed() })}>Device returns: locked</Step>
+          <Step onClick={s.reset}>Reset</Step>
+        </Script>
+      </>
+    );
+  },
+};
+
+const ARTWORK = (
+  <span aria-hidden="true" className="grid size-full place-items-center bg-primary/15 text-title-md text-foreground">
+    MN
+  </span>
+);
+
+function MediaScript({ ending }: { ending: "confirm" | "fail" }) {
+  const s = useScript(() => startCommandLifecycle<"playing" | "paused">({ confirmed: "paused" }));
+  return (
+    <>
+      <Label>Media · confirmed · play</Label>
+      <DeviceMediaControl
+        label="Kitchen speaker"
+        title="Morning news"
+        subtitle="Episode 112"
+        artwork={ARTWORK}
+        playbackLifecycle={s.lifecycle}
+        duration={1_800}
+        position={65}
+        onPlaybackRequest={(next) => s.replace((l) => run(supersedeCommandLifecycle(l, next, { commandId: "p1" }), { type: "sent" }, s.at + 100))}
+        onPrevious={() => {}}
+        onNext={() => {}}
+        onSeek={() => {}}
+      />
+      <Script stage={s.lifecycle.stage} refused={s.refused}>
+        {ending === "confirm" ? (
+          <Step onClick={() => s.apply({ type: "confirm", commandId: "p1" })}>Device confirms</Step>
+        ) : (
+          <Step onClick={() => s.apply({ type: "fail", commandId: "p1", reason: "Nothing queued." })}>Device fails</Step>
+        )}
+        <Step onClick={s.reset}>Reset</Step>
+      </Script>
+    </>
+  );
+}
+
+export const MediaPlayConfirmed: Story = { name: "Media: paused, play requested, confirmed", render: () => <MediaScript ending="confirm" /> };
+export const MediaPlayFailure: Story = { name: "Media: play failure", render: () => <MediaScript ending="fail" /> };
+
+export const MediaSeekVolume: Story = {
+  name: "Media: seek and volume requested vs reported",
+  render: function Render() {
+    const seek = useScript(() => startCommandLifecycle<number>({ confirmed: 65 }));
+    const volume = useScript(() => startCommandLifecycle<number>({ confirmed: 40 }));
+    return (
+      <>
+        <Label>Media · confirmed · seek and volume</Label>
+        <DeviceMediaControl
+          label="Living room display"
+          title="Field trial walkthrough"
+          playback="playing"
+          duration={1_800}
+          seekLifecycle={seek.lifecycle}
+          volumeLifecycle={volume.lifecycle}
+          muted={false}
+          control={resolveControlState({ deviceStatus: "online" })}
+          onPlaybackRequest={() => {}}
+          onSeek={(to) => seek.replace((l) => run(supersedeCommandLifecycle(l, to, { commandId: "s1" }), { type: "sent" }, seek.at + 100))}
+          onVolumeChange={(to) => volume.replace((l) => run(supersedeCommandLifecycle(l, to, { commandId: "v1" }), { type: "sent" }, volume.at + 100))}
+          onMuteChange={() => {}}
+        />
+        <Script stage={`${seek.lifecycle.stage} / ${volume.lifecycle.stage}`} refused={seek.refused || volume.refused}>
+          <Step onClick={() => seek.replace((l) => run(supersedeCommandLifecycle(l, 120, { commandId: "s1" }), { type: "sent" }, seek.at + 100))}>Seek to 2:00</Step>
+          <Step onClick={() => seek.apply({ type: "report", value: 66, observedAt: seek.observed() })}>Device reports 1:06</Step>
+          <Step onClick={() => seek.apply({ type: "confirm", value: 120, commandId: "s1" })}>Device confirms the seek</Step>
+          <Step onClick={() => volume.replace((l) => run(supersedeCommandLifecycle(l, 60, { commandId: "v1" }), { type: "sent" }, volume.at + 100))}>Volume to 60</Step>
+          <Step onClick={() => volume.apply({ type: "confirm", commandId: "v1" })}>Device confirms the volume</Step>
+        </Script>
+      </>
+    );
+  },
+};
+
+export const MediaUnavailable: Story = {
+  name: "Media: unknown and unsupported devices",
+  render: () => (
+    <>
+      <Label>Media · no status reported</Label>
+      <DeviceMediaControl label="Garage speaker" title="Unknown" playback={null} control={resolveControlState()} duration={240} position={0} onPlaybackRequest={() => {}} onNext={() => {}} onPrevious={() => {}} />
+      <Label>Media · capability not offered</Label>
+      <DeviceMediaControl label="Doorbell" support="unsupported" />
     </>
   ),
 };

@@ -2,7 +2,8 @@
 
 How KinetixUI models a connected device changing state: what a user asked for, what the device
 reports, and what a control is allowed to draw in between. M1 laid the foundation; M2A made connectivity
-truthful and wired the four existing React controls to it (§4.1, §6.1). The audit behind both is
+truthful and wired the four existing React controls to it (§4.1, §6.1); M2B stopped a missing device
+status reading as offline (§6.2) and added colour, lock and media controls on the same API (§4.2). The audit behind both is
 [IOT-MATURITY-AUDIT.md](./IOT-MATURITY-AUDIT.md).
 
 The contract lives in `@kinetixui/iot/functions`: TypeScript types and pure functions, no React,
@@ -186,6 +187,71 @@ reported value whenever the request is marked as unconfirmed. Disabled (`disable
 changes: `DevicePowerControl` with `requested` no longer moves its knob by default (pass
 `strategy="hybrid"` for the previous drawing), and the value props are optional.
 
+### 4.2 Colour, lock and media (M2B)
+
+Three controls on the same `lifecycle` / `strategy` / `announce` API, with no state logic of their own:
+each goes through `resolveControlPresentation` and `describeControlOutcome`, and the lifecycle's
+correlation (`commandId`, `supersededCommandIds`) and report ordering are what refuse stale replies.
+
+| | Strategies | Default | Composes | Capability |
+| --- | --- | --- | --- | --- |
+| `DeviceColorControl` | `confirmed`, `optimistic`, `hybrid` | `confirmed` (`hybrid` recommended) | `DeviceModeControl` (`tiles`) for the choices | `color` (role `color` or `color-temperature`) |
+| `DeviceLockControl` | `confirmed`, `hybrid` | `confirmed` | — | `mode` with role `lock` |
+| `DeviceMediaControl` | `confirmed`, `optimistic`, `hybrid`, one for all its commands | `confirmed` | `DeviceLevelControl` for seek and volume | `mode`/`media-playback`, `level`/`volume` |
+
+Each takes `support` from `resolveCapabilitySupport`: `read-only` shows the state without actions, and
+`unsupported` renders one sentence ("Front door: not supported by this device") rather than a disabled
+widget, because "not on this device" is a different answer from "not now".
+
+**Colour.** `KinetixDeviceColor` is `{ mode: "rgb", r, g, b }` or `{ mode: "temperature", kelvin }` —
+the two shapes devices across domains share; a product whose devices speak HSV or CIE xy converts at its
+boundary. Values are compared with `isSameDeviceValue`, so a reported colour that is a new object, with
+its keys in another order, still confirms the request; `normalizeDeviceColor` turns `#rrggbb` and
+loose objects into one of the two shapes before they enter a lifecycle. The product supplies the colours
+(`options`); the control is a named radiogroup with a preview, not a design-tool picker. A reported colour
+that is none of the options is shown and named by its value. The device's colour is drawn as data
+(an inline fill, kept under forced colours like an image); borders, focus, labels and state marks are tokens.
+
+| | `confirmed` | `hybrid` | `optimistic` |
+| --- | --- | --- | --- |
+| Colour | Preview and checked radio = reported; the request is dashed and named on its swatch; chip "Requested Ocean (#2563EB), not yet confirmed" | Preview = request with a dashed edge; chip names what the device reports; reported radio stays checked | Preview and checked radio = request; silent; rolls back in words |
+
+The default is not changed for colour. `hybrid` suits it — people expect to see the colour they chose —
+but a per-control default would make "the default" mean different things on different controls.
+
+**Lock — the safety policy.** "Locked" is only ever the device's word:
+
+- The headline, the closed padlock and `data-lock-state="locked"` appear only when the device *reports*
+  locked. While a request is open the headline is either the reported state with the request beside it
+  (`confirmed`: "Unlocked" + "Locking, not yet confirmed") or the direction with the reported state
+  beside it (`hybrid`: "Locking" + "Waiting for the device. It still reports unlocked").
+- `optimistic` is excluded by type (`KinetixLockStrategy`), and `resolveLockStrategy` draws it as
+  `confirmed` at runtime, because its whole purpose is to show the request as the state.
+- The lock is operated by named buttons ("Lock Front door"), not a switch. A jammed or unknown lock
+  offers both actions. Pending is busy (`aria-busy`) and not pressable.
+- Announcements: "Locking, waiting for the device." → "Locked." or "Could not lock. The device still
+  reports unlocked." A physical change reported with no request updates the state and announces nothing.
+
+**Media — the transport boundary.** KinetixUI owns the interaction and its truth; the application owns
+playback. There is no `<audio>`, `<video>`, HLS, WebRTC, RTSP, codec, player or vendor SDK, and nothing
+in the control starts, stops or seeks anything: `onPlaybackRequest`, `onSeek`, `onVolumeChange`,
+`onMuteChange`, `onPrevious` and `onNext` are callbacks. Each asynchronous command has its own lifecycle
+(`playbackLifecycle`, `seekLifecycle`, `volumeLifecycle`, `muteLifecycle`) under one `strategy`:
+
+- **Play/pause.** Under `confirmed` the headline stays at what the device reports ("Paused") with
+  "Starting playback, not yet confirmed" beside it; the Play button is busy and not pressable.
+- **Seek.** The scrubber is `DeviceLevelControl`, so the reported position and the requested target are
+  drawn apart; time is written "1:05" and spoken "1 minute 5 seconds" (`aria-valuetext`). A position
+  report that is not the target keeps the seek pending. The product feeds position as `report` events.
+- **Volume.** `DeviceLevelControl` itself — the level semantics, not a copy.
+- **Mute.** A toggle button; `aria-pressed` is the reported state while a change is marked.
+- Previous/next are fire-and-forget; their result is a new title the product reports.
+- The transport row and the scrubber stay left-to-right in RTL (playback controls and progress are not
+  mirrored); the text around them is.
+
+A pending play does not disable the other actions: each command resolves its own interactivity. Each
+tracked command has its own polite status region.
+
 ## 5. Capabilities, not device classes
 
 A device is a list of `KinetixDeviceCapability` entries. `kind` is the interaction shape (how it is
@@ -218,6 +284,12 @@ The brief's validation devices, as data (all asserted in the contract test):
 | Soil sensor | telemetry soil-moisture, telemetry/battery |
 | Infusion pump | setpoint/infusion-rate, action start |
 | Conveyor motor | power, level (rpm) |
+
+**Which control reads which capability (M2B).** No kind or role was added. `DeviceColorControl` is for
+`color`. `DeviceLockControl` is for `mode` with role `lock` — the lock is a two-state mode with stricter
+presentation, not a new shape. `DeviceMediaControl` is for the speaker's `mode`/`media-playback` and
+`level`/`volume`; `media` stays what M1 defined, a preview or stream surface the application renders
+(`CameraDeviceCard`), because a playback endpoint and a picture are different shapes.
 
 **Deliberately not capabilities.** *Schedule* is the automation model (`KinetixAutomation`), *activity*
 is `KinetixActivityEvent`, and *access* (who may unlock, who did) is application business logic on top
@@ -262,6 +334,25 @@ Each state needs its own evidence, and the absence of evidence is a state of its
 as offline; `unknown` and `connecting` are not counted as either. An exhaustive `switch` over
 `KinetixConnectivityState` in consumer code needs two new arms.
 
+### 6.2 Control availability (M2B, audit G12)
+
+`resolveControlState` used `normalizeDeviceStatus`'s badge fallback, so a control with no status said
+"Device offline. Showing the last known setting". It now asks for evidence, as connectivity does.
+
+| Input | Before | After |
+| --- | --- | --- |
+| No `deviceStatus`, `null`, `""` or an unrecognised string | `offline`, "Device offline…" | `unknown`, "Device status unknown"; not interactive; not "last known" |
+| `deviceStatus: "unreachable"` | `offline` | `unreachable`, "Device unreachable. Showing the last known setting" |
+| `connectivity: "connecting"` (new input) | — | `connecting`, "Connecting to the device. Showing the last known setting" |
+| `connectivity` `offline` / `unreachable` / `stale` | — | wins over `deviceStatus` (the link is the more specific claim) |
+| `connectivity: "online"` with no status | — | `ready` |
+| A request in flight to a device of unknown status | `offline` | `pending` (the request is a fact we hold) |
+
+`unknown` keeps the old fail-safe (no input), and only `offline`'s sentence says "offline".
+`KinetixControlAvailability` gains `unknown`, `unreachable` and `connecting`; an exhaustive `switch`
+over it needs three new arms. A control given only a `lifecycle` and no `control` still assumes nothing
+about the device (§4.1).
+
 ## 7. Examples by domain
 
 **Smart home.** A lamp's brightness uses `optimistic`: the slider moves at once, and if the bridge
@@ -298,10 +389,14 @@ Truth today, verified by search of `packages/` at audit time:
 
 | Concept | TS functions | React | Angular | SwiftUI | Compose | Flutter |
 | --- | --- | --- | --- | --- | --- | --- |
-| Command lifecycle + `report` + correlation | implemented, tested | consumed by `CommandLifecycle` and, since M2A, by the four controls (`lifecycle` prop) | not implemented | not implemented | not implemented | not implemented |
-| Interaction strategies | implemented, tested | the four controls (`strategy` prop), tested in jsdom and Chromium | not implemented | not implemented | not implemented | not implemented |
+| Command lifecycle + `report` + correlation | implemented, tested | consumed by `CommandLifecycle` and by the device controls (`lifecycle` prop; four since M2A, seven since M2B) | not implemented | not implemented | not implemented | not implemented |
+| Interaction strategies | implemented, tested | the seven controls (`strategy` prop; lock: `confirmed`/`hybrid` only), tested in jsdom and Chromium | not implemented | not implemented | not implemented | not implemented |
+| Control availability incl. `unknown` (G12) | implemented, tested | every control and `DeviceControlCard` | not implemented | not implemented | not implemented | not implemented |
+| Colour value + equality | implemented, tested | `DeviceColorControl` | not implemented | not implemented | not implemented | not implemented |
+| Lock safety policy | implemented, tested | `DeviceLockControl` | not implemented | not implemented | not implemented | not implemented |
+| Media playback / seek / volume / mute | implemented, tested | `DeviceMediaControl` (no playback in the package) | not implemented | not implemented | not implemented | not implemented |
 | Connectivity incl. `connecting` / `unknown` | implemented, tested | words via `describeConnectivity`; no connectivity component | not implemented | not implemented | not implemented | not implemented |
-| Capability kinds / roles / support | implemented, tested | not consumed | not implemented | not implemented | not implemented | not implemented |
+| Capability kinds / roles / support | implemented, tested | `support` prop on the three M2B controls | not implemented | not implemented | not implemented | not implemented |
 | Telemetry freshness | implemented, tested | consumed | not implemented | not implemented | not implemented | not implemented |
 | Battery state | implemented, tested | `BatteryIndicator` uses the percentage only | not implemented | not implemented | not implemented | not implemented |
 
@@ -311,10 +406,9 @@ service or test consumes it, so that is not claimed as Angular support.
 
 ## 9. What remains
 
-- **M2B**: colour, media and lock controls on the same API, only with a demonstrated consumer.
-- **Control availability without a device status** (audit G12): `resolveControlState()` still reads a
-  missing status as offline.
-- **Manual screen-reader verification** of the M2A announcements (VoiceOver, NVDA, TalkBack). Only
+- **M3, monitoring and feedback**: `DeviceBattery`, `DeviceConnection` (a glyph for `connecting` and
+  `unknown`), `TelemetryMetric` maturity, `CommandFeedback`, `DeviceActivity`, `EnergySummary`.
+- **Manual screen-reader verification** of the M2A and M2B announcements (VoiceOver, NVDA, TalkBack). Only
   automated accessibility-tree checks have run.
 - **Native parity**: implement the lifecycle, strategies and capability support in Swift, Kotlin and
   Dart against the same test cases, where those toolchains can run in CI.
