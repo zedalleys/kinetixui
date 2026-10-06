@@ -153,32 +153,24 @@ source is named instead.
   *engine*, a runtime, live camera or video, or wearable support (the module ships automation and camera
   *patterns* — UI for state someone else supplies); counting its primitives or patterns in the component
   catalogue; or describing it as planned or unpublished.
-- **Review trigger:** a native port, a transport integration, or a catalogue merge. **Also C4b whenever the
-  iot cohort publishes** — the two rows drift apart in opposite directions.
+- **Review trigger:** a native port, a transport integration, or a catalogue merge. **Also C4b whenever an iot
+  changeset is added or the iot cohort publishes** — the two rows drift apart in opposite directions.
 
-### C4b — What is in main's source is ahead of what is on npm
+### C4b — When main's source is ahead of what is on npm
 
-- **Status:** APPROVED WITH QUALIFICATION — and the qualification is the whole row
-- **Evidence:** `marketing:stats` reads the published `@kinetixui/iot` version from the registry — read it
-  there, never from here. Main carries more than that version ships: the control layer
-  (`DevicePowerControl`, `DeviceLevelControl`, `DeviceSetpointControl`, `DeviceModeControl`,
-  `resolveControlState`) sits behind an **unpublished** changeset,
-  `.changeset/iot-control-layer.md`, and so do the colour, lock and media controls
-  (`.changeset/iot-controls-m2b.md`), and #259 added the `/iot` Connected Space showcase and the expanded
-  reference — website work, not package work. Publishing is a separate decision and has not been made.
-- **Approved wording:** "`@kinetixui/iot` on npm is an experimental, React-only module. The connected-product
-  showcase at `/iot` is a deterministic simulation — no network, no device, no video — and some of what it
-  demonstrates is source in the repository that has not been released yet."
-- **Forbidden interpretation:** presenting the showcase, the reference page or anything behind the pending
-  changeset as *shipped*, *installable today*, or *production-ready*; implying the `/iot` demos talk to
-  hardware; quoting a feature a reader would not get from `npm install @kinetixui/iot` without saying so.
-  Also forbidden: the inverse understatement — main's source is genuinely more mature than the published
-  version, so do not claim the module is only primitives when asked directly.
-- **Qualification that must travel with any IoT sentence in the next fortnight:** React only · experimental ·
-  the showcase is a labelled simulation · the published npm version (quote it from `marketing:stats` at the
-  moment of writing) is behind main · no transport.
-- **Review trigger:** the iot cohort publishes (then fold this row back into C4), or a changeset is added,
-  removed or altered under `.changeset/` for `@kinetixui/iot`.
+- **Status:** CONDITIONAL — applies only while `.changeset/` holds a pending changeset that names
+  `@kinetixui/iot`. With none pending, the version npm serves is the package source on `main`, and C4 alone
+  governs. Check `.changeset/` and `pnpm marketing:stats` at the moment of writing; never quote this row's state
+  from memory.
+- **Evidence when it applies:** the pending changeset names what main carries beyond the published version.
+  `/docs/iot` may mark exactly those sections as not yet released, and `current-truth.test.ts` refuses such a
+  marker when no IoT changeset is pending, so the page cannot keep saying it after the release.
+- **Approved wording when it applies:** "`@kinetixui/iot` on npm is an experimental, React-only module. Some of
+  what the reference documents is in the repository and not yet released."
+- **Forbidden interpretation:** presenting anything behind a pending changeset as *shipped* or *installable
+  today*; implying the `/iot` demos talk to hardware; and the inverse, saying npm is behind main when no IoT
+  changeset is pending.
+- **Review trigger:** a changeset for `@kinetixui/iot` is added, or the iot cohort publishes.
 
 ### C5 — Wearables
 

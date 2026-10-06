@@ -629,6 +629,55 @@ describe("the IoT module is described as what it is", () => {
     }
   });
 
+  /**
+   * A section marked "not released yet" is true only while a release is actually pending.
+   *
+   * The failure this exists for: M3 shipped in 0.5.0, and `/docs/iot` kept a callout saying the monitoring
+   * components were on `main` but "not in the version npm serves", plus four "**Unreleased**" badges. The rule
+   * above could not see it, because it looks for a denial of the *package* and this denied a *section*.
+   *
+   * The source of truth is the changeset queue, not a version number typed here. A changeset naming
+   * `@kinetixui/iot` is exactly "main carries something npm does not", and the version PR consumes it; with
+   * none pending, the version npm serves is the package source in this repository. So a pre-release marker is
+   * allowed while an IoT changeset is pending (future unreleased work can be documented ahead of its release)
+   * and refused once none is. The roadmap is excised first: it is about work that is not in the module at all.
+   */
+  it("marks nothing as unreleased once no IoT release is pending", () => {
+    const changesetDir = `${root}/.changeset`;
+    const pendingIot = readdirSync(changesetDir)
+      .filter((file) => file.endsWith(".md") && file !== "README.md")
+      .filter((file) => {
+        const frontmatter = readFileSync(`${changesetDir}/${file}`, "utf8").split(/^---\s*$/m)[1] ?? "";
+        return /^\s*["']?@kinetixui\/iot["']?\s*:/m.test(frontmatter);
+      });
+
+    const PRE_RELEASE = [
+      /\*\*Unreleased\.?\*\*/i,
+      /ahead of the published package/i,
+      /not in the version npm serves/i,
+      /lands? (on|in) the next `?@kinetixui\/iot`?\s+release/i,
+      /\bnot yet released\b/i,
+    ];
+    // The markers still recognise the callout that shipped, so a rewording of these patterns cannot quietly
+    // stop them matching the defect they were written for.
+    const shipped =
+      "**Part of this page is ahead of the published package.** ... are in this repository's `main` but **not in " +
+      "the version npm serves**, so the sections documenting them are marked **Unreleased**. They land on the next " +
+      "`@kinetixui/iot`\n  release";
+    expect(PRE_RELEASE.filter((marker) => marker.test(shipped)).length, "the original callout must still be caught").toBe(4);
+
+    if (pendingIot.length > 0) return; // a release is pending; marking its sections is honest
+    for (const [name, text] of Object.entries(IOT_SURFACES)) {
+      for (const marker of PRE_RELEASE) {
+        expect(
+          claimsOnly(text).match(marker)?.[0],
+          `${name} marks something as not yet released, but no changeset for @kinetixui/iot is pending, so npm ` +
+            `already serves this source. Remove the marker, or add the changeset that makes it true.`,
+        ).toBeUndefined();
+      }
+    }
+  });
+
   /* ---- planned work stays marked ---- */
 
   it("marks every roadmap item that has not shipped", () => {

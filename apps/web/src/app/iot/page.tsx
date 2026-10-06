@@ -151,7 +151,6 @@ const ROADMAP: readonly { when: string; state: "shipped" | "excluded" | "deferre
     state: "deferred",
     items: [
       "A grouped or scheduled command queue, which needs a real product's requirements before it is modelled",
-      "Optimistic updates with rollback as an opt-in, which needs a rollback story before it is safe to offer",
     ],
   },
 ];
@@ -529,9 +528,9 @@ evaluateReading({ value: null, metric: "temperature" }).state; // "unavailable"`
             </p>
             <dl className="mt-6 divide-y divide-border border-y border-border">
               {[
-                { name: "Primitives", count: IOT_CATALOGUE.primitives, body: "One fact, rendered: a status, a battery, a signal, a timestamp, a reading, an identity." },
-                { name: "Controls", count: IOT_CATALOGUE.controls, body: "One thing a user can change: power, level, setpoint, mode." },
-                { name: "Patterns", count: IOT_CATALOGUE.patterns, body: "Compositions with a rule or two: cards, lists, telemetry, alerts, automation, pairing, places, energy and a camera that is never a feed." },
+                { name: "Primitives", count: IOT_CATALOGUE.primitives, body: "One fact, rendered: a status, a connection, a battery, a signal, a timestamp, a reading, an identity." },
+                { name: "Controls", count: IOT_CATALOGUE.controls, body: "One thing a user can change: power, level, setpoint, mode, colour, lock and media playback." },
+                { name: "Patterns", count: IOT_CATALOGUE.patterns, body: "Compositions with a rule or two: cards, lists, telemetry, command feedback, alerts, activity, automation, pairing, places, energy and a camera that is never a feed." },
               ].map((row) => (
                 <div key={row.name} className="flex items-baseline gap-4 py-4">
                   <dt className="w-24 shrink-0 font-display text-sm font-semibold">{row.name}</dt>

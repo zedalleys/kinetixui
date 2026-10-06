@@ -40,15 +40,9 @@ pattern working — see [the IoT overview](/iot).
 npm install @kinetixui/iot
 ```
 
-<Callout>
-  **Part of this page is ahead of the published package.** The M3 monitoring pieces (`DeviceBattery`,
-  `DeviceConnection`, `CommandFeedback`, `DeviceActivity`, `resolveFreshness` and its helpers in
-  `@kinetixui/iot/functions`, and the new `TelemetryMetric` and `EnergySummary` props) are in this repository's
-  `main` but **not in the version npm serves**, so the sections documenting
-  them are marked **Unreleased**. They land on the next `@kinetixui/iot`
-  release; until then, importing one from an installed copy is a build error, not a mistake you made. Check what
-  you have against [the changelog](/docs/changelog).
-</Callout>
+The module is versioned on its own line, apart from `@kinetixui/ui`, so the site-wide changelog does not
+list it. What changed in each version is in
+[its own changelog](https://github.com/zedalleys/kinetixui/blob/main/packages/iot/CHANGELOG.md).
 
 Three entry points, because the useful half of this module has nothing to do with rendering:
 
@@ -97,6 +91,8 @@ The `functions` subpath needs none of that.
 
 - a state model — device, health, command lifecycle, telemetry, alert, activity, automation rule, pairing flow,
   space hierarchy and energy types — with pure functions for each
+- monitoring and feedback that keep "we do not know" visible: battery, connection, data freshness, telemetry,
+  command feedback, per-device activity and energy (see [Monitoring truth model](#monitoring-truth-model))
 - 10 React primitives, 7 device controls and 29 patterns
 - a device taxonomy and a metric registry, so a category and a metric mean the same thing everywhere
 - control-state resolution: `resolveControlState` turns a device status and a command lifecycle into one answer
@@ -170,6 +166,20 @@ function toDevice(message: ProviderMessage): KinetixDevice {
 }
 ```
 
+`status` is a badge, and a badge has no "unknown", so an unrecognised spelling falls back to `offline` there.
+Decide connectivity from the provider's own value instead, before that fallback, so "we could not read it"
+stays `unknown` (see [Status, connectivity and health](#status-connectivity-and-health-are-different-questions)):
+
+```ts
+import { normalizeConnectivityState, type KinetixConnectivityState } from "@kinetixui/iot/functions";
+
+function toConnectivity(link: string | undefined): KinetixConnectivityState {
+  if (link === "CONNECTED") return "online";      // your provider's spellings, mapped by you
+  if (link === "DISCONNECTED") return "offline";
+  return normalizeConnectivityState(link);         // a known state passes through; anything else is "unknown"
+}
+```
+
 Going the other way, a control reports intent and your code does whatever your transport requires. The
 control never assumes it worked:
 
@@ -207,8 +217,9 @@ The module holds this line in four places:
 - **Unknown is a result.** No battery, no signal, no timestamp and no reading are each rendered as “unknown”,
   never as zero.
 
-Optimistic updates are not forbidden — a product can pass `requested` equal to the new value and update `state`
-when the device confirms. The point is that the requested value stays visibly a request until then.
+Optimistic presentation is not forbidden: every control except the lock accepts `strategy="optimistic"`, which
+moves at once and says so in words if the device refuses (see [Controls](#controls)). What no strategy changes is
+the model underneath: `requested` and `state` stay two values, and only the device's report moves `state`.
 
 ## The command lifecycle
 
@@ -309,7 +320,8 @@ old", which is the state device UIs most often render as a confident `online`.
 
 `status` is what a device row shows as one badge. Beneath it the module keeps two more precise answers:
 
-- **Connectivity** — can the device be reached (`online`, `stale`, `offline`, `unreachable`)?
+- **Connectivity** — can the device be reached (`online`, `stale`, `connecting`, `offline`, `unreachable`,
+  `unknown`)? A missing or unreadable status is `unknown`, never `offline`.
 - **Health** — is it working (`healthy`, `degraded`, `warning`, `critical`, `unknown`), with the *reasons* listed?
 
 `deriveDeviceHealth` returns both a level and the reasons behind it, so a screen can say why:
@@ -431,7 +443,7 @@ Every state is a different glyph silhouette *and* a word, so no state is carried
 
 ## Monitoring truth model
 
-**Unreleased.** Monitoring is where an interface most often turns "we do not know" into a value. Five
+Monitoring is where an interface most often turns "we do not know" into a value. Five
 dimensions are kept apart, each with its own evidence and its own `unknown`, and **none is derived from another**:
 
 | Dimension | Question | Values |
@@ -479,6 +491,13 @@ import { CommandFeedback, DeviceBattery, DeviceConnection, TelemetryMetric } fro
 <DeviceBattery value={18} updatedAt={batteryAt} staleAfterMs={6 * 3_600_000} />
 <CommandFeedback lifecycle={valve} label="Zone 3 valve" formatValue={(v) => (v ? "open" : "closed")} onRetry={retry} />
 ```
+
+`TelemetryMetric` reports two separate answers on its root. `data-value-state` is whether there is a value —
+`known`, `unknown` (nothing was reported), `unavailable` (`quality` `missing` or `error`, or the `unavailable` prop) or
+`unsupported` — and it is the one to style or test on. `data-reading-state` is `evaluateReading`'s judgement of
+the reading (`normal`, `warning`, `critical`, `stale` or `unavailable`), where every missing value is
+`unavailable`; that is why the visible word for an empty reading with no `quality` is "Unknown" while its reading
+state is still `unavailable`.
 
 None of the monitoring components is a live region or offers a control; `CommandFeedback` adds one polite
 `role="status"` only when you pass `announce` (a control given the same lifecycle already announces it).
@@ -617,7 +636,7 @@ source, action and an acknowledged or resolved state. Severity is a glyph and a 
 renders what happened, grouped by day: commands (with their lifecycle status, so a `requested` entry reads
 “Requested, not yet confirmed” and cannot be mistaken for a result), state changes, alerts, automation and
 firmware. Live-region announcements are rare on purpose; a list is not announced when it changes.
-`DeviceActivity` (**Unreleased**) is one device's history in an order you choose, with each event's origin —
+`DeviceActivity` is one device's history in an order you choose, with each event's origin —
 user, device, automation or system — and "Source unknown" when your log did not record one.
 
 ## Automation
@@ -711,7 +730,7 @@ energyTrend([3, 4, 5, 6]).direction; // "rising"
 ```
 
 `EnergySummary` displays these. It is display only: it computes no billing, cost, carbon estimate or forecast, and
-every number comes from your application. Without a `summary` (**Unreleased**) it is a set of `TelemetryMetric`s —
+every number comes from your application. Without a `summary` it is a set of `TelemetryMetric`s —
 power, energy, a cost you computed and formatted, and anything else — over a period you name; see
 [Monitoring truth model](#monitoring-truth-model).
 
@@ -807,7 +826,7 @@ import {
 ```
 
 Ten primitives in all: those five, plus `DeviceIcon` and `DeviceIdentity` (a device's category, drawn with its
-state carried on the icon tile), `MetricStatus` (a reading's state as a glyph and a word), and — **Unreleased** —
+state carried on the icon tile), `MetricStatus` (a reading's state as a glyph and a word),
 `DeviceBattery` and `DeviceConnection` (see [Monitoring truth model](#monitoring-truth-model)). Each accepts `className` and forwards the rest of its props, and each emits a `data-` attribute for the
 value it resolved — `data-status`, `data-level`, `data-quality` — so a product can restyle per state
 without this module growing a variant API.
