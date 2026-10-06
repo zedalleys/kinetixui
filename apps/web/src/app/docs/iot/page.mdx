@@ -41,11 +41,10 @@ npm install @kinetixui/iot
 ```
 
 <Callout>
-  **Part of this page is ahead of the published package.** `DeviceColorControl`, `DeviceLockControl` and
-  `DeviceMediaControl`, their helpers in `@kinetixui/iot/functions`, the `unknown`, `unreachable` and
-  `connecting` control availabilities, and the M3 monitoring pieces (`DeviceBattery`, `DeviceConnection`,
-  `CommandFeedback`, `DeviceActivity`, `resolveFreshness`, and the new `TelemetryMetric` and `EnergySummary`
-  props) are in this repository's `main` but **not in the version npm serves**, so the sections documenting
+  **Part of this page is ahead of the published package.** The M3 monitoring pieces (`DeviceBattery`,
+  `DeviceConnection`, `CommandFeedback`, `DeviceActivity`, `resolveFreshness` and its helpers in
+  `@kinetixui/iot/functions`, and the new `TelemetryMetric` and `EnergySummary` props) are in this repository's
+  `main` but **not in the version npm serves**, so the sections documenting
   them are marked **Unreleased**. They land on the next `@kinetixui/iot`
   release; until then, importing one from an installed copy is a build error, not a mistake you made. Check what
   you have against [the changelog](/docs/changelog).
@@ -834,12 +833,6 @@ website, meant to be read and copied into your own codebase, because a screen la
 product's decisions live and importing someone else's is rarely the shortcut it looks like.
 
 ## Controls
-
-<Callout>
-  **Partly unreleased.** The power, level, setpoint and mode controls are published. `DeviceColorControl`,
-  `DeviceLockControl` and `DeviceMediaControl` are in `main` and not in the published package — see
-  [Install](#install).
-</Callout>
 
 A control is the part that makes this a connected-device system rather than a dashboard. All seven
 share one rule, and it is the rule most device UIs get wrong:
