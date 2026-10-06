@@ -173,6 +173,12 @@ const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
     const rangeText = rangeMin !== null || rangeMax !== null
       ? `${range?.label ?? "Reference"} ${rangeMin !== null && rangeMax !== null ? `${rangeMin}–${rangeMax}` : rangeMin !== null ? `≥ ${rangeMin}` : `≤ ${rangeMax}`}${shownUnit ? ` ${shownUnit}` : ""}`
       : null;
+    const spokenRange =
+      rangeMin !== null && rangeMax !== null
+        ? `${rangeMin} to ${rangeMax}`
+        : rangeMin !== null
+          ? `at least ${rangeMin}`
+          : `at most ${rangeMax}`;
     const statusWord =
       availability === "unknown" ? "Unknown" : availability === "unsupported" ? "Not supported" : state === "stale" || noValue ? undefined : statusLabel;
     const hideStatus = quietWhenNormal && state === "normal" && !statusLabel;
@@ -191,7 +197,8 @@ const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
           ? `unchanged from ${previousLabel}`
           : `${delta.direction} ${numberText(Math.abs(delta.value))}${spokenUnit ? ` ${spokenUnit}` : ""} from ${previousLabel}`
         : undefined,
-      rangeText: rangeText ? `${(range?.label ?? "Reference").toLowerCase()} ${rangeMin ?? "any"} to ${rangeMax ?? "any"}` : undefined,
+      // A one-sided range is spoken as one bound. "4 to any" would name a limit the product never gave.
+      rangeText: rangeText ? `${(range?.label ?? "Reference").toLowerCase()} ${spokenRange}` : undefined,
       ageText: hasTimestamp && !unsupported ? describeReadingAge(timestamp, { now }) || undefined : undefined,
     });
 

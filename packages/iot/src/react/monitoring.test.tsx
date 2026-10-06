@@ -205,6 +205,18 @@ describe("TelemetryMetric, generic readings (M3)", () => {
     expect(container.querySelector("[data-reading-sentence]")).toHaveTextContent("Glucose 9.1 millimoles per litre, reference 4.0 to 7.0, measured 2 minutes ago");
   });
 
+  it("speaks a one-sided range as one bound, never inventing the other (#314 review)", () => {
+    const lower = render(<TelemetryMetric label="Pressure" value={3.2} unit="bar" range={{ min: 2 }} />);
+    expect(lower.container.querySelector("[data-range]")).toHaveTextContent("Reference ≥ 2 bar");
+    expect(lower.container.querySelector("[data-reading-sentence]")).toHaveTextContent("reference at least 2");
+    expect(lower.container.querySelector("[data-reading-sentence]")).not.toHaveTextContent("any");
+
+    const upper = render(<TelemetryMetric label="Noise" value={48} unit="dB" range={{ max: 70, label: "Limit" }} />);
+    expect(upper.container.querySelector("[data-range]")).toHaveTextContent("Limit ≤ 70 dB");
+    expect(upper.container.querySelector("[data-reading-sentence]")).toHaveTextContent("limit at most 70");
+    expect(upper.container.querySelector("[data-reading-sentence]")).not.toHaveTextContent("any");
+  });
+
   it("uses the product's severity and status words over thresholds", () => {
     const { container } = render(<TelemetryMetric label="Vibration" value={7.2} unit="mm/s" severity="warning" statusLabel="Above service limit" />);
     expect(container).toHaveTextContent("Above service limit");
