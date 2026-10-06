@@ -722,9 +722,10 @@ describe("focus ring visibility", () => {
   });
 
   it("reports a ring-ring control the user made invisible by pinning `ring` apart from `focus`", () => {
-    // `focus` stays the readable brand ring, so every `focus` pair passes; Checkbox, Radio, Switch, Tabs and
-    // Badge draw `ring`, and a white ring on a white page is invisible.
-    const rows = contrastOf(theme({ manualOverrides: { ring: "#fafafa" } }).light);
+    // Pinning `ring` alone moves `focus` with it (the role-default rule), so both are pinned here: `focus` stays
+    // the readable brand ring and every `focus` pair passes, while Checkbox, Radio, Switch, Tabs and Badge draw
+    // `ring`, and a near-white ring on a white page is invisible.
+    const rows = contrastOf(theme({ manualOverrides: { focus: "#1d4ed8", ring: "#fafafa" } }).light);
     expect(rows.filter((r) => r.pair[1] === "focus").every((r) => r.pass)).toBe(true);
     const ring = rows.find((r) => r.pair[0] === "background" && r.pair[1] === "ring")!;
     expect(ring.min).toBe(3);

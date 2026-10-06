@@ -343,7 +343,7 @@ describe("focus ring contrast", () => {
     await openAdvanced(user);
 
     await user.click(within(sidebar()).getByLabelText("All overrides, as text"));
-    await user.paste("ring,#fafafa");
+    await user.paste("focus,#1d4ed8\nring,#fafafa");
 
     const failing = within(sidebar()).getAllByText("Fail").map((el) => el.closest("div")!.textContent ?? "");
     expect(failing.some((row) => /Background.*ring/i.test(row) && /needs 3:1/.test(row))).toBe(true);

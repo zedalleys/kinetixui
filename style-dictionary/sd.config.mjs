@@ -1,5 +1,5 @@
 /**
- * Style Dictionary v4 — KinetixUI cross-platform token engine (config factory).
+ * Style Dictionary — KinetixUI cross-platform token engine (config factory).
  *
  * Multi-theme is handled the idiomatic v4 way: one build run per theme, each
  * with its own source set, so light and dark never collide on the same token
@@ -81,7 +81,7 @@ const isSimpleForCss = (t) => t.$type !== 'shadow' && t.$type !== 'typography';
 
 /**
  * @param {'light'|'dark'} theme
- * @returns full Style Dictionary v4 config for one theme
+ * @returns full Style Dictionary config for one theme
  */
 export function getConfig(theme) {
   const light = theme === 'light';

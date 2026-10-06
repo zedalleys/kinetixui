@@ -1,5 +1,5 @@
 /**
- * Custom Style Dictionary v4 hooks (transforms) shared by all platforms.
+ * Custom Style Dictionary hooks (transforms) shared by all platforms.
  * Registered on the StyleDictionary class in sd.config.mjs before build.
  */
 
@@ -115,7 +115,11 @@ function hexToHslChannels(hex) {
     }
     hue /= 6;
   }
-  return `${Math.round(hue * 360)} ${Math.round(sat * 100)}% ${Math.round(l * 100)}%`;
+  const channels = `${Math.round(hue * 360)} ${Math.round(sat * 100)}% ${Math.round(l * 100)}%`;
+  // An 8-digit hex carries its own alpha (the `scrim` role): `0 0% 0% / 0.4`, which `hsl(var(--scrim))`
+  // reads as one colour. Such a role is mapped without Tailwind's `<alpha-value>` — the alpha is the role.
+  const a = h.length === 8 ? Number((parseInt(h.slice(6, 8), 16) / 255).toFixed(2)) : 1;
+  return a === 1 ? channels : `${channels} / ${a}`;
 }
 
 export const hslChannels = {
@@ -171,11 +175,18 @@ function typographyToCss(v) {
  * theme, so the default rendering is unchanged and the two cannot drift. The alpha of each layer is read
  * from the source hex (`#1d4ed833` -> 0.2), so the halo keeps its per-theme weight.
  *
- * The status rings (focus-destructive / -success / -warning) stay baked: their light source colours are
- * not all equal to their roles today (focus-destructive is the Figma error red, not `--destructive`), so
- * making them live is a visual change, tracked in docs/audits/COLOR-THEMING-MATURITY-AUDIT.md.
+ * The status rings follow the same way, each to its own status role: `focus-destructive` -> `destructive`,
+ * `focus-success` -> `success`, `focus-warning` -> `warning`. They were the last baked colours in the web
+ * focus system. Their source hexes are the roles' resolved values (the light destructive ring used to be
+ * the Figma error red `#ec5047`, 3.62:1, and is now `--destructive` `#c60a0a`, 6.09:1, the same colour the
+ * invalid field's border already draws), and `check:contrast` asserts every ring edge equals its role.
  */
-export const LIVE_SHADOW_ROLES = { 'shadow.focus': 'focus' };
+export const LIVE_SHADOW_ROLES = {
+  'shadow.focus': 'focus',
+  'shadow.focus-destructive': 'destructive',
+  'shadow.focus-success': 'success',
+  'shadow.focus-warning': 'warning',
+};
 
 const alphaOf = (hex) => {
   const h = String(hex).replace('#', '');
@@ -342,8 +353,9 @@ function camelize(s) {
 function hexToRgbFloats(hex) {
   let h = String(hex).replace('#', '').trim();
   if (h.length === 3) h = h.split('').map((c) => c + c).join('');
-  if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
-  return [0, 2, 4].map((i) => Number((parseInt(h.slice(i, i + 2), 16) / 255).toFixed(3)));
+  if (!/^[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(h)) return null;
+  // the fourth number is the alpha, 1 for an opaque colour
+  return [0, 2, 4, 6].map((i) => (i === 6 && h.length === 6 ? 1 : Number((parseInt(h.slice(i, i + 2), 16) / 255).toFixed(3))));
 }
 
 /**
@@ -361,8 +373,9 @@ export const swiftUIColorFormat = {
       .map((t) => {
         const rgb = hexToRgbFloats(t.$value ?? t.value);
         if (!rgb) return null;
-        const [r, g, b] = rgb;
-        return `    public static let ${camelize(t.path.at(-1))} = Color(red: ${r}, green: ${g}, blue: ${b})`;
+        const [r, g, b, a] = rgb;
+        const opacity = a === 1 ? '' : `, opacity: ${Number(a.toFixed(2))}`;
+        return `    public static let ${camelize(t.path.at(-1))} = Color(red: ${r}, green: ${g}, blue: ${b}${opacity})`;
       })
       .filter(Boolean)
       .join('\n');
@@ -382,6 +395,7 @@ export const swiftUIColorFormat = {
 function hexToDartColor(hex) {
   let h = String(hex).replace('#', '').trim();
   if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  if (/^[0-9a-fA-F]{8}$/.test(h)) return `Color(0x${h.slice(6, 8).toUpperCase()}${h.slice(0, 6).toUpperCase()})`;
   if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
   return `Color(0xFF${h.toUpperCase()})`;
 }

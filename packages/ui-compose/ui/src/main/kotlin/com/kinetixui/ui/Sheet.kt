@@ -43,6 +43,7 @@ fun KinetixSheet(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         containerColor = colors.background,
+        scrimColor = colors.scrim,
         contentColor = colors.foreground,
         shape = shape,
     ) {

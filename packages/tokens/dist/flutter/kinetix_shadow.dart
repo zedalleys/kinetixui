@@ -29,8 +29,8 @@ class KinetixShadow {
   ];
 
   static const List<BoxShadow> focusDestructive = <BoxShadow>[
-    BoxShadow(color: Color(0xFFEC5047), offset: Offset(0, 0), blurRadius: 0, spreadRadius: 1),
-    BoxShadow(color: Color(0x33EC5047), offset: Offset(0, 0), blurRadius: 0, spreadRadius: 4),
+    BoxShadow(color: Color(0xFFC60A0A), offset: Offset(0, 0), blurRadius: 0, spreadRadius: 1),
+    BoxShadow(color: Color(0x33C60A0A), offset: Offset(0, 0), blurRadius: 0, spreadRadius: 4),
   ];
 
   static const List<BoxShadow> focusSuccess = <BoxShadow>[

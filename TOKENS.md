@@ -12,7 +12,7 @@
    success colours, motion, opacity, z-index and several WCAG-driven overrides
    are repo-owned (see the Origin / notes columns below). Change the contract
    here, not by re-syncing Figma.
-3. **Platform output** — compiled by Style Dictionary v4
+3. **Platform output** — compiled by Style Dictionary
    (`style-dictionary/build.mjs`) to CSS, TypeScript, SwiftUI, Compose and Flutter.
    Never hand-edit.
 
@@ -306,7 +306,7 @@ is added.
 | Part | Token(s) | Notes |
 |---|---|---|
 | Modal surface (dialog, alert dialog, modal, sheet, drawer) | `popover` fill, `popover-foreground` text, full `border` edge, `shadow-xl`, radius `surface` | sheets are square; the drawer rounds only its top corners (`radius-xxl`) |
-| Scrim | `static-black` at 40% light, 60% dark | not `foreground`, which is near-white in dark and would lift the page toward the dialog instead of setting it back |
+| Scrim | the `scrim` role (`color.scrim`): black 40% light, 60% dark; `bg-scrim`, `--scrim`, `scrim` on every native theme | not `foreground`, which is near-white in dark and would lift the page toward the dialog instead of setting it back |
 | Floating surface (popover, hover card) | `popover` fill, full `border` edge, `shadow-lg`, radius `control` | capped to the room the placement leaves (`--kx-available-width/height`), then scrolls inside itself |
 | Tooltip | `action` fill, `action-foreground` text, `text-body-sm`, no shadow | the inverse surface: it labels, it holds no content. A transparent edge becomes its outline under forced colours |
 | Description text inside a surface | `muted-foreground` | at least 4.5:1 against `popover` in both themes (gate) |

@@ -49,7 +49,7 @@ fun KinetixInform(
 ) {
     val colors = KinetixColorScheme.current
     val (container, content) = when (variant) {
-        KinetixInformVariant.Information -> colors.info.copy(alpha = 0.1f) to colors.info
+        KinetixInformVariant.Information -> colors.info.copy(alpha = 0.1f) to colors.onInfoContainer
         KinetixInformVariant.Warning -> colors.warning.copy(alpha = 0.15f) to colors.warning
         KinetixInformVariant.Success -> colors.success.copy(alpha = 0.15f) to colors.success
         KinetixInformVariant.Error -> colors.destructive.copy(alpha = 0.1f) to colors.destructive

@@ -360,11 +360,23 @@ describe("release tag names", () => {
     }
   });
 
+  /**
+   * The manifest version Angular's newest tag has to account for.
+   *
+   * Tags are created by the publish step, so between a Version Packages PR merging and that publish the
+   * manifest is one version ahead of the newest tag — the state the Release workflow's preflight runs
+   * in, with full tags. That window is the only legitimate gap: the manifest may lead the newest tag
+   * (an unpublished version, the same reading as "is not published yet" below), never trail it.
+   */
+  const angularManifestVersion = read("packages/ui-angular/package.json").version;
+  const angularAwaitingPublish = (newest) =>
+    !localTags.has(releaseTagName("@kinetixui/angular", angularManifestVersion)) && semver.gt(angularManifestVersion, newest);
+
   /** Angular versions on its own, and its newest tag is allowed — expected — to differ from core's. */
   it("lets the Angular cohort sit at its own version", { skip: kinetixTags.length === 0 && "shallow checkout: no tags fetched" }, () => {
     const angular = newestVersionOf("@kinetixui/angular");
     if (!angular) return; // not yet released in this checkout
-    assert.equal(angular, read("packages/ui-angular/package.json").version);
+    if (!angularAwaitingPublish(angular)) assert.equal(angular, angularManifestVersion);
     assert.notEqual(angular, newestVersionOf("@kinetixui/cli"), "this assertion is only meaningful while the cohorts differ");
   });
 
@@ -396,6 +408,11 @@ describe("release tag names", () => {
   it("tagged Angular's release once it became publishable", { skip: kinetixTags.length === 0 && "shallow checkout: no tags fetched" }, () => {
     const angular = read("packages/ui-angular/package.json");
     assert.notEqual(angular.private, true, "this assertion assumes Angular is publishable");
+    const newest = newestVersionOf("@kinetixui/angular");
+    assert.ok(newest, "Angular is publishable, so at least one of its releases must have been tagged");
+    // A version the publish step has not reached yet has no tag to find. Anything else does: once the
+    // version is published, or if the manifest ever trails its own newest tag, this is the strict check.
+    if (angularAwaitingPublish(newest)) return;
     assert.ok(
       localTags.has(releaseTagName("@kinetixui/angular", angular.version)),
       `expected ${releaseTagName("@kinetixui/angular", angular.version)} to exist`,
@@ -500,6 +517,13 @@ describe("a release cannot run while changesets are pending", () => {
  * built and verified against, not with its own version string. Bumping the peer to match the
  * package version would quietly reintroduce the lockstep the cohorts exist to remove.
  */
+/** True when the peer range's floor sits on `version`'s own `major.minor` — the range follows the version. */
+function peerMirrorsVersion(peer, version) {
+  const floor = semver.minVersion(peer);
+  const own = semver.parse(version);
+  return floor !== null && own !== null && floor.major === own.major && floor.minor === own.minor;
+}
+
 describe("Angular's token peer is a compatibility range, not a mirror of its own version", () => {
   const angular = read("packages/ui-angular/package.json");
   const tokens = read("packages/tokens/package.json");
@@ -522,9 +546,23 @@ describe("Angular's token peer is a compatibility range, not a mirror of its own
   it("does not mirror Angular's own version", () => {
     if (angular.version === tokens.version) return; // nothing to prove while they coincide
     assert.ok(
-      !peer.includes(angular.version.split(".").slice(0, 2).join(".")),
+      !peerMirrorsVersion(peer, angular.version),
       `the token peer (${peer}) was bumped to follow @kinetixui/angular@${angular.version} rather than the token contract`,
     );
+  });
+
+  /**
+   * What "mirror" means, asked of semver. The earlier form searched the range's text for Angular's
+   * `major.minor`, so `>=0.23.0 <0.25.0` "mirrored" `@kinetixui/angular@0.25.0` through its exclusive
+   * upper bound — a bound that excludes the very version it was accused of following. The policy is
+   * about the floor: a peer whose lowest accepted tokens version is Angular's own `major.minor.0`.
+   */
+  it("judges a mirror by the range's floor, not by its text", () => {
+    assert.equal(peerMirrorsVersion(">=0.23.0 <0.25.0", "0.25.0"), false, "an exclusive upper bound is not a mirror");
+    assert.equal(peerMirrorsVersion(">=0.24.0 <0.25.0", "0.25.0"), false);
+    assert.equal(peerMirrorsVersion("^0.25.0", "0.25.0"), true);
+    assert.equal(peerMirrorsVersion(">=0.25.0 <0.26.0", "0.25.3"), true);
+    assert.equal(peerMirrorsVersion("~0.25.1", "0.25.0"), true, "any floor inside Angular's own minor follows it");
   });
 
   /**

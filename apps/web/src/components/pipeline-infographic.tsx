@@ -9,7 +9,7 @@ import { componentTotal } from "@/lib/platform-support";
  */
 const STAGES = [
   { n: "01", label: "DTCG source", sub: "tokens/**" },
-  { n: "02", label: "Style Dictionary v4", sub: "pnpm build:tokens" },
+  { n: "02", label: "Style Dictionary", sub: "pnpm build:tokens" },
   { n: "03", label: "Platform output", sub: "dist/{web,ios,android,flutter}" },
 ] as const;
 
@@ -46,7 +46,7 @@ export function PipelineInfographic() {
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
         <span>one source</span>
         <span className="text-foreground">
-          {componentTotal} components · {PLATFORMS.length} platform libraries · light + dark
+          {componentTotal} catalogue entries · {PLATFORMS.length} platform libraries · light + dark
         </span>
       </div>
     </div>

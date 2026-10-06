@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import manifest from "../../../../components.manifest.json";
 import parity from "../../../../platform-parity.json";
@@ -483,5 +483,106 @@ describe("global metadata cannot drift back to retired positioning", () => {
     expect("One design language. 4 platforms. Claims you can check.".match(/\d+/g)).not.toEqual([
       String(PLATFORMS.length),
     ]);
+  });
+});
+
+/** Every site page and component, flattened so a phrase wrapped across lines is still one phrase. */
+function siteSources(): Record<string, string> {
+  const out: Record<string, string> = {};
+  const walk = (dir: string, keep: (name: string) => boolean) => {
+    for (const name of readdirSync(dir)) {
+      const full = `${dir}/${name}`;
+      if (statSync(full).isDirectory()) walk(full, keep);
+      else if (keep(name)) out[full] = readFileSync(full, "utf8").replace(/\s+/g, " ");
+    }
+  };
+  walk("src/app", (n) => /\.(mdx|tsx)$/.test(n));
+  walk("src/components", (n) => n.endsWith(".tsx") && !n.includes(".test."));
+  out["README.md"] = readme.replace(/\s+/g, " ");
+  return out;
+}
+const SITE = siteSources();
+const hitsOf = (re: RegExp) =>
+  Object.entries(SITE).flatMap(([f, text]) => {
+    const m = re.exec(text);
+    return m ? [`${f}: …${text.slice(Math.max(0, m.index - 40), m.index + m[0].length + 20)}…`] : [];
+  });
+
+/**
+ * CLAIMS.md B2: the catalogue is "98 catalogue entries — 97 components and one documented recipe", and "98
+ * components" is a forbidden interpretation. The number is never typed — it renders from `componentTotal` (or the
+ * gallery's own item count, or `<ComponentTotalInline />`) — so the guard reads the expression the number comes from
+ * and the noun printed after it. The recipe count is read from the manifest, so the day the catalogue has no recipe
+ * the total really is a component count and this rule switches itself off.
+ */
+describe("the catalogue total is not called a component count", () => {
+  const recipeCount = Object.values(manifest.components as Record<string, { platformNote?: string }>).filter((c) =>
+    /not a component/i.test(c.platformNote ?? ""),
+  ).length;
+  const total = Object.keys(manifest.components).length;
+  const TOTAL_THEN_COMPONENTS = [
+    // `{componentTotal} components`, `${ITEMS.length} components`, `{componentDocs.length} React components`
+    /\{(?:componentTotal|ITEMS\.length|componentDocs\.length|ALL_SLUGS\.length)\}\s+(?:React\s+|KinetixUI\s+)?components\b/,
+    // "{full}/{componentTotal} components", "{n} of {componentTotal} components"
+    /(?:\/|\bof\s+)\$?\{componentTotal\}\s+components\b/,
+    // `<ComponentTotalInline /> React components`
+    /<ComponentTotalInline\s*\/>\s+(?:React\s+|KinetixUI\s+)?components\b/,
+    // `{ n: componentTotal, label: "React components" }`
+    /n:\s*componentTotal,\s*label:\s*"[^"]*\bcomponents"/,
+  ];
+
+  it("has a documented recipe in the manifest, so the total is not a component count", () => {
+    expect(recipeCount).toBeGreaterThan(0);
+  });
+
+  it.each(TOTAL_THEN_COMPONENTS.map((re) => [re.source, re] as const))("finds no %s", (_name, re) => {
+    if (recipeCount === 0) return;
+    expect(hitsOf(re)).toEqual([]);
+  });
+
+  it(`never types the total followed by "components"`, () => {
+    if (recipeCount === 0) return;
+    expect(hitsOf(new RegExp(`\\b${total}\\s+(?:React\\s+)?components\\b`))).toEqual([]);
+  });
+
+  it("says what the total is where the gallery introduces it", () => {
+    const gallery = SITE["src/components/component-gallery.tsx"]!;
+    expect(gallery).toMatch(/\{componentTotal\} catalogue entries — \{componentCount\} components and \{recipes\.length\} documented/);
+  });
+
+  it("would catch the wording that shipped, so none of the rules above is vacuous", () => {
+    const shipped = [
+      "{ITEMS.length} components across {CATEGORY_ORDER.length} categories",
+      "{fullCoverageCount}/{componentTotal} components on all {catalogPlatformCount} platforms",
+      "<ComponentTotalInline /> React components, on the same token contract",
+      '{ n: componentTotal, label: "React components", sub: `x` }',
+    ];
+    for (const s of shipped) expect(TOTAL_THEN_COMPONENTS.some((re) => re.test(s)), s).toBe(true);
+  });
+});
+
+/**
+ * Components copied by the CLI arrive with the npm packages they import (Radix, cva, recharts…), so "no runtime
+ * dependency" on its own is false. The accurate claim, which the homepage already made lower down, is "no runtime
+ * dependency you cannot patch". `@kinetixui/iot` is the one place an unqualified "no runtime dependencies" is a fact
+ * about a package, and it stays allowed only while that package's manifest really declares none.
+ */
+describe("dependency claims are qualified", () => {
+  const unqualified = /\bno runtime dependenc(?:y|ies)\b(?!\s+you\s+cannot\s+patch)|\bnothing here is a runtime dependency\b/i;
+  const iot = JSON.parse(read("packages/iot/package.json")) as { dependencies?: Record<string, string> };
+
+  it("never says components carry no runtime dependency without saying which kind", () => {
+    const hits = hitsOf(unqualified).filter((h) => !h.startsWith("src/app/docs/iot/page.mdx"));
+    expect(hits).toEqual([]);
+  });
+
+  it("allows the IoT page's unqualified claim only because the IoT package declares no dependencies", () => {
+    expect(Object.keys(iot.dependencies ?? {})).toEqual([]);
+  });
+
+  it("would catch the wording that shipped, so the rule above is not vacuous", () => {
+    expect("Components install through the kinetixui CLI and land in your repo. No runtime dependency, no lock-in").toMatch(unqualified);
+    expect("so it adds no runtime dependency and no version lock").toMatch(unqualified);
+    expect("so what lands is yours to edit — no runtime dependency you cannot patch.").not.toMatch(unqualified);
   });
 });

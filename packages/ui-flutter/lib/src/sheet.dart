@@ -32,7 +32,7 @@ class KinetixSheet extends StatelessWidget {
         Positioned.fill(
           child: GestureDetector(
             onTap: onDismiss,
-            child: const ColoredBox(color: Color(0x66000000)),
+            child: ColoredBox(color: c.scrim),
           ),
         ),
         Align(

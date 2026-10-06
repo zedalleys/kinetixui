@@ -35,7 +35,7 @@ class KinetixDialog extends StatelessWidget {
         Positioned.fill(
           child: GestureDetector(
             onTap: dismissible ? onDismiss : null,
-            child: const ColoredBox(color: Color(0x66000000)),
+            child: ColoredBox(color: c.scrim),
           ),
         ),
         Center(

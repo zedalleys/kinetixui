@@ -41,7 +41,7 @@ class KinetixInform extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
     final (Color container, Color content) = switch (variant) {
-      KinetixInformVariant.information => (c.info.withValues(alpha: 0.1), c.info),
+      KinetixInformVariant.information => (c.info.withValues(alpha: 0.1), c.onInfoContainer),
       KinetixInformVariant.warning => (c.warning.withValues(alpha: 0.15), c.warning),
       KinetixInformVariant.success => (c.success.withValues(alpha: 0.15), c.success),
       KinetixInformVariant.error => (c.destructive.withValues(alpha: 0.1), c.destructive),

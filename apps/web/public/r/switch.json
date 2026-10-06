@@ -2,7 +2,7 @@
   "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "switch",
   "title": "Switch",
-  "description": "Generated 1:1 from the KinetixUI design source, node 54855:13984.",
+  "description": "Reconciled 1:1 with the KinetixUI design source, node 54855:13984.",
   "dependencies": [
     "@radix-ui/react-switch",
     "clsx",

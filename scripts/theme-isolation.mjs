@@ -25,6 +25,7 @@
  *   invalid      a malformed hex is marked invalid and leaves the preview's colours as they were
  *   reset        Reset puts the preview back on the shipped tokens and drops `?preset=` from the URL
  *   navigation   a design does not follow the reader to another page
+ *   nav menu     a keyboard-focused NavigationMenu trigger draws the `ring` role at 3:1 (audit P1-5)
  *
  * Every assertion compares two renderings in the same run, so fonts and antialiasing do not enter into it.
  */
@@ -203,6 +204,32 @@ try {
     if (panel) {
       const leaked = tokens.filter((n) => panel[n] !== lightValues[n]);
       check(leaked.length === 0, "leak-in: the Theming page's light panel resolves light tokens", leaked.map((n) => `${n} "${panel[n]}"`).join("; "));
+    }
+    // ── NavigationMenu keyboard focus (audit P1-5) ───────────────────────────
+    // The trigger's only focus cue was `bg-accent`, 1.08:1 on the page in light and 1.24:1 in dark. It now draws
+    // the `ring` role like every other ring-ring control; measured, on the shipped theme and on a green one.
+    await page.goto(`${base}/docs/components/navigation-menu`, { waitUntil: "networkidle" });
+    for (const themed of [false, true]) {
+      if (themed) await page.addStyleTag({ content: ":root,.dark{--ring:143 82% 35%}" });
+      // The Radix trigger, by its trigger style (the Tabs triggers on the same page share the id pattern).
+      const trigger = page.locator('button.group.w-max[data-state]').first();
+      if ((await trigger.count()) === 0) { check(false, "navigation menu: a trigger exists on its docs page"); break; }
+      // Reach it the way a keyboard user does, so :focus-visible applies (a scripted .focus() may not).
+      await trigger.focus();
+      await page.keyboard.press("Shift+Tab");
+      await page.keyboard.press("Tab");
+      await page.waitForTimeout(500);
+      const nav = await page.evaluate(() => {
+        const t = document.activeElement;
+        if (!t?.matches('button.group.w-max[data-state]')) return null;
+        return { shadow: getComputedStyle(t).boxShadow, ring: getComputedStyle(document.documentElement).getPropertyValue("--ring").trim(), page: getComputedStyle(document.body).backgroundColor };
+      });
+      if (!nav) { check(false, "navigation menu: keyboard focus lands on the trigger"); break; }
+      const edge = rgbOf(nav.shadow.split(/,(?![^(]*\))/).map((x) => x.trim()).find((x) => /0px 0px 0px 2px$/.test(x)) ?? "");
+      const label = `navigation menu${themed ? " (green ring)" : ""}`;
+      check(near(edge, hslChannelsToRgb(nav.ring)), `${label}: keyboard focus draws the ring role`, `ring ${edge} vs --ring ${hslChannelsToRgb(nav.ring)}`);
+      const nr = ratio(edge, rgbOf(nav.page));
+      check(nr >= 3, `${label}: the focus ring clears 3:1 on the page`, `${nr.toFixed(2)}:1`);
     }
     await context.close();
   }

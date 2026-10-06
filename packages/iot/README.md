@@ -119,7 +119,10 @@ number to keep in step. A documented prerequisite says the same thing without pr
 resolvable.
 
 So the prerequisite is stated instead of depended on. For the React primitives to look right, an app
-needs the KinetixUI token stylesheet loaded and this package inside its Tailwind `content`:
+needs the **KinetixUI token stylesheet, 0.24.0 or later**, loaded, and this package inside its Tailwind
+`content`. 0.24.0 is the floor because the device, group and activity cards set secondary text in
+`text-muted-on-container`, a role earlier token versions do not define; on them that text falls back to
+the inherited colour instead of the tuned one:
 
 ```js
 // tailwind.config.js

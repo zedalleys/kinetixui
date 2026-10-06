@@ -6,7 +6,7 @@ intent: awareness → evaluation
 channels: [dev.to, kinetixui site later]
 campaign: kx_p2_b_token_boundary
 cta: /docs/tokens
-status: drafted — full text, ready for a final numbers pass
+status: published on dev.to — 2026-10-06
 search_intent: "design tokens flutter", "design tokens swiftui", "design tokens jetpack compose", "dtcg design tokens"
 derived_assets: [LI-005, X-004, X-010, VIS-003]
 ---

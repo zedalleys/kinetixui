@@ -3,7 +3,7 @@
  *
  * ## The most complete native target so far
  *
- * `packages/ui-flutter`'s `KinetixColors` carries all 35 semantic colours plus `chart`, including
+ * `packages/ui-flutter`'s `KinetixColors` carries all 37 semantic colours plus `chart`, including
  * `input`, `ring` and `tertiaryForeground` — the three the Compose port lacks. So this exporter has no
  * unmapped-role section to declare: every colour the resolved theme produces has a field to land in, and
  * the header says nothing about roles that cannot travel, because none cannot.
@@ -153,6 +153,8 @@ export const FLUTTER_COLOR_FIELDS: readonly (readonly [field: string, token: str
   ["infoForeground", "info-foreground"],
   ["popover", "popover"],
   ["popoverForeground", "popover-foreground"],
+  ["onInfoContainer", "on-info-container"],
+  ["scrim", "scrim"],
 ] as const;
 
 /** The chart stops `KinetixColors.chart` carries, in series order. */
@@ -231,9 +233,9 @@ function header(symbol: string, theme: ResolvedCreateTheme): string {
     "// They apply on the web. That is the only thing this file does not carry.",
     "//",
     "// A field written as `KinetixColors.light.…` is one this design did not change, and it keeps",
-    "// following the library. Six of them — tertiary, tertiaryForeground, info, infoForeground,",
-    "// successForeground and warningForeground — are always references, because Create does not model",
-    "// those tokens.",
+    "// following the library. Eight of them — tertiary, tertiaryForeground, info, infoForeground,",
+    "// onInfoContainer, scrim, successForeground and warningForeground — are always references, because",
+    "// Create does not model those tokens.",
     "//",
     "// These are `static final` rather than `static const`: Dart's constant expressions do not include",
     "// instance field access, so a `static const` could not reference the shipped palette. The theme is",

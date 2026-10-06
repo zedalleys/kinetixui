@@ -77,6 +77,17 @@ jobs:
       - name: SwiftUI radius/elevation token guardrail
         run: pnpm check:swiftui-tokens
 
+      # Reusable component source reads colour from semantic roles: no palette utilities, no primitives,
+      # no raw hex/rgb/hsl, on every platform. A reviewed allowlist in the script carries the exceptions.
+      - name: Component colour-contract guardrail (semantic roles only)
+        run: pnpm check:component-colors
+
+      # Compose's KinetixColors is a data class, so its PARAMETER ORDER is public API: positional callers
+      # and `componentN()` both read it. The snapshot makes an inserted or reordered role a reviewable
+      # diff, and the script refuses a required parameter declared after a defaulted one.
+      - name: Compose colour API snapshot is current
+        run: pnpm check:compose-api
+
       - name: Typography alias guardrail
         run: pnpm check:typography
 

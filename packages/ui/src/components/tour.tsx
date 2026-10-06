@@ -147,9 +147,9 @@ const Tour: React.FC<TourProps> = ({
         left: rect.left - SPOTLIGHT_PADDING,
         width: rect.width + SPOTLIGHT_PADDING * 2,
         height: rect.height + SPOTLIGHT_PADDING * 2,
-        boxShadow: "0 0 0 9999px rgb(0 0 0 / 0.6)",
+        boxShadow: "0 0 0 9999px hsl(var(--scrim))",
       }
-    : { inset: 0, background: "rgb(0 0 0 / 0.6)" };
+    : { inset: 0, background: "hsl(var(--scrim))" };
 
   const cardStyle: React.CSSProperties = rect
     ? {
