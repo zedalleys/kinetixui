@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -666,13 +667,27 @@ describe("the IoT module is described as what it is", () => {
       "`@kinetixui/iot`\n  release";
     expect(PRE_RELEASE.filter((marker) => marker.test(shipped)).length, "the original callout must still be caught").toBe(4);
 
-    if (pendingIot.length > 0) return; // a release is pending; marking its sections is honest
+    // The Version Packages PR consumes the changeset and bumps the package before anything is published, so an
+    // empty queue alone would fail that PR for documentation that is still honestly unreleased. The release job
+    // tags each version as it publishes, so a package version with no tag yet is not on npm either. Tags are only
+    // visible in a full clone (CI checks out with `fetch-depth: 0`); a shallow local clone sees none and falls back
+    // to the changeset queue alone.
+    const iotVersion = JSON.parse(readFileSync(`${root}/packages/iot/package.json`, "utf8")).version as string;
+    let tags: string[] = [];
+    try {
+      tags = execFileSync("git", ["tag", "-l", "@kinetixui/*"], { cwd: root, encoding: "utf8" }).split("\n").filter(Boolean);
+    } catch {
+      /* not a git checkout: the changeset queue is the only evidence */
+    }
+    const versionUnpublished = tags.length > 0 && !tags.includes(`@kinetixui/iot@${iotVersion}`);
+
+    if (pendingIot.length > 0 || versionUnpublished) return; // a release is pending; marking its sections is honest
     for (const [name, text] of Object.entries(IOT_SURFACES)) {
       for (const marker of PRE_RELEASE) {
         expect(
           claimsOnly(text).match(marker)?.[0],
-          `${name} marks something as not yet released, but no changeset for @kinetixui/iot is pending, so npm ` +
-            `already serves this source. Remove the marker, or add the changeset that makes it true.`,
+          `${name} marks something as not yet released, but no changeset for @kinetixui/iot is pending and its version is ` +
+            `already tagged, so npm serves this source. Remove the marker, or add the changeset that makes it true.`,
         ).toBeUndefined();
       }
     }
