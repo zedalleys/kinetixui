@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * Input — generated from Figma "KinetixUI" › UI Components ›
+ * Input — reconciled 1:1 with the design source, Figma "KinetixUI" › UI Components ›
  * 01. Form Inputs › Input (node 54855:13836).
  *
  * Figma component property: state = Default | Focus | Error | Disabled.

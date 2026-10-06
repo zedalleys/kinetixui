@@ -124,7 +124,7 @@ export function CrossPlatformFlagship() {
 
       <p className="mt-4 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
         <Link href="/docs/platforms" className="underline-offset-4 hover:text-foreground hover:underline">
-          {fullCoverageCount}/{componentTotal} components on all {catalogPlatformCount} platforms · {documentedExceptionCount} documented
+          {fullCoverageCount}/{componentTotal} catalogue entries on all {catalogPlatformCount} platforms · {documentedExceptionCount} documented
           exceptions
         </Link>
       </p>

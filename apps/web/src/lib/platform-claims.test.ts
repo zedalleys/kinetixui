@@ -91,6 +91,22 @@ function proseFiles(): string[] {
 
 const NUMBER_WORDS = "one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|sixty-nine|seventy";
 
+const patterns: [string, RegExp][] = [
+  // "90 Kinetix* composables", "All 89", "97 components", "72 React components"
+  ["a number followed by components/composables/views/widgets", /\b\d{2,3}\b(?: `?Kinetix\*`?| React| native| [A-Za-z]+)? (?:components?|composables|views|widgets)\b/],
+  ["'All <n>'", /\bAll \d{2,3}\b/],
+  ["a count of non-ports", new RegExp(`\\b(?:${NUMBER_WORDS}) (?:standing |deliberate )?non-ports?\\b`, "i")],
+  ["'bar <n> deliberate non-ports'", new RegExp(`\\bbar (?:${NUMBER_WORDS})\\b`, "i")],
+  ["'<n> of <m>' components/files", /\b\d{2,3} of \d{2,3}\b[^.]{0,40}(?:components|files)/],
+  ["an approximate '~<n> components'", /~\d{2,3}\b[^.]{0,20}(?:components|widgets|views)/],
+  // "All four platforms are at parity" is not literally true: Compose has no Chart and several ports are scoped down
+  ["a blanket parity claim", /\b(?:are|is) at parity\b/i],
+  // "React, SwiftUI, Compose and Flutter snippets ship with every one" — not every catalogue entry is native
+  ["snippets promised for every entry", /\bsnippets?\b[^.]{0,80}\b(?:ship|come|are included|included)\s+with\s+(?:every|each|all)\b/i],
+  ["'parity snippets for all of them'", /\bsnippets?\s+(?:for|with)\s+(?:all|every)\b/i],
+  ["'ships on every platform'", /\b(?:every|each) (?:one|component|entry)\b[^.]{0,40}\b(?:on|across) (?:all|every) (?:four|five|\d) platforms\b/i],
+];
+
 describe("no hand-typed coverage counts", () => {
   const files = proseFiles();
 
@@ -100,18 +116,6 @@ describe("no hand-typed coverage counts", () => {
       expect(files).toContain(f);
     }
   });
-
-  const patterns: [string, RegExp][] = [
-    // "90 Kinetix* composables", "All 89", "97 components", "72 React components"
-    ["a number followed by components/composables/views/widgets", /\b\d{2,3}\b(?: `?Kinetix\*`?| React| native| [A-Za-z]+)? (?:components?|composables|views|widgets)\b/],
-    ["'All <n>'", /\bAll \d{2,3}\b/],
-    ["a count of non-ports", new RegExp(`\\b(?:${NUMBER_WORDS}) (?:standing |deliberate )?non-ports?\\b`, "i")],
-    ["'bar <n> deliberate non-ports'", new RegExp(`\\bbar (?:${NUMBER_WORDS})\\b`, "i")],
-    ["'<n> of <m>' components/files", /\b\d{2,3} of \d{2,3}\b[^.]{0,40}(?:components|files)/],
-    ["an approximate '~<n> components'", /~\d{2,3}\b[^.]{0,20}(?:components|widgets|views)/],
-    // "All four platforms are at parity" is not literally true: Compose has no Chart and several ports are scoped down
-    ["a blanket parity claim", /\b(?:are|is) at parity\b/i],
-  ];
 
   // Match against whitespace-collapsed text so a claim wrapped across lines ("[seven standing\nnon-ports]") is still seen.
   const flat = (f: string) => read(f).replace(/\s+/g, " ");
@@ -123,5 +127,34 @@ describe("no hand-typed coverage counts", () => {
       return m ? [`${f}: …${text.slice(Math.max(0, m.index - 30), m.index + m[0].length + 30)}…`] : [];
     });
     expect(hits).toEqual([]);
+  });
+});
+
+/**
+ * The gallery used to say React, SwiftUI, Compose and Flutter snippets "ship with every one" of its entries. The
+ * manifest says otherwise, so the wording is now a derived count — and this proves the count is needed at all: some
+ * entries are on no native platform (the standing non-ports), so "every one" would be false today.
+ */
+describe("per-entry platform coverage is stated, not assumed", () => {
+  it("has entries that are not on every catalogue-complete platform, which is why no surface may say 'every one'", () => {
+    expect(gaps.length).toBeGreaterThan(0);
+    expect(nonPorts.length).toBeGreaterThan(0);
+  });
+
+  it("ships React source for every entry, which is what the gallery does still claim for all of them", () => {
+    for (const slug of slugs) expect(components[slug]!.platforms, slug).toContain("React");
+  });
+
+  it("states the native share in the gallery from the derived count", () => {
+    const gallery = read("apps/web/src/components/component-gallery.tsx").replace(/\s+/g, " ");
+    expect(gallery).toMatch(/\{fullCoverageCount\} of \{componentTotal\} also have \{NATIVE_SENTENCE\} implementations/);
+    expect(gallery).not.toMatch(/RE SW JC FL/); // the tag row is derived from the platform list, Angular included
+  });
+
+  it("would catch the sentences that shipped, so the patterns above are not vacuous", () => {
+    const [, snippetsEvery] = patterns.find(([n]) => n === "snippets promised for every entry")!;
+    const [, parityAll] = patterns.find(([n]) => n === "'parity snippets for all of them'")!;
+    expect("React, SwiftUI, Jetpack Compose and Flutter snippets ship with every one; the tags").toMatch(snippetsEvery);
+    expect("stay React-only, with parity snippets for all of them.").toMatch(parityAll);
   });
 });

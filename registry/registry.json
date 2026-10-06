@@ -200,7 +200,7 @@
       "name": "badge",
       "type": "registry:ui",
       "title": "Badge",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13995.",
+      "description": "Reconciled 1:1 with the KinetixUI design source, node 54855:13995.",
       "dependencies": [
         "@radix-ui/react-slot",
         "class-variance-authority",
@@ -306,7 +306,7 @@
       "name": "button",
       "type": "registry:ui",
       "title": "Button",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54863:351.",
+      "description": "Reconciled 1:1 with the KinetixUI design source, node 54863:351.",
       "dependencies": [
         "@radix-ui/react-slot",
         "class-variance-authority",
@@ -441,7 +441,7 @@
       "name": "checkbox",
       "type": "registry:ui",
       "title": "Checkbox",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54863:483.",
+      "description": "Reconciled 1:1 with the KinetixUI design source, node 54863:483.",
       "dependencies": [
         "@radix-ui/react-checkbox",
         "clsx",
@@ -1187,7 +1187,7 @@
       "name": "input",
       "type": "registry:ui",
       "title": "Input",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13836.",
+      "description": "Reconciled 1:1 with the KinetixUI design source, node 54855:13836.",
       "dependencies": [
         "class-variance-authority",
         "clsx",
@@ -1478,7 +1478,7 @@
       "name": "modal",
       "type": "registry:ui",
       "title": "Modal",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54857:1322.",
+      "description": "Reconciled 1:1 with the KinetixUI design source, node 54857:1322.",
       "dependencies": [
         "@radix-ui/react-dialog",
         "clsx",
@@ -1828,7 +1828,7 @@
       "name": "radio-group",
       "type": "registry:ui",
       "title": "Radio Group",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54863:536.",
+      "description": "Reconciled 1:1 with the KinetixUI design source, node 54863:536.",
       "dependencies": [
         "@radix-ui/react-radio-group",
         "clsx",
@@ -1961,7 +1961,7 @@
       "name": "select",
       "type": "registry:ui",
       "title": "Select",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13882.",
+      "description": "Reconciled 1:1 with the KinetixUI design source, node 54855:13882.",
       "dependencies": [
         "@radix-ui/react-select",
         "clsx",
@@ -2200,7 +2200,7 @@
       "name": "switch",
       "type": "registry:ui",
       "title": "Switch",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13984.",
+      "description": "Reconciled 1:1 with the KinetixUI design source, node 54855:13984.",
       "dependencies": [
         "@radix-ui/react-switch",
         "clsx",
@@ -2327,7 +2327,7 @@
       "name": "tag",
       "type": "registry:ui",
       "title": "Tag",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54855:14021.",
+      "description": "Reconciled 1:1 with the KinetixUI design source, node 54855:14021.",
       "dependencies": [
         "@radix-ui/react-slot",
         "class-variance-authority",
@@ -2355,7 +2355,7 @@
       "name": "textarea",
       "type": "registry:ui",
       "title": "Textarea",
-      "description": "Generated 1:1 from the KinetixUI design source, node 54855:13857.",
+      "description": "Reconciled 1:1 with the KinetixUI design source, node 54855:13857.",
       "dependencies": [
         "class-variance-authority",
         "clsx",

@@ -17,7 +17,16 @@ import {
 import { cn } from "@/lib/utils";
 import { componentDocs } from "@/lib/site";
 import { CATEGORY_ORDER, PRIMITIVE, categoryOf } from "@/lib/component-registry";
-import { NATIVE_PLATFORMS, isOnPlatform, countOnPlatform } from "@/lib/platform-parity";
+import {
+  NATIVE_PLATFORMS,
+  PLATFORMS,
+  PLATFORM_ABBR,
+  PLATFORM_DEFINITIONS,
+  isOnPlatform,
+  countOnPlatform,
+} from "@/lib/platform-parity";
+import { componentCount, componentTotal, recipes } from "@/lib/platform-support";
+import { fullCoverageCount } from "@/lib/project-stats";
 import { STATUS } from "@/lib/component-status";
 import { PlatformBadges } from "@/components/platform-badges";
 import { SectionHead } from "@/components/section-head";
@@ -73,6 +82,16 @@ const ALL_SLUGS = ITEMS.map((it) => it.slug);
 const PLATFORM_COUNT: Record<string, number> = Object.fromEntries(
   NATIVE_PLATFORMS.map((p) => [p, countOnPlatform(ALL_SLUGS, p)]),
 );
+
+/**
+ * Coverage wording for the intro, read from the generated platform data rather than typed: which native libraries
+ * exist, and the tag row exactly as the cards draw it. Not every entry is on every platform, so the intro says how
+ * many are (`fullCoverageCount`) instead of promising snippets "with every one".
+ */
+const NATIVE_LABELS = NATIVE_PLATFORMS.map((p) => PLATFORM_DEFINITIONS[p].label);
+const NATIVE_SENTENCE =
+  NATIVE_LABELS.length > 1 ? `${NATIVE_LABELS.slice(0, -1).join(", ")} and ${NATIVE_LABELS.at(-1)}` : NATIVE_LABELS.join("");
+const ABBR_ROW = PLATFORMS.map((p) => PLATFORM_ABBR[p]).join(" ");
 
 function Thumbnail({ item }: { item: Item }) {
   // A hand-built static mock wins over everything — portal components (dialog,
@@ -318,11 +337,13 @@ export function ComponentGallery() {
   return (
     <>
       <p className="mt-2 max-w-2xl text-muted-foreground">
-        {ITEMS.length} components across {CATEGORY_ORDER.length} categories — built from Figma,
-        styled against the token contract, distributed through the kinetixui registry. React,
-        SwiftUI, Jetpack Compose and Flutter snippets ship with every one; the{" "}
-        <span className="font-mono text-[11px] uppercase tracking-[0.1em]">RE SW JC FL</span> tags
-        on each card mark which native libraries carry it today.
+        {componentTotal} catalogue entries — {componentCount} components and {recipes.length} documented{" "}
+        {recipes.length === 1 ? "recipe" : "recipes"} — across {CATEGORY_ORDER.length} categories, built from Figma,
+        styled against the token contract, distributed through the kinetixui registry. Each one ships React source;{" "}
+        {fullCoverageCount} of {componentTotal} also have {NATIVE_SENTENCE} implementations, and their snippets
+        appear on the component page. The{" "}
+        <span className="font-mono text-[11px] uppercase tracking-[0.1em]">{ABBR_ROW}</span> tags on each card mark
+        which libraries carry it today.
       </p>
 
       {/* filter bar */}
@@ -434,8 +455,8 @@ export function ComponentGallery() {
 
       <p role="status" aria-live="polite" className="mt-4 font-mono text-[11px] text-muted-foreground">
         {filtered.length === ITEMS.length
-          ? `${ITEMS.length} components`
-          : `${filtered.length} of ${ITEMS.length} components`}
+          ? `${ITEMS.length} entries`
+          : `${filtered.length} of ${ITEMS.length} entries`}
         {activeCat ? ` · ${activeCat}` : ""}
         {activePlatform ? ` · ${activePlatform}` : ""}
         {activeStatus ? ` · ${activeStatus}` : ""}

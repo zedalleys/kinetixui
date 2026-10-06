@@ -51,7 +51,7 @@ export function RegistryTreemap() {
     <ChartContainer
       config={{} satisfies ChartConfig}
       className="mt-5 h-[280px] w-full"
-      label={`The ${componentDocs.length} components by category — Form Inputs and Data Display are the largest groups.`}
+      label={`The ${componentDocs.length} catalogue entries by category — Form Inputs and Data Display are the largest groups.`}
     >
       <Treemap
         data={data}

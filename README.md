@@ -67,7 +67,7 @@ contract import, dark mode — is in [Installation](https://kinetixui.com/docs/i
 
 ## What you get
 
-- **A DTCG token engine.** `tokens/**` → Style Dictionary v4 → CSS custom
+- **A DTCG token engine.** `tokens/**` → Style Dictionary → CSS custom
   properties (light + dark, HSL channels), a typed `tokens` object, and native
   colour + type sets for SwiftUI / Compose / Flutter. One edit re‑skins every
   platform.

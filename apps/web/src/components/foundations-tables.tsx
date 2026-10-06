@@ -214,7 +214,7 @@ export function PlatformSupportTable() {
               </p>
               <span className="text-xs text-muted-foreground">{p.technology}</span>
               <span className="ml-auto text-sm tabular-nums">
-                {p.components} of {componentTotal} components
+                {p.components} of {componentTotal} entries
               </span>
             </div>
             {/* `[&>div]:min-w-0` and `break-words`: these cells are sized by their widest content, which is a

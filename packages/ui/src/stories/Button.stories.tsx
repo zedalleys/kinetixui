@@ -13,7 +13,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Generated from Figma `KinetixUI` › UI Components › 02. Controls & Actions › Button (node 54863:351). 6 variants × 4 sizes × 5 states = 120 permutations, mirrored 1:1 from the Figma component properties.",
+          "Reconciled 1:1 with the design source, Figma `KinetixUI` › UI Components › 02. Controls & Actions › Button (node 54863:351). 6 variants × 4 sizes × 5 states = 120 permutations, mirrored 1:1 from the Figma component properties.",
       },
     },
   },
