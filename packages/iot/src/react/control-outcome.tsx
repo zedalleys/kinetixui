@@ -105,6 +105,16 @@ export function isDisconnected(availability: KinetixControlAvailability | undefi
   return availability === "offline" || availability === "unreachable" || availability === "connecting" || availability === "unknown";
 }
 
+/**
+ * The motion on a "requested, not yet confirmed" chip. It pulses while the request can still be answered,
+ * and holds still once the link is gone: a request to an offline or unreachable device is not progressing
+ * (see `resolveControlState`), and a pulse beside it would say it is. The chip's dashed outline and words
+ * stay, so a still chip reads exactly as it does under reduced motion, where the pulse is never drawn.
+ */
+export function pendingMotion(availability: KinetixControlAvailability | undefined): string {
+  return isDisconnected(availability) ? "" : "animate-pulse motion-reduce:animate-none";
+}
+
 /** The short chip word for an inoperable availability. */
 export function availabilityWord(availability: KinetixControlAvailability | undefined): string {
   switch (availability) {

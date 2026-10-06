@@ -406,6 +406,30 @@ const SCENARIOS = {
     expectThat(tag, (await announcer(page)) === "Locked.", `reconnect: "${await announcer(page)}"`);
   },
 
+  // A request still open when the device's link drops: the request is honestly unresolved, but nothing is
+  // progressing, so the chip must stop pulsing (and keep its dashed outline and words). Read off the running
+  // animations, not the class list: the class is what the unit test checks, the animation is what a person sees.
+  "level-pending-link-lost": async (page, tag, cond) => {
+    const chip = page.locator("[data-requested]");
+    const pulsing = () => chip.evaluate((el) => el.getAnimations().some((a) => a.playState === "running" && a.effect?.getComputedTiming().iterations === Infinity));
+    const dashed = () => chip.evaluate((el) => getComputedStyle(el).borderStyle.includes("dashed"));
+    const moves = cond.reducedMotion !== "reduce";
+    expectThat(tag, (await chip.textContent()) === "Requested 60%, not yet confirmed", `online chip: ${await chip.textContent()}`);
+    expectThat(tag, (await pulsing()) === moves, `online: the open request ${moves ? "does not pulse" : "pulses under reduced motion"}`);
+    for (const [step, label] of [["offline", "Device goes offline"], ["unreachable", "Hub unreachable"]]) {
+      await press(page, cond, button(page, label));
+      expectThat(tag, (await chip.count()) === 1 && (await chip.textContent()) === "Requested 60%, not yet confirmed", `${step}: the request is no longer shown`);
+      expectThat(tag, !(await pulsing()), `${step}: the chip still pulses beside a request that is going nowhere`);
+      expectThat(tag, await dashed(), `${step}: the chip lost its dashed outline`);
+    }
+    await press(page, cond, button(page, "Device back online"));
+    expectThat(tag, (await pulsing()) === moves, `back online: the pulse ${moves ? "did not resume" : "ran under reduced motion"}`);
+    // axe freezes every animation on the page, so it runs last, on the offline state.
+    await press(page, cond, button(page, "Device goes offline"));
+    await conditionChecks(page, `${tag} offline`, cond);
+    await axe(page, `${tag} offline`, cond);
+  },
+
   "media-play-confirmed": async (page, tag, cond) => {
     await press(page, cond, button(page, "Play"));
     await mediaPendingChecks(page, tag, cond);

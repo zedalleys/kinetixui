@@ -189,6 +189,28 @@ export const LevelRapidCommands: Story = {
   },
 };
 
+export const LevelPendingLinkLost: Story = {
+  name: "Level: request open, the device's link drops",
+  render: function Render() {
+    const s = useScript(() => run(startCommandLifecycle<number>({ confirmed: 20, requested: 60, commandId: "c60" }), { type: "sent" }, 0));
+    const [status, setStatus] = React.useState<"online" | "offline" | "unreachable">("online");
+    return (
+      <>
+        <Label>Level · confirmed · the request is still open when the device drops off</Label>
+        {/* The lifecycle has not timed out yet, so the request is honestly still open. What changes is
+            whether anything is progressing: online, the chip pulses; offline or unreachable, it holds still
+            and keeps its dashed outline and words, as it always does under reduced motion. */}
+        <DeviceLevelControl lifecycle={s.lifecycle} control={resolveControlState({ deviceStatus: status, lifecycle: s.lifecycle })} label="Bench light" />
+        <Script stage={s.lifecycle.stage} refused={s.refused}>
+          <Step onClick={() => setStatus("offline")}>Device goes offline</Step>
+          <Step onClick={() => setStatus("unreachable")}>Hub unreachable</Step>
+          <Step onClick={() => setStatus("online")}>Device back online</Step>
+        </Script>
+      </>
+    );
+  },
+};
+
 export const SetpointHybrid: Story = {
   name: "Setpoint: hybrid, target differs from reported",
   render: function Render() {
