@@ -169,7 +169,7 @@
       "communityReuse": "COM-001 derives from it \u2014 not before day 10",
       "metricToWatch": "Qualified Evaluation of devto sessions against linkedin, as counts",
       "status": "published",
-      "result": "Posted 2026-10-06 on dev.to at about 09:03 UTC, on its scheduled day 8: https://dev.to/zedalleys/your-design-tokens-stop-at-the-web-boundary-4p6a. The in-body link is the tracked /docs/tokens URL from the content register (kx_p2_b_token_boundary, utm_content=art_primary), dev.to is the canonical, and the cover is VIS-003 resized to 2000x840. No counts are recorded yet: this row was logged minutes after posting, so the honest result is none observed so far, to be replaced with absolute counts (devto sessions carrying kx_p2_b_token_boundary, then Qualified Evaluation from them) at the next close-out. Organic only \u2014 no amplification. No hashnode cross-post is recorded. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
+      "result": "Published on dev.to on 2026-10-06 (about 09:03 UTC), on its scheduled day 8. The live article is https://dev.to/zedalleys/your-design-tokens-stop-at-the-web-boundary-4p6a. No performance counts are recorded yet: this close-out was made immediately after publication, so the honest result is none observed so far. Track absolute counts only at the next close-out: devto-attributed sessions carrying kx_p2_b_token_boundary with utm_content=art_primary, then Qualified Evaluation and Adoption Intent from them. Organic only \u2014 no amplification; no hashnode cross-post. No conclusion either way while analytics.md \u00a710's baseline window is open."
     },
     {
       "date": null,
