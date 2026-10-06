@@ -118,7 +118,7 @@ for (const file of files) {
     type: "registry:ui",
     title: name.split("-").map((s) => s[0].toUpperCase() + s.slice(1)).join(" "),
     description: NODE[name]
-      ? `Generated 1:1 from the KinetixUI design source, node ${NODE[name]}.`
+      ? `Reconciled 1:1 with the KinetixUI design source, node ${NODE[name]}.`
       : `Ported onto the KinetixUI token contract.`,
     dependencies: [...deps].sort(),
     registryDependencies: [...registryDeps],

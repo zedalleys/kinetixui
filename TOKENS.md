@@ -12,7 +12,7 @@
    success colours, motion, opacity, z-index and several WCAG-driven overrides
    are repo-owned (see the Origin / notes columns below). Change the contract
    here, not by re-syncing Figma.
-3. **Platform output** — compiled by Style Dictionary v4
+3. **Platform output** — compiled by Style Dictionary
    (`style-dictionary/build.mjs`) to CSS, TypeScript, SwiftUI, Compose and Flutter.
    Never hand-edit.
 

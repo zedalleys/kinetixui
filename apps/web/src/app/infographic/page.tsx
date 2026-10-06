@@ -10,7 +10,7 @@ import { DepsBar } from "@/components/infographic/deps-bar";
 import { componentDocs, CATEGORY_ORDER } from "@/lib/site";
 import { RELEASES, isNotable } from "@/lib/releases";
 import { PLATFORMS as ALL_PLATFORMS, countOnPlatform, type Platform } from "@/lib/platform-parity";
-import { componentTotal } from "@/lib/platform-support";
+import { componentCount, componentTotal, recipes } from "@/lib/platform-support";
 
 /* the component libraries (derived — never a second hard-coded list) and the compiled outputs of the token engine */
 const PLATFORMS = ALL_PLATFORMS;
@@ -48,7 +48,11 @@ const CHART_RECIPES = chartRecipeCount();
 const STATS = [
   { n: TOKEN_COUNT, label: "design tokens", sub: "primitives + semantic, DTCG" },
   // the manifest total, not componentDocs.length: avatar-group ships inside avatar and has no page of its own
-  { n: componentTotal, label: "React components", sub: `${CATEGORY_ORDER.length} categories` },
+  {
+    n: componentTotal,
+    label: "catalogue entries",
+    sub: `${componentCount} components + ${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"} · ${CATEGORY_ORDER.length} categories`,
+  },
   { n: CHART_RECIPES, label: "chart recipes", sub: "Recharts, token-driven" },
   { n: PLATFORM_OUTPUTS.length, label: "platform outputs", sub: PLATFORM_OUTPUTS.join(" · ") },
   { n: "100%", label: "WCAG AA", sub: "text pairs, light + dark, CI-gated" },
@@ -139,7 +143,7 @@ export default function InfographicPage() {
 
       {/* 03 — registry by category */}
       <section className="mt-14">
-        <SectionHead index="03" label="Registry, by category" meta={`${componentDocs.length} components`} />
+        <SectionHead index="03" label="Registry, by category" meta={`${componentDocs.length} entries`} />
         <RegistryTreemap />
       </section>
 
@@ -184,10 +188,10 @@ export default function InfographicPage() {
           </table>
         </div>
         <p className="mt-3 font-mono text-[10px] text-muted-foreground">
-          Of the {componentDocs.length} React components, SwiftUI ports {NATIVE_COUNT.SwiftUI},
+          Of the {componentDocs.length} React catalogue entries, SwiftUI ports {NATIVE_COUNT.SwiftUI},
           Jetpack Compose {NATIVE_COUNT.Compose} and Flutter {NATIVE_COUNT.Flutter}; the rest
           (Form, Navigation Menu, Combobox and a couple of platform-specific gaps) stay React-only,
-          with parity snippets for all of them. Every port rides the same token contract.
+          and their component pages say why. Every port rides the same token contract.
         </p>
       </section>
 

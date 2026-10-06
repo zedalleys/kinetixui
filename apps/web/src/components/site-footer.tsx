@@ -112,7 +112,7 @@ export function SiteFooter() {
               </Link>
             </p>
           </div>
-          <p>tokens · DTCG → Style Dictionary v4</p>
+          <p>tokens · DTCG → Style Dictionary</p>
         </div>
       </div>
     </footer>

@@ -61,9 +61,10 @@ export function DepsBar() {
         ))}
       </div>
       <figcaption className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground">
-        KinetixUI isn&rsquo;t an installed package — the CLI copies component source into your repo,
-        so it adds no runtime dependency and no version lock. A pasted component pulls in only its
-        own primitives (e.g. Button ≈ 2&nbsp;kB of JSX you own). Other figures: approximate min+gzip
+        Through the CLI, KinetixUI is source in your repo rather than a package you depend on — the CLI copies
+        component source and installs the npm packages it imports, so there is no runtime dependency you cannot
+        patch and no KinetixUI version lock. A pasted component pulls in only the primitives it imports (e.g.
+        Button ≈ 2&nbsp;kB of JSX you own). Other figures: approximate min+gzip
         of the top-level import, via bundlephobia.
       </figcaption>
     </figure>

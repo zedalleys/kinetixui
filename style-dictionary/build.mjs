@@ -1,5 +1,5 @@
 /**
- * KinetixUI token build — runs Style Dictionary v4 once per theme.
+ * KinetixUI token build — runs Style Dictionary once per theme.
  *   node style-dictionary/build.mjs        (via: pnpm build:tokens)
  */
 import { readFileSync, writeFileSync } from 'node:fs';
