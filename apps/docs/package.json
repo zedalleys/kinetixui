@@ -17,14 +17,14 @@
     "recharts": "^3.10.1"
   },
   "devDependencies": {
-    "@storybook/addon-a11y": "^10.6.0",
-    "@storybook/addon-themes": "^10.6.0",
-    "@storybook/react-vite": "^10.6.0",
+    "@storybook/addon-a11y": "^10.6.1",
+    "@storybook/addon-themes": "^10.6.1",
+    "@storybook/react-vite": "^10.6.1",
     "@vitejs/plugin-react": "^6.1.1",
     "autoprefixer": "^10.6.1",
     "postcss": "^8.5.28",
-    "storybook": "^10.6.0",
+    "storybook": "^10.6.1",
     "tailwindcss": "^3.4.19",
-    "vite": "^8.3.1"
+    "vite": "^8.3.2"
   }
 }

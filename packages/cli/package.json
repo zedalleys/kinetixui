@@ -27,12 +27,12 @@
   "devDependencies": {
     "@kinetixui/create-preset": "workspace:*",
     "@kinetixui/create-theme": "workspace:*",
-    "@types/node": "^22.20.4",
+    "@types/node": "^22.20.5",
     "@types/prompts": "^2.4.9",
     "jsdom": "^30.1.0",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.3"
   },
   "engines": {
     "node": ">=18"
