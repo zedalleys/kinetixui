@@ -1,5 +1,21 @@
 # @kinetixui/cli
 
+## 0.24.0
+
+### Patch Changes
+
+- Released with the core line at 0.24.0. `add` and `init` copy from the hosted registry, which serves the 0.24.0
+  tokens and components (the rem-based type scale, the surface model and the new colour roles) once the site deploys.
+  The token values bundled into the CLI move to 0.24.0, so `preset` output carries the new roles (`scrim`,
+  `on-info-container`), rem font sizes and line heights, and the `#c60a0a` destructive focus ring.
+  
+  Registry handling changed in two ways. `init`, `add`, `list`, `inspect` and `doctor` now use the `registry` set in `kinetixui.json` when
+  `--registry` is not passed; before, that field was ignored and the default registry was always asked. And a
+  registry that cannot be reached, or answers with something other than valid registry JSON, now produces an error
+  that names the registry's origin and says how to point elsewhere, instead of a bare fetch or JSON parse error.
+  
+  No command or flag changed.
+
 ## 0.23.3
 
 ### Patch Changes

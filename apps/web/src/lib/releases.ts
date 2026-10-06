@@ -66,6 +66,90 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.24.0",
+    date: "2026-10-06",
+    summary:
+      "The type scale follows the reader's text size, one theme means the same thing on every platform, and surfaces, selection controls and text fields share one state contract. On their own version lines: @kinetixui/angular 0.25.0 takes the Preview catalogue from 31 to 64 of 98, and @kinetixui/iot 0.3.0 learns to operate a device, not only display one.",
+    breaking: [
+      "`@kinetixui/tokens`: `fontSize.*` and `lineHeight.*` values, and the `--font-size-*` / `--line-height-*` custom properties, are now rem strings (`\"0.875rem\"`, not `\"14px\"`). Nothing renders differently at the default text size, but code that does arithmetic on the raw values gets a different number.",
+      "Compose (`com.kinetixui:ui-compose`, not yet published): `KinetixColors` gains `onInfoContainer` and `scrim` before `chart`, so positional constructor arguments, `componentN()` destructuring and binary compatibility shift. Named-argument callers are unaffected.",
+      "`@kinetixui/ui` Tailwind preset: under `prefers-reduced-motion: reduce`, a base layer now shortens every animation and transition in the app to 0.01ms, not only KinetixUI's.",
+      "`@kinetixui/iot` 0.3.0: `DevicePowerControl` with `requested` now keeps the switch at the device's reported state while the command is pending (`strategy=\"confirmed\"`, the default) instead of moving it.",
+      "`@kinetixui/iot` 0.3.0: a device with no connectivity reported is `unknown`, not `offline`. `KinetixConnectivityState` gains `connecting` and `unknown`.",
+      "`@kinetixui/angular` 0.25.0: requires `@kinetixui/tokens` 0.24.0 or later (peer `>=0.24.0 <0.25.0`).",
+    ],
+    migration:
+      'If you read token values directly, treat `fontSize` and `lineHeight` as rem strings. In Compose, construct `KinetixColors` with named arguments. For the previous power-control look, pass `strategy="hybrid"` to `DevicePowerControl`; an exhaustive `switch` over availability or connectivity needs `unknown` and `connecting` arms. With `@kinetixui/angular` 0.25.0, move `@kinetixui/tokens` to 0.24.0 — 0.23.x lacks `--surface-grouped` and `--on-info-container`, which its segmented control and information banner read.',
+    changes: [
+      {
+        kind: "accessibility",
+        area: ["tokens", "platforms"],
+        title: "The type scale follows the reader's text size",
+        body: "Raising the browser's default text size used to leave every KinetixUI type-scale step where it was. Web font sizes and line heights are now rem, SwiftUI uses `Font.custom(_:size:relativeTo:)` so Dynamic Type applies, and Compose and Flutter were already correct. At the default size every step computes to the pixel value it always did.",
+        href: "/docs/tokens",
+      },
+      {
+        kind: "fixed",
+        area: ["tokens", "platforms"],
+        title: "One theme means one thing in the preview, the CSS and every native export",
+        body: "Pinning `primary` in Create now moves `action`, `link` and `focus` in the preview and in the SwiftUI, Compose and Flutter exports, not only in the web CSS. New roles `scrim` (the backdrop behind dialogs, sheets and drawers) and `on-info-container` (text on a tinted info surface) reach every platform, and the status focus rings follow their roles.",
+        href: "/docs/theming",
+      },
+      {
+        kind: "new",
+        area: ["components", "tokens"],
+        title: "A surface model, and a Card that looks raised",
+        body: "New role `surface-grouped` for the section raised content sits on. Card rests on a softer edge and the `md` elevation step, and gains `asChild` for an opt-in interactive contract: hover, pressed, current and focus states keyed on the link or button it renders as.",
+        href: "/docs/components/card",
+      },
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "One state contract for selection controls, text fields and tabs",
+        body: "Checkbox and RadioGroup edges, and the resting edge of Input, Textarea, Select and NativeSelect, now clear the 3:1 non-text contrast they fell short of. Hover, pressed, invalid and disabled are drawn the same way across the family, in React and Angular, and composite fields (InputGroup, NumberInput, MultiSelect, InputOTP) follow the same rules.",
+      },
+      {
+        kind: "improved",
+        area: ["components", "tokens"],
+        title: "Motion is on the tokens, with a reduced-motion floor",
+        body: "Four motion tokens that no class could reach are mapped in the preset, twenty components move onto the scale, Collapsible gets the disclosure motion Accordion already had, and a `prefers-reduced-motion` base layer stops every overlay animating at full speed when the system asks it not to.",
+      },
+      {
+        kind: "fixed",
+        area: "components",
+        title: "Right-to-left and overlays",
+        body: "Overlays now open with the direction of the section that opened them. The form family, the Switch thumb and directional icons (back chevrons, pagination, breadcrumb separators, tree chevrons) mirror correctly under `dir=\"rtl\"`. Banner and Inform take a replaceable `dismissIcon`, and a table that scrolls can be reached by keyboard.",
+        href: "/docs/rtl",
+      },
+      {
+        kind: "fixed",
+        area: "cli",
+        title: "The CLI honours the registry in kinetixui.json",
+        body: "`init`, `add`, `list`, `inspect` and `doctor` use the `registry` set in `kinetixui.json` when `--registry` is not passed, and a registry that cannot be reached or returns invalid JSON now produces an error naming it. `preset` output carries the 0.24.0 roles and rem type scale. No command or flag changed.",
+        href: "/docs/cli",
+      },
+      {
+        kind: "new",
+        area: "components",
+        title: "@kinetixui/angular 0.25.0 — 64 of 98, still Preview",
+        body: "Four waves on Angular's own version line: content, the rest of the input family, navigation and disclosure, and the overlay layer with the dialog family. The catalogue goes from 31 to 64 of 98 components. Angular stays a Preview implementation.",
+        href: "/docs/angular",
+      },
+      {
+        kind: "new",
+        area: "components",
+        title: "@kinetixui/iot 0.3.0 — operate a device, not only display it",
+        body: "Four controls (power, level, setpoint, mode) that draw what the user asked for differently from what the device confirmed, on a command lifecycle with a `confirmed` / `optimistic` / `hybrid` strategy. Identity and card compositions, and the Connected Product System patterns: alerts, automations, cameras, energy, health, pairing and telemetry, each with React-free functions in `@kinetixui/iot/functions`.",
+        href: "/docs/iot",
+      },
+    ],
+    limitations: [
+      "`@kinetixui/angular` remains **Preview** at 64 of 98 components; this release does not graduate it.",
+      "`@kinetixui/iot` remains **Experimental** and versioned on its own line. It has no SwiftUI, Compose or Flutter ports and no transport or protocol adapters, and it is not counted in the component catalogue. Its React components need the 0.24.0 token stylesheet.",
+      "The SwiftUI, Compose and Flutter packages are not published by this release. Native CI compiles and unit-tests them; nothing here was validated on a simulator, emulator or device.",
+    ],
+  },
+  {
     version: "0.23.3",
     date: "2026-09-28",
     summary:
