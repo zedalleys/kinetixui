@@ -1,5 +1,5 @@
 /**
- * Custom Style Dictionary v4 hooks (transforms) shared by all platforms.
+ * Custom Style Dictionary hooks (transforms) shared by all platforms.
  * Registered on the StyleDictionary class in sd.config.mjs before build.
  */
 

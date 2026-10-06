@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   composeExporter,
@@ -646,6 +646,110 @@ describe("the IoT module is described as what it is", () => {
     // And the roadmap carries no date and no "coming soon".
     const roadmap = page.slice(page.indexOf("const ROADMAP"), page.indexOf("export default"));
     expect(roadmap).not.toMatch(/coming soon|\bQ[1-4]\b|\b20\d\d\b/i);
+  });
+});
+
+/* ------------------------------------------------------------------ token engine and design provenance */
+
+/**
+ * Every present-tense surface that can name the token engine or a component's design provenance: the site's pages
+ * and components, the READMEs, `TOKENS.md`, the token build's own sources, and the registry metadata the CLI and
+ * kinetixui.com/r serve. Release history (`releases.ts`, CHANGELOGs) and dated audits are not in it — see below.
+ */
+function provenanceSurfaces(): Record<string, string> {
+  const out: Record<string, string> = {};
+  const walk = (dir: string, keep: (name: string) => boolean) => {
+    for (const name of readdirSync(`${root}/${dir}`)) {
+      const rel = `${dir}/${name}`;
+      if (statSync(`${root}/${rel}`).isDirectory()) walk(rel, keep);
+      else if (keep(name)) out[rel] = read(rel);
+    }
+  };
+  walk("apps/web/src/app", (n) => /\.(mdx|tsx)$/.test(n));
+  walk("apps/web/src/components", (n) => n.endsWith(".tsx") && !n.includes(".test."));
+  walk("apps/web/public/r", (n) => n.endsWith(".json"));
+  walk("style-dictionary", (n) => n.endsWith(".mjs"));
+  // Component source docblocks travel into consumers' repositories through `kinetixui add`, and the stories are the
+  // published Storybook's descriptions — both are public prose about provenance.
+  walk("packages/ui/src/components", (n) => n.endsWith(".tsx") && !n.includes(".test."));
+  walk("packages/ui/src/stories", (n) => n.endsWith(".tsx"));
+  walk("registry/kinetixui/ui", (n) => n.endsWith(".tsx"));
+  for (const f of ["README.md", "TOKENS.md", "packages/tokens/README.md", "registry/registry.json", "scripts/gen-registry.mjs", "scripts/gen-docs.mjs"]) {
+    if (existsSync(`${root}/${f}`)) out[f] = read(f);
+  }
+  return out;
+}
+const PROVENANCE = provenanceSurfaces();
+
+describe("the token engine is named at the version that is installed", () => {
+  /** `^5.5.5` → 5. Read from both manifests that declare it, which must agree. */
+  const declared = [read("package.json"), read("packages/tokens/package.json")].map(
+    (pkg) => (JSON.parse(pkg) as { devDependencies?: Record<string, string>; dependencies?: Record<string, string> }),
+  );
+  const ranges = declared.map((pkg) => pkg.devDependencies?.["style-dictionary"] ?? pkg.dependencies?.["style-dictionary"]);
+  const major = Number(/(\d+)\./.exec(ranges[0] ?? "")?.[1]);
+
+  it("reads one Style Dictionary version from the manifests", () => {
+    expect(ranges.every(Boolean), "style-dictionary is no longer declared where this guard looks").toBe(true);
+    expect(new Set(ranges).size, `the two manifests disagree: ${ranges.join(" vs ")}`).toBe(1);
+    expect(major).toBeGreaterThan(0);
+  });
+
+  /** "Style Dictionary v4", "Style Dictionary 4.x", "style-dictionary@4": any major that is not the installed one. */
+  const versioned = /style[ -]?dictionary(?:\s+v|\s+|@)(\d+)(?:\.\d+)*/gi;
+
+  it("scans a meaningful set of surfaces", () => {
+    expect(Object.keys(PROVENANCE).length).toBeGreaterThan(100);
+    for (const f of ["README.md", "TOKENS.md", "apps/web/src/app/page.tsx", "apps/web/src/components/site-footer.tsx"]) {
+      expect(Object.keys(PROVENANCE)).toContain(f);
+    }
+  });
+
+  it("never names a Style Dictionary major other than the installed one", () => {
+    const stale = Object.entries(PROVENANCE).flatMap(([f, text]) =>
+      [...text.matchAll(versioned)].filter((m) => Number(m[1]) !== major).map((m) => `${f}: "${m[0]}"`),
+    );
+    expect(stale, `Style Dictionary ${major} is installed`).toEqual([]);
+  });
+
+  it("would catch the wording that shipped, so the rule above is not vacuous", () => {
+    const old = "One DTCG source, compiled by Style Dictionary v4.";
+    expect([...old.matchAll(versioned)].some((m) => Number(m[1]) !== major)).toBe(major !== 4);
+  });
+});
+
+describe("component provenance says reconciled, not generated", () => {
+  /**
+   * Components are hand-built and reconciled against design source nodes; nothing generates them from Figma. Pages
+   * and registry items that cite a node say "Reconciled 1:1 with design source node …". The three oldest pages
+   * (button, input, textarea) are hand-written — `scripts/gen-docs.mjs` deliberately skips any page that exists — and
+   * the registry descriptions come from `scripts/gen-registry.mjs`, so both are scanned at their source.
+   */
+  const generated = /generated\s+(?:1:1\s+)?from\s+(?:the\s+)?(?:figma|(?:kinetixui\s+)?design source)/i;
+
+  it("never claims a component was generated from Figma or the design source", () => {
+    const hits = Object.entries(PROVENANCE).flatMap(([f, text]) => {
+      const m = generated.exec(text);
+      return m ? [`${f}: "${m[0]}"`] : [];
+    });
+    expect(hits).toEqual([]);
+  });
+
+  it("still cites the design source node wherever it did, with the honest verb", () => {
+    for (const slug of ["button", "input", "textarea"]) {
+      const page = PROVENANCE[`apps/web/src/app/docs/components/${slug}/page.mdx`]!;
+      expect(page, `${slug} lost its design source node`).toMatch(/\b5\d{4}:\d+\b/);
+      expect(page).toMatch(/Reconciled 1:1 with design source node/);
+    }
+    const registry = JSON.parse(PROVENANCE["registry/registry.json"]!) as { items: { name: string; description: string }[] };
+    const cited = registry.items.filter((i) => /node \d+:\d+/.test(i.description));
+    expect(cited.length, "the registry no longer cites any design source node").toBeGreaterThan(0);
+    for (const i of cited) expect(i.description, i.name).toMatch(/^Reconciled 1:1 with the KinetixUI design source, node /);
+  });
+
+  it("would catch the wording that shipped, so the rule above is not vacuous", () => {
+    expect("A single-line text field. Generated 1:1 from Figma node 54855:13836.").toMatch(generated);
+    expect("Generated 1:1 from the KinetixUI design source, node 54863:351.").toMatch(generated);
   });
 });
 

@@ -228,6 +228,10 @@
       opacity: 0;
     }
   }
+  /* <HeroCommand>'s pause button stops the blink with the typing: a solid caret, not one frozen mid-blink. */
+  .kx-caret[data-paused] {
+    animation: none;
+  }
 
   /* hero: staggered fade-up of the headline block's direct children on load */
   .kx-hero-enter > * {
@@ -422,21 +426,34 @@
     }
   }
 
-  /* marquee track: duplicate children inside, animate the wrapper */
+  /* marquee track (<PlatformTicker>): two identical halves, translated by exactly one half per cycle.
+     `flex: none` matters — as a flex item the track shrank below its content at phone width, so -50% stopped short
+     of a full half and the loop jumped at every boundary. Under RTL the track starts at the inline-start (right)
+     edge, so it has to travel the other way for the next half to land where the first began. */
+  .kx-marquee {
+    --kx-marquee-shift: -50%;
+  }
+  [dir="rtl"] .kx-marquee {
+    --kx-marquee-shift: 50%;
+  }
   .kx-marquee-track {
     display: flex;
+    flex: none;
     width: max-content;
-    animation: marquee var(--marquee-duration, 32s) linear infinite;
+    animation: kx-ticker var(--marquee-duration, 32s) linear infinite;
   }
-  .kx-marquee:hover .kx-marquee-track {
+  .kx-marquee:hover .kx-marquee-track,
+  .kx-marquee[data-paused] .kx-marquee-track {
     animation-play-state: paused;
   }
-  @keyframes marquee {
+  /* Not `marquee`: the @kinetixui/ui preset defines a `marquee` keyframe of its own (a fixed -50%), and the later
+     definition wins, which silently discarded the RTL direction below. */
+  @keyframes kx-ticker {
     from {
       transform: translateX(0);
     }
     to {
-      transform: translateX(-50%);
+      transform: translateX(var(--kx-marquee-shift));
     }
   }
 }
@@ -471,6 +488,21 @@
   }
   .kx-fan-node {
     opacity: 0.85;
+  }
+  /* Nothing moves, so the loop's repeats go and the one real list wraps inside the band: every platform stays
+     visible at any width instead of being clipped by the strip's overflow. */
+  .kx-marquee-track {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+  }
+  .kx-marquee-repeat {
+    display: none !important;
+  }
+  .kx-marquee-list {
+    flex-wrap: wrap;
+    flex-shrink: 1;
+    row-gap: 0.5rem;
   }
 }
 

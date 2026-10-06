@@ -2,7 +2,7 @@
   "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "radio-group",
   "title": "Radio Group",
-  "description": "Generated 1:1 from the KinetixUI design source, node 54863:536.",
+  "description": "Reconciled 1:1 with the KinetixUI design source, node 54863:536.",
   "dependencies": [
     "@radix-ui/react-radio-group",
     "clsx",

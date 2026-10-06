@@ -19,6 +19,10 @@ on:
       - "scripts/a11y-site.mjs"
       - "scripts/theme-isolation.mjs"
       - "scripts/iot-state-spatial.mjs"
+      - "scripts/platform-ticker.mjs"
+      # The ticker reads its platforms and labels from these, so a manifest change can move its geometry.
+      - "components.manifest.json"
+      - "platform-parity.json"
       - ".github/workflows/a11y-site.yml"
   pull_request:
     paths:
@@ -34,6 +38,10 @@ on:
       - "scripts/a11y-site.mjs"
       - "scripts/theme-isolation.mjs"
       - "scripts/iot-state-spatial.mjs"
+      - "scripts/platform-ticker.mjs"
+      # The ticker reads its platforms and labels from these, so a manifest change can move its geometry.
+      - "components.manifest.json"
+      - "platform-parity.json"
       - ".github/workflows/a11y-site.yml"
 
 permissions:
@@ -95,3 +103,10 @@ jobs:
       # the arc it sits under, a lock's word and its drawing, two plan markers) that axe and overflow cannot see.
       - name: IoT state and spatial pass (ring clearance, lock/light fidelity, plan markers)
         run: pnpm check:iot-state-spatial
+
+      # The homepage platform ticker moves, so its contract is geometric and needs the same running site: one
+      # accessible list of the canonical platforms with decorative marks, a seamless gap-free loop in LTR and RTL,
+      # a keyboard pause (WCAG 2.2.2), and a static wrapping list under reduced motion, at phone to wide widths and
+      # 200% text.
+      - name: Platform ticker (loop, pause, reduced motion, RTL, 200% text)
+        run: pnpm check:platform-ticker

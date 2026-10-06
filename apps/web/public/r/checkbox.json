@@ -2,7 +2,7 @@
   "$schema": "https://kinetixui.com/schema/registry-item.json",
   "name": "checkbox",
   "title": "Checkbox",
-  "description": "Generated 1:1 from the KinetixUI design source, node 54863:483.",
+  "description": "Reconciled 1:1 with the KinetixUI design source, node 54863:483.",
   "dependencies": [
     "@radix-ui/react-checkbox",
     "clsx",
