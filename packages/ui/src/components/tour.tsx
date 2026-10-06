@@ -3,6 +3,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { Button } from "./button";
+import { useKinetixPortalContainer } from "./direction-provider";
 
 /**
  * Tour — sequenced spotlight popovers over real elements (onboarding
@@ -57,6 +58,9 @@ const Tour: React.FC<TourProps> = ({
   doneLabel = "Done",
 }) => {
   const [mounted, setMounted] = React.useState(false);
+  // Portaled like every other overlay here: into the nearest direction provider's host, else <body>. `null`
+  // is a provider whose host is not attached yet: render nothing until it is.
+  const portalHost = useKinetixPortalContainer();
   const [rect, setRect] = React.useState<DOMRect | null>(null);
   const step = steps[stepIndex];
 
@@ -132,7 +136,7 @@ const Tour: React.FC<TourProps> = ({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open, onOpenChange]);
 
-  if (!mounted || !open || !step) return null;
+  if (!mounted || !open || !step || portalHost === null) return null;
 
   const isFirst = stepIndex === 0;
   const isLast = stepIndex === steps.length - 1;
@@ -143,9 +147,9 @@ const Tour: React.FC<TourProps> = ({
         left: rect.left - SPOTLIGHT_PADDING,
         width: rect.width + SPOTLIGHT_PADDING * 2,
         height: rect.height + SPOTLIGHT_PADDING * 2,
-        boxShadow: "0 0 0 9999px rgb(0 0 0 / 0.6)",
+        boxShadow: "0 0 0 9999px hsl(var(--scrim))",
       }
-    : { inset: 0, background: "rgb(0 0 0 / 0.6)" };
+    : { inset: 0, background: "hsl(var(--scrim))" };
 
   const cardStyle: React.CSSProperties = rect
     ? {
@@ -203,7 +207,7 @@ const Tour: React.FC<TourProps> = ({
         </div>
       </div>
     </>,
-    document.body,
+    portalHost ?? document.body,
   );
 };
 

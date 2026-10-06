@@ -7,10 +7,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
@@ -28,8 +29,8 @@ import kotlinx.coroutines.launch
  * `HorizontalPager`'s own `content: @Composable (page: Int) -> Unit`
  * lambda already covers both. `size-8` (32dp) isn't on the shared
  * `spacing_*` scale — hardcoded, same reasoning as `KinetixFab`'s
- * off-scale sizes. The chevron buttons are plain "‹"/"›" glyphs, same "no
- * icon library" gap noted for `KinetixBreadcrumbSeparator`.
+ * off-scale sizes. The chevron buttons are named ("Previous slide" /
+ * "Next slide") and draw Material chevrons from [KinetixIcons].
  */
 enum class KinetixCarouselOrientation { Horizontal, Vertical }
 
@@ -60,7 +61,7 @@ fun KinetixCarouselPrevious(
         size = KinetixButtonSize.Icon,
         enabled = pagerState.currentPage > 0,
     ) {
-        Text("‹")
+        KinetixIcon(KinetixIcons.ChevronStart, 16.dp, modifier = Modifier.semantics { contentDescription = "Previous slide" })
     }
 }
 
@@ -78,6 +79,6 @@ fun KinetixCarouselNext(
         size = KinetixButtonSize.Icon,
         enabled = pagerState.currentPage < pagerState.pageCount - 1,
     ) {
-        Text("›")
+        KinetixIcon(KinetixIcons.ChevronEnd, 16.dp, modifier = Modifier.semantics { contentDescription = "Next slide" })
     }
 }

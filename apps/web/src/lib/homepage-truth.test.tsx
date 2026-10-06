@@ -129,6 +129,16 @@ describe("homepage rendering: matches the repository's current truth", () => {
     expect(text().toLowerCase()).not.toContain("identical everywhere");
   });
 
+  it("never calls the catalogue total a component count (CLAIMS.md B2: 97 components + 1 recipe)", () => {
+    expect(text()).not.toMatch(new RegExp(`\\b${componentTotal}\\s+(?:React\\s+)?components\\b`));
+    expect(text()).not.toMatch(new RegExp(`/${componentTotal}\\s+components\\b`));
+  });
+
+  it("names the installed token engine without a stale version", () => {
+    expect(text()).toContain("Style Dictionary");
+    expect(text()).not.toMatch(/Style Dictionary v\d/);
+  });
+
   it("never renders HTML/CSS as a platform name in the marquee", () => {
     expect(text()).not.toMatch(/HTML\s*\+\s*CSS/);
   });

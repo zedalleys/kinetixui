@@ -11,6 +11,10 @@
 // `pauseOnHover` isn't ported — hover isn't a primary iOS interaction,
 // unlike the web (and desktop-pointer) case it's built for.
 //
+// With Reduce Motion on it does not scroll by itself (KinetixLoopMotion): one copy of the content in a
+// horizontal ScrollView the reader moves by hand. Stopping the ticker in place would leave whatever sat
+// past the edge unreachable.
+//
 
 import SwiftUI
 
@@ -26,6 +30,7 @@ public struct KinetixMarquee<Content: View>: View {
     private let durationSeconds: Double
     private let content: Content
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var contentWidth: CGFloat = 0
     @State private var offset: CGFloat = 0
 
@@ -35,6 +40,23 @@ public struct KinetixMarquee<Content: View>: View {
     }
 
     public var body: some View {
+        Group {
+            if KinetixLoopMotion.runs(reduceMotion: reduceMotion) {
+                ticker
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) { content }
+            }
+        }
+        // The ticker's measured width and offset outlive the branch that built them. Without a reset, turning
+        // Reduce Motion off again rebuilds the ticker at `offset == -width` with `contentWidth` already set,
+        // so the one-shot guard in `onPreferenceChange` never installs a new loop and it stays frozen.
+        .onChange(of: reduceMotion) { _ in
+            contentWidth = 0
+            offset = 0
+        }
+    }
+
+    private var ticker: some View {
         HStack(spacing: 0) {
             content
                 .fixedSize()

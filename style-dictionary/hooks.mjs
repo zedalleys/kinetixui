@@ -1,5 +1,5 @@
 /**
- * Custom Style Dictionary v4 hooks (transforms) shared by all platforms.
+ * Custom Style Dictionary hooks (transforms) shared by all platforms.
  * Registered on the StyleDictionary class in sd.config.mjs before build.
  */
 
@@ -115,7 +115,11 @@ function hexToHslChannels(hex) {
     }
     hue /= 6;
   }
-  return `${Math.round(hue * 360)} ${Math.round(sat * 100)}% ${Math.round(l * 100)}%`;
+  const channels = `${Math.round(hue * 360)} ${Math.round(sat * 100)}% ${Math.round(l * 100)}%`;
+  // An 8-digit hex carries its own alpha (the `scrim` role): `0 0% 0% / 0.4`, which `hsl(var(--scrim))`
+  // reads as one colour. Such a role is mapped without Tailwind's `<alpha-value>` — the alpha is the role.
+  const a = h.length === 8 ? Number((parseInt(h.slice(6, 8), 16) / 255).toFixed(2)) : 1;
+  return a === 1 ? channels : `${channels} / ${a}`;
 }
 
 export const hslChannels = {
@@ -157,6 +161,50 @@ function typographyToCss(v) {
  * The light run writes the full `:root` set; the dark run writes only the
  * theme-dependent focus rings under `.dark` (see sd.config.mjs `css-extras`).
  */
+/**
+ * Shadow composites the web emits as a LIVE reference to a colour role rather than a baked hex.
+ *
+ * `--shadow-focus` is the keyboard focus ring of Button, Input, Textarea, NativeSelect, MultiSelect,
+ * NumberInput, InputGroup, InputOTP, Fab and interactive Card. Baked, it stayed the shipped azure whatever
+ * a theme did to `--focus` / `--ring`: a Create theme with a green brand still drew a blue ring, and one
+ * whose background was close to that blue drew an invisible one. Emitted as `hsl(var(--focus) / a)`, it
+ * follows the `focus` role the contract already documents as "override to theme focus separately".
+ *
+ * The source keeps the resolved hex because the native shadow outputs (Flutter BoxShadow) and
+ * `check:contrast` read it; `check:contrast` asserts that hex equals the resolved `focus` role in each
+ * theme, so the default rendering is unchanged and the two cannot drift. The alpha of each layer is read
+ * from the source hex (`#1d4ed833` -> 0.2), so the halo keeps its per-theme weight.
+ *
+ * The status rings follow the same way, each to its own status role: `focus-destructive` -> `destructive`,
+ * `focus-success` -> `success`, `focus-warning` -> `warning`. They were the last baked colours in the web
+ * focus system. Their source hexes are the roles' resolved values (the light destructive ring used to be
+ * the Figma error red `#ec5047`, 3.62:1, and is now `--destructive` `#c60a0a`, 6.09:1, the same colour the
+ * invalid field's border already draws), and `check:contrast` asserts every ring edge equals its role.
+ */
+export const LIVE_SHADOW_ROLES = {
+  'shadow.focus': 'focus',
+  'shadow.focus-destructive': 'destructive',
+  'shadow.focus-success': 'success',
+  'shadow.focus-warning': 'warning',
+};
+
+const alphaOf = (hex) => {
+  const h = String(hex).replace('#', '');
+  return h.length === 8 ? Math.round((parseInt(h.slice(6, 8), 16) / 255) * 100) / 100 : 1;
+};
+
+/** DTCG shadow array -> `box-shadow` string whose colours are `hsl(var(--role) / a)`. */
+export function liveShadowToCss(value, role) {
+  const layers = Array.isArray(value) ? value : [value];
+  return layers
+    .map((l) => {
+      const a = alphaOf(l.color);
+      const colour = a === 1 ? `hsl(var(--${role}))` : `hsl(var(--${role}) / ${a})`;
+      return `${px(l.offsetX)} ${px(l.offsetY)} ${px(l.blur)} ${px(l.spread)} ${colour}`;
+    })
+    .join(', ');
+}
+
 export const extrasCssFormat = {
   name: 'kinetix/extras-css',
   format: ({ dictionary, options }) => {
@@ -165,7 +213,8 @@ export const extrasCssFormat = {
     const type = [];
     for (const t of dictionary.allTokens) {
       const v = t.$value ?? t.value;
-      if (t.$type === 'shadow') shadows.push(`  --${t.path.join('-')}: ${shadowToCss(v)};`);
+      const role = LIVE_SHADOW_ROLES[t.path.join('.')];
+      if (t.$type === 'shadow') shadows.push(`  --${t.path.join('-')}: ${role ? liveShadowToCss(v, role) : shadowToCss(v)};`);
       else if (t.$type === 'typography') type.push(`  --text-${t.path.at(-1)}: ${typographyToCss(v)};`);
     }
     return (
@@ -304,8 +353,9 @@ function camelize(s) {
 function hexToRgbFloats(hex) {
   let h = String(hex).replace('#', '').trim();
   if (h.length === 3) h = h.split('').map((c) => c + c).join('');
-  if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
-  return [0, 2, 4].map((i) => Number((parseInt(h.slice(i, i + 2), 16) / 255).toFixed(3)));
+  if (!/^[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(h)) return null;
+  // the fourth number is the alpha, 1 for an opaque colour
+  return [0, 2, 4, 6].map((i) => (i === 6 && h.length === 6 ? 1 : Number((parseInt(h.slice(i, i + 2), 16) / 255).toFixed(3))));
 }
 
 /**
@@ -323,8 +373,9 @@ export const swiftUIColorFormat = {
       .map((t) => {
         const rgb = hexToRgbFloats(t.$value ?? t.value);
         if (!rgb) return null;
-        const [r, g, b] = rgb;
-        return `    public static let ${camelize(t.path.at(-1))} = Color(red: ${r}, green: ${g}, blue: ${b})`;
+        const [r, g, b, a] = rgb;
+        const opacity = a === 1 ? '' : `, opacity: ${Number(a.toFixed(2))}`;
+        return `    public static let ${camelize(t.path.at(-1))} = Color(red: ${r}, green: ${g}, blue: ${b}${opacity})`;
       })
       .filter(Boolean)
       .join('\n');
@@ -344,6 +395,7 @@ export const swiftUIColorFormat = {
 function hexToDartColor(hex) {
   let h = String(hex).replace('#', '').trim();
   if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  if (/^[0-9a-fA-F]{8}$/.test(h)) return `Color(0x${h.slice(6, 8).toUpperCase()}${h.slice(0, 6).toUpperCase()})`;
   if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
   return `Color(0xFF${h.toUpperCase()})`;
 }

@@ -96,9 +96,13 @@ public struct KinetixMessageBubble<Avatar: View>: View {
 public struct KinetixTypingIndicator: View {
     @Environment(\.kinetixColors) private var colors
     @Environment(\.kinetixRadii) private var radii
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var animate = false
+    private let label: String
 
-    public init() {}
+    /// `label` is what VoiceOver announces; React's `aria-label="Typing"`. With Reduce Motion on the dots
+    /// rest at the muted opacity and do not move (KinetixLoopMotion), like `motion-reduce:opacity-70`.
+    public init(label: String = "Typing") { self.label = label }
 
     public var body: some View {
         HStack(spacing: 4) { // spacing/1
@@ -106,9 +110,15 @@ public struct KinetixTypingIndicator: View {
                 Circle()
                     .fill(colors.mutedForeground)
                     .frame(width: 6, height: 6)
-                    .offset(y: animate ? -3 : 0)
+                    .opacity(reduceMotion ? KinetixLoopMotion.restingDotOpacity : 1)
+                    .offset(y: animate && !reduceMotion ? -3 : 0)
                     .animation(
-                        .easeInOut(duration: 0.6).repeatForever(autoreverses: true).delay(Double(i) * 0.15),
+                        KinetixLoopMotion.loop(
+                            .easeInOut(duration: KinetixLoopMotion.typingHalfCycleSeconds),
+                            reduceMotion: reduceMotion,
+                            autoreverses: true,
+                            delay: Double(i) * KinetixLoopMotion.typingStaggerSeconds
+                        ),
                         value: animate
                     )
             }
@@ -117,5 +127,7 @@ public struct KinetixTypingIndicator: View {
         .padding(.vertical, 10) // spacing/2.5, off-scale
         .background(colors.muted, in: RoundedRectangle(cornerRadius: radii.surface, style: .continuous))
         .onAppear { animate = true }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
     }
 }

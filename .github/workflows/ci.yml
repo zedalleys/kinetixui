@@ -77,6 +77,17 @@ jobs:
       - name: SwiftUI radius/elevation token guardrail
         run: pnpm check:swiftui-tokens
 
+      # Reusable component source reads colour from semantic roles: no palette utilities, no primitives,
+      # no raw hex/rgb/hsl, on every platform. A reviewed allowlist in the script carries the exceptions.
+      - name: Component colour-contract guardrail (semantic roles only)
+        run: pnpm check:component-colors
+
+      # Compose's KinetixColors is a data class, so its PARAMETER ORDER is public API: positional callers
+      # and `componentN()` both read it. The snapshot makes an inserted or reordered role a reviewable
+      # diff, and the script refuses a required parameter declared after a defaulted one.
+      - name: Compose colour API snapshot is current
+        run: pnpm check:compose-api
+
       - name: Typography alias guardrail
         run: pnpm check:typography
 
@@ -167,6 +178,12 @@ jobs:
       # and left a project that could not build. Runs after the build so it checks what would be served.
       - name: Registry dependency completeness
         run: pnpm check:registry-deps
+
+      # The registry does not deliver the preset's global reduced-motion floor, so the one promise a delivered
+      # file can keep itself is that every loop it ships states its own reduced form. Reads the same served
+      # payloads as the check above, because those are what a consumer receives.
+      - name: Registry reduced-motion floor
+        run: pnpm check:registry-motion
 
       # `pnpm typecheck` type-checks the IoT source, which is not the same as proving it bundles: the
       # three entry points, the .d.ts rollup and the `exports` map's paths are all produced here. Without

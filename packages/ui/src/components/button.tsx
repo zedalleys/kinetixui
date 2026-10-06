@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/utils";
 
 /**
- * Button — generated from Figma "KinetixUI" › UI Components ›
+ * Button — reconciled 1:1 with the design source, Figma "KinetixUI" › UI Components ›
  * 02. Controls & Actions › Button (node 54863:351).
  *
  * Figma variant matrix (mirrored 1:1 below):

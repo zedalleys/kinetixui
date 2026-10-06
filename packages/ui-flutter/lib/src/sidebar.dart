@@ -44,7 +44,7 @@ class KinetixSidebar extends StatelessWidget {
           child: GestureDetector(
             onTap: onDismiss,
             behavior: HitTestBehavior.opaque,
-            child: const ColoredBox(color: Color(0x66000000)),
+            child: ColoredBox(color: c.scrim),
           ),
         ),
         Align(

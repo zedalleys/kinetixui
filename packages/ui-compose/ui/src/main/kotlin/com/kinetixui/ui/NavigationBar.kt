@@ -1,7 +1,6 @@
 package com.kinetixui.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
@@ -35,8 +33,8 @@ import androidx.compose.ui.unit.sp
  * source exactly rather than Material3's own app-bar conventions.
  * `h-14`/`min-w-9`/`size-9` (56dp/36dp/36dp) aren't on the shared
  * `spacing_*` scale — hardcoded, same reasoning as `KinetixFab`'s
- * off-scale sizes. The back chevron is a plain "‹" glyph, same "no icon
- * library" gap noted for `KinetixRating`/`KinetixTag`. The bottom border
+ * off-scale sizes. Back is a named button whose chevron ([KinetixIcons],
+ * autoMirror) points to the inline start in both directions. The bottom border
  * is hand-drawn with `drawBehind`, same approach `KinetixAccordionItem`'s
  * `border-b` uses.
  */
@@ -73,15 +71,15 @@ fun KinetixNavigationBar(
             when {
                 leading != null -> leading()
                 onBack != null -> {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp) // size-9, not on the shared scale
-                            .clip(CircleShape)
-                            .clickable(onClick = onBack),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(text = "‹", color = colors.foreground, fontSize = 20.sp)
-                    }
+                    // ChevronStart is auto-mirrored: it points to the inline start in RTL as well.
+                    KinetixIconControl(
+                        label = "Back",
+                        onClick = onBack,
+                        iconSize = 24.dp,
+                        tint = colors.foreground,
+                        padding = 6.dp,
+                        modifier = Modifier.clip(CircleShape), // size-9 overall, not on the shared scale
+                    ) { KinetixIcon(KinetixIcons.ChevronStart, 24.dp) }
                 }
             }
         }

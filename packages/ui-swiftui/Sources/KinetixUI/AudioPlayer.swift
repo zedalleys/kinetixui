@@ -60,7 +60,7 @@ public struct KinetixAudioPlayer: View {
     }
 
     @ViewBuilder
-    private func iconButton(_ symbol: String, size: CGFloat, action: @escaping () -> Void) -> some View {
+    private func iconButton(_ symbol: String, size: CGFloat, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: size))
@@ -69,6 +69,9 @@ public struct KinetixAudioPlayer: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        // Named as React names them, rather than by VoiceOver's reading of the symbol ("backward.fill" is
+        // the rewind symbol, so its built-in name would not say "Previous track").
+        .accessibilityLabel(label)
     }
 
     public var body: some View {
@@ -95,11 +98,11 @@ public struct KinetixAudioPlayer: View {
                 .foregroundStyle(colors.mutedForeground)
                 HStack(spacing: 4) {
                     Spacer()
-                    if let onPrev { iconButton("backward.fill", size: 16, action: onPrev) }
-                    iconButton("gobackward.10", size: 16) { onSkip(-10) }
-                    iconButton(isPlaying ? "pause.fill" : "play.fill", size: 22, action: onPlayPause)
-                    iconButton("goforward.10", size: 16) { onSkip(10) }
-                    if let onNext { iconButton("forward.fill", size: 16, action: onNext) }
+                    if let onPrev { iconButton("backward.fill", size: 16, label: "Previous track", action: onPrev) }
+                    iconButton("gobackward.10", size: 16, label: "Back 10s") { onSkip(-10) }
+                    iconButton(isPlaying ? "pause.fill" : "play.fill", size: 22, label: isPlaying ? "Pause" : "Play", action: onPlayPause)
+                    iconButton("goforward.10", size: 16, label: "Forward 10s") { onSkip(10) }
+                    if let onNext { iconButton("forward.fill", size: 16, label: "Next track", action: onNext) }
                     Spacer()
                 }
             }
@@ -112,7 +115,7 @@ public struct KinetixAudioPlayer: View {
 
         case .mini:
             HStack(spacing: 8) {
-                iconButton(isPlaying ? "pause.fill" : "play.fill", size: 16, action: onPlayPause)
+                iconButton(isPlaying ? "pause.fill" : "play.fill", size: 16, label: isPlaying ? "Pause" : "Play", action: onPlayPause)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.system(size: 13, weight: .medium))

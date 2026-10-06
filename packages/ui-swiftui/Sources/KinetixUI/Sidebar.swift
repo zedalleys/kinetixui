@@ -15,6 +15,7 @@ import SwiftUI
 
 public struct KinetixSidebar<Content: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @Binding private var isOpen: Bool
     private let width: CGFloat
@@ -29,7 +30,7 @@ public struct KinetixSidebar<Content: View>: View {
     public var body: some View {
         if isOpen {
             ZStack(alignment: .leading) {
-                Color.black.opacity(0.4)
+                colors.scrim
                     .ignoresSafeArea()
                     .onTapGesture { isOpen = false }
 
@@ -42,7 +43,7 @@ public struct KinetixSidebar<Content: View>: View {
                         Rectangle().fill(colors.border).frame(width: 1)
                     }
                     .ignoresSafeArea(edges: .vertical)
-                    .transition(.move(edge: .leading))
+                    .transition(KinetixSlideMotion.transition(from: .leading, reduceMotion: reduceMotion))
             }
         }
     }

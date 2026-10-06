@@ -57,7 +57,9 @@ Some things to know before relying on them:
 - **`EnergySummary` is display only** — no billing, cost, carbon or forecast.
 - **Pairing components are UI state.** No Bluetooth, Wi-Fi or discovery lives here.
 - **Live regions are rare.** `CommandLifecycle` and `AutomationBuilder` each have one polite
-  `role="status"`; `PairingFailure` is a `role="alert"`. Nothing else announces.
+  `role="status"`; `PairingFailure` is a `role="alert"`; `DeviceSetpointControl` has one polite
+  sentence. A device control given a `lifecycle` announces its change in one polite `role="status"`
+  (turn it off with `announce={false}` when `CommandLifecycle` shows the same change). Nothing else announces.
 
 ## What it is not
 
@@ -65,6 +67,19 @@ Not a transport. There is no MQTT, BLE, WebSocket or HTTP client here, no vendor
 that parses or executes a device payload. Nothing in this package opens a connection or holds a
 credential. It models what a device *is*, so the layer that talks to one has something honest to
 render into.
+
+## The device interaction contract
+
+Desired vs reported state, the command lifecycle (including correlation of replies and reports that
+arrive out of order), the `confirmed` / `optimistic` / `hybrid` presentation strategies and
+capability-oriented devices are specified in
+[`docs/iot/DEVICE-INTERACTION-CONTRACT.md`](../../docs/iot/DEVICE-INTERACTION-CONTRACT.md). They are
+React-free and live in `@kinetixui/iot/functions`.
+
+The four controls take a command `lifecycle` and a `strategy` (`confirmed` by default, `optimistic`,
+`hybrid`) and draw what `presentCommandValue` decides; a strategy changes what is shown, never what the
+lifecycle says about the device. Connectivity separates `unknown` and `connecting` from `offline`: a
+device nobody has reported on is not a device that is gone.
 
 ## The recurring design rule
 
@@ -90,7 +105,10 @@ number to keep in step. A documented prerequisite says the same thing without pr
 resolvable.
 
 So the prerequisite is stated instead of depended on. For the React primitives to look right, an app
-needs the KinetixUI token stylesheet loaded and this package inside its Tailwind `content`:
+needs the **KinetixUI token stylesheet, 0.24.0 or later**, loaded, and this package inside its Tailwind
+`content`. 0.24.0 is the floor because the device, group and activity cards set secondary text in
+`text-muted-on-container`, a role earlier token versions do not define; on them that text falls back to
+the inherited colour instead of the tuned one:
 
 ```js
 // tailwind.config.js

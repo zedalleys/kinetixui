@@ -2403,7 +2403,8 @@
         "build",
         "interaction",
         "largeText",
-        "published"
+        "published",
+        "rtl"
       ],
       "Angular": [
         "accessibility",
@@ -2457,7 +2458,8 @@
         "build",
         "interaction",
         "largeText",
-        "published"
+        "published",
+        "rtl"
       ],
       "Angular": [
         "accessibility",
@@ -2907,13 +2909,16 @@
         "published"
       ],
       "SwiftUI": [
-        "build"
+        "build",
+        "reducedMotion"
       ],
       "Compose": [
-        "build"
+        "build",
+        "reducedMotion"
       ],
       "Flutter": [
-        "build"
+        "build",
+        "reducedMotion"
       ]
     },
     "menubar": {
@@ -2942,13 +2947,16 @@
         "published"
       ],
       "SwiftUI": [
-        "build"
+        "build",
+        "reducedMotion"
       ],
       "Compose": [
-        "build"
+        "build",
+        "reducedMotion"
       ],
       "Flutter": [
-        "build"
+        "build",
+        "reducedMotion"
       ]
     },
     "metric": {
@@ -3431,7 +3439,8 @@
         "build",
         "interaction",
         "largeText",
-        "published"
+        "published",
+        "rtl"
       ],
       "Angular": [
         "accessibility",
@@ -3485,14 +3494,17 @@
         "published"
       ],
       "SwiftUI": [
-        "build"
+        "build",
+        "reducedMotion"
       ],
       "Compose": [
-        "build"
+        "build",
+        "reducedMotion"
       ],
       "Flutter": [
         "build",
         "largeText",
+        "reducedMotion",
         "rtl"
       ]
     },
@@ -3556,14 +3568,17 @@
         "published"
       ],
       "SwiftUI": [
-        "build"
+        "build",
+        "reducedMotion"
       ],
       "Compose": [
-        "build"
+        "build",
+        "reducedMotion"
       ],
       "Flutter": [
         "build",
         "largeText",
+        "reducedMotion",
         "rtl"
       ]
     },
@@ -3900,7 +3915,8 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "published",
+        "rtl"
       ]
     },
     "tree-view": {
@@ -3942,7 +3958,7 @@
       "build": 98,
       "interaction": 38,
       "accessibility": 98,
-      "rtl": 18,
+      "rtl": 22,
       "largeText": 27,
       "reducedMotion": 3,
       "visual": 0,
@@ -3964,7 +3980,7 @@
       "accessibility": 0,
       "rtl": 0,
       "largeText": 0,
-      "reducedMotion": 3,
+      "reducedMotion": 7,
       "visual": 0,
       "published": 0
     },
@@ -3974,7 +3990,7 @@
       "accessibility": 4,
       "rtl": 1,
       "largeText": 0,
-      "reducedMotion": 3,
+      "reducedMotion": 7,
       "visual": 0,
       "published": 0
     },
@@ -3984,7 +4000,7 @@
       "accessibility": 5,
       "rtl": 58,
       "largeText": 58,
-      "reducedMotion": 3,
+      "reducedMotion": 7,
       "visual": 0,
       "published": 0
     }

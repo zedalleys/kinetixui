@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
@@ -26,8 +27,13 @@ import androidx.compose.ui.unit.sp
  * `foreground`-on-`background` — no separate token, just the pair swapped.
  * The leading intent icon isn't ported — no icon library wired in yet,
  * same gap noted for `KinetixAlert`/`KinetixFieldMessage`. The dismiss
- * "×" and action-label glyphs follow the same plain-text convention as
- * `KinetixTag`'s remove control.
+ * control is a named button ("Dismiss") with Material's Close icon, the
+ * same control as `KinetixTag`'s remove.
+ *
+ * `dismissIcon` replaces the default dismiss mark (Material's Close). Pass any composable — a Material
+ * `Icon`, a vector or painter resource, your company's icon composable. The control lays it out at 14dp,
+ * provides the content colour as `LocalContentColor` (which material3's `Icon` tints with by default), and
+ * keeps the "Dismiss" name and button role, so pass `contentDescription = null` on an `Icon`. See /docs/icons.
  */
 enum class KinetixInformVariant { Information, Warning, Success, Error, Action }
 
@@ -39,10 +45,11 @@ fun KinetixInform(
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
     onDismiss: (() -> Unit)? = null,
+    dismissIcon: (@Composable () -> Unit)? = null,
 ) {
     val colors = KinetixColorScheme.current
     val (container, content) = when (variant) {
-        KinetixInformVariant.Information -> colors.info.copy(alpha = 0.1f) to colors.info
+        KinetixInformVariant.Information -> colors.info.copy(alpha = 0.1f) to colors.onInfoContainer
         KinetixInformVariant.Warning -> colors.warning.copy(alpha = 0.15f) to colors.warning
         KinetixInformVariant.Success -> colors.success.copy(alpha = 0.15f) to colors.success
         KinetixInformVariant.Error -> colors.destructive.copy(alpha = 0.1f) to colors.destructive
@@ -76,13 +83,13 @@ fun KinetixInform(
             }
         }
         if (onDismiss != null) {
-            Text(
-                text = "×",
-                color = content,
-                modifier = Modifier
-                    .align(Alignment.Top)
-                    .clickable(onClick = onDismiss),
-            )
+            KinetixIconControl(
+                label = "Dismiss",
+                onClick = onDismiss,
+                iconSize = 14.dp,
+                tint = content.copy(alpha = 0.7f),
+                modifier = Modifier.align(Alignment.Top),
+            ) { dismissIcon?.invoke() ?: KinetixIcon(KinetixIcons.Close, 14.dp) }
         }
     }
 }

@@ -168,7 +168,7 @@
         "$type": "color"
       },
       "on-info-container": {
-        "$value": "#395a70",
+        "$value": "{color.on-info-container}",
         "$type": "color",
         "$description": "text on a tinted info surface (bg-info/10) — Banner/Inform information. --info itself is only 4.15:1 on its own 10% tint; this clears AA. Exposed as text-info-on-container."
       },
@@ -263,6 +263,16 @@
     "info-foreground": {
       "$value": "{color.blue.50}",
       "$type": "color"
+    },
+    "scrim": {
+      "$value": "#00000066",
+      "$type": "color",
+      "$description": "the dimming layer behind a modal surface (Dialog, AlertDialog, Sheet, Drawer, Modal, Command, Tour, mobile Sidebar) on every platform: black at 40%. Black, not `foreground` — in dark `foreground` is near-white and would lift the page toward the dialog's own surface. The alpha is part of the role, so draw it as is (web `bg-scrim`, native `colors.scrim`) rather than adding opacity."
+    },
+    "on-info-container": {
+      "$value": "{color.blue.400}",
+      "$type": "color",
+      "$description": "text and icons on a tinted info surface (`info` at 10% over the page) — Banner and Inform information, on every platform. `info` itself is 4.19:1 on its own 10% tint; this is 6.47:1. Web exposes it as `text-info-on-container`; SwiftUI, Compose and Flutter as `onInfoContainer`."
     },
     "brand": {
       "$value": "{color.blue.500}",

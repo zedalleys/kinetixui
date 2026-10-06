@@ -84,19 +84,25 @@ const TEXT_SCALES = [1, 2];
 /**
  * Pages that do not yet hold at 200% text, with the reason, as a ratchet.
  *
- * Every other page on the site passes both text sizes at all four widths. `/iot` does not, and the cause
- * is NOT the pattern the rest of this pass fixed — it is not a container refusing to yield.
- * `DeviceSetpointControl` draws a fixed-geometry ring with its readout and its min/max labels absolutely
- * positioned over it, so the text doubles while the ring does not: measured at 320px/200%, the label row
- * inside the ring overhangs by 116px. Making that reflow is a design decision about a published
- * component — does the numeral shrink, does the ring grow, does the presentation change below some size
- * — and not something to settle inside an accessibility sweep.
+ * Every other page on the site passes both text sizes at all four widths. `/iot` does not. Its original cause,
+ * `DeviceSetpointControl`'s fixed-geometry ring, was fixed by the state and spatial audit (the ring now stacks
+ * below 12rem; `check:iot-state-spatial` holds it). Re-measured after that fix, /iot still overflows at 200% text
+ * from page chrome: 75px at 320 (environment tab labels, the "Built from" part list) and 40px at 768 (the
+ * roadmap's "Deferred" chip). Those are the remaining reason for the entry.
  *
  * This is a ratchet and not an exemption: the entry is asserted to be NEEDED, so the moment /iot is fixed
  * this run fails and tells you to delete the line. It follows `check-rtl.mjs`, which carries its pending
  * files the same way. 1 of 21 pages, at one of the two text sizes.
  */
-const TEXT_SCALE_PENDING = new Map([["/iot", "DeviceSetpointControl's ring has fixed geometry under text that scales — needs a design decision, see PR"]]);
+const TEXT_SCALE_PENDING = new Map([
+  [
+    "/iot",
+    // The ring itself was fixed by the state and spatial audit (docs/audits/INTERACTIVE-STATE-SPATIAL-AUDIT.md):
+    // it now stacks below 12rem. Measured after that fix, what still overflows at 200% text is page chrome — the
+    // environment tab labels and the "Built from" part list at 320px, and the roadmap's "Deferred" chip at 768px.
+    "page chrome (environment tabs, 'Built from' list, roadmap chip) overflows at 320/768px — not the ring any more",
+  ],
+]);
 
 /**
  * Per-page layout contracts: regions that must still be usable, not merely free of sideways scroll.

@@ -91,8 +91,18 @@ export default {
 ```
 
 <Callout>
-  The preset only wires `colors`, `borderRadius`, `spacing`, and `fontFamily` to
-  CSS variables. It adds no plugins and no reset.
+  The preset wires `colors`, `borderRadius`, `spacing`, `fontFamily` and the motion
+  durations and easings to CSS variables. It also adds the `tailwindcss-animate`
+  plugin, the accordion, collapsible, marquee, typing and caret keyframes, and a
+  base rule that shortens every animation and transition to `0.01ms` under
+  `prefers-reduced-motion: reduce`. It adds no reset.
+
+  The registry (`npx @kinetixui/cli add`) delivers component source and the token
+  stylesheet, **not** the preset. Without it, utilities such as `animate-in`,
+  `duration-fast` and `ease-standard` do not exist, so those animations simply do
+  not run, and there is no global reduced-motion rule. What a registry component
+  does promise on its own is that every loop it ships stops under reduced motion.
+  See [Foundations](/docs/foundations#motion).
 </Callout>
 
 ## Dark mode

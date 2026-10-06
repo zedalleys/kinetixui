@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
+import 'kinetix_loop_motion.dart';
 import 'theme.dart';
 
 enum KinetixSpinnerSize { sm, md, lg }
@@ -12,23 +13,40 @@ enum KinetixSpinnerVariant { primary, muted, onColor }
 /// border-current border-t-transparent` ring, `animate-spin`). Drawn as a
 /// 270°-sweep stroked arc (one quadrant open = `border-t-transparent`),
 /// rotating continuously — same approach as the Compose / SwiftUI ports.
+///
+/// With animations removed the arc rests and does not rotate
+/// ([KinetixLoopMotion]). [label] is announced in both modes, so the loading
+/// state never depends on the motion.
 class KinetixSpinner extends StatefulWidget {
   const KinetixSpinner({
     super.key,
     this.size = KinetixSpinnerSize.md,
     this.variant = KinetixSpinnerVariant.primary,
+    this.label = 'Loading',
   });
 
   final KinetixSpinnerSize size;
   final KinetixSpinnerVariant variant;
 
+  /// What assistive technology announces. Mirrors React's `label`.
+  final String label;
+
   @override
   State<KinetixSpinner> createState() => _KinetixSpinnerState();
 }
 
-class _KinetixSpinnerState extends State<KinetixSpinner> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 800))..repeat();
+class _KinetixSpinnerState extends State<KinetixSpinner>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+      vsync: this, duration: KinetixLoopMotion.spinnerPeriod);
+  bool _runs = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _runs = KinetixLoopMotion.runsOf(context);
+    KinetixLoopMotion.sync(_controller, runs: _runs);
+  }
 
   @override
   void dispose() {
@@ -50,12 +68,13 @@ class _KinetixSpinnerState extends State<KinetixSpinner> with SingleTickerProvid
       KinetixSpinnerVariant.onColor => c.actionForeground,
     };
 
-    return SizedBox(
-      width: d,
-      height: d,
-      child: RotationTransition(
-        turns: _controller,
-        child: CustomPaint(painter: _ArcPainter(color)),
+    final arc = CustomPaint(painter: _ArcPainter(color));
+    return Semantics(
+      label: widget.label,
+      child: SizedBox(
+        width: d,
+        height: d,
+        child: _runs ? RotationTransition(turns: _controller, child: arc) : arc,
       ),
     );
   }

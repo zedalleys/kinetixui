@@ -77,6 +77,19 @@ for (const [name, p] of Object.entries(PLATFORMS)) {
         );
       }
 
+      // 2b. A strict family (loops, slides) is held to more than a mention. Its reduced form is the whole
+      //     point, so the member must read the platform setting in its own source and actually CALL the
+      //     helper (`Helper.`), not just name it in a comment or declare an environment value it ignores.
+      if (family.strict) {
+        const helperName = family.helper.replace(p.ext, "");
+        if (!p.preference.test(src) || !new RegExp(`\\b${helperName}[.(]`).test(src)) {
+          errors.push(
+            `${name}/${member}: in the strict ${familyName} family but ${!p.preference.test(src) ? "never reads the platform preference" : `never calls ${helperName}`}.\n` +
+              `      This family's reduced form is its purpose; naming the helper is not the same as using it.`,
+          );
+        }
+      }
+
       // 3. A member that resolves a DIRECTIONAL animation must choose the direction from state.
       //    SwiftUI's Collapsible hardcoded `.expanding`, so the exit curve the resolver defines was
       //    unreachable and a collapse was never animated at all. Only families with an asymmetric

@@ -4,6 +4,7 @@ import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "../lib/utils";
+import { withDirectionalPortal } from "./direction-provider";
 
 /**
  * Select — reconciled 1:1 with the KinetixUI design source, node 54855:13882.
@@ -12,6 +13,7 @@ import { cn } from "../lib/utils";
  * navigation"): an 80% `--muted-foreground` edge at rest, full strength under a hovering pointer, and hover
  * never over focus, an open list, invalid or disabled. Select has no read-only state.
  */
+const SelectPortal = withDirectionalPortal(SelectPrimitive.Portal);
 const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
 const SelectValue = SelectPrimitive.Value;
@@ -62,7 +64,7 @@ const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
 >(({ className, children, position = "popper", ...props }, ref) => (
-  <SelectPrimitive.Portal>
+  <SelectPortal>
     <SelectPrimitive.Content
       ref={ref}
       position={position}
@@ -86,7 +88,7 @@ const SelectContent = React.forwardRef<
         <ChevronDown className="size-4" />
       </SelectPrimitive.ScrollDownButton>
     </SelectPrimitive.Content>
-  </SelectPrimitive.Portal>
+  </SelectPortal>
 ));
 SelectContent.displayName = SelectPrimitive.Content.displayName;
 

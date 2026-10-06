@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'icon_control.dart';
 import 'theme.dart';
 
 class KinetixCodeBlockFile {
@@ -48,13 +49,13 @@ class _KinetixCodeBlockState extends State<KinetixCodeBlock> {
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
 
-    final Widget copyButton = GestureDetector(
+    final Widget copyButton = IconControl(
+      label: _copied ? 'Copied' : 'Copy code',
       onTap: _copy,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.all(6),
-        child: Icon(_copied ? Icons.check : Icons.copy, size: 14, color: c.mutedForeground),
-      ),
+      size: 14,
+      color: c.mutedForeground,
+      padding: const EdgeInsets.all(6),
+      child: Icon(_copied ? Icons.check : Icons.copy),
     );
 
     return ClipRRect(

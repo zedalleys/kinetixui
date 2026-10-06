@@ -179,6 +179,8 @@
   <color name="color_tertiary_foreground">#fff0f7ff</color>
   <color name="color_info">#ff57778d</color>
   <color name="color_info_foreground">#fff0f7ff</color>
+  <color name="color_scrim">#66000000</color>
+  <color name="color_on_info_container">#ff395a70</color>
   <color name="color_brand">#ff1b3c53</color>
   <color name="color_brand_foreground">#fff0f7ff</color>
   <color name="color_action">#ff1d4ed8</color>

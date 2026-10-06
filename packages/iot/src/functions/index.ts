@@ -43,7 +43,15 @@ export {
   type RelativeTimeOptions,
   type SummarizeAutomationOptions,
 } from "./automation";
-export { clampBatteryLevel, classifyBatteryLevel, describeBattery, describeBatteryLevel, formatBatteryPercent } from "./battery";
+export {
+  clampBatteryLevel,
+  classifyBatteryLevel,
+  describeBattery,
+  describeBatteryLevel,
+  formatBatteryPercent,
+  resolveBatteryState,
+} from "./battery";
+export { findCapabilitiesByRole, resolveCapabilitySupport } from "./capabilities";
 export {
   advanceCommandLifecycle,
   buildDeviceCommand,
@@ -57,22 +65,29 @@ export {
   isLifecyclePending,
   isLifecycleSettled,
   isLifecycleTimedOut,
+  isSameDeviceValue,
   lifecycleToCommandStatus,
   lifecycleToControlPhase,
+  presentCommandValue,
   startCommandLifecycle,
+  supersedeCommandLifecycle,
   transitionCommandLifecycle,
   type BuildDeviceCommandInput,
   type DescribeLifecycleOptions,
   type StartCommandLifecycleInput,
+  type SupersedeCommandLifecycleOptions,
 } from "./commands";
 export {
   clampLevel,
+  describeControlOutcome,
   describeControlState,
   describePowerState,
   normalizePowerState,
   resolveActiveMode,
+  resolveControlPresentation,
   resolveControlState,
   snapToStep,
+  type DescribeControlOutcomeOptions,
 } from "./control";
 export {
   assessDevices,

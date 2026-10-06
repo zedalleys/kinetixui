@@ -90,6 +90,9 @@ const ALPHA_TEXT_PAIRS = [
   ["secondary", "secondary-foreground", 1, "background", "Button Secondary hover"],
   ["secondary", "secondary-foreground", 1, "background", "Button Secondary pressed"],
   ["on-info-container", "info", 0.1, "background", "Banner/Inform information"],
+  // Native Banner/Inform draw the same text on the same tint (`onInfoContainer`); a banner inside a
+  // muted panel is the tighter case — `info` itself is 3.90:1 there.
+  ["on-info-container", "info", 0.1, "muted", "Banner/Inform information on a muted surface"],
   // IoT device, group and activity cards tint their surface to carry state. `--muted-foreground`
   // is tuned against `--background` and `--muted` and has no margin left on a 10% tint (4.43:1 on
   // primary, 4.33:1 on destructive), which is how three contrast violations reached main unseen.
@@ -245,6 +248,25 @@ for (const mode of ["light", "dark"]) {
     const r = ratio(edge, S.background);
     if (r < 3) failures += 1;
     console.log(`  ${`shadow-${name} / background`.padEnd(44)} ${r.toFixed(2)}:1  ${r >= 3 ? "ok" : "** FAIL **"}`);
+  }
+
+  // Every focus ring is emitted on the web as a live `hsl(var(--role) / a)` reference (LIVE_SHADOW_ROLES in
+  // style-dictionary/hooks.mjs): `--shadow-focus` follows `focus`, and the status rings follow `destructive`,
+  // `success` and `warning`, so a theme that moves a role moves its ring. The source hex is what native
+  // shadows read, so it has to BE the role's value — otherwise the web default and the native default would
+  // quietly disagree. And the generated stylesheet has to actually carry the reference: a baked hex there is
+  // how a custom theme ended up with an azure ring (or an invisible one on a blue background).
+  console.log(`--- ${mode} — focus rings follow their role ---`);
+  const extras = readFileSync(`${root}/packages/tokens/dist/web/${mode === "dark" ? "extras.dark.css" : "extras.css"}`, "utf8");
+  for (const [ring, role] of [["focus", "focus"], ["focus-destructive", "destructive"], ["focus-success", "success"], ["focus-warning", "warning"]]) {
+    const edge = val(shadows[ring])?.[0]?.color?.slice(0, 7)?.toLowerCase();
+    const sameAsRole = edge && S[role] && edge === S[role].toLowerCase();
+    if (!sameAsRole) failures += 1;
+    console.log(`  ${`shadow.${ring} edge == color.${role}`.padEnd(44)} ${edge} vs ${S[role]}  ${sameAsRole ? "ok" : "** FAIL — the source ring is not the role **"}`);
+    const emitted = extras.match(new RegExp(`--shadow-${ring}:\\s*([^;]+);`))?.[1] ?? "";
+    const live = new RegExp(`^0 0 0 1px hsl\\(var\\(--${role}\\)\\), 0 0 0 4px hsl\\(var\\(--${role}\\) / [\\d.]+\\)$`).test(emitted.trim());
+    if (!live) failures += 1;
+    console.log(`  ${`generated --shadow-${ring} reads var(--${role})`.padEnd(44)} ${live ? "ok" : `** FAIL — got "${emitted}"; run pnpm build:tokens **`}`);
   }
 
   console.log(`--- ${mode} — non-text cues (SC 1.4.11 = 3:1) ---`);

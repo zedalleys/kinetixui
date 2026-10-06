@@ -49,6 +49,7 @@ export {
 
 export {
   TOKEN_CONTRACT,
+  ROLE_DEFAULTS,
   tokenNameForHex,
   SHIPPED_RADIUS,
   SHIPPED_ELEVATION,
@@ -63,6 +64,9 @@ export {
 export {
   ACCEPTED_TOKENS,
   CONTRAST_PAIRS,
+  NON_TEXT_PAIRS,
+  TEXT_MIN,
+  NON_TEXT_MIN,
   parsePaletteText,
   deriveForegrounds,
   toCssVarStyle,

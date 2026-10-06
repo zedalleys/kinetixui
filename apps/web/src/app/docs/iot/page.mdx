@@ -40,18 +40,6 @@ pattern working — see [the IoT overview](/iot).
 npm install @kinetixui/iot
 ```
 
-<Callout>
-  **Part of this page is ahead of the published package.** `npm install` today gives you the state model
-  and the fourteen primitives. The **control layer** (`DevicePowerControl`, `DeviceLevelControl`,
-  `DeviceSetpointControl`, `DeviceModeControl`, `resolveControlState`), the **identity and card
-  compositions** (`DeviceIcon`, `DeviceIdentity`, `DeviceControlCard`, `DeviceGroupCard`, `RoutineCard`)
-  and the control-state, device-category and automation-timing helpers in `@kinetixui/iot/functions` are
-  in this repository's `main` but **not in the version npm serves**, so the sections documenting them are
-  marked **Unreleased**. They land on the next `@kinetixui/iot` release; until then, importing one from an
-  installed copy is a build error, not a mistake you made. Check what you have against
-  [the changelog](/docs/changelog).
-</Callout>
-
 Three entry points, because the useful half of this module has nothing to do with rendering:
 
 | import                     | contains                                 |
@@ -567,11 +555,6 @@ firmware. Live-region announcements are rare on purpose; a list is not announced
 
 ## Automation
 
-<Callout>
-  `RoutineCard` is **unreleased** — see [Install](#install). The automation *model* and its timing helpers
-  ship with it; the rest of this section describes types that are already published.
-</Callout>
-
 An automation is a **rule**: one trigger, any number of conditions joined by `and` / `or`, and one or more
 actions. The module models the rule and edits it. **It does not run it.** There is no engine, no scheduler and
 no trigger evaluation in this package; your application owns execution.
@@ -781,11 +764,6 @@ product's decisions live and importing someone else's is rarely the shortcut it 
 
 ## Controls
 
-<Callout>
-  **Unreleased.** Everything in this section is in `main` and not in the published package — see
-  [Install](#install).
-</Callout>
-
 A control is the part that makes this a connected-device system rather than a dashboard. All four
 share one rule, and it is the rule most device UIs get wrong:
 
@@ -797,10 +775,15 @@ and the user finds out minutes later. So a requested state and a confirmed state
 
 | Control | Confirmed | Requested, not yet confirmed |
 | --- | --- | --- |
-| `DevicePowerControl` | Track filled, knob solid | Track moves, knob stays hollow and dashed |
+| `DevicePowerControl` | Track filled, knob solid | Switch stays at the reported state, track outlined dashed, label says “Turning on” |
 | `DeviceLevelControl` | Solid fill to the value | Hatched fill to the requested value, solid fill left at the confirmed one |
 | `DeviceSetpointControl` | Target shown plainly | Target tinted, with the current reading still visible beneath it |
 | `DeviceModeControl` | Mode filled | Mode outlined and dashed, never filled |
+
+That is the default, `strategy="confirmed"`. Every control also accepts `strategy="hybrid"`, where the
+control moves to the request but stays marked as unconfirmed (the power knob hollow, the confirmed mark
+withheld), and `strategy="optimistic"`, which moves without the mark and rolls back in words if the request
+fails.
 
 The same distinction reaches assistive technology rather than being a visual flourish:
 `aria-checked` on the power switch reports the **confirmed** state while a request is open, and the

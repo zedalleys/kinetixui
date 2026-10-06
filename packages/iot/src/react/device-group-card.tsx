@@ -206,7 +206,7 @@ const DeviceGroupCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
         data-selected={selected ? "" : undefined}
         data-variant={variant}
         className={cn(
-          "flex flex-col font-sans transition-colors duration-base ease-out motion-reduce:transition-none",
+          "flex flex-col font-sans transition-colors duration-base ease-enter motion-reduce:transition-none",
           row ? "gap-2 rounded-2xl px-3 py-2" : "gap-4 rounded-container p-5 shadow-sm",
           surface,
           className,

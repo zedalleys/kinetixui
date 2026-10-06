@@ -80,7 +80,9 @@ public struct KinetixNavigationBackButton: View {
 
     public var body: some View {
         Button(action: action) {
-            Image(systemName: "chevron.left")
+            // `.backward`, not `.left`: SF Symbols flips the backward/forward chevrons in a right-to-left
+            // layout, so Back points to the inline start in both directions. `chevron.left` never flips.
+            Image(systemName: "chevron.backward")
                 .font(.system(size: 18))
                 .foregroundStyle(colors.foreground)
                 .frame(width: 36, height: 36)

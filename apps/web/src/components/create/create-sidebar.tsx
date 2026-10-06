@@ -124,7 +124,9 @@ function ContrastPanel({ results, manual }: { results: ContrastResult[]; manual:
         )}
       </span>
       <span className="flex shrink-0 items-center gap-2 font-mono text-xs">
-        <span className="text-muted-foreground">{c.ratio.toFixed(2)}:1</span>
+        <span className="text-muted-foreground">
+          {c.ratio.toFixed(2)}:1<span className="sr-only">, needs {c.min}:1</span>
+        </span>
         {/* The word carries the result; the colour only reinforces it. */}
         <span className={c.pass ? "text-success" : "text-destructive"}>{c.pass ? "Pass" : "Fail"}</span>
       </span>
@@ -137,7 +139,7 @@ function ContrastPanel({ results, manual }: { results: ContrastResult[]; manual:
         <span className="font-mono">
           {results.length - failing.length}/{results.length}
         </span>{" "}
-        pairs meet WCAG AA.
+        pairs meet WCAG (4.5:1 text, 3:1 focus ring).
         {failing.length > 0 && <span className="text-destructive"> {failing.length} do not.</span>}
       </p>
 

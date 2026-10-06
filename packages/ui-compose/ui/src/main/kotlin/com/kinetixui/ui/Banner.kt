@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
@@ -19,11 +20,16 @@ import androidx.compose.ui.unit.sp
  * full-bleed, page-level notice, optionally dismissible. Distinct from
  * [KinetixAlert] (in-flow, static) and [KinetixToaster] (transient):
  * persistent, edge-to-edge, no rounded corners (compare [KinetixInform]'s
- * rounded inline card). Reuses Inform's variant/tint taxonomy and its
- * "no icon library wired in yet" gap. The web version's `sticky` prop has
+ * rounded inline card). Reuses Inform's variant/tint taxonomy (and its
+ * unported leading intent icon). The web version's `sticky` prop has
  * no Compose equivalent at the component level — pin it to the top by
  * placement instead (a `Scaffold`'s `topBar`, or the first child of a
  * non-scrolling `Column`), same as `KinetixAppBar`.
+ *
+ * `dismissIcon` replaces the default dismiss mark (Material's Close). Pass any composable — a Material
+ * `Icon`, a vector or painter resource, your company's icon composable. The control lays it out at 14dp,
+ * provides the content colour as `LocalContentColor` (which material3's `Icon` tints with by default), and
+ * keeps the "Dismiss" name and button role, so pass `contentDescription = null` on an `Icon`. See /docs/icons.
  */
 enum class KinetixBannerVariant { Information, Warning, Success, Error, Action }
 
@@ -35,10 +41,11 @@ fun KinetixBanner(
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
     onDismiss: (() -> Unit)? = null,
+    dismissIcon: (@Composable () -> Unit)? = null,
 ) {
     val colors = KinetixColorScheme.current
     val (container, content) = when (variant) {
-        KinetixBannerVariant.Information -> colors.info.copy(alpha = 0.1f) to colors.info
+        KinetixBannerVariant.Information -> colors.info.copy(alpha = 0.1f) to colors.onInfoContainer
         KinetixBannerVariant.Warning -> colors.warning.copy(alpha = 0.15f) to colors.warning
         KinetixBannerVariant.Success -> colors.success.copy(alpha = 0.15f) to colors.success
         KinetixBannerVariant.Error -> colors.destructive.copy(alpha = 0.1f) to colors.destructive
@@ -71,13 +78,13 @@ fun KinetixBanner(
             )
         }
         if (onDismiss != null) {
-            Text(
-                text = "×",
-                color = content,
-                modifier = Modifier
-                    .padding(start = dimensionResource(R.dimen.spacing_3))
-                    .clickable(onClick = onDismiss),
-            )
+            KinetixIconControl(
+                label = "Dismiss",
+                onClick = onDismiss,
+                iconSize = 14.dp,
+                tint = content,
+                modifier = Modifier.padding(start = dimensionResource(R.dimen.spacing_3)),
+            ) { dismissIcon?.invoke() ?: KinetixIcon(KinetixIcons.Close, 14.dp) }
         }
     }
 }

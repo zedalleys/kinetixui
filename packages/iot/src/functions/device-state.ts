@@ -15,7 +15,7 @@ import type { KinetixFirmwareInfo } from "../types/firmware";
 import { classifyBatteryLevel } from "./battery";
 import { resolveFirmwareStatus } from "./firmware";
 import { detectStaleReading } from "./telemetry";
-import { normalizeDeviceStatus } from "./status";
+import { isKnownDeviceStatus, normalizeDeviceStatus } from "./status";
 import { parseTimestamp } from "./time";
 
 /**
@@ -63,6 +63,10 @@ export function describeConnectivity(state: KinetixConnectivityState): string {
       return "Unreachable";
     case "stale":
       return "Data is out of date";
+    case "connecting":
+      return "Connecting";
+    case "unknown":
+      return "Connection unknown";
   }
 }
 
@@ -77,15 +81,23 @@ export type DeriveConnectivityOptions = {
  *
  * `offline`/`stale` statuses map straight through; every other status means the device is talking,
  * so `online` — unless `staleAfterMs` is given and `lastSeenAt` is older than it (or absent, because
- * an absent timestamp is not evidence of freshness). `unreachable` is never derived: only a failed
- * attempt to reach the device can say that, and the product knows about attempts, not this function.
+ * an absent timestamp is not evidence of freshness).
+ *
+ * A missing or unrecognised status is `unknown`, not `offline`: `normalizeDeviceStatus` falls back to
+ * `offline` for a badge, but a connectivity claim needs evidence, and "we could not read this field"
+ * is not evidence that the device is gone. A backend that literally reports `unreachable` keeps that
+ * word, because it is reporting a failed attempt. Otherwise `unreachable` and `connecting` are never
+ * derived: only the layer that makes attempts knows about them.
  */
 export function deriveDeviceConnectivity(
   device: Pick<KinetixDevice, "status" | "lastSeenAt" | "signal">,
   options: DeriveConnectivityOptions = {},
 ): KinetixDeviceConnectivity {
   const status = normalizeDeviceStatus(device.status);
-  let state: KinetixConnectivityState = status === "offline" ? "offline" : status === "stale" ? "stale" : "online";
+  let state: KinetixConnectivityState;
+  if (!isKnownDeviceStatus(device.status)) state = "unknown";
+  else if (isUnreachableSpelling(device.status)) state = "unreachable";
+  else state = status === "offline" ? "offline" : status === "stale" ? "stale" : "online";
   if (state === "online" && options.staleAfterMs !== undefined && detectStaleReading(device.lastSeenAt, options.staleAfterMs, options.now)) {
     state = "stale";
   }
@@ -93,6 +105,11 @@ export function deriveDeviceConnectivity(
   if (device.lastSeenAt !== undefined) out.lastSeenAt = device.lastSeenAt;
   if (device.signal !== undefined) out.signal = device.signal;
   return out;
+}
+
+/** `normalizeDeviceStatus` folds the spelling `unreachable` into `offline`; connectivity keeps it apart. */
+function isUnreachableSpelling(input: unknown): boolean {
+  return typeof input === "string" && input.trim().toLowerCase() === "unreachable";
 }
 
 export type DeriveDeviceHealthInput = {
@@ -119,12 +136,22 @@ const isActiveFault = (fault: KinetixDeviceFault | null | undefined): fault is K
  */
 export function deriveDeviceHealth(input: DeriveDeviceHealthInput = {}): KinetixDeviceHealth {
   const reasons: KinetixHealthReason[] = [];
-  const status = input.status === undefined || input.status === null ? undefined : normalizeDeviceStatus(input.status);
+  // An unrecognised status is no evidence at all, rather than the `offline` a badge would fall back to.
+  const status = input.status === undefined || input.status === null || !isKnownDeviceStatus(input.status) ? undefined : normalizeDeviceStatus(input.status);
 
   let connectivity: KinetixConnectivityState | undefined = input.connectivity?.state;
   if (!connectivity && status) {
-    connectivity = status === "offline" ? "offline" : status === "stale" ? "stale" : status === "disabled" ? undefined : "online";
+    connectivity = isUnreachableSpelling(input.status)
+      ? "unreachable"
+      : status === "offline"
+        ? "offline"
+        : status === "stale"
+          ? "stale"
+          : status === "disabled"
+            ? undefined
+            : "online";
   }
+  // `unknown` and `connecting` add no reason and no evidence: neither says anything about the device.
 
   if (status === "error") reasons.push({ code: "device-error", level: "critical", message: "The device reports an error" });
   else if (status === "warning") reasons.push({ code: "device-warning", level: "warning", message: "The device reports a warning" });
@@ -193,7 +220,9 @@ export function summarizeDeviceState(state: KinetixDeviceState): KinetixDeviceSt
   const pendingCommands = (state.pendingCommands ?? []).length;
   const unconfirmed = unconfirmedKeys(state);
   const health = state.health?.level ?? "unknown";
-  const connectivity = state.connectivity?.state ?? "offline";
+  // Missing connectivity is `unknown`. It used to be `offline`, which told a reader a device was gone
+  // when all that was true is that nobody had said.
+  const connectivity = state.connectivity?.state ?? "unknown";
 
   const parts = [`${state.device?.name ?? "Device"}: ${describeDeviceHealth(health).toLowerCase()}`, describeConnectivity(connectivity).toLowerCase()];
   if (activeFaults > 0) parts.push(`${activeFaults} active ${activeFaults === 1 ? "fault" : "faults"}`);

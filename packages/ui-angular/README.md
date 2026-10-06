@@ -81,7 +81,8 @@ in your editor if you are unsure: `KxButton` is a directive, `KxCard` is a compo
 ## Environment
 
 - **Angular 21** — `@angular/core` and `@angular/forms` are peers at `^21.0.0`
-- **`@kinetixui/tokens`** is a peer at `>=0.23.0 <0.25.0`; install it alongside this package
+- **`@kinetixui/tokens`** is a peer at `>=0.24.0 <0.25.0`; install it alongside this package. 0.25.0 reads
+  `--surface-grouped` and `--on-info-container`, which tokens 0.23.x does not define
 - Standalone APIs only — no NgModules are exported
 - Built with ng-packagr; ships `fesm2022` plus types, and is compiled and strict-template-typechecked in
   CI on every change

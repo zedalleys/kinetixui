@@ -38,7 +38,7 @@ public struct KinetixDialog<Content: View>: View {
     public var body: some View {
         if isPresented {
             ZStack {
-                Color.black.opacity(0.4)
+                colors.scrim
                     .ignoresSafeArea()
                     .onTapGesture { if dismissible { isPresented = false } }
 

@@ -5,52 +5,201 @@ export const metadata = {
 
 # Theming
 
-KinetixUI uses a **semantic CSS variable contract**. Components reference
-semantic names only; the mapping to real colours lives in one place.
+KinetixUI colour is built in four layers, and a product team should only ever need to touch the
+second one.
+
+```
+primitive palette   azure.700 = #1d4ed8         tokens/primitives/color.json   (raw ramps, never themed)
+        ↓
+semantic role       primary = {color.azure.700}  tokens/semantic/color.light.json / color.dark.json
+        ↓
+theme               :root { … }  .dark { … }     the generated CSS / Swift / Kotlin / Dart, plus your overrides
+        ↓
+component           Button → bg-action, focus ring → --focus, Input border → --input
+```
+
+Components reference **semantic roles** — no component in `@kinetixui/ui`, `@kinetixui/angular` or the
+native ports reads a colour ramp directly (the one primitive read is `static.white`, for the Angular
+switch thumb; the colour-picker visualisation is the other reviewed exception, and
+`pnpm check:component-colors` holds the line). That is what makes a rebrand a theme change rather than
+a component change: you move `--primary`, and every button, checkbox, tab and focus ring that means
+"interactive" moves with it. Edit a component instead and the next one you forget keeps the old colour.
+
+## Choose how much to customise
+
+| Level | You change | Where | Who it is for |
+|---|---|---|---|
+| **Simple** | one theme colour (plus neutral, radius, surface) | [Create](/create) | most teams: a brand colour, safe light + dark roles derived for you |
+| **Advanced** | individual semantic roles (`--background`, `--action`, `--focus`, …) | Create's Advanced panel, or a CSS / native override | brands that need a specific surface, status or focus colour |
+| **Expert** | the DTCG token source | `tokens/**` in a fork, then `pnpm build:tokens` | teams maintaining their own distribution of the system |
+
+Start at Simple. Create derives action, hover, pressed, foreground, accent, link and focus from one
+colour in OKLCH, in both appearances, and holds every generated text pair to WCAG AA; the
+[export](#building-a-theme-visually) is the override block (or native `KinetixColors` pair) your app
+pastes in. Reach for Advanced only for the roles Create cannot infer from a brand.
+
+### Brand colour is not always a UI colour
+
+A brand hex is an identity value. It is not guaranteed to work as button fill, link text, a focus ring or
+a dark-mode surface: a pale yellow brand has no readable white label, and a navy brand vanishes on a
+dark page. KinetixUI keeps the two apart — `--brand` is identity (logos, headers), `--action` is the
+interactive colour — and Create moves the action colour into a lightness band that can carry text in
+each mode while keeping its hue. Expect the button colour to be *your hue*, not always *your exact hex*.
 
 ## The contract
 
-| Variable | Light | Figma source |
-| --- | --- | --- |
-| `--background` | `#ffffff` | `surfaceContainerLowest` |
-| `--foreground` | `#050c11` | `onSurface` |
-| `--primary` | `#1d4ed8` | action blue *(replaces Figma `Primay` navy)* |
-| `--primary-foreground` | `#f0f7ff` | `On Primary` |
-| `--secondary` | `#c7cfc7` | `secondaryContainer` *(deepened for surface contrast)* |
-| `--muted` / `--muted-foreground` | `#f6f6f6` / `#6d6d6d` | `surfaceContainer` / `onSurfaceVariant` |
-| `--accent` | `#f0f7ff` | `LightBlue` |
-| `--destructive` | `#ec5047` | `error` |
-| `--border` / `--input` | `#92b2c8` | `outline` |
-| `--ring` | `#1d4ed8` | focus outline *(tracks `--primary`)* |
-| `--radius` | `8px` | `Button` |
+The light value of the most-used roles. Every role, both modes, all four platforms:
+[/docs/tokens](/docs/tokens).
 
-`--card`, `--popover`, `--ring`, the neutral ramp, and the entire dark theme are
-**synthesized** — Figma does not define them yet. Every synthesized value is
-listed in the repo's `TOKENS.md`.
+| Variable | Light | Source |
+| --- | --- | --- |
+| `--background` | `#ffffff` | `neutral.0` |
+| `--foreground` | `#050c11` | `blue.900` |
+| `--primary` / `--action` | `#1d4ed8` | `azure.700` — action blue *(replaces the Figma navy, which is now `--brand`)* |
+| `--primary-foreground` | `#f0f7ff` | `blue.50` |
+| `--secondary` | `#c7cfc7` | `green.200` *(deepened for surface contrast)* |
+| `--muted` / `--muted-foreground` | `#f6f6f6` / `#6d6d6d` | `neutral.100` / `neutral.600` |
+| `--accent` | `#f0f7ff` | `blue.50` |
+| `--destructive` | `#c60a0a` | `red.500` *(the Figma error `#ec5047` fails AA as text)* |
+| `--border` / `--input` | `#92b2c8` | `blue.100` |
+| `--ring` / `--focus` | `#1d4ed8` | `azure.700` — the keyboard focus ring |
+
+Corner radius is a separate ladder — `--radius-sm` / `-md` / `-lg` / `-xl`, with role aliases
+`--radius-field`, `-control`, `-container` and `-surface` — not a single `--radius`.
 
 ## Both themes
 
-Light and dark are two independent palettes — not one value set flipped. Most
-light roles are aliased from Figma; `--primary` / `--ring` are an action blue
-(`#1d4ed8` light, `#60a5fa` dark, each picked to clear WCAG AA on its own
-surface); the rest of dark is synthesized.
+Light and dark are two independent palettes — not one value set flipped. Each role is mapped to a
+primitive step chosen for its own surface: `--primary` is `azure.700` on the white page and `azure.400`
+on the near-black one, because the light value would be ~2.9:1 there. The dark surfaces are a navy
+ladder (`blue.900` page, `blue.850` grouped section, `blue.800` card, `blue.700` muted) so a card reads as
+raised in both modes.
+
+A custom theme needs a dark value for every role it overrides. Create generates both from one
+configuration; a hand-written override must state both, or your light colour shows up in dark mode.
 
 <ThemePreview />
 
-## Retheme
+## Retheme by hand (Advanced)
 
-Override the semantic variables after importing the contract. Primitives stay
-put; only the mapping changes:
+Override the semantic variables after importing the contract. Primitives stay put; only the mapping
+changes. Set the role **and** its foreground, and set it for both modes:
 
 ```css
 @import "@kinetixui/tokens/css";
+@import "@kinetixui/tokens/css/dark";
+@import "@kinetixui/tokens/css/extras";
+@import "@kinetixui/tokens/css/extras/dark";
 
 :root {
-  --primary: var(--green-500);
-  --primary-foreground: var(--green-50);
-  --radius: 12px;
+  --primary: var(--green-700);            /* #465245 */
+  --primary-foreground: var(--green-50);  /* 7.38:1 on it */
+  --ring: var(--green-700);               /* the focus ring follows --ring, not --primary */
+}
+
+.dark {
+  --primary: var(--green-300);            /* #acb8ab — a lighter step for the dark page */
+  --primary-foreground: var(--green-950); /* 9.41:1 on it */
+  --ring: var(--green-300);
 }
 ```
+
+`--ring` is not derived from `--primary` — it is its own role, so a theme that changes only `--primary`
+keeps the azure focus ring. Set both. Every Kinetix focus ring (the `shadow-focus` utility, Angular's
+`.kx-*:focus-visible`) reads `--focus`, which defaults to `--ring`. The error, success and warning focus
+rings (`shadow-focus-destructive`, `-success`, `-warning`) read `--destructive`, `--success` and
+`--warning` the same way, so a theme that recolours a status role recolours its focus ring with it.
+Controls that draw their ring with `ring-ring` (the NavigationMenu trigger among them) follow `--ring`.
+Both mechanisms are deliberate: one is a two-layer composite, the other a single utility.
+
+Contrast is yours to keep when you write values by hand. Check them with `pnpm check:contrast`'s rules
+in mind, or paste them into Create's Advanced panel, which reports every text pair at 4.5:1 and the focus
+ring against the page and cards at 3:1.
+
+## Apply a theme on each platform
+
+One design, four renderings. Create's **Export** (or the matching `kinetixui preset …` command) writes the
+file for each; the snippets below show where it plugs in.
+
+**React / web and Angular** read the same CSS custom properties, so the same override block themes both:
+
+```css
+/* after the four @kinetixui/tokens imports — the block from "Retheme by hand", or Create's Web CSS export */
+:root { --primary: var(--green-700); --primary-foreground: var(--green-50); --ring: var(--green-700); }
+.dark { --primary: var(--green-300); --primary-foreground: var(--green-950); --ring: var(--green-300); }
+```
+
+Dark mode is the `.dark` class on `<html>` ([Dark mode](/docs/dark-mode)).
+
+**SwiftUI** — `kinetixui preset swiftui KX1_… --name AcmeTheme` writes a `KinetixColors` pair:
+
+```swift
+KinetixTheme(light: AcmeTheme.light, dark: AcmeTheme.dark) {
+    ContentView()
+}
+```
+
+**Jetpack Compose** — from an exported preset, or by copying one role off the shipped set:
+
+```kotlin
+KinetixTheme(
+    light = LightKinetixColors.copy(action = Color(0xFF465245), primary = Color(0xFF465245)),
+    dark = DarkKinetixColors.copy(action = Color(0xFFACB8AB), primary = Color(0xFFACB8AB)),
+) {
+    App()
+}
+```
+
+**Flutter** — the custom constructor for Kinetix widgets, and the adapter for stock Material widgets:
+
+```dart
+KinetixTheme.custom(
+  light: AcmeTheme.light,
+  dark: AcmeTheme.dark,
+  child: MaterialApp(
+    theme: KinetixMaterialTheme.fromColors(Brightness.light, AcmeTheme.light),
+    darkTheme: KinetixMaterialTheme.fromColors(Brightness.dark, AcmeTheme.dark),
+    home: const App(),
+  ),
+)
+```
+
+What each platform themes for you, and what stays your app's job:
+
+| Platform | Kinetix components | Stock platform controls |
+|---|---|---|
+| Web (React / Angular) | every role, live, through CSS variables | not applicable — style your own markup with the Tailwind preset (`bg-action`, `text-muted-foreground`) |
+| SwiftUI | every field of `KinetixColors`, through `KinetixTheme` | not themed — stock SwiftUI controls keep the system tint |
+| Compose | every field of `KinetixColors`, through `KinetixTheme` | not themed — `MaterialTheme` is wrapped, not mapped |
+| Flutter | every field of `KinetixColors`, through `KinetixTheme` | yes — `KinetixMaterialTheme` and `KinetixCupertinoTheme` map the contract onto stock widgets |
+
+The native colour sets are a subset of the web contract: they carry the roles their components read
+(no `surface-grouped`, `sidebar-*` or the `semantic-*` container colours, and five chart colours rather
+than eight), and Compose has no `input`, `ring` or `tertiaryForeground` field. Only `@kinetixui/tokens`
+is installed from a registry today; the native token files are copied in.
+
+## Accessibility rules a theme must keep
+
+- **Text** — every foreground on its surface at 4.5:1 (WCAG AA), including hover and pressed fills.
+  Create enforces this for everything it generates; values you type are reported, not corrected.
+- **Focus** — the focus ring (`--focus`, defaulting to `--ring`) at 3:1 against the page and against
+  cards. Do not assume your brand colour qualifies: a ring the colour of your page background is
+  invisible. Create's contrast panel checks both.
+- **Boundaries** — `--border`, `--input` and the switch's off track are intentionally below 3:1 in the
+  shipped theme and are never the only cue (a focus ring, a thumb or a label carries the state). Darken
+  them if your product needs stronger boundaries; do not lighten them further.
+- **Colour is never the only signal** — error and success states also carry text or an icon in
+  `FieldMessage`, `Banner` and `Inform`. `Alert`, `Badge` and the invalid border on fields do not add
+  one for you: put the word in the content.
+- **Both modes** — check the dark values too; a theme that passes on white can fail on the dark page.
+
+## Back to the defaults
+
+Everything here is an override layer, so removing it is the reset: delete your `:root` / `.dark` block
+(or stop passing `light:` / `dark:` to the native `KinetixTheme`) and the shipped contract applies again.
+In Create, **Reset** returns every control to the shipped theme and drops the preset from the URL, and
+the ↺ beside an Advanced value resets that one role. Create stores nothing in the browser; a design
+lives only in its `KX1_` preset.
 
 ## Role tokens: brand, action, link, focus
 
@@ -83,6 +232,16 @@ still recolours them via the default and overriding `--action` recolours only th
 Contrast is on you when you split them: `kinetixui theme build` reports `action` / `action-foreground`
 and `brand` / `brand-foreground` when you set them.
 
+**What pinning `primary` means in Create.** The table above is one rule, not a default that happens to
+hold on the web: `action`, `action-foreground` and `link` follow `primary` / `primary-foreground`, and
+`focus` follows `ring` — in light and in dark, in the token source and in every export. In Create's
+Advanced panel, pinning `primary` therefore moves Action and Link too, and the row says so
+("from primary") until you pin that role yourself, which always wins. The preview, the CSS block and the
+SwiftUI, Compose and Flutter files all say the same thing; `role-equivalence.test.ts` pins that. To keep
+buttons on the old colour while changing `primary`, pin `action` (and `action-foreground`). Hover and
+pressed are regenerated from whichever `action` results, so they never lag behind it. `brand` is
+identity and is never derived from `primary`.
+
 **Hover and pressed.** On the web the Button derives its states from `action` (`bg-action/90`,
 `bg-action/85`), so they follow whatever you set. The contract also carries explicit
 `--action-hover` / `--action-pressed` values — the same two colours, precomputed over the page
@@ -99,11 +258,27 @@ button label at 3.4:1 while pressed, which is what this used to do.
 **Native.** The SwiftUI, Compose and Flutter components read the same role tokens: `KinetixColors` has
 `action`, `actionForeground`, `actionHover`, `actionPressed`, `link`, `focus`, `brand` and
 `brandForeground` alongside `primary` / `ring`, and the components use the role fields (the Button's
-Link variant reads `link`; focus rings read `focus`). The primary Button uses `actionHover` on pointer hover and `actionPressed` while pressed; other components keep the platform's own interaction feedback. `primary` remains as the source they default to.
+Link variant reads `link`; focus rings read `focus`). Two roles exist so the native Banner/Inform and
+the overlays do not need a literal: `onInfoContainer` is the text colour on a tinted `info` container
+(the plain `info` role is 4.19:1 there; `onInfoContainer` clears AA), and `scrim` is the backdrop behind
+Dialog, Sheet and Sidebar. The Compose `Dialog` keeps the platform's own window dim, which cannot be
+recoloured; its Sheet and Sidebar read `scrim`. The primary Button uses `actionHover` on pointer hover and `actionPressed` while pressed; other components keep the platform's own interaction feedback. `primary` remains as the source they default to.
 
 **Upgrading:** components that use `bg-action` / `text-link` need the matching
 `@kinetixui/ui/tailwind.config` preset (it defines the new colours) — update the package when you
 re-add components with the CLI.
+
+### Scrim and container text
+
+| Token | Meaning | Light | Dark |
+|---|---|---|---|
+| `--scrim` (`bg-scrim`) | the veil behind a modal: Dialog, Alert dialog, Sheet, Drawer, command menu, Tour, Angular `<dialog>` | black 40% | black 60% |
+| `--on-info-container` (`text-info-on-container`) | text on `bg-info/10`: Banner and Inform "information" | `blue.400` | `blue.100` |
+
+The scrim is black in both themes and denser in dark, because black over a dark page needs more opacity
+to set the dialog back. It was `foreground` at 40%, which is near-white in dark mode and lifted the page
+toward the dialog instead. A theme can override `--scrim` like any other role; it is a role, not a
+palette step, and is not exposed as one.
 
 ## Primitive ramps
 

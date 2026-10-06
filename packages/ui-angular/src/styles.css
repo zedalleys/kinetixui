@@ -1190,12 +1190,12 @@ label.kx-rating__item { cursor: pointer; }
 .kx-banner--sticky { position: sticky; inset-block-start: 0; z-index: var(--z-index-sticky, 40); }
 .kx-inform { border-radius: var(--radius-md); padding: var(--spacing-3); }
 
-.kx-banner--information { background-color: hsl(var(--info) / 0.1); color: hsl(var(--semantic-on-info-container)); border-color: hsl(var(--info) / 0.2); }
+.kx-banner--information { background-color: hsl(var(--info) / 0.1); color: hsl(var(--on-info-container)); border-color: hsl(var(--info) / 0.2); }
 .kx-banner--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--warning)); border-color: hsl(var(--warning) / 0.25); }
 .kx-banner--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--success)); border-color: hsl(var(--success) / 0.25); }
 .kx-banner--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive)); border-color: hsl(var(--destructive) / 0.2); }
 .kx-banner--action      { background-color: hsl(var(--foreground)); color: hsl(var(--background)); }
-.kx-inform--information { background-color: hsl(var(--info) / 0.1); color: hsl(var(--semantic-on-info-container)); }
+.kx-inform--information { background-color: hsl(var(--info) / 0.1); color: hsl(var(--on-info-container)); }
 .kx-inform--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--warning)); }
 .kx-inform--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--success)); }
 .kx-inform--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive)); }
@@ -1343,10 +1343,17 @@ label.kx-rating__item { cursor: pointer; }
 }
 .kx-code-block__copy:hover { color: hsl(var(--foreground)); }
 .kx-code-block__copy:focus-visible { outline: var(--border-width-default) solid currentColor; }
-/* The default glyphs. Sized here rather than on the SVG so a projected replacement inherits the same
-   box, and so a consumer restyling the package can reach them. */
-.kx-dismiss-glyph { width: 0.875rem; height: 0.875rem; display: block; }
-.kx-copy-glyph { width: 1rem; height: 1rem; display: block; }
+/* The default glyphs, and whatever an application projects in their place (`[kxDismissIcon]`,
+   `[kxCopyIcon]` — an <svg>, or an icon component whose host wraps one). Sized here rather than on the SVG
+   so a projected replacement gets the same box without carrying a size of its own, and so a consumer
+   restyling the package can reach them. Until this rule named the projected slots, only the built-in glyph
+   was sized: a projected <svg> with no width rendered at the browser's default 300×150. */
+.kx-dismiss-glyph,
+[kxDismissIcon],
+[kxDismissIcon] > svg { width: 0.875rem; height: 0.875rem; display: block; flex-shrink: 0; }
+.kx-copy-glyph,
+[kxCopyIcon],
+[kxCopyIcon] > svg { width: 1rem; height: 1rem; display: block; flex-shrink: 0; }
 
 .kx-code-block__body { position: relative; }
 /* No filename and no tabs means no header to hold the copy button, so it sits over the code. */
@@ -2126,17 +2133,18 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
 @starting-style {
   .kx-dialog[open] { opacity: 0; scale: 0.95; }
 }
-/* The scrim. Black at 40% in light and 60% in dark — not `foreground`, which is near-white in dark and would
-   lift the page behind the dialog toward the dialog's own surface instead of setting it back. */
+/* The scrim: the `scrim` role (black at 40% in light, 60% in dark) — not `foreground`, which is near-white in
+   dark and would lift the page behind the dialog toward the dialog's own surface instead of setting it back.
+   The role carries its own alpha. The fallback keeps a browser that does not pass custom properties through to
+   `::backdrop` drawing the light scrim rather than nothing. */
 .kx-dialog::backdrop {
-  background-color: hsl(var(--static-black) / 0.4);
+  background-color: hsl(var(--scrim, 0 0% 0% / 0.4));
   opacity: 0;
   transition:
     opacity var(--duration-instant) var(--easing-exit),
     overlay var(--duration-instant) var(--easing-exit) allow-discrete,
     display var(--duration-instant) var(--easing-exit) allow-discrete;
 }
-.dark .kx-dialog::backdrop { background-color: hsl(var(--static-black) / 0.6); }
 .kx-dialog[open]::backdrop { opacity: 1; transition-duration: var(--duration-fast); transition-timing-function: var(--easing-enter); }
 @starting-style {
   .kx-dialog[open]::backdrop { opacity: 0; }

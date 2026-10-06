@@ -4,6 +4,7 @@ import * as React from "react";
 import * as MenubarPrimitive from "@radix-ui/react-menubar";
 import { Check, ChevronRight, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { withDirectionalPortal } from "@/components/ui/direction-provider";
 
 const MenubarMenu = (props: React.ComponentProps<typeof MenubarPrimitive.Menu>) => (
   <MenubarPrimitive.Menu {...props} />
@@ -11,9 +12,7 @@ const MenubarMenu = (props: React.ComponentProps<typeof MenubarPrimitive.Menu>) 
 const MenubarGroup = (props: React.ComponentProps<typeof MenubarPrimitive.Group>) => (
   <MenubarPrimitive.Group {...props} />
 );
-const MenubarPortal = (props: React.ComponentProps<typeof MenubarPrimitive.Portal>) => (
-  <MenubarPrimitive.Portal {...props} />
-);
+const MenubarPortal = withDirectionalPortal(MenubarPrimitive.Portal);
 const MenubarSub = (props: React.ComponentProps<typeof MenubarPrimitive.Sub>) => (
   <MenubarPrimitive.Sub {...props} />
 );
@@ -83,7 +82,7 @@ const MenubarContent = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Content>
 >(({ className, align = "start", alignOffset = -4, sideOffset = 8, ...props }, ref) => (
-  <MenubarPrimitive.Portal>
+  <MenubarPortal>
     <MenubarPrimitive.Content
       ref={ref}
       align={align}
@@ -92,7 +91,7 @@ const MenubarContent = React.forwardRef<
       className={cn(contentCls, className)}
       {...props}
     />
-  </MenubarPrimitive.Portal>
+  </MenubarPortal>
 ));
 MenubarContent.displayName = MenubarPrimitive.Content.displayName;
 

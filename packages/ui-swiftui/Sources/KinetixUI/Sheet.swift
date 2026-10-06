@@ -19,6 +19,7 @@ public struct KinetixSheet<Content: View>: View {
     @Environment(\.kinetixColors) private var colors
     @Environment(\.kinetixElevations) private var elevations
     @Environment(\.kinetixRadii) private var radii
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @Binding private var isPresented: Bool
     private let content: Content
@@ -31,7 +32,7 @@ public struct KinetixSheet<Content: View>: View {
     public var body: some View {
         if isPresented {
             ZStack(alignment: .bottom) {
-                Color.black.opacity(0.4)
+                colors.scrim
                     .ignoresSafeArea()
                     .onTapGesture { isPresented = false }
 
@@ -54,7 +55,7 @@ public struct KinetixSheet<Content: View>: View {
                 }
                 .kinetixElevation(elevations.xl.flippedVertically)
                 .ignoresSafeArea(edges: .bottom)
-                .transition(.move(edge: .bottom))
+                .transition(KinetixSlideMotion.transition(from: .bottom, reduceMotion: reduceMotion))
             }
         }
     }

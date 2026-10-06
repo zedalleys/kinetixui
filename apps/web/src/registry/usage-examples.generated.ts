@@ -5,12 +5,13 @@
  * page cannot describe an API that no longer exists. `check:platform-code` prefers these over the
  * hand-written entries in platform-code.ts and fails if the two disagree.
  *
+ * packages/ui/src/usage/icons.tsx
  * packages/ui-angular/src/usage/examples.ts
  * packages/ui-swiftui/Tests/KinetixUITests/Usage/UsageExamples.swift
  * packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/usage/UsageExamplesTest.kt
  * packages/ui-flutter/test/usage/usage_examples_test.dart
  */
-export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | "kotlin" | "dart", string>>> = {
+export const usageExamples: Record<string, Partial<Record<"react" | "angular" | "swift" | "kotlin" | "dart", string>>> = {
   "accordion-demo": {
     "angular": "@Component({\n  selector: 'app-accordion-demo',\n  imports: [KxAccordion, KxAccordionItem, KxAccordionTrigger, KxAccordionContent],\n  template: `\n    <kx-accordion type=\"single\" collapsible [(value)]=\"open\">\n      <kx-accordion-item value=\"shipping\">\n        <kx-accordion-trigger>When will my order ship?</kx-accordion-trigger>\n        <kx-accordion-content>Orders leave the warehouse within two working days.</kx-accordion-content>\n      </kx-accordion-item>\n      <kx-accordion-item value=\"returns\">\n        <kx-accordion-trigger>Can I return an item?</kx-accordion-trigger>\n        <kx-accordion-content>Yes, within 30 days, in its original packaging.</kx-accordion-content>\n      </kx-accordion-item>\n    </kx-accordion>\n  `,\n})\nexport class AccordionDemo {\n  open: readonly string[] = ['shipping'];\n}",
   },
@@ -103,6 +104,16 @@ export const usageExamples: Record<string, Partial<Record<"angular" | "swift" | 
   },
   "hover-card-demo": {
     "angular": "@Component({\n  selector: 'app-hover-card-demo',\n  imports: [KxHoverCard, KxHoverCardTrigger, KxHoverCardContent],\n  template: `\n    <kx-hover-card>\n      <a kxHoverCardTrigger href=\"/about\">@kinetixui</a>\n      <kx-hover-card-content>One token architecture, in motion across every platform.</kx-hover-card-content>\n    </kx-hover-card>\n  `,\n})\nexport class HoverCardDemo {}",
+  },
+  "icons-dismiss-icon": {
+    "react": "{/* Default: lucide's X */}\n<Banner onDismiss={onDismiss}>Changes saved.</Banner>\n\n{/* Another lucide icon */}\n<Banner onDismiss={onDismiss} dismissIcon={<CircleX />}>\n  Changes saved.\n</Banner>\n\n{/* Your own icon: sized to 14px, coloured by the banner, named \"Dismiss\" */}\n<Banner onDismiss={onDismiss} dismissIcon={<CompanyCloseIcon />}>\n  Changes saved.\n</Banner>",
+    "angular": "@Component({\n  selector: 'app-icons-dismiss-icon',\n  imports: [KxBanner],\n  template: `\n    <!-- Default: the built-in dismiss mark -->\n    <kx-banner dismissible (dismiss)=\"hide()\">Changes saved.</kx-banner>\n\n    <!-- Yours: any SVG or icon component carrying kxDismissIcon. The slot sizes it (14px), colours it\n         (currentColor) and names the button (\"Dismiss\"), so it needs no size, colour or aria. -->\n    <kx-banner dismissible (dismiss)=\"hide()\">\n      Changes saved.\n      <svg kxDismissIcon viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\">\n        <circle cx=\"12\" cy=\"12\" r=\"9\" />\n        <path d=\"m15 9-6 6M9 9l6 6\" />\n      </svg>\n    </kx-banner>\n  `,\n})\nexport class IconsDismissIconDemo {\n  hide(): void {}\n}",
+    "swift": "VStack(spacing: 8) {\n    // Default: the xmark SF Symbol.\n    KinetixBanner(\"Changes saved.\", onDismiss: save)\n\n    // Another SF Symbol: tinted and sized by the banner, labelled \"Dismiss\".\n    KinetixBanner(\"Changes saved.\", onDismiss: save) {\n        Image(systemName: \"xmark.circle\")\n    }\n\n    // Your own view or asset: laid out in the same 14×14 frame.\n    KinetixBanner(\"Changes saved.\", onDismiss: save) {\n        Image(\"company-close\").resizable().scaledToFit()\n    }\n}",
+    "kotlin": "// Default: Material's Close, drawn by KinetixUI.\nKinetixBanner(\"Changes saved.\", onDismiss = save)\n\n// Yours: any composable. The banner sizes it (14dp), tints it through LocalContentColor and names\n// the button \"Dismiss\" — so pass contentDescription = null.\nKinetixBanner(\n    \"Changes saved.\",\n    onDismiss = save,\n    dismissIcon = { Icon(imageVector = CompanyIcons.Close, contentDescription = null) },\n)",
+    "dart": "// Default: Material's Icons.close.\nKinetixBanner('Changes saved.', onDismiss: save),\n\n// A Cupertino icon (add the cupertino_icons font package): sized to 14 and tinted by the banner.\nKinetixBanner('Changes saved.', onDismiss: save, dismissIcon: const Icon(CupertinoIcons.xmark_circle)),\n\n// Any widget — an SVG widget, your company's icon. Laid out at 14×14, named \"Dismiss\".\nKinetixBanner('Changes saved.', onDismiss: save, dismissIcon: const CompanyCloseIcon()),",
+  },
+  "icons-icon-only-button": {
+    "react": "<Tooltip>\n  <TooltipTrigger asChild>\n    {/* size=\"icon\" keeps the svg visible and turns the text into the button's\n        screen-reader-only name: \"Delete draft, button\" */}\n    <Button size=\"icon\" variant=\"Ghost\" onClick={onDelete}>\n      <Trash2 />\n      <span>Delete draft</span>\n    </Button>\n  </TooltipTrigger>\n  <TooltipContent>Delete draft</TooltipContent>\n</Tooltip>",
   },
   "image-demo": {
     "angular": "@Component({\n  selector: 'app-image-demo',\n  imports: [KxImage],\n  template: `\n    <kx-image src=\"/cover.jpg\" alt=\"Harbour at dusk\" ratio=\"16:9\">\n      <span kxImageFallback>Unavailable</span>\n    </kx-image>\n  `,\n})\nexport class ImageDemo {}",

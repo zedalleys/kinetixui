@@ -126,6 +126,7 @@ public enum KinetixColor {
     public static let colorNeutral700 = UIColor(red: 0.310, green: 0.310, blue: 0.310, alpha: 1)
     public static let colorNeutral800 = UIColor(red: 0.200, green: 0.200, blue: 0.200, alpha: 1)
     public static let colorNeutral900 = UIColor(red: 0.122, green: 0.122, blue: 0.122, alpha: 1)
+    public static let colorOnInfoContainer = UIColor(red: 0.224, green: 0.353, blue: 0.439, alpha: 1) /** text and icons on a tinted info surface (`info` at 10% over the page) — Banner and Inform information, on every platform. `info` itself is 4.19:1 on its own 10% tint; this is 6.47:1. Web exposes it as `text-info-on-container`; SwiftUI, Compose and Flutter as `onInfoContainer`. */
     public static let colorPopover = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1) /** synth: no Figma popover token; = background */
     public static let colorPopoverForeground = UIColor(red: 0.020, green: 0.047, blue: 0.067, alpha: 1) /** synth: = foreground */
     public static let colorPrimary = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1) /** was Figma 'Primay' navy (blue.500 -> blue.700). Swapped for a bright action blue #1d4ed8 (6.55:1 on bg) so primary buttons/links pop rather than reading as near-black. Dark uses a lighter step (#60a5fa) — navy/this hue would fail on the dark surface. */
@@ -146,6 +147,7 @@ public enum KinetixColor {
     public static let colorRed900 = UIColor(red: 0.157, green: 0.008, blue: 0.008, alpha: 1)
     public static let colorRed950 = UIColor(red: 0.078, green: 0.004, blue: 0.004, alpha: 1)
     public static let colorRing = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1) /** focus ring — tracks --primary (#1d4ed8, 6.55:1 on bg) */
+    public static let colorScrim = UIColor(red: 0.000, green: 0.000, blue: 0.000, alpha: 0.4) /** the dimming layer behind a modal surface (Dialog, AlertDialog, Sheet, Drawer, Modal, Command, Tour, mobile Sidebar) on every platform: black at 40%. Black, not `foreground` — in dark `foreground` is near-white and would lift the page toward the dialog's own surface. The alpha is part of the role, so draw it as is (web `bg-scrim`, native `colors.scrim`) rather than adding opacity. */
     public static let colorSecondary = UIColor(red: 0.780, green: 0.812, blue: 0.780, alpha: 1) /** figma secondaryContainer was green.50 #f1f3f1 (invisible on bg); deepened to green.200 #c7cfc7 so a secondary button/chip clearly stands off the white page — same sage hue */
     public static let colorSecondaryForeground = UIColor(red: 0.275, green: 0.322, blue: 0.271, alpha: 1) /** green.700 #465245 on secondary green.200 #c7cfc7 clears ~5.2:1 */
     public static let colorSemanticError = UIColor(red: 0.925, green: 0.314, blue: 0.278, alpha: 1) /** figma: error (NOT red.500 #c60a0a — Figma keeps error as its own value) */

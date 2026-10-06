@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'icon_control.dart';
 import 'slider.dart';
 import 'app_text.dart';
 import 'theme.dart';
@@ -46,15 +47,17 @@ class KinetixAudioPlayer extends StatelessWidget {
   final VoidCallback? onPrev;
   final VoidCallback? onNext;
 
-  Widget _iconButton(BuildContext context, IconData icon, double size, VoidCallback onTap) {
+  Widget _iconButton(BuildContext context, IconData icon, double size, String label, VoidCallback onTap) {
+    // A named button ("Previous track", "Back 10s", …, as React's aria-labels): a bare GestureDetector around
+    // an Icon gave TalkBack and VoiceOver a tap target with no name.
     final c = KinetixTheme.of(context);
-    return GestureDetector(
+    return IconControl(
+      label: label,
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Icon(icon, size: size, color: c.foreground),
-      ),
+      size: size,
+      color: c.foreground,
+      padding: const EdgeInsets.all(8),
+      child: Icon(icon),
     );
   }
 
@@ -77,7 +80,7 @@ class KinetixAudioPlayer extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _iconButton(context, isPlaying ? Icons.pause : Icons.play_arrow, 16, onPlayPause),
+            _iconButton(context, isPlaying ? Icons.pause : Icons.play_arrow, 16, isPlaying ? 'Pause' : 'Play', onPlayPause),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -125,11 +128,11 @@ class KinetixAudioPlayer extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (onPrev != null) _iconButton(context, Icons.skip_previous, 20, onPrev!),
-              _iconButton(context, Icons.replay_10, 20, () => onSkip?.call(-10)),
-              _iconButton(context, isPlaying ? Icons.pause : Icons.play_arrow, 28, onPlayPause),
-              _iconButton(context, Icons.forward_10, 20, () => onSkip?.call(10)),
-              if (onNext != null) _iconButton(context, Icons.skip_next, 20, onNext!),
+              if (onPrev != null) _iconButton(context, Icons.skip_previous, 20, 'Previous track', onPrev!),
+              _iconButton(context, Icons.replay_10, 20, 'Back 10s', () => onSkip?.call(-10)),
+              _iconButton(context, isPlaying ? Icons.pause : Icons.play_arrow, 28, isPlaying ? 'Pause' : 'Play', onPlayPause),
+              _iconButton(context, Icons.forward_10, 20, 'Forward 10s', () => onSkip?.call(10)),
+              if (onNext != null) _iconButton(context, Icons.skip_next, 20, 'Next track', onNext!),
             ],
           ),
         ],

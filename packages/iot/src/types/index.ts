@@ -25,26 +25,33 @@ export type {
   KinetixCommandLifecycle,
   KinetixCommandLifecycleEvent,
   KinetixCommandLifecycleStage,
+  KinetixCommandPresentation,
   KinetixCommandStatus,
+  KinetixCommandStrategy,
   KinetixDeviceCommand,
   KinetixLifecycleRejection,
   KinetixLifecycleTransition,
 } from "./command";
-export { KINETIX_COMMAND_LIFECYCLE_STAGES } from "./command";
+export { KINETIX_COMMAND_LIFECYCLE_STAGES, KINETIX_COMMAND_STRATEGIES } from "./command";
 export type {
   KinetixControlAvailability,
+  KinetixControlOutcome,
   KinetixControlPhase,
+  KinetixControlPresentation,
   KinetixControlState,
   KinetixDeviceMode,
   KinetixPowerState,
+  ResolveControlPresentationInput,
   ResolveControlStateInput,
 } from "./control";
 export { KINETIX_CONTROL_AVAILABILITIES } from "./control";
-export type { KinetixBatteryLevel, KinetixDevice, KinetixDeviceStatus, KinetixSignalLevel } from "./device";
+export type { KinetixBatteryLevel, KinetixBatteryState, KinetixBatteryStatus, KinetixDevice, KinetixDeviceStatus, KinetixSignalLevel } from "./device";
 export { KINETIX_DEVICE_STATUSES } from "./device";
 export type {
   KinetixConnectivityState,
   KinetixDeviceCapability,
+  KinetixCapabilityRole,
+  KinetixCapabilitySupport,
   KinetixDeviceCapabilityKind,
   KinetixDeviceConnectivity,
   KinetixDeviceFault,
@@ -54,7 +61,7 @@ export type {
   KinetixDeviceStateSummary,
   KinetixHealthReason,
 } from "./device-state";
-export { KINETIX_CONNECTIVITY_STATES, KINETIX_HEALTH_LEVELS } from "./device-state";
+export { KINETIX_CAPABILITY_KINDS, KINETIX_CONNECTIVITY_STATES, KINETIX_HEALTH_LEVELS } from "./device-state";
 export type {
   KinetixEnergyBreakdownItem,
   KinetixEnergyFlag,

@@ -262,7 +262,7 @@ const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
         >
           {hasChildren ? (
             <ChevronRight
-              className={cn("size-4 shrink-0 text-muted-foreground transition-transform", expanded && "rotate-90")}
+              className={cn("size-4 shrink-0 text-muted-foreground transition-transform", expanded ? "rotate-90" : "rtl:-scale-x-100")}
               onClick={(e) => {
                 e.stopPropagation();
                 ctx.toggleExpanded(value);

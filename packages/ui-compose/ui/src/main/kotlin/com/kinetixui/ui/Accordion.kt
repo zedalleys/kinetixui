@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
@@ -30,9 +31,8 @@ import androidx.compose.ui.unit.sp
  * single-side border uses. Expand/collapse reuses Compose's built-in
  * `AnimatedVisibility`, same as `KinetixCollapsible` — no
  * `Root`/`Trigger`/`Content` graph to reassemble, `expanded` is
- * caller-owned. The chevron is a plain "▾" glyph rotated 180° when open —
- * no icon library is wired into this package, same gap noted for
- * `KinetixRating`/`KinetixTag`.
+ * caller-owned. The chevron is Material's ExpandMore ([KinetixIcons]),
+ * decorative, rotated 180° when open; it does not mirror in RTL.
  */
 @Composable
 fun KinetixAccordion(
@@ -103,9 +103,11 @@ fun KinetixAccordionTrigger(
             fontWeight = FontWeight.Medium,
             fontSize = dimensionResource(R.dimen.font_size_body_md).value.sp,
         )
-        Text(
-            text = "▾",
-            color = colors.mutedForeground,
+        // Decorative: no content description, so TalkBack reads the label, not "down-pointing small triangle".
+        KinetixIcon(
+            KinetixIcons.ExpandMore,
+            16.dp,
+            tint = colors.mutedForeground,
             modifier = Modifier.graphicsLayer { rotationZ = rotation },
         )
     }

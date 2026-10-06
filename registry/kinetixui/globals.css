@@ -134,9 +134,9 @@
   --semantic-on-success-container: 115 9% 30%;
   --semantic-warning: 28 95% 50%;
   --semantic-info-container: 212 100% 97%;
-  --semantic-on-info-container: 204 33% 33%; /** text on a tinted info surface (bg-info/10) — Banner/Inform information. --info itself is only 4.15:1 on its own 10% tint; this clears AA. Exposed as text-info-on-container. */
   --semantic-muted-on-container: 0 0% 38%; /** secondary text on a tinted container (bg-primary/10, bg-destructive/10 and their /5 variants) — IoT device, group and activity cards. --muted-foreground (neutral.600 #6d6d6d) is tuned against --background and --muted and clears AA there at 5.17:1, but a 10% tint eats the margin: 4.43:1 on bg-primary/10 and 4.33:1 on bg-destructive/10. This is one step darker and clears AA on every tint those surfaces use, worst case 4.79:1 on bg-destructive/10 over --muted, while staying visibly lighter than --foreground. Exposed as text-muted-on-container. */
   --tertiary: 0 0% 69%; /** figma: tertiary — switch off-track */
+  --scrim: 0 0% 0% / 0.4; /** the dimming layer behind a modal surface (Dialog, AlertDialog, Sheet, Drawer, Modal, Command, Tour, mobile Sidebar) on every platform: black at 40%. Black, not `foreground` — in dark `foreground` is near-white and would lift the page toward the dialog's own surface. The alpha is part of the role, so draw it as is (web `bg-scrim`, native `colors.scrim`) rather than adding opacity. */
   --action-hover: 224 71% 53%; /** explicit hover fill for native ports: `action` at 90% over `background` (#1d4ed8 over #ffffff). The web renders this as `bg-action/90`; `check:contrast` asserts the two agree. */
   --action-pressed: 224 71% 56%; /** explicit pressed fill for native ports: `action` at 85% over `background`. The web renders this as `bg-action/85`; `check:contrast` asserts the two agree and that text on it clears AA. */
   --spacing-0: 0;
@@ -274,12 +274,14 @@
   --tertiary-foreground: var(--blue-50);
   --info: var(--blue-300); /** synth: steel blue, distinct from navy primary */
   --info-foreground: var(--blue-50);
+  --on-info-container: var(--blue-400); /** text and icons on a tinted info surface (`info` at 10% over the page) — Banner and Inform information, on every platform. `info` itself is 4.19:1 on its own 10% tint; this is 6.47:1. Web exposes it as `text-info-on-container`; SwiftUI, Compose and Flutter as `onInfoContainer`. */
   --brand: var(--blue-500); /** identity colour — the original Figma navy that `primary` was swapped away from for interactive use. Use it for logos, headers and brand surfaces, not for controls. */
   --brand-foreground: var(--blue-50); /** text/icons on `brand` */
   --radius-field: var(--radius-sm); /** Role alias — text-entry and small selection surfaces: Input, Textarea, Select, Checkbox, Tag, Kbd. A theme can round or square every field by overriding this one token. */
   --radius-control: var(--radius-md); /** Role alias — pressable controls and menus: Button, Toggle, ButtonGroup, dropdown / context / menubar menus, Select popup, Popover. */
   --radius-container: var(--radius-lg); /** Role alias — inline containers: Alert, Tabs list, SegmentedControl, Sidebar, Tour. */
   --radius-surface: var(--radius-xl); /** Role alias — large elevated surfaces: Card, Dialog, AlertDialog, Modal. */
+  --semantic-on-info-container: var(--on-info-container); /** text on a tinted info surface (bg-info/10) — Banner/Inform information. --info itself is only 4.15:1 on its own 10% tint; this clears AA. Exposed as text-info-on-container. */
   --action: var(--primary); /** the interactive colour (buttons, selected controls). Defaults to `primary`; override `--action` on its own to split the interactive colour from `primary`. */
   --action-foreground: var(--primary-foreground); /** text/icons on `action` */
   --focus: var(--ring); /** focus indicator colour. Defaults to `ring`; override `--focus` to theme focus separately. */
@@ -291,6 +293,7 @@
  */
 
 .dark {
+  --scrim: 0 0% 0% / 0.6; /** black at 60%: a dark page is already near-black, so 40% would barely dim it; 60% keeps the modal separated from what is behind it. */
   --action-hover: 213 71% 62%; /** explicit hover fill for native ports: `action` at 90% over `background` (#60a5fa over #050c11). The web renders this as `bg-action/90`; `check:contrast` asserts the two agree. */
   --action-pressed: 213 62% 58%; /** explicit pressed fill for native ports: `action` at 85% over `background`. The web renders this as `bg-action/85`; `check:contrast` asserts the two agree and that text on it clears AA. */
   --background: 205 55% 4%;
@@ -337,10 +340,11 @@
   --tertiary-foreground: 212 100% 97%;
   --info: 204 33% 68%;
   --info-foreground: 205 55% 4%;
-  --semantic-on-info-container: 204 33% 68%; /** text on a tinted info surface (bg-info/10). Dark: same as --info, which already clears AA on the dark tint. Light counterpart is darker — see color.light.json. */
+  --on-info-container: 204 33% 68%; /** text and icons on a tinted info surface. Dark: the same step as `info`, which already clears AA on the dark tint (7.70:1 over the page) because a 10% tint lightens a dark surface away from light text. */
   --semantic-muted-on-container: 204 33% 68%; /** secondary text on a tinted container. Dark: identical to --muted-foreground, which already clears AA on every dark tint (6.92:1 on bg-primary/10 over --card, 7.24:1 on bg-destructive/10). Darkening is a light-mode problem only, because a 10% tint lightens a dark surface away from the text rather than toward it. Light counterpart is darker — see color.light.json. */
   --brand: 204 25% 56%; /** identity colour, lightened so it stays legible on the dark surface (the light navy would vanish). Independent of light, not a flip. */
   --brand-foreground: 205 55% 4%; /** text/icons on `brand` */
+  --semantic-on-info-container: 204 33% 68%; /** text on a tinted info surface (bg-info/10). Dark: same as --info, which already clears AA on the dark tint. Light counterpart is darker — see color.light.json. */
   --action: var(--primary); /** the interactive colour (buttons, selected controls). Defaults to `primary`; override `--action` on its own to split the interactive colour from `primary`. */
   --action-foreground: var(--primary-foreground); /** text/icons on `action` */
   --focus: var(--ring); /** focus indicator colour. Defaults to `ring`; override `--focus` to theme focus separately. */
@@ -354,10 +358,10 @@
   --shadow-md: 0 1px 1px 0 #0000001f, 0 2px 5px 0 #676e7614;
   --shadow-lg: 0 4px 6px -1px #00000012, 0 2px 4px -2px #0000000f;
   --shadow-xl: 0 4px 24px 0 #0000001f;
-  --shadow-focus: 0 0 0 1px #1d4ed8, 0 0 0 4px #1d4ed833;
-  --shadow-focus-destructive: 0 0 0 1px #ec5047, 0 0 0 4px #ec504733;
-  --shadow-focus-success: 0 0 0 1px #5d6d5c, 0 0 0 4px #5d6d5c33;
-  --shadow-focus-warning: 0 0 0 1px #7f5b21, 0 0 0 4px #7f5b2133;
+  --shadow-focus: 0 0 0 1px hsl(var(--focus)), 0 0 0 4px hsl(var(--focus) / 0.2);
+  --shadow-focus-destructive: 0 0 0 1px hsl(var(--destructive)), 0 0 0 4px hsl(var(--destructive) / 0.2);
+  --shadow-focus-success: 0 0 0 1px hsl(var(--success)), 0 0 0 4px hsl(var(--success) / 0.2);
+  --shadow-focus-warning: 0 0 0 1px hsl(var(--warning)), 0 0 0 4px hsl(var(--warning) / 0.2);
 
   --text-display-lg: 500 3.5625rem/4rem Montserrat, ui-sans-serif, system-ui, sans-serif;
   --text-display-md: 500 2.8125rem/3.25rem Montserrat, ui-sans-serif, system-ui, sans-serif;
@@ -380,8 +384,8 @@
 /* Generated by Style Dictionary — shadow + typography composites. */
 
 .dark {
-  --shadow-focus: 0 0 0 1px #60a5fa, 0 0 0 4px #60a5fa52;
-  --shadow-focus-destructive: 0 0 0 1px #dd6a6a, 0 0 0 4px #dd6a6a52;
-  --shadow-focus-success: 0 0 0 1px #90a08f, 0 0 0 4px #90a08f52;
-  --shadow-focus-warning: 0 0 0 1px #ffc975, 0 0 0 4px #ffc97552;
+  --shadow-focus: 0 0 0 1px hsl(var(--focus)), 0 0 0 4px hsl(var(--focus) / 0.32);
+  --shadow-focus-destructive: 0 0 0 1px hsl(var(--destructive)), 0 0 0 4px hsl(var(--destructive) / 0.32);
+  --shadow-focus-success: 0 0 0 1px hsl(var(--success)), 0 0 0 4px hsl(var(--success) / 0.32);
+  --shadow-focus-warning: 0 0 0 1px hsl(var(--warning)), 0 0 0 4px hsl(var(--warning) / 0.32);
 }

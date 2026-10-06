@@ -18,16 +18,29 @@ import type { KinetixDevice } from "./device";
 /**
  * Whether we can reach the device, as a claim about the link rather than the device's condition.
  *
- * `unreachable` is stronger than `offline`: offline is "it told us it is gone (or went quiet)",
- * unreachable is "we tried and could not get there" — the state a timed-out command lands in.
- * `stale` means a link story exists but the data behind it is old.
+ * Each state needs its own evidence, and the absence of evidence is a state of its own:
+ *
+ * - `online` — reachable, per the current evidence.
+ * - `offline` — affirmative evidence that the device is gone: it told us, or the product's own rule
+ *   for "went quiet" fired.
+ * - `unreachable` — an attempt to reach it was made and failed. Stronger than `offline`, and never
+ *   derived from a status: only the layer that made the attempt knows it happened.
+ * - `stale` — a link story exists, but the evidence behind it is too old to trust.
+ * - `connecting` — an attempt or a session is being established and has not resolved yet.
+ * - `unknown` — not enough information to say anything. Missing connection data is this, never
+ *   `offline`: "we were not told" is not "it is gone".
+ *
+ * `unknown`, `connecting`, `unreachable` and `stale` are each distinct from `offline`.
  */
-export type KinetixConnectivityState = "online" | "offline" | "unreachable" | "stale";
+export type KinetixConnectivityState = "online" | "offline" | "unreachable" | "stale" | "connecting" | "unknown";
 
+/** Descending concern: what most needs a person's attention first. */
 export const KINETIX_CONNECTIVITY_STATES: readonly KinetixConnectivityState[] = [
   "unreachable",
   "offline",
   "stale",
+  "connecting",
+  "unknown",
   "online",
 ] as const;
 
@@ -85,10 +98,53 @@ export type KinetixDeviceHealth = {
 };
 
 /**
- * What a capability *is*, as an interaction shape. Mirrors the control affordances plus the two a
- * state model needs that a control does not: reading a metric, and firing a one-shot action.
+ * What a capability *is*, as an interaction shape. Mirrors the control affordances plus the ones a
+ * state model needs that a control does not: reading a metric, firing a one-shot action, a colour
+ * value (a structured value, not a number on a range), and a media surface — a camera preview or
+ * live stream the **product** renders. This package carries no stream, player or codec; `media` only
+ * says the device offers one, so a UI can reserve a place for it and say when it is unavailable.
  */
-export type KinetixDeviceCapabilityKind = "power" | "level" | "setpoint" | "mode" | "telemetry" | "action";
+export type KinetixDeviceCapabilityKind = "power" | "level" | "setpoint" | "mode" | "telemetry" | "action" | "color" | "media";
+
+export const KINETIX_CAPABILITY_KINDS: readonly KinetixDeviceCapabilityKind[] = [
+  "power",
+  "level",
+  "setpoint",
+  "mode",
+  "color",
+  "telemetry",
+  "media",
+  "action",
+] as const;
+
+/**
+ * What a capability *means*, separate from its shape: a lamp's brightness and a speaker's volume are
+ * both `level`. Suggested roles keep autocomplete; `(string & {})` lets a product name its own
+ * ("irrigation-zone", "infusion-rate") without a cast. A role is a label for grouping, docs and
+ * analytics — no function in this package changes behaviour by role.
+ */
+export type KinetixCapabilityRole =
+  | "power"
+  | "brightness"
+  | "color"
+  | "color-temperature"
+  | "temperature-setpoint"
+  | "humidity"
+  | "fan-speed"
+  | "operating-mode"
+  | "battery"
+  | "media-playback"
+  | "volume"
+  | "camera-preview"
+  | "live-stream"
+  | "recording"
+  | "motion-detection"
+  | "privacy"
+  | "lock"
+  | (string & {});
+
+/** Whether a device offers a capability. `unsupported` is a result, not an absence to guess around. */
+export type KinetixCapabilitySupport = "supported" | "read-only" | "unsupported";
 
 /**
  * Something a device can do or report. Ranges, steps, units and modes are **product-supplied** — a
@@ -97,6 +153,8 @@ export type KinetixDeviceCapabilityKind = "power" | "level" | "setpoint" | "mode
 export type KinetixDeviceCapability = {
   id: string;
   kind: KinetixDeviceCapabilityKind;
+  /** What it means. Optional; see {@link KinetixCapabilityRole}. */
+  role?: KinetixCapabilityRole;
   label?: string;
   min?: number;
   max?: number;

@@ -24,6 +24,7 @@ import {
 } from './content';
 import {
   BannerDemo,
+  IconsDismissIconDemo,
   ButtonGroupDemo,
   CircularProgressDemo,
   CodeBlockDemo,
@@ -110,6 +111,18 @@ describe('KxBanner', () => {
     expect(f.componentInstance.dismissed).toBe(1);
     // Still in the DOM: the caller owns the visibility, which is what lets it animate or persist the choice.
     expect(f.nativeElement.querySelector('kx-banner')).not.toBeNull();
+  });
+});
+
+describe('the dismiss icon slot (/docs/icons)', () => {
+  it('renders the built-in mark by default and the projected icon in its place, in a named button', () => {
+    const f = render(IconsDismissIconDemo);
+    const [byDefault, own] = Array.from<HTMLButtonElement>(f.nativeElement.querySelectorAll('.kx-banner__dismiss'));
+    expect(byDefault.querySelector('svg.kx-dismiss-glyph')).not.toBeNull();
+    expect(own.querySelector('svg.kx-dismiss-glyph')).toBeNull();
+    expect(own.querySelector('svg[kxDismissIcon]')).not.toBeNull();
+    // The name is the button's, so the application's icon needs no aria of its own.
+    expect(own.getAttribute('aria-label')).toBe('Dismiss');
   });
 });
 

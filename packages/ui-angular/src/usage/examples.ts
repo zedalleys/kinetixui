@@ -602,6 +602,30 @@ export class BannerDemo {
 }
 // kx-usage:end
 
+// kx-usage:icons-dismiss-icon
+@Component({
+  selector: 'app-icons-dismiss-icon',
+  imports: [KxBanner],
+  template: `
+    <!-- Default: the built-in dismiss mark -->
+    <kx-banner dismissible (dismiss)="hide()">Changes saved.</kx-banner>
+
+    <!-- Yours: any SVG or icon component carrying kxDismissIcon. The slot sizes it (14px), colours it
+         (currentColor) and names the button ("Dismiss"), so it needs no size, colour or aria. -->
+    <kx-banner dismissible (dismiss)="hide()">
+      Changes saved.
+      <svg kxDismissIcon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="9" />
+        <path d="m15 9-6 6M9 9l6 6" />
+      </svg>
+    </kx-banner>
+  `,
+})
+export class IconsDismissIconDemo {
+  hide(): void {}
+}
+// kx-usage:end
+
 // kx-usage:button-group-demo
 @Component({
   selector: 'app-button-group-demo',

@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
@@ -70,7 +71,7 @@ fun KinetixSelectTrigger(
             color = if (text != null) colors.foreground else colors.mutedForeground,
             fontSize = dimensionResource(R.dimen.font_size_body_md).value.sp,
         )
-        Text(text = "▾", color = colors.mutedForeground) // matches KinetixAccordion's chevron glyph
+        KinetixIcon(KinetixIcons.ExpandMore, 16.dp, tint = colors.mutedForeground) // the same chevron as KinetixAccordion
     }
 }
 

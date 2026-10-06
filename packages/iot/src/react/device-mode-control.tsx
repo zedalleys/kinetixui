@@ -2,7 +2,9 @@
 
 import * as React from "react";
 import type { KinetixControlState, KinetixDeviceMode } from "../types/control";
+import type { DescribeControlOutcomeOptions } from "../functions/control";
 import { cn } from "./cn";
+import { ControlAnnouncer, ControlOutcomeNote, useControlContract, type ControlContractProps } from "./control-outcome";
 import { withDisplayName } from "./display-name";
 
 /**
@@ -20,6 +22,12 @@ import { withDisplayName } from "./display-name";
  * rather than hiding it — because a mode that vanishes leaves the user hunting for it, while one
  * that is visibly unavailable answers the question. `aria-disabled` rather than `disabled` keeps it
  * reachable by screen reader so the explanation is discoverable.
+ *
+ * **The checked radio is the reported mode** under `confirmed` (default) and `hybrid`; the requested one
+ * is outlined dashed and named "requested, not yet confirmed". `hybrid` also raises the requested
+ * segment so the press reads as received, and `optimistic` checks it outright (without the confirmed
+ * tick) and moves back, in words, if the device does not take it. With a `lifecycle`, the outcome
+ * sentence and its status region render after the group, never inside it, so the group holds radios only.
  */
 // `onSelect` is a real DOM handler on HTMLAttributes, so it is omitted rather than shadowed —
 // same reason DeviceGroupCard omits it.
@@ -29,11 +37,11 @@ export type DeviceModeOption = KinetixDeviceMode & {
   icon?: React.ReactNode;
 };
 
-export interface DeviceModeControlProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange" | "onSelect"> {
+export interface DeviceModeControlProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange" | "onSelect">, ControlContractProps<string> {
   modes: readonly DeviceModeOption[];
-  /** The confirmed mode id. */
-  value: string | null | undefined;
-  /** A requested mode id that the device has not confirmed. */
+  /** The confirmed mode id. Ignored when a `lifecycle` is passed. */
+  value?: string | null;
+  /** A requested mode id that the device has not confirmed. Ignored with a `lifecycle`. */
   requested?: string | null;
   /** Accessible name for the group, e.g. "Heating mode". */
   label: string;
@@ -58,10 +66,28 @@ function Tick() {
 }
 
 const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceModeControlProps>(
-  ({ modes, value, requested, label, control, onSelect, variant: variantProp = "segmented", presentation = "segmented", className, ...props }, ref) => {
+  (
+    { modes, value: valueProp, requested, label, control: controlProp, lifecycle, strategy, announce, onSelect, variant: variantProp = "segmented", presentation = "segmented", className, ...props },
+    ref,
+  ) => {
     const tiles = presentation === "tiles";
     const variant = tiles ? "segmented" : variantProp;
-    const pendingId = requested && requested !== value ? requested : null;
+    const nameOf = (id: unknown) => modes.find((m) => m.id === id)?.label ?? String(id);
+    const sentence: DescribeControlOutcomeOptions = {
+      formatValue: nameOf,
+      pendingPhrase: (id) => `Changing to ${nameOf(id)}`,
+      failedPhrase: (id) => `Could not change to ${nameOf(id)}`,
+    };
+    const contract = useControlContract<string>({ lifecycle, strategy, announce, control: controlProp, reported: valueProp, requested }, sentence);
+    const { control } = contract;
+    const view = contract.presentation;
+    const value = view.reportedValue ?? null;
+    const asked = view.pending ? view.pendingValue : undefined;
+    const pendingId = asked && asked !== value ? asked : null;
+    const marked = !!pendingId && view.indicatePending;
+    // Read off the presentation, never off the strategy's name: the mode it draws, and whether the
+    // request is marked as unconfirmed.
+    const shownId = pendingId && view.valueSource === "requested" ? pendingId : value;
     const interactive = control ? control.interactive : true;
 
     const selectable = modes.filter((m) => !m.unavailable);
@@ -97,12 +123,14 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
       onSelect?.(next.id);
     };
 
-    return (
+    const group = (
       <div
         ref={setGroup}
         role="radiogroup"
         aria-label={label}
+        aria-busy={pendingId ? true : undefined}
         data-pending={pendingId ? "" : undefined}
+        data-strategy={view.strategy}
         className={cn(
           tiles
             ? "grid grid-cols-2 gap-2 rounded-2xl bg-muted/60 p-2 sm:grid-cols-4"
@@ -117,7 +145,13 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
         {modes.map((mode) => {
           const isConfirmed = mode.id === value;
           const isPending = mode.id === pendingId;
-          const active = isConfirmed || isPending;
+          // Checked: the reported mode while a request is marked; otherwise the mode drawn (`optimistic`).
+          const checked = marked ? isConfirmed : mode.id === shownId;
+          // Raised: the mode drawn — the request under `hybrid` and `optimistic`, the reported one otherwise.
+          const raised = mode.id === shownId;
+          // The tick is the confirmed mode's, and only while nothing unmarked is drawn over it.
+          const ticked = isConfirmed && (marked || !pendingId);
+          const selectedLook = tiles ? "bg-primary font-semibold text-primary-foreground shadow-sm" : "bg-background font-semibold text-foreground shadow-sm";
           const disabled = !interactive || mode.unavailable;
 
           return (
@@ -125,12 +159,13 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
               key={mode.id}
               type="button"
               role="radio"
-              aria-checked={isConfirmed}
+              aria-checked={checked}
               aria-disabled={disabled || undefined}
-              aria-label={isPending ? `${mode.label}, requested, not yet confirmed` : undefined}
+              aria-label={isPending && marked ? `${mode.label}, requested, not yet confirmed` : undefined}
               tabIndex={mode.id === focusId ? 0 : -1}
               data-mode-id={mode.id}
               data-state={isConfirmed ? "confirmed" : isPending ? "requested" : "inactive"}
+              data-shown={checked ? "" : undefined}
               onClick={() => !disabled && onSelect?.(mode.id)}
               onKeyDown={(e) => {
                 if (e.key === "ArrowRight" || e.key === "ArrowDown") {
@@ -142,7 +177,7 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
                 }
               }}
               className={cn(
-                "relative rounded-lg px-3 text-label-lg transition-colors duration-fast ease-out",
+                "relative rounded-lg px-3 text-label-lg transition-colors duration-fast ease-enter",
                 tiles ? "min-h-20 rounded-xl" : "min-h-11 md:min-h-9",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                 "focus-visible:ring-offset-background motion-reduce:transition-none",
@@ -160,10 +195,11 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
                 disabled && "cursor-not-allowed opacity-45",
                 // Selected = raised: a lighter surface, a shadow, heavier type and a tick. Four cues, so
                 // it survives greyscale, low contrast and a screen magnifier.
-                isConfirmed && (tiles ? "bg-primary font-semibold text-primary-foreground shadow-sm" : "bg-background font-semibold text-foreground shadow-sm"),
-                // Requested-not-confirmed: outlined, never filled. Same grammar as the power knob.
-                isPending && "border border-dashed border-primary bg-primary/10 text-foreground",
-                !active && !disabled && (tiles ? "bg-background text-muted-foreground hover:text-foreground" : "text-muted-foreground hover:bg-background/50 hover:text-foreground"),
+                raised && !(isPending && marked) && selectedLook,
+                // Requested-not-confirmed: outlined, never filled. Same grammar as the power knob. Under
+                // `hybrid` it is also raised, so the press reads as received; the dashed edge stays.
+                isPending && marked && (raised ? "border border-dashed border-primary bg-background font-semibold text-foreground shadow-sm" : "border border-dashed border-primary bg-primary/10 text-foreground"),
+                !raised && !(isPending && marked) && !disabled && (tiles ? "bg-background text-muted-foreground hover:text-foreground" : "text-muted-foreground hover:bg-background/50 hover:text-foreground"),
               )}
             >
               {tiles && mode.icon ? (
@@ -171,12 +207,14 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
                   {mode.icon}
                 </span>
               ) : null}
-              {tiles && isConfirmed ? (
+              {/* The tick belongs to the confirmed mode; under `optimistic` it is withheld while the
+                  request is open, so the checked request is never given the mark of a reported mode. */}
+              {tiles && ticked ? (
                 <span aria-hidden="true" className="absolute end-2 top-2">
                   <Tick />
                 </span>
               ) : null}
-              {!tiles && variant === "segmented" && isConfirmed ? <Tick /> : null}
+              {!tiles && variant === "segmented" && ticked ? <Tick /> : null}
               <span className="truncate">{mode.label}</span>
               {variant === "list" && mode.description ? (
                 <span className="truncate text-label-md font-normal text-muted-foreground">{mode.description}</span>
@@ -185,6 +223,16 @@ const DeviceModeControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
           );
         })}
       </div>
+    );
+
+    // Without a lifecycle the control renders exactly the group, as it always has.
+    if (contract.announcement === null && !view.unsuccessful) return group;
+    return (
+      <>
+        {group}
+        <ControlOutcomeNote presentation={view} sentence={sentence} />
+        <ControlAnnouncer announcement={contract.announcement} />
+      </>
     );
   },
 ), "DeviceModeControl");

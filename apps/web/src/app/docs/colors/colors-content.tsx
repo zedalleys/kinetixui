@@ -18,7 +18,7 @@ const RAMP_NOTE: Record<(typeof RAMPS)[number], string> = {
   blue: "Navy — backs --foreground and the dark surface scale, plus --border/--input and --accent on light.",
   green: "Secondary + success — backs --secondary, --secondary-foreground, --success.",
   amber: "Reserved for --warning and the data-viz palette (--chart-3).",
-  red: "Powers the data-viz palette (--chart-4); --destructive is a standalone Figma value, not this ramp.",
+  red: "Backs --destructive (light = red.500, dark = red.300) and the data-viz reds (--chart-4, --chart-7).",
   taupe: "Data-viz only today (--chart-5) — open for a semantic role in a future release.",
   cream: "Not yet wired to a semantic token — free for a future surface or accent.",
   neutral: "Synthesized (Figma exposes only three anchors) — backs --background, --card, --muted.",

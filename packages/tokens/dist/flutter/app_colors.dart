@@ -129,6 +129,7 @@ class KinetixColors {
     static const colorNeutral700 = Color(0xFF4F4F4F);
     static const colorNeutral800 = Color(0xFF333333);
     static const colorNeutral900 = Color(0xFF1F1F1F);
+    static const colorOnInfoContainer = Color(0xFF395A70); /** text and icons on a tinted info surface (`info` at 10% over the page) — Banner and Inform information, on every platform. `info` itself is 4.19:1 on its own 10% tint; this is 6.47:1. Web exposes it as `text-info-on-container`; SwiftUI, Compose and Flutter as `onInfoContainer`. */
     static const colorPopover = Color(0xFFFFFFFF); /** synth: no Figma popover token; = background */
     static const colorPopoverForeground = Color(0xFF050C11); /** synth: = foreground */
     static const colorPrimary = Color(0xFF1D4ED8); /** was Figma 'Primay' navy (blue.500 -> blue.700). Swapped for a bright action blue #1d4ed8 (6.55:1 on bg) so primary buttons/links pop rather than reading as near-black. Dark uses a lighter step (#60a5fa) — navy/this hue would fail on the dark surface. */
@@ -149,6 +150,7 @@ class KinetixColors {
     static const colorRed900 = Color(0xFF280202);
     static const colorRed950 = Color(0xFF140101);
     static const colorRing = Color(0xFF1D4ED8); /** focus ring — tracks --primary (#1d4ed8, 6.55:1 on bg) */
+    static const colorScrim = Color(0x66000000); /** the dimming layer behind a modal surface (Dialog, AlertDialog, Sheet, Drawer, Modal, Command, Tour, mobile Sidebar) on every platform: black at 40%. Black, not `foreground` — in dark `foreground` is near-white and would lift the page toward the dialog's own surface. The alpha is part of the role, so draw it as is (web `bg-scrim`, native `colors.scrim`) rather than adding opacity. */
     static const colorSecondary = Color(0xFFC7CFC7); /** figma secondaryContainer was green.50 #f1f3f1 (invisible on bg); deepened to green.200 #c7cfc7 so a secondary button/chip clearly stands off the white page — same sage hue */
     static const colorSecondaryForeground = Color(0xFF465245); /** green.700 #465245 on secondary green.200 #c7cfc7 clears ~5.2:1 */
     static const colorSemanticError = Color(0xFFEC5047); /** figma: error (NOT red.500 #c60a0a — Figma keeps error as its own value) */

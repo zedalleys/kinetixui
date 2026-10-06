@@ -104,6 +104,18 @@ describe("phone width (~390 px)", () => {
     expect(layout.dropped.map((h) => h.id)).toEqual(["a", "b"]);
   });
 
+  it("judges collisions at the text size actually drawn: at 200% text the 88px targets need twice the room", () => {
+    const spaced: PlanHotspot[] = [
+      { id: "a", roomId: "room-hall", x: 20, y: 50, category: "light", state: "confirmed", label: "A" },
+      { id: "b", roomId: "room-hall", x: 30, y: 50, category: "light", state: "confirmed", label: "B" },
+    ];
+    // 10% of a 480px plan is 48px: clear of a 44px target, inside an 88px one
+    const normal = phonePlanLayout({ hotspots: spaced, viewBox: { width: 640, height: 420 }, planWidth: 480 });
+    const large = phonePlanLayout({ hotspots: spaced, viewBox: { width: 640, height: 420 }, planWidth: 480, textScale: 2 });
+    expect(normal.dropped).toEqual([]);
+    expect(large.dropped.map((h) => h.id)).toEqual(["b"]);
+  });
+
   it("prefers anything needing attention over a quiet marker in the selected room", () => {
     const withWarning = dense.map((h) => (h.id === "b" ? { ...h, roomId: "room-kitchen", state: "warning" as const } : h));
     const layout = phonePlanLayout({ hotspots: withWarning, selectedRoomId: "room-hall", viewBox: { width: 640, height: 420 } });
