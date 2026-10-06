@@ -40,6 +40,21 @@
   - `resolveBatteryState` (level, availability, charging), `isSameDeviceValue`, and optional `metadata` on activity events.
   
   Type-level note: `KinetixCommandLifecycleEvent`, `KinetixLifecycleRejection["code"]` and `KinetixDeviceCapabilityKind` gain members, so an exhaustive `switch` over them in consumer code needs a new arm. No runtime behaviour changes for existing callers.
+- e289c14: Add the Connected Product System patterns, which reached 0.3.0 without a changeset of their own.
+  
+  Thirteen React components, with the React-free models and functions behind them in `@kinetixui/iot/functions`:
+  
+  - **Alerts:** `AlertList`.
+  - **Automations:** `AutomationBuilder` and `AutomationRuleView`.
+  - **Cameras:** `CameraDeviceCard`.
+  - **Energy:** `EnergySummary`.
+  - **Health and spaces:** `DeviceHealthSummary` and `SpaceRollup`.
+  - **Pairing:** `PairingMethodPicker`, `PairingStepper` and `PairingFailure`.
+  - **Telemetry:** `TelemetryGrid`, `TelemetryMetric` and `MetricStatus`.
+  
+  The functions cover the logic behind them — alert grouping and acknowledgement, automation rule editing and
+  validation, pairing flow and recovery, device health assessment, space trees and rollups, and metric thresholds
+  and series gaps — so the same behaviour can be used without React. All additive; nothing earlier changed.
 
 ### Patch Changes
 

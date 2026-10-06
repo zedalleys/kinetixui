@@ -191,6 +191,14 @@
 
 ### Patch Changes
 
+- Require `@kinetixui/tokens` 0.24.0 or later: the peer is now `>=0.24.0 <0.25.0`.
+  
+  This supersedes the `>=0.23.0` floor described under 93f21e7 below. That entry was written when tokens 0.24.0
+  was byte-identical to 0.23.3; it no longer is. This release's styles read two roles that tokens 0.24.0 adds and
+  0.23.x does not define — `--surface-grouped` (the `kx-segmented` track) and `--on-info-container` (the text of
+  `kx-banner--information` and `kx-inform--information`) — with no fallback. Against tokens 0.23.x the segmented
+  control lost its track and information banners lost their text colour, and nothing warned. With the new floor,
+  the package manager reports the mismatch instead. If you pinned `@kinetixui/tokens` to 0.23.x, move it to 0.24.0.
 - 93f21e7: Accept `@kinetixui/tokens` 0.24.x as a peer.
   
   `@kinetixui/angular` peer-declared `@kinetixui/tokens` as `^0.23.0`, and 0.24.0 falls outside
