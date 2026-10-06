@@ -3,7 +3,8 @@
 How KinetixUI models a connected device changing state: what a user asked for, what the device
 reports, and what a control is allowed to draw in between. M1 laid the foundation; M2A made connectivity
 truthful and wired the four existing React controls to it (§4.1, §6.1); M2B stopped a missing device
-status reading as offline (§6.2) and added colour, lock and media controls on the same API (§4.2). The audit behind both is
+status reading as offline (§6.2) and added colour, lock and media controls on the same API (§4.2); M3 added the
+monitoring and feedback components and the freshness contract (§9). The audit behind all of them is
 [IOT-MATURITY-AUDIT.md](./IOT-MATURITY-AUDIT.md).
 
 The contract lives in `@kinetixui/iot/functions`: TypeScript types and pure functions, no React,
@@ -395,20 +396,87 @@ Truth today, verified by search of `packages/` at audit time:
 | Colour value + equality | implemented, tested | `DeviceColorControl` | not implemented | not implemented | not implemented | not implemented |
 | Lock safety policy | implemented, tested | `DeviceLockControl` | not implemented | not implemented | not implemented | not implemented |
 | Media playback / seek / volume / mute | implemented, tested | `DeviceMediaControl` (no playback in the package) | not implemented | not implemented | not implemented | not implemented |
-| Connectivity incl. `connecting` / `unknown` | implemented, tested | words via `describeConnectivity`; no connectivity component | not implemented | not implemented | not implemented | not implemented |
+| Connectivity incl. `connecting` / `unknown` | implemented, tested | `DeviceConnection` (M3): six shapes and words | not implemented | not implemented | not implemented | not implemented |
+| Data freshness (`resolveFreshness`, M3) | implemented, tested | `DeviceBattery`, `TelemetryMetric`, `EnergySummary` | not implemented | not implemented | not implemented | not implemented |
+| Command feedback (`describeCommandFeedback`, M3) | implemented, tested | `CommandFeedback` | not implemented | not implemented | not implemented | not implemented |
+| Activity origin (M3) | implemented, tested | `DeviceActivity` | not implemented | not implemented | not implemented | not implemented |
 | Capability kinds / roles / support | implemented, tested | `support` prop on the three M2B controls | not implemented | not implemented | not implemented | not implemented |
 | Telemetry freshness | implemented, tested | consumed | not implemented | not implemented | not implemented | not implemented |
-| Battery state | implemented, tested | `BatteryIndicator` uses the percentage only | not implemented | not implemented | not implemented | not implemented |
+| Battery state | implemented, tested | `DeviceBattery` (M3): level, charging, freshness, thresholds, support; `BatteryIndicator` uses the percentage only | not implemented | not implemented | not implemented | not implemented |
 
 "Not implemented" means no source exists. An Angular application *can* import
 `@kinetixui/iot/functions` today because it has no React dependency, but no Angular component,
 service or test consumes it, so that is not claimed as Angular support.
 
-## 9. What remains
+## 9. Monitoring truth model (M3)
 
-- **M3, monitoring and feedback**: `DeviceBattery`, `DeviceConnection` (a glyph for `connecting` and
-  `unknown`), `TelemetryMetric` maturity, `CommandFeedback`, `DeviceActivity`, `EnergySummary`.
-- **Manual screen-reader verification** of the M2A and M2B announcements (VoiceOver, NVDA, TalkBack). Only
+Monitoring is the half of a connected product where nobody presses anything, and it is where interfaces
+most often turn "we do not know" into a value. M3 keeps five dimensions apart. Each has its own evidence,
+each has its own `unknown`, and **none is derived from another**:
+
+| Dimension | Question | Values | Source of truth |
+| --- | --- | --- | --- |
+| Connectivity | Can the device be reached? | `online`, `offline`, `unreachable`, `stale`, `connecting`, `unknown` (§6.1) | The application's link evidence |
+| Freshness | How old is *this* piece of data? | `fresh`, `stale`, `unknown` | A timestamp and a policy (`staleAfterMs`) **the application supplies** |
+| Availability | Is there a value to show? | known, `unknown` (nothing reported), `unavailable` (the source says it cannot give one now), `unsupported` (the device does not do this) | The payload, `quality`, `resolveCapabilitySupport` |
+| Value | What is it? | A number (formatted by the product), never invented | The device's report |
+| Command lifecycle | What happened to what the user asked for? | The nine stages (§3) | Lifecycle events |
+
+`resolveFreshness({ observedAt, staleAfterMs, now, freshness })` is the shared contract. Without a policy
+it answers `unknown` — **there is no default timeout**, because how fresh is fresh is a property of the
+device and the product: a soil probe reporting twice a day is not stale at noon, and an infusion pump's
+rate from ten minutes ago is. Undated data is `unknown`, not stale and not fresh. An answer the
+application already has (`freshness`) wins. `TelemetryMetric`'s older `staleAfterMs` path keeps its 0.3
+rule — with a window set, an *undated* reading is shown as last known rather than as current — because
+the tile has to draw something, and drawing an undated number as live is the lie the package exists to avoid.
+
+### The components
+
+| Component | Layer | Truth rules |
+| --- | --- | --- |
+| `DeviceBattery` | primitive | Unknown is "—" and "Unknown", never 0 %. Charging is said only when reported (`null` = the device says it cannot tell; omitted = not reported); 100 % implies no charger. Stale is about the reading's age and never says offline. `unsupported` is "No battery", not unknown. `critical`/`low` boundaries are the product's (`thresholds`). |
+| `DeviceConnection` | primitive | The six states as six shapes and six words. Connecting never looks online; unknown never says offline; stale means old evidence, not disconnected. Last seen is shown where it means something. No animation. Transport is product display text. |
+| `TelemetryMetric` | pattern (extended) | Unknown ≠ unavailable ≠ unsupported, three words, no number for any. Stale keeps its number, marked. A delta needs a real `previous`; none for a stale or missing value. A reference range is printed, never judged; status comes only from the product's thresholds or `severity`. No unit, decimals or medical reading assumed. |
+| `CommandFeedback` | pattern | Presentation of an existing lifecycle; no state of its own. Requested/acknowledged/retrying say "not yet confirmed"; timed out "may still apply"; unreachable is not "failed"; cancelled claims no rollback. Retry only when the lifecycle allows it and the product asked; never automatic. |
+| `DeviceActivity` | pattern | Explicit `order`. Explicit `origin` (`user`, `device`, `automation`, `system`); missing is "Source unknown", never inferred from `actor`/`source`. A real list; rows are not focusable; actions are real buttons. |
+| `EnergySummary` | pattern (extended) | Without `summary`, a composition of `TelemetryMetric`s (power, energy, cost, more) over a period the product names. No kWh, currency, tariff or "today" assumed; a cost is the product's number. No chart in this form. |
+
+**Passive by design.** None of `DeviceBattery`, `DeviceConnection`, `TelemetryMetric`, `DeviceActivity` or
+`EnergySummary` is a live region, holds a lifecycle or offers a control. `CommandFeedback` renders one polite
+`role="status"` only with `announce` — off by default because a control given the same lifecycle already
+announces it — and under `optimistic` does not announce the wait. Each component speaks one phrase
+("Battery 18 percent, low, stale reading"; "Offline, last seen 5 minutes ago"; "Glucose 5.8 millimoles
+per litre, reference 4.0 to 7.0, measured 2 minutes ago") and hides its visual parts, so nothing is read twice.
+
+### Examples: dimensions that disagree
+
+| Situation | What is shown | Why |
+| --- | --- | --- |
+| **Online + stale telemetry** | `DeviceConnection` "Online"; `TelemetryMetric` "Soil moisture 31 %", "Last known value", clock + "Stale" | The link is up, but this sensor has sent nothing for three hours. A green dot does not make the number current. |
+| **Unknown connection + known stale battery** | "Connection unknown"; "Battery 18 percent, low, stale reading" | Nothing is known about the link, and the last battery report is old. Neither becomes "offline", and the battery is not hidden because the link is unknown. |
+| **Offline + last known telemetry** | "Offline, last seen 7 minutes ago"; the reading with its own freshness | Offline is about reaching the device. The reading from seven minutes ago is still fresh under a 10-minute policy, and is shown as such. |
+| **Requested command + reported state unchanged** | Control at the reported value; `CommandFeedback` "Requested, not yet confirmed" — "…It last reported 20%." | A request is not a state (§2). The reported value is authoritative until the device reports otherwise. |
+| **Unsupported capability vs supported but no data** | "Battery not supported by this device" vs "Battery level unknown"; "Glucose not supported by this device" vs "Glucose unknown, no reading" | "Not on this device" and "not reported yet" lead to different next steps; neither is drawn as zero or as a disabled control. |
+
+### Capability model
+
+No capability kind or role was added. A battery is a `telemetry` capability with role `battery`;
+energy and power readings are `telemetry`; connectivity is not a capability (every connected device has a
+link); activity remains deliberately not a capability (§5). The monitoring components take `support` from
+`resolveCapabilitySupport`, so `unsupported` is distinct from no data, and `read-only` — normal for an
+observation — changes nothing.
+
+### Ownership
+
+The application owns timestamps, the freshness policy, battery thresholds, status verdicts, value and
+currency formatting, event copy, event origin and de-duplication of transport events. KinetixUI owns how
+each dimension is shown and said, and that none is silently converted into another.
+
+## 10. What remains
+
+- **M4, camera, security and spatial**: camera preview and availability, security event presentation,
+  privacy and recording truth, spatial overlays — with no embedded transport or video engine.
+- **Manual screen-reader verification** of the M2A, M2B and M3 announcements and phrases (VoiceOver, NVDA, TalkBack). Only
   automated accessibility-tree checks have run.
 - **Native parity**: implement the lifecycle, strategies and capability support in Swift, Kotlin and
   Dart against the same test cases, where those toolchains can run in CI.

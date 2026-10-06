@@ -2,6 +2,7 @@ import * as React from "react";
 import type { KinetixEnergySummary } from "../types/energy";
 import { energyTrend } from "../functions/energy";
 import { Glyph } from "./glyph";
+import { EnergyReadings, type EnergyReading } from "./energy-readings";
 import { cn } from "./cn";
 import { withDisplayName } from "./display-name";
 
@@ -34,10 +35,32 @@ import { withDisplayName } from "./display-name";
  *
  * The bars flow with the writing direction, so under RTL the oldest day is at the right — the same way a
  * timeline reads in that locale — and every offset is logical.
+ *
+ * **Metrics form (M3).** Omit `summary` and pass readings instead — `power`, `energy`, `cost` and any
+ * `metrics` — for a summary of whatever the product measures, over a `period` it names. Each reading is a
+ * `TelemetryMetric`, so unknown, stale, unavailable and unsupported mean exactly what they mean there, a
+ * comparison is a `previous` value (no delta without one), and no unit, currency, tariff or period is
+ * assumed: an irrigation pump's 85 kWh "this week", a press line's MJ "this shift" and a kettle's 2.1 kW
+ * "now" are the same component. No chart is drawn in this form; the breakdown chart needs `summary`.
  */
 export interface EnergySummaryProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "children"> {
-  /** `summarizeEnergy(...)` for the period the breakdown covers. */
-  summary: KinetixEnergySummary;
+  /**
+   * `summarizeEnergy(...)` for the period the breakdown covers. Omit it for the metrics form, which
+   * renders `period`, `power`, `energy`, `cost` and `metrics` instead (M3).
+   */
+  summary?: KinetixEnergySummary;
+  /** Metrics form: the period, in the product's words ("Last 7 days", "This shift"). */
+  period?: string;
+  /** Metrics form: instantaneous draw, as a `TelemetryMetric` reading. */
+  power?: EnergyReading;
+  /** Metrics form: energy over the period. */
+  energy?: EnergyReading;
+  /** Metrics form: a cost the product computed; format it with `formatValue`. */
+  cost?: EnergyReading;
+  /** Metrics form: secondary readings. */
+  metrics?: readonly EnergyReading[];
+  /** Metrics form: reference instant for ages and staleness. */
+  now?: string | Date | number | null;
   /** Instantaneous draw, e.g. `{ value: 1.2, unit: "kW" }`. */
   current?: { value: number; unit: string };
   /** Today's total, in `summary.unit`. */
@@ -96,7 +119,10 @@ const alongPlot = (frac: number) => `calc(${PLOT_INSET} + (100% - ${PLOT_INSET} 
 
 const usable = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v) && v >= 0;
 
-const EnergySummary = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, EnergySummaryProps>(
+type BreakdownProps = Omit<EnergySummaryProps, "summary" | "period" | "power" | "energy" | "cost" | "metrics" | "now"> & { summary: KinetixEnergySummary };
+
+/** The breakdown form (0.3), unchanged. A component of its own so the two forms never share hook order. */
+const EnergyBreakdown = /* @__PURE__ */ React.forwardRef<HTMLDivElement, BreakdownProps>(
   (
     { summary, current, today, days, dayLabels, breakdownLabel = "Top contributors", precision = 1, todayIndex, dailyBaseline, dailyBaselineLabel, comparison, presentation = "chart", updatedLabel, className, ...props },
     ref,
@@ -450,6 +476,23 @@ const EnergySummary = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forw
       </div>
     );
   },
+);
+
+const EnergySummary = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, EnergySummaryProps>(
+  (
+    { summary, period, power, energy, cost, metrics, now, current, today, days, dayLabels, breakdownLabel, precision, todayIndex, dailyBaseline, dailyBaselineLabel, comparison, presentation, updatedLabel, ...props },
+    ref,
+  ) =>
+    summary ? (
+      <EnergyBreakdown
+        ref={ref}
+        {...{ summary, current, today, days, dayLabels, breakdownLabel, precision, todayIndex, dailyBaseline, dailyBaselineLabel, comparison, presentation, updatedLabel }}
+        {...props}
+      />
+    ) : (
+      // The breakdown-only props are left out here, so they never land on the metrics form's element.
+      <EnergyReadings ref={ref} period={period} power={power} energy={energy} cost={cost} metrics={metrics} now={now} {...props} />
+    ),
 ), "EnergySummary");
 
 export { EnergySummary };

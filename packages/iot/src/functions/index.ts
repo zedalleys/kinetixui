@@ -9,7 +9,15 @@
  */
 export * from "../types";
 
-export { describeActivityEvent, groupActivityByDay, sortActivity, type DescribeActivityOptions, type GroupActivityOptions } from "./activity";
+export {
+  describeActivityEvent,
+  describeActivityOrigin,
+  groupActivityByDay,
+  resolveActivityOrigin,
+  sortActivity,
+  type DescribeActivityOptions,
+  type GroupActivityOptions,
+} from "./activity";
 export {
   acknowledgeAlert,
   activeAlerts,
@@ -48,10 +56,19 @@ export {
   classifyBatteryLevel,
   describeBattery,
   describeBatteryLevel,
+  describeDeviceBattery,
   formatBatteryPercent,
   resolveBatteryState,
+  resolveBatteryThresholds,
+  type DescribeDeviceBatteryInput,
 } from "./battery";
 export { findCapabilitiesByRole, resolveCapabilitySupport } from "./capabilities";
+export {
+  connectionShowsLastSeen,
+  describeDeviceConnection,
+  normalizeConnectivityState,
+  type DescribeDeviceConnectionInput,
+} from "./connection";
 export { describeDeviceColor, findDeviceColorOption, formatDeviceColorHex, normalizeDeviceColor, previewDeviceColor } from "./color";
 export {
   advanceCommandLifecycle,
@@ -106,6 +123,8 @@ export {
   type KinetixFleetHealthEntry,
   type KinetixFleetHealthSummary,
 } from "./device-state";
+export { describeCommandFeedback } from "./feedback";
+export { describeFreshness, resolveFreshness, type ResolveFreshnessInput } from "./freshness";
 export { energyTrend, summarizeEnergy, type EnergyTrendOptions, type SummarizeEnergyOptions } from "./energy";
 export {
   compareFirmwareVersions,
@@ -206,4 +225,5 @@ export {
   type KinetixThresholdCrossing,
   type SummarizeSeriesOptions,
 } from "./telemetry";
+export { describeReadingAge, describeTelemetryReading, resolveReadingDelta, type DescribeTelemetryReadingInput } from "./reading";
 export { parseTimestamp, resolveNow } from "./time";

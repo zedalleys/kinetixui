@@ -27,6 +27,20 @@ export type KinetixActivityStatus =
   | "unreachable"
   | "cancelled";
 
+/**
+ * Who or what caused an event, as the application recorded it (M3). A closed set so a UI can give each
+ * a shape and a word; `unknown` is the honest value when nothing was recorded, and it is never guessed
+ * from `actor` or `source`.
+ *
+ * - `user`: a person acted (in this app or another).
+ * - `device`: the device itself — a physical switch, a sensor threshold, a reboot.
+ * - `automation`: a rule, schedule or scene.
+ * - `system`: the platform — a backend job, a firmware rollout.
+ */
+export type KinetixActivityOrigin = "user" | "device" | "automation" | "system" | "unknown";
+
+export const KINETIX_ACTIVITY_ORIGINS: readonly KinetixActivityOrigin[] = ["user", "device", "automation", "system", "unknown"] as const;
+
 export type KinetixActivityEvent = {
   id: string;
   timestamp: string | Date;
@@ -37,6 +51,10 @@ export type KinetixActivityEvent = {
   /** A system that caused it: a rule, an integration, "schedule". */
   source?: string;
   status?: KinetixActivityStatus;
+  /** Who or what caused it (M3). Absent is `unknown`; see {@link KinetixActivityOrigin}. */
+  origin?: KinetixActivityOrigin;
+  /** The command this event belongs to, when the product correlates them (the lifecycle's `commandId`). */
+  commandId?: string;
   /** Already-localised text from the product. */
   message: string;
   detail?: string;

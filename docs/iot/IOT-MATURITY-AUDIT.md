@@ -1,4 +1,4 @@
-# `@kinetixui/iot` maturity audit — M1 contract foundation, M2A controls, M2B colour/lock/media
+# `@kinetixui/iot` maturity audit — M1 contract foundation, M2A controls, M2B colour/lock/media, M3 monitoring and feedback
 
 Audited at `main` `3eaf2c3` (2026-10-05). This is the record of what existed before the M1 contract
 slice, what was measured, and what the slice was allowed to change. The contract itself is documented
@@ -345,3 +345,86 @@ are the honest unit here.)
 - Lock access (who may unlock, PIN, audit trail) is application logic on top of the activity log.
 - Previous/next are callbacks without a lifecycle; their result is the next title the product reports.
 - Angular, SwiftUI, Compose and Flutter have no IoT controls; nothing in this slice changes that.
+
+---
+
+# M3 — Monitoring and feedback
+
+Started from `main` **`19557fb`** (2026-10-06: #310 merged, M2B head `a4e189f8` present). `@kinetixui/iot`
+**0.3.0** in source and on npm (the M2B changeset is still pending for the next Version PR). Scope: six
+monitoring and feedback surfaces on the M1/M2A/M2B contract, React only. No transport, vendor, camera,
+spatial, device card, automation, dashboard, Angular or native code.
+
+## 18. Repository truth before M3 edits
+
+| Fact | Evidence |
+| --- | --- |
+| M2B present | `DeviceColorControl`, `DeviceLockControl`, `DeviceMediaControl` exported; `.changeset/iot-controls-m2b.md` pending |
+| Tests | 35 files, 964 tests, all passing |
+| React barrel | 8 primitives, 7 controls, 27 patterns (README and the `/docs/iot` catalogue both derived from it) |
+| Browser gate | `pnpm check:iot-strategies`: 20 demos × 7 conditions, 140 runs, 1598 checks |
+| Existing names | `TelemetryMetric` and `EnergySummary` already ship (0.3); `BatteryIndicator`, `ConnectionHealth`, `CommandLifecycle` and `ActivityTimeline` do neighbouring jobs |
+| Freshness | Only a boolean (`detectStaleReading`, an undated reading with a window counts as stale) |
+| Connectivity | `KinetixConnectivityState` (six states) existed since M2A, but no component rendered it |
+| Unknown numbers | `TelemetryMetric` showed a `null` or `NaN` value as "Unavailable", the same word as a device saying it cannot measure |
+| Activity origin | `KinetixActivityEvent` had `actor` and `source` but no origin; nothing distinguished "a person did this" from "we do not know who" |
+
+## 19. Decisions
+
+| Question | Decision | Why |
+| --- | --- | --- |
+| `TelemetryMetric`, `EnergySummary` | Extended additively; every 0.3 prop and default kept | Two components with the same name would split consumers; the new props are optional |
+| Battery, connection, feedback, activity | Four new components (`DeviceBattery`, `DeviceConnection`, `CommandFeedback`, `DeviceActivity`) | The neighbouring components have different jobs and public contracts (a stepper, device-status rows, a day-grouped log); changing them would break consumers |
+| Freshness | `fresh` / `stale` / `unknown`, decided only from a consumer-supplied `staleAfterMs` and a timestamp | No hidden timeout: without a policy or a timestamp the honest answer is `unknown`, never `fresh` |
+| Undated reading with a window, in `TelemetryMetric` | Still drawn as last known (the 0.3 rule) | Changing it would turn a cautious display into a confident one for existing consumers |
+| Unknown vs unavailable numbers | `null`/`NaN` now read "Unknown"; "Unavailable" only when the product says so (`unavailable`) | A missing value is not a device fault; the visible word changes and the changeset says so |
+| Delta | Only when both the current and the comparison value are real numbers | A delta against a guessed zero is a fabricated trend |
+| Feedback wording | `requested`, `acknowledged`, `retrying` end "not yet confirmed"; `timed-out` "may still apply" | Acknowledgement is receipt, not success; a timeout is silence, not failure |
+| Feedback announcement | Off by default; when on, nothing is announced while an optimistic request is pending | The owning control already announces; doubling it is noise, and optimistic draws are not news |
+| Activity origin | Optional `origin`; missing or unrecognised is `unknown` ("Source unknown"), never inferred from `actor` or `source` | Attributing an action to a person who did not take it is the worst error a history can make |
+| Activity order | `order` is required | Newest-first and oldest-first are both valid; a default would hide the choice |
+| Capability model | No new kind or role | Battery is `telemetry`/`battery`, energy is telemetry, connectivity and activity are not capabilities; `support` props reuse `KinetixCapabilitySupport` |
+
+## 20. Evidence
+
+**Tests.** `functions/monitoring.test.ts` (26) and `react/monitoring.test.tsx` (36, axe in jsdom) cover the
+brief's sixteen named cases and the six components. The 0.3 test that expected "Unavailable" for `null`/`NaN`
+now expects "Unknown". iot suite: 37 files, 1026 tests.
+
+**Browser.** `pnpm check:iot-monitoring` (new, wired into `a11y-browser.yml`) opens eight `IoT/Monitoring`
+stories, 36 scenarios, in seven conditions (light, dark, keyboard, reduced motion, forced colours, RTL, 390 px
+at 200% text): 252 runs, 1562 checks, green. It reads back the spoken sentences from the accessibility tree,
+the visible words and glyphs, the truth rules per scenario (no "offline" for unknown, no "fresh" for stale, no
+"0" for unknown, no "confirmed" before confirmation, "Source unknown" for missing origin), clipping at 200%
+text, glyph boxes in forced colours, inline-start placement in RTL, the absence of infinite animation under
+reduced motion, tab stops and live regions, and runs axe-core. Chromium only. An automated
+accessibility-tree check; **no manual screen-reader testing was done.**
+
+**Negative controls.** Each mutation was applied to the working tree alone, run against the iot unit suite and
+the browser gate (`--only` its scenarios, on a fresh Storybook build), then restored; none was committed. Logs
+and the runner: `/mnt/project-files/iot-m3/negative-controls/`.
+
+| # | Mutation | Unit tests failing | Browser gate (scenario runs red) |
+| - | -------- | ------------------ | -------------------------------- |
+| 1 | A missing connectivity state normalises to `offline` | 2 | 7 of 21 (connection-unknown red; connection-online and -offline unaffected, as expected) |
+| 2 | `resolveFreshness` answers `fresh` past the window | 3 | 7 of 14 (battery-stale red; energy-stale uses the telemetry path, see 2b) |
+| 2b | `detectStaleReading` (the telemetry and energy stale path) never stale | 12 | 14 of 14 (telemetry-stale, energy-stale) |
+| 3 | `requested` headline reads "Confirmed" | 3 | 14 of 14 (feedback-requested, feedback-script) |
+| 4 | An unknown numeric value renders as `0` | 4 | 28 of 28 (telemetry-unknown, telemetry-unavailable, energy-unknown, energy-partial) |
+| 5 | A missing activity origin resolves to `user` | 2 | 7 of 7 (activity) |
+| 6 | The visible "Last known value" label removed from stale telemetry | 3 | 14 of 14 (telemetry-stale, energy-stale) |
+
+The first run of control 1 found a gap in the gate, not the code: the `connection-unknown` story passed
+`"unknown"` explicitly, so it never exercised the missing-input path and the browser gate stayed green
+(0 of 21). The story now passes no state for that scenario, and the re-run is the row above. Control 2 is
+split because freshness has two paths: `resolveFreshness` (battery, M3) and the 0.3 `detectStaleReading`
+that `TelemetryMetric` and the energy form still use; each is caught on its own.
+
+## 21. Not done in M3
+
+- Manual screen readers (VoiceOver, NVDA, TalkBack), Safari, Firefox and real hardware.
+- No component derives freshness or connectivity from a transport; the product passes them in.
+- `DeviceActivity` does not group, filter or paginate; `ActivityTimeline` still does the day-grouped log.
+- Angular, SwiftUI, Compose and Flutter have no monitoring components; nothing in this slice changes that.
+- Camera, security, spatial and device cards are M4; native parity and an Angular reassessment are M5;
+  reference experiences are M6.
