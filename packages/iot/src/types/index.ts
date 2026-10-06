@@ -2,9 +2,10 @@ export type {
   KinetixActivityDayGroup,
   KinetixActivityEvent,
   KinetixActivityKind,
+  KinetixActivityOrigin,
   KinetixActivityStatus,
 } from "./activity";
-export { KINETIX_ACTIVITY_KINDS } from "./activity";
+export { KINETIX_ACTIVITY_KINDS, KINETIX_ACTIVITY_ORIGINS } from "./activity";
 export type { KinetixAlertAction, KinetixAlertSeverity, KinetixDeviceAlert, KinetixSuggestedAlertKind } from "./alert";
 export { KINETIX_ALERT_KINDS, KINETIX_ALERT_SEVERITIES } from "./alert";
 export type {
@@ -76,6 +77,14 @@ export type {
   KinetixEnergyTrend,
   KinetixEnergyTrendDirection,
 } from "./energy";
+export type {
+  KinetixBatteryThresholds,
+  KinetixCommandFeedback,
+  KinetixCommandFeedbackTone,
+  KinetixFreshness,
+  KinetixReadingDelta,
+} from "./monitoring";
+export { KINETIX_FRESHNESS_STATES } from "./monitoring";
 export type { KinetixFirmwareInfo, KinetixFirmwareStatus } from "./firmware";
 export type {
   KinetixControlAffordance,

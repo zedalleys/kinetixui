@@ -42,6 +42,8 @@
 
 /* ------------------------------------------------------------------ primitives */
 export { BatteryIndicator, type BatteryIndicatorProps } from "./battery-indicator";
+export { DeviceBattery, type DeviceBatteryProps } from "./device-battery";
+export { DeviceConnection, type DeviceConnectionProps } from "./device-connection";
 export { DeviceIcon, type DeviceIconProps } from "./device-icon";
 export { DeviceIdentity, type DeviceIdentityProps } from "./device-identity";
 export { DeviceStatusBadge, type DeviceStatusBadgeProps } from "./device-status-badge";
@@ -66,9 +68,11 @@ export { AlertList, type AlertListProps } from "./alert-list";
 export { AutomationBuilder, type AutomationBuilderProps, type KinetixBuilderSubject, type KinetixBuilderTarget } from "./automation-builder";
 export { AutomationRuleView, type AutomationRuleViewProps } from "./automation-rule-view";
 export { CameraDeviceCard, type CameraDeviceCardProps } from "./camera-device-card";
+export { CommandFeedback, type CommandFeedbackProps } from "./command-feedback";
 export { CommandLifecycle, type CommandLifecycleProps } from "./command-lifecycle";
 export { CommandStatus, type CommandStatusProps } from "./command-status";
 export { ConnectionHealth, type ConnectionHealthProps } from "./connection-health";
+export { DeviceActivity, type DeviceActivityProps } from "./device-activity";
 export { DeviceCard, type DeviceCardProps } from "./device-card";
 export { DeviceControlCard, type DeviceControlCardProps } from "./device-control-card";
 export { DeviceGroupCard, type DeviceGroupCardProps } from "./device-group-card";
@@ -76,6 +80,7 @@ export { DeviceHealthSummary, type DeviceHealthSummaryProps } from "./device-hea
 export { DeviceListItem, type DeviceListItemProps } from "./device-list-item";
 export { DeviceStateSummary, type DeviceStateSummaryProps } from "./device-state-summary";
 export { EnergySummary, type EnergySummaryProps } from "./energy-summary";
+export type { EnergyReading } from "./energy-readings";
 export { FirmwareStatus, type FirmwareStatusProps } from "./firmware-status";
 export { PairingFailure, type PairingFailureProps } from "./pairing-failure";
 export { PairingMethodPicker, type PairingMethodOption, type PairingMethodPickerProps } from "./pairing-method-picker";

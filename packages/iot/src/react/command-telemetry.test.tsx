@@ -275,10 +275,11 @@ describe("TelemetryMetric", () => {
     expect(container.querySelector("[data-trend]")).toBeNull();
   });
 
-  it("treats a NaN or null value as unavailable, never zero", () => {
+  it("treats a NaN or null value as unknown, never zero (M3: unknown is not unavailable)", () => {
     for (const value of [Number.NaN, null, undefined]) {
       const { container, unmount } = render(<TelemetryMetric metric="humidity" value={value as number} />);
-      expect(container).toHaveTextContent("Unavailable");
+      expect(container).toHaveTextContent("Unknown");
+      expect(container.firstElementChild).toHaveAttribute("data-value-state", "unknown");
       expect(container.textContent).not.toMatch(/\b0\b/);
       unmount();
     }

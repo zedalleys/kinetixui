@@ -1,4 +1,5 @@
-import type { KinetixActivityDayGroup, KinetixActivityEvent, KinetixActivityStatus } from "../types/activity";
+import type { KinetixActivityDayGroup, KinetixActivityEvent, KinetixActivityOrigin, KinetixActivityStatus } from "../types/activity";
+import { KINETIX_ACTIVITY_ORIGINS } from "../types/activity";
 import { parseTimestamp, resolveNow } from "./time";
 
 /**
@@ -135,4 +136,30 @@ export function describeActivityEvent(event: KinetixActivityEvent, options: Desc
   else if (event.actor ?? event.source) text += ` By ${event.actor ?? event.source}.`;
   if (event.detail) text += ` ${event.detail.trim()}`;
   return text;
+}
+
+/**
+ * The event's origin as recorded, or `unknown`. Deliberately not inferred: an `actor` may be a person
+ * acting through an automation, and a `source` of "app" says nothing about who pressed what, so a
+ * missing origin stays `unknown` rather than becoming `user` or `system`.
+ */
+export function resolveActivityOrigin(event: Pick<KinetixActivityEvent, "origin"> | null | undefined): KinetixActivityOrigin {
+  const origin = event?.origin;
+  return typeof origin === "string" && (KINETIX_ACTIVITY_ORIGINS as readonly string[]).includes(origin) ? origin : "unknown";
+}
+
+/** The word for an origin. */
+export function describeActivityOrigin(origin: KinetixActivityOrigin): string {
+  switch (origin) {
+    case "user":
+      return "User";
+    case "device":
+      return "Device";
+    case "automation":
+      return "Automation";
+    case "system":
+      return "System";
+    default:
+      return "Source unknown";
+  }
 }

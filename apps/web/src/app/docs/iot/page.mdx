@@ -42,9 +42,11 @@ npm install @kinetixui/iot
 
 <Callout>
   **Part of this page is ahead of the published package.** `DeviceColorControl`, `DeviceLockControl` and
-  `DeviceMediaControl`, their helpers in `@kinetixui/iot/functions`, and the `unknown`, `unreachable` and
-  `connecting` control availabilities are in this repository's `main` but **not in the version npm serves**, so
-  the sections documenting them are marked **Unreleased**. They land on the next `@kinetixui/iot`
+  `DeviceMediaControl`, their helpers in `@kinetixui/iot/functions`, the `unknown`, `unreachable` and
+  `connecting` control availabilities, and the M3 monitoring pieces (`DeviceBattery`, `DeviceConnection`,
+  `CommandFeedback`, `DeviceActivity`, `resolveFreshness`, and the new `TelemetryMetric` and `EnergySummary`
+  props) are in this repository's `main` but **not in the version npm serves**, so the sections documenting
+  them are marked **Unreleased**. They land on the next `@kinetixui/iot`
   release; until then, importing one from an installed copy is a build error, not a mistake you made. Check what
   you have against [the changelog](/docs/changelog).
 </Callout>
@@ -96,7 +98,7 @@ The `functions` subpath needs none of that.
 
 - a state model — device, health, command lifecycle, telemetry, alert, activity, automation rule, pairing flow,
   space hierarchy and energy types — with pure functions for each
-- 8 React primitives, 7 device controls and 27 patterns
+- 10 React primitives, 7 device controls and 29 patterns
 - a device taxonomy and a metric registry, so a category and a metric mean the same thing everywhere
 - control-state resolution: `resolveControlState` turns a device status and a command lifecycle into one answer
   about whether a control is operable, and whether what you are looking at is confirmed
@@ -428,6 +430,61 @@ evaluateReading({ metric: "temperature", value: null, quality: "missing" });
 
 Every state is a different glyph silhouette *and* a word, so no state is carried by colour alone.
 
+## Monitoring truth model
+
+**Unreleased.** Monitoring is where an interface most often turns "we do not know" into a value. Five
+dimensions are kept apart, each with its own evidence and its own `unknown`, and **none is derived from another**:
+
+| Dimension | Question | Values |
+| --- | --- | --- |
+| Connectivity | Can the device be reached? | `online`, `offline`, `unreachable`, `stale`, `connecting`, `unknown` |
+| Freshness | How old is this piece of data? | `fresh`, `stale`, `unknown` — from a timestamp and a policy **you** supply |
+| Availability | Is there a value at all? | a value, `unknown` (nothing reported), `unavailable` (the source cannot give one now), `unsupported` (the device does not do this) |
+| Value | What is it? | a number you format; never invented, never 0 for "no value" |
+| Command lifecycle | What happened to the request? | the nine stages below |
+
+```ts
+import { resolveFreshness } from "@kinetixui/iot/functions";
+
+resolveFreshness({ observedAt: "2026-01-01T09:00:00Z", staleAfterMs: 30 * 60_000, now: "2026-01-01T12:00:00Z" }); // "stale"
+resolveFreshness({ observedAt: "2026-01-01T09:00:00Z", now: "2026-01-01T12:00:00Z" });                            // "unknown" — no policy, no default
+```
+
+There is no default timeout: a soil probe reporting twice a day is not stale at noon, and an infusion pump's
+rate from ten minutes ago may be. Undated data is `unknown`, not stale and not fresh.
+
+| Situation | What is shown |
+| --- | --- |
+| Online + stale telemetry | "Online" beside a reading marked "Last known value" and "Stale" — a green dot does not make a number current |
+| Unknown connection + known stale battery | "Connection unknown" and "Battery 18 percent, low, stale reading" — neither becomes "offline" |
+| Offline + last known telemetry | "Offline, last seen 7 minutes ago" and the reading with its own freshness |
+| Requested command + reported state unchanged | The control at the reported value; `CommandFeedback` "Requested, not yet confirmed … It last reported 20%" |
+| Unsupported vs supported but no data | "Battery not supported by this device" vs "Battery level unknown" |
+
+The components that present it:
+
+| Component | Truth rules |
+| --- | --- |
+| `DeviceBattery` | Unknown is "—", never 0 %; charging only when reported, and 100 % implies no charger; stale never says offline; unsupported is "No battery"; `thresholds` are yours |
+| `DeviceConnection` | Six states, six shapes, six words; connecting never looks online; unknown never says offline; no animation; transport text is yours |
+| `TelemetryMetric` | `metric` optional; unknown, unavailable and unsupported are three words; a delta only with a real `previous`; a reference `range` is printed, never judged; `formatValue` and `unitLabel` are yours |
+| `CommandFeedback` | One line or panel over an existing lifecycle: acknowledged is not confirmed, a timeout "may still apply", unreachable is not "failed", cancel claims no rollback; announces only with `announce` |
+| `DeviceActivity` | A required `order`; an explicit `origin` (user, device, automation, system), and "Source unknown" when none was recorded — never guessed |
+| `EnergySummary` | Without `summary`: `TelemetryMetric`s for power, energy, cost and more over a period you name; no kWh, currency or "today" assumed |
+
+```tsx
+import { CommandFeedback, DeviceBattery, DeviceConnection, TelemetryMetric } from "@kinetixui/iot/react";
+
+<DeviceConnection state="online" transportLabel="Wi-Fi via Barn gateway" />
+<TelemetryMetric label="Soil moisture" value={31} unit="%" timestamp={readAt} staleAfterMs={30 * 60_000} />
+<DeviceBattery value={18} updatedAt={batteryAt} staleAfterMs={6 * 3_600_000} />
+<CommandFeedback lifecycle={valve} label="Zone 3 valve" formatValue={(v) => (v ? "open" : "closed")} onRetry={retry} />
+```
+
+None of the monitoring components is a live region or offers a control; `CommandFeedback` adds one polite
+`role="status"` only when you pass `announce` (a control given the same lifecycle already announces it).
+No capability kind was added: a battery is `telemetry` with role `battery`.
+
 ### Series, gaps and accessible summaries
 
 A series is analysed without interpolating over what is missing. `summarizeSeries` reports min, max, average
@@ -561,6 +618,8 @@ source, action and an acknowledged or resolved state. Severity is a glyph and a 
 renders what happened, grouped by day: commands (with their lifecycle status, so a `requested` entry reads
 “Requested, not yet confirmed” and cannot be mistaken for a result), state changes, alerts, automation and
 firmware. Live-region announcements are rare on purpose; a list is not announced when it changes.
+`DeviceActivity` (**Unreleased**) is one device's history in an order you choose, with each event's origin —
+user, device, automation or system — and "Source unknown" when your log did not record one.
 
 ## Automation
 
@@ -652,8 +711,10 @@ energy.top[0]?.share;                // 0.75
 energyTrend([3, 4, 5, 6]).direction; // "rising"
 ```
 
-`EnergySummary` displays these. It is display only: no billing, no cost, no carbon estimate and no forecast, and
-every number comes from your application.
+`EnergySummary` displays these. It is display only: it computes no billing, cost, carbon estimate or forecast, and
+every number comes from your application. Without a `summary` (**Unreleased**) it is a set of `TelemetryMetric`s —
+power, energy, a cost you computed and formatted, and anything else — over a period you name; see
+[Monitoring truth model](#monitoring-truth-model).
 
 ## Camera pattern
 
@@ -746,8 +807,9 @@ import {
 <SensorReading metric="Temperature" value={23.4} unit="°C" />
 ```
 
-Eight primitives in all: those five, plus `DeviceIcon` and `DeviceIdentity` (a device's category, drawn with its
-state carried on the icon tile) and `MetricStatus` (a reading's state as a glyph and a word). Each accepts `className` and forwards the rest of its props, and each emits a `data-` attribute for the
+Ten primitives in all: those five, plus `DeviceIcon` and `DeviceIdentity` (a device's category, drawn with its
+state carried on the icon tile), `MetricStatus` (a reading's state as a glyph and a word), and — **Unreleased** —
+`DeviceBattery` and `DeviceConnection` (see [Monitoring truth model](#monitoring-truth-model)). Each accepts `className` and forwards the rest of its props, and each emits a `data-` attribute for the
 value it resolved — `data-status`, `data-level`, `data-quality` — so a product can restyle per state
 without this module growing a variant API.
 
@@ -880,7 +942,7 @@ than one per animation frame, which on a real gateway is a real cost.
 
 ## Patterns
 
-27 compositions, each built from the primitives and controls above rather than re-deriving their semantics —
+29 compositions, each built from the primitives and controls above rather than re-deriving their semantics —
 so what "stale" means is decided once and every one of them agrees.
 
 ```tsx
@@ -898,9 +960,9 @@ import {
 | --- | --- | --- |
 | A device | `DeviceCard`, `DeviceListItem`, `DeviceControlCard`, `DeviceStateSummary` | What is this device doing, and what can I do about it? |
 | Connection and firmware | `ConnectionHealth`, `FirmwareStatus` | Why can I not reach it, and what version is it on? |
-| A change settling | `CommandLifecycle`, `CommandStatus` | Where did the command I sent get to? |
+| A change settling | `CommandLifecycle`, `CommandStatus`, `CommandFeedback` | Where did the command I sent get to? |
 | A reading | `TelemetryMetric`, `TelemetryGrid`, `TelemetryCard`, `TelemetryTrend` | What is it, how much should I trust it, and what has it been doing, including where it stopped? |
-| Alerts and history | `AlertList`, `AlertCard`, `ActivityTimeline` | What is wrong, has anyone looked, and what happened? |
+| Alerts and history | `AlertList`, `AlertCard`, `ActivityTimeline`, `DeviceActivity` | What is wrong, has anyone looked, and what happened, caused by whom or what? |
 | Places and health | `DeviceGroupCard`, `DeviceHealthSummary`, `SpaceBreadcrumb`, `SpaceRollup` | How is this room, zone, line or site doing? |
 | Automation | `AutomationRuleView`, `AutomationBuilder`, `RoutineCard` | What will happen, and when? (The rule is edited here and run by you.) |
 | Adding a device | `PairingMethodPicker`, `PairingStepper`, `PairingFailure` | How is setup going, and what next if it fails? |
@@ -972,7 +1034,8 @@ dashed edge as well as a muted one. A requested value and a confirmed one differ
 ### Live regions are rare
 
 `CommandLifecycle` and `AutomationBuilder` each have one polite `role="status"`; `PairingFailure` is a
-`role="alert"`. Nothing else announces, and a live region announces *changes*, so nothing is spoken on first render.
+`role="alert"`; a device control given a `lifecycle` has one polite `role="status"`, and `CommandFeedback` has one
+only when given `announce`. Nothing else announces, and a live region announces *changes*, so nothing is spoken on first render.
 
 ### Charts and scroll regions
 
@@ -1035,11 +1098,18 @@ earlier fleet, dashboard, connected-space, telemetry-board, alert-inbox and conn
 
 ## Roadmap
 
-Nothing here is scheduled, and none of it is in the module today.
+The maturity programme so far, each step in this repository with its tests and browser gates
+([the audit](https://github.com/zedalleys/kinetixui/blob/main/docs/iot/IOT-MATURITY-AUDIT.md)):
+
+- **M1 ✅** the device interaction contract: requested vs reported, correlation, report ordering, strategies.
+- **M2A ✅** the four original controls on that contract, with `confirmed`, `optimistic` (with rollback) and `hybrid`.
+- **M2B ✅** colour, lock and media controls; a missing status is `unknown`, not offline.
+- **M3 ✅** monitoring and feedback: battery, connection, telemetry, command feedback, activity, energy, freshness.
+
+Next, and not in the module today: **M4** camera, security and spatial presentation (no video engine), **M5** native
+parity and an Angular reassessment, **M6** reference experiences. Also not scheduled:
 
 - **A grouped or scheduled command queue** — genuinely useful and genuinely a product concern. Modelling it here
   risks becoming the engine this module refuses to be, so it waits for a real product's requirements.
-- **Optimistic updates with rollback, as an opt-in** — some products legitimately want it for low-stakes devices,
-  and it needs a rollback story before it is safe to offer.
 
 Transports, an automation engine and video are not roadmap items: they are outside what this module is.

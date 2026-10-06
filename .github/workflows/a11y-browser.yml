@@ -29,6 +29,7 @@ on:
       - "scripts/motion-states.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
+      - "scripts/iot-monitoring.mjs"
       - "scripts/card-visual.mjs"
       - "scripts/icon-direction.mjs"
       - "scripts/selection-visual.mjs"
@@ -59,6 +60,7 @@ on:
       - "scripts/motion-states.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
+      - "scripts/iot-monitoring.mjs"
       - "scripts/card-visual.mjs"
       - "scripts/icon-direction.mjs"
       - "scripts/selection-visual.mjs"
@@ -140,6 +142,12 @@ jobs:
       # RTL and 390px at 200% text, reading back the accessible state, the announced sentence and axe.
       - name: IoT control strategies (lifecycle + strategy, seven browser conditions)
         run: pnpm check:iot-strategies
+
+      # The M3 monitoring and feedback components, read in the same seven conditions: every `IoT/Monitoring`
+      # scenario's accessibility-tree sentence, its state words and glyph shapes, the truth rules (unknown is
+      # not 0 or offline, stale is marked, acknowledged is not confirmed, origin is never guessed) and axe.
+      - name: IoT monitoring (battery, connection, telemetry, feedback, activity, energy; seven conditions)
+        run: pnpm check:iot-monitoring
 
       # Card's surface and state contract, read off rendered pixels in light and dark: the resting edge
       # is softer than the controls inside it, the card is lifted and sits above a grouped section, a static

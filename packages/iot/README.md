@@ -10,8 +10,8 @@ npm install @kinetixui/iot
 
 ## What it is
 
-A product semantic layer for connected devices: the models, the classification rules, eight React
-primitives, seven device controls, and twenty-seven composed product patterns built from them. Deliberately
+A product semantic layer for connected devices: the models, the classification rules, ten React
+primitives, seven device controls, and twenty-nine composed product patterns built from them. Deliberately
 generic — the same vocabulary suits smart agriculture, medical devices, smart home, industrial
 dashboards, and fleet and logistics.
 
@@ -54,13 +54,16 @@ Some things to know before relying on them:
   evaluation in this package.
 - **`CameraDeviceCard` never shows or implies a live feed.** There is no `<video>`, no stream and no
   player; the picture is a poster slot the product fills, or a placeholder that says "no live feed".
-- **`EnergySummary` is display only** — no billing, cost, carbon or forecast.
+- **`EnergySummary` is display only** — it computes no billing, cost, carbon or forecast. Since M3 its
+  metrics form can show a cost the product computed and formatted itself.
 - **Pairing components are UI state.** No Bluetooth, Wi-Fi or discovery lives here.
 - **Live regions are rare.** `CommandLifecycle` and `AutomationBuilder` each have one polite
   `role="status"`; `PairingFailure` is a `role="alert"`; `DeviceSetpointControl` has one polite
   sentence. A device control given a `lifecycle` announces its change in one polite `role="status"`
   (turn it off with `announce={false}` when `CommandLifecycle` shows the same change);
-  `DeviceMediaControl` has one per command it tracks (play, seek, volume, mute). Nothing else announces.
+  `DeviceMediaControl` has one per command it tracks (play, seek, volume, mute). `CommandFeedback` has one
+  only when given `announce`. Nothing else announces — the M3 monitoring components (`DeviceBattery`,
+  `DeviceConnection`, `TelemetryMetric`, `DeviceActivity`, `EnergySummary`) never do.
 
 ## What it is not
 
@@ -94,6 +97,28 @@ M2B added three controls on the same contract:
   endpoint. Every action is a callback; there is no `<audio>`, `<video>`, stream, codec or player in
   the package. Seek and volume are `DeviceLevelControl`, so a requested position or level is drawn
   apart from the reported one.
+
+## Monitoring and feedback (M3)
+
+Six components for watching devices rather than operating them, on one truth model: connectivity,
+data freshness, availability, the value itself and a command's lifecycle are **separate dimensions**,
+and none is derived from another. An `online` device can have stale telemetry; an `offline` one can have
+a reading still fresh by the product's policy; an `unknown` connection can sit beside a known, stale
+battery reading. See [Monitoring truth model](../../docs/iot/DEVICE-INTERACTION-CONTRACT.md#9-monitoring-truth-model-m3).
+
+| Component | What it adds |
+| --- | --- |
+| `DeviceBattery` (primitive) | Level, charging (`true` / `false` / `null` = device cannot tell / omitted = not reported), freshness, product thresholds, `unsupported`. Unknown is never 0 %; 100 % never implies a charger |
+| `DeviceConnection` (primitive) | The six connectivity states as six shapes and words; last seen where it means something; a product-supplied transport label; no animation |
+| `TelemetryMetric` (extended) | `metric` now optional; `formatValue`, `unitLabel`, `previous` (delta only with a real comparison), `range` (printed, never judged), `severity` / `statusLabel`, `freshness`, `support`, `unavailable`; unknown, unavailable and unsupported are three different words; one spoken phrase |
+| `CommandFeedback` (pattern) | One line or a small panel over an existing `KinetixCommandLifecycle`: acknowledged is not confirmed, a timeout "may still apply", unreachable is not "failed", cancelled claims no rollback; Retry only when allowed; announces only with `announce` |
+| `DeviceActivity` (pattern) | One device's history with an explicit `order` and an explicit `origin` (user, device, automation, system — or "Source unknown", never guessed) |
+| `EnergySummary` (extended) | Without `summary`: a composition of `TelemetryMetric`s — power, energy, cost, more — over a period the product names; no unit, currency or "today" assumed |
+
+The shared contract is `resolveFreshness` (`fresh` / `stale` / `unknown`, from a timestamp and a
+`staleAfterMs` **the product supplies** — there is no default timeout), with `describeDeviceBattery`,
+`describeDeviceConnection`, `describeTelemetryReading`, `resolveReadingDelta`, `describeCommandFeedback`
+and `resolveActivityOrigin` in `@kinetixui/iot/functions`. No capability kind or role was added.
 
 ## The recurring design rule
 
