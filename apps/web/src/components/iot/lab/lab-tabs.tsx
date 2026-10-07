@@ -4,6 +4,7 @@ import * as React from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import { preloadPreview } from "@/components/iot/lazy-preview";
 import { cn } from "@/lib/utils";
+import { ENVIRONMENT_ICONS } from "./environment-icons";
 
 /**
  * Accessible tabs for the lab: one panel rendered at a time, deep-linkable by `#<tab id>`.
@@ -38,22 +39,6 @@ export type LabTab = {
   panel: React.ReactNode;
 };
 
-const glyph = (children: React.ReactNode) => (
-  <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-    {children}
-  </svg>
-);
-
-/** Generic inline glyphs for the three reference environments, keyed by tab id. Not brand marks. */
-const ENVIRONMENT_ICONS: Record<string, React.ReactNode> = {
-  // a house
-  "smart-space": glyph(<><path d="M4 11 12 4l8 7" /><path d="M6 10v9.5h12V10" /><path d="M10 19.5v-5h4v5" /></>),
-  // a sprouting leaf
-  agritech: glyph(<><path d="M12 20v-8" /><path d="M12 12c0-4 2.5-6.5 7-6.5 0 4.5-2.5 6.5-7 6.5Z" /><path d="M12 15c0-3-2-5-6-5 0 3.5 2 5 6 5Z" /></>),
-  // a factory
-  operations: glyph(<><path d="M3.5 20V9.5l5 3v-3l5 3v-3l5 3V20Z" /><path d="M18.5 12.5V5h2v8" /><path d="M7.5 16h.01M11.5 16h.01M15.5 16h.01" /></>),
-};
-
 export function LabTabs({
   tabs,
   label,
@@ -84,7 +69,12 @@ export function LabTabs({
       const id = decodeURIComponent(window.location.hash.slice(1));
       if (!ids.includes(id)) return;
       setValue(id);
-      if (scroll) root.current?.scrollIntoView({ block: "start" });
+      if (!scroll) return;
+      // The tabs may sit in a closed disclosure (the environments do). A deep link to a tab is a request to see
+      // it, so open the disclosure first; scrolling to a closed one would land on nothing.
+      const disclosure = root.current?.closest("details");
+      if (disclosure && !disclosure.open) disclosure.open = true;
+      root.current?.scrollIntoView({ block: "start" });
     };
     fromHash(true);
     const onHash = () => fromHash(false);
@@ -105,7 +95,10 @@ export function LabTabs({
     <Tabs.Root ref={root} value={value} onValueChange={select} dir={dir} className={cn("scroll-mt-20", className)}>
       <Tabs.List
         aria-label={label}
-        className={cn(segmented ? "grid w-full grid-flow-col auto-cols-fr gap-1 rounded-2xl bg-muted/70 p-1 sm:inline-grid sm:w-auto sm:rounded-full" : "flex flex-wrap gap-2")}
+        // Below `sm` the segments are as many equal columns as fit at a 5.5rem minimum (a rem, so the minimum grows
+        // with the reader's text size): three across on a phone at default text, one per row at 200%, where
+        // "Operations" alone is wider than a third of a 320px screen. From `sm` it is one joined row, as before.
+        className={cn(segmented ? "grid w-full grid-cols-[repeat(auto-fit,minmax(min(100%,5.5rem),1fr))] gap-1 rounded-2xl bg-muted/70 p-1 sm:inline-grid sm:w-auto sm:grid-flow-col sm:grid-cols-none sm:auto-cols-fr sm:rounded-full" : "flex flex-wrap gap-2")}
       >
         {tabs.map((tab) => {
           const icon = tab.icon ?? ENVIRONMENT_ICONS[tab.id];

@@ -178,7 +178,10 @@ and announces a sentence such as "Could not turn on. The device still reports of
 
 **Accessibility.** Announcements are polite and one per stage: "Turning on, waiting for the device." →
 "On." or "Could not turn on. The device still reports off."; timed-out and unreachable endings name
-themselves. `optimistic` announces nothing while it waits (it chose not to mark the wait) but always
+themselves, and a timed-out one says the change may still apply ("No confirmation for on: the device did not
+confirm in time, so the change may still apply…"), because a timeout is the application giving up, not the
+device refusing (Phase 3D). A request still open when the link drops to `offline` or `unreachable` is described
+by the link first ("Device offline. The requested change is not confirmed…"), never as a change in progress. `optimistic` announces nothing while it waits (it chose not to mark the wait) but always
 announces the outcome. The status region exists before its first message. `aria-checked` stays the
 reported value whenever the request is marked as unconfirmed. Disabled (`disabled`) and unavailable
 (`aria-disabled` on a mode) are unchanged. Verified with jsdom tests and in Chromium by

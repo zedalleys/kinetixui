@@ -116,16 +116,44 @@ export function resolveControlState(input: ResolveControlStateInput = {}): Kinet
   return { availability, phase, interactive, lastKnown, description: describeControlState(availability, phase) };
 }
 
+/** The sentence for a request that is still open and can still be answered. */
+const REQUEST_OPEN = "Change requested, not yet confirmed by the device";
+
 /**
  * A sentence for a control's accessible description.
  *
  * These are read aloud, so they are written as things a person would say. In particular the pending
  * wording never claims the device did anything — "requested" and "not confirmed" are both in it,
  * because a screen-reader user gets no visual pending affordance to disambiguate. No sentence but the
- * `offline` one says "offline".
+ * `offline` ones says "offline".
+ *
+ * An open request does not outrank the link. `resolveControlState` already lets an offline or
+ * unreachable device decide availability over a command in flight, because that command is going
+ * nowhere; the sentence follows it, so it names the link first and does not say "not yet", which
+ * would promise progress. `connecting` keeps "not yet" (the link is coming back), and `stale` keeps the
+ * open-request sentence (a stale device still accepts commands) and adds that its data is old. A
+ * request with no known link (`pending`) is just a request: unknown is never read as offline.
+ *
+ * `failed` covers a refusal, a timeout and an unreachable device alike, and a timeout does not prove
+ * the device ignored the change, so the sentence claims only what all three share: it was not
+ * confirmed. The precise outcome is `describeControlOutcome`'s job.
  */
 export function describeControlState(availability: KinetixControlAvailability, phase: KinetixControlPhase = "idle"): string {
-  if (availability === "pending" || phase === "requested") return "Change requested, not yet confirmed by the device";
+  if (phase === "requested") {
+    switch (availability) {
+      case "offline":
+        return "Device offline. The requested change is not confirmed. Showing the last known setting";
+      case "unreachable":
+        return "Device unreachable. The requested change is not confirmed. Showing the last known setting";
+      case "connecting":
+        return "Connecting to the device. The requested change is not yet confirmed. Showing the last known setting";
+      case "stale":
+        return `${REQUEST_OPEN}. Device data is out of date`;
+      default:
+        return REQUEST_OPEN;
+    }
+  }
+  if (availability === "pending") return REQUEST_OPEN;
   switch (availability) {
     case "offline":
       return "Device offline. Showing the last known setting";
@@ -140,7 +168,7 @@ export function describeControlState(availability: KinetixControlAvailability, p
     case "unknown":
       return "Device status unknown";
     case "ready":
-      return phase === "failed" ? "The last change failed. Showing the device's current setting" : "Ready";
+      return phase === "failed" ? "The last change was not confirmed. Showing the setting the device reports" : "Ready";
   }
 }
 
@@ -258,7 +286,10 @@ export type DescribeControlOutcomeOptions = {
   formatValue?: (value: unknown) => string;
   /** The in-progress phrase for a request: "Turning on". Defaults to `Changing to <value>`. */
   pendingPhrase?: (requested: unknown) => string;
-  /** The unsuccessful phrase for a request: "Could not turn on". Defaults to `Could not change to <value>`. */
+  /**
+   * The unsuccessful phrase for a request: "Could not turn on". Defaults to `Could not change to <value>`. Used
+   * for `failed` and `unreachable`; a timeout is not phrased as a failure, because the change may still apply.
+   */
   failedPhrase?: (requested: unknown) => string;
 };
 
@@ -290,7 +321,8 @@ export function describeControlOutcome(presentation: KinetixControlPresentation,
     case "failed":
       return `${failedPhrase(want)}. The device still reports ${have}.`;
     case "timed-out":
-      return `${failedPhrase(want)}: the device did not answer. It last reported ${have}.`;
+      // A timeout is the application giving up waiting, not the device refusing: the change may still apply.
+      return `No confirmation for ${format(want)}: the device did not confirm in time, so the change may still apply. It last reported ${have}.`;
     case "unreachable":
       return `${failedPhrase(want)}: the device is unreachable. It last reported ${have}.`;
     case "cancelled":

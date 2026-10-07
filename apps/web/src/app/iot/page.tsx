@@ -13,6 +13,7 @@ import { HeroCommandStrip } from "@/components/iot/lab/hero-command-strip";
 import { LiveControlPanel } from "@/components/iot/lab/live-control-panel";
 import { LabSection } from "@/components/iot/lab/lab-section";
 import { LabTabs } from "@/components/iot/lab/lab-tabs";
+import { ENVIRONMENT_ICONS } from "@/components/iot/lab/environment-icons";
 import { CategoryExplorer, MoreExamples } from "@/components/iot/lab/category-explorer";
 import { ModuleBoundary } from "@/components/iot/module-boundary";
 import { Reveal } from "@/components/reveal";
@@ -168,6 +169,23 @@ function CategoryPanel({
   );
 }
 
+/**
+ * Three across when each card gets 14rem, otherwise fewer. In rem, so the breakpoint follows the reader's text size:
+ * at 768px and 200% text a third of the row cannot hold "Operations" at heading size, and a fixed `md:` three-column
+ * grid pushed the page sideways there.
+ */
+const ENVIRONMENT_GRID = "grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))]";
+
+/**
+ * The three questions every reference environment asks of a device, whatever it calls its places. They are the
+ * reason the package is not a smart-home kit, so the Environments section leads with them.
+ */
+const ENVIRONMENT_QUESTIONS: readonly { question: string; answer: string }[] = [
+  { question: "What did I ask for?", answer: "A request is drawn and announced as a request until the device confirms it." },
+  { question: "What did the device confirm?", answer: "The reported state stays authoritative, and the last known value is labelled as last known." },
+  { question: "How much should I trust this number?", answer: "Readings carry their age, a missing value is never zero, and simulated data says so." },
+];
+
 /** The framework-independent layer, by the product question each group answers. */
 const SEMANTIC_GROUPS: readonly { title: string; body: string }[] = [
   { title: "Device state", body: "Status, health and connectivity kept apart, and a normaliser for whatever spelling a backend sends." },
@@ -272,7 +290,7 @@ export default function IotPage() {
               </p>
 
               <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-                <Button asChild size="lg">
+                <Button asChild size="lg" className="whitespace-normal">
                   <Link href="/docs/iot" {...ctaAttrs("iot_page", "read_docs")}>
                     Explore IoT <ArrowUpRight className="size-4" />
                   </Link>
@@ -304,6 +322,10 @@ export default function IotPage() {
       </section>
 
       {/* ─── environments ──────────────────────────────────────────────── */}
+      {/* The section answers one question, why the package applies beyond a home, and answers it before the reader
+          reaches the explorer: the three questions every environment shares, then the three environments side by
+          side, each named by the place hierarchy it uses. Operating one is opt-in, behind a disclosure, because a
+          whole environment is several screens of product and the point is made without it. */}
       <LabSection
         id="environments"
         index="01"
@@ -312,31 +334,60 @@ export default function IotPage() {
         tone="muted"
         title="Three products, one interaction model."
         lede={
-          <>
-            <p>
-              A home, a farm and a production line name their places differently and want different controls, and
-              they still need the same answers: what did I ask for, what did the device confirm, and how much should
-              I trust this number. Choose an environment and operate it.
-            </p>
-            <p className="text-sm">
+          <p>
+            A home, a farm and a production line name their places differently and want different controls. They
+            still ask the same three questions of every device, and the same components answer them.
+          </p>
+        }
+      >
+        {/* `minmax(0,1fr)`, not the implicit `auto` track: an `auto` track grows to its widest child's min-content,
+            and an opened environment is wide, which stretched the cards above it past a 390px screen. */}
+        <Reveal className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-8">
+          <ol aria-label="The questions every environment asks" className={ENVIRONMENT_GRID}>
+            {ENVIRONMENT_QUESTIONS.map((q, i) => (
+              <li key={q.question} className="min-w-0 rounded-xl border border-border bg-card p-4">
+                <span aria-hidden className="font-mono text-[11px] text-muted-foreground">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <p className="mt-1 font-display text-base font-semibold">{q.question}</p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{q.answer}</p>
+              </li>
+            ))}
+          </ol>
+
+          <ul aria-label="Reference environments" className={ENVIRONMENT_GRID}>
+            {IOT_ENVIRONMENTS.map((env) => (
+              <li key={env.id} className="min-w-0 rounded-xl bg-card p-5 shadow-sm">
+                <h3 className="flex items-center gap-2 font-display text-lg font-semibold">
+                  <span className="text-primary">{ENVIRONMENT_ICONS[env.id]}</span>
+                  {env.label}
+                </h3>
+                <p className="mt-2 font-mono text-xs text-muted-foreground [overflow-wrap:anywhere]">
+                  {env.hierarchy}
+                </p>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{env.summary}</p>
+              </li>
+            ))}
+          </ul>
+
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
+            <p className="max-w-2xl text-sm text-muted-foreground">
               Each environment is fabricated and scripted in your browser. Nothing is measured, and no device is
               contacted.
             </p>
-          </>
-        }
-      >
-        <Reveal className="mt-10">
-          <LabTabs
-            label="Reference environment"
-            tabs={IOT_ENVIRONMENTS.map((env) => ({
-              id: env.id,
-              label: env.label,
-              meta: env.hierarchy,
-              summary: env.summary,
-              preload: env.slug,
-              panel: <IotExample slug={env.slug} />,
-            }))}
-          />
+            <MoreExamples summary="Operate an environment" tabIds={IOT_ENVIRONMENTS.map((env) => env.id)} flush>
+              <LabTabs
+                label="Reference environment"
+                tabs={IOT_ENVIRONMENTS.map((env) => ({
+                  id: env.id,
+                  label: env.label,
+                  meta: env.hierarchy,
+                  preload: env.slug,
+                  panel: <IotExample slug={env.slug} />,
+                }))}
+              />
+            </MoreExamples>
+          </div>
         </Reveal>
       </LabSection>
 
@@ -902,7 +953,8 @@ import { SensorReading, formatLastSeen } from "${IOT_PACKAGE}";`}
         <Reveal className="mt-10 grid gap-6 [&>*]:min-w-0 md:grid-cols-[repeat(3,minmax(0,1fr))]">
           {ROADMAP.map((column) => (
             <div key={column.when} className="rounded-xl border border-border bg-card p-5">
-              <div className="flex items-center justify-between gap-3 border-b border-border pb-3">
+              {/* Wraps: at 768px and 200% text a third of the row is narrower than the heading and its chip together. */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
                 <h3 className="font-display text-sm font-semibold">{column.when}</h3>
                 <span
                   className={
@@ -939,7 +991,9 @@ import { SensorReading, formatLastSeen } from "${IOT_PACKAGE}";`}
               registries, the accessibility contract and the module&rsquo;s stated limits.
             </p>
             <div className="mt-8">
-              <Button asChild size="lg">
+              {/* `whitespace-normal` at the call site, as on the homepage: Button is `whitespace-nowrap` by design, and
+                  at 200% text this label is 363px inside a 358px column at 390px, which pushed the page sideways. */}
+              <Button asChild size="lg" className="whitespace-normal">
                 <Link href="/docs/iot" {...ctaAttrs("iot_page", "read_docs")}>
                   Read the IoT docs <ArrowUpRight className="size-4" />
                 </Link>

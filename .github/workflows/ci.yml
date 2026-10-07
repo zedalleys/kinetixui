@@ -68,6 +68,11 @@ jobs:
       - name: Changelog page is current with the packages
         run: pnpm check:releases
 
+      # A README is read on GitHub, on npmjs.com and in node_modules. A relative link out of the package
+      # directory only works in the first, so published READMEs link outside themselves with absolute URLs.
+      - name: Published READMEs link only to what their readers can reach
+        run: pnpm check:package-readmes
+
       - name: RTL logical-property guardrail
         run: pnpm check:rtl
 

@@ -203,7 +203,21 @@ export function CategoryExplorer({ categories, label }: { categories: readonly E
  * JavaScript and needs no ARIA of its own. It opens itself when the URL points at one of its tabs, so an old
  * `#layout-dashboard` link still shows that layout.
  */
-export function MoreExamples({ summary, tabIds = [], children }: { summary: string; tabIds?: readonly string[]; children: React.ReactNode }) {
+export function MoreExamples({
+  summary,
+  tabIds = [],
+  flush = false,
+  children,
+}: {
+  summary: string;
+  tabIds?: readonly string[];
+  /**
+   * Content at the full width of the column, outside the frame: the frame is the summary alone. For content that
+   * lays itself out by its own width (a whole environment), where a padded frame would take 34-50px from it.
+   */
+  flush?: boolean;
+  children: React.ReactNode;
+}) {
   const [open, setOpen] = React.useState(false);
   React.useEffect(() => {
     const check = () => {
@@ -217,9 +231,14 @@ export function MoreExamples({ summary, tabIds = [], children }: { summary: stri
     <details
       open={open}
       onToggle={(event) => setOpen(event.currentTarget.open)}
-      className="group rounded-xl border border-border bg-card/40"
+      className={cn("group", !flush && "rounded-xl border border-border bg-card/40")}
     >
-      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+      <summary
+        className={cn(
+          "flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden",
+          flush && "border border-border bg-card/40",
+        )}
+      >
         <span>{summary}</span>
         <span aria-hidden className="text-muted-foreground transition-transform duration-fast group-open:rotate-180 motion-reduce:transition-none">
           <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" focusable="false">
@@ -227,7 +246,7 @@ export function MoreExamples({ summary, tabIds = [], children }: { summary: stri
           </svg>
         </span>
       </summary>
-      <div className="border-t border-border p-4 sm:p-6">{children}</div>
+      <div className={flush ? "pt-6" : "border-t border-border p-4 sm:p-6"}>{children}</div>
     </details>
   );
 }
