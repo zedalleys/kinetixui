@@ -70,6 +70,15 @@ export type {
 } from "./device-state";
 export { KINETIX_CAPABILITY_KINDS, KINETIX_CONNECTIVITY_STATES, KINETIX_HEALTH_LEVELS } from "./device-state";
 export type {
+  KinetixCommandIntent,
+  KinetixDeviceLedger,
+  KinetixDeviceSignal,
+  KinetixLedgerDevice,
+  KinetixLedgerRejection,
+  KinetixLedgerTransition,
+  KinetixLedgerUpdate,
+} from "./device-ledger";
+export type {
   KinetixEnergyBreakdownItem,
   KinetixEnergyFlag,
   KinetixEnergyShare,

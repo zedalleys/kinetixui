@@ -50,7 +50,7 @@
   ],
   "scripts": {
     "build": "tsup src/index.ts src/functions/index.ts src/react/index.ts --format esm --dts --clean --external react --external react-dom",
-    "lint": "eslint src",
+    "lint": "eslint src reference",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"

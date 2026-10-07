@@ -124,6 +124,19 @@ export {
   type KinetixFleetHealthEntry,
   type KinetixFleetHealthSummary,
 } from "./device-state";
+export {
+  applyDeviceSignals,
+  createDeviceLedger,
+  expireDeviceCommands,
+  requestDeviceChange,
+  selectCapabilityLifecycle,
+  selectDeviceConnectivity,
+  toDeviceState,
+  type CreateDeviceLedgerInput,
+  type ExpireDeviceCommandsOptions,
+  type RequestDeviceChangeInput,
+  type ToDeviceStateInput,
+} from "./device-ledger";
 export { describeCommandFeedback } from "./feedback";
 export { describeFreshness, resolveFreshness, type ResolveFreshnessInput } from "./freshness";
 export { energyTrend, summarizeEnergy, type EnergyTrendOptions, type SummarizeEnergyOptions } from "./energy";
