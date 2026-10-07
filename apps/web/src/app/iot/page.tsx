@@ -340,7 +340,9 @@ export default function IotPage() {
           </p>
         }
       >
-        <Reveal className="mt-10 grid gap-8">
+        {/* `minmax(0,1fr)`, not the implicit `auto` track: an `auto` track grows to its widest child's min-content,
+            and an opened environment is wide, which stretched the cards above it past a 390px screen. */}
+        <Reveal className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-8">
           <ol aria-label="The questions every environment asks" className={ENVIRONMENT_GRID}>
             {ENVIRONMENT_QUESTIONS.map((q, i) => (
               <li key={q.question} className="min-w-0 rounded-xl border border-border bg-card p-4">
@@ -368,12 +370,12 @@ export default function IotPage() {
             ))}
           </ul>
 
-          <div className="grid gap-3">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
             <p className="max-w-2xl text-sm text-muted-foreground">
               Each environment is fabricated and scripted in your browser. Nothing is measured, and no device is
               contacted.
             </p>
-            <MoreExamples summary="Operate an environment" tabIds={IOT_ENVIRONMENTS.map((env) => env.id)}>
+            <MoreExamples summary="Operate an environment" tabIds={IOT_ENVIRONMENTS.map((env) => env.id)} flush>
               <LabTabs
                 label="Reference environment"
                 tabs={IOT_ENVIRONMENTS.map((env) => ({
