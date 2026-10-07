@@ -96,15 +96,28 @@ export type KinetixCommandLifecycleEvent =
   /** `value` is what the device actually reported; omit it to mean "the requested value". */
   | { type: "confirm"; value?: unknown; commandId?: string }
   | { type: "fail"; reason?: string; code?: string; commandId?: string }
-  | { type: "timeout"; reason?: string; code?: string }
+  /**
+   * `commandId` names the request the deadline was set for. A timeout for a superseded request, or for
+   * another request than the current one, is refused as `stale-response`, exactly as a late reply would
+   * be: a timer started for a request the user replaced cannot time out the one that replaced it.
+   * Omit it and the timeout applies to whatever is current, as before.
+   */
+  | { type: "timeout"; reason?: string; code?: string; commandId?: string }
   | { type: "deviceUnreachable"; reason?: string; code?: string }
   | { type: "retry"; commandId?: string }
   | { type: "cancel"; reason?: string; code?: string }
   /**
    * The device's reported value. `observedAt` is when the device observed it (its own timestamp if it
    * sends one); a report older than the last accepted one is refused with `stale-report`.
+   *
+   * `receivedAt` is when the **application** received the report, on the same clock as the `now` it
+   * gives this machine. Two questions use two clocks: reports are ordered against each other by
+   * `observedAt` (the device's clock, consistent with itself), and whether a report can be evidence
+   * about the current send is decided by `receivedAt` when it is given (the application's clock,
+   * consistent with `sentAt`). Without it, `observedAt` answers both, which is only right when the
+   * device's clock matches the application's.
    */
-  | { type: "report"; value: unknown; observedAt?: string | Date | number };
+  | { type: "report"; value: unknown; observedAt?: string | Date | number; receivedAt?: string | Date | number };
 
 export type KinetixCommandLifecycle<T = unknown> = {
   /** What the device last reported. Only a `confirm` event changes it. */
@@ -135,6 +148,13 @@ export type KinetixCommandLifecycle<T = unknown> = {
   supersededCommandIds?: string[];
   /** When the device observed `confirmedValue`, from the last accepted `report`. Orders reports. */
   reportedAt?: string;
+  /**
+   * The value the device confirmed **instead of** the one requested — a thermostat that took 21.5 for a
+   * request of 22, a dimmer that clamped to 80 — set only by a `confirm` event that carries a different
+   * value. It records how this request settled, so a later `report` (the dial turned by hand) neither
+   * sets nor clears it. Read it through `isLifecycleAdjusted`.
+   */
+  adjustedValue?: T;
 };
 
 /** Why a transition was refused. The state is returned unchanged alongside it. */

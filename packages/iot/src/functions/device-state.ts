@@ -13,6 +13,7 @@ import type { KinetixDeviceAlert } from "../types/alert";
 import type { KinetixDevice } from "../types/device";
 import type { KinetixFirmwareInfo } from "../types/firmware";
 import { classifyBatteryLevel } from "./battery";
+import { isSameDeviceValue } from "./commands";
 import { resolveFirmwareStatus } from "./firmware";
 import { detectStaleReading } from "./telemetry";
 import { isKnownDeviceStatus, normalizeDeviceStatus } from "./status";
@@ -205,7 +206,8 @@ export function deriveDeviceHealth(input: DeriveDeviceHealthInput = {}): Kinetix
 function unconfirmedKeys(state: Pick<KinetixDeviceState, "confirmedValues" | "requestedValues">): string[] {
   const requested = state.requestedValues ?? {};
   const confirmed = state.confirmedValues ?? {};
-  return Object.keys(requested).filter((key) => !Object.is(requested[key], confirmed[key]));
+  // By content, as everywhere else: a reported colour arrives as a new object on every snapshot.
+  return Object.keys(requested).filter((key) => !isSameDeviceValue(requested[key], confirmed[key]));
 }
 
 /**
