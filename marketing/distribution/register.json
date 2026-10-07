@@ -172,7 +172,7 @@
       "result": "Published on dev.to on 2026-10-06 (about 09:03 UTC), on its scheduled day 8. The live article is https://dev.to/zedalleys/your-design-tokens-stop-at-the-web-boundary-4p6a. No performance counts are recorded yet: this close-out was made immediately after publication, so the honest result is none observed so far. Track absolute counts only at the next close-out: devto-attributed sessions carrying kx_p2_b_token_boundary with utm_content=art_primary, then Qualified Evaluation and Adoption Intent from them. Organic only \u2014 no amplification; no hashnode cross-post. No conclusion either way while analytics.md \u00a710's baseline window is open."
     },
     {
-      "date": null,
+      "date": "2026-10-07",
       "day": 9,
       "asset": "LI-005",
       "channel": "linkedin",
@@ -190,8 +190,8 @@
       "secondary": null,
       "communityReuse": "COM-001",
       "metricToWatch": "adopt_tokens on /docs/tokens",
-      "status": "planned",
-      "result": null
+      "status": "published",
+      "result": "Posted 2026-10-07, on its scheduled day 9. The live post URL is not recorded: it was not supplied with the close-out and LinkedIn is not readable from the repo tooling. No counts are recorded yet: this row was logged the same day it went out, so the honest result is none observed so far, to be replaced with absolute counts at the next close-out: adopt_tokens on /docs/tokens first, since that is the metric to watch, then sessions carrying kx_p2_b_token_boundary with utm_content=li_primary. Organic only \u2014 no amplification. The exact posting time is not recorded. It shares kx_p2_b_token_boundary with ART-002 (utm_content=art_primary), so the two are separated by utm_content, never by campaign. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {
       "date": null,
