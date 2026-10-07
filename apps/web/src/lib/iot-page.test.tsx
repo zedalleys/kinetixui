@@ -372,12 +372,52 @@ describe("/iot: reference environments", () => {
     expect(panel.querySelector("[data-simulation-disclosure]")).toBeNull();
   });
 
-  it("selects an environment from the URL hash", async () => {
+  it("selects an environment from the URL hash, and opens the disclosure it sits in", async () => {
     window.location.hash = "#agritech";
     render(<IotPage />);
     const list = screen.getByRole("tablist", { name: "Reference environment" });
     expect(await within(list).findByRole("tab", { name: "Agritech" })).toHaveAttribute("aria-selected", "true");
+    expect(list.closest("details")).toHaveProperty("open", true);
     window.location.hash = "";
+  });
+
+  /*
+   * Phase 3D. Before: the section opened straight into a whole environment (4,403px at 1280, 4.9 screens), so the
+   * explorer started 5.9 screens down. Now it says why the package spans domains first (the three questions, the
+   * three environments and their place hierarchies), and operating one is a closed disclosure.
+   */
+  it("answers why the package spans environments without operating one", () => {
+    render(<IotPage />);
+    const section = document.getElementById("environments")!;
+    const questions = within(section).getByRole("list", { name: "The questions every environment asks" });
+    expect(within(questions).getAllByRole("listitem").map((li) => li.querySelector("p")!.textContent)).toEqual([
+      "What did I ask for?",
+      "What did the device confirm?",
+      "How much should I trust this number?",
+    ]);
+    const cards = within(within(section).getByRole("list", { name: "Reference environments" })).getAllByRole("listitem");
+    expect(cards).toHaveLength(IOT_ENVIRONMENTS.length);
+    IOT_ENVIRONMENTS.forEach((env, i) => {
+      expect(within(cards[i]!).getByRole("heading", { level: 3 })).toHaveTextContent(env.label);
+      expect(cards[i]).toHaveTextContent(env.hierarchy);
+      expect(cards[i]).toHaveTextContent(env.summary);
+    });
+    // The simulation disclosure is said before anything can be operated, not only inside the examples.
+    expect(section.textContent).toMatch(/fabricated and scripted in your browser\. Nothing is measured, and no device is\s+contacted/);
+  });
+
+  it("keeps the operable environments behind one closed disclosure, before the explorer", () => {
+    render(<IotPage />);
+    const section = document.getElementById("environments")!;
+    // The examples carry their own "Built from" disclosures; the section's own is the outermost one.
+    const disclosures = [...section.querySelectorAll("details")].filter((d) => !d.parentElement!.closest("details"));
+    expect(disclosures).toHaveLength(1);
+    expect(disclosures[0]).toHaveProperty("open", false);
+    expect(disclosures[0]!.querySelector("summary")).toHaveTextContent("Operate an environment");
+    expect(within(disclosures[0] as HTMLElement).getByRole("tablist", { name: "Reference environment" })).toBeInTheDocument();
+    // Still a section of its own, and still ahead of the explorer: not a second navigation system.
+    expect(section.compareDocumentPosition(document.getElementById("explore")!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect([...section.querySelectorAll('[role="tablist"]')].filter((list) => !list.closest("details"))).toHaveLength(0);
   });
 });
 

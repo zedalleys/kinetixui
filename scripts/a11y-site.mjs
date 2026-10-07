@@ -29,6 +29,14 @@ import { chromium } from "playwright";
 
 const base = (process.argv.includes("--base") ? process.argv[process.argv.indexOf("--base") + 1] : "http://127.0.0.1:3100").replace(/\/$/, "");
 
+/**
+ * `--page /iot` (repeatable) sweeps only the named pages, for reproducing one finding locally. CI passes none, so it
+ * always sweeps every page, and the ratchet check below still runs against the full list.
+ */
+const ONLY_PAGES = process.argv.includes("--page")
+  ? process.argv.flatMap((arg, i) => (process.argv[i - 1] === "--page" ? [arg] : []))
+  : null;
+
 /** One representative page per kind of layout, plus the pages with the densest custom UI. */
 const PAGES = [
   "/",
@@ -84,25 +92,17 @@ const TEXT_SCALES = [1, 2];
 /**
  * Pages that do not yet hold at 200% text, with the reason, as a ratchet.
  *
- * Every other page on the site passes both text sizes at all four widths. `/iot` does not. Its original cause,
- * `DeviceSetpointControl`'s fixed-geometry ring, was fixed by the state and spatial audit (the ring now stacks
- * below 12rem; `check:iot-state-spatial` holds it). Re-measured after that fix, /iot still overflows at 200% text
- * from page chrome: 75px at 320 (environment tab labels, the "Built from" part list) and 40px at 768 (the
- * roadmap's "Deferred" chip). Those are the remaining reason for the entry.
+ * Empty: every page passes both text sizes at all four widths. `/iot` was the last entry. Its original cause,
+ * `DeviceSetpointControl`'s fixed-geometry ring, was fixed by the state and spatial audit; the page chrome that
+ * still overflowed (the closing "Read the IoT docs" button at 320/375px, the environment tab labels and the
+ * "Built from" part names at 320px, the roadmap's "Deferred" chip at 768px) was fixed in Phase 3D by letting
+ * each one wrap, without clipping or shrinking anything.
  *
- * This is a ratchet and not an exemption: the entry is asserted to be NEEDED, so the moment /iot is fixed
- * this run fails and tells you to delete the line. It follows `check-rtl.mjs`, which carries its pending
- * files the same way. 1 of 21 pages, at one of the two text sizes.
+ * This is a ratchet and not an exemption: an entry is asserted to be NEEDED, so the moment a page is fixed this
+ * run fails and tells you to delete the line. It follows `check-rtl.mjs`, which carries its pending files the
+ * same way. A new entry needs a measured reason.
  */
-const TEXT_SCALE_PENDING = new Map([
-  [
-    "/iot",
-    // The ring itself was fixed by the state and spatial audit (docs/audits/INTERACTIVE-STATE-SPATIAL-AUDIT.md):
-    // it now stacks below 12rem. Measured after that fix, what still overflows at 200% text is page chrome — the
-    // environment tab labels and the "Built from" part list at 320px, and the roadmap's "Deferred" chip at 768px.
-    "page chrome (environment tabs, 'Built from' list, roadmap chip) overflows at 320/768px — not the ring any more",
-  ],
-]);
+const TEXT_SCALE_PENDING = new Map([]);
 
 /**
  * Per-page layout contracts: regions that must still be usable, not merely free of sideways scroll.
@@ -157,7 +157,7 @@ for (const scheme of SCHEMES) {
   for (const [widthName, width, height] of WIDTHS) {
     for (const scale of TEXT_SCALES) {
       const context = await browser.newContext({ viewport: { width, height }, colorScheme: scheme, reducedMotion: "reduce" });
-      for (const path of PAGES) {
+      for (const path of ONLY_PAGES ?? PAGES) {
         // A pending page is still SWEPT. Review caught that skipping it before navigation also skipped
         // the root-size assertion, axe and the overflow check at every width and theme, so its known
         // overflow would have masked a new axe violation, or extra overflow at another width. Only the
@@ -270,7 +270,7 @@ if (failures.length) {
   process.exit(1);
 }
 console.log(
-  `a11y-site ok — ${PAGES.length} pages × ${SCHEMES.length} themes × ${WIDTHS.length} widths × ${TEXT_SCALES.length} text sizes ` +
+  `a11y-site ok — ${(ONLY_PAGES ?? PAGES).length} pages × ${SCHEMES.length} themes × ${WIDTHS.length} widths × ${TEXT_SCALES.length} text sizes ` +
     `(${views} views): no axe findings, no horizontal overflow, ${LAYOUT_CONTRACTS.size} layout contract(s) held.` +
     (TEXT_SCALE_PENDING.size
       ? `\n  ${TEXT_SCALE_PENDING.size} page(s) pending at 200% text, each verified to still need it: ` +

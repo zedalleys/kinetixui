@@ -290,6 +290,33 @@ whether a window has passed when you pass it `now` and a limit — and what to d
 renders a lifecycle as a stepper (`requested → acknowledged → confirmed`, or a failure branch with a Retry when
 the machine allows one) with one polite `role="status"` sentence, the same one `describeCommandLifecycle` returns.
 
+### A request that is open when the link drops
+
+A request can still be open when the device goes offline. `resolveControlState` lets the link decide a
+control's availability over a command in flight, because a request to an offline device is going nowhere, and
+`describeControlState` follows it. This wording lands on the next `@kinetixui/iot` release:
+
+| Command | Link | Control description |
+| --- | --- | --- |
+| requested or acknowledged | online, or not reported | Change requested, not yet confirmed by the device |
+| requested | connecting | Connecting to the device. The requested change is not yet confirmed. Showing the last known setting |
+| requested | stale | Change requested, not yet confirmed by the device. Device data is out of date |
+| requested | offline | Device offline. The requested change is not confirmed. Showing the last known setting |
+| requested | unreachable | Device unreachable. The requested change is not confirmed. Showing the last known setting |
+| confirmed | online | Ready |
+| failed or timed out | online | The last change was not confirmed. Showing the setting the device reports |
+
+Offline and unreachable drop the "not yet", which would promise progress, and the request chip stops pulsing
+there too. A link that is not reported is `unknown`, never offline. A timeout is the application giving up
+waiting, so it is announced as "No confirmation for on: the device did not confirm in time, so the change may
+still apply", not as a failure.
+
+`CommandStatus` is different on purpose. It shows a command record (`queued`, `sent`, `acknowledged`…) and knows
+nothing about the device's link, because a record can legitimately stay queued while a device is offline: many
+backends hold commands until the device reconnects. Show the link beside it with `DeviceConnection`, and settle the
+record (`expired`, `failed`) in your application when your transport gives up. The component does not guess from
+the device's state.
+
 ## The device model
 
 ```ts

@@ -209,7 +209,7 @@ describe("DeviceLevelControl", () => {
     expect(screen.getByRole("slider")).toHaveAttribute("aria-busy", "true");
     rerender(<DeviceLevelControl lifecycle={run(ramp(), [{ type: "timeout" }, 5000])} strategy="optimistic" label="Dimmer" />);
     expect(container.querySelector("[data-confirmed]")).toHaveTextContent("20%");
-    expect(container.querySelector("[data-outcome]")).toHaveTextContent("Could not change to 80%: the device did not answer. It last reported 20%.");
+    expect(container.querySelector("[data-outcome]")).toHaveTextContent("No confirmation for 80%: the device did not confirm in time, so the change may still apply. It last reported 20%.");
   });
 });
 
