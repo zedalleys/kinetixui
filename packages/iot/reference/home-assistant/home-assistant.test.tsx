@@ -226,11 +226,41 @@ describe("fixture flow: provider → adapter → ledger → selector → control
     expect(lamp()).toMatchObject({ stage: "failed", reasonCode: "invalid-request", confirmedValue: "off", commandId: "cmd-2" });
   });
 
-  it("sends nothing for a request the adapter cannot express", () => {
+  it("sends nothing for a capability the application never registered", () => {
     const { integration, sent, log, at } = harness();
     at("2026-10-07T18:00:00Z", () => integration.request("desk-lamp", "brightness", 40));
     expect(sent).toEqual([]);
     expect(log.at(-1)?.rejection?.code).toBe("unknown-capability");
+  });
+
+  it("sends nothing for a value the adapter cannot express, and records the request as refused", () => {
+    const { integration, sent, log, at, lamp } = harness();
+    at("2026-10-07T17:59:59.500Z", () => integration.receive(messages.initialStates!));
+    at("2026-10-07T18:00:00Z", () => integration.request("desk-lamp", "power", 0.5));
+    expect(sent).toEqual([]);
+    expect(lamp()).toMatchObject({ stage: "failed", reasonCode: "unsupported", confirmedValue: "off" });
+    expect(log.slice(-2).map((t) => [t.cause, t.to, t.rejection?.code])).toEqual([
+      ["request", "requested", undefined],
+      ["result", "failed", undefined],
+    ]);
+  });
+
+  it("forgets request ids once answered and when the session drops, so a reused id is not read as an old reply", () => {
+    const { integration, at, lamp } = harness();
+    at("2026-10-07T17:59:59.500Z", () => integration.receive(messages.initialStates!));
+    at("2026-10-07T18:05:30Z", () => integration.request("desk-lamp", "power", "on"));
+    // The session drops before Home Assistant answers request 10; the new session numbers from 10 again.
+    at("2026-10-07T18:07:00Z", () => integration.linkLost());
+    at("2026-10-07T18:08:01Z", () => integration.receive({ ...messages.reconnectStatesOn!, id: 10 } as HomeAssistantMessage));
+    expect(selectDeviceConnectivity(integration.getLedger(), "desk-lamp").state).toBe("online");
+    expect(lamp()).toMatchObject({ stage: "confirmed", confirmedValue: "on" });
+
+    // An answered id is forgotten too.
+    const second = harness();
+    second.at("2026-10-07T18:00:00Z", () => second.integration.request("desk-lamp", "power", "on"));
+    second.at("2026-10-07T18:00:00.300Z", () => second.integration.receive(messages.callServiceOk!));
+    second.at("2026-10-07T18:00:01Z", () => second.integration.receive({ ...messages.reconnectStatesOn!, id: 10 } as HomeAssistantMessage));
+    expect(second.lamp()).toMatchObject({ stage: "confirmed", confirmedValue: "on" });
   });
 });
 

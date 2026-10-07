@@ -19,7 +19,6 @@ import type {
 } from "../types/device-ledger";
 import {
   isLifecyclePending,
-  isLifecycleTimedOut,
   isSameDeviceValue,
   lifecycleToCommandStatus,
   startCommandLifecycle,
@@ -28,7 +27,7 @@ import {
 } from "./commands";
 import { normalizeConnectivityState } from "./connection";
 import { deriveDeviceHealth } from "./device-state";
-import { resolveNow } from "./time";
+import { parseTimestamp, resolveNow } from "./time";
 
 /**
  * The device ledger (M4B): pure reconciliation between what an application asked its devices to do and
@@ -235,14 +234,16 @@ export function applyDeviceSignals(
 
 export type ExpireDeviceCommandsOptions = {
   /**
-   * How long a request may stay open, measured from its latest send. A number, or a function for
-   * per-capability deadlines. A non-positive or non-finite value expires nothing.
+   * How long a request may stay open, measured from its latest send; it expires at or after
+   * `sentAt + timeoutMs`. A number, or a function for per-capability deadlines. A non-positive or
+   * non-finite value expires nothing.
    */
   timeoutMs?: number | ((target: { deviceId: string; capabilityId: string }) => number);
   /**
    * Expire exactly this request, as a per-request timer firing would. Refused as `stale-response` when
    * it has been superseded, so a timer left over from a replaced request cannot time out its successor.
-   * With `timeoutMs` as well, it expires only once that much time has passed.
+   * With `timeoutMs` as well, it expires only once the deadline is reached, so a one-shot timer that
+   * fires exactly at it still expires the request.
    */
   commandId?: string;
 };
@@ -285,7 +286,7 @@ export function expireDeviceCommands(
       });
     } else {
       const ms = deadline(found.deviceId, found.capabilityId);
-      if (ms === undefined || isLifecycleTimedOut(found.lifecycle, at, ms)) expire(found.deviceId, found.capabilityId, found.lifecycle, options.commandId);
+      if (ms === undefined || hasReachedDeadline(found.lifecycle, at, ms)) expire(found.deviceId, found.capabilityId, found.lifecycle, options.commandId);
     }
     return { ledger: draft.done(), transitions };
   }
@@ -294,7 +295,7 @@ export function expireDeviceCommands(
   for (const [deviceId, device] of Object.entries(ledger.devices)) {
     for (const [capabilityId, lifecycle] of Object.entries(device.capabilities)) {
       const ms = deadline(deviceId, capabilityId);
-      if (ms !== undefined && isLifecyclePending(lifecycle) && isLifecycleTimedOut(lifecycle, at, ms)) expire(deviceId, capabilityId, lifecycle, lifecycle.commandId);
+      if (ms !== undefined && hasReachedDeadline(lifecycle, at, ms)) expire(deviceId, capabilityId, lifecycle, lifecycle.commandId);
     }
   }
   return { ledger: draft.done(), transitions };
@@ -376,6 +377,17 @@ export function toDeviceState(ledger: KinetixDeviceLedger, input: ToDeviceStateI
 // ---------------------------------------------------------------------------------------------
 // Module-private helpers.
 // ---------------------------------------------------------------------------------------------
+
+/**
+ * Whether an open request has reached its deadline: `now >= sentAt + timeoutMs`. Inclusive, unlike
+ * `isLifecycleTimedOut`'s "longer than", because the application's timer is scheduled for exactly that
+ * moment and may not fire again.
+ */
+function hasReachedDeadline(lifecycle: KinetixCommandLifecycle, now: number, timeoutMs: number): boolean {
+  if (!isLifecyclePending(lifecycle) || typeof timeoutMs !== "number" || !Number.isFinite(timeoutMs) || timeoutMs <= 0) return false;
+  const sent = parseTimestamp(lifecycle.sentAt ?? null);
+  return sent !== null && now - sent.getTime() >= timeoutMs;
+}
 
 type Located = { lifecycle: KinetixCommandLifecycle } | { rejected: KinetixLedgerTransition };
 

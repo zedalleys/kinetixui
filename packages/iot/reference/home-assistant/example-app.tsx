@@ -78,17 +78,26 @@ export function createLightIntegration(options: LightIntegrationOptions) {
     /** Called by the application's socket handler for every message. */
     receive(message: HomeAssistantMessage) {
       apply(translateHomeAssistantMessage(message, { entities: options.entities, commandIdForRequest: (id) => requestIds.get(id) }));
+      // A request id answers once. Forgetting it stops a later message that reuses the id from being read as this reply.
+      if (message.type === "result" && typeof message.id === "number") requestIds.delete(message.id);
     },
     /** The application's socket closed: we lost our view, the devices did not go offline. */
     linkLost() {
+      // Request ids belong to the closed session; a new session may number its messages from 1 again.
+      requestIds.clear();
       apply([...new Set(targets.map((t) => t.deviceId))].map((deviceId) => ({ type: "connectivity", deviceId, state: "connecting" })));
     },
     /** A control asked for a change. */
     request(deviceId: string, capabilityId: string, value: unknown) {
       const update = requestDeviceChange(ledger, { commandId: options.nextCommandId(), deviceId, capabilityId, value }, options.now());
-      const call = update.intent ? encodeHomeAssistantCommand(update.intent, { entities: options.entities }) : null;
-      if (!update.intent || !call) return commit({ ledger, transitions: update.transitions });
+      if (!update.intent) return commit(update);
+      const call = encodeHomeAssistantCommand(update.intent, { entities: options.entities });
       commit(update);
+      if (!call) {
+        // The adapter cannot express it, so nothing is sent. The request is recorded and refused with this
+        // application's own code, so the control and the transition log both say it did not happen.
+        return apply([{ type: "result", commandId: update.intent.commandId, outcome: "rejected", code: "unsupported" }]);
+      }
       requestIds.set(options.transport.send(call), update.intent.commandId);
     },
     /** The application's timer. */

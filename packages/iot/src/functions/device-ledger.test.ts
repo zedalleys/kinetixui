@@ -321,6 +321,15 @@ describe("reconciliation", () => {
     expect(run.transitions).toHaveLength(1);
   });
 
+  it("a one-shot timer firing exactly at the deadline expires the request", () => {
+    const exact = runLedgerScenario(homeLedger(), [turnOn("c", 1_000), { at: 6_000, expire: { commandId: "c", timeoutMs: 5_000 } }]);
+    expect(power(exact.ledger).stage).toBe("timed-out");
+    const policy = runLedgerScenario(homeLedger(), [turnOn("c", 1_000), { at: 6_000, expire: { timeoutMs: 5_000 } }]);
+    expect(power(policy.ledger).stage).toBe("timed-out");
+    const early = runLedgerScenario(homeLedger(), [turnOn("c", 1_000), { at: 5_999, expire: { commandId: "c", timeoutMs: 5_000 } }]);
+    expect(power(early.ledger).stage).toBe("requested");
+  });
+
   it("stale timeout: a timer for replaced command A cannot time out B", () => {
     const run = runLedgerScenario(homeLedger(), [setTo("a", 22, 1_000), setTo("b", 24, 2_000), { at: 11_000, expire: { commandId: "a" } }]);
     expect(setpoint(run.ledger)).toMatchObject({ stage: "requested", commandId: "b", requestedValue: 24 });
