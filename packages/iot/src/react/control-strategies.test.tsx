@@ -160,6 +160,24 @@ describe("DevicePowerControl: OFF → ON under each strategy", () => {
     expect(screen.getByText("Device offline. Showing the last known setting")).toBeInTheDocument();
   });
 
+  it("an open request whose link drops is announced as not confirmed, never as waiting", () => {
+    // Reproduced on ce254f1: the description named the link, the status region still said "Turning on, waiting for the device."
+    for (const connectivity of ["offline", "unreachable"] as const) {
+      for (const strategy of ["confirmed", "optimistic", "hybrid"] as const) {
+        render(<DevicePowerControl lifecycle={turningOn()} strategy={strategy} control={resolveControlState({ connectivity, lifecycle: turningOn() })} label="Lamp" />);
+        expect(status(), `${connectivity} ${strategy}`).toHaveTextContent(`Device ${connectivity}. The requested change is not confirmed.`);
+        expect(status()?.textContent, `${connectivity} ${strategy}`).not.toMatch(/waiting/);
+        cleanup();
+      }
+    }
+    // A link that is merely coming back, or unknown, keeps the request's own sentence.
+    for (const connectivity of ["connecting", "unknown"] as const) {
+      render(<DevicePowerControl lifecycle={turningOn()} control={resolveControlState({ connectivity, lifecycle: turningOn() })} label="Lamp" />);
+      expect(status(), connectivity).toHaveTextContent("Turning on, waiting for the device.");
+      cleanup();
+    }
+  });
+
   it("without a control, a settled lifecycle is pressable and requests the opposite of what is checked", () => {
     const onToggle = vi.fn();
     render(<DevicePowerControl lifecycle={confirmedOn()} label="Lamp" onToggle={onToggle} />);

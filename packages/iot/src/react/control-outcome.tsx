@@ -50,8 +50,26 @@ export function useControlContract<T>(
   return {
     presentation,
     control: resolved,
-    announcement: announcing ? describeControlOutcome(presentation, sentence) : null,
+    announcement: announcing ? announcementFor(presentation, sentence, lifecycle, resolved?.availability) : null,
   };
+}
+
+/**
+ * The status region's sentence. An open request whose link has dropped is not "waiting for the device":
+ * the control's description already names the link first (`describeControlState`), and the region says
+ * the same, so a screen-reader user is told the link went and is never left with a progress claim. It
+ * does not say which value is shown, because under `optimistic` that is the request.
+ */
+function announcementFor<T>(
+  presentation: KinetixControlPresentation<T>,
+  sentence: DescribeControlOutcomeOptions,
+  lifecycle: KinetixCommandLifecycle<T> | null | undefined,
+  availability: KinetixControlAvailability | undefined,
+): string {
+  if (lifecycle && isLifecyclePending(lifecycle) && (availability === "offline" || availability === "unreachable")) {
+    return `Device ${availability}. The requested change is not confirmed.`;
+  }
+  return describeControlOutcome(presentation, sentence);
 }
 
 /**

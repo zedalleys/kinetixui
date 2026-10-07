@@ -306,8 +306,8 @@ control's availability over a command in flight, because a request to an offline
 | confirmed | online | Ready |
 | failed or timed out | online | The last change was not confirmed. Showing the setting the device reports |
 
-Offline and unreachable drop the "not yet", which would promise progress, and the request chip stops pulsing
-there too. A link that is not reported is `unknown`, never offline. A timeout is the application giving up
+Offline and unreachable drop the "not yet", which would promise progress, the request chip stops pulsing
+there too, and the control's status region announces "Device offline. The requested change is not confirmed." A link that is not reported is `unknown`, never offline. A timeout is the application giving up
 waiting, so it is announced as "No confirmation for on: the device did not confirm in time, so the change may
 still apply", not as a failure.
 
