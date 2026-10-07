@@ -45,6 +45,17 @@ function intersect(selector: string) {
 }
 
 /**
+ * How long a test waits for a lazy preview to replace its placeholder. Mounting one is a real dynamic `import()`
+ * of the example's module graph, which Vitest transforms on first use: 0.3–0.9 s alone, but 1.5–2.4 s while
+ * `turbo run test` runs every package's suite at once, past Testing Library's 1 s default. The wait still polls
+ * and resolves the moment the example is there; this only bounds how long a preview that never mounts can take
+ * to fail. Tests that use it raise their own timeout to LAZY_MOUNT_TEST_TIMEOUT so the wait, not Vitest's 5 s
+ * test timeout, reports the failure.
+ */
+const LAZY_MOUNT_TIMEOUT = 5_000;
+const LAZY_MOUNT_TEST_TIMEOUT = 10_000;
+
+/**
  * The /iot page against its own claims. `current-truth.test.ts` polices what the page must never say; this file
  * asserts what it does say, and that the structure a keyboard or screen-reader user relies on is there.
  */
@@ -360,11 +371,11 @@ describe("/iot: reference environments", () => {
     expect(panel.querySelector("[data-preview-placeholder]")).toHaveAttribute("aria-hidden", "true");
     expect(within(panel).queryByRole("switch")).toBeNull();
     intersect('[data-lazy-preview="smart-space-environment"]');
-    await waitFor(() => expect(panel.querySelector("[data-preview-placeholder]")).toBeNull());
+    await waitFor(() => expect(panel.querySelector("[data-preview-placeholder]")).toBeNull(), { timeout: LAZY_MOUNT_TIMEOUT });
     expect(panel.querySelector('[data-lazy-preview="smart-space-environment"]')).toHaveAttribute("data-mounted");
     // Still exactly one disclosure once the example has replaced the placeholder.
     expect(panel.querySelectorAll("[data-simulation-notice]")).toHaveLength(1);
-  });
+  }, LAZY_MOUNT_TEST_TIMEOUT);
 
   it("does not render the same disclosure in the panel header as well as in the example", () => {
     render(<IotPage />);
@@ -445,11 +456,11 @@ describe("/iot: interactive examples load on demand", () => {
   it("mounts a section's real example when it nears the viewport", async () => {
     const { container } = render(<IotPage />);
     intersect('[data-lazy-preview="device-detail"]');
-    expect(await screen.findByRole("article", { name: "Pump Station detail" })).toBeInTheDocument();
+    expect(await screen.findByRole("article", { name: "Pump Station detail" }, { timeout: LAZY_MOUNT_TIMEOUT })).toBeInTheDocument();
     expect(container.querySelector('[data-lazy-preview="device-detail"] [data-preview-placeholder]')).toBeNull();
     // A neighbour that has not intersected stays a placeholder.
     expect(container.querySelector('[data-lazy-preview="pairing-flow"] [data-preview-placeholder]')).not.toBeNull();
-  });
+  }, LAZY_MOUNT_TEST_TIMEOUT);
 
   it("keeps the placeholder out of the accessibility tree and free of animation", () => {
     const { container } = render(<IotPage />);
