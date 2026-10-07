@@ -228,7 +228,7 @@
       "icp": "p2",
       "pillar": "b",
       "stage": "awareness",
-      "status": "ready",
+      "status": "published",
       "file": "marketing/content/linkedin.md",
       "day": 9,
       "destination": "/docs/tokens",
