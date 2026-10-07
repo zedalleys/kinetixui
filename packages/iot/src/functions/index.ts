@@ -80,6 +80,7 @@ export {
   isCommandInFlight,
   isCommandSettled,
   isCommandUnsuccessful,
+  isLifecycleAdjusted,
   isLifecyclePending,
   isLifecycleSettled,
   isLifecycleTimedOut,

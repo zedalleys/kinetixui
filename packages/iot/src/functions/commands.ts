@@ -245,7 +245,8 @@ const TRANSITIONS: Readonly<Record<KinetixCommandLifecycleStage, Partial<Record<
   cancelled: {},
 };
 
-const RESPONSES: readonly EventType[] = ["acknowledge", "confirm", "fail"];
+/** Events that belong to one request, so a `commandId` on them must name the current one. */
+const CORRELATED: readonly EventType[] = ["acknowledge", "confirm", "fail", "timeout"];
 
 /**
  * Apply a `report`: the device's own account of its value, which is not necessarily an answer.
@@ -280,11 +281,12 @@ function applyReport<T>(
   const draft: KinetixCommandLifecycle<T> = { ...state, confirmedValue: event.value as T };
   if (observed) draft.reportedAt = observed.toISOString();
 
-  // An observation made before the current send cannot be evidence about it, whatever its value.
-  // `observedAt` and `sentAt` are compared directly, so a product passing device timestamps must
-  // put them on the same clock basis as the `now` it gives this machine.
+  // An observation made before the current send cannot be evidence about it, whatever its value. That
+  // compares against `sentAt`, which is on the application's clock, so `receivedAt` (also on it) is used
+  // when given; `observedAt` only when not, which assumes the device's clock matches the application's.
   const sent = parseTimestamp(state.sentAt ?? null);
-  if (observed && sent && observed.getTime() < sent.getTime()) return { ok: true, state: draft };
+  const evidenceAt = parseTimestamp(event.receivedAt ?? null) ?? observed;
+  if (evidenceAt && sent && evidenceAt.getTime() < sent.getTime()) return { ok: true, state: draft };
 
   const matches = state.requestedValue !== undefined && isSameDeviceValue(event.value, state.requestedValue);
   const open = isLifecyclePending(state) || state.stage === "failed" || state.stage === "timed-out" || state.stage === "unreachable";
@@ -333,7 +335,7 @@ export function transitionCommandLifecycle<T = unknown>(
     };
   }
 
-  const responseId = RESPONSES.includes(event.type) && "commandId" in event ? event.commandId : undefined;
+  const responseId = CORRELATED.includes(event.type) && "commandId" in event ? event.commandId : undefined;
   if (responseId !== undefined && state.supersededCommandIds?.includes(responseId)) {
     return {
       ok: false,
@@ -378,6 +380,9 @@ export function transitionCommandLifecycle<T = unknown>(
       // Only here does the device's state change. A device that reports something other than what was
       // asked (a dimmer that clamped to 80) is believed over the request.
       draft.confirmedValue = "value" in event && event.value !== undefined ? (event.value as T) : state.requestedValue;
+      // Kept only when the device confirmed something other than the request; see `isLifecycleAdjusted`.
+      if (state.requestedValue !== undefined && !isSameDeviceValue(draft.confirmedValue, state.requestedValue)) draft.adjustedValue = draft.confirmedValue;
+      else delete draft.adjustedValue;
       draft.settledAt = at;
       draft.reason = undefined;
       draft.reasonCode = undefined;
@@ -397,6 +402,20 @@ export function advanceCommandLifecycle<T = unknown>(
   now?: string | Date | number | null,
 ): KinetixCommandLifecycle<T> {
   return transitionCommandLifecycle(state, event, now).state;
+}
+
+/**
+ * Whether the device confirmed this request with a value other than the one asked for: a setpoint
+ * quantised to the hardware's step, a level clamped to a range, a colour normalised by the provider.
+ *
+ * True only for a `confirmed` lifecycle settled by a `confirm` event whose value differed from the
+ * request (structurally, by `isSameDeviceValue`). A `report` never makes it true: a differing report
+ * while the request is open is not a confirmation, and one after it is the device changing, not the
+ * request settling. `adjustedValue` holds what the device confirmed; `confirmedValue` is what it reports
+ * now, which a later report may have moved.
+ */
+export function isLifecycleAdjusted(state: Pick<KinetixCommandLifecycle, "stage" | "adjustedValue">): boolean {
+  return state.stage === "confirmed" && state.adjustedValue !== undefined;
 }
 
 /** True while a request is out and unresolved: requested, acknowledged or retrying. */

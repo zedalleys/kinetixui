@@ -86,6 +86,60 @@ and (new in M1) `report`. A refused event returns `ok: false` with the same stat
 
 In every case the reported value becomes `confirmedValue`.
 
+### M4A additions: real-device edges
+
+A simulated device shares the application's clock, ids and timers. A real one does not. These four rules are
+additive: a caller that passes none of the new fields sees the M1–M3 behaviour unchanged. Tested in
+`packages/iot/src/functions/lifecycle-edges.test.ts`, and read through the Phase 3D wording in
+`lifecycle-edges-wording.test.ts`.
+
+| Addition | Rule |
+| --- | --- |
+| `receivedAt` on `report` | When the application received the report, on the same clock as `now` and `sentAt`. |
+| `commandId` on `timeout` | A timeout belongs to the request it was started for. |
+| `adjustedValue` on the lifecycle, and `isLifecycleAdjusted(lifecycle)` | The device confirmed the request with a different value. |
+| Structural value equality in `summarizeDeviceState` | Requested and reported values are compared with `isSameDeviceValue`. |
+
+**Two clocks on a report.** `observedAt` is when the device observed the value, on the device's clock.
+`receivedAt` is when the application received it, on the application's clock. They answer different questions,
+so they are never compared with each other:
+
+- *Ordering* uses `observedAt` only. A report older than the last ordered report is refused as `stale-report`,
+  whatever its `receivedAt`, and `reportedAt` keeps the device's time.
+- *Settling* asks whether the report can be evidence about the current request, which means it must postdate the
+  send. With `receivedAt`, that is `receivedAt` against `sentAt`, both on the application's clock, so a device
+  whose clock runs behind no longer leaves a request it carried out pending until it times out. Without
+  `receivedAt`, `observedAt` is used as before. A report from before the send updates `confirmedValue` and never
+  settles the request. An unreadable `receivedAt` is ignored, not trusted.
+- Residual: a pre-send observation that is only received after the send, and whose value equals the request,
+  settles it. The value it reports is the one asked for, so the claim "the device holds the requested value" is
+  still true.
+
+**Correlated timeouts.** `timeout` takes an optional `commandId` and is checked like `acknowledge`, `confirm` and
+`fail`: an id of a superseded request, or any id other than the current one, is refused as `stale-response`
+with the same state object. A timer left over from a replaced request therefore cannot time out the request that
+replaced it. An untagged `timeout` behaves as before. `deviceUnreachable` and `cancel` stay uncorrelated: they
+describe the link and the user, not one request.
+
+**Adjusted confirmations.** A `confirm` carrying a value that is not `isSameDeviceValue` to the request (a
+setpoint rounded to the hardware's step, a clamped level) settles the request as `confirmed`, records the value in
+`adjustedValue`, and `isLifecycleAdjusted` is true. There is no new stage.
+
+- Only a `confirm` sets it. A `report` that differs from the request is not a confirmation: the request stays
+  open ("not yet confirmed"), as the table above says. So "requested 22, the device confirms 21.5" and "requested
+  22, a report says 21.5" stay distinct.
+- It describes how the request settled, so a later `report` that moves `confirmedValue` neither sets nor clears
+  it. A new request (`supersedeCommandLifecycle` or `startCommandLifecycle`) starts without it.
+- It changes nothing a strategy draws or a control says. The control and `CommandFeedback` name the device's
+  value ("21.5°.", "Confirmed: the device reports 21.5°."), never the requested one, so no sentence claims the
+  request was met exactly. An application that wants to say "adjusted" reads `isLifecycleAdjusted`.
+
+**How these read in Phase 3D's words.** No sentence changed. A timeout after a differing report says "No
+confirmation for 22°: the device did not confirm in time, so the change may still apply. It last reported 21.5°."
+A refused superseded timeout leaves the current request's own "not yet confirmed" sentence. A request whose link is
+lost reads by the link first. Requested and acknowledged are never confirmed, a lost link is not a failure, a timeout
+is not a refusal, offline never sounds in progress, and unknown is never offline.
+
 ### The asynchronous cases, and where they are tested
 
 All in `packages/iot/src/functions/device-contract.test.ts` unless noted.
@@ -100,6 +154,9 @@ All in `packages/iot/src/functions/device-contract.test.ts` unless noted.
 | Stale acknowledgement | refused as `stale-response` (correlated) or `stale-report` (ordered) |
 | Device goes offline while pending | `deviceUnreachable` |
 | Device reconnects later | `report` → `confirmed` or `failed`, then `retry` with a new `commandId` |
+| Device clock behind the application's | `report` with `receivedAt` settles; ordering stays on `observedAt` (`lifecycle-edges.test.ts`) |
+| Timeout for a superseded request | `timeout` with its `commandId`, refused as `stale-response` (`lifecycle-edges.test.ts`) |
+| Device adjusts the requested value | `confirm` with the adjusted value → `confirmed`, `isLifecycleAdjusted` (`lifecycle-edges.test.ts`) |
 | Stale telemetry | `evaluateReading` → `stale`, never `normal` |
 | Unsupported capability | `resolveCapabilitySupport` → `unsupported` |
 
