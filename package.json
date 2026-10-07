@@ -65,6 +65,7 @@
     "build:cli": "pnpm --filter @kinetixui/cli build",
     "build:iot": "pnpm --filter @kinetixui/iot build",
     "check:iot-dist": "node scripts/check-iot-dist.mjs",
+    "check:package-readmes": "node scripts/check-package-readmes.mjs",
     "storybook": "pnpm --filter @kinetixui/docs storybook",
     "build-storybook": "pnpm --filter @kinetixui/docs build-storybook",
     "dev:web": "pnpm --filter @kinetixui/web dev",

@@ -66,8 +66,18 @@ async function openIot({ width, scale = 1, scheme = "light", reducedMotion = "no
   return { context, page };
 }
 
+/**
+ * The environments are behind a closed "Operate an environment" disclosure (Phase 3D). Opening it is what a reader
+ * does to reach them, so the gate does the same, by its summary, before measuring anything inside.
+ */
+async function openEnvironments(page) {
+  const disclosure = page.locator("#environments details", { has: page.locator("summary", { hasText: "Operate an environment" }) }).first();
+  if (!(await disclosure.evaluate((d) => d.open))) await disclosure.locator("summary").first().click();
+}
+
 /** The examples mount lazily as they near the viewport: walk down to them. */
 async function mount(page, selector, sectionId = "environments") {
+  if (sectionId === "environments") await openEnvironments(page);
   await page.locator(`#${sectionId}`).scrollIntoViewIfNeeded();
   for (let i = 0; i < 40 && !(await page.locator(selector).count()); i++) {
     await page.mouse.wheel(0, 600);
@@ -79,6 +89,7 @@ async function mount(page, selector, sectionId = "environments") {
 }
 
 async function chooseEnvironment(page, name) {
+  await openEnvironments(page);
   await page.locator("#environments").scrollIntoViewIfNeeded();
   await page.getByRole("tab", { name: new RegExp(name) }).first().click();
 }
@@ -320,6 +331,12 @@ for (const env of runs("plan") ? ["Smart space", "Agritech", "Operations"] : [])
       });
       if (!overlaps.count) fail(tag, "no marker is drawn on the plan");
       for (const o of overlaps.out) fail(tag, `marker targets overlap: ${o}`);
+      // The environment open and mounted is a state check:a11y-site never reaches (it does not open the
+      // disclosure), so the page-overflow rule is held here too. Phase 3D: an `auto` grid track around the
+      // disclosure let an opened environment stretch the page 175-536px past a 390px screen at 200% text.
+      checks++;
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      if (overflow > 0) fail(tag, `with the environment open, the page scrolls sideways by ${overflow}px`);
     } catch (error) {
       fail(tag, error.message);
     } finally {
@@ -338,4 +355,4 @@ if (!checks) {
   console.error("✗ iot-state-spatial: nothing was checked");
   process.exit(1);
 }
-console.log(`iot-state-spatial ok — ${checks} checks${ONLY ? ` (only ${ONLY.join(", ")})` : ": ring clearance (6 views), lock fidelity (2 motion modes), light fidelity (2 themes), plan markers (3 environments × 4 views)"}.`);
+console.log(`iot-state-spatial ok — ${checks} checks${ONLY ? ` (only ${ONLY.join(", ")})` : ": ring clearance (6 views), lock fidelity (2 motion modes), light fidelity (2 themes), plan markers and open-environment overflow (3 environments × 4 views)"}.`);

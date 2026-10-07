@@ -59,7 +59,7 @@ describe("strategies draw one lifecycle three ways, and none of them changes it"
 
     const timedOut = view(run(turningOn(), [{ type: "timeout" }, 5000]), "optimistic");
     expect(timedOut).toMatchObject({ value: "off", rolledBack: true, outcome: "timed-out" });
-    expect(describeControlOutcome(timedOut, POWER)).toBe("Could not turn on: the device did not answer. It last reported off.");
+    expect(describeControlOutcome(timedOut, POWER)).toBe("No confirmation for on: the device did not confirm in time, so the change may still apply. It last reported off.");
 
     const cancelled = view(run(turningOn(), [{ type: "cancel" }, 200]), "optimistic");
     expect(cancelled).toMatchObject({ value: "off", rolledBack: true, outcome: "cancelled" });
@@ -223,9 +223,13 @@ describe("describeControlOutcome", () => {
     const said = (outcome: KinetixControlPresentation["outcome"]) => describeControlOutcome({ ...base, outcome, pending: false }, POWER);
     expect(said("idle")).toBe("");
     for (const outcome of ["failed", "timed-out", "unreachable"] as const) {
-      expect(said(outcome)).toMatch(/^Could not turn on/);
+      expect(said(outcome)).toMatch(/\bon\b/);
       expect(said(outcome)).toMatch(/off\.$/);
     }
+    expect(said("failed")).toMatch(/^Could not turn on/);
+    expect(said("unreachable")).toMatch(/^Could not turn on/);
+    // A timeout is the application giving up waiting; it is not phrased as the device refusing (Phase 3D).
+    expect(said("timed-out")).toMatch(/^No confirmation for on: .*may still apply/);
   });
 
   it("defaults to a generic sentence and says unknown rather than inventing a value", () => {

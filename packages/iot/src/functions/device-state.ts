@@ -228,7 +228,12 @@ export function summarizeDeviceState(state: KinetixDeviceState): KinetixDeviceSt
   if (activeFaults > 0) parts.push(`${activeFaults} active ${activeFaults === 1 ? "fault" : "faults"}`);
   if (activeAlerts > 0) parts.push(`${activeAlerts} open ${activeAlerts === 1 ? "alert" : "alerts"}`);
   if (unconfirmed.length > 0) parts.push(`${unconfirmed.length === 1 ? "1 change" : `${unconfirmed.length} changes`} requested but not confirmed`);
-  else if (pendingCommands > 0) parts.push(`${pendingCommands} ${pendingCommands === 1 ? "command" : "commands"} in progress`);
+  else if (pendingCommands > 0) {
+    // "In progress" promises movement. Beside an offline or unreachable link the commands are still open, and
+    // nothing is moving them, so the sentence says only that they are not confirmed.
+    const linkLost = connectivity === "offline" || connectivity === "unreachable";
+    parts.push(`${pendingCommands} ${pendingCommands === 1 ? "command" : "commands"} ${linkLost ? "not confirmed" : "in progress"}`);
+  }
 
   return {
     health,

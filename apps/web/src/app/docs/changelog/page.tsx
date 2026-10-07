@@ -6,6 +6,7 @@ import { PLATFORMS, PLATFORM_ABBR, platformsFor } from "@/lib/platform-parity";
 import { componentDocs } from "@/lib/site";
 import { ChangelogView, ReleaseList, type ViewComponent, type ViewRelease } from "@/components/changelog-view";
 import { canonical } from "@/lib/seo";
+import { packageLines, type PackageLine } from "@/lib/package-lines";
 
 export const metadata: Metadata = {
   title: "Changelog",
@@ -59,8 +60,55 @@ const releases: ViewRelease[] = RELEASES.map((r, i) => ({
   githubReleaseUrl: r.githubReleaseUrl,
 }));
 
+/**
+ * The packages that are not on the core train, each with its current version and its release history, read from
+ * its own Changesets changelog (`lib/package-lines.ts`). Listed, not merged into the core history: a version
+ * number here means something different from one in the list below, so each line keeps its package's name.
+ */
+function PackageLines({ lines }: { lines: PackageLine[] }) {
+  return (
+    <section aria-labelledby="package-lines-title" id="package-lines" className="mt-8 scroll-mt-28">
+      <h2 id="package-lines-title" className="font-display text-xl font-semibold tracking-[-0.01em]">
+        Other packages, on their own version lines
+      </h2>
+      <ul className="mt-4 grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))]">
+        {lines.map((line) => (
+          <li key={line.group} id={line.group} data-package-line={line.name} className="min-w-0 scroll-mt-28 rounded-lg border border-border p-4">
+            <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <Link href={line.docs} className="font-semibold text-foreground underline-offset-4 hover:underline">
+                {line.label}
+              </Link>
+              <code className="break-all text-sm text-muted-foreground">
+                {line.name}@{line.version}
+              </code>
+            </p>
+            {line.releases.length > 0 ? (
+              <ol aria-label={`${line.name} releases`} className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm">
+                {line.releases.map((release) => (
+                  <li key={release.version}>
+                    <a href={release.href} className="text-primary underline underline-offset-4" target="_blank" rel="noreferrer">
+                      {release.version}
+                    </a>
+                    {release.type !== "Unclassified" ? <span className="text-muted-foreground"> · {release.type.toLowerCase()}</span> : null}
+                  </li>
+                ))}
+              </ol>
+            ) : null}
+            <p className="mt-3 text-sm">
+              <a href={line.changelog} className="font-medium text-primary underline underline-offset-4" target="_blank" rel="noreferrer">
+                Full {line.label} changelog
+              </a>
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export default function ChangelogPage() {
   const latest = releases.find((r) => r.isLatest) ?? releases[0]!;
+  const lines = packageLines();
   return (
     <div>
       <h1 className="mb-3 mt-2 scroll-mt-28 font-display text-4xl font-bold tracking-[-0.02em]">Changelog</h1>
@@ -87,10 +135,21 @@ export default function ChangelogPage() {
         changes</strong>, with a migration note where there is one. This page is the release train for{" "}
         <code className="text-foreground">@kinetixui/tokens</code>, <code className="text-foreground">@kinetixui/ui</code>{" "}
         and <code className="text-foreground">@kinetixui/cli</code>, which always share a version; the indicators on
-        each release show which ones actually changed. <code className="text-foreground">@kinetixui/angular</code> is
-        released on its own cadence and has its own version — see{" "}
-        <Link href="/docs/angular" className="underline underline-offset-4 hover:text-foreground">Angular</Link>.
+        each release show which ones actually changed.{" "}
+        {lines.map((line, i) => (
+          <React.Fragment key={line.group}>
+            {i > 0 ? (i === lines.length - 1 ? " and " : ", ") : null}
+            <code className="text-foreground">{line.name}</code>
+          </React.Fragment>
+        ))}{" "}
+        release on their own version lines — see{" "}
+        <a href="#package-lines" className="underline underline-offset-4 hover:text-foreground">
+          other packages
+        </a>
+        .
       </p>
+
+      <PackageLines lines={lines} />
 
       {/* ChangelogView reads the URL (?filter=…&q=…) with useSearchParams, which needs a Suspense boundary on a
           statically rendered page. The fallback is the full, unfiltered list, so the prerendered HTML (and
@@ -101,7 +160,7 @@ export default function ChangelogPage() {
 
       <div className="mt-16 border-t border-border pt-6 text-sm text-muted-foreground">
         Full commit-level history:{" "}
-        {PACKAGE_CHANGELOGS.map((pkg, i) => (
+        {[...PACKAGE_CHANGELOGS, ...lines.map((line) => ({ name: line.name, href: line.changelog }))].map((pkg, i) => (
           <span key={pkg.name}>
             {i > 0 && " · "}
             <a href={pkg.href} className="font-medium text-primary underline underline-offset-4" target="_blank" rel="noreferrer">

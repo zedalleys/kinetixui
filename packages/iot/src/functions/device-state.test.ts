@@ -131,6 +131,17 @@ describe("summarizeDeviceState", () => {
     expect(s.pendingCommands).toBe(1);
     expect(s.description).toContain("1 command in progress");
   });
+  it("an open command beside a lost link is not confirmed, not in progress", () => {
+    const pendingCommands = [{ id: "c", deviceId: "pump-1", name: "x", status: "sent" as const, createdAt: NOW }];
+    for (const state of ["offline", "unreachable"] as const) {
+      const s = summarizeDeviceState({ ...base, requestedValues: { power: false }, connectivity: { state }, pendingCommands });
+      expect(s.description, state).toContain("1 command not confirmed");
+      expect(s.description, state).not.toMatch(/in progress/);
+    }
+    // Unknown is not lost: nothing says the link is gone, so the command is still described as moving.
+    const unknown = summarizeDeviceState({ ...base, requestedValues: { power: false }, connectivity: { state: "unknown" }, pendingCommands });
+    expect(unknown.description).toContain("1 command in progress");
+  });
   it("flags attention and counts open items", () => {
     const s = summarizeDeviceState({
       ...base,

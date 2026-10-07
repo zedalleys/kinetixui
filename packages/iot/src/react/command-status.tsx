@@ -22,6 +22,12 @@ import { withDisplayName } from "./display-name";
  *
  * An error message is rendered as text, like an alert message, and for the same reason.
  *
+ * It is a command record, not a device: it takes no connectivity on purpose. A command can stay `queued` while
+ * its device is offline (many backends hold commands until the device reconnects), so the pulse says "this record
+ * is still open", which stays true. Show the link beside it with `DeviceConnection`, and move the record to
+ * `expired` or `failed` when your transport gives up. A control showing its own request reads the link through
+ * `resolveControlState` instead.
+ *
  * Every line wraps rather than widening the row: a command name, a translated status word and a
  * device's error message are all arbitrary length, and on a phone a row that refuses to wrap is a row
  * whose end is off the screen.

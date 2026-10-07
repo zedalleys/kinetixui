@@ -70,6 +70,14 @@ sixty-second visual check on the repository page, not a re-upload.
 
 ### The state, re-derived
 
+> **Superseded — re-checked 2026-10-07.** Everything from here to *How a Release feeds content* describes
+> **2026-09-29**, and is kept as the record of that decision, not as instructions. Since 2026-10-06 the
+> repository has GitHub Releases for the package tags published that day (core, Angular and IoT), the mechanism
+> described below, so the "three outstanding Releases" further down are **not** to be created: they would be Releases for
+> superseded versions, which the *historical version → No* rule in this section forbids. The versions named below
+> are not current. For current versions run `pnpm marketing:stats`; for Releases, read the repository's Releases
+> page. No version is restated here, so this note cannot go stale the same way.
+
 > **This section names versions, and that is deliberate.** `marketing/README.md`'s rule is that *evergreen*
 > copy — positioning, messaging, personas, claims, pillars, SEO — must not hard-code a version. A release
 > action cannot be written without naming the tag it acts on, so the version is the subject here rather than
@@ -80,7 +88,7 @@ sixty-second visual check on the repository page, not a re-upload.
 | --- | --- |
 | Releases that exist | **2** — `v0.5.0` (2026-09-06) and `v0.4.1`. Both from an abandoned repository-level `vX.Y.Z` tagging scheme |
 | Package tags that exist | **94**, in the per-package `@kinetixui/<pkg>@<version>` scheme Changesets uses |
-| Current versions on npm | `@kinetixui/{ui,tokens,cli}@0.23.3` · `@kinetixui/angular@0.24.0` · `@kinetixui/iot@0.2.0` |
+| Versions on npm on 2026-09-29 (historical; not current) | `@kinetixui/{ui,tokens,cli}@0.23.3` · `@kinetixui/angular@0.24.0` · `@kinetixui/iot@0.2.0` |
 | Tags with no Release | **92** |
 | `githubReleaseUrl` set in `releases.ts` | **None.** The field is declared and unused; the site links each version's tag |
 

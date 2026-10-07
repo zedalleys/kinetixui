@@ -77,7 +77,7 @@ render into.
 Desired vs reported state, the command lifecycle (including correlation of replies and reports that
 arrive out of order), the `confirmed` / `optimistic` / `hybrid` presentation strategies and
 capability-oriented devices are specified in
-[`docs/iot/DEVICE-INTERACTION-CONTRACT.md`](../../docs/iot/DEVICE-INTERACTION-CONTRACT.md). They are
+[`docs/iot/DEVICE-INTERACTION-CONTRACT.md`](https://github.com/zedalleys/kinetixui/blob/main/docs/iot/DEVICE-INTERACTION-CONTRACT.md). They are
 React-free and live in `@kinetixui/iot/functions`.
 
 The controls take a command `lifecycle` and a `strategy` (`confirmed` by default, `optimistic`,
@@ -104,7 +104,7 @@ Six components for watching devices rather than operating them, on one truth mod
 data freshness, availability, the value itself and a command's lifecycle are **separate dimensions**,
 and none is derived from another. An `online` device can have stale telemetry; an `offline` one can have
 a reading still fresh by the product's policy; an `unknown` connection can sit beside a known, stale
-battery reading. See [Monitoring truth model](../../docs/iot/DEVICE-INTERACTION-CONTRACT.md#9-monitoring-truth-model-m3).
+battery reading. See [Monitoring truth model](https://github.com/zedalleys/kinetixui/blob/main/docs/iot/DEVICE-INTERACTION-CONTRACT.md#9-monitoring-truth-model-m3).
 
 | Component | What it adds |
 | --- | --- |

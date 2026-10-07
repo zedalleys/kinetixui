@@ -88,9 +88,12 @@ export function IotExampleShowcase({
           </summary>
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 pb-1 [&_*]:break-words md:pb-0">
             <span className="hidden text-body-sm text-muted-foreground md:inline">Built from</span>
-            <ul className="flex flex-wrap gap-x-3 gap-y-1">
+            {/* A part name is one long word ("DeviceSetpointControl"). At 200% text on a 320px screen it is wider than
+                the column, so it may break anywhere rather than push the page sideways; `break-words` alone does not
+                lower a flex item's min-content width, which is what overflowed. */}
+            <ul className="flex min-w-0 flex-wrap gap-x-3 gap-y-1">
               {uses.map((name) => (
-                <li key={name} className="font-mono text-label-md text-muted-foreground">
+                <li key={name} className="min-w-0 font-mono text-label-md text-muted-foreground [overflow-wrap:anywhere]">
                   {name}
                 </li>
               ))}
