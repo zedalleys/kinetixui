@@ -6,6 +6,10 @@ import { DeviceLevelControl } from "./device-level-control";
 import { DeviceModeControl } from "./device-mode-control";
 import { DevicePowerControl } from "./device-power-control";
 import { DeviceSetpointControl } from "./device-setpoint-control";
+import { DeviceColorControl } from "./device-color-control";
+import { DeviceLockControl } from "./device-lock-control";
+import { DeviceMediaControl } from "./device-media-control";
+import { resolveControlState } from "../functions/control";
 
 /** Mid-flight: some stages reached, some still ahead — the state the transitions exist for. */
 const LC = { stage: "acknowledged", attempts: 1, maxAttempts: 3, requestedValue: "on", confirmedValue: "off", ackAt: Date.now() } as never;
@@ -156,4 +160,55 @@ describe("the setpoint ring animates over properties a browser can interpolate",
     const atMin = ring(15).querySelector("[data-ring-confirmed]")!;
     expect(atMin.getAttribute("stroke-linecap")).toBe("butt");
   });
+});
+
+/**
+ * The "requested, not yet confirmed" chip pulses while the request can still be answered. Once the device
+ * is offline or unreachable nothing is progressing — `resolveControlState` calls that command "going
+ * nowhere" — so the chip holds still and keeps its dashed outline and words, the treatment reduced motion
+ * already gets. Each control is checked both ways, so the still case cannot pass by never pulsing at all.
+ */
+describe("a pending request stops pulsing when the device's link is gone", () => {
+  const pendingFor = (requestedValue: unknown, confirmedValue: unknown) =>
+    ({ stage: "acknowledged", attempts: 1, maxAttempts: 3, requestedValue, confirmedValue, ackAt: Date.now() }) as never;
+  const WARM = { mode: "temperature", kelvin: 2700 } as const;
+  const OCEAN = { mode: "rgb", r: 37, g: 99, b: 235 } as const;
+  const CONTROLS: [string, (control: never) => React.ReactElement][] = [
+    ["DeviceLevelControl", (control) => <DeviceLevelControl label="Lamp" value={20} lifecycle={pendingFor(60, 20)} control={control} onValueChange={() => {}} />],
+    ["DeviceSetpointControl", (control) => <DeviceSetpointControl label="Heat" value={20} lifecycle={pendingFor(22, 20)} control={control} onValueChange={() => {}} />],
+    ["DeviceLockControl", (control) => <DeviceLockControl label="Door" state="locked" lifecycle={pendingFor("unlocked", "locked")} control={control} onRequest={() => {}} />],
+    [
+      "DeviceColorControl",
+      (control) => (
+        <DeviceColorControl
+          label="Lamp colour"
+          options={[{ id: "warm", label: "Warm white", value: WARM }, { id: "ocean", label: "Ocean", value: OCEAN }]}
+          lifecycle={pendingFor(OCEAN, WARM)}
+          control={control}
+        />
+      ),
+    ],
+    ["DeviceMediaControl", (control) => <DeviceMediaControl label="Speaker" title="News" duration={200} playbackLifecycle={pendingFor("playing", "paused")} control={control} onPlaybackRequest={() => {}} />],
+  ];
+  const chipOf = (container: HTMLElement) => {
+    const chip = container.querySelector("[data-requested]");
+    expect(chip, "the pending chip is drawn in every case").not.toBeNull();
+    return classOf(chip!);
+  };
+
+  for (const [name, make] of CONTROLS) {
+    it(`${name}: pulses while online, holds still offline and unreachable`, () => {
+      const online = render(make(resolveControlState({ deviceStatus: "online", lifecycle: pendingFor(1, 0) }) as never));
+      expect(chipOf(online.container)).toContain("animate-pulse");
+      expect(chipOf(online.container)).toContain("motion-reduce:animate-none");
+      online.unmount();
+      for (const deviceStatus of ["offline", "unreachable"]) {
+        const gone = render(make(resolveControlState({ deviceStatus, lifecycle: pendingFor(1, 0) }) as never));
+        const cls = chipOf(gone.container);
+        expect(cls, `${deviceStatus}: no pulse beside a request that is going nowhere`).not.toContain("animate-pulse");
+        expect(cls, "the dashed outline still marks the request").toContain("border-dashed");
+        gone.unmount();
+      }
+    });
+  }
 });

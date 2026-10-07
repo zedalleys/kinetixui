@@ -114,9 +114,10 @@ camera surfaces are *patterns*, UI for state something else supplies. Its primit
 component catalogue. Guards enforce the platform, native-port, transport and catalogue rules.
 
 **And the one a piece in this pillar is most likely to get wrong:** the showcase is not the package. The `/iot`
-environments are a deterministic simulation with no network and no device, and they demonstrate source that
-the published module does not yet carry. Anything written here states what `npm install @kinetixui/iot`
-actually delivers, separately from what the showcase shows. `CLAIMS.md` C4b is the row.
+environments are a deterministic simulation with no network and no device, and the simulation and the screen
+compositions are website source, not package code. Anything written here states what `npm install @kinetixui/iot`
+actually delivers, separately from what the showcase shows. `CLAIMS.md` C4 is the row (and C4b while an IoT
+release is pending).
 
 ---
 

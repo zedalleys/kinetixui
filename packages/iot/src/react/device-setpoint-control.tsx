@@ -4,7 +4,7 @@ import * as React from "react";
 import type { KinetixControlState } from "../types/control";
 import { snapToStep, type DescribeControlOutcomeOptions } from "../functions/control";
 import { cn } from "./cn";
-import { ControlAnnouncer, ControlOutcomeNote, useControlContract, type ControlContractProps } from "./control-outcome";
+import { ControlAnnouncer, ControlOutcomeNote, pendingMotion, useControlContract, type ControlContractProps } from "./control-outcome";
 import { withDisplayName } from "./display-name";
 
 /**
@@ -174,7 +174,7 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
             {marked ? (
           <span
             data-requested=""
-            className="inline-flex max-w-full animate-pulse items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md tabular-nums text-foreground motion-reduce:animate-none"
+            className={cn("inline-flex max-w-full items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md tabular-nums text-foreground", pendingMotion(control?.availability))}
           >
             {lead === confirmed
               ? `Requested ${requested}${unit}, not yet confirmed`

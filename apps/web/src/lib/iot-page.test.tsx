@@ -11,7 +11,7 @@ import {
   KINETIX_PAIRING_METHODS,
   KINETIX_PAIRING_STAGES,
 } from "@kinetixui/iot/functions";
-import { IOT_CATALOGUE, IOT_ENVIRONMENTS, IOT_PAGE_EXAMPLES } from "./iot";
+import { IOT_CATALOGUE, IOT_CATEGORIES, IOT_ENVIRONMENTS, IOT_PAGE_EXAMPLES, IOT_PART_LAYER } from "./iot";
 import { IOT_EXAMPLES } from "./iot-examples";
 import { SIMULATION_DISCLOSURE } from "./iot-sim/labels";
 
@@ -166,7 +166,8 @@ describe("/iot: structure", () => {
   it("names every section as a landmark by its own heading", () => {
     const { container } = render(<IotPage />);
     const sections = [...container.querySelectorAll("section[aria-labelledby]")];
-    expect(sections.length).toBeGreaterThanOrEqual(14);
+    // Eight top-level sections since the categories moved into the explorer, plus the hero and the closer.
+    expect(sections.length).toBeGreaterThanOrEqual(10);
     for (const section of sections) {
       const id = section.getAttribute("aria-labelledby")!;
       const heading = section.querySelector(`#${id}`);
@@ -179,7 +180,7 @@ describe("/iot: structure", () => {
     const { container } = render(<IotPage />);
     const nav = screen.getByRole("navigation", { name: "On this page" });
     const links = within(nav).getAllByRole("link");
-    expect(links.length).toBeGreaterThan(8);
+    expect(links.length).toBeGreaterThanOrEqual(8);
     for (const link of links) {
       const id = link.getAttribute("href")!.slice(1);
       expect(container.querySelector(`section#${id}`), `contents links to #${id}, which is not a section`).not.toBeNull();
@@ -188,7 +189,8 @@ describe("/iot: structure", () => {
 
   it("names its scroll region and makes it reachable by keyboard", () => {
     render(<IotPage />);
-    const region = screen.getByRole("region", { name: "Missing device data, compared" });
+    // It lives in the Monitoring category, which is a hidden tab panel until chosen.
+    const region = screen.getByRole("region", { name: "Missing device data, compared", hidden: true });
     expect(region).toHaveAttribute("tabindex", "0");
   });
 
@@ -197,6 +199,96 @@ describe("/iot: structure", () => {
       if (name === "docs/iot") continue;
       expect(text, `${name} uses a physical direction utility`).not.toMatch(/["'\s](ml|mr|pl|pr|left|right|text-left|text-right)-(?:\d|\[|auto|px)/);
     }
+  });
+});
+
+/* ------------------------------------------------------------------ explore by task */
+
+describe("/iot: explore by task", () => {
+  beforeEach(() => {
+    window.history.replaceState(null, "", "/");
+  });
+
+  it("puts every exported React component in exactly one category, and nothing else", () => {
+    const exported = [...layer("primitives"), ...layer("controls"), ...layer("patterns")].sort();
+    const listed = IOT_CATEGORIES.flatMap((c) => c.parts);
+    expect([...listed].sort()).toEqual(exported);
+    expect(new Set(listed).size, "a part appears in two categories").toBe(listed.length);
+  });
+
+  it("labels each part with the barrel layer it really comes from", () => {
+    for (const name of layer("primitives")) expect(IOT_PART_LAYER[name], name).toBe("primitive");
+    for (const name of layer("controls")) expect(IOT_PART_LAYER[name], name).toBe("control");
+    for (const name of layer("patterns")) expect(IOT_PART_LAYER[name], name).toBeUndefined();
+  });
+
+  it("offers the categories as tabs in a sticky bar, with one panel visible and every panel server-rendered", () => {
+    const { container } = render(<IotPage />);
+    const list = screen.getByRole("tablist", { name: "IoT category" });
+    const tabs = within(list).getAllByRole("tab");
+    expect(tabs.map((t) => t.textContent)).toEqual(IOT_CATEGORIES.map((c) => c.tab));
+    expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+    expect(container.querySelector("[data-category-bar]")!.className).toMatch(/\bsticky\b/);
+    const panels = [...container.querySelectorAll("[data-category-panel]")];
+    expect(panels.map((p) => p.getAttribute("data-category-panel"))).toEqual(IOT_CATEGORIES.map((c) => c.id));
+    expect(panels.filter((p) => !p.hasAttribute("hidden"))).toHaveLength(1);
+  });
+
+  it("points every tab at its own panel, so aria-controls and aria-labelledby resolve", () => {
+    const { container } = render(<IotPage />);
+    const tabs = [...container.querySelectorAll<HTMLElement>("[data-category-tab]")];
+    expect(tabs.length).toBe(IOT_CATEGORIES.length);
+    for (const tab of tabs) {
+      const panel = document.getElementById(tab.getAttribute("aria-controls") ?? "");
+      expect(panel, `${tab.textContent}: aria-controls names no element`).not.toBeNull();
+      expect(panel!.getAttribute("role")).toBe("tabpanel");
+      expect(panel!.getAttribute("aria-labelledby")).toBe(tab.id);
+    }
+  });
+
+  it("gives every category the same order: problem, parts, the way to the reference, then an example", () => {
+    const { container } = render(<IotPage />);
+    for (const category of IOT_CATEGORIES) {
+      const panel = container.querySelector(`[data-category-panel="${category.id}"]`)!;
+      expect(panel.querySelector("h3"), `${category.id} has no heading`).not.toBeNull();
+      const parts = panel.querySelector(`aside[aria-label="${category.label}: parts"]`)!;
+      for (const name of category.parts) expect(parts.textContent, `${category.id} does not list ${name}`).toContain(name);
+      expect(parts.querySelector(`a[href="${category.docs}"]`), `${category.id} does not link the reference`).not.toBeNull();
+      expect([...panel.querySelectorAll("h4")].map((h) => h.textContent)).toContain("Try it");
+    }
+  });
+
+  it("switches category in place and records it in the URL without adding history", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<IotPage />);
+    const before = window.history.length;
+    await user.click(screen.getByRole("tab", { name: "Setup" }));
+    expect(screen.getByRole("tab", { name: "Setup" })).toHaveAttribute("aria-selected", "true");
+    expect(container.querySelector('[data-category-panel="setup"]')).not.toHaveAttribute("hidden");
+    expect(container.querySelector('[data-category-panel="control"]')).toHaveAttribute("hidden");
+    expect(window.location.hash).toBe("#setup");
+    expect(window.history.length).toBe(before);
+  });
+
+  it("moves between categories from the keyboard", async () => {
+    const user = userEvent.setup();
+    render(<IotPage />);
+    screen.getByRole("tab", { name: "Control" }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: "Monitoring" })).toHaveFocus();
+    expect(screen.getByRole("tab", { name: "Monitoring" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it.each([
+    ["#automation", "Automation"],
+    ["#pairing", "Setup"],
+    ["#telemetry", "Monitoring"],
+    ["#layout-dashboard", "Fleets"],
+  ])("opens the right category for %s, including the anchors this content used to have", async (hash, label) => {
+    window.location.hash = hash;
+    render(<IotPage />);
+    expect(await screen.findByRole("tab", { name: label, selected: true })).toBeInTheDocument();
+    window.location.hash = "";
   });
 });
 

@@ -159,7 +159,7 @@ for (const [width, scale, dir] of !runs("ring") ? [] : [
   const { context, page } = await openIot({ width, scale });
   try {
     await mount(page, '[data-device="thermostat-hall"] [data-presentation="ring"]');
-    await mount(page, '#state-honesty [data-presentation="ring"]', "state-honesty");
+    await mount(page, '#explore-control [data-presentation="ring"]', "explore");
     if (dir === "rtl") await page.evaluate(() => document.querySelectorAll('[data-presentation="ring"]').forEach((r) => r.closest("[data-device], section")?.setAttribute("dir", "rtl")));
     await page.waitForTimeout(300);
     const rings = [];

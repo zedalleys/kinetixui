@@ -200,10 +200,9 @@ cannot install it, which is false.
 Read its version from `marketing:stats`. Never hard-code it — a guard enforces this.
 
 **The `/iot` showcase is not the package.** The connected-product environments at `/iot` are a deterministic
-simulation — no network, no device, no video — and they demonstrate work that includes source in the
-repository the published module does not yet carry. Never present the showcase as what `npm install` gives
-you, and never let a demo screenshot imply hardware. See `CLAIMS.md` C4b, which carries the five qualifiers
-that travel with any IoT sentence.
+simulation — no network, no device, no video — and both the simulation and the screen compositions are website
+source to copy, not part of the package. Never present the showcase as what `npm install` gives you, and never
+let a demo screenshot imply hardware. While a release is pending, `CLAIMS.md` C4b adds one more qualifier.
 
 ### Wearables
 

@@ -4,7 +4,7 @@ import * as React from "react";
 import type { KinetixControlState } from "../types/control";
 import { clampLevel, snapToStep, type DescribeControlOutcomeOptions } from "../functions/control";
 import { cn } from "./cn";
-import { ControlAnnouncer, ControlOutcomeNote, useControlContract, type ControlContractProps } from "./control-outcome";
+import { ControlAnnouncer, ControlOutcomeNote, pendingMotion, useControlContract, type ControlContractProps } from "./control-outcome";
 import { withDisplayName } from "./display-name";
 
 /**
@@ -187,7 +187,7 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
                 {shown === null ? "—" : format ? format.value(shown) : shown}
                 {shown === null || format ? null : <span className="ms-0.5 text-title-md text-muted-foreground">{unit}</span>}
               </span>
-              {marked ? <RequestChip requested={requested!} confirmed={confirmed} write={written} leadsWithRequest={shown !== confirmed} /> : null}
+              {marked ? <RequestChip requested={requested!} confirmed={confirmed} write={written} leadsWithRequest={shown !== confirmed} motion={pendingMotion(control?.availability)} /> : null}
             </span>
           </div>
         ) : null}
@@ -311,7 +311,7 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
           />
         </div>
 
-        {pill && marked ? <RequestChip requested={requested!} confirmed={confirmed} write={written} leadsWithRequest={shown !== confirmed} className="w-fit max-w-full" /> : null}
+        {pill && marked ? <RequestChip requested={requested!} confirmed={confirmed} write={written} leadsWithRequest={shown !== confirmed} motion={pendingMotion(control?.availability)} className="w-fit max-w-full" /> : null}
 
         {control?.description && control.availability !== "ready" ? (
           <span id={descriptionId} className="text-label-md text-muted-foreground">
@@ -329,12 +329,13 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
  * The request, in words, in a dashed chip — not an arrow, which would flip under RTL and read backwards.
  * When the numeral already shows the request (`hybrid`) the chip names what the device still reports.
  */
-function RequestChip({ requested, confirmed, write, leadsWithRequest, className }: { requested: number; confirmed: number | null; write: (n: number) => string; leadsWithRequest: boolean; className?: string }) {
+function RequestChip({ requested, confirmed, write, leadsWithRequest, motion, className }: { requested: number; confirmed: number | null; write: (n: number) => string; leadsWithRequest: boolean; motion: string; className?: string }) {
   return (
     <span
       data-requested=""
       className={cn(
-        "inline-flex animate-pulse items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md tabular-nums text-foreground motion-reduce:animate-none",
+        "inline-flex items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md tabular-nums text-foreground",
+        motion,
         className,
       )}
     >

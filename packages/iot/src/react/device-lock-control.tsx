@@ -5,7 +5,7 @@ import type { KinetixCapabilitySupport } from "../types/device-state";
 import type { KinetixControlState, KinetixLockRequest, KinetixLockState, KinetixLockStrategy } from "../types/control";
 import { LOCK_SENTENCE, describeLockState, lockActions, normalizeLockState, resolveLockStrategy } from "../functions/lock";
 import { cn } from "./cn";
-import { ControlAnnouncer, ControlOutcomeNote, SupportNote, useControlContract, type ControlContractProps } from "./control-outcome";
+import { ControlAnnouncer, ControlOutcomeNote, pendingMotion, SupportNote, useControlContract, type ControlContractProps } from "./control-outcome";
 import { withDisplayName } from "./display-name";
 
 /**
@@ -143,7 +143,7 @@ const DeviceLockControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
             {pending ? (
               <span
                 data-requested=""
-                className="inline-flex w-fit max-w-full animate-pulse items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md text-foreground motion-reduce:animate-none"
+                className={cn("inline-flex w-fit max-w-full items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md text-foreground", pendingMotion(control?.availability))}
               >
                 <span className="min-w-0 break-words">
                   {leadsWithRequest

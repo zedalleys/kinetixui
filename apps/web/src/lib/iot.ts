@@ -121,3 +121,140 @@ export const IOT_PAGE_EXAMPLES = {
     { id: "layout-troubleshooting", label: "Connection troubleshooting", slug: "connection-troubleshooting" },
   ],
 } as const;
+
+/**
+ * The /iot "Explore by task" categories, derived from what the React barrel actually exports.
+ *
+ * Every component in `@kinetixui/iot/react` belongs to exactly one category, and `iot-page.test.tsx` holds that
+ * against the barrel, so a category cannot advertise a part that does not ship and a shipped part cannot be left
+ * out of the tour. The groups follow the task a product team is doing, not the package's internal layers:
+ * environment telemetry and monitoring were one group because every telemetry part is also a monitoring part,
+ * and fleets and places were one group because the place hierarchy only exists to roll devices up.
+ *
+ * `aliases` are the section anchors this content used to live under (`#telemetry`, `#pairing`, a layout tab
+ * id), so an old link still lands on the right category.
+ */
+export type IotCategoryId = "control" | "monitoring" | "alerts" | "automation" | "setup" | "fleet";
+
+export const IOT_CATEGORIES: readonly {
+  id: IotCategoryId;
+  label: string;
+  /** The tab's own word. Short on purpose: at 390px and 200% text one tab has about 320px. */
+  tab: string;
+  parts: readonly string[];
+  docs: string;
+  aliases: readonly string[];
+}[] = [
+  {
+    id: "control",
+    label: "Control",
+    tab: "Control",
+    parts: [
+      "DevicePowerControl",
+      "DeviceLevelControl",
+      "DeviceSetpointControl",
+      "DeviceModeControl",
+      "DeviceColorControl",
+      "DeviceLockControl",
+      "DeviceMediaControl",
+      "DeviceControlCard",
+      "CommandLifecycle",
+      "CommandStatus",
+      "CommandFeedback",
+    ],
+    docs: "/docs/iot#controls",
+    aliases: ["state-honesty"],
+  },
+  {
+    id: "monitoring",
+    label: "Monitoring",
+    tab: "Monitoring",
+    parts: [
+      "DeviceConnection",
+      "DeviceBattery",
+      "BatteryIndicator",
+      "SignalStrength",
+      "LastSync",
+      "SensorReading",
+      "MetricStatus",
+      "TelemetryMetric",
+      "TelemetryTrend",
+      "TelemetryCard",
+      "TelemetryGrid",
+      "ConnectionHealth",
+      "EnergySummary",
+      "FirmwareStatus",
+    ],
+    docs: "/docs/iot#monitoring-truth-model",
+    aliases: ["telemetry", "missing-data", "layout-telemetry"],
+  },
+  {
+    id: "alerts",
+    label: "Alerts and activity",
+    tab: "Alerts",
+    parts: ["AlertList", "AlertCard", "ActivityTimeline", "DeviceActivity"],
+    docs: "/docs/iot#alerts-and-activity",
+    aliases: ["layout-inbox"],
+  },
+  {
+    id: "automation",
+    label: "Automation",
+    tab: "Automation",
+    parts: ["AutomationBuilder", "AutomationRuleView", "RoutineCard"],
+    docs: "/docs/iot#automation",
+    aliases: [],
+  },
+  {
+    id: "setup",
+    label: "Setup",
+    tab: "Setup",
+    parts: ["PairingMethodPicker", "PairingStepper", "PairingFailure"],
+    docs: "/docs/iot#pairing-is-ui-state-not-a-transport",
+    aliases: ["pairing"],
+  },
+  {
+    id: "fleet",
+    label: "Fleets and places",
+    tab: "Fleets",
+    parts: [
+      "DeviceStatusBadge",
+      "DeviceIcon",
+      "DeviceIdentity",
+      "DeviceCard",
+      "DeviceListItem",
+      "DeviceGroupCard",
+      "DeviceHealthSummary",
+      "DeviceStateSummary",
+      "SpaceRollup",
+      "SpaceBreadcrumb",
+      "CameraDeviceCard",
+    ],
+    docs: "/docs/iot#grouping-and-hierarchy",
+    aliases: ["layouts", "layout-fleet", "layout-dashboard", "layout-space", "layout-troubleshooting"],
+  },
+];
+
+/** Which layer of the React barrel a part comes from, for the "Parts" list. Held against the barrel in tests. */
+export const IOT_PART_LAYER: Record<string, "primitive" | "control" | "pattern"> = Object.fromEntries([
+  ...[
+    "BatteryIndicator",
+    "DeviceBattery",
+    "DeviceConnection",
+    "DeviceIcon",
+    "DeviceIdentity",
+    "DeviceStatusBadge",
+    "LastSync",
+    "MetricStatus",
+    "SensorReading",
+    "SignalStrength",
+  ].map((name) => [name, "primitive"] as const),
+  ...[
+    "DeviceColorControl",
+    "DeviceLevelControl",
+    "DeviceLockControl",
+    "DeviceMediaControl",
+    "DeviceModeControl",
+    "DevicePowerControl",
+    "DeviceSetpointControl",
+  ].map((name) => [name, "control"] as const),
+]);

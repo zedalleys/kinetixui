@@ -7,7 +7,7 @@ import type { DescribeControlOutcomeOptions } from "../functions/control";
 import { describeDeviceColor, findDeviceColorOption, previewDeviceColor } from "../functions/color";
 import { isSameDeviceValue } from "../functions/commands";
 import { cn } from "./cn";
-import { ControlAnnouncer, ControlOutcomeNote, SupportNote, useControlContract, type ControlContractProps } from "./control-outcome";
+import { ControlAnnouncer, ControlOutcomeNote, pendingMotion, SupportNote, useControlContract, type ControlContractProps } from "./control-outcome";
 import { DeviceModeControl } from "./device-mode-control";
 import { withDisplayName } from "./display-name";
 
@@ -119,7 +119,7 @@ const DeviceColorControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
             {marked ? (
               <span
                 data-requested=""
-                className="inline-flex w-fit max-w-full animate-pulse items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md text-foreground motion-reduce:animate-none"
+                className={cn("inline-flex w-fit max-w-full items-center rounded-full border border-dashed border-primary bg-primary/10 px-2.5 py-0.5 text-label-md text-foreground", pendingMotion(control?.availability))}
               >
                 <span className="min-w-0 break-words">
                   {shown === reported

@@ -1,3 +1,4 @@
+import type * as React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
@@ -12,29 +13,34 @@ import { HeroCommandStrip } from "@/components/iot/lab/hero-command-strip";
 import { LiveControlPanel } from "@/components/iot/lab/live-control-panel";
 import { LabSection } from "@/components/iot/lab/lab-section";
 import { LabTabs } from "@/components/iot/lab/lab-tabs";
+import { CategoryExplorer, MoreExamples } from "@/components/iot/lab/category-explorer";
 import { ModuleBoundary } from "@/components/iot/module-boundary";
 import { Reveal } from "@/components/reveal";
 import { ctaAttrs } from "@/lib/analytics-surfaces";
 import {
   IOT_CATALOGUE,
+  IOT_CATEGORIES,
   IOT_ENTRY_POINTS,
   IOT_ENVIRONMENTS,
   IOT_MATURITY_LABEL,
   IOT_PACKAGE,
   IOT_PAGE_EXAMPLES,
+  IOT_PART_LAYER,
   IOT_REACT_OPTIONAL,
   IOT_REACT_PEER,
   IOT_VERSION,
+  type IotCategoryId,
 } from "@/lib/iot";
 import { canonical } from "@/lib/seo";
 
 /**
  * /iot — the Connected Product Lab. `/docs/iot` stays the reference.
  *
- * The page is organised by the moments a connected product is actually about, not by component: a command
- * settling, a reading you may not trust, an alert someone must own, a rule that is edited and not executed, a
- * device being added, one device in depth. Each section states its principle and then shows a working example
- * beside it. The page is for someone who has not decided yet; the documentation answers how.
+ * The page is a hierarchy, not a waterfall: an overview (the hero and the three reference environments), then
+ * "Explore by task", where one category is on screen at a time behind a category bar that stays in reach, then one
+ * device in depth, then the technical proof (architecture, what ships, accessibility, install, roadmap). Each
+ * category states its problem and state model before it shows parts or an example, and keeps secondary examples
+ * behind a disclosure. The page teaches, demonstrates and routes; `/docs/iot` answers how.
  *
  * Every claim on this page is either derived from `packages/iot/package.json` (version, entry points, the React
  * peer), counted from the React barrel by `current-truth.test.ts` (`IOT_CATALOGUE`), or asserted there. The
@@ -42,8 +48,8 @@ import { canonical } from "@/lib/seo";
  * automation engine, no video and no native port, and the page says so as prominently as it says what exists.
  *
  * **Client boundaries.** The page itself is a server component. Interactive code is limited to: the hero's
- * single-device command strip; `LabTabs` (two instances, each mounting only its active panel); the examples,
- * which bring their own boundaries; and `DeviceShowcase`. Nothing here imports the simulation into the hero.
+ * single-device command strip; `CategoryExplorer` and `MoreExamples`; `LabTabs` (each mounting only its active
+ * panel); the examples, which bring their own boundaries; and `DeviceShowcase`. Nothing here imports the simulation into the hero.
  */
 
 const NOW = "2026-01-01T12:00:00.000Z";
@@ -72,20 +78,95 @@ export const metadata: Metadata = {
 /** The on-page contents, in section order. Ids match the `LabSection` ids below. */
 const CONTENTS: readonly { id: string; label: string }[] = [
   { id: "environments", label: "Environments" },
-  { id: "state-honesty", label: "State honesty" },
-  { id: "telemetry", label: "Telemetry" },
-  { id: "alerts", label: "Alerts" },
-  { id: "automation", label: "Automation" },
-  { id: "pairing", label: "Pairing" },
-  { id: "device-detail", label: "Device detail" },
-  { id: "layouts", label: "More layouts" },
+  { id: "explore", label: "Explore by task" },
+  { id: "device-detail", label: "One device" },
   { id: "architecture", label: "Architecture" },
   { id: "ships", label: "What ships" },
-  { id: "missing-data", label: "Missing data" },
   { id: "accessibility", label: "Accessibility and RTL" },
   { id: "install", label: "Install" },
   { id: "roadmap", label: "Roadmap" },
 ];
+
+const category = (id: IotCategoryId) => IOT_CATEGORIES.find((c) => c.id === id)!;
+const categoryLabel = (id: IotCategoryId) => category(id).tab;
+const categoryAliases = (id: IotCategoryId) => category(id).aliases;
+const layoutSlug = (id: string) => IOT_PAGE_EXAMPLES.layouts.find((l) => l.id === id)!.slug;
+const layoutTab = (id: string) => {
+  const layout = IOT_PAGE_EXAMPLES.layouts.find((l) => l.id === id)!;
+  return { id: layout.id, label: layout.label, preload: layout.slug, panel: <IotExample slug={layout.slug} /> };
+};
+
+/**
+ * One category of the explorer, always in the same order: the problem, the state model, the parts, one focused
+ * example, then anything secondary behind a disclosure, then the way to the reference. The order is the point:
+ * a reader learns what the thing is for before being shown how many pieces it has.
+ */
+function CategoryPanel({
+  id,
+  title,
+  problem,
+  model,
+  example,
+  more,
+}: {
+  id: IotCategoryId;
+  title: React.ReactNode;
+  problem: React.ReactNode;
+  model?: React.ReactNode;
+  example: React.ReactNode;
+  more?: React.ReactNode;
+}) {
+  const { label, parts, docs } = category(id);
+  const layers = (["control", "primitive", "pattern"] as const)
+    .map((layer) => ({ layer, names: parts.filter((name) => (IOT_PART_LAYER[name] ?? "pattern") === layer) }))
+    .filter((group) => group.names.length > 0);
+  return (
+    <div className="grid gap-10">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:gap-16">
+        <div className="min-w-0">
+          <p className="eyebrow">{label}</p>
+          <h3 className="mt-3 max-w-2xl text-balance font-display text-2xl font-semibold tracking-[-0.02em] md:text-3xl">
+            {title}
+          </h3>
+          <div className="mt-4 grid max-w-2xl gap-4 text-muted-foreground">{problem}</div>
+        </div>
+        <aside aria-label={`${label}: parts`} className="min-w-0 rounded-xl border border-border bg-card p-5">
+          <h4 className="text-sm font-semibold text-foreground">Parts</h4>
+          <dl className="mt-3 grid gap-3">
+            {layers.map((group) => (
+              <div key={group.layer}>
+                <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {group.layer === "control" ? "Controls" : group.layer === "primitive" ? "Primitives" : "Patterns"}
+                </dt>
+                <dd className="mt-1 flex flex-wrap gap-1.5">
+                  {group.names.map((name) => (
+                    <code key={name} className="break-all rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">
+                      {name}
+                    </code>
+                  ))}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <Link href={docs} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary underline underline-offset-4">
+            Props and behaviour in the reference <ArrowUpRight className="size-3.5 rtl:-scale-x-100" />
+          </Link>
+        </aside>
+      </div>
+      {model ? (
+        <div className="min-w-0">
+          <h4 className="font-display text-lg font-semibold">The state model</h4>
+          <div className="mt-4">{model}</div>
+        </div>
+      ) : null}
+      <div className="min-w-0">
+        <h4 className="font-display text-lg font-semibold">Try it</h4>
+        <div className="mt-4">{example}</div>
+      </div>
+      {more}
+    </div>
+  );
+}
 
 /** The framework-independent layer, by the product question each group answers. */
 const SEMANTIC_GROUPS: readonly { title: string; body: string }[] = [
@@ -151,7 +232,6 @@ const ROADMAP: readonly { when: string; state: "shipped" | "excluded" | "deferre
     state: "deferred",
     items: [
       "A grouped or scheduled command queue, which needs a real product's requirements before it is modelled",
-      "Optimistic updates with rollback as an opt-in, which needs a rollback story before it is safe to offer",
     ],
   },
 ];
@@ -260,148 +340,286 @@ export default function IotPage() {
         </Reveal>
       </LabSection>
 
-      {/* ─── state honesty ─────────────────────────────────────────────── */}
+      {/* ─── explore by task ──────────────────────────────────────────── */}
       <LabSection
-        id="state-honesty"
+        id="explore"
         index="02"
-        label="Device controls and state honesty"
-        title="A request is not a state."
+        label="Explore by task"
+        title="Pick the job you are building for."
         lede={
-          <>
-            <p>
-              Almost every device UI fills the gap between <em>asked</em> and <em>confirmed</em> with an optimistic
-              update: the switch slides, the icon lights, and the screen asserts a state the device has not
-              reported. On a lamp that is harmless. On a lock, a valve or a pump it is a lie the user finds out about
-              later.
-            </p>
-            <p>
-              Every control here draws the request differently from the confirmed state, in the picture and in the
-              accessible name, and one function decides what “pending” means so five controls on a screen cannot
-              disagree.
-            </p>
-          </>
+          <p>
+            Six groups, covering every component the package exports. Each starts with the problem it solves and the
+            state model behind it, then lets you operate one focused example. The category bar stays in reach while
+            you read.
+          </p>
         }
       >
-        <Reveal className="mt-10">
-          <ol aria-label="One command, told honestly" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {COMMAND_STORY.map((step, i) => (
-              <li key={step.word} className="rounded-xl border border-border bg-card p-4">
-                <span aria-hidden className="font-mono text-[11px] text-muted-foreground">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <p className="mt-1 font-display text-base font-semibold">{step.word}</p>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
-              </li>
-            ))}
-          </ol>
-        </Reveal>
-        {/* The five words above describe the model; this is the model with your hands on it. Four kinds of
-            change — power, level, mode and setpoint — on two simulated devices sharing one command queue,
-            so the requested-versus-confirmed split is something a reader can press rather than read. */}
-        <Reveal className="mt-10">
-          <h3 className="font-display text-lg font-semibold">Use it.</h3>
-          <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
-            Every change below is a request first. The dashed treatment is what the device has not agreed to yet,
-            and it disappears when the (scripted) device confirms. Nothing here is connected to anything.
-          </p>
-          <div className="mt-5">
-            <LiveControlPanel />
+        <div className="mt-10">
+          <CategoryExplorer
+            label="IoT category"
+            categories={[
+              {
+                id: "control",
+                label: categoryLabel("control"),
+                aliases: categoryAliases("control"),
+                panel: (
+                  <CategoryPanel
+                    id="control"
+                    title="A request is not a state."
+                    problem={
+                      <>
+                        <p>
+                          Almost every device UI fills the gap between <em>asked</em> and <em>confirmed</em> with an
+                          optimistic update: the switch slides, the icon lights, and the screen asserts a state the
+                          device has not reported. On a lamp that is harmless. On a lock, a valve or a pump it is a lie
+                          the user finds out about later.
+                        </p>
+                        <p>
+                          Every control draws the request differently from the confirmed state, in the picture and in the
+                          accessible name, and one function decides what &ldquo;pending&rdquo; means so the controls on
+                          a screen cannot disagree.
+                        </p>
+                      </>
+                    }
+                    model={
+                      <ol aria-label="One command, told honestly" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                        {COMMAND_STORY.map((step, i) => (
+                          <li key={step.word} className="rounded-xl border border-border bg-card p-4">
+                            <span aria-hidden className="font-mono text-[11px] text-muted-foreground">
+                              {String(i + 1).padStart(2, "0")}
+                            </span>
+                            <p className="mt-1 font-display text-base font-semibold">{step.word}</p>
+                            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+                          </li>
+                        ))}
+                      </ol>
+                    }
+                    example={
+                      <>
+                        <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+                          Every change below is a request first. The dashed treatment is what the device has not agreed
+                          to yet, and it disappears when the (scripted) device confirms. Nothing here is connected to
+                          anything.
+                        </p>
+                        <div className="mt-5">
+                          <LiveControlPanel />
+                        </div>
+                      </>
+                    }
+                    more={
+                      <MoreExamples summary="See a reliable, a flaky and an unreachable device side by side">
+                        <IotExample slug={IOT_PAGE_EXAMPLES.stateHonesty} />
+                      </MoreExamples>
+                    }
+                  />
+                ),
+              },
+              {
+                id: "monitoring",
+                label: categoryLabel("monitoring"),
+                aliases: categoryAliases("monitoring"),
+                panel: (
+                  <CategoryPanel
+                    id="monitoring"
+                    title="A reading is a value, a time, and how much to trust it."
+                    problem={
+                      <>
+                        <p>
+                          Connection, battery, freshness and the value itself are separate questions, and none is
+                          derived from another: an online device can send a stale reading, and an offline one can have
+                          a battery level you last heard an hour ago. A gap in a series is drawn as a gap, because a
+                          straight line across it claims the sensor was answering.
+                        </p>
+                        <p>
+                          A device that does not report a battery is not a device with a flat one, so
+                          <code className="mx-1 text-foreground">unknown</code> is a first-class result rather than a
+                          fallback.
+                        </p>
+                      </>
+                    }
+                    model={
+                      <>
+        {/* Scrollable, not clipped, and reachable by keyboard: `tabindex=0` plus a name is the part a bare
+            `overflow-x-auto` leaves out. */}
+        <Reveal>
+          <div
+            role="region"
+            aria-label="Missing device data, compared"
+            tabIndex={0}
+            className="overflow-x-auto rounded-xl border border-border bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <table className="w-full min-w-[22rem] text-sm">
+              <caption className="sr-only">
+                What the interface shows when device data is missing, compared with the misleading alternative
+              </caption>
+              <thead>
+                <tr className="border-b border-border text-start">
+                  <th scope="col" className="px-4 py-3 text-start font-medium text-muted-foreground">
+                    The fact
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-start font-medium text-muted-foreground">
+                    Misleading
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-start font-medium text-muted-foreground">
+                    What KinetixUI IoT renders
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {UNKNOWNS.map((u) => (
+                  <tr key={u.fact} className="border-b border-border last:border-b-0">
+                    <td className="px-4 py-4 align-middle text-muted-foreground">{u.fact}</td>
+                    <td className="px-4 py-4 align-middle">
+                      <span className="text-muted-foreground line-through decoration-destructive/70">{u.misleading}</span>
+                    </td>
+                    <td className="px-4 py-4 align-middle">{u.accurate}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </Reveal>
-        <Reveal className="mt-10">
-          <IotExample slug={IOT_PAGE_EXAMPLES.stateHonesty} />
-        </Reveal>
-      </LabSection>
-
-      {/* ─── telemetry ─────────────────────────────────────────────────── */}
-      <LabSection
-        id="telemetry"
-        index="03"
-        label="Telemetry"
-        tone="muted"
-        title="A reading is a value, a time, and how much to trust it."
-        lede={
-          <p>
-            A metric registry gives a number its unit and its bounds. A reading can be normal, over a threshold,
-            stale, or unavailable, and each is a word and a shape. A gap in a series is drawn as a gap, because a
-            straight line across it claims the sensor was answering.
+        <Reveal className="mt-4">
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            This is a rule about presentation, not a data-quality guarantee: the module cannot tell you whether a
+            reading is <em>correct</em>, only refuse to present an absent one as a measurement.
           </p>
-        }
-      >
-        <Reveal className="mt-10">
-          <IotExample slug={IOT_PAGE_EXAMPLES.telemetry} />
         </Reveal>
-      </LabSection>
-
-      {/* ─── alerts ────────────────────────────────────────────────────── */}
-      <LabSection
-        id="alerts"
-        index="04"
-        label="Alerts"
-        title="Somebody has to own it."
-        lede={
-          <p>
-            Severity is a word and a glyph. An alert carries what raised it and what can be done, and an
-            acknowledged alert is still visible as acknowledged rather than removed. Live-region announcements are
-            rare on purpose.
-          </p>
-        }
-      >
-        <Reveal className="mt-10">
-          <IotExample slug={IOT_PAGE_EXAMPLES.alerts} />
-        </Reveal>
-      </LabSection>
-
-      {/* ─── automation ────────────────────────────────────────────────── */}
-      <LabSection
-        id="automation"
-        index="05"
-        label="Automation"
-        tone="muted"
-        title="Edit a rule. Your application runs it."
-        lede={
-          <>
-            <p>
-              <code className="font-mono text-[0.9em] text-foreground">AutomationBuilder</code> is a keyboard-operable
-              form over a structured rule: a trigger, conditions, actions, and validation with words. It produces a
-              rule and reads one back as a sentence.
-            </p>
-            <p className="text-sm">
-              There is no automation engine here. Nothing evaluates a trigger, schedules a run or sends a command.
-              Where a demo shows an automation firing, the event is scripted and says so.
-            </p>
-          </>
-        }
-      >
-        <Reveal className="mt-10">
-          <IotExample slug={IOT_PAGE_EXAMPLES.automation} />
-        </Reveal>
-      </LabSection>
-
-      {/* ─── pairing ───────────────────────────────────────────────────── */}
-      <LabSection
-        id="pairing"
-        index="06"
-        label="Pairing"
-        title="Pairing is a product pattern, not a Bluetooth API."
-        lede={
-          <p>
-            {KINETIX_PAIRING_STAGES.length} stages, {KINETIX_PAIRING_METHODS.length} ways a person may be asked to
-            connect, and a registry of {Object.keys(KINETIX_PAIRING_FAILURES).length} ways it goes wrong, each with
-            what to say and what to offer next. It models the screen so it can be built and
-            reviewed before any transport exists. It discovers nothing and connects to nothing.
-          </p>
-        }
-      >
-        <Reveal className="mt-10">
-          <IotExample slug={IOT_PAGE_EXAMPLES.pairing} />
-        </Reveal>
+                      </>
+                    }
+                    example={<IotExample slug={IOT_PAGE_EXAMPLES.telemetry} />}
+                    more={
+                      <MoreExamples summary="Try imperfect data yourself, or see a telemetry board" tabIds={["monitoring-playground", "layout-telemetry"]}>
+                        <LabTabs
+                          label="More monitoring examples"
+                          variant="pills"
+                          tabs={[
+                            {
+                              id: "monitoring-playground",
+                              label: "Imperfect data",
+                              summary:
+                                "Set a battery nobody reported, drag a reading three days into the past, tell the sensor it errored.",
+                              panel: <DeviceShowcase />,
+                            },
+                            layoutTab("layout-telemetry"),
+                          ]}
+                        />
+                      </MoreExamples>
+                    }
+                  />
+                ),
+              },
+              {
+                id: "alerts",
+                label: categoryLabel("alerts"),
+                aliases: categoryAliases("alerts"),
+                panel: (
+                  <CategoryPanel
+                    id="alerts"
+                    title="Somebody has to own it."
+                    problem={
+                      <p>
+                        Severity is a word and a glyph. An alert carries what raised it and what can be done, and an
+                        acknowledged alert is still visible as acknowledged rather than removed. Activity records what
+                        happened and who or what caused it, and says &ldquo;Source unknown&rdquo; rather than guessing.
+                        Live-region announcements are rare on purpose.
+                      </p>
+                    }
+                    example={<IotExample slug={IOT_PAGE_EXAMPLES.alerts} />}
+                    more={
+                      <MoreExamples summary="See the same alerts as an inbox" tabIds={["layout-inbox"]}>
+                        <IotExample slug={layoutSlug("layout-inbox")} />
+                      </MoreExamples>
+                    }
+                  />
+                ),
+              },
+              {
+                id: "automation",
+                label: categoryLabel("automation"),
+                aliases: categoryAliases("automation"),
+                panel: (
+                  <CategoryPanel
+                    id="automation"
+                    title="Edit a rule. Your application runs it."
+                    problem={
+                      <>
+                        <p>
+                          <code className="font-mono text-[0.9em] text-foreground">AutomationBuilder</code> is a
+                          keyboard-operable form over a structured rule: a trigger, conditions, actions, and validation
+                          with words. It produces a rule and reads one back as a sentence.
+                        </p>
+                        <p className="text-sm">
+                          There is no automation engine here. Nothing evaluates a trigger, schedules a run or sends a
+                          command. Where a demo shows an automation firing, the event is scripted and says so.
+                        </p>
+                      </>
+                    }
+                    example={<IotExample slug={IOT_PAGE_EXAMPLES.automation} />}
+                  />
+                ),
+              },
+              {
+                id: "setup",
+                label: categoryLabel("setup"),
+                aliases: categoryAliases("setup"),
+                panel: (
+                  <CategoryPanel
+                    id="setup"
+                    title="Pairing is a product pattern, not a Bluetooth API."
+                    problem={
+                      <p>
+                        {KINETIX_PAIRING_STAGES.length} stages, {KINETIX_PAIRING_METHODS.length} ways a person may be
+                        asked to connect, and a registry of {Object.keys(KINETIX_PAIRING_FAILURES).length} ways it goes
+                        wrong, each with what to say and what to offer next. It models the screen so it can be built and
+                        reviewed before any transport exists. It discovers nothing and connects to nothing.
+                      </p>
+                    }
+                    example={<IotExample slug={IOT_PAGE_EXAMPLES.pairing} />}
+                  />
+                ),
+              },
+              {
+                id: "fleet",
+                label: categoryLabel("fleet"),
+                aliases: categoryAliases("fleet"),
+                panel: (
+                  <CategoryPanel
+                    id="fleet"
+                    title="Forty devices, one question: which one needs you?"
+                    problem={
+                      <p>
+                        A fleet view sorts by attention, not by name, and gives every device exactly one bucket so the
+                        counts add up. Places (a home, a farm, a production line) roll device health up the hierarchy
+                        your product already uses, without the library naming any level. The controls in these layouts
+                        change local demo state only.
+                      </p>
+                    }
+                    example={<IotExample slug={layoutSlug("layout-fleet")} />}
+                    more={
+                      <MoreExamples
+                        summary="Three more layouts: dashboard, connected space, troubleshooting"
+                        tabIds={["layout-dashboard", "layout-space", "layout-troubleshooting"]}
+                      >
+                        <LabTabs
+                          label="More fleet layouts"
+                          variant="pills"
+                          tabs={["layout-dashboard", "layout-space", "layout-troubleshooting"].map(layoutTab)}
+                        />
+                      </MoreExamples>
+                    }
+                  />
+                ),
+              },
+            ]}
+          />
+        </div>
       </LabSection>
 
       {/* ─── device detail ─────────────────────────────────────────────── */}
       <LabSection
         id="device-detail"
-        index="07"
+        index="03"
         label="Device detail"
         tone="muted"
         title="One device, in depth."
@@ -418,38 +636,10 @@ export default function IotPage() {
         </Reveal>
       </LabSection>
 
-      {/* ─── more layouts ──────────────────────────────────────────────── */}
-      <LabSection
-        id="layouts"
-        index="08"
-        label="More layouts"
-        meta="demo state only"
-        title="Other arrangements, one at a time."
-        lede={
-          <p>
-            Earlier compositions, kept because they answer different questions: a fleet overview, a dashboard, a
-            telemetry board, an alert inbox and a troubleshooting grid. The controls change local demo state and
-            nothing else. There is no device, no broker and no request.
-          </p>
-        }
-      >
-        <Reveal className="mt-10">
-          <LabTabs
-            label="Layout"
-            tabs={IOT_PAGE_EXAMPLES.layouts.map((layout) => ({
-              id: layout.id,
-              label: layout.label,
-              preload: layout.slug,
-              panel: <IotExample slug={layout.slug} />,
-            }))}
-          />
-        </Reveal>
-      </LabSection>
-
       {/* ─── architecture ──────────────────────────────────────────────── */}
       <LabSection
         id="architecture"
-        index="09"
+        index="04"
         label="Architecture"
         tone="muted"
         title="Bring your own connection."
@@ -480,7 +670,7 @@ export default function IotPage() {
       {/* ─── what ships ────────────────────────────────────────────────── */}
       <LabSection
         id="ships"
-        index="10"
+        index="05"
         label="What ships"
         meta={IOT_VERSION}
         title="Two layers. The useful half has nothing to do with rendering."
@@ -529,9 +719,9 @@ evaluateReading({ value: null, metric: "temperature" }).state; // "unavailable"`
             </p>
             <dl className="mt-6 divide-y divide-border border-y border-border">
               {[
-                { name: "Primitives", count: IOT_CATALOGUE.primitives, body: "One fact, rendered: a status, a battery, a signal, a timestamp, a reading, an identity." },
-                { name: "Controls", count: IOT_CATALOGUE.controls, body: "One thing a user can change: power, level, setpoint, mode." },
-                { name: "Patterns", count: IOT_CATALOGUE.patterns, body: "Compositions with a rule or two: cards, lists, telemetry, alerts, automation, pairing, places, energy and a camera that is never a feed." },
+                { name: "Primitives", count: IOT_CATALOGUE.primitives, body: "One fact, rendered: a status, a connection, a battery, a signal, a timestamp, a reading, an identity." },
+                { name: "Controls", count: IOT_CATALOGUE.controls, body: "One thing a user can change: power, level, setpoint, mode, colour, lock and media playback." },
+                { name: "Patterns", count: IOT_CATALOGUE.patterns, body: "Compositions with a rule or two: cards, lists, telemetry, command feedback, alerts, activity, automation, pairing, places, energy and a camera that is never a feed." },
               ].map((row) => (
                 <div key={row.name} className="flex items-baseline gap-4 py-4">
                   <dt className="w-24 shrink-0 font-display text-sm font-semibold">{row.name}</dt>
@@ -553,84 +743,10 @@ evaluateReading({ value: null, metric: "temperature" }).state; // "unavailable"`
         </div>
       </LabSection>
 
-      {/* ─── missing data ──────────────────────────────────────────────── */}
-      <LabSection
-        id="missing-data"
-        index="11"
-        label="Missing data"
-        meta="the rule"
-        tone="muted"
-        title={<>&ldquo;We do not know&rdquo; survives.</>}
-        lede={
-          <p>
-            A device that does not report a battery is not a device with a flat one. Each of these is a place where a
-            convenient default becomes a lie the interface tells about someone&rsquo;s hardware, so
-            <code className="mx-1 text-foreground">unknown</code> is a first-class result rather than a fallback.
-          </p>
-        }
-      >
-        {/* Scrollable, not clipped, and reachable by keyboard: `tabindex=0` plus a name is the part a bare
-            `overflow-x-auto` leaves out. */}
-        <Reveal className="mt-10">
-          <div
-            role="region"
-            aria-label="Missing device data, compared"
-            tabIndex={0}
-            className="overflow-x-auto rounded-xl border border-border bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          >
-            <table className="w-full min-w-[22rem] text-sm">
-              <caption className="sr-only">
-                What the interface shows when device data is missing, compared with the misleading alternative
-              </caption>
-              <thead>
-                <tr className="border-b border-border text-start">
-                  <th scope="col" className="px-4 py-3 text-start font-medium text-muted-foreground">
-                    The fact
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-start font-medium text-muted-foreground">
-                    Misleading
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-start font-medium text-muted-foreground">
-                    What KinetixUI IoT renders
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {UNKNOWNS.map((u) => (
-                  <tr key={u.fact} className="border-b border-border last:border-b-0">
-                    <td className="px-4 py-4 align-middle text-muted-foreground">{u.fact}</td>
-                    <td className="px-4 py-4 align-middle">
-                      <span className="text-muted-foreground line-through decoration-destructive/70">{u.misleading}</span>
-                    </td>
-                    <td className="px-4 py-4 align-middle">{u.accurate}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Reveal>
-        <Reveal className="mt-4">
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            This is a rule about presentation, not a data-quality guarantee: the module cannot tell you whether a
-            reading is <em>correct</em>, only refuse to present an absent one as a measurement.
-          </p>
-        </Reveal>
-        <Reveal className="mt-10">
-          <h3 className="font-display text-xl font-semibold">Try it</h3>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Set a battery nobody reported, drag a reading three days into the past, tell the sensor it errored. The
-            point is what the interface says when the data is imperfect.
-          </p>
-          <div className="mt-6">
-            <DeviceShowcase />
-          </div>
-        </Reveal>
-      </LabSection>
-
       {/* ─── accessibility and RTL ─────────────────────────────────────── */}
       <LabSection
         id="accessibility"
-        index="12"
+        index="06"
         label="Accessibility, RTL and motion"
         title="A green dot is not a device state."
       >
@@ -700,7 +816,7 @@ evaluateReading({ value: null, metric: "temperature" }).state; // "unavailable"`
       {/* ─── install ───────────────────────────────────────────────────── */}
       <LabSection
         id="install"
-        index="13"
+        index="07"
         label="Install"
         meta={IOT_PACKAGE}
         tone="muted"
@@ -772,7 +888,7 @@ import { SensorReading, formatLastSeen } from "${IOT_PACKAGE}";`}
       {/* ─── roadmap ───────────────────────────────────────────────────── */}
       <LabSection
         id="roadmap"
-        index="14"
+        index="08"
         label="Roadmap"
         meta="no dates"
         title="What exists, what does not, and what is only open."
