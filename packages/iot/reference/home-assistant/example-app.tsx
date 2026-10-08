@@ -32,9 +32,18 @@ import { encodeHomeAssistantCommand, translateHomeAssistantMessage, type HomeAss
 
 /**
  * The application's connection to Home Assistant, behind its own server-side proxy in a real product.
- * `send` returns the message id it assigned, which Home Assistant echoes on the reply.
+ * `send` returns the message id it assigned, which Home Assistant echoes on the reply, or `null` when
+ * the connection cannot carry it right now (not yet authenticated, or reconnecting). There is no outbox:
+ * a request that was not sent is recorded as refused, never queued and replayed later.
+ * `live/session.ts` is one implementation.
  */
-export type HomeAssistantTransport = { send(call: HomeAssistantServiceCall): number };
+export type HomeAssistantTransport = { send(call: HomeAssistantServiceCall): number | null };
+
+/** The application's timer. Injected so a test, or a server, decides what time is. */
+export type IntegrationScheduler = {
+  setTimeout(callback: () => void, ms: number): unknown;
+  clearTimeout(handle: unknown): void;
+};
 
 export type LightIntegrationOptions = {
   transport: HomeAssistantTransport;
@@ -47,6 +56,11 @@ export type LightIntegrationOptions = {
   timeoutMs: number;
   /** Where structured transitions go: logging, analytics, an audit trail. KinetixUI sends nothing. */
   onTransitions?: (transitions: KinetixLedgerTransition[]) => void;
+  /**
+   * When given, every sent request gets one timer at its deadline (`timeoutMs` after it was sent) that
+   * expires that request and only that one. Without it the application calls `tick` on its own schedule.
+   */
+  scheduler?: IntegrationScheduler;
 };
 
 /** An application-owned store around one ledger value. Could equally be Zustand, Redux or server state. */
@@ -60,6 +74,8 @@ export function createLightIntegration(options: LightIntegrationOptions) {
   });
   const listeners = new Set<() => void>();
   const requestIds = new Map<number, string>();
+  const deadlines = new Map<string, unknown>();
+  const deviceIds = [...new Set(targets.map((t) => t.deviceId))];
 
   const commit = (update: { ledger: KinetixDeviceLedger; transitions: KinetixLedgerTransition[] }) => {
     options.onTransitions?.(update.transitions);
@@ -69,7 +85,7 @@ export function createLightIntegration(options: LightIntegrationOptions) {
   };
   const apply = (signals: KinetixDeviceSignal[]) => commit(applyDeviceSignals(ledger, signals, options.now()));
 
-  return {
+  const integration = {
     getLedger: () => ledger,
     subscribe(listener: () => void) {
       listeners.add(listener);
@@ -81,11 +97,19 @@ export function createLightIntegration(options: LightIntegrationOptions) {
       // A request id answers once. Forgetting it stops a later message that reuses the id from being read as this reply.
       if (message.type === "result" && typeof message.id === "number") requestIds.delete(message.id);
     },
-    /** The application's socket closed: we lost our view, the devices did not go offline. */
+    /** The application's socket closed and it is reconnecting: we lost our view, the devices did not go offline. */
     linkLost() {
       // Request ids belong to the closed session; a new session may number its messages from 1 again.
       requestIds.clear();
-      apply([...new Set(targets.map((t) => t.deviceId))].map((deviceId) => ({ type: "connectivity", deviceId, state: "connecting" })));
+      apply(deviceIds.map((deviceId) => ({ type: "connectivity", deviceId, state: "connecting" })));
+    },
+    /**
+     * The application stopped trying (it shut the session down, or Home Assistant refused its credential).
+     * Nothing is coming back, so "connecting" would promise progress: what we know is nothing.
+     */
+    linkClosed() {
+      requestIds.clear();
+      apply(deviceIds.map((deviceId) => ({ type: "connectivity", deviceId, state: "unknown" })));
     },
     /** A control asked for a change. */
     request(deviceId: string, capabilityId: string, value: unknown) {
@@ -98,13 +122,38 @@ export function createLightIntegration(options: LightIntegrationOptions) {
         // application's own code, so the control and the transition log both say it did not happen.
         return apply([{ type: "result", commandId: update.intent.commandId, outcome: "rejected", code: "unsupported" }]);
       }
-      requestIds.set(options.transport.send(call), update.intent.commandId);
+      const commandId = update.intent.commandId;
+      const requestId = options.transport.send(call);
+      if (requestId === null) {
+        // The connection could not carry it, so Home Assistant never saw it. Refused with this
+        // application's code; not queued, not retried.
+        return apply([{ type: "result", commandId, outcome: "rejected", code: "not-sent" }]);
+      }
+      requestIds.set(requestId, commandId);
+      if (options.scheduler) {
+        const scheduler = options.scheduler;
+        deadlines.set(commandId, scheduler.setTimeout(() => {
+          deadlines.delete(commandId);
+          integration.expire(commandId);
+        }, options.timeoutMs));
+      }
+    },
+    /** One request's deadline. A request that was already settled or replaced is left alone by the ledger. */
+    expire(commandId: string) {
+      commit(expireDeviceCommands(ledger, options.now(), { commandId, timeoutMs: options.timeoutMs }));
     },
     /** The application's timer. */
     tick() {
       commit(expireDeviceCommands(ledger, options.now(), { timeoutMs: options.timeoutMs }));
     },
+    /** Cancels outstanding deadline timers. */
+    dispose() {
+      deadlines.forEach((handle) => options.scheduler?.clearTimeout(handle));
+      deadlines.clear();
+      listeners.clear();
+    },
   };
+  return integration;
 }
 
 export type LightIntegration = ReturnType<typeof createLightIntegration>;

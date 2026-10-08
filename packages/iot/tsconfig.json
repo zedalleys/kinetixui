@@ -12,5 +12,5 @@
     "noUncheckedIndexedAccess": true
   },
   "include": ["src", "reference"],
-  "exclude": ["node_modules", "dist", "src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.stories.tsx", "test", "reference/**/*.test.ts", "reference/**/*.test.tsx"]
+  "exclude": ["node_modules", "dist", "src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.stories.tsx", "test", "reference/**/*.test.ts", "reference/**/*.test.tsx", "reference/**/*.e2e.ts"]
 }
