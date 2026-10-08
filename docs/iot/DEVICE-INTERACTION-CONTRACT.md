@@ -844,19 +844,19 @@ put the token in a repository, a CI secret shared with pull requests, a browser 
 
 ### 11.9 Roadmap naming
 
-The public roadmap (`/docs/iot`, written before this work) lists **M4** as camera, security and spatial
-presentation. The real-device integration work has since shipped as M4A (lifecycle edges), M4B (device ledger)
-and M4C (validation). Proposal, pending the owner's confirmation before any public page changes:
+The public roadmap (`/docs/iot`, written before this work) listed **M4** as camera, security and spatial
+presentation. The real-device integration work then shipped as M4A (lifecycle edges), M4B (device ledger) and
+M4C (validation). Decided by the owner on 2026-10-08:
 
-- Name the shipped track **M4 · Device integration** (M4A, M4B, M4C), since that is what the repository and its
-  history already say.
-- Move camera, security and spatial to **M7**, marked "previously listed as M4". M5 and M6 keep their numbers, so
-  no other commitment moves.
+- The shipped track is **M4 · Device integration** (M4A, M4B, M4C), which is what the repository and its history
+  already say.
+- Camera, security and spatial move to **M7**, marked "previously listed as M4" on `/docs/iot`. M5 and M6 keep
+  their numbers, so no other commitment moves.
 
 ## 12. What remains
 
-- **Camera, security and spatial** (labelled M4 in the public roadmap before the real-device integration work
-  took the M4A/M4B names): camera preview and availability, security event presentation,
+- **Camera, security and spatial** (M7; listed as M4 in the public roadmap before the real-device integration
+  work took that number, see §11.9): camera preview and availability, security event presentation,
   privacy and recording truth, spatial overlays — with no embedded transport or video engine.
 - **Live-provider and physical validation of the ledger** (§11, M4C-B and M4C-C): blocked on an authorized Home
   Assistant instance and a physical light or plug. Also deferred from M4B: report origin evidence (ending a pending request
