@@ -4,7 +4,8 @@ How KinetixUI models a connected device changing state: what a user asked for, w
 reports, and what a control is allowed to draw in between. M1 laid the foundation; M2A made connectivity
 truthful and wired the four existing React controls to it (§4.1, §6.1); M2B stopped a missing device
 status reading as offline (§6.2) and added colour, lock and media controls on the same API (§4.2); M3 added the
-monitoring and feedback components and the freshness contract (§9). The audit behind all of them is
+monitoring and feedback components and the freshness contract (§9); M4A hardened the lifecycle for real
+devices (§3) and M4B added the device ledger, the provider-neutral integration layer (§10). The audit behind all of them is
 [IOT-MATURITY-AUDIT.md](./IOT-MATURITY-AUDIT.md).
 
 The contract lives in `@kinetixui/iot/functions`: TypeScript types and pure functions, no React,
@@ -22,7 +23,8 @@ document is implemented in Angular, SwiftUI, Jetpack Compose or Flutter yet (see
 | Telemetry freshness, battery and health classification | Streaming video, codecs, players |
 | Accessible sentences for every state | Localisation of those sentences, error copy for its own codes |
 
-The package never opens a connection, never holds a credential and never parses a device payload.
+The package never opens a connection, never holds a credential and never parses a device payload. §10.2
+extends this table for applications that connect a real provider through the device ledger.
 
 ## 2. Desired and reported state
 
@@ -532,10 +534,182 @@ The application owns timestamps, the freshness policy, battery thresholds, statu
 currency formatting, event copy, event origin and de-duplication of transport events. KinetixUI owns how
 each dimension is shown and said, and that none is silently converted into another.
 
-## 10. What remains
+## 10. Device ledger and provider integration (M4B)
 
-- **M4, camera, security and spatial**: camera preview and availability, security event presentation,
+KinetixUI owns device-interaction truth, not device infrastructure. M4B adds the smallest layer that lets an
+application connect a real provider (a home hub, a broker, a vendor cloud) to the lifecycle in §3 without
+KinetixUI touching the network: a normalized signal vocabulary, a command intent, and a **device ledger** with
+pure functions over it. Types in `src/types/device-ledger.ts`, functions in `src/functions/device-ledger.ts`,
+tests in `device-ledger.test.ts` and `device-ledger-boundary.test.ts`. All of it is additive: no existing type,
+function, control or sentence changed, and an application that drives lifecycles directly keeps doing so.
+
+### 10.1 What the ledger is, and is not
+
+The ledger is a plain value: for each device the application registered, its link (`KinetixDeviceConnectivity`)
+and, for each registered capability, exactly one `KinetixCommandLifecycle`. An idle lifecycle still tracks what
+the device reports, so every reported value lives in one place, and `toDeviceState` derives
+`confirmedValues`/`requestedValues` from it instead of storing them twice.
+
+It is not a store, a cache, a registry, a queue or a runtime. It has no singleton, no React context, no
+subscription, no timer and no history. The application keeps it wherever it keeps state (React state, Zustand,
+Redux, XState, a server) and replaces it with what each function returns. Signals for devices or capabilities the
+application did not register are refused, not added, so a provider that streams every entity it knows does not
+turn the ledger into a device registry.
+
+| Function | Does |
+| --- | --- |
+| `createDeviceLedger({ devices })` | Registers devices and capability ids. Capabilities start `idle`; links start `unknown` unless given. |
+| `requestDeviceChange(ledger, { commandId, deviceId, capabilityId, value }, now)` | Records the request (`requested`, superseding an open one) and returns the `KinetixCommandIntent` to send. No intent for an unknown target, so nothing is sent. |
+| `applyDeviceSignals(ledger, signals, now)` | Reconciles provider facts, in order. `now` is when the application received them. |
+| `expireDeviceCommands(ledger, now, { timeoutMs?, commandId? })` | Times out open requests by policy, or exactly one request when the application's own timer fires. |
+| `selectCapabilityLifecycle(ledger, deviceId, capabilityId)` | The lifecycle for a control's `lifecycle` prop. Same object until that capability changes. |
+| `selectDeviceConnectivity(ledger, deviceId)` | The link, for `resolveControlState({ connectivity, lifecycle })` and `DeviceConnection`. `unknown` when absent. |
+| `toDeviceState(ledger, { device, … })` | A `KinetixDeviceState` for `summarizeDeviceState` and the device cards. Identity stays the application's. |
+
+Every operation returns `{ ledger, transitions }`. A transition records the cause (a signal type, `request` or
+`expire`), the device, capability and command, the lifecycle stage before and after, the link before and after,
+and a `rejection` when the item was refused. The application can log, audit, notify or debug from them; the
+ledger never throws, emits or sends, and a call that changes nothing returns the same ledger object.
+
+### 10.2 Ownership
+
+| Concern | KinetixUI | Application | Adapter |
+| --- | --- | --- | --- |
+| Signal vocabulary, command intent shape | defines | — | emits / reads |
+| Reconciliation rules, lifecycle transitions, stale-response and stale-report refusal | owns (pure functions) | — | — |
+| Requested vs confirmed, adjusted confirmations | owns | — | — |
+| UI-facing connectivity and lifecycle, strategies, sentences, selectors | owns | chooses strategy, localises | — |
+| Structured transition records | returns them | logs, audits, analyses | — |
+| The ledger value and where it is stored | defines the shape | stores it | — |
+| Command ids | requires one per request | generates them | carries them |
+| Provider request id ↔ command id | never sees provider ids | keeps the map (its transport) | asks for it |
+| Provider message → signals; intent → provider command | — | — | owns (pure) |
+| Provider error → application code | invents no codes | owns the codes and their copy | maps |
+| Timeout rule | owns (`expireDeviceCommands`) | owns the deadline and when to call it | — |
+| Transport: WebSocket, HTTP, MQTT, Matter, Bluetooth, discovery | never | owns | never |
+| Credentials, authentication, authorization, account linking | never | owns, server side | never |
+| Subscriptions, reconnect, backoff, retry policy, rate limits | never | owns | never |
+| Device and entity registry, persistence, offline queue / outbox | never | owns | never |
+| Telemetry storage, background processing | never | owns | never |
+
+An adapter is a pure translation boundary: provider event → `KinetixDeviceSignal[]`, `KinetixCommandIntent` →
+provider command. It is a convention, not an exported interface, until more than one real adapter shows what a
+shared interface would need.
+
+### 10.3 Signals
+
+| Signal | Carries | Becomes |
+| --- | --- | --- |
+| `report` | `deviceId`, `capabilityId`, `value`, optional `observedAt` | a lifecycle `report` with `receivedAt: now`. Always the reported value; settles an open request only when it equals the request (`isSameDeviceValue`) and was received after the send. |
+| `snapshot` | `deviceId`, `values` by capability, optional `observedAt` | one `report` per capability it names, for providers that observe a device's capabilities together |
+| `acknowledgement` | `commandId` | `acknowledge`: still not confirmed |
+| `result` | `commandId`, `outcome: applied` (optional `value`) or `rejected` (optional `code`, `reason`) | `confirm` (adjusted when the value differs) or `fail` with the application's code |
+| `connectivity` | `deviceId`, one of the six connectivity states, optional `lastSeenAt` | the device's link only |
+
+Deliberately absent:
+
+- **Provider fields.** No provider name, entity id, topic, cluster or provider context id. An adapter maps a
+  provider target to the application's `deviceId`/`capabilityId`, and a provider request id to the KinetixUI
+  `commandId`, before a signal exists. The ledger copies only the fields above; extra keys on a signal never reach
+  it (`device-ledger-boundary.test.ts`).
+- **An application ↔ provider link signal.** The RFC proposed `link: up | down | resyncing`. It was not needed:
+  when the application's own connection drops, it says so per device with `connectivity: connecting` (we lost our
+  view; the device did not go offline), and the reconnect snapshot restores the truth.
+- **A timeout signal.** A timeout is the application's clock, not a provider fact: `expireDeviceCommands`.
+- **Origin / caused-by on reports.** A physical change while a request is open keeps the request open (§3, "What
+  `report` does"). Ending it as overridden needs provider evidence of origin, which is deferred.
+- **`result: applied` for providers that only accept.** A provider whose reply means "dispatched" (Home Assistant's
+  `call_service` result is one) emits an `acknowledgement`. Only a reply that speaks for the device is a `result`.
+
+### 10.4 Command intent
+
+`KinetixCommandIntent` is `commandId`, `deviceId`, `capabilityId`, `value`, `requestedAt` (ISO, application clock)
+and, when an open request was replaced, `supersedes`. It contains no URL, token, service name, topic, cluster,
+characteristic or SDK object. The adapter encodes it; the application's transport sends it.
+
+### 10.5 Reconciliation
+
+Each signal becomes one lifecycle event, so §3's rules apply unchanged. Each row is a test in
+`device-ledger.test.ts`.
+
+| Scenario | Signals | Ledger result |
+| --- | --- | --- |
+| Normal confirmation | request 22, acknowledgement, report 22 | `requested` → `acknowledged` → `confirmed` 22 |
+| Report without acknowledgement | request 22, report 22 | `confirmed`. An acknowledgement is not required for truth. |
+| Acknowledgement without report | request on, acknowledgement | `acknowledged`, reported off; then `timed-out` ("may still apply"), never `failed` |
+| Adjusted confirmation | request 22, `result applied` 21.5 | `confirmed` 21.5, `isLifecycleAdjusted`; every strategy draws 21.5, no sentence says 22 |
+| Unrelated report | request 22, report 21.5 | still `requested`; reported value 21.5 |
+| Physical change | confirmed 20, report 18 (no request) | reported 18, stage kept |
+| Disconnect while pending | request on, `connectivity: offline` | still `requested`, not `failed`, no code. `resolveControlState` reads "Device offline. The requested change is not confirmed." |
+| Reconnect | `connecting`, `online`, snapshot | the link alone confirms nothing; a snapshot equal to the request confirms it, one that differs leaves it open |
+| Timeout | `expireDeviceCommands` | `timed-out` with the request's own `commandId`; a later matching report still confirms |
+| Stale timeout | A, B replaces A, timer for A fires | refused as `stale-response`; B untouched |
+| Late response to a replaced command | A, B, then A's acknowledgement / result | refused as `stale-response` in every order; a late *report* of A's value is device truth but cannot confirm B |
+| Out-of-order reports | observed 4 s, then observed 3 s | the older one is refused as `stale-report` |
+| Device clock behind | report observed before the send on the device's clock, received after it | confirms (M4A two clocks: `observedAt` orders, receipt time settles) |
+| Report before acknowledgement | report on, then acknowledgement | `confirmed`; the acknowledgement is absorbed as `illegal-transition` |
+
+### 10.6 One request, end to end
+
+```text
+ Control        App store         KinetixUI ledger      Adapter          App transport     Provider / device
+    │ onToggle(on)   │                    │                  │                   │                  │
+    ├───────────────▶│ requestDeviceChange│                  │                   │                  │
+    │                ├───────────────────▶│ lifecycle: requested                 │                  │
+    │                │◀── ledger, intent ─┤                  │                   │                  │
+    │                ├──────────────── encode(intent) ──────▶│                   │                  │
+    │                │◀────────────── provider command ──────┤                   │                  │
+    │                ├────────────────────── send (assigns request id) ─────────▶├─────────────────▶│
+    │                │                    │                  │◀── reply id 10 ───┤◀── accepted ─────┤
+    │                │ applyDeviceSignals ◀── acknowledgement(cmd-1) ────────────┤ (id 10 → cmd-1)  │
+    │◀── on requested, off reported ──────┤ acknowledged      │                   │                  │
+    │                │                    │                  │◀── state: on ─────┤◀── light is on ──┤
+    │                │ applyDeviceSignals ◀── report(on) ─────┤                   │                  │
+    │◀── on confirmed┤◀─ lifecycle: confirmed               │                   │                  │
+```
+
+### 10.7 Provider neutrality and the Home Assistant reference
+
+Home Assistant is the reference integration target, not a dependency. The reference adapter, its fixtures and an
+example application live in `packages/iot/reference/home-assistant/`, outside `src`: they are not built, exported
+or published, and a boundary test fails if package source imports them. The adapter covers binary power for
+`light.*` and `switch.*` entities: `state_changed` and `get_states` → `connectivity` + `report`, `unavailable` →
+`offline`, a `call_service` success → `acknowledgement` (the later state change is the confirmation), a failure →
+`result: rejected` with the application's own code; intent on/off → `turn_on`/`turn_off`. The fixtures are
+synthetic messages shaped from Home Assistant's public WebSocket API documentation, with no token, URL or personal
+data; they were not captured from a live instance, so the shapes are representative, not verified.
+
+The same ledger accepts the same signals from an MQTT, Matter or cloud adapter without changing its lifecycle
+model (the reference suite checks that a non-Home-Assistant signal sequence yields an identical ledger). That is
+architectural portability. No MQTT, Matter, Bluetooth or cloud adapter exists.
+
+### 10.8 Physical proof target
+
+The first physical validation target is a smart light or smart plug with binary power: the requested and
+confirmed values are unambiguous, a person can override it at the switch, it can be unplugged and reconnected, and
+a stale report is easy to provoke. The architecture names no vendor. **No physical device has been tested yet.**
+Before that can happen: a running Home Assistant (or other provider) with the device paired; an application-side
+transport and server proxy that holds the credential; the adapter's message shapes checked against that instance's
+real messages; and a manual run of the §10.5 scenarios with the physical device.
+
+### 10.9 Truth semantics kept
+
+Requested ≠ confirmed. Acknowledged ≠ confirmed. Disconnected ≠ failed: a `connectivity` signal never settles,
+fails or times out a request, and an offline device's open request reads "not confirmed", never "in progress".
+Timeout ≠ refused: `expireDeviceCommands` produces `timed-out` ("may still apply"), and only a `result: rejected`
+produces `failed`. Unknown ≠ offline: a device nobody has reported on, or the ledger does not hold, is `unknown`.
+Reports may be late, out of order, or caused by someone else; transport time and device observation time stay
+separate clocks.
+
+## 11. What remains
+
+- **Camera, security and spatial** (labelled M4 in the public roadmap before the real-device integration work
+  took the M4A/M4B names): camera preview and availability, security event presentation,
   privacy and recording truth, spatial overlays — with no embedded transport or video engine.
+- **Real-provider and physical validation of the ledger** (§10.8): the Home Assistant adapter against a live
+  instance, then a physical light or plug. Also deferred from M4B: report origin evidence (ending a pending request
+  as overridden), cancel and retry through the ledger, and a React helper, which waits until the same wiring
+  repeats in real applications.
 - **Manual screen-reader verification** of the M2A, M2B and M3 announcements and phrases (VoiceOver, NVDA, TalkBack). Only
   automated accessibility-tree checks have run.
 - **Native parity**: implement the lifecycle, strategies and capability support in Swift, Kotlin and

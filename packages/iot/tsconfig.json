@@ -11,6 +11,6 @@
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.stories.tsx", "test"]
+  "include": ["src", "reference"],
+  "exclude": ["node_modules", "dist", "src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.stories.tsx", "test", "reference/**/*.test.ts", "reference/**/*.test.tsx"]
 }

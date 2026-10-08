@@ -98,6 +98,33 @@ M2B added three controls on the same contract:
   the package. Seek and volume are `DeviceLevelControl`, so a requested position or level is drawn
   apart from the reported one.
 
+## Connecting a real provider: the device ledger (M4B)
+
+KinetixUI owns device-interaction truth, not device infrastructure. The application keeps its provider
+connection, credentials, store and timers; an adapter it owns translates provider messages into
+`KinetixDeviceSignal`s and a `KinetixCommandIntent` back into a provider command. In between, pure functions in
+`@kinetixui/iot/functions` reconcile them:
+
+```ts
+let ledger = createDeviceLedger({ devices: [{ deviceId: "desk-lamp", capabilities: ["power"] }] });
+
+// A control asked for a change: record it, then send the intent through your own transport.
+const { ledger: requested, intent } = requestDeviceChange(ledger, { commandId: "cmd-1", deviceId: "desk-lamp", capabilityId: "power", value: "on" });
+
+// Your transport received provider messages; your adapter translated them.
+ledger = applyDeviceSignals(requested, [{ type: "acknowledgement", commandId: "cmd-1" }]).ledger; // still not confirmed
+ledger = applyDeviceSignals(ledger, [{ type: "report", deviceId: "desk-lamp", capabilityId: "power", value: "on" }]).ledger; // confirmed
+
+<DevicePowerControl label="Desk lamp" lifecycle={selectCapabilityLifecycle(ledger, "desk-lamp", "power")} />;
+```
+
+Acknowledgements never confirm, a lost link never fails a request, a timeout (`expireDeviceCommands`) never
+reads as a refusal, and replies to replaced requests are refused. The rules, the ownership table and a Home
+Assistant reference adapter (not published; binary power only, tested against synthetic fixtures) are in
+[§10 of the device contract](https://github.com/zedalleys/kinetixui/blob/main/docs/iot/DEVICE-INTERACTION-CONTRACT.md#10-device-ledger-and-provider-integration-m4b).
+No provider adapter ships in this package, and none has been validated against a live provider or a physical
+device yet.
+
 ## Monitoring and feedback (M3)
 
 Six components for watching devices rather than operating them, on one truth model: connectivity,

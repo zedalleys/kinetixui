@@ -1,0 +1,193 @@
+{
+  "_about": "Synthetic messages shaped like the Home Assistant WebSocket API (auth handshake, get_states result, call_service result, state_changed event). Written for the M4B reference proof from Home Assistant's public API documentation; not captured from a live instance. No access token, URL, user id or personal data. Entity ids and context ids are invented.",
+  "authOk": { "type": "auth_ok", "ha_version": "2026.10.0" },
+  "pong": { "id": 3, "type": "pong" },
+  "initialStates": {
+    "id": 2,
+    "type": "result",
+    "success": true,
+    "result": [
+      {
+        "entity_id": "light.desk_lamp",
+        "state": "off",
+        "attributes": { "friendly_name": "Desk lamp", "supported_color_modes": ["onoff"], "color_mode": null },
+        "last_changed": "2026-10-07T17:59:00.000000+00:00",
+        "last_updated": "2026-10-07T17:59:00.000000+00:00",
+        "last_reported": "2026-10-07T17:59:00.000000+00:00",
+        "context": { "id": "01SYNTHETICCONTEXT000000001", "parent_id": null, "user_id": null }
+      },
+      {
+        "entity_id": "switch.kettle_plug",
+        "state": "on",
+        "attributes": { "friendly_name": "Kettle plug" },
+        "last_changed": "2026-10-07T17:58:00.000000+00:00",
+        "last_updated": "2026-10-07T17:58:00.000000+00:00",
+        "context": { "id": "01SYNTHETICCONTEXT000000002", "parent_id": null, "user_id": null }
+      },
+      {
+        "entity_id": "sensor.hallway_temperature",
+        "state": "21.4",
+        "attributes": { "unit_of_measurement": "°C" },
+        "last_changed": "2026-10-07T17:59:30.000000+00:00",
+        "last_updated": "2026-10-07T17:59:30.000000+00:00",
+        "context": { "id": "01SYNTHETICCONTEXT000000003", "parent_id": null, "user_id": null }
+      }
+    ]
+  },
+  "callServiceOk": {
+    "id": 10,
+    "type": "result",
+    "success": true,
+    "result": { "context": { "id": "01SYNTHETICCONTEXT000000010", "parent_id": null, "user_id": null } }
+  },
+  "callServiceError": {
+    "id": 11,
+    "type": "result",
+    "success": false,
+    "error": { "code": "service_validation_error", "message": "Entity is not available" }
+  },
+  "deskLampOn": {
+    "id": 1,
+    "type": "event",
+    "event": {
+      "event_type": "state_changed",
+      "data": {
+        "entity_id": "light.desk_lamp",
+        "old_state": { "entity_id": "light.desk_lamp", "state": "off", "last_updated": "2026-10-07T17:59:00.000000+00:00" },
+        "new_state": {
+          "entity_id": "light.desk_lamp",
+          "state": "on",
+          "attributes": { "friendly_name": "Desk lamp", "supported_color_modes": ["onoff"], "color_mode": "onoff" },
+          "last_changed": "2026-10-07T18:00:01.200000+00:00",
+          "last_updated": "2026-10-07T18:00:01.200000+00:00",
+          "last_reported": "2026-10-07T18:00:01.200000+00:00",
+          "context": { "id": "01SYNTHETICCONTEXT000000010", "parent_id": null, "user_id": null }
+        }
+      },
+      "origin": "LOCAL",
+      "time_fired": "2026-10-07T18:00:01.200000+00:00",
+      "context": { "id": "01SYNTHETICCONTEXT000000010", "parent_id": null, "user_id": null }
+    }
+  },
+  "deskLampPhysicalOff": {
+    "id": 1,
+    "type": "event",
+    "event": {
+      "event_type": "state_changed",
+      "data": {
+        "entity_id": "light.desk_lamp",
+        "old_state": { "entity_id": "light.desk_lamp", "state": "on", "last_updated": "2026-10-07T18:00:01.200000+00:00" },
+        "new_state": {
+          "entity_id": "light.desk_lamp",
+          "state": "off",
+          "attributes": { "friendly_name": "Desk lamp", "supported_color_modes": ["onoff"], "color_mode": null },
+          "last_changed": "2026-10-07T18:05:00.000000+00:00",
+          "last_updated": "2026-10-07T18:05:00.000000+00:00",
+          "last_reported": "2026-10-07T18:05:00.000000+00:00",
+          "context": { "id": "01SYNTHETICCONTEXT000000020", "parent_id": null, "user_id": null }
+        }
+      },
+      "origin": "LOCAL",
+      "time_fired": "2026-10-07T18:05:00.000000+00:00",
+      "context": { "id": "01SYNTHETICCONTEXT000000020", "parent_id": null, "user_id": null }
+    }
+  },
+  "deskLampUnavailable": {
+    "id": 1,
+    "type": "event",
+    "event": {
+      "event_type": "state_changed",
+      "data": {
+        "entity_id": "light.desk_lamp",
+        "old_state": { "entity_id": "light.desk_lamp", "state": "off", "last_updated": "2026-10-07T18:05:00.000000+00:00" },
+        "new_state": {
+          "entity_id": "light.desk_lamp",
+          "state": "unavailable",
+          "attributes": { "friendly_name": "Desk lamp", "restored": true },
+          "last_changed": "2026-10-07T18:06:00.000000+00:00",
+          "last_updated": "2026-10-07T18:06:00.000000+00:00",
+          "context": { "id": "01SYNTHETICCONTEXT000000030", "parent_id": null, "user_id": null }
+        }
+      },
+      "origin": "LOCAL",
+      "time_fired": "2026-10-07T18:06:00.000000+00:00",
+      "context": { "id": "01SYNTHETICCONTEXT000000030", "parent_id": null, "user_id": null }
+    }
+  },
+  "reconnectStatesStillOff": {
+    "id": 2,
+    "type": "result",
+    "success": true,
+    "result": [
+      {
+        "entity_id": "light.desk_lamp",
+        "state": "off",
+        "attributes": { "friendly_name": "Desk lamp" },
+        "last_changed": "2026-10-07T18:08:00.000000+00:00",
+        "last_updated": "2026-10-07T18:08:00.000000+00:00",
+        "last_reported": "2026-10-07T18:08:00.000000+00:00",
+        "context": { "id": "01SYNTHETICCONTEXT000000040", "parent_id": null, "user_id": null }
+      }
+    ]
+  },
+  "reconnectStatesOn": {
+    "id": 2,
+    "type": "result",
+    "success": true,
+    "result": [
+      {
+        "entity_id": "light.desk_lamp",
+        "state": "on",
+        "attributes": { "friendly_name": "Desk lamp" },
+        "last_changed": "2026-10-07T18:08:00.000000+00:00",
+        "last_updated": "2026-10-07T18:08:00.000000+00:00",
+        "last_reported": "2026-10-07T18:08:00.000000+00:00",
+        "context": { "id": "01SYNTHETICCONTEXT000000041", "parent_id": null, "user_id": null }
+      }
+    ]
+  },
+  "staleDeskLampOn": {
+    "id": 1,
+    "type": "event",
+    "event": {
+      "event_type": "state_changed",
+      "data": {
+        "entity_id": "light.desk_lamp",
+        "old_state": null,
+        "new_state": {
+          "entity_id": "light.desk_lamp",
+          "state": "on",
+          "attributes": { "friendly_name": "Desk lamp" },
+          "last_changed": "2026-10-07T18:00:01.200000+00:00",
+          "last_updated": "2026-10-07T18:00:01.200000+00:00",
+          "context": { "id": "01SYNTHETICCONTEXT000000010", "parent_id": null, "user_id": null }
+        }
+      },
+      "origin": "LOCAL",
+      "time_fired": "2026-10-07T18:00:01.200000+00:00",
+      "context": { "id": "01SYNTHETICCONTEXT000000010", "parent_id": null, "user_id": null }
+    }
+  },
+  "unknownState": {
+    "id": 1,
+    "type": "event",
+    "event": {
+      "event_type": "state_changed",
+      "data": {
+        "entity_id": "switch.kettle_plug",
+        "old_state": null,
+        "new_state": {
+          "entity_id": "switch.kettle_plug",
+          "state": "unknown",
+          "attributes": { "friendly_name": "Kettle plug" },
+          "last_changed": "2026-10-07T18:01:00.000000+00:00",
+          "last_updated": "2026-10-07T18:01:00.000000+00:00",
+          "context": { "id": "01SYNTHETICCONTEXT000000050", "parent_id": null, "user_id": null }
+        }
+      },
+      "origin": "LOCAL",
+      "time_fired": "2026-10-07T18:01:00.000000+00:00",
+      "context": { "id": "01SYNTHETICCONTEXT000000050", "parent_id": null, "user_id": null }
+    }
+  }
+}
