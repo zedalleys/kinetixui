@@ -319,19 +319,32 @@ describe("M4C-A matrix (automated, fixture double)", () => {
     // The two superseded acknowledgements were refused, not applied to cmd-3.
     expect(h.diagnostics.records.filter((r) => r.cause === "acknowledgement" && r.rejection === "stale-response").map((r) => r.command)).toEqual(["cmd-1", "cmd-2"]);
   });
-  it("S20 boundary: after a full live-path run, nothing Home Assistant-specific is in the ledger", () => {
+  it("S20 boundary: at every step of a live-path run, nothing Home Assistant-specific is in the ledger", () => {
+    const PROVIDER = /light\.|switch\.|entity_id|call_service|turn_on|turn_off|context|user_id|attributes|service_validation_error|home_assistant_error|Free text/;
     const h = setup();
-    h.request("on");
-    h.ha.answer(h.ha.held[0]!, "service_validation_error");
-    h.advance(20);
-    h.request("off");
-    h.ha.answer(h.ha.held[0]!);
-    h.ha.applyState(LAMP, "off");
-    h.ha.drop();
-    h.advance(1_100);
-    const ledger = JSON.stringify(h.integration.getLedger());
-    expect(ledger).not.toMatch(/light\.|switch\.|entity_id|call_service|turn_on|turn_off|context|user_id|attributes|service_validation_error|home_assistant_error|Free text/);
-    expect(JSON.stringify(h.diagnostics.records)).not.toMatch(/light\.|entity_id|service_validation_error|Free text/);
+    const ledgers: string[] = [];
+    const step = (action: () => void) => {
+      action();
+      ledgers.push(JSON.stringify(h.integration.getLedger()));
+    };
+    step(() => h.request("on"));
+    step(() => {
+      h.ha.answer(h.ha.held[0]!, "service_validation_error");
+      h.advance(20);
+    });
+    step(() => h.request("off"));
+    step(() => {
+      h.ha.answer(h.ha.held[0]!);
+      h.advance(20);
+    });
+    step(() => {
+      h.ha.applyState(LAMP, "off");
+      h.advance(20);
+    });
+    step(() => h.ha.drop());
+    step(() => h.advance(1_100));
+    for (const ledger of ledgers) expect(ledger).not.toMatch(PROVIDER);
+    expect(JSON.stringify(h.diagnostics.records)).not.toMatch(PROVIDER);
   });
 });
 
