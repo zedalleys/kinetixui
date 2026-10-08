@@ -34,7 +34,8 @@ describe.skipIf(!configured)("M4C-B live provider (manual)", () => {
   const config = parsed.config;
   const pseudonyms = { [config.entityId]: "device-1.power" };
   const wire: unknown[] = [];
-  const shapes = new Map<string, string[]>();
+  /** Every key path seen per message type, across all variants (subscription ack, snapshot, call result, error). */
+  const shapes = new Map<string, Set<string>>();
   const results: { scenario: string; expected: string; observed: string; pass: boolean }[] = [];
   let lastSocket: WebSocket | null = null;
 
@@ -75,7 +76,9 @@ describe.skipIf(!configured)("M4C-B live provider (manual)", () => {
       if (kept === null) return;
       wire.push(kept);
       const type = (kept as { type?: string }).type ?? "unknown";
-      if (!shapes.has(type)) shapes.set(type, messageShape(kept));
+      const paths = shapes.get(type) ?? new Set<string>();
+      messageShape(kept).forEach((path) => paths.add(path));
+      shapes.set(type, paths);
     },
   });
   transport.send = session.send;
@@ -91,6 +94,7 @@ describe.skipIf(!configured)("M4C-B live provider (manual)", () => {
     results.push({ scenario, expected, observed, pass });
     diagnostics.scenario(scenario);
   };
+  const serviceCalls = () => wire.filter((m) => (m as { type?: string }).type === "call_service").length;
   const toggle = (value: unknown) => (value === "on" ? "off" : "on");
 
   afterAll(() => {
@@ -149,6 +153,7 @@ describe.skipIf(!configured)("M4C-B live provider (manual)", () => {
   it("L08–L10 link loss and reconnect: connecting, nothing failed or re-sent, the snapshot decides", async () => {
     diagnostics.scenario("L08-L10 reconnect");
     const want = toggle(power().confirmedValue);
+    const callsBefore = serviceCalls();
     integration.request("device-1", "power", want);
     const commandId = power().commandId;
     lastSocket?.close();
@@ -156,12 +161,12 @@ describe.skipIf(!configured)("M4C-B live provider (manual)", () => {
     const stageWhileDown = power().stage;
     const back = await waitFor(() => session.status() === "ready", 15_000);
     const settled = await waitFor(() => power().stage === "confirmed" || power().stage === "timed-out", config.timeoutMs + 2_000);
-    const sends = wire.filter((m) => (m as { type?: string }).type === "call_service").length;
+    const sends = serviceCalls() - callsBefore;
     record(
       "L08-L10 reconnect",
       "link connecting while down; request not failed; one service call total for it; confirmed by report or timed out by its deadline",
-      `connecting ${connecting}, stage while down ${stageWhileDown}, ready again ${back}, final ${power().stage} for ${power().commandId === commandId ? "same command" : "another command"}, call_service total ${sends}`,
-      connecting && stageWhileDown !== "failed" && back && settled,
+      `connecting ${connecting}, stage while down ${stageWhileDown}, ready again ${back}, final ${power().stage} for ${power().commandId === commandId ? "same command" : "another command"}, call_service for it ${sends}`,
+      connecting && stageWhileDown !== "failed" && back && settled && sends === 1,
     );
     expect(back).toBe(true);
   });
@@ -180,7 +185,7 @@ describe.skipIf(!configured)("M4C-B live provider (manual)", () => {
 });
 
 /** Live message shapes against the synthetic fixtures': what the fixtures got wrong, if anything. */
-function compareShapes(live: Map<string, string[]>) {
+function compareShapes(live: Map<string, Set<string>>) {
   const fixtureShapes = new Map<string, Set<string>>();
   for (const message of Object.values(fixtures as Record<string, unknown>)) {
     const type = (message as { type?: string })?.type;
@@ -189,7 +194,8 @@ function compareShapes(live: Map<string, string[]>) {
     messageShape(message).forEach((path) => set.add(path));
     fixtureShapes.set(type, set);
   }
-  return [...live].map(([type, paths]) => {
+  return [...live].map(([type, seen]) => {
+    const paths = [...seen].sort();
     const known = fixtureShapes.get(type);
     return { type, inFixtures: Boolean(known), onlyLive: known ? paths.filter((p) => !known.has(p)) : paths };
   });

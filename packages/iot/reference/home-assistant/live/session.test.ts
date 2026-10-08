@@ -66,6 +66,23 @@ describe("session: handshake and credentials", () => {
     expect(h.link()).toBe("online");
   });
 
+  for (const step of ["subscribe_events", "get_states"] as const) {
+    it(`is not ready when ${step} fails: it carries no command and reconnects with backoff`, () => {
+      const h = setup();
+      h.ha.refuseNext(step);
+      h.session.start();
+      h.clock.advance(50);
+      expect(h.session.status()).toBe("waiting-to-reconnect");
+      expect(h.statuses).not.toContain("ready");
+      expect(h.link()).toBe("connecting");
+      expect(h.session.send({ type: "call_service", domain: "light", service: "turn_on", target: { entity_id: LAMP } })).toBeNull();
+      expect(h.ha.openConnections()).toBe(0);
+      h.clock.advance(1_050);
+      expect(h.session.status()).toBe("ready");
+      expect(h.ha.connections).toHaveLength(2);
+    });
+  }
+
   it("never passes the token to the wire log, and reads it only when authenticating", () => {
     const h = setup();
     h.session.start();

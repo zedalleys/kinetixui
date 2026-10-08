@@ -8,6 +8,7 @@
  * integration's transport for outbound service calls.
  *
  *   connect ─▶ auth_required ─▶ auth ─▶ auth_ok ─▶ subscribe_events(state_changed) ─▶ get_states ─▶ ready
+ *                                                       (both must succeed; an error result reconnects)
  *      ▲                                   │
  *      │                              auth_invalid ─▶ unauthorized (stops; never retries a refused credential)
  *      └── backoff ◀── socket closed (not by us) ─▶ integration.linkLost()  (devices: connecting)
@@ -75,6 +76,8 @@ export function createHomeAssistantSession(options: HomeAssistantSessionOptions)
   let nextId = 1;
   let subscriptionId: number | null = null;
   let statesRequestId: number | null = null;
+  /** Handshake requests still waiting for a successful result. `ready` needs both. */
+  const awaiting = new Set<number>();
   let attempt = 0;
   let reconnectTimer: unknown = null;
   /** Bumped per connection, so a late callback from a socket we already left changes nothing. */
@@ -98,6 +101,7 @@ export function createHomeAssistantSession(options: HomeAssistantSessionOptions)
     nextId = 1;
     subscriptionId = null;
     statesRequestId = null;
+    awaiting.clear();
     setStatus("connecting");
     socket = options.connect({
       message: (data) => {
@@ -137,14 +141,27 @@ export function createHomeAssistantSession(options: HomeAssistantSessionOptions)
         // ledger orders the two by observation time if they overlap.
         statesRequestId = nextMessageId();
         write({ id: statesRequestId, type: "get_states" });
+        awaiting.add(subscriptionId).add(statesRequestId);
         return;
       case "auth_invalid":
         // A refused credential does not get better by retrying it. Stop, and say we know nothing.
         stop("unauthorized");
         return;
     }
+    const result = message.type === "result" ? (message as { id: number; success: boolean }) : null;
+    if (result && awaiting.has(result.id)) {
+      if (!result.success) {
+        // Without the subscription or the snapshot the view cannot be trusted: drop this connection and
+        // reconnect with backoff, exactly as if the link had gone. Nothing is ready, so nothing was sent.
+        const current = socket;
+        dropped();
+        current?.close();
+        return;
+      }
+      awaiting.delete(result.id);
+    }
     options.integration.receive(message);
-    if (message.type === "result" && message.id === statesRequestId) setStatus("ready");
+    if (status === "subscribing" && awaiting.size === 0 && statesRequestId !== null) setStatus("ready");
   };
 
   const dropped = () => {

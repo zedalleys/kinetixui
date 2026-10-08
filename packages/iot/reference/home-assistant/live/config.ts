@@ -39,7 +39,8 @@ export function readLiveConfig(env: Env): LiveConfigResult {
         problems.push("KX_HA_URL must use wss:// (ws:// needs KX_HA_ALLOW_INSECURE=1)");
       }
       if (!parsed.pathname.endsWith("/api/websocket")) problems.push("KX_HA_URL must end with /api/websocket");
-      if (parsed.username || parsed.password || parsed.search) problems.push("KX_HA_URL must not carry credentials or a query string");
+      // A fragment makes the WebSocket constructor throw before the session can connect.
+      if (parsed.username || parsed.password || parsed.search || parsed.hash) problems.push("KX_HA_URL must not carry credentials, a query string or a fragment");
     }
   }
   const entityId = env.KX_HA_ENTITY ?? "";

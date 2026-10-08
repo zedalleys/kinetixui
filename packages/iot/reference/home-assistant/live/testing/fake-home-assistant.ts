@@ -78,6 +78,8 @@ export function createFakeHomeAssistant(options: FakeHomeAssistantOptions) {
   const received: Record<string, unknown>[] = [];
   const held: HeldCall[] = [];
   let mode = options.calls ?? "auto";
+  /** Handshake request types the fake answers with an error, once each. */
+  const refusals = new Set<string>();
 
   const deliver = (connection: Connection, message: unknown, delay = latency) => {
     clock.scheduler.setTimeout(() => {
@@ -139,6 +141,10 @@ export function createFakeHomeAssistant(options: FakeHomeAssistantOptions) {
       // Home Assistant closes the connection on a non-increasing id; this fake records it for tests to assert on.
       if (!(id > connection.lastId)) throw new Error(`message id ${id} did not increase (last ${connection.lastId})`);
       connection.lastId = id;
+      if (refusals.delete(message.type as string)) {
+        deliver(connection, { id, type: "result", success: false, error: { code: "unknown_error", message: "refused by the test" } });
+        return;
+      }
       switch (message.type) {
         case "subscribe_events":
           connection.subscriptions.add(id);
@@ -163,6 +169,10 @@ export function createFakeHomeAssistant(options: FakeHomeAssistantOptions) {
           return;
         }
       }
+    },
+    /** Answers the next `subscribe_events` or `get_states` with an error result. */
+    refuseNext(type: "subscribe_events" | "get_states") {
+      refusals.add(type);
     },
     /** Switch between automatic and held service calls mid-scenario. */
     setCalls(next: "auto" | "hold") {

@@ -83,7 +83,8 @@ describe("live configuration", () => {
     };
     expect(problems({ KX_HA_URL: "ws://ha.local/api/websocket" })).toEqual(["KX_HA_URL must use wss:// (ws:// needs KX_HA_ALLOW_INSECURE=1)"]);
     expect(problems({ KX_HA_URL: "ws://ha.local/api/websocket", KX_HA_ALLOW_INSECURE: "1" })).toEqual([]);
-    expect(problems({ KX_HA_URL: "wss://u:p@ha.example.test/api/websocket" })).toEqual(["KX_HA_URL must not carry credentials or a query string"]);
+    expect(problems({ KX_HA_URL: "wss://u:p@ha.example.test/api/websocket" })).toEqual(["KX_HA_URL must not carry credentials, a query string or a fragment"]);
+    expect(problems({ KX_HA_URL: "wss://ha.example.test/api/websocket#x" })).toEqual(["KX_HA_URL must not carry credentials, a query string or a fragment"]);
     expect(problems({ KX_HA_ENTITY: "lock.front_door" })).toEqual(["KX_HA_ENTITY must be one light.* or switch.* entity"]);
   });
 });
