@@ -701,13 +701,165 @@ produces `failed`. Unknown ≠ offline: a device nobody has reported on, or the 
 Reports may be late, out of order, or caused by someone else; transport time and device observation time stay
 separate clocks.
 
-## 11. What remains
+## 11. Live-provider validation (M4C)
+
+M4C proves the M4B architecture against real Home Assistant behaviour and, later, a real lamp. It adds no
+architecture to `@kinetixui/iot`: everything below lives in `packages/iot/reference/home-assistant/live/`,
+outside `src`, and is not built, exported or published. No changeset.
+
+**Status: M4C-A (integration readiness) is done. M4C-B (live provider) and M4C-C (physical device) are BLOCKED**:
+no authorized Home Assistant instance or physical device has been available. Nothing in this section claims
+a live or physical result.
+
+### 11.1 Integration architecture
+
+```
+ server (holds the token)                                      browser / app UI
+ ┌──────────────────────────────────────────────────────┐      ┌─────────────────────┐
+ │ session.ts   socket · auth · subscribe · ids ·        │      │ DevicePowerControl  │
+ │              reconnect · cleanup                      │      │  (unchanged)        │
+ │   │ messages ▲ service calls                          │      └─────────▲───────────┘
+ │   ▼          │                                        │                │ selectors
+ │ example-app  receive · request · expire · linkLost ── │── ledger ──────┘
+ │   │ adapter.translate / adapter.encode (pure)         │  (app-owned value)
+ │   ▼                                                   │
+ │ @kinetixui/iot/functions  applyDeviceSignals · requestDeviceChange · expireDeviceCommands
+ └──────────────────────────────────────────────────────┘
+```
+
+| File | Owner in a real product | What it does |
+| --- | --- | --- |
+| `live/session.ts` | application | The Home Assistant WebSocket session: `auth_required` → `auth` → `auth_ok`, then `subscribe_events(state_changed)` **before** `get_states`; message ids from 1 per connection, always increasing; reconnect with backoff (1 s, 2 s, 5 s, 10 s, 30 s, last repeats); `stop()` unsubscribes and closes. It is the integration's transport. |
+| `example-app.tsx` | application | Gains a `scheduler` (one timer per sent command, at its deadline, expiring only that command), `expire(commandId)`, `linkClosed()` (devices `unknown` when the app stops trying) and `dispose()`. `send` may now return `null`: the request is refused as `not-sent`, never queued. |
+| `live/config.ts` | application | Reads the live run's environment. No defaults for endpoint, token, entity or evidence location; the token never enters the parsed config. |
+| `live/sanitize.ts` | evidence | Keeps only types, ids, outcomes, the test entity's on/off state and Home Assistant's timestamps, under a pseudonym. Drops tokens, attributes, `context`, error text and every other entity. `findSensitiveContent` refuses a file that still holds a secret, a URL, a private address, a user id or a real entity id. |
+| `live/diagnostics.ts` | application (opt-in) | Records each ledger transition: scenario, time, cause, device, capability, command, lifecycle before → after, connectivity before → after, rejection code. |
+| `live/testing/fake-home-assistant.ts` | tests | A manual clock and an in-memory Home Assistant that speaks the same protocol subset. |
+| `live/live-harness.test.tsx`, `session.test.ts`, `sanitize.test.ts` | tests | The automated column of the matrix (§11.5), the presentation table, session mechanics, sanitizer and config. In CI. |
+| `live/live-provider.e2e.ts` + `vitest.live.config.ts` | evidence (manual) | The M4C-B run against a real instance. Never in `pnpm test` or CI; skips everything without configuration. |
+
+### 11.2 Home Assistant transport boundary
+
+- **Credential.** A long-lived access token for a Home Assistant user that may switch only the test entity. It is
+  read from the server's environment at the moment of authentication, never stored by the session, never
+  logged (the wire log shows `[redacted]`), and never sent to a browser. A browser app talks to its own server,
+  which holds the session; that proxy is the application's and is not built here.
+- **Authorization.** A refused credential (`auth_invalid`) stops the session: no retry, devices read `unknown`.
+- **Transport security.** `wss://` only; `ws://` needs `KX_HA_ALLOW_INSECURE=1` (a LAN instance), and a URL
+  with credentials or a query string is refused.
+- **Commands are never retried or queued.** Reconnecting restores the view (subscription and a fresh snapshot),
+  not commands. A command sent before a drop stays open until a report, a result or its own deadline settles it.
+- **Unsupported devices.** An entity the application did not map is ignored; a value the adapter cannot express
+  is refused as `unsupported` and nothing is sent.
+
+### 11.3 Real-provider message mapping
+
+Unchanged from §10.7. What M4C adds is a way to check it: the live run records every message's shape
+(`messageShape`, key paths only) and writes `shapes.json`, listing per message type the fields a live instance
+sends that the synthetic fixtures lack. Until that run happens, the mapping is still from Home Assistant's
+public documentation.
+
+### 11.4 Evidence classification
+
+| Class | What counts | Where it lives |
+| --- | --- | --- |
+| **Automated** | Repeatable tests against the in-memory double on a manual clock. Proves the code follows the contract under the modelled protocol. | `live/*.test.ts(x)`; CI. |
+| **Live provider** | Sanitized messages and ledger transitions from an authorized Home Assistant instance. Proves the protocol model matches reality. | `KX_HA_EVIDENCE_DIR`: `wire.json`, `diagnostics.json`, `results.json`, `shapes.json`. |
+| **Physical** | A person's observation of the device itself (the lamp lit, the plug clicked) next to the run's records. | The checklist in §11.6, filled in by the operator. |
+| **Blocked** | A prerequisite was not available. Never counted as passed. | — |
+
+### 11.5 Evidence matrix
+
+Automated rows are tests in `live/live-harness.test.tsx` (S01–S20) unless noted. Every live and physical cell is
+**BLOCKED** (no instance, no device). The live run covers L01–L11; rows it does not cover stay automated-only.
+
+| # | Scenario | Expected | Automated | Live (run step) | Physical |
+| --- | --- | --- | --- | --- | --- |
+| S01 | Initial state | Real state displayed once ready | pass | BLOCKED (L01) | BLOCKED |
+| S02 | Request ON | `requested`; reported unchanged; one `call_service` | pass | BLOCKED (L02) | BLOCKED |
+| S03 | Provider acknowledgement | `acknowledged`, not confirmed | pass | BLOCKED (L03) | — |
+| S04 | Device reports ON | `confirmed` | pass | BLOCKED (L04) | BLOCKED |
+| S05 | Request OFF while ON open | supersedes | pass | BLOCKED (L11) | — |
+| S06 | Device reports OFF | confirmed OFF | pass | BLOCKED (L06) | BLOCKED |
+| S07 | Physical switch OFF | UI updates, no app request | pass | BLOCKED (L07) | BLOCKED |
+| S08 | Provider disconnect | `connecting`; command not failed; not re-sent | pass | BLOCKED (L08) | — |
+| S09 | Device unavailable | offline; pending reads "not confirmed" | pass | not in live run | BLOCKED (unplug) |
+| S10 | App reconnect | link back confirms nothing | pass | BLOCKED (L09) | — |
+| S11 | Reconnect, unexpected value | reported updates; request open | pass | not in live run | BLOCKED |
+| S12 | Reconnect, requested value | confirms by the usual rules | pass | BLOCKED (L10) | — |
+| S13 | Exact deadline | `timed-out` at the deadline, not rejected | pass | not in live run | — |
+| S14 | Late response | ack cannot reopen; later report of the value confirms | pass | not in live run | — |
+| S15 | Superseded response | refused `stale-response` | pass | BLOCKED (L11) | — |
+| S16 | Out-of-order report | refused `stale-report` | pass | not in live run | — |
+| S17 | Unsupported command | nothing sent; `failed`/`unsupported` | pass (+ S17b not-sent) | not in live run | — |
+| S18 | Provider rejection | `failed` only on an explicit error | pass | not in live run | — |
+| S19 | Rapid toggles | last request settles; earlier acks refused | pass | BLOCKED (L11) | BLOCKED |
+| S20 | Boundary | no provider vocabulary in the ledger at any step | pass | — | — |
+
+Presentation (brief §6) is a second table in the same file: idle, requested, acknowledged, offline with a pending
+request, reconnecting, timed out, rejected, confirmed, physical override, credential refused, unsupported. Each row
+checks `aria-checked`, `aria-busy`, disabled, the visible label, the accessible description, zero axe violations
+and keyboard reachability. Binary power has no adjusted-value state (documented gap).
+
+### 11.6 Physical-device checklist (M4C-C, manual)
+
+One smart light or plug, binary power, paired to the Home Assistant instance used in M4C-B. The operator records
+the time, what the device did, and what the control showed:
+
+1. Start the live run with `KX_HA_PHYSICAL_WAIT_MS=60000`. The lamp's real state matches L01.
+2. L02–L06: the lamp turns on, then off, and the control shows "Turning on" until the lamp is lit, never before.
+3. L07: press the device's own button during the wait. The control follows without a request.
+4. Unplug the device. The control reads offline; a pending request reads "not confirmed".
+5. Plug it back in. Connectivity returns; the control shows what the device reports, not what was requested.
+6. Request a change, then unplug before it applies. After the deadline the control reads "may still apply", not "rejected".
+7. Toggle quickly three times. The lamp ends where the last request asked; the control agrees.
+
+### 11.7 Setup, operational security and troubleshooting
+
+Setup: create a Home Assistant user limited to one test entity; create a long-lived token for it; on a machine
+you control set `KX_HA_URL`, `KX_HA_TOKEN`, `KX_HA_ENTITY`, `KX_HA_EVIDENCE_DIR` (optionally `KX_HA_TIMEOUT_MS`,
+`KX_HA_PHYSICAL_WAIT_MS`) and run `pnpm --filter @kinetixui/iot test:live`. Revoke the token afterwards. Never
+put the token in a repository, a CI secret shared with pull requests, a browser bundle, or a chat.
+
+| Symptom | Likely cause |
+| --- | --- |
+| All live tests skipped | Configuration missing or invalid; `readLiveConfig` lists which. |
+| Session `unauthorized` | Token revoked or wrong; the session will not retry. |
+| Stuck `waiting-to-reconnect` | URL, TLS or network; the backoff tops out at 30 s. |
+| Requests `not-sent` | The session was not `ready` when the control was pressed. |
+| `Refusing to write …` | The sanitizer found something that must not be kept; fix the pseudonym map, never the check. |
+
+### 11.8 Findings and known limitations
+
+- **F1 (fixture finding, open).** Home Assistant's own `unknown` state reports no value (an M4B decision), so the
+  last known value stays on screen at `ready`, as if current. Whether a live light reports `unknown` (after a Home
+  Assistant restart, say) needs M4C-B; until then the adapter is unchanged.
+- **F2 (fixture finding, open).** An offline device with an open request is labelled "Turning on" with the
+  description "Device offline. The requested change is not confirmed." The description is right; the label
+  still names the request. Pre-existing (M3/3D); no change without live evidence.
+- Confirmation is by value: a report of the requested value confirms the open request whoever caused it (report
+  origin evidence is deferred from M4B). Rapid toggles can therefore confirm the last request on an earlier report.
+- No heartbeat (`ping`): a half-open socket is noticed only when the operating system closes it.
+- Home Assistant only. No MQTT, Matter, Bluetooth or cloud transport; binary power only.
+
+### 11.9 Roadmap naming
+
+The public roadmap (`/docs/iot`, written before this work) lists **M4** as camera, security and spatial
+presentation. The real-device integration work has since shipped as M4A (lifecycle edges), M4B (device ledger)
+and M4C (validation). Proposal, pending the owner's confirmation before any public page changes:
+
+- Name the shipped track **M4 · Device integration** (M4A, M4B, M4C), since that is what the repository and its
+  history already say.
+- Move camera, security and spatial to **M7**, marked "previously listed as M4". M5 and M6 keep their numbers, so
+  no other commitment moves.
+
+## 12. What remains
 
 - **Camera, security and spatial** (labelled M4 in the public roadmap before the real-device integration work
   took the M4A/M4B names): camera preview and availability, security event presentation,
   privacy and recording truth, spatial overlays — with no embedded transport or video engine.
-- **Real-provider and physical validation of the ledger** (§10.8): the Home Assistant adapter against a live
-  instance, then a physical light or plug. Also deferred from M4B: report origin evidence (ending a pending request
+- **Live-provider and physical validation of the ledger** (§11, M4C-B and M4C-C): blocked on an authorized Home
+  Assistant instance and a physical light or plug. Also deferred from M4B: report origin evidence (ending a pending request
   as overridden), cancel and retry through the ledger, and a React helper, which waits until the same wiring
   repeats in real applications.
 - **Manual screen-reader verification** of the M2A, M2B and M3 announcements and phrases (VoiceOver, NVDA, TalkBack). Only
