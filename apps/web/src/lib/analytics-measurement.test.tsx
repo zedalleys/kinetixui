@@ -234,6 +234,24 @@ describe("session-level measurement", () => {
     expect(summarizeSessions([ev("s", "installation_viewed", 0)])).toMatchObject({ qualifiedEvaluationSessions: 1, adoptionIntentSessions: 1, progressionSessions: 1 });
   });
 
+  it("counts Progression when ANY intent signal follows the first evaluation, not only the session's first intent", () => {
+    // intent → evaluation → later intent. Comparing the FIRST intent with the first evaluation drops this
+    // session; dashboard tile 8b did exactly that until 2026-10-09 (marketing/analytics.md §11).
+    expect(summarizeSessions([ev("s", "cli_command_copied", 0), ev("s", "component_viewed", 5), ev("s", "install_command_copied", 10)]).progressionSessions).toBe(1);
+    expect(
+      summarizeSessions([
+        ev("s", "cta_clicked", 0, { target: "adopt_tokens" }),
+        ev("s", "cta_clicked", 3, { target: "platform_coverage" }),
+        ev("s", "cta_clicked", 6, { target: "adopt_blocks" }),
+      ]).progressionSessions,
+    ).toBe(1);
+  });
+
+  it("counts a session with no $pageview as an eligible arriving session", () => {
+    // Observed live: sessions holding only $pageleave. A $pageview-only denominator drops them.
+    expect(summarizeSessions([ev("p", "$pageleave", 0), ev("v", "$pageview", 0)]).eligibleSessions).toBe(2);
+  });
+
   it("keeps Progression bounded by Qualified Evaluation, and never divides intent by evaluation", () => {
     const s = summarizeSessions([ev("a", "cli_command_copied", 0), ev("b", "install_command_copied", 0), ev("c", "component_viewed", 0)]);
     expect(s.adoptionIntentSessions).toBeGreaterThan(s.qualifiedEvaluationSessions); // why AI ÷ QE is not a rate
