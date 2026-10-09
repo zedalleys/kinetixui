@@ -342,7 +342,8 @@ The executable form is `summarizeSessions` in `apps/web/src/lib/analytics-measur
 case for each rule.
 
 1. **Count distinct `$session_id`s**, never events and never persons. A native funnel defaults to persons, so
-   it must be aggregated by `properties.$session_id`.
+   it must be aggregated by `properties.$session_id`. The one exception is *Returning evaluators*, whose unit is
+   deliberately the anonymous ID (below).
 2. **Eligible arriving sessions = sessions with any event**, not `$pageview` sessions (§4).
 3. **A session is campaign-attributed when any of its events carries `kx_campaign`** (§8), not only a
    `$pageview`.
