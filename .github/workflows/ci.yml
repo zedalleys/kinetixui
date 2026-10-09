@@ -283,6 +283,9 @@ jobs:
             exit 1
           fi
 
+      - name: Documented React onboarding in a clean consumer
+        run: node scripts/adoption/react-consumer.mjs
+
       - name: Build site
         run: pnpm build:web
 
