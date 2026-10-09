@@ -192,7 +192,7 @@
       "metricToWatch": "adopt_tokens on /docs/tokens",
       "status": "blocked",
       "result": null,
-      "blockedBy": "Author correction supplied in the developer adoption audit request on 2026-10-08: October 7 actual posts concerned IoT. PR #321 incorrectly closed LI-005 (token boundary) as published. Verify the actual post identity and link before closing LI-005 or adding an IoT publication row; see october-7-correction.md."
+      "blockedBy": "Author correction on 2026-10-08 says October 7 actual posts concerned IoT. The short link recorded by PR #321 was independently opened and verified as an IoT post, not LI-005 token-boundary copy; canonical URL and evidence are preserved in october-7-correction.md. Locate any separate LI-005 publication before closing this asset. No replacement IoT row or counts are inferred."
     },
     {
       "date": null,
