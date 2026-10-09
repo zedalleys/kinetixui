@@ -48,7 +48,13 @@ what PostHog will actually receive. Not inferred — executed.
 | --- | --- | --- |
 | LinkedIn | `https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_parity_proof` | `kx_source: linkedin`, `kx_medium: social`, `kx_campaign: kx_p1_a_parity_proof` |
 | X | `https://kinetixui.com/docs/platforms?utm_source=x&utm_medium=social&utm_campaign=kx_p1_a_parity_proof` | `kx_source: x`, `kx_medium: social`, `kx_campaign: kx_p1_a_parity_proof` |
-| DEV article CTA | `https://kinetixui.com/docs/platforms?utm_source=devto&utm_medium=community&utm_campaign=kx_p1_a_parity_proof` | `kx_source: devto`, `kx_medium: community`, `kx_campaign: kx_p1_a_parity_proof` |
+| DEV article CTA | `https://kinetixui.com/docs/platforms?utm_source=devto&utm_medium=referral&utm_campaign=kx_p1_a_parity_proof&utm_content=art_primary` | `kx_source: devto`, `kx_medium: referral`, `kx_campaign: kx_p1_a_parity_proof`, `kx_content: art_primary` |
+
+**2026-10-09:** the DEV row now matches ART-001's built URL in `../../register.json`, which
+`check:distribution` validates and which ART-002 already used (`utm_medium=referral`, `utm_content=art_primary`).
+The earlier `community` medium was valid but disagreed with the register, so the distribution row could not have
+recorded it. The LinkedIn and X rows above predate `utm_content`; paste the register's built URLs for LI-001 and
+X-001 instead (`utm_content=li_primary` / `x_thread`).
 
 All three also carry `kx_landing_page: /docs/platforms`.
 

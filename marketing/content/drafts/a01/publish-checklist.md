@@ -67,7 +67,8 @@ past tense. See `sources.md`.
 - [ ] `<DEV_ARTICLE_URL>` → the real URL in `linkedin.md` (A and B) and
       `x-thread.md` (post 9)
 - [ ] Append the campaign parameters from `measurement.md` per channel
-      (LinkedIn/X: `utm_medium=social`; DEV CTA: `utm_medium=community` —
+      (paste each asset's built `url` from `../../register.json`: DEV CTA
+      `utm_medium=referral&utm_content=art_primary`, LinkedIn/X `utm_medium=social` —
       `article` is not an accepted medium and is silently replaced)
 - [ ] Do **not** add campaign parameters to the DEV article URL itself — it is
       not our property and our parser never sees those hits
