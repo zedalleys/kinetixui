@@ -24,14 +24,26 @@ source it's built from.
 
 ## Setup
 
-The `ui` module is `com.android.library`, `namespace com.kinetixui.ui`,
-`compileSdk 37` / `minSdk 24`, Compose enabled, JDK 17. It depends only on
-`compose-bom` + `androidx.compose.ui` / `material3`, and builds with Android
-Gradle Plugin 9.4.1 and the Kotlin Compose compiler plugin 2.4.20.
+KinetixUI for Compose is **source-integrated**: you copy the library module from
+a repository checkout into your app. There is no Maven Central dependency to add.
 
-Start from an Android app that already builds, with `android.useAndroidX=true`
-in `gradle.properties`. Copy `packages/ui-compose/ui` from a repository checkout
-into your project as `kinetixui-ui`, then register it:
+### Before you start
+
+- An Android app that already builds, using Gradle Kotlin DSL (`.kts` files) and
+  `android.useAndroidX=true` in `gradle.properties`.
+- JDK 17 or newer and an Android SDK that Gradle can find.
+- Android Gradle Plugin 9.4.1, the Kotlin Compose compiler plugin 2.4.20 and
+  `compileSdk 37`. These are the versions the module builds with and that the
+  check below uses; other versions are not tested. That plugin version needs a
+  Gradle 9 wrapper (the repository uses 9.8.0).
+
+The `ui` module is `com.android.library`, `namespace com.kinetixui.ui`,
+`minSdk 24`, and depends only on `compose-bom` + `androidx.compose.ui` / `material3`.
+
+### 1. Copy the module and register it
+
+Copy `packages/ui-compose/ui` into your project as a folder named `kinetixui-ui`,
+next to your `app` folder, then register it:
 
 ```kotlin
 // settings.gradle.kts: add to your existing settings
@@ -39,9 +51,10 @@ include(":kinetixui-ui")
 project(":kinetixui-ui").projectDir = file("kinetixui-ui")
 ```
 
+### 2. Declare the plugin versions
+
 The copied module applies its plugins without versions, so your root build
-script declares them. Keep these versions; an older Android Gradle Plugin cannot
-build `compileSdk 37`.
+script declares them:
 
 ```kotlin
 // build.gradle.kts (root)
@@ -52,12 +65,18 @@ plugins {
 }
 ```
 
+### 3. Add KinetixUI and Compose to your app module
+
 Your app module needs Compose enabled, the same `compileSdk`, and its own
-Compose dependencies: the module keeps `material3` internal, so `Text`,
+Compose dependencies. The KinetixUI module keeps `material3` internal, so `Text`,
 `Column` and `Modifier` come from your app's dependencies, not from KinetixUI.
 
 ```kotlin
 // app/build.gradle.kts: add to your app module
+plugins {
+    id("org.jetbrains.kotlin.plugin.compose")
+}
+
 android {
     compileSdk = 37
     buildFeatures { compose = true }
@@ -72,6 +91,8 @@ dependencies {
 ```
 
 ## First working screen
+
+### 4. Add the screen
 
 Add this file to your app module. `KinetixTheme` resolves every `Kinetix*`
 composable to the right light or dark token set; it defaults to
@@ -95,6 +116,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kinetixui.ui.*
@@ -119,14 +142,19 @@ fun FirstScreen() {
                 KinetixInput(value = email, onValueChange = { email = it }, isError = emailError != null)
                 emailError?.let { KinetixFieldMessage(text = it) }
             }
-            // Merging the row gives assistive technology one switch named by its visible label.
             Row(
-                modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                KinetixLabel(text = "Product updates")
-                KinetixSwitch(checked = updates, onCheckedChange = { updates = it })
+                // KinetixSwitch has no label parameter: name the switch itself, and hide the
+                // visible text from assistive technology so it is not read twice.
+                KinetixLabel(text = "Product updates", modifier = Modifier.clearAndSetSemantics {})
+                KinetixSwitch(
+                    checked = updates,
+                    onCheckedChange = { updates = it },
+                    modifier = Modifier.semantics { contentDescription = "Product updates" },
+                )
             }
             KinetixButton(onClick = { submitted = true }, variant = KinetixButtonVariant.Primary) {
                 Text("Get started")
@@ -136,7 +164,9 @@ fun FirstScreen() {
 }
 ```
 
-Show it from your activity:
+### 5. Show it from your activity
+
+Call `FirstScreen()` from your launcher activity's `setContent`:
 
 ```kotlin
 // MainActivity.kt
@@ -152,10 +182,20 @@ class MainActivity : ComponentActivity() {
 }
 ```
 
-You should see an Email field, a Product updates switch and a **Get started**
-button. Tapping **Get started** with no `@` in the email shows
-"Enter an email address." under the field. Add a `package` line matching your
-app if your files use one.
+Add a `package` line matching your app to both files if your sources use one.
+
+### 6. Run it
+
+Run the app from Android Studio, or build it with `./gradlew :app:assembleDebug`.
+You should see an Email field, a Product updates switch that starts on, and a
+**Get started** button. Tapping **Get started** while the email has no `@` shows
+"Enter an email address." under the field; typing an address clears it.
+Tapping the switch turns it off.
+
+These steps are checked on every Compose change: CI copies the module into a
+new app, applies the fenced code above exactly, builds the app, and runs the
+screen's behaviour in a Robolectric test on the JVM. That is not a test on a
+device or emulator.
 
 `KinetixColorScheme.current` exposes the active `KinetixColors` set if you
 need a token directly.
