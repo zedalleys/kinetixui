@@ -5,7 +5,19 @@ export const metadata = {
 
 # Installation
 
-KinetixUI ships two ways. Use whichever fits — they're the same tokens.
+KinetixUI is cross-platform design system infrastructure. Choose your platform first:
+
+- **React** — use the registry or npm instructions below in an existing React app.
+- **[Angular (Preview)](/docs/angular)** — Angular 21, standalone components, and plain CSS; the React CLI does not install Angular components.
+- **[SwiftUI](/docs/swiftui)** — a local SwiftPM package from a repository checkout; iOS 16 / macOS 13 or newer.
+- **[Jetpack Compose](/docs/compose)** — the Android library module from a repository checkout; no Maven Central install yet.
+- **[Flutter](/docs/flutter)** — a local path dependency from a repository checkout; no pub.dev install yet.
+
+The rest of this page covers **React with Tailwind CSS 3**. Tailwind 4 setup is not verified here.
+Start with an app that already renders React and loads a global stylesheet. The CLI adds component source
+and tokens; it does not create an app, configure Tailwind, or configure your import aliases.
+
+React ships two ways. Both use the same tokens.
 
 | What you install | Registry (own the code) | npm (versioned dependency) |
 | --- | --- | --- |
@@ -68,7 +80,7 @@ for every flag.
 per-component step:
 
 ```bash
-npm i @kinetixui/ui
+npm i @kinetixui/ui @kinetixui/tokens
 ```
 
 ```tsx
@@ -76,6 +88,14 @@ import { Button, Field, FieldLabel } from "@kinetixui/ui";
 ```
 
 ## Tailwind
+
+Install the preset's package for either React route, and install Tailwind's build tools if your app does
+not already have them:
+
+```bash
+npm i @kinetixui/ui
+npm i -D tailwindcss@3 postcss autoprefixer
+```
 
 Map the utilities onto the contract — KinetixUI ships a preset:
 
@@ -86,7 +106,13 @@ import preset from "@kinetixui/ui/tailwind.config";
 export default {
   presets: [preset],
   darkMode: ["class"],
-  content: ["./src/**/*.{ts,tsx}"],
+  content: [
+    "./src/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    // npm components live outside src; scan their shipped source for utilities.
+    "./node_modules/@kinetixui/ui/src/**/*.{ts,tsx}",
+  ],
 };
 ```
 
@@ -104,6 +130,58 @@ export default {
   does promise on its own is that every loop it ships stops under reduced motion.
   See [Foundations](/docs/foundations#motion).
 </Callout>
+
+## First working React component
+
+For the **npm route**, load the token CSS and Tailwind layers in the global stylesheet that your app imports:
+
+```css
+@import "@kinetixui/tokens/css";
+@import "@kinetixui/tokens/css/dark";
+@import "@kinetixui/tokens/css/extras";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+Use your existing PostCSS configuration, or create `postcss.config.cjs`:
+
+```js
+module.exports = {
+  plugins: { tailwindcss: {}, autoprefixer: {} },
+};
+```
+
+Replace your app's component with this example, then run its usual development command:
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import { Button } from "@kinetixui/ui";
+
+export default function App() {
+  const [saved, setSaved] = useState(false);
+  return (
+    <Button variant="Primary" onClick={() => setSaved(true)}>
+      {saved ? "Saved" : "Save"}
+    </Button>
+  );
+}
+```
+
+You should see a styled **Save** button; clicking it changes the label to **Saved**.
+An unstyled button usually means Tailwind is not running, the package source is absent from `content`,
+or the global token stylesheet is not loaded.
+
+For the **registry route**, run `npx @kinetixui/cli init` before `add button`, choose your real global
+stylesheet, and configure `@/*` to resolve to the directory containing `components` and `lib` in both
+TypeScript and your bundler. Import the copied Button from `@/components/ui/button` instead of
+`@kinetixui/ui` (adjust to your configured components directory). Keep the CLI's token stylesheet and add
+the Tailwind layers there; you do not need to import a second copy of the token CSS.
+
+[Explore components](/components) once your first button works.
 
 ## Dark mode
 

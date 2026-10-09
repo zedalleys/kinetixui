@@ -62,6 +62,15 @@ export function ComponentMeta() {
       <Row label="CLI">
         <span className="break-all">npx @kinetixui/cli add {slug}</span>
       </Row>
+      <Row label="Setup">
+        <Link href="/docs/installation" className="text-primary underline underline-offset-2">
+          Installation and first component →
+        </Link>
+        <p className="mt-1 font-sans text-muted-foreground">
+          The CLI copies React source. Usage imports from @kinetixui/ui require the npm package;
+          for copied source, use your configured local import instead.
+        </p>
+      </Row>
       <Row label="Registry">
         <a
           href={`/r/${slug}.json`}
