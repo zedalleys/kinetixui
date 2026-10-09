@@ -354,7 +354,7 @@ case for each rule.
 6. **Evaluation, adoption intent and verified adoption are different claims.** No tile here measures
    adoption (§5).
 
-### Defects found 2026-10-09 — dashboard changes awaiting owner approval
+### Defects found and corrected 2026-10-09
 
 Reproduced read-only against PostHog on a fixed window: 2026-09-09 00:00 to 2026-10-09 19:56 UTC, excluding
 the diagnostic probe window 2026-10-09 13:25–13:35 UTC (one session). The corrected queries reproduce the
@@ -379,13 +379,15 @@ a copy or an `adopt_*` CTA.
 two steps, so a session whose only qualifying event is `installation_viewed` can never complete a
 three-step funnel; and an *unordered* funnel's "completed 2 steps" is any two of the three, not the
 evaluation step. On the fixed window, adding `installation_viewed` and aggregating by session gives 4
-(unordered) or 2 (ordered) where Progression is 9. The proposed fix replaces Funnel 1 with a session table
+(unordered) or 2 (ordered) where Progression is 9. The fix replaced Funnel 1 with a session table
 (eligible arriving → Qualified Evaluation → Progression) computed by the same rules as tiles 5 and 8b. It
 was also never homepage-scoped despite its name: step 1 was any `$pageview`.
 
-**Not applied.** The exact changes are proposed in the measurement thread for the owner's approval. Until
-they are applied, read tiles 5, 8, 8b, Funnel 1 and Funnel 2 against the rules above, and this section stays
-the record of what the live dashboard does.
+**Applied 2026-10-09 ~20:25 UTC, on the owner's approval.** Tiles 4, 5 and 8 count eligible arriving sessions
+over any event; tile 2 attributes on any event; 8b compares the last intent with the first evaluation; Funnels
+1 and 2 are now HogQL session tables built by the same rules; the reading-notes text tile states the rules.
+Read back after the change, on the dashboard's rolling 30 days: 99 eligible, 16 Qualified Evaluation and 10
+Progression — the fixed-window counts plus the one probe session, which the dashboard does not exclude.
 
 **Observed, not decided:** the four sessions a `$pageview` denominator misses each hold only `$pageleave` —
 most likely a tab left idle long enough for PostHog to rotate its session before the page was closed. §4
@@ -417,12 +419,13 @@ definition question for this file, not for a query.
 Component and block interest are deliberately **not** dashboard insights. They are long-tail lists, better
 queried when a question arises than watched weekly.
 
-### Funnels (3, flexible-step)
+### Funnels (3; 1 and 2 are session tables)
 
-1. **Homepage → evaluation → intent:** `$pageview /` → any QE signal → any AI signal. As built it is neither
-   homepage-scoped nor able to count Progression — see *Defects found 2026-10-09* above; the proposed
-   replacement is a session table, not a native funnel.
-2. **Campaign → evaluation:** session with `kx_campaign` → any QE signal, broken down by campaign.
+1. **Arrival → evaluation → intent** (originally specified as homepage-scoped, never built that way): eligible
+   arriving sessions → Qualified Evaluation sessions → Progression sessions. A HogQL session table since
+   2026-10-09, not a native funnel — see *Defects found and corrected 2026-10-09* above.
+2. **Campaign → evaluation:** sessions with any event carrying `kx_campaign` → Qualified Evaluation sessions,
+   by campaign. Also a HogQL session table since 2026-10-09.
 3. **Coverage → component:** `cta_clicked` → `platform_coverage` → `component_viewed`.
 
 All flexible-step: these are not journeys anyone must take in order, and forcing linearity would report a
