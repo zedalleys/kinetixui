@@ -81,7 +81,7 @@ async function visitor(browser, options = {}) {
     await page.waitForTimeout(1500); // a duplicate would arrive with or just after the expected batch
     return sent.filter((e) => e.event !== "$pageleave");
   };
-  return { context, page, settle };
+  return { context, page, settle, sent };
 }
 
 const sequence = (events) => events.map((e) => (e.event === "cta_clicked" ? `cta_clicked:${e.properties.target}` : e.event));
@@ -91,9 +91,10 @@ function expectSequence(flow, events, expected) {
   if (JSON.stringify(got) !== JSON.stringify(expected)) fail(flow, `expected ${JSON.stringify(expected)}\n      got ${JSON.stringify(got)}`);
 }
 
-/** Nothing raw on the wire: no query string, no utm_* key or value, no raw referrer. */
-function expectClean(flow, events) {
+/** Nothing raw on the wire: no query string, no utm_* key or value, no raw referrer. Genuine traffic is never marked diagnostic. */
+function expectClean(flow, events, { diagnostic = false } = {}) {
   const wire = JSON.stringify(events);
+  if (!diagnostic && wire.includes('"kx_traffic_type"')) fail(flow, "marked genuine traffic as diagnostic");
   for (const [what, re] of [["a query string in a URL property", /https?:\/\/[^"]*\?/], ["a utm_ key", /"\$?(session_entry_|initial_)?utm_/], ["the raw referrer", /lnkd\.in\/secret/]]) {
     if (re.test(wire)) fail(flow, `sent ${what}`);
   }
@@ -212,6 +213,30 @@ const evidence = {};
   await context.close();
 }
 
+/* ---------------------------------------------------------------- 5. a diagnostic probe marks itself, and only itself */
+{
+  // marketing/analytics.md §11 "Diagnostic traffic": reporting drops any session holding a marked event, so the mark
+  // must reach every event the tab sends — the SDK's own $pageleave included — and the marker must not leave as a URL.
+  const flow = "diagnostic";
+  const { context, page, settle, sent } = await visitor(browser, { viewport: { width: 1280, height: 900 } });
+  await page.goto(base + "/docs/installation?kx_traffic=diagnostic", { waitUntil: "networkidle" });
+  await page.locator('aside a[href="/docs/components/button"]').first().click();
+  await page.waitForURL("**/docs/components/button");
+  const events = await settle(4);
+  expectSequence(flow, events, ["$pageview", "installation_viewed", "$pageview", "component_viewed"]);
+  const leaves = () => sent.filter((e) => e.event === "$pageleave");
+  for (let i = 0; i < 20 && leaves().length === 0; i++) {
+    await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
+    await page.waitForTimeout(500);
+  }
+  if (leaves().length === 0) fail(flow, "no $pageleave arrived to check");
+  for (const e of [...events, ...leaves()]) if (e.properties.kx_traffic_type !== "diagnostic") fail(flow, `${e.event} is not marked diagnostic`);
+  if (JSON.stringify(sent).includes("kx_traffic=")) fail(flow, "sent the kx_traffic query parameter");
+  expectClean(flow, sent, { diagnostic: true });
+  evidence[flow] = [...events, ...leaves()].map((e) => ({ event: e.event, kx_traffic_type: e.properties.kx_traffic_type, kx_source: e.properties.kx_source, session: e.properties.$session_id, url: e.properties.$current_url }));
+  await context.close();
+}
+
 await browser.close();
 
 console.log(JSON.stringify(evidence, null, 2));
@@ -219,4 +244,4 @@ if (problems.length) {
   console.error(`\nanalytics-browser: ${problems.length} problem(s)\n  - ${problems.join("\n  - ")}`);
   process.exit(1);
 }
-console.log("\nanalytics-browser: OK — campaign → evaluation → intent, keyboard CTA, touch block copy and the /docs/tokens bridge all sent exactly the expected events");
+console.log("\nanalytics-browser: OK — campaign → evaluation → intent, keyboard CTA, touch block copy, the /docs/tokens bridge and a diagnostic probe all sent exactly the expected events");

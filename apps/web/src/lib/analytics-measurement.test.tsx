@@ -12,6 +12,7 @@ import { AnalyticsProvider } from "@/components/analytics-provider";
 import { ANALYTICS_CTA_TARGETS, analytics, resetAnalyticsForTests } from "./analytics";
 import {
   ADOPTION_INTENT_SIGNALS,
+  ARRIVAL_EVENTS,
   QUALIFIED_EVALUATION_SIGNALS,
   isAdoptionIntent,
   isQualifiedEvaluation,
@@ -198,7 +199,7 @@ describe("session-level measurement", () => {
       ev("a", "cta_clicked", 5, { target: "view_verification" }),
       ev("b", "$pageview", 0),
     ]);
-    expect(s).toEqual({ eligibleSessions: 2, attributedSessions: 0, qualifiedEvaluationSessions: 1, adoptionIntentSessions: 0, progressionSessions: 0 });
+    expect(s).toEqual({ eligibleSessions: 2, diagnosticSessions: 0, attributedSessions: 0, qualifiedEvaluationSessions: 1, adoptionIntentSessions: 0, progressionSessions: 0, returningEvaluators: 0 });
   });
 
   it("separates attributed, evaluating and intending sessions", () => {
@@ -210,7 +211,7 @@ describe("session-level measurement", () => {
       ev("direct", "cli_command_copied", 0),
       ev("bounce", "$pageview", 0, { campaign: "kx_p2_b_token_boundary" }),
     ]);
-    expect(s).toEqual({ eligibleSessions: 3, attributedSessions: 2, qualifiedEvaluationSessions: 1, adoptionIntentSessions: 2, progressionSessions: 1 });
+    expect(s).toEqual({ eligibleSessions: 3, diagnosticSessions: 0, attributedSessions: 2, qualifiedEvaluationSessions: 1, adoptionIntentSessions: 2, progressionSessions: 1, returningEvaluators: 0 });
   });
 
   it("does not count a campaign landing on a docs page as evaluation or intent by itself", () => {
@@ -247,14 +248,100 @@ describe("session-level measurement", () => {
     ).toBe(1);
   });
 
-  it("counts a session with no $pageview as an eligible arriving session", () => {
-    // Observed live: sessions holding only $pageleave. A $pageview-only denominator drops them.
-    expect(summarizeSessions([ev("p", "$pageleave", 0), ev("v", "$pageview", 0)]).eligibleSessions).toBe(2);
-  });
-
   it("keeps Progression bounded by Qualified Evaluation, and never divides intent by evaluation", () => {
     const s = summarizeSessions([ev("a", "cli_command_copied", 0), ev("b", "install_command_copied", 0), ev("c", "component_viewed", 0)]);
     expect(s.adoptionIntentSessions).toBeGreaterThan(s.qualifiedEvaluationSessions); // why AI ÷ QE is not a rate
     expect(s.progressionSessions).toBeLessThanOrEqual(s.qualifiedEvaluationSessions);
+  });
+});
+
+/* ------------------------------------------------------------------ 4. which sessions count at all */
+
+describe("eligible arriving sessions and diagnostic traffic", () => {
+  const ev = (sessionId: string, event: string, timestamp: number, extra: Partial<MeasuredEvent> = {}): MeasuredEvent => ({ sessionId, event, timestamp, ...extra });
+  const eligible = (events: MeasuredEvent[]) => summarizeSessions(events).eligibleSessions;
+
+  it("does not count a $pageleave-only session as an arrival", () => {
+    // Observed live 2026-09-30/10-01: a tab idle past the 30-minute timeout sends $pageleave under a NEW session id.
+    expect(eligible([ev("rotated", "$pageleave", 0)])).toBe(0);
+    expect(eligible([ev("rotated", "$pageleave", 0), ev("rotated", "$pageleave", 9)])).toBe(0);
+  });
+
+  it("counts a $pageview session", () => {
+    expect(eligible([ev("v", "$pageview", 0)])).toBe(1);
+  });
+
+  it("counts a session with a site interaction and no $pageview", () => {
+    expect(eligible([ev("i", "cli_command_copied", 0)])).toBe(1);
+    expect(eligible([ev("d", "docs_viewed", 0)])).toBe(1);
+    expect(eligible([ev("g", "github_clicked", 0)])).toBe(1);
+  });
+
+  it("counts a session with $pageleave plus a site interaction", () => {
+    expect(eligible([ev("m", "$pageleave", 0), ev("m", "component_viewed", 5)])).toBe(1);
+  });
+
+  it("leaves an unknown or SDK event out of the denominator", () => {
+    expect(eligible([ev("u", "$autocapture", 0), ev("u", "$web_vitals", 1), ev("u", "$identify", 2), ev("u", "some_future_event", 3)])).toBe(0);
+    expect(ARRIVAL_EVENTS).not.toContain("$pageleave");
+  });
+
+  it("does not let several events inflate one session", () => {
+    expect(eligible([ev("a", "$pageview", 0), ev("a", "$pageview", 1), ev("a", "docs_viewed", 2), ev("a", "$pageleave", 3)])).toBe(1);
+  });
+
+  it("drops a diagnostic session from every count and reports it separately", () => {
+    const s = summarizeSessions([
+      ev("probe", "$pageview", 0, { trafficType: "diagnostic" }),
+      ev("probe", "installation_viewed", 1),
+      ev("probe", "cli_command_copied", 2, { campaign: "kx_p2_a_drift" }),
+      ev("real", "$pageview", 0),
+    ]);
+    expect(s).toEqual({ eligibleSessions: 1, diagnosticSessions: 1, attributedSessions: 0, qualifiedEvaluationSessions: 0, adoptionIntentSessions: 0, progressionSessions: 0, returningEvaluators: 0 });
+  });
+
+  it("keeps a genuine session that has no traffic marking", () => {
+    expect(summarizeSessions([ev("real", "component_viewed", 0, { trafficType: undefined })])).toMatchObject({ eligibleSessions: 1, diagnosticSessions: 0, qualifiedEvaluationSessions: 1 });
+  });
+
+  it("attributes a campaign carried only by a non-pageview event, but not by a $pageleave-only session", () => {
+    expect(summarizeSessions([ev("c", "$pageview", 0), ev("c", "component_viewed", 4, { campaign: "kx_p2_a_drift" })]).attributedSessions).toBe(1);
+    expect(summarizeSessions([ev("c", "docs_viewed", 0, { campaign: "kx_p2_a_drift" })]).attributedSessions).toBe(1);
+    // the rotated session still carries the tab's campaign from sessionStorage; it is not a second campaign visit
+    expect(summarizeSessions([ev("r", "$pageleave", 0, { campaign: "kx_p2_a_drift" })]).attributedSessions).toBe(0);
+  });
+
+  it("keeps Progression ordering and installation_viewed's double role inside the eligibility filter", () => {
+    const s = summarizeSessions([
+      ev("late", "cli_command_copied", 0),
+      ev("late", "component_viewed", 5),
+      ev("late", "install_command_copied", 10),
+      ev("both", "installation_viewed", 0),
+      ev("before", "cli_command_copied", 0),
+      ev("before", "component_viewed", 5),
+    ]);
+    expect(s).toMatchObject({ eligibleSessions: 3, qualifiedEvaluationSessions: 3, adoptionIntentSessions: 3, progressionSessions: 2 });
+  });
+
+  it("keeps Returning evaluators per anonymous ID: QE in two or more eligible sessions", () => {
+    const s = summarizeSessions([
+      ev("v1-a", "component_viewed", 0, { distinctId: "v1" }),
+      ev("v1-b", "platform_selected", 0, { distinctId: "v1" }),
+      ev("v1-c", "$pageview", 0, { distinctId: "v1" }),
+      ev("v2-a", "component_viewed", 0, { distinctId: "v2" }),
+      ev("v2-b", "$pageview", 0, { distinctId: "v2" }),
+      ev("v3-a", "component_viewed", 0, { distinctId: "v3" }),
+      ev("v3-probe", "component_viewed", 0, { distinctId: "v3", trafficType: "diagnostic" }),
+    ]);
+    expect(s.returningEvaluators).toBe(1);
+  });
+
+  it("is documented in analytics.md: every arrival event is listed, and $pageleave is named as not qualifying", () => {
+    const start = SPEC.indexOf("### Eligible arriving session");
+    expect(start, "analytics.md has no 'Eligible arriving session' section").toBeGreaterThanOrEqual(0);
+    const section = SPEC.slice(start, SPEC.indexOf("\n#", start + 1));
+    const [qualifying, rest] = section.split(/Does not qualify/);
+    for (const name of ARRIVAL_EVENTS) expect(qualifying, name).toContain(`\`${name}\``);
+    expect(rest).toContain("`$pageleave`");
   });
 });

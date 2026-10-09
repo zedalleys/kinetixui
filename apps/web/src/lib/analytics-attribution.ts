@@ -23,6 +23,11 @@
  *  campaign only a utm_campaign matching `kx_[a-z0-9][a-z0-9_-]{0,62}`; otherwise omitted, never inferred
  *  content  only a strict slug, and only alongside a valid campaign
  *
+ * DIAGNOSTIC TRAFFIC is marked here too, because it is the same kind of fact: what this tab's visit IS, decided
+ * once from the landing URL. `?kx_traffic=diagnostic` marks the tab (sessionStorage) and every event it sends
+ * then carries `kx_traffic_type: "diagnostic"`; `?kx_traffic=clear` removes the mark. Reporting drops any
+ * session holding a marked event (marketing/analytics.md §11 "Diagnostic traffic"); PostHog keeps the raw events.
+ *
  * No cookies, no server, no dependency: only URLSearchParams and Web Storage. Storage that is blocked or full
  * degrades to "attribution missing" and never throws.
  */
@@ -276,6 +281,10 @@ const FIELD_VALID: Record<Field, (v: unknown) => boolean> = {
 
 const KX_KEY = /^kx_(first_)?(source|medium|campaign|content|referrer|landing_page)$/;
 
+/** The only value `kx_traffic_type` may take. Genuine traffic carries no `kx_traffic_type` at all. */
+export const DIAGNOSTIC_TRAFFIC_TYPE = "diagnostic";
+const TRAFFIC_TYPE_KEY = "kx_traffic_type";
+
 /** A record → `kx_source`, … or `kx_first_source`, …; only the fields that are present. */
 export function toProps(a: Attribution, prefix: "kx_" | "kx_first_"): Record<string, string> {
   const out: Record<string, string> = { [`${prefix}source`]: a.source, [`${prefix}medium`]: a.medium, [`${prefix}referrer`]: a.referrer };
@@ -292,6 +301,10 @@ export function toProps(a: Attribution, prefix: "kx_" | "kx_first_"): Record<str
  */
 export function sanitizeAttributionProps(bag: Record<string, unknown>): void {
   for (const key of Object.keys(bag)) {
+    if (key === TRAFFIC_TYPE_KEY) {
+      if (bag[key] !== DIAGNOSTIC_TRAFFIC_TYPE) delete bag[key];
+      continue;
+    }
     const m = KX_KEY.exec(key);
     if (key.startsWith("kx_") && !m) {
       delete bag[key];
@@ -308,6 +321,7 @@ export function sanitizeAttributionProps(bag: Record<string, unknown>): void {
 
 const SESSION_KEY = "kx_analytics_session_v1";
 const FIRST_TOUCH_KEY = "kx_analytics_first_touch_v1";
+const TRAFFIC_KEY = "kx_analytics_traffic_v1";
 
 type Where = "session" | "local";
 
@@ -351,6 +365,23 @@ function write(where: Where, key: string, a: Attribution): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * `?kx_traffic=diagnostic` marks this tab, `?kx_traffic=clear` unmarks it, anything else leaves the stored mark
+ * as it is. Returns whether the tab is marked. Blocked storage keeps the mark for this page only.
+ */
+function diagnosticMark(search: string): boolean {
+  const requested = new URLSearchParams(search).get("kx_traffic");
+  try {
+    const s = store("session");
+    if (requested === DIAGNOSTIC_TRAFFIC_TYPE) s?.setItem(TRAFFIC_KEY, DIAGNOSTIC_TRAFFIC_TYPE);
+    else if (requested === "clear") s?.removeItem(TRAFFIC_KEY);
+    if (s) return s.getItem(TRAFFIC_KEY) === DIAGNOSTIC_TRAFFIC_TYPE;
+  } catch {
+    // fall through: storage is unavailable, so only this page's URL can mark it
+  }
+  return requested === DIAGNOSTIC_TRAFFIC_TYPE;
 }
 
 /* ------------------------------------------------------------------ lifecycle */
@@ -404,7 +435,11 @@ export function initAttribution(input: AttributionInput | null = browserInput(),
     first = write("local", FIRST_TOUCH_KEY, session) ? session : null;
   }
 
-  context = Object.freeze({ ...toProps(session, "kx_"), ...(first ? toProps(first, "kx_first_") : {}) });
+  context = Object.freeze({
+    ...toProps(session, "kx_"),
+    ...(first ? toProps(first, "kx_first_") : {}),
+    ...(diagnosticMark(input.search) ? { [TRAFFIC_TYPE_KEY]: DIAGNOSTIC_TRAFFIC_TYPE } : {}),
+  });
 }
 
 /** The attribution properties for every outgoing event. Empty until (and unless) `initAttribution` ran. */

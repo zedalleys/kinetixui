@@ -106,15 +106,53 @@ why the next two measures are separate, with different denominators, rather than
 ### Adoption Intent Rate
 
 > **Numerator** — sessions with ≥1 Adoption Intent signal.
-> **Denominator** — **eligible arriving sessions**: every session the site received events from at all. The
-> same denominator as Qualified Evaluation Rate (§2), so the two are readable side by side.
-
-"Any event" is literal: a session is eligible whether or not it holds a `$pageview`. Counting `$pageview`
-sessions instead is a different, smaller number — 94 against 98 in the 2026-10-09 checkpoint (§11), the four
-missing sessions each holding only `$pageleave`.
+> **Denominator** — **eligible arriving sessions** (next section). The same denominator as Qualified
+> Evaluation Rate (§2), so the two are readable side by side.
 
 *For:* how much of arriving traffic reaches adoption documentation at all. A share of arrivals — **not a
 conversion rate**, and nothing may present it as one.
+
+### Eligible arriving session
+
+> A session that holds at least one event proving the visitor was on a page of the site, and no event
+> marked as diagnostic traffic (§11 *Diagnostic traffic*).
+
+The denominator of Qualified Evaluation Rate and Adoption Intent Rate, and the population every other count
+on the dashboard is drawn from: Qualified Evaluation, Adoption Intent, Progression, campaign-attributed
+sessions and Returning evaluators are all counted **among eligible sessions only**.
+
+**Qualifies.** `$pageview`, and every event in the site's event contract (`AnalyticsEvents` in
+`apps/web/src/lib/analytics.ts`), each of which the site fires from a page, on render or on a click:
+`cta_clicked`, `docs_viewed`, `installation_viewed`, `cli_command_copied`, `install_command_copied`,
+`component_viewed`, `component_code_copied`, `platform_selected`, `github_clicked`, `npm_clicked`,
+`changelog_viewed`, `external_link_clicked`, `preset_shared`, `preset_code_copied`, `preset_loaded`,
+`preset_randomized`, `create_export_target_selected`, `create_export_copied`, `iot_example_copied`,
+`block_code_copied`. A session with one of these and no `$pageview` is an arrival.
+
+**Does not qualify on its own.** `$pageleave`, and any other event name: PostHog SDK events (`$autocapture`,
+`$identify`, `$web_vitals`, …) and names nobody declared. The list is an allowlist, so a new event cannot
+widen the denominator until someone adds it here and to `ARRIVAL_EVENTS` in `analytics-measurement.ts`
+(the code fails to compile if a contract event is missing from it). A session holding a `$pageleave` *and*
+a qualifying event is an arrival.
+
+**Why `$pageleave` is excluded: session rotation.** PostHog ends a session after 30 minutes without activity
+(posthog-js `SessionIdManager`, `DEFAULT_SESSION_IDLE_TIMEOUT_SECONDS`). The SDK sends `$pageleave` itself on
+`pagehide`, and that capture checks the session first: if the tab sat idle past the timeout, the
+`$pageleave` opens a **new** `$session_id` and is its only event. The visit it closes was already counted under
+the old session. Verified on the 2026-10-09 window: three of the four `$pageleave`-only sessions follow an
+earlier session of the same device by 51, 54 and 1,346 minutes, and each `$pageleave` reports a page-view
+duration matching that gap (3,018 s, 3,278 s, 80,799 s).
+
+**The known cost.** The fourth `$pageleave`-only session is different: the device's first, a LinkedIn
+`kx_p2_a_drift` landing on `/docs/platforms`, with a page-view duration of 3 s. Its `$pageview` was recorded
+by the SDK but never reached PostHog, most likely lost as the page closed. The rule above drops it, so the
+2026-10-09 window counts one campaign arrival fewer than really happened. Rescuing such sessions would mean
+reading an SDK-internal property (`$prev_pageview_duration` under the idle timeout), so it is not part of the
+definition; it is a limitation, recorded in §11.
+
+**Historical numbers keep their definition.** The 2026-10-09 checkpoint (98 / 15 / 12 / 9) was measured with
+"any event" eligibility and is reported as such. The same window under this definition is 94 / 15 / 12 / 9
+(§11). Neither replaces the other.
 
 ### Evaluation → Intent Progression
 
@@ -344,15 +382,20 @@ case for each rule.
 1. **Count distinct `$session_id`s**, never events and never persons. A native funnel defaults to persons, so
    it must be aggregated by `properties.$session_id`. The one exception is *Returning evaluators*, whose unit is
    deliberately the anonymous ID (below).
-2. **Eligible arriving sessions = sessions with any event**, not `$pageview` sessions (§4).
+2. **Eligible arriving sessions = sessions with at least one `ARRIVAL_EVENTS` event** (§4 *Eligible arriving
+   session*): not `$pageview` sessions only, and not any event either. `$pageleave` alone never qualifies.
 3. **A session is campaign-attributed when any of its events carries `kx_campaign`** (§8), not only a
-   `$pageview`.
+   `$pageview`, and only if the session is eligible: a `$pageleave`-only session still carries its tab's
+   campaign.
 4. **Progression = any intent signal at or after the first Qualified Evaluation signal**: compare the
    session's *last* intent timestamp with its *first* evaluation timestamp. Comparing first with first drops
    intent → evaluation → later intent.
 5. **`installation_viewed` is in both signal lists**, in every tile that lists either.
 6. **Evaluation, adoption intent and verified adoption are different claims.** No tile here measures
    adoption (§5).
+7. **Diagnostic sessions are excluded from every count**: any session holding an event with
+   `kx_traffic_type = 'diagnostic'`, plus the historical probe listed under *Diagnostic traffic*. The exclusion
+   is per session, so one marked event removes the whole session.
 
 ### Defects found and corrected 2026-10-09
 
@@ -389,10 +432,59 @@ over any event; tile 2 attributes on any event; 8b compares the last intent with
 Read back after the change, on the dashboard's rolling 30 days: 99 eligible, 16 Qualified Evaluation and 10
 Progression — the fixed-window counts plus the one probe session, which the dashboard does not exclude.
 
-**Observed, not decided:** the four sessions a `$pageview` denominator misses each hold only `$pageleave` —
-most likely a tab left idle long enough for PostHog to rotate its session before the page was closed. §4
-counts them, and this section does not change that; whether a `$pageleave`-only session is an *arrival* is a
-definition question for this file, not for a query.
+**Observed then, decided since:** the four sessions a `$pageview` denominator misses each hold only
+`$pageleave`. §4 *Eligible arriving session* now excludes them; see the next two sections.
+
+### Diagnostic traffic
+
+**Policy.** Traffic generated to test the site or its analytics (probes, QA passes, demos) is kept in PostHog
+for debugging and excluded from every formal count (rule 7). It is never deleted and never re-labelled after
+the fact.
+
+**Marking future diagnostic traffic.** Open the first page of the test with `?kx_traffic=diagnostic`, for
+example `https://kinetixui.com/?kx_traffic=diagnostic`. The tab remembers the mark (sessionStorage) and every
+event it sends carries `kx_traffic_type: "diagnostic"` (`analytics-attribution.ts`). `?kx_traffic=clear`
+removes it. To run a probe safely:
+
+1. Use a fresh private window, so the probe has its own anonymous ID and session.
+2. Start every tab of the probe from a marked URL; the mark is per tab, and an unmarked tab's events are only
+   excluded if they share the marked tab's PostHog session.
+3. Before relying on the result, check in PostHog that the probe's events carry `kx_traffic_type`.
+4. Do not include a `utm_campaign` unless the campaign path is what is being tested; the exclusion already
+   keeps it out of campaign counts.
+
+**Historical probe (before marking existed).** One session, excluded by its id:
+`01a120d7-2b07-7ed0-af0c-f96d32e4c5bd`, 2026-10-09 13:25:35–13:28:59 UTC. Identified by the owner's report of a
+probe at 13:25–13:35 *and* by its own content: it is the only session in that window (±1 hour), and in 3.5
+minutes it fires every evaluation and intent signal type once or twice, including all four copy events, from a
+direct visit. The time window alone is not the rule; the session id is. **Uncertain and not excluded:** the
+same device's earlier session that day (04:05–04:14 UTC, homepage → components → installation) may also be
+the owner's, but nothing identifies it as a test, so it stays in the counts. No event property was added to
+past events.
+
+### Arrival eligibility and diagnostic exclusion, 2026-10-09
+
+Same fixed window as above (2026-09-09 00:00 to 2026-10-09 19:56 UTC), with the probe excluded by session id
+instead of by time window. Measured read-only through PostHog SQL on 2026-10-09 ~21:00 UTC.
+
+| Count | Any-event rule (applied ~20:25) | §4 *Eligible arriving session* + rule 7 | Change |
+| --- | --- | --- | --- |
+| Eligible arriving sessions | 98 | 94 | 4 `$pageleave`-only sessions out |
+| Qualified Evaluation sessions | 15 | 15 | — |
+| Adoption Intent sessions | 12 | 12 | — |
+| Progression sessions | 9 | 9 | — |
+| Campaign-attributed sessions | 28 | 27 | the lost-pageview LinkedIn landing (§4) |
+| Sessions marked diagnostic | 0 | 0 | marking did not exist yet |
+| Eligible sessions with no `$pageview` | — | 0 | none observed yet; covered by tests |
+
+Without the probe exclusion the dashboard's rolling window read 99 / 16 / 10. Returning evaluators drops from 2
+to 1 on the same window: the probe's device had a Qualified Evaluation session earlier that day, so the probe made
+it "returning".
+
+**Dashboard: proposed, not applied.** Tiles 1, 2, 4, 5, 6, 8, 8b, 10, Funnels 1 and 2 and Returning evaluators
+move to one shared HogQL session CTE (§4 eligibility + rule 7); native tiles 3, 7, 9, 11 and Funnel 3, which count
+specific product events, get event-level filters for `kx_traffic_type` and the historical probe. The exact per-tile queries are kept next to this project's analytics corrections, not in
+this repository; apply them only on the owner's approval, then read every changed tile back.
 
 **12 insights** (1–11, plus 8b).
 
@@ -435,7 +527,7 @@ funnel the product does not have.
 
 PostHog's anonymous distinct ID already supports this with `person_profiles: identified_only` — no identity
 collection, no new tracking. Counted as distinct anonymous IDs with a qualified evaluation in two or more
-sessions. Treat as directional: cleared cookies and multiple devices both undercount, and we will never know
+eligible, non-diagnostic sessions. Treat as directional: cleared cookies and multiple devices both undercount, and we will never know
 by how much.
 
 ---
