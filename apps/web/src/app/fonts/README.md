@@ -72,3 +72,13 @@ Do not hand-edit these binaries. To change a weight, a subset or a version, repl
 update the table above from the file's own `name` table, and update the `src` entries in
 `../layout.tsx`. `apps/web/src/app/fonts.test.ts` fails if `layout.tsx` reaches for
 `next/font/google` again, or if a `.woff2` here is unreferenced.
+
+## Documentation diagram face
+
+`jetbrains-mono-tree.woff2` is the full JetBrains Mono Regular face (92,380 bytes), from
+https://github.com/JetBrains/JetBrainsMono/blob/master/fonts/webfonts/JetBrainsMono-Regular.woff2
+(downloaded 2026-10-09). It uses the included `JetBrainsMono-OFL.txt` license. Unlike the Latin
+subset, it covers `│`, `├`, `└`, and `─` in the same face as spaces and filenames. Only plaintext
+documentation diagrams use it; code syntax highlighting retains its existing typography.
+
+SHA-256: `f1a7a03672cdd494ce0d5543fac6e4360fe22403c6de297fdc2e55a815f7baff`.
