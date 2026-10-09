@@ -220,7 +220,7 @@
       "blockedBy": "Author correction on 2026-10-08 says October 7 actual posts concerned IoT. The short link recorded by PR #321 was independently opened and verified as an IoT post, not LI-005 token-boundary copy; canonical URL and evidence are preserved in october-7-correction.md. Locate any separate LI-005 publication before closing this asset. No replacement IoT row or counts are inferred."
     },
     {
-      "date": "2026-10-09",
+      "date": null,
       "day": 11,
       "asset": "X-004",
       "channel": "x",
@@ -238,8 +238,8 @@
       "secondary": null,
       "communityReuse": null,
       "metricToWatch": "kx_p2_b_token_boundary sessions with utm_content=x_thread, then component_viewed or platform_selected downstream (Button is linked from /docs/tokens) and install_command_copied on /docs/tokens. /docs/tokens itself emits no platform_selected",
-      "status": "published",
-      "result": "Posted 2026-10-09, on its scheduled day 11. Post 1 is https://x.com/zedalleys/status/2108651928087413167 (author-supplied; x.com is not reachable from this environment, so the thread's text was not read back). Posting time about 20:12:51 UTC, derived from the status ID's embedded timestamp rather than read from the post; author confirmation pending. Whether the copy went out as the final package text (post 4 reading 'Angular components') is pending author confirmation. Counts as of 2026-10-09 20:16 UTC, read from PostHog: 0 sessions carried kx_p2_b_token_boundary with utm_content=x_thread, minutes after posting, so not a settled figure. Replies are not readable from this environment and are not recorded; the author can add them. Organic only, no amplification. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
+      "status": "planned",
+      "result": null
     },
     {
       "date": null,
