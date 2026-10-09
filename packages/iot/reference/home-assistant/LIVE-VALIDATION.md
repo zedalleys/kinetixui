@@ -138,3 +138,8 @@ harness is not completion of M4C's live-provider/physical proof.
   M5/M6 unchanged. No provider or physical validation performed; operator evidence remains pending.
 - Security limits above remain applicable: token privileges, native socket buffering and no heartbeat.
   Follow-up hosted checks must be evaluated against the new PR commit. No merge or publication authorized.
+
+## Consolidated evidence
+
+See [EVIDENCE-CONSOLIDATION.md](./EVIDENCE-CONSOLIDATION.md) for the pinned #324 donor matrix,
+coverage mapping, selected regressions, assets not imported and pending physical checklist.

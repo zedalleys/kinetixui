@@ -111,6 +111,30 @@ describe("M4C-A application session (synthetic, no provider/hardware)", () => {
     expect(h.lamp().stage).toBe("confirmed");
   });
 
+  // Scenario coverage donated by PR #324; uses the single #325 transport.
+  it("follows an external power report without a request or an origin claim", () => {
+    const h = harness(); const sub = h.ready(); h.advance(1);
+    h.event(sub, "on");
+    expect(h.lamp().confirmedValue).toBe("on");
+    expect(h.socket().sent.filter(m => m.type === "call_service")).toHaveLength(0);
+    expect(h.lamp().commandId).toBeUndefined();
+  });
+
+  it("settles only the last rapid toggle while earlier acknowledgements remain stale", () => {
+    const h = harness(); const sub = h.ready(); h.advance(1);
+    const ids: unknown[] = [];
+    for (const value of ["on", "off", "on"] as const) {
+      expect(h.app.request("lamp", value)).toBe(true);
+      ids.push(h.socket().sent.at(-1)!.id);
+    }
+    h.result(ids[0]); h.result(ids[1]);
+    expect(h.lamp()).toMatchObject({ stage: "requested", commandId: "command-3", confirmedValue: "off" });
+    h.result(ids[2]);
+    expect(h.lamp().stage).toBe("acknowledged");
+    h.event(sub, "on");
+    expect(h.lamp()).toMatchObject({ stage: "confirmed", commandId: "command-3", confirmedValue: "on" });
+  });
+
   it("bounds retry attempts and never retries authentication rejection", () => {
     const h = harness(1); h.advance(100);
     expect(h.app.status().fault).toBe("auth-timeout"); h.advance(10);
