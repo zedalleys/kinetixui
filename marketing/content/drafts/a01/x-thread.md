@@ -122,7 +122,7 @@ When documentation turns out to be wrong, don't just fix the documentation.
 Ask what would have caught it, write that, and run it against everything you've
 already published.
 
-Mine found five more problems on its first run.
+Mine found four more problems.
 
 ---
 

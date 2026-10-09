@@ -28,7 +28,7 @@ I wrote a script to check whether our design system's platform claims were true.
 
 They weren't.
 
-We publish component implementations for React, SwiftUI, Jetpack Compose and
+We maintain component implementations for React, SwiftUI, Jetpack Compose and
 Flutter. Every component page listed its supported platforms. Every listing was
 a hand-typed string, and nothing checked whether the implementation it claimed
 existed.
