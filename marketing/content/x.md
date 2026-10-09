@@ -34,29 +34,47 @@ piece of writing about that idea, not a shortened copy — the register records 
 
 ## X-004 · NEUTRAL · Pillar B · Thread (5)
 
-**Campaign:** `kx_p2_b_token_boundary` · **Destination:** `/docs/tokens` · **Visual:** VIS-003
+**Campaign:** `kx_p2_b_token_boundary` · **Destination:** `/docs/tokens` · **Visual:** VIS-003 (post 1 only)
 
-> **1/** Design tokens have a boundary problem.
+> **1/** Design tokens have a boundary problem: they stop at the web.
 >
-> They stop at the web.
+> JSON → build step → CSS variables. Then iOS needs the same values, so someone copies them into Swift.
+> Android gets Kotlin. Flutter gets Dart.
 >
-> **2/** The usual pipeline: JSON → build step → CSS custom properties. Genuinely good. Solves the web.
+> Three copies, made once, maintained never.
 >
-> Then iOS needs the same numbers. Someone copies them into Swift. Android gets Kotlin. Flutter gets Dart.
+> **2/** The copies don't drift because people are careless. They drift because nothing connects them.
 >
-> **3/** Three copies, made once, maintained never.
+> The fix is one canonical source: one set of DTCG token files, a generator per platform, and the generated
+> Swift, Kotlin, Dart and CSS committed so every change shows up in review.
 >
-> Your "single source of truth" is now a single source of truth for one of four platforms.
+> **3/** A shared token source is not a shared component source, though.
 >
-> **4/** They don't drift from carelessness. They drift because nothing connects them. A value changed on
-> the web has no route to a Kotlin constant.
+> Tokens are values. They generate cleanly.
 >
-> **5/** Fix is boring: treat native outputs as build artifacts, not files people edit. One source, a
-> generator per target, generated files committed so the diff shows up in review.
+> Components are behaviour: focus, gestures, scrolling, accessibility APIs. Each platform already has an
+> opinion about those, and it's usually the right one.
 >
-> Change once, all four move in one commit.
+> **4/** So KinetixUI splits it:
 >
-> https://kinetixui.com/docs/tokens
+> Tokens are generated from one source.
+> Components are written natively per platform against a shared contract: SwiftUI views, Compose
+> composables, Flutter widgets, Angular directives, React components.
+>
+> CI fails any platform claim without real source.
+>
+> **5/** Start with the token contract: every platform's generated output, plus Button built on those tokens
+> in all five frameworks.
+>
+> React installs from npm; Angular does too, in preview. SwiftUI, Compose and Flutter are source you build
+> today.
+>
+> https://kinetixui.com/docs/tokens?utm_source=x&utm_medium=social&utm_campaign=kx_p2_b_token_boundary&utm_content=x_thread
+
+Claims used: A1 with A2 in the same thread (post 2, post 4), A3 (post 4), B1 (post 4), C2 and C3 with their
+qualifiers (post 5). Every post is under 280 characters with the link counted as 23. Revised 2026-10-09 so the
+thread also covers why native implementations still matter and where to start; the campaign, destination and
+tagged URL are unchanged.
 
 ---
 

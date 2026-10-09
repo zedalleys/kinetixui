@@ -87,7 +87,7 @@ check("blocks preview had id=\"bl-email\"", /id="bl-email"/.test(blocks), true);
 check("'from a single source' occurrences", (blocks.match(/from a single source/g) || []).length, 4);
 
 // ── the guardrail scripts, and when they landed ─────────────────────────────
-const added = (path) => git(["log", "--diff-filter=A", "--format=%h", "--", path]).trim().split("\n").pop();
+const added = (path) => git(["log", "--diff-filter=A", "--format=%h", "--", path]).trim().split("\n").pop().slice(0, 7); // git widens %h as the repo grows
 check("check-platform-source.mjs added in", added("scripts/check-platform-source.mjs"), "34e5b06");
 check("check-platform-code.mjs added in", added("scripts/check-platform-code.mjs"), "c3de388");
 check("check-block-source.mjs added in", added("scripts/check-block-source.mjs"), "41fe16b");

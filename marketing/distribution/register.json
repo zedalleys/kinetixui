@@ -6,7 +6,8 @@
     "Rows for days 1-14 were DERIVED from marketing/content/register.json rather than typed, so the two cannot disagree.",
     "Validated by `pnpm check:distribution`, which re-derives every field from the content register and the site routes and fails on any drift.",
     "Append rows for days 15-30 when those days are reached. This file is a log, not a plan: marketing/content/calendar.md is the schedule.",
-    "amplification is a SEPARATE log for paid promotion of an already-published asset. It is not a row, because a boost is not an act of publishing, and it never changes the organic row's date, result or copy. The row points at it so its counts cannot be read as organic-only. Unknowns stay null: a guessed spend or boost window is worse than an absent one."
+    "amplification is a SEPARATE log for paid promotion of an already-published asset. It is not a row, because a boost is not an act of publishing, and it never changes the organic row's date, result or copy. The row points at it so its counts cannot be read as organic-only. Unknowns stay null: a guessed spend or boost window is worse than an absent one.",
+    "offCalendar is a SEPARATE log for acts of publishing that are not assets in marketing/content/register.json. They are real posts, so they are recorded, but they are not rows: a row must re-derive from a registered asset, and inventing an asset after the fact would rewrite the calendar. Unknowns stay null. Added 2026-10-09 by the October 7 reconciliation (measurement/OCTOBER-7-RECONCILIATION.md)."
   ],
   "rowShape": {
     "date": "YYYY-MM-DD, the day it actually went out. null while planned",
@@ -32,6 +33,17 @@
     "platformMetrics": "impressions/clicks/CPM/CPC/CTR as the platform reports them, else null. NEVER guessed",
     "note": "free text. Must carry the measurement rule: traffic during the window is not purely organic"
   },
+  "offCalendarShape": {
+    "id": "off-NNN",
+    "date": "YYYY-MM-DD, the day it went out",
+    "channel": "same vocabulary as a row's channel",
+    "topic": "short free text: what the post was about, as stated by its author",
+    "registeredAsset": "always null. A registered asset is a row, not an entry here",
+    "posts": "how many posts this entry covers, or null if not known. NEVER guessed",
+    "url": "a live URL supplied by the author, or null",
+    "attribution": "the utm quartet if the post carried a tagged link, else null",
+    "note": "free text: the source of every fact above and what is not known"
+  },
   "channels": [
     "linkedin",
     "x",
@@ -53,6 +65,19 @@
       "spend": null,
       "platformMetrics": null,
       "note": "Paid amplification of the ALREADY-PUBLISHED LI-003. This is not a second act of publishing and not a new asset: the organic row keeps its own date, result and copy. Only four facts are known and recorded \u2014 the asset, the channel, that it is a boosted post, and that it runs four days. Start and end dates, spend, impressions, clicks, CPM, CPC, CTR, audience settings and any LinkedIn campaign id are NOT known and are left null rather than guessed. MEASUREMENT RULE: arrivals during the boost window are not purely organic LI-003 performance and must never be reported as such. Two things follow. First, it is not known whether the counts already recorded on the organic row fall inside the boost window, so they cannot be called organic-only either. Second, a LinkedIn boost normally promotes the original post, which carries the original tagged URL \u2014 so paid and organic arrivals reach us with the same kx_source, kx_campaign and kx_content and are INDISTINGUISHABLE in first-party data. Unless a separate tagged URL was used, the end-of-boost comparison can set LinkedIn's reported figures beside our session counts, but cannot split our sessions into paid and organic. Confirm which link the boost served before any such comparison."
+    }
+  ],
+  "offCalendar": [
+    {
+      "id": "off-001",
+      "date": "2026-10-07",
+      "channel": "linkedin",
+      "topic": "IoT",
+      "registeredAsset": null,
+      "posts": null,
+      "url": "https://www.linkedin.com/posts/zedalleys_designsystems-uxdesign-iot-activity-7513596965998333955-KRhK",
+      "attribution": null,
+      "note": "Author-supplied publication date: 2026-10-07. The short link https://lnkd.in/p/dafq4fNP was independently inspected in PR #326 and resolves to this IoT device-state post; see october-7-correction.md. Exact time, total post count and attribution remain unknown. This does not prove that LI-005 never published separately. Analytics notes in measurement/OCTOBER-7-RECONCILIATION.md concern observed traffic only."
     }
   ],
   "notYetRoutes": [
@@ -125,7 +150,7 @@
       "communityReuse": null,
       "metricToWatch": "kx_p1_c_manifest vs kx_p2_a_drift \u2014 the P1/P2 comparison starts here",
       "status": "published",
-      "result": "Posted 2026-10-03, one day after its scheduled day 4 (2026-10-02); the day offset stays 4 because it is the schedule slot, and the date is when it actually went out. No counts are recorded yet: this row was logged minutes after posting, so the honest result is none observed so far, to be replaced with absolute counts at the next close-out. Organic only \u2014 no amplification. Comparison caveat stands: LI-003 (kx_p2_a_drift) took a four-day paid boost (amp-001) and this did not, so any gap between kx_p1_c_manifest and kx_p2_a_drift is message and paid reach together and must not be attributed to the message. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
+      "result": "Posted 2026-10-03 as recorded at the time, one day after its scheduled day 4 (2026-10-02); the day offset stays 4 because it is the schedule slot. Counts as of 2026-10-09 04:15 UTC, read from PostHog: 5 sessions carried kx_p1_c_manifest with utm_content=li_primary; 0 reached Qualified Evaluation; 0 reached Adoption Intent. Each landed on /docs/platforms and emitted only $pageview and docs_viewed, neither of which is a qualifying signal (analytics.md \u00a73). All 5 began between 18:31 and 18:34 UTC on 2026-10-02, before the recorded posting date, and no session has carried this campaign since. Four of them began within the same second, which is consistent with automated link previews rather than readers \u2014 an inference, not verified. The posting date is left as recorded until the author confirms whether the post went out on 2026-10-02 (UTC); 18:31 UTC is 21:31 at UTC+3. Organic only \u2014 no amplification. Comparison caveat stands: LI-003 (kx_p2_a_drift) took a four-day paid boost (amp-001) and this did not, so any gap between kx_p1_c_manifest and kx_p2_a_drift is message and paid reach together and must not be attributed to the message. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {
       "date": "2026-10-04",
@@ -147,7 +172,7 @@
       "communityReuse": "COM-002 draws on the same argument \u2014 not within 48 hours",
       "metricToWatch": "replies; the most quotable asset in week 1",
       "status": "published",
-      "result": "Posted 2026-10-04, on its scheduled day 6. No counts are recorded yet: this row was logged the same day it went out, so the honest result is none observed so far, to be replaced with absolute counts (replies first, since that is the metric to watch, then sessions carrying kx_p1_c_manifest with utm_content=x_single) at the next close-out. Organic only \u2014 no amplification. The exact posting time is not recorded, so to keep COM-002 a full 48 hours clear it should not go out before 2026-10-07. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
+      "result": "Posted 2026-10-04, on its scheduled day 6. Counts as of 2026-10-09 04:15 UTC, read from PostHog: 0 sessions carried kx_p1_c_manifest with utm_content=x_single, and no session since 2026-10-03 carried kx_source=x. Replies, the metric to watch, are not readable from this environment and are not recorded; the author can add them. Organic only \u2014 no amplification. The exact posting time is not recorded, so to keep COM-002 a full 48 hours clear it should not go out before 2026-10-07. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {
       "date": "2026-10-06",
@@ -169,7 +194,7 @@
       "communityReuse": "COM-001 derives from it \u2014 not before day 10",
       "metricToWatch": "Qualified Evaluation of devto sessions against linkedin, as counts",
       "status": "published",
-      "result": "Published on dev.to on 2026-10-06 (about 09:03 UTC), on its scheduled day 8. The live article is https://dev.to/zedalleys/your-design-tokens-stop-at-the-web-boundary-4p6a. No performance counts are recorded yet: this close-out was made immediately after publication, so the honest result is none observed so far. Track absolute counts only at the next close-out: devto-attributed sessions carrying kx_p2_b_token_boundary with utm_content=art_primary, then Qualified Evaluation and Adoption Intent from them. Organic only \u2014 no amplification; no hashnode cross-post. No conclusion either way while analytics.md \u00a710's baseline window is open."
+      "result": "Published on dev.to on 2026-10-06 (about 09:03 UTC), on its scheduled day 8. The live article is https://dev.to/zedalleys/your-design-tokens-stop-at-the-web-boundary-4p6a. Counts as of 2026-10-09 04:15 UTC, read from PostHog: 0 sessions carried kx_p2_b_token_boundary with utm_content=art_primary, and no session carried kx_source=devto. dev.to's own view and reaction counts are not readable from this environment and are not recorded; the author can add them. Organic only \u2014 no amplification; no hashnode cross-post. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {
       "date": null,
@@ -189,7 +214,7 @@
       "linkPlacement": "in the post body",
       "secondary": null,
       "communityReuse": "COM-001",
-      "metricToWatch": "adopt_tokens on /docs/tokens",
+      "metricToWatch": "kx_p2_b_token_boundary sessions with utm_content=li_primary, then install_command_copied on /docs/tokens and component_viewed downstream. adopt_tokens is a homepage CTA and cannot fire on /docs/tokens",
       "status": "blocked",
       "result": null,
       "blockedBy": "Author correction on 2026-10-08 says October 7 actual posts concerned IoT. The short link recorded by PR #321 was independently opened and verified as an IoT post, not LI-005 token-boundary copy; canonical URL and evidence are preserved in october-7-correction.md. Locate any separate LI-005 publication before closing this asset. No replacement IoT row or counts are inferred."
@@ -212,7 +237,7 @@
       "linkPlacement": "final post of the thread",
       "secondary": null,
       "communityReuse": null,
-      "metricToWatch": "platform_selected spread",
+      "metricToWatch": "kx_p2_b_token_boundary sessions with utm_content=x_thread, then component_viewed or platform_selected downstream (Button is linked from /docs/tokens) and install_command_copied on /docs/tokens. /docs/tokens itself emits no platform_selected",
       "status": "planned",
       "result": null
     },
