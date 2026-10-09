@@ -163,8 +163,8 @@ built the thing and made the decisions — not as a founder with a growth story.
 > converted from one source into five — the tokens are generated, the components are written.
 >
 > The honest cost: five implementations to maintain, and coverage that isn't identical everywhere. Today
-> React carries the full catalogue, the three native platforms carry most of it, and Angular, still in
-> preview, carries 64 of 98 — with the gaps written down and the reasons given.
+> React carries the full catalogue, the three native platforms carry most of it, and Angular is on npm in
+> preview as a deliberate subset — with the gaps written down and the reasons given.
 >
 > The honest benefit: nothing is standing between your design system and the platform.
 >
