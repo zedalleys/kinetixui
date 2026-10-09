@@ -62,29 +62,7 @@ jobs:
       - name: Lint
         run: ./gradlew :ui:lintDebug
 
-      # BASELINE measurement of the current /docs/compose first screen in a clean consumer.
-      - name: "Baseline: control screen in the clean consumer"
-        working-directory: .
-        env:
-          KINETIX_CONTROL: "1"
-        run: node scripts/adoption/compose-consumer.mjs
-
-      - name: "Baseline: docs fence pasted verbatim"
-        id: verbatim
-        continue-on-error: true
+      # The /docs/compose setup and first screen, built and tested in a clean consumer app.
+      - name: Documented Compose onboarding in a clean consumer
         working-directory: .
         run: node scripts/adoption/compose-consumer.mjs
-
-      - name: "Baseline: docs fence wrapped in a @Composable function"
-        id: wrapped
-        continue-on-error: true
-        working-directory: .
-        env:
-          KINETIX_WRAP_LEGACY: "1"
-        run: node scripts/adoption/compose-consumer.mjs
-
-      - name: Baseline outcomes
-        working-directory: .
-        run: |
-          echo "verbatim=${{ steps.verbatim.outcome }} wrapped=${{ steps.wrapped.outcome }}"
-          test "${{ steps.verbatim.outcome }}" = success && test "${{ steps.wrapped.outcome }}" = success
