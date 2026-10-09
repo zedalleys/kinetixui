@@ -249,7 +249,7 @@ That is the only pattern I would actually recommend: when documentation turns ou
 to be wrong, do not just fix the documentation. Ask what would have caught it,
 write that, and run it against everything else you have already published.
 
-Mine found five more problems on its first run. You will not enjoy that run.
+Mine found four more problems. You will not enjoy that run.
 Run it anyway.
 
 ---
