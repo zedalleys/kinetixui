@@ -585,3 +585,25 @@
     transition: none !important;
   }
 }
+
+/* Plain-text documentation diagrams: one face for connectors, spaces and filenames. */
+[data-documentation-tree] {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: left;
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
+  tab-size: 3;
+}
+[data-documentation-tree] code {
+  font-family: var(--font-tree-mono), ui-monospace, monospace;
+  font-weight: 400;
+  font-style: normal;
+  font-synthesis: none;
+  font-variant-ligatures: none;
+  letter-spacing: 0;
+  white-space: pre;
+  width: max-content;
+  min-width: 100%;
+}

@@ -8,6 +8,7 @@ import { trackFenceCopy } from "@/lib/analytics-surfaces";
 
 /** MDX <pre>: always-visible mobile copy control, revealed by hover/focus on desktop. */
 export function CodePre({ className, children, ...props }: React.ComponentPropsWithoutRef<"pre">) {
+  const isTextDiagram = (props as { "data-language"?: string })["data-language"] === "text";
   const ref = React.useRef<HTMLPreElement>(null);
   const pathname = usePathname();
   const [copied, setCopied] = React.useState(false);
@@ -47,6 +48,10 @@ export function CodePre({ className, children, ...props }: React.ComponentPropsW
       <span aria-live="polite" className="sr-only">{copied ? "Copied" : ""}</span>
       <pre
         ref={ref}
+        data-documentation-tree={isTextDiagram || undefined}
+        dir={isTextDiagram ? "ltr" : undefined}
+        role={isTextDiagram ? "region" : undefined}
+        aria-label={isTextDiagram ? "Scrollable text diagram" : undefined}
         // a code block scrolls sideways when a line is long, so the keyboard must be able to reach it
         tabIndex={0}
         className={cn("my-4 overflow-x-auto rounded-lg border border-border bg-muted/40 text-[13px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", className)}
