@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import * as Tabs from "@radix-ui/react-tabs";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,14 @@ import {
   type PlatformTab,
 } from "@/lib/platform-tabs";
 import { usageExamples } from "@/registry/usage-examples.generated";
+
+const setupHref: Record<CodeTab, string> = {
+  react: "/docs/installation",
+  angular: "/docs/angular",
+  swift: "/docs/swiftui",
+  kotlin: "/docs/compose",
+  dart: "/docs/flutter",
+};
 
 const tabTrigger = cn(
   "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
@@ -127,6 +136,12 @@ export function ComponentPreview({
 
     return (
       <>
+        <p className="border-b border-border px-4 py-2 text-[13px] text-muted-foreground">
+          {`${label} source; the live preview uses React. `}
+          <Link href={setupHref[tab]} className="text-primary underline underline-offset-2">
+            {label} installation and setup
+          </Link>
+        </p>
         {state && state !== "implementation" && (
           <GuidanceNote kind={state.type} label={GUIDANCE_LABEL[state.type]}>
             {state.type === "native-equivalent"

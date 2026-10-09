@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { trackFenceCopy } from "@/lib/analytics-surfaces";
 
-/** MDX <pre> with a hover-revealed copy button. Used for fenced code blocks. */
+/** MDX <pre>: always-visible mobile copy control, revealed by hover/focus on desktop. */
 export function CodePre({ className, children, ...props }: React.ComponentPropsWithoutRef<"pre">) {
   const ref = React.useRef<HTMLPreElement>(null);
   const pathname = usePathname();
@@ -39,7 +39,7 @@ export function CodePre({ className, children, ...props }: React.ComponentPropsW
         onClick={copy}
         aria-label="Copy code"
         className={cn(
-          "absolute right-2.5 top-2.5 z-10 inline-flex size-7 items-center justify-center rounded-md border border-border bg-background/80 text-muted-foreground opacity-0 backdrop-blur transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100",
+          "absolute right-2.5 top-2.5 z-10 inline-flex size-7 items-center justify-center rounded-md border border-border bg-background/80 text-muted-foreground opacity-100 md:opacity-0 backdrop-blur transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100",
         )}
       >
         {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}

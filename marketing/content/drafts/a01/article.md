@@ -181,8 +181,8 @@ KinetixButton(onClick = save) {
 ```
 
 One file. The compiler sees it, the website quotes it, a drift check fails if
-they disagree. Five of a hundred-odd demo examples now take their native code
-that way. Saying "five" is more useful than saying "we're migrating."
+they disagree. Six of a hundred-odd demo examples now take their native code
+that way. Saying "six" is more useful than saying "we're migrating."
 
 ## The same failure, one layer up
 
@@ -220,7 +220,7 @@ Whether you are evaluating a design system or maintaining one:
    what the denominator excludes.
 
 Ours, today: 98 catalogue entries — 97 components and one documented recipe.
-React 98, SwiftUI 90, Jetpack Compose 90, Flutter 90, and Angular 31 —
+React 98, SwiftUI 90, Jetpack Compose 90, Flutter 90, and Angular 64 —
 explicitly in preview. 90 of 98 on all four catalogue-complete platforms, with
 8 documented exceptions that each carry a written reason. Angular sits outside
 that denominator because its catalogue is deliberately incomplete; folding it in

@@ -261,6 +261,28 @@ for (const row of register.rows) {
   if (row.status !== "published") fail(where, `is "${row.status}" but points at ${amp.id} — you cannot amplify a post that has not gone out`);
 }
 
+/* ---------------------------------------------- off-calendar posts */
+
+/**
+ * A real post that is not a registered asset. It cannot be a row, because every row re-derives from the content
+ * register, and inventing an asset after the fact would rewrite the calendar. So it is logged on its own, and
+ * the one rule worth enforcing is that it never claims to BE a registered asset: that is how an IoT post was
+ * once recorded as LI-005, which is the drift this log exists to stop.
+ */
+const offCalendar = register.offCalendar ?? [];
+const offIds = new Set();
+for (const off of offCalendar) {
+  const where = `offCalendar ${off.id ?? "<no id>"}`;
+  if (!off.id || !/^off-\d{3}$/.test(off.id)) fail(where, "id is not off-NNN");
+  if (offIds.has(off.id)) fail(where, "duplicate offCalendar id");
+  offIds.add(off.id);
+  if (!DATE.test(off.date ?? "")) fail(where, "date is not YYYY-MM-DD — an off-calendar entry records something that already went out");
+  if (!CHANNELS.has(off.channel)) fail(where, `channel "${off.channel}" is not in the register's own channel list`);
+  if (off.registeredAsset !== null) fail(where, "registeredAsset must be null — a registered asset is logged as a row, not here");
+  if (off.posts !== null && !(Number.isInteger(off.posts) && off.posts > 0)) fail(where, "posts is neither null nor a positive whole number — never guess it");
+  if (!off.note) fail(where, "no note — say where each fact came from and what is not known");
+}
+
 /* ---------------------------------------------- the documents */
 
 /**
@@ -321,5 +343,5 @@ console.log(
   `check:distribution ok — ${register.rows.length} rows (${published} published), ` +
     `${Object.entries(counts).map(([c, n]) => `${c} ${n}`).join(", ")}; ` +
     `${ROUTES.size} routes verified, ${SOURCES.size} attribution sources read from the runtime, ` +
-    `${amplification.length} paid amplification${amplification.length === 1 ? "" : "s"}.`,
+    `${amplification.length} paid amplification${amplification.length === 1 ? "" : "s"}, ${offCalendar.length} off-calendar entr${offCalendar.length === 1 ? "y" : "ies"}.`,
 );

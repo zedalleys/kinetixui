@@ -188,7 +188,8 @@ built the thing and made the decisions — not as a founder with a growth story.
 >
 > So the published numbers say things like: contrast is gated in CI for everything, accessibility is
 > checked in a real browser across the site and every Storybook story — and direction-aware behaviour
-> testing sits at a handful of components on some platforms and none at all on one.
+> testing runs from most of the catalogue on one platform to a single component on another, and none at
+> all on a third.
 >
 > That last clause is uncomfortable to publish. It's also the only part a reader can act on. "Has RTL
 > support" tells you nothing about whether the component you need has been tested. A fraction tells you the

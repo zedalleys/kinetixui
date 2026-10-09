@@ -5,8 +5,8 @@ here. Re-run `pnpm marketing:stats` on the day of publishing and re-check the
 numbers before posting — they move.
 
 **Numbers verified:** 2026-09-23, against `main` @ `e29184c`, KinetixUI v0.22.1.
-**Current-state figures re-derived:** 2026-09-29, core v0.23.3 with
-`@kinetixui/angular` at 0.24.0 and `@kinetixui/iot` at 0.2.0, each in its own
+**Current-state figures re-derived:** 2026-10-09, core v0.24.0 with
+`@kinetixui/angular` at 0.25.0 and `@kinetixui/iot` at 0.5.0, each in its own
 release cohort. Only the *current* columns moved — every historical figure below
 is tied to a commit and is unchanged.
 
@@ -19,7 +19,7 @@ From `pnpm marketing:stats` (reads `platform-parity.json` and
 | --- | --- | --- |
 | 98 catalogue entries (97 components + 1 documented recipe) | 98 | `components.manifest.json` |
 | React | 98 / 98 | `platform-parity.json` → `coverage` |
-| Angular (preview) | 31 / 98 | same, `platformDefinitions.Angular.maturity = "preview"` |
+| Angular (preview) | 64 / 98 | same, `platformDefinitions.Angular.maturity = "preview"` |
 | SwiftUI | 90 / 98 | same |
 | Jetpack Compose | 90 / 98 | same |
 | Flutter | 90 / 98 | same |
@@ -192,10 +192,10 @@ before trusting any tooling that "found nothing".
 
 ---
 
-# Current repository state — 2026-09-29
+# Current repository state — 2026-10-09
 
-Use this for the "ours, today" paragraph. Core v0.23.3 MIT, with
-`@kinetixui/angular` at 0.24.0 and `@kinetixui/iot` at 0.2.0. Re-run
+Use this for the "ours, today" paragraph. Core v0.24.0 MIT, with
+`@kinetixui/angular` at 0.25.0 and `@kinetixui/iot` at 0.5.0. Re-run
 `pnpm marketing:stats` before publishing — these move:
 
 | | |
@@ -203,40 +203,43 @@ Use this for the "ours, today" paragraph. Core v0.23.3 MIT, with
 | Catalogue entries | 98 — 97 components + 1 documented recipe (`combobox`) |
 | Lifecycle | 97 stable, 1 beta |
 | React | 98 / 98 |
-| Angular | 31 / 98 — **preview**, `catalogComplete: false` |
+| Angular | 64 / 98 — **preview**, `catalogComplete: false` |
 | SwiftUI | 90 / 98 |
 | Jetpack Compose | 90 / 98 |
 | Flutter | 90 / 98 |
 | On all four catalogue-complete platforms | **90 / 98** |
 | Documented exceptions | 8 |
 | Blocks | 20, on all five platforms |
-| npm | `ui`, `cli`, `tokens` at 0.23.3; `angular` at **0.24.0 — published, still preview**; `iot` at 0.2.0 — each non-core package versioned independently |
+| npm | `ui`, `cli`, `tokens` at 0.24.0; `angular` at **0.25.0 — published, still preview**; `iot` at 0.5.0 — each non-core package versioned independently |
 
-Snippet migration, counted directly (not covered by `marketing:stats`):
+Snippet migration, counted directly (not covered by `marketing:stats`). Re-counted 2026-10-09 with the
+parser in `verify-package.mjs` (top-level demo keys; `swift`/`kotlin`/`dart` keys as native snippets):
 
 | | |
 | --- | --- |
-| Demo keys carrying native code | 101 |
-| With ≥1 native snippet from a compiled file | **5** (`button`, `badge`, `switch`, `chart`, `direction-provider`) |
-| Compiled native snippets | 13 |
-| Still hand-written in `platform-code.ts` | 97 keys / **290 snippets** |
-| Angular examples, all compiler-extracted | 33 |
+| Demo keys carrying native code | 102 |
+| With ≥1 native snippet from a compiled file | **6** (`badge`, `button`, `chart`, `direction-provider`, `switch`, and the `icons-dismiss-icon` demo) |
+| Compiled native snippets | 16 |
+| Still hand-written in `platform-code.ts` | 97 keys / **282 snippets** |
+| Generated examples carrying Angular code | 67 |
 
 The article's migration line is the fastest-ageing sentence in the piece. It read
-"three of a hundred" at the 2026-09-23 freeze and is **five** as of 2026-09-24 —
-one day, one change. `verify-package.mjs` now fails the package when it drifts
-again, so this does not have to be caught by eye.
+"three of a hundred" at the 2026-09-23 freeze, **five** as of 2026-09-24, and **six** as of 2026-10-09.
+`verify-package.mjs` fails the package when it drifts again, so this does not have to be caught by eye.
+The earlier rows (101 demo keys, 13 compiled snippets, 290 hand-written, 33 Angular) were counted on
+2026-09-24 and may have used a different counting rule for snippets; the 2026-10-09 figures are the ones to
+quote.
 
 ## Historical vs current — never mix these
 
 The article quotes the audit *as it stood*, in past tense, tied to commits.
 Current figures appear only in the "ours, today" paragraph.
 
-| Figure | Historical (commit) | Current (`dfd0d81`) |
+| Figure | Historical (commit) | Current (`0450908`, 2026-10-09) |
 | --- | --- | --- |
 | SwiftUI · Compose · Flutter | 91 · 90 · 91 (`34e5b06~1`) | 90 · 90 · 90 |
 | On all four | 90 (`34e5b06~1`) | 90 |
-| Snippets in `platform-code.ts` | 300 (`c3de388~1`) | 290 |
+| Snippets in `platform-code.ts` | 300 (`c3de388~1`) | 282 (re-counted 2026-10-09) |
 | Symbols used SwiftUI/Compose/Flutter | 164 / 182 / 175 (`c3de388~1`) | not re-counted; 0 unknown |
 | Unknown Compose symbols | 3 (`c3de388~1`) | 0 |
 | Demo keys from compiled source | 0 | 5 |

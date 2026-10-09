@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Menu, X } from "lucide-react";
-import { docsNav, mainNav } from "@/lib/site";
+import { docsNav, mainNav, siteConfig } from "@/lib/site";
 
 const iconButton =
   "inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -31,7 +31,12 @@ export function MobileNav() {
             className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-background p-4"
           >
             <div className="mb-2 flex items-center justify-between">
-              <Dialog.Title className="px-2 text-sm font-medium">Menu</Dialog.Title>
+              <div className="flex min-w-0 items-baseline gap-2 px-2">
+                <Dialog.Title className="text-sm font-medium">Menu</Dialog.Title>
+                <span className="font-mono text-[11px] text-muted-foreground">
+                  v{siteConfig.version} — beta
+                </span>
+              </div>
               <Dialog.Close aria-label="Close menu" className={iconButton}>
                 <X className="size-4" />
               </Dialog.Close>
