@@ -9,11 +9,15 @@ on:
       - "packages/ui-compose/**"
       - "tokens/**"
       - "style-dictionary/**"
+      - "apps/web/src/app/docs/compose/**"
+      - "scripts/adoption/compose-consumer.mjs"
   pull_request:
     paths:
       - "packages/ui-compose/**"
       - "tokens/**"
       - "style-dictionary/**"
+      - "apps/web/src/app/docs/compose/**"
+      - "scripts/adoption/compose-consumer.mjs"
 
 permissions:
   contents: read
@@ -57,3 +61,46 @@ jobs:
 
       - name: Lint
         run: ./gradlew :ui:lintDebug
+
+      # The /docs/compose setup and first screen, built and tested in a clean consumer app.
+      - name: Documented Compose onboarding in a clean consumer
+        working-directory: .
+        run: node scripts/adoption/compose-consumer.mjs
+
+  # Proves the consumer gate above can fail: each control breaks one documented step (an import,
+  # a component, a dependency, module registration, the activity, validation, the switch's state or
+  # name, or a fence) and must fail the gate for that named reason. JVM/Robolectric only, no device.
+  consumer-negative-controls:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        control:
+          - missing-import
+          - missing-component
+          - missing-dependency
+          - module-not-registered
+          - activity-not-wired
+          - validation-broken
+          - switch-unresponsive
+          - switch-unnamed
+          - switch-row-merge
+          - fence-missing
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
+        with:
+          packages: "platform-tools"
+
+      - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+
+      - name: "Negative control: ${{ matrix.control }}"
+        env:
+          CONTROL: ${{ matrix.control }}
+        run: node scripts/adoption/compose-consumer.mjs --negative="$CONTROL"
