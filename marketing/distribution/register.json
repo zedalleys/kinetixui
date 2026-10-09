@@ -172,7 +172,7 @@
       "result": "Published on dev.to on 2026-10-06 (about 09:03 UTC), on its scheduled day 8. The live article is https://dev.to/zedalleys/your-design-tokens-stop-at-the-web-boundary-4p6a. No performance counts are recorded yet: this close-out was made immediately after publication, so the honest result is none observed so far. Track absolute counts only at the next close-out: devto-attributed sessions carrying kx_p2_b_token_boundary with utm_content=art_primary, then Qualified Evaluation and Adoption Intent from them. Organic only \u2014 no amplification; no hashnode cross-post. No conclusion either way while analytics.md \u00a710's baseline window is open."
     },
     {
-      "date": "2026-10-07",
+      "date": null,
       "day": 9,
       "asset": "LI-005",
       "channel": "linkedin",
@@ -190,8 +190,9 @@
       "secondary": null,
       "communityReuse": "COM-001",
       "metricToWatch": "adopt_tokens on /docs/tokens",
-      "status": "published",
-      "result": "Posted 2026-10-07, on its scheduled day 9. The live post is https://lnkd.in/p/dafq4fNP (LinkedIn short link, as supplied by the author). No counts are recorded yet: this row was logged the same day it went out, so the honest result is none observed so far, to be replaced with absolute counts at the next close-out: adopt_tokens on /docs/tokens first, since that is the metric to watch, then sessions carrying kx_p2_b_token_boundary with utm_content=li_primary. Organic only \u2014 no amplification. The exact posting time is not recorded; it went out before 13:58 UTC, when it was reported as published. It shares kx_p2_b_token_boundary with ART-002 (utm_content=art_primary), so the two are separated by utm_content, never by campaign. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
+      "status": "blocked",
+      "result": null,
+      "blockedBy": "Author correction supplied in the developer adoption audit request on 2026-10-08: October 7 actual posts concerned IoT. PR #321 incorrectly closed LI-005 (token boundary) as published. Verify the actual post identity and link before closing LI-005 or adding an IoT publication row; see october-7-correction.md."
     },
     {
       "date": null,

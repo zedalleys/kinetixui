@@ -1,5 +1,5 @@
 {
-  "$comment": "Canonical register for the first 30 days. Validated by scripts/check-content-register.mjs (pnpm check:content). ONE CAMPAIGN PER IDEA (family), utm_content identifies the asset within it — so reporting shows which argument works, not which button. Names follow marketing/analytics.md §8.",
+  "$comment": "Canonical register for the first 30 days. Validated by scripts/check-content-register.mjs (pnpm check:content). ONE CAMPAIGN PER IDEA (family), utm_content identifies the asset within it \u2014 so reporting shows which argument works, not which button. Names follow marketing/analytics.md \u00a78.",
   "visuals": [
     "VIS-001",
     "VIS-002",
@@ -228,7 +228,7 @@
       "icp": "p2",
       "pillar": "b",
       "stage": "awareness",
-      "status": "published",
+      "status": "ready",
       "file": "marketing/content/linkedin.md",
       "day": 9,
       "destination": "/docs/tokens",
