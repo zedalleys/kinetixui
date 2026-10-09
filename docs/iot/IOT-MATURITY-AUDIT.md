@@ -426,5 +426,6 @@ that `TelemetryMetric` and the energy form still use; each is caught on its own.
 - No component derives freshness or connectivity from a transport; the product passes them in.
 - `DeviceActivity` does not group, filter or paginate; `ActivityTimeline` still does the day-grouped log.
 - Angular, SwiftUI, Compose and Flutter have no monitoring components; nothing in this slice changes that.
-- Camera, security, spatial and device cards are M4; native parity and an Angular reassessment are M5;
-  reference experiences are M6.
+- Roadmap naming updated after the owner decision: M4 is Device Integration; the old camera, security,
+  spatial and device-card scope is M7. Native parity and an Angular reassessment remain M5; reference
+  experiences remain M6. This renaming does not revise the historical audit evidence.
