@@ -59,7 +59,7 @@ piece of writing about that idea, not a shortened copy — the register records 
 >
 > Tokens are generated from one source.
 > Components are written natively per platform against a shared contract: SwiftUI views, Compose
-> composables, Flutter widgets, Angular directives, React components.
+> composables, Flutter widgets, Angular components, React components.
 >
 > CI fails any platform claim without real source.
 >
@@ -158,8 +158,8 @@ tagged URL are unchanged.
 > The runtime buys one codebase and charges you at the edges — where a platform has an opinion your
 > abstraction didn't anticipate.
 >
-> **4/** We took B. A SwiftUI view is a SwiftUI view. Angular is directives on real elements, not React in
-> a bridge.
+> **4/** We took B. A SwiftUI view is a SwiftUI view. An Angular button is a directive on a real HTML button,
+> not React in a bridge.
 >
 > Cost: five implementations, coverage not identical everywhere.
 >
