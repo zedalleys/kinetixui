@@ -61,6 +61,7 @@ const mono = localFont({
 const treeMono = localFont({
   src: "./fonts/jetbrains-mono-tree.woff2",
   variable: "--font-tree-mono",
+  preload: false,
   weight: "400",
   display: "block",
   adjustFontFallback: false,
