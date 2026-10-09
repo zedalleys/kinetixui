@@ -93,6 +93,7 @@ describe("M4C-A application session (synthetic, no provider/hardware)", () => {
     expect(selectDeviceConnectivity(h.app.getLedger(), "lamp").state).toBe("connecting");
     expect(h.app.request("lamp", "off")).toBe(false);
     h.advance(10); h.ready();
+    expect(h.socket().sent.filter(m => m.type === "call_service")).toHaveLength(0);
     h.app.request("lamp", "on");
     callback({ data: JSON.stringify({ type: "result", id: h.socket().sent.at(-1)!.id, success: true, result: null }) });
     h.result(id);
@@ -113,11 +114,13 @@ describe("M4C-A application session (synthetic, no provider/hardware)", () => {
   it("bounds retry attempts and never retries authentication rejection", () => {
     const h = harness(1); h.advance(100);
     expect(h.app.status().fault).toBe("auth-timeout"); h.advance(10);
-    h.advance(100); expect(h.app.status().phase).toBe("blocked"); h.advance(1000);
+    h.advance(100); expect(h.app.status().phase).toBe("blocked");
+    expect(selectDeviceConnectivity(h.app.getLedger(), "lamp").state).toBe("unknown"); h.advance(1000);
     expect(h.sockets).toHaveLength(2);
     const denied = harness(); denied.socket().receive({ type: "auth_invalid", message: "secret raw provider text" });
     denied.advance(1000); expect(denied.sockets).toHaveLength(1);
     expect(JSON.stringify(denied.app.status())).not.toMatch(/secret/);
+    expect(selectDeviceConnectivity(denied.app.getLedger(), "lamp").state).toBe("unknown");
   });
 
   it("times out setup and rejects malformed, oversized or mismatched frames without throwing", () => {
@@ -158,6 +161,7 @@ describe("M4C-A application session (synthetic, no provider/hardware)", () => {
     const h = harness(); h.socket().receive({ type: "auth_required" }); h.socket().receive({ type: "auth_ok" });
     h.result(h.socket().sent.at(-1)!.id, null, false);
     expect(h.app.status()).toMatchObject({ phase: "blocked", fault: "setup-rejected" });
+    expect(selectDeviceConnectivity(h.app.getLedger(), "lamp").state).toBe("unknown");
     const bad = harness(); bad.socket().receive({ type: "auth_required" }); bad.socket().receive({ type: "auth_ok" });
     bad.result(bad.socket().sent.at(-1)!.id);
     bad.result(bad.socket().sent.at(-1)!.id, [{ entity_id: "light.fixture", state: "on", last_updated: "bad" }]);

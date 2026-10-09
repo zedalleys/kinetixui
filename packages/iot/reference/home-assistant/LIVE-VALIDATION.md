@@ -52,7 +52,8 @@ the socket and timer. Missing/invalid configuration exits before connecting. Gen
   current session's pending map; unknown/duplicate results cannot turn an arbitrary array into a snapshot.
   State events must match the current subscription, entity mapping and validated frame shape.
 - Session callbacks are generation-guarded; every drop clears the map and subscription. Reconnect performs
-  auth → acknowledged subscription → snapshot. Link loss produces `connecting`, never command failure.
+  auth → acknowledged subscription → snapshot. Retryable link loss produces `connecting`, never command failure. Terminal blocks produce
+  `unknown` connectivity because no further connection attempt is scheduled.
   Commands are not replayed. Requests require ready session and reported-online allowlisted target.
 - The owner calls `tick` (CLI: every 100 ms). Auth/setup timeouts detach and reconnect; command deadlines
   remove correlation and call the ledger expiry rule, including exact deadlines. Timeout means uncertain,
@@ -78,7 +79,7 @@ node packages/iot/reference/home-assistant/negative-controls.mjs
 
 Run negative controls only in a disposable checkout without concurrent edits/tests. The script first requires
 a green baseline, individually sabotages acknowledgement semantics, session guarding, unknown-result routing,
-TLS enforcement and exact request-map deadlines, requires assertion failures, and restores the source in
+TLS enforcement, stale-report ordering, reconnect false confirmation and exact request-map deadlines, requires assertion failures, and restores the source in
 `finally`. It then requires a green restored baseline. These are synthetic controls, not provider observations.
 
 Local verification on 2026-10-08 (America/Los_Angeles), Node 22.23.3:
@@ -118,3 +119,22 @@ For each row, record observed lifecycle, normalized value and independent physic
 
 No release or changeset is required: the published package surface is unchanged. Completion of the automated
 harness is not completion of M4C's live-provider/physical proof.
+
+## Continuation verification — 2026-10-09
+
+- PR #325 inspection: existing head `1af55de236`; hosted build, accessibility, CodeQL and Vercel checks passed.
+- Addressed review finding: blocked authentication/setup/retry exhaustion now reports connectivity
+  `unknown`, retaining the last reported value without suggesting an active retry. Regression assertions
+  cover all three terminal paths; reconnect explicitly asserts zero automatic command replay.
+- Full IoT unit/integration/accessibility/boundary suite: 44 files / 1,148 tests passed.
+- Seven executable negative controls failed assertions as intended: acknowledgement 2, old callback 1,
+  unknown result 1, insecure endpoint 1, stale report 1, reconnect false confirmation 1, exact deadline 3.
+  Restored baseline: 12/12 passed; source restored byte-for-byte.
+- IoT typecheck, lint, build, distribution import checks, manifest, verification, IoT examples and release
+  metadata checks passed. Standalone session bundle and CLI syntax passed; missing configuration
+  returned exit 1 before connection.
+- npm dry-run: 113 files, zero reference files, no bundled dependencies. Published source/API unchanged.
+- M4 Device Integration and M7 Camera, Security & Spatial verified in contract, audit and website roadmap;
+  M5/M6 unchanged. No provider or physical validation performed; operator evidence remains pending.
+- Security limits above remain applicable: token privileges, native socket buffering and no heartbeat.
+  Follow-up hosted checks must be evaluated against the new PR commit. No merge or publication authorized.

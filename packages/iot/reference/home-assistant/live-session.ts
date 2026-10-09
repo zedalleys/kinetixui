@@ -80,8 +80,8 @@ export function createLiveSession(options: {
   const lost = (code: string, terminal = false) => {
     detach();
     fault = code; // Fixed codes only; never raw messages, URLs, credentials or exception text.
-    apply(targets.map(t => ({ type: "connectivity", deviceId: t.deviceId, state: "connecting" })));
     phase = terminal || retries >= maxRetries ? "blocked" : "retry";
+    apply(targets.map(t => ({ type: "connectivity", deviceId: t.deviceId, state: phase === "retry" ? "connecting" : "unknown" })));
     retryAt = options.now() + retryMs * 2 ** retries;
   };
   const send = (message: Message, entry: Pending) => {

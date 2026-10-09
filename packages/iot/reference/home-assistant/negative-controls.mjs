@@ -15,14 +15,16 @@ const controls = [
   ["old-session-callback", 'if (session === generation) receive(event.data);', 'receive(event.data);'],
   ["unknown-result-as-snapshot", 'if (!entry) return;', 'if (!entry) { apply(translateHomeAssistantMessage(m as HomeAssistantMessage, { entities })); return; }'],
   ["allow-insecure-remote", 'url.protocol !== "wss:"', 'false'],
+  ["stale-report-ordering", 'apply(translateHomeAssistantMessage(m as HomeAssistantMessage, { entities }));', 'apply(translateHomeAssistantMessage(m as HomeAssistantMessage, { entities }).map(signal => signal.type === "report" ? { ...signal, observedAt: undefined } : signal));'],
+  ["reconnect-false-confirmation", 'fault = undefined;', 'fault = undefined; apply([{ type: "result", commandId: "command-1", outcome: "applied", value: "on" }]);'],
   ["exclusive-request-deadline", 'if (now < entry.deadline) continue;', 'if (now <= entry.deadline) continue;'],
 ];
 const baseline = run();
 if (baseline.status !== 0) throw new Error("Baseline failed; negative controls not run");
 try {
   for (const [name, before, after] of controls) {
-    if (original.split(before).length !== 2) throw new Error(`Mutation anchor is not unique: ${name}`);
-    writeFileSync(source, original.replace(before, after));
+    if (original.split(before).length !== (name === "stale-report-ordering" ? 3 : 2)) throw new Error(`Mutation anchor is not unique: ${name}`);
+    writeFileSync(source, name === "stale-report-ordering" ? original.replaceAll(before, after) : original.replace(before, after));
     const result = run();
     const output = result.stdout + result.stderr;
     if (result.error || result.status === 0 || !/Tests\s+\d+ failed/.test(output)) {
