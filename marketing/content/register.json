@@ -325,7 +325,7 @@
       "icp": "p2",
       "pillar": "b",
       "stage": "awareness",
-      "status": "ready",
+      "status": "published",
       "file": "marketing/content/x.md",
       "day": 11,
       "destination": "/docs/tokens",
