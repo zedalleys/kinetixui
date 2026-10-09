@@ -1,21 +1,29 @@
 /** Run against the docs server; screenshot artifacts are written to --out (default /tmp/docs-trees). */
 import assert from 'node:assert/strict';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { chromium } from 'playwright';
 const arg = (key, fallback) => process.argv.includes(key) ? process.argv[process.argv.indexOf(key) + 1] : fallback;
 const out = arg('--out', '/tmp/docs-trees');
 mkdirSync(out, { recursive: true });
+const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 try {
   for (const width of [320, 1280]) for (const dir of ['ltr', 'rtl']) {
     const page = await browser.newPage({ viewport: { width, height: 900 } });
     await page.goto(`${arg('--base', 'http://127.0.0.1:3000')}/docs/tokens`);
     await page.evaluate(async dir => { document.documentElement.dir = dir; await document.fonts.ready; }, dir);
+    await page.addScriptTag({ content: axeSource });
+    const violations = await page.evaluate(async () => (await window.axe.run(document, {
+      rules: { region: { enabled: false } },
+    })).violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })));
+    assert.deepEqual(violations, [], 'documentation page must pass axe');
     const trees = page.locator('[data-documentation-tree]');
     assert.equal(await trees.count(), 2);
     for (let i = 0; i < 2; i++) {
       const tree = trees.nth(i);
       assert.equal(await tree.getAttribute('dir'), 'ltr');
+      assert.equal(await tree.getAttribute('role'), 'group');
       assert.equal(await tree.getAttribute('aria-label'), 'Scrollable text diagram');
       await tree.focus();
       assert.equal(await tree.evaluate(el => document.activeElement === el), true);

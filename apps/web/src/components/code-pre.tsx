@@ -50,7 +50,7 @@ export function CodePre({ className, children, ...props }: React.ComponentPropsW
         ref={ref}
         data-documentation-tree={isTextDiagram || undefined}
         dir={isTextDiagram ? "ltr" : undefined}
-        role={isTextDiagram ? "region" : undefined}
+        role={isTextDiagram ? "group" : undefined}
         aria-label={isTextDiagram ? "Scrollable text diagram" : undefined}
         // a code block scrolls sideways when a line is long, so the keyboard must be able to reach it
         tabIndex={0}
