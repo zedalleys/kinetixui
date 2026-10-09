@@ -141,7 +141,7 @@ adds the attribution to **every** event (including `$pageview`) centrally.
 | `kx_first_*` (first touch) | How was this *browser* first acquired? | `localStorage` (`kx_analytics_first_touch_v1`) | until cleared | **write-once**. Never overwritten, and never replaced by `direct` |
 
 Properties (each present only when known): `kx_source`, `kx_medium`, `kx_campaign`, `kx_content`, `kx_referrer`,
-`kx_landing_page`, and the same six as `kx_first_*`. Only normalised values are ever stored or sent — never a query
+`kx_landing_page`, and the same six as `kx_first_*`; plus `kx_traffic_type` on diagnostic traffic only (below). Only normalised values are ever stored or sent — never a query
 string, a referrer, a click id or a full URL. Storage is re-validated when read (it is user-editable).
 
 ### Source taxonomy (closed)
@@ -224,6 +224,15 @@ omitted (the source and medium still count).
   `src/lib/analytics-measurement.ts` is the rule in code, and `analytics-posthog.attribution.test.ts` pins the tab
   behaviour.
 
+### Diagnostic traffic
+
+A test of the site or its analytics is marked, not filtered at the source: open its first page with
+`?kx_traffic=diagnostic`. The tab stores the mark in `sessionStorage` (`kx_analytics_traffic_v1`) and every event it
+sends carries `kx_traffic_type: "diagnostic"`, the only value that property may take (`sanitizeAttributionProps`
+drops anything else). `?kx_traffic=clear` removes it. The mark does not change attribution, so a campaign link can
+still be tested. Reporting drops every session holding a marked event; PostHog keeps the raw events. The policy and
+the probe checklist are in [`marketing/analytics.md`](../../marketing/analytics.md) §11 *Diagnostic traffic*.
+
 ### Marketing metrics
 
 Defined in [`marketing/analytics.md`](../../marketing/analytics.md) — Qualified Evaluation Rate, Adoption Intent
@@ -245,6 +254,8 @@ for us because our page views are manual, so it has to be set explicitly.)
 - **Attribution reaches it because it is attached in `before_send`**, for every event, not at the call sites. The SDK
   creates `$pageleave` itself and it never passes through our `capture` wrapper, so enrichment there would have missed it.
 - **Volume:** roughly one extra event per page view. Keep that in mind against your PostHog event quota.
-- **The marketing metrics are unaffected:** `$pageleave` is in neither definition, and it is not a product event.
-  Exclude it from any breakdown that counts "events per visitor".
+- **It does not make a session an arrival.** A tab left idle past PostHog's 30-minute session timeout sends its
+  `$pageleave` under a new `$session_id`, so that session holds nothing else. The marketing denominator counts only
+  sessions with a `$pageview` or a product event (`ARRIVAL_EVENTS` in `src/lib/analytics-measurement.ts`; marketing/
+  analytics.md §4 *Eligible arriving session*). Exclude it from any breakdown that counts "events per visitor".
 - Do Not Track still applies: with it on, nothing is captured, `$pageleave` included.

@@ -359,3 +359,26 @@ describe("campaign landing → navigation → evaluation → adoption intent (kx
     expect(props.kx_campaign).toBeUndefined();
   });
 });
+
+describe("diagnostic traffic marking (real SDK)", () => {
+  it("a tab opened with ?kx_traffic=diagnostic marks $pageview, product events and $pageleave, and nothing raw leaks", async () => {
+    await visit("/?kx_traffic=diagnostic&gclid=DO_NOT_SEND");
+    analytics.pageview("/");
+    analytics.track("component_viewed", { component: "button" });
+    window.dispatchEvent(new Event("pagehide"));
+    for (const name of ["$pageview", "component_viewed", "$pageleave"]) {
+      expect(byEvent(name), name).toHaveLength(1);
+      expect(byEvent(name)[0]!.properties, name).toMatchObject({ kx_traffic_type: "diagnostic" });
+    }
+    expect(wire()).not.toContain("kx_traffic=");
+    expect(wire()).not.toContain("DO_NOT_SEND");
+  });
+
+  it("genuine traffic carries no kx_traffic_type at all", async () => {
+    await visit(LANDING);
+    analytics.pageview("/");
+    analytics.track("component_viewed", { component: "button" });
+    expect(seen.length).toBeGreaterThan(0);
+    for (const e of seen) expect(e.properties).not.toHaveProperty("kx_traffic_type");
+  });
+});

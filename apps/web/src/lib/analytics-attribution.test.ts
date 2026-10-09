@@ -613,3 +613,54 @@ describe("startAnalytics and attribution: only when analytics is on", () => {
 function everythingIn() {
   return JSON.stringify({ s: { ...window.sessionStorage }, l: { ...window.localStorage }, c: getAttributionContext() });
 }
+
+describe("diagnostic traffic marking", () => {
+  it("marks every event from a tab opened with ?kx_traffic=diagnostic, and keeps the mark on later pages of that tab", () => {
+    initAttribution(input("?kx_traffic=diagnostic", "", "/docs"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "diagnostic", kx_source: "direct" });
+    initAttribution(input("", "https://kinetixui.com/", "/components"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "diagnostic" });
+  });
+
+  it("removes the mark with ?kx_traffic=clear", () => {
+    initAttribution(input("?kx_traffic=diagnostic"), false);
+    initAttribution(input("?kx_traffic=clear"), false);
+    expect(getAttributionContext()).not.toHaveProperty("kx_traffic_type");
+  });
+
+  it("never marks genuine traffic, and ignores any other kx_traffic value", () => {
+    initAttribution(input("?utm_source=linkedin&utm_campaign=kx_p2_a_drift"), false);
+    expect(getAttributionContext()).not.toHaveProperty("kx_traffic_type");
+    initAttribution(input("?kx_traffic=internal"), false);
+    expect(getAttributionContext()).not.toHaveProperty("kx_traffic_type");
+  });
+
+  it("is not a new session or first-touch source: marking leaves attribution as it was", () => {
+    initAttribution(input("?kx_traffic=diagnostic&utm_source=linkedin&utm_campaign=kx_p2_a_drift"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_source: "linkedin", kx_campaign: "kx_p2_a_drift", kx_first_campaign: "kx_p2_a_drift" });
+  });
+
+  it("lets only kx_traffic_type=diagnostic out through sanitizeAttributionProps", () => {
+    const ok: Record<string, unknown> = { kx_traffic_type: "diagnostic" };
+    sanitizeAttributionProps(ok);
+    expect(ok).toEqual({ kx_traffic_type: "diagnostic" });
+    for (const bad of ["internal", "Diagnostic", "", 1, null]) {
+      const bag: Record<string, unknown> = { kx_traffic_type: bad };
+      sanitizeAttributionProps(bag);
+      expect(bag, String(bad)).toEqual({});
+    }
+  });
+
+  it("marks only the current page when storage is blocked", () => {
+    vi.spyOn(window, "sessionStorage", "get").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    initAttribution(input("?kx_traffic=diagnostic"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "diagnostic" });
+  });
+
+  it("sends nothing under Do Not Track, diagnostic or not", () => {
+    initAttribution(input("?kx_traffic=diagnostic"), true);
+    expect(getAttributionContext()).toEqual({});
+  });
+});
