@@ -18,7 +18,7 @@ pillar B, `kx_p2_b_token_boundary` → `/docs/tokens` — as published on 2026-1
 | --- | --- |
 | The 2026-10-07 close-out thread | The author wrote "today's post published" without naming the post. The close-out took the asset from the calendar slot (day 9 → LI-005). The post's content was never compared with LI-005's copy. The URL arrived later as "Today post is published", again without naming it |
 | The author, 2026-10-09 | The October 7 LinkedIn posts were focused on IoT |
-| PostHog, read 2026-10-09 04:15 UTC | **0** sessions have ever carried `kx_p2_b_token_boundary` with `utm_content=li_primary`. On 2026-10-07 and 2026-10-08 there was one session in total; it was direct (no campaign, no LinkedIn referrer) and did not view `/iot` |
+| PostHog, read 2026-10-09 04:15 UTC | **0** observed sessions before that cutoff carried `kx_p2_b_token_boundary` with `utm_content=li_primary`. On 2026-10-07 and 2026-10-08 there was one session in total; it was direct (no campaign, no LinkedIn referrer) and did not view `/iot` |
 | LinkedIn | Independently inspected in merged PR #326: the short link resolves to an IoT device-state post. Canonical URL and evidence limits are preserved in [the correction](../distribution/october-7-correction.md) |
 
 Zero tracked visits establishes only a lack of observed tagged traffic. It cannot prove non-publication,
@@ -55,3 +55,12 @@ floor. A post with no tagged link arrives as `direct` unless the browser sends a
 The close-out recorded an asset from the calendar slot, not from what was posted. A close-out should name the
 asset back to the author ("LI-005, *The boundary…*?") before writing `published`, and an unplanned post goes in
 `offCalendar` rather than in the nearest calendar row.
+
+## Final review cross-check
+
+Requeried the historical window 2026-09-01 00:00 UTC through 2026-10-09 04:15 UTC,
+end-exclusive, production host kinetixui.com, nonempty session IDs, attribution on any event in the session.
+LI-004: 5 tagged sessions, 0 QE, 0 AI; first sessions 2026-10-02 18:31:49–18:33:25 UTC.
+Those sessions emitted 5 $pageview and 5 docs_viewed events. No matching rows for X-003,
+ART-002 or LI-005 campaign/content pairs. This supports bounded traffic observations only.
+X-004: all five posts fit 280 characters with URLs counted as 23, including each numbered prefix.
