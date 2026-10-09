@@ -109,15 +109,20 @@ why the next two measures are separate, with different denominators, rather than
 > **Denominator** — **eligible arriving sessions**: every session the site received events from at all. The
 > same denominator as Qualified Evaluation Rate (§2), so the two are readable side by side.
 
+"Any event" is literal: a session is eligible whether or not it holds a `$pageview`. Counting `$pageview`
+sessions instead is a different, smaller number — 94 against 98 in the 2026-10-09 checkpoint (§11), the four
+missing sessions each holding only `$pageleave`.
+
 *For:* how much of arriving traffic reaches adoption documentation at all. A share of arrivals — **not a
 conversion rate**, and nothing may present it as one.
 
 ### Evaluation → Intent Progression
 
 > **Numerator** — sessions containing **both** a Qualified Evaluation signal (§3) and an Adoption Intent
-> signal, where the intent signal occurs **after or within** the evaluation: same session, intent timestamp
-> at or later than the session's first qualifying evaluation. `installation_viewed` is both signals at once
-> and counts as *within*.
+> signal, where **any** intent signal occurs **after or within** the evaluation: same session, at least one
+> intent timestamp at or later than the session's first qualifying evaluation. It need not be the session's
+> *first* intent signal — intent → evaluation → later intent progresses. `installation_viewed` is both signals
+> at once and counts as *within*.
 > **Denominator** — Qualified Evaluation sessions (§3).
 
 *For:* whether evaluation leads anywhere. This is the conversion measure, and it is bounded by 100% because
@@ -327,15 +332,69 @@ with explicit numerators and denominators. Neither of the two options previously
 making Adoption Intent require evaluation would have discarded a real behaviour, and simply swapping the
 denominator would have left the progression question unanswered.
 
-**The live dashboard has NOT been changed, and now disagrees with this specification.** Insight 8 still
-reports Adoption Intent and Qualified Evaluation as **counts** against each other, which is safe — no
-misleading percentage is displayed — but it is not either measure named above, and insight 10's `Both`
-column is the overlap Progression would use rather than Progression itself. **Manual follow-up:** rebuild
-insight 8 as Adoption Intent Rate over eligible arriving sessions, and add Evaluation → Intent Progression
-over Qualified Evaluation sessions, before either is read as a rate. Until that is done the spec is
-canonical and the tile is stale.
+**The dashboard was rebuilt on 2026-09-30** (tile 8 over eligible arriving sessions, new tile 8b for
+Progression). That rebuild left three query defects, found and reproduced on 2026-10-09 — next section.
 
-**11 insights.**
+### Query rules every tile must follow
+
+These are the §3, §4 and §8 definitions restated as query rules, because each one has been broken by a tile.
+The executable form is `summarizeSessions` in `apps/web/src/lib/analytics-measurement.ts`; its tests carry a
+case for each rule.
+
+1. **Count distinct `$session_id`s**, never events and never persons. A native funnel defaults to persons, so
+   it must be aggregated by `properties.$session_id`. The one exception is *Returning evaluators*, whose unit is
+   deliberately the anonymous ID (below).
+2. **Eligible arriving sessions = sessions with any event**, not `$pageview` sessions (§4).
+3. **A session is campaign-attributed when any of its events carries `kx_campaign`** (§8), not only a
+   `$pageview`.
+4. **Progression = any intent signal at or after the first Qualified Evaluation signal**: compare the
+   session's *last* intent timestamp with its *first* evaluation timestamp. Comparing first with first drops
+   intent → evaluation → later intent.
+5. **`installation_viewed` is in both signal lists**, in every tile that lists either.
+6. **Evaluation, adoption intent and verified adoption are different claims.** No tile here measures
+   adoption (§5).
+
+### Defects found and corrected 2026-10-09
+
+Reproduced read-only against PostHog on a fixed window: 2026-09-09 00:00 to 2026-10-09 19:56 UTC, excluding
+the diagnostic probe window 2026-10-09 13:25–13:35 UTC (one session). The corrected queries reproduce the
+historical checkpoint exactly: **98** eligible arriving sessions, **15** Qualified Evaluation, **12**
+Adoption Intent, **9** Progression. A refresh to 20:13 UTC the same day returned the same four counts. These
+are bounded observations, not rates — §10's baseline is still open.
+
+| Tile | Defect | Fixed window, current query | Same window, corrected | Rule |
+| --- | --- | --- | --- | --- |
+| 5, 8 (and Tier 2 tile 4) | Denominator counts `$pageview` sessions | 94 | 98 | 2 |
+| 8b | Compares first intent with first evaluation | 9 | 9 | 4 |
+| Funnel 1 | Intent step omits `installation_viewed`; aggregates persons; unordered | 74 → 15 → 2 persons | 98 → 15 → 9 sessions | 1, 5 |
+| 2, Funnel 2 | Attribution read from `$pageview` only; Funnel 2 aggregates persons | 27 campaign sessions | 28 | 1, 3 |
+
+**8b** shows no difference in this window: every one of the nine progressing sessions contains
+`installation_viewed`, which satisfies both sides at its own timestamp. The defect is still real — run
+through PostHog's own SQL engine on synthetic sessions, the current query scores intent → evaluation → later
+intent as 0 and the corrected one as 1 — and it will start to miss sessions as soon as one progresses through
+a copy or an `adopt_*` CTA.
+
+**Funnel 1 cannot be fixed by adding the event alone.** A native PostHog funnel will not let one event fill
+two steps, so a session whose only qualifying event is `installation_viewed` can never complete a
+three-step funnel; and an *unordered* funnel's "completed 2 steps" is any two of the three, not the
+evaluation step. On the fixed window, adding `installation_viewed` and aggregating by session gives 4
+(unordered) or 2 (ordered) where Progression is 9. The fix replaced Funnel 1 with a session table
+(eligible arriving → Qualified Evaluation → Progression) computed by the same rules as tiles 5 and 8b. It
+was also never homepage-scoped despite its name: step 1 was any `$pageview`.
+
+**Applied 2026-10-09 ~20:25 UTC, on the owner's approval.** Tiles 4, 5 and 8 count eligible arriving sessions
+over any event; tile 2 attributes on any event; 8b compares the last intent with the first evaluation; Funnels
+1 and 2 are now HogQL session tables built by the same rules; the reading-notes text tile states the rules.
+Read back after the change, on the dashboard's rolling 30 days: 99 eligible, 16 Qualified Evaluation and 10
+Progression — the fixed-window counts plus the one probe session, which the dashboard does not exclude.
+
+**Observed, not decided:** the four sessions a `$pageview` denominator misses each hold only `$pageleave` —
+most likely a tab left idle long enough for PostHog to rotate its session before the page was closed. §4
+counts them, and this section does not change that; whether a `$pageleave`-only session is an *arrival* is a
+definition question for this file, not for a query.
+
+**12 insights** (1–11, plus 8b).
 
 | # | Name | Event / filter | Breakdown | Range | Question |
 | --- | --- | --- | --- | --- | --- |
@@ -350,7 +409,8 @@ canonical and the tile is stale.
 | 6 | Evaluation entry point | first QE event in session | event name | 30d | What starts evaluation? |
 | 7 | Verification engagement | `cta_clicked` → `view_verification`, `platform_coverage` | `source` | 30d | Does the position get followed? |
 | **Adoption intent** |
-| 8 | **Adoption Intent Rate** | AI §4 and QE §3 as counts — **stale, see above**; §4 now specifies AI ÷ eligible arriving sessions, plus a second tile for Evaluation → Intent Progression | — | 30d | **Tier 1** |
+| 8 | **Adoption Intent Rate** | AI §4 ÷ eligible arriving sessions, as two counts — denominator defect above | — | 30d | **Tier 1** |
+| 8b | **Evaluation → Intent Progression** | §4, HogQL, ÷ Qualified Evaluation sessions — comparison defect above | — | 30d | **Tier 1** |
 | 9 | Adoption-rung split | `cta_clicked` → `adopt_*` | `target` | 30d | Which rung do people reach for? |
 | **ICP and content** |
 | 10 | **ICP hypothesis comparison** | QE and AI rates, with a `Both` overlap column | `kx_campaign` prefix (`kx_p1`/`kx_p2`) | 90d | **Tier 1** — which message converts? |
@@ -359,10 +419,13 @@ canonical and the tile is stale.
 Component and block interest are deliberately **not** dashboard insights. They are long-tail lists, better
 queried when a question arises than watched weekly.
 
-### Funnels (3, flexible-step)
+### Funnels (3; 1 and 2 are session tables)
 
-1. **Homepage → evaluation → intent:** `$pageview /` → any QE signal → any AI signal.
-2. **Campaign → evaluation:** session with `kx_campaign` → any QE signal, broken down by campaign.
+1. **Arrival → evaluation → intent** (originally specified as homepage-scoped, never built that way): eligible
+   arriving sessions → Qualified Evaluation sessions → Progression sessions. A HogQL session table since
+   2026-10-09, not a native funnel — see *Defects found and corrected 2026-10-09* above.
+2. **Campaign → evaluation:** sessions with any event carrying `kx_campaign` → Qualified Evaluation sessions,
+   by campaign. Also a HogQL session table since 2026-10-09.
 3. **Coverage → component:** `cta_clicked` → `platform_coverage` → `component_viewed`.
 
 All flexible-step: these are not journeys anyone must take in order, and forcing linearity would report a
