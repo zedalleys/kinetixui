@@ -159,12 +159,12 @@ built the thing and made the decisions — not as a founder with a growth story.
 > edges — the places where a platform has an opinion your abstraction didn't anticipate.
 >
 > KinetixUI takes the second one. A SwiftUI view is a SwiftUI view. A Compose composable is a composable.
-> The Angular components are directives on real HTML elements, not React wrapped in a bridge. Nothing is
+> In Angular, a button is a directive on a real HTML button, not React wrapped in a bridge. Nothing is
 > converted from one source into five — the tokens are generated, the components are written.
 >
 > The honest cost: five implementations to maintain, and coverage that isn't identical everywhere. Today
-> React carries the full catalogue and the three native platforms carry most of it, with the gaps written
-> down and the reasons given.
+> React carries the full catalogue, the three native platforms carry most of it, and Angular, still in
+> preview, carries 64 of 98 — with the gaps written down and the reasons given.
 >
 > The honest benefit: nothing is standing between your design system and the platform.
 >
