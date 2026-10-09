@@ -59,7 +59,7 @@ piece of writing about that idea, not a shortened copy — the register records 
 >
 > Tokens are generated from one source.
 > Components are written natively per platform against a shared contract: SwiftUI views, Compose
-> composables, Flutter widgets, Angular directives, React components.
+> composables, Flutter widgets, Angular components, React components.
 >
 > CI fails any platform claim without real source.
 >
