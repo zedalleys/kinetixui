@@ -99,7 +99,7 @@ three fictional.
 About 1% fiction — enough to publish an API that had never existed.
 
 Those examples are moving into files our CI compiles, with the site quoting the
-extracted region. Five of a hundred-odd so far.
+extracted region. Six of a hundred-odd so far.
 
 Writeup: <DEV_ARTICLE_URL>
 

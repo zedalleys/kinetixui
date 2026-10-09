@@ -129,7 +129,7 @@ Mine found five more problems on its first run.
 **9/**
 
 Examples are migrating into files CI compiles, with the site quoting the
-extracted region. Five of a hundred-odd so far.
+extracted region. Six of a hundred-odd so far.
 
 Current coverage is generated from the manifest — edit it by hand and the build
 fails.

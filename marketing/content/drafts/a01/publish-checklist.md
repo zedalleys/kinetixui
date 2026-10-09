@@ -10,7 +10,7 @@ Work top to bottom on publication day. Nothing here is automated, and nothing
 should be: every step is a human deciding the claim still holds.
 
 **Editorial freeze:** 2026-09-23, against `main` @ `e29184c`, v0.22.1.
-**Volatile facts re-derived:** 2026-09-30, v0.23.3 core / `@kinetixui/angular` 0.24.0 / `@kinetixui/iot` 0.2.0.
+**Volatile facts re-derived:** 2026-10-09, v0.24.0 core / `@kinetixui/angular` 0.25.0 / `@kinetixui/iot` 0.5.0.
 **Current-state figures re-derived:** 2026-09-30, `main` @ `e289c14`.
 Anything below marked ⏱ ages and must be re-derived.
 
@@ -25,9 +25,9 @@ to eyeball. `verify-evidence.mjs` covers the historical claims against git.
 - [ ] Re-run the snippet audit (`sources.md` → "Current state") for migrated vs
       hand-written counts
 - [ ] Compare each against the article. **Most likely to have moved:**
-  - [ ] "Five of a hundred-odd demo examples" — article + X 9 + LinkedIn B
+  - [ ] "Six of a hundred-odd demo examples" — article + X 9 + LinkedIn B
   - [ ] "98 catalogue entries — 97 components and one documented recipe. React
-        98, SwiftUI 90, Compose 90, Flutter 90, Angular 31"
+        98, SwiftUI 90, Compose 90, Flutter 90, Angular 64"
   - [ ] "90 of 98 … 8 documented exceptions"
 - [ ] Angular still `maturity: "preview"` and `catalogComplete: false`
 - [x] `@kinetixui/angular` shipped on 2026-09-27 (0.24.0, still preview). As this

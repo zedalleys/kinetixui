@@ -5,8 +5,8 @@ here. Re-run `pnpm marketing:stats` on the day of publishing and re-check the
 numbers before posting — they move.
 
 **Numbers verified:** 2026-09-23, against `main` @ `e29184c`, KinetixUI v0.22.1.
-**Current-state figures re-derived:** 2026-09-29, core v0.23.3 with
-`@kinetixui/angular` at 0.24.0 and `@kinetixui/iot` at 0.2.0, each in its own
+**Current-state figures re-derived:** 2026-10-09, core v0.24.0 with
+`@kinetixui/angular` at 0.25.0 and `@kinetixui/iot` at 0.5.0, each in its own
 release cohort. Only the *current* columns moved — every historical figure below
 is tied to a commit and is unchanged.
 
@@ -19,7 +19,7 @@ From `pnpm marketing:stats` (reads `platform-parity.json` and
 | --- | --- | --- |
 | 98 catalogue entries (97 components + 1 documented recipe) | 98 | `components.manifest.json` |
 | React | 98 / 98 | `platform-parity.json` → `coverage` |
-| Angular (preview) | 31 / 98 | same, `platformDefinitions.Angular.maturity = "preview"` |
+| Angular (preview) | 64 / 98 | same, `platformDefinitions.Angular.maturity = "preview"` |
 | SwiftUI | 90 / 98 | same |
 | Jetpack Compose | 90 / 98 | same |
 | Flutter | 90 / 98 | same |
@@ -192,10 +192,10 @@ before trusting any tooling that "found nothing".
 
 ---
 
-# Current repository state — 2026-09-29
+# Current repository state — 2026-10-09
 
-Use this for the "ours, today" paragraph. Core v0.23.3 MIT, with
-`@kinetixui/angular` at 0.24.0 and `@kinetixui/iot` at 0.2.0. Re-run
+Use this for the "ours, today" paragraph. Core v0.24.0 MIT, with
+`@kinetixui/angular` at 0.25.0 and `@kinetixui/iot` at 0.5.0. Re-run
 `pnpm marketing:stats` before publishing — these move:
 
 | | |
@@ -203,14 +203,14 @@ Use this for the "ours, today" paragraph. Core v0.23.3 MIT, with
 | Catalogue entries | 98 — 97 components + 1 documented recipe (`combobox`) |
 | Lifecycle | 97 stable, 1 beta |
 | React | 98 / 98 |
-| Angular | 31 / 98 — **preview**, `catalogComplete: false` |
+| Angular | 64 / 98 — **preview**, `catalogComplete: false` |
 | SwiftUI | 90 / 98 |
 | Jetpack Compose | 90 / 98 |
 | Flutter | 90 / 98 |
 | On all four catalogue-complete platforms | **90 / 98** |
 | Documented exceptions | 8 |
 | Blocks | 20, on all five platforms |
-| npm | `ui`, `cli`, `tokens` at 0.23.3; `angular` at **0.24.0 — published, still preview**; `iot` at 0.2.0 — each non-core package versioned independently |
+| npm | `ui`, `cli`, `tokens` at 0.24.0; `angular` at **0.25.0 — published, still preview**; `iot` at 0.5.0 — each non-core package versioned independently |
 
 Snippet migration, counted directly (not covered by `marketing:stats`):
 
