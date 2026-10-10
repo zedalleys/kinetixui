@@ -501,6 +501,13 @@ is written per tab and an unmarked tab can share a session with a marked one. Th
 by its own timestamp, per rule 7. The exact per-tile queries are kept next to this project's analytics
 corrections, not in this repository; apply them only on the owner's approval, then read every changed tile back.
 
+**Decided 2026-10-10 (owner).** Tiles 3, 7, 9, 11 and Funnel 3 keep event-time windows and their per-event
+breakdowns; the whole-session diagnostic exclusion on them stays the `$session_id` anti-join. Putting them on
+session-start windows was considered and rejected: it would turn "which CTA target earned the click" into "how
+many sessions contained that click", losing the breakdown each of those tiles exists for, and Funnel 3's
+flexible-step ordering is itself the measure. The cost is the documented edge disagreement with the session
+tiles, which is why rule 7 names both rules and the dashboard's own text tile repeats them.
+
 **12 insights** (1–11, plus 8b).
 
 | # | Name | Event / filter | Breakdown | Range | Question |
