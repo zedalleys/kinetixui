@@ -692,6 +692,12 @@ Before that can happen: a running Home Assistant (or other provider) with the de
 transport and server proxy that holds the credential; the adapter's message shapes checked against that instance's
 real messages; and a manual run of the §10.5 scenarios with the physical device.
 
+The M4C-A application-side session and server-only operator CLI are documented in
+[`LIVE-VALIDATION.md`](../../packages/iot/reference/home-assistant/LIVE-VALIDATION.md). They add
+connection, authentication, subscription, resnapshot, correlation and bounded reconnect handling outside
+the published package. Automated evidence is synthetic only; live-provider and physical proof remain blocked
+until an operator supplies access and records the run.
+
 ### 10.9 Truth semantics kept
 
 Requested ≠ confirmed. Acknowledged ≠ confirmed. Disconnected ≠ failed: a `connectivity` signal never settles,
@@ -703,8 +709,8 @@ separate clocks.
 
 ## 11. What remains
 
-- **Camera, security and spatial** (labelled M4 in the public roadmap before the real-device integration work
-  took the M4A/M4B names): camera preview and availability, security event presentation,
+- **M7 — Camera, Security & Spatial** (moved from the old M4 scope; M4 is now Device Integration,
+  and M5 native parity / Angular reassessment and M6 reference experiences are unchanged): camera preview and availability, security event presentation,
   privacy and recording truth, spatial overlays — with no embedded transport or video engine.
 - **Real-provider and physical validation of the ledger** (§10.8): the Home Assistant adapter against a live
   instance, then a physical light or plug. Also deferred from M4B: report origin evidence (ending a pending request
