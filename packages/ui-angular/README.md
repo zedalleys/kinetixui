@@ -35,12 +35,16 @@ this package is built against.
 
 ## Minimal usage
 
-Load the stylesheet once, then import the standalone symbols you need.
+Load the stylesheets once, then import the standalone symbols you need. All four token sheets are
+needed: `css/extras` defines the focus ring the components draw in place of the browser outline, and
+the two `/dark` sheets are what the `.dark` class switches to.
 
 ```css
 /* your global stylesheet */
 @import "@kinetixui/tokens/css";
 @import "@kinetixui/tokens/css/dark";
+@import "@kinetixui/tokens/css/extras";
+@import "@kinetixui/tokens/css/extras/dark";
 @import "@kinetixui/angular/styles.css";
 ```
 
