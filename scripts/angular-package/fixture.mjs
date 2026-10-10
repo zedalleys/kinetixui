@@ -162,12 +162,36 @@ bootstrapApplication(AppComponent).catch((error: unknown) => {
 });
 `;
 
-// The documented token imports, which is the thing being tested: importing only globals.css leaves
-// the elevation and typography ramps undefined.
-const styles = `@import "@kinetixui/tokens/css";
-@import "@kinetixui/tokens/css/extras";
-@import "@kinetixui/angular/styles.css";
-`;
+/**
+ * Where a reader copies the global stylesheet from. The consumer does not restate these imports: it
+ * uses the docs fence verbatim, so a missing sheet in the docs is a missing sheet in the consumer.
+ * The README is what npm shows on the package page, so it has to be the same recipe.
+ */
+export const STYLESHEET_SOURCES = {
+  docs: "apps/web/src/app/docs/angular/page.mdx",
+  readme: "packages/ui-angular/README.md",
+};
+
+/**
+ * The one ```css fence in `text` that loads `@kinetixui/angular/styles.css`.
+ *
+ * @param {string} text
+ * @param {string} where for the error message
+ * @returns {string}
+ */
+export function stylesheetFence(text, where) {
+  const fences = [...text.matchAll(/^```css\n([\s\S]*?)^```/gm)].map((match) => match[1]);
+  const matches = fences.filter((fence) => fence.includes("@kinetixui/angular/styles.css"));
+  if (matches.length !== 1) {
+    throw new Error(`${where} must have exactly one css fence importing @kinetixui/angular/styles.css, found ${matches.length}`);
+  }
+  return matches[0];
+}
+
+/** The `@import` targets of a stylesheet, in order — comments and blank lines are not the recipe. */
+export function importsOf(css) {
+  return [...css.matchAll(/@import\s+"([^"]+)"/g)].map((match) => match[1]);
+}
 
 const index = `<!doctype html>
 <html lang="en">
@@ -238,10 +262,11 @@ const angularJson = (name) => ({
 /**
  * The files of the consumer application.
  *
- * @param {{name: string, angular: string}} options
+ * @param {{name?: string, angular?: string, styles: string}} options — `styles` is the docs fence
  * @returns {Record<string, string>} path → contents
  */
-export function consumerFiles({ name = "kinetixui-angular-consumer", angular = "^21.0.0" } = {}) {
+export function consumerFiles({ name = "kinetixui-angular-consumer", angular = "^21.0.0", styles } = {}) {
+  if (typeof styles !== "string") throw new Error("consumerFiles needs the documented stylesheet (styles)");
   return {
     "package.json": `${JSON.stringify(
       {

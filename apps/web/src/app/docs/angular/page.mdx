@@ -20,16 +20,25 @@ npm i @kinetixui/angular @kinetixui/tokens
 
 `@kinetixui/tokens` is a peer dependency, not a convenience: the components
 spend generated CSS custom properties and never define them, so the token
-contract has to be present for anything to render as designed. Load both
-stylesheets before the component styles — `globals.css` carries colour, spacing
-and radius, and `extras.css` carries the elevation and typography ramps the
-components also use:
+contract has to be present for anything to render as designed. Load the token
+sheets before the component styles. `css` carries colour, spacing and radius,
+and `css/extras` carries the elevation and typography ramps, including the
+focus ring every interactive component draws. Each has a `/dark` half that
+redefines it under the `.dark` class:
 
 ```css
 @import "@kinetixui/tokens/css";
+@import "@kinetixui/tokens/css/dark";
 @import "@kinetixui/tokens/css/extras";
+@import "@kinetixui/tokens/css/extras/dark";
 @import "@kinetixui/angular/styles.css";
 ```
+
+Leave out `css/extras` and a keyboard user gets no focus ring, because the
+component styles replace the browser outline with it. Leave out a `/dark`
+sheet and toggling `.dark` changes nothing it would have redefined.
+`check:angular-package` builds a clean Angular app from this exact block and
+checks both in Chromium.
 
 Angular 21 is the tested and supported range (`@angular/core` and
 `@angular/forms`, `^21.0.0`). Every export is standalone, so a template imports
