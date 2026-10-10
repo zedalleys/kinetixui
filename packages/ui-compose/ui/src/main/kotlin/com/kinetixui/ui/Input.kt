@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
@@ -50,6 +51,11 @@ import androidx.compose.ui.unit.sp
  * independently of its value. Pair it with a visible FieldLabel whose
  * duplicate semantics are cleared. It comes after `trailing` so a positional
  * call written against this signature can never bind to it.
+ *
+ * Inside a [KinetixField], while `isError` or the field is invalid, the
+ * editable node also carries the field's error [KinetixFieldMessage] as its
+ * error, so accessibility services get it on the input rather than only as
+ * loose text below it.
  */
 @Composable
 fun KinetixInput(
@@ -87,6 +93,7 @@ fun KinetixInput(
     val colors = KinetixColorScheme.current
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
+    val errorMessage = LocalFieldError.current?.message?.takeIf { isError || LocalFieldInvalid.current }
 
     val borderColor = when {
         isError -> colors.destructive
@@ -116,6 +123,7 @@ fun KinetixInput(
                 onValueChange = onValueChange,
                 modifier = Modifier.semantics {
                     accessibleLabel?.takeIf { it.isNotBlank() }?.let { contentDescription = it }
+                    errorMessage?.let { error(it) }
                 },
                 enabled = enabled,
                 singleLine = true,

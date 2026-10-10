@@ -53,7 +53,7 @@
     "Compose": {
       "build": 90,
       "interaction": 7,
-      "accessibility": 5,
+      "accessibility": 6,
       "rtl": 1,
       "largeText": 0,
       "reducedMotion": 7,
@@ -778,6 +778,7 @@
         "components": [
           "button",
           "checkbox",
+          "field",
           "input",
           "switch",
           "tabs"
@@ -1552,7 +1553,7 @@
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:36-108"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-148"
         ]
       },
       "Flutter": {
@@ -1823,7 +1824,7 @@
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:36-108"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-148"
         ]
       },
       "Flutter": {
@@ -2686,6 +2687,9 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-148"
         ]
       },
       "Flutter": {
@@ -3017,7 +3021,7 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:36-108"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-148"
         ]
       },
       "Flutter": {
@@ -5018,7 +5022,7 @@
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:53-203"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:36-108"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-148"
         ],
         "reducedMotion": [
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:53-203"
@@ -5249,7 +5253,7 @@
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:36-108"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-148"
         ],
         "rtl": [
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/AdaptivityTest.kt:24-61"

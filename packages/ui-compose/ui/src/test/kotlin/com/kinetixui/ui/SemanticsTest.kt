@@ -1,11 +1,15 @@
 package com.kinetixui.ui
 
 import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -51,6 +55,42 @@ class SemanticsTest {
         val input = rule.onNode(hasSetTextAction() and hasContentDescription("Email"))
         input.assertIsEnabled().performTextInput("ada@example.com")
         input.assertTextEquals("ada@example.com")
+    }
+
+    // Inside a KinetixField, the error message reaches the editable node itself (the Compose equivalent of
+    // aria-describedby for errors), so TalkBack reads it on the input, not only as loose text below it.
+    private fun emailField(value: MutableState<String>, submitted: MutableState<Boolean>) {
+        rule.setContent {
+            KinetixTheme(darkTheme = false) {
+                val error = if (submitted.value && "@" !in value.value) "Enter an email address." else null
+                KinetixField(invalid = error != null) {
+                    KinetixFieldLabel(text = "Email", modifier = Modifier.clearAndSetSemantics { })
+                    KinetixInput(value = value.value, onValueChange = { value.value = it }, isError = error != null, accessibleLabel = "Email")
+                    KinetixFieldDescription(text = "We only use it to sign you in.")
+                    error?.let { KinetixFieldMessage(text = it) }
+                }
+            }
+        }
+    }
+
+    private val editableEmail = hasSetTextAction() and hasContentDescription("Email")
+
+    @Test
+    fun field_error_is_exposed_on_the_editable_node_and_cleared_when_corrected() {
+        val value = mutableStateOf("ada")
+        val submitted = mutableStateOf(false)
+        emailField(value, submitted)
+        rule.onNode(editableEmail).assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Error))
+
+        submitted.value = true
+        rule.onNode(editableEmail).assert(SemanticsMatcher.expectValue(SemanticsProperties.Error, "Enter an email address."))
+
+        // Correcting the value through the editable node itself clears the error, and the label survives.
+        rule.onNode(editableEmail).performTextReplacement("ada@example.com")
+        rule.onNode(editableEmail)
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Error))
+            .assertTextEquals("ada@example.com")
+        rule.onNodeWithText("Enter an email address.").assertDoesNotExist()
     }
 
     @Test

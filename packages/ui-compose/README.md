@@ -80,8 +80,11 @@ proximity to the token source it depends on.
 - `Field.kt` / `Fab.kt` / `Quote.kt` / `Slider.kt` / `PasswordInput.kt` —
   same pattern. `KinetixField`/`KinetixFieldLabel`/`KinetixFieldMessage`
   share an `invalid` flag through a `compositionLocalOf`, playing the role
-  the React source's `useField()` context does (the `id`/`aria-describedby`
-  wiring itself isn't ported — no Android equivalent). `KinetixSlider` is
+  the React source's `useField()` context does. Android has no
+  `aria-describedby`; instead a `KinetixInput` inside an invalid field
+  carries the error `KinetixFieldMessage` as its accessibility error.
+  `KinetixFieldDescription` is not linked to the input yet: the hint-text
+  semantics it needs are not in the pinned Compose BOM. `KinetixSlider` is
   the first component to wrap a Material3 control outright rather than
   hand-rolling interaction (`Modifier.toggleable`/`selectable` elsewhere) —
   a slider's drag/keyboard/RTL handling is real surface area worth reusing,
