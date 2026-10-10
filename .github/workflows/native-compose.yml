@@ -83,6 +83,7 @@ jobs:
           - activity-not-wired
           - validation-broken
           - switch-unresponsive
+          - email-unnamed
           - switch-unnamed
           - switch-row-merge
           - fence-missing
