@@ -24,6 +24,8 @@ import { fileURLToPath } from 'node:url';
 const NEGATIVES = {
   'email-unnamed': { fence: 'FirstScreen.kt', from: ', accessibleLabel = "Email"', to: '',
     expect: /FirstScreenTest > emailIsNamedAndEditable FAILED/ },
+  'email-label-duplicated': { fence: 'FirstScreen.kt', from: 'KinetixFieldLabel(text = "Email", modifier = Modifier.clearAndSetSemantics { })',
+    to: 'KinetixFieldLabel(text = "Email")', expect: /FirstScreenTest > emailIsNamedAndEditable FAILED/ },
   'missing-import': { fence: 'FirstScreen.kt', from: 'import androidx.compose.material3.Text\n', to: '',
     expect: /Unresolved reference 'Text'/ },
   'missing-component': { fence: 'FirstScreen.kt', from: 'KinetixSwitch(', to: 'KinetixToggleSwitch(',
@@ -205,6 +207,8 @@ class FirstScreenTest {
     @Test
     fun emailIsNamedAndEditable() {
         rule.setContent { FirstScreen() }
+        // The visible label is hidden from assistive technology, so "Email" is announced once, on the input.
+        rule.onNodeWithText("Email").assertDoesNotExist()
         val email = rule.onNode(hasSetTextAction() and hasContentDescription("Email"))
         email.assertExists().assertIsEnabled().performTextInput("ada@example.com")
     }

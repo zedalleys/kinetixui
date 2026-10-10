@@ -42,11 +42,14 @@ import androidx.compose.ui.unit.sp
  * composition (`InputGroupAddon`) — a single optional end-aligned slot
  * rather than a full addon system, enough for [KinetixPasswordInput]'s
  * show/hide control without pulling in a separate InputGroup type.
- * `accessibleLabel` names the editable node itself, independently of its value.
- * Pair it with a visible FieldLabel whose duplicate semantics are cleared.
  * `keyboardType`/`visualTransformation` exist for the same reason —
  * [KinetixPasswordInput] needs to mask input, which this bare control has
  * no other way to request.
+ *
+ * The overload taking `accessibleLabel` names the editable node itself,
+ * independently of its value. Pair it with a visible FieldLabel whose
+ * duplicate semantics are cleared. It comes after `trailing` so a positional
+ * call written against this signature can never bind to it.
  */
 @Composable
 fun KinetixInput(
@@ -64,7 +67,7 @@ fun KinetixInput(
         value = value, onValueChange = onValueChange, modifier = modifier,
         placeholder = placeholder, enabled = enabled, isError = isError,
         keyboardType = keyboardType, visualTransformation = visualTransformation,
-        accessibleLabel = null, trailing = trailing,
+        trailing = trailing, accessibleLabel = null,
     )
 }
 
@@ -78,8 +81,8 @@ fun KinetixInput(
     isError: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    accessibleLabel: String?,
     trailing: (@Composable () -> Unit)? = null,
+    accessibleLabel: String?,
 ) {
     val colors = KinetixColorScheme.current
     val interactionSource = remember { MutableInteractionSource() }

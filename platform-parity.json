@@ -1369,7 +1369,7 @@
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
+      "Compose": "beta",
       "Flutter": "experimental"
     },
     "input-group": {
@@ -1726,8 +1726,8 @@
       "experimental": 90
     },
     "Compose": {
-      "experimental": 86,
-      "beta": 4
+      "experimental": 85,
+      "beta": 5
     },
     "Flutter": {
       "experimental": 85,
@@ -2716,6 +2716,7 @@
         "build"
       ],
       "Compose": [
+        "accessibility",
         "build"
       ],
       "Flutter": [
@@ -3987,7 +3988,7 @@
     "Compose": {
       "build": 90,
       "interaction": 7,
-      "accessibility": 4,
+      "accessibility": 5,
       "rtl": 1,
       "largeText": 0,
       "reducedMotion": 7,

@@ -53,7 +53,7 @@
     "Compose": {
       "build": 90,
       "interaction": 7,
-      "accessibility": 4,
+      "accessibility": 5,
       "rtl": 1,
       "largeText": 0,
       "reducedMotion": 7,
@@ -778,6 +778,7 @@
         "components": [
           "button",
           "checkbox",
+          "input",
           "switch",
           "tabs"
         ]
@@ -1551,7 +1552,7 @@
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:30-89"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:36-108"
         ]
       },
       "Flutter": {
@@ -1822,7 +1823,7 @@
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:30-89"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:36-108"
         ]
       },
       "Flutter": {
@@ -3014,6 +3015,9 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:36-108"
         ]
       },
       "Flutter": {
@@ -5014,7 +5018,7 @@
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:53-203"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:30-89"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:36-108"
         ],
         "reducedMotion": [
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:53-203"
@@ -5245,7 +5249,7 @@
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:30-89"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:36-108"
         ],
         "rtl": [
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/AdaptivityTest.kt:24-61"
