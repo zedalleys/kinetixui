@@ -184,6 +184,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.printToString
 import org.junit.Rule
 import org.junit.Test
@@ -226,12 +228,17 @@ class FirstScreenTest {
     fun emailErrorIsAnnouncedOnTheInputUntilCorrected() {
         rule.setContent { FirstScreen() }
         val email = rule.onNode(hasSetTextAction() and hasContentDescription("Email"))
-        email.assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Error))
-        rule.onNodeWithText("Get started").performClick()
-        // TalkBack reads the error on the field it belongs to, not only as loose text below it.
-        email.assert(SemanticsMatcher.expectValue(SemanticsProperties.Error, error))
+        val noError = SemanticsMatcher.keyNotDefined(SemanticsProperties.Error)
+        // Valid: submitting a real address raises no error.
         email.performTextInput("ada@example.com")
-        email.assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Error)).assertIsEnabled()
+        rule.onNodeWithText("Get started").performClick()
+        email.assert(noError)
+        // Invalid: the error is on the field it belongs to, not only loose text below it.
+        email.performTextReplacement("ada")
+        email.assert(SemanticsMatcher.expectValue(SemanticsProperties.Error, error))
+        // Corrected: the error is removed; the name and the typed value survive.
+        email.performTextReplacement("ada@example.com")
+        email.assert(noError).assertIsEnabled().assertTextEquals("ada@example.com")
     }
 
     @Test

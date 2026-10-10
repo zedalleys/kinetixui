@@ -77,19 +77,21 @@ class SemanticsTest {
 
     @Test
     fun field_error_is_exposed_on_the_editable_node_and_cleared_when_corrected() {
-        val value = mutableStateOf("ada")
-        val submitted = mutableStateOf(false)
+        val value = mutableStateOf("ada@example.com")
+        val submitted = mutableStateOf(true)
         emailField(value, submitted)
-        rule.onNode(editableEmail).assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Error))
+        val noError = SemanticsMatcher.keyNotDefined(SemanticsProperties.Error)
 
-        submitted.value = true
+        // Valid: no error on the editable node.
+        rule.onNode(editableEmail).assert(noError)
+
+        // Invalid: the field's error message is the editable node's error.
+        rule.onNode(editableEmail).performTextReplacement("ada")
         rule.onNode(editableEmail).assert(SemanticsMatcher.expectValue(SemanticsProperties.Error, "Enter an email address."))
 
-        // Correcting the value through the editable node itself clears the error, and the label survives.
+        // Corrected: the error is removed, and the label and value survive.
         rule.onNode(editableEmail).performTextReplacement("ada@example.com")
-        rule.onNode(editableEmail)
-            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Error))
-            .assertTextEquals("ada@example.com")
+        rule.onNode(editableEmail).assert(noError).assertTextEquals("ada@example.com")
         rule.onNodeWithText("Enter an email address.").assertDoesNotExist()
     }
 
