@@ -400,9 +400,11 @@ case for each rule.
    adoption (§5).
 7. **Diagnostic sessions are excluded from every count**: any session holding an event with
    `kx_traffic_type = 'diagnostic'`, plus the historical probe listed under *Diagnostic traffic*. The exclusion
-   is per session, so one marked event removes the whole session. A session belongs to the date range in which
-   it starts, and all of its events are read, including those after the range ends, so a marked event just
-   outside the range still removes it.
+   is per session, so one marked event removes the whole session. On a tile that counts sessions, a session
+   belongs to the date range in which it **starts**, and all of its events are read, including those after the
+   range ends, so a marked event just outside the range still removes it. On a tile that counts events, each
+   event is placed by its own timestamp, so the two kinds of tile can disagree at a range's edges: that is the
+   cost of needing whole sessions for a session measure, and it is stated on the dashboard.
 
 ### Defects found and corrected 2026-10-09
 
@@ -490,7 +492,8 @@ it "returning".
 
 **Dashboard: proposed, not applied.** Tiles 1, 2, 4, 5, 6, 8, 8b, 10, Funnels 1 and 2 and Returning evaluators
 move to one shared HogQL session CTE (§4 eligibility, §8 attribution, rule 7) whose window follows the
-dashboard's date controls; native tiles 3, 7, 9, 11 and Funnel 3, which count specific product events, get one
+dashboard's date controls and is clamped at the present, because an unset upper bound drops its comparison
+rather than resolving to now; native tiles 3, 7, 9, 11 and Funnel 3, which count specific product events, get one
 session-level filter for `kx_traffic_type = 'diagnostic'` and the historical probe. The exact per-tile queries are
 kept next to this project's analytics corrections, not in this repository; apply them only on the owner's
 approval, then read every changed tile back.
