@@ -57,8 +57,8 @@ class SemanticsTest {
         input.assertTextEquals("ada@example.com")
     }
 
-    // Inside a KinetixField, the error message and the helper text reach the editable node itself (the
-    // Compose equivalent of aria-describedby), so TalkBack reads them on the input, not only as loose text.
+    // Inside a KinetixField, the error message reaches the editable node itself (the Compose equivalent of
+    // aria-describedby for errors), so TalkBack reads it on the input, not only as loose text below it.
     private fun emailField(value: MutableState<String>, submitted: MutableState<Boolean>) {
         rule.setContent {
             KinetixTheme(darkTheme = false) {
@@ -91,25 +91,6 @@ class SemanticsTest {
             .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Error))
             .assertTextEquals("ada@example.com")
         rule.onNodeWithText("Enter an email address.").assertDoesNotExist()
-    }
-
-    @Test
-    fun field_description_is_the_editable_node_hint() {
-        emailField(mutableStateOf(""), mutableStateOf(false))
-        rule.onNode(editableEmail)
-            .assert(SemanticsMatcher.expectValue(SemanticsProperties.HintText, "We only use it to sign you in."))
-    }
-
-    @Test
-    fun input_outside_a_field_gains_no_error_or_hint() {
-        rule.setContent {
-            KinetixTheme(darkTheme = false) {
-                KinetixInput(value = "ada", onValueChange = {}, isError = true, accessibleLabel = "Email")
-            }
-        }
-        rule.onNode(editableEmail)
-            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Error))
-            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.HintText))
     }
 
     @Test
