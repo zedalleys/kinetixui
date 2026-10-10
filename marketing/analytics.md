@@ -493,10 +493,13 @@ it "returning".
 **Dashboard: proposed, not applied.** Tiles 1, 2, 4, 5, 6, 8, 8b, 10, Funnels 1 and 2 and Returning evaluators
 move to one shared HogQL session CTE (§4 eligibility, §8 attribution, rule 7) whose window follows the
 dashboard's date controls and is clamped at the present, because an unset upper bound drops its comparison
-rather than resolving to now; native tiles 3, 7, 9, 11 and Funnel 3, which count specific product events, get one
-session-level filter for `kx_traffic_type = 'diagnostic'` and the historical probe. The exact per-tile queries are
-kept next to this project's analytics corrections, not in this repository; apply them only on the owner's
-approval, then read every changed tile back.
+rather than resolving to now. Native tiles 3, 7, 9, 11 and Funnel 3 stay event counts, because what they answer
+is which CTA, platform or step was used, not how many sessions did something; they get one filter that is an
+**anti-join on `$session_id`** — every session holding a `kx_traffic_type = 'diagnostic'` event, plus the
+historical probe, is removed whole, which a filter on the event property alone could not do, since the property
+is written per tab and an unmarked tab can share a session with a marked one. Those tiles still place each event
+by its own timestamp, per rule 7. The exact per-tile queries are kept next to this project's analytics
+corrections, not in this repository; apply them only on the owner's approval, then read every changed tile back.
 
 **12 insights** (1–11, plus 8b).
 
