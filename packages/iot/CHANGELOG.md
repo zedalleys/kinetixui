@@ -1,5 +1,38 @@
 # @kinetixui/iot
 
+## 0.6.0
+
+### Minor Changes
+
+- ade2eb4: Connect a real device provider without KinetixUI owning the connection (M4B). All additive; nothing existing changes.
+  
+  - **Device ledger.** `createDeviceLedger`, `requestDeviceChange`, `applyDeviceSignals` and `expireDeviceCommands` are pure functions over a plain value the application stores wherever it keeps state. Each registered capability has one command lifecycle, so the M1–M4A rules (correlation, supersession, report ordering, two clocks, adjusted confirmations) apply to provider traffic unchanged. Every call returns `{ ledger, transitions }`, structured records an application can log or audit; nothing is thrown, sent, scheduled or stored.
+  - **Normalized signals and intent.** `KinetixDeviceSignal` (`report`, `snapshot`, `acknowledgement`, `result`, `connectivity`) is what an adapter emits; `KinetixCommandIntent` is what `requestDeviceChange` returns for the application to send. Neither carries a provider name, entity id, topic, URL or credential.
+  - **Truth kept.** An acknowledgement never confirms. A lost link never fails, refuses or times out a request, and a returned link confirms nothing until the device reports. A timeout reads "may still apply", never refused. Late replies to a replaced request are refused in any order. Signals for devices or capabilities the application did not register are refused rather than added.
+  - **Selectors.** `selectCapabilityLifecycle` feeds a control's `lifecycle` prop and keeps its identity until that capability changes; `selectDeviceConnectivity` feeds `resolveControlState`; `toDeviceState` derives a `KinetixDeviceState` for `summarizeDeviceState` and the device cards.
+  
+  A Home Assistant reference adapter (binary power, synthetic fixtures) lives in the repository's `packages/iot/reference/` and is not published. No provider adapter is included in the package, and the ledger has not yet been run against a live provider or a physical device.
+- bd29090: Harden the command lifecycle for real devices (M4A). All additive; existing callers see no change unless they use the new fields.
+  
+  - **Device clocks.** A `report` event takes an optional `receivedAt`: when the application received it, on the same clock as `now`. When given, it decides whether a report can settle the current request, so a device whose clock runs behind the application's no longer leaves a request it carried out pending until it times out. Reports are still ordered against each other by `observedAt`, so stale-report protection is unchanged.
+  - **Timeouts belong to a request.** A `timeout` event takes an optional `commandId`. A timeout for a superseded request, or for another request than the current one, is refused as `stale-response`, as a late reply already was, so a timer left over from a replaced request cannot time out the one that replaced it.
+  - **Adjusted confirmations.** New `isLifecycleAdjusted(lifecycle)` and the lifecycle's `adjustedValue`: true when the device confirmed the request with a different value (a setpoint rounded to the hardware's step, a clamped level). Set only by a `confirm` that carries a different value, never by a `report`. No new stage, and nothing a control draws or says changes.
+  - **Fix:** `summarizeDeviceState` compared requested and reported values by reference, so a requested colour equal to the reported one (a new object on every snapshot) was counted as unconfirmed. It now compares by content with `isSameDeviceValue`, as the rest of the package does.
+
+### Patch Changes
+
+- dfe0678: Say what an open request means once the device's link is gone, and stop calling a timeout a failure.
+  
+  - **`describeControlState(availability, "requested")`** now names the link first when the device is `offline` or `unreachable` ("Device offline. The requested change is not confirmed. Showing the last known setting") instead of "Change requested, not yet confirmed by the device", which promised progress the request was not making and never said the device was gone. `connecting` says "Connecting to the device. The requested change is not yet confirmed…", and `stale` adds "Device data is out of date". Online, acknowledged and unknown-link requests are unchanged. No availability or phase was added, and `resolveControlState`'s availability, phase and `interactive` are unchanged.
+  - **A control's status region** says "Device offline. The requested change is not confirmed." (or "unreachable") when its open request loses the link, instead of keeping "Turning on, waiting for the device.", under every strategy. `connecting` and an unreported link keep the request's own sentence.
+  - **The `failed` phase** reads "The last change was not confirmed. Showing the setting the device reports" (was "The last change failed…"): that phase also covers a timeout and an unreachable device, and neither proves the device refused.
+  - **`describeControlOutcome` for `timed-out`** reads "No confirmation for on: the device did not confirm in time, so the change may still apply. It last reported off." (was "Could not turn on: the device did not answer…"), matching `CommandFeedback`'s "Timed out, may still apply". `failedPhrase` is no longer used for a timeout. Every control's outcome note and announcement follow.
+  - **`summarizeDeviceState`** says "1 command not confirmed" instead of "1 command in progress" when the device is `offline` or `unreachable`.
+  - The README's links to the device contract are absolute, so they work on npmjs.com and in `node_modules`.
+  
+  Migration: code that matched these sentences should match the new wording, or read `availability`, `phase` and `outcome` instead.
+- ca5b53f: A "requested, not yet confirmed" chip on `DeviceLevelControl`, `DeviceSetpointControl`, `DeviceColorControl`, `DeviceLockControl` and `DeviceMediaControl` no longer pulses while the device is offline or unreachable. A request to a device whose link is gone is not progressing, and the pulse said it was. The chip keeps its dashed outline and words, which is how it already looks under reduced motion. No API change.
+
 ## 0.5.0
 
 ### Minor Changes
