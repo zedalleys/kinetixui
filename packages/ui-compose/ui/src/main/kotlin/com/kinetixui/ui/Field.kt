@@ -5,7 +5,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
@@ -18,16 +25,27 @@ import androidx.compose.ui.unit.sp
  * React Context; here a `compositionLocalOf` plays the same role for
  * `invalid` — [KinetixFieldLabel] and [KinetixFieldMessage] read it rather
  * than taking it as a parameter, same call as the source's `useField()`.
- * The `id`/`aria-describedby` wiring itself isn't ported: Android's
- * accessibility model doesn't use string-ID cross-references the way ARIA
- * does, so there's nothing equivalent to wire up. `gap-1.5` (6dp) isn't on
+ * Android has no string-ID cross-references like `aria-describedby`; its
+ * equivalent for an error is the editable node's own error property. So an
+ * error [KinetixFieldMessage] registers its text with the enclosing field,
+ * and a [KinetixInput] in that field exposes it while invalid.
+ * [KinetixFieldDescription] is not linked: the matching hint-text semantics
+ * are not in the Compose version this module pins. `gap-1.5` (6dp) isn't on
  * the shared `spacing_*` scale — hardcoded, same reasoning as `KinetixCard`
  * header's gap. `FieldControl`'s `Slot`-based prop injection has no
  * Compose equivalent (Compose has no generic "clone this child with extra
  * props") — callers just place their own control (`KinetixInput`, etc.)
  * directly inside [KinetixField]'s `content` slot.
  */
-private val LocalFieldInvalid = compositionLocalOf { false }
+internal val LocalFieldInvalid = compositionLocalOf { false }
+
+/** The field's current error message, so its input can expose it on the editable node. */
+@Stable
+internal class FieldError {
+    var message by mutableStateOf<String?>(null)
+}
+
+internal val LocalFieldError = staticCompositionLocalOf<FieldError?> { null }
 
 @Composable
 fun KinetixField(
@@ -35,7 +53,8 @@ fun KinetixField(
     invalid: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    CompositionLocalProvider(LocalFieldInvalid provides invalid) {
+    val fieldError = remember { FieldError() }
+    CompositionLocalProvider(LocalFieldInvalid provides invalid, LocalFieldError provides fieldError) {
         Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
             content()
         }
@@ -86,6 +105,12 @@ fun KinetixFieldMessage(
         KinetixFieldMessageIntent.Warning -> colors.warning
         KinetixFieldMessageIntent.Success -> colors.success
         KinetixFieldMessageIntent.Info -> colors.info
+    }
+    // Only an error message is the field's error; other intents stay ordinary text.
+    val fieldError = LocalFieldError.current.takeIf { intent == KinetixFieldMessageIntent.Error }
+    DisposableEffect(fieldError, text) {
+        fieldError?.message = text
+        onDispose { if (fieldError != null && fieldError.message == text) fieldError.message = null }
     }
     Text(
         text = text,
