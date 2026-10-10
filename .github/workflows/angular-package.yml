@@ -15,6 +15,7 @@ on:
     paths:
       - "packages/ui-angular/**"
       - "packages/tokens/**"
+      - "apps/web/src/app/docs/angular/**"
       - "scripts/angular-package/**"
       - "scripts/release/**"
       - "release/publish-packages.json"
@@ -25,6 +26,7 @@ on:
     paths:
       - "packages/ui-angular/**"
       - "packages/tokens/**"
+      - "apps/web/src/app/docs/angular/**"
       - "scripts/angular-package/**"
       - "scripts/release/**"
       - "release/publish-packages.json"
@@ -60,9 +62,13 @@ jobs:
       - name: Build tokens
         run: pnpm build:tokens
 
-      # The whole gate: build, API snapshot, DOM-access check, publication simulation, artifact
-      # contract, clean external install, production AOT build, and a check that the stylesheets
-      # actually reached the bundle.
+      # The consumer is opened in Chromium to read the documented stylesheet's computed result.
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # The whole gate: docs/README stylesheet parity, build, API snapshot, DOM-access check,
+      # publication simulation, artifact contract, clean external install, production AOT build, a
+      # check that the stylesheets reached the bundle, and their rendered result in light and dark.
       - name: Angular publication readiness
         run: pnpm check:angular-package
 
@@ -92,3 +98,35 @@ jobs:
 
       - name: Release tooling tests
         run: pnpm test:release
+
+  # Each control removes one step from the documented stylesheet (in memory) and passes only if the
+  # gate fails for that step's reason — proof the rendered check can see a forgotten sheet.
+  stylesheet-negative-controls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        control: [no-extras, no-dark, no-extras-dark, readme-drift]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build tokens
+        run: pnpm build:tokens
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: "Negative control: ${{ matrix.control }}"
+        env:
+          CONTROL: ${{ matrix.control }}
+        run: node scripts/angular-package/check.mjs --negative="$CONTROL"
