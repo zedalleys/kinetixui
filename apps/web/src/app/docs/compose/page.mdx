@@ -138,8 +138,8 @@ fun FirstScreen() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             KinetixField(invalid = emailError != null) {
-                KinetixFieldLabel(text = "Email")
-                KinetixInput(value = email, onValueChange = { email = it }, isError = emailError != null)
+                KinetixFieldLabel(text = "Email", modifier = Modifier.clearAndSetSemantics { })
+                KinetixInput(value = email, onValueChange = { email = it }, isError = emailError != null, accessibleLabel = "Email")
                 emailError?.let { KinetixFieldMessage(text = it) }
             }
             Row(

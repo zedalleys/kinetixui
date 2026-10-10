@@ -335,6 +335,11 @@ proximity to the token source it depends on.
   `vaul`-specific `shouldScaleBackground` has no `ModalBottomSheet`
   equivalent.
 
+For a visible field label, pass the same `accessibleLabel` to `KinetixInput` and clear
+the duplicate label semantics with `Modifier.clearAndSetSemantics {}` (import
+`androidx.compose.ui.semantics.clearAndSetSemantics`). The label names the editable
+node without replacing its text or editing actions.
+
 ## Try it
 
 ```kotlin
@@ -374,8 +379,8 @@ KinetixTheme {
         KinetixCircularProgress(value = 75f, showValue = true)
         KinetixRating(value = stars, onValueChange = { stars = it })
         KinetixField(invalid = emailError != null) {
-            KinetixFieldLabel(text = "Email")
-            KinetixInput(value = email, onValueChange = { email = it }, isError = emailError != null)
+            KinetixFieldLabel(text = "Email", modifier = Modifier.clearAndSetSemantics {})
+            KinetixInput(value = email, onValueChange = { email = it }, isError = emailError != null, accessibleLabel = "Email")
             emailError?.let { KinetixFieldMessage(text = it) }
         }
         KinetixFab(onClick = { /* ... */ }) { Text("+") }

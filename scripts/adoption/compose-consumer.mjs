@@ -22,6 +22,8 @@ import { fileURLToPath } from 'node:url';
 // Each control breaks one thing a reader copies, and names the failure the gate must report.
 // `from` must occur exactly once in that fence, so a control cannot silently become a no-op.
 const NEGATIVES = {
+  'email-unnamed': { fence: 'FirstScreen.kt', from: ', accessibleLabel = "Email"', to: '',
+    expect: /FirstScreenTest > emailIsNamedAndEditable FAILED/ },
   'missing-import': { fence: 'FirstScreen.kt', from: 'import androidx.compose.material3.Text\n', to: '',
     expect: /Unresolved reference 'Text'/ },
   'missing-component': { fence: 'FirstScreen.kt', from: 'KinetixSwitch(', to: 'KinetixToggleSwitch(',
@@ -198,6 +200,13 @@ class FirstScreenTest {
         rule.onNodeWithText(error).assertIsDisplayed()
         rule.onNode(hasSetTextAction()).performTextInput("ada@example.com")
         rule.onNodeWithText(error).assertDoesNotExist()
+    }
+
+    @Test
+    fun emailIsNamedAndEditable() {
+        rule.setContent { FirstScreen() }
+        val email = rule.onNode(hasSetTextAction() and hasContentDescription("Email"))
+        email.assertExists().assertIsEnabled().performTextInput("ada@example.com")
     }
 
     @Test

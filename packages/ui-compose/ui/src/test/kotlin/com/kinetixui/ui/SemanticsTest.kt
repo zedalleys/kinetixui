@@ -1,6 +1,12 @@
 package com.kinetixui.ui
 
 import androidx.compose.material3.Text
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.state.ToggleableState
@@ -33,6 +39,19 @@ class SemanticsTest {
     val rule = createComposeRule()
 
     private fun hasRole(role: Role) = SemanticsMatcher.expectValue(SemanticsProperties.Role, role)
+
+    @Test
+    fun input_label_stays_on_the_editable_node_after_typing() {
+        rule.setContent {
+            KinetixTheme(darkTheme = false) {
+                val value = remember { mutableStateOf("") }
+                KinetixInput(value = value.value, onValueChange = { value.value = it }, accessibleLabel = "Email")
+            }
+        }
+        val input = rule.onNode(hasSetTextAction() and hasContentDescription("Email"))
+        input.assertIsEnabled().performTextInput("ada@example.com")
+        input.assertTextEquals("ada@example.com")
+    }
 
     @Test
     fun button_is_announced_as_an_enabled_button_with_a_click_action() {

@@ -17,6 +17,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
@@ -40,6 +42,8 @@ import androidx.compose.ui.unit.sp
  * composition (`InputGroupAddon`) — a single optional end-aligned slot
  * rather than a full addon system, enough for [KinetixPasswordInput]'s
  * show/hide control without pulling in a separate InputGroup type.
+ * `accessibleLabel` names the editable node itself, independently of its value.
+ * Pair it with a visible FieldLabel whose duplicate semantics are cleared.
  * `keyboardType`/`visualTransformation` exist for the same reason —
  * [KinetixPasswordInput] needs to mask input, which this bare control has
  * no other way to request.
@@ -54,6 +58,27 @@ fun KinetixInput(
     isError: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailing: (@Composable () -> Unit)? = null,
+) {
+    KinetixInput(
+        value = value, onValueChange = onValueChange, modifier = modifier,
+        placeholder = placeholder, enabled = enabled, isError = isError,
+        keyboardType = keyboardType, visualTransformation = visualTransformation,
+        accessibleLabel = null, trailing = trailing,
+    )
+}
+
+@Composable
+fun KinetixInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    placeholder: String? = null,
+    enabled: Boolean = true,
+    isError: Boolean = false,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    accessibleLabel: String?,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val colors = KinetixColorScheme.current
@@ -86,7 +111,9 @@ fun KinetixInput(
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
-                modifier = Modifier,
+                modifier = Modifier.semantics {
+                    accessibleLabel?.takeIf { it.isNotBlank() }?.let { contentDescription = it }
+                },
                 enabled = enabled,
                 singleLine = true,
                 textStyle = textStyle,
