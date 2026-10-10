@@ -190,7 +190,9 @@ Run the app from Android Studio, or build it with `./gradlew :app:assembleDebug`
 You should see an Email field, a Product updates switch that starts on, and a
 **Get started** button. Tapping **Get started** while the email has no `@` shows
 "Enter an email address." under the field; typing an address clears it.
-Tapping the switch turns it off.
+While it shows, the same text is also the input's accessibility error, so
+assistive technology gets it on the field itself, not only as text below it. Tapping the
+switch turns it off.
 
 These steps are checked on every Compose change: CI copies the module into a
 new app, applies the fenced code above exactly, builds the app, and runs the

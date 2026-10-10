@@ -68,8 +68,8 @@ jobs:
         run: node scripts/adoption/compose-consumer.mjs
 
   # Proves the consumer gate above can fail: each control breaks one documented step (an import,
-  # a component, a dependency, module registration, the activity, validation, the email field's name
-  # or duplicated label, the switch's state or name, or a fence) and must fail the gate for that named reason. JVM/Robolectric only, no device.
+  # a component, a dependency, module registration, the activity, validation, the email field's name,
+  # duplicated label or unexposed error, the switch's state or name, or a fence) and must fail the gate for that named reason. JVM/Robolectric only, no device.
   consumer-negative-controls:
     runs-on: ubuntu-latest
     strategy:
@@ -85,6 +85,7 @@ jobs:
           - switch-unresponsive
           - email-unnamed
           - email-label-duplicated
+          - email-error-unexposed
           - switch-unnamed
           - switch-row-merge
           - fence-missing

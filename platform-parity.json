@@ -1325,7 +1325,7 @@
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
+      "Compose": "beta",
       "Flutter": "experimental"
     },
     "file-upload": {
@@ -1726,8 +1726,8 @@
       "experimental": 90
     },
     "Compose": {
-      "experimental": 85,
-      "beta": 5
+      "experimental": 84,
+      "beta": 6
     },
     "Flutter": {
       "experimental": 85,
@@ -2564,6 +2564,7 @@
         "build"
       ],
       "Compose": [
+        "accessibility",
         "build"
       ],
       "Flutter": [
@@ -3988,7 +3989,7 @@
     "Compose": {
       "build": 90,
       "interaction": 7,
-      "accessibility": 5,
+      "accessibility": 6,
       "rtl": 1,
       "largeText": 0,
       "reducedMotion": 7,

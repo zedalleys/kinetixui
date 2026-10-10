@@ -26,6 +26,12 @@ const NEGATIVES = {
     expect: /FirstScreenTest > emailIsNamedAndEditable FAILED/ },
   'email-label-duplicated': { fence: 'FirstScreen.kt', from: 'KinetixFieldLabel(text = "Email", modifier = Modifier.clearAndSetSemantics { })',
     to: 'KinetixFieldLabel(text = "Email")', expect: /FirstScreenTest > emailIsNamedAndEditable FAILED/ },
+  // The message is still shown, but the field and input are no longer marked invalid, so the error
+  // never reaches the editable node: the gate must notice missing error feedback, not only missing text.
+  'email-error-unexposed': { fence: 'FirstScreen.kt', edits: [
+    ['KinetixField(invalid = emailError != null)', 'KinetixField()'],
+    [', isError = emailError != null', ''],
+  ], expect: /FirstScreenTest > emailErrorIsAnnouncedOnTheInputUntilCorrected FAILED/ },
   'missing-import': { fence: 'FirstScreen.kt', from: 'import androidx.compose.material3.Text\n', to: '',
     expect: /Unresolved reference 'Text'/ },
   'missing-component': { fence: 'FirstScreen.kt', from: 'KinetixSwitch(', to: 'KinetixToggleSwitch(',
@@ -162,6 +168,9 @@ tasks.withType<Test> {
   write(`${source}/MainActivity.kt`, `package com.example.consumer\n\n${fence('MainActivity.kt')}\n`);
   write('app/src/test/kotlin/com/example/consumer/FirstScreenTest.kt', `package com.example.consumer
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsOff
@@ -211,6 +220,18 @@ class FirstScreenTest {
         rule.onNodeWithText("Email").assertDoesNotExist()
         val email = rule.onNode(hasSetTextAction() and hasContentDescription("Email"))
         email.assertExists().assertIsEnabled().performTextInput("ada@example.com")
+    }
+
+    @Test
+    fun emailErrorIsAnnouncedOnTheInputUntilCorrected() {
+        rule.setContent { FirstScreen() }
+        val email = rule.onNode(hasSetTextAction() and hasContentDescription("Email"))
+        email.assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Error))
+        rule.onNodeWithText("Get started").performClick()
+        // TalkBack reads the error on the field it belongs to, not only as loose text below it.
+        email.assert(SemanticsMatcher.expectValue(SemanticsProperties.Error, error))
+        email.performTextInput("ada@example.com")
+        email.assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Error)).assertIsEnabled()
     }
 
     @Test
