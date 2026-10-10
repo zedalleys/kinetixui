@@ -262,6 +262,11 @@ tabs.** A page opened in a new tab from a campaign landing starts its own sessio
 Observed live on 2026-09-30, and the rule in code is `summarizeSessions` in
 `apps/web/src/lib/analytics-measurement.ts`.
 
+**Which value a session takes**, when its events carry more than one: the campaign is the `kx_campaign` of the
+session's earliest event that has one, and the source is its earliest `kx_source` other than `direct`, falling
+back to `direct` only when nothing else is present. A new tab always records `direct`, so it never overrides a
+real channel. Ties at the same instant take the lowest value, so every count is reproducible.
+
 ### Canonical campaign name
 
 ```
@@ -395,7 +400,9 @@ case for each rule.
    adoption (§5).
 7. **Diagnostic sessions are excluded from every count**: any session holding an event with
    `kx_traffic_type = 'diagnostic'`, plus the historical probe listed under *Diagnostic traffic*. The exclusion
-   is per session, so one marked event removes the whole session.
+   is per session, so one marked event removes the whole session. A session belongs to the date range in which
+   it starts, and all of its events are read, including those after the range ends, so a marked event just
+   outside the range still removes it.
 
 ### Defects found and corrected 2026-10-09
 
@@ -482,9 +489,11 @@ to 1 on the same window: the probe's device had a Qualified Evaluation session e
 it "returning".
 
 **Dashboard: proposed, not applied.** Tiles 1, 2, 4, 5, 6, 8, 8b, 10, Funnels 1 and 2 and Returning evaluators
-move to one shared HogQL session CTE (§4 eligibility + rule 7); native tiles 3, 7, 9, 11 and Funnel 3, which count
-specific product events, get event-level filters for `kx_traffic_type` and the historical probe. The exact per-tile queries are kept next to this project's analytics corrections, not in
-this repository; apply them only on the owner's approval, then read every changed tile back.
+move to one shared HogQL session CTE (§4 eligibility, §8 attribution, rule 7) whose window follows the
+dashboard's date controls; native tiles 3, 7, 9, 11 and Funnel 3, which count specific product events, get one
+session-level filter for `kx_traffic_type = 'diagnostic'` and the historical probe. The exact per-tile queries are
+kept next to this project's analytics corrections, not in this repository; apply them only on the owner's
+approval, then read every changed tile back.
 
 **12 insights** (1–11, plus 8b).
 
