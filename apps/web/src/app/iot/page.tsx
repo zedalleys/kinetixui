@@ -10,6 +10,8 @@ import { DeviceShowcase } from "@/components/iot/device-showcase";
 import { InstallCommand } from "@/components/iot/install-command";
 import { IotExample } from "@/components/iot/iot-example";
 import { HeroCommandStrip } from "@/components/iot/lab/hero-command-strip";
+import { IotHeroArt } from "@/components/iot/lab/iot-hero-art";
+import { IOT_HERO_ART_SVG } from "@/components/iot/lab/iot-hero-art-svg";
 import { LiveControlPanel } from "@/components/iot/lab/live-control-panel";
 import { LabSection } from "@/components/iot/lab/lab-section";
 import { LabTabs } from "@/components/iot/lab/lab-tabs";
@@ -265,7 +267,7 @@ export default function IotPage() {
               command was in flight the strip's lifecycle row pushed this grid to 429px inside a 358px box and
               shoved the whole hero 55px past a 390px viewport. `documentElement.scrollWidth` never grew, so
               the overflow was invisible to automation and only showed up on a real phone. */}
-          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-16">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-16">
             <div>
               <p className="eyebrow">Connected Product Lab</p>
               <h1
@@ -301,7 +303,18 @@ export default function IotPage() {
               </div>
             </div>
 
-            <HeroCommandStrip />
+            {/* The illustration is the device; the command card overlaps its lower edge as the app that talks to
+                it. The frame's aspect ratio reserves its height before anything paints, so nothing shifts, and the
+                card keeps its full width: the overlap is a negative margin on the card, not an inset. The overlap is in px,
+                not rem, because it is measured against the picture, which does not grow with text: at 200% text a
+                rem overlap covered the chip. The grid aligns its columns to the top, not the centre: this column is
+                taller than the copy, and centring pushed the eyebrow ~110px down at 1440px. */}
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)]">
+              <IotHeroArt svg={IOT_HERO_ART_SVG} className="aspect-[16/10]" />
+              <div className="relative -mt-[40px] min-w-0 px-3 sm:-mt-[32px] sm:px-6">
+                <HeroCommandStrip />
+              </div>
+            </div>
           </div>
 
           <nav aria-label="On this page" className="mt-12 border-t border-border pt-4">
