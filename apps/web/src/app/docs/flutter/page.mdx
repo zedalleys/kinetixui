@@ -1,18 +1,20 @@
 export const metadata = {
   title: "Flutter",
-  description: "The Flutter component library — a Dart port on the KinetixUI token contract, mirroring the React component API.",
+  description: "The Flutter component library — a Dart implementation of the shared KinetixUI component contract, on the same token contract.",
 };
 
 # Flutter
 
-`packages/ui-flutter` is the **Flutter** port of KinetixUI — the fourth
-platform alongside React (`@kinetixui/ui`),
-[Jetpack Compose](/docs/compose) and [SwiftUI](/docs/swiftui).
+`packages/ui-flutter` is the **Flutter** implementation of KinetixUI, one of
+three native libraries alongside [Jetpack Compose](/docs/compose) and
+[SwiftUI](/docs/swiftui); the web implementations are React (`@kinetixui/ui`)
+and [Angular](/docs/angular).
 `Kinetix*` widgets for <PlatformCountInline platform="Flutter" /> of the
 <ComponentTotalInline /> React catalogue entries — **the full React component
 surface** bar the <NonPortCountInline /> deliberate non-ports, built in batches on a CI `flutter analyze` path;
-each mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with
-a doc comment stating anything not carried over.
+each is a native Flutter implementation of the same component contract as its
+`packages/ui/src/components/*.tsx` counterpart, with a doc comment stating
+anything not carried over.
 
 It's a **standalone Flutter package** inside this monorepo, not a
 pnpm/npm workspace member — there's no `package.json`, so it's invisible
@@ -23,7 +25,8 @@ to the token source it depends on.
 <Callout>
   Not on pub.dev (`publish_to: none`). Consume it from a repo checkout
   with a `path:` dependency — the same "own the code" model as the other
-  ports.
+  ports. A publication workflow (`publish-flutter.yml`) exists but has not been
+  used for a real release.
 </Callout>
 
 ## Setup
@@ -319,7 +322,8 @@ overlays and disclosures. Overlay widgets (`KinetixDialog`,
   `KinetixSidebarMenuItem`) and drops the desktop shell: rail / icon-collapse
   mode, `SidebarInset`, the cookie and the keyboard shortcut. For a persistent
   desktop rail, use `NavigationRail` directly.
-- **No remote publishing.** `flutter analyze` on `ubuntu-latest`
+- **Not published yet.** The publication workflow has never run for real.
+  `flutter analyze` on `ubuntu-latest`
   (`subosito/flutter-action`) is the sole compiler feedback on every push
   that touches `packages/ui-flutter`, `tokens/`, or `style-dictionary/`.
 - **Platform widgets are reused where they're strong** — `KinetixSlider`,

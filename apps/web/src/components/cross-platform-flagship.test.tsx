@@ -63,8 +63,8 @@ describe("CrossPlatformFlagship", () => {
   });
 
   // `flagship-preferences` is a composed recipe, not a components.manifest.json entry. `component_code_copied` is a
-  // Developer Activation signal whose `component` property drives the "Top Components Copied" breakdown, so emitting
-  // it here would both inflate activation and put a non-component in that list. The copy stays deliberately silent
+  // Qualified Evaluation signal whose `component` property drives the "Top Components Copied" breakdown, so emitting
+  // it here would both inflate Qualified Evaluation and put a non-component in that list. The copy stays deliberately silent
   // rather than borrowing an event that means something else.
   it("copies the real source but emits NO analytics — never component_code_copied", async () => {
     const user = userEvent.setup();

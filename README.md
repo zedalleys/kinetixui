@@ -75,8 +75,8 @@ contract import, dark mode — is in [Installation](https://kinetixui.com/docs/i
   against the semantic token layer, never a hex.
 - **Cross‑platform by default.** [`ui-compose`](packages/ui-compose),
   [`ui-swiftui`](packages/ui-swiftui) and [`ui-flutter`](packages/ui-flutter)
-  each carry a 1:1 port of the React surface on the
-  same token contract, compiled in CI per platform. Per-platform coverage and the documented exceptions (React‑only or partial) live
+  each carry a native implementation of the shared KinetixUI component
+  contract on the same token contract, compiled in CI per platform. Per-platform coverage and the documented exceptions (React‑only or partial) live
   in [`components.manifest.json`](components.manifest.json) and are listed, with the
   reason for each, at [kinetixui.com/docs/platforms](https://kinetixui.com/docs/platforms).
 - **A portable registry.** Every component serialised to a shadcn‑compatible JSON

@@ -9,10 +9,16 @@ import { flagshipExampleSource } from "@/registry/flagship-example.generated";
 import { analytics } from "@/lib/analytics";
 import { PLATFORM_FROM_CODE_TAB } from "@/lib/analytics-surfaces";
 import { catalogPlatformCount, documentedExceptionCount, fullCoverageCount } from "@/lib/project-stats";
+import { PLATFORMS, PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
 import { componentTotal } from "@/lib/platform-support";
 import { PLATFORM_TABS, type CodeTab } from "@/lib/platform-tabs";
 import { CopyButton } from "./copy-button";
 import { cn } from "@/lib/utils";
+
+/** "Angular (preview)" — platforms whose catalogue is still rolling out, derived rather than typed. */
+const ROLLING_OUT = PLATFORMS.filter((p) => !PLATFORM_DEFINITIONS[p].catalogComplete).map(
+  (p) => `${PLATFORM_DEFINITIONS[p].label} (${PLATFORM_DEFINITIONS[p].maturity})`,
+);
 
 /** The recipe's identifier in analytics — not a real registry component, so it's not `componentSlugFor`-derived. */
 const FLAGSHIP_COMPONENT = "flagship-preferences";
@@ -64,11 +70,11 @@ export function CrossPlatformFlagship() {
   };
 
   // NOTE: copying this recipe's source is deliberately NOT tracked. It is tempting to reuse
-  // `component_code_copied` here, but that event is one of the three Developer Activation signals and its
+  // `component_code_copied` here, but that event is a Qualified Evaluation signal (analytics.md §3) and its
   // `component` property is what the "Top Components Copied" breakdown groups by. `flagship-preferences` is a
   // composed example, not an entry in components.manifest.json, so emitting it would both pollute that
-  // breakdown with a non-component and inflate activation with a homepage interaction. If we ever want this
-  // measured, it needs its own event and its own deliberate decision about whether it counts as activation —
+  // breakdown with a non-component and inflate Qualified Evaluation with a homepage interaction. If we ever want this
+  // measured, it needs its own event and its own deliberate decision about whether it counts toward Qualified Evaluation —
   // not a borrowed one. `cross-platform-flagship.test.tsx` asserts the silence.
 
   return (
@@ -124,8 +130,11 @@ export function CrossPlatformFlagship() {
 
       <p className="mt-4 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
         <Link href="/docs/platforms" className="underline-offset-4 hover:text-foreground hover:underline">
-          {fullCoverageCount}/{componentTotal} catalogue entries on all {catalogPlatformCount} platforms · {documentedExceptionCount} documented
-          exceptions
+          {/* "all 4" under a headline of 5 read as a miscount. These are the catalogue-complete platforms; the one
+              still rolling out is named rather than left for the reader to subtract. */}
+          {fullCoverageCount}/{componentTotal} catalogue entries on all {catalogPlatformCount} catalogue-complete platforms ·{" "}
+          {documentedExceptionCount} documented exceptions
+          {ROLLING_OUT.length > 0 ? ` · ${ROLLING_OUT.join(", ")} still rolling out` : ""}
         </Link>
       </p>
     </div>

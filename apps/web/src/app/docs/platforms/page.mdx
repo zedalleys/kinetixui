@@ -58,18 +58,20 @@ evidence per component, and a published package.
 - **Components** counts the components each platform implements, out of <ComponentTotalInline /> catalogue entries in the
   manifest. React is the reference implementation; the native ports mirror its API where it makes sense on
   the platform.
-- **Automated verification** is what the platform's CI actually runs. It is the honest measure of how proven a
-  platform is: React has behavioural, keyboard and accessibility tests across the whole library. The native
-  libraries are compiled in CI, and Flutter and Compose now also test their five core controls (Button,
-  Checkbox, Switch, Toggle, Tabs) for interaction, accessibility semantics and RTL; SwiftUI tests its colour
-  contrast and spacing scale but not yet its views. No native port has screenshot tests, and the
-  remaining components on each are compile-checked only — so read them as less proven than React.
-- **RTL** — "not audited yet" means exactly that: each native platform has its own layout-direction
-  mechanism (`LocalLayoutDirection`, the `layoutDirection` environment value, `Directionality`) and it hasn't
-  been checked. See [RTL](/docs/rtl).
-- **Maturity.** Each component is marked <StatusSummary /> in the manifest, but per component, not per
-  platform. Given the verification gap above, that label describes the React implementation. Per-platform
-  maturity is a 1.0 task.
+- **Automated verification** is what the platform's CI actually runs, and the
+  [evidence counts above](#availability-package-maturity-and-verification-are-three-different-things) are the
+  measure of it, read from the test files rather than written here. React has behavioural, keyboard and
+  accessibility tests across the whole library. Every native library is compiled in CI on every change; beyond
+  that, behavioural, accessibility-semantics, RTL and large-text tests cover a subset of components, and the
+  subset differs by platform — read each platform's fractions rather than assuming one from another. No native
+  port has screenshot tests, and a component with only build evidence is compile-checked and nothing more.
+- **RTL** — each native platform has its own layout-direction mechanism (`LocalLayoutDirection`, the
+  `layoutDirection` environment value, `Directionality`). The RTL row in each platform's evidence counts the
+  components with a test that proves mirrored behaviour; the rest are not audited yet. See [RTL](/docs/rtl).
+- **Maturity** is recorded twice, on purpose. Each platform's *package* maturity is in the manifest and shown
+  above — Angular is <PlatformMaturityInline platform="Angular" />. Each *component* is also marked
+  (<StatusSummary />), per component rather than per platform: that label is about the component's API, not
+  about how well any one platform's implementation of it is verified, which is what the evidence counts are for.
 
 ## Not on every platform, on purpose
 

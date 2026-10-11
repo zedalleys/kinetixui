@@ -31,9 +31,11 @@ Three things have to be true: the token stylesheet is loaded, the Tailwind prese
 `.dark` is on an ancestor when you want the dark set.
 
 ```css
-/* your global stylesheet */
+/* your global stylesheet: all four, in this order */
 @import "@kinetixui/tokens/css";
 @import "@kinetixui/tokens/css/dark";
+@import "@kinetixui/tokens/css/extras";
+@import "@kinetixui/tokens/css/extras/dark";
 ```
 
 ```ts

@@ -156,6 +156,18 @@ export default function HomePage() {
               </div>
 
               {/*
+                The platform names, in static text, at every width.
+
+                Below `lg` the spec panel is hidden and the only other place the platforms appear is the ticker,
+                which is decorative and `aria-hidden`. So a phone visitor read "N platforms." in the headline and
+                was never told which. Derived from the manifest like every other list on this page, with Angular's
+                maturity carried rather than flattened.
+              */}
+              <p data-hero-platforms className="mt-4 max-w-xl text-sm text-muted-foreground">
+                {componentPlatformCount} implementations: {platformSentence}.
+              </p>
+
+              {/*
                 The install command stays directly behind the CTAs: it is the strongest single piece of
                 proof in the hero — a real command for a real package — and on a phone it now lands inside
                 the first viewport rather than ~140px below it.
@@ -239,7 +251,7 @@ export default function HomePage() {
       <section id="flagship" className="border-b border-border bg-muted/20 scroll-mt-24">
         <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 lg:px-8">
           <Reveal>
-            <SectionHead index="01" label="One interface, four native implementations" meta="live" />
+            <SectionHead index="01" label="One design contract, web and native implementations" meta="live" />
             <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
               The tokens and component contract stay shared. The implementation stays native.
             </h2>
@@ -248,7 +260,8 @@ export default function HomePage() {
               <code className="text-foreground">Badge</code>, <code className="text-foreground">Switch</code> and{" "}
               <code className="text-foreground">Button</code> — rendered here with the live React implementation, and
               backed by real, CI-compiled source for SwiftUI, Jetpack Compose and Flutter. Switch tabs to read the
-              actual platform code, not a mock-up.
+              actual platform code, not a mock-up. Angular, in preview, has no tab in this example yet; its
+              compiled examples are on each component&rsquo;s page.
             </p>
 
             {/*
@@ -335,11 +348,12 @@ export default function HomePage() {
                 </dd>
               </div>
               <div>
-                <dt className="font-display text-lg font-semibold">Every snippet comes from a compiled file</dt>
+                <dt className="font-display text-lg font-semibold">Platform snippets are checked against real source</dt>
                 <dd className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  The platform code on this site is extracted from source that platform&rsquo;s CI compiles —
-                  not typed into a docs page. It caught a Compose symbol being advertised that had no source
-                  file at all.
+                  Where a compiled example exists, the snippet is extracted from a file that platform&rsquo;s CI
+                  builds. The rest are still written by hand, and every KinetixUI symbol in them must exist in
+                  that platform&rsquo;s source. Where a component is not ported, the tab is labelled as guidance
+                  instead. This caught a Compose symbol being advertised that had no source file at all.
                 </dd>
               </div>
               <div>
@@ -435,7 +449,7 @@ export default function HomePage() {
               <Link
                 href="/iot"
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
-                {...ctaAttrs("homepage", "read_docs")}
+                {...ctaAttrs("homepage", "explore_iot")}
               >
                 Explore IoT <ArrowUpRight className="size-3.5" />
               </Link>
@@ -556,8 +570,10 @@ export default function HomePage() {
                 doubled text size each label is wider than a 320px content column and the row could not wrap
                 its way out of it. Capping each child at the row's width is what lets the label itself wrap. */}
             <div className="mt-8 flex flex-wrap items-center gap-3 [&>*]:max-w-full">
+              {/* Installation, not the Introduction: a visitor who reaches the closer and says "get started" is asking
+                  how to set it up, and the Introduction is an explanation they can still reach from the docs nav. */}
               <Button asChild size="lg" className="whitespace-normal">
-                <Link href="/docs" {...ctaAttrs("homepage", "get_started")}>
+                <Link href="/docs/installation" {...ctaAttrs("homepage", "get_started")}>
                   Get started <ArrowUpRight className="size-4" />
                 </Link>
               </Button>

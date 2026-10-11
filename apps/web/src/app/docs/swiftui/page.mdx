@@ -1,17 +1,18 @@
 export const metadata = {
   title: "SwiftUI",
-  description: "The native iOS component library — a SwiftUI port on the KinetixUI token contract, mirroring the React component API.",
+  description: "The native iOS component library — a SwiftUI implementation of the shared KinetixUI component contract, on the same token contract.",
 };
 
 # SwiftUI
 
-`packages/ui-swiftui` is the native **SwiftUI** port of KinetixUI — the
+`packages/ui-swiftui` is the native **SwiftUI** implementation of KinetixUI — the
 iOS counterpart to the [Jetpack Compose](/docs/compose) library.
 `Kinetix*` views for <PlatformCountInline platform="SwiftUI" /> of the
 <ComponentTotalInline /> React catalogue entries — **the full React component
 surface** bar the <NonPortCountInline /> deliberate non-ports, built in batches on a macOS `swift build` CI path;
-each mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with
-a doc comment stating anything not carried over.
+each is a native SwiftUI implementation of the same component contract as its
+`packages/ui/src/components/*.tsx` counterpart, with a doc comment stating
+anything not carried over.
 
 It's a **standalone SwiftPM package** inside this monorepo, not a
 pnpm/npm workspace package — there's no `package.json`, so it's invisible
@@ -21,8 +22,9 @@ source it's built from.
 <Callout>
   Not on the SwiftPM registry. Consume it from a repo checkout with
   `.package(path: "…/packages/ui-swiftui")` — the same "own the code"
-  model as the web CLI and the Compose library. A tagged release needs
-  repo/signing decisions and is deliberately not wired up.
+  model as the web CLI and the Compose library. A publication workflow
+  (`publish-swiftui.yml`, which mirrors the package to its own repository for
+  tagged releases) exists but has not been used for a real release.
 </Callout>
 
 ## Setup
@@ -235,7 +237,8 @@ are placed in an `.overlay { }` or a top-level `ZStack` and driven by an
 
 ## Known gaps
 
-- **No remote publishing.** `swift build` on `macos-latest` (against the
+- **Not published yet.** The publication workflow has never run for real.
+  `swift build` on `macos-latest` (against the
   `.macOS(.v13)` target, no simulator) is the sole compiler feedback on
   every push that touches `packages/ui-swiftui`, `tokens/`, or
   `style-dictionary/`.

@@ -68,6 +68,19 @@ const PAGES = [
   "/demos/building-operations",
   "/docs/components/button",
   "/docs/components/data-grid",
+  // The three component pages the evaluator-journey audit found failing when it swept all 98: Accordion's trigger
+  // headings skipped a level under the page h1, and CodeBlock's and DiffViewer's scroll regions were unreachable by
+  // keyboard at 320px. Each is here because it was found failing off-sweep, which is the argument for sweeping it.
+  "/docs/components/accordion",
+  "/docs/components/code-block",
+  "/docs/components/diff-viewer",
+  // One page per remaining gallery category (Form Inputs, Navigation, Overlays, Feedback), so every category has
+  // at least one page under the gate. Button (Controls & Actions), Data Grid and the three above (Foundations,
+  // Data Display) cover the rest. A full 98-page sweep at this matrix is ~1,570 views; this is the bounded step.
+  "/docs/components/input",
+  "/docs/components/tabs",
+  "/docs/components/dialog",
+  "/docs/components/alert",
 ];
 const WIDTHS = [
   // 320 is the narrowest width the site claims to support, and it is not a rounding of 375: a fixed-width
@@ -150,6 +163,19 @@ const LAYOUT_CONTRACTS = new Map([
   ],
 ]);
 
+/**
+ * Navigation contracts: what a reader must be able to reach on a page at every swept width, measured as rendered
+ * visibility rather than read from class names.
+ *
+ *   search   the site search trigger. It used to be `hidden` below 640px, so phones had no site search at all.
+ *   docs     on /docs/*, either the docs sidebar or the menu that carries the docs groups. The sidebar appears at
+ *            `lg` and the menu used to disappear at `md`, so 768–1023px had neither.
+ *
+ * Both are checked at every width and text size because both regressions were breakpoint arithmetic, and the
+ * band where they fail is exactly the one a desktop-only look never visits.
+ */
+const isDocsPage = (path) => path === "/docs" || path.startsWith("/docs/");
+
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 const failures = [];
@@ -218,6 +244,26 @@ for (const scheme of SCHEMES) {
             };
           }, LAYOUT_CONTRACTS.get(path) ?? null);
           views++;
+          const reach = await page.evaluate(() => {
+            const shown = (el) => {
+              if (!el) return false;
+              const r = el.getBoundingClientRect();
+              const cs = getComputedStyle(el);
+              return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && cs.display !== "none";
+            };
+            const header = document.querySelector("header");
+            const buttons = header ? [...header.querySelectorAll("button")] : [];
+            const named = (re) => buttons.some((b) => re.test((b.getAttribute("aria-label") || b.textContent || "").trim()) && shown(b));
+            return {
+              search: named(/^Search/),
+              menu: named(/^Menu$/),
+              sidebar: shown(document.querySelector('nav[aria-label="Documentation"]')),
+            };
+          });
+          if (!reach.search) failures.push(`${tag}: no visible site search trigger in the header`);
+          if (isDocsPage(path) && !reach.sidebar && !reach.menu) {
+            failures.push(`${tag}: no docs navigation — neither the sidebar nor the menu button is visible`);
+          }
           for (const v of result.violations) {
             failures.push(`${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")})`);
           }
@@ -274,7 +320,8 @@ if (failures.length) {
 }
 console.log(
   `a11y-site ok — ${(ONLY_PAGES ?? PAGES).length} pages × ${SCHEMES.length} themes × ${WIDTHS.length} widths × ${TEXT_SCALES.length} text sizes ` +
-    `(${views} views): no axe findings, no horizontal overflow, ${LAYOUT_CONTRACTS.size} layout contract(s) held.` +
+    `(${views} views): no axe findings, no horizontal overflow, ${LAYOUT_CONTRACTS.size} layout contract(s) held, ` +
+    `site search and docs navigation reachable at every width.` +
     (TEXT_SCALE_PENDING.size
       ? `\n  ${TEXT_SCALE_PENDING.size} page(s) pending at 200% text, each verified to still need it: ` +
         [...TEXT_SCALE_PENDING.keys()].join(", ")

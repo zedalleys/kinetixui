@@ -3,7 +3,7 @@
  *
  * Deliberately not copyable and deliberately not a client component. The docs are where someone goes to copy an
  * import; on the landing page these exist to be *read*, and every copyable surface is one more thing that has to
- * be instrumented, announced and kept out of the activation metric. The install command is the one exception,
+ * be instrumented, announced and kept out of the Qualified Evaluation metric. The install command is the one exception,
  * because copying it is the actual call to action.
  *
  * `dir="ltr"` because code is code: in an RTL locale the surrounding prose flips and the sample must not.

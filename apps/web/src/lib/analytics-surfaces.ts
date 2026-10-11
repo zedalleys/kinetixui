@@ -229,7 +229,7 @@ export const PLATFORM_FROM_CODE_TAB = { react: "react", angular: "angular", swif
 /**
  * A fenced code block in the docs was copied. A KinetixUI command → the matching command event. Otherwise, on a
  * component's own page, a fence in a platform language → `component_code_copied`. Anything else (theme CSS, JSON,
- * an unrelated shell command) is not an activation signal and produces nothing.
+ * an unrelated shell command) is not a measured copy and produces nothing.
  */
 export function trackFenceCopy(text: string, language: string | undefined, pathname: string): void {
   const source = sourceForPath(pathname);
