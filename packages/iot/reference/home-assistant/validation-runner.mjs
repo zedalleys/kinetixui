@@ -62,7 +62,7 @@ try {
 run.session.start();
 console.log(`Live provider run (${kind} device). Commands are refused until KX_TEST_DEVICE names the entity.`);
 console.log(run.attested ? "Test device attested." : "Test device NOT attested: on/off will be refused.");
-console.log("Commands: status, cases, case <id>, on, off, observe matches|differs [note], end, save, quit");
+console.log("Commands: status, cases, case <id>, on, off, burst, observe matches|differs [note], end, save, quit");
 const input = createInterface({ input: process.stdin, output: process.stdout });
 const timer = setInterval(() => run.session.tick(), 100);
 let stopped = false;

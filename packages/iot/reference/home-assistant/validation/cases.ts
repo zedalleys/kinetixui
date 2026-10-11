@@ -211,8 +211,10 @@ export const VALIDATION_CASES: ValidationCase[] = [
         { name: "summary does not call the request in progress", ok: !/in progress/.test(offline.view.summary), detail: offline.view.summary },
       ];
       const expired = window.find((e) => e.cause === "expire" && e.transitions?.some((t) => t.commandId === commandId));
-      if (expired) checks.push({ name: "timeout reads may-still-apply, never failed", ok: expired.view.stage === "timed-out", detail: expired.view.stage });
-      return result(checks, { offlineAfterSendMs: ms(offline.view.sentAt, offline.at) ?? 0 });
+      const metrics = { offlineAfterSendMs: ms(offline.view.sentAt, offline.at) ?? 0 };
+      if (!expired) return notExercised("the command timeout never passed in this window; wait past KX_TIMEOUT_MS before `end`", checks, metrics);
+      checks.push({ name: "timeout reads may-still-apply, never failed", ok: expired.view.stage === "timed-out", detail: expired.view.stage });
+      return result(checks, metrics);
     },
   },
   {
@@ -264,7 +266,7 @@ export const VALIDATION_CASES: ValidationCase[] = [
       const away = window.find((e) => e.transitions?.some((t) => t.cause === "connectivity" && t.connectivity?.to === "connecting"));
       if (!away) return notExercised("the provider connection never dropped in this window", [link]);
       const back = window.find((e) => e.seq > away.seq && e.session.phase === "ready");
-      const operatorSends = window.filter((e) => e.operator === "on" || e.operator === "off").length;
+      const operatorSends = window.reduce((n, e) => n + (e.operator === "on" || e.operator === "off" ? 1 : e.operator === "burst" ? 3 : 0), 0);
       const checks: CaseCheck[] = [
         link,
         { name: "reconnected through a snapshot", ok: Boolean(back) || window.at(-1)!.session.phase === "ready", detail: window.at(-1)!.session.phase },
@@ -278,10 +280,11 @@ export const VALIDATION_CASES: ValidationCase[] = [
     title: "Rapid toggles: only the last request settles",
     changesets: ["iot-device-ledger", "iot-lifecycle-edges"],
     physical: true,
-    steps: ["`case H09`", "Type `on`, `off`, `on` (or the reverse) as fast as you can.", "Wait for the device to settle, `observe`, `end`."],
+    steps: ["`case H09`", "Type `burst` once: it sends `on`, `off`, `on` back to back, faster than Home Assistant can answer the first.", "Wait for the device to settle, `observe`, `end`."],
     criteria: [
       "Three or more requests in the window.",
-      "Replies to replaced requests never change the stage (refused as stale when they arrive).",
+      "At least one reply to a replaced request arrives and is refused as stale (otherwise not exercised).",
+      "Replies to replaced requests never change the stage.",
       "The capability ends confirmed under the last request's id with its value, or still open under that id.",
     ],
     observe: "The device ends in the last requested state.",
@@ -293,10 +296,13 @@ export const VALIDATION_CASES: ValidationCase[] = [
       const lastIndex = window.indexOf(sent.at(-1)!.entry);
       const strayAfter = window.slice(lastIndex + 1).filter((e) => e.transitions?.some((t) => t.commandId && earlier.has(t.commandId) && !t.rejection && t.from !== t.to));
       const end = window.at(-1)!;
-      const stale = window.flatMap((e) => e.transitions ?? []).filter((t) => t.rejection?.code === "stale-response").length;
+      const stale = window.flatMap((e) => e.transitions ?? []).filter((t) => t.rejection?.code === "stale-response" && t.commandId !== undefined && earlier.has(t.commandId)).length;
+      const checks: CaseCheck[] = [{ name: "no replaced request changes the stage", ok: strayAfter.length === 0, detail: strayAfter.map((e) => e.seq).join(",") || undefined }];
+      if (!stale) return notExercised("no reply to a replaced request arrived after its replacement, so stale-reply refusal was not observed; use `burst`", checks, { requests: sent.length, staleRepliesRefused: 0 });
       return result(
         [
-          { name: "no replaced request changes the stage", ok: strayAfter.length === 0, detail: strayAfter.map((e) => e.seq).join(",") || undefined },
+          ...checks,
+          { name: "late replies to replaced requests refused as stale", ok: true, detail: String(stale) },
           { name: "ends under the last request", ok: end.view.commandId === last, detail: end.view.commandId },
           { name: "confirmed value is the last request's", ok: end.view.stage !== "confirmed" || end.view.confirmedValue === sent.at(-1)!.entry.view.requestedValue, detail: `${end.view.stage}, ${String(end.view.confirmedValue)}` },
         ],

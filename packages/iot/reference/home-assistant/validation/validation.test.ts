@@ -58,10 +58,18 @@ function harness(overrides: Partial<ValidationRunOptions> = {}) {
   };
   const report = (value: string, time = now) =>
     socket().receive({ type: "event", id: subscription, event: { event_type: "state_changed", data: { entity_id: ENTITY, new_state: state(value, time) } } });
+  /** Answers every command call not yet answered, oldest first (a provider replying late). */
+  const ackAll = () => {
+    for (const call of socket().sent.filter((m) => m.type === "call_service" && !answered.has(m.id))) {
+      answered.add(call.id);
+      socket().receive({ type: "result", id: call.id, success: true, result: null });
+    }
+  };
+  const answered = new Set<unknown>();
   const advance = (ms: number) => { now += ms; run.session.tick(); };
   const say = (...lines: string[]) => lines.map((line) => run.handle(line));
   run.session.start();
-  return { run, socket, sockets, ready, ack, report, advance, say, now: () => now };
+  return { run, socket, sockets, ready, ack, ackAll, report, advance, say, now: () => now };
 }
 
 /** The full operator script, against a well-behaved synthetic provider. */
@@ -74,7 +82,7 @@ function fullRun(h: ReturnType<typeof harness>) {
   h.say("case H05", "on"); h.advance(50); h.ack(); h.advance(200); h.report("unavailable"); h.advance(1_000); h.say("observe matches", "end");
   h.say("case H06"); h.advance(500); h.report("on"); h.say("observe matches came back on", "end");
   h.say("case H07", "off"); h.advance(10); h.socket().onclose!(); h.advance(2_100); h.ready("off"); h.say("end");
-  h.say("case H09", "on", "off", "on"); h.ack(); h.advance(100); h.report("on"); h.say("observe matches", "end");
+  h.say("case H09", "burst"); h.ackAll(); h.advance(100); h.report("on"); h.say("observe matches", "end");
 }
 
 describe("real-device validation harness (synthetic socket — simulation only)", () => {
@@ -208,6 +216,39 @@ describe("real-device validation harness (synthetic socket — simulation only)"
       expect(c.steps.length && c.criteria.length && c.observe).toBeTruthy();
       expect(c.changesets.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("review findings (#342)", () => {
+  it("does not pass H05 until the command timeout has passed", () => {
+    const h = harness();
+    h.ready(); h.advance(5);
+    h.say("case H05", "on"); h.ack(); h.advance(100); h.report("unavailable");
+    const [out] = h.say("end");
+    expect(out![0]).toMatch(/not-exercised: the command timeout never passed/);
+  });
+
+  it("does not pass H09 unless a reply to a replaced request is refused as stale", () => {
+    const h = harness();
+    h.ready(); h.advance(5);
+    h.say("case H09");
+    for (const value of ["on", "off", "on"]) { h.say(value); h.ackAll(); h.advance(500); }
+    h.report("on");
+    const [out] = h.say("end");
+    expect(out![0]).toMatch(/not-exercised: no reply to a replaced request/);
+  });
+
+  it("recomputes every case from the trace instead of trusting stored outcomes", () => {
+    const h = harness();
+    h.ready(); h.advance(5);
+    h.say("case H05", "on"); h.ack(); h.report("unavailable"); h.say("observe matches", "end");
+    const forged = JSON.parse(JSON.stringify(h.run.record())) as EvidenceRecord;
+    forged.cases[0]!.automated = { outcome: "pass", checks: [], metrics: {} };
+    forged.cases[0]!.verdict = "simulation-only";
+    expect(validateEvidenceRecord(forged)).toContain("H05: automated result does not follow from the trace");
+    const truncated = JSON.parse(JSON.stringify(h.run.record())) as EvidenceRecord;
+    truncated.trace = [];
+    expect(validateEvidenceRecord(truncated)).toContain("H05: case window does not match the trace");
   });
 });
 

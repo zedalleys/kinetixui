@@ -11,7 +11,7 @@
  * cryptographic proof; `validateEvidenceRecord` checks that it is complete and that nothing in the
  * record looks like a credential, URL or provider identifier.
  */
-import { VALIDATION_CASES, type CaseEvaluation } from "./cases";
+import { VALIDATION_CASES, evaluateCase, type CaseEvaluation } from "./cases";
 import type { TraceEntry } from "./trace";
 
 export const EVIDENCE_SCHEMA = "kinetixui.iot.device-validation/1";
@@ -32,6 +32,9 @@ export type CaseVerdict = "pass" | "fail" | "not-exercised" | "incomplete" | "pr
 
 export type CaseRecord = {
   id: string;
+  /** Trace positions of the operator's `case` and `end` entries; the validator re-evaluates this window. */
+  startSeq: number;
+  endSeq: number;
   startedAt: string;
   endedAt: string;
   automated: CaseEvaluation;
@@ -122,7 +125,17 @@ export function validateEvidenceRecord(record: EvidenceRecord, secrets: readonly
   } else if (record.provider?.endpoint !== "synthetic") {
     errors.push("a simulation record must say its endpoint was synthetic");
   }
+  const trace = record.trace ?? [];
+  if (trace.some((e, i) => e?.seq !== i)) errors.push("trace is not contiguous");
   for (const entry of record.cases ?? []) {
+    // Never trust a stored outcome: recompute it from the recorded trace window.
+    const start = trace[entry.startSeq];
+    const end = trace[entry.endSeq];
+    if (start?.operator !== `case ${entry.id}` || end?.operator !== "end" || entry.endSeq <= entry.startSeq) {
+      errors.push(`${entry.id}: case window does not match the trace`);
+    } else if (JSON.stringify(evaluateCase(entry.id, trace.slice(entry.startSeq, entry.endSeq + 1))) !== JSON.stringify(entry.automated)) {
+      errors.push(`${entry.id}: automated result does not follow from the trace`);
+    }
     const expected = caseVerdict(record.source, record.device?.kind, Boolean(VALIDATION_CASES.find((c) => c.id === entry.id)?.physical), entry.automated, entry.physical);
     if (entry.verdict !== expected) errors.push(`${entry.id}: verdict ${entry.verdict} does not follow from its results (expected ${expected})`);
     for (const o of entry.physical) {

@@ -17,7 +17,7 @@ published) and builds on the PR #325 live session and the M4B adapter:
 | `live-session.ts` (#325) | Authenticated Home Assistant WebSocket session → adapter → ledger. Gains an `onLedger` observer and the provider's version. |
 | `validation/cases.ts` | The case catalogue: held changeset, steps, criteria, and an evaluator per case. |
 | `validation/trace.ts` | Records each ledger change as the UI would read it (stage, availability, `describeControlState`, `summarizeDeviceState`). Sees no frame, URL, entity id or credential. |
-| `validation/evidence.ts` | Evidence record, verdict rules, sensitive-content screening and the release gate. |
+| `validation/evidence.ts` | Evidence record, verdict rules, sensitive-content screening and the release gate. The validator recomputes every case's automated result from the recorded trace window rather than trusting the stored outcome. |
 | `validation/runner.ts` + `validation-runner.mjs` | Operator CLI. The only producer of `live-provider` records. |
 | `evidence-gate.mjs` | Reads committed records in `validation/records/` and prints the gate. |
 | `validation/negative-controls.mjs` | Reverts each held behaviour and harness guard in turn and requires the tests to fail. |
@@ -56,10 +56,10 @@ and a broken rule fails the case even when it is otherwise not exercised.
 | H02 | One `on`/`off` | `requested` → acknowledgement leaves the value unchanged → only a report with the requested value confirms. Records ack and confirm latency | Device changed, not before the send |
 | H03 | Same as H02 | Records `observedAt − sentAt`. Passes only when negative (provider clock behind) and the report still confirms; otherwise `not-exercised` | — |
 | H04 | Press the device's own button | No request; value changes; no request settled | Change came from the button |
-| H05 | Unplug, then immediately send a change | Request open when the link goes `offline`; link change never moves the stage; availability `offline`/`unreachable`; description starts "Device offline. The requested change is not confirmed."; summary never says "in progress"; after the timeout the stage is `timed-out`, never `failed` | Device stayed unpowered and unchanged |
+| H05 | Unplug, then immediately send a change | Request open when the link goes `offline`; link change never moves the stage; availability `offline`/`unreachable`; description starts "Device offline. The requested change is not confirmed."; summary never says "in progress"; the timeout must pass inside the case and leave the stage `timed-out`, never `failed` (without it the case is `not-exercised`) | Device stayed unpowered and unchanged |
 | H06 | Plug back in (after H05) | Link back `online`; the link alone never settles; a report of the requested value confirms late, the old value leaves it unconfirmed | Which state the device came back in |
 | H07 | Restart the test Home Assistant | `connecting` while away, never moving a lifecycle stage; reconnect through a snapshot; no request without an operator command. (A request held open across a provider restart is too fast to stage by hand with a working device; it stays covered by #325's synthetic session tests.) | — |
-| H09 | `on`, `off`, `on` quickly | No replaced request changes the stage; ends under the last request's id with its value | Device ends in the last requested state |
+| H09 | `burst` (sends `on`, `off`, `on` back to back) | At least one reply to a replaced request arrives and is refused as stale (otherwise `not-exercised`); no replaced request changes the stage; ends under the last request's id with its value | Device ends in the last requested state |
 
 **Verdicts in a record:** `pass` needs a `live-provider` run, a `physical` device, an automated `pass` and every
 observation `matches`. A virtual entity gives `provider-only`; a missing observation gives `incomplete`;
@@ -117,7 +117,7 @@ The runner connects and sends nothing until you type a command. Then, in order:
 7. `case H07` · restart Home Assistant (Settings → System → Restart) · wait for `status` to show `ready` · `end`.
    The runner retries for about two minutes (2 s doubling, six tries); if `status` shows `blocked`, the
    restart took longer: `quit`, start the runner again and repeat H07.
-8. `case H09` · `on`, `off`, `on` as fast as you can · `observe matches` · `end`
+8. `case H09` · `burst` (typing three commands by hand is too slow: each reply would arrive before the next request) · `observe matches` · `end`
 9. `save`, then `quit`. Revoke the token.
 
 `observe` notes are short and descriptive ("lamp lit"); a note that looks like a token, URL or entity id is
@@ -140,7 +140,7 @@ releasing remain the owner's decisions.
 
 ## 6. Checks run on 2026-10-11 (simulation and tooling only)
 
-- Validation suite: 12 tests on a synthetic socket. Every case evaluates `pass` against a well-behaved
+- Validation suite: 15 tests on a synthetic socket. Every case evaluates `pass` against a well-behaved
   synthetic provider; every verdict is `simulation-only`; the gate reports not ready.
 - Negative controls (`validation/negative-controls.mjs`): reverting the offline wording, dropping
   `receivedAt` from ledger reports, letting an acknowledgement confirm, removing test-device attestation,

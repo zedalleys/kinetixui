@@ -49,7 +49,7 @@ export type TraceEntry = {
   kind: "ledger" | "operator";
   cause?: "signals" | "request" | "expire";
   transitions?: KinetixLedgerTransition[];
-  /** Operator command: `on`, `off`, `case H05`, `end`, `observe`. Never free text. */
+  /** Operator command: `on`, `off`, `burst`, `case H05`, `end`, `observe`. Never free text. */
   operator?: string;
   session: { phase: string; fault?: string };
   view: DeviceView;
@@ -79,7 +79,7 @@ export function viewDevice(ledger: KinetixDeviceLedger, deviceId: string, capabi
 }
 
 /** Operator commands a trace may carry. Anything else is refused, so free text never lands in `operator`. */
-const OPERATOR = /^(on|off|end|observe|case H\d{2})$/;
+const OPERATOR = /^(on|off|burst|end|observe|case H\d{2})$/;
 
 export function createTraceRecorder(options: {
   deviceId: string;

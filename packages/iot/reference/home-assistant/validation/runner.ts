@@ -113,6 +113,12 @@ export function createValidationRun(options: ValidationRunOptions) {
         trace.operator(command);
         return [JSON.stringify({ dispatched: session.request(VALIDATION_DEVICE, command) })];
       }
+      case "burst": {
+        // H09: three requests in one turn of the event loop, so replies to the first two arrive after their replacement.
+        if (!attested) return ["Refused: set KX_TEST_DEVICE to the configured entity id to confirm it is a dedicated test device. No command sent."];
+        trace.operator("burst");
+        return [JSON.stringify({ dispatched: (["on", "off", "on"] as const).map((value) => session.request(VALIDATION_DEVICE, value)) })];
+      }
       case "observe": {
         if (!open) return ["No case is open."];
         const verdict = rest[0];
@@ -132,7 +138,7 @@ export function createValidationRun(options: ValidationRunOptions) {
         const automated = evaluateCase(open.id, window);
         const physicalCase = Boolean(findCase(open.id)?.physical);
         const verdict = caseVerdict(options.source, options.device.kind, physicalCase, automated, open.physical);
-        cases.push({ id: open.id, startedAt: open.startedAt, endedAt: new Date(options.now()).toISOString(), automated, physical: open.physical, verdict });
+        cases.push({ id: open.id, startSeq: open.start, endSeq: end, startedAt: open.startedAt, endedAt: new Date(options.now()).toISOString(), automated, physical: open.physical, verdict });
         open = undefined;
         return [
           `${cases.at(-1)!.id}: ${verdict} (automated ${automated.outcome}${automated.reason ? `: ${automated.reason}` : ""})`,
@@ -150,7 +156,7 @@ export function createValidationRun(options: ValidationRunOptions) {
         return [`Saved ${options.save(name, `${JSON.stringify(value, null, 2)}\n`)}`];
       }
       default:
-        return ["Commands: status, cases, case <id>, on, off, observe matches|differs [note], end, save, quit"];
+        return ["Commands: status, cases, case <id>, on, off, burst, observe matches|differs [note], end, save, quit"];
     }
   };
 
