@@ -233,6 +233,60 @@ was caught:
   on every side" (the surface clips two sides, 1.37:1 and 1.00:1).
 - The close button's focus ring removed → the same row, 1.00:1 on all four sides, light and dark.
 
+### Wave C2a — the collection core and the menus (done)
+
+**Components:** `dropdown-menu`, `context-menu`, `menubar` (3). 12/13 held; Angular 64 → 67. The listboxes
+(`select`, `combobox`, `multi-select`, `command`) are C2b and are not part of this wave.
+
+**One set of parts, three roots.** Every item part (`kxMenuItem`, `kx-menu-checkbox-item`,
+`kx-menu-radio-group` / `kx-menu-radio-item`, `kx-menu-label`, `kx-menu-group`, `kx-menu-separator`,
+`kx-menu-shortcut`, and submenus: `kx-menu-sub`, `kxMenuSubTrigger`, `kx-menu-sub-content`) is written once in
+`lib/menu.ts` and finds its menu through DI, so the dropdown menu, the context menu and the menubar differ
+only in their root and trigger. The menus are floating surfaces of the C1 layer (`popover="manual"`, the one
+stack, `computePlacement`); no second overlay system was added. Two additions to the layer: a virtual anchor
+(a rectangle and the element whose direction it reads), which is how a context menu opens at the pointer, and
+`reposition()`, which re-places an open surface when its anchor moves (a second right-click). Element anchors
+are unchanged, and the C1 gate still passes over them.
+
+**The collection core** (`lib/collection.ts`, internal, not exported): `moveIndex` (next, previous, first,
+last, skipping disabled items; wrapping is the caller's choice: menus stop at their ends, as React's tested
+contract does, and the menubar's triggers wrap), `moveForKey` and `inlineKey` (horizontal keys resolved
+against direction), `isRtl` (the nearest `[dir]`, else the computed style through the element's own window),
+the typeahead (a 500ms buffer, a repeated letter cycles, disabled items never match) and roving focus (one
+Tab stop). Tabs, accordion and the code block keep their own copies; moving them onto the core is a later,
+behaviour-neutral change.
+
+| | |
+|---|---|
+| Behavioural contracts | dropdown menu (Enter, Space, ArrowDown open on the first item, ArrowUp on the last; arrows stop at the ends; Home/End; typeahead; Enter/Space activate; Escape closes and returns focus; Tab closes and moves on; activating an item closes the tree and returns focus to the trigger; disabled items announced and skipped); submenus (two levels, nested in the parent's DOM; ArrowRight/Enter/Space open on the first item, ArrowLeft and Escape close ONE level with focus on that level's trigger; hover opens after 100ms; a grace triangle lets the pointer cross the parent's items on the way into the submenu); context menu (right-click opens at the pointer, a second right-click moves it there, the ContextMenu key and Shift+F10 open it at the focused element, Escape returns focus there); menubar (one Tab stop, ArrowLeft/Right wrap across triggers, with a menu open they open the neighbour's menu, ArrowRight past a submenu moves to the next menu, the pointer switches menus while one is open); checkbox and radio items (`aria-checked`, two-way `checked` and `value`) |
+| Accessibility | `menu`, `menuitem`, `menuitemcheckbox`, `menuitemradio`, `group` named by its label, `separator`, `menubar`; the trigger carries `aria-haspopup`, `aria-expanded`, `aria-controls`; the menu is named by its trigger; axe over every menu OPEN (submenus included) and the three usage examples, light and dark; forced colours (highlight and open-trigger outlines) |
+| RTL | 3 components in four direction cases (RTL page, LTR page, an RTL region in an LTR page and the reverse): submenus open toward the inline end, ArrowLeft opens and ArrowRight closes in RTL, the menubar's arrows follow reading order, a context menu's inline-start corner sits on the pointer |
+| Large text | 3 components at 2× text at 1024px and 390px: inside the viewport, no clipped text, 24px targets; a submenu with no room beside its parent opens below its trigger |
+| Motion | the surface's motion is the floating surface's (C1); item and trigger state changes are `duration-instant` and none under reduced motion |
+| Visual | `check:menu-visual` (new, Angular only): each item state against the others, the keyboard highlight against the pointer's, disabled, destructive, check and radio marks, shortcut contrast at rest and highlighted, the chevron and the submenu's side in LTR and RTL, the menubar's open trigger, and forced colours; light and dark |
+| Compositions | a data row's action menu (named by its row's trigger; a destructive action removes the row) and a menu inside a dialog (`check:angular-overlays`: Escape closes the menu, then the dialog, one layer at a time) |
+| Defects it found and fixed | a menu reopened during its own closing transition could not take focus for one frame (Chromium; focus now retries on the next frame if nothing else took it); at 390px and at 200% text a submenu was squeezed into the 10px beside its parent (it now opens below its trigger); a context menu's second right-click did not move the open menu; a muted shortcut fell below 4.5:1 on a highlighted item (axe; it now takes the item's colour); the native `disabled` attribute removed disabled items from the accessibility tree (they are now `aria-disabled`) |
+
+**Findings not fixed:** when a data row's action removes the row, its trigger goes with it and focus falls to
+`body`. Where focus should go (the next row, the table) is the data table's decision, which is Wave D.
+
+#### Negative controls (Wave C2a)
+
+10 controls, each a real break in the source, a fresh harness built from it, the gate run against it, and the
+file restored from git and checked by hash before the next (logs and `summary.json`:
+`/mnt/project-files/angular-wave-c2a/negative-controls/`). None committed. Every one was caught:
+
+- Vertical arrows wrap at the ends of a menu → `check:angular-collections`: "ArrowDown … stops at the end (no wrap)".
+- Typeahead includes disabled items → `check:angular-collections`: "typeahead never lands on the disabled item".
+- Submenu open/close keys not mirrored in RTL → `check:angular-collections`: RTL page: "ArrowLeft (the inline-end arrow) opens it", and its closing pair.
+- Submenu rendered outside the parent menu (portalled to body) → `check:angular-collections`: "submenus are nested in their parent menu in the DOM, two levels deep", and the tree no longer closing as one.
+- Escape closes the whole menu tree → `check:angular-collections`: "Escape closes one level: the deepest, the other two stay open", in the dropdown and the context menu.
+- No focus return after an item is activated → `check:angular-collections`: "focus returns to the trigger after an item runs" (focus was on `body`).
+- Context menu anchored to its trigger, not the pointer → `check:angular-collections`: "it opens AT the pointer" (point 88,144; menu at 48,276) and "a second secondary click moves it".
+- aria-checked not updated on a checkbox item → `check:angular-collections`: "a checkbox item is a menuitemcheckbox with its state", in the dropdown and the context menu.
+- Menubar horizontal movement does not open the neighbouring menu → `check:angular-collections`: "with a menu open, ArrowRight opens the next menu", and the wrap and ArrowLeft cases.
+- Keyboard highlight identical to the pointer highlight → `check:menu-visual`: "an inset focus ring clears 3:1 against the layer" (1.00:1) and "keyboard and pointer highlights look different", light and dark, LTR and RTL.
+
 ### What remains after Wave C2a, ranked
 
 29 planned. Ranked by what each group unblocks and by the evidence React already holds for it (which Angular
