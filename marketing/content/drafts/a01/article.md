@@ -18,7 +18,7 @@ Mine was. Not deliberately — nobody sat down to write something false. But the
 documentation said a thing that was not true, and nothing in the repository
 could tell.
 
-We publish component implementations for React, SwiftUI, Jetpack Compose and
+We maintain component implementations for React, SwiftUI, Jetpack Compose and
 Flutter — the four this story is about. Every component page listed its
 supported platforms. Every listing was a string in a JSON file that a human
 typed, and nothing checked whether the implementation it claimed actually
@@ -221,7 +221,7 @@ Whether you are evaluating a design system or maintaining one:
 
 Ours, today: 98 catalogue entries — 97 components and one documented recipe.
 React 98, SwiftUI 90, Jetpack Compose 90, Flutter 90, and Angular 64 —
-explicitly in preview. 90 of 98 on all four catalogue-complete platforms, with
+published on npm and explicitly in preview. 90 of 98 on all four catalogue-complete platforms, with
 8 documented exceptions that each carry a written reason. Angular sits outside
 that denominator because its catalogue is deliberately incomplete; folding it in
 would flatter the number.
@@ -236,7 +236,7 @@ want.
 ## The part that matters
 
 The guardrails are not impressive engineering. The platform-source check is
-about a hundred lines, and the most sophisticated thing it does is compare two
+about two hundred lines, and the most sophisticated thing it does is compare two
 lists.
 
 What made them worth writing is that each came from a specific bug rather than a
@@ -249,7 +249,7 @@ That is the only pattern I would actually recommend: when documentation turns ou
 to be wrong, do not just fix the documentation. Ask what would have caught it,
 write that, and run it against everything else you have already published.
 
-Mine found five more problems on its first run. You will not enjoy that run.
+Mine found four more problems. You will not enjoy that run.
 Run it anyway.
 
 ---

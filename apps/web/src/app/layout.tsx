@@ -57,6 +57,16 @@ const mono = localFont({
   adjustFontFallback: "Arial",
 });
 
+// Text diagrams need the full face: the Latin subset does not include box-drawing glyphs.
+const treeMono = localFont({
+  src: "./fonts/jetbrains-mono-tree.woff2",
+  variable: "--font-tree-mono",
+  preload: false,
+  weight: "400",
+  display: "block",
+  adjustFontFallback: false,
+});
+
 export const metadata: Metadata = {
   title: { default: `${siteConfig.name} — ${siteConfig.tagline}`, template: `%s — ${siteConfig.name}` },
   description: siteConfig.description,
@@ -84,7 +94,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       dir="ltr"
       suppressHydrationWarning
-      className={`${sans.variable} ${display.variable} ${mono.variable}`}
+      className={`${sans.variable} ${display.variable} ${mono.variable} ${treeMono.variable}`}
     >
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>

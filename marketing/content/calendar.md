@@ -49,7 +49,7 @@ appears, which is why they carry no fixed day.
 | **Week 2 — architecture** |
 | 8 | **ART-002** | dev.to | article | NEUTRAL | B | Awareness | *Your design tokens stop at the web boundary* | Token contract → `/docs/tokens` | `kx_p2_b_token_boundary` | — | **Published** 2026-10-06 |
 | 9 | **LI-005** | LinkedIn | post | NEUTRAL | B | Awareness | The boundary, and the copies nobody maintains | Token contract → `/docs/tokens` | `kx_p2_b_token_boundary` | ART-002 | Ready; publication disputed — [correction](../distribution/october-7-correction.md) |
-| 11 | **X-004** | X | thread (5) | NEUTRAL | B | Awareness | The token boundary, in five | `/docs/tokens` | `kx_p2_b_token_boundary` | ART-002 | Ready |
+| 11 | **X-004** | X | thread (5) | NEUTRAL | B | Awareness | The token boundary, in five | `/docs/tokens` | `kx_p2_b_token_boundary` | ART-002 | **Published** 2026-10-09 |
 | 13 | **LI-007** | LinkedIn | post | P2 | F | Evaluation | Two trades: runtime vs native implementations | Catalogue → `/components` | `kx_p2_f_two_trades` | — | Ready |
 | — | **COM-001** | community | comment | P2 | B | Awareness | Cross-platform token architecture | opportunistic | — | ART-002 | Brief |
 | **Week 3 — proof** |

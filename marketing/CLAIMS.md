@@ -158,10 +158,11 @@ source is named instead.
 
 ### C4b — When main's source is ahead of what is on npm
 
-- **Status:** CONDITIONAL — applies only while `.changeset/` holds a pending changeset that names
-  `@kinetixui/iot`. With none pending, the version npm serves is the package source on `main`, and C4 alone
-  governs. Check `.changeset/` and `pnpm marketing:stats` at the moment of writing; never quote this row's state
-  from memory.
+- **Status:** CONDITIONAL — applies only while `.changeset/` or `.changeset-held/iot/` holds a pending changeset
+  that names `@kinetixui/iot`. A held changeset is unreleased work kept out of the Version Packages PR so another
+  cohort can ship alone; it is still pending. With none in either, the version npm serves is the package source
+  on `main`, and C4 alone governs. Check both directories and `pnpm marketing:stats` at the moment of writing;
+  never quote this row's state from memory.
 - **Evidence when it applies:** the pending changeset names what main carries beyond the published version.
   `/docs/iot` may mark exactly those sections as not yet released, and `current-truth.test.ts` refuses such a
   marker when no IoT changeset is pending, so the page cannot keep saying it after the release.
@@ -170,7 +171,8 @@ source is named instead.
 - **Forbidden interpretation:** presenting anything behind a pending changeset as *shipped* or *installable
   today*; implying the `/iot` demos talk to hardware; and the inverse, saying npm is behind main when no IoT
   changeset is pending.
-- **Review trigger:** a changeset for `@kinetixui/iot` is added, or the iot cohort publishes.
+- **Review trigger:** a changeset for `@kinetixui/iot` is added, held or released from `.changeset-held/iot/`, or
+  the iot cohort publishes.
 
 ### C5 — Wearables
 
