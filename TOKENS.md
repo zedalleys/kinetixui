@@ -374,6 +374,35 @@ floating surface's, above.
 | React | Not changed by this contract; parity is not claimed |
 | SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
 
+### Listboxes
+
+Angular Wave C2b (`@kinetixui/angular`: select, command, multi-select, and the combobox recipe). One option part
+shared by all of them, on the menu item's states above, inside the floating surface of the Overlays contract
+(the command's list is inline when it is not in a popover or the command dialog). No token is added.
+
+| Part | Token(s) | Notes |
+|---|---|---|
+| Listbox surface | the floating surface (`popover` fill, `border` edge, `shadow-lg`, radius `control`); padding `spacing-1`, text `text-body-md` | at least as wide as the field it opens from, capped to `--kx-available-width`; scrolls inside itself when taller than the room |
+| Option, resting | transparent, `foreground` text, radius `control` − 2px, 2rem minimum block size | a long label wraps; nothing is cut |
+| Option, highlighted | `foreground` layer at 8% | the highlight is the active descendant: focus stays on the field |
+| Option, highlighted by the keyboard | the 8% layer plus an inset 2px `ring` | differs from the pointer's highlight, which draws no ring |
+| Option, selected | a check mark, 1rem, at the inline start, in the option's text colour | the CHOSEN value (`aria-selected`); a shape, never colour alone, and independent of the highlight — a chosen option that is not highlighted paints no layer |
+| Option, disabled | `opacity-disabled`, cursor `not-allowed`, never highlighted | announced (`aria-disabled`), never the active descendant |
+| Group label, separator, empty text | label `muted-foreground`, `text-label-md`, `font-weight-semibold`; the menu's separator; empty text `muted-foreground`, `text-body-sm` | a label names its group; a separator is decorative (`aria-hidden`) |
+| Select trigger | the Input contract (Text entry and navigation): `muted-foreground` edge at 80% at rest, full on hover, `action` edge and `--shadow-focus` on keyboard focus, `action` edge while open, `destructive` when invalid; placeholder `muted-foreground` | a chevron at the inline end; the value wraps at 200% text |
+| Multi-select field | the Composite fields contract: one edge around the chips and the input; the field draws the focus ring while its input has focus | chips are `secondary` tags; a chip's remove button is a 24px target and owns its focus ring (an inset 2px `ring` at full opacity), and the field's ring stays off |
+| Command | `popover` surface, `border` edge, radius `control` when standalone; borderless inside a popover or the command dialog | the search field draws an `action` rule along its block-end edge on focus; shortcuts are the menu's |
+
+Forced colours: the select trigger, the multi-select field, the command's search field and a highlighted option
+draw a system outline. Motion: the popup's motion is the floating surface's; option state changes are
+`duration-instant` and none under reduced motion.
+
+| Platform | Status |
+|---|---|
+| Angular | Implemented in `styles.css`. The option states are verified on rendered pixels by `check:menu-visual` (light + dark, LTR + RTL, select and multi-select); the select trigger by `check:entry-visual` and the multi-select field by `check:composite-visual`. Behaviour, the active descendant, direction, 200% text and motion are measured on the live application by `check:angular-collections` |
+| React | Not changed by this contract; parity is not claimed |
+| SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
+
 ## Role tokens (added on top of `primary`)
 
 `brand`, `action` (+ `action-foreground`), `link` and `focus` are **repo-owned** — none exist in Figma. `action`,

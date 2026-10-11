@@ -1,5 +1,5 @@
 /**
- * menu-visual.mjs — the menu item state contract, measured on rendered pixels.
+ * menu-visual.mjs — the menu item and listbox option state contract, measured on rendered pixels.
  *
  *   pnpm build:tokens && node scripts/menu-visual.mjs
  *
@@ -29,10 +29,23 @@
  *                draws a ring that clears 3:1
  *   context      the context menu's surface and items are the same contract (it is the same parts)
  *
+ * Wave C2b's listboxes (TOKENS.md, "Listboxes") — the select's and the multi-select's popups, from
+ * src/fixtures/listboxes.ts — hold the same option states, plus one a menu has no use for:
+ *
+ *   surface      the listbox is the same popover surface and edge
+ *   rest         an option at rest paints nothing of its own
+ *   keyboard     the keyboard highlight (the active descendant: focus stays on the field) draws the layer and an
+ *                inset ring that clears 3:1; a pointer highlight draws the layer and no ring
+ *   selected     a CHOSEN option carries a check mark at its inline start that clears 3:1, and paints no layer
+ *                when it is not highlighted — chosen and highlighted are two states, never one look; an
+ *                unchosen option carries no mark
+ *   disabled     drawn at the disabled opacity, and a pointer over it paints no layer
+ *
  * Light and dark, LTR and RTL. Thresholds appear only where a standard names one (3:1, SC 1.4.11; 4.5:1,
  * SC 1.4.3); every other assertion is a relation between two renderings in the same run.
  *
- * Angular only: React's menus are not changed by Wave C2a and are not measured here (visual-gates.mjs).
+ * Angular only: React's menus and listboxes are not changed by Waves C2a and C2b and are not measured here
+ * (visual-gates.mjs).
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary for local runs.
  */
@@ -49,13 +62,15 @@ const VIEWPORT = { width: 1024, height: 800 };
 
 const dir = buildAngularSubject("collections", { name: "menu-visual", layout: "" });
 const server = await serveStatic(dir);
+const listDir = buildAngularSubject("listboxes", { name: "listbox-visual", layout: "" });
+const listServer = await serveStatic(listDir);
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 
-async function open(theme, { rtl = false, forced = false } = {}) {
+async function open(theme, { rtl = false, forced = false, at = server } = {}) {
   const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: DPR, reducedMotion: "reduce", forcedColors: forced ? "active" : "none" });
   const page = await context.newPage();
-  await page.route((url) => !url.href.startsWith(server.base) && !url.href.startsWith("data:"), (route) => route.abort());
-  await page.goto(`${server.base}/${theme}.html${rtl ? "?dir=rtl" : ""}`, { waitUntil: "load" });
+  await page.route((url) => !url.href.startsWith(at.base) && !url.href.startsWith("data:"), (route) => route.abort());
+  await page.goto(`${at.base}/${theme}.html${rtl ? "?dir=rtl" : ""}`, { waitUntil: "load" });
   await waitForAngular(page);
   await page.mouse.move(0, 0);
   return { page, close: () => context.close() };
@@ -312,6 +327,111 @@ async function forced(theme) {
   await close();
 }
 
+/**
+ * A listbox's option states. `subject` names the field, how it opens, and which options are which once open:
+ * `keyboard` is the highlight the opening key lands on, `chosen` is selected but not highlighted, `rest` neither,
+ * `disabled` disabled.
+ */
+async function listbox(theme, rtl, subject) {
+  const name = `${theme} ${rtl ? "rtl" : "ltr"} ${subject.slug}`;
+  const { page, close } = await open(theme, { rtl, at: listServer });
+  const fill = await token(page, "--popover");
+  const border = await token(page, "--border");
+  const sel = (id) => `[id="${id}"]`;
+  await subject.prepare?.(page);
+  await keyboardFocus(page, subject.field);
+  for (const k of subject.keys) await key(page, k);
+  const ids = await subject.ids(page);
+  const m = await box(page, subject.surface);
+  const f = await frame(page, m);
+  check(contrast(f.at(m.x + m.width / 2, m.y + m.height - 3), fill) < 1.05, `${name} the listbox is painted the popover token`);
+  let edge = f.at(m.x, m.y + m.height / 2);
+  for (let x = m.x - 0.5; x <= m.x + 2; x += 0.5) if (contrast(f.at(x, m.y + m.height / 2), border) < contrast(edge, border)) edge = f.at(x, m.y + m.height / 2);
+  check(contrast(edge, border) < 1.1, `${name} its edge is drawn in the full border token`, `${edge} vs ${border}`);
+  check((await page.locator(subject.field).evaluate((el) => el === document.activeElement)) && (await page.locator(subject.field).getAttribute("aria-activedescendant")) === ids.keyboard, `${name} focus stays on the field; the active descendant is the keyboard highlight`);
+
+  // rest, keyboard highlight
+  const kb = await box(page, sel(ids.keyboard));
+  const rb = await box(page, sel(ids.rest));
+  const restFill = f.at(...fillPoint(rb, rtl));
+  check(contrast(restFill, fill) < 1.03, `${name} rest: an option paints nothing of its own`, `${restFill} vs ${fill}`);
+  const kbFill = f.at(...fillPoint(kb, rtl));
+  check(contrast(kbFill, fill) > 1.03, `${name} keyboard highlight: the state layer is drawn`, `${r2(contrast(kbFill, fill))}:1`);
+  const kbRing = strongest(f, kbFill, [kb.x + kb.width / 2, kb.y + 0.5], [kb.x + kb.width / 2, kb.y + 2]);
+  check(kbRing >= 3, `${name} keyboard highlight: an inset ring clears 3:1 against the layer`, `${r2(kbRing)}:1`);
+  const kbRingAt = f.at(...ringPoint(kb));
+
+  // chosen, not highlighted: a mark, no layer; unchosen: no mark
+  const markInk = (fr, mk) => {
+    let ink = 1;
+    for (let y = mk.y + 2; y <= mk.y + mk.height - 2; y += 0.5) ink = Math.max(ink, strongest(fr, fill, [mk.x + 1, y], [mk.x + mk.width - 1, y]));
+    return ink;
+  };
+  const cb = await box(page, sel(ids.chosen));
+  const cm = await box(page, `${sel(ids.chosen)} .kx-option__indicator`);
+  const markAtStart = rtl ? cb.right - cm.right <= 12 : cm.left - cb.left <= 12;
+  const chosenInk = markInk(await frame(page, cm), cm);
+  check(chosenInk >= 3 && markAtStart, `${name} selected: a check mark at the inline start that clears 3:1`, `${r2(chosenInk)}:1`);
+  check(contrast(f.at(...fillPoint(cb, rtl)), fill) < 1.03, `${name} selected but not highlighted: no state layer — chosen and highlighted look different`);
+  const rm = await box(page, `${sel(ids.rest)} .kx-option__indicator`);
+  check(markInk(await frame(page, rm), rm) < 1.5, `${name} unselected: no mark`);
+
+  // the pointer on the keyboard-highlighted option: the same layer, no ring
+  await page.mouse.move(kb.x + kb.width / 2, kb.y + kb.height / 2);
+  await rest(page);
+  const f2 = await frame(page, m);
+  const ptFill = f2.at(...fillPoint(kb, rtl));
+  check(contrast(ptFill, fill) > 1.03 && contrast(ptFill, kbFill) < 1.03, `${name} hover: the same state layer as the keyboard highlight`, `${r2(contrast(ptFill, fill))}:1 over the surface`);
+  const ptRing = strongest(f2, ptFill, [kb.x + kb.width / 2, kb.y + 0.5], [kb.x + kb.width / 2, kb.y + 2]);
+  const differs = contrast(f2.at(...ringPoint(kb)), kbRingAt);
+  check(ptRing < 1.5 && differs >= 3, `${name} hover draws NO ring: keyboard and pointer highlights look different`, `ring ${r2(ptRing)}:1 under the pointer; keyboard vs pointer edge ${r2(differs)}:1`);
+
+  // disabled: dimmed, and the pointer paints nothing over it
+  const db = await box(page, sel(ids.disabled));
+  await page.mouse.move(db.x + db.width / 2, db.y + db.height / 2);
+  await rest(page);
+  const f4 = await frame(page, m);
+  const opacity = Number(await style(page, sel(ids.disabled), "opacity"));
+  const want = await page.evaluate(() => Number(getComputedStyle(document.documentElement).getPropertyValue("--opacity-disabled")) || null);
+  check(want !== null && Math.abs(opacity - want) < 0.01, `${name} disabled: drawn at the disabled opacity`, `${opacity} (token ${want})`);
+  check(contrast(f4.at(...fillPoint(db, rtl)), fill) < 1.03, `${name} disabled: a pointer over it paints no layer`);
+  await close();
+}
+const LISTBOXES = [
+  {
+    slug: "select",
+    field: "#sel-trigger",
+    // choose Apricot first, then reopen and move the highlight off it
+    prepare: async (page) => {
+      await keyboardFocus(page, "#sel-trigger");
+      for (const k of ["ArrowDown", "ArrowDown", "Enter"]) await key(page, k);
+    },
+    keys: ["ArrowDown", "ArrowDown"],
+    surface: "#sel-content",
+    ids: async () => ({ keyboard: "sel-banana", chosen: "sel-apricot", rest: "sel-cherry", disabled: "sel-blueberry" }),
+  },
+  {
+    slug: "multi-select",
+    field: "#ms-input",
+    keys: ["ArrowDown"],
+    surface: "#ms .kx-option-popup",
+    // Bug is highlighted, Design and Documentation are chosen, Research is neither, Blocked is disabled
+    ids: (page) =>
+      page.locator("#ms .kx-option-popup [role=option]").evaluateAll((os) => ({ keyboard: os[0].id, chosen: os[1].id, disabled: os[3].id, rest: os[4].id })),
+  },
+];
+async function forcedListbox(theme) {
+  const { page, close } = await open(theme, { forced: true, at: listServer });
+  const canvas = rgb(await page.evaluate(() => getComputedStyle(document.body).backgroundColor));
+  await keyboardFocus(page, "#sel-trigger");
+  await key(page, "ArrowDown");
+  const kb = await box(page, "#sel-apple");
+  const f = await frame(page, kb);
+  const ring = strongest(f, canvas, [kb.x + kb.width / 2, kb.y + 0.5], [kb.x + kb.width / 2, kb.y + 2.5]);
+  check(ring >= 3, `${theme} forced colours: the highlighted option still draws its outline`, `${r2(ring)}:1`);
+  await close();
+}
+
 for (const theme of ["light", "dark"]) {
   report.push(`\nAngular · ${theme}`);
   for (const rtl of [false, true]) {
@@ -320,14 +440,18 @@ for (const theme of ["light", "dark"]) {
   }
   if (COVERS.has("context-menu")) await context(theme);
   if (COVERS.has("dropdown-menu")) await forced(theme);
+  for (const rtl of [false, true]) for (const subject of LISTBOXES) if (COVERS.has(subject.slug)) await listbox(theme, rtl, subject);
+  if (COVERS.has("select")) await forcedListbox(theme);
 }
 
 await browser.close();
 server.close();
+listServer.close();
 rmSync(dir, { recursive: true, force: true });
+rmSync(listDir, { recursive: true, force: true });
 console.log(report.join("\n"));
 if (failures.length) {
   console.error(`\n✗ menu-visual: ${failures.length} contract failure(s)\n` + failures.map((f) => `  ${f}`).join("\n"));
   process.exit(1);
 }
-console.log("\nmenu-visual ok — the menu item state contract holds for Angular, in light and dark, LTR and RTL, on rendered pixels.");
+console.log("\nmenu-visual ok — the menu item and listbox option state contract holds for Angular, in light and dark, LTR and RTL, on rendered pixels.");

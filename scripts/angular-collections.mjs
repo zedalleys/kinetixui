@@ -157,6 +157,60 @@ async function axe(page) {
 }
 const settled = (page) => page.evaluate(() => Promise.allSettled(document.getAnimations().map((a) => a.finished)));
 
+/* ── listbox helpers: focus stays put, the active descendant moves ───────── */
+
+/** The focused field's `aria-activedescendant` — the option the keys are on — or null. */
+const descendant = (page, field) => page.locator(field).first().getAttribute("aria-activedescendant");
+/**
+ * Whether a field's active descendant is one a reader can be on: null, or exactly one element with that id, an
+ * enabled `role="option"`, rendered, inside the listbox the field controls. A stale id (an option that closed,
+ * was filtered out or removed) or one pointing at a disabled option fails.
+ */
+const descendantValid = (page, field) =>
+  page.locator(field).first().evaluate((f) => {
+    const id = f.getAttribute("aria-activedescendant");
+    if (id === null) return { ok: true, id };
+    const all = document.querySelectorAll(`[id="${CSS.escape(id)}"]`);
+    const el = all[0];
+    const list = document.getElementById(f.getAttribute("aria-controls") ?? "");
+    const why = [];
+    if (all.length !== 1) why.push(`${all.length} elements`);
+    if (el && el.getAttribute("role") !== "option") why.push("not an option");
+    if (el && (el.hidden || !el.checkVisibility())) why.push("not rendered");
+    if (el && el.getAttribute("aria-disabled") === "true") why.push("disabled");
+    if (el && !list?.contains(el)) why.push("outside the controlled listbox");
+    return { ok: why.length === 0, id, why: why.join(", ") };
+  });
+/** Ids used more than once, and id references (aria-controls/-activedescendant/-labelledby/-describedby, for) that resolve to nothing. */
+const idHygiene = (page) =>
+  page.evaluate(() => {
+    const count = {};
+    for (const e of document.querySelectorAll("[id]")) count[e.id] = (count[e.id] ?? 0) + 1;
+    const dups = Object.entries(count).filter(([, n]) => n > 1).map(([id, n]) => `${id}×${n}`);
+    const broken = [];
+    for (const attr of ["aria-controls", "aria-activedescendant", "aria-labelledby", "aria-describedby", "for"]) {
+      for (const e of document.querySelectorAll(`[${attr}]`)) {
+        for (const id of e.getAttribute(attr).split(/\s+/).filter(Boolean)) if (!document.getElementById(id)) broken.push(`${attr}=${id}`);
+      }
+    }
+    return { dups, broken };
+  });
+/** The rendered options of a listbox, by id, with their state. */
+const optionsOf = (page, list) =>
+  page.locator(list).first().evaluate((l) =>
+    [...l.querySelectorAll('[role="option"]')].filter((o) => !o.hidden).map((o) => ({ id: o.id, selected: o.getAttribute("aria-selected"), disabled: o.getAttribute("aria-disabled") === "true", highlighted: o.getAttribute("data-highlighted") })),
+  );
+/** Press keys one after another, collecting the field's active descendant after each. */
+async function walkDescendant(page, field, key, n) {
+  const seen = [];
+  for (let i = 0; i < n; i++) {
+    await press(page, key);
+    seen.push(await descendant(page, field));
+  }
+  return seen;
+}
+const listboxOf = (page, field) => page.locator(field).first().getAttribute("aria-controls").then((id) => `[id="${id}"]`);
+
 /* ════════════════════════════════════════════════════════════════════════════
  * kx-verify: interaction, accessibility
  *
@@ -191,6 +245,52 @@ const settled = (page) => page.evaluate(() => Promise.allSettled(document.getAni
  *                   the inline-start arrow closes only the submenu; hovering another trigger while a menu is open
  *                   switches to it; Escape closes and leaves focus on the trigger; a checkbox and radio item
  *                   inside a menubar menu work as anywhere else
+ *
+ * Wave C2b adds the listboxes on the same core: select, command, the combobox recipe and multi-select, sharing
+ * one listbox layer (src/lib/listbox.ts: options, highlight, selection, `aria-activedescendant`) and floating on
+ * the same overlay layer (src/fixtures/listboxes.ts). In all four, DOM focus stays on the field — the trigger,
+ * the search field or the input — and only `aria-activedescendant` moves; after every key the gate reads it back
+ * and requires it to name exactly one rendered, enabled option inside the listbox the field controls, or nothing.
+ *
+ *   KxSelect        the trigger is `role="combobox"` with `aria-haspopup="listbox"`, `aria-expanded` and
+ *                   `aria-controls`, named by its `<label for>`; closed, no listbox is exposed. ArrowDown, Enter
+ *                   and Space open it with focus kept on the trigger, the highlight on the first option (or the
+ *                   chosen one), ArrowUp on the last; the listbox is named by the field's label; arrows stop at
+ *                   the ends and skip the disabled options, which are `aria-disabled` and never the active
+ *                   descendant; Home / End jump; typeahead matches a prefix and never lands on a disabled option.
+ *                   Enter chooses and closes; the chosen option alone carries `aria-selected="true"` and the
+ *                   trigger shows its text; Escape closes without choosing; Tab closes without choosing and moves
+ *                   on (and the form control is touched); a closed select chooses by typeahead without opening.
+ *                   A pointer press opens and closes it, a resting pointer highlights (as a pointer highlight, not
+ *                   a keyboard one), a press on an option chooses it, a press on a disabled option does nothing,
+ *                   and a press outside closes it. No stale active descendant survives a close or reopen
+ *   KxCommand       the search field is `role="combobox"`, `aria-expanded="true"`, `aria-controls` its list and
+ *                   is named by the command's label, as is the `role="listbox"` list; the first item is the active
+ *                   descendant and, being an action, the only one `aria-selected`. ArrowDown / ArrowUp stop at the
+ *                   ends and skip the disabled item; Home / End stay the field's caret keys; typing filters
+ *                   locally (text, value and keywords; a shortcut is not text), the highlight resets to the first
+ *                   match, groups with no match and the separator hide; when nothing enabled matches there is no
+ *                   active descendant, and the empty state shows. Enter and a press run the item with focus
+ *                   kept in the field; removing the highlighted item moves the highlight to one that remains. The
+ *                   query never leaves the page: no request is made while typing
+ *   KxCombobox      a RECIPE (a button, a popover and a command — there is no component): Enter on the button
+ *                   opens it with focus in the search field and the first option active; typing filters; the
+ *                   disabled option is skipped; Enter chooses, the popover closes and focus returns to the button,
+ *                   which shows the choice; Escape closes it the same way
+ *   KxMultiSelect   the input is `role="combobox"` named by its `<label for>`, described by a summary of what is
+ *                   chosen; the listbox is `aria-multiselectable`, and `aria-selected` on every option says
+ *                   whether it is CHOSEN, independent of the highlight. ArrowDown opens it on the first option;
+ *                   arrows stop at the ends and skip the disabled option; Enter toggles the highlighted option and
+ *                   the list stays open; typing filters and resets the highlight; Escape closes only the list;
+ *                   Backspace in an empty input removes the last chip. Each chip's remove button is named
+ *                   "Remove X"; Enter on it removes the chip and focus moves to the neighbouring chip, then the
+ *                   input — never the page; a pointer press on one does the same; with `creatable`, a new text is
+ *                   offered and added. The form control is touched on blur
+ *
+ * Compositions: a select and a multi-select inside a dialog — Escape closes the listbox alone (focus stays on
+ * its field), the next Escape closes the dialog and focus returns to the button that opened it; the command
+ * dialog — focus starts in its search field, Enter runs an item, the dialog closes and focus returns. With every
+ * listbox open on the page at once, no id is used twice and every id reference resolves.
  *
  * Then axe, light and dark, with each menu open, with a submenu open, in a menu inside a dialog, on a data
  * row's action menu, and on the three usage examples opened; disabled items carry `aria-disabled` and no
@@ -554,6 +654,315 @@ const BEHAVIOUR = [
       t((await out(page, "bar")) === "", "with no menu open, hovering a trigger opens nothing");
     },
   },
+  {
+    component: "KxSelect",
+    fixture: "listboxes",
+    async run(page, t) {
+      const trigger = page.locator("#sel-trigger");
+      const valid = async (what) => {
+        const v = await descendantValid(page, "#sel-trigger");
+        t(v.ok, `${what}: the active descendant is valid`, v.ok ? String(v.id) : `${v.id}: ${v.why}`);
+      };
+      t((await trigger.getAttribute("role")) === "combobox" && (await trigger.getAttribute("aria-haspopup")) === "listbox", "the trigger is a combobox that opens a listbox");
+      t((await trigger.getAttribute("aria-expanded")) === "false" && (await trigger.getAttribute("aria-controls")) === "sel-content", "closed, it says so and names the listbox it controls", await trigger.getAttribute("aria-controls"));
+      t((await page.getByRole("combobox", { name: "Fruit" }).count()) === 1, "the trigger is named by its label");
+      t((await page.locator("#sel-content").evaluate((el) => el.checkVisibility())) === false && (await trigger.getAttribute("aria-activedescendant")) === null, "closed, no listbox is exposed and nothing is active");
+
+      // ── opening from the keyboard: focus stays on the trigger ──
+      await focus(page, "#sel-trigger");
+      await press(page, "ArrowDown");
+      t((await showing(page, "#sel-content")) && (await active(page)) === "sel-trigger", "ArrowDown opens it, focus stays on the trigger", await active(page));
+      t((await descendant(page, "#sel-trigger")) === "sel-apple" && (await page.locator("#sel-apple").getAttribute("data-highlighted")) === "keyboard", "the first option is the active descendant, a keyboard highlight", await descendant(page, "#sel-trigger"));
+      t((await page.getByRole("listbox", { name: "Fruit" }).count()) === 1, "the listbox is named by the field's label");
+      t((await trigger.getAttribute("aria-expanded")) === "true" && (await out(page, "sel-open")) === "true", "the trigger and the model say it is open");
+      t((await optionsOf(page, "#sel-content")).every((o) => o.selected === "false"), "nothing is chosen yet: every option is aria-selected=false");
+      t((await page.locator("#sel-blueberry").getAttribute("aria-disabled")) === "true", "the disabled option is aria-disabled");
+      await valid("opened");
+
+      // ── arrows stop at the ends and skip the disabled options ──
+      const down = await walkDescendant(page, "#sel-trigger", "ArrowDown", 7);
+      const expected = ["sel-apricot", "sel-banana", "sel-cherry", "sel-dragonfruit", "sel-elderberry", "sel-elderberry", "sel-elderberry"];
+      t(down.join(",") === expected.join(","), "ArrowDown walks the options, skips the disabled ones and stops at the end", down.join(" > "));
+      t((await active(page)) === "sel-trigger", "focus never left the trigger while the keys moved", await active(page));
+      await valid("at the end");
+      await press(page, "Home");
+      t((await descendant(page, "#sel-trigger")) === "sel-apple", "Home jumps to the first option");
+      await press(page, "ArrowUp");
+      t((await descendant(page, "#sel-trigger")) === "sel-apple", "ArrowUp at the first option stays (no wrap)");
+      await press(page, "End");
+      t((await descendant(page, "#sel-trigger")) === "sel-elderberry", "End jumps to the last enabled option, past the disabled one", await descendant(page, "#sel-trigger"));
+
+      // ── typeahead ──
+      await page.waitForTimeout(600);
+      await press(page, "b");
+      t((await descendant(page, "#sel-trigger")) === "sel-banana", "typeahead never lands on the disabled option", await descendant(page, "#sel-trigger"));
+      await page.waitForTimeout(600);
+      for (const k of ["a", "p", "r"]) await press(page, k);
+      t((await descendant(page, "#sel-trigger")) === "sel-apricot", "typeahead matches a prefix typed in quick succession", await descendant(page, "#sel-trigger"));
+      await valid("after typeahead");
+
+      // ── Enter chooses ──
+      await press(page, "Enter");
+      t(!(await showing(page, "#sel-content")) && (await active(page)) === "sel-trigger" && (await out(page, "fruit")) === "apricot", "Enter chooses the option and closes, focus on the trigger", `${await out(page, "fruit")} / ${await active(page)}`);
+      t((await trigger.getAttribute("aria-activedescendant")) === null && (await trigger.getAttribute("aria-expanded")) === "false", "closed, no stale active descendant is left on the trigger");
+      t((await trigger.textContent()).trim() === "Apricot", "the trigger shows the chosen option", (await trigger.textContent()).trim());
+      await press(page, " ");
+      t((await descendant(page, "#sel-trigger")) === "sel-apricot", "Space reopens it on the chosen option", await descendant(page, "#sel-trigger"));
+      const chosen = (await optionsOf(page, "#sel-content")).filter((o) => o.selected === "true").map((o) => o.id);
+      t(chosen.join(",") === "sel-apricot", "the chosen option alone is aria-selected=true", chosen.join(","));
+      await press(page, "ArrowDown");
+      t((await page.locator("#sel-apricot").getAttribute("aria-selected")) === "true" && (await page.locator("#sel-banana").getAttribute("aria-selected")) === "false", "moving the highlight does not move the selection");
+      await valid("reopened");
+
+      // ── Escape, Tab ──
+      await press(page, "Escape");
+      t(!(await showing(page, "#sel-content")) && (await active(page)) === "sel-trigger" && (await out(page, "fruit")) === "apricot", "Escape closes without choosing, focus on the trigger", await out(page, "fruit"));
+      await press(page, "ArrowUp");
+      await press(page, "ArrowDown");
+      await press(page, "Tab");
+      t(!(await showing(page, "#sel-content")) && (await active(page)) === "sel-after" && (await out(page, "fruit")) === "apricot", "Tab closes without choosing and moves on", `${await active(page)} / ${await out(page, "fruit")}`);
+      t((await out(page, "fruit-touched")) === "true", "leaving the trigger marks the form control touched");
+
+      // ── a closed select chooses by typeahead without opening ──
+      await focus(page, "#sel-trigger");
+      await page.waitForTimeout(600);
+      await press(page, "c");
+      t(!(await showing(page, "#sel-content")) && (await out(page, "fruit")) === "cherry", "closed, a printable key chooses the next match without opening", await out(page, "fruit"));
+      await page.waitForTimeout(600);
+      await press(page, "z");
+      t((await out(page, "fruit")) === "cherry", "closed typeahead never chooses a disabled option", await out(page, "fruit"));
+
+      // ── the pointer ──
+      await click(page, "#sel-trigger");
+      t((await showing(page, "#sel-content")) && (await active(page)) === "sel-trigger", "a press opens it, focus on the trigger");
+      await page.locator("#sel-banana").hover();
+      await idle(page);
+      t((await descendant(page, "#sel-trigger")) === "sel-banana" && (await page.locator("#sel-banana").getAttribute("data-highlighted")) === "pointer", "a resting pointer highlights an option, as a pointer highlight");
+      await page.locator("#sel-blueberry").hover();
+      await idle(page);
+      await valid("pointer over the disabled option");
+      await click(page, "#sel-blueberry", { force: true });
+      t((await showing(page, "#sel-content")) && (await out(page, "fruit")) === "cherry", "a press on the disabled option does nothing");
+      await click(page, "#sel-banana");
+      t(!(await showing(page, "#sel-content")) && (await out(page, "fruit")) === "banana" && (await active(page)) === "sel-trigger", "a press on an option chooses it and closes, focus on the trigger", `${await out(page, "fruit")} / ${await active(page)}`);
+      await click(page, "#sel-trigger");
+      await click(page, "#sel-trigger");
+      t(!(await showing(page, "#sel-content")), "a second press on the trigger closes it");
+      await click(page, "#sel-trigger");
+      await page.mouse.click(980, 780);
+      await idle(page);
+      t(!(await showing(page, "#sel-content")) && (await out(page, "fruit")) === "banana", "a press outside closes it without choosing");
+
+      // ── two selects on one page ──
+      await focus(page, "#sel2-trigger");
+      await press(page, "Enter");
+      t((await descendant(page, "#sel2-trigger"))?.length > 0 && (await page.locator("#sel2-trigger").getAttribute("aria-controls")) === "sel2-content", "a second select opens on its own listbox, on its chosen option", await descendant(page, "#sel2-trigger"));
+      const ids = await idHygiene(page);
+      t(ids.dups.length === 0 && ids.broken.length === 0, "two selects on one page: no duplicate ids, every reference resolves", [...ids.dups, ...ids.broken].join(", "));
+      await press(page, "Escape");
+    },
+  },
+  {
+    component: "KxCommand",
+    fixture: "listboxes",
+    async run(page, t) {
+      const requests = [];
+      page.on("request", (r) => requests.push(r.url()));
+      const field = page.locator("#cmd-input");
+      const valid = async (what) => {
+        const v = await descendantValid(page, "#cmd-input");
+        t(v.ok, `${what}: the active descendant is valid`, v.ok ? String(v.id) : `${v.id}: ${v.why}`);
+      };
+      const shown = () => optionsOf(page, "#cmd-list").then((os) => os.map((o) => o.id).join(","));
+      t((await field.getAttribute("role")) === "combobox" && (await field.getAttribute("aria-expanded")) === "true" && (await field.getAttribute("aria-controls")) === "cmd-list", "the search field is a combobox whose list is always showing");
+      t((await page.getByRole("combobox", { name: "Commands" }).count()) === 1 && (await page.getByRole("listbox", { name: "Commands" }).count()) === 1, "the field and the list are named by the command's label");
+      t((await page.getByRole("group", { name: "Suggestions" }).count()) === 1, "a group is named by its heading");
+      t((await descendant(page, "#cmd-input")) === "cmd-calendar", "the first item is the active descendant", await descendant(page, "#cmd-input"));
+      const sel = (await optionsOf(page, "#cmd-list")).filter((o) => o.selected === "true").map((o) => o.id);
+      t(sel.join(",") === "cmd-calendar", "an action list: aria-selected follows the highlight, on one item", sel.join(","));
+
+      await focus(page, "#cmd-input");
+      const down = await walkDescendant(page, "#cmd-input", "ArrowDown", 7);
+      const expected = ["cmd-emoji", "cmd-calculator", "cmd-profile", "cmd-billing", "cmd-extra", "cmd-extra", "cmd-extra"];
+      t(down.join(",") === expected.join(","), "ArrowDown walks the items, skips the disabled one and stops at the end", down.join(" > "));
+      t((await active(page)) === "cmd-input", "focus stays in the search field", await active(page));
+      await press(page, "Home");
+      t((await descendant(page, "#cmd-input")) === "cmd-extra", "Home stays the field's caret key and moves no highlight");
+      for (let i = 0; i < 8; i++) await press(page, "ArrowUp");
+      t((await descendant(page, "#cmd-input")) === "cmd-calendar", "ArrowUp stops at the first item (no wrap)");
+
+      // ── filtering ──
+      await page.keyboard.type("cal");
+      await idle(page);
+      t((await shown()) === "cmd-calendar,cmd-calculator" && (await descendant(page, "#cmd-input")) === "cmd-calendar", "typing filters locally; the highlight resets to the first match", await shown());
+      t((await page.locator("#cmd-settings").evaluate((el) => el.hidden)) && (await page.locator("#cmd-separator").evaluate((el) => el.hidden)), "a group with no match and the separator hide");
+      await press(page, "ArrowDown");
+      t((await descendant(page, "#cmd-input")) === "cmd-calculator", "the arrows walk only what the filter left");
+      await press(page, "c");
+      t((await descendant(page, "#cmd-input")) === "cmd-calculator" && (await shown()) === "cmd-calculator", "as the results shrink the active descendant stays on one that remains", await descendant(page, "#cmd-input"));
+      await valid("results shrank");
+      await page.fill("#cmd-input", "smiley");
+      await idle(page);
+      t((await shown()) === "cmd-emoji" && (await descendant(page, "#cmd-input")) === "cmd-emoji", "keywords match", await shown());
+      await page.fill("#cmd-input", "ctrl");
+      await idle(page);
+      t((await shown()) === "" && !(await page.locator("#cmd-empty").evaluate((el) => el.hidden)), "a shortcut is not part of what the filter matches; the empty state shows", await shown());
+      await page.fill("#cmd-input", "launch");
+      await idle(page);
+      t((await shown()) === "cmd-launch" && (await descendant(page, "#cmd-input")) === null, "only a disabled item matches: it shows, and is never the active descendant", String(await descendant(page, "#cmd-input")));
+      await press(page, "Enter");
+      t((await out(page, "ran")) === "", "Enter with nothing active runs nothing");
+      await page.fill("#cmd-input", "zzz");
+      await idle(page);
+      t((await descendant(page, "#cmd-input")) === null && !(await page.locator("#cmd-empty").evaluate((el) => el.hidden)), "no match: no active descendant, and the empty state shows");
+      t((await page.locator("#cmd-list").getAttribute("role")) === null && (await field.getAttribute("aria-expanded")) === "false", "no match: the list is no longer a listbox (it would own no options) and the field reads collapsed");
+      await page.fill("#cmd-input", "");
+      await idle(page);
+      t((await descendant(page, "#cmd-input")) === "cmd-calendar" && (await page.locator("#cmd-empty").evaluate((el) => el.hidden)), "clearing the search brings every item and the first highlight back");
+
+      // ── running ──
+      await press(page, "ArrowDown");
+      await press(page, "Enter");
+      t((await out(page, "ran")) === "emoji" && (await active(page)) === "cmd-input", "Enter runs the highlighted item, focus stays in the field", await out(page, "ran"));
+      await page.locator("#cmd-billing").hover();
+      await idle(page);
+      t((await descendant(page, "#cmd-input")) === "cmd-billing", "a resting pointer highlights an item");
+      await click(page, "#cmd-billing");
+      t((await out(page, "ran")) === "billing" && (await active(page)) === "cmd-input", "a press runs the item, focus stays in the field", await active(page));
+      await click(page, "#cmd-launch", { force: true });
+      t((await out(page, "ran")) === "billing", "a press on the disabled item does nothing");
+
+      // ── the highlighted item goes away ──
+      await focus(page, "#cmd-input");
+      for (let i = 0; i < 7; i++) await press(page, "ArrowDown");
+      t((await descendant(page, "#cmd-input")) === "cmd-extra", "the last item is highlighted");
+      await page.evaluate(() => document.querySelector("#cmd-toggle-extra").click());
+      await idle(page);
+      t((await descendant(page, "#cmd-input")) !== "cmd-extra" && (await page.locator("#cmd-extra").count()) === 0, "removing the highlighted item moves the highlight to one that remains", String(await descendant(page, "#cmd-input")));
+      await valid("item removed");
+
+      const leaked = requests.filter((u) => /cal|smiley|ctrl|launch|zzz/i.test(new URL(u).search + new URL(u).pathname));
+      t(requests.length === 0 && leaked.length === 0, "the query never leaves the page: no request was made while searching", requests.join(", "));
+    },
+  },
+  {
+    component: "KxCombobox",
+    fixture: "listboxes",
+    async run(page, t) {
+      await focus(page, "#cb-trigger");
+      await press(page, "Enter");
+      t((await out(page, "cb-open")) === "true" && (await active(page)) === "cb-input", "Enter on the button opens the recipe, focus in the search field", await active(page));
+      t((await descendant(page, "#cb-input")) === "cb-next" && (await page.getByRole("listbox", { name: "Frameworks" }).count()) === 1, "the first option is active in the named list", await descendant(page, "#cb-input"));
+      await press(page, "ArrowDown");
+      await press(page, "ArrowDown");
+      t((await descendant(page, "#cb-input")) === "cb-remix", "the arrows skip the disabled option", await descendant(page, "#cb-input"));
+      await page.keyboard.type("as");
+      await idle(page);
+      t((await descendant(page, "#cb-input")) === "cb-astro", "typing filters and resets the highlight to the first match", await descendant(page, "#cb-input"));
+      await press(page, "Enter");
+      t((await out(page, "cb")) === "astro" && (await out(page, "cb-open")) === "false" && (await active(page)) === "cb-trigger", "Enter chooses, the popover closes and focus returns to the button", `${await out(page, "cb")} / ${await active(page)}`);
+      t((await page.locator("#cb-trigger").textContent()).trim() === "Astro", "the button shows the choice");
+      await press(page, "Enter");
+      await press(page, "Escape");
+      t((await out(page, "cb-open")) === "false" && (await active(page)) === "cb-trigger" && (await out(page, "cb")) === "astro", "Escape closes it without choosing, focus back on the button", await active(page));
+    },
+  },
+  {
+    component: "KxMultiSelect",
+    fixture: "listboxes",
+    async run(page, t) {
+      const input = page.locator("#ms-input");
+      const valid = async (what) => {
+        const v = await descendantValid(page, "#ms-input");
+        t(v.ok, `${what}: the active descendant is valid`, v.ok ? String(v.id) : `${v.id}: ${v.why}`);
+      };
+      const list = await listboxOf(page, "#ms-input");
+      const chosenIds = async () => (await optionsOf(page, list)).filter((o) => o.selected === "true").length;
+      t((await input.getAttribute("role")) === "combobox" && (await input.getAttribute("aria-expanded")) === "false", "the input is a combobox, closed");
+      t((await page.getByRole("combobox", { name: "Labels" }).count()) === 1, "the input is named by its label");
+      const described = await input.evaluate((el) => el.getAttribute("aria-describedby").split(" ").map((id) => document.getElementById(id)?.textContent).join(" "));
+      t(described.includes("2 selected: Design, Documentation"), "the input is described by a summary of what is chosen", described);
+      const removes = await page.locator("#ms").getByRole("button").evaluateAll((bs) => bs.map((b) => b.getAttribute("aria-label")));
+      t(removes.join(",") === "Remove Design,Remove Documentation", "each chip's remove button is named Remove X", removes.join(","));
+
+      await focus(page, "#ms-input");
+      await press(page, "ArrowDown");
+      t((await showing(page, list)) && (await active(page)) === "ms-input", "ArrowDown opens the list, focus stays in the input");
+      t((await page.locator(list).getAttribute("aria-multiselectable")) === "true" && (await page.getByRole("listbox", { name: "Labels" }).count()) === 1, "the listbox is multiselectable and named by the field's label");
+      const opts = await optionsOf(page, list);
+      t(opts.map((o) => o.selected).join(",") === "false,true,true,false,false,false", "aria-selected says which options are CHOSEN", opts.map((o) => o.selected).join(","));
+      t((await descendant(page, "#ms-input")) === opts[0].id, "the first option is the active descendant");
+      const walked = await walkDescendant(page, "#ms-input", "ArrowDown", 6);
+      t(walked.join(",") === [opts[1].id, opts[2].id, opts[4].id, opts[5].id, opts[5].id, opts[5].id].join(","), "ArrowDown skips the disabled option and stops at the end", walked.join(" > "));
+      t((await page.locator(`[id="${opts[3].id}"]`).getAttribute("aria-disabled")) === "true", "the disabled option is aria-disabled");
+      await valid("walked");
+
+      // ── Enter toggles; the list stays open ──
+      await press(page, "Enter");
+      t((await out(page, "ms")) === "design,docs,a11y" && (await showing(page, list)) && (await page.locator(`[id="${opts[5].id}"]`).getAttribute("aria-selected")) === "true", "Enter chooses the highlighted option and the list stays open", await out(page, "ms"));
+      t((await page.locator("#ms [role=status]").textContent()).includes("Accessibility selected"), "the change is announced");
+      await press(page, "Enter");
+      t((await out(page, "ms")) === "design,docs" && (await page.locator(`[id="${opts[5].id}"]`).getAttribute("aria-selected")) === "false", "Enter again removes it: aria-selected stays accurate", await out(page, "ms"));
+      t((await chosenIds()) === 2, "two options are chosen, two are aria-selected");
+
+      // ── filtering ──
+      await page.keyboard.type("res");
+      await idle(page);
+      const left = (await optionsOf(page, list)).map((o) => o.id);
+      t(left.join(",") === opts[4].id && (await descendant(page, "#ms-input")) === opts[4].id, "typing filters the options and resets the highlight to the first match", left.join(","));
+      await press(page, "Enter");
+      t((await out(page, "ms")) === "design,docs,research" && (await input.inputValue()) === "", "Enter adds it and clears the search", await out(page, "ms"));
+      await valid("after a filtered choice");
+      await page.keyboard.type("zz");
+      await idle(page);
+      t((await descendant(page, "#ms-input")) === null, "no match: no active descendant");
+      await page.fill("#ms-input", "");
+      await idle(page);
+
+      // ── Escape closes only the list ──
+      await press(page, "Escape");
+      t(!(await showing(page, list)) && (await active(page)) === "ms-input" && (await input.getAttribute("aria-activedescendant")) === null, "Escape closes the list, focus stays, no stale active descendant");
+      await press(page, "Backspace");
+      t((await out(page, "ms")) === "design,docs", "Backspace in an empty input removes the last chip", await out(page, "ms"));
+
+      // ── chips: keyboard removal keeps focus ──
+      await press(page, "Shift+Tab");
+      const onChip = await page.evaluate(() => document.activeElement?.getAttribute("aria-label"));
+      t(onChip === "Remove Documentation", "Shift+Tab reaches the last chip's remove button", onChip);
+      await press(page, "Enter");
+      const after = await page.evaluate(() => document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.id);
+      t((await out(page, "ms")) === "design" && after === "Remove Design", "Enter removes the chip; focus moves to the neighbouring chip's button", `${await out(page, "ms")} / ${after}`);
+      await press(page, " ");
+      t((await out(page, "ms")) === "" && (await active(page)) === "ms-input", "removing the last chip leaves focus in the input, never on the page", await active(page));
+      t((await out(page, "ms-touched")) === "true", "leaving the input marks the form control touched");
+
+      // ── the pointer ──
+      await click(page, "#ms-input");
+      t(await showing(page, list), "a press on the field opens the list");
+      const os = await optionsOf(page, list);
+      await click(page, `[id="${os[3].id}"]`, { force: true });
+      t((await out(page, "ms")) === "", "a press on the disabled option does nothing");
+      await click(page, `[id="${os[0].id}"]`);
+      await click(page, `[id="${os[1].id}"]`);
+      t((await out(page, "ms")) === "bug,design" && (await active(page)) === "ms-input" && (await showing(page, list)), "a press toggles an option, focus stays in the input", await out(page, "ms"));
+      await page.mouse.click(980, 780);
+      await idle(page);
+      t(!(await showing(page, list)), "a press outside closes the list");
+      await click(page, "#ms [aria-label='Remove Bug']");
+      const afterPointer = await page.evaluate(() => document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.id);
+      t((await out(page, "ms")) === "design" && afterPointer === "Remove Design", "a press on a chip's remove button removes it; focus is kept on a neighbour", afterPointer);
+
+      // ── creatable ──
+      await focus(page, "#ms2-input");
+      await page.keyboard.type("Someday");
+      await idle(page);
+      const offer = await page.evaluate(() => document.getElementById(document.activeElement.getAttribute("aria-activedescendant"))?.textContent.trim());
+      t(offer === "Create “Someday”", "creatable: a new text is offered as an option", offer);
+      await press(page, "Enter");
+      t((await out(page, "ms2")) === "Someday", "creatable: Enter adds the text", await out(page, "ms2"));
+      await press(page, "Escape");
+    },
+  },
 ];
 
 /** Each menu open the way a reader opens it, for axe and forced colours. */
@@ -564,19 +973,32 @@ const OPENED = [
   { name: "menubar → submenu", open: async (p) => { await focus(p, "#mb-file"); for (const k of ["Enter", "s", "ArrowRight"]) await press(p, k); } },
   { name: "dialog → menu → submenu", open: async (p) => { await click(p, "#dlg-trigger"); await focus(p, "#dlg-menu-trigger"); for (const k of ["Enter", "End", "ArrowRight"]) await press(p, k); } },
   { name: "data row action menu", open: async (p) => { await focus(p, "#row-INV-002-actions"); await press(p, "Enter"); } },
+  { name: "select", fixture: "listboxes", open: async (p) => { await focus(p, "#sel-trigger"); await press(p, "ArrowDown"); } },
+  { name: "command, filtered", fixture: "listboxes", open: async (p) => { await focus(p, "#cmd-input"); await p.keyboard.type("ca"); await idle(p); } },
+  { name: "command, no match", fixture: "listboxes", open: async (p) => { await focus(p, "#cmd-input"); await p.keyboard.type("zzz"); await idle(p); } },
+  { name: "combobox recipe", fixture: "listboxes", open: async (p) => { await focus(p, "#cb-trigger"); await press(p, "Enter"); } },
+  { name: "multi-select", fixture: "listboxes", open: async (p) => { await focus(p, "#ms-input"); await press(p, "ArrowDown"); } },
+  { name: "multi-select, creatable", fixture: "listboxes", open: async (p) => { await focus(p, "#ms2-input"); await p.keyboard.type("Someday"); await idle(p); } },
+  { name: "dialog → select", fixture: "listboxes", open: async (p) => { await click(p, "#dlg-trigger"); await focus(p, "#dlg-sel-trigger"); await press(p, "Enter"); } },
+  { name: "dialog → multi-select", fixture: "listboxes", open: async (p) => { await click(p, "#dlg-trigger"); await focus(p, "#dlg-ms-input"); await press(p, "ArrowDown"); } },
+  { name: "command dialog", fixture: "listboxes", open: async (p) => { await click(p, "#pal-open"); } },
 ];
 const DEMOS = [
   { demo: "DropdownMenuDemo", open: async (p) => { await focus(p, "[kxDropdownMenuTrigger]"); await press(p, "Enter"); await press(p, "s"); await press(p, "ArrowRight"); } },
   { demo: "ContextMenuDemo", open: async (p) => { await focus(p, "[kxContextMenuTrigger]"); await press(p, "Shift+F10"); await press(p, "m"); await press(p, "ArrowRight"); } },
   { demo: "MenubarDemo", open: async (p) => { await focus(p, "[kxMenubarTrigger]"); await press(p, "Enter"); await press(p, "s"); await press(p, "ArrowRight"); } },
+  { demo: "SelectDemo", open: async (p) => { await focus(p, "[kxSelectTrigger]"); await press(p, "Enter"); } },
+  { demo: "CommandDemo", open: async (p) => { await focus(p, "[kxCommandInput]"); await press(p, "ArrowDown"); } },
+  { demo: "ComboboxDemo", open: async (p) => { await focus(p, ".combobox-trigger"); await press(p, "Enter"); } },
+  { demo: "MultiSelectDemo", open: async (p) => { await focus(p, "#platforms"); await press(p, "ArrowDown"); } },
 ];
 
 if (runs("interaction")) {
   assertClaims("interaction, accessibility", BEHAVIOUR);
-  report.push(`\ninteraction — ${BEHAVIOUR.length} menus driven by keyboard and pointer in Chromium`);
+  report.push(`\ninteraction — ${BEHAVIOUR.length} menus and listboxes driven by keyboard and pointer in Chromium`);
   for (const subject of BEHAVIOUR) {
     const context = await browser.newContext({ viewport: { width: 1024, height: 800 } });
-    const page = await open(context);
+    const page = await open(context, subject.fixture);
     try {
       await subject.run(page, (ok, what, detail) => check(ok, `${subject.component}: ${what}`, detail));
     } catch (err) {
@@ -610,21 +1032,84 @@ if (runs("interaction")) {
     }
     await context.close();
   }
+  // The listboxes composed: inside a dialog, the command dialog, and every listbox open on one page.
+  {
+    const context = await browser.newContext({ viewport: { width: 1024, height: 800 } });
+    const page = await open(context, "listboxes");
+    try {
+      await click(page, "#dlg-trigger");
+      await focus(page, "#dlg-sel-trigger");
+      await press(page, "Enter");
+      check((await out(page, "dlg-sel-open")) === "true" && (await active(page)) === "dlg-sel-trigger", "composition: a select opens inside a dialog, focus on its trigger");
+      await press(page, "Escape");
+      check((await out(page, "dlg-sel-open")) === "false" && (await out(page, "dialog")) === "true" && (await active(page)) === "dlg-sel-trigger", "composition: in a dialog, Escape closes the select alone, focus on its trigger", await active(page));
+      await focus(page, "#dlg-ms-input");
+      await press(page, "ArrowDown");
+      check((await out(page, "dlg-ms-open")) === "true" && (await active(page)) === "dlg-ms-input", "composition: a multi-select opens inside a dialog, focus in its input");
+      await press(page, "Escape");
+      check((await out(page, "dlg-ms-open")) === "false" && (await out(page, "dialog")) === "true" && (await active(page)) === "dlg-ms-input", "composition: in a dialog, Escape closes the multi-select's list alone", await active(page));
+      await press(page, "Escape");
+      check((await out(page, "dialog")) === "false" && (await active(page)) === "dlg-trigger", "composition: the next Escape closes the dialog, focus back on its button", await active(page));
+
+      await focus(page, "#pal-open");
+      await press(page, "Enter");
+      check((await out(page, "palette")) === "true" && (await active(page)) === "pal-input" && (await descendant(page, "#pal-input")) === "pal-home", "composition: the command dialog opens with focus in its search field", await active(page));
+      check((await page.getByRole("dialog", { name: "Command palette" }).count()) === 1, "composition: the command dialog is named");
+      await page.keyboard.type("inb");
+      await idle(page);
+      await press(page, "Enter");
+      check((await out(page, "palette-ran")) === "inbox" && (await out(page, "palette")) === "false" && (await active(page)) === "pal-open", "composition: Enter runs the item, the dialog closes, focus returns", await active(page));
+      await press(page, "Enter");
+      await press(page, "Escape");
+      check((await out(page, "palette")) === "false" && (await active(page)) === "pal-open", "composition: Escape closes the command dialog, focus returns", await active(page));
+
+      // every listbox open at once: the generated ids never collide, and every reference resolves
+      await focus(page, "#sel-trigger");
+      await press(page, "Enter");
+      const sel = await idHygiene(page);
+      await press(page, "Escape");
+      await focus(page, "#ms-input");
+      await press(page, "ArrowDown");
+      const ms = await idHygiene(page);
+      await press(page, "Escape");
+      await focus(page, "#ms2-input");
+      await press(page, "ArrowDown");
+      const ms2 = await idHygiene(page);
+      await press(page, "Escape");
+      await focus(page, "#cb-trigger");
+      await press(page, "Enter");
+      const cb = await idHygiene(page);
+      await press(page, "Escape");
+      const bad = [sel, ms, ms2, cb].flatMap((r) => [...r.dups, ...r.broken]);
+      check(bad.length === 0, "composition: with each listbox open, no id is used twice and every id reference resolves", [...new Set(bad)].join(", "));
+      // reopen: no stale ids, the active descendant is a live option
+      await focus(page, "#ms-input");
+      await press(page, "ArrowDown");
+      await press(page, "Escape");
+      await press(page, "ArrowDown");
+      const v = await descendantValid(page, "#ms-input");
+      check(v.ok && v.id !== null, "composition: closed and reopened, the active descendant is a live option, not a stale id", v.ok ? String(v.id) : `${v.id}: ${v.why}`);
+    } catch (err) {
+      check(false, "listbox compositions: ran to completion", String(err.message).split("\n")[0]);
+    }
+    await context.close();
+  }
   async function t2(locator, label) {
     check((await locator.count()) === 1, label);
   }
 
-  report.push(`\naccessibility — every menu open, under axe (light and dark), visible focus and forced colours`);
+  report.push(`\naccessibility — every menu and listbox open, under axe (light and dark), visible focus and forced colours`);
   for (const theme of ["light", "dark"]) {
     const context = await browser.newContext({ viewport: { width: 1024, height: 800 }, colorScheme: theme, reducedMotion: "reduce" });
-    const cases = [...OPENED.map((c) => ({ ...c, fixture: "collections" })), ...DEMOS.map((d) => ({ name: `usage ${d.demo}`, fixture: "usage", demo: d.demo, open: d.open }))];
+    const cases = [...OPENED.map((c) => ({ ...c, fixture: c.fixture ?? "collections" })), ...DEMOS.map((d) => ({ name: `usage ${d.demo}`, fixture: "usage", demo: d.demo, open: d.open }))];
     for (const c of cases) {
       const page = await open(context, c.fixture, { theme, demo: c.demo });
       try {
         await c.open(page);
-        const opened = await page.evaluate(() => document.querySelectorAll('[role="menu"]:popover-open').length);
+        // a menu or a listbox popup open in the top layer, or (a command) a listbox on the page with a search field driving it
+        const opened = await page.evaluate(() => [...document.querySelectorAll('[role="menu"]:popover-open, [role="listbox"], .kx-command__list')].filter((el) => el.checkVisibility()).length);
         const violations = (await axe(page)).flatMap((v) => v.targets.map((target) => `${v.id} ${target}`));
-        check(opened > 0 && violations.length === 0, `axe ${theme} ${c.name} (${opened} menu${opened === 1 ? "" : "s"} open)`, opened ? violations.join("; ") : "nothing opened");
+        check(opened > 0 && violations.length === 0, `axe ${theme} ${c.name} (${opened} surface${opened === 1 ? "" : "s"} open)`, opened ? violations.join("; ") : "nothing opened");
       } catch (err) {
         check(false, `axe ${theme} ${c.name}: ran to completion`, String(err.message).split("\n")[0]);
       }
@@ -682,6 +1167,73 @@ if (runs("interaction")) {
     }
     await context.close();
   }
+  // Visible focus in the listboxes: a keyboard highlight draws a ring, a pointer highlight does not, and
+  // the chosen option's mark is a shape that does not depend on the highlight.
+  {
+    const context = await browser.newContext({ viewport: { width: 1024, height: 800 }, reducedMotion: "reduce" });
+    const page = await open(context, "listboxes");
+    const shadow = (sel) => page.locator(sel).evaluate((el) => getComputedStyle(el).boxShadow);
+    try {
+      for (const [field, keyboardOpt, pointerOpt, how] of [["#sel-trigger", "#sel-apple", "#sel-banana", "ArrowDown"], ["#ms-input", null, null, "ArrowDown"]]) {
+        await focus(page, field);
+        await press(page, how);
+        const kb = keyboardOpt ?? `[id="${await descendant(page, field)}"]`;
+        const keyboard = await shadow(kb);
+        const list = await listboxOf(page, field);
+        const ptr = pointerOpt ?? `${list} [role="option"]:nth-of-type(3)`;
+        await page.locator(ptr).hover();
+        await idle(page);
+        const pointer = await shadow(ptr);
+        check(keyboard !== "none" && pointer === "none", `visible focus: in ${field.slice(1)}'s listbox a keyboard highlight draws a ring, a pointer highlight does not`, `keyboard ${keyboard}; pointer ${pointer}`);
+        await press(page, "Escape");
+      }
+      await focus(page, "#sel-trigger");
+      check((await shadow("#sel-trigger")) !== "none", "visible focus: the select trigger draws a focus ring");
+      await focus(page, "#ms-input");
+      check((await shadow("#ms .kx-multi-select__field")) !== "none", "visible focus: the multi-select field draws a focus ring while its input has focus");
+      await focus(page, "#cmd-input");
+      check((await shadow("#cmd-input")) !== "none", "visible focus: the command's search field draws its focus rule");
+    } catch (err) {
+      check(false, "listbox visible focus: ran to completion", String(err.message).split("\n")[0]);
+    }
+    await context.close();
+  }
+
+  // Forced colours in the listboxes: the field with focus and the highlighted option keep an outline.
+  {
+    const context = await browser.newContext({ viewport: { width: 1024, height: 800 }, forcedColors: "active", reducedMotion: "reduce" });
+    const page = await open(context, "listboxes");
+    const outlined = (sel) => page.locator(sel).first().evaluate((el) => { const cs = getComputedStyle(el); return cs.outlineStyle !== "none" && parseFloat(cs.outlineWidth) > 0; });
+    try {
+      const missing = [];
+      await focus(page, "#sel-trigger");
+      if (!(await outlined("#sel-trigger"))) missing.push("select trigger");
+      await press(page, "ArrowDown");
+      for (let i = 0; i < 4; i++) {
+        const id = await descendant(page, "#sel-trigger");
+        if (!(await outlined(`[id="${id}"]`))) missing.push(id);
+        await press(page, "ArrowDown");
+      }
+      await page.locator("#sel-banana").hover();
+      await idle(page);
+      if (!(await outlined("#sel-banana"))) missing.push("sel-banana (pointer)");
+      await press(page, "Escape");
+      await focus(page, "#ms-input");
+      if (!(await outlined("#ms .kx-multi-select__field"))) missing.push("multi-select field");
+      await press(page, "ArrowDown");
+      const msOpt = await descendant(page, "#ms-input");
+      if (!(await outlined(`[id="${msOpt}"]`))) missing.push(msOpt);
+      await press(page, "Escape");
+      await focus(page, "#cmd-input");
+      if (!(await outlined("#cmd-input"))) missing.push("command search field");
+      const cmdOpt = await descendant(page, "#cmd-input");
+      if (!(await outlined(`[id="${cmdOpt}"]`))) missing.push(cmdOpt);
+      check(missing.length === 0, "forced colours: every listbox field with focus and every highlighted option keeps an outline", missing.join(", "));
+    } catch (err) {
+      check(false, "listbox forced colours: ran to completion", String(err.message).split("\n")[0]);
+    }
+    await context.close();
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -700,6 +1252,17 @@ if (runs("interaction")) {
  *                   edge in RTL
  *   KxMenubar       the inline-end arrow moves to the next trigger (ArrowRight in LTR, ArrowLeft in RTL) and
  *                   the triggers run in reading order; a menu's inline-start edge lines up with its trigger's
+ *
+ * The listboxes, in the same four cases (src/fixtures/listboxes.ts):
+ *
+ *   KxSelect        the listbox's inline-start edge lines up with the trigger's; the value sits at the trigger's
+ *                   inline start and the chevron at its inline end; the check mark sits at an option's inline
+ *                   start; and the keys do not flip — ArrowDown still moves down
+ *   KxCommand       an item's shortcut sits at its inline end, its text at its inline start
+ *   KxCombobox      the recipe's popover lines up with its button's inline-start edge
+ *   KxMultiSelect   the chips run in reading order from the field's inline start, the input after them; the
+ *                   listbox lines up with the field's inline-start edge; the check mark sits at an option's
+ *                   inline start
  * ════════════════════════════════════════════════════════════════════════════ */
 const towardEnd = (dir, a, b) => (dir === "rtl" ? b - a : a - b);
 const RTL = [
@@ -773,6 +1336,82 @@ const RTL = [
       await press(page, "Escape");
     },
   },
+  {
+    component: "KxSelect",
+    fixture: "listboxes",
+    probe: "#sel-content",
+    async run(page, dir, t) {
+      const startEdge = (r) => (dir === "rtl" ? r.right : r.left);
+      await focus(page, "#sel-trigger");
+      await press(page, "ArrowDown");
+      await settled(page);
+      const tr = await rectOf(page, "#sel-trigger");
+      const m = await rectOf(page, "#sel-content");
+      t(Math.abs(startEdge(m) - startEdge(tr)) <= 1.5, "the listbox's inline-start edge lines up with the trigger's", `trigger ${tr.left.toFixed(0)}–${tr.right.toFixed(0)}, listbox ${m.left.toFixed(0)}–${m.right.toFixed(0)}`);
+      const chev = await rectOf(page, "#sel-trigger .kx-select__chevron");
+      const val = await rectOf(page, "#sel-trigger .kx-select__value");
+      t(towardEnd(dir, chev.left, val.left) > 0, "the value sits at the trigger's inline start, the chevron at its inline end", `value ${val.left.toFixed(0)}, chevron ${chev.left.toFixed(0)}`);
+      await press(page, "ArrowDown");
+      await press(page, "Enter");
+      await press(page, "ArrowDown");
+      const opt = await rectOf(page, "#sel-apricot");
+      const mark = await rectOf(page, "#sel-apricot .kx-option__indicator");
+      const atStart = dir === "rtl" ? opt.right - mark.right <= 12 : mark.left - opt.left <= 12;
+      t(atStart, "the check mark sits at the option's inline start", `option ${opt.left.toFixed(0)}–${opt.right.toFixed(0)}, mark ${mark.left.toFixed(0)}–${mark.right.toFixed(0)}`);
+      await press(page, "ArrowDown");
+      t((await descendant(page, "#sel-trigger")) === "sel-banana", "ArrowDown still moves down", await descendant(page, "#sel-trigger"));
+      await press(page, "Escape");
+    },
+  },
+  {
+    component: "KxCommand",
+    fixture: "listboxes",
+    probe: "#cmd-list",
+    async run(page, dir, t) {
+      const item = await rectOf(page, "#cmd-profile");
+      const sc = await rectOf(page, "#cmd-profile kx-command-shortcut");
+      const atEnd = dir === "rtl" ? sc.left - item.left <= 12 : item.right - sc.right <= 12;
+      t(atEnd, "the shortcut sits at the item's inline end", `item ${item.left.toFixed(0)}–${item.right.toFixed(0)}, shortcut ${sc.left.toFixed(0)}–${sc.right.toFixed(0)}`);
+    },
+  },
+  {
+    component: "KxCombobox",
+    fixture: "listboxes",
+    probe: "#cb-list",
+    async run(page, dir, t) {
+      await focus(page, "#cb-trigger");
+      await press(page, "Enter");
+      await settled(page);
+      const tr = await rectOf(page, "#cb-trigger");
+      const m = await rectOf(page, "#cb-content");
+      const aligned = dir === "rtl" ? Math.abs(m.right - tr.right) <= 1.5 : Math.abs(m.left - tr.left) <= 1.5;
+      t(aligned, "the recipe's popover lines up with its button's inline-start edge", `button ${tr.left.toFixed(0)}–${tr.right.toFixed(0)}, popover ${m.left.toFixed(0)}–${m.right.toFixed(0)}`);
+      await press(page, "Escape");
+    },
+  },
+  {
+    component: "KxMultiSelect",
+    fixture: "listboxes",
+    probe: "#ms .kx-option-popup",
+    async run(page, dir, t) {
+      const chips = await page.locator("#ms .kx-multi-select__chip").evaluateAll((cs) => cs.map((c) => c.getBoundingClientRect().left));
+      const input = await rectOf(page, "#ms-input");
+      t(towardEnd(dir, chips[1], chips[0]) > 0 && towardEnd(dir, input.left, chips[1]) > 0, "the chips run in reading order, the input after them", `${chips.map((x) => x.toFixed(0)).join(", ")}, input ${input.left.toFixed(0)}`);
+      await focus(page, "#ms-input");
+      await press(page, "ArrowDown");
+      await settled(page);
+      const field = await rectOf(page, "#ms .kx-multi-select__field");
+      const m = await rectOf(page, "#ms .kx-option-popup");
+      const aligned = dir === "rtl" ? Math.abs(m.right - field.right) <= 1.5 : Math.abs(m.left - field.left) <= 1.5;
+      t(aligned, "the listbox lines up with the field's inline-start edge", `field ${field.left.toFixed(0)}–${field.right.toFixed(0)}, listbox ${m.left.toFixed(0)}–${m.right.toFixed(0)}`);
+      const opt = await page.locator("#ms .kx-option-popup [aria-selected='true']").first();
+      const o = await opt.evaluate((el) => el.getBoundingClientRect().toJSON());
+      const mk = await opt.locator(".kx-option__indicator").evaluate((el) => el.getBoundingClientRect().toJSON());
+      const atStart = dir === "rtl" ? o.right - mk.right <= 12 : mk.left - o.left <= 12;
+      t(atStart, "the check mark sits at the chosen option's inline start", `option ${o.left.toFixed(0)}–${o.right.toFixed(0)}, mark ${mk.left.toFixed(0)}–${mk.right.toFixed(0)}`);
+      await press(page, "Escape");
+    },
+  },
 ];
 const DIRECTION_CASES = [
   { page: "ltr", region: null },
@@ -782,18 +1421,18 @@ const DIRECTION_CASES = [
 ];
 if (runs("rtl")) {
   assertClaims("rtl", RTL);
-  report.push(`\nrtl — ${RTL.length} menus in ${DIRECTION_CASES.length} direction cases`);
+  report.push(`\nrtl — ${RTL.length} menus and listboxes in ${DIRECTION_CASES.length} direction cases`);
   for (const c of DIRECTION_CASES) {
     const want = c.region ?? c.page;
     const label = c.region ? `${c.region} region in an ${c.page} page` : `${c.page} page`;
     for (const subject of RTL) {
       const context = await browser.newContext({ viewport: { width: 1024, height: 800 }, reducedMotion: "reduce" });
-      const page = await open(context, "collections", { dir: c.page, region: c.region });
+      const page = await open(context, subject.fixture, { dir: c.page, region: c.region });
       const name = `${subject.component} (${label})`;
       try {
         const resolved = await page.locator("#region").evaluate((el) => getComputedStyle(el).direction);
-        const menuDir = await page.locator("#dd-content").evaluate((el) => getComputedStyle(el).direction);
-        check(resolved === want && menuDir === want, `${name}: the region and its menus resolve to ${want}`, `${resolved}, menu ${menuDir}`);
+        const menuDir = await page.locator(subject.probe ?? "#dd-content").first().evaluate((el) => getComputedStyle(el).direction);
+        check(resolved === want && menuDir === want, `${name}: the region and its ${subject.probe ? "listbox" : "menus"} resolve to ${want}`, `${resolved}, surface ${menuDir}`);
         await subject.run(page, want, (ok, what, detail) => check(ok, `${name}: ${what}`, detail));
       } catch (err) {
         check(false, `${name}: ran to completion`, String(err.message).split("\n")[0]);
@@ -817,11 +1456,26 @@ if (runs("rtl")) {
  *   KxMenubar       a menu opened from its trigger; at 390px the menubar's triggers wrap rather than overflow
  *
  * And the whole page fits 390px at 2x with no horizontal scroll.
+ *
+ * The listboxes, at the same 2x, 1024px and 390px: opened from the keyboard, the listbox stays inside the
+ * viewport, scrolls inside itself when it is taller than the room (the arrows reach its last option and it is
+ * then in view), cuts nothing off sideways, grows its text and keeps every option a 24px target; it is still
+ * operable (Escape closes it, focus on its field).
+ *
+ *   KxSelect        the trigger, its long value wrapped rather than cut; the listbox with its longest option
+ *   KxCommand       the inline list (no popup): text grows, nothing is cut, every item is a 24px target
+ *   KxCombobox      the recipe's popover with its search field and list
+ *   KxMultiSelect   with every enabled option chosen (a long selection): the chips wrap inside the field, every
+ *                   remove button is a 24px target, and the field never pushes the page sideways
  * ════════════════════════════════════════════════════════════════════════════ */
 const LARGE = [
   { component: "KxDropdownMenu", trigger: "#dd-trigger", keys: ["Enter"], surface: "#dd-content", sub: { keys: ["s", "ArrowRight"], surface: "#dd-sub-content" } },
   { component: "KxContextMenu", trigger: "#ctx-region", keys: ["Shift+F10"], surface: "#ctx-content", sub: { keys: ["End", "ArrowUp", "ArrowRight"], surface: "#ctx-sub-content" } },
   { component: "KxMenubar", trigger: "#mb-file", keys: ["Enter"], surface: "#mb-file-content", sub: { keys: ["s", "ArrowRight"], surface: "#mb-share-content" } },
+  { component: "KxSelect", fixture: "listboxes", field: "#sel-trigger", keys: ["ArrowDown"], surface: "#sel-content", items: ".kx-option" },
+  { component: "KxCommand", fixture: "listboxes", field: "#cmd-input", keys: [], surface: "#cmd-list", items: ".kx-option", inline: true },
+  { component: "KxCombobox", fixture: "listboxes", field: "#cb-trigger", keys: ["Enter"], surface: "#cb-content", items: ".kx-option", focusAfter: "cb-input" },
+  { component: "KxMultiSelect", fixture: "listboxes", field: "#ms-input", keys: ["ArrowDown"], surface: "#ms .kx-option-popup", items: ".kx-option", long: true },
 ];
 const SCALE = 2;
 const measure = (page, surface) =>
@@ -843,8 +1497,8 @@ const measure = (page, surface) =>
   }, surface);
 if (runs("largeText")) {
   assertClaims("largeText", LARGE);
-  report.push(`\nlargeText — ${LARGE.length} menus open at ${SCALE}x the root font size, 1024px and 390px`);
-  for (const s of LARGE) {
+  report.push(`\nlargeText — ${LARGE.length} menus and listboxes open at ${SCALE}x the root font size, 1024px and 390px`);
+  for (const s of LARGE.filter((x) => !x.fixture)) {
     for (const viewport of [{ width: 1024, height: 800 }, { width: 390, height: 844 }]) {
       const context = await browser.newContext({ viewport, reducedMotion: "reduce" });
       const page = await open(context);
@@ -900,6 +1554,143 @@ if (runs("largeText")) {
   const bar = await rectOf(page, "#mb");
   check(bar.right <= 390 + 0.5, `the menubar wraps inside 390px at ${SCALE}x rather than overflowing`, `right edge ${bar.right.toFixed(0)}`);
   await context.close();
+  // The listboxes: focus stays on the field, so "reaching the last option" is the active descendant's, not focus.
+  const measureList = (page, surface, items) =>
+    page.evaluate(({ surface, items }) => {
+      const el = document.querySelector(surface);
+      const r = el.getBoundingClientRect();
+      const opts = [...el.querySelectorAll(items)].filter((i) => !i.hidden && i.checkVisibility());
+      const scroller = el.matches('[role="listbox"]') ? el : (el.querySelector('[role="listbox"]') ?? el);
+      return {
+        rect: { left: r.left, right: r.right, top: r.top, bottom: r.bottom },
+        vw: document.documentElement.clientWidth,
+        vh: innerHeight,
+        sideways: Math.max(el.scrollWidth - el.clientWidth, scroller.scrollWidth - scroller.clientWidth),
+        scrolls: scroller.scrollHeight > scroller.clientHeight + 1,
+        overflowY: getComputedStyle(scroller).overflowY,
+        fontSize: parseFloat(getComputedStyle(opts[0]).fontSize),
+        small: opts.filter((i) => Math.min(i.getBoundingClientRect().width, i.getBoundingClientRect().height) < 24).map((i) => i.id || i.textContent.trim()),
+        pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    }, { surface, items });
+  /** Wait until a surface's box stops moving: placement re-runs when its size changes (a ResizeObserver). */
+  const restOf = (page, surface) =>
+    page.evaluate(
+      (surface) =>
+        new Promise((resolve) => {
+          let last = "";
+          let frames = 0;
+          const tick = () => {
+            const r = document.querySelector(surface).getBoundingClientRect();
+            const now = [r.left, r.top, r.right, r.bottom].map(Math.round).join();
+            if ((now === last && frames > 2) || frames > 30) return resolve(frames);
+            last = now;
+            frames++;
+            requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        }),
+      surface,
+    );
+  for (const s of LARGE.filter((x) => x.fixture === "listboxes")) {
+    for (const viewport of [{ width: 1024, height: 800 }, { width: 390, height: 844 }]) {
+      const context = await browser.newContext({ viewport, reducedMotion: "reduce" });
+      const page = await open(context, "listboxes");
+      const name = `${s.component} @${viewport.width}px`;
+      try {
+        const openIt = async () => {
+          await focus(page, s.field);
+          // the larger text moved the field: bring it back into view, as a reader scrolling to it would
+          await page.locator(s.field).scrollIntoViewIfNeeded();
+          for (const k of s.keys) await press(page, k);
+          await settled(page);
+        };
+        await openIt();
+        const before = (await measureList(page, s.surface, s.items)).fontSize;
+        if (!s.inline) await press(page, "Escape");
+        await page.evaluate((px) => (document.documentElement.style.fontSize = `${px}px`), 16 * SCALE);
+        await idle(page);
+        if (s.long) {
+          // a long selection: every enabled option chosen
+          await focus(page, s.field);
+          await press(page, "ArrowDown");
+          for (let i = 0; i < 6; i++) {
+            const id = await descendant(page, s.field);
+            if ((await page.locator(`[id="${id}"]`).getAttribute("aria-selected")) === "false") await press(page, "Enter");
+            await press(page, "ArrowDown");
+          }
+          await press(page, "Escape");
+          const f = await page.locator("#ms .kx-multi-select__field").evaluate((el) => {
+            const r = el.getBoundingClientRect();
+            const chips = [...el.querySelectorAll(".kx-multi-select__chip")];
+            const rows = new Set(chips.map((c) => Math.round(c.getBoundingClientRect().top))).size;
+            const smallRemove = [...el.querySelectorAll(".kx-tag__remove")].filter((b) => Math.min(b.getBoundingClientRect().width, b.getBoundingClientRect().height) < 24).map((b) => b.getAttribute("aria-label"));
+            const outside = chips.filter((c) => c.getBoundingClientRect().right > r.right + 0.5 || c.getBoundingClientRect().left < r.left - 0.5).length;
+            return { chips: chips.length, rows, smallRemove, outside, right: r.right, vw: document.documentElement.clientWidth, pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth };
+          });
+          check(f.chips === 5 && f.outside === 0 && f.right <= f.vw + 0.5, `${name}: a long selection (${f.chips} chips) wraps inside the field`, `${f.rows} rows, ${f.outside} outside, field right ${f.right.toFixed(0)} of ${f.vw}`);
+          check(f.smallRemove.length === 0, `${name}: every chip's remove button is at least a 24px target`, f.smallRemove.join(", "));
+          check(f.pageOverflow <= 0, `${name}: the long selection never pushes the page sideways`, `${f.pageOverflow}px`);
+        }
+        await openIt();
+        const frames = await restOf(page, s.surface);
+        const m = await measureList(page, s.surface, s.items);
+        if (process.env.KX_VERBOSE) console.log(`  ${name}: placement came to rest after ${frames} frame(s)`);
+        if (!s.inline) {
+          const inside = m.rect.left >= 7.5 && m.rect.right <= m.vw - 7.5 && m.rect.top >= 7.5 && m.rect.bottom <= m.vh - 7.5;
+          check(inside, `${name}: the listbox stays inside the viewport at ${SCALE}x`, `${m.rect.left.toFixed(0)},${m.rect.top.toFixed(0)}–${m.rect.right.toFixed(0)},${m.rect.bottom.toFixed(0)} in ${m.vw}x${m.vh}`);
+        }
+        check(m.sideways <= 1, `${name}: nothing in the listbox is cut off sideways`, `${m.sideways}px`);
+        check(m.fontSize >= before * 1.8, `${name}: the options' text grows with the reader's`, `${before}px -> ${m.fontSize}px`);
+        check(m.small.length === 0, `${name}: every option is at least a 24px target`, m.small.join(", "));
+        if (m.scrolls) {
+          const owner = s.focusAfter ? `#${s.focusAfter}` : s.field;
+          for (let i = 0; i < 14; i++) await press(page, "ArrowDown");
+          const last = await page.evaluate(({ owner, surface }) => {
+            const el = document.querySelector(surface);
+            const scroller = el.matches('[role="listbox"]') ? el : el.querySelector('[role="listbox"]');
+            const a = document.getElementById(document.querySelector(owner).getAttribute("aria-activedescendant") ?? "");
+            const visible = [...scroller.querySelectorAll('[role="option"]')].filter((o) => !o.hidden && o.getAttribute("aria-disabled") !== "true");
+            if (!a) return { inside: false, last: false };
+            const ar = a.getBoundingClientRect();
+            const r = scroller.getBoundingClientRect();
+            return { inside: ar.top >= r.top - 0.5 && ar.bottom <= r.bottom + 0.5, last: a === visible.at(-1) };
+          }, { owner, surface: s.surface });
+          check(m.overflowY === "auto" && last.inside && last.last, `${name}: the listbox is taller than the room, so it scrolls inside itself; the arrows reach its last option, in view`, `${m.overflowY} ${JSON.stringify(last)}`);
+        }
+        check(m.pageOverflow <= 0, `${name}: no horizontal page overflow with the listbox open`, `${m.pageOverflow}px`);
+        if (!s.inline) {
+          await press(page, "Escape");
+          check(!(await showing(page, s.surface)) && (await page.locator(s.field).evaluate((el) => el === document.activeElement)), `${name}: still operable — Escape closes it, focus on its field`, await active(page));
+        } else {
+          await page.keyboard.type("bil");
+          await idle(page);
+          check((await descendant(page, s.field)) === "cmd-billing", `${name}: still operable — typing filters and moves the active descendant`, String(await descendant(page, s.field)));
+        }
+        if (s.component === "KxSelect") {
+          await focus(page, s.field);
+          await press(page, "Enter");
+          await press(page, "End");
+          await press(page, "ArrowUp");
+          await press(page, "Enter");
+          const t = await page.locator(s.field).evaluate((el) => ({ sideways: el.scrollWidth - el.clientWidth, right: el.getBoundingClientRect().right, vw: document.documentElement.clientWidth, text: el.textContent.trim() }));
+          check(t.sideways <= 1 && t.right <= t.vw + 0.5 && t.text.startsWith("Dragon fruit"), `${name}: a long chosen value wraps inside the trigger rather than being cut`, `${t.sideways}px, right ${t.right.toFixed(0)} of ${t.vw}`);
+        }
+      } catch (err) {
+        check(false, `${name}: ran to completion`, String(err.message).split("\n")[0]);
+      }
+      await context.close();
+    }
+  }
+  {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const page = await open(context, "listboxes");
+    await page.evaluate((px) => (document.documentElement.style.fontSize = `${px}px`), 16 * SCALE);
+    await idle(page);
+    const overflowX = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    check(overflowX <= 0, `the whole listboxes page fits 390px at ${SCALE}x text`, `${overflowX}px`);
+    await context.close();
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -915,11 +1706,18 @@ if (runs("largeText")) {
  *   KxDropdownMenu  opened by pressing its trigger
  *   KxContextMenu   opened by a secondary click in its region
  *   KxMenubar       opened by pressing a trigger
+ *
+ * The listboxes' popups float on the same surface and move the same way, measured the same way:
+ *
+ *   KxSelect        opened by pressing its trigger
+ *   KxMultiSelect   opened by pressing its field
  * ════════════════════════════════════════════════════════════════════════════ */
 const MOTION = [
   { component: "KxDropdownMenu", control: "#dd-trigger", target: "#dd-content", how: "click" },
   { component: "KxContextMenu", control: "#ctx-region", target: "#ctx-content", how: "contextmenu" },
   { component: "KxMenubar", control: "#mb-file", target: "#mb-file-content", how: "click" },
+  { component: "KxSelect", fixture: "listboxes", control: "#sel-trigger", target: "#sel-content", how: "click" },
+  { component: "KxMultiSelect", fixture: "listboxes", control: "#ms-input", target: "#ms .kx-option-popup", how: "click" },
 ];
 function sampleTravel(page, { control, target, how }, travel) {
   return page.evaluate(
@@ -969,13 +1767,13 @@ function sampleTravel(page, { control, target, how }, travel) {
 if (runs("reducedMotion")) {
   assertClaims("reducedMotion", MOTION);
   const { PERCEPTIBLE_MS, SUPPRESSED_MS } = await import("./motion-states.mjs");
-  report.push(`\nreducedMotion — ${MOTION.length} menus, open and close, LTR and RTL, normal and reduced`);
+  report.push(`\nreducedMotion — ${MOTION.length} menus and listbox popups, open and close, LTR and RTL, normal and reduced`);
   for (const s of MOTION) {
     for (const dir of ["ltr", "rtl"]) {
       let openEnd = null;
       for (const reduced of [false, true]) {
         const context = await browser.newContext({ viewport: { width: 1024, height: 800 }, reducedMotion: reduced ? "reduce" : "no-preference" });
-        const page = await open(context, "collections", { dir });
+        const page = await open(context, s.fixture, { dir });
         for (const travel of ["open", "close"]) {
           const name = `${s.component} ${travel} (${dir}, ${reduced ? "reduced" : "normal"} motion)`;
           try {

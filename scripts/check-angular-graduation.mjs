@@ -176,7 +176,8 @@ const say = (re, want, what) => {
   else if (String(m[1]) !== String(want)) docGaps.push(`README says ${m[1]} ${what}; the manifest/evidence says ${want}`);
 };
 say(/carries \*\*(\d+) of the \d+ entries/, implemented.length, "catalogue entries (intro)");
-say(/^(\d+) components, as/m, implemented.length, "components (What it provides)");
+// "N components, as", or "N catalogue entries, as" once a recipe (the combobox) is among them
+say(/^(\d+) (?:components|catalogue entries), as/m, implemented.length, "components (What it provides)");
 say(/as \*\*(\d+) exported symbols\*\*/, api.exportedSymbols.length, "exported symbols");
 say(/\*\*Preview, and (\d+) of \d+ entries/, implemented.length, "entries (Limitations)");
 // counted from the evidence, not assumed from the implementation count: a display-only component (the stepper)

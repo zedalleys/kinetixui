@@ -26,6 +26,16 @@ describe('text entry and tabs — rendered subject for check:entry-visual', () =
     expect((at('[data-kx-kind="native-select"] [data-kx-case="filled"]') as HTMLSelectElement).value).toBe('utc');
   });
 
+  it('renders the select trigger in every field state, the placeholder marked on the empty one', () => {
+    const trigger = (c: string) => at(`[data-kx-kind="select"] [data-kx-case="${c}"]`) as HTMLButtonElement;
+    expect(trigger('rest').getAttribute('role')).toBe('combobox');
+    expect(trigger('rest').hasAttribute('data-placeholder')).toBe(true);
+    expect(trigger('filled').hasAttribute('data-placeholder')).toBe(false);
+    expect(trigger('filled').textContent!.trim()).toBe('UTC');
+    expect(trigger('invalid').getAttribute('aria-invalid')).toBe('true');
+    expect(trigger('disabled').disabled).toBe(true);
+  });
+
   it('renders each tab strip with one selected tab and a disabled one', () => {
     for (const where of ['page', 'card']) {
       const tab = (c: string) => at(`kx-tab-list[data-kx-case="${where}"] [data-kx-case="${c}"]`);

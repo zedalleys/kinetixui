@@ -31,14 +31,14 @@
       "published": 98
     },
     "Angular": {
-      "build": 67,
-      "interaction": 67,
-      "accessibility": 67,
-      "rtl": 34,
-      "largeText": 40,
-      "reducedMotion": 15,
+      "build": 71,
+      "interaction": 71,
+      "accessibility": 71,
+      "rtl": 38,
+      "largeText": 44,
+      "reducedMotion": 17,
       "visual": 0,
-      "published": 67
+      "published": 71
     },
     "SwiftUI": {
       "build": 90,
@@ -612,6 +612,8 @@
           "circular-progress",
           "code-block",
           "collapsible",
+          "combobox",
+          "command",
           "context-menu",
           "description-list",
           "dialog",
@@ -634,6 +636,7 @@
           "menubar",
           "metric",
           "modal",
+          "multi-select",
           "native-select",
           "navigation-bar",
           "number-input",
@@ -646,6 +649,7 @@
           "radio-group",
           "rating",
           "segmented-control",
+          "select",
           "separator",
           "sheet",
           "skeleton",
@@ -674,9 +678,13 @@
           "rtl"
         ],
         "components": [
+          "combobox",
+          "command",
           "context-menu",
           "dropdown-menu",
-          "menubar"
+          "menubar",
+          "multi-select",
+          "select"
         ]
       },
       {
@@ -967,21 +975,21 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "reducedMotion": [
-          "scripts/angular-browser.mjs:1657-1787"
+          "scripts/angular-browser.mjs:1679-1809"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1043,7 +1051,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1102,7 +1110,7 @@
           "scripts/angular-overlays.mjs:190-785"
         ],
         "accessibility": [
-          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-browser.mjs:182-309",
           "scripts/angular-overlays.mjs:190-785"
         ],
         "rtl": [
@@ -1159,21 +1167,21 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "reducedMotion": [
-          "scripts/angular-browser.mjs:1657-1787"
+          "scripts/angular-browser.mjs:1679-1809"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1223,7 +1231,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1308,7 +1316,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1358,7 +1366,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1390,7 +1398,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1437,12 +1445,12 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1483,18 +1491,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1544,15 +1552,15 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1611,12 +1619,12 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1686,12 +1694,12 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1815,15 +1823,15 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1885,7 +1893,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1933,17 +1941,17 @@
         "interaction": [
           "packages/ui-angular/src/lib/content.spec.ts:569-635",
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/content.spec.ts:569-635",
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
           "packages/ui-angular/src/lib/content.spec.ts:569-635",
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -1996,18 +2004,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "reducedMotion": [
-          "scripts/angular-browser.mjs:1657-1787"
+          "scripts/angular-browser.mjs:1679-1809"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2092,6 +2100,27 @@
         "published": [
           "npm: @kinetixui/ui"
         ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-collections.mjs:215-1239"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-collections.mjs:215-1239"
+        ],
+        "rtl": [
+          "scripts/angular-collections.mjs:1240-1445"
+        ],
+        "largeText": [
+          "scripts/angular-collections.mjs:1446-1696"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
+        ]
       }
     },
     "command": {
@@ -2105,6 +2134,27 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-collections.mjs:215-1239"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-collections.mjs:215-1239"
+        ],
+        "rtl": [
+          "scripts/angular-collections.mjs:1240-1445"
+        ],
+        "largeText": [
+          "scripts/angular-collections.mjs:1446-1696"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -2180,20 +2230,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:161-687"
+          "scripts/angular-collections.mjs:215-1239"
         ],
         "accessibility": [
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-collections.mjs:161-687"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-collections.mjs:215-1239"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:688-806"
+          "scripts/angular-collections.mjs:1240-1445"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:807-905"
+          "scripts/angular-collections.mjs:1446-1696"
         ],
         "reducedMotion": [
-          "scripts/angular-collections.mjs:906-1017"
+          "scripts/angular-collections.mjs:1697-1815"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2336,7 +2386,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2389,7 +2439,7 @@
           "scripts/angular-overlays.mjs:190-785"
         ],
         "accessibility": [
-          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-browser.mjs:182-309",
           "scripts/angular-overlays.mjs:190-785"
         ],
         "rtl": [
@@ -2514,7 +2564,7 @@
           "scripts/angular-overlays.mjs:190-785"
         ],
         "accessibility": [
-          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-browser.mjs:182-309",
           "scripts/angular-overlays.mjs:190-785"
         ],
         "rtl": [
@@ -2581,20 +2631,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:161-687"
+          "scripts/angular-collections.mjs:215-1239"
         ],
         "accessibility": [
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-collections.mjs:161-687"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-collections.mjs:215-1239"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:688-806"
+          "scripts/angular-collections.mjs:1240-1445"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:807-905"
+          "scripts/angular-collections.mjs:1446-1696"
         ],
         "reducedMotion": [
-          "scripts/angular-collections.mjs:906-1017"
+          "scripts/angular-collections.mjs:1697-1815"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2638,7 +2688,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2679,12 +2729,12 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2731,15 +2781,15 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2827,18 +2877,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2907,7 +2957,7 @@
           "scripts/angular-overlays.mjs:190-785"
         ],
         "accessibility": [
-          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-browser.mjs:182-309",
           "scripts/angular-overlays.mjs:190-785"
         ],
         "rtl": [
@@ -2961,7 +3011,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3002,12 +3052,12 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3060,18 +3110,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3127,18 +3177,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/inputs.spec.ts:31-178",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/inputs.spec.ts:31-178",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3196,18 +3246,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/inputs.spec.ts:31-178",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/inputs.spec.ts:31-178",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3303,7 +3353,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3350,15 +3400,15 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3408,12 +3458,12 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3495,7 +3545,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3554,20 +3604,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:161-687"
+          "scripts/angular-collections.mjs:215-1239"
         ],
         "accessibility": [
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-collections.mjs:161-687"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-collections.mjs:215-1239"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:688-806"
+          "scripts/angular-collections.mjs:1240-1445"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:807-905"
+          "scripts/angular-collections.mjs:1446-1696"
         ],
         "reducedMotion": [
-          "scripts/angular-collections.mjs:906-1017"
+          "scripts/angular-collections.mjs:1697-1815"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3649,7 +3699,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3705,7 +3755,7 @@
           "scripts/angular-overlays.mjs:190-785"
         ],
         "accessibility": [
-          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-browser.mjs:182-309",
           "scripts/angular-overlays.mjs:190-785"
         ],
         "rtl": [
@@ -3768,6 +3818,30 @@
           "npm: @kinetixui/ui"
         ]
       },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-collections.mjs:215-1239"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-collections.mjs:215-1239"
+        ],
+        "rtl": [
+          "scripts/angular-collections.mjs:1240-1445"
+        ],
+        "largeText": [
+          "scripts/angular-collections.mjs:1446-1696"
+        ],
+        "reducedMotion": [
+          "scripts/angular-collections.mjs:1697-1815"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
+        ]
+      },
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
@@ -3806,15 +3880,15 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3840,18 +3914,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3948,19 +4022,19 @@
         "interaction": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
           "packages/ui-angular/src/lib/inputs.spec.ts:31-178",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
           "packages/ui-angular/src/lib/inputs.spec.ts:31-178",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4010,7 +4084,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4051,18 +4125,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4109,18 +4183,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4182,7 +4256,7 @@
           "scripts/angular-overlays.mjs:190-785"
         ],
         "accessibility": [
-          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-browser.mjs:182-309",
           "scripts/angular-overlays.mjs:190-785"
         ],
         "rtl": [
@@ -4236,7 +4310,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4286,7 +4360,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4344,18 +4418,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4402,18 +4476,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/inputs.spec.ts:31-178",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/inputs.spec.ts:31-178",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4530,18 +4604,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4588,6 +4662,30 @@
           "npm: @kinetixui/ui"
         ]
       },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-collections.mjs:215-1239"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-collections.mjs:215-1239"
+        ],
+        "rtl": [
+          "scripts/angular-collections.mjs:1240-1445"
+        ],
+        "largeText": [
+          "scripts/angular-collections.mjs:1446-1696"
+        ],
+        "reducedMotion": [
+          "scripts/angular-collections.mjs:1697-1815"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
+        ]
+      },
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
@@ -4632,7 +4730,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4691,7 +4789,7 @@
           "scripts/angular-overlays.mjs:190-785"
         ],
         "accessibility": [
-          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-browser.mjs:182-309",
           "scripts/angular-overlays.mjs:190-785"
         ],
         "rtl": [
@@ -4786,7 +4884,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4852,18 +4950,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4948,7 +5046,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -5007,13 +5105,13 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/navigation.spec.ts:379-407",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -5074,21 +5172,21 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "reducedMotion": [
-          "scripts/angular-browser.mjs:1657-1787"
+          "scripts/angular-browser.mjs:1679-1809"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -5158,18 +5256,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -5245,18 +5343,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/navigation.spec.ts:62-378",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -5312,19 +5410,19 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -5389,12 +5487,12 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -5452,18 +5550,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -5513,7 +5611,7 @@
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:175-287"
+          "scripts/angular-browser.mjs:182-309"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -5561,15 +5659,15 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -5632,18 +5730,18 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:175-287",
-          "scripts/angular-browser.mjs:288-1018"
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-browser.mjs:310-1040"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1279-1656"
+          "scripts/angular-browser.mjs:1301-1678"
         ],
         "largeText": [
-          "scripts/angular-browser.mjs:1019-1278"
+          "scripts/angular-browser.mjs:1041-1300"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -5703,7 +5801,7 @@
           "scripts/angular-overlays.mjs:190-785"
         ],
         "accessibility": [
-          "scripts/angular-browser.mjs:175-287",
+          "scripts/angular-browser.mjs:182-309",
           "scripts/angular-overlays.mjs:190-785"
         ],
         "rtl": [

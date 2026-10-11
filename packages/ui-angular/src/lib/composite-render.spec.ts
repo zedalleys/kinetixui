@@ -26,4 +26,15 @@ describe('composite fields — rendered subject for check:composite-visual', () 
     expect(at('kx-number-input[data-kx-case="rest"] button').tabIndex).toBe(-1);
   });
 
+  it('renders the multi-select in every state, with a chip remove button as the part that owns focus', () => {
+    const input = (c: string) => at(`kx-multi-select[data-kx-case="${c}"] input`) as HTMLInputElement;
+    expect(input('rest').getAttribute('role')).toBe('combobox');
+    expect(input('rest').placeholder).toBe('Add labels…');
+    expect(at('kx-multi-select[data-kx-case="filled"] .kx-tag__remove').getAttribute('aria-label')).toBe('Remove Design');
+    expect(input('invalid').getAttribute('aria-invalid')).toBe('true');
+    expect(input('invalid').getAttribute('aria-describedby')!.split(' ')[0]).toBe('ms-invalid-error');
+    expect(input('disabled').disabled).toBe(true);
+    expect(at('kx-multi-select[data-kx-case="disabled"] .kx-tag__remove')).toBeNull();
+  });
+
 });
