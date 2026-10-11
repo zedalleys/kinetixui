@@ -338,6 +338,94 @@
       transform: translateX(300%);
     }
   }
+
+  /* /iot hero illustration (decorative; markup in components/iot/lab/iot-hero-art-svg.ts). It has no background.
+     The artwork's own colours are left in the markup and re-mapped here onto the site's tokens, so it follows the
+     theme like the rest of the page: the chip is the action blue (lighter on top, so the isometric faces still
+     read), the hollow is the muted surface, the code columns are the info slate, and the pins are neutrals.
+     Each loop says one thing about a connected device: a signal walks the pins, the IOT stack lifts as data rises
+     off the chip, and the data columns brighten in turn. Opacity and transform only, plus the fill of 24 tiny pin
+     faces. */
+  .kx-iot-art {
+    --kx-iot-art-side: hsl(var(--primary));
+    --kx-iot-art-top: color-mix(in srgb, hsl(var(--primary)) 72%, white);
+    --kx-iot-art-pin-top: hsl(var(--neutral-200));
+    --kx-iot-art-pin-front: hsl(var(--neutral-300));
+    --kx-iot-art-pin-side: hsl(var(--neutral-400));
+  }
+  .kx-iot-art [fill="#2874c6"] {
+    fill: var(--kx-iot-art-side);
+  }
+  .kx-iot-art [fill="#3eadff"] {
+    fill: var(--kx-iot-art-top);
+  }
+  .kx-iot-art [fill="#fff"] {
+    fill: hsl(var(--muted));
+  }
+  .kx-iot-art [fill="#7dc1ff"] {
+    fill: hsl(var(--info));
+  }
+  .kx-iot-art [fill="#f6f2ed"] {
+    fill: var(--kx-iot-art-pin-top);
+  }
+  .kx-iot-art [fill="#e9e4db"] {
+    fill: var(--kx-iot-art-pin-front);
+  }
+  .kx-iot-art [fill="#beb9b0"] {
+    fill: var(--kx-iot-art-pin-side);
+  }
+  .kx-iot-art [fill="#434c54"] {
+    fill: hsl(var(--neutral-700));
+  }
+  /* The top face of each pin. 4.8s round all 24, one every 0.2s: one pin is lit at a time, then the next. */
+  .kx-iot-art-pin > :nth-child(3) {
+    animation: kx-iot-pin 4.8s linear infinite;
+    animation-delay: calc(var(--i) * 0.2s - 4.8s);
+  }
+  @keyframes kx-iot-pin {
+    0%,
+    14%,
+    100% {
+      fill: var(--kx-iot-art-pin-top);
+    }
+    4% {
+      fill: hsl(var(--primary));
+    }
+  }
+  /* Layer i (0 is the bottom) lifts i × 0.6 units, so the stack stretches upward and the lettered top rides it. */
+  .kx-iot-art-layer,
+  .kx-iot-art-glyph {
+    animation: kx-iot-lift 4.8s ease-in-out infinite;
+  }
+  .kx-iot-art-glyph {
+    --i: 10;
+  }
+  @keyframes kx-iot-lift {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(calc(var(--i) * -0.6px));
+    }
+  }
+  /* Ten columns, 0.48s apart over one 4.8s cycle, so the brightening travels across the cloud. */
+  .kx-iot-art-data {
+    animation: kx-iot-data 4.8s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -0.48s);
+  }
+  @keyframes kx-iot-data {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+    30% {
+      opacity: 1;
+    }
+  }
+  [data-iot-hero-art][data-paused] .kx-iot-art * {
+    animation-play-state: paused;
+  }
   .kx-pipe-chip {
     font-family: var(--font-mono);
     font-size: 10px;
@@ -471,6 +559,7 @@
   .kx-fan-node,
   .kx-caret,
   .kx-flow-bar::after,
+  .kx-iot-art *,
   [data-reveal][data-shown] {
     animation: none !important;
   }
