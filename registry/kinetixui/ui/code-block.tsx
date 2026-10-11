@@ -23,6 +23,37 @@ export interface CodeBlockProps extends Omit<React.HTMLAttributes<HTMLDivElement
   hideCopy?: boolean;
 }
 
+/**
+ * True only while the element can actually scroll. A scroll container no keyboard can reach fails WCAG 2.1.1
+ * (axe `scrollable-region-focusable`), but an unconditional `tabIndex` would add a focus stop to every short
+ * snippet. Same contract as `Table`'s wrapper; kept in this file, as there, so the registry item stays
+ * self-contained. The 1px tolerance absorbs sub-pixel rounding.
+ */
+function useScrollFocus(ref: React.RefObject<HTMLElement | null>, axis: "x" | "both" = "x"): boolean {
+  const [scrollable, setScrollable] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const measure = () =>
+      setScrollable(
+        el.scrollWidth > el.clientWidth + 1 || (axis === "both" && el.scrollHeight > el.clientHeight + 1),
+      );
+
+    measure();
+    // ResizeObserver rather than a window resize listener: the container changes size with the viewport, and its
+    // content changes size with the text, the reader's font size and the active tab — none of which fire a resize
+    // event on the window.
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    if (el.firstElementChild) observer.observe(el.firstElementChild);
+    return () => observer.disconnect();
+  }, [ref, axis]);
+
+  return scrollable;
+}
+
 const CodeBlock = React.forwardRef<HTMLDivElement, CodeBlockProps>(
   ({ className, code, language, filename, files, hideCopy, ...props }, ref) => {
     const tabs = files && files.length > 0 ? files : [{ name: filename ?? language ?? "", code: code ?? "" }];
@@ -30,6 +61,10 @@ const CodeBlock = React.forwardRef<HTMLDivElement, CodeBlockProps>(
     const [copied, setCopied] = React.useState(false);
     const current = tabs[active] ?? tabs[0]!;
     const hasHeader = tabs.length > 1 || !!current.name;
+    const pre = React.useRef<HTMLPreElement>(null);
+    // A long line scrolls the `pre` sideways — at a phone width that is most lines. While it does, the keyboard
+    // must be able to reach it; while it does not, it stays out of the tab order.
+    const scrollable = useScrollFocus(pre);
 
     const copy = async () => {
       try {
@@ -83,7 +118,18 @@ const CodeBlock = React.forwardRef<HTMLDivElement, CodeBlockProps>(
               {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
             </button>
           )}
-          <pre className="overflow-x-auto p-4 text-body-sm text-foreground">
+          <pre
+            ref={pre}
+            className="overflow-x-auto p-4 text-body-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+            {...(scrollable
+              ? {
+                  tabIndex: 0,
+                  // Named by the file it shows, when it shows one. No fabricated fallback such as "Code": the code
+                  // itself is what a screen reader reads next, and a generic label adds nothing to it.
+                  ...(current.name ? { role: "group", "aria-label": current.name } : {}),
+                }
+              : {})}
+          >
             <code>{current.code}</code>
           </pre>
         </div>
