@@ -109,7 +109,7 @@
   },
   "coverage": {
     "React": 98,
-    "Angular": 64,
+    "Angular": 67,
     "SwiftUI": 90,
     "Compose": 90,
     "Flutter": 90
@@ -278,6 +278,7 @@
     ],
     "context-menu": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -332,6 +333,7 @@
     ],
     "dropdown-menu": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -460,6 +462,7 @@
     ],
     "menubar": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -830,12 +833,6 @@
         "wave": "layout"
       }
     },
-    "context-menu": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
-      }
-    },
     "data-grid": {
       "Angular": {
         "type": "planned",
@@ -876,12 +873,6 @@
       "Flutter": {
         "type": "native-equivalent",
         "reason": "Flutter carries layout direction in the widget tree. Wrap a subtree in Directionality and every widget below reads it — there is no provider to port."
-      }
-    },
-    "dropdown-menu": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
       }
     },
     "file-upload": {
@@ -936,12 +927,6 @@
       "Angular": {
         "type": "planned",
         "wave": "advanced"
-      }
-    },
-    "menubar": {
-      "Angular": {
-        "type": "planned",
-        "wave": "navigation"
       }
     },
     "message-bubble": {
@@ -1249,6 +1234,7 @@
     },
     "context-menu": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1303,6 +1289,7 @@
     },
     "dropdown-menu": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1431,6 +1418,7 @@
     },
     "menubar": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1720,7 +1708,7 @@
       "beta": 98
     },
     "Angular": {
-      "preview": 64
+      "preview": 67
     },
     "SwiftUI": {
       "experimental": 90
@@ -2313,6 +2301,15 @@
         "published",
         "rtl"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -2489,6 +2486,15 @@
         "interaction",
         "largeText",
         "published",
+        "rtl"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
         "rtl"
       ],
       "SwiftUI": [
@@ -2930,6 +2936,15 @@
         "interaction",
         "largeText",
         "published",
+        "rtl"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
         "rtl"
       ],
       "SwiftUI": [
@@ -3967,14 +3982,14 @@
       "published": 98
     },
     "Angular": {
-      "build": 64,
-      "interaction": 64,
-      "accessibility": 64,
-      "rtl": 31,
-      "largeText": 37,
-      "reducedMotion": 12,
+      "build": 67,
+      "interaction": 67,
+      "accessibility": 67,
+      "rtl": 34,
+      "largeText": 40,
+      "reducedMotion": 15,
       "visual": 0,
-      "published": 64
+      "published": 67
     },
     "SwiftUI": {
       "build": 90,

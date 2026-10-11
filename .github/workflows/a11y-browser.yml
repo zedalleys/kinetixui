@@ -37,12 +37,14 @@ on:
       - "scripts/composite-visual.mjs"
       - "scripts/navigation-visual.mjs"
       - "scripts/overlay-visual.mjs"
+      - "scripts/menu-visual.mjs"
       - "scripts/visual-harness.mjs"
       - "scripts/visual-gates.mjs"
       - "packages/ui-angular/src/**"
       - "packages/ui-angular/browser/**"
       - "scripts/angular-browser.mjs"
       - "scripts/angular-overlays.mjs"
+      - "scripts/angular-collections.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -68,12 +70,14 @@ on:
       - "scripts/composite-visual.mjs"
       - "scripts/navigation-visual.mjs"
       - "scripts/overlay-visual.mjs"
+      - "scripts/menu-visual.mjs"
       - "scripts/visual-harness.mjs"
       - "scripts/visual-gates.mjs"
       - "packages/ui-angular/src/**"
       - "packages/ui-angular/browser/**"
       - "scripts/angular-browser.mjs"
       - "scripts/angular-overlays.mjs"
+      - "scripts/angular-collections.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -197,6 +201,14 @@ jobs:
       - name: Overlay visual contract (Angular, light and dark)
         run: pnpm check:overlay-visual
 
+      # The menu item state contract (TOKENS.md, "Menus") on rendered pixels, Angular only: the menu surface
+      # (popover fill, border edge, shadow or surface step), an item at rest, hovered (the state layer, no ring),
+      # keyboard-highlighted (the same layer AND an inset ring that clears 3:1, so the two never look the same),
+      # pressed, disabled, checked marks, destructive, the sub trigger's chevron and open state, the submenu
+      # toward the inline end, separators, labels and shortcuts, the menubar's triggers, in LTR and RTL.
+      - name: Menu visual contract (Angular, light and dark)
+        run: pnpm check:menu-visual
+
       # Which way React's component-owned directional icons point, read from ink in LTR and in an RTL preview
       # scoped to the story root (never <html>): Back, Previous / Next and the breadcrumb separator mirror; a
       # collapsed disclosure mirrors; an expanded disclosure and the accordion chevron do not (/docs/icons).
@@ -217,3 +229,12 @@ jobs:
       # open/close motion with and without reduced motion. verification.json publishes this evidence.
       - name: Angular overlays in the browser (nesting, focus, axe open, RTL, 200% text, motion)
         run: pnpm check:angular-overlays
+
+      # The menus (dropdown menu, context menu, menubar) as a live Angular application on the collection core:
+      # arrows that stop or wrap, Home/End, typeahead, disabled items, activation and focus return, Escape one
+      # level at a time, Tab, outside presses, submenus by keyboard, hover intent and the diagonal grace area,
+      # context menus at the pointer and from the keyboard, the menubar's moves between menus; then axe with
+      # menus and submenus open (and inside a dialog), forced colours, four direction cases, 200% text at 1024px
+      # and 390px, and the open/close motion with and without reduced motion. verification.json publishes this.
+      - name: Angular menus in the browser (keyboard, pointer, submenus, axe open, RTL, 200% text, motion)
+        run: pnpm check:angular-collections

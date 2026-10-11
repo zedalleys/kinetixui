@@ -1,6 +1,7 @@
 import type { Type } from '@angular/core';
 import { BehaviourFixture } from './behaviour';
 import { CardStates } from './card';
+import { CollectionsFixture } from './collections';
 import { CompositeStates } from './composite';
 import { CompositionsFixture } from './compositions';
 import { EntryStates } from './entry';
@@ -20,6 +21,7 @@ import { UsageExamples } from './usage';
 export const FIXTURES: Record<string, Type<unknown>> = {
   behaviour: BehaviourFixture,
   card: CardStates,
+  collections: CollectionsFixture,
   composite: CompositeStates,
   compositions: CompositionsFixture,
   entry: EntryStates,

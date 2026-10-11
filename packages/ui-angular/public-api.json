@@ -53,6 +53,9 @@
     "KxCollapsible",
     "KxCollapsibleContent",
     "KxCollapsibleTrigger",
+    "KxContextMenu",
+    "KxContextMenuContent",
+    "KxContextMenuTrigger",
     "KxCorners",
     "KxDescriptionList",
     "KxDescriptionListItem",
@@ -67,6 +70,9 @@
     "KxDialogTrigger",
     "KxDrawer",
     "KxDrawerContent",
+    "KxDropdownMenu",
+    "KxDropdownMenuContent",
+    "KxDropdownMenuTrigger",
     "KxEmpty",
     "KxEmptyContent",
     "KxEmptyDescription",
@@ -108,6 +114,21 @@
     "KxListItem",
     "KxMarquee",
     "KxMarqueeContent",
+    "KxMenuCheckboxItem",
+    "KxMenuGroup",
+    "KxMenuItem",
+    "KxMenuLabel",
+    "KxMenuRadioGroup",
+    "KxMenuRadioItem",
+    "KxMenuSeparator",
+    "KxMenuShortcut",
+    "KxMenuSub",
+    "KxMenuSubContent",
+    "KxMenuSubTrigger",
+    "KxMenubar",
+    "KxMenubarContent",
+    "KxMenubarMenu",
+    "KxMenubarTrigger",
     "KxMetric",
     "KxModal",
     "KxModalType",
@@ -709,6 +730,49 @@
       "exported": true
     },
     {
+      "name": "KxContextMenu",
+      "kind": "component",
+      "selector": "kx-context-menu",
+      "inputs": [
+        "open"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxMenuRoot",
+      "exported": true
+    },
+    {
+      "name": "KxContextMenuContent",
+      "kind": "component",
+      "selector": "kx-context-menu-content",
+      "inputs": [
+        "align",
+        "id",
+        "label",
+        "labelledby",
+        "offset",
+        "side"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxMenuSurface",
+      "exported": true
+    },
+    {
+      "name": "KxContextMenuTrigger",
+      "kind": "directive",
+      "selector": "[kxContextMenuTrigger]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
       "name": "KxDescriptionList",
       "kind": "directive",
       "selector": "dl[kxDescriptionList]",
@@ -882,6 +946,51 @@
       "projectsContent": true,
       "standalone": true,
       "extends": "KxModalSurface",
+      "exported": true
+    },
+    {
+      "name": "KxDropdownMenu",
+      "kind": "component",
+      "selector": "kx-dropdown-menu",
+      "inputs": [
+        "open"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxMenuRoot",
+      "exported": true
+    },
+    {
+      "name": "KxDropdownMenuContent",
+      "kind": "component",
+      "selector": "kx-dropdown-menu-content",
+      "inputs": [
+        "align",
+        "id",
+        "label",
+        "labelledby",
+        "offset",
+        "side"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxMenuSurface",
+      "exported": true
+    },
+    {
+      "name": "KxDropdownMenuTrigger",
+      "kind": "directive",
+      "selector": "button[kxDropdownMenuTrigger]",
+      "inputs": [
+        "id"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
       "exported": true
     },
     {
@@ -1341,6 +1450,268 @@
       "projectsContent": false,
       "standalone": true,
       "exported": true
+    },
+    {
+      "name": "KxMenubar",
+      "kind": "component",
+      "selector": "kx-menubar",
+      "inputs": [
+        "value"
+      ],
+      "outputs": [
+        "valueChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxMenubarContent",
+      "kind": "component",
+      "selector": "kx-menubar-content",
+      "inputs": [
+        "align",
+        "id",
+        "label",
+        "labelledby",
+        "offset",
+        "side"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxMenuSurface",
+      "exported": true
+    },
+    {
+      "name": "KxMenubarMenu",
+      "kind": "component",
+      "selector": "kx-menubar-menu",
+      "inputs": [
+        "open",
+        "value"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxMenuRoot",
+      "exported": true
+    },
+    {
+      "name": "KxMenubarTrigger",
+      "kind": "directive",
+      "selector": "button[kxMenubarTrigger]",
+      "inputs": [
+        "id"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxMenuCheckboxItem",
+      "kind": "component",
+      "selector": "kx-menu-checkbox-item",
+      "inputs": [
+        "checked",
+        "disabled",
+        "textValue"
+      ],
+      "outputs": [
+        "checkedChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxMenuEntry",
+      "exported": true
+    },
+    {
+      "name": "KxMenuEntry",
+      "kind": "directive",
+      "selector": null,
+      "inputs": [
+        "disabled",
+        "textValue"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": false
+    },
+    {
+      "name": "KxMenuGroup",
+      "kind": "component",
+      "selector": "kx-menu-group",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxMenuItem",
+      "kind": "directive",
+      "selector": "button[kxMenuItem], a[kxMenuItem]",
+      "inputs": [
+        "disabled",
+        "inset",
+        "textValue",
+        "variant"
+      ],
+      "outputs": [
+        "select"
+      ],
+      "projectsContent": false,
+      "standalone": true,
+      "extends": "KxMenuEntry",
+      "exported": true
+    },
+    {
+      "name": "KxMenuLabel",
+      "kind": "component",
+      "selector": "kx-menu-label",
+      "inputs": [
+        "id",
+        "inset"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxMenuRadioGroup",
+      "kind": "component",
+      "selector": "kx-menu-radio-group",
+      "inputs": [
+        "value"
+      ],
+      "outputs": [
+        "valueChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxMenuRadioItem",
+      "kind": "component",
+      "selector": "kx-menu-radio-item",
+      "inputs": [
+        "disabled",
+        "textValue",
+        "value"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxMenuEntry",
+      "exported": true
+    },
+    {
+      "name": "KxMenuRoot",
+      "kind": "directive",
+      "selector": null,
+      "inputs": [
+        "open"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": false,
+      "standalone": true,
+      "extends": "KxFloatingRoot",
+      "exported": false
+    },
+    {
+      "name": "KxMenuSeparator",
+      "kind": "component",
+      "selector": "kx-menu-separator",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxMenuShortcut",
+      "kind": "component",
+      "selector": "kx-menu-shortcut",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxMenuSub",
+      "kind": "component",
+      "selector": "kx-menu-sub",
+      "inputs": [
+        "open",
+        "openDelay"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxMenuRoot",
+      "exported": true
+    },
+    {
+      "name": "KxMenuSubContent",
+      "kind": "component",
+      "selector": "kx-menu-sub-content",
+      "inputs": [
+        "align",
+        "id",
+        "label",
+        "labelledby",
+        "offset",
+        "side"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxMenuSurface",
+      "exported": true
+    },
+    {
+      "name": "KxMenuSubTrigger",
+      "kind": "component",
+      "selector": "button[kxMenuSubTrigger]",
+      "inputs": [
+        "disabled",
+        "id",
+        "inset",
+        "textValue"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxMenuEntry",
+      "exported": true
+    },
+    {
+      "name": "KxMenuSurface",
+      "kind": "directive",
+      "selector": null,
+      "inputs": [
+        "align",
+        "id",
+        "label",
+        "labelledby",
+        "offset"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "extends": "KxFloatingSurface",
+      "exported": false
     },
     {
       "name": "KxMetric",
@@ -2141,6 +2512,10 @@
       "definition": "'start' | 'center' | 'end'"
     },
     {
+      "name": "KxAnchor",
+      "definition": "HTMLElement | KxVirtualAnchor"
+    },
+    {
       "name": "KxBadgeVariant",
       "definition": "'default' | 'secondary' | 'outline' | 'destructive' | 'success' | 'warning'"
     },
@@ -2189,8 +2564,16 @@
       "definition": "'information' | 'warning' | 'success' | 'error' | 'action'"
     },
     {
+      "name": "KxMenuFocus",
+      "definition": "'first' | 'last' | 'surface' | 'none'"
+    },
+    {
       "name": "KxModalType",
       "definition": "'Info' | 'Confirmation' | 'Warning' | 'Destructive'"
+    },
+    {
+      "name": "KxMove",
+      "definition": "'next' | 'previous' | 'first' | 'last'"
     },
     {
       "name": "KxOrientation",

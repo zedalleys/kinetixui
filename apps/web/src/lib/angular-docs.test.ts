@@ -91,11 +91,11 @@ describe("/docs/angular", () => {
   });
 
   it("does not ship an overlay component the page says is still to come, and ships the ones it says are built", () => {
-    expect(page).toMatch(/menus, listboxes and\s+notifications still to come/);
-    for (const slug of ["select", "dropdown-menu", "context-menu", "combobox", "command", "sonner"]) {
+    expect(page).toMatch(/listboxes and\s+notifications still to come/);
+    for (const slug of ["select", "combobox", "command", "multi-select", "sonner"]) {
       expect(platformsFor(slug)).not.toContain("Angular");
     }
-    for (const slug of ["dialog", "alert-dialog", "modal", "sheet", "drawer", "popover", "tooltip", "hover-card"]) {
+    for (const slug of ["dialog", "alert-dialog", "modal", "sheet", "drawer", "popover", "tooltip", "hover-card", "dropdown-menu", "context-menu", "menubar"]) {
       expect(platformsFor(slug)).toContain("Angular");
     }
   });

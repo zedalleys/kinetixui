@@ -6,16 +6,16 @@ CI — and this document describes it; where the two disagree, the script is rig
 
 Publication is distribution, not maturity. The package is on npm and stays Preview.
 
-## Current truth (computed, 2026-10-04, main `dd9eed1` + Wave C1)
+## Current truth (computed, 2026-10-11, main `4cc711b` + Wave C2a)
 
 | | Count | Source |
 |---|---|---|
-| Implemented | 64 of 98 | `components.manifest.json` |
+| Implemented | 67 of 98 | `components.manifest.json` |
 | Native-equivalent | 2 (`direction-provider`, `form`) | manifest `platformGuidance`, each with its reason |
-| Planned | 32 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
+| Planned | 29 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
 | `catalogComplete` | false | manifest |
-| Evidence (verification.json) | build 64 · interaction 64 · accessibility 64 · rtl 31 · largeText 37 · reducedMotion 12 · visual 0 | generated from the tests |
-| Rendered visual/state gate | 29 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs; `check:composite-visual`: input-group, number-input, input-otp, password-input; `check:navigation-visual`, Angular only: breadcrumb, pagination, table-of-contents, tab-bar, app-bar, footer, accordion; `check:overlay-visual`, Angular only: dialog, alert-dialog, modal, sheet, drawer, popover, tooltip, hover-card), no `partial` marks | `scripts/visual-gates.mjs` |
+| Evidence (verification.json) | build 67 · interaction 67 · accessibility 67 · rtl 34 · largeText 40 · reducedMotion 15 · visual 0 | generated from the tests |
+| Rendered visual/state gate | 32 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs; `check:composite-visual`: input-group, number-input, input-otp, password-input; `check:navigation-visual`, Angular only: breadcrumb, pagination, table-of-contents, tab-bar, app-bar, footer, accordion; `check:overlay-visual`, Angular only: dialog, alert-dialog, modal, sheet, drawer, popover, tooltip, hover-card; `check:menu-visual`, Angular only: dropdown-menu, context-menu, menubar), no `partial` marks | `scripts/visual-gates.mjs` |
 
 Wave A moved Angular's evidence into a real browser. `check:angular-browser` (scripts/angular-browser.mjs)
 builds the package's fixtures AOT and bootstraps them as a live, zoneless Angular application in Chromium,
@@ -41,19 +41,19 @@ maturity — they are statements about today, and CI fails the moment one is fal
 
 | Dimension | Criterion | Kind | Today |
 |---|---|---|---|
-| Catalogue | No Angular entry is still planned | gate | **open** — 32 planned |
+| Catalogue | No Angular entry is still planned | gate | **open** — 29 planned |
 | Catalogue | Every native-equivalent / composition entry carries its reason | always | met |
 | Catalogue | `catalogComplete` is true only when nothing is planned | always | met |
-| Build / distribution | Every implemented component compiles in CI (ng-packagr, strict templates) | gate | met — 64/64 |
+| Build / distribution | Every implemented component compiles in CI (ng-packagr, strict templates) | gate | met — 67/67 |
 | Build / distribution | CI builds the package, checks the public API snapshot, runs the tests and this guard; the clean-consumer install + AOT build runs (`angular-package.yml`) | always | met |
-| Behaviour | Every implemented component has `interaction` evidence | gate | met — 64/64 (jsdom, and a real keyboard in Chromium for the 44 interactive components; the stepper, which is display, by its state following `current`) |
-| Behaviour | `interaction` wherever React has it | gate | met — 24/24 (dialog, alert dialog, modal, sheet, drawer, popover and tooltip added; React has no interaction evidence for the hover card, Angular does) |
-| Accessibility | Every implemented component has `accessibility` evidence | gate | met — 64/64 |
-| Accessibility | `accessibility` wherever React has it | gate | met — 64/64 |
-| Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | met — 64/64 (`angular-browser.mjs`: axe over every usage example and state fixture, light and dark, plus forced colours and reduced motion; `angular-overlays.mjs`: axe over every overlay OPEN, nested and composed) |
-| RTL | `rtl` wherever React has it | gate | met — 10/10 (alert dialog, popover and tooltip added; Angular measures 31 in four direction cases) |
-| Large text | `largeText` wherever React has it | gate | met — 21/21 (React's bar rose by the seven overlays it measures at 200%; Angular measures 37) |
-| Large text | …from a real browser (`large-text.mjs`) | gate | met — 21/21 |
+| Behaviour | Every implemented component has `interaction` evidence | gate | met — 67/67 (jsdom, and a real keyboard in Chromium for the 47 interactive components; the stepper, which is display, by its state following `current`) |
+| Behaviour | `interaction` wherever React has it | gate | met — 27/27 (Wave C2a added dropdown menu, context menu and menubar; React has no interaction evidence for the hover card, Angular does) |
+| Accessibility | Every implemented component has `accessibility` evidence | gate | met — 67/67 |
+| Accessibility | `accessibility` wherever React has it | gate | met — 67/67 |
+| Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | met — 67/67 (`angular-browser.mjs`: axe over every usage example and state fixture, light and dark, plus forced colours and reduced motion; `angular-overlays.mjs`: axe over every overlay OPEN, nested and composed; `angular-collections.mjs`: axe over every menu OPEN, submenus included) |
+| RTL | `rtl` wherever React has it | gate | met — 16/16 (this row read 10/10 after Wave C1 while the guard computed 13/13; Wave C2a added the three menus; Angular measures 34 in four direction cases) |
+| Large text | `largeText` wherever React has it | gate | met — 24/24 (Wave C2a added the three menus; Angular measures 40) |
+| Large text | …from a real browser (`large-text.mjs`) | gate | met — 24/24 |
 | Motion | `reducedMotion` wherever React has it | gate | met — 3/3 (switch, accordion, collapsible) |
 | Motion | …from a real browser (`motion.mjs`) | gate | met — 3/3 (Angular's in `angular-browser.mjs`, which also measures the app bar's menu) |
 | Visual | A rendered visual/state gate covers Angular wherever one covers React | gate | met — 12/12: the interactive Card (`kxCard` on a link or button) and `kx-number-input`'s `readonly` closed the two `partial` marks, and input-group and input-otp arrived measured. password-input is measured too but not owed (React's PasswordInput is not separately gated) |
@@ -62,7 +62,7 @@ maturity — they are statements about today, and CI fails the moment one is fal
 | Documentation | The package README's counts, component list and Preview label match the manifest and evidence | always | met (it was stale — 31 components, 69 symbols — and is corrected in this change) |
 | CI | The guard itself: fails if `maturity` is `stable` with any gate criterion open | — | in `ci.yml` |
 
-12 of 13 gate criteria are met; only the catalogue is open (32 planned). Angular stays Preview.
+12 of 13 gate criteria are met; only the catalogue is open (29 planned). Angular stays Preview.
 
 `published` is reported but is not a criterion. Neither is `visual` from verification.json: that kind
 means comparison against stored reference images, which KinetixUI does not keep on any platform.
@@ -233,16 +233,15 @@ was caught:
   on every side" (the surface clips two sides, 1.37:1 and 1.00:1).
 - The close button's focus ring removed → the same row, 1.00:1 on all four sides, light and dark.
 
-### What remains after Wave C1, ranked
+### What remains after Wave C2a, ranked
 
-32 planned. Ranked by what each group unblocks and by the evidence React already holds for it (which Angular
+29 planned. Ranked by what each group unblocks and by the evidence React already holds for it (which Angular
 will owe the moment it implements the component):
 
-1. **Overlays C2 (Wave C, below)** — 9 `overlays` + `menubar`, `navigation-menu` (`navigation`) + `sidebar`.
-   The layer exists now; C2 adds what menus and listboxes need on top of it: roving focus or
-   `aria-activedescendant`, typeahead, submenus that open toward the inline end, and a toast queue. Menus and
-   listboxes (`dropdown-menu`, `context-menu`, `menubar`, `navigation-menu`, `select`, `combobox`,
-   `multi-select`, `command`), notifications (`sonner`, `notification-center`, `tour`), then `sidebar`.
+1. **Overlays C2b and the rest of Wave C (below)** — the listboxes (`select`, `combobox`, `multi-select`,
+   `command`), `navigation-menu`, notifications (`sonner`, `notification-center`, `tour`), then `sidebar`.
+   Wave C2a built the collection core (roving focus, typeahead, direction-aware keys) and the menus on it;
+   C2b adds `aria-activedescendant` and the listbox on the same core, then the toast queue.
 2. **Layout, pointer and scroll** — `scroll-area`, `resizable`, `carousel`, `comparison-slider`. Owes only
    browser axe, so it is cheap, but it brings drag with a keyboard alternative and direction-dependent
    handles, which no implemented Angular component has yet. `table` and `virtual-list` (also `layout`) go
@@ -270,10 +269,13 @@ below its breakpoint.
 | Visual | overlay elevation above raised cards (the slice 1 follow-up), focus ring inside overlays |
 | Proof it creates | a settings flow with dialogs and menus in Angular; overlay parity table |
 
-**C1 is done** (above): the layer and the eight dialog-family members. What follows is C2 and `sidebar`.
+**C1 and C2a are done** (above): the layer, the eight dialog-family members and the three menus. What follows
+is C2b, `navigation-menu`, notifications and `sidebar`.
 
-**Owed by the remaining 12 (React has it):** interaction 6 · rtl 6 · largeText 5 · browser axe 12 · visual gate
-2 (select and multi-select, in `check:entry-visual` and `check:composite-visual`).
+**Owed by the remaining 9 (React has it):** interaction 3 (select, multi-select, tour) · rtl 4
+(navigation-menu, select, multi-select, tour) · largeText 2 (select, multi-select) · browser axe 9 · visual
+gate 2 (select and multi-select, in `check:entry-visual` and `check:composite-visual`). Before C2a this line
+read rtl 6 for the then 12; it was 7 (the three menus, navigation-menu, select, multi-select, tour).
 
 ### Wave D — data and advanced
 
@@ -281,8 +283,9 @@ below its breakpoint.
 `diff-viewer`, `message-bubble`, `calendar`, `date-picker`, `color-picker`, `file-upload`,
 `audio-player`, `kanban-board`, `markdown-editor` (16).
 
-**Why last:** they compose earlier waves — `date-picker` is popover + calendar, `data-table` uses
-dropdown-menu and pagination, `kanban-board` needs drag with a keyboard alternative.
+**Why last:** they compose earlier waves — `date-picker` is popover + calendar, `data-table` composes
+`table` and `button` (React's has its own previous/next paging, not the pagination component, and no
+dropdown menu), `kanban-board` needs drag with a keyboard alternative.
 
 | | |
 |---|---|

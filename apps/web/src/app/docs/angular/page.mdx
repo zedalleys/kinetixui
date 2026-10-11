@@ -171,6 +171,19 @@ suite, so it can't drift from the real API.
   Floating surfaces take a logical side (`start`, `end`), flip and shift to
   stay on screen, follow their trigger through scrolling containers, and
   scroll inside themselves at 200% text.
+- **Menus are one set of parts.** Dropdown menu, context menu and menubar
+  share the same items (`kxMenuItem`, checkbox and radio items, labels,
+  groups, separators, shortcuts, submenus), with `role="menu"`,
+  `menuitem`, `menuitemcheckbox` and `menuitemradio`. Exactly one item is a
+  Tab stop; the arrows stop at the ends of a menu and wrap across a menubar;
+  Home, End and typeahead move too; disabled items are announced with
+  `aria-disabled`, skipped and never run. Running an item closes the whole
+  menu and returns focus to its trigger; Escape closes one level at a time.
+  A submenu sits inside its parent menu in the DOM and opens toward the inline
+  end, by the inline-end arrow (ArrowRight, or ArrowLeft in right-to-left). A
+  context menu opens at the pointer, or from the ContextMenu key and
+  Shift+F10 at the focused element. A keyboard highlight draws a focus ring a
+  pointer highlight does not.
 
 These behaviours are covered by unit tests in jsdom and by
 `check:angular-browser`, which runs the package as a live Angular application
@@ -199,8 +212,9 @@ and it is not counted as Angular coverage.
 stacking, focus, dismissal, scroll locking and positioning. Building that
 separately per component would mean getting it subtly different each time, so
 it was built once, with the dialog family (dialog, alert dialog, modal, sheet,
-drawer, popover, tooltip, hover card), and the menus, listboxes and
-notifications still to come are built on it.
+drawer, popover, tooltip, hover card). The menus (dropdown menu, context menu,
+menubar) are built on it, with one shared collection core for keyboard
+navigation; the listboxes and notifications still to come are built on both.
 
 ## What Stable would require
 
@@ -211,9 +225,9 @@ not by itself change the label, and nothing here is graded on a curve:
 1. **Catalogue target reached** — the waves above complete, or every remaining
    gap reclassified as a native equivalent or a composition with a reason.
 2. **Overlays complete**, on one shared architecture with focus trapping,
-   scroll locking, dismissal and return-focus behaviour. The architecture and
-   the dialog family are in place; menus, listboxes and notifications are
-   not.
+   scroll locking, dismissal and return-focus behaviour. The architecture,
+   the dialog family and the menus are in place; listboxes and notifications
+   are not.
 3. **Forms complete** — every control a `ControlValueAccessor`, validation
    states wired to `aria-invalid`, and error messaging tested.
 4. **Documentation complete** — every shipped component reachable from its own

@@ -200,8 +200,9 @@ const centredOrShifted = (tip, tr, vw) =>
  *                  closes one layer, top first, focus walking back down), a press in the dialog closes only the
  *                  popover and a press in the popover closes nothing, dialog → tooltip, dialog → dialog (the
  *                  inner closes alone, the page stays locked until the outer closes; when the inner trigger is
- *                  removed as it closes, focus goes back to the outer dialog, not the page), and closing the
- *                  dialog closes what is nested in it
+ *                  removed as it closes, focus goes back to the outer dialog, not the page), dialog → menu
+ *                  (Escape and a press in the dialog close the menu alone, focus back on the menu's trigger;
+ *                  the next Escape closes the dialog), and closing the dialog closes what is nested in it
  *   KxAlertDialog  `role="alertdialog"`, named and described; first focus Cancel, never the destructive
  *                  action; the backdrop does not dismiss; Escape cancels; no X; Tab cycles Cancel and the
  *                  action. Focus restoration when the trigger is gone: to `returnFocus`, and when there is no
@@ -363,6 +364,21 @@ const BEHAVIOUR = [
       await press(page, "Escape");
       t(!(await locked(page)) && !(await showing(page, "#dlg-content")), "nested: the page unlocks when the last modal closes");
       t(total(await documentListeners(page)) === total(before), "nothing left listening after every nested case", JSON.stringify(await documentListeners(page)));
+
+      // ── dialog → menu: one Escape closes the menu alone, focus back on its trigger; the next closes the dialog ──
+      await click(page, "#dlg-trigger");
+      await focus(page, "#dlg-menu-trigger");
+      await press(page, "Enter");
+      t((await showing(page, "#dlg-menu-content")) && (await active(page)) === "dlg-menu-first", "nested: a menu opens in the dialog, focus on its first item", await active(page));
+      await press(page, "Escape");
+      t(!(await showing(page, "#dlg-menu-content")) && (await showing(page, "#dlg-content")) && (await out(page, "dialog-menu")) === "false", "nested: Escape closes the menu, not the dialog");
+      t((await active(page)) === "dlg-menu-trigger", "nested: focus returns to the menu's trigger, inside the dialog", await active(page));
+      await press(page, "Enter");
+      const menuTitle = await rectOf(page, "#dlg-content .kx-dialog__title");
+      await pressAt(page, menuTitle.left + 4, menuTitle.top + menuTitle.height / 2);
+      t(!(await showing(page, "#dlg-menu-content")) && (await showing(page, "#dlg-content")), "nested: a press in the dialog outside the menu closes only the menu");
+      await press(page, "Escape");
+      t(!(await showing(page, "#dlg-content")) && !(await locked(page)), "nested: the next Escape closes the dialog");
 
       // ── dialog → dialog, the inner trigger removed as the inner dialog closes: focus stays in the outer dialog ──
       await click(page, "#dlg-trigger");
