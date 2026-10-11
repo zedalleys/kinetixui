@@ -1,5 +1,5 @@
 /** Application-side session, not a package export. Credentials belong to the server caller. */
-import { applyDeviceSignals, createDeviceLedger, expireDeviceCommands, requestDeviceChange, selectDeviceConnectivity, type KinetixDeviceSignal } from "../../src/functions";
+import { applyDeviceSignals, createDeviceLedger, expireDeviceCommands, requestDeviceChange, selectDeviceConnectivity, type KinetixDeviceLedger, type KinetixDeviceSignal, type KinetixLedgerTransition } from "../../src/functions";
 import { encodeHomeAssistantCommand, translateHomeAssistantMessage, type HomeAssistantEntityMap, type HomeAssistantMessage } from "./adapter";
 
 export type Socket = {
@@ -37,6 +37,11 @@ export function createLiveSession(options: {
   timeoutMs?: number;
   retryMs?: number;
   maxRetries?: number;
+  /**
+   * Validation observer: every ledger change with its cause, after it is applied. Receives only the
+   * provider-neutral ledger and transitions, never a frame, URL or credential.
+   */
+  onLedger?: (update: { cause: "signals" | "request" | "expire"; transitions: KinetixLedgerTransition[]; ledger: KinetixDeviceLedger; at: number }) => void;
 }) {
   const endpoint = validateEndpoint(options.endpoint, options.allowLoopback);
   const entities = Object.fromEntries(Object.entries(options.entities).map(([entity, target]) => {
@@ -64,8 +69,17 @@ export function createLiveSession(options: {
   let retryAt = 0;
   let retries = 0;
   let fault: string | undefined;
+  let providerVersion: string | undefined;
   const pending = new Map<number, Pending>();
-  const apply = (signals: KinetixDeviceSignal[]) => { ledger = applyDeviceSignals(ledger, signals, options.now()).ledger; };
+  const observe = (cause: "signals" | "request" | "expire", transitions: KinetixLedgerTransition[], at: number) => {
+    if (transitions.length) options.onLedger?.({ cause, transitions, ledger, at });
+  };
+  const apply = (signals: KinetixDeviceSignal[]) => {
+    const at = options.now();
+    const update = applyDeviceSignals(ledger, signals, at);
+    ledger = update.ledger;
+    observe("signals", update.transitions, at);
+  };
   const detach = () => {
     generation++;
     const old = socket;
@@ -99,6 +113,10 @@ export function createLiveSession(options: {
     try { m = JSON.parse(raw); } catch { return lost("invalid-json"); }
     if (!object(m) || typeof m.type !== "string") return lost("invalid-message");
     if (m.type === "auth_invalid") return lost("auth-invalid", true);
+    // The provider's own version string, kept only when it looks like one (evidence records need it).
+    if ((m.type === "auth_required" || m.type === "auth_ok") && typeof m.ha_version === "string" && /^[0-9A-Za-z.+-]{1,32}$/.test(m.ha_version)) {
+      providerVersion = m.ha_version;
+    }
     if (phase === "auth-required" && m.type === "auth_required") {
       phase = "auth-ok";
       phaseDeadline = options.now() + timeoutMs;
@@ -165,14 +183,16 @@ export function createLiveSession(options: {
   };
   return {
     getLedger: () => ledger,
-    status: () => ({ phase, fault, retries, pendingRequests: pending.size }),
+    status: () => ({ phase, fault, retries, pendingRequests: pending.size, providerVersion }),
     start() { if (phase === "stopped") open(); },
     stop() { detach(); phase = "stopped"; },
     request(deviceId: string, value: "on" | "off") {
       if (value !== "on" && value !== "off") return false;
       if (phase !== "ready" || pending.size >= 64 || selectDeviceConnectivity(ledger, deviceId).state !== "online") return false;
-      const update = requestDeviceChange(ledger, { commandId: options.nextCommandId(), deviceId, capabilityId: "power", value }, options.now());
+      const at = options.now();
+      const update = requestDeviceChange(ledger, { commandId: options.nextCommandId(), deviceId, capabilityId: "power", value }, at);
       ledger = update.ledger;
+      observe("request", update.transitions, at);
       if (!update.intent) return false;
       const call = encodeHomeAssistantCommand(update.intent, { entities });
       if (!call) return false;
@@ -183,7 +203,9 @@ export function createLiveSession(options: {
     /** Server owner schedules this clock; deadlines include auth, setup and command expiry. */
     tick() {
       const now = options.now();
-      ledger = expireDeviceCommands(ledger, now, { timeoutMs }).ledger;
+      const expired = expireDeviceCommands(ledger, now, { timeoutMs });
+      ledger = expired.ledger;
+      observe("expire", expired.transitions, now);
       if (["auth-required", "auth-ok"].includes(phase) && now >= phaseDeadline) lost("auth-timeout");
       for (const [id, entry] of pending) {
         if (now < entry.deadline) continue;
