@@ -195,6 +195,27 @@ import {
   KxMenubarMenu,
   KxMenubarTrigger,
 } from '../lib/menu';
+import {
+  KxSelect,
+  KxSelectContent,
+  KxSelectGroup,
+  KxSelectItem,
+  KxSelectLabel,
+  KxSelectSeparator,
+  KxSelectTrigger,
+  KxSelectValue,
+} from '../lib/select';
+import {
+  KxCommand,
+  KxCommandEmpty,
+  KxCommandGroup,
+  KxCommandInput,
+  KxCommandItem,
+  KxCommandList,
+  KxCommandSeparator,
+  KxCommandShortcut,
+} from '../lib/command';
+import { KxMultiSelect, type KxMultiSelectOption } from '../lib/multi-select';
 
 /* ── primitives ─────────────────────────────────────────────────────────── */
 
@@ -1320,5 +1341,147 @@ export class MenubarDemo {
   bookmarks = true;
   fullUrls = false;
   zoom = '100';
+}
+// kx-usage:end
+
+// kx-usage:select-demo
+@Component({
+  selector: 'app-select-demo',
+  imports: [KxLabel, KxSelect, KxSelectTrigger, KxSelectValue, KxSelectContent, KxSelectGroup, KxSelectLabel, KxSelectItem, KxSelectSeparator],
+  template: `
+    <label kxLabel for="fruit">Fruit</label>
+    <kx-select [(value)]="fruit">
+      <button kxSelectTrigger id="fruit"><kx-select-value placeholder="Select a fruit" /></button>
+      <kx-select-content>
+        <kx-select-group>
+          <kx-select-label>Fruit</kx-select-label>
+          <kx-select-item value="apple">Apple</kx-select-item>
+          <kx-select-item value="banana">Banana</kx-select-item>
+          <kx-select-item value="blueberry">Blueberry</kx-select-item>
+        </kx-select-group>
+        <kx-select-separator />
+        <kx-select-group>
+          <kx-select-label>Out of season</kx-select-label>
+          <kx-select-item value="cherry" disabled>Cherry</kx-select-item>
+        </kx-select-group>
+      </kx-select-content>
+    </kx-select>
+  `,
+  styles: `
+    :host { display: grid; gap: var(--spacing-2); max-inline-size: 16rem; }
+  `,
+})
+export class SelectDemo {
+  fruit: string | null = null;
+}
+// kx-usage:end
+
+// kx-usage:command-demo
+@Component({
+  selector: 'app-command-demo',
+  imports: [KxCommand, KxCommandInput, KxCommandList, KxCommandEmpty, KxCommandGroup, KxCommandItem, KxCommandSeparator, KxCommandShortcut],
+  template: `
+    <kx-command label="Commands">
+      <input kxCommandInput placeholder="Type a command or search…" />
+      <kx-command-list>
+        <kx-command-empty>No results found.</kx-command-empty>
+        <kx-command-group heading="Suggestions">
+          <kx-command-item value="calendar" (select)="ran = $event">Calendar</kx-command-item>
+          <kx-command-item value="emoji" [keywords]="['smiley', 'face']" (select)="ran = $event">Search emoji</kx-command-item>
+          <kx-command-item value="launch" disabled>Launch</kx-command-item>
+        </kx-command-group>
+        <kx-command-separator />
+        <kx-command-group heading="Settings">
+          <kx-command-item value="profile" (select)="ran = $event">Profile <kx-command-shortcut>Ctrl+P</kx-command-shortcut></kx-command-item>
+          <kx-command-item value="billing" (select)="ran = $event">Billing <kx-command-shortcut>Ctrl+B</kx-command-shortcut></kx-command-item>
+        </kx-command-group>
+      </kx-command-list>
+    </kx-command>
+  `,
+  styles: `
+    :host { display: block; max-inline-size: 26rem; }
+  `,
+})
+export class CommandDemo {
+  ran = '';
+}
+// kx-usage:end
+
+// kx-usage:combobox-demo
+// Combobox is a recipe, not a component: a popover holding a command. There is no KxCombobox to import.
+@Component({
+  selector: 'app-combobox-demo',
+  imports: [KxButton, KxPopover, KxPopoverTrigger, KxPopoverContent, KxCommand, KxCommandInput, KxCommandList, KxCommandEmpty, KxCommandGroup, KxCommandItem],
+  template: `
+    <kx-popover [(open)]="open">
+      <button kxButton variant="Outline" kxPopoverTrigger class="combobox-trigger">
+        {{ labelOf(framework) ?? 'Select framework…' }}
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M5 6l3-3 3 3M5 10l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+      <kx-popover-content side="bottom" align="start" label="Frameworks">
+        <kx-command label="Frameworks">
+          <input kxCommandInput placeholder="Search framework…" />
+          <kx-command-list>
+            <kx-command-empty>No framework found.</kx-command-empty>
+            <kx-command-group>
+              @for (f of frameworks; track f.value) {
+                <kx-command-item [value]="f.value" (select)="choose($event)">
+                  <svg class="combobox-check" [class.combobox-check--on]="framework === f.value" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                  {{ f.label }}
+                </kx-command-item>
+              }
+            </kx-command-group>
+          </kx-command-list>
+        </kx-command>
+      </kx-popover-content>
+    </kx-popover>
+  `,
+  styles: `
+    .combobox-trigger { inline-size: 15rem; justify-content: space-between; }
+    .combobox-trigger svg, .combobox-check { inline-size: 1rem; block-size: 1rem; flex: none; }
+    .combobox-check { visibility: hidden; }
+    .combobox-check--on { visibility: visible; }
+  `,
+})
+export class ComboboxDemo {
+  open = false;
+  framework: string | null = null;
+  readonly frameworks = [
+    { value: 'next', label: 'Next.js' },
+    { value: 'sveltekit', label: 'SvelteKit' },
+    { value: 'nuxt', label: 'Nuxt' },
+    { value: 'remix', label: 'Remix' },
+    { value: 'astro', label: 'Astro' },
+  ];
+  labelOf(value: string | null): string | null {
+    return this.frameworks.find((f) => f.value === value)?.label ?? null;
+  }
+  choose(value: string): void {
+    this.framework = value === this.framework ? null : value;
+    this.open = false;
+  }
+}
+// kx-usage:end
+
+// kx-usage:multi-select-demo
+@Component({
+  selector: 'app-multi-select-demo',
+  imports: [KxLabel, KxMultiSelect],
+  template: `
+    <label kxLabel for="platforms">Platforms</label>
+    <kx-multi-select inputId="platforms" [options]="platforms" [(value)]="chosen" placeholder="Select platforms…" />
+  `,
+  styles: `
+    :host { display: grid; gap: var(--spacing-2); max-inline-size: 24rem; }
+  `,
+})
+export class MultiSelectDemo {
+  chosen = ['react', 'swiftui'];
+  readonly platforms: KxMultiSelectOption[] = [
+    { value: 'react', label: 'React' },
+    { value: 'swiftui', label: 'SwiftUI' },
+    { value: 'compose', label: 'Jetpack Compose' },
+    { value: 'flutter', label: 'Flutter' },
+  ];
 }
 // kx-usage:end

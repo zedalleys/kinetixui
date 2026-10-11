@@ -191,3 +191,18 @@ export {
   KxMenubarMenu,
   KxMenubarTrigger,
 } from './lib/menu';
+export { KxSelect, KxSelectContent, KxSelectGroup, KxSelectItem, KxSelectLabel, KxSelectSeparator, KxSelectTrigger, KxSelectValue } from './lib/select';
+export type { KxCommandFilter, KxCommandFilterItem } from './lib/command';
+export {
+  KxCommand,
+  KxCommandDialog,
+  KxCommandEmpty,
+  KxCommandGroup,
+  KxCommandInput,
+  KxCommandItem,
+  KxCommandList,
+  KxCommandSeparator,
+  KxCommandShortcut,
+} from './lib/command';
+export type { KxMultiSelectOption } from './lib/multi-select';
+export { KxMultiSelect } from './lib/multi-select';

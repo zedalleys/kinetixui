@@ -53,6 +53,17 @@
     "KxCollapsible",
     "KxCollapsibleContent",
     "KxCollapsibleTrigger",
+    "KxCommand",
+    "KxCommandDialog",
+    "KxCommandEmpty",
+    "KxCommandFilter",
+    "KxCommandFilterItem",
+    "KxCommandGroup",
+    "KxCommandInput",
+    "KxCommandItem",
+    "KxCommandList",
+    "KxCommandSeparator",
+    "KxCommandShortcut",
     "KxContextMenu",
     "KxContextMenuContent",
     "KxContextMenuTrigger",
@@ -132,6 +143,8 @@
     "KxMetric",
     "KxModal",
     "KxModalType",
+    "KxMultiSelect",
+    "KxMultiSelectOption",
     "KxNativeSelect",
     "KxNavigationBar",
     "KxNumberInput",
@@ -157,6 +170,14 @@
     "KxRating",
     "KxSegment",
     "KxSegmentedControl",
+    "KxSelect",
+    "KxSelectContent",
+    "KxSelectGroup",
+    "KxSelectItem",
+    "KxSelectLabel",
+    "KxSelectSeparator",
+    "KxSelectTrigger",
+    "KxSelectValue",
     "KxSeparator",
     "KxSheet",
     "KxSheetContent",
@@ -726,6 +747,124 @@
       "inputs": [],
       "outputs": [],
       "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCommand",
+      "kind": "component",
+      "selector": "kx-command",
+      "inputs": [
+        "filter",
+        "label",
+        "search"
+      ],
+      "outputs": [
+        "searchChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCommandDialog",
+      "kind": "component",
+      "selector": "kx-command-dialog",
+      "inputs": [
+        "label",
+        "open",
+        "returnFocus"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxDialogRoot",
+      "exported": true
+    },
+    {
+      "name": "KxCommandEmpty",
+      "kind": "component",
+      "selector": "kx-command-empty",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCommandGroup",
+      "kind": "component",
+      "selector": "kx-command-group",
+      "inputs": [
+        "heading"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCommandInput",
+      "kind": "directive",
+      "selector": "input[kxCommandInput]",
+      "inputs": [
+        "aria-labelledby"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCommandItem",
+      "kind": "component",
+      "selector": "kx-command-item",
+      "inputs": [
+        "disabled",
+        "id",
+        "keywords",
+        "textValue",
+        "value"
+      ],
+      "outputs": [
+        "select"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxOptionBase",
+      "exported": true
+    },
+    {
+      "name": "KxCommandList",
+      "kind": "component",
+      "selector": "kx-command-list",
+      "inputs": [
+        "id"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCommandSeparator",
+      "kind": "component",
+      "selector": "kx-command-separator",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCommandShortcut",
+      "kind": "component",
+      "selector": "kx-command-shortcut",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
       "standalone": true,
       "exported": true
     },
@@ -1766,6 +1905,31 @@
       "exported": false
     },
     {
+      "name": "KxMultiSelect",
+      "kind": "component",
+      "selector": "kx-multi-select",
+      "inputs": [
+        "aria-describedby",
+        "aria-invalid",
+        "aria-label",
+        "aria-labelledby",
+        "creatable",
+        "disabled",
+        "emptyLabel",
+        "inputId",
+        "options",
+        "placeholder",
+        "value"
+      ],
+      "outputs": [
+        "valueChange"
+      ],
+      "projectsContent": false,
+      "standalone": true,
+      "extends": "KxOptionField",
+      "exported": true
+    },
+    {
       "name": "KxNativeSelect",
       "kind": "directive",
       "selector": "select[kxNativeSelect]",
@@ -1819,6 +1983,48 @@
       "standalone": true,
       "extends": "KxValueBase",
       "exported": true
+    },
+    {
+      "name": "KxOptionBase",
+      "kind": "directive",
+      "selector": null,
+      "inputs": [
+        "disabled",
+        "id",
+        "textValue"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": false
+    },
+    {
+      "name": "KxOptionField",
+      "kind": "directive",
+      "selector": null,
+      "inputs": [
+        "disabled"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": false
+    },
+    {
+      "name": "KxOptionPopup",
+      "kind": "directive",
+      "selector": null,
+      "inputs": [
+        "align",
+        "id",
+        "offset",
+        "side"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "extends": "KxFloatingSurface",
+      "exported": false
     },
     {
       "name": "KxPageHeader",
@@ -2110,6 +2316,110 @@
         "valueChange"
       ],
       "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSelect",
+      "kind": "component",
+      "selector": "kx-select",
+      "inputs": [
+        "disabled",
+        "value"
+      ],
+      "outputs": [
+        "valueChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxOptionField",
+      "exported": true
+    },
+    {
+      "name": "KxSelectContent",
+      "kind": "component",
+      "selector": "kx-select-content",
+      "inputs": [
+        "align",
+        "id",
+        "offset",
+        "side"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxOptionPopup",
+      "exported": true
+    },
+    {
+      "name": "KxSelectGroup",
+      "kind": "component",
+      "selector": "kx-select-group",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSelectItem",
+      "kind": "component",
+      "selector": "kx-select-item",
+      "inputs": [
+        "disabled",
+        "id",
+        "textValue",
+        "value"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxOptionBase",
+      "exported": true
+    },
+    {
+      "name": "KxSelectLabel",
+      "kind": "component",
+      "selector": "kx-select-label",
+      "inputs": [
+        "id"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSelectSeparator",
+      "kind": "component",
+      "selector": "kx-select-separator",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSelectTrigger",
+      "kind": "component",
+      "selector": "button[kxSelectTrigger]",
+      "inputs": [
+        "id"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSelectValue",
+      "kind": "component",
+      "selector": "kx-select-value",
+      "inputs": [
+        "placeholder"
+      ],
+      "outputs": [],
+      "projectsContent": false,
       "standalone": true,
       "exported": true
     },
@@ -2528,6 +2838,10 @@
       "definition": "'Primary' | 'Secondary' | 'Outline' | 'Destructive' | 'Ghost' | 'Link'"
     },
     {
+      "name": "KxCommandFilter",
+      "definition": "(search: string, item: KxCommandFilterItem) => boolean"
+    },
+    {
       "name": "KxCorners",
       "definition": "'sharp' | 'default' | 'pill'"
     },
@@ -2578,6 +2892,10 @@
     {
       "name": "KxOrientation",
       "definition": "'horizontal' | 'vertical'"
+    },
+    {
+      "name": "KxSelectionMode",
+      "definition": "'single' | 'multiple' | 'none'"
     },
     {
       "name": "KxSheetSide",

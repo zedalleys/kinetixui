@@ -184,6 +184,17 @@ suite, so it can't drift from the real API.
   context menu opens at the pointer, or from the ContextMenu key and
   Shift+F10 at the focused element. A keyboard highlight draws a focus ring a
   pointer highlight does not.
+- **Listboxes keep focus where you type.** Select, command and multi-select
+  share one listbox layer: the trigger, the search field or the input keeps
+  focus, and `aria-activedescendant` names the highlighted option, which is
+  never a disabled one and never one a filter has hidden. Select is the
+  select-only combobox (a `role="combobox"` button over a `role="listbox"`);
+  `aria-selected` marks the chosen option, apart from the highlight, and a
+  closed select chooses by typeahead. Command filters locally — the query is
+  never sent anywhere — and composes into a page, a popover or the command
+  dialog. Multi-select holds its choices as chips whose remove buttons are
+  named "Remove …", and keeps focus on a neighbour when one is removed.
+  Combobox is a recipe — a popover holding a command — not a component.
 
 These behaviours are covered by unit tests in jsdom and by
 `check:angular-browser`, which runs the package as a live Angular application
@@ -214,7 +225,8 @@ separately per component would mean getting it subtly different each time, so
 it was built once, with the dialog family (dialog, alert dialog, modal, sheet,
 drawer, popover, tooltip, hover card). The menus (dropdown menu, context menu,
 menubar) are built on it, with one shared collection core for keyboard
-navigation; the listboxes and notifications still to come are built on both.
+navigation, and the listboxes (select, command, multi-select and the combobox
+recipe) on both; the notifications still to come are built on it too.
 
 ## What Stable would require
 
@@ -226,8 +238,8 @@ not by itself change the label, and nothing here is graded on a curve:
    gap reclassified as a native equivalent or a composition with a reason.
 2. **Overlays complete**, on one shared architecture with focus trapping,
    scroll locking, dismissal and return-focus behaviour. The architecture,
-   the dialog family and the menus are in place; listboxes and notifications
-   are not.
+   the dialog family, the menus and the listboxes are in place;
+   notifications are not.
 3. **Forms complete** — every control a `ControlValueAccessor`, validation
    states wired to `aria-invalid`, and error messaging tested.
 4. **Documentation complete** — every shipped component reachable from its own

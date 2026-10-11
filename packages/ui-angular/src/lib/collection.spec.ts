@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  KxActiveDescendant,
   KxRovingFocus,
   KxTypeahead,
   inlineKey,
@@ -7,7 +8,9 @@ import {
   isTypeaheadKey,
   moveForKey,
   moveIndex,
+  readableText,
   typeaheadMatch,
+  type KxDescendantItem,
   type KxRovingItem,
 } from './collection';
 
@@ -202,5 +205,77 @@ describe('KxRovingFocus', () => {
     items[1]!.label = 'Rename';
     roving.focus(items[0]!);
     expect(roving.match('r', (i) => (i as { label: string }).label)).toBe(items[1]);
+  });
+});
+
+describe('KxActiveDescendant', () => {
+  type Item = KxDescendantItem & { label: string; disabled: boolean; hidden: boolean };
+  const make = (labels: string[], disabled: number[] = [], hidden: number[] = []) => {
+    const items: Item[] = labels.map((label, i) => {
+      const el = document.createElement('div');
+      el.id = `opt-${i}`;
+      return { el, label, disabled: disabled.includes(i), hidden: hidden.includes(i), domId: () => el.id, isDisabled() { return this.disabled; }, isHidden() { return this.hidden; } };
+    });
+    return { items, ad: new KxActiveDescendant<Item>(() => items) };
+  };
+
+  it('starts on nothing, and resets to the first enabled visible item', () => {
+    const { items, ad } = make(['A', 'B', 'C'], [0]);
+    expect(ad.activeId()).toBeNull();
+    expect(ad.reset()).toBe(items[1]);
+    expect(ad.activeId()).toBe('opt-1');
+  });
+
+  it('refuses a disabled or hidden item, and prefers a valid preferred one', () => {
+    const { items, ad } = make(['A', 'B', 'C'], [1], [2]);
+    expect(ad.set(items[1]!)).toBeNull();
+    expect(ad.set(items[2]!)).toBeNull();
+    expect(ad.reset(items[2]!)).toBe(items[0]);
+    expect(ad.reset(items[0]!)).toBe(items[0]);
+  });
+
+  it('moves over visible items only, stopping or wrapping at the ends', () => {
+    const { items, ad } = make(['A', 'B', 'C', 'D'], [1], [2]);
+    ad.reset();
+    expect(ad.target('next', false)).toBe(items[3]);
+    ad.set(items[3]!);
+    expect(ad.target('next', false)).toBeNull();
+    expect(ad.target('next', true)).toBe(items[0]);
+    expect(ad.target('last', false, null)).toBe(items[3]);
+  });
+
+  it('never names an item that became hidden or disabled: current and activeId drop it', () => {
+    const { items, ad } = make(['A', 'B']);
+    ad.set(items[1]!);
+    expect(ad.activeId()).toBe('opt-1');
+    // computed() reads plain fields here, so read through a fresh instance over the changed items
+    items[1]!.hidden = true;
+    const again = new KxActiveDescendant<Item>(() => items);
+    again.active.set(items[1]!);
+    expect(again.current()).toBeNull();
+    expect(again.activeId()).toBeNull();
+    items[1]!.hidden = false;
+    items[1]!.disabled = true;
+    const third = new KxActiveDescendant<Item>(() => items);
+    third.active.set(items[1]!);
+    expect(third.activeId()).toBeNull();
+  });
+
+  it('matches typeahead over visible items from the current one', () => {
+    const { items, ad } = make(['Apple', 'Banana', 'Blueberry', 'Cherry'], [2]);
+    ad.reset();
+    expect(ad.match('b', (i) => i.label)).toBe(items[1]);
+    expect(ad.match('bl', (i) => i.label)).toBeNull();
+    ad.set(items[1]!);
+    expect(ad.match('c', (i) => i.label)).toBe(items[3]);
+  });
+});
+
+describe('readableText', () => {
+  it('reads an element’s text without what it is told to skip, collapsing whitespace', () => {
+    const el = document.createElement('div');
+    el.innerHTML = 'Profile <span aria-hidden="true">✓</span>\n  page <kbd class="k">Ctrl+P</kbd>';
+    expect(readableText(el)).toBe('Profile page Ctrl+P');
+    expect(readableText(el, '.k, [aria-hidden="true"]')).toBe('Profile page');
   });
 });
