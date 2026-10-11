@@ -130,13 +130,13 @@ ${desc}
 
 <ComponentPreview name="${slug}-demo" />
 
-## Installation
+## React installation
 
 \`\`\`bash
 npx @kinetixui/cli add ${slug}
 \`\`\`
 
-## Usage
+## React usage
 
 \`\`\`tsx
 import { ${exports} } from "@kinetixui/ui";

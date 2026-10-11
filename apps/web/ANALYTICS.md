@@ -63,8 +63,8 @@ explicit that installs are not measurable on-site, and there is deliberately no 
 
 | Event | Fires when | Owner |
 | --- | --- | --- |
-| `cli_command_copied` | a `npx @kinetixui/cli …` command is copied | `HeroCommand` (homepage) and `CodePre` (any docs fence) |
-| `install_command_copied` | an `npm i @kinetixui/…` (or pnpm / yarn / bun add) command is copied | `CodePre` |
+| `cli_command_copied` | a `npx @kinetixui/cli …` command is copied | `HeroCommand` (homepage), `CodePre` (any docs fence) and the install strip on component pages (`ComponentMeta`) |
+| `install_command_copied` | an `npm i @kinetixui/…` (or pnpm / yarn / bun add) command is copied, or a native port's install snippet is copied: a `Package.swift` dependency on `packages/ui-swiftui`, a Gradle `":kinetixui-ui"` registration, a `kinetix_ui:` pubspec entry, or a git command that clones or pins this repository on that port's setup page. Native copies carry the manifest package (`KinetixUI`, `com.kinetixui:ui-compose`, `kinetix_ui`) and `platform`; npm copies carry the package only | `CodePre`, and the install strip on component pages (`ComponentMeta`) |
 | `component_code_copied` | a component's code is copied, with its component and platform | `ComponentPreview` code tabs and `CodePre` on a component page |
 | `block_code_copied` | a block's source is copied on `/blocks`, with its block and platform | `Showcase` (`analyticsBlock` set by the blocks gallery only) |
 
@@ -77,7 +77,7 @@ explicit that installs are not measurable on-site, and there is deliberately no 
 | `component_viewed` | a component's docs page is viewed | `AnalyticsProvider` |
 | `changelog_viewed` | `/docs/changelog` is viewed | `AnalyticsProvider` |
 | `cta_clicked` | a link marked with `ctaAttrs(source, target)` is clicked | `AnalyticsProvider` listener; markup on the homepage |
-| `platform_selected` | the user switches a platform tab: in a component's code view, a block's code view on `/blocks` (with `block`), or the homepage cross-platform example | `ComponentPreview`, `Showcase`, `CrossPlatformFlagship` |
+| `platform_selected` | the user switches a platform tab: in a component's code view, a block's code view on `/blocks` (with `block`), or the homepage cross-platform example. The choice is shared by every switcher and remembered between pages (`platform-preference.ts`); restoring it on a later page, or opening a page with `?platform=`, is not a selection and fires nothing | `ComponentPreview`, `Showcase`, `CrossPlatformFlagship` |
 | `github_clicked` | a link into our GitHub repository is clicked | `AnalyticsProvider` listener |
 | `npm_clicked` | a link to one of our npm packages is clicked | `AnalyticsProvider` listener |
 | `external_link_clicked` | a link to a listed external host with no more specific event (today: the Figma file) | `AnalyticsProvider` listener |

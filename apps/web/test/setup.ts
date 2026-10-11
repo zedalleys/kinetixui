@@ -43,3 +43,21 @@ if (typeof window !== "undefined") {
   Element.prototype.releasePointerCapture ??= vi.fn();
   Element.prototype.scrollIntoView ??= vi.fn();
 }
+
+/**
+ * The reader's platform is remembered (module memory + localStorage) so it carries across pages. Across tests
+ * that would carry a platform picked in one test into the next, so every test starts from no choice at all.
+ * Not a product shim: it is the test-isolation half of `platform-preference.ts`.
+ */
+if (typeof window !== "undefined") {
+  const { afterEach } = await import("vitest");
+  const { resetPlatformPreferenceForTests } = await import("../src/lib/platform-preference");
+  afterEach(() => {
+    resetPlatformPreferenceForTests();
+    try {
+      window.localStorage.clear();
+    } catch {
+      // storage unavailable in this environment: nothing was remembered
+    }
+  });
+}
