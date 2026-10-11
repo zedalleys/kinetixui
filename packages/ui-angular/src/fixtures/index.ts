@@ -5,6 +5,7 @@ import { CollectionsFixture } from './collections';
 import { CompositeStates } from './composite';
 import { CompositionsFixture } from './compositions';
 import { EntryStates } from './entry';
+import { ListboxesFixture } from './listboxes';
 import { NavigationFixture } from './navigation';
 import { OverlayCompositionsFixture } from './overlay-compositions';
 import { OverlaysFixture } from './overlays';
@@ -25,6 +26,7 @@ export const FIXTURES: Record<string, Type<unknown>> = {
   composite: CompositeStates,
   compositions: CompositionsFixture,
   entry: EntryStates,
+  listboxes: ListboxesFixture,
   navigation: NavigationFixture,
   overlays: OverlaysFixture,
   'overlay-compositions': OverlayCompositionsFixture,

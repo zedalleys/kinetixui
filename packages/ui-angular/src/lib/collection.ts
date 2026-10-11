@@ -36,11 +36,24 @@ import { computed, signal } from '@angular/core';
  * items left out. A buffer of one repeated character ("ddd") cycles through the items starting with it
  * instead of searching for "ddd" — the way a native select and Radix behave.
  *
- * ── Roving focus ───────────────────────────────────────────────────────────
+ * ── Two ways to say which item is current ──────────────────────────────────
  *
- * One item holds `tabindex="0"`, every other item `-1`: the active one, or when nothing is active the first
- * enabled one. Moving focus moves the stop with it, so the collection is a single Tab stop and focus is where
- * the keyboard left it.
+ * The same walk (moveIndex, typeahead, disabled-skip) drives two focus models, and a collection uses one:
+ *
+ *   roving focus        DOM focus moves onto the item. Menus (Wave C2a): each item is a real focus target.
+ *   active descendant   DOM focus STAYS where the reader is typing or pressing — a select's trigger, a
+ *                       command palette's search field, a multi-select's input — and the focused element's
+ *                       `aria-activedescendant` names the current item (Wave C2b, listbox.ts). The items are
+ *                       never focused, so typing keeps reaching the field.
+ *
+ * Roving focus: one item holds `tabindex="0"`, every other item `-1`: the active one, or when nothing is
+ * active the first enabled one. Moving focus moves the stop with it, so the collection is a single Tab stop and
+ * focus is where the keyboard left it.
+ *
+ * Active descendant: `current` is never a stale reference. It is the active item only while that item is
+ * still in the collection, not filtered out and not disabled; otherwise it is null, so the id the field points
+ * at always names a rendered, operable element — a filter that removes the active item takes the reference
+ * with it in the same change, rather than leaving the field pointing at nothing.
  */
 
 export type KxOrientation = 'vertical' | 'horizontal';
@@ -129,6 +142,23 @@ export function typeaheadMatch(labels: readonly string[], isDisabled: (index: nu
   return -1;
 }
 
+/**
+ * The text a reader would type to find an item: its own text, leaving out anything hidden from assistive
+ * technology and anything matching `skip` (a menu item's shortcut, say). Whitespace is collapsed.
+ */
+export function readableText(el: Element, skip = '[aria-hidden="true"]'): string {
+  let out = '';
+  for (const node of Array.from(el.childNodes)) {
+    if (node.nodeType === 3) out += node.textContent ?? '';
+    else if (node.nodeType === 1) {
+      const child = node as Element;
+      if (child.matches(skip)) continue;
+      out += readableText(child, skip);
+    }
+  }
+  return out.replace(/\s+/g, ' ').trim();
+}
+
 /** The typeahead buffer: characters typed in quick succession, cleared `resetMs` after the last one. */
 export class KxTypeahead {
   private buffer = '';
@@ -204,6 +234,72 @@ export class KxRovingFocus<T extends KxRovingItem> {
       items.map(text),
       (k) => items[k]!.isDisabled(),
       active ? items.indexOf(active) : -1,
+      search,
+    );
+    return i === -1 ? null : items[i]!;
+  }
+}
+
+/** An item an active-descendant collection can hold. */
+export interface KxDescendantItem {
+  readonly el: HTMLElement;
+  /** The id `aria-activedescendant` names: the item's own element id. */
+  domId(): string;
+  isDisabled(): boolean;
+  /** Filtered out: not rendered, not walked, never current. */
+  isHidden(): boolean;
+}
+
+/**
+ * Active descendant over a collection: focus stays on the field, and `activeId` is what the field's
+ * `aria-activedescendant` says. `items` is read on demand, like `KxRovingFocus`'s, so the walk follows items
+ * being added, removed, filtered, disabled or enabled.
+ */
+export class KxActiveDescendant<T extends KxDescendantItem> {
+  /** The item last made active. Read `current`, which drops it the moment it stops being a valid target. */
+  readonly active = signal<T | null>(null);
+  constructor(private readonly items: () => readonly T[]) {}
+
+  /** The items the reader can see, in document order. */
+  readonly visible = computed(() => this.items().filter((i) => !i.isHidden()));
+
+  /** The active item while it is present, visible and enabled; otherwise null — never a stale reference. */
+  readonly current = computed<T | null>(() => {
+    const active = this.active();
+    return active && !active.isDisabled() && this.visible().includes(active) ? active : null;
+  });
+
+  /** The id the field's `aria-activedescendant` names, or null. */
+  readonly activeId = computed(() => this.current()?.domId() ?? null);
+
+  /** The item a move lands on from `from` (the current item by default), over the visible items, or null. */
+  target(move: KxMove, wrap: boolean, from: T | null = this.current()): T | null {
+    const items = this.visible();
+    const at = from ? items.indexOf(from) : -1;
+    const i = moveIndex(items.length, at, move, (k) => items[k]!.isDisabled(), wrap);
+    return i === -1 ? null : items[i]!;
+  }
+
+  /** Make `item` current. A disabled or filtered-out item never becomes current; null clears it. */
+  set(item: T | null): T | null {
+    if (item && (item.isDisabled() || item.isHidden())) return this.current();
+    this.active.set(item);
+    return item;
+  }
+
+  /** Current becomes `preferred` when it can be, else the first enabled visible item, else nothing. */
+  reset(preferred: T | null = null): T | null {
+    if (preferred && !preferred.isDisabled() && !preferred.isHidden()) return this.set(preferred);
+    return this.set(this.target('first', false, null));
+  }
+
+  /** The typeahead target for `search`, from `from` (the current item by default), over visible text. */
+  match(search: string, text: (item: T) => string, from: T | null = this.current()): T | null {
+    const items = this.visible();
+    const i = typeaheadMatch(
+      items.map(text),
+      (k) => items[k]!.isDisabled(),
+      from ? items.indexOf(from) : -1,
       search,
     );
     return i === -1 ? null : items[i]!;

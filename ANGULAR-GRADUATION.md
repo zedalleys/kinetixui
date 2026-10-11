@@ -6,16 +6,16 @@ CI — and this document describes it; where the two disagree, the script is rig
 
 Publication is distribution, not maturity. The package is on npm and stays Preview.
 
-## Current truth (computed, 2026-10-11, main `4cc711b` + Wave C2a)
+## Current truth (computed, 2026-10-11, main `4a7a587` + Wave C2b)
 
 | | Count | Source |
 |---|---|---|
-| Implemented | 67 of 98 | `components.manifest.json` |
+| Implemented | 71 of 98 (70 components and one recipe, the combobox) | `components.manifest.json` |
 | Native-equivalent | 2 (`direction-provider`, `form`) | manifest `platformGuidance`, each with its reason |
-| Planned | 29 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
+| Planned | 25 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
 | `catalogComplete` | false | manifest |
-| Evidence (verification.json) | build 67 · interaction 67 · accessibility 67 · rtl 34 · largeText 40 · reducedMotion 15 · visual 0 | generated from the tests |
-| Rendered visual/state gate | 32 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs; `check:composite-visual`: input-group, number-input, input-otp, password-input; `check:navigation-visual`, Angular only: breadcrumb, pagination, table-of-contents, tab-bar, app-bar, footer, accordion; `check:overlay-visual`, Angular only: dialog, alert-dialog, modal, sheet, drawer, popover, tooltip, hover-card; `check:menu-visual`, Angular only: dropdown-menu, context-menu, menubar), no `partial` marks | `scripts/visual-gates.mjs` |
+| Evidence (verification.json) | build 71 · interaction 71 · accessibility 71 · rtl 38 · largeText 44 · reducedMotion 17 · visual 0 | generated from the tests |
+| Rendered visual/state gate | 34 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs, select; `check:composite-visual`: input-group, number-input, input-otp, password-input, multi-select; `check:navigation-visual`, Angular only: breadcrumb, pagination, table-of-contents, tab-bar, app-bar, footer, accordion; `check:overlay-visual`, Angular only: dialog, alert-dialog, modal, sheet, drawer, popover, tooltip, hover-card; `check:menu-visual`, Angular only: dropdown-menu, context-menu, menubar, plus select and multi-select open), no `partial` marks | `scripts/visual-gates.mjs` |
 
 Wave A moved Angular's evidence into a real browser. `check:angular-browser` (scripts/angular-browser.mjs)
 builds the package's fixtures AOT and bootstraps them as a live, zoneless Angular application in Chromium,
@@ -41,28 +41,28 @@ maturity — they are statements about today, and CI fails the moment one is fal
 
 | Dimension | Criterion | Kind | Today |
 |---|---|---|---|
-| Catalogue | No Angular entry is still planned | gate | **open** — 29 planned |
+| Catalogue | No Angular entry is still planned | gate | **open** — 25 planned |
 | Catalogue | Every native-equivalent / composition entry carries its reason | always | met |
 | Catalogue | `catalogComplete` is true only when nothing is planned | always | met |
-| Build / distribution | Every implemented component compiles in CI (ng-packagr, strict templates) | gate | met — 67/67 |
+| Build / distribution | Every implemented component compiles in CI (ng-packagr, strict templates) | gate | met — 71/71 |
 | Build / distribution | CI builds the package, checks the public API snapshot, runs the tests and this guard; the clean-consumer install + AOT build runs (`angular-package.yml`) | always | met |
-| Behaviour | Every implemented component has `interaction` evidence | gate | met — 67/67 (jsdom, and a real keyboard in Chromium for the 47 interactive components; the stepper, which is display, by its state following `current`) |
-| Behaviour | `interaction` wherever React has it | gate | met — 27/27 (Wave C2a added dropdown menu, context menu and menubar; React has no interaction evidence for the hover card, Angular does) |
-| Accessibility | Every implemented component has `accessibility` evidence | gate | met — 67/67 |
-| Accessibility | `accessibility` wherever React has it | gate | met — 67/67 |
-| Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | met — 67/67 (`angular-browser.mjs`: axe over every usage example and state fixture, light and dark, plus forced colours and reduced motion; `angular-overlays.mjs`: axe over every overlay OPEN, nested and composed; `angular-collections.mjs`: axe over every menu OPEN, submenus included) |
-| RTL | `rtl` wherever React has it | gate | met — 16/16 (this row read 10/10 after Wave C1 while the guard computed 13/13; Wave C2a added the three menus; Angular measures 34 in four direction cases) |
-| Large text | `largeText` wherever React has it | gate | met — 24/24 (Wave C2a added the three menus; Angular measures 40) |
-| Large text | …from a real browser (`large-text.mjs`) | gate | met — 24/24 |
+| Behaviour | Every implemented component has `interaction` evidence | gate | met — 71/71 (jsdom, and a real keyboard in Chromium for the 51 interactive components; the stepper, which is display, by its state following `current`) |
+| Behaviour | `interaction` wherever React has it | gate | met — 29/29 (Wave C2a added dropdown menu, context menu and menubar, Wave C2b select and multi-select; React has no interaction evidence for the hover card, Angular does) |
+| Accessibility | Every implemented component has `accessibility` evidence | gate | met — 71/71 |
+| Accessibility | `accessibility` wherever React has it | gate | met — 71/71 |
+| Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | met — 71/71 (`angular-browser.mjs`: axe over every usage example and state fixture, light and dark, plus forced colours and reduced motion; `angular-overlays.mjs`: axe over every overlay OPEN, nested and composed; `angular-collections.mjs`: axe over every menu and listbox OPEN, submenus and empty lists included) |
+| RTL | `rtl` wherever React has it | gate | met — 18/18 (this row read 10/10 after Wave C1 while the guard computed 13/13; Wave C2a added the three menus, Wave C2b select and multi-select; Angular measures 38 in four direction cases) |
+| Large text | `largeText` wherever React has it | gate | met — 26/26 (Wave C2a added the three menus, Wave C2b select and multi-select; Angular measures 44) |
+| Large text | …from a real browser (`large-text.mjs`) | gate | met — 26/26 |
 | Motion | `reducedMotion` wherever React has it | gate | met — 3/3 (switch, accordion, collapsible) |
 | Motion | …from a real browser (`motion.mjs`) | gate | met — 3/3 (Angular's in `angular-browser.mjs`, which also measures the app bar's menu) |
-| Visual | A rendered visual/state gate covers Angular wherever one covers React | gate | met — 12/12: the interactive Card (`kxCard` on a link or button) and `kx-number-input`'s `readonly` closed the two `partial` marks, and input-group and input-otp arrived measured. password-input is measured too but not owed (React's PasswordInput is not separately gated) |
+| Visual | A rendered visual/state gate covers Angular wherever one covers React | gate | met — 14/14 (Wave C2b: select in `check:entry-visual`, multi-select in `check:composite-visual`): the interactive Card (`kxCard` on a link or button) and `kx-number-input`'s `readonly` closed the two `partial` marks, and input-group and input-otp arrived measured. password-input is measured too but not owed (React's PasswordInput is not separately gated) |
 | Visual | Every registered visual gate exists and runs in CI | always | met |
 | Visual | A visual gate claims Angular only for components Angular implements | always | met |
 | Documentation | The package README's counts, component list and Preview label match the manifest and evidence | always | met (it was stale — 31 components, 69 symbols — and is corrected in this change) |
 | CI | The guard itself: fails if `maturity` is `stable` with any gate criterion open | — | in `ci.yml` |
 
-12 of 13 gate criteria are met; only the catalogue is open (29 planned). Angular stays Preview.
+12 of 13 gate criteria are met; only the catalogue is open (25 planned). Angular stays Preview.
 
 `published` is reported but is not a criterion. Neither is `visual` from verification.json: that kind
 means comparison against stored reference images, which KinetixUI does not keep on any platform.
@@ -121,8 +121,8 @@ Run against deliberately broken inputs during this change (none committed):
 
 ## The waves
 
-Derived from the manifest's own `wave` tags (now `overlays` 9, `layout` 7, `data` 7, `advanced` 7,
-`navigation` 2 — the `inputs` tag closed with Wave A), reordered by dependency. The evidence instrument came
+Derived from the manifest's own `wave` tags (now `layout` 7, `data` 7, `advanced` 7, `overlays` 3,
+`navigation` 1 — the `inputs` tag closed with Wave A), reordered by dependency. The evidence instrument came
 first, before more unverified components were added; every later wave arrives through it.
 
 "Owed" below is computed from the current bar, not estimated: the evidence kinds React already has for that
@@ -287,15 +287,75 @@ file restored from git and checked by hash before the next (logs and `summary.js
 - Menubar horizontal movement does not open the neighbouring menu → `check:angular-collections`: "with a menu open, ArrowRight opens the next menu", and the wrap and ArrowLeft cases.
 - Keyboard highlight identical to the pointer highlight → `check:menu-visual`: "an inset focus ring clears 3:1 against the layer" (1.00:1) and "keyboard and pointer highlights look different", light and dark, LTR and RTL.
 
-### What remains after Wave C2a, ranked
+### Wave C2b — the listboxes (done)
 
-29 planned. Ranked by what each group unblocks and by the evidence React already holds for it (which Angular
+**Catalogue entries:** `select`, `command`, `multi-select` (components) and `combobox` (a recipe). 12/13 held;
+Angular 67 → 71 implemented (70 components and one recipe), 69/98 → 73/98, 29 → 25 planned.
+
+**One listbox layer on the C2a core** (`lib/listbox.ts`, internal, not exported). The core gained
+`KxActiveDescendant` (`lib/collection.ts`) and `readableText`; the walk itself is C2a's (`moveIndex`, the
+disabled skip, the typeahead), extended rather than forked. On top of it, `KxOptionList` is the controller every
+owner holds (selection mode, vertical keys, typeahead, pointer highlight), `KxOptionBase` is what every option
+shares (`role="option"`, a stable id from the C1 id counter, `aria-selected`, `aria-disabled`, `hidden`),
+`KxOptionField` is the root of a field that opens a listbox (a C1 floating root that is also a
+`ControlValueAccessor`) and `KxOptionPopup` its C1 floating surface. Select and multi-select are fields; the
+command owns its list directly; the combobox recipe is a popover holding a command. No new portal, overlay
+system or focus stack: every popup is a `popover="manual"` surface on the one C1 stack, so Escape closes only
+the top layer.
+
+**`aria-activedescendant`.** Focus never moves into a listbox: it stays on the select's trigger, the command's
+search field or the multi-select's input, and the field names the current option. The current option is a
+computed value, not a stored id: `current` is the item last made active only while it is present, visible and
+enabled, so a filter that hides it, a change that disables it, or its removal drops it in the same change, and
+the field's attribute follows (`activeId` is null rather than stale). `set` refuses disabled and hidden items,
+so a disabled option can never become current, by arrow, Home/End, typeahead or pointer. Options are
+`mousedown`-prevented, so a press inside a popup keeps focus where typing reaches it. A command or multi-select
+search resets the highlight to the first match. `aria-selected` follows the selection mode, not the highlight:
+the chosen value in a select, every chosen value in a multi-select (`aria-multiselectable`), and the highlight
+in a command, whose items are actions (selection follows focus). A listbox whose filter leaves nothing drops
+its role, and the command field reads collapsed, because a listbox must own options.
+
+| | |
+|---|---|
+| Behavioural contracts | select (Enter, Space, ArrowDown, ArrowUp open on the chosen option or the first/last; arrows stop at the ends; Home/End; typeahead, disabled options never match; Enter/Space choose and close; Escape closes without changing the value; Tab closes and moves on; focus returns to the trigger; CVA value, touched and disabled); command (local, synchronous filtering by text, value and keywords; groups hide when empty; the empty text; disabled items skipped; Enter runs the highlighted item; the network is checked during a search: no request leaves the page); the combobox recipe (trigger, popover, command; choosing closes and returns focus; Escape closes only the popover); multi-select (typing filters, Enter toggles, Backspace in an empty input removes the last chip, every chip has a remove button named "Remove X", removal from the keyboard keeps focus in the field, `creatable` offers "Create “…”") |
+| Accessibility | combobox / listbox / option / group roles, `aria-expanded`, `aria-controls`, `aria-activedescendant`, `aria-selected`, `aria-multiselectable`, `aria-disabled`; axe over every listbox OPEN and with an empty filter, light and dark; ids unique on the page and never stale after close and reopen; a select and a multi-select inside a dialog (Escape closes the listbox first, then the dialog); a command palette in `kx-command-dialog` |
+| RTL | select and multi-select in four direction cases: popups align to the inline start, chips and remove buttons mirror, keys unchanged (vertical) |
+| Large text | select and multi-select at 2× text at 1024px and 390px: the popup stays inside the viewport, no clipped text, 24px targets, a long chosen label and a five-chip selection wrap rather than overflow |
+| Motion | select and multi-select: the surface's motion is C1's, none under reduced motion |
+| Visual | `check:entry-visual` (select: rest, filled, invalid, disabled), `check:composite-visual` (multi-select: the same, and the chip's remove button as a part), `check:menu-visual` (select and multi-select open: rest, hover, keyboard highlight distinct from hover, selected, disabled, the open surface; light and dark, LTR and RTL; forced colours) |
+| Defects it found and fixed | the published `.d.ts` typed `KxSelect.value` as `ModelSignal<string>`, so a consumer's strict AOT build rejected it (`check:angular-package` in CI; the field is now annotated); a bound `[disabled]` did not close an open popup (only a form's `setDisabledState` did), and an already-disabled field could still be opened through `[(open)]` (the effect now tracks both signals, and no option activates while its field is disabled); a select opened through `[(open)]` had no active descendant until the first key; `creatable` offered to create text that was already an option's value (Codex review); an empty command list kept `role="listbox"` with no options (axe `aria-required-children`); at 2× text the select popup was placed from a stale shrink-to-fit width and overflowed the viewport (the popup is now measured from the start edge and placed in one pass); at 390px the multi-select input's intrinsic width widened the page; chip remove buttons were under 24px; the chip remove button's focus ring was 2.77:1 because the button's muted opacity muted its ring (it is now an inset ring at full opacity inside a multi-select) |
+
+**Findings not fixed:** the base `KxTag` remove button's focus ring has the same muted-opacity weakness outside a
+multi-select (pre-existing, Tag is not in this wave). C1's shrink-to-fit popover can take one frame to converge
+on its placement; the listbox popup no longer depends on it, the popover still does. In this container
+`check:angular-browser` fails "KxBreadcrumb: nothing truncated inside it"; it fails identically on main
+`4a7a587` with no C2b change, so it is not this wave's.
+
+#### Negative controls (Wave C2b)
+
+8 controls (11–18), run after the implementation was committed (`b1f3b46`, and `294ad6c` for 17 after its guard
+fix): each a real break in the source, a fresh harness built from it, the gate run against it, and the file
+restored from git and checked by hash before the next (logs and `summary.json`:
+`/mnt/project-files/angular-wave-c2b/negative-controls/`). None committed. Every one was caught:
+
+- 11: the active descendant ignores disabled options (`set`, `current` and the typeahead skip removed together) → `check:angular-collections`: "closed typeahead never chooses a disabled option" (zucchini). Removing only `set`'s guard, then `set`'s and `current`'s, changed nothing observable: the walk, the typeahead and the option's pointer handler each skip disabled options on their own. Both runs are kept as `11-*-not-observable.log`.
+- 12: filtering or removal leaves the active descendant on an option that is not shown → "removing the highlighted item moves the highlight to one that remains" and "item removed: the active descendant is valid".
+- 13: `aria-selected` follows the keyboard highlight in a select → "nothing is chosen yet: every option is aria-selected=false" and "moving the highlight does not move the selection".
+- 14: removing a chip from the keyboard drops focus to the page → "Enter removes the chip; focus moves to the neighbouring chip's button" and "removing the last chip leaves focus in the input" (`body`).
+- 15: the listbox popup is not a layer on the stack → "in a dialog, Escape closes the select alone, focus on its trigger" (the dialog closed with it), and every Escape and outside-press case for select and multi-select.
+- 16: the command query is sent off the page on every keystroke → "the query never leaves the page: no request was made while searching" (it names each `/analytics/capture?q=…` request).
+- 17: `export { KxCommand as KxCombobox }` in the public API → `check:platform-completeness`: "combobox is a documented recipe … but Angular exports a component named after it". The first run passed: the guard only looked for a decorated class, so an alias slipped through. The guard now reads the public API too (`scripts/check-platform-completeness.mjs`), and the re-run is caught.
+- 18: keyboard highlight identical to the pointer highlight in a listbox → `check:menu-visual`: "keyboard highlight: an inset ring clears 3:1 against the layer" (1.00:1) and "keyboard and pointer highlights look different", for select and multi-select.
+- 19 (post-review regression, added after the Codex fixes): the disabled-close effect in `KxOptionField` reads `open()` untracked again, so an already-disabled field can be opened through `[(open)]` → `check:angular-collections`: "a disabled field cannot be externally reopened" (open=true), for select and multi-select.
+
+### What remains after Wave C2b, ranked
+
+25 planned. Ranked by what each group unblocks and by the evidence React already holds for it (which Angular
 will owe the moment it implements the component):
 
-1. **Overlays C2b and the rest of Wave C (below)** — the listboxes (`select`, `combobox`, `multi-select`,
-   `command`), `navigation-menu`, notifications (`sonner`, `notification-center`, `tour`), then `sidebar`.
-   Wave C2a built the collection core (roving focus, typeahead, direction-aware keys) and the menus on it;
-   C2b adds `aria-activedescendant` and the listbox on the same core, then the toast queue.
+1. **The rest of Wave C (below)** — `navigation-menu`, notifications (`sonner`, `notification-center`,
+   `tour`), then `sidebar`. The collection core now has both roving focus (menus) and the active descendant
+   (listboxes); notifications add the toast queue.
 2. **Layout, pointer and scroll** — `scroll-area`, `resizable`, `carousel`, `comparison-slider`. Owes only
    browser axe, so it is cheap, but it brings drag with a keyboard alternative and direction-dependent
    handles, which no implemented Angular component has yet. `table` and `virtual-list` (also `layout`) go
@@ -323,13 +383,12 @@ below its breakpoint.
 | Visual | overlay elevation above raised cards (the slice 1 follow-up), focus ring inside overlays |
 | Proof it creates | a settings flow with dialogs and menus in Angular; overlay parity table |
 
-**C1 and C2a are done** (above): the layer, the eight dialog-family members and the three menus. What follows
-is C2b, `navigation-menu`, notifications and `sidebar`.
+**C1, C2a and C2b are done** (above): the layer, the eight dialog-family members, the three menus and the four
+listbox entries. What follows is `navigation-menu`, notifications and `sidebar`.
 
-**Owed by the remaining 9 (React has it):** interaction 3 (select, multi-select, tour) · rtl 4
-(navigation-menu, select, multi-select, tour) · largeText 2 (select, multi-select) · browser axe 9 · visual
-gate 2 (select and multi-select, in `check:entry-visual` and `check:composite-visual`). Before C2a this line
-read rtl 6 for the then 12; it was 7 (the three menus, navigation-menu, select, multi-select, tour).
+**Owed by the remaining 5 (React has it):** interaction 1 (tour) · rtl 2 (navigation-menu, tour) · browser
+axe 5. Before C2b this line read 9 entries: C2b paid select's and multi-select's interaction, rtl, largeText
+and visual-gate debts and the four entries' browser axe.
 
 ### Wave D — data and advanced
 

@@ -109,7 +109,7 @@
   },
   "coverage": {
     "React": 98,
-    "Angular": 67,
+    "Angular": 71,
     "SwiftUI": 90,
     "Compose": 90,
     "Flutter": 90
@@ -262,10 +262,12 @@
       "Flutter"
     ],
     "combobox": [
-      "React"
+      "React",
+      "Angular"
     ],
     "command": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -489,6 +491,7 @@
     ],
     "multi-select": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -597,6 +600,7 @@
     ],
     "select": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -749,7 +753,7 @@
   },
   "notes": {
     "avatar-group": "standing non-port — the React component re-wraps its children, which no native layout system does; compose an Avatar row directly. Its cap and +N marker would port to a data-driven native API, so this is a scope decision rather than an impossibility",
-    "combobox": "not a component — a documented composition of Command (CommandInput/CommandList/CommandItem). There is no Combobox export on any platform; the recipe is React-only because Command is.",
+    "combobox": "not a component — a documented composition of Command (CommandInput/CommandList/CommandItem) in a Popover. There is no Combobox export on any platform; the recipe exists on React and Angular, the two platforms with Command.",
     "direction-provider": "React-only by design: the web needs a provider to thread direction through Radix, while SwiftUI (environment .layoutDirection), Compose (LocalLayoutDirection) and Flutter (Directionality) already carry layout direction in the framework itself. Nothing to port.",
     "form": "standing non-port",
     "kanban-board": "standing non-port — built on @dnd-kit; each native platform would need its own from-scratch accessible multi-container drag-and-drop implementation (no equivalent dependency exists in this repo's native packages)",
@@ -804,10 +808,6 @@
       }
     },
     "combobox": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
-      },
       "SwiftUI": {
         "type": "composition",
         "reason": "Combobox is a recipe over Command on the web, not a component anywhere — compose a popover with a filtered list, or use KinetixSelect for a fixed set."
@@ -819,12 +819,6 @@
       "Flutter": {
         "type": "composition",
         "reason": "Combobox is a recipe over Command on the web, not a component anywhere — compose a popover with a filtered list, or use KinetixSelect for a fixed set."
-      }
-    },
-    "command": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
       }
     },
     "comparison-slider": {
@@ -935,12 +929,6 @@
         "wave": "data"
       }
     },
-    "multi-select": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
-      }
-    },
     "native-select": {
       "SwiftUI": {
         "type": "composition",
@@ -989,12 +977,6 @@
       "Angular": {
         "type": "planned",
         "wave": "layout"
-      }
-    },
-    "select": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
       }
     },
     "sidebar": {
@@ -1218,10 +1200,12 @@
       "Flutter": "experimental"
     },
     "combobox": {
-      "React": "beta"
+      "React": "beta",
+      "Angular": "preview"
     },
     "command": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1445,6 +1429,7 @@
     },
     "multi-select": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1553,6 +1538,7 @@
     },
     "select": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1708,7 +1694,7 @@
       "beta": 98
     },
     "Angular": {
-      "preview": 67
+      "preview": 71
     },
     "SwiftUI": {
       "experimental": 90
@@ -2258,6 +2244,14 @@
         "accessibility",
         "build",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
       ]
     },
     "command": {
@@ -2265,6 +2259,14 @@
         "accessibility",
         "build",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3038,6 +3040,15 @@
         "published",
         "rtl"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -3412,6 +3423,15 @@
         "interaction",
         "largeText",
         "published",
+        "rtl"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
         "rtl"
       ],
       "SwiftUI": [
@@ -3982,14 +4002,14 @@
       "published": 98
     },
     "Angular": {
-      "build": 67,
-      "interaction": 67,
-      "accessibility": 67,
-      "rtl": 34,
-      "largeText": 40,
-      "reducedMotion": 15,
+      "build": 71,
+      "interaction": 71,
+      "accessibility": 71,
+      "rtl": 38,
+      "largeText": 44,
+      "reducedMotion": 17,
       "visual": 0,
-      "published": 67
+      "published": 71
     },
     "SwiftUI": {
       "build": 90,

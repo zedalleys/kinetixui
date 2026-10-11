@@ -17,9 +17,9 @@
  * Two platforms, one set of assertions:
  *
  *   React     the `EntryStates` stories for InputGroup, NumberInput, MultiSelect and InputOTP
- *   Angular   kx-input-group, kx-number-input, kx-input-otp and kx-password-input (its implemented composites;
- *             multi-select is planned there), live in the Angular browser harness (src/fixtures/composite.ts),
- *             painted with the package's own styles.css and the generated token CSS (visual-harness.mjs)
+ *   Angular   kx-input-group, kx-number-input, kx-input-otp, kx-password-input and kx-multi-select, live in
+ *             the Angular browser harness (src/fixtures/composite.ts), painted with the package's own styles.css
+ *             and the generated token CSS (visual-harness.mjs)
  *
  * ── Method ───────────────────────────────────────────────────────────────
  *
@@ -46,8 +46,9 @@
  *   disabled     hovering changes no pixel, and the edge is weaker than an enabled one
  *   motion       hover runs a perceptible border transition; under reduced motion none, same end state
  *
- * A component that has no such state is skipped for that row, and the report says so: MultiSelect has no
- * read-only or disabled prop; InputOTP has no read-only and its slots are cells, not a divided control;
+ * A component that has no such state is skipped for that row, and the report says so: React's MultiSelect has
+ * no read-only or disabled prop, and Angular's has no read-only (its disabled state is measured, and a chip's
+ * remove button is the part that owns focus); InputOTP has no read-only and its slots are cells, not a divided control;
  * Angular's kx-password-input has no read-only input, and kx-number-input's steppers are deliberately not
  * keyboard stops (they duplicate the input's own arrow keys), so it has no part to own focus. Angular's number
  * input opens with a stepper, which is always muted, so its read-only fill is sampled inside the input.
@@ -160,6 +161,15 @@ const ADAPTERS = {
       fill: (c) => `kx-number-input[data-kx-case="${c}"] input`,
       placeholder: null,
       readonly: true,
+      disabled: true,
+    },
+    "multi-select": {
+      // the field the chips and the input sit in draws the edge; the input is the combobox
+      shell: (c) => `kx-multi-select[data-kx-case="${c}"] .kx-multi-select__field`,
+      input: (c) => `kx-multi-select[data-kx-case="${c}"] input`,
+      part: { case: "filled", sel: `kx-multi-select[data-kx-case="filled"] .kx-tag__remove` },
+      placeholder: "placeholder",
+      readonly: false,
       disabled: true,
     },
     "password-input": {

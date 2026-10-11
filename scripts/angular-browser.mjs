@@ -153,7 +153,7 @@ async function liveAnimations(page) {
   );
 }
 
-const STATE_FIXTURES = ["selection", "entry", "composite", "card", "behaviour", "navigation", "compositions", "overlays", "overlay-compositions", "collections"];
+const STATE_FIXTURES = ["selection", "entry", "composite", "card", "behaviour", "navigation", "compositions", "overlays", "overlay-compositions", "collections", "listboxes"];
 
 /**
  * axe findings that are correct for axe and wrong for WCAG, each with the reason — the same mechanism and the
@@ -169,6 +169,13 @@ const AXE_BASELINE = {
     "Dimming it is deliberate: a disabled field whose prefix stayed at full strength would read as half-enabled. " +
     "React carries the same entry (form-inputs-inputgroup--entry-states).",
   'composite|dark|color-contrast|kx-input-group[data-kx-case="disabled"] > kx-input-group-text': "Same finding as the light entry.",
+  'composite|light|color-contrast|kx-multi-select[inputid="ms-disabled"] > .kx-multi-select__field > kx-tag > .kx-tag__text':
+    "The chosen-value chip of the disabled MultiSelect. The input is disabled, so the whole field takes --opacity-disabled " +
+    "and its chips dim with it, the same shape as the disabled InputGroup add-on above: WCAG 1.4.3 exempts text that is " +
+    "part of an inactive user interface component, and axe exempts only text inside the disabled control itself, while " +
+    "the chip is a sibling of the input. A disabled field whose chips stayed at full strength would read as editable; " +
+    "the disabled chip also drops its remove button, so nothing in it can be operated.",
+  'composite|dark|color-contrast|kx-multi-select[inputid="ms-disabled"] > .kx-multi-select__field > kx-tag > .kx-tag__text': "Same finding as the light entry.",
 };
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -204,6 +211,7 @@ if (runs("accessibility")) {
 
   const rendered = new Map(publicExports.map((e) => [e.name, 0]));
   const seenBaseline = new Set();
+  const demoSlugs = new Map();
   const subjects = [...demos.map((demo) => ({ fixture: "usage", demo })), ...STATE_FIXTURES.map((fixture) => ({ fixture }))];
   for (const theme of ["light", "dark"]) {
     const context = await browser.newContext({ viewport: { width: 1024, height: 900 }, colorScheme: theme });
@@ -214,6 +222,7 @@ if (runs("accessibility")) {
         window.kxHarness.exports.map((e) => ({ name: e.name, n: e.selector ? document.querySelectorAll(`kx-fixture :is(${e.selector})`).length : 0 })),
       );
       for (const c of counts) rendered.set(c.name, rendered.get(c.name) + c.n);
+      if (s.demo) demoSlugs.set(s.demo, new Set(counts.filter((c) => c.n > 0).flatMap((c) => [...coveredSlugs(c.name, "Angular")])));
       const found = (await axe(page)).flatMap((v) => v.targets.map((target) => `${s.demo ?? s.fixture}|${theme}|${v.id}|${target}`));
       for (const key of found.filter((k) => AXE_BASELINE[k])) seenBaseline.add(key);
       const violations = found.filter((k) => !AXE_BASELINE[k]);
@@ -235,6 +244,16 @@ if (runs("accessibility")) {
   const neverRendered = [...rendered].filter(([name, n]) => n === 0 && !TEMPLATE_DIRECTIVES.includes(name)).map(([name]) => name);
   check(neverRendered.length === 0, "every public directive/component rendered in the live DOM", neverRendered.join(", "));
   const renderedSlugs = new Set([...rendered].filter(([, n]) => n > 0).flatMap(([name]) => [...coveredSlugs(name, "Angular")]));
+  // A recipe (a manifest entry with `composition`) has no symbol of its own, so no directive can stand for it.
+  // It counts as rendered when its own usage example was scanned and the component it composes rendered there:
+  // the combobox is ComboboxDemo with a live KxCommand inside it.
+  const pascal = (slug) => slug.replace(/(^|-)(\w)/g, (_, __, c) => c.toUpperCase());
+  for (const [slug, entry] of Object.entries(manifest.components)) {
+    if (!entry.composition || !implemented.includes(slug)) continue;
+    const composed = demoSlugs.get(`${pascal(slug)}Demo`)?.has(entry.composition) ?? false;
+    check(composed, `recipe ${slug}: ${pascal(slug)}Demo rendered a live ${entry.composition}`, "no such demo, or the composed component did not render in it");
+    if (composed) renderedSlugs.add(slug);
+  }
   const unrendered = implemented.filter((s) => !renderedSlugs.has(s));
   check(unrendered.length === 0, `all ${implemented.length} implemented components rendered and scanned`, unrendered.join(", "));
 
@@ -265,8 +284,11 @@ if (runs("accessibility")) {
           if (!el || el === document.body || !el.closest("kx-fixture")) return null;
           // A visually hidden native control (a radio inside a segment, toggle or rating) draws its ring on its
           // label; the one-time-code input, which paints nothing, draws it on the cell the next character goes in.
+          // The multi-select's text input sits among its chips, so the whole field draws the ring.
           const shown = el.matches(".kx-input-otp__input")
             ? el.closest("kx-input-otp").querySelector("[data-active]") ?? el
+            : el.matches(".kx-multi-select__input")
+            ? el.closest(".kx-multi-select__field") ?? el
             : el.matches("input[type=radio]") && getComputedStyle(el).opacity === "0" ? el.labels?.[0] ?? el.nextElementSibling ?? el : el;
           const cs = getComputedStyle(shown);
           const visible = cs.outlineStyle !== "none" && parseFloat(cs.outlineWidth) > 0 && cs.outlineColor !== "rgba(0, 0, 0, 0)";

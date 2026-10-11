@@ -3,9 +3,10 @@ import { KxCard, KxCardContent, KxLabel } from '../lib/primitives';
 import { KxNumberInput, KxPasswordInput } from '../lib/forms';
 import { KxInputGroup, KxInputGroupButton, KxInputGroupInput, KxInputGroupText } from '../lib/input-group';
 import { KxInputOtp } from '../lib/input-otp';
+import { KxMultiSelect, type KxMultiSelectOption } from '../lib/multi-select';
 
 /**
- * InputGroup, InputOTP, NumberInput and PasswordInput — Angular's composite fields — rendered by Angular in
+ * InputGroup, InputOTP, NumberInput, PasswordInput and MultiSelect — Angular's composite fields — rendered by Angular in
  * every state the composite-field contract names (TOKENS.md, "Composite fields"): the subject
  * `scripts/composite-visual.mjs` paints in Chromium.
  *
@@ -21,7 +22,7 @@ import { KxInputOtp } from '../lib/input-otp';
  */
 @Component({
   selector: 'kx-fixture',
-  imports: [KxCard, KxCardContent, KxInputGroup, KxInputGroupButton, KxInputGroupInput, KxInputGroupText, KxInputOtp, KxLabel, KxNumberInput, KxPasswordInput],
+  imports: [KxCard, KxCardContent, KxInputGroup, KxInputGroupButton, KxInputGroupInput, KxInputGroupText, KxInputOtp, KxLabel, KxMultiSelect, KxNumberInput, KxPasswordInput],
   template: `
     <div class="kx-render-grid">
       <kx-card data-kx-kind="input-group">
@@ -87,7 +88,25 @@ import { KxInputOtp } from '../lib/input-otp';
           <div class="kx-render-field"><span kxLabel id="pw-disabled-label">Service password (managed)</span><kx-password-input data-kx-case="disabled" aria-labelledby="pw-disabled-label" value="managed-secret" [disabled]="true" /></div>
         </kx-card-content>
       </kx-card>
+      <kx-card data-kx-kind="multi-select">
+        <kx-card-content class="kx-render-stack">
+          <div class="kx-render-field"><label kxLabel for="ms-rest">Labels</label><kx-multi-select data-kx-case="rest" inputId="ms-rest" [options]="labels" placeholder="Add labels…" /></div>
+          <div class="kx-render-field"><label kxLabel for="ms-filled">Reviewers</label><kx-multi-select data-kx-case="filled" inputId="ms-filled" [options]="labels" [value]="['design', 'docs']" /></div>
+          <div class="kx-render-field">
+            <label kxLabel for="ms-invalid">Owners</label>
+            <kx-multi-select data-kx-case="invalid" inputId="ms-invalid" [options]="labels" [aria-invalid]="'true'" [aria-describedby]="'ms-invalid-error'" />
+            <p id="ms-invalid-error" class="kx-render-error">Choose at least one owner.</p>
+          </div>
+          <div class="kx-render-field"><label kxLabel for="ms-disabled">Teams (locked)</label><kx-multi-select data-kx-case="disabled" inputId="ms-disabled" [options]="labels" [value]="['bug']" [disabled]="true" /></div>
+        </kx-card-content>
+      </kx-card>
     </div>
   `,
 })
-export class CompositeStates {}
+export class CompositeStates {
+  readonly labels: KxMultiSelectOption[] = [
+    { value: 'bug', label: 'Bug' },
+    { value: 'design', label: 'Design' },
+    { value: 'docs', label: 'Documentation' },
+  ];
+}

@@ -26,6 +26,7 @@ import {
   isRtl,
   isTypeaheadKey,
   moveForKey,
+  readableText,
   type KxRovingItem,
 } from './collection';
 import { disclosureId } from './disclosure';
@@ -369,7 +370,7 @@ export abstract class KxMenuEntry implements KxRovingItem {
 
   /** The item's text without its shortcut or anything hidden from assistive technology. */
   text(): string {
-    return this.textValue() ?? readableText(this.el);
+    return this.textValue() ?? readableText(this.el, MENU_TEXT_SKIP);
   }
 
   focusIn(): void {
@@ -398,18 +399,7 @@ export abstract class KxMenuEntry implements KxRovingItem {
 }
 
 /** Text a reader would type to find an item: its own text, leaving out its shortcut and hidden decoration. */
-function readableText(el: Element): string {
-  let out = '';
-  for (const node of Array.from(el.childNodes)) {
-    if (node.nodeType === 3) out += node.textContent ?? '';
-    else if (node.nodeType === 1) {
-      const child = node as Element;
-      if (child.matches('kx-menu-shortcut, [aria-hidden="true"]')) continue;
-      out += readableText(child);
-    }
-  }
-  return out.replace(/\s+/g, ' ').trim();
-}
+const MENU_TEXT_SKIP = 'kx-menu-shortcut, [aria-hidden="true"]';
 
 /**
  *   <button kxMenuItem (select)="duplicate()">Duplicate <kx-menu-shortcut>⌘D</kx-menu-shortcut></button>
@@ -1137,7 +1127,7 @@ export class KxMenubarTrigger implements KxRovingItem {
     return false;
   }
   text(): string {
-    return readableText(this.el);
+    return readableText(this.el, MENU_TEXT_SKIP);
   }
 
   /** With another of the menubar's menus open, pointing at this trigger opens this one instead. */

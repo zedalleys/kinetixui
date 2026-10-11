@@ -2498,6 +2498,239 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
 .kx-menubar__trigger:focus-visible,
 .kx-context-menu__trigger:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 
+/* ── listboxes: select, command, multi-select (and the combobox recipe) ────── */
+/* One option row and one popup for all of them (listbox.ts). Focus never moves onto an option: the field keeps
+   it, and `aria-activedescendant` names the current option. So the option states are drawn, not focused —
+
+   Option states (TOKENS.md, "Listboxes"), on the popover fill:
+     highlighted   the current option, the navigation hover layer (foreground at 8%), as a menu item's. Arrived
+                   at by the keyboard (`data-highlighted="keyboard"`) it also draws the inset focus ring, so a
+                   keyboard reader can tell where the keys are from where a pointer happens to rest
+     selected      a check mark at the inline start — a shape, never colour alone — and `aria-selected`. In a
+                   select and a multi-select this is the CHOSEN value, independent of the highlight
+     disabled      `--opacity-disabled`, no highlight, `not-allowed`; announced, never operable
+   A command's options are actions: nothing stays chosen, so it has highlight and disabled only. */
+.kx-option-popup {
+  min-inline-size: max(8rem, min(var(--kx-field-width, 8rem), var(--kx-available-width, 100vw)));
+  padding: var(--spacing-1);
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+}
+.kx-option-popup:popover-open { display: flex; flex-direction: column; }
+.kx-option-group { display: flex; flex-direction: column; }
+.kx-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-block-size: 2rem;
+  padding-block: var(--spacing-1);
+  padding-inline: var(--spacing-2);
+  border-radius: calc(var(--radius-control) - 2px);
+  color: inherit;
+  cursor: default;
+  user-select: none;
+  overflow-wrap: anywhere;
+  transition:
+    background-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard);
+}
+.kx-option--inset { padding-inline-start: calc(var(--spacing-2) + 1rem + var(--spacing-2)); }
+.kx-option[data-highlighted] { background-color: hsl(var(--foreground) / 0.08); }
+.kx-option[data-highlighted='keyboard'] { box-shadow: inset 0 0 0 2px hsl(var(--ring)); }
+.kx-option[aria-disabled='true'] { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.kx-option__indicator {
+  position: absolute;
+  inset-inline-start: var(--spacing-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+.kx-option__mark { inline-size: 1rem; block-size: 1rem; visibility: hidden; }
+.kx-option[data-state='checked'] .kx-option__mark { visibility: visible; }
+.kx-option-label {
+  display: block;
+  padding-block: var(--spacing-1);
+  padding-inline: var(--spacing-2);
+  color: hsl(var(--muted-foreground));
+  font: var(--text-label-md);
+  font-weight: var(--font-weight-semibold);
+}
+.kx-option-separator {
+  display: block;
+  block-size: var(--border-width-default);
+  margin-block: var(--spacing-1);
+  margin-inline: calc(-1 * var(--spacing-1));
+  background-color: hsl(var(--border));
+}
+.kx-option-empty,
+.kx-command__empty {
+  display: block;
+  padding-block: var(--spacing-6);
+  padding-inline: var(--spacing-2);
+  color: hsl(var(--muted-foreground));
+  font: var(--text-body-sm);
+  text-align: center;
+}
+/* a filter hides options, groups, separators and the empty message with `hidden`; the rules above set `display` */
+:is(.kx-option, .kx-option-group, .kx-option-separator, .kx-option-empty, .kx-command__empty)[hidden] { display: none; }
+
+/* select: the trigger is a field — Input's text-entry contract (TOKENS.md, "Text entry and navigation"): an 80%
+   `--muted-foreground` edge at rest, full strength under a hovering pointer, the action edge and focus glow on
+   keyboard focus, the action edge while open, destructive when invalid, and hover never over focus, open,
+   invalid or disabled. The value wraps rather than being cut (200% text keeps all of it). */
+.kx-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+  inline-size: 100%;
+  min-block-size: 44px;
+  margin: 0;
+  padding: var(--spacing-3);
+  border: var(--border-width-default) solid hsl(var(--muted-foreground) / 0.8);
+  border-radius: var(--radius-field);
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+  text-align: start;
+  cursor: default;
+  outline: none;
+  transition:
+    border-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard);
+}
+.kx-select__trigger[data-placeholder] { color: hsl(var(--muted-foreground)); }
+.kx-select__value { flex: 1 1 auto; min-inline-size: 0; overflow-wrap: anywhere; }
+.kx-select__chevron { flex: none; inline-size: 1rem; block-size: 1rem; color: hsl(var(--muted-foreground)); }
+@media (hover: hover) {
+  .kx-select__trigger:enabled:not(:focus-visible):not([aria-invalid='true']):not([data-state='open']):hover { border-color: hsl(var(--muted-foreground)); }
+}
+.kx-select__trigger[data-state='open'] { border-color: hsl(var(--action)); }
+.kx-select__trigger:focus-visible { border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
+.kx-select__trigger[aria-invalid='true'] { border-color: hsl(var(--destructive)); }
+.kx-select__trigger[aria-invalid='true']:focus-visible { box-shadow: var(--shadow-focus-destructive); }
+.kx-select__trigger:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+
+/* multi-select: ONE field (TOKENS.md, "Composite fields") whose chips sit inside its edge. The field draws the
+   edge and the focus ring while its INPUT has focus; a chip's remove button draws its own ring and the field's
+   stays off, so the ring always says which thing the keyboard is on. */
+.kx-multi-select { display: block; }
+.kx-multi-select__field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-block-size: 44px;
+  padding-block: var(--spacing-2);
+  padding-inline: var(--spacing-3);
+  border: var(--border-width-default) solid hsl(var(--muted-foreground) / 0.8);
+  border-radius: var(--radius-field);
+  background-color: hsl(var(--background));
+  cursor: text;
+  transition:
+    border-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard);
+}
+.kx-multi-select__chip { max-inline-size: 100%; overflow-wrap: anywhere; }
+/* the chip's remove button is a 24px target (WCAG 2.5.8) without making the chip taller: it reaches into the
+   chip's own padding */
+.kx-multi-select__chip .kx-tag__remove {
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 24px;
+  min-block-size: 24px;
+  margin-block: -4px;
+  margin-inline-end: -4px;
+  border-radius: var(--radius-full);
+}
+/* inside a field the chip's button owns the ring: an inset ring in the ring colour, drawn on the button itself
+   at full opacity (the button rests at the muted opacity, which would otherwise mute its ring too) */
+.kx-multi-select__chip .kx-tag__remove:focus-visible { opacity: var(--opacity-visible); box-shadow: inset 0 0 0 2px hsl(var(--ring)); }
+.kx-multi-select__input {
+  flex: 1 1 6rem;
+  /* a definite size, so the input's intrinsic width (about 20 characters) never props the field wider than
+     its container at large text */
+  inline-size: 6rem;
+  min-inline-size: 4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: hsl(var(--foreground));
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+  outline: none;
+}
+.kx-multi-select__input::placeholder { color: hsl(var(--muted-foreground)); }
+@media (hover: hover) {
+  .kx-multi-select:not([data-disabled]) .kx-multi-select__field:not(:has(.kx-multi-select__input:focus-visible)):not(:has([aria-invalid='true'])):not(:has([aria-expanded='true'])):hover {
+    border-color: hsl(var(--muted-foreground));
+  }
+}
+.kx-multi-select__field:has(.kx-multi-select__input[aria-expanded='true']) { border-color: hsl(var(--action)); }
+.kx-multi-select__field:has(.kx-multi-select__input:focus-visible) { border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
+.kx-multi-select__field:has(.kx-multi-select__input[aria-invalid='true']) { border-color: hsl(var(--destructive)); }
+.kx-multi-select__field:has(.kx-multi-select__input[aria-invalid='true']:focus-visible) { box-shadow: var(--shadow-focus-destructive); }
+.kx-multi-select[data-disabled] .kx-multi-select__field { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.kx-multi-select__input:disabled { cursor: not-allowed; }
+
+/* command: a search field over a list. Standalone it is a bordered surface; inside a popover or the command
+   dialog the surface around it already draws the edge. */
+.kx-command {
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+  overflow: hidden;
+  border: var(--border-width-default) solid hsl(var(--border));
+  border-radius: var(--radius-control);
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+}
+:is(.kx-floating, .kx-command-dialog) .kx-command { border: 0; border-radius: 0; }
+.kx-popover:has(> .kx-command) { padding: 0; }
+.kx-command__input {
+  inline-size: 100%;
+  min-block-size: 44px;
+  margin: 0;
+  padding-inline: var(--spacing-3);
+  border: 0;
+  border-block-end: var(--border-width-default) solid hsl(var(--border));
+  background: transparent;
+  color: hsl(var(--foreground));
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+  outline: none;
+  transition: box-shadow var(--duration-instant) var(--easing-standard);
+}
+.kx-command__input::placeholder { color: hsl(var(--muted-foreground)); }
+/* the search field is where the keyboard is: an action rule along its block-end edge says so */
+.kx-command__input:focus-visible { box-shadow: inset 0 -2px 0 hsl(var(--action)); }
+.kx-command__list {
+  display: flex;
+  flex-direction: column;
+  max-block-size: min(300px, 60vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--spacing-1);
+}
+.kx-command__shortcut {
+  margin-inline-start: auto;
+  padding-inline-start: var(--spacing-4);
+  color: hsl(var(--muted-foreground));
+  font: var(--text-body-sm);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+/* on a highlighted row the muted shortcut would fall under 4.5:1 against the state layer: it takes the row's colour */
+.kx-option[data-highlighted] > .kx-command__shortcut { color: inherit; }
+.kx-command-dialog { padding: 0; gap: 0; overflow: hidden; }
+
 /* Overlay motion tells the reader where a surface came from; under reduced motion it simply appears and
    disappears, in the same open and closed states (the discrete `display` / `overlay` hand-off goes with it). */
 @media (prefers-reduced-motion: reduce) {
@@ -2506,7 +2739,11 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
   .kx-dialog__close,
   .kx-floating,
   .kx-menu__item,
-  .kx-menubar__trigger { transition: none; }
+  .kx-menubar__trigger,
+  .kx-option,
+  .kx-select__trigger,
+  .kx-multi-select__field,
+  .kx-command__input { transition: none; }
 }
 
 /* ── forced colours ─────────────────────────────────────────────────────── */
@@ -2523,15 +2760,16 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
       .kx-inform [kxInformAction], a.kx-card, button.kx-card, .kx-accordion__trigger, .kx-breadcrumb__link,
       .kx-pagination__link, .kx-toc__link, .kx-tab-bar__item, .kx-navigation-bar__back, .kx-app-bar__toggle,
       .kx-app-bar__link, a.kx-app-bar__brand, .kx-footer__link, .kx-dialog__close, .kx-menubar__trigger,
-      .kx-context-menu__trigger
+      .kx-context-menu__trigger, .kx-select__trigger
     ):focus-visible,
+  .kx-multi-select__field:has(.kx-multi-select__input:focus-visible),
   :is(.kx-segmented__radio, .kx-toggle-group__radio):focus-visible + label,
   .kx-rating__item:has(.kx-rating__radio:focus-visible),
   .kx-input-otp:has(.kx-input-otp__input:focus-visible) .kx-input-otp__slot[data-active] {
     outline: 2px solid Highlight;
     outline-offset: 2px;
   }
-  :is(.kx-number-input__input, .kx-password-input__input, .kx-password-input__reveal, .kx-input-group__input, .kx-input-group__button):focus-visible {
+  :is(.kx-number-input__input, .kx-password-input__input, .kx-password-input__reveal, .kx-input-group__input, .kx-input-group__button, .kx-command__input):focus-visible {
     outline: 2px solid Highlight;
     outline-offset: -2px;
   }
@@ -2547,5 +2785,7 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
   .kx-slider__fill { background-color: Highlight; }
   /* a menu item's highlight is a fill and an inset shadow, both flattened: the highlighted row gets the outline */
   .kx-menu__item[data-highlighted] { outline: 2px solid Highlight; outline-offset: -2px; }
+  /* the same for the current option of a listbox, which is drawn rather than focused */
+  .kx-option[data-highlighted] { outline: 2px solid Highlight; outline-offset: -2px; }
   .kx-menubar__trigger[data-state='open'] { outline: 2px solid CanvasText; outline-offset: -2px; }
 }
