@@ -45,9 +45,7 @@ export function SiteHeader() {
           sits beside the mark or under it.
         */}
         <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
-          <div className="hidden sm:block">
-            <CommandMenu />
-          </div>
+          <CommandMenu />
           <GitHubButton />
           <ModeToggle />
           <MobileNav />

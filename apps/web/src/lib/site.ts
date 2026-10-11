@@ -233,7 +233,8 @@ const componentGroups: NavGroup[] = CATEGORY_ORDER.map((title) => ({
   items: componentDocs.filter((i) => (COMPONENT_CATEGORY[slugOf(i.href)] ?? "Data Display") === title),
 }));
 
-export const docsNav: NavGroup[] = [
+/** The docs' own guide pages, without the per-component groups. What the mobile menu lists. */
+export const docsGuideNav: NavGroup[] = [
   {
     title: "Getting Started",
     items: [
@@ -282,7 +283,9 @@ export const docsNav: NavGroup[] = [
       { title: "Changelog", href: "/docs/changelog" },
     ],
   },
-  ...componentGroups,
 ];
+
+/** Every docs page: the guide groups, then one group per component category. Drives the sidebar and search. */
+export const docsNav: NavGroup[] = [...docsGuideNav, ...componentGroups];
 
 export const allDocsLinks: NavItem[] = docsNav.flatMap((g) => g.items);

@@ -32,10 +32,14 @@ or pub.dev. See [Native output](#native-output).
 ## Minimal usage
 
 Import the stylesheets in your global CSS. Light is the base; dark is applied under a `.dark` ancestor.
+The `extras` pair carries the shadow and type ramps and the focus ring; leave out `extras/dark` and the
+dark theme keeps the light focus halo.
 
 ```css
 @import "@kinetixui/tokens/css";
 @import "@kinetixui/tokens/css/dark";
+@import "@kinetixui/tokens/css/extras";
+@import "@kinetixui/tokens/css/extras/dark";
 ```
 
 Then use the semantic roles, never a raw value:

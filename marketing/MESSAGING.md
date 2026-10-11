@@ -76,15 +76,21 @@ Current homepage hero: *"Copy a component, own the code"* — see §6 for the co
 
 ### G. Primary CTA
 
-**`npx @kinetixui/cli@latest add button`**
+**"Explore components" → `/components`**
 
-Note the constraint: activation copy around this command is **PENDING LIVE VERIFICATION** (`CLAIMS.md` D1).
-The command is correct and safe to show. What must not accompany it is a promise of the form "one command and
-you're running", until a repeatable production check exists.
+This is what the shipped homepage hero renders (`apps/web/src/app/page.tsx`, analytics target
+`browse_components`). It replaced the CLI command as the primary CTA: real components, rendered, are the
+lowest-friction thing that is also evidence, while a command asks a visitor who does not yet know what this is
+to install it.
+
+The CLI command (`npx @kinetixui/cli add <name>`, cycling through a few component names) stays in the hero,
+directly under the CTAs, as an example of adding one component — not as the call to action. The constraint
+on it is unchanged: copy around the command is **PENDING LIVE VERIFICATION** (`CLAIMS.md` D1). What must not accompany it is a promise of the
+form "one command and you're running", until a repeatable production check exists.
 
 ### H. Secondary CTA
 
-**"See what each platform actually covers" → `/docs/platforms`**
+**"See what each platform covers" → `/docs/platforms`**
 
 This is deliberately not "Read the docs". The secondary CTA should send a sceptic to the evidence, because
 credibility is the funnel's narrowest point.
@@ -345,7 +351,7 @@ these are recommendations with reasons.
 | **Homepage subhead** | Token/platform sentence naming four platforms with Angular in preview | §F wording | Adds the verification clause, which is the position. Keeps the tokens-vs-components split explicit | **Change** |
 | **GitHub description** | "Multi-platform design system: one token contract, with React, SwiftUI, Jetpack Compose and Flutter components." | §I wording | Omits Angular entirely, and omits verification. A hard-coded platform enumeration also drifts — prefer durable wording | **Change** |
 | **README intro** | Token-contract-first framing | §J wording | Already close. The addition is "not transpiled" made explicit rather than implied | **Light edit** |
-| **Primary CTA** | `npx @kinetixui/cli@latest add button` | unchanged | Correct and verified as a command. Only surrounding promises are constrained (D1) | **Keep** |
+| **Primary CTA** | `npx @kinetixui/cli@latest add button` | "Explore components" (§G) | Superseded after this table was written: the hero now leads with rendered components and keeps the command beneath the CTAs as an example. The command is still correct; only surrounding promises are constrained (D1) | **Changed** (shipped) |
 | **npm descriptions** | Per-package, already accurate | §K table | Already good; the table makes them consistent and keeps the version caveat attached | **Light edit** |
 | **Old messaging headline** | "One token architecture, in motion across every platform." | §A / §E | "Every platform" invites the parity reading the whole position rejects, and "in motion" is decorative | **Replaced here** |
 

@@ -64,9 +64,15 @@ export function CommandMenu() {
   // overlay it replaces did none of those.
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger className="inline-flex h-9 w-full items-center gap-2 rounded-md border border-input bg-muted/50 px-3 text-[13px] text-muted-foreground transition-colors hover:bg-muted sm:w-56">
-        <Search className="size-4" />
-        <span className="flex-1 text-left">Search…</span>
+      {/*
+        One trigger at every width. Below `sm` it collapses to a square icon button rather than being hidden: phones
+        had no site search at all, and a second trigger would have meant a second instance of this component and a
+        second global ⌘K listener, which toggles the dialog twice. The visible text becomes `sr-only` instead of
+        being removed, so the accessible name is the same "Search…" at every width.
+      */}
+      <Dialog.Trigger className="inline-flex size-9 items-center justify-center gap-2 rounded-md border border-input bg-muted/50 text-[13px] text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-9 sm:w-56 sm:justify-start sm:px-3">
+        <Search aria-hidden className="size-4 shrink-0" />
+        <span className="sr-only sm:not-sr-only sm:flex-1 sm:text-left">Search…</span>
         <span className="pointer-events-none hidden items-center gap-1 sm:flex">
           <Kbd>{mod}</Kbd>
           <Kbd>K</Kbd>

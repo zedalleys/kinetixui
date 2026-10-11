@@ -127,7 +127,8 @@ but any link to one of our packages on npmjs.com is reported the moment it is ad
 
 ## Acquisition attribution
 
-Where did a developer come from, what did they do, and did they activate? Attribution answers the first part
+Where did a developer come from, what did they do, and did it reach Qualified Evaluation or Adoption Intent?
+Attribution answers the first part
 with a deliberately simple, inspectable model. **It is directional evidence, not causal truth**: referrers are
 stripped by many apps and privacy tools, a link can be shared beyond the audience it was made for, and a visit is
 credited to a channel, not to the effect of a post. Use it to compare channels, not to prove one caused an install.

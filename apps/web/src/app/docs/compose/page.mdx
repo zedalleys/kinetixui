@@ -1,11 +1,11 @@
 export const metadata = {
   title: "Jetpack Compose",
-  description: "The native Android component library — Kotlin composables on the KinetixUI token contract, mirroring the React component API.",
+  description: "The native Android component library — Kotlin composables implementing the shared KinetixUI component contract, on the same token contract.",
 };
 
 # Jetpack Compose
 
-`packages/ui-compose` is a native **Jetpack Compose** port of KinetixUI —
+`packages/ui-compose` is the native **Jetpack Compose** implementation of KinetixUI —
 `Kinetix*` composables for <PlatformCountInline platform="Compose" /> of the
 <ComponentTotalInline /> React catalogue entries, on the same token contract as the
 web library: one for every React component (or a documented reason it isn't).
@@ -18,8 +18,9 @@ source it's built from.
 <Callout>
   Not on Maven Central yet. Consume it by cloning the repo and copying the
   `packages/ui-compose/ui` module into your project (or `includeBuild`-ing
-  it), the same "own the code" model as the web CLI. Remote publishing
-  needs a signing key and is deliberately not wired up.
+  it), the same "own the code" model as the web CLI. A publication workflow
+  (`publish-compose.yml`, staging to the Central Portal) exists but needs
+  signing credentials and has not been used for a real release.
 </Callout>
 
 ## Setup
@@ -271,8 +272,9 @@ a comment).
 One per ported React component — Button, Input, Dialog, Popover, Sheet,
 DropdownMenu, DataTable, Calendar, Carousel, Sidebar, and the rest. The
 [components gallery](/components) is the master list; each Compose file
-mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with a
-doc comment stating exactly what wasn't carried over.
+is a native Compose implementation of the same component contract as its
+`packages/ui/src/components/*.tsx` counterpart, with a doc comment stating
+exactly what wasn't carried over.
 
 Reuse over re-derivation is the rule: `KinetixSlider` wraps Material3's
 `Slider`, `KinetixCalendar` its `DatePicker`, `KinetixToaster` its
@@ -284,10 +286,10 @@ different name.
 
 ## Known gaps
 
-- **`Chart` and `Form` aren't ported.** The React `Chart` is a `recharts`
-  theming shell with no rendering of its own — a Compose equivalent needs
-  a charting-library decision (Vico / YCharts) or hand-rolled `Canvas`.
-  The React `Form` is `react-hook-form` glue; `KinetixField` +
+- **`Chart` is ported but scoped.** `KinetixChart` draws bar and line
+  series with `Canvas` (no charting dependency) and requires a
+  `description` for TalkBack; anything richer is a charting-library
+  decision. **`Form` isn't ported.** The React `Form` is `react-hook-form` glue; `KinetixField` +
   `KinetixFieldLabel` / `Description` / `Message` **are** the Compose
   equivalent — Compose has no RHF-shaped context to wrap.
 - **`NavigationMenu` isn't ported** — a hover-triggered desktop mega-menu
@@ -313,7 +315,8 @@ different name.
   syntax highlighting. `KinetixCalendar` / `DatePicker` have no range
   select. `KinetixImage` / `FileUpload` / `AudioPlayer` are presentational
   — no Coil, file picker, or media playback; you wire those in.
-- **No remote publishing, no screenshot-test harness.** CI compiles the
+- **Not published yet, no screenshot-test harness.** The publication
+  workflow has never run for real. CI compiles the
   whole package (`assembleDebug` + `lintDebug`) on every push that
   touches it or the token source.
 

@@ -5,11 +5,12 @@ export const metadata = {
 
 # Contributing
 
-KinetixUI is **one design source, one implementation per platform**. React
-(`@kinetixui/ui`) is the source of truth; Jetpack Compose
+KinetixUI is **one token source and one component contract, with a native
+implementation per platform**. React (`@kinetixui/ui`) is the reference
+implementation a new component usually starts from; Jetpack Compose
 (`packages/ui-compose`), SwiftUI (`packages/ui-swiftui`) and Flutter
-(`packages/ui-flutter`) each carry a 1:1 port of the same component
-surface on the same token contract. Angular (`packages/ui-angular`) is a
+(`packages/ui-flutter`) each implement the same component contract natively,
+on the same token contract. Angular (`packages/ui-angular`) is a
 fifth implementation, still in preview and rolling out in waves — see
 [Angular](/docs/angular).
 
@@ -20,8 +21,8 @@ catalogue-complete platforms** — React, SwiftUI, Jetpack Compose and Flutter �
 or is a documented, deliberate non-port on the ones where it has no native
 idiom. Each port:
 
-1. **Mirrors the React source 1:1** — the same variants, sizes, states
-   and prop names, adjusted only for platform idiom (`onPressed` /
+1. **Implements the same contract** — the same variants, sizes, states
+   and prop names as the reference implementation, adjusted for platform idiom (`onPressed` /
    `onChanged` callbacks instead of DOM events, `value` + `ValueChanged`
    instead of controlled inputs, etc.).
 2. **Resolves the same semantic tokens** — never a hard-coded colour.

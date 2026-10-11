@@ -24,6 +24,7 @@ import {
   PLATFORM_DEFINITIONS,
   isOnPlatform,
   countOnPlatform,
+  type Platform,
 } from "@/lib/platform-parity";
 import { componentCount, componentTotal, recipes } from "@/lib/platform-support";
 import { fullCoverageCount } from "@/lib/project-stats";
@@ -80,8 +81,26 @@ const CATEGORY_COUNT: Record<string, number> = ITEMS.reduce(
 
 const ALL_SLUGS = ITEMS.map((it) => it.slug);
 const PLATFORM_COUNT: Record<string, number> = Object.fromEntries(
-  NATIVE_PLATFORMS.map((p) => [p, countOnPlatform(ALL_SLUGS, p)]),
+  PLATFORMS.map((p) => [p, countOnPlatform(ALL_SLUGS, p)]),
 );
+
+/**
+ * The `?platform=` value, resolved against every implementation platform — web and native.
+ *
+ * The filter used to iterate the native platforms only, so React and Angular could not be chosen and
+ * `?platform=Angular` was silently ignored. The URL keeps the manifest key (`Compose`, not "Jetpack Compose"), so
+ * links shared before this change still resolve; the chip shows the label. Anything else — a typo, an old or
+ * invented platform — resolves to no filter rather than to an empty result or a thrown error.
+ */
+export function resolvePlatformParam(value: string | null): Platform | null {
+  return PLATFORMS.find((p) => p === value) ?? null;
+}
+
+/** "Angular · Preview" — the chip label, with a non-stable package's maturity carried rather than dropped. */
+export function platformChipLabel(p: Platform): string {
+  const d = PLATFORM_DEFINITIONS[p];
+  return d.maturity === "stable" ? d.label : `${d.label} · ${d.maturity.charAt(0).toUpperCase()}${d.maturity.slice(1)}`;
+}
 
 /**
  * Coverage wording for the intro, read from the generated platform data rather than typed: which native libraries
@@ -92,6 +111,10 @@ const NATIVE_LABELS = NATIVE_PLATFORMS.map((p) => PLATFORM_DEFINITIONS[p].label)
 const NATIVE_SENTENCE =
   NATIVE_LABELS.length > 1 ? `${NATIVE_LABELS.slice(0, -1).join(", ")} and ${NATIVE_LABELS.at(-1)}` : NATIVE_LABELS.join("");
 const ABBR_ROW = PLATFORMS.map((p) => PLATFORM_ABBR[p]).join(" ");
+/** "Angular (preview) implements 64 so far" — the platforms still rolling out, named rather than left to a tag. */
+const ROLLING_OUT = PLATFORMS.filter((p) => !PLATFORM_DEFINITIONS[p].catalogComplete).map(
+  (p) => `${PLATFORM_DEFINITIONS[p].label} (${PLATFORM_DEFINITIONS[p].maturity}) implements ${countOnPlatform(ALL_SLUGS, p)} so far`,
+);
 
 function Thumbnail({ item }: { item: Item }) {
   // A hand-built static mock wins over everything — portal components (dialog,
@@ -208,7 +231,8 @@ export function ComponentGallery() {
 
   const [query, setQuery] = React.useState(params.get("q") ?? "");
   const activeCat = params.get("cat");
-  const activePlatform = NATIVE_PLATFORMS.find((p) => p === params.get("platform")) ?? null;
+  const activePlatform = resolvePlatformParam(params.get("platform"));
+  const activePlatformLabel = activePlatform ? PLATFORM_DEFINITIONS[activePlatform].label : null;
   const activeStatus = params.get("status") === "beta" ? "beta" : null;
 
   // debounce the search term into the URL so a filtered view is shareable and
@@ -304,7 +328,7 @@ export function ComponentGallery() {
         <span className="mr-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
           Platform
         </span>
-        {NATIVE_PLATFORMS.map((p) => {
+        {PLATFORMS.map((p) => {
           const on = activePlatform === p;
           return (
             <button
@@ -313,9 +337,9 @@ export function ComponentGallery() {
               aria-pressed={on}
               onClick={() => setPlatform(on ? null : p)}
               className={catButton(on)}
-              title={`Components shipping in the ${p} library`}
+              title={`Components implemented in the ${PLATFORM_DEFINITIONS[p].label} library`}
             >
-              {p} <span className="tabular-nums">{PLATFORM_COUNT[p] ?? 0}</span>
+              {platformChipLabel(p)} <span className="tabular-nums">{PLATFORM_COUNT[p] ?? 0}</span>
             </button>
           );
         })}
@@ -341,7 +365,9 @@ export function ComponentGallery() {
         {recipes.length === 1 ? "recipe" : "recipes"} — across {CATEGORY_ORDER.length} categories, built from Figma,
         styled against the token contract, distributed through the kinetixui registry. Each one ships React source;{" "}
         {fullCoverageCount} of {componentTotal} also have {NATIVE_SENTENCE} implementations, and their snippets
-        appear on the component page. The{" "}
+        appear on the component page.{" "}
+        {ROLLING_OUT.length > 0 && <>{ROLLING_OUT.join("; ")}, and its catalogue is still rolling out. </>}
+        The{" "}
         <span className="font-mono text-[11px] uppercase tracking-[0.1em]">{ABBR_ROW}</span> tags on each card mark
         which libraries carry it today.
       </p>
@@ -458,7 +484,7 @@ export function ComponentGallery() {
           ? `${ITEMS.length} entries`
           : `${filtered.length} of ${ITEMS.length} entries`}
         {activeCat ? ` · ${activeCat}` : ""}
-        {activePlatform ? ` · ${activePlatform}` : ""}
+        {activePlatformLabel ? ` · ${activePlatformLabel}` : ""}
         {activeStatus ? ` · ${activeStatus}` : ""}
         {q ? ` · “${query.trim()}”` : ""}
       </p>
@@ -468,7 +494,7 @@ export function ComponentGallery() {
           <p className="text-sm text-muted-foreground">
             No components match{q ? ` “${query.trim()}”` : ""}
             {activeCat ? ` in ${activeCat}` : ""}
-            {activePlatform ? ` on ${activePlatform}` : ""}.
+            {activePlatformLabel ? ` on ${activePlatformLabel}` : ""}.
           </p>
           <button
             type="button"

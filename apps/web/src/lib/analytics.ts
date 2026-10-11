@@ -89,6 +89,12 @@ export const ANALYTICS_CTA_TARGETS = [
    * signal (analytics-measurement.ts lists those); it answers only whether the demo is found from /iot.
    */
   "building_operations_demo",
+  /*
+   * The homepage's "Explore IoT" link to the /iot module page. It was tagged `read_docs`, so a visit to a
+   * module showcase was counted as a docs CTA. Not a Qualified Evaluation or Adoption Intent signal: it
+   * answers only whether the homepage's module section sends anyone to the module.
+   */
+  "explore_iot",
 ] as const;
 export type AnalyticsCtaTarget = (typeof ANALYTICS_CTA_TARGETS)[number];
 
@@ -154,12 +160,12 @@ export interface AnalyticsEvents {
   // Export. `target` is one of the four stable exporter ids — "web-css", "swiftui", "compose",
   // "flutter" — and nothing else travels: not the preset, not the generated code, not the symbol
   // name the author typed. Deliberately separate from `component_code_copied`, which is about
-  // activating a component and would stop meaning anything if theme exports were folded into it.
+  // copying a catalogue component's code and would stop meaning anything if theme exports were folded into it.
   create_export_target_selected: Shape<"target", "source">;
   create_export_copied: Shape<"target", "source">;
   // IoT. One event, carrying only a surface and a position — never the example's slug as free text,
   // never the snippet. Deliberately NOT `component_code_copied`: that event means a component from
-  // the 98-component catalogue was activated and is the core activation metric, while an IoT example
+  // the catalogue was copied and is a Qualified Evaluation signal, while an IoT example
   // is a composition from a separate Experimental module. Folding the two together would inflate the
   // metric with a different kind of thing and make the trend unreadable in both directions.
   // The alternative considered was adding an `example` property to `component_code_copied`; rejected

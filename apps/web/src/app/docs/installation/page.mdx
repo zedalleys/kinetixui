@@ -42,8 +42,14 @@ npx @kinetixui/cli init
 ```css
 @import "@kinetixui/tokens/css";
 @import "@kinetixui/tokens/css/dark";
-@import "@kinetixui/tokens/css/extras"; /* --shadow-* + --text-* */
+@import "@kinetixui/tokens/css/extras";
+@import "@kinetixui/tokens/css/extras/dark";
 ```
+
+All four, in this order. `css` carries colour, spacing and radius; `css/extras`
+carries the shadow and type ramps, including the focus ring. Each `/dark` sheet
+redefines its half under `.dark`, so leaving one out keeps that half light in dark
+mode — `css/extras/dark` is where the stronger dark focus halo lives.
 
 ```ts
 import tokens from "@kinetixui/tokens";
@@ -139,6 +145,7 @@ For the **npm route**, load the token CSS and Tailwind layers in the global styl
 @import "@kinetixui/tokens/css";
 @import "@kinetixui/tokens/css/dark";
 @import "@kinetixui/tokens/css/extras";
+@import "@kinetixui/tokens/css/extras/dark";
 
 @tailwind base;
 @tailwind components;

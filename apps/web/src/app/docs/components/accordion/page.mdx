@@ -9,6 +9,11 @@ export const metadata = {
 
 A vertically stacked set of interactive headings that each reveal a section of content.
 
+{/* An h2 above the preview, because each trigger in it is a real `h3` (Radix's Accordion.Header). Placed straight
+    under the page's h1, the demo skipped a heading level (axe `heading-order`); under this heading it does not. */}
+
+## Example
+
 <ComponentPreview name="accordion-demo" />
 
 ## Installation

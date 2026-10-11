@@ -66,3 +66,79 @@ describe("ComponentGallery filters on a phone", () => {
     expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
   });
 });
+
+describe("ComponentGallery platform filter covers every implementation platform", () => {
+  /** The chips render in the inline facet row (CSS-hidden on phones, present in the DOM) — read that group. */
+  const platformGroup = () => screen.getAllByRole("group", { name: "Filter by platform" })[0]!;
+  const status = () => screen.getByRole("status").textContent ?? "";
+
+  it("offers React, Angular and the three native platforms, with user-facing labels", () => {
+    render(<ComponentGallery />);
+    const names = within(platformGroup())
+      .getAllByRole("button")
+      .map((b) => b.textContent ?? "");
+    for (const label of ["React", "Angular", "SwiftUI", "Jetpack Compose", "Flutter"]) {
+      expect(names.some((n) => n.startsWith(label)), `no ${label} chip`).toBe(true);
+    }
+    // the manifest key never leaks into the label
+    expect(names.some((n) => /^Compose\b/.test(n))).toBe(false);
+  });
+
+  it("marks Angular as Preview on its chip", () => {
+    render(<ComponentGallery />);
+    expect(within(platformGroup()).getByRole("button", { name: /^Angular · Preview \d+$/ })).toBeInTheDocument();
+  });
+
+  it.each([
+    ["React", "React"],
+    ["Angular", "Angular"],
+    ["SwiftUI", "SwiftUI"],
+    ["Compose", "Jetpack Compose"],
+    ["Flutter", "Flutter"],
+  ])("filters by ?platform=%s", (key, label) => {
+    nav.search = `platform=${key}`;
+    render(<ComponentGallery />);
+    const chip = within(platformGroup()).getByRole("button", { name: new RegExp(`^${label}`) });
+    expect(chip).toHaveAttribute("aria-pressed", "true");
+    const count = Number((chip.textContent ?? "").match(/(\d+)$/)?.[1]);
+    expect(count).toBeGreaterThan(0);
+    // "N entries" when the platform carries the whole catalogue (React), "N of M entries" otherwise
+    expect(Number(status().match(/^(\d+)/)?.[1])).toBe(count);
+    expect(status()).toContain(` · ${label}`);
+  });
+
+  it("narrows Angular below the full catalogue, because its catalogue is still rolling out", () => {
+    nav.search = "platform=Angular";
+    render(<ComponentGallery />);
+    const [shown, total] = (status().match(/(\d+) of (\d+)/) ?? []).slice(1).map(Number);
+    expect(shown).toBeGreaterThan(0);
+    expect(shown).toBeLessThan(total!);
+  });
+
+  it("ignores an unknown platform rather than filtering to nothing", () => {
+    nav.search = "platform=WearOS";
+    render(<ComponentGallery />);
+    expect(status()).toMatch(/^\d+ entries$/);
+    for (const chip of within(platformGroup()).getAllByRole("button")) {
+      expect(chip).toHaveAttribute("aria-pressed", "false");
+    }
+  });
+
+  it("chooses a web platform through the same URL parameter", async () => {
+    render(<ComponentGallery />);
+    await userEvent.click(within(platformGroup()).getByRole("button", { name: /^React \d+$/ }));
+    expect(nav.replace).toHaveBeenCalledWith(expect.stringContaining("platform=React"), { scroll: false });
+  });
+});
+
+describe("ComponentGallery thumbnails", () => {
+  it("adds no heading of its own: the page's h1 stays the only one", () => {
+    const { container } = render(<ComponentGallery />);
+    expect(container.querySelectorAll("h1")).toHaveLength(0);
+  });
+
+  it("does not describe KinetixUI as an open-source UI kit", () => {
+    const { container } = render(<ComponentGallery />);
+    expect(container.textContent).not.toMatch(/open-source UI kit/i);
+  });
+});

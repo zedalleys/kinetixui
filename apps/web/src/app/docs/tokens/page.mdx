@@ -131,11 +131,14 @@ install exists for the web only.
 npm install @kinetixui/tokens
 ```
 
-Import the stylesheets once, globally. Light is the base; dark applies under a `.dark` ancestor.
+Import the stylesheets once, globally. Light is the base; dark applies under a `.dark` ancestor. The
+`extras` pair carries the shadow and type ramps and the focus ring, and its dark half the dark focus halo.
 
 ```css
 @import "@kinetixui/tokens/css";
 @import "@kinetixui/tokens/css/dark";
+@import "@kinetixui/tokens/css/extras";
+@import "@kinetixui/tokens/css/extras/dark";
 ```
 
 Then refer to semantic roles, never to a raw value:

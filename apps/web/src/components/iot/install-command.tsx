@@ -11,9 +11,9 @@ import { trackFenceCopy } from "@/lib/analytics-surfaces";
  * this component invents no event of its own. Nothing from the snippet reaches analytics: `CopyButton` calls
  * `onCopy` with no arguments, and the classifier only ever forwards a package name it already knew.
  *
- * Note what this deliberately is not: `component_code_copied`. That event means a core catalogue component was
- * activated, and it can only fire on a `/docs/components/<slug>` page — IoT primitives are module primitives and
- * are not in that catalogue, so folding them in would quietly corrupt the activation metric.
+ * Note what this deliberately is not: `component_code_copied`. That event means a core catalogue component's code
+ * was copied (a Qualified Evaluation signal), and it can only fire on a `/docs/components/<slug>` page — IoT primitives are module primitives and
+ * are not in that catalogue, so folding them in would quietly corrupt that metric.
  */
 export function InstallCommand({ command, language = "bash" }: { command: string; language?: string }) {
   return (

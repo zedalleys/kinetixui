@@ -5,7 +5,7 @@
  * repository does not implement is listed under `notSupported`, not given a status.
  */
 import manifest from "../../../../components.manifest.json";
-import { CATALOG_PLATFORMS, NATIVE_PLATFORMS } from "./platform-parity";
+import { CATALOG_PLATFORMS, EVIDENCE_COUNTS, NATIVE_PLATFORMS, type Platform } from "./platform-parity";
 
 type Guidance = { type: "native-equivalent" | "composition" | "planned"; reason?: string; wave?: string };
 type ManifestComponent = {
@@ -48,6 +48,22 @@ const NATIVE: readonly string[] = NATIVE_PLATFORMS;
  */
 export const nonPorts = all.filter((n) => NATIVE.every((p) => !components[n]!.platforms.includes(p)));
 
+/**
+ * The RTL cell, derived from the verification evidence rather than typed.
+ *
+ * These were hand-written ("Core controls tested; the rest not audited") and drifted in both directions: Flutter
+ * gained RTL evidence on most of its catalogue while its cell still said "core controls", and Compose's cell implied
+ * more than its single component of evidence. The count is the one `verification.json` holds, so the cell cannot
+ * disagree with the evidence table on the same page. `mechanism` is the platform's own direction API, which is a
+ * fact about the platform rather than a measurement.
+ */
+const rtlCell = (platform: Platform, mechanism: string) => {
+  const proven = EVIDENCE_COUNTS[platform]?.rtl ?? 0;
+  const total = count(platform);
+  const evidence = proven === 0 ? "no component has RTL test evidence yet" : `${proven} of ${total} components have RTL test evidence; the rest are not audited`;
+  return `${mechanism} — ${evidence}`;
+};
+
 export type PlatformRow = {
   id: string;
   name: string;
@@ -72,7 +88,7 @@ export const platforms: PlatformRow[] = [
     components: count("React"),
     tokens: "CSS variables, Tailwind preset, typed TS object",
     darkMode: "Yes — `.dark` class",
-    rtl: "In progress — logical properties plus `KinetixDirectionProvider`",
+    rtl: rtlCell("React", "Logical properties plus `KinetixDirectionProvider`"),
     verification: "Unit, interaction and keyboard tests; axe in jsdom and in a real browser (light + dark); contrast, RTL, typography and grid guardrails",
     workflow: "ci.yml, a11y-browser.yml",
   },
@@ -85,7 +101,7 @@ export const platforms: PlatformRow[] = [
     components: count("Angular"),
     tokens: "The same generated CSS custom properties as React — one stylesheet, no Angular-specific token set",
     darkMode: "Yes — the same `.dark` class contract",
-    rtl: "Tabs resolve arrow-key direction from the document; the rest not audited",
+    rtl: rtlCell("Angular", "The document's `dir`"),
     verification:
       "`ng-packagr` AOT build with strictTemplates (every template compiled), plus Vitest behaviour tests for roles, keyboard, disabled state, forms integration and RTL. No browser-level axe pass yet",
     workflow: "ci.yml",
@@ -99,7 +115,7 @@ export const platforms: PlatformRow[] = [
     components: count("SwiftUI"),
     tokens: "Swift enums: colors (light + dark), type styles, spacing, radius, motion",
     darkMode: "Yes — follows the system color scheme",
-    rtl: "Not audited yet",
+    rtl: rtlCell("SwiftUI", "The `layoutDirection` environment value"),
     verification: "`swift build` and `swift test` on macOS: WCAG contrast of the light and dark colour sets, and the spacing / radius scale. No view-level interaction or accessibility tests yet",
     workflow: "native-swiftui.yml",
   },
@@ -112,8 +128,8 @@ export const platforms: PlatformRow[] = [
     components: count("Compose"),
     tokens: "Kotlin objects and `dimens.xml`: colors (light + dark), type styles, spacing, radius, motion",
     darkMode: "Yes — follows `isSystemInDarkTheme()`",
-    rtl: "Core controls tested (Tabs mirror); the rest not audited",
-    verification: "`gradle assembleDebug`, `lintDebug` and Compose UI tests (Robolectric) for the core controls: interaction, accessibility semantics, RTL. No screenshot tests yet",
+    rtl: rtlCell("Compose", "`LocalLayoutDirection`"),
+    verification: "`gradle assembleDebug`, `lintDebug` and Compose UI tests (Robolectric) for the core controls: interaction and accessibility semantics (counted in the evidence table). No screenshot tests yet",
     workflow: "native-compose.yml",
   },
   {
@@ -125,8 +141,8 @@ export const platforms: PlatformRow[] = [
     components: count("Flutter"),
     tokens: "Dart classes: color scheme (light + dark), type styles, spacing, radius, motion",
     darkMode: "Yes — follows the platform brightness",
-    rtl: "Core controls tested (Switch mirrors, RTL build); the rest not audited",
-    verification: "`flutter analyze`, widget smoke tests (~55 widgets, light and dark), and interaction, accessibility-semantics, RTL and large-text tests for the core controls. No golden tests yet",
+    rtl: rtlCell("Flutter", "`Directionality`"),
+    verification: "`flutter analyze`, widget smoke tests (light and dark), interaction and accessibility-semantics tests for the core controls, and RTL and large-text tests across most of the catalogue (counted in the evidence table). No golden tests yet",
     workflow: "native-flutter.yml",
   },
 ];

@@ -312,11 +312,38 @@ function ResizableMock() {
   );
 }
 
+/**
+ * PageHeader's live demo renders the component's real `<h1>`, and an inert, aria-hidden subtree is still DOM:
+ * the gallery page carried a second `h1` that any heading-structure check counts. The mock draws the same
+ * shape — breadcrumb, title, description, actions — with no heading element in it.
+ */
+function PageHeaderMock() {
+  return (
+    <div className="w-[200px] space-y-1.5 border-b border-border pb-2.5 text-[10px] text-muted-foreground">
+      <div className="flex items-center gap-1">
+        <span>Projects</span>
+        <span className="opacity-40">/</span>
+        <span className="text-foreground">KinetixUI</span>
+      </div>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 space-y-1">
+          <p className="text-[13px] font-medium text-foreground">KinetixUI</p>
+          <Bar w="w-24" h="h-1.5" />
+        </div>
+        <div className="flex shrink-0 gap-1">
+          <Btn>Settings</Btn>
+          <Btn solid>Deploy</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SeparatorMock() {
   return (
     <div className="w-[170px] space-y-2 text-[11px] text-muted-foreground">
       <p className="font-medium text-foreground">KinetixUI</p>
-      <p>An open-source UI kit.</p>
+      <p>KinetixUI — Cross-platform design system</p>
       <div className="h-px bg-border" />
       <div className="flex gap-3">
         <span>Blog</span>
@@ -354,4 +381,5 @@ export const THUMBNAIL_MOCKS: Record<string, React.ComponentType> = {
   "scroll-area": ScrollAreaMock,
   resizable: ResizableMock,
   separator: SeparatorMock,
+  "page-header": PageHeaderMock,
 };
