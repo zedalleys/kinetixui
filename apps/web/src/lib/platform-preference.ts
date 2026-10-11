@@ -53,6 +53,10 @@ export const platformIdForManifest = (platform: string): PlatformId | null => pa
 /* ------------------------------------------------------------------ the store */
 
 let current: PlatformId | null = null;
+// the reader's own choice this document: what the page falls back to when a `?platform=` override goes away
+let chosen: PlatformId | null = null;
+// the URL query `current` was resolved against; a client-side navigation changes it without a new document
+let resolvedFor: string | null = null;
 const listeners = new Set<() => void>();
 
 function readStored(): PlatformId | null {
@@ -63,18 +67,30 @@ function readStored(): PlatformId | null {
   }
 }
 
-function readQuery(): PlatformId | null {
+function readSearch(): string {
   try {
-    return parsePlatform(new URLSearchParams(window.location.search).get(PLATFORM_QUERY_PARAM));
+    return window.location.search;
   } catch {
-    return null;
+    return "";
   }
 }
 
-/** The platform the client should show now. Resolved once per document, then kept in memory. */
+/**
+ * The platform the client should show now. Re-resolved whenever the URL query changes, so following a
+ * `?platform=` link client-side applies it, and leaving that page goes back to the reader's own choice.
+ */
 function resolve(): PlatformId {
-  if (current === null) current = readQuery() ?? readStored() ?? DEFAULT_PLATFORM;
+  const search = readSearch();
+  if (current === null || search !== resolvedFor) {
+    resolvedFor = search;
+    const fromQuery = parsePlatform(new URLSearchParams(search).get(PLATFORM_QUERY_PARAM));
+    current = fromQuery ?? chosen ?? readStored() ?? DEFAULT_PLATFORM;
+  }
   return current;
+}
+
+function notify() {
+  for (const l of listeners) l();
 }
 
 // another tab changed the choice: follow it, so two open docs tabs don't disagree
@@ -82,28 +98,39 @@ function onStorage(e: StorageEvent) {
   if (e.key !== PLATFORM_STORAGE_KEY) return;
   const next = parsePlatform(e.newValue);
   if (!next || next === current) return;
-  current = next;
-  for (const l of listeners) l();
+  current = chosen = next;
+  notify();
+}
+
+// back/forward can change the query without remounting anything: re-read it
+function onPopState() {
+  notify();
 }
 
 function subscribe(listener: () => void) {
-  if (listeners.size === 0) window.addEventListener("storage", onStorage);
+  if (listeners.size === 0) {
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("popstate", onPopState);
+  }
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
-    if (listeners.size === 0) window.removeEventListener("storage", onStorage);
+    if (listeners.size === 0) {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("popstate", onPopState);
+    }
   };
 }
 
 /** Record an explicit choice: every switcher on the page follows it, and the next page opens on it. */
 export function setPreferredPlatform(id: PlatformId): void {
-  current = id;
+  current = chosen = id;
   try {
     window.localStorage.setItem(PLATFORM_STORAGE_KEY, id);
   } catch {
     // storage unavailable: the choice still holds for this page
   }
-  for (const l of listeners) l();
+  notify();
 }
 
 /** The reader's platform. React on the server and on the first client render; the stored choice right after. */
@@ -113,7 +140,8 @@ export function usePreferredPlatform(): PlatformId {
 
 /** Tests only: forget the in-memory choice so the next read goes back to the URL and storage. */
 export function resetPlatformPreferenceForTests(): void {
-  current = null;
+  current = chosen = resolvedFor = null;
   listeners.clear();
   window.removeEventListener("storage", onStorage);
+  window.removeEventListener("popstate", onPopState);
 }

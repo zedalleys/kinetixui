@@ -56,7 +56,15 @@ Note the commit in your own repository (a line in your README or the commit
 message that adds the folder), so the next update knows where it started. To
 update, check out a newer commit, read
 `git -C ../kinetixui log --oneline <commit-sha>..<newer-commit-sha> -- packages/ui-compose/ui`,
-and copy the folder again.
+then replace the folder: delete it first, because `cp -R` onto an existing
+`kinetixui-ui` nests the new copy inside the old one.
+
+```bash
+git -C ../kinetixui fetch
+git -C ../kinetixui checkout <newer-commit-sha>
+rm -rf kinetixui-ui
+cp -R ../kinetixui/packages/ui-compose/ui kinetixui-ui
+```
 
 That leaves `packages/ui-compose/ui` in your project as a folder named `kinetixui-ui`,
 next to your `app` folder. Register it:

@@ -70,7 +70,12 @@ read what changed for this package, then move the pin:
 git -C Vendor/kinetixui fetch
 git -C Vendor/kinetixui log --oneline <commit-sha>..origin/main -- packages/ui-swiftui
 git -C Vendor/kinetixui checkout <newer-commit-sha>
+git add Vendor/kinetixui
+git commit -m "Update KinetixUI to <newer-commit-sha>"
 ```
+
+The last two lines record the new pin in your repository; without them a fresh
+clone still builds the old commit.
 
 ### First screen
 

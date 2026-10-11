@@ -72,6 +72,30 @@ describe("the reader's platform", () => {
     expect(window.localStorage.getItem(PLATFORM_STORAGE_KEY)).toBe("compose");
   });
 
+  it("follows ?platform= across client-side navigation and goes back to the reader's choice when it is gone", async () => {
+    window.localStorage.setItem(PLATFORM_STORAGE_KEY, "compose");
+    const user = userEvent.setup();
+    const page = (url: string) => {
+      cleanup();
+      window.history.pushState(null, "", url);
+      render(<ComponentPreview name="button-demo" />);
+    };
+    page("/docs/components/button");
+    await openCode(user);
+    expect(selected().some((t) => t?.startsWith("Jetpack Compose"))).toBe(true);
+    page("/docs/components/dialog?platform=angular");
+    await openCode(user);
+    expect(selected().some((t) => t?.startsWith("Angular"))).toBe(true);
+    page("/docs/components/tabs");
+    await openCode(user);
+    expect(selected().some((t) => t?.startsWith("Jetpack Compose"))).toBe(true);
+    // back to the override without a remount: popstate re-reads the URL
+    window.history.pushState(null, "", "/docs/components/tabs?platform=angular");
+    act(() => window.dispatchEvent(new PopStateEvent("popstate")));
+    expect(selected().some((t) => t?.startsWith("Angular"))).toBe(true);
+    expect(window.localStorage.getItem(PLATFORM_STORAGE_KEY)).toBe("compose");
+  });
+
   it("ignores an unknown value from the URL or storage and falls back to React", async () => {
     window.localStorage.setItem(PLATFORM_STORAGE_KEY, "vue");
     window.history.replaceState(null, "", "/docs/components/button?platform=svelte");
