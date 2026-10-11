@@ -95,6 +95,11 @@ export function BuildingOpsDemo({ initialScenario = DEFAULT_SCENARIO, seed = DEF
     },
     [clock],
   );
+  // Alert ids are deterministic, so a replayed alert would otherwise come back already acknowledged.
+  const restartScenario = React.useCallback(() => {
+    setAcknowledged({});
+    clock.restart();
+  }, [clock]);
 
   // `?scenario=` selects a scenario on load; choosing one writes it back, so a link reproduces the view.
   React.useEffect(() => {
@@ -213,7 +218,7 @@ export function BuildingOpsDemo({ initialScenario = DEFAULT_SCENARIO, seed = DEF
               <FastForward aria-hidden="true" />
               <span aria-hidden="true">+15 s</span>
             </Button>
-            <Button variant="Ghost" size="sm" onClick={() => clock.restart()} aria-label="Restart scenario">
+            <Button variant="Ghost" size="sm" onClick={restartScenario} aria-label="Restart scenario">
               <RotateCcw aria-hidden="true" />
               <span aria-hidden="true">Restart</span>
             </Button>

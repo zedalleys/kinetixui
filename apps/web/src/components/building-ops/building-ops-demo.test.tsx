@@ -170,4 +170,38 @@ describe("Building Operations demo", () => {
     fireEvent.click(screen.getByRole("button", { name: "Restart scenario" }));
     expect(document.querySelector("[data-sim-clock]")).toHaveTextContent("09:30:00 UTC");
   });
+
+  it("clears acknowledgements on restart, so a replayed alert comes back new", () => {
+    renderDemo({ initialScenario: "camera-offline" });
+    const alerts = () => screen.getByRole("heading", { name: "Alerts on L2" }).closest("section")!;
+    const ackButtons = () => within(alerts()).queryAllByRole("button", { name: /acknowledge/i });
+    const before = ackButtons().length;
+    expect(before).toBeGreaterThan(0);
+    fireEvent.click(ackButtons()[0]);
+    expect(ackButtons()).toHaveLength(before - 1);
+    fireEvent.click(screen.getByRole("button", { name: "Restart scenario" }));
+    expect(ackButtons()).toHaveLength(before);
+  });
+
+  it("skips time the tab spent hidden even when the browser suspended the interval", () => {
+    vi.useFakeTimers();
+    let now = 0;
+    render(<BuildingOpsDemo syncUrl={false} clock={{ clock: () => now, intervalMs: 1000 }} />);
+    const clockText = () => document.querySelector("[data-sim-clock]")!.textContent;
+    act(() => {
+      now = 2_000;
+      vi.advanceTimersByTime(1000);
+    });
+    expect(clockText()).toBe("09:30:02 UTC");
+    // Hidden for five minutes with no interval callbacks, then visible again.
+    now = 302_000;
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    act(() => {
+      now = 303_000;
+      vi.advanceTimersByTime(1000);
+    });
+    expect(clockText()).toBe("09:30:03 UTC");
+  });
 });

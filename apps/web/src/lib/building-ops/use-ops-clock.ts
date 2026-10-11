@@ -58,7 +58,16 @@ export function useOpsClock({ intervalMs = 1000, clock = defaultClock, initially
       lastRef.current = at;
       commit(elapsedRef.current + Math.max(0, at - last));
     }, intervalMs);
-    return () => clearInterval(id);
+    // Browsers may suspend the interval while the tab is hidden, so the hidden check above never runs. Re-base
+    // on the way back so the hidden time is skipped instead of added in one jump.
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") lastRef.current = clockRef.current();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [playing, intervalMs, commit]);
 
   const setPlaying = useCallback((value: boolean) => setPlayingState(value), []);
