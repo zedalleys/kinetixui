@@ -642,13 +642,20 @@ describe("the IoT module is described as what it is", () => {
    * none pending, the version npm serves is the package source in this repository. So a pre-release marker is
    * allowed while an IoT changeset is pending (future unreleased work can be documented ahead of its release)
    * and refused once none is. The roadmap is excised first: it is about work that is not in the module at all.
+   *
+   * A changeset held back in `.changeset-held/` is still unreleased work on `main`; it is only kept out of the
+   * Version Packages PR so another cohort can ship without it. It counts as pending here.
    */
   it("marks nothing as unreleased once no IoT release is pending", () => {
-    const changesetDir = `${root}/.changeset`;
-    const pendingIot = readdirSync(changesetDir)
-      .filter((file) => file.endsWith(".md") && file !== "README.md")
-      .filter((file) => {
-        const frontmatter = readFileSync(`${changesetDir}/${file}`, "utf8").split(/^---\s*$/m)[1] ?? "";
+    const pendingIot = [`${root}/.changeset`, `${root}/.changeset-held/iot`]
+      .filter((dir) => existsSync(dir))
+      .flatMap((dir) =>
+        readdirSync(dir)
+          .filter((file) => file.endsWith(".md") && file !== "README.md")
+          .map((file) => `${dir}/${file}`),
+      )
+      .filter((path) => {
+        const frontmatter = readFileSync(path, "utf8").split(/^---\s*$/m)[1] ?? "";
         return /^\s*["']?@kinetixui\/iot["']?\s*:/m.test(frontmatter);
       });
 
