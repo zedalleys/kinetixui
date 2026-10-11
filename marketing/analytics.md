@@ -225,7 +225,7 @@ block interest (`block_code_copied` by block) · adoption-rung split (`adopt_*`)
 Sessions · pageviews · referrers · attribution source and medium.
 
 Vercel Web Analytics (page views, visitors, top pages, referrers, countries, devices) also lives here, as a
-cross-check on PostHog's traffic counts. It is never a source for §3, §4 or any Tier 1 or Tier 2 metric: it has
+cross-check on PostHog's traffic counts, and so does Vercel Speed Insights (Core Web Vitals per page). It is never a source for §3, §4 or any Tier 1 or Tier 2 metric: it has
 no sessions in PostHog's sense, no product events and no `kx_*` attribution, and the two tools count visitors
 differently, so their totals are not expected to match.
 
@@ -583,6 +583,7 @@ permitted, including PostHog-injected `$session_entry_utm_*` / `gclid` / `ph_key
 specification carries anything but short identifiers from closed vocabularies — no URLs, no copied strings,
 no search terms, no names.
 
-Vercel Web Analytics follows the same rules: page views only (no custom events), URLs cut to origin + path,
+Vercel Web Analytics and Speed Insights follow the same rules: page views and Web Vitals measurements only (no
+custom events), URLs cut to origin + path,
 the same production-hostname gate, Do Not Track honoured and diagnostic tabs dropped. Details in
-[`apps/web/ANALYTICS.md`](../apps/web/ANALYTICS.md) *Vercel Web Analytics*.
+[`apps/web/ANALYTICS.md`](../apps/web/ANALYTICS.md) *Vercel Web Analytics and Speed Insights*.

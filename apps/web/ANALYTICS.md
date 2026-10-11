@@ -264,27 +264,31 @@ for us because our page views are manual, so it has to be set explicitly.)
   analytics.md §4 *Eligible arriving session*). Exclude it from any breakdown that counts "events per visitor".
 - Do Not Track still applies: with it on, nothing is captured, `$pageleave` included.
 
-## Vercel Web Analytics (second view of traffic)
+## Vercel Web Analytics and Speed Insights (second view of traffic and performance)
 
-A second, smaller tool next to PostHog: the Vercel dashboard's page views, visitors, top pages, referrers,
-countries and devices. It is context only. Qualified Evaluation, Adoption Intent and attribution stay in PostHog,
+Two smaller Vercel tools next to PostHog: Web Analytics (page views, visitors, top pages, referrers, countries and
+devices) and Speed Insights (Core Web Vitals per page: LCP, INP, CLS, FCP, TTFB). Both are context only. Qualified Evaluation, Adoption Intent and attribution stay in PostHog,
 and nothing here feeds them; the two tools count visitors differently, so their totals will not match.
 
-Rules in [`src/lib/analytics-vercel.ts`](src/lib/analytics-vercel.ts); the SDK is imported only by
+Rules in [`src/lib/analytics-vercel.ts`](src/lib/analytics-vercel.ts); both SDKs are imported only by
 [`src/components/vercel-analytics.tsx`](src/components/vercel-analytics.tsx), mounted next to `AnalyticsProvider`.
 
-- **Same gate as PostHog.** The script loads only in a production build on `kinetixui.com` (or with
-  `NEXT_PUBLIC_ANALYTICS_ANY_HOST=true`), so `next dev`, tests and Vercel preview deployments never load it. It
-  needs no environment variables.
+- **Same gate as PostHog.** Both scripts load only in a production build on `kinetixui.com` (or with
+  `NEXT_PUBLIC_ANALYTICS_ANY_HOST=true`), so `next dev`, tests and Vercel preview deployments never load them. They
+  need no environment variables. The React entry points are used, not `/next`, so nothing reads `useSearchParams`;
+  every route here is a literal path, so `/next`'s dynamic-route grouping would add nothing.
 - **Page views only.** No custom events: `track` from `@vercel/analytics` is not used (the architecture test pins
   it), and `beforeSend` cancels any `event` that arrives anyway. Never send copied code, commands or URLs to it.
+- **Speed Insights sends measurements only** (`vital`); its `beforeSend` cancels anything else.
 - **URLs are cut to origin + path** in `beforeSend`, so no query string (`?q=`, `?filter=`, `utm_*`) or hash is sent.
   A path that is not identifier-shaped (`cleanPath`) is dropped, exactly as for PostHog page views.
-- **Do Not Track** cancels every page view. A tab marked `?kx_traffic=diagnostic` is also cancelled, because a
+- **Do Not Track** cancels every page view and measurement. A tab marked `?kx_traffic=diagnostic` is also cancelled, because a
   Vercel event cannot carry the mark and so could not be filtered out afterwards.
-- **What Vercel itself collects** (its documented behaviour, not something this code controls): the page URL we
-  pass, the referrer, the country from the request, browser, OS and device type. It sets no cookie; it counts a
-  visitor by a hash of the request that it resets daily, and does not store the IP address. The script and its
-  ingest are same-origin (`/_vercel/insights/*`), so the CSP needs no change.
-- **To turn it on:** enable Web Analytics on the Vercel project (Analytics tab), then redeploy. Until then the
-  script request 404s and nothing is collected.
+- **What Vercel itself collects** (its documented behaviour, not something this code controls): Web Analytics gets
+  the page URL we pass, the referrer, the country from the request, browser, OS and device type, sets no cookie, and
+  counts a visitor by a request hash it resets daily. Speed Insights gets the page URL we pass, the Web Vitals
+  values, and browser, OS, device type, country and connection type; it identifies no visitor. Both scripts and
+  their ingest are same-origin (`/_vercel/insights/*`, `/_vercel/speed-insights/*`), so the CSP needs no change.
+- **To turn them on:** enable Web Analytics and Speed Insights on the Vercel project (each has its own tab), then
+  redeploy. Until then each script request 404s and nothing is collected. Speed Insights may be billed beyond the
+  plan's free allowance; check the project's plan.

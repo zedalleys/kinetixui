@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { isDiagnosticTab } from "./analytics-attribution";
-import { shouldLoadVercelAnalytics, vercelBeforeSend } from "./analytics-vercel";
+import { shouldLoadVercelAnalytics, speedInsightsBeforeSend, vercelBeforeSend } from "./analytics-vercel";
 
 const ok = { dnt: false, diagnostic: false };
 
@@ -48,6 +48,23 @@ describe("vercelBeforeSend", () => {
   it("drops a URL it cannot read or a path that is not identifier-shaped", () => {
     expect(vercelBeforeSend({ type: "pageview", url: "not a url" }, ok)).toBeNull();
     expect(vercelBeforeSend({ type: "pageview", url: "https://kinetixui.com/a%20b" }, ok)).toBeNull();
+  });
+});
+
+describe("speedInsightsBeforeSend", () => {
+  const vital = { type: "vital" as const, url: "https://kinetixui.com/docs/tokens?utm_source=x#a", route: "/docs/tokens" };
+
+  it("sends a Web Vitals measurement with the URL cut to origin + path", () => {
+    expect(speedInsightsBeforeSend(vital, ok)).toEqual({ ...vital, url: "https://kinetixui.com/docs/tokens" });
+  });
+
+  it("sends nothing but measurements", () => {
+    expect(speedInsightsBeforeSend({ type: "pageview", url: "https://kinetixui.com/" }, ok)).toBeNull();
+  });
+
+  it("drops measurements under Do Not Track and from a diagnostic tab", () => {
+    expect(speedInsightsBeforeSend(vital, { dnt: true, diagnostic: false })).toBeNull();
+    expect(speedInsightsBeforeSend(vital, { dnt: false, diagnostic: true })).toBeNull();
   });
 });
 

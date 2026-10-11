@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { Analytics } from "@vercel/analytics/react";
-import { readVercelAnalyticsEnv, shouldLoadVercelAnalytics, vercelBeforeSend } from "@/lib/analytics-vercel";
+import { SpeedInsights } from "@vercel/speed-insights/react";
+import { readVercelAnalyticsEnv, shouldLoadVercelAnalytics, speedInsightsBeforeSend, vercelBeforeSend } from "@/lib/analytics-vercel";
 
 /**
- * Mounts Vercel Web Analytics behind the same gate as PostHog. Renders nothing until an effect has checked the
- * hostname, so the server render and dev, test and preview builds never inject the script. The React entry point
- * (not `/next`) is used so nothing reads `useSearchParams`; the script follows client-side navigations itself.
+ * Mounts Vercel Web Analytics and Speed Insights behind the same gate as PostHog. Renders nothing until an effect
+ * has checked the hostname, so the server render and dev, test and preview builds never inject either script. The
+ * React entry points (not `/next`) are used so nothing reads `useSearchParams`; both scripts follow client-side
+ * navigations themselves, and every route on this site is a literal path, so `/next`'s dynamic-route grouping adds
+ * nothing.
  * Rules and reasons: `lib/analytics-vercel.ts`.
  */
 export function VercelAnalytics() {
@@ -17,5 +20,11 @@ export function VercelAnalytics() {
     setEnabled(shouldLoadVercelAnalytics(readVercelAnalyticsEnv(window.location.hostname)));
   }, []);
 
-  return enabled ? <Analytics mode="production" beforeSend={(event) => vercelBeforeSend(event)} /> : null;
+  if (!enabled) return null;
+  return (
+    <>
+      <Analytics mode="production" beforeSend={(event) => vercelBeforeSend(event)} />
+      <SpeedInsights beforeSend={(event) => speedInsightsBeforeSend(event)} />
+    </>
+  );
 }

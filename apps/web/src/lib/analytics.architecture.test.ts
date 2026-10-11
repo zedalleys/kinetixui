@@ -38,8 +38,8 @@ describe("analytics architecture", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("imports @vercel/analytics only in its one component, and never its custom-event API", () => {
-    const offenders = files.filter((f) => /["']@vercel\/analytics/.test(code(f)));
+  it("imports @vercel/analytics and @vercel/speed-insights only in their one component, and never the custom-event API", () => {
+    const offenders = files.filter((f) => /["']@vercel\/(analytics|speed-insights)/.test(code(f)));
     expect(offenders).toEqual(["src/components/vercel-analytics.tsx"]);
     expect(code("src/components/vercel-analytics.tsx")).not.toMatch(/\btrack\b/);
     expect(read("src/app/layout.tsx")).toContain("<VercelAnalytics />");
