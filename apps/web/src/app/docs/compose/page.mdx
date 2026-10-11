@@ -16,9 +16,9 @@ to `pnpm install` / Turborepo. It lives here for proximity to the token
 source it's built from.
 
 <Callout>
-  Not on Maven Central yet. Consume it by cloning the repo and copying the
-  `packages/ui-compose/ui` module into your project (or `includeBuild`-ing
-  it), the same "own the code" model as the web CLI. A publication workflow
+  Not on Maven Central yet. Consume it by cloning the repo at a pinned commit
+  and copying the `packages/ui-compose/ui` module into your project, the same
+  "own the code" model as the web CLI. A publication workflow
   (`publish-compose.yml`, staging to the Central Portal) exists but needs
   signing credentials and has not been used for a real release.
 </Callout>
@@ -43,8 +43,23 @@ The `ui` module is `com.android.library`, `namespace com.kinetixui.ui`,
 
 ### 1. Copy the module and register it
 
-Copy `packages/ui-compose/ui` into your project as a folder named `kinetixui-ui`,
-next to your `app` folder, then register it:
+There is no released version, so copy from a checkout pinned to a commit. From
+your project's root folder:
+
+```bash
+git clone https://github.com/zedalleys/kinetixui.git ../kinetixui
+git -C ../kinetixui checkout <commit-sha>
+cp -R ../kinetixui/packages/ui-compose/ui kinetixui-ui
+```
+
+Note the commit in your own repository (a line in your README or the commit
+message that adds the folder), so the next update knows where it started. To
+update, check out a newer commit, read
+`git -C ../kinetixui log --oneline <commit-sha>..<newer-commit-sha> -- packages/ui-compose/ui`,
+and copy the folder again.
+
+That leaves `packages/ui-compose/ui` in your project as a folder named `kinetixui-ui`,
+next to your `app` folder. Register it:
 
 ```kotlin
 // settings.gradle.kts: add to your existing settings

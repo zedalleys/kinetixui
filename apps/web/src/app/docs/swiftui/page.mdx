@@ -31,7 +31,48 @@ source it's built from.
 
 `Package.swift` declares one library target, `KinetixUI`, for
 `.iOS(.v16)` / `.macOS(.v13)` (the floor is 16 / 13 because
-`KinetixButton` uses the View-level `.tracking` text modifier).
+`KinetixButton` uses the View-level `.tracking` text modifier). It uses
+`swift-tools-version: 6.0`, so it needs Swift 6, which means Xcode 16 or newer.
+
+### Add the package from a pinned checkout
+
+There is no released version to depend on, so pin a commit instead. SwiftPM reads
+`Package.swift` from the root of a git repository and this one keeps it in
+`packages/ui-swiftui`, so `.package(url:)` pointed at this repository does not
+resolve. Add the repository as a submodule and check out the commit you want:
+
+```bash
+git submodule add https://github.com/zedalleys/kinetixui.git Vendor/kinetixui
+git -C Vendor/kinetixui checkout <commit-sha>
+git add .gitmodules Vendor/kinetixui
+```
+
+In an Xcode app project, choose **File › Add Package Dependencies… › Add Local…**,
+select `Vendor/kinetixui/packages/ui-swiftui`, and add the `KinetixUI` library to
+your app target. In a Swift package, depend on the local path:
+
+```swift
+// Package.swift
+dependencies: [
+    .package(path: "Vendor/kinetixui/packages/ui-swiftui"),
+],
+targets: [
+    .target(name: "App", dependencies: [
+        .product(name: "KinetixUI", package: "ui-swiftui"),
+    ]),
+]
+```
+
+Your repository now records exactly which commit you build against. To update,
+read what changed for this package, then move the pin:
+
+```bash
+git -C Vendor/kinetixui fetch
+git -C Vendor/kinetixui log --oneline <commit-sha>..origin/main -- packages/ui-swiftui
+git -C Vendor/kinetixui checkout <newer-commit-sha>
+```
+
+### First screen
 
 Wrap a screen — or a `#Preview` — in `KinetixTheme` so every `Kinetix*`
 view resolves to the right light/dark token set:
@@ -58,6 +99,10 @@ struct ContentView: View {
     }
 }
 ```
+
+Show `ContentView` from your app's `WindowGroup` and run it. You should see a
+**Get started** button, a smaller outlined **Cancel** button and a destructive
+**Delete** button, in light or dark to match the system appearance.
 
 `@Environment(\.kinetixColors)` exposes the active `KinetixColors` set if
 you need a token directly.
