@@ -119,6 +119,21 @@ import {
             </kx-select-content>
           </kx-select>
         </div>
+        <!-- a disabled select whose open state the page also drives: it must never be open while disabled -->
+        <div class="kx-fixture-field">
+          <label kxLabel for="lock-trigger">Locked</label>
+          <kx-select [(value)]="lockValue" [(open)]="lockOpen" [disabled]="lockOff()">
+            <button kxSelectTrigger id="lock-trigger"><kx-select-value placeholder="Locked" /></button>
+            <kx-select-content id="lock-content">
+              <kx-select-item value="one" id="lock-one">One</kx-select-item>
+              <kx-select-item value="two" id="lock-two">Two</kx-select-item>
+            </kx-select-content>
+          </kx-select>
+          <button kxButton variant="outline" type="button" id="lock-open" (click)="lockOpen.set(true)">Open the locked select</button>
+          <button kxButton variant="outline" type="button" id="lock-toggle" (click)="lockOff.set(!lockOff())">Toggle disabled</button>
+        </div>
+        <output data-kx-out="lock-open">{{ lockOpen() }}</output>
+        <output data-kx-out="lock">{{ lockValue() ?? '' }}</output>
         <output data-kx-out="fruit">{{ fruit.value ?? '' }}</output>
         <output data-kx-out="fruit-touched">{{ fruit.touched }}</output>
         <output data-kx-out="sel-open">{{ selOpen() }}</output>
@@ -181,6 +196,13 @@ import {
           <label kxLabel for="ms2-input">Tags</label>
           <kx-multi-select inputId="ms2-input" id="ms2" [options]="tags" [(value)]="tagValues" creatable placeholder="Add tags…" />
         </div>
+        <div class="kx-fixture-field">
+          <label kxLabel for="ms-lock-input">Locked tags</label>
+          <kx-multi-select inputId="ms-lock-input" id="ms-lock" [options]="labels" [(value)]="lockTags" [(open)]="msLockOpen" [disabled]="true" />
+          <button kxButton variant="outline" type="button" id="ms-lock-open" (click)="msLockOpen.set(true)">Open the locked tags</button>
+        </div>
+        <output data-kx-out="ms-lock-open">{{ msLockOpen() }}</output>
+        <output data-kx-out="ms-lock">{{ lockTags().join(',') }}</output>
         <output data-kx-out="ms">{{ chosen.value.join(',') }}</output>
         <output data-kx-out="ms-touched">{{ chosen.touched }}</output>
         <output data-kx-out="ms-open">{{ msOpen() }}</output>
@@ -250,6 +272,11 @@ export class ListboxesFixture {
   readonly fruit = new FormControl<string | null>(null);
   readonly selOpen = signal(false);
   readonly size = signal<string | null>('m');
+  readonly lockValue = signal<string | null>('two');
+  readonly lockOpen = signal(false);
+  readonly lockOff = signal(true);
+  readonly lockTags = signal<string[]>([]);
+  readonly msLockOpen = signal(false);
   readonly search = signal('');
   readonly ran = signal('');
   readonly extra = signal(true);

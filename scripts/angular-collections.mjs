@@ -760,6 +760,23 @@ const BEHAVIOUR = [
       const ids = await idHygiene(page);
       t(ids.dups.length === 0 && ids.broken.length === 0, "two selects on one page: no duplicate ids, every reference resolves", [...ids.dups, ...ids.broken].join(", "));
       await press(page, "Escape");
+
+      // ── a disabled select is never open, however the page asks ──
+      const lock = page.locator("#lock-trigger");
+      t((await lock.isDisabled()) && (await lock.getAttribute("aria-expanded")) === "false", "a disabled select is closed");
+      await click(page, "#lock-open");
+      await idle(page);
+      t(!(await showing(page, "#lock-content")) && (await out(page, "lock-open")) === "false", "a disabled field cannot be externally reopened: [(open)] set true settles back to false, no popup", `open=${await out(page, "lock-open")}`);
+      t((await lock.getAttribute("aria-expanded")) === "false" && (await lock.getAttribute("aria-activedescendant")) === null, "…and the trigger reads collapsed with no active descendant");
+      await page.locator("#lock-one").evaluate((el) => el.click());
+      await idle(page);
+      t((await out(page, "lock")) === "two", "…and no option can change its value", await out(page, "lock"));
+      await click(page, "#lock-toggle");
+      await click(page, "#lock-trigger");
+      t((await showing(page, "#lock-content")) && (await out(page, "lock-open")) === "true", "re-enabled, it opens normally again");
+      await click(page, "#lock-toggle");
+      await idle(page);
+      t(!(await showing(page, "#lock-content")) && (await out(page, "lock-open")) === "false", "disabled while open, it closes");
     },
   },
   {
@@ -961,6 +978,16 @@ const BEHAVIOUR = [
       await press(page, "Enter");
       t((await out(page, "ms2")) === "Someday", "creatable: Enter adds the text", await out(page, "ms2"));
       await press(page, "Escape");
+
+      // ── a disabled multi-select is never open, however the page asks ──
+      await click(page, "#ms-lock-open");
+      await idle(page);
+      const lockInput = page.locator("#ms-lock-input");
+      t(!(await showing(page, "#ms-lock .kx-option-popup")) && (await out(page, "ms-lock-open")) === "false", "a disabled field cannot be externally reopened: [(open)] set true settles back to false, no popup", `open=${await out(page, "ms-lock-open")}`);
+      t((await lockInput.getAttribute("aria-expanded")) === "false" && (await lockInput.getAttribute("aria-activedescendant")) === null, "…and the input reads collapsed with no active descendant");
+      await page.locator("#ms-lock .kx-option").first().evaluate((el) => el.click());
+      await idle(page);
+      t((await out(page, "ms-lock")) === "", "…and no option can change the selection", await out(page, "ms-lock"));
     },
   },
 ];

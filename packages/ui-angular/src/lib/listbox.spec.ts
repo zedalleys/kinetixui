@@ -200,6 +200,91 @@ describe('select', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
   });
 
+  describe('a disabled field is never open', () => {
+    const DISABLED = `
+      <kx-select [(value)]="v" [(open)]="open" [disabled]="off()">
+        <button kxSelectTrigger aria-label="Pick"><kx-select-value /></button>
+        <kx-select-content><kx-select-item value="a">A</kx-select-item><kx-select-item value="b">B</kx-select-item></kx-select-content>
+      </kx-select>
+      <kx-select [formControl]="form" [(open)]="formOpen">
+        <button kxSelectTrigger aria-label="Form pick"><kx-select-value /></button>
+        <kx-select-content><kx-select-item value="a">A</kx-select-item><kx-select-item value="b">B</kx-select-item></kx-select-content>
+      </kx-select>`;
+    const state = () => ({
+      v: signal<string | null>('b'),
+      open: signal(false),
+      off: signal(false),
+      form: new FormControl<string | null>('b'),
+      formOpen: signal(false),
+    });
+    const triggers = (el: HTMLElement) => el.querySelectorAll<HTMLButtonElement>('button[kxSelectTrigger]');
+    const popups = (el: HTMLElement) => el.querySelectorAll<HTMLElement>('kx-select-content');
+
+    it('open, then [disabled]: closes', async () => {
+      const { fixture, el, state: s } = host(DISABLED, state());
+      s.open.set(true);
+      await settle(fixture);
+      expect(triggers(el)[0]!.getAttribute('aria-expanded')).toBe('true');
+      s.off.set(true);
+      await settle(fixture);
+      expect(s.open()).toBe(false);
+      expect(triggers(el)[0]!.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('[disabled], then an external [(open)]: it cannot stay open, names no option and keeps its value', async () => {
+      const { fixture, el, state: s } = host(DISABLED, state());
+      s.off.set(true);
+      await settle(fixture);
+      s.open.set(true);
+      await settle(fixture);
+      const trigger = triggers(el)[0]!;
+      expect(s.open()).toBe(false);
+      expect(trigger.getAttribute('aria-expanded')).toBe('false');
+      expect(ad(trigger)).toBeNull();
+      popups(el)[0]!.querySelectorAll<HTMLElement>('[role=option]')[0]!.click();
+      key(trigger, 'Enter');
+      await settle(fixture);
+      expect(s.v()).toBe('b');
+      expect(s.open()).toBe(false);
+    });
+
+    it('form-disabled, then an external [(open)]: the same', async () => {
+      const { fixture, el, state: s } = host(DISABLED, state());
+      s.form.disable();
+      await settle(fixture);
+      s.formOpen.set(true);
+      await settle(fixture);
+      const trigger = triggers(el)[1]!;
+      expect(s.formOpen()).toBe(false);
+      expect(trigger.getAttribute('aria-expanded')).toBe('false');
+      expect(ad(trigger)).toBeNull();
+      popups(el)[1]!.querySelectorAll<HTMLElement>('[role=option]')[0]!.click();
+      await settle(fixture);
+      expect(s.form.value).toBe('b');
+    });
+
+    it('re-enabled: opens normally again', async () => {
+      const { fixture, el, state: s } = host(DISABLED, state());
+      s.off.set(true);
+      await settle(fixture);
+      s.open.set(true);
+      await settle(fixture);
+      s.off.set(false);
+      await settle(fixture);
+      const trigger = triggers(el)[0]!;
+      key(trigger, 'ArrowDown');
+      await settle(fixture);
+      expect(s.open()).toBe(true);
+      expect(textOf(ad(trigger))).toBe('B');
+      s.form.disable();
+      s.form.enable();
+      s.formOpen.set(true);
+      await settle(fixture);
+      expect(s.formOpen()).toBe(true);
+      expect(triggers(el)[1]!.getAttribute('aria-expanded')).toBe('true');
+    });
+  });
+
   it('chooses by typeahead while closed, never a disabled option, and Escape and Tab choose nothing', async () => {
     const { fixture, el, state } = host(SELECT, selectState());
     const trigger = el.querySelector<HTMLElement>('button[kxSelectTrigger]')!;
@@ -443,6 +528,25 @@ describe('multi-select', () => {
       const offers = [...el.querySelectorAll<HTMLElement>('[role=option]')].filter((o) => !o.hidden).map((o) => o.textContent!.trim());
       expect(offers.some((t) => t.startsWith('Create'))).toBe(false);
     }
+  });
+
+  it('disabled, then an external [(open)]: the list cannot stay open and the selection cannot change', async () => {
+    const { fixture, el, state } = host(
+      `<kx-multi-select aria-label="Tags" [options]="options" [(value)]="tags" [(open)]="open" [disabled]="true" />`,
+      { ...multiState(), tags: signal<string[]>(['docs']), open: signal(false) },
+    );
+    await settle(fixture);
+    state.open.set(true);
+    await settle(fixture);
+    const input = el.querySelector('input')!;
+    expect(state.open()).toBe(false);
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    expect(ad(input)).toBeNull();
+    el.querySelectorAll<HTMLElement>('[role=option]')[0]!.click();
+    key(input, 'Enter');
+    await settle(fixture);
+    expect(state.tags()).toEqual(['docs']);
+    expect(state.open()).toBe(false);
   });
 
   it('reports touched on blur and disables every part with the form control', async () => {

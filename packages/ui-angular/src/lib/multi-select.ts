@@ -155,6 +155,7 @@ export class KxMultiSelect extends KxOptionField<string[]> {
   readonly list = new KxOptionList({
     items: () => this.items(),
     selection: 'multiple',
+    ownerDisabled: () => this.isDisabled(),
     isSelected: (option) => this.value().includes(option.optionValue()),
     isHidden: (option) => !this.matches(option as KxMultiSelectOptionItem),
     activate: (option) => this.toggle(option.optionValue()),

@@ -2106,17 +2106,17 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:215-1239"
+          "scripts/angular-collections.mjs:215-1266"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-collections.mjs:215-1239"
+          "scripts/angular-collections.mjs:215-1266"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:1240-1445"
+          "scripts/angular-collections.mjs:1267-1472"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:1446-1696"
+          "scripts/angular-collections.mjs:1473-1723"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2141,17 +2141,17 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:215-1239"
+          "scripts/angular-collections.mjs:215-1266"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-collections.mjs:215-1239"
+          "scripts/angular-collections.mjs:215-1266"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:1240-1445"
+          "scripts/angular-collections.mjs:1267-1472"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:1446-1696"
+          "scripts/angular-collections.mjs:1473-1723"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2230,20 +2230,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:215-1239"
+          "scripts/angular-collections.mjs:215-1266"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-collections.mjs:215-1239"
+          "scripts/angular-collections.mjs:215-1266"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:1240-1445"
+          "scripts/angular-collections.mjs:1267-1472"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:1446-1696"
+          "scripts/angular-collections.mjs:1473-1723"
         ],
         "reducedMotion": [
-          "scripts/angular-collections.mjs:1697-1815"
+          "scripts/angular-collections.mjs:1724-1842"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2631,20 +2631,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:215-1239"
+          "scripts/angular-collections.mjs:215-1266"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-collections.mjs:215-1239"
+          "scripts/angular-collections.mjs:215-1266"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:1240-1445"
+          "scripts/angular-collections.mjs:1267-1472"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:1446-1696"
+          "scripts/angular-collections.mjs:1473-1723"
         ],
         "reducedMotion": [
-          "scripts/angular-collections.mjs:1697-1815"
+          "scripts/angular-collections.mjs:1724-1842"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3604,20 +3604,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:215-1239"
+          "scripts/angular-collections.mjs:215-1266"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-collections.mjs:215-1239"
+          "scripts/angular-collections.mjs:215-1266"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:1240-1445"
+          "scripts/angular-collections.mjs:1267-1472"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:1446-1696"
+          "scripts/angular-collections.mjs:1473-1723"
         ],
         "reducedMotion": [
-          "scripts/angular-collections.mjs:1697-1815"
+          "scripts/angular-collections.mjs:1724-1842"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3823,20 +3823,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:215-1239"
+          "scripts/angular-collections.mjs:215-1266"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-collections.mjs:215-1239"
+          "scripts/angular-collections.mjs:215-1266"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:1240-1445"
+          "scripts/angular-collections.mjs:1267-1472"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:1446-1696"
+          "scripts/angular-collections.mjs:1473-1723"
         ],
         "reducedMotion": [
-          "scripts/angular-collections.mjs:1697-1815"
+          "scripts/angular-collections.mjs:1724-1842"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4667,20 +4667,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:215-1239"
+          "scripts/angular-collections.mjs:215-1266"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-collections.mjs:215-1239"
+          "scripts/angular-collections.mjs:215-1266"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:1240-1445"
+          "scripts/angular-collections.mjs:1267-1472"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:1446-1696"
+          "scripts/angular-collections.mjs:1473-1723"
         ],
         "reducedMotion": [
-          "scripts/angular-collections.mjs:1697-1815"
+          "scripts/angular-collections.mjs:1724-1842"
         ],
         "published": [
           "npm: @kinetixui/angular"

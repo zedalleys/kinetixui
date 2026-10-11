@@ -66,6 +66,8 @@ export interface KxOptionListConfig<T extends KxOptionBase> {
   isSelected?: (option: T) => boolean;
   /** Whether a filter hides an option. */
   isHidden?: (option: T) => boolean;
+  /** Whether the owner itself is disabled: then no option activates, by any route. */
+  ownerDisabled?: () => boolean;
   /** An enabled option was chosen, by a click or by the owner's Enter. */
   activate: (option: T) => void;
 }
@@ -107,7 +109,7 @@ export class KxOptionList<T extends KxOptionBase = KxOptionBase> {
 
   /** Choose `option`. A disabled or hidden option is exposed but never operable. */
   activate(option: T): void {
-    if (option.isDisabled() || option.isHidden()) return;
+    if (option.isDisabled() || option.isHidden() || this.config.ownerDisabled?.()) return;
     this.config.activate(option);
   }
 
@@ -242,9 +244,12 @@ export abstract class KxOptionField<T> extends KxFloatingRoot implements Control
 
   constructor() {
     super();
-    // Disabled while open, from `[disabled]` or a form: the popup closes, so no option can be pressed after it.
+    // A disabled field is never open: disabled while open (`[disabled]` or a form) closes it, and an open
+    // requested while disabled (`[(open)]`) is undone at once. Both signals are tracked, so either change re-runs it.
     effect(() => {
-      if (this.isDisabled() && untracked(this.open)) untracked(() => this.hide('programmatic'));
+      const disabled = this.isDisabled();
+      const open = this.open();
+      if (disabled && open) untracked(() => this.hide('programmatic'));
     });
   }
 

@@ -86,6 +86,7 @@ export class KxSelect extends KxOptionField<string | null> {
   readonly list = new KxOptionList({
     items: () => this.items(),
     selection: 'single',
+    ownerDisabled: () => this.isDisabled(),
     isSelected: (option) => option.optionValue() === this.value(),
     activate: (option) => this.choose(option.optionValue()),
   });
