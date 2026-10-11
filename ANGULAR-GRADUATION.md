@@ -6,16 +6,16 @@ CI — and this document describes it; where the two disagree, the script is rig
 
 Publication is distribution, not maturity. The package is on npm and stays Preview.
 
-## Current truth (computed, 2026-10-04, main `dd9eed1` + Wave C1)
+## Current truth (computed, 2026-10-11, main `4cc711b` + Wave C2a)
 
 | | Count | Source |
 |---|---|---|
-| Implemented | 64 of 98 | `components.manifest.json` |
+| Implemented | 67 of 98 | `components.manifest.json` |
 | Native-equivalent | 2 (`direction-provider`, `form`) | manifest `platformGuidance`, each with its reason |
-| Planned | 32 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
+| Planned | 29 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
 | `catalogComplete` | false | manifest |
-| Evidence (verification.json) | build 64 · interaction 64 · accessibility 64 · rtl 31 · largeText 37 · reducedMotion 12 · visual 0 | generated from the tests |
-| Rendered visual/state gate | 29 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs; `check:composite-visual`: input-group, number-input, input-otp, password-input; `check:navigation-visual`, Angular only: breadcrumb, pagination, table-of-contents, tab-bar, app-bar, footer, accordion; `check:overlay-visual`, Angular only: dialog, alert-dialog, modal, sheet, drawer, popover, tooltip, hover-card), no `partial` marks | `scripts/visual-gates.mjs` |
+| Evidence (verification.json) | build 67 · interaction 67 · accessibility 67 · rtl 34 · largeText 40 · reducedMotion 15 · visual 0 | generated from the tests |
+| Rendered visual/state gate | 32 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs; `check:composite-visual`: input-group, number-input, input-otp, password-input; `check:navigation-visual`, Angular only: breadcrumb, pagination, table-of-contents, tab-bar, app-bar, footer, accordion; `check:overlay-visual`, Angular only: dialog, alert-dialog, modal, sheet, drawer, popover, tooltip, hover-card; `check:menu-visual`, Angular only: dropdown-menu, context-menu, menubar), no `partial` marks | `scripts/visual-gates.mjs` |
 
 Wave A moved Angular's evidence into a real browser. `check:angular-browser` (scripts/angular-browser.mjs)
 builds the package's fixtures AOT and bootstraps them as a live, zoneless Angular application in Chromium,
@@ -41,19 +41,19 @@ maturity — they are statements about today, and CI fails the moment one is fal
 
 | Dimension | Criterion | Kind | Today |
 |---|---|---|---|
-| Catalogue | No Angular entry is still planned | gate | **open** — 32 planned |
+| Catalogue | No Angular entry is still planned | gate | **open** — 29 planned |
 | Catalogue | Every native-equivalent / composition entry carries its reason | always | met |
 | Catalogue | `catalogComplete` is true only when nothing is planned | always | met |
-| Build / distribution | Every implemented component compiles in CI (ng-packagr, strict templates) | gate | met — 64/64 |
+| Build / distribution | Every implemented component compiles in CI (ng-packagr, strict templates) | gate | met — 67/67 |
 | Build / distribution | CI builds the package, checks the public API snapshot, runs the tests and this guard; the clean-consumer install + AOT build runs (`angular-package.yml`) | always | met |
-| Behaviour | Every implemented component has `interaction` evidence | gate | met — 64/64 (jsdom, and a real keyboard in Chromium for the 44 interactive components; the stepper, which is display, by its state following `current`) |
-| Behaviour | `interaction` wherever React has it | gate | met — 24/24 (dialog, alert dialog, modal, sheet, drawer, popover and tooltip added; React has no interaction evidence for the hover card, Angular does) |
-| Accessibility | Every implemented component has `accessibility` evidence | gate | met — 64/64 |
-| Accessibility | `accessibility` wherever React has it | gate | met — 64/64 |
-| Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | met — 64/64 (`angular-browser.mjs`: axe over every usage example and state fixture, light and dark, plus forced colours and reduced motion; `angular-overlays.mjs`: axe over every overlay OPEN, nested and composed) |
-| RTL | `rtl` wherever React has it | gate | met — 10/10 (alert dialog, popover and tooltip added; Angular measures 31 in four direction cases) |
-| Large text | `largeText` wherever React has it | gate | met — 21/21 (React's bar rose by the seven overlays it measures at 200%; Angular measures 37) |
-| Large text | …from a real browser (`large-text.mjs`) | gate | met — 21/21 |
+| Behaviour | Every implemented component has `interaction` evidence | gate | met — 67/67 (jsdom, and a real keyboard in Chromium for the 47 interactive components; the stepper, which is display, by its state following `current`) |
+| Behaviour | `interaction` wherever React has it | gate | met — 27/27 (Wave C2a added dropdown menu, context menu and menubar; React has no interaction evidence for the hover card, Angular does) |
+| Accessibility | Every implemented component has `accessibility` evidence | gate | met — 67/67 |
+| Accessibility | `accessibility` wherever React has it | gate | met — 67/67 |
+| Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | met — 67/67 (`angular-browser.mjs`: axe over every usage example and state fixture, light and dark, plus forced colours and reduced motion; `angular-overlays.mjs`: axe over every overlay OPEN, nested and composed; `angular-collections.mjs`: axe over every menu OPEN, submenus included) |
+| RTL | `rtl` wherever React has it | gate | met — 16/16 (this row read 10/10 after Wave C1 while the guard computed 13/13; Wave C2a added the three menus; Angular measures 34 in four direction cases) |
+| Large text | `largeText` wherever React has it | gate | met — 24/24 (Wave C2a added the three menus; Angular measures 40) |
+| Large text | …from a real browser (`large-text.mjs`) | gate | met — 24/24 |
 | Motion | `reducedMotion` wherever React has it | gate | met — 3/3 (switch, accordion, collapsible) |
 | Motion | …from a real browser (`motion.mjs`) | gate | met — 3/3 (Angular's in `angular-browser.mjs`, which also measures the app bar's menu) |
 | Visual | A rendered visual/state gate covers Angular wherever one covers React | gate | met — 12/12: the interactive Card (`kxCard` on a link or button) and `kx-number-input`'s `readonly` closed the two `partial` marks, and input-group and input-otp arrived measured. password-input is measured too but not owed (React's PasswordInput is not separately gated) |
@@ -62,7 +62,7 @@ maturity — they are statements about today, and CI fails the moment one is fal
 | Documentation | The package README's counts, component list and Preview label match the manifest and evidence | always | met (it was stale — 31 components, 69 symbols — and is corrected in this change) |
 | CI | The guard itself: fails if `maturity` is `stable` with any gate criterion open | — | in `ci.yml` |
 
-12 of 13 gate criteria are met; only the catalogue is open (32 planned). Angular stays Preview.
+12 of 13 gate criteria are met; only the catalogue is open (29 planned). Angular stays Preview.
 
 `published` is reported but is not a criterion. Neither is `visual` from verification.json: that kind
 means comparison against stored reference images, which KinetixUI does not keep on any platform.
@@ -233,16 +233,69 @@ was caught:
   on every side" (the surface clips two sides, 1.37:1 and 1.00:1).
 - The close button's focus ring removed → the same row, 1.00:1 on all four sides, light and dark.
 
-### What remains after Wave C1, ranked
+### Wave C2a — the collection core and the menus (done)
 
-32 planned. Ranked by what each group unblocks and by the evidence React already holds for it (which Angular
+**Components:** `dropdown-menu`, `context-menu`, `menubar` (3). 12/13 held; Angular 64 → 67. The listboxes
+(`select`, `combobox`, `multi-select`, `command`) are C2b and are not part of this wave.
+
+**One set of parts, three roots.** Every item part (`kxMenuItem`, `kx-menu-checkbox-item`,
+`kx-menu-radio-group` / `kx-menu-radio-item`, `kx-menu-label`, `kx-menu-group`, `kx-menu-separator`,
+`kx-menu-shortcut`, and submenus: `kx-menu-sub`, `kxMenuSubTrigger`, `kx-menu-sub-content`) is written once in
+`lib/menu.ts` and finds its menu through DI, so the dropdown menu, the context menu and the menubar differ
+only in their root and trigger. The menus are floating surfaces of the C1 layer (`popover="manual"`, the one
+stack, `computePlacement`); no second overlay system was added. Two additions to the layer: a virtual anchor
+(a rectangle and the element whose direction it reads), which is how a context menu opens at the pointer, and
+`reposition()`, which re-places an open surface when its anchor moves (a second right-click). Element anchors
+are unchanged, and the C1 gate still passes over them.
+
+**The collection core** (`lib/collection.ts`, internal, not exported): `moveIndex` (next, previous, first,
+last, skipping disabled items; wrapping is the caller's choice: menus stop at their ends, as React's tested
+contract does, and the menubar's triggers wrap), `moveForKey` and `inlineKey` (horizontal keys resolved
+against direction), `isRtl` (the nearest `[dir]`, else the computed style through the element's own window),
+the typeahead (a 500ms buffer, a repeated letter cycles, disabled items never match) and roving focus (one
+Tab stop). Tabs, accordion and the code block keep their own copies; moving them onto the core is a later,
+behaviour-neutral change.
+
+| | |
+|---|---|
+| Behavioural contracts | dropdown menu (Enter, Space, ArrowDown open on the first item, ArrowUp on the last; arrows stop at the ends; Home/End; typeahead; Enter/Space activate; Escape closes and returns focus; Tab closes and moves on; activating an item closes the tree and returns focus to the trigger; disabled items announced and skipped); submenus (two levels, nested in the parent's DOM; ArrowRight/Enter/Space open on the first item, ArrowLeft and Escape close ONE level with focus on that level's trigger; hover opens after 100ms; a grace triangle lets the pointer cross the parent's items on the way into the submenu); context menu (right-click opens at the pointer, a second right-click moves it there, the ContextMenu key and Shift+F10 open it at the focused element, Escape returns focus there); menubar (one Tab stop, ArrowLeft/Right wrap across triggers, with a menu open they open the neighbour's menu, ArrowRight past a submenu moves to the next menu, the pointer switches menus while one is open); checkbox and radio items (`aria-checked`, two-way `checked` and `value`) |
+| Accessibility | `menu`, `menuitem`, `menuitemcheckbox`, `menuitemradio`, `group` named by its label, `separator`, `menubar`; the trigger carries `aria-haspopup`, `aria-expanded`, `aria-controls`; the menu is named by its trigger; axe over every menu OPEN (submenus included) and the three usage examples, light and dark; forced colours (highlight and open-trigger outlines) |
+| RTL | 3 components in four direction cases (RTL page, LTR page, an RTL region in an LTR page and the reverse): submenus open toward the inline end, ArrowLeft opens and ArrowRight closes in RTL, the menubar's arrows follow reading order, a context menu's inline-start corner sits on the pointer |
+| Large text | 3 components at 2× text at 1024px and 390px: inside the viewport, no clipped text, 24px targets; a submenu with no room beside its parent opens below its trigger |
+| Motion | the surface's motion is the floating surface's (C1); item and trigger state changes are `duration-instant` and none under reduced motion |
+| Visual | `check:menu-visual` (new, Angular only): each item state against the others, the keyboard highlight against the pointer's, disabled, destructive, check and radio marks, shortcut contrast at rest and highlighted, the chevron and the submenu's side in LTR and RTL, the menubar's open trigger, and forced colours; light and dark |
+| Compositions | a data row's action menu (named by its row's trigger; a destructive action removes the row) and a menu inside a dialog (`check:angular-overlays`: Escape closes the menu, then the dialog, one layer at a time) |
+| Defects it found and fixed | a menu reopened during its own closing transition could not take focus for one frame (Chromium; focus now retries on the next frame if nothing else took it); at 390px and at 200% text a submenu was squeezed into the 10px beside its parent (it now opens below its trigger); a context menu's second right-click did not move the open menu; a muted shortcut fell below 4.5:1 on a highlighted item (axe; it now takes the item's colour); the native `disabled` attribute removed disabled items from the accessibility tree (they are now `aria-disabled`) |
+
+**Findings not fixed:** when a data row's action removes the row, its trigger goes with it and focus falls to
+`body`. Where focus should go (the next row, the table) is the data table's decision, which is Wave D.
+
+#### Negative controls (Wave C2a)
+
+10 controls, each a real break in the source, a fresh harness built from it, the gate run against it, and the
+file restored from git and checked by hash before the next (logs and `summary.json`:
+`/mnt/project-files/angular-wave-c2a/negative-controls/`). None committed. Every one was caught:
+
+- Vertical arrows wrap at the ends of a menu → `check:angular-collections`: "ArrowDown … stops at the end (no wrap)".
+- Typeahead includes disabled items → `check:angular-collections`: "typeahead never lands on the disabled item".
+- Submenu open/close keys not mirrored in RTL → `check:angular-collections`: RTL page: "ArrowLeft (the inline-end arrow) opens it", and its closing pair.
+- Submenu rendered outside the parent menu (portalled to body) → `check:angular-collections`: "submenus are nested in their parent menu in the DOM, two levels deep", and the tree no longer closing as one.
+- Escape closes the whole menu tree → `check:angular-collections`: "Escape closes one level: the deepest, the other two stay open", in the dropdown and the context menu.
+- No focus return after an item is activated → `check:angular-collections`: "focus returns to the trigger after an item runs" (focus was on `body`).
+- Context menu anchored to its trigger, not the pointer → `check:angular-collections`: "it opens AT the pointer" (point 88,144; menu at 48,276) and "a second secondary click moves it".
+- aria-checked not updated on a checkbox item → `check:angular-collections`: "a checkbox item is a menuitemcheckbox with its state", in the dropdown and the context menu.
+- Menubar horizontal movement does not open the neighbouring menu → `check:angular-collections`: "with a menu open, ArrowRight opens the next menu", and the wrap and ArrowLeft cases.
+- Keyboard highlight identical to the pointer highlight → `check:menu-visual`: "an inset focus ring clears 3:1 against the layer" (1.00:1) and "keyboard and pointer highlights look different", light and dark, LTR and RTL.
+
+### What remains after Wave C2a, ranked
+
+29 planned. Ranked by what each group unblocks and by the evidence React already holds for it (which Angular
 will owe the moment it implements the component):
 
-1. **Overlays C2 (Wave C, below)** — 9 `overlays` + `menubar`, `navigation-menu` (`navigation`) + `sidebar`.
-   The layer exists now; C2 adds what menus and listboxes need on top of it: roving focus or
-   `aria-activedescendant`, typeahead, submenus that open toward the inline end, and a toast queue. Menus and
-   listboxes (`dropdown-menu`, `context-menu`, `menubar`, `navigation-menu`, `select`, `combobox`,
-   `multi-select`, `command`), notifications (`sonner`, `notification-center`, `tour`), then `sidebar`.
+1. **Overlays C2b and the rest of Wave C (below)** — the listboxes (`select`, `combobox`, `multi-select`,
+   `command`), `navigation-menu`, notifications (`sonner`, `notification-center`, `tour`), then `sidebar`.
+   Wave C2a built the collection core (roving focus, typeahead, direction-aware keys) and the menus on it;
+   C2b adds `aria-activedescendant` and the listbox on the same core, then the toast queue.
 2. **Layout, pointer and scroll** — `scroll-area`, `resizable`, `carousel`, `comparison-slider`. Owes only
    browser axe, so it is cheap, but it brings drag with a keyboard alternative and direction-dependent
    handles, which no implemented Angular component has yet. `table` and `virtual-list` (also `layout`) go
@@ -270,10 +323,13 @@ below its breakpoint.
 | Visual | overlay elevation above raised cards (the slice 1 follow-up), focus ring inside overlays |
 | Proof it creates | a settings flow with dialogs and menus in Angular; overlay parity table |
 
-**C1 is done** (above): the layer and the eight dialog-family members. What follows is C2 and `sidebar`.
+**C1 and C2a are done** (above): the layer, the eight dialog-family members and the three menus. What follows
+is C2b, `navigation-menu`, notifications and `sidebar`.
 
-**Owed by the remaining 12 (React has it):** interaction 6 · rtl 6 · largeText 5 · browser axe 12 · visual gate
-2 (select and multi-select, in `check:entry-visual` and `check:composite-visual`).
+**Owed by the remaining 9 (React has it):** interaction 3 (select, multi-select, tour) · rtl 4
+(navigation-menu, select, multi-select, tour) · largeText 2 (select, multi-select) · browser axe 9 · visual
+gate 2 (select and multi-select, in `check:entry-visual` and `check:composite-visual`). Before C2a this line
+read rtl 6 for the then 12; it was 7 (the three menus, navigation-menu, select, multi-select, tour).
 
 ### Wave D — data and advanced
 
@@ -281,8 +337,9 @@ below its breakpoint.
 `diff-viewer`, `message-bubble`, `calendar`, `date-picker`, `color-picker`, `file-upload`,
 `audio-player`, `kanban-board`, `markdown-editor` (16).
 
-**Why last:** they compose earlier waves — `date-picker` is popover + calendar, `data-table` uses
-dropdown-menu and pagination, `kanban-board` needs drag with a keyboard alternative.
+**Why last:** they compose earlier waves — `date-picker` is popover + calendar, `data-table` composes
+`table` and `button` (React's has its own previous/next paging, not the pagination component, and no
+dropdown menu), `kanban-board` needs drag with a keyboard alternative.
 
 | | |
 |---|---|

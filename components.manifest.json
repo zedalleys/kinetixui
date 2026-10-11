@@ -424,16 +424,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "overlays"
-        }
-      }
+      ]
     },
     "data-grid": {
       "status": "stable",
@@ -563,16 +558,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "overlays"
-        }
-      }
+      ]
     },
     "empty": {
       "status": "stable",
@@ -836,16 +826,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "navigation"
-        }
-      }
+      ]
     },
     "message-bubble": {
       "status": "stable",

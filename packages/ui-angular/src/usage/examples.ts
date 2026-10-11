@@ -172,6 +172,29 @@ import {
   KxTooltipContent,
   KxTooltipTrigger,
 } from '../lib/floating';
+import {
+  KxContextMenu,
+  KxContextMenuContent,
+  KxContextMenuTrigger,
+  KxDropdownMenu,
+  KxDropdownMenuContent,
+  KxDropdownMenuTrigger,
+  KxMenuCheckboxItem,
+  KxMenuGroup,
+  KxMenuItem,
+  KxMenuLabel,
+  KxMenuRadioGroup,
+  KxMenuRadioItem,
+  KxMenuSeparator,
+  KxMenuShortcut,
+  KxMenuSub,
+  KxMenuSubContent,
+  KxMenuSubTrigger,
+  KxMenubar,
+  KxMenubarContent,
+  KxMenubarMenu,
+  KxMenubarTrigger,
+} from '../lib/menu';
 
 /* ── primitives ─────────────────────────────────────────────────────────── */
 
@@ -1141,4 +1164,161 @@ export class TooltipDemo {}
   `,
 })
 export class HoverCardDemo {}
+// kx-usage:end
+
+// The three menus share one set of parts (`KxMenu…`); only the root differs.
+const MENU_PARTS = [
+  KxMenuItem,
+  KxMenuCheckboxItem,
+  KxMenuRadioGroup,
+  KxMenuRadioItem,
+  KxMenuLabel,
+  KxMenuGroup,
+  KxMenuSeparator,
+  KxMenuShortcut,
+  KxMenuSub,
+  KxMenuSubTrigger,
+  KxMenuSubContent,
+];
+
+// kx-usage:dropdown-menu-demo
+@Component({
+  selector: 'app-dropdown-menu-demo',
+  imports: [KxButton, KxDropdownMenu, KxDropdownMenuTrigger, KxDropdownMenuContent, ...MENU_PARTS],
+  template: `
+    <kx-dropdown-menu>
+      <button kxButton variant="Outline" kxDropdownMenuTrigger>Options</button>
+      <kx-dropdown-menu-content align="start">
+        <kx-menu-group>
+          <kx-menu-label>Document</kx-menu-label>
+          <button kxMenuItem (select)="last = 'rename'">Rename <kx-menu-shortcut>F2</kx-menu-shortcut></button>
+          <button kxMenuItem (select)="last = 'duplicate'">Duplicate <kx-menu-shortcut>Ctrl+D</kx-menu-shortcut></button>
+          <button kxMenuItem disabled>Move to archive</button>
+          <kx-menu-sub>
+            <button kxMenuSubTrigger>Share</button>
+            <kx-menu-sub-content>
+              <button kxMenuItem (select)="last = 'email'">Email link</button>
+              <button kxMenuItem (select)="last = 'copy'">Copy link</button>
+            </kx-menu-sub-content>
+          </kx-menu-sub>
+        </kx-menu-group>
+        <kx-menu-separator />
+        <kx-menu-checkbox-item [(checked)]="showRuler">Show ruler</kx-menu-checkbox-item>
+        <kx-menu-radio-group [(value)]="density">
+          <kx-menu-label inset>Density</kx-menu-label>
+          <kx-menu-radio-item value="compact">Compact</kx-menu-radio-item>
+          <kx-menu-radio-item value="comfortable">Comfortable</kx-menu-radio-item>
+        </kx-menu-radio-group>
+        <kx-menu-separator />
+        <button kxMenuItem variant="destructive" (select)="last = 'delete'">Delete document</button>
+      </kx-dropdown-menu-content>
+    </kx-dropdown-menu>
+  `,
+})
+export class DropdownMenuDemo {
+  last = '';
+  showRuler = true;
+  density = 'comfortable';
+}
+// kx-usage:end
+
+// kx-usage:context-menu-demo
+@Component({
+  selector: 'app-context-menu-demo',
+  imports: [KxContextMenu, KxContextMenuTrigger, KxContextMenuContent, ...MENU_PARTS],
+  template: `
+    <kx-context-menu>
+      <!-- right-click, the ContextMenu key or Shift+F10 inside the region opens the menu -->
+      <div kxContextMenuTrigger tabindex="0" role="group" aria-label="Canvas" class="canvas">
+        Right-click here, or focus and press Shift+F10
+      </div>
+      <kx-context-menu-content label="Canvas actions">
+        <button kxMenuItem>Back <kx-menu-shortcut>Alt+←</kx-menu-shortcut></button>
+        <button kxMenuItem disabled>Forward</button>
+        <button kxMenuItem>Reload <kx-menu-shortcut>Ctrl+R</kx-menu-shortcut></button>
+        <kx-menu-sub>
+          <button kxMenuSubTrigger>More tools</button>
+          <kx-menu-sub-content>
+            <button kxMenuItem>Save page as…</button>
+            <button kxMenuItem>Developer tools</button>
+          </kx-menu-sub-content>
+        </kx-menu-sub>
+        <kx-menu-separator />
+        <kx-menu-checkbox-item [(checked)]="showGuides">Show guides</kx-menu-checkbox-item>
+      </kx-context-menu-content>
+    </kx-context-menu>
+  `,
+  styles: `
+    .canvas {
+      display: grid;
+      place-items: center;
+      min-block-size: 9rem;
+      padding: var(--spacing-4);
+      border: 1px dashed hsl(var(--border));
+      border-radius: var(--radius-surface);
+      color: hsl(var(--muted-foreground));
+      text-align: center;
+    }
+  `,
+})
+export class ContextMenuDemo {
+  showGuides = true;
+}
+// kx-usage:end
+
+// kx-usage:menubar-demo
+@Component({
+  selector: 'app-menubar-demo',
+  imports: [KxMenubar, KxMenubarMenu, KxMenubarTrigger, KxMenubarContent, ...MENU_PARTS],
+  template: `
+    <kx-menubar aria-label="Editor">
+      <kx-menubar-menu value="file">
+        <button kxMenubarTrigger>File</button>
+        <kx-menubar-content>
+          <button kxMenuItem>New tab <kx-menu-shortcut>Ctrl+T</kx-menu-shortcut></button>
+          <button kxMenuItem>New window</button>
+          <kx-menu-sub>
+            <button kxMenuSubTrigger>Share</button>
+            <kx-menu-sub-content>
+              <button kxMenuItem>Email link</button>
+              <button kxMenuItem>Messages</button>
+            </kx-menu-sub-content>
+          </kx-menu-sub>
+          <kx-menu-separator />
+          <button kxMenuItem>Print… <kx-menu-shortcut>Ctrl+P</kx-menu-shortcut></button>
+        </kx-menubar-content>
+      </kx-menubar-menu>
+      <kx-menubar-menu value="edit">
+        <button kxMenubarTrigger>Edit</button>
+        <kx-menubar-content>
+          <button kxMenuItem>Undo <kx-menu-shortcut>Ctrl+Z</kx-menu-shortcut></button>
+          <button kxMenuItem disabled>Redo</button>
+          <kx-menu-separator />
+          <button kxMenuItem>Cut</button>
+          <button kxMenuItem>Copy</button>
+          <button kxMenuItem>Paste</button>
+        </kx-menubar-content>
+      </kx-menubar-menu>
+      <kx-menubar-menu value="view">
+        <button kxMenubarTrigger>View</button>
+        <kx-menubar-content>
+          <kx-menu-checkbox-item [(checked)]="bookmarks">Show bookmarks</kx-menu-checkbox-item>
+          <kx-menu-checkbox-item [(checked)]="fullUrls">Show full URLs</kx-menu-checkbox-item>
+          <kx-menu-separator />
+          <kx-menu-radio-group [(value)]="zoom">
+            <kx-menu-label inset>Zoom</kx-menu-label>
+            <kx-menu-radio-item value="90">90%</kx-menu-radio-item>
+            <kx-menu-radio-item value="100">100%</kx-menu-radio-item>
+            <kx-menu-radio-item value="125">125%</kx-menu-radio-item>
+          </kx-menu-radio-group>
+        </kx-menubar-content>
+      </kx-menubar-menu>
+    </kx-menubar>
+  `,
+})
+export class MenubarDemo {
+  bookmarks = true;
+  fullUrls = false;
+  zoom = '100';
+}
 // kx-usage:end

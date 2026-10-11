@@ -64,6 +64,15 @@ export const VISUAL_GATES = [
       Angular: ["dialog", "alert-dialog", "modal", "sheet", "drawer", "popover", "tooltip", "hover-card"],
     },
   },
+  {
+    script: "scripts/menu-visual.mjs",
+    command: "check:menu-visual",
+    contract: "TOKENS.md — Menus",
+    // Angular only: React's menus are not changed by Angular Wave C2a and are not measured here
+    covers: {
+      Angular: ["dropdown-menu", "context-menu", "menubar"],
+    },
+  },
 ];
 
 /** The registry entry for a gate script, by its path relative to the repository root. */

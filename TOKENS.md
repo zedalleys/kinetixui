@@ -342,6 +342,38 @@ because it never depended on a transition ending.
 | React | Not changed by this contract. React's overlays keep their current styling (sheet sides are physical, the tooltip has no forced-colours edge, Modal reverses its footer); parity is not claimed |
 | SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
 
+### Menus
+
+Angular Wave C2a (`@kinetixui/angular`: dropdown menu, context menu, menubar). One set of item parts shared by
+all three, inside the floating surface of the Overlays contract above. No token is added.
+
+| Part | Token(s) | Notes |
+|---|---|---|
+| Menu surface | the floating surface above (`popover` fill, `border` edge, `shadow-lg`, radius `control`); padding `spacing-1`, text `text-body-md` | at least 12rem wide, capped to `--kx-available-width`; a submenu with no room on either inline side of its parent opens below it |
+| Item, resting | transparent, `foreground` text, radius `control` − 2px, 2rem minimum block size, `spacing-2` inline padding | grows with text; nothing is sized in px except the 2px ring |
+| Item, highlighted | `foreground` layer at 8% | focus is the highlight: the pointer moves it, so hover and the highlighted item are the same state |
+| Item, highlighted by the keyboard | the 8% layer plus an inset 2px `ring` | the gate requires the keyboard highlight to differ from the pointer's, so a keyboard reader can tell where they are |
+| Item, pressed | `foreground` layer at 12% | |
+| Item, disabled | `opacity-disabled`, cursor `not-allowed`, never highlighted | still announced (`aria-disabled`), skipped by arrows and typeahead |
+| Destructive item | `destructive` text; highlighted, the `destructive` layer at 10% | |
+| Checkbox / radio item | a check or a dot, 1rem, at the inline start | a shape, never colour alone; `aria-checked` carries the state |
+| Shortcut | `muted-foreground`, `text-body-sm`, pushed to the inline end | on a highlighted item it takes the item's colour (muted text under the state layer falls below 4.5:1) |
+| Label | `text-label-lg`, `font-weight-semibold` | names its group (`aria-labelledby`) |
+| Separator | `border`, `border-width-default`, bleeds to the surface's edge | |
+| Open submenu trigger | keeps the 8% layer while focus is inside the submenu | its chevron points toward the inline end and mirrors in RTL |
+| Menubar | `background`, `border` edge, `shadow-sm`, radius `control`; triggers `text-label-lg`, hover 8%, open 8%, pressed 12%, focus `--shadow-focus` | one Tab stop; arrows move between triggers and wrap |
+
+Forced colours: a highlighted item and an open menubar trigger draw a system outline (`Highlight`,
+`CanvasText`), because state layers vanish there. Motion: items and triggers change `background-color` and
+`box-shadow` over `duration-instant`; reduced motion removes the transition. The surface's own motion is the
+floating surface's, above.
+
+| Platform | Status |
+|---|---|
+| Angular | Implemented in `styles.css` and verified on rendered pixels by `check:menu-visual` (light + dark, LTR + RTL): each item state against the others, the keyboard ring against the pointer highlight, disabled and destructive, check and radio marks, shortcut contrast, the submenu's side, and forced colours. Behaviour, direction, 200% text and motion are measured on the live application by `check:angular-collections` |
+| React | Not changed by this contract; parity is not claimed |
+| SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
+
 ## Role tokens (added on top of `primary`)
 
 `brand`, `action` (+ `action-foreground`), `link` and `focus` are **repo-owned** — none exist in Figma. `action`,

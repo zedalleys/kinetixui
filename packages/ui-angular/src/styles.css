@@ -2372,13 +2372,141 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
 }
 .kx-tooltip:popover-open { transition-duration: var(--duration-instant); }
 
+/* ── menus: dropdown menu, context menu, menubar ─────────────────────────── */
+/* One surface and one set of items for all three (menu.ts). The surface is a floating surface (above) with a
+   tighter inset: a menu is a list of rows, not a card of content.
+
+   Item states (TOKENS.md, "Menus"), on the popover fill:
+     highlighted   focus IS the highlight (focus follows the pointer), drawn as the navigation hover layer,
+                   foreground at 8%. Arrived at by the keyboard (`data-highlighted="keyboard"`) it also draws
+                   the inset focus ring, so a keyboard reader can tell where they are from where a pointer rests.
+     pressed       foreground at 12%, the navigation pressed layer
+     disabled      `--opacity-disabled`, no highlight, `not-allowed`
+     destructive   the label in `--destructive`; highlighted, the destructive layer at 10% under it
+     checked       a check or a dot at the inline start — a shape, never colour alone
+     sub open      the trigger of an open submenu keeps the highlight layer while focus is in the submenu */
+.kx-menu {
+  min-inline-size: min(12rem, var(--kx-available-width, 12rem));
+  padding: var(--spacing-1);
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+}
+.kx-menu:popover-open { display: flex; flex-direction: column; }
+.kx-menu__group { display: flex; flex-direction: column; }
+.kx-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  inline-size: 100%;
+  min-block-size: 2rem;
+  margin: 0;
+  padding-block: var(--spacing-1);
+  padding-inline: var(--spacing-2);
+  border: 0;
+  border-radius: calc(var(--radius-control) - 2px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: default;
+  user-select: none;
+  outline: none;
+  transition:
+    background-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard);
+}
+.kx-menu__item--inset,
+.kx-menu__label--inset { padding-inline-start: calc(var(--spacing-2) + 1rem + var(--spacing-2)); }
+.kx-menu__item--inset { position: relative; }
+.kx-menu__item[data-highlighted] { background-color: hsl(var(--foreground) / 0.08); }
+.kx-menu__item[data-highlighted='keyboard'] { box-shadow: inset 0 0 0 2px hsl(var(--ring)); }
+.kx-menu__item:not([aria-disabled='true']):active { background-color: hsl(var(--foreground) / 0.12); }
+.kx-menu__item--sub[data-state='open']:not([data-highlighted]) { background-color: hsl(var(--foreground) / 0.08); }
+.kx-menu__item[aria-disabled='true'] { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.kx-menu__item[data-variant='destructive'] { color: hsl(var(--destructive)); }
+.kx-menu__item[data-variant='destructive'][data-highlighted] { background-color: hsl(var(--destructive) / 0.1); }
+.kx-menu__indicator {
+  position: absolute;
+  inset-inline-start: var(--spacing-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+.kx-menu__mark { inline-size: 1rem; block-size: 1rem; visibility: hidden; }
+[data-state='checked'] > .kx-menu__indicator > .kx-menu__mark { visibility: visible; }
+.kx-menu__shortcut {
+  margin-inline-start: auto;
+  padding-inline-start: var(--spacing-4);
+  color: hsl(var(--muted-foreground));
+  font: var(--text-body-sm);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+/* on a highlighted row the muted shortcut would fall under 4.5:1 against the state layer: it takes the row's colour */
+.kx-menu__item[data-highlighted] > .kx-menu__shortcut { color: inherit; }
+.kx-menu__chevron { margin-inline-start: auto; color: hsl(var(--muted-foreground)); line-height: 1; font-size: 1.125em; }
+.kx-menu__label {
+  display: block;
+  padding-block: var(--spacing-1);
+  padding-inline: var(--spacing-2);
+  font: var(--text-label-lg);
+  font-weight: var(--font-weight-semibold);
+}
+.kx-menu__separator {
+  display: block;
+  block-size: var(--border-width-default);
+  margin-block: var(--spacing-1);
+  margin-inline: calc(-1 * var(--spacing-1));
+  background-color: hsl(var(--border));
+}
+/* a menubar: one bordered row of triggers, a single Tab stop */
+.kx-menubar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1);
+  border: var(--border-width-default) solid hsl(var(--border));
+  border-radius: var(--radius-control);
+  background-color: hsl(var(--background));
+  box-shadow: var(--shadow-sm);
+}
+.kx-menubar__trigger {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2rem;
+  margin: 0;
+  padding-block: var(--spacing-1);
+  padding-inline: var(--spacing-3);
+  border: 0;
+  border-radius: calc(var(--radius-control) - 2px);
+  background: transparent;
+  color: hsl(var(--foreground));
+  font: var(--text-label-lg);
+  cursor: default;
+  outline: none;
+  transition: background-color var(--duration-instant) var(--easing-standard);
+}
+@media (hover: hover) {
+  .kx-menubar__trigger:hover { background-color: hsl(var(--foreground) / 0.08); }
+}
+.kx-menubar__trigger[data-state='open'] { background-color: hsl(var(--foreground) / 0.08); }
+.kx-menubar__trigger:active { background-color: hsl(var(--foreground) / 0.12); }
+.kx-menubar__trigger:focus-visible,
+.kx-context-menu__trigger:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
 /* Overlay motion tells the reader where a surface came from; under reduced motion it simply appears and
    disappears, in the same open and closed states (the discrete `display` / `overlay` hand-off goes with it). */
 @media (prefers-reduced-motion: reduce) {
   .kx-dialog,
   .kx-dialog::backdrop,
   .kx-dialog__close,
-  .kx-floating { transition: none; }
+  .kx-floating,
+  .kx-menu__item,
+  .kx-menubar__trigger { transition: none; }
 }
 
 /* ── forced colours ─────────────────────────────────────────────────────── */
@@ -2394,7 +2522,8 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
       .kx-slider__input, .kx-tab, .kx-tab-panel, .kx-toggle, .kx-tag__remove, .kx-banner [kxBannerAction],
       .kx-inform [kxInformAction], a.kx-card, button.kx-card, .kx-accordion__trigger, .kx-breadcrumb__link,
       .kx-pagination__link, .kx-toc__link, .kx-tab-bar__item, .kx-navigation-bar__back, .kx-app-bar__toggle,
-      .kx-app-bar__link, a.kx-app-bar__brand, .kx-footer__link, .kx-dialog__close
+      .kx-app-bar__link, a.kx-app-bar__brand, .kx-footer__link, .kx-dialog__close, .kx-menubar__trigger,
+      .kx-context-menu__trigger
     ):focus-visible,
   :is(.kx-segmented__radio, .kx-toggle-group__radio):focus-visible + label,
   .kx-rating__item:has(.kx-rating__radio:focus-visible),
@@ -2416,4 +2545,7 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
   /* the slider's track and fill are plain elements, whose backgrounds the mode would flatten to Canvas */
   .kx-slider__track { forced-color-adjust: none; background-color: GrayText; }
   .kx-slider__fill { background-color: Highlight; }
+  /* a menu item's highlight is a fill and an inset shadow, both flattened: the highlighted row gets the outline */
+  .kx-menu__item[data-highlighted] { outline: 2px solid Highlight; outline-offset: -2px; }
+  .kx-menubar__trigger[data-state='open'] { outline: 2px solid CanvasText; outline-offset: -2px; }
 }
