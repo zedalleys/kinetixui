@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Check, Copy } from "lucide-react";
 import { cn } from "../lib/utils";
-import { useScrollFocus } from "../lib/use-scroll-focus";
 
 /**
  * CodeBlock — a code display with a copy button and, for more than one
@@ -22,6 +21,37 @@ export interface CodeBlockProps extends Omit<React.HTMLAttributes<HTMLDivElement
   filename?: string;
   files?: CodeBlockFile[];
   hideCopy?: boolean;
+}
+
+/**
+ * True only while the element can actually scroll. A scroll container no keyboard can reach fails WCAG 2.1.1
+ * (axe `scrollable-region-focusable`), but an unconditional `tabIndex` would add a focus stop to every short
+ * snippet. Same contract as `Table`'s wrapper; kept in this file, as there, so the registry item stays
+ * self-contained. The 1px tolerance absorbs sub-pixel rounding.
+ */
+function useScrollFocus(ref: React.RefObject<HTMLElement | null>, axis: "x" | "both" = "x"): boolean {
+  const [scrollable, setScrollable] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const measure = () =>
+      setScrollable(
+        el.scrollWidth > el.clientWidth + 1 || (axis === "both" && el.scrollHeight > el.clientHeight + 1),
+      );
+
+    measure();
+    // ResizeObserver rather than a window resize listener: the container changes size with the viewport, and its
+    // content changes size with the text, the reader's font size and the active tab — none of which fire a resize
+    // event on the window.
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    if (el.firstElementChild) observer.observe(el.firstElementChild);
+    return () => observer.disconnect();
+  }, [ref, axis]);
+
+  return scrollable;
 }
 
 const CodeBlock = React.forwardRef<HTMLDivElement, CodeBlockProps>(
