@@ -179,6 +179,27 @@ describe('select', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
   });
 
+  it('opened through [(open)] starts on the chosen option; a bound [disabled] closes it', async () => {
+    const { fixture, el, state } = host(
+      `<kx-select [(value)]="v" [(open)]="open" [disabled]="off()">
+        <button kxSelectTrigger aria-label="Pick"><kx-select-value /></button>
+        <kx-select-content><kx-select-item value="a">A</kx-select-item><kx-select-item value="b">B</kx-select-item></kx-select-content>
+      </kx-select>`,
+      { v: signal<string | null>('b'), open: signal(false), off: signal(false) },
+    );
+    const trigger = el.querySelector('button')!;
+    state.open.set(true);
+    await settle(fixture);
+    expect(textOf(ad(trigger))).toBe('B');
+    key(trigger, 'ArrowUp');
+    await settle(fixture);
+    expect(textOf(ad(trigger))).toBe('A');
+    state.off.set(true);
+    await settle(fixture);
+    expect(state.open()).toBe(false);
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  });
+
   it('chooses by typeahead while closed, never a disabled option, and Escape and Tab choose nothing', async () => {
     const { fixture, el, state } = host(SELECT, selectState());
     const trigger = el.querySelector<HTMLElement>('button[kxSelectTrigger]')!;
@@ -409,6 +430,19 @@ describe('multi-select', () => {
     key(input, 'Enter');
     await settle(fixture);
     expect(state.tags()).toEqual(['Someday']);
+  });
+
+  it('creatable: never offers text that is already an option value or label', async () => {
+    const { fixture, el } = host(MULTI, multiState());
+    const input = el.querySelectorAll('kx-multi-select')[1]!.querySelector('input')!;
+    for (const text of ['docs', 'DOCUMENTATION']) {
+      input.value = text;
+      input.dispatchEvent(new Event('input'));
+      await settle(fixture);
+      expect(textOf(ad(input)) ?? '').not.toMatch(/^Create/);
+      const offers = [...el.querySelectorAll<HTMLElement>('[role=option]')].filter((o) => !o.hidden).map((o) => o.textContent!.trim());
+      expect(offers.some((t) => t.startsWith('Create'))).toBe(false);
+    }
   });
 
   it('reports touched on blur and disables every part with the form control', async () => {

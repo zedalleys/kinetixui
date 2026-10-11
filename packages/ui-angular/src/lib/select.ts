@@ -10,6 +10,9 @@ import {
   inject,
   input,
   model,
+  effect,
+  untracked,
+  type ModelSignal,
 } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { isTypeaheadKey } from './collection';
@@ -76,7 +79,8 @@ import { KX_OPTION_LIST, KxOptionBase, KxOptionField, KxOptionList, KxOptionPopu
 })
 export class KxSelect extends KxOptionField<string | null> {
   /** Two-way: the chosen option's value, or null for none. */
-  readonly value = model<string | null>(null);
+  // Annotated: inferred, the published .d.ts drops `| null` and a consumer's strict AOT build rejects the override.
+  readonly value: ModelSignal<string | null> = model<string | null>(null);
   readonly multiple = false;
   private readonly items = contentChildren(forwardRef(() => KxSelectItem), { descendants: true });
   readonly list = new KxOptionList({
@@ -87,6 +91,19 @@ export class KxSelect extends KxOptionField<string | null> {
   });
   /** The chosen option, while one with the value exists. */
   readonly selected = computed(() => this.items().find((i) => i.optionValue() === this.value()) ?? null);
+
+  constructor() {
+    super();
+    // Opened through `[(open)]` rather than a key or a press: start on the chosen option all the same, so
+    // `aria-activedescendant`, Enter and the arrows work from the first key.
+    effect(() => {
+      if (!this.open()) return;
+      untracked(() => {
+        const chosen = this.selected();
+        if (!this.list.descendant.current() && chosen && !chosen.isDisabled()) this.list.highlight(chosen, 'pointer');
+      });
+    });
+  }
 
   focusTarget(): HTMLElement | null {
     return this.trigger;

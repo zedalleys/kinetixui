@@ -6,9 +6,11 @@ import {
   afterRenderEffect,
   booleanAttribute,
   computed,
+  effect,
   inject,
   input,
   signal,
+  untracked,
 } from '@angular/core';
 import type { ControlValueAccessor } from '@angular/forms';
 import { KxActiveDescendant, KxTypeahead, isTypeaheadKey, moveForKey, readableText, type KxDescendantItem } from './collection';
@@ -236,6 +238,14 @@ export abstract class KxOptionField<T> extends KxFloatingRoot implements Control
   protected readonly formDisabled = signal(false);
   isDisabled(): boolean {
     return this.disabled() || this.formDisabled();
+  }
+
+  constructor() {
+    super();
+    // Disabled while open, from `[disabled]` or a form: the popup closes, so no option can be pressed after it.
+    effect(() => {
+      if (this.isDisabled() && untracked(this.open)) untracked(() => this.hide('programmatic'));
+    });
   }
 
   protected onChange: (value: T) => void = () => {};

@@ -323,13 +323,29 @@ its role, and the command field reads collapsed, because a listbox must own opti
 | Large text | select and multi-select at 2× text at 1024px and 390px: the popup stays inside the viewport, no clipped text, 24px targets, a long chosen label and a five-chip selection wrap rather than overflow |
 | Motion | select and multi-select: the surface's motion is C1's, none under reduced motion |
 | Visual | `check:entry-visual` (select: rest, filled, invalid, disabled), `check:composite-visual` (multi-select: the same, and the chip's remove button as a part), `check:menu-visual` (select and multi-select open: rest, hover, keyboard highlight distinct from hover, selected, disabled, the open surface; light and dark, LTR and RTL; forced colours) |
-| Defects it found and fixed | an empty command list kept `role="listbox"` with no options (axe `aria-required-children`); at 2× text the select popup was placed from a stale shrink-to-fit width and overflowed the viewport (the popup is now measured from the start edge and placed in one pass); at 390px the multi-select input's intrinsic width widened the page; chip remove buttons were under 24px; the chip remove button's focus ring was 2.77:1 because the button's muted opacity muted its ring (it is now an inset ring at full opacity inside a multi-select) |
+| Defects it found and fixed | the published `.d.ts` typed `KxSelect.value` as `ModelSignal<string>`, so a consumer's strict AOT build rejected it (`check:angular-package` in CI; the field is now annotated); a bound `[disabled]` did not close an open popup (only a form's `setDisabledState` did); a select opened through `[(open)]` had no active descendant until the first key; `creatable` offered to create text that was already an option's value (Codex review); an empty command list kept `role="listbox"` with no options (axe `aria-required-children`); at 2× text the select popup was placed from a stale shrink-to-fit width and overflowed the viewport (the popup is now measured from the start edge and placed in one pass); at 390px the multi-select input's intrinsic width widened the page; chip remove buttons were under 24px; the chip remove button's focus ring was 2.77:1 because the button's muted opacity muted its ring (it is now an inset ring at full opacity inside a multi-select) |
 
 **Findings not fixed:** the base `KxTag` remove button's focus ring has the same muted-opacity weakness outside a
 multi-select (pre-existing, Tag is not in this wave). C1's shrink-to-fit popover can take one frame to converge
 on its placement; the listbox popup no longer depends on it, the popover still does. In this container
 `check:angular-browser` fails "KxBreadcrumb: nothing truncated inside it"; it fails identically on main
 `4a7a587` with no C2b change, so it is not this wave's.
+
+#### Negative controls (Wave C2b)
+
+8 controls (11–18), run after the implementation was committed (`b1f3b46`, and `294ad6c` for 17 after its guard
+fix): each a real break in the source, a fresh harness built from it, the gate run against it, and the file
+restored from git and checked by hash before the next (logs and `summary.json`:
+`/mnt/project-files/angular-wave-c2b/negative-controls/`). None committed. Every one was caught:
+
+- 11: the active descendant ignores disabled options (`set`, `current` and the typeahead skip removed together) → `check:angular-collections`: "closed typeahead never chooses a disabled option" (zucchini). Removing only `set`'s guard, then `set`'s and `current`'s, changed nothing observable: the walk, the typeahead and the option's pointer handler each skip disabled options on their own. Both runs are kept as `11-*-not-observable.log`.
+- 12: filtering or removal leaves the active descendant on an option that is not shown → "removing the highlighted item moves the highlight to one that remains" and "item removed: the active descendant is valid".
+- 13: `aria-selected` follows the keyboard highlight in a select → "nothing is chosen yet: every option is aria-selected=false" and "moving the highlight does not move the selection".
+- 14: removing a chip from the keyboard drops focus to the page → "Enter removes the chip; focus moves to the neighbouring chip's button" and "removing the last chip leaves focus in the input" (`body`).
+- 15: the listbox popup is not a layer on the stack → "in a dialog, Escape closes the select alone, focus on its trigger" (the dialog closed with it), and every Escape and outside-press case for select and multi-select.
+- 16: the command query is sent off the page on every keystroke → "the query never leaves the page: no request was made while searching" (it names each `/analytics/capture?q=…` request).
+- 17: `export { KxCommand as KxCombobox }` in the public API → `check:platform-completeness`: "combobox is a documented recipe … but Angular exports a component named after it". The first run passed: the guard only looked for a decorated class, so an alias slipped through. The guard now reads the public API too (`scripts/check-platform-completeness.mjs`), and the re-run is caught.
+- 18: keyboard highlight identical to the pointer highlight in a listbox → `check:menu-visual`: "keyboard highlight: an inset ring clears 3:1 against the layer" (1.00:1) and "keyboard and pointer highlights look different", for select and multi-select.
 
 ### What remains after Wave C2b, ranked
 

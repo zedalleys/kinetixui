@@ -164,7 +164,7 @@ export class KxMultiSelect extends KxOptionField<string[]> {
   protected readonly createLabel = computed(() => `Create “${this.createText()}”`);
   private readonly canCreate = computed(() => {
     const text = this.createText().toLocaleLowerCase();
-    return this.creatable() && !!text && !this.options().some((o) => o.label.toLocaleLowerCase() === text) && !this.value().some((v) => v.toLocaleLowerCase() === text);
+    return this.creatable() && !!text && !this.options().some((o) => o.label.toLocaleLowerCase() === text || o.value.toLocaleLowerCase() === text) && !this.value().some((v) => v.toLocaleLowerCase() === text);
   });
   protected readonly summary = computed(() => {
     const chosen = this.value();
