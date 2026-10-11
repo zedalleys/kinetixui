@@ -6,8 +6,9 @@ import { PRIMITIVE, COMPONENT_CATEGORY } from "@/lib/component-registry";
 import { PlatformVerification } from "@/components/platform-verification";
 import { STATUS } from "@/lib/component-status";
 import { PACKAGES } from "@/lib/packages";
-import { PLATFORMS, PLATFORM_DEFINITIONS, type Platform } from "@/lib/platform-parity";
-import { GUIDANCE_LABEL, WAVE_LABEL, platformStateFor } from "@/lib/platform-tabs";
+import { NpmLinks } from "./npm-links";
+import { PLATFORMS, PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
+import { GUIDANCE_LABEL, SETUP_HREF, WAVE_LABEL, platformStateFor } from "@/lib/platform-tabs";
 import { trackFenceCopy } from "@/lib/analytics-surfaces";
 import { CopyButton } from "./copy-button";
 
@@ -25,14 +26,6 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-/** Each platform's setup page. Install snippets on a component page are a summary; the full steps live there. */
-const SETUP_HREF: Record<Platform, string> = {
-  React: "/docs/installation",
-  Angular: "/docs/angular",
-  SwiftUI: "/docs/swiftui",
-  Compose: "/docs/compose",
-  Flutter: "/docs/flutter",
-};
 
 function Command({ value, label, pathname }: { value: string; label: string; pathname: string }) {
   return (
@@ -82,6 +75,7 @@ function InstallStrip({ slug, pathname }: { slug: string; pathname: string }) {
               <div className="space-y-1 font-mono text-[12px]">
                 {p === "React" && <Command value={`npx ${PACKAGES.cli} add ${slug}`} label={`Copy ${def.label} CLI command`} pathname={pathname} />}
                 <Command value={`npm i ${def.distribution.coordinate} ${PACKAGES.tokens}`} label={`Copy ${def.label} npm command`} pathname={pathname} />
+                <NpmLinks names={[def.distribution.coordinate, PACKAGES.tokens]} />
               </div>
             ) : (
               <p className="text-muted-foreground">Source only, not on {def.distribution.channel} yet: use a repository checkout pinned to a commit.</p>
@@ -152,8 +146,10 @@ export function ComponentMeta() {
         </a>
       </Row>
       <Row label="A11y">
+        {/* the axe and keyboard runs this links to cover the React library; each platform's own evidence is in the
+            Platforms row above, so this must not read as a claim about all five */}
         <Link href="/docs/accessibility" className="text-primary underline underline-offset-2">
-          audited in CI →
+          React: audited in CI →
         </Link>
       </Row>
     </dl>

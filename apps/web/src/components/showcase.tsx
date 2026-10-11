@@ -57,6 +57,7 @@ export function Showcase({
   sources,
   analyticsBlock,
   platforms,
+  aside,
   children,
   className,
   contentClassName,
@@ -77,6 +78,8 @@ export function Showcase({
   analyticsBlock?: string;
   /** Platform labels to show as a coverage line — derived by the caller, never counted here. */
   platforms?: string[];
+  /** A line under the title, e.g. how to install this block on the reader's platform. */
+  aside?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
   contentClassName?: string;
@@ -117,6 +120,7 @@ export function Showcase({
           {platforms.join(" · ")}
         </p>
       )}
+      {aside}
 
       <div className="mt-3 overflow-hidden rounded-xl border border-border">
         <Tabs.Root defaultValue="preview" dir={dir}>

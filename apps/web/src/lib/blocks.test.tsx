@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import blocksManifest from "../../../../blocks.manifest.json";
 import componentsManifest from "../../../../components.manifest.json";
 import { BlocksContent } from "../app/blocks/blocks-content";
+import { blockComponents } from "./block-components";
 import { blockCoverage, blockTotal, blocks } from "./blocks";
 import { PLATFORMS, PLATFORM_DEFINITIONS } from "./platform-parity";
 import { blockExampleSource } from "../registry/block-examples.generated";
@@ -81,18 +82,18 @@ describe("generated snippets come from the real source files", () => {
 
 describe("the /blocks page", () => {
   it("renders every block from the manifest", () => {
-    render(<BlocksContent />);
+    render(<BlocksContent components={blockComponents()} />);
     for (const b of blocks) expect(screen.getByRole("heading", { name: b.title, level: 2 })).toBeInTheDocument();
   });
 
   it("gives each block an anchor id matching its slug", () => {
-    const { container } = render(<BlocksContent />);
+    const { container } = render(<BlocksContent components={blockComponents()} />);
     for (const b of blocks) expect(container.querySelector(`section#${b.slug}`)).not.toBeNull();
   });
 
   it("shows a platform tab for exactly the platforms a block implements — no undeclared tab", async () => {
     const user = userEvent.setup();
-    const { container } = render(<BlocksContent />);
+    const { container } = render(<BlocksContent components={blockComponents()} />);
 
     for (const block of blocks) {
       const section = container.querySelector(`section#${block.slug}`)!;
@@ -119,7 +120,7 @@ describe("the /blocks page", () => {
 
   it("shows the generated source, not a hand-written copy", async () => {
     const user = userEvent.setup();
-    const { container } = render(<BlocksContent />);
+    const { container } = render(<BlocksContent components={blockComponents()} />);
     await user.click(screen.getAllByRole("tab", { name: "code" })[0]!);
     const pre = container.querySelector("section#sign-in pre")!;
     expect(pre.textContent).toBe(blockExampleSource["sign-in"].React);
@@ -127,14 +128,14 @@ describe("the /blocks page", () => {
 
   it("copies exactly the generated snippet", async () => {
     const user = userEvent.setup();
-    const { container } = render(<BlocksContent />);
+    const { container } = render(<BlocksContent components={blockComponents()} />);
     await user.click(screen.getAllByRole("tab", { name: "code" })[0]!);
     await user.click(container.querySelector("section#sign-in button[aria-label='Copy']") as HTMLElement);
     await waitFor(async () => expect(await navigator.clipboard.readText()).toBe(blockExampleSource["sign-in"].React));
   });
 
   it("names the platforms instead of claiming 'all platforms'", () => {
-    const { container } = render(<BlocksContent />);
+    const { container } = render(<BlocksContent components={blockComponents()} />);
     const text = container.textContent ?? "";
     expect(text.toLowerCase()).not.toContain("all platforms");
     expect(container.querySelector("section#sign-in")!.textContent).toContain("React");
@@ -142,7 +143,7 @@ describe("the /blocks page", () => {
 
   it("makes each code block reachable by keyboard, since long native lines scroll", async () => {
     const user = userEvent.setup();
-    const { container } = render(<BlocksContent />);
+    const { container } = render(<BlocksContent components={blockComponents()} />);
     await user.click(screen.getAllByRole("tab", { name: "code" })[0]!);
     const pre = container.querySelector("section#sign-in pre")!;
     expect(pre.getAttribute("tabindex")).toBe("0");

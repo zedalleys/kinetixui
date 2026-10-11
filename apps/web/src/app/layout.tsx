@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { AnalyticsProvider } from "@/components/analytics-provider";
+import { PlatformLocationSync } from "@/components/platform-location-sync";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
@@ -113,6 +115,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </ThemeProvider>
         <AnalyticsProvider />
+        <Suspense fallback={null}>
+          <PlatformLocationSync />
+        </Suspense>
       </body>
     </html>
   );

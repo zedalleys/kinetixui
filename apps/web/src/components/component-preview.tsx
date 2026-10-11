@@ -116,6 +116,19 @@ export function ComponentPreview({
   // a demo outside a component page may not have the reader's platform; it shows its first tab and leaves the choice alone
   const platform: CodeTab = tabs.some((t) => t.tab === preferred) ? preferred : (tabs[0]?.tab ?? "react");
 
+  // whether a platform tab puts code on screen; a planned port shows a sentence, not code
+  const showsCode = (tab: CodeTab) => {
+    const t = tabs.find((x) => x.tab === tab);
+    const state = t ? platformStateFor(component, t.platform) : undefined;
+    return Boolean(byTab[tab]) && !(state && state !== "implementation" && state.type === "planned");
+  };
+  // someone looked at the source: only from a click on Code or on another platform's tab, never on mount or restore
+  const viewed = (tab: CodeTab, location: "code_tab" | "platform_tabs") => {
+    if (component && showsCode(tab)) {
+      analytics.track("component_code_viewed", { component, platform: PLATFORM_FROM_CODE_TAB[tab], location, source: "component_page" });
+    }
+  };
+
   // the code itself is never reported — only which component and which platform's snippet was copied
   const copied = (tab: CodeTab) => {
     if (component) analytics.track("component_code_copied", { component, platform: PLATFORM_FROM_CODE_TAB[tab], source: "component_page" });
@@ -164,7 +177,7 @@ export function ComponentPreview({
       data-cp
       className={cn("my-6 overflow-hidden rounded-xl border border-border", className)}
     >
-      <Tabs.Root defaultValue="preview" dir={dir}>
+      <Tabs.Root defaultValue="preview" dir={dir} onValueChange={(v) => v === "code" && viewed(tabs.length > 1 ? platform : "react", "code_tab")}>
         <Tabs.List aria-label="View preview or code" className="flex items-center gap-1 bg-muted/30 px-2">
           {["preview", "code"].map((v) => (
             <Tabs.Trigger key={v} value={v} className={tabTrigger}>
@@ -193,6 +206,7 @@ export function ComponentPreview({
                   if (component) {
                     analytics.track("platform_selected", { platform: PLATFORM_FROM_CODE_TAB[next], component, source: "component_page", location: "platform_tabs" });
                   }
+                  viewed(next, "platform_tabs");
                 }}
               >
                 <Tabs.List aria-label="Platform" className="flex flex-wrap items-center gap-1 border-b border-border px-2">

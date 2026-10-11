@@ -1,17 +1,26 @@
 export const metadata = {
   title: "Select",
-  description: "Displays a list of options for the user to pick from — triggered by a button. Reconciled 1:1 with design source node 54855:13882.",
+  description: "Displays a list of options for the user to pick from — triggered by a button.",
 };
 
 # Select
 
 <ComponentMeta />
 
-Displays a list of options for the user to pick from — triggered by a button. Reconciled 1:1 with design source node 54855:13882.
+Displays a list of options for the user to pick from — triggered by a button.
 
 <ComponentPreview name="select-demo" />
 
 ## React installation
+
+Install the package the usage below imports from:
+
+```bash
+npm i @kinetixui/ui @kinetixui/tokens
+```
+
+The project also needs Tailwind CSS 3 and the KinetixUI preset; see [Installation](/docs/installation). To own
+the source instead, copy it into your project with the CLI and import from the folder it writes to:
 
 ```bash
 npx @kinetixui/cli add select
@@ -23,15 +32,15 @@ npx @kinetixui/cli add select
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@kinetixui/ui";
 ```
 
-Styled entirely from the KinetixUI token contract — `bg-action`,
-`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
-with no extra config. Keyboard and ARIA behaviour is inherited from Radix where the
-component is built on a primitive; the hand-built widgets (DataGrid, TreeView,
-ColorPicker, MultiSelect, Tour, KanbanBoard) have their own documented interaction
-models — see [Accessibility](/docs/accessibility).
+Styled from the KinetixUI token contract, in light and dark, with no extra configuration. Keyboard and
+ARIA behaviour comes from Radix Select; see [Accessibility](/docs/accessibility).
 
 <ComponentApi slug="select" />
 
 ## Keyboard
 
 <ComponentKeyboard slug="select" />
+
+## Design source
+
+Reconciled 1:1 with design source node 54855:13882.

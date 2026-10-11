@@ -107,6 +107,15 @@ function onPopState() {
   notify();
 }
 
+/**
+ * The URL changed without a new document (a client-side navigation): let every switcher re-read it, so a
+ * `?platform=` link applies and leaving it restores the reader's choice even where nothing remounts. Called by
+ * `PlatformLocationSync`; a no-op when the URL query did not change.
+ */
+export function notifyLocationChanged(): void {
+  if (readSearch() !== resolvedFor) notify();
+}
+
 function subscribe(listener: () => void) {
   if (listeners.size === 0) {
     window.addEventListener("storage", onStorage);

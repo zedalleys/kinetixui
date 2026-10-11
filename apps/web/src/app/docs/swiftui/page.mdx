@@ -45,7 +45,12 @@ resolve. Add the repository as a submodule and check out the commit you want:
 git submodule add https://github.com/zedalleys/kinetixui.git Vendor/kinetixui
 git -C Vendor/kinetixui checkout <commit-sha>
 git add .gitmodules Vendor/kinetixui
+git commit -m "Add KinetixUI at <commit-sha>"
 ```
+
+The commit records `.gitmodules` and the pinned commit (the submodule's gitlink) in
+your repository. Anyone who clones it, CI included, gets exactly that commit with
+`git submodule update --init`.
 
 In an Xcode app project, choose **File › Add Package Dependencies… › Add Local…**,
 select `Vendor/kinetixui/packages/ui-swiftui`, and add the `KinetixUI` library to

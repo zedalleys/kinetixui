@@ -8,6 +8,7 @@ import { ComponentPreview } from "@/components/component-preview";
 import { analytics } from "./analytics";
 import {
   PLATFORM_STORAGE_KEY,
+  notifyLocationChanged,
   parsePlatform,
   resetPlatformPreferenceForTests,
   setPreferredPlatform,
@@ -74,6 +75,7 @@ describe("the reader's platform", () => {
 
   it("follows ?platform= across client-side navigation and goes back to the reader's choice when it is gone", async () => {
     window.localStorage.setItem(PLATFORM_STORAGE_KEY, "compose");
+    const track = vi.spyOn(analytics, "track").mockImplementation(() => {});
     const user = userEvent.setup();
     const page = (url: string) => {
       cleanup();
@@ -93,7 +95,42 @@ describe("the reader's platform", () => {
     window.history.pushState(null, "", "/docs/components/tabs?platform=angular");
     act(() => window.dispatchEvent(new PopStateEvent("popstate")));
     expect(selected().some((t) => t?.startsWith("Angular"))).toBe(true);
+    // a Next.js navigation that changes only the query, with nothing remounting: the layout's sync re-reads it
+    window.history.replaceState(null, "", "/docs/components/tabs?platform=flutter");
+    act(() => notifyLocationChanged());
+    expect(selected().some((t) => t?.startsWith("Flutter"))).toBe(true);
+    window.history.replaceState(null, "", "/docs/components/tabs");
+    act(() => notifyLocationChanged());
+    expect(selected().some((t) => t?.startsWith("Jetpack Compose"))).toBe(true);
+    // an override is never saved, and following or leaving one is not a selection
     expect(window.localStorage.getItem(PLATFORM_STORAGE_KEY)).toBe("compose");
+    expect(track.mock.calls.filter(([e]) => e === "platform_selected")).toEqual([]);
+  });
+
+  it("an explicit pick on an override page holds for that page and is what the next page opens on", async () => {
+    window.localStorage.setItem(PLATFORM_STORAGE_KEY, "compose");
+    const user = userEvent.setup();
+    window.history.pushState(null, "", "/docs/components/button?platform=angular");
+    render(<ComponentPreview name="button-demo" />);
+    await openCode(user);
+    await user.click(screen.getByRole("tab", { name: /SwiftUI/ }));
+    expect(selected().some((t) => t?.startsWith("SwiftUI"))).toBe(true);
+    cleanup();
+    window.history.pushState(null, "", "/docs/components/dialog");
+    render(<ComponentPreview name="button-demo" />);
+    await openCode(user);
+    expect(selected().some((t) => t?.startsWith("SwiftUI"))).toBe(true);
+    expect(window.localStorage.getItem(PLATFORM_STORAGE_KEY)).toBe("swiftui");
+  });
+
+  it("restoring a remembered platform reports nothing; opening Code reports an inspection of that platform", async () => {
+    window.localStorage.setItem(PLATFORM_STORAGE_KEY, "swiftui");
+    const track = vi.spyOn(analytics, "track").mockImplementation(() => {});
+    const user = userEvent.setup();
+    render(<ComponentPreview name="button-demo" />);
+    expect(track).not.toHaveBeenCalled();
+    await openCode(user);
+    expect(track.mock.calls).toEqual([["component_code_viewed", { component: "button", platform: "swiftui", location: "code_tab", source: "component_page" }]]);
   });
 
   it("ignores an unknown value from the URL or storage and falls back to React", async () => {

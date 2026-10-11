@@ -6,7 +6,8 @@
  *                                                                               # persistence check can fail
  *
  * jsdom proves the store's logic (platform-preference.test.tsx). This proves what only a browser can: that the
- * choice survives a real full-page navigation and a client-side one, reaches /blocks and the homepage flagship,
+ * choice survives a real full-page navigation and a client-side one, that `?platform=` is followed and dropped across
+ * Next.js client navigations, that /blocks gives install guidance for the chosen platform, reaches /blocks and the homepage flagship,
  * hydrates without a mismatch, still works with storage blocked, and that the install strip does not overflow a
  * 320px phone or 200% text.
  */
@@ -141,6 +142,48 @@ try {
     assert.equal(await page.evaluate(() => localStorage.getItem('kx-platform')), 'compose');
     await go(page, '/docs/components/button?platform=vue');
     assert.deepEqual([...new Set(await selectedPlatforms(page))], ['Jetpack Compose'], 'an unknown value is ignored');
+  });
+
+  await check('client-side navigation into, between and away from ?platform= follows the URL and restores the saved choice', async () => {
+    const { page, errors } = await newPage();
+    await go(page, '/docs/components/button');
+    await page.locator('[data-cp]').first().getByRole('tab', { name: 'code', exact: true }).click();
+    await page.locator('[data-cp]').first().getByRole('tablist', { name: 'Platform' }).getByRole('tab', { name: 'Jetpack Compose' }).click();
+    // a marker on window survives only while no full page load happens: every step below must keep it
+    await page.evaluate(() => { window.__kxSameDocument = true; });
+    const push = async (url) => {
+      await page.evaluate((u) => window.next.router.push(u), url);
+      await page.waitForURL(`**${url}`);
+      await page.waitForLoadState('networkidle');
+      assert.equal(await page.evaluate(() => window.__kxSameDocument === true), true, `${url} was a full page load, not a client navigation`);
+    };
+    await push('/docs/components/dialog?platform=angular');
+    assert.deepEqual([...new Set(await selectedPlatforms(page))], ['Angular'], 'into an override');
+    await push('/docs/components/tabs?platform=flutter');
+    assert.deepEqual([...new Set(await selectedPlatforms(page))], ['Flutter'], 'between overrides');
+    await push('/docs/components/tabs');
+    assert.deepEqual([...new Set(await selectedPlatforms(page))], ['Jetpack Compose'], 'same page, override removed');
+    await push('/docs/components/tabs?platform=swiftui');
+    assert.deepEqual([...new Set(await selectedPlatforms(page))], ['SwiftUI'], 'same page, override added');
+    await push('/docs/components/button');
+    assert.deepEqual([...new Set(await selectedPlatforms(page))], ['Jetpack Compose'], 'away from an override');
+    assert.equal(await page.evaluate(() => localStorage.getItem('kx-platform')), 'compose', 'an override was saved over the reader\'s choice');
+    assert.deepEqual(errors, []);
+  });
+
+  await check('/blocks explains installation for the chosen platform, and shows the React CLI only on React', async () => {
+    const { page, errors } = await newPage();
+    await go(page, '/blocks');
+    const guide = page.locator('[data-blocks-install]');
+    assert.equal(await guide.getAttribute('data-blocks-install'), 'React');
+    const signIn = page.locator('section#sign-in');
+    assert.equal((await signIn.locator('code', { hasText: 'npx @kinetixui/cli add' }).textContent())?.trim(), 'npx @kinetixui/cli add button card checkbox input label');
+    await signIn.getByRole('tab', { name: 'code', exact: true }).click();
+    await signIn.locator('[role="tablist"][aria-label$="implementation platform"]').getByRole('tab', { name: 'SwiftUI' }).click();
+    assert.equal(await guide.getAttribute('data-blocks-install'), 'SwiftUI');
+    assert.match(await guide.textContent(), /source only and not on Swift Package Manager yet/);
+    assert.equal(await page.locator('code', { hasText: 'npx @kinetixui/cli add' }).count(), 0, 'a React CLI command is still shown on SwiftUI');
+    assert.deepEqual(errors, []);
   });
 
   await check('with storage blocked the page still renders and a pick still works', async () => {

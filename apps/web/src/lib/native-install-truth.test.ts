@@ -74,3 +74,51 @@ describe("native install truth", () => {
     expect(nativeInstallViolations(p, page(p).replaceAll("<commit-sha>", "main")).join()).toMatch(/pins a commit/);
   });
 });
+
+/**
+ * The update steps do what they say (PR #350 review). Each fence is read as the ordered shell lines a reader runs.
+ * Compose: replacing a copied module must delete it first (`cp -R` onto an existing folder nests the copy) and must
+ * save and re-apply the reader's own edits. SwiftUI: moving a submodule only changes the nested checkout until the
+ * parent repository stages and commits the gitlink, at setup and on update alike.
+ */
+const fences = (text: string, lang: string) => [...text.matchAll(new RegExp("```" + lang + "\\n([\\s\\S]*?)\\n```", "g"))].map((m) => m[1]!.split("\n").map((l) => l.trim()));
+const ordered = (lines: string[], steps: RegExp[]) => {
+  let at = -1;
+  for (const step of steps) {
+    const next = lines.findIndex((l, i) => i > at && step.test(l));
+    if (next === -1) return false;
+    at = next;
+  }
+  return true;
+};
+
+const composeUpdateRefreshes = (text: string) =>
+  fences(text, "bash").some((f) =>
+    ordered(f, [/^git -C \.\.\/kinetixui checkout <commit-sha>$/, /^diff -ruN .*\.\.\/kinetixui\/packages\/ui-compose\/ui kinetixui-ui > (\S+)$/, /checkout <newer-commit-sha>$/, /^rm -rf kinetixui-ui$/, /^cp -R \.\.\/kinetixui\/packages\/ui-compose\/ui kinetixui-ui$/, /^patch -p1 -d kinetixui-ui < /]),
+  );
+const swiftPinCommitted = (text: string, sha: string) =>
+  fences(text, "bash").some((f) => ordered(f, [new RegExp(`^git -C Vendor/kinetixui checkout ${sha}$`), /^git add (?:\.gitmodules )?Vendor\/kinetixui$/, /^git commit\b/]));
+
+describe("native update steps", () => {
+  const compose = read(SETUP_PAGE.Compose);
+  const swift = read(SETUP_PAGE.SwiftUI);
+
+  it("Compose replaces the copied module, saving and re-applying local edits, in that order", () => {
+    expect(composeUpdateRefreshes(compose)).toBe(true);
+  });
+
+  it("SwiftUI commits .gitmodules and the pin at setup, and the moved pin on update", () => {
+    expect(swiftPinCommitted(swift, "<commit-sha>")).toBe(true);
+    expect(swift).toMatch(/git add \.gitmodules Vendor\/kinetixui/);
+    expect(swiftPinCommitted(swift, "<newer-commit-sha>")).toBe(true);
+  });
+
+  it("would catch the steps that shipped before the review", () => {
+    // copy over the existing folder, no delete, no patch
+    expect(composeUpdateRefreshes("```bash\ngit -C ../kinetixui checkout <newer-commit-sha>\ncp -R ../kinetixui/packages/ui-compose/ui kinetixui-ui\n```")).toBe(false);
+    // delete-and-copy that throws away local edits
+    expect(composeUpdateRefreshes("```bash\ngit -C ../kinetixui checkout <newer-commit-sha>\nrm -rf kinetixui-ui\ncp -R ../kinetixui/packages/ui-compose/ui kinetixui-ui\n```")).toBe(false);
+    // moving the submodule without recording it
+    expect(swiftPinCommitted("```bash\ngit -C Vendor/kinetixui fetch\ngit -C Vendor/kinetixui checkout <newer-commit-sha>\n```", "<newer-commit-sha>")).toBe(false);
+  });
+});
