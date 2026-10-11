@@ -47,6 +47,9 @@ export const ANALYTICS_SOURCES = [
   // signal was `$pageview` — the rung of the adoption ladder we could see people reach for and then not
   // see them use.
   "blocks_gallery",
+  // The simulated Building Operations console. Its own source so a link followed from it (GitHub, docs) is
+  // attributed to the demo rather than dropped as an unlisted page.
+  "building_operations_demo",
 ] as const;
 export type AnalyticsSource = (typeof ANALYTICS_SOURCES)[number];
 
@@ -81,6 +84,11 @@ export const ANALYTICS_CTA_TARGETS = [
   "adopt_tokens",
   "adopt_components",
   "adopt_blocks",
+  /*
+   * The /iot link to the full-page Building Operations demo. Not a Qualified Evaluation or Adoption Intent
+   * signal (analytics-measurement.ts lists those); it answers only whether the demo is found from /iot.
+   */
+  "building_operations_demo",
 ] as const;
 export type AnalyticsCtaTarget = (typeof ANALYTICS_CTA_TARGETS)[number];
 

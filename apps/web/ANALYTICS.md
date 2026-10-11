@@ -118,7 +118,10 @@ GitHub click is `github_clicked` and never also `external_link_clicked` or `cta_
 Copy buttons on `/charts`, `/docs/colors` and "copy page as markdown" (no component + platform to attribute, or not
 code), and the homepage cross-platform example's copy button (a composed example, not a catalogue component —
 `cross-platform-flagship.test.tsx` asserts the silence); `/create` reports only its own `preset_*` / `create_export_*`
-events; ordinary navigation, the docs search palette, gallery search and filters (their text must never be sent);
+events; the `/demos/building-operations` console's own controls (scenario, playback, floor, camera, zone and status
+filters, layers, fullscreen — demo state, and the one signal worth having from the demo is whether it is found, which
+`cta_clicked` with target `building_operations_demo` from `/iot` answers; the page itself is source
+`building_operations_demo`); ordinary navigation, the docs search palette, gallery search and filters (their text must never be sent);
 attribution links (Radix, Lucide, Recharts). `npm_clicked` has no surface yet — the site links to no npm page —
 but any link to one of our packages on npmjs.com is reported the moment it is added.
 
