@@ -388,6 +388,29 @@ export default function IotPage() {
               />
             </MoreExamples>
           </div>
+
+          {/* A whole-page composition in a fourth setting, linked rather than embedded: it is a full console, and the
+              point of this section is made without it. Same rules: simulated, and it says so. */}
+          <aside
+            aria-labelledby="iot-building-demo"
+            className="flex min-w-0 flex-col gap-4 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="min-w-0">
+              <p className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Full-page demo · simulated</p>
+              <h3 id="iot-building-demo" className="mt-1 font-display text-lg font-semibold">
+                Building operations
+              </h3>
+              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                A commercial building console: floors, a floor plan with camera placeholders, occupancy against zone
+                capacity, and alerts that stay honest when a camera drops off or readings go stale.
+              </p>
+            </div>
+            <Button asChild variant="Outline" className="shrink-0 whitespace-normal">
+              <Link href="/demos/building-operations" {...ctaAttrs("iot_page", "building_operations_demo")}>
+                Open the demo <ArrowUpRight className="size-4" />
+              </Link>
+            </Button>
+          </aside>
         </Reveal>
       </LabSection>
 

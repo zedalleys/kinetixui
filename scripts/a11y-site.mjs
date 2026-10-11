@@ -63,6 +63,9 @@ const PAGES = [
   // selects, ranges, switches and a command strip — the densest set of custom controls outside /create, and
   // the only page whose components come from a different package. In the sweep for the same reason /create is.
   "/iot",
+  // The simulated Building Operations console linked from /iot: a dark shell with a floor plan, roving marker and
+  // floor groups, a zone table and live-updating totals. Custom layout throughout, so it is swept like /create.
+  "/demos/building-operations",
   "/docs/components/button",
   "/docs/components/data-grid",
 ];

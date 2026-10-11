@@ -10,8 +10,12 @@ import { allDocsLinks, componentDocs, mainNav, siteConfig } from "./site";
  * are linked from page content rather than the header or sidebar. Keep this list short and justified.
  */
 const UNLISTED_PUBLIC_ROUTES: readonly string[] = [
-  // Empty on purpose. /create is in mainNav and /docs/colors is in docsNav, so both reach the sitemap
-  // through the navigation they are actually in — which is the point of deriving this list.
+  // /create is in mainNav and /docs/colors is in docsNav, so both reach the sitemap through the navigation they
+  // are actually in — which is the point of deriving this list.
+  //
+  // The Building Operations demo is a full-page composition reached from the /iot page's environments section,
+  // not a docs page or a top-level product area, so it has no nav entry to inherit from.
+  "/demos/building-operations",
 ];
 
 /** Every indexable route, absolute-path form (`/docs/tokens`), deduped, in a stable order. */

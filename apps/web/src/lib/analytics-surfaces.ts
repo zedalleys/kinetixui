@@ -47,6 +47,7 @@ export function sourceForPath(pathname: string): AnalyticsSource | null {
   if (pathname === "/components") return "components_gallery";
   if (pathname === "/blocks") return "blocks_gallery";
   if (pathname === "/iot") return "iot_page";
+  if (pathname === "/demos/building-operations") return "building_operations_demo";
   return null;
 }
 
