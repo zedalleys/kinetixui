@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { AnalyticsProvider } from "@/components/analytics-provider";
+import { VercelAnalytics } from "@/components/vercel-analytics";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
@@ -113,6 +114,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </ThemeProvider>
         <AnalyticsProvider />
+        <VercelAnalytics />
       </body>
     </html>
   );

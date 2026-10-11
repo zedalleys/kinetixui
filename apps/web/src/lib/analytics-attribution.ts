@@ -384,10 +384,26 @@ function diagnosticMark(search: string): boolean {
   return requested === DIAGNOSTIC_TRAFFIC_TYPE;
 }
 
+/**
+ * Whether this tab is marked as diagnostic, WITHOUT changing the mark: `?kx_traffic=diagnostic` on this URL, or a
+ * stored mark that `?kx_traffic=clear` does not remove. For a second analytics tool (analytics-vercel.ts) that
+ * cannot carry a property and therefore drops marked traffic instead; `diagnosticMark` stays the one writer.
+ */
+export function isDiagnosticTab(search: string = typeof window === "undefined" ? "" : window.location.search): boolean {
+  const requested = new URLSearchParams(search).get("kx_traffic");
+  if (requested === DIAGNOSTIC_TRAFFIC_TYPE) return true;
+  if (requested === "clear") return false;
+  try {
+    return store("session")?.getItem(TRAFFIC_KEY) === DIAGNOSTIC_TRAFFIC_TYPE;
+  } catch {
+    return false;
+  }
+}
+
 /* ------------------------------------------------------------------ lifecycle */
 
 /** Mirrors PostHog's own `respect_dnt`: with Do Not Track on, nothing is persisted either. */
-function doNotTrack(): boolean {
+export function doNotTrack(): boolean {
   try {
     const w = window as unknown as { doNotTrack?: unknown };
     const n = navigator as unknown as { doNotTrack?: unknown; msDoNotTrack?: unknown };

@@ -263,3 +263,28 @@ for us because our page views are manual, so it has to be set explicitly.)
   sessions with a `$pageview` or a product event (`ARRIVAL_EVENTS` in `src/lib/analytics-measurement.ts`; marketing/
   analytics.md §4 *Eligible arriving session*). Exclude it from any breakdown that counts "events per visitor".
 - Do Not Track still applies: with it on, nothing is captured, `$pageleave` included.
+
+## Vercel Web Analytics (second view of traffic)
+
+A second, smaller tool next to PostHog: the Vercel dashboard's page views, visitors, top pages, referrers,
+countries and devices. It is context only. Qualified Evaluation, Adoption Intent and attribution stay in PostHog,
+and nothing here feeds them; the two tools count visitors differently, so their totals will not match.
+
+Rules in [`src/lib/analytics-vercel.ts`](src/lib/analytics-vercel.ts); the SDK is imported only by
+[`src/components/vercel-analytics.tsx`](src/components/vercel-analytics.tsx), mounted next to `AnalyticsProvider`.
+
+- **Same gate as PostHog.** The script loads only in a production build on `kinetixui.com` (or with
+  `NEXT_PUBLIC_ANALYTICS_ANY_HOST=true`), so `next dev`, tests and Vercel preview deployments never load it. It
+  needs no environment variables.
+- **Page views only.** No custom events: `track` from `@vercel/analytics` is not used (the architecture test pins
+  it), and `beforeSend` cancels any `event` that arrives anyway. Never send copied code, commands or URLs to it.
+- **URLs are cut to origin + path** in `beforeSend`, so no query string (`?q=`, `?filter=`, `utm_*`) or hash is sent.
+  A path that is not identifier-shaped (`cleanPath`) is dropped, exactly as for PostHog page views.
+- **Do Not Track** cancels every page view. A tab marked `?kx_traffic=diagnostic` is also cancelled, because a
+  Vercel event cannot carry the mark and so could not be filtered out afterwards.
+- **What Vercel itself collects** (its documented behaviour, not something this code controls): the page URL we
+  pass, the referrer, the country from the request, browser, OS and device type. It sets no cookie; it counts a
+  visitor by a hash of the request that it resets daily, and does not store the IP address. The script and its
+  ingest are same-origin (`/_vercel/insights/*`), so the CSP needs no change.
+- **To turn it on:** enable Web Analytics on the Vercel project (Analytics tab), then redeploy. Until then the
+  script request 404s and nothing is collected.

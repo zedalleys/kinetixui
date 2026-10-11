@@ -38,6 +38,13 @@ describe("analytics architecture", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("imports @vercel/analytics only in its one component, and never its custom-event API", () => {
+    const offenders = files.filter((f) => /["']@vercel\/analytics/.test(code(f)));
+    expect(offenders).toEqual(["src/components/vercel-analytics.tsx"]);
+    expect(code("src/components/vercel-analytics.tsx")).not.toMatch(/\btrack\b/);
+    expect(read("src/app/layout.tsx")).toContain("<VercelAnalytics />");
+  });
+
   it("keeps the root layout a server component", () => {
     const layout = read("src/app/layout.tsx");
     expect(layout).not.toMatch(/^\s*["']use client["']/m);
