@@ -308,8 +308,10 @@ export default function IotPage() {
                 card keeps its full width: the overlap is a negative margin on the card, not an inset. The overlap is in px,
                 not rem, because it is measured against the picture, which does not grow with text: at 200% text a
                 rem overlap covered the chip. The grid aligns its columns to the top, not the centre: this column is
-                taller than the copy, and centring pushed the eyebrow ~110px down at 1440px. */}
-            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)]">
+                taller than the copy, and centring pushed the eyebrow ~110px down at 1440px. Side by side, the column is lifted
+                48px so the chip sits level with the heading rather than below the eyebrow; stacked, it keeps the
+                plain gap below the CTAs. */}
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] lg:-mt-12">
               <IotHeroArt svg={IOT_HERO_ART_SVG} className="aspect-[16/10]" />
               <div className="relative -mt-[40px] min-w-0 px-3 sm:-mt-[32px] sm:px-6">
                 <HeroCommandStrip />
