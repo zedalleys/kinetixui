@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Check, Copy } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useScrollFocus } from "../lib/use-scroll-focus";
 
 /**
  * CodeBlock — a code display with a copy button and, for more than one
@@ -30,6 +31,10 @@ const CodeBlock = React.forwardRef<HTMLDivElement, CodeBlockProps>(
     const [copied, setCopied] = React.useState(false);
     const current = tabs[active] ?? tabs[0]!;
     const hasHeader = tabs.length > 1 || !!current.name;
+    const pre = React.useRef<HTMLPreElement>(null);
+    // A long line scrolls the `pre` sideways — at a phone width that is most lines. While it does, the keyboard
+    // must be able to reach it; while it does not, it stays out of the tab order.
+    const scrollable = useScrollFocus(pre);
 
     const copy = async () => {
       try {
@@ -83,7 +88,18 @@ const CodeBlock = React.forwardRef<HTMLDivElement, CodeBlockProps>(
               {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
             </button>
           )}
-          <pre className="overflow-x-auto p-4 text-body-sm text-foreground">
+          <pre
+            ref={pre}
+            className="overflow-x-auto p-4 text-body-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+            {...(scrollable
+              ? {
+                  tabIndex: 0,
+                  // Named by the file it shows, when it shows one. No fabricated fallback such as "Code": the code
+                  // itself is what a screen reader reads next, and a generic label adds nothing to it.
+                  ...(current.name ? { role: "group", "aria-label": current.name } : {}),
+                }
+              : {})}
+          >
             <code>{current.code}</code>
           </pre>
         </div>

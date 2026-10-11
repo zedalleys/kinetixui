@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "../lib/utils";
+import { useScrollFocus } from "../lib/use-scroll-focus";
 
 export interface DiffViewerProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "children"> {
   oldText: string;
@@ -80,9 +81,22 @@ function computeLineDiff(oldText: string, newText: string): DiffOp[] {
 const DiffViewer = React.forwardRef<HTMLDivElement, DiffViewerProps>(
   ({ oldText, newText, mode = "unified", oldLabel = "Before", newLabel = "After", className, ...props }, ref) => {
     const ops = React.useMemo(() => computeLineDiff(oldText, newText), [oldText, newText]);
+    // The container scrolls both ways (long lines; a height a caller caps). While it can, it takes a tab stop so a
+    // keyboard can reach it; while it cannot, it stays out of the tab order. A caller's own `tabIndex` still wins.
+    const container = React.useRef<HTMLDivElement>(null);
+    React.useImperativeHandle(ref, () => container.current as HTMLDivElement);
+    const scrollable = useScrollFocus(container, "both");
 
     return (
-      <div ref={ref} className={cn("overflow-auto rounded-md border font-mono text-xs", className)} {...props}>
+      <div
+        ref={container}
+        className={cn(
+          "overflow-auto rounded-md border font-mono text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          className,
+        )}
+        {...(scrollable ? { tabIndex: 0 } : {})}
+        {...props}
+      >
         {mode === "split" ? (
           <SplitDiff ops={ops} oldLabel={oldLabel} newLabel={newLabel} />
         ) : (
