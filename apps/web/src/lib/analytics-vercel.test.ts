@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from "vitest";
-import { isDiagnosticTab } from "./analytics-attribution";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { isDiagnosticTab, resetAttributionForTests } from "./analytics-attribution";
 import { shouldLoadVercelAnalytics, speedInsightsBeforeSend, vercelBeforeSend } from "./analytics-vercel";
 
 const ok = { dnt: false, diagnostic: false };
@@ -68,17 +68,32 @@ describe("speedInsightsBeforeSend", () => {
   });
 });
 
-describe("isDiagnosticTab reads the mark without writing it", () => {
-  afterEach(() => window.sessionStorage.clear());
+describe("isDiagnosticTab: the tab's mark holds across navigation", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    window.sessionStorage.clear();
+    resetAttributionForTests();
+  });
 
-  it("follows the URL, then the stored mark, and never stores anything itself", () => {
+  it("stores the mark from the URL, so later pages without the query are still marked", () => {
     expect(isDiagnosticTab("?kx_traffic=diagnostic")).toBe(true);
-    expect(window.sessionStorage.length).toBe(0);
-    expect(isDiagnosticTab("")).toBe(false);
-
-    window.sessionStorage.setItem("kx_analytics_traffic_v1", "diagnostic");
     expect(isDiagnosticTab("")).toBe(true);
     expect(isDiagnosticTab("?kx_traffic=clear")).toBe(false);
-    expect(window.sessionStorage.getItem("kx_analytics_traffic_v1")).toBe("diagnostic");
+    expect(isDiagnosticTab("")).toBe(false);
+  });
+
+  it("keeps the mark in memory when sessionStorage is blocked", () => {
+    vi.spyOn(window, "sessionStorage", "get").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    expect(isDiagnosticTab("?kx_traffic=diagnostic")).toBe(true);
+    expect(isDiagnosticTab("")).toBe(true);
+    expect(isDiagnosticTab("?kx_traffic=clear")).toBe(false);
+    expect(isDiagnosticTab("")).toBe(false);
+  });
+
+  it("an unmarked tab stays unmarked", () => {
+    expect(isDiagnosticTab("")).toBe(false);
+    expect(isDiagnosticTab("?kx_traffic=other")).toBe(false);
   });
 });

@@ -277,13 +277,18 @@ Rules in [`src/lib/analytics-vercel.ts`](src/lib/analytics-vercel.ts); both SDKs
   `NEXT_PUBLIC_ANALYTICS_ANY_HOST=true`), so `next dev`, tests and Vercel preview deployments never load them. They
   need no environment variables. The React entry points are used, not `/next`, so nothing reads `useSearchParams`;
   every route here is a literal path, so `/next`'s dynamic-route grouping would add nothing.
+- **A page view is a pathname change**, reported from `usePathname()`, not from the history API: passing `route`
+  turns the script's own `pushState` tracking off, so a query-only change (the changelog filter) is not counted as
+  another view of the same page.
 - **Page views only.** No custom events: `track` from `@vercel/analytics` is not used (the architecture test pins
   it), and `beforeSend` cancels any `event` that arrives anyway. Never send copied code, commands or URLs to it.
 - **Speed Insights sends measurements only** (`vital`); its `beforeSend` cancels anything else.
 - **URLs are cut to origin + path** in `beforeSend`, so no query string (`?q=`, `?filter=`, `utm_*`) or hash is sent.
   A path that is not identifier-shaped (`cleanPath`) is dropped, exactly as for PostHog page views.
 - **Do Not Track** cancels every page view and measurement. A tab marked `?kx_traffic=diagnostic` is also cancelled, because a
-  Vercel event cannot carry the mark and so could not be filtered out afterwards.
+  Vercel event cannot carry the mark and so could not be filtered out afterwards. The check uses the same writer as
+  PostHog, so the mark holds for the rest of the tab even when PostHog is off; with storage blocked it holds in
+  memory until a full reload.
 - **What Vercel itself collects** (its documented behaviour, not something this code controls): Web Analytics gets
   the page URL we pass, the referrer, the country from the request, browser, OS and device type, sets no cookie, and
   counts a visitor by a request hash it resets daily. Speed Insights gets the page URL we pass, the Web Vitals
