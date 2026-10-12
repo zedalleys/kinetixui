@@ -25,6 +25,7 @@
  */
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { resolve } from "node:path";
 import { chromium } from "playwright";
 
 const base = (process.argv.includes("--base") ? process.argv[process.argv.indexOf("--base") + 1] : "http://127.0.0.1:3100").replace(/\/$/, "");
@@ -33,9 +34,18 @@ const base = (process.argv.includes("--base") ? process.argv[process.argv.indexO
  * `--page /iot` (repeatable) sweeps only the named pages, for reproducing one finding locally. CI passes none, so it
  * always sweeps every page, and the ratchet check below still runs against the full list.
  */
-const ONLY_PAGES = process.argv.includes("--page")
-  ? process.argv.flatMap((arg, i) => (process.argv[i - 1] === "--page" ? [arg] : []))
-  : null;
+const { GUIDES } = await import(resolve("apps/web/src/lib/guides-data.ts"));
+/** Every registered guide, read from the registry so a guide added later is swept without editing this file. */
+const GUIDE_PAGES = GUIDES.map((g) => `/guides/${g.slug}`);
+
+/** `--guides` adds every registered guide to the `--page` list (the publication runbook uses it). */
+const ONLY_PAGES =
+  process.argv.includes("--page") || process.argv.includes("--guides")
+    ? [
+        ...(process.argv.includes("--guides") ? GUIDE_PAGES : []),
+        ...process.argv.flatMap((arg, i) => (process.argv[i - 1] === "--page" ? [arg] : [])),
+      ]
+    : null;
 
 /** One representative page per kind of layout, plus the pages with the densest custom UI. */
 const PAGES = [
@@ -84,10 +94,7 @@ const PAGES = [
   // The guides cluster (SEO Phase 3): long-form reading pages with their own layout, a status line, a wrapping CTA
   // button and a related-reading footer. Swept in whichever publication state the registry is in, so the pages
   // are already under the gate on the day they go live (marketing/seo/GUIDE-PUBLISH-RUNBOOK.md).
-  "/guides/cross-platform-design-systems",
-  "/guides/generated-tokens-vs-generated-components",
-  "/guides/verify-design-system-parity",
-  "/guides/evaluate-cross-platform-component-library",
+  ...GUIDE_PAGES,
 ];
 const WIDTHS = [
   // 320 is the narrowest width the site claims to support, and it is not a rounding of 375: a fixed-width

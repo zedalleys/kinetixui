@@ -108,8 +108,12 @@ WITH s AS (
     countIf(event = 'installation_viewed') AS install_views,
     countIf(event IN ('install_command_copied', 'cli_command_copied')) AS install_copies,
     countIf(event = 'platform_selected') AS platform_selections,
-    -- later product pages in the same session, for the guide clickthrough rows
-    countIf(event = '$pageview' AND match(properties.$pathname, '^/(docs(/|$)|components$|blocks$)')) > 0 AS product_page
+    -- for the guide clickthrough rows: when the organic landing happened, and when the product pages were seen
+    minIf(timestamp, properties.kx_medium = 'organic') AS organic_at,
+    groupArrayIf(timestamp, event = '$pageview'
+      AND match(properties.$pathname, '^/(docs(/|$)|components$|blocks$)')) AS product_page_ts,
+    groupArrayIf(timestamp, event = '$pageview' AND properties.$pathname = '/components') AS components_page_ts,
+    groupArrayIf(timestamp, event = 'component_viewed') AS component_view_ts
   FROM events
   WHERE timestamp >= {from} - INTERVAL 1 DAY AND timestamp < {to} + INTERVAL 1 DAY
     AND `$session_id` IS NOT NULL AND `$session_id` != ''
@@ -117,20 +121,27 @@ WITH s AS (
   HAVING started >= {from} AND started < {to}
 ),
 organic AS (
-  SELECT * FROM s
+  SELECT *,
+    -- only what happened AFTER the organic landing counts as a clickthrough
+    arrayExists(t -> t > organic_at, product_page_ts) AS product_page_after,
+    arrayExists(t -> t > organic_at, components_page_ts) AS components_after,
+    arrayExists(t -> t > organic_at, component_view_ts) AS component_view_after
+  FROM s
   WHERE arrived AND NOT diagnostic AND organic AND sid != '01a120d7-2b07-7ed0-af0c-f96d32e4c5bd'
 )
 ```
 
 **Checked, read-only, 2026-10-12:** this CTE compiles and runs in the project's PostHog SQL on the fixed window
-2026-09-14 to 2026-10-12 00:00 UTC (95 eligible arriving sessions, 1 of them organic). That is a syntax check, not
+2026-09-14 to 2026-10-12 00:00 UTC (95 eligible arriving sessions, 1 of them organic); re-run the same day with
+the after-the-landing clickthrough columns, same result for the organic count. That is a syntax check, not
 a baseline; the baseline is captured on publication day (§6). Several arrival events had not fired yet in that
 window, which is expected: the list is an allowlist.
 
 The ±1 day on the event scan lets a session that starts inside the window keep its events after `{to}`, so a
-diagnostic mark just outside the window still removes it (rule 7). `product_page` is any `/docs…`,
-`/components` or `/blocks` page view in the session, including the landing; the clickthrough rows below subtract
-the landing.
+diagnostic mark just outside the window still removes it (rule 7). The clickthrough columns
+(`product_page_after`, `components_after`, `component_view_after`) count only events **after** the first organic
+event (`organic_at`, the search landing), so a docs page seen in another tab before the visitor arrived from search
+is not reported as a guide clickthrough.
 
 ### 3.3 The queries
 
@@ -146,9 +157,9 @@ the landing.
 | **Organic installation views / copies** | `SELECT sum(install_views), sum(install_copies), countIf(install_views + install_copies > 0) FROM organic` | events and sessions |
 | **Organic platform selections** | `SELECT sum(platform_selections), countIf(platform_selections > 0) FROM organic` | events and sessions; the platform breakdown is the §11 tile 11 event query with an anti-join on non-organic sessions |
 | By landing-path cluster | `multiIf` on `landing` with the cluster table in §4, then the QE and count columns | counts per cluster |
-| **Guide → product-doc clickthrough** | `SELECT countIf(product_page), count() FROM organic WHERE startsWith(landing, '/guides/')` | two counts (a guide landing is not itself a product page, so any `product_page` is a later one) |
-| **Guide → component view** | `SELECT countIf(component_views > 0), count() FROM organic WHERE startsWith(landing, '/guides/')` | two counts |
-| Guide → `/components` clickthrough | a `$pageview` with `$pathname = '/components'` after the landing, same CTE with one more `countIf` | two counts |
+| **Guide → product-doc clickthrough** | `SELECT countIf(product_page_after), count() FROM organic WHERE startsWith(landing, '/guides/')` | two counts |
+| **Guide → component view** | `SELECT countIf(component_view_after), count() FROM organic WHERE startsWith(landing, '/guides/')` | two counts |
+| Guide → `/components` clickthrough | `SELECT countIf(components_after), count() FROM organic WHERE startsWith(landing, '/guides/')` | two counts |
 | **Returning organic evaluators** | `SELECT count() FROM (SELECT device FROM organic WHERE qe GROUP BY device HAVING count() >= 2)` | count; directional (cleared storage and second devices undercount) |
 | First-touch organic evaluators (optional) | the same over all eligible sessions, filtered on `kx_first_medium = 'organic'` | count; answers "did search acquire people who came back another way" |
 

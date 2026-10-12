@@ -153,7 +153,7 @@ try {
       }
       if (has("--a11y")) {
         const routes = [...G1.map((g) => `/guides/${g.slug}`), "/docs/platforms", "/docs/tokens", "/docs/accessibility", "/docs/installation"];
-        const r = run("node", ["scripts/a11y-site.mjs", "--base", base, ...routes.flatMap((x) => ["--page", x])], { env });
+        const r = run("node", ["scripts/a11y-site.mjs", "--base", base, "--guides", ...routes.slice(G1.length).flatMap((x) => ["--page", x])], { env });
         log(`  ${r.code === 0 ? "✓" : "✗"} ${TO} a11y-site (${routes.length} routes)\n${r.out.split("\n").slice(-6).join("\n")}`);
         report.gates["a11y-site"] = r.code;
       }

@@ -122,9 +122,7 @@ pnpm turbo run build --filter=@kinetixui/web...
 pnpm check:seo && pnpm check:editorial
 pnpm --filter @kinetixui/web exec vitest run src/lib/guides.test.ts
 (cd apps/web && npx next start -p 3000 &) ; pnpm check:seo-browser
-node scripts/a11y-site.mjs --base http://localhost:3000 \
-  --page /guides/cross-platform-design-systems --page /guides/generated-tokens-vs-generated-components \
-  --page /guides/verify-design-system-parity --page /guides/evaluate-cross-platform-component-library \
+node scripts/a11y-site.mjs --base http://localhost:3000 --guides \
   --page /docs/platforms --page /docs/tokens --page /docs/accessibility --page /docs/installation
 node scripts/editorial-negative-controls.mjs      # runs the controls for the registry's current state
 ```
