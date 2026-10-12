@@ -1,21 +1,25 @@
 /**
- * Simulated publication of the guides cluster: what publishing all four guides would change, proved on a real
- * production build, then reverted byte for byte. Nothing here is committed or deployed.
+ * Simulated change of the guides cluster's publication state, proved on a real production build, then reverted
+ * byte for byte. Nothing here is committed or deployed. It flips whichever state the registry is in:
+ *
+ *   all drafts     → simulated PUBLICATION of all four (the dry run before going live)
+ *   all published  → simulated UNPUBLICATION of all four (the rollback rehearsal: proves a revert to drafts leaves
+ *                    no guide indexable, in the sitemap, carrying TechArticle or linked from a docs page)
  *
  *   node scripts/simulate-guide-publication.mjs [--date YYYY-MM-DD] [--browser] [--controls] [--a11y] [--json out.json]
  *
  * Steps:
  *   1. read the current build (it must exist and be green): indexable pages, sitemap URLs, guides with
  *      TechArticle, guides in the sitemap, "Further reading" links on docs pages
- *   2. set every guide to `status: "published"` with `datePublished` (--date; the simulation date is a placeholder,
- *      never the real one, and never committed) in apps/web/src/lib/guides-data.ts
+ *   2. publication: set every guide to `status: "published"` with `datePublished` (--date; a placeholder, never the
+ *      real one, never committed); unpublication: set every guide to `status: "draft"` and drop its dates
  *   3. rebuild the web app, read the same numbers, run check:seo, check:editorial and the guides unit test;
  *      --browser also starts `next start` on :3100 and runs check:seo-browser against it; --a11y runs the a11y-site
- *      sweep on the guides and the docs pages that link them; --controls runs the published-state negative controls
+ *      sweep on the guides and the docs pages that link them; --controls runs the negative controls for the
+ *      simulated state
  *   4. restore guides-data.ts, verify its SHA-256, rebuild, and confirm the numbers are back to step 1
  *
- * When the registry is already published (the cluster has gone live), there is nothing to simulate: the script
- * reports the live numbers and exits; run the gates directly instead (marketing/seo/GUIDE-PUBLISH-RUNBOOK.md).
+ * A mixed registry is refused (check:editorial cluster-partial fails on it). See marketing/seo/GUIDE-PUBLISH-RUNBOOK.md.
  */
 import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -110,12 +114,9 @@ async function withServer(fn) {
 const original = readFileSync(REGISTRY);
 const originalSha = sha(REGISTRY);
 const G0 = await guides();
-if (G0.every((g) => g.status === "published")) {
-  log("The guides cluster is already published; there is nothing to simulate. Live numbers:");
-  log(JSON.stringify(await measure(), null, 2));
-  process.exit(0);
-}
-if (!G0.every((g) => g.status === "draft")) {
+const FROM = G0.every((g) => g.status === "draft") ? "draft" : G0.every((g) => g.status === "published") ? "published" : null;
+const TO = FROM === "draft" ? "published" : "draft";
+if (!FROM) {
   log("The guides cluster is partly published; fix that first (check:editorial cluster-partial).");
   process.exit(1);
 }
@@ -127,36 +128,41 @@ log(`before: ${JSON.stringify(report.before)}`);
 
 let failed = false;
 try {
-  const published = original
-    .toString("utf8")
-    .replaceAll(/\n(\s*)status: "draft",/g, `\n$1status: "published",\n$1datePublished: "${DATE}",`);
-  writeFileSync(REGISTRY, published);
+  const flipped =
+    TO === "published"
+      ? original.toString("utf8").replaceAll(/\n(\s*)status: "draft",/g, `\n$1status: "published",\n$1datePublished: "${DATE}",`)
+      : original.toString("utf8").replaceAll(/\n(\s*)status: "published",(\n\s*datePublished: "[^"]*",)?(\n\s*dateModified: "[^"]*",)?/g, `\n$1status: "draft",`);
+  writeFileSync(REGISTRY, flipped);
   const G1 = await guides();
-  if (!G1.every((g) => g.status === "published" && g.datePublished === DATE)) throw new Error("the registry rewrite did not publish all four guides");
-  build("simulated publication");
+  const ok = TO === "published" ? G1.every((g) => g.status === "published" && g.datePublished === DATE) : G1.every((g) => g.status === "draft" && !g.datePublished && !g.dateModified);
+  if (!ok) throw new Error(`the registry rewrite did not move all four guides to ${TO}`);
+  log(`simulating: ${FROM} → ${TO}`);
+  report.from = FROM;
+  report.to = TO;
+  build(`simulated ${TO === "published" ? "publication" : "unpublication"}`);
   report.after = await measure();
   log(`after:  ${JSON.stringify(report.after)}`);
-  report.gates = gates("published");
+  report.gates = gates(TO);
   if (has("--browser") || has("--a11y")) {
     await withServer(async (base) => {
       const env = { ...process.env };
       if (has("--browser")) {
         const r = run("node", ["scripts/seo-browser.mjs", "--base", base], { env });
-        log(`  ${r.code === 0 ? "✓" : "✗"} published check:seo-browser\n${r.out.split("\n").slice(-8).join("\n")}`);
+        log(`  ${r.code === 0 ? "✓" : "✗"} ${TO} check:seo-browser\n${r.out.split("\n").slice(-8).join("\n")}`);
         report.gates["check:seo-browser"] = r.code;
       }
       if (has("--a11y")) {
         const routes = [...G1.map((g) => `/guides/${g.slug}`), "/docs/platforms", "/docs/tokens", "/docs/accessibility", "/docs/installation"];
         const r = run("node", ["scripts/a11y-site.mjs", "--base", base, ...routes.flatMap((x) => ["--page", x])], { env });
-        log(`  ${r.code === 0 ? "✓" : "✗"} published a11y-site (${routes.length} routes)\n${r.out.split("\n").slice(-6).join("\n")}`);
+        log(`  ${r.code === 0 ? "✓" : "✗"} ${TO} a11y-site (${routes.length} routes)\n${r.out.split("\n").slice(-6).join("\n")}`);
         report.gates["a11y-site"] = r.code;
       }
     });
   }
   if (has("--controls")) {
-    const r = run("node", ["scripts/editorial-negative-controls.mjs", "--state", "published"]);
+    const r = run("node", ["scripts/editorial-negative-controls.mjs", "--state", TO]);
     log(r.out);
-    report.gates["negative-controls(published)"] = r.code;
+    report.gates[`negative-controls(${TO})`] = r.code;
   }
   failed = Object.values(report.gates).some((c) => c !== 0);
 } catch (e) {
@@ -169,10 +175,10 @@ try {
 }
 
 if (!has("--no-rebuild")) {
-  build("restored drafts");
+  build(`restored ${FROM}`);
   report.restoredMeasure = await measure();
   log(`restored: ${JSON.stringify(report.restoredMeasure)}`);
-  report.restoredGates = gates("restored");
+  report.restoredGates = gates(`restored ${FROM}`);
   const same = JSON.stringify(report.restoredMeasure) === JSON.stringify(report.before);
   log(`build numbers back to the starting state: ${same ? "yes" : "NO"}`);
   if (!same) failed = true;
@@ -180,5 +186,5 @@ if (!has("--no-rebuild")) {
 }
 if (!report.restored) failed = true;
 if (jsonOut) writeFileSync(jsonOut, JSON.stringify(report, null, 2));
-log(failed ? "simulated publication: FAILED" : "simulated publication: all checks pass, state restored");
+log(failed ? `simulated ${FROM} → ${TO}: FAILED` : `simulated ${FROM} → ${TO}: all checks pass, state restored`);
 process.exit(failed ? 1 : 0);

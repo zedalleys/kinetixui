@@ -104,15 +104,16 @@ The calendar is not rescheduled. Existing assets that can promote a guide once i
 ## Phase 3 — publication system and organic measurement
 
 **Implemented** (PR "feat(marketing): prepare SEO guide publication and organic measurement"). No content cluster
-was added and no guide was published.
+was added. The guides themselves were published separately, on 2026-10-12, by PR #366; this PR treats that as the
+starting state.
 
 | Item | Where |
 | --- | --- |
 | Publication procedure for the four guides | [`GUIDE-PUBLISH-RUNBOOK.md`](./GUIDE-PUBLISH-RUNBOOK.md) |
-| Publication gate: cluster-partial, cluster-date, sitemap-state, further-reading, pillar-proof, CTA destination, typed counts in guide snippets | `scripts/check-editorial.mjs` |
+| Publication gate: cluster-partial, guide-date, sitemap-state, further-reading, pillar-proof, CTA destination, typed counts in guide snippets | `scripts/check-editorial.mjs` |
 | Rendered guide checks in both states (draft: noindex and no TechArticle; published: indexable with TechArticle) | `scripts/seo-browser.mjs` |
 | The four guides in the CI a11y-site sweep | `scripts/a11y-site.mjs` |
-| Simulated publication, reverted by hash | `scripts/simulate-guide-publication.mjs` |
+| Simulated publication or unpublication (whichever the registry is not in), reverted by hash | `scripts/simulate-guide-publication.mjs` |
 | Negative controls EC-16 to EC-27, state-aware | `scripts/editorial-negative-controls.mjs` |
 | Authority and link-target plan | [`AUTHORITY-PLAN.md`](./AUTHORITY-PLAN.md) |
 | Organic measurement workflow, dashboard spec, Search Console and Bing checklists, Day 0/7/14/30 cadence, baseline capture | [`MEASUREMENT.md`](./MEASUREMENT.md) §3–§8 |

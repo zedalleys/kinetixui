@@ -162,8 +162,8 @@ ART-001, *"Your cross-platform design system may be lying about parity"*, publis
 ## Final ownership (SEO Phase 3)
 
 Re-checked after the Phase 3 metadata edits with `pnpm check:editorial` (intent-duplicate, guide-intent,
-near-duplicate: pass) in both publication states (guides as drafts on `main`, and all four published in the
-simulated publication). One owner per question, across the site and the two articles:
+near-duplicate: pass) in both publication states (all four published, as on `main` since #366, and all four
+reverted to drafts in the simulated unpublication). One owner per question, across the site and the two articles:
 
 | Question | Owner | Not the owner, and why |
 | --- | --- | --- |
@@ -173,7 +173,7 @@ simulated publication). One owner per question, across the site and the two arti
 | What does this library implement per platform | `/docs/platforms` | ART-001 links it as evidence; the guides link it as their proof |
 | How do I verify parity | `/guides/verify-design-system-parity` | `/docs/accessibility` describes this library's checks, not the method |
 | Design tokens across web, iOS and Android | `/docs/tokens` | ART-002 (dev.to) is the awareness piece and links it; no guide competes |
-| Why tokens are generated and components are not | `/guides/generated-tokens-vs-generated-components` | `/docs/tokens` has one section on it and links the guide once published |
+| Why tokens are generated and components are not | `/guides/generated-tokens-vs-generated-components` | `/docs/tokens` has one section on it and links the guide |
 | How to evaluate a cross-platform component library | `/guides/evaluate-cross-platform-component-library` | `/components` is the catalogue, not the checklist |
 | Install KinetixUI (React adoption included) | `/docs/installation` | no `/docs/react` (Phase 2A decision) |
 | `<component>` component for `<platforms>` | `/docs/components/<slug>` | sibling pages each keep their own primary intent |

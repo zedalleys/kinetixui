@@ -259,23 +259,25 @@ sessions with flat Organic QE sessions is not a win.
 The standing rhythm lives in [`../weekly-review.md`](../weekly-review.md) (indexed pages, non-brand clicks,
 organic eligible sessions, organic QE sessions) and [`../monthly-review.md`](../monthly-review.md) (the cluster
 table, the intent map's unowned families). Publication adds a one-off Day 0 / 7 / 14 / 30 sequence for the
-guides cluster, counted from the day the guides deploy:
+guides cluster, counted from go-live on **2026-10-12** (PR #366): Day 7 = 2026-10-19, Day 14 = 2026-10-26,
+Day 30 = 2026-11-11.
 
 | Day | Look at | Decide |
 | --- | --- | --- |
-| **0** | indexation eligibility (no noindex, self canonical, sitemap lists all four, JSON-LD parses) per [`GUIDE-PUBLISH-RUNBOOK.md`](./GUIDE-PUBLISH-RUNBOOK.md) §5; URL Inspection requested for the four; the PostHog baseline (§6) | nothing; fix only a defect in the checks |
-| **7** | indexed or not for each guide (URL Inspection); impressions and clicks per guide; the first queries; organic landing paths into the guides (§3.3); organic QE sessions | nothing, unless a guide is "Discovered/Crawled – currently not indexed" with a fixable cause |
-| **14** | CTR per guide and per high-value route (§9); guide → docs and guide → components clickthrough; snippets with impressions but no clicks | a snippet edit only where a page has a real impression count and a CTR well below its neighbours; one change at a time, dated in the backlog |
-| **30** | the cluster's contribution (guide sessions and their QE sessions vs all organic); Organic QE by cluster; which intent earns impressions; queries landing on the wrong page | refresh or leave each guide (§7 of the runbook); whether the next content candidate in [`CONTENT-BACKLOG.md`](./CONTENT-BACKLOG.md) is justified by the data |
+| **0** (2026-10-12) | indexation eligibility (no noindex, self canonical, sitemap lists all four, JSON-LD parses) per [`GUIDE-PUBLISH-RUNBOOK.md`](./GUIDE-PUBLISH-RUNBOOK.md) §5; URL Inspection requested for the four; the PostHog baseline (§6) | nothing; fix only a defect in the checks |
+| **7** (2026-10-19) | indexed or not for each guide (URL Inspection); impressions and clicks per guide; the first queries; organic landing paths into the guides (§3.3); organic QE sessions | nothing, unless a guide is "Discovered/Crawled – currently not indexed" with a fixable cause |
+| **14** (2026-10-26) | CTR per guide and per high-value route (§9); guide → docs and guide → components clickthrough; snippets with impressions but no clicks | a snippet edit only where a page has a real impression count and a CTR well below its neighbours; one change at a time, dated in the backlog |
+| **30** (2026-11-11) | the cluster's contribution (guide sessions and their QE sessions vs all organic); Organic QE by cluster; which intent earns impressions; queries landing on the wrong page | refresh or leave each guide (§7 of the runbook); whether the next content candidate in [`CONTENT-BACKLOG.md`](./CONTENT-BACKLOG.md) is justified by the data |
 
 **Small samples.** A guide with tens of impressions has no CTR worth reading. Before Day 30, record numbers and
 change nothing that is not a defect.
 
 ---
 
-## 6. Baseline capture, on the day the guides go live
+## 6. Baseline capture, Day 0 (2026-10-12)
 
-Recorded once, as text, in `marketing/measurement/` (a dated file), from the live site and the tools, never from
+The guides went live on 2026-10-12, so the baseline is taken for that day (or the first day after it that the
+tools are available, with that date written down). Recorded once, as text, in `marketing/measurement/` (a dated file), from the live site and the tools, never from
 memory. If a tool is not set up yet, write "not available" and the reason: an empty cell is better than an
 invented one.
 
@@ -307,10 +309,10 @@ workspace). Each step names what the owner does; nothing is done for them.
    `https://kinetixui.com/` can verify with the meta tag in `app/layout.tsx` `metadata.verification.google`, using
    the real value only.)
 3. **Submit the sitemap:** Indexing → Sitemaps → `https://kinetixui.com/sitemap.xml`. Expect "Success" and the
-   discovered count to match `pnpm check:seo` (128 today with the guides as drafts; 132 once published).
+   discovered count to match `pnpm check:seo` (132 since the guides were published on 2026-10-12).
 4. **Initial URL inspections** (URL Inspection → "Test live URL", then "Request indexing"): `/`,
-   `/components`, `/docs/platforms`, `/docs/tokens`, `/docs/angular`, `/docs/installation`, and, once published,
-   the four guides. Record for each: "URL is on Google" or the reason it is not, the Google-selected canonical,
+   `/components`, `/docs/platforms`, `/docs/tokens`, `/docs/angular`, `/docs/installation`, and the four
+   guides. Record for each: "URL is on Google" or the reason it is not, the Google-selected canonical,
    and whether it matches ours.
 5. **Index coverage checks** (Indexing → Pages): read the "Why pages aren't indexed" table. Expected and fine:
    query-string variants canonicalised to the clean URL (`?platform=`, `?filter=`), `/r/*.json` registry files if

@@ -28,8 +28,8 @@
  * Publication rules (SEO Phase 3; the operator procedure is marketing/seo/GUIDE-PUBLISH-RUNBOOK.md). They hold in
  * both states, all drafts and all published, so the gate guards the cluster before and after it goes live:
  *
- *   cluster-partial     the guides do not all share one status: the cluster publishes together or not at all
- *   cluster-date        published guides carry different datePublished values (one release, one real date)
+ *   cluster-partial     the cluster (the pillar plus every guide its prose links) does not share one status: it
+ *                       publishes and unpublishes together. A new guide the pillar does not link yet may be a draft.
  *   guide-date          (also) a draft carries a datePublished, or a published guide's registry date is not ISO
  *                       or differs from its TechArticle's
  *   sitemap-state       a published guide is missing from the sitemap (a draft in it is draft-indexed)
@@ -188,11 +188,11 @@ for (const g of GUIDES) {
 
 /* Publication is one act for the whole cluster: the guides cross-link in their prose, so a partial cluster either
  * links drafts or reads as an essay with holes. Checked from the registry, independent of what was built. */
-const statuses = new Set(GUIDES.map((g) => g.status));
-if (statuses.size > 1)
-  fail("cluster-partial", "guides-data.ts", GUIDES.map((g) => `${g.slug}=${g.status}`).join(", "));
-const dates = new Set(GUIDES.filter((g) => g.status === "published").map((g) => g.datePublished));
-if (dates.size > 1) fail("cluster-date", "guides-data.ts", `published guides carry ${dates.size} different dates: ${[...dates].join(", ")}`);
+// the cluster is derived from the pillar's source, so it is the same in either state and needs no hand-kept list
+const pillarSrc = readFileSync(join(resolve("apps/web/src/app/guides"), PILLAR.slug, "page.mdx"), "utf8");
+const cluster = GUIDES.filter((g) => g === PILLAR || pillarSrc.includes(`](/guides/${g.slug})`));
+if (new Set(cluster.map((g) => g.status)).size > 1)
+  fail("cluster-partial", "guides-data.ts", cluster.map((g) => `${g.slug}=${g.status}`).join(", "));
 
 /* "Further reading" on docs pages: the source names guides; the build must show exactly the published ones. */
 const named = new Set();

@@ -1,11 +1,12 @@
 # Guide publication runbook
 
-**Operator checklist.** The one procedure for taking the four-guide cluster from draft to published, checking it
-on the day it goes live, and keeping it true afterwards. Ownership and intents are in
+**Operator checklist** for the guides on kinetixui.com: how publication works, the checks on the day a guide goes
+live, the ART-001 edit, keeping guides true, unpublishing, and adding a guide later. Ownership and intents are in
 [`SEARCH-INTENT-MAP.md`](./SEARCH-INTENT-MAP.md#content-cluster); what to measure is in
 [`MEASUREMENT.md`](./MEASUREMENT.md). Nothing in this file publishes anything by itself.
 
-The cluster:
+**State: the four-guide cluster is published**, all four together on **2026-10-12** (PR #366, after the owner's
+review of the copy). Go-live day for the Day 0 / 7 / 14 / 30 cadence is 2026-10-12.
 
 | Route | Role | CTA |
 | --- | --- | --- |
@@ -24,8 +25,8 @@ at build time, so it cannot be switched on its own:
 
 | Condition | Where it comes from | Gate rule that fails if it is wrong |
 | --- | --- | --- |
-| 1. All four switch together | the registry | `check:editorial` **cluster-partial** (also draft-linked) |
-| 2. Each carries a real `datePublished`, the same one | the registry | **guide-date**, **cluster-date**; `guides.test.ts`; the build throws on a published guide without a date |
+| 1. The cluster switches together (the pillar and every guide its prose links) | the registry | `check:editorial` **cluster-partial** (also draft-linked) |
+| 2. Each published guide carries a real `datePublished`; a draft carries none | the registry | **guide-date**; `guides.test.ts`; the build throws on a published guide without a date |
 | 3. Sitemap entries appear together | `app/sitemap.ts` lists `publishedGuides()` | **sitemap-state** (published but absent), **draft-indexed** (draft but present) |
 | 4. Article JSON-LD appears together | `guideJsonLd()` returns `null` for a draft | **guide-date** (published without TechArticle), **draft-indexed** (draft with one); `check:seo-browser` on the rendered page |
 | 5. FurtherReading appears only after publication | `<FurtherReading>` renders published guides only | **further-reading** (shows a draft, or drops a published guide, or a published guide no docs page names) |
@@ -50,71 +51,85 @@ the map (**guide-intent**, **intent-duplicate**), and no guide or guide snippet 
 node -e 'import("./apps/web/src/lib/guides-data.ts").then(m => console.table(m.GUIDES.map(({slug,status,datePublished}) => ({slug,status,datePublished}))))'
 ```
 
-All four `draft`: follow §3. All four `published`: the cluster is live; skip to §5 for the Day 0 checks if they
-have not been done, otherwise §7 for freshness. Anything mixed is a defect: `check:editorial` fails on it.
+On 2026-10-12 all four read `published` with `datePublished` 2026-10-12. A mixed cluster is a defect:
+`check:editorial` fails on it.
 
-## 3. Before publishing
+## 3. How the cluster was published, and the dry run
 
-- [ ] **Owner review of the copy is done.** Publication is the owner's decision; nothing here infers it.
-- [ ] **Counts are live.** Every count in a guide renders from the manifest (`<ComponentTotalInline />`,
-      `<PlatformCountInline />`); `check:editorial` count-hardcoded fails on a typed one. Re-read any sentence that
-      describes a platform's state (Angular maturity, what is on a registry) against `platform-parity.json`.
-- [ ] **Dry run passes** on a fresh `main` checkout, with the drafts unchanged:
+Recorded so the next publication repeats it:
 
-  ```bash
-  pnpm turbo run build --filter=@kinetixui/web...
-  PLAYWRIGHT_CHROMIUM_PATH=/path/to/chrome node scripts/simulate-guide-publication.mjs --browser --a11y --controls
-  ```
+1. **Owner review** of the copy. Publication is the owner's decision; nothing here infers it.
+2. **Counts are live.** Every count in a guide renders from the manifest (`<ComponentTotalInline />`,
+   `<PlatformCountInline />`); `check:editorial` count-hardcoded fails on a typed one. Sentences that describe a
+   platform's state (Angular maturity, what is on a registry) are re-read against `platform-parity.json`.
+3. **Dry run** while the guides are drafts: `node scripts/simulate-guide-publication.mjs --browser --a11y --controls`
+   publishes them in the registry with a placeholder date (`2099-01-01`), rebuilds, runs `check:seo`,
+   `check:editorial`, `guides.test.ts`, `check:seo-browser`, the a11y-site sweep on the guides and the four docs pages
+   that link them, and the negative controls for the published state; then restores the registry, verifies its
+   SHA-256 and rebuilds. Measured on main 655b11d before #366:
 
-  It publishes all four in the registry with a placeholder date (`2099-01-01`), rebuilds, runs `check:seo`,
-  `check:editorial`, `guides.test.ts`, `check:seo-browser`, the a11y-site sweep on the guides and the four docs
-  pages that link them, and the published-state negative controls; then restores the registry, verifies its
-  SHA-256 and rebuilds. Expected movement (2026-10-12, main 655b11d):
+   | Measure | Drafts | Published |
+   | --- | --- | --- |
+   | Built pages | 133 | 133 |
+   | Indexable pages | 128 | 132 |
+   | Sitemap URLs | 128 | 132 |
+   | Guides in the sitemap | 0 | 4 |
+   | Guides with TechArticle JSON-LD | 0 | 4 |
+   | Guides with `noindex` | 4 | 0 |
+   | FurtherReading guide links on docs pages | 0 | 5 |
 
-  | Measure | Drafts | Published |
-  | --- | --- | --- |
-  | Built pages | 133 | 133 |
-  | Indexable pages | 128 | 132 |
-  | Sitemap URLs | 128 | 132 |
-  | Guides in the sitemap | 0 | 4 |
-  | Guides with TechArticle JSON-LD | 0 | 4 |
-  | Guides with `noindex` | 4 | 0 |
-  | FurtherReading guide links on docs pages | 0 | 5 |
+   The non-guide numbers move with the site; the guide rows must swap, and indexable and sitemap must differ by
+   exactly the number of guides.
+4. **The edit:** on every guide in the cluster, `status: "published"` and `datePublished: "<the day it deploys,
+   UTC>"`, the same date, no `dateModified`. The date is never taken from the build or git, and never back-dated.
+5. **Gates** on the branch, then CI; the owner merges; Vercel deploys; §5 the same day.
 
-  The non-guide numbers move with the site; the guide rows must be 0 → 4 and 4 → 0, and indexable and sitemap
-  must each rise by exactly four.
+## 4. Unpublish, roll back, or add a guide
 
-## 4. Publish
+**Fix forward first.** A wrong sentence, link or snippet is a normal PR on a published guide (§7 for dates).
 
-1. Branch from current `main`.
-2. In `apps/web/src/lib/guides-data.ts`, on **all four** entries, set `status: "published"` and add
-   `datePublished: "<the day the change deploys, UTC>"`. Use the same date on all four. Do not add `dateModified`.
-   The date is never taken from the build or from git, and never back-dated.
-3. Build and run, in this order:
+**Unpublish (rollback).** The same edit in reverse on every guide in the cluster: `status: "draft"`, and remove
+`datePublished` and any `dateModified`. Rehearse it first; while the cluster is published the simulation runs the
+other way:
 
-   ```bash
-   pnpm turbo run build --filter=@kinetixui/web...
-   pnpm check:seo && pnpm check:editorial
-   pnpm --filter @kinetixui/web exec vitest run src/lib/guides.test.ts
-   (cd apps/web && npx next start -p 3000 &) ; pnpm check:seo-browser
-   node scripts/a11y-site.mjs --base http://localhost:3000 \
-     --page /guides/cross-platform-design-systems --page /guides/generated-tokens-vs-generated-components \
-     --page /guides/verify-design-system-parity --page /guides/evaluate-cross-platform-component-library \
-     --page /docs/platforms --page /docs/tokens --page /docs/accessibility --page /docs/installation
-   node scripts/editorial-negative-controls.mjs      # now runs the published-state controls
-   ```
+```bash
+pnpm turbo run build --filter=@kinetixui/web...
+PLAYWRIGHT_CHROMIUM_PATH=/path/to/chrome node scripts/simulate-guide-publication.mjs --browser --a11y --controls
+```
 
-   `check:seo` must report four more indexable pages and four more sitemap URLs than `main`.
-4. Open the PR. CI runs the same gates. The owner merges; Vercel deploys.
-5. Record it the same day: `CONTENT-BACKLOG.md` Phase 2B rows → published with the date; the baseline capture in
-   [`MEASUREMENT.md`](./MEASUREMENT.md) §6.
+It moves all four to draft in the registry, rebuilds, and checks that no guide is indexable, in the sitemap,
+carrying TechArticle or linked from a docs page (the table in §3, right to left), runs the draft-state negative
+controls, then restores and verifies the hash. The next deploy of the real edit makes the guides `noindex` and
+drops them from the sitemap; Search Console drops them on recrawl. Do not use the Search Console removal tool for
+this: it hides URLs temporarily and is meant for emergencies. Record the unpublication and the reason in
+`CONTENT-BACKLOG.md`.
 
-**If something is wrong after it is live:** fix forward in a normal PR. Unpublishing is the same edit in
-reverse on all four (status back to `draft`, `datePublished` removed); the next deploy makes them `noindex` and
-drops them from the sitemap, and Search Console drops them on recrawl. Do not use the Search Console removal tool
-for this: it hides URLs temporarily and is meant for emergencies.
+**Unpublishing one guide alone fails the gates**, by design: the others link it in their prose (`draft-linked`) and
+it belongs to the pillar's cluster (`cluster-partial`). Remove the links in the same PR, or unpublish the cluster.
 
-## 5. Day 0: checks on the live site
+**Add a guide later.** A new guide starts as `draft` in `guides-data.ts`, with its own row in
+[`SEARCH-INTENT-MAP.md`](./SEARCH-INTENT-MAP.md) (`guide-intent` fails without one). While it is a draft, no
+published page may link it (`draft-linked`), so the pillar does not link it yet and it sits outside the cluster;
+the gates allow that. To publish it: set its status and real date, add the pillar's link to it in the same PR (it
+then joins the cluster), name it in a docs page's `<FurtherReading>` if one fits, and run the gate commands below and the
+checks in §5. Before writing one, check the backlog's rule: no new cluster without evidence from Search Console
+([`CONTENT-BACKLOG.md`](./CONTENT-BACKLOG.md)).
+
+### Gate commands
+
+```bash
+pnpm turbo run build --filter=@kinetixui/web...
+pnpm check:seo && pnpm check:editorial
+pnpm --filter @kinetixui/web exec vitest run src/lib/guides.test.ts
+(cd apps/web && npx next start -p 3000 &) ; pnpm check:seo-browser
+node scripts/a11y-site.mjs --base http://localhost:3000 \
+  --page /guides/cross-platform-design-systems --page /guides/generated-tokens-vs-generated-components \
+  --page /guides/verify-design-system-parity --page /guides/evaluate-cross-platform-component-library \
+  --page /docs/platforms --page /docs/tokens --page /docs/accessibility --page /docs/installation
+node scripts/editorial-negative-controls.mjs      # runs the controls for the registry's current state
+```
+
+## 5. Day 0: checks on the live site (go-live 2026-10-12)
 
 Open every live page in a private window with `?kx_traffic=diagnostic` on the first URL, so the visit is excluded
 from analytics ([`../analytics.md`](../analytics.md) §11 *Diagnostic traffic*).
@@ -130,13 +145,15 @@ from analytics ([`../analytics.md`](../analytics.md) §11 *Diagnostic traffic*).
 - [ ] Search Console: URL Inspection on the four guides, then "Request indexing" on each
       ([`MEASUREMENT.md`](./MEASUREMENT.md) §7); Bing: URL Submission for the four (§8).
 - [ ] Capture the Day 0 baseline ([`MEASUREMENT.md`](./MEASUREMENT.md) §6).
-- [ ] ART-001 post-publication edit, if ART-001 is live (§6 below).
+- [ ] ART-001 post-publication edit: not on Day 0 (ART-001 was not live on 2026-10-12); do it the day ART-001
+      goes live (§6 below).
 
 ## 6. ART-001 → pillar: the post-publication edit
 
 ART-001 (*"Your cross-platform design system may be lying about parity"*) is the awareness piece on dev.to and
-stays canonical there. Its package is **not changed before it publishes**. Once the article is live **and** the
-pillar is published, make one edit on dev.to and record it in the ART-001 close-out:
+stays canonical there. Its package is **not changed before it publishes**. The pillar has been live since
+2026-10-12, so the only remaining condition is ART-001 itself (planned Tue 13 Oct). **Operator step, after ART-001
+is live:** make one edit on dev.to and record it in the ART-001 close-out:
 
 - **Where:** the italic footer, after the sentence ending "…not maintained by hand."
 - **Add:** *For the architecture behind it (shared tokens, native components, and what parity takes to verify),
