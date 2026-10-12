@@ -101,8 +101,17 @@ const robotsTxt = readFileSync(join(APP_DIR, "robots.txt.body"), "utf8");
 
 /* ---------------------------------------------------------------------------------------- extraction */
 
+/** Whether `url` is on the site's own origin. Parsed, not prefix-matched: `https://kinetixui.com.evil.example` is not. */
+const onOrigin = (url) => {
+  try {
+    return new URL(url).origin === ORIGIN;
+  } catch {
+    return false;
+  }
+};
+
 const toPath = (url) => {
-  if (!url.startsWith(ORIGIN)) return null;
+  if (!onOrigin(url)) return null;
   const rest = url.slice(ORIGIN.length);
   return rest === "" ? "/" : rest;
 };
@@ -172,7 +181,7 @@ for (const p of indexable) {
   if (!p.description) fail("desc-missing", p.route, "no meta description");
   if (!p.canonical) fail("canonical-missing", p.route, "no rel=canonical");
   else {
-    if (!p.canonical.startsWith(ORIGIN)) fail("canonical-host", p.route, `canonical ${p.canonical} is not on ${ORIGIN}`);
+    if (!onOrigin(p.canonical)) fail("canonical-host", p.route, `canonical ${p.canonical} is not on ${ORIGIN}`);
     if (/[?#]/.test(p.canonical)) fail("canonical-query", p.route, `canonical carries query/fragment: ${p.canonical}`);
     const path = toPath(p.canonical.replace(/[?#].*$/, ""));
     if (path !== null && path !== p.route) fail("canonical-self", p.route, `canonical points at ${path}`);

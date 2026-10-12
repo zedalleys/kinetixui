@@ -359,8 +359,9 @@ verifies its SHA-256. Nothing in the source tree is touched, and no control is c
 | 12 | `Badge — KinetixUI` (no platform) | `component-title` | ✓ |
 | 13 | drop the only link to `/demos/building-operations` | `orphan` | ✓ |
 | 14 | drop Related components from `/docs/components/slider` | `component-related` | ✓ |
+| 15 | canonical on `https://kinetixui.com.evil.example` (the origin as a host prefix) | `canonical-host` | ✓ |
 
-All 14 were caught and the gate is green again afterwards. The browser check's platform assertion was checked the
+All 15 were caught and the gate is green again afterwards. The browser check's platform assertion was checked the
 same way: expecting Flutter on `button?platform=SwiftUI` failed with the SwiftUI tab reported as selected, and the
 script was restored.
 

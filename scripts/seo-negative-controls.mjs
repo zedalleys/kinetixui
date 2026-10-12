@@ -120,6 +120,13 @@ const CONTROLS = [
     mutate: (s) => s.replace(/data-related-components="true"/, 'data-related-components-removed="true"'),
     expect: "component-related",
   },
+  {
+    id: 15,
+    name: "canonical on a look-alike host (the origin as a prefix of another host)",
+    file: "docs/rtl.html",
+    mutate: (s) => s.replace('href="https://kinetixui.com/docs/rtl"/>', 'href="https://kinetixui.com.evil.example/docs/rtl"/>'),
+    expect: "canonical-host",
+  },
 ];
 
 function runGate() {
