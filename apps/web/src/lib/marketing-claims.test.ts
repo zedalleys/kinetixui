@@ -10,6 +10,7 @@ import {
   stablePlatformSentence,
 } from "./platform-prose";
 import { PLATFORMS } from "./platform-parity";
+import { ROUTE_SEO } from "./route-seo";
 import { siteConfig } from "./site";
 
 /**
@@ -44,11 +45,18 @@ const defs = manifest.platformDefinitions as Record<
 const COPY = {
   "homepage": homepage,
   "README.md": readme,
-  "docs landing": readFileSync("src/app/docs/page.mdx", "utf8"),
+  // A page's search snippet now lives in lib/route-seo.ts, not in the page file, so it is read from there and
+  // judged together with the page it describes.
+  "docs landing": readFileSync("src/app/docs/page.mdx", "utf8") + "\n" + ROUTE_SEO["/docs"].description,
   // Added in Phase 0.5: its `description` is a search snippet that said components "ship on" four
   // platforms, which a reader hears as four they can install. A snippet is top-of-funnel copy, so it
   // belongs under the same rules as the homepage.
-  "components page": readFileSync("src/app/components/page.tsx", "utf8"),
+  "components page": readFileSync("src/app/components/page.tsx", "utf8") + "\n" + ROUTE_SEO["/components"].description,
+  // Every title and search snippet on the site that is not a component page, as one surface: a snippet is the
+  // first copy most visitors read.
+  "search snippets": Object.values(ROUTE_SEO)
+    .map((r) => `${r.title}\n${r.description}`)
+    .join("\n"),
 };
 
 describe("platform lists are derived, not typed", () => {

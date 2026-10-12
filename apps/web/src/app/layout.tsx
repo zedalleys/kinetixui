@@ -74,12 +74,13 @@ export const metadata: Metadata = {
   description: siteConfig.description,
   metadataBase: new URL(siteConfig.url),
   applicationName: siteConfig.name,
-  // Every page inherits these; a page only overrides what differs (title/description do, via its own
-  // `metadata` export, and Open Graph picks those up automatically from the resolved title/description).
+  // Fallbacks only. Every indexable page declares its own canonical, og:url and share card through
+  // `pageMetadata` (lib/seo.ts), because Next merges `openGraph` shallowly: a page that set any field here
+  // replaced the whole object. There is deliberately no `url` — it used to be the homepage, and every page that
+  // set nothing inherited it, so a shared docs link told LinkedIn and Slack it was the homepage.
   openGraph: {
     type: "website",
     siteName: siteConfig.name,
-    url: siteConfig.url,
     locale: "en",
   },
   twitter: {

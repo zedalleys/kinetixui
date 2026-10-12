@@ -67,6 +67,7 @@ repository may contradict them.
 | File | Use it when |
 | --- | --- |
 | `seo.md` | Topic clusters and landing-page architecture |
+| `seo/` | SEO baseline, gates, search intent map, organic measurement, content backlog |
 | `content-calendar.md` | The cadence principle. **Superseded as a calendar** — the schedule is `content/calendar.md` |
 | `community.md` | Which communities to participate in, fit classification, the weekly listening routine |
 | `distribution/` | **Channel roles, the 14-day execution plan, GitHub as a channel, partnerships, the distribution log** |

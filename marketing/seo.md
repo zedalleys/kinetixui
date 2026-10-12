@@ -4,6 +4,12 @@
 [`MESSAGING.md`](./MESSAGING.md); what may be claimed on any page is [`CLAIMS.md`](./CLAIMS.md). This file
 decides which searches we go after and what each landing surface must do — never what we say.
 
+**The SEO workstream lives in [`seo/`](./seo/)** — repo-truth baseline, principles and gates
+([`SEO-BASELINE.md`](./seo/SEO-BASELINE.md)), one primary intent per route
+([`SEARCH-INTENT-MAP.md`](./seo/SEARCH-INTENT-MAP.md)), Organic Qualified Evaluation Rate
+([`MEASUREMENT.md`](./seo/MEASUREMENT.md)) and the editorial backlog ([`CONTENT-BACKLOG.md`](./seo/CONTENT-BACKLOG.md)).
+This file keeps the cluster strategy those build on.
+
 ## Intent map
 
 Each cluster tied to the audience it serves, the surface it lands on, the message it carries and the action it
@@ -105,7 +111,9 @@ differentiated story. Revisit once the cross-platform position is established.
 
 Present and working: `sitemap.ts`, `robots.ts`, `opengraph-image.tsx`,
 `structured-data.tsx`, per-page metadata, `seo.test.ts` asserting the sitemap
-covers core pages and every component page.
+covers core pages and every component page. Superseded in detail by
+[`seo/SEO-BASELINE.md`](./seo/SEO-BASELINE.md) (2026-10-12), which adds canonicals,
+BreadcrumbList and the `check:seo` gate.
 
 **Gap:** no article/blog infrastructure exists. Long-form currently has to live
 on DEV or Hashnode. That is acceptable for the first 30 days — publishing

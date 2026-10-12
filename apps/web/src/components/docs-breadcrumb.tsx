@@ -2,65 +2,77 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { docsNav } from "@/lib/site";
+import { docsBreadcrumbTrail } from "@/lib/docs-trail";
+import { breadcrumbJsonLd } from "@/lib/seo";
 
-/** Docs / <Group> / <Page> — mono, spec-sheet style. */
+/**
+ * Docs / <Group> / <Page> — mono, spec-sheet style.
+ *
+ * Also emits the page's BreadcrumbList JSON-LD, from the same trail. This is a client component, but it is
+ * prerendered like every page on this static site, so the <script> is in the HTML a crawler receives — no
+ * hydration needed. Rendering it here rather than per page is what keeps the two from disagreeing.
+ */
 export function DocsBreadcrumb() {
   const pathname = usePathname();
+  const { crumbs, group } = docsBreadcrumbTrail(pathname);
 
-  if (pathname === "/docs") {
+  if (crumbs.length === 1) {
     return (
       <nav
         aria-label="Docs breadcrumb"
         className="font-mono text-[11px] uppercase tracking-[0.14em] text-foreground"
       >
-        Docs
+        <span data-crumb>Docs</span>
       </nav>
     );
   }
 
-  let group: string | undefined;
-  let title: string | undefined;
-  for (const g of docsNav) {
-    const item = g.items.find((i) => i.href === pathname);
-    if (item) {
-      group = g.title;
-      title = item.title;
-      break;
-    }
-  }
-
-  const isComponent = pathname.startsWith("/docs/components/");
+  const [docs, ...rest] = crumbs;
+  const current = rest.at(-1)?.href ? undefined : rest.at(-1);
+  const middle = current ? rest.slice(0, -1) : rest;
 
   return (
     <nav
       aria-label="Docs breadcrumb"
       className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground"
     >
-      <Link href="/docs" className="transition-colors hover:text-foreground">
-        Docs
+      <Link href={docs!.href!} className="transition-colors hover:text-foreground">
+        {docs!.name}
       </Link>
 
       {/* middle crumbs collapse below sm so the trail stays one line on phones */}
-      {(isComponent || group) && (
+      {(middle.length > 0 || group) && (
         <span className="hidden items-center gap-2 sm:inline-flex">
-          <span aria-hidden>/</span>
-          {isComponent && (
-            <Link href="/components" className="transition-colors hover:text-foreground">
-              Components
-            </Link>
+          {middle.map((c) => (
+            <span key={c.href} className="inline-flex items-center gap-2">
+              <span aria-hidden>/</span>
+              <Link href={c.href!} className="transition-colors hover:text-foreground">
+                {c.name}
+              </Link>
+            </span>
+          ))}
+          {group && (
+            <>
+              <span aria-hidden>/</span>
+              <span>{group}</span>
+            </>
           )}
-          {isComponent && group && <span aria-hidden>/</span>}
-          {group && <span>{group}</span>}
         </span>
       )}
 
-      {title && (
+      {current && (
         <>
           <span aria-hidden>/</span>
-          <span className="text-foreground">{title}</span>
+          <span data-crumb className="text-foreground">
+            {current.name}
+          </span>
         </>
       )}
+      <script
+        type="application/ld+json"
+        // built from the static nav config and the route — no user input reaches it
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(crumbs)) }}
+      />
     </nav>
   );
 }

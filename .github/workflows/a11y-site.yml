@@ -17,6 +17,7 @@ on:
       - "packages/create-preset/**"
       - "style-dictionary/**"
       - "scripts/a11y-site.mjs"
+      - "scripts/seo-browser.mjs"
       - "scripts/theme-isolation.mjs"
       - "scripts/iot-state-spatial.mjs"
       - "scripts/platform-ticker.mjs"
@@ -37,6 +38,7 @@ on:
       - "packages/create-preset/**"
       - "style-dictionary/**"
       - "scripts/a11y-site.mjs"
+      - "scripts/seo-browser.mjs"
       - "scripts/theme-isolation.mjs"
       - "scripts/iot-state-spatial.mjs"
       - "scripts/platform-ticker.mjs"
@@ -105,6 +107,12 @@ jobs:
       # the arc it sits under, a lock's word and its drawing, two plan markers) that axe and overflow cannot see.
       - name: IoT state and spatial pass (ring clearance, lock/light fidelity, plan markers)
         run: pnpm check:iot-state-spatial
+
+      # Search metadata as a JavaScript-running crawler sees it on representative routes: title, description, a
+      # canonical with no query state (also when the page is opened with ?platform= / ?filter= / ?q=), one <h1>,
+      # key internal links and parseable JSON-LD. The whole inventory is checked statically by `check:seo` in ci.yml.
+      - name: Rendered SEO metadata (representative routes, with query state)
+        run: pnpm check:seo-browser
 
       # The homepage platform ticker moves, so its contract is geometric and needs the same running site: one
       # accessible list of the canonical platforms with decorative marks, a seamless gap-free loop in LTR and RTL,
