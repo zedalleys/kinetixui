@@ -805,6 +805,40 @@ const BEHAVIOUR = [
       await press(page, "Escape");
       await click(page, "#toast-dismiss-all");
 
+      // ── dismissed by code (KxToasterService.dismiss), not by a press in the toaster: focus still moves on ──
+      await click(page, "#toast-error");
+      await click(page, "#toast-show");
+      await focus(page, "#toast-show");
+      await press(page, "Alt+t");
+      await press(page, "Tab");
+      const inNewest = await page.evaluate(() => !!document.activeElement?.closest("li.kx-toast")?.textContent.includes("Event created"));
+      await page.evaluate(() => document.getElementById("toast-dismiss-newest").click());
+      await idle(page);
+      const byId = await page.evaluate(() => ({ body: document.activeElement === document.body, toast: document.activeElement?.closest("li.kx-toast")?.textContent.replace(/\s+/g, " ").trim() ?? null }));
+      t(inNewest && !byId.body && !!byId.toast?.includes("Upload failed"), "dismiss(id) from code on the focused toast moves focus to the toast that stays, never to the page", JSON.stringify(byId));
+      await page.evaluate(() => document.getElementById("toast-dismiss-all").click());
+      await idle(page);
+      t((await toasts()).length === 0 && (await active(page)) === "toast-show", "dismiss() of every toast from code while one has focus sends focus back where it came from", await active(page));
+
+      // ── under a modal dialog the toaster is inert and unseen: its clock waits for the dialog ──
+      const e0 = Number(await out(page, "expired"));
+      await click(page, "#toast-modal-open");
+      await click(page, "#toast-modal-raise");
+      await idle(page);
+      t((await main.getAttribute("data-paused")) === "", "a modal dialog open outside the toaster holds its clock");
+      await page.waitForTimeout(2000);
+      await idle(page);
+      t((await toasts()).length === 1 && Number(await out(page, "expired")) === e0, "a toast raised under a modal outlives its duration while the modal is open");
+      await press(page, "Escape");
+      await settled(page);
+      t(!(await showing(page, "#toast-modal-content")) && (await main.getAttribute("data-paused")) === null, "the modal closed, the clock runs again");
+      await page.waitForTimeout(900);
+      await idle(page);
+      t((await toasts()).length === 1, "and the toast has its time after the modal: still there just after it closed");
+      await page.waitForTimeout(900);
+      await idle(page);
+      t((await toasts()).length === 0 && Number(await out(page, "expired")) === e0 + 1, "then it leaves on its clock, through onAutoClose");
+
       // ── an update in place; a visible limit; a toast that waits; toasters kept apart ──
       await click(page, "#toast-update");
       await click(page, "#toast-update");
@@ -873,6 +907,9 @@ const BEHAVIOUR = [
       await focus(page, "#tour-start");
       await press(page, "Enter");
       await settled(page);
+      // the first step scrolls its target towards the centre, smoothly: measure once the page has stopped
+      await scrollEnd();
+      await idle(page);
       t((await showing(page, dialog)) && (await out(page, "tour-open")) === "true", "it opens as a modal dialog in the top layer");
       t((await page.getByRole("dialog", { name: "Save your work" }).count()) === 1 && (await description(page, dialog)).startsWith("Changes save automatically"), "named by the step's title and described by its text");
       t((await page.locator(dialog).evaluate((el) => el === document.activeElement)), "first focus is the dialog itself: the reader hears the step, then Tabs to its buttons");
@@ -881,7 +918,7 @@ const BEHAVIOUR = [
       t(sr === "Step 1 of 5", "the step count is said in words", sr);
       const [ta, ca, spot] = [await rectOf(page, "#tour-a"), await rectOf(page, card), await rectOf(page, "#tour .kx-tour__spotlight")];
       t(ca.top >= ta.bottom && Math.abs(ca.left - ta.left) <= 1, "the card sits below its target, aligned to the target's inline start", `target ${ta.left.toFixed(0)},${ta.bottom.toFixed(0)} card ${ca.left.toFixed(0)},${ca.top.toFixed(0)}`);
-      t(spot.left <= ta.left && spot.right >= ta.right && spot.top <= ta.top && spot.bottom >= ta.bottom && (await page.locator(dialog).getAttribute("data-target")) === "found", "the spotlight surrounds the target");
+      t(spot.left <= ta.left && spot.right >= ta.right && spot.top <= ta.top && spot.bottom >= ta.bottom && (await page.locator(dialog).getAttribute("data-target")) === "found", "the spotlight surrounds the target", `spot ${spot.left.toFixed(0)},${spot.top.toFixed(0)}–${spot.right.toFixed(0)},${spot.bottom.toFixed(0)} target ${ta.left.toFixed(0)},${ta.top.toFixed(0)}–${ta.right.toFixed(0)},${ta.bottom.toFixed(0)} ${await page.locator(dialog).getAttribute("data-target")}`);
       const trap = [];
       for (let i = 0; i < 4; i++) {
         await press(page, "Tab");
@@ -972,6 +1009,21 @@ const BEHAVIOUR = [
       await settled(page);
       t((await out(page, "sb-open")) === "true" && (await visible(panel)), "Ctrl+B toggles it from anywhere on the page");
 
+      // ── side="end", written before its inset: the gap and the panel on the same side, nothing underneath ──
+      const endPanel = "#sb-end .kx-sidebar__panel";
+      const endLayout = async () => {
+        await page.locator("#sb-end-frame").evaluate((el) => el.scrollIntoView({ block: "start" }));
+        await idle(page);
+        return { frame: await rectOf(page, "#sb-end-frame"), panel: await rectOf(page, endPanel), main: await rectOf(page, "#sb-end-main") };
+      };
+      const fmt = ({ frame, panel, main }) => `frame ${frame.left.toFixed(0)}–${frame.right.toFixed(0)}, panel ${panel.left.toFixed(0)}–${panel.right.toFixed(0)}, page ${main.left.toFixed(0)}–${main.right.toFixed(0)}`;
+      const e1 = await endLayout();
+      t(Math.abs(e1.panel.right - e1.frame.right) <= 1.5 && Math.abs(e1.main.left - e1.frame.left) <= 1.5 && e1.main.right <= e1.panel.left + 0.5, "side=\"end\": the panel at the inline end, the page from the inline start up to it, no empty gutter and nothing underneath", fmt(e1));
+      await click(page, "#sb-end-trigger");
+      await settled(page);
+      const e2 = await endLayout();
+      t((await out(page, "sb-end-open")) === "false" && e2.panel.width < 60 && e2.main.right <= e2.panel.left + 0.5 && Math.abs(e2.main.left - e2.frame.left) <= 1.5, "collapsed to icons at the end: the page widens up to the narrow panel", fmt(e2));
+
       // ── the phone: the same content in the family's Sheet ──
       await page.setViewportSize({ width: 390, height: 844 });
       await page.waitForTimeout(100);
@@ -1005,6 +1057,19 @@ const BEHAVIOUR = [
       await page.waitForTimeout(100);
       await idle(page);
       t((await page.evaluate(() => document.querySelectorAll("dialog:modal").length)) === 0, "narrowed again, the sheet does not reopen by itself");
+
+      // ── collapsed to icons on desktop, then a phone: the sheet shows the whole sidebar, not the icon rail ──
+      await click(page, "#sb-end-trigger");
+      await settled(page);
+      const phone = await page.evaluate(() => {
+        const label = document.querySelector("#sb-end-label");
+        const entry = document.querySelector("#sb-end-inbox");
+        return { collapsible: document.querySelector("#sb-end").getAttribute("data-collapsible"), sheet: !!entry?.closest("dialog.kx-sidebar__sheet:modal"), label: Number(getComputedStyle(label).opacity), entry: entry.getBoundingClientRect().width };
+      });
+      t(phone.sheet && phone.collapsible === "" && phone.label === 1 && phone.entry > 100, "an icon-collapsed sidebar opens on a phone as the full sidebar: labels shown, entries full width", JSON.stringify(phone));
+      t((await out(page, "sb-end-open")) === "false", "and the desktop collapse is kept for when the viewport widens again");
+      await press(page, "Escape");
+      await settled(page);
     },
   },
 ];

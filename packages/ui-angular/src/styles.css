@@ -3108,6 +3108,8 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
 .kx-sidebar-wrapper:has(> .kx-sidebar[data-variant='inset']) { background-color: hsl(var(--sidebar)); }
 .kx-sidebar { display: block; flex: none; color: hsl(var(--sidebar-foreground)); }
 .kx-sidebar[data-mobile] { display: contents; }
+/* the gap goes on the same logical side as the panel, whatever the source order: `side="end"` comes after the inset */
+.kx-sidebar[data-side='end'] { order: 1; }
 .kx-sidebar[data-collapsible='none'] { display: flex; inline-size: var(--sidebar-width); background-color: hsl(var(--sidebar)); }
 .kx-sidebar__gap {
   inline-size: var(--sidebar-width);
@@ -3230,6 +3232,8 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
   box-shadow: var(--shadow-sm);
 }
 .kx-sidebar[data-variant='inset'][data-collapsible]:not([data-collapsible='']):not([data-mobile]) ~ .kx-sidebar-inset { margin-inline-start: var(--spacing-2); }
+.kx-sidebar[data-variant='inset'][data-side='end']:not([data-mobile]) ~ .kx-sidebar-inset { margin-inline: var(--spacing-2) 0; }
+.kx-sidebar[data-variant='inset'][data-side='end'][data-collapsible]:not([data-collapsible='']):not([data-mobile]) ~ .kx-sidebar-inset { margin-inline-end: var(--spacing-2); }
 
 @media (prefers-reduced-motion: reduce) {
   .kx-navigation-menu__trigger,

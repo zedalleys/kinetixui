@@ -96,6 +96,8 @@ export class KxToastQueue {
   /** How many toasters are attached to each channel. A channel with none is held (see the header). */
   private readonly attached = new Map<string, number>();
   private counter = 0;
+  /** Called with each toast just before it leaves the queue, whatever removes it. */
+  private readonly leaving = new Set<(toast: KxToast) => void>();
 
   /** Add a toast, or update the queued toast with the same id. Returns its id. */
   add(type: KxToastType, title: string, options: KxToastOptions = {}): string | number {
@@ -173,6 +175,15 @@ export class KxToastQueue {
     };
   }
 
+  /**
+   * Run `fn` with each toast just before it leaves the queue — dismissed by the reader, by code or by its clock —
+   * while its toaster still renders it. Returns the function that stops it.
+   */
+  beforeRemove(fn: (toast: KxToast) => void): () => void {
+    this.leaving.add(fn);
+    return () => this.leaving.delete(fn);
+  }
+
   /** Whether `id`'s clock is running now. For the toaster's `data-paused`, and for tests. */
   isRunning(id: string | number): boolean {
     return !!this.clocks.get(id)?.handle;
@@ -234,7 +245,9 @@ export class KxToastQueue {
 
   /** Take a toast out, with its timer. False when it was not queued. */
   private remove(id: string | number): boolean {
-    if (!this.list().some((t) => t.id === id)) return false;
+    const toast = this.list().find((t) => t.id === id);
+    if (!toast) return false;
+    for (const fn of this.leaving) fn(toast);
     const clock = this.clocks.get(id);
     if (clock) {
       if (clock.handle) clearTimeout(clock.handle);

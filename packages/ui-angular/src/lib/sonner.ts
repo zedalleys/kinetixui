@@ -58,7 +58,8 @@ import { DEFAULT_TOAST_DURATION, KX_TOAST_QUEUE, type KxToast, type KxToastOptio
  * `loading` or `promise` toast and no custom JSX toast; nothing claims them.
  *
  * While a modal dialog is open the page outside it is inert, the toaster included (the browser's rule for
- * `showModal()`): a toast raised then is shown after the dialog closes, still within its time.
+ * `showModal()`): a toast raised then cannot be seen, reached or heard, so the toaster holds its clocks for as
+ * long as a modal dialog that does not contain it is open, and the toast has its whole time after it closes.
  */
 
 /** The application's `toast()`. Every method returns the toast's id; pass it back as `id` to update the toast. */
@@ -157,7 +158,7 @@ const TYPE_LABELS: Record<Exclude<KxToastType, 'default'>, string> = { success: 
               }
             </div>
             @if ((toast.closeButton ?? closeButton()) && toast.dismissible !== false) {
-              <button type="button" class="kx-toast__close" [attr.aria-label]="closeLabel()" (click)="close(toast, $event)">
+              <button type="button" class="kx-toast__close" [attr.aria-label]="closeLabel()" (click)="close(toast)">
                 <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>
               </button>
             }
@@ -198,7 +199,7 @@ export class KxToaster {
   protected readonly regionLabel = computed(() => `${this.label()} alt+T`);
 
   // the reasons this toaster holds its channel's clocks; each is its own token, so releasing one never releases another
-  private readonly holds = { hover: {}, focus: {}, hidden: {} };
+  private readonly holds = { hover: {}, focus: {}, hidden: {}, modal: {} };
   private heldChannel: string | null = null;
   /** Where focus came from when it entered the toasts; where Escape and a last dismissal send it back. */
   private returnTo: HTMLElement | null = null;
@@ -234,17 +235,42 @@ export class KxToaster {
       },
     });
 
+    // Whatever removes a toast (the reader, `KxToasterService.dismiss()` from code, the clock), focus inside it
+    // moves on first, while the toast is still rendered.
+    const unwatch = this.queue.beforeRemove((toast) => this.keepFocus(toast));
+
     const visibility = () => this.set(this.holds.hidden, this.doc.visibilityState === 'hidden');
+    // `showModal()` and `close()` add and remove a dialog's `open` attribute, so watching that attribute sees
+    // every modal dialog open and close, whoever opened it
+    const modal = () => this.set(this.holds.modal, this.excludedByModal());
+    const modals = typeof MutationObserver === 'function' ? new MutationObserver(modal) : null;
     const hotkey = (event: KeyboardEvent) => this.onHotkey(event);
     afterNextRender(() => {
       visibility();
+      modal();
       this.doc.addEventListener('visibilitychange', visibility);
+      modals?.observe(this.doc.documentElement, { subtree: true, attributes: true, attributeFilter: ['open'] });
       this.doc.addEventListener('keydown', hotkey);
     });
     inject(DestroyRef).onDestroy(() => {
+      unwatch();
+      modals?.disconnect();
       this.doc.removeEventListener('visibilitychange', visibility);
       this.doc.removeEventListener('keydown', hotkey);
     });
+  }
+
+  /** A modal dialog is open and this toaster is outside it: inert, under the top layer, unseen and unheard. */
+  private excludedByModal(): boolean {
+    for (const dialog of Array.from(this.doc.querySelectorAll('dialog[open]'))) {
+      if (dialog.contains(this.host)) continue;
+      try {
+        if (dialog.matches(':modal')) return true;
+      } catch {
+        // a browser without `:modal` has no way to say; it holds nothing
+      }
+    }
+    return false;
   }
 
   private readonly active = new Set<object>();
@@ -301,22 +327,26 @@ export class KxToaster {
 
   protected press(toast: KxToast, onClick: (event: MouseEvent) => void, event: MouseEvent): void {
     onClick(event);
-    if (!event.defaultPrevented && toast.dismissible !== false) this.close(toast, event);
+    if (!event.defaultPrevented && toast.dismissible !== false) this.close(toast);
   }
 
-  protected close(toast: KxToast, event: Event): void {
-    this.keepFocus(event.currentTarget);
+  protected close(toast: KxToast): void {
     this.queue.dismiss(toast.id);
   }
 
   /**
-   * The toast holding focus is about to go: send focus to the next toast's first control, else the previous
-   * one's, else back where it came from, else the list — so it never falls to `<body>`.
+   * `leaving` is about to go: if focus is inside it, send focus to the first control of the next toast that
+   * stays, else of the previous one, else back where it came from, else the list — so it never falls to
+   * `<body>`. Toasts leaving in the same pass (a dismiss-all) are still rendered but are not candidates.
    */
-  private keepFocus(from: EventTarget | null): void {
-    const item = from instanceof Element ? from.closest('li.kx-toast') : null;
+  private keepFocus(leaving: KxToast): void {
+    const items = Array.from(this.host.querySelectorAll<HTMLElement>('li.kx-toast'));
+    const item = items.find((li) => li.dataset['kxToast'] === String(leaving.id));
     if (!item || !item.contains(activeElement(this.doc))) return;
-    const siblings = [item.nextElementSibling, item.previousElementSibling].filter((el): el is HTMLElement => el instanceof HTMLElement);
+    const staying = new Set(this.queue.toasts().filter((t) => t.id !== leaving.id).map((t) => String(t.id)));
+    const stays = (el: HTMLElement) => staying.has(el.dataset['kxToast'] ?? '');
+    const at = items.indexOf(item);
+    const siblings = [items.slice(at + 1).find(stays), items.slice(0, at).reverse().find(stays)].filter((el): el is HTMLElement => !!el);
     const target =
       siblings.map((el) => tabbables(el)[0]).find((el) => !!el) ??
       (isFocusTarget(this.returnTo) ? this.returnTo : null) ??

@@ -180,6 +180,27 @@ describe('KxToastQueue', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
+  it('tells beforeRemove of every removal, while the toast is still queued: dismiss(id), dismiss() and expiry', () => {
+    const detach = q.attach('', 1000);
+    const seen: Array<[string, number]> = [];
+    const stop = q.beforeRemove((toast) => seen.push([toast.title, q.toasts().length]));
+    q.add('default', 'A', { id: 'a' });
+    q.add('default', 'B', { id: 'b' });
+    q.add('default', 'C', { id: 'c', duration: Infinity });
+    q.dismiss('a');
+    q.dismiss('nowhere');
+    expect(seen).toEqual([['A', 3]]);
+    vi.advanceTimersByTime(1000);
+    expect(seen).toEqual([['A', 3], ['B', 2]]);
+    q.dismiss();
+    expect(seen).toEqual([['A', 3], ['B', 2], ['C', 1]]);
+    stop();
+    q.add('default', 'D');
+    q.dismiss();
+    expect(seen).toHaveLength(3);
+    detach();
+  });
+
   it('destroy clears every timer and toast', () => {
     q.attach('', 4000);
     q.add('default', 'one');

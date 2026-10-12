@@ -86,6 +86,14 @@ import {
         <button kxButton variant="Outline" id="toast-forever" (click)="forever()">Forever</button>
         <button kxButton variant="Outline" id="toast-panel" (click)="panel()">Panel toast</button>
         <button kxButton variant="Outline" id="toast-dismiss-all" (click)="toast.dismiss()">Dismiss all</button>
+        <button kxButton variant="Outline" id="toast-dismiss-newest" (click)="dismissNewest()">Dismiss newest</button>
+        <kx-dialog id="toast-modal">
+          <button kxButton variant="Outline" kxDialogTrigger id="toast-modal-open">Open a modal</button>
+          <dialog kxDialogContent id="toast-modal-content">
+            <kx-dialog-header><h2 kxDialogTitle>Busy</h2></kx-dialog-header>
+            <button kxButton id="toast-modal-raise" (click)="show()">Raise a toast</button>
+          </dialog>
+        </kx-dialog>
       </div>
       <p>dismissed <output data-kx-out="dismissed">{{ dismissed() }}</output>, expired <output data-kx-out="expired">{{ expired() }}</output>, actions <output data-kx-out="actions">{{ actions() }}</output></p>
       <div id="toaster-main"><kx-toaster [duration]="1500" closeButton /></div>
@@ -161,6 +169,28 @@ import {
         </kx-sidebar-provider>
       </div>
       <p>open <output data-kx-out="sb-open">{{ sidebarOpen }}</output></p>
+      <!-- side="end" and collapsible="icon", written before its inset as React's examples are -->
+      <div class="frame" id="sb-end-frame">
+        <kx-sidebar-provider [keyboardShortcut]="false" [(open)]="endOpen">
+          <kx-sidebar id="sb-end" side="end" collapsible="icon">
+            <kx-sidebar-content>
+              <kx-sidebar-group>
+                <h3 kxSidebarGroupLabel id="sb-end-label">Workspace</h3>
+                <kx-sidebar-group-content>
+                  <ul kxSidebarMenu>
+                    <li kxSidebarMenuItem><button kxSidebarMenuButton id="sb-end-inbox"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.5" /></svg><span>Inbox</span></button></li>
+                  </ul>
+                </kx-sidebar-group-content>
+              </kx-sidebar-group>
+            </kx-sidebar-content>
+          </kx-sidebar>
+          <!-- the inset's own class, not a second <main> landmark on the page -->
+          <div class="kx-sidebar-inset" id="sb-end-main">
+            <button kxSidebarTrigger id="sb-end-trigger" label="Toggle end sidebar"></button>
+          </div>
+        </kx-sidebar-provider>
+      </div>
+      <p>end open <output data-kx-out="sb-end-open">{{ endOpen }}</output></p>
     </section>
   `,
   styles: `
@@ -199,11 +229,17 @@ export class NotificationsFixture {
   readonly innerSteps: KxTourStep[] = [{ target: '#tour-in-dialog-target', title: 'Theme', content: 'Light, dark or the system’s.' }];
 
   sidebarOpen = true;
+  endOpen = true;
+  private newest: string | number | null = null;
 
   private readonly hooks = { onDismiss: () => this.dismissed.update((n) => n + 1), onAutoClose: () => this.expired.update((n) => n + 1) };
 
   show(): void {
-    this.toast.show('Event created', { description: 'Sunday, December 03 at 9:00 AM', ...this.hooks });
+    this.newest = this.toast.show('Event created', { description: 'Sunday, December 03 at 9:00 AM', ...this.hooks });
+  }
+  /** Dismissed by code, by id — not by a press inside the toaster. */
+  dismissNewest(): void {
+    if (this.newest !== null) this.toast.dismiss(this.newest);
   }
   success(): void {
     this.toast.success('Profile saved', this.hooks);

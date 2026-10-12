@@ -154,7 +154,8 @@ export type KxSidebarSide = 'start' | 'end';
     '[attr.data-side]': 'side()',
     '[attr.data-variant]': 'variant()',
     '[attr.data-state]': 'provider.state()',
-    '[attr.data-collapsible]': 'collapsible() === "none" ? "none" : provider.open() ? "" : collapsible()',
+    // the desktop collapse mode never reaches the phone: its Sheet always shows the whole sidebar
+    '[attr.data-collapsible]': 'collapsible() === "none" ? "none" : provider.open() || provider.isMobile() ? "" : collapsible()',
     '[attr.data-mobile]': 'provider.isMobile() ? "" : null',
   },
 })
