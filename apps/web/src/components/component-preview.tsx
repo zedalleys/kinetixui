@@ -21,6 +21,7 @@ import {
   type PlatformTab,
 } from "@/lib/platform-tabs";
 import { usageExamples } from "@/registry/usage-examples.generated";
+import { codeTabFor, platformIdForCodeTab, setPreferredPlatform, usePreferredPlatform } from "@/lib/platform-preference";
 
 const setupHref: Record<CodeTab, string> = {
   react: "/docs/installation",
@@ -76,7 +77,8 @@ export function ComponentPreview({
   className?: string;
 }) {
   // hooks first: an early return below must not change how many hooks run
-  const [platform, setPlatform] = React.useState<CodeTab>("react");
+  // the reader's platform, shared with every other switcher on the site and remembered between pages
+  const preferred = codeTabFor(usePreferredPlatform());
   const pathname = usePathname();
   // the preview / code strip follows the page (the stage below carries the same direction); source stays LTR
   const dir = useDocumentDirection();
@@ -111,6 +113,21 @@ export function ComponentPreview({
    * a component page there is no slug to look guidance up by, so only the tabs that have code are shown.
    */
   const tabs = PLATFORM_TABS.filter((t) => byTab[t.tab] || (component && platformStateFor(component, t.platform)));
+  // a demo outside a component page may not have the reader's platform; it shows its first tab and leaves the choice alone
+  const platform: CodeTab = tabs.some((t) => t.tab === preferred) ? preferred : (tabs[0]?.tab ?? "react");
+
+  // whether a platform tab puts code on screen; a planned port shows a sentence, not code
+  const showsCode = (tab: CodeTab) => {
+    const t = tabs.find((x) => x.tab === tab);
+    const state = t ? platformStateFor(component, t.platform) : undefined;
+    return Boolean(byTab[tab]) && !(state && state !== "implementation" && state.type === "planned");
+  };
+  // someone looked at the source: only from a click on Code or on another platform's tab, never on mount or restore
+  const viewed = (tab: CodeTab, location: "code_tab" | "platform_tabs") => {
+    if (component && showsCode(tab)) {
+      analytics.track("component_code_viewed", { component, platform: PLATFORM_FROM_CODE_TAB[tab], location, source: "component_page" });
+    }
+  };
 
   // the code itself is never reported — only which component and which platform's snippet was copied
   const copied = (tab: CodeTab) => {
@@ -160,7 +177,7 @@ export function ComponentPreview({
       data-cp
       className={cn("my-6 overflow-hidden rounded-xl border border-border", className)}
     >
-      <Tabs.Root defaultValue="preview" dir={dir}>
+      <Tabs.Root defaultValue="preview" dir={dir} onValueChange={(v) => v === "code" && viewed(tabs.length > 1 ? platform : "react", "code_tab")}>
         <Tabs.List aria-label="View preview or code" className="flex items-center gap-1 bg-muted/30 px-2">
           {["preview", "code"].map((v) => (
             <Tabs.Trigger key={v} value={v} className={tabTrigger}>
@@ -185,10 +202,11 @@ export function ComponentPreview({
                   const next = v as CodeTab;
                   // only an explicit change of platform; the default React tab rendering is not a selection
                   if (next === platform) return;
-                  setPlatform(next);
+                  setPreferredPlatform(platformIdForCodeTab(next));
                   if (component) {
                     analytics.track("platform_selected", { platform: PLATFORM_FROM_CODE_TAB[next], component, source: "component_page", location: "platform_tabs" });
                   }
+                  viewed(next, "platform_tabs");
                 }}
               >
                 <Tabs.List aria-label="Platform" className="flex flex-wrap items-center gap-1 border-b border-border px-2">

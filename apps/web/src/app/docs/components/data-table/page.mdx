@@ -1,33 +1,39 @@
 export const metadata = {
   title: "Data Table",
-  description: "Powerful table and datagrid built with TanStack Table.",
+  description: "A React data table with sorting and pagination on by default, built on TanStack Table and the KinetixUI Table.",
 };
 
 # Data Table
 
 <ComponentMeta />
 
-Powerful table and datagrid built with TanStack Table.
+A data table for React: pass `columns` and `data`, and sorting and pagination are on by default. It is built on
+TanStack Table and renders with the KinetixUI `Table` parts.
 
 <ComponentPreview name="data-table-demo" />
 
-## Installation
+## React installation
+
+Install the package the usage below imports from:
+
+```bash
+npm i @kinetixui/ui @kinetixui/tokens
+```
+
+The project also needs Tailwind CSS 3 and the KinetixUI preset; see [Installation](/docs/installation). To own
+the source instead, copy it into your project with the CLI and import from the folder it writes to:
 
 ```bash
 npx @kinetixui/cli add data-table
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { DataTable, Table } from "@kinetixui/ui";
 ```
 
-Styled entirely from the KinetixUI token contract — `bg-action`,
-`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
-with no extra config. Keyboard and ARIA behaviour is inherited from Radix where the
-component is built on a primitive; the hand-built widgets (DataGrid, TreeView,
-ColorPicker, MultiSelect, Tour, KanbanBoard) have their own documented interaction
-models — see [Accessibility](/docs/accessibility).
+Styled from the KinetixUI token contract, in light and dark, with no extra configuration. For full control
+of the table state, use TanStack Table's `useTable` directly with the KinetixUI `Table` parts.
 
 <ComponentApi slug="data-table" />

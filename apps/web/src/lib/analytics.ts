@@ -54,7 +54,7 @@ export const ANALYTICS_SOURCES = [
 export type AnalyticsSource = (typeof ANALYTICS_SOURCES)[number];
 
 /** The position inside a surface. Stable identifiers, never visible text. */
-export const ANALYTICS_LOCATIONS = ["hero", "primary_nav", "sidebar", "installation", "code_example", "platform_tabs", "component_header", "footer", "content"] as const;
+export const ANALYTICS_LOCATIONS = ["hero", "primary_nav", "sidebar", "installation", "code_example", "platform_tabs", "code_tab", "component_header", "footer", "content"] as const;
 export type AnalyticsLocation = (typeof ANALYTICS_LOCATIONS)[number];
 
 /** What a product call-to-action is FOR — never its visible label and never its destination URL. */
@@ -147,6 +147,15 @@ export interface AnalyticsEvents {
   component_viewed: Shape<"component", "platform" | "source">;
   component_code_copied: Shape<"component" | "platform", "source">;
   platform_selected: Shape<"platform", "location" | "component" | "block" | "source">;
+  /*
+   * Someone looked at a component's source: opened the Code tab (`location: "code_tab"`) or, with it open,
+   * switched to another platform's code (`location: "platform_tabs"`). `platform` is the platform whose code is
+   * now on screen. Fired only from those two clicks — never on mount, and never because a remembered platform
+   * was restored — so "landed on the page" and "inspected the code" can be told apart. Separate from
+   * `component_code_copied` on purpose: looking is not wanting the source. In neither Qualified Evaluation nor
+   * Adoption Intent (analytics.md §3/§4); a component page already qualifies through `component_viewed`.
+   */
+  component_code_viewed: Shape<"component" | "platform" | "location", "source">;
   github_clicked: Shape<"source", "location">;
   npm_clicked: Shape<"source", "package">;
   changelog_viewed: Shape<never, "version" | "source">;

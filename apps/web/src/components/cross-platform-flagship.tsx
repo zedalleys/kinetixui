@@ -12,6 +12,7 @@ import { catalogPlatformCount, documentedExceptionCount, fullCoverageCount } fro
 import { PLATFORMS, PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
 import { componentTotal } from "@/lib/platform-support";
 import { PLATFORM_TABS, type CodeTab } from "@/lib/platform-tabs";
+import { codeTabFor, platformIdForCodeTab, setPreferredPlatform, usePreferredPlatform } from "@/lib/platform-preference";
 import { CopyButton } from "./copy-button";
 import { cn } from "@/lib/utils";
 
@@ -55,12 +56,14 @@ const tabTrigger = cn(
 );
 
 export function CrossPlatformFlagship() {
-  const [platform, setPlatform] = React.useState<CodeTab>("react");
+  // the reader's platform, shared with the docs; this recipe has no Angular copy, so Angular shows React here
+  const preferred = codeTabFor(usePreferredPlatform());
+  const platform: CodeTab = SOURCE_KEY[preferred] ? preferred : "react";
 
   const onPlatformChange = (value: string) => {
     const next = value as CodeTab;
     if (next === platform) return; // an explicit change only — the default React tab rendering is not a selection
-    setPlatform(next);
+    setPreferredPlatform(platformIdForCodeTab(next));
     analytics.track("platform_selected", {
       platform: PLATFORM_FROM_CODE_TAB[next],
       component: FLAGSHIP_COMPONENT,

@@ -140,18 +140,38 @@ describe("ComponentPreview (component page: code tabs and platform switcher)", (
     nav.pathname = "/docs/components/button";
     render(<ComponentPreview name="button-demo" />);
     await user.click(screen.getByRole("tab", { name: "code" }));
+    track.mockClear(); // opening Code is its own event, asserted below; these tests are about what follows
     return user;
   };
+  const selections = () => track.mock.calls.filter(([e]) => e === "platform_selected");
 
-  it("fires nothing when it renders — the default React tab is not a selection", async () => {
-    await open();
+  it("fires nothing when it renders — the default React tab is not a selection, and nothing was inspected", async () => {
+    nav.pathname = "/docs/components/button";
+    render(<ComponentPreview name="button-demo" />);
     expect(track).not.toHaveBeenCalled();
   });
 
-  it("reports an explicit platform switch once, with component, platform and where", async () => {
+  it("reports opening the Code tab as an inspection of the platform on screen, not as a selection or a copy", async () => {
+    const user = userEvent.setup();
+    nav.pathname = "/docs/components/button";
+    render(<ComponentPreview name="button-demo" />);
+    await user.click(screen.getByRole("tab", { name: "code" }));
+    expect(track.mock.calls).toEqual([["component_code_viewed", { component: "button", platform: "react", location: "code_tab", source: "component_page" }]]);
+    // back to Preview and the same Code tab again: each explicit open is one inspection
+    await user.click(screen.getByRole("tab", { name: "preview" }));
+    await user.click(screen.getByRole("tab", { name: "code" }));
+    expect(track).toHaveBeenCalledTimes(2);
+    expectSanitary();
+  });
+
+  it("reports an explicit platform switch once, with component, platform and where, plus the code it put on screen", async () => {
     const user = await open();
     await user.click(screen.getByRole("tab", { name: "Jetpack Compose" }));
-    expect(track.mock.calls).toEqual([["platform_selected", { platform: "compose", component: "button", source: "component_page", location: "platform_tabs" }]]);
+    expect(track.mock.calls).toEqual([
+      ["platform_selected", { platform: "compose", component: "button", source: "component_page", location: "platform_tabs" }],
+      ["component_code_viewed", { component: "button", platform: "compose", location: "platform_tabs", source: "component_page" }],
+    ]);
+    expect(JSON.stringify(track.mock.calls)).not.toContain("REACT_SOURCE_SENTINEL");
     expectSanitary();
   });
 
@@ -160,7 +180,8 @@ describe("ComponentPreview (component page: code tabs and platform switcher)", (
     await user.click(screen.getByRole("tab", { name: "Jetpack Compose" }));
     await user.click(screen.getByRole("tab", { name: "Jetpack Compose" }));
     await user.click(screen.getByRole("tab", { name: "Jetpack Compose" }));
-    expect(track).toHaveBeenCalledOnce();
+    expect(selections()).toHaveLength(1);
+    expect(track).toHaveBeenCalledTimes(2); // the one selection and the one inspection it caused
   });
 
   it("does not fire for clicking the default (React) tab while it is already selected", async () => {
@@ -174,7 +195,7 @@ describe("ComponentPreview (component page: code tabs and platform switcher)", (
     await user.click(screen.getByRole("tab", { name: "SwiftUI" }));
     await user.click(screen.getByRole("tab", { name: "Flutter" }));
     await user.click(screen.getByRole("tab", { name: "React" }));
-    expect(track.mock.calls.map((c) => (c[1] as { platform: string }).platform)).toEqual(["swiftui", "flutter", "react"]);
+    expect(selections().map((c) => (c[1] as { platform: string }).platform)).toEqual(["swiftui", "flutter", "react"]);
   });
 
   it("reports the copied platform's snippet with component + platform, never the source", async () => {

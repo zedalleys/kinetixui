@@ -14,6 +14,7 @@ import {
 } from "@/lib/platform-parity";
 import { componentTotal, gaps, nonPorts, notSupported, platformCount, platforms, statusCounts } from "@/lib/platform-support";
 import { availabilitySentence } from "@/lib/platform-prose";
+import { siteConfig } from "@/lib/site";
 
 const manifestComponents = manifest.components as Record<
   string,
@@ -245,7 +246,20 @@ export function PlatformSupportTable() {
                 <dt className={field}>Automated verification</dt>
                 <dd className="m-0 mt-1">
                   <Inline text={p.verification} />
-                  <span className="mt-1 block font-mono text-[11px] text-muted-foreground">{p.workflow}</span>
+                  {/* each named workflow links to its run history, so the claim beside it can be checked */}
+                  <span className="mt-1 flex flex-wrap gap-x-2 font-mono text-[11px] text-muted-foreground">
+                    {p.workflow.split(/,\s*/).map((file) => (
+                      <a
+                        key={file}
+                        href={`${siteConfig.repo}/actions/workflows/${file}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary underline underline-offset-2"
+                      >
+                        {file} <span className="sr-only">runs</span>
+                      </a>
+                    ))}
+                  </span>
                 </dd>
               </div>
             </dl>

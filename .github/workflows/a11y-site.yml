@@ -20,6 +20,7 @@ on:
       - "scripts/theme-isolation.mjs"
       - "scripts/iot-state-spatial.mjs"
       - "scripts/platform-ticker.mjs"
+      - "scripts/platform-preference-browser.mjs"
       # The ticker reads its platforms and labels from these, so a manifest change can move its geometry.
       - "components.manifest.json"
       - "platform-parity.json"
@@ -39,6 +40,7 @@ on:
       - "scripts/theme-isolation.mjs"
       - "scripts/iot-state-spatial.mjs"
       - "scripts/platform-ticker.mjs"
+      - "scripts/platform-preference-browser.mjs"
       # The ticker reads its platforms and labels from these, so a manifest change can move its geometry.
       - "components.manifest.json"
       - "platform-parity.json"
@@ -110,3 +112,8 @@ jobs:
       # 200% text.
       - name: Platform ticker (loop, pause, reduced motion, RTL, 200% text)
         run: pnpm check:platform-ticker
+
+      # The reader's platform choice is shared by every switcher and survives navigation, reload and blocked
+      # storage, and the component-page install strip fits a phone and 200% text (evaluator audit F-02/F-10).
+      - name: Platform choice and install strip
+        run: pnpm check:platform-preference

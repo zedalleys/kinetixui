@@ -12,7 +12,7 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 describe("component onboarding", () => {
   it("connects the component CLI to full setup and distinguishes npm imports", () => {
     render(<ComponentMeta />);
-    expect(screen.getByRole("link", { name: "Installation and first component →" })).toHaveAttribute("href", "/docs/installation");
+    expect(screen.getByRole("link", { name: "React Setup →" })).toHaveAttribute("href", "/docs/installation");
     expect(screen.getByText(/Usage imports from @kinetixui\/ui require the npm package/)).toBeInTheDocument();
   });
 

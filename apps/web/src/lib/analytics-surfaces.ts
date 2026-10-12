@@ -22,6 +22,7 @@ import {
   type AnalyticsSource,
 } from "./analytics";
 import { PACKAGE_NAMES, PACKAGES } from "./packages";
+import { PLATFORMS, PLATFORM_DEFINITIONS, type Platform } from "./platform-parity";
 import type { CodeTab } from "./platform-tabs";
 import { publicRoutes } from "./seo";
 import { componentDocs, siteConfig } from "./site";
@@ -223,6 +224,42 @@ export function analyticsPlatformFor(manifestPlatform: string | undefined): Anal
   return candidate && isMember(ANALYTICS_PLATFORMS, candidate) ? candidate : null;
 }
 
+/* ------------------------------------------------------------------ native installs (no command to recognise) */
+
+/**
+ * The native ports are not on SwiftPM, Maven Central or pub.dev, so installing one is not a shell command: it is a
+ * Package.swift dependency, a Gradle module registration, a pubspec dependency, or a git command that pins a
+ * checkout. `classifyCommand` never matches any of those, so copying them used to be silent — native install
+ * intent was invisible. Each rule below recognises one documented snippet shape. As with commands, the text is
+ * only inspected; the event carries the platform's package identifier from the manifest and nothing else.
+ */
+const NATIVE_INSTALL: readonly { platform: Platform; language: ReadonlySet<string>; test: (text: string) => boolean }[] = [
+  // .package(path: "Vendor/kinetixui/packages/ui-swiftui")
+  { platform: "SwiftUI", language: new Set(["swift"]), test: (t) => /\.package\s*\(/.test(t) && t.includes(PLATFORM_DEFINITIONS.SwiftUI.dir) },
+  // include(":kinetixui-ui") in settings, or implementation(project(":kinetixui-ui")) in the app module
+  { platform: "Compose", language: new Set(["kotlin", "kt", "kts"]), test: (t) => /(?:include|project)\(\s*":kinetixui-ui"\s*\)/.test(t) },
+  // a pubspec dependency on the package, by path or by git
+  { platform: "Flutter", language: new Set(["yaml", "yml"]), test: (t) => new RegExp(`^\\s+${escape(PLATFORM_DEFINITIONS.Flutter.package)}:\\s*$`, "m").test(t) },
+];
+
+/** A native setup page → its platform. A git command that clones or pins this repository there installs that port. */
+const SETUP_PAGE_PLATFORM: Readonly<Record<string, Platform>> = { "/docs/swiftui": "SwiftUI", "/docs/compose": "Compose", "/docs/flutter": "Flutter" };
+
+export type NativeInstallCopy = { package: string; platform: AnalyticsPlatform };
+
+/** Which native port a copied snippet installs, or null. Never reads anything from the snippet into the result. */
+export function classifyNativeInstall(text: string, language: string | undefined, pathname: string): NativeInstallCopy | null {
+  const lang = language?.toLowerCase();
+  if (!lang) return null;
+  let platform: Platform | undefined = NATIVE_INSTALL.find((r) => r.language.has(lang) && r.test(text))?.platform;
+  if (!platform && SHELL_LANGUAGES.has(lang) && /^\s*\$?\s*git\s/m.test(text) && text.includes(REPO_PATH.slice(1))) {
+    platform = SETUP_PAGE_PLATFORM[pathname];
+  }
+  if (!platform || !PLATFORMS.includes(platform)) return null;
+  const id = analyticsPlatformFor(platform);
+  return id ? { package: PLATFORM_DEFINITIONS[platform].package, platform: id } : null;
+}
+
 /** The docs code-block ids used by `platform-code.ts` mapped to analytics platforms. */
 export const PLATFORM_FROM_CODE_TAB = { react: "react", angular: "angular", swift: "swiftui", kotlin: "compose", dart: "flutter" } as const satisfies Record<CodeTab, AnalyticsPlatform>;
 
@@ -238,6 +275,12 @@ export function trackFenceCopy(text: string, language: string | undefined, pathn
     if (!source) return;
     if (command.event === "cli_command_copied") analytics.track("cli_command_copied", { source, package: command.package });
     else analytics.track("install_command_copied", { source, package: command.package });
+    return;
+  }
+
+  const native = classifyNativeInstall(text, language, pathname);
+  if (native) {
+    if (source) analytics.track("install_command_copied", { source, package: native.package, platform: native.platform });
     return;
   }
 
