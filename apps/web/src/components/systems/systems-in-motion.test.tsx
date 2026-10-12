@@ -251,7 +251,11 @@ describe("systems in motion: reduced motion and transparency", () => {
   const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
 
   it("stops every moving part of the map under reduced motion", () => {
-    for (const cls of [".kx-trace", ".kx-map-stage", ".kx-swap"]) expect(reduced).toContain(cls);
+    // the selectors of the rule that switches animation off, not just any mention later in the block
+    const off = /([^{}]*)\{\s*animation:\s*none !important;\s*\}/.exec(reduced);
+    expect(off, "a reduced-motion rule that stops animation").not.toBeNull();
+    const selectors = off![1].split(",").map((x) => x.trim());
+    for (const cls of [".kx-trace", ".kx-map-stage", ".kx-swap"]) expect(selectors).toContain(cls);
     expect(reduced).toMatch(/\.kx-trace-pulse[^{]*\{[^}]*display:\s*none/);
   });
 
