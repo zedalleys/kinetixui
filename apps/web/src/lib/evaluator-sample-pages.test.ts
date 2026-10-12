@@ -13,7 +13,7 @@ const page = (slug: string) => readFileSync(`src/app/docs/components/${slug}/pag
 /** What is wrong with a sampled page. Empty means it passes. */
 function problems(slug: string, text: string): string[] {
   const out: string[] = [];
-  const description = /description:\s*\n?\s*"([^"]*)"/.exec(text)?.[1] ?? "";
+  const description = /description:\s*"([^"]*)"/.exec(text)?.[1] ?? "";
   const lead = text.split("<ComponentMeta />")[1]?.split(/\n\n/).find((p) => p.trim()) ?? "";
   for (const [where, s] of [["metadata description", description], ["lead paragraph", lead]] as const) {
     if (/\b5\d{4}:\d+\b|Reconciled|Figma/.test(s)) out.push(`${where} carries an internal design-source reference`);

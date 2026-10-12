@@ -83,7 +83,8 @@ describe("evidence links", () => {
   });
 
   it("from the platforms and accessibility pages, point at repository files that exist", () => {
-    const blob = new RegExp(`${siteConfig.repo.replace(/[./]/g, "\\$&")}/blob/main/([^)\\s]+)`, "g");
+    const escapeRegExp = (v: string) => v.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
+    const blob = new RegExp(`${escapeRegExp(siteConfig.repo)}/blob/main/([^)\\s]+)`, "g");
     const linked = ["platforms", "accessibility"].flatMap((f) => [...readFileSync(`src/app/docs/${f}/page.mdx`, "utf8").matchAll(blob)].map((m) => m[1]!));
     expect(linked).toEqual(expect.arrayContaining(["verification.json", "a11y-baseline.json"]));
     for (const file of linked) expect(existsSync(`${ROOT}/${file}`), file).toBe(true);
