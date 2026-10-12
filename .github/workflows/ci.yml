@@ -289,6 +289,12 @@ jobs:
       - name: Build site
         run: pnpm build:web
 
+      # Reads the prerendered HTML, sitemap.xml and robots.txt the build just wrote: titles, descriptions and
+      # canonicals on every page, sitemap ↔ pages, internal links, OG images, JSON-LD and breadcrumbs. Rules and
+      # negative controls: marketing/seo/SEO-BASELINE.md.
+      - name: SEO gate (built HTML, sitemap, robots)
+        run: pnpm check:seo
+
       # Every workspace with a `typecheck` script (@kinetixui/ui, @kinetixui/cli, @kinetixui/web) via turbo.
       # Was `--filter @kinetixui/ui` + `continue-on-error`, which let real apps/web type errors through unseen.
       - name: Typecheck (all workspaces)

@@ -3,6 +3,7 @@ import { DocsToc } from "@/components/docs-toc";
 import { DocsPager } from "@/components/docs-pager";
 import { DocsBreadcrumb } from "@/components/docs-breadcrumb";
 import { DocsPageActions } from "@/components/docs-page-actions";
+import { RelatedComponents } from "@/components/related-components";
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -18,6 +19,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
             <DocsPageActions />
           </div>
           {children}
+          <RelatedComponents />
           <DocsPager />
         </article>
         <DocsToc />

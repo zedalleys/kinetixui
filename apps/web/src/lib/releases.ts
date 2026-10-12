@@ -266,7 +266,7 @@ export const RELEASES: Release[] = [
         area: "components",
         title: "Four Beta APIs corrected before 1.0",
         body: "ColorPicker and MarkdownEditor could only be used controlled and used `onChange` against the convention every other value control follows. TreeView's selection had no `defaultSelected`, so an uncontrolled tree could never show one. JsonViewer's `hideCopy` was a negative boolean. See the migration note above.",
-        href: "/docs/components",
+        href: "/components",
       },
       {
         kind: "improved",
@@ -280,7 +280,7 @@ export const RELEASES: Release[] = [
         area: "components",
         title: "Every component's React API is on its docs page",
         body: "Props, types and defaults, generated from the source rather than written twice.",
-        href: "/docs/components",
+        href: "/components",
       },
       {
         kind: "new",

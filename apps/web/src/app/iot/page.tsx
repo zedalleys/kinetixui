@@ -1,5 +1,6 @@
 import type * as React from "react";
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/route-seo";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { KINETIX_PAIRING_FAILURES, KINETIX_PAIRING_METHODS, KINETIX_PAIRING_STAGES } from "@kinetixui/iot/functions";
@@ -34,7 +35,6 @@ import {
   IOT_VERSION,
   type IotCategoryId,
 } from "@/lib/iot";
-import { canonical } from "@/lib/seo";
 
 /**
  * /iot — the Connected Product Lab. `/docs/iot` stays the reference.
@@ -58,25 +58,7 @@ import { canonical } from "@/lib/seo";
 const NOW = "2026-01-01T12:00:00.000Z";
 const FIVE_MINUTES_AGO = new Date(Date.parse(NOW) - 5 * 60_000).toISOString();
 
-export const metadata: Metadata = {
-  title: "IoT — Connected Product Lab",
-  description:
-    "Controls, telemetry, pairing and automation patterns for real asynchronous hardware. KinetixUI IoT is a React-only, experimental module that draws what a device confirmed differently from what a user requested. It ships no transport, no automation engine and no video; every demo on this page is simulated.",
-  ...canonical("/iot"),
-  openGraph: {
-    title: "KinetixUI IoT — Build connected products that tell the truth about device state",
-    description:
-      "Controls, telemetry, pairing and automation patterns for real asynchronous hardware. React-only and experimental, with no transport and no automation engine.",
-    url: "/iot",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "KinetixUI IoT — Build connected products that tell the truth about device state",
-    description:
-      "Controls, telemetry, pairing and automation patterns for real asynchronous hardware. React-only and experimental, with no transport and no automation engine.",
-  },
-};
+export const metadata: Metadata = routeMetadata("/iot");
 
 /** The on-page contents, in section order. Ids match the `LabSection` ids below. */
 const CONTENTS: readonly { id: string; label: string }[] = [

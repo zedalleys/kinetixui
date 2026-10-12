@@ -1,4 +1,5 @@
 import * as React from "react";
+import Link from "next/link";
 import { durations, easings, elevation, platformUnits, radiusRoles, radiusScale, spacingScale } from "@/lib/foundations";
 import manifest from "../../../../components.manifest.json";
 import {
@@ -545,3 +546,81 @@ export function NonPortNamesInline() {
 /** "navigation-menu" → "NavigationMenu". */
 export const componentName = (slug: string) =>
   slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("");
+
+/** "`dimens.xml` and …" → the backticked spans as <code>, the way the /docs/platforms table renders the same rows. */
+const withCode = (text: string) => text.split("`").map((part, i) => (i % 2 ? <code key={i}>{part}</code> : part));
+
+/** Where each platform page's own first-run section starts (its first `##`, slugged by rehype-slug). */
+const FIRST_STEP: Partial<Record<Platform, string>> = { Angular: "#install", SwiftUI: "#setup", Compose: "#setup", Flutter: "#setup" };
+
+/**
+ * The seven facts an evaluator needs before reading a platform page, in one place at its top: package maturity,
+ * distribution, catalogue coverage, what is not implemented, verification evidence, the token model and where to
+ * start. Every value is read from the manifest, the generated verification counts or the /docs/platforms rows, so
+ * the four platform pages differ exactly where the platforms do and cannot drift from the coverage table.
+ */
+export function PlatformAtAGlance({ platform }: { platform: Platform }) {
+  const def = PLATFORM_DEFINITIONS[platform];
+  const row = platforms.find((r) => r.id === platform.toLowerCase());
+  const shipped = platformCount(platform);
+  const missing = componentTotal - shipped;
+  const evidence = EVIDENCE_COUNTS[platform] ?? ({} as Record<EvidenceKind, number>);
+  const kinds = (["interaction", "accessibility", "rtl", "largeText"] as const).map(
+    (k) => `${EVIDENCE_LABEL[k]} ${evidence[k] ?? 0}/${shipped}`,
+  );
+  const level = CATALOGUE_VERIFICATION[platform];
+  const link = "text-primary underline underline-offset-2";
+  return (
+    <dl aria-label={`${def.label} at a glance`} data-platform-glance={platform} className="my-6 divide-y divide-border rounded-lg border border-border bg-muted/20 text-sm">
+      {[
+        ["Package", <><code>{def.package}</code> · {def.maturity} package</>],
+        [
+          "Distribution",
+          def.distribution.published ? (
+            <>On {def.distribution.channel}.</>
+          ) : (
+            <>Not on {def.distribution.channel} yet: build it from a repository checkout pinned to a commit.</>
+          ),
+        ],
+        [
+          "Catalogue",
+          <>
+            {shipped} of {componentTotal} catalogue entries.{" "}
+            <Link href="/components" className={link}>Browse components</Link>
+          </>,
+        ],
+        [
+          "Not implemented",
+          missing === 0 ? (
+            <>Nothing in the catalogue.</>
+          ) : (
+            <>
+              {missing} entries, each with its reason on{" "}
+              <Link href="/docs/platforms#not-on-every-platform-on-purpose" className={link}>platform coverage</Link>.
+            </>
+          ),
+        ],
+        [
+          "Verification",
+          <>
+            {level ? <>Catalogue verified to <strong className="font-medium">{level}</strong> (the weakest component sets it). </> : null}
+            Components with test evidence: {kinds.join(" · ")}.{row ? <> CI: <code>{row.workflow}</code>.</> : null}
+          </>,
+        ],
+        [
+          "Tokens",
+          <>
+            {withCode(row?.tokens ?? "Generated from the canonical token source.")}{" "}
+            <Link href="/docs/tokens" className={link}>How tokens reach {def.label}</Link>
+          </>,
+        ],
+        ...(FIRST_STEP[platform] ? [["Start", <a key="start" href={FIRST_STEP[platform]} className={link}>{platform === "Angular" ? "Install" : "Set up"} {def.label}</a>] as const] : []),
+      ].map(([label, value]) => (
+        <div key={label as string} className="flex flex-wrap items-baseline gap-x-3 px-3.5 py-2">
+          <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground sm:w-28 sm:shrink-0">{label}</dt>
+          <dd className="min-w-0 sm:flex-1 sm:basis-0">{value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
