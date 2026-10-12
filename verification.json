@@ -31,14 +31,14 @@
       "published": 98
     },
     "Angular": {
-      "build": 76,
-      "interaction": 76,
-      "accessibility": 76,
-      "rtl": 43,
-      "largeText": 49,
-      "reducedMotion": 22,
+      "build": 80,
+      "interaction": 80,
+      "accessibility": 80,
+      "rtl": 47,
+      "largeText": 53,
+      "reducedMotion": 23,
       "visual": 0,
-      "published": 76
+      "published": 80
     },
     "SwiftUI": {
       "build": 90,
@@ -608,12 +608,14 @@
           "button",
           "button-group",
           "card",
+          "carousel",
           "checkbox",
           "circular-progress",
           "code-block",
           "collapsible",
           "combobox",
           "command",
+          "comparison-slider",
           "context-menu",
           "description-list",
           "dialog",
@@ -650,6 +652,8 @@
           "quote",
           "radio-group",
           "rating",
+          "resizable",
+          "scroll-area",
           "segmented-control",
           "select",
           "separator",
@@ -691,6 +695,22 @@
           "multi-select",
           "navigation-menu",
           "select"
+        ]
+      },
+      {
+        "file": "scripts/angular-layout.mjs",
+        "kinds": [
+          "accessibility",
+          "interaction",
+          "largeText",
+          "reducedMotion",
+          "rtl"
+        ],
+        "components": [
+          "carousel",
+          "comparison-slider",
+          "resizable",
+          "scroll-area"
         ]
       },
       {
@@ -1750,6 +1770,30 @@
           "npm: @kinetixui/ui"
         ]
       },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-layout.mjs:468-1213"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-layout.mjs:468-1213"
+        ],
+        "rtl": [
+          "scripts/angular-layout.mjs:1214-1374"
+        ],
+        "largeText": [
+          "scripts/angular-layout.mjs:1375-1497"
+        ],
+        "reducedMotion": [
+          "scripts/angular-layout.mjs:1498-1596"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
+        ]
+      },
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
@@ -2194,6 +2238,27 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-layout.mjs:468-1213"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-layout.mjs:468-1213"
+        ],
+        "rtl": [
+          "scripts/angular-layout.mjs:1214-1374"
+        ],
+        "largeText": [
+          "scripts/angular-layout.mjs:1375-1497"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -4586,6 +4651,27 @@
           "npm: @kinetixui/ui"
         ]
       },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-layout.mjs:468-1213"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-layout.mjs:468-1213"
+        ],
+        "rtl": [
+          "scripts/angular-layout.mjs:1214-1374"
+        ],
+        "largeText": [
+          "scripts/angular-layout.mjs:1375-1497"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
+        ]
+      },
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
@@ -4619,6 +4705,27 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-layout.mjs:468-1213"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-layout.mjs:468-1213"
+        ],
+        "rtl": [
+          "scripts/angular-layout.mjs:1214-1374"
+        ],
+        "largeText": [
+          "scripts/angular-layout.mjs:1375-1497"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {

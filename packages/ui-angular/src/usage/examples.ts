@@ -226,6 +226,10 @@ import {
   KxNavigationMenuTrigger,
 } from '../lib/navigation-menu';
 import { KxToaster, KxToasterService } from '../lib/sonner';
+import { KxScrollArea } from '../lib/scroll-area';
+import { KxResizableHandle, KxResizablePanel, KxResizablePanelGroup } from '../lib/resizable';
+import { KxCarousel, KxCarouselContent, KxCarouselItem, KxCarouselNext, KxCarouselPrevious } from '../lib/carousel';
+import { KxComparisonSlider } from '../lib/comparison-slider';
 import { KxNotificationCenter, KxNotificationCenterContent, KxNotificationCenterTrigger, KxNotificationItem } from '../lib/notification-center';
 import { KxTour, type KxTourStep } from '../lib/tour';
 import {
@@ -1706,4 +1710,89 @@ export class TourDemo {
 export class SidebarDemo {
   open = true;
 }
+// kx-usage:end
+
+// kx-usage:scroll-area-demo
+@Component({
+  selector: 'app-scroll-area-demo',
+  imports: [KxScrollArea],
+  template: `
+    <kx-scroll-area label="Tags" class="tags">
+      @for (tag of tags; track tag) {
+        <div class="tag">{{ tag }}</div>
+      }
+    </kx-scroll-area>
+  `,
+  styles: `
+    .tags { block-size: 10rem; inline-size: min(14rem, 100%); border: 1px solid hsl(var(--border)); border-radius: var(--radius-md); }
+    .tag { padding: var(--spacing-1) var(--spacing-4); font: var(--text-body-sm); }
+  `,
+})
+export class ScrollAreaDemo {
+  readonly tags = Array.from({ length: 20 }, (_, i) => `Tag ${i + 1}`);
+}
+// kx-usage:end
+
+// kx-usage:resizable-demo
+@Component({
+  selector: 'app-resizable-demo',
+  imports: [KxResizablePanelGroup, KxResizablePanel, KxResizableHandle],
+  template: `
+    <kx-resizable-panel-group direction="horizontal" class="frame">
+      <kx-resizable-panel [defaultSize]="50"><div class="pane">One</div></kx-resizable-panel>
+      <kx-resizable-handle withHandle />
+      <kx-resizable-panel [defaultSize]="50"><div class="pane">Two</div></kx-resizable-panel>
+    </kx-resizable-panel-group>
+  `,
+  styles: `
+    .frame { max-inline-size: 28rem; block-size: 8rem; border: 1px solid hsl(var(--border)); border-radius: var(--radius-lg); }
+    .pane { display: grid; place-items: center; block-size: 100%; padding: var(--spacing-6); font: var(--text-body-sm); }
+  `,
+})
+export class ResizableDemo {}
+// kx-usage:end
+
+// kx-usage:carousel-demo
+@Component({
+  selector: 'app-carousel-demo',
+  imports: [KxCarousel, KxCarouselContent, KxCarouselItem, KxCarouselPrevious, KxCarouselNext],
+  template: `
+    <kx-carousel aria-label="Featured" class="carousel">
+      <kx-carousel-content>
+        @for (n of slides; track n) {
+          <kx-carousel-item><div class="slide">{{ n }}</div></kx-carousel-item>
+        }
+      </kx-carousel-content>
+      <button kxCarouselPrevious></button>
+      <button kxCarouselNext></button>
+    </kx-carousel>
+  `,
+  styles: `
+    .carousel { inline-size: min(20rem, 100%); }
+    .slide { display: grid; place-items: center; aspect-ratio: 1; border: 1px solid hsl(var(--border)); border-radius: var(--radius-lg); background: hsl(var(--muted)); font: var(--text-title-lg); }
+  `,
+})
+export class CarouselDemo {
+  readonly slides = [1, 2, 3, 4, 5];
+}
+// kx-usage:end
+
+// kx-usage:comparison-slider-demo
+@Component({
+  selector: 'app-comparison-slider-demo',
+  imports: [KxComparisonSlider],
+  template: `
+    <kx-comparison-slider class="compare" beforeLabel="Before" afterLabel="After">
+      <div kxComparisonBefore class="layer before">Original</div>
+      <div kxComparisonAfter class="layer after">Redesign</div>
+    </kx-comparison-slider>
+  `,
+  styles: `
+    .compare { max-inline-size: 28rem; }
+    .layer { display: grid; place-items: center; block-size: 100%; font: var(--text-body-sm); }
+    .before { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+    .after { background: hsl(var(--primary) / 0.15); color: hsl(var(--primary)); }
+  `,
+})
+export class ComparisonSliderDemo {}
 // kx-usage:end

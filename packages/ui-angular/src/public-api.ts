@@ -245,3 +245,8 @@ export {
   KxSidebarSeparator,
   KxSidebarTrigger,
 } from './lib/sidebar';
+export { KxScrollArea } from './lib/scroll-area';
+export type { KxResizableDirection } from './lib/resizable';
+export { KxResizableHandle, KxResizablePanel, KxResizablePanelGroup } from './lib/resizable';
+export { KxCarousel, KxCarouselContent, KxCarouselItem, KxCarouselNext, KxCarouselPrevious } from './lib/carousel';
+export { KxComparisonSlider } from './lib/comparison-slider';

@@ -272,16 +272,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "layout"
-        }
-      }
+      ]
     },
     "chart": {
       "status": "stable",
@@ -400,16 +395,11 @@
       "since": "0.11.0",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "layout"
-        }
-      }
+      ]
     },
     "context-menu": {
       "status": "stable",
@@ -1052,15 +1042,13 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
       ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "layout"
-        }
+      "sourceNames": {
+        "Angular": "ResizablePanelGroup"
       }
     },
     "scroll-area": {
@@ -1068,16 +1056,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
       ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "layout"
-        }
-      },
       "sourceNames": {
         "React": "ScrollBar"
       }
