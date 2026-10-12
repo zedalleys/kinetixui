@@ -236,11 +236,14 @@ import {
   KxSidebarGroupContent,
   KxSidebarGroupLabel,
   KxSidebarHeader,
+  KxSidebarInput,
   KxSidebarInset,
   KxSidebarMenu,
   KxSidebarMenuButton,
+  KxSidebarMenuSkeleton,
   KxSidebarMenuItem,
   KxSidebarProvider,
+  KxSidebarSeparator,
   KxSidebarTrigger,
 } from '../lib/sidebar';
 
@@ -1654,11 +1657,17 @@ export class TourDemo {
     KxSidebarMenuButton,
     KxSidebarInset,
     KxSidebarTrigger,
+    KxSidebarInput,
+    KxSidebarSeparator,
+    KxSidebarMenuSkeleton,
   ],
   template: `
     <kx-sidebar-provider [(open)]="open">
       <kx-sidebar collapsible="icon">
-        <kx-sidebar-header><strong>Acme</strong></kx-sidebar-header>
+        <kx-sidebar-header>
+          <strong>Acme</strong>
+          <input kxSidebarInput type="search" placeholder="Search" aria-label="Search the workspace" />
+        </kx-sidebar-header>
         <kx-sidebar-content>
           <kx-sidebar-group>
             <h2 kxSidebarGroupLabel>Platform</h2>
@@ -1668,6 +1677,15 @@ export class TourDemo {
                 <li kxSidebarMenuItem><a kxSidebarMenuButton href="#projects"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.5" /></svg><span>Projects</span></a></li>
                 <li kxSidebarMenuItem><a kxSidebarMenuButton href="#settings"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.5" /></svg><span>Settings</span></a></li>
               </ul>
+            </kx-sidebar-group-content>
+          </kx-sidebar-group>
+          <kx-sidebar-separator />
+          <kx-sidebar-group aria-busy="true">
+            <h2 kxSidebarGroupLabel>Recent</h2>
+            <kx-sidebar-group-content>
+              <!-- while the recent projects load -->
+              <kx-sidebar-menu-skeleton showIcon width="60%" />
+              <kx-sidebar-menu-skeleton showIcon width="80%" />
             </kx-sidebar-group-content>
           </kx-sidebar-group>
         </kx-sidebar-content>

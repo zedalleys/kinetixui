@@ -2093,10 +2093,7 @@
       "kind": "component",
       "selector": "kx-notification-center",
       "inputs": [
-        "label",
-        "open",
-        "unreadCount",
-        "unreadLabel"
+        "open"
       ],
       "outputs": [
         "openChange"
@@ -2133,7 +2130,11 @@
       "name": "KxNotificationCenterTrigger",
       "kind": "component",
       "selector": "button[kxNotificationCenterTrigger]",
-      "inputs": [],
+      "inputs": [
+        "label",
+        "unreadCount",
+        "unreadLabel"
+      ],
       "outputs": [],
       "projectsContent": true,
       "standalone": true,
