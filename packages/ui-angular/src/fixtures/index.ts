@@ -7,6 +7,7 @@ import { CompositionsFixture } from './compositions';
 import { EntryStates } from './entry';
 import { ListboxesFixture } from './listboxes';
 import { NavigationFixture } from './navigation';
+import { NotificationsFixture } from './notifications';
 import { OverlayCompositionsFixture } from './overlay-compositions';
 import { OverlaysFixture } from './overlays';
 import { SelectionStates } from './selection';
@@ -28,6 +29,7 @@ export const FIXTURES: Record<string, Type<unknown>> = {
   entry: EntryStates,
   listboxes: ListboxesFixture,
   navigation: NavigationFixture,
+  notifications: NotificationsFixture,
   overlays: OverlaysFixture,
   'overlay-compositions': OverlayCompositionsFixture,
   selection: SelectionStates,

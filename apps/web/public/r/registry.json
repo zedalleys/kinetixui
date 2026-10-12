@@ -752,7 +752,8 @@
       "title": "Navigation Menu",
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
-        "React"
+        "React",
+        "Angular"
       ]
     },
     {
@@ -762,6 +763,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -968,6 +970,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -1006,6 +1009,7 @@
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
@@ -1185,7 +1189,8 @@
       "title": "Tour",
       "description": "Ported onto the KinetixUI token contract.",
       "platforms": [
-        "React"
+        "React",
+        "Angular"
       ]
     },
     {

@@ -383,6 +383,8 @@ export interface KxAutoPlaceOptions {
   side: () => KxSide;
   align: () => KxAlign;
   offset: () => number;
+  /** Runs after every placement — for a member that draws something else against the same anchor (the tour's spotlight). */
+  placed?: () => void;
 }
 
 /** Viewport inset kept clear around a floating surface. */
@@ -426,6 +428,7 @@ export function autoPlace(anchor: KxAnchor, floating: HTMLElement, o: KxAutoPlac
     write(floating, first);
     const final = computePlacement(input(size()));
     write(floating, final);
+    o.placed?.();
   };
   const schedule = () => {
     if (!frame) frame = view.requestAnimationFrame(place);

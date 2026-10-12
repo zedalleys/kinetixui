@@ -90,12 +90,10 @@ describe("/docs/angular", () => {
     expect(page).toMatch(/versions independently/i);
   });
 
-  it("does not ship an overlay component the page says is still to come, and ships the ones it says are built", () => {
-    expect(page).toMatch(/notifications still to come/);
-    for (const slug of ["sonner", "notification-center", "tour"]) {
-      expect(platformsFor(slug)).not.toContain("Angular");
-    }
-    for (const slug of ["dialog", "alert-dialog", "modal", "sheet", "drawer", "popover", "tooltip", "hover-card", "dropdown-menu", "context-menu", "menubar", "select", "command", "multi-select", "combobox"]) {
+  it("ships every overlay component the page says is built, and says none is still to come", () => {
+    expect(page).not.toMatch(/still to come/);
+    expect(page).toMatch(/notifications \(toast, notification center, tour\) are built/);
+    for (const slug of ["dialog", "alert-dialog", "modal", "sheet", "drawer", "popover", "tooltip", "hover-card", "dropdown-menu", "context-menu", "menubar", "select", "command", "multi-select", "combobox", "sonner", "notification-center", "tour", "navigation-menu", "sidebar"]) {
       expect(platformsFor(slug)).toContain("Angular");
     }
   });

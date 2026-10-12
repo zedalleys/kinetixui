@@ -403,6 +403,35 @@ draw a system outline. Motion: the popup's motion is the floating surface's; opt
 | React | Not changed by this contract; parity is not claimed |
 | SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
 
+### Navigation menu, notifications and sidebar
+
+Angular Wave C3 (`@kinetixui/angular`: navigation menu, toaster (sonner), notification center, tour, sidebar).
+Each takes a contract above rather than starting its own. No token is added.
+
+| Part | Token(s) | Notes |
+|---|---|---|
+| Navigation menu trigger, top-level link | the menubar trigger's states (Menus): transparent at rest, `foreground` text, `text-label-lg`; hover 8%, open 8%, pressed 12% `foreground` layer; focus `--shadow-focus` | the chevron turns up while its panel is open; the indicator under the open trigger is `border`, decoration only |
+| Navigation menu panel | the floating surface (Overlays); its links `popover-foreground`, hover 8%, pressed 12% `popover-foreground` layer | the page you are on: `font-weight-semibold` and a 2px underline — weight and a shape, never colour alone |
+| Toast | the floating surface: `popover` fill, `popover-foreground` text, full `border` edge, `shadow-lg`, radius `control` | React paints `background`; in dark that is the page's own fill, and the edge alone (2.70:1) would separate the toast from the page. Title `text-label-lg` semibold, description `muted-foreground`; actions sit under the text, never beside it |
+| Toast type icon | `success`, `info`, `warning`, `destructive` | at least 3:1 against the toast (gate); the type is also said in text before the title |
+| Toast buttons | action `action` / `action-foreground`; cancel `muted` / `muted-foreground`; close the dialog close button's states | |
+| Toaster region | `--z-index-overlay`; logical corners (`bottom-end` is bottom right in LTR, bottom left in RTL) | the only overlay with a z-index: it is not a top-layer surface. It scrolls past the viewport at 200% text, and reaches `spacing-3` past its toasts so the scroll clip never cuts their shadows or the list's focus ring |
+| Notification center | the floating surface; unread dot `action`; Mark all read `link` | the dot is decoration; "Unread:" is in the item's text and the count is in the trigger's name |
+| Tour | the card is the floating surface; the scrim is the spotlight's own spread shadow in `scrim`, cut out around the target | with no target, a plain full scrim and a centred card |
+| Sidebar | `sidebar` surface, `sidebar-foreground` text, `sidebar-border` edge on the side facing the page; entries hover 8%, pressed 12% `sidebar-foreground` layer; focus a 2px `sidebar-ring` | the active entry: `sidebar-accent` fill and `font-weight-medium` (the fill is faint in light, 1.03:1; the weight is the cue that is not colour). On a phone it is the family's sheet |
+
+Forced colours: every focus stop draws an outline; the open navigation trigger, the current page and the active
+sidebar entry draw a `CanvasText` outline; the unread dots keep `Highlight`; the tour's spotlight draws a
+`Highlight` outline, since its scrim is a shadow and vanishes. Motion: the panel, the notification center and a
+toast arriving fade on the floating surface's timing; the tour's card and spotlight move between steps and the
+sidebar slides over `duration-fast`; reduced motion removes every one and lands on the same end state.
+
+| Platform | Status |
+|---|---|
+| Angular | Implemented in `styles.css`. Verified on rendered pixels by `check:navigation-visual` (navigation menu, sidebar) and `check:overlay-visual` (toast, notification center, tour), light and dark. Behaviour, direction, 200% text and motion are measured on the live application by `check:angular-collections` (navigation menu) and `check:angular-overlays` (the other four) |
+| React | Not changed by this contract; parity is not claimed |
+| SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
+
 ## Role tokens (added on top of `primary`)
 
 `brand`, `action` (+ `action-foreground`), `link` and `focus` are **repo-owned** — none exist in Figma. `action`,

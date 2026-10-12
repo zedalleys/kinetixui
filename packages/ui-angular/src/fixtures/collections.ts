@@ -28,12 +28,20 @@ import {
   KxMenubarContent,
   KxMenubarMenu,
   KxMenubarTrigger,
+  KxNavigationMenu,
+  KxNavigationMenuContent,
+  KxNavigationMenuIndicator,
+  KxNavigationMenuItem,
+  KxNavigationMenuLink,
+  KxNavigationMenuList,
+  KxNavigationMenuTrigger,
 } from '../public-api';
 
 /**
  * The menus — dropdown menu, context menu, menubar — wired to state the page can read back: the subject of
  * `scripts/angular-collections.mjs` (keyboard, pointer, submenus, RTL, 200% text, motion, axe) and of
- * `scripts/menu-visual.mjs`.
+ * `scripts/menu-visual.mjs`. The navigation menu (site navigation, not a menu) sits here too: its keyboard is the
+ * collection core's and its panel is a floating surface, so it is measured beside the menus it must not be.
  *
  * behaviour.ts's conventions: each subject in its own `[data-kx-subject]` region, every value it changes bound
  * into an `<output data-kx-out="…">`, and the elements a gate drives carry ids. `?region=rtl|ltr` wraps the
@@ -74,6 +82,13 @@ import {
     KxMenubarContent,
     KxMenubarMenu,
     KxMenubarTrigger,
+    KxNavigationMenu,
+    KxNavigationMenuContent,
+    KxNavigationMenuIndicator,
+    KxNavigationMenuItem,
+    KxNavigationMenuLink,
+    KxNavigationMenuList,
+    KxNavigationMenuTrigger,
   ],
   template: `
     <div class="kx-collections-fixture" id="region" [attr.dir]="region">
@@ -193,6 +208,37 @@ import {
         <output data-kx-out="zoom">{{ zoom() }}</output>
       </section>
 
+      <section data-kx-subject="navigation-menu" id="nm-region">
+        <button kxButton variant="Outline" id="nm-before">Before</button>
+        <nav kxNavigationMenu [(value)]="nav" id="nm" aria-label="Site">
+          <ul kxNavigationMenuList>
+            <li kxNavigationMenuItem value="products">
+              <button kxNavigationMenuTrigger id="nm-products">Products</button>
+              <kx-navigation-menu-content id="nm-products-content">
+                <ul class="kx-fixture-links">
+                  <li><a kxNavigationMenuLink id="nm-analytics" href="#analytics" (click)="pick('analytics')">Analytics</a></li>
+                  <li><a kxNavigationMenuLink id="nm-billing" href="#billing" [active]="true">Billing</a></li>
+                  <li><a kxNavigationMenuLink id="nm-security" href="#security">Security</a></li>
+                </ul>
+              </kx-navigation-menu-content>
+            </li>
+            <li kxNavigationMenuItem value="resources">
+              <button kxNavigationMenuTrigger id="nm-resources">Resources</button>
+              <kx-navigation-menu-content id="nm-resources-content">
+                <ul class="kx-fixture-links">
+                  <li><a kxNavigationMenuLink id="nm-docs" href="#docs">Documentation</a></li>
+                  <li><a kxNavigationMenuLink id="nm-blog" href="#blog">Blog</a></li>
+                </ul>
+              </kx-navigation-menu-content>
+            </li>
+            <li kxNavigationMenuItem><a kxNavigationMenuLink id="nm-pricing" href="#pricing">Pricing</a></li>
+          </ul>
+          <kx-navigation-menu-indicator id="nm-indicator" />
+        </nav>
+        <button kxButton variant="Outline" id="nm-after">After</button>
+        <output data-kx-out="nav">{{ nav() ?? '' }}</output>
+      </section>
+
       <section data-kx-subject="table" class="kx-fixture-table-wrap">
         <table class="kx-fixture-table" aria-label="Invoices">
           <thead><tr><th scope="col">Invoice</th><th scope="col">Amount</th><th scope="col"><span class="kx-fixture-sr">Actions</span></th></tr></thead>
@@ -254,6 +300,7 @@ import {
     .kx-fixture-table { border-collapse: collapse; inline-size: 100%; }
     .kx-fixture-table :is(th, td) { padding: var(--spacing-2); border-block-end: 1px solid hsl(var(--border)); text-align: start; }
     .kx-fixture-sr { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .kx-fixture-links { display: grid; gap: var(--spacing-1); inline-size: 16rem; max-inline-size: 100%; }
     output { display: none; }
   `,
 })
@@ -270,6 +317,7 @@ export class CollectionsFixture {
   readonly ctxSub = signal(false);
   readonly guides = signal(false);
   readonly bar = signal<string | null>(null);
+  readonly nav = signal<string | null>(null);
   readonly bookmarks = signal(true);
   readonly zoom = signal('100');
   readonly dialog = signal(false);
