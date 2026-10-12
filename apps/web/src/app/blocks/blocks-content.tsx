@@ -5,6 +5,7 @@ import { blocks } from "@/lib/blocks";
 import { PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
 import { blockPreviews } from "@/registry/block-previews";
 import { blockExampleSource } from "@/registry/block-examples.generated";
+import { BlockReactInstall } from "./block-install";
 
 /**
  * Every block on the page, driven by blocks.manifest.json.
@@ -15,7 +16,7 @@ import { blockExampleSource } from "@/registry/block-examples.generated";
  * cannot disagree — and a platform only appears if `blocks.manifest.json` points at a real file for it, which
  * `check:block-source` verifies and the native workflows compile.
  */
-export function BlocksContent() {
+export function BlocksContent({ components }: { components: Record<string, string[]> }) {
   return (
     <div className="mt-10 grid gap-12">
       {blocks.map((block) => {
@@ -33,6 +34,7 @@ export function BlocksContent() {
             sources={sources}
             platforms={block.platforms.map((p) => PLATFORM_DEFINITIONS[p].label)}
             analyticsBlock={block.slug}
+            aside={<BlockReactInstall components={components[block.slug] ?? []} platforms={block.platforms} />}
           >
             <Preview />
           </Showcase>

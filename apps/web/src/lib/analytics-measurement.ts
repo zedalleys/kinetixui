@@ -56,6 +56,7 @@ export const ARRIVAL_EVENTS = [
   "component_viewed",
   "component_code_copied",
   "platform_selected",
+  "component_code_viewed",
   "github_clicked",
   "npm_clicked",
   "changelog_viewed",

@@ -8,7 +8,18 @@ import { cn } from "@/lib/utils";
  * `onCopy` runs after the text has actually reached the clipboard (never when the write is blocked). It is how a
  * caller reports a copy to analytics: the callback gets no arguments, so the copied text cannot leak into an event.
  */
-export function CopyButton({ value, className, onCopy }: { value: string; className?: string; onCopy?: () => void }) {
+export function CopyButton({
+  value,
+  className,
+  onCopy,
+  label = "Copy",
+}: {
+  value: string;
+  className?: string;
+  onCopy?: () => void;
+  /** The button's accessible name. Name it when several copy buttons share a region, so each says what it copies. */
+  label?: string;
+}) {
   const [copied, setCopied] = React.useState(false);
 
   // The icon swap is visual only; the live region is what tells a screen reader the copy happened.
@@ -16,7 +27,7 @@ export function CopyButton({ value, className, onCopy }: { value: string; classN
     <>
       <button
         type="button"
-        aria-label="Copy"
+        aria-label={label}
         onClick={() => {
           navigator.clipboard.writeText(value).then(
             () => {

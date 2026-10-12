@@ -94,3 +94,12 @@ export const WAVE_LABEL: Record<string, string> = {
   data: "data display",
   advanced: "advanced interaction",
 };
+
+/** Each platform's setup page. Install snippets elsewhere (component pages, /blocks) are a summary; the full steps live there. */
+export const SETUP_HREF: Record<Platform, string> = {
+  React: "/docs/installation",
+  Angular: "/docs/angular",
+  SwiftUI: "/docs/swiftui",
+  Compose: "/docs/compose",
+  Flutter: "/docs/flutter",
+};

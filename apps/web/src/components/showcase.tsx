@@ -8,6 +8,7 @@ import { CopyButton } from "./copy-button";
 import { analytics } from "@/lib/analytics";
 import { analyticsPlatformFor } from "@/lib/analytics-surfaces";
 import { useDocumentDirection } from "@/lib/use-document-direction";
+import { manifestPlatformFor, platformIdForManifest, setPreferredPlatform, usePreferredPlatform } from "@/lib/platform-preference";
 
 /**
  * The real source for the same example on each platform that implements it, keyed by platform name. Only
@@ -56,6 +57,7 @@ export function Showcase({
   sources,
   analyticsBlock,
   platforms,
+  aside,
   children,
   className,
   contentClassName,
@@ -76,6 +78,8 @@ export function Showcase({
   analyticsBlock?: string;
   /** Platform labels to show as a coverage line — derived by the caller, never counted here. */
   platforms?: string[];
+  /** A line under the title, e.g. how to install this block on the reader's platform. */
+  aside?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
   contentClassName?: string;
@@ -87,7 +91,10 @@ export function Showcase({
     return code ? [{ key: "React", label: PLATFORM_DEFINITIONS.React.label, value: code }] : [];
   }, [code, sources]);
 
-  const [lang, setLang] = React.useState<string>(langs[0]?.key ?? "React");
+  // The reader's platform, shared with the component pages and the other showcases. A block with no source for
+  // it shows its first platform and leaves the choice alone, so one React-only block can't reset it.
+  const preferred = manifestPlatformFor(usePreferredPlatform());
+  const lang = langs.some((l) => l.key === preferred) ? preferred! : (langs[0]?.key ?? "React");
   const previewRef = React.useRef<HTMLDivElement>(null);
   const previewScrollable = useScrollable(previewRef);
   const active = langs.find((l) => l.key === lang) ?? langs[0];
@@ -113,6 +120,7 @@ export function Showcase({
           {platforms.join(" · ")}
         </p>
       )}
+      {aside}
 
       <div className="mt-3 overflow-hidden rounded-xl border border-border">
         <Tabs.Root defaultValue="preview" dir={dir}>
@@ -160,7 +168,9 @@ export function Showcase({
                   dir={dir}
                   value={lang}
                   onValueChange={(next) => {
-                    setLang(next);
+                    if (next === lang) return;
+                    const id = platformIdForManifest(next);
+                    if (id) setPreferredPlatform(id);
                     // Only a real platform the manifest knows, and only for a block. `isAnalyticsPlatform`
                     // rejects anything else, so a future non-platform tab cannot leak in as one.
                     const platform = analyticsPlatformFor(next);

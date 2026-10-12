@@ -72,6 +72,10 @@ and that is a fact we want in the denominator of everything else.
 
 **Excluded on purpose:** homepage `$pageview`, scroll depth, time on page, `external_link_clicked`,
 `changelog_viewed`, and every `preset_*` event from `/create` (a theming toy, not product evaluation).
+`component_code_viewed` (opening a component's Code tab, or switching platform with it open) is excluded too:
+it only fires on a component page, which already qualifies through `component_viewed`, so adding it would
+change nothing today and would quietly redefine the signal later. It exists to tell "landed" from
+"inspected the code" inside sessions that already qualify.
 
 **A campaign landing is not a signal by itself.** Arriving on `/docs/platforms` or `/docs/tokens` emits
 `docs_viewed`, which is in neither list: "Read platform coverage" counts the homepage CTA *click*, not the page.
@@ -97,6 +101,13 @@ decision, made here, not in a query.
 
 **Adoption Intent is not activation.** It is the strongest on-site signal available and it stops well short
 of the claim.
+
+**Native install copies count since 2026-10.** Copying a SwiftUI, Compose or Flutter install snippet (a
+`Package.swift` dependency, the Gradle module lines, the `pubspec.yaml` entry, or the pinned-checkout `git`
+commands on that platform's setup page) now emits `install_command_copied` with the package and platform.
+Those copies were silent before, so Adoption Intent counts can rise from that date without any change in
+behaviour; read a step change across it as newly visible native intent, not growth. The signal list itself
+is unchanged.
 
 **Adoption Intent does not require evaluation.** The signal list above *is* the definition. A session that
 copies an install command without ever opening a component page is Adoption Intent, and that is deliberate —
@@ -124,7 +135,7 @@ sessions and Returning evaluators are all counted **among eligible sessions only
 **Qualifies.** `$pageview`, and every event in the site's event contract (`AnalyticsEvents` in
 `apps/web/src/lib/analytics.ts`), each of which the site fires from a page, on render or on a click:
 `cta_clicked`, `docs_viewed`, `installation_viewed`, `cli_command_copied`, `install_command_copied`,
-`component_viewed`, `component_code_copied`, `platform_selected`, `github_clicked`, `npm_clicked`,
+`component_viewed`, `component_code_copied`, `platform_selected`, `component_code_viewed`, `github_clicked`, `npm_clicked`,
 `changelog_viewed`, `external_link_clicked`, `preset_shared`, `preset_code_copied`, `preset_loaded`,
 `preset_randomized`, `create_export_target_selected`, `create_export_copied`, `iot_example_copied`,
 `block_code_copied`. A session with one of these and no `$pageview` is an arrival.
