@@ -73,9 +73,9 @@ CTAs and links: [`SEARCH-INTENT-MAP.md` § Content cluster](./SEARCH-INTENT-MAP.
 | Guide | Status | Next step |
 | --- | --- | --- |
 | Pillar: Cross-platform design systems — architecture, parity and trade-offs (`/guides/cross-platform-design-systems`) | drafted | owner review, then publish with the real date |
-| Generated tokens vs generated components | drafted | publish with or after the pillar |
-| How to verify design system parity across web, iOS and Android | drafted | publish with or after the pillar |
-| What a cross-platform component library should actually give you | drafted | publish with or after the pillar |
+| Generated tokens vs generated components | drafted | publish together with the pillar (a published guide linking a draft fails `draft-linked`) |
+| How to verify design system parity across web, iOS and Android | drafted | publish together with the pillar (a published guide linking a draft fails `draft-linked`) |
+| What a cross-platform component library should actually give you | drafted | publish together with the pillar (a published guide linking a draft fails `draft-linked`) |
 | Design tokens across React, SwiftUI, Compose and Flutter | **deferred** | owned by `/docs/tokens` and ART-002; would cannibalise both |
 | `/guides` index page | **deferred** | only once at least two guides are published; until then the guides link each other |
 | A diagram for the pillar (token source → generated outputs; components per platform → evidence) | **brief only** | reuse the `/infographic` pipeline art if it fits; not a blocker for publishing |

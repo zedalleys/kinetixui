@@ -51,27 +51,31 @@ export function GuideCta({ slug }: { slug: string }) {
 
 /**
  * The foot of a guide: the other guides in the cluster (each by its title), then the article structured data, which
- * exists only for a published guide. Draft guides may link each other: none of them is indexable.
+ * exists only for a published guide. Draft guides may link each other: none of them is indexable. A published guide
+ * links only published guides, so publishing one never exposes a draft (`check:editorial` draft-linked).
  */
 export function GuideFooter({ slug }: { slug: string }) {
-  const others = GUIDES.filter((g) => g.slug !== slug);
+  const published = isPublished(guide(slug));
+  const others = GUIDES.filter((g) => g.slug !== slug && (!published || isPublished(g)));
   const ld = guideJsonLd(slug);
   return (
     <>
-      <nav aria-labelledby="related-reading" data-guide-related className="mt-12 border-t border-border pt-6">
-        <h2 id="related-reading" className="text-base font-semibold tracking-tight">
-          Related reading
-        </h2>
-        <ul className="mt-3 grid gap-2 text-sm">
-          {others.map((g) => (
-            <li key={g.slug}>
-              <Link href={guideHref(g.slug)} className={link}>
-                {g.title}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      {others.length > 0 ? (
+        <nav aria-labelledby="related-reading" data-guide-related className="mt-12 border-t border-border pt-6">
+          <h2 id="related-reading" className="text-base font-semibold tracking-tight">
+            Related reading
+          </h2>
+          <ul className="mt-3 grid gap-2 text-sm">
+            {others.map((g) => (
+              <li key={g.slug}>
+                <Link href={guideHref(g.slug)} className={link}>
+                  {g.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ) : null}
       {ld ? (
         <script
           type="application/ld+json"

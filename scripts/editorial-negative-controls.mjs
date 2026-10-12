@@ -140,6 +140,15 @@ export const CONTROLS = [
     gate: EDITORIAL,
     expect: "intent-duplicate",
   },
+  {
+    id: 15,
+    name: "one guide published on its own while the guides it links are still drafts",
+    file: resolve("apps/web/src/lib/guides-data.ts"),
+    // the build still holds the draft pages, so the published pillar is read with its draft links intact
+    mutate: (s) => s.replace('role: "pillar",\n    status: "draft",', 'role: "pillar",\n    status: "published", datePublished: "2026-01-01",'),
+    gate: EDITORIAL,
+    expect: "draft-linked",
+  },
 ];
 
 function runGate(script) {

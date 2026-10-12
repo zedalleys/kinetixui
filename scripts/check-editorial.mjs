@@ -21,7 +21,7 @@
  *   guide-cta           a guide does not have exactly one primary CTA, or it points off-site
  *   guide-pillar        the pillar does not link every supporting guide, or a supporting guide does not link the pillar
  *   draft-indexed       a draft guide is indexable, is in the sitemap, or carries article JSON-LD
- *   draft-linked        an indexable page links to a draft guide
+ *   draft-linked        an indexable page (a published guide included) links to a draft guide
  *   guide-date          a published guide has no datePublished in its TechArticle JSON-LD
  *   guide-intent        a guide's primary intent is not the one SEARCH-INTENT-MAP.md assigns to its route
  *   near-duplicate      two indexable non-component pages have near-identical titles or descriptions
@@ -141,8 +141,9 @@ for (const g of GUIDES) {
     return body.includes(`href="${target}"`);
   };
   if (g.role === "supporting" && !bodyLinks(`/guides/${PILLAR.slug}`)) fail("guide-pillar", route, "the body does not link back to the pillar");
+  // a published pillar links the published supporting guides (a draft one would trip draft-linked); a draft pillar, all
   if (g.role === "pillar")
-    for (const s of GUIDES.filter((x) => x.role === "supporting"))
+    for (const s of GUIDES.filter((x) => x.role === "supporting" && (g.status === "draft" || x.status === "published")))
       if (!bodyLinks(`/guides/${s.slug}`)) fail("guide-pillar", route, `the body does not link ${s.slug}`);
   const article = p.jsonld.find((n) => n["@type"] === "TechArticle" || n["@type"] === "Article");
   if (g.status === "draft") {
@@ -156,9 +157,9 @@ for (const g of GUIDES) {
 }
 const drafts = new Set(GUIDES.filter((g) => g.status === "draft").map((g) => `/guides/${g.slug}`));
 for (const route of built.keys()) {
-  if (route === "/_not-found" || GUIDE_ROUTES.has(route)) continue;
+  if (route === "/_not-found" || drafts.has(route)) continue; // published guides are checked too
   const p = read(route);
-  if (p.noindex) continue;
+  if (p.noindex && !GUIDE_ROUTES.has(route)) continue; // a guide registered as published is checked even if built noindex
   for (const h of p.links) if (drafts.has(h.replace(/[?#].*$/, ""))) fail("draft-linked", route, `links draft guide ${h}`);
 }
 
