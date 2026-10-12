@@ -403,7 +403,7 @@ engine, direction system or focus framework.
 | Large text | all five at 2× text at 1024px and 390px: inside the viewport, nothing cut off sideways, 24px targets, still operable |
 | Motion | navigation panel (opacity); toast arrival (opacity); notification center (opacity); tour card and spotlight between steps (position); sidebar slide (inline-start offset): each through a rendered midpoint with normal motion, and none under reduced motion, landing on the same value, LTR and RTL |
 | Visual | `check:navigation-visual` (navigation menu: trigger and top-level link hover 8%, pressed 12%, focus ring, open layer and chevron, the current page by weight and an underline; sidebar: its surface and edge, entry hover/pressed/focus, the active entry by weight); `check:overlay-visual` (notification center as a floating surface; toast surface, edge, shadow or dark surface step, text, icons 3:1, action label, close-button ring; tour cut-out, scrim, card, text, the no-target scrim) |
-| Defects it found and fixed | NEGATIVE_C3_DEFECTS |
+| Defects it found and fixed | at 2× text at 390px the toast's action and cancel buttons squeezed its text to a few characters per line (the actions now sit under the text); in dark mode the toast was told apart from the page only by a 2.70:1 edge (it is now painted `popover`, a surface step); the toaster's list clipped the toasts' shadows and focus rings (it now has a bleed inside its padding); the navigation trigger, navigation panel links and sidebar entries had no pressed state deeper than hover (12% on `:active` now); a toast removed while hovered or focused left its channel held, so the next toast never expired (removal now releases the hold); the committed public-API snapshot was stale; `check:angular-browser` found `KxSidebarInput`, `KxSidebarSeparator` and `KxSidebarMenuSkeleton` exported but never rendered (the usage example now shows them) |
 
 **Not ported, by design or for later:** React's sidebar cookie persistence (persistence is the application's,
 through `[(open)]`) and the menu button's tooltip in icon mode (the label stays in the accessible name);
@@ -416,7 +416,25 @@ in `check:angular-browser`, which fails identically on main `eb6957f`).
 
 #### Negative controls (Wave C3)
 
-NEGATIVE_C3_CONTROLS
+13 controls (20–32), run after the implementation was committed (`9eb32a8`): each a real break in the source, a
+fresh harness built from it, the gate run against it with `--only`, and the file restored from git and checked by
+hash against HEAD before the next (logs and `summary.json`: `/mnt/project-files/angular-wave-c3/negative-controls/`).
+None committed. Every one was caught, across ten classes (direction, disclosure, roles, timing, focus, layering,
+target tracking, viewport, sheet composition, duplication):
+
+- 20: the navigation menu's `inlineKey` ignores direction → `check:angular-collections --only=rtl`: "ArrowLeft (the inline-end arrow) moves to the next stop", in both RTL cases (8 failures, including the panel's and indicator's placement).
+- 21: opening a second navigation panel no longer closes the first → "opening a second trigger closes the first".
+- 22: `role="menubar"` / `menuitem` on the navigation list → "no menu, menubar or menuitem role anywhere inside", and axe `aria-required-children` in every open case (17 failures).
+- 23: the toast queue's `hold()` is a no-op → "paused, it outlives its duration", "with focus in the toaster, a toast outlives its duration", "hovering one toaster pauses it alone".
+- 24: resuming restarts the full duration → "it leaves with the time it had left (~0.5s), not a fresh 1.5s".
+- 25: the toaster focuses its list when a toast arrives → "a toast appears and focus stays where the reader is: it never steals focus".
+- 26: Escape on a tour also closes the dialog under it → "one Escape closes the tour alone, focus back on its starter inside the dialog".
+- 27: the tour's target watcher removed → "its target removed while it shows, the step falls back to a centred card — never pointing at a stale place".
+- 28: the tour card's inline position forced, unshifted → "against the viewport's inline end the card shifts to stay inside it" (card 917–1237 of 1024).
+- 29: the tour card aligned by the document's direction rather than the target's → `--only=rtl`: "the card below its target, aligned to the target's inline start", both mixed-direction cases.
+- 30: the phone sidebar rendered as a plain `div`, not the Sheet → "the trigger opens it as a Sheet: one modal dialog, the family's own", "named, the page locked behind it, focus inside", and axe/forced-colours "nothing opened".
+- 31: the phone open state not reset when the breakpoint is crossed → "narrowed again, the sheet does not reopen by itself".
+- 32: the desktop panel also rendered on a phone → "below the breakpoint the persistent panel is gone; its content is still rendered once" and the widening case.
 
 ### What remains after Wave C3, ranked
 
