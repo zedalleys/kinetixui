@@ -105,7 +105,30 @@ organic code copies, organic install views and copies, organic platform selectio
 | Tokens / Foundations | `/docs/tokens`, `/docs/foundations`, `/docs/theming`, `/docs/colors`, `/docs/dark-mode` |
 | Accessibility / RTL | `/docs/accessibility`, `/docs/rtl` |
 | IoT | `/iot`, `/docs/iot`, `/demos/*` |
-| Articles | off-site today (dev.to); measured through campaign attribution, not organic |
+| Guides (content cluster) | `/guides/*`, published 2026-10-12 (all four; before that they were noindex drafts) |
+| Articles | off-site (dev.to); measured through campaign attribution, not organic |
+
+### Content-cluster reporting (SEO Phase 2B)
+
+The cluster is the four guides under `/guides/` ([`SEARCH-INTENT-MAP.md`](./SEARCH-INTENT-MAP.md#content-cluster)).
+Every row below is a slice of tiles that already exist; **QE membership is unchanged** and no event was added.
+A guide's CTA is a plain link: it does not fire `cta_clicked`, so it cannot add QE sessions by itself; what the
+reader does on the page it lands on is what counts.
+
+| Report | Definition | Source |
+| --- | --- | --- |
+| Organic sessions by cluster | eligible arriving organic sessions grouped by the landing-path cluster table above | PostHog |
+| QER by cluster | organic QE sessions ÷ organic eligible sessions, per cluster (counts until the baseline policy allows a rate) | PostHog |
+| Top landing pages | first `$pageview` path of organic sessions, with each page's QE session count | PostHog; Search Console for impressions and clicks |
+| Guide → product-doc clickthrough | guide-landing sessions with a later `$pageview` on `/docs/*`, `/components` or `/blocks` ÷ guide-landing sessions | PostHog (path sequence within a session) |
+| Guide → component-view rate | guide-landing sessions with `component_viewed` ÷ guide-landing sessions | PostHog |
+| Guide → installation view / copy rate | guide-landing sessions with `installation_viewed`, or `install_command_copied` / `cli_command_copied` | PostHog |
+| Platform-page organic QER | organic QER for sessions landing on `/docs/platforms`, `/docs/angular`, `/docs/swiftui`, `/docs/compose`, `/docs/flutter` | PostHog |
+| Editorial component pages | organic landings on the 20 pages with editorial copy vs the other component pages, with QE per group | PostHog; Search Console CTR per page |
+
+Read the cluster rows monthly, not weekly: a guide needs weeks of indexing before its numbers mean anything, and
+with low volume the `analytics.md` §10 rule (fewer than ~30 organic QE sessions: change nothing) will apply for a
+while. A guide is doing its job when its landings continue into product docs, not when its own page views grow.
 
 Search Console integration through its API is **not** built: no authenticated connector exists, and a weekly
 manual export into the review is enough at current traffic.

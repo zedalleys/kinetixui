@@ -28,6 +28,29 @@ source it's built from.
 
 <PlatformAtAGlance platform="SwiftUI" />
 
+## What differs from the React library
+
+- **SwiftUI views, written natively.** State is caller-owned through bindings, and overlays such as dialogs,
+  sheets and toasts are placed in an `.overlay` or a top-level `ZStack` and driven by an `isPresented` binding,
+  rather than managed by a provider the way Radix does on the web.
+- **System controls where they are strong.** Slider, date picker, calendar, scroll area, carousel and chart
+  wrap the SwiftUI control or the Charts framework, so they keep the system look. The calendar picks one date;
+  there is no range selection.
+- **Its own token set.** The library reads a SwiftUI `Color` set generated for it, with real dark values, not
+  the UIKit `UIColor` output (see [Tokens](#tokens-swiftui-color-not-uicolor) below).
+- **SF Symbols** replace the web's icon set.
+- **Distribution and evidence.** It is source you add from a pinned checkout, and the only compiler feedback
+  in CI is `swift build` on macOS. The evidence counts in the summary above say how much of the catalogue has
+  tests beyond that.
+
+## A first adoption path
+
+1. Pin a commit and [add the package from a checkout](#add-the-package-from-a-pinned-checkout).
+2. Build the [first screen](#first-screen) inside `KinetixTheme`.
+3. Apply your own colours with [a custom theme](#a-custom-theme).
+4. Read [Not ported](#not-ported-deliberate) and [Known gaps](#known-gaps) for the components your screens
+   need before you plan around them.
+
 ## Setup
 
 `Package.swift` declares one library target, `KinetixUI`, for

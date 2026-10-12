@@ -13,6 +13,31 @@ and grows incrementally.
 
 <PlatformAtAGlance platform="Angular" />
 
+## What differs from the React library
+
+- **Written for Angular, not wrapped.** Standalone components and directives with signal inputs and
+  `ControlValueAccessor`, so a KinetixUI control drops into a reactive form like any other Angular control.
+- **Plain CSS, no Tailwind.** The component stylesheet only spends the token custom properties, so an app does
+  not adopt React's styling toolchain to get the design language.
+- **Overlays use the browser's top layer.** Dialogs are a native `<dialog>` and floating surfaces use the
+  `popover` attribute, where React uses Radix portals. The behaviour contract (focus, Escape, return focus) is
+  the same; the mechanism is Angular's and the DOM's own.
+- **Some gaps are answered by Angular itself.** Form is `ReactiveFormsModule` and Direction Provider is the
+  `dir` attribute, shown on each component page as a native equivalent rather than counted as coverage.
+- **The catalogue is still arriving**, which is why the package is
+  <PlatformMaturityInline platform="Angular" />. The unbuilt entries are listed by wave
+  [below](#what-is-left-by-wave), and nothing else on this page is promised for them.
+
+## A first adoption path
+
+1. [Install](#install) the package and load the token sheets before the component styles.
+2. Start where Angular already has a strong idiom: buttons, inputs, selects and switches in a reactive form,
+   as in the [example](#example).
+3. Before planning a screen, check each component it needs in [What's available](#whats-available); a
+   planned one shows its wave on its own page.
+4. Read [What Stable would require](#what-stable-would-require) before you commit a product to the API: a
+   Preview package can still change.
+
 ## Install
 
 ```bash

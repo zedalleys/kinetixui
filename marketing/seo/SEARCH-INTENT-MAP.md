@@ -11,6 +11,9 @@ repository, and Search Console is not set up yet ([`MEASUREMENT.md`](./MEASUREME
 the questions the product genuinely answers; which of them bring traffic is what the first eight weeks of Search
 Console data will say. Revisit this map then.
 
+**Checked.** `pnpm check:editorial` parses the route table below and fails if two routes claim the same primary
+intent (the bold phrase, or the whole cell when nothing is bold).
+
 **How to read it.** *Primary* is the one intent the page's title and H1 are written for. *Secondary* intents may
 appear in the description or body, but another page owns each of them as its primary. A query family with no owner
 is in the "unowned" table at the end, on purpose.
@@ -52,6 +55,10 @@ is in the "unowned" table at the end, on purpose.
 | `/charts` | React charts themed with design tokens | — | evaluation | components |
 | `/themes` | light and dark themes on one semantic token contract | — | evaluation | theming |
 | `/infographic` | how KinetixUI is built (brand) | — | discovery | platforms |
+| `/guides/cross-platform-design-systems` | **cross-platform design system architecture** (pillar) | design system parity; native vs single-renderer; source vs package distribution | awareness → evaluation | `/docs/platforms` |
+| `/guides/generated-tokens-vs-generated-components` | **generated design tokens vs generated components** | generate components from one source; token pipeline | awareness | `/docs/tokens` |
+| `/guides/verify-design-system-parity` | **design system parity verification** | design system QA across platforms; verification levels | evaluation | `/docs/platforms` verification evidence |
+| `/guides/evaluate-cross-platform-component-library` | **cross-platform component library evaluation** | what cross-platform component library means; adoption checklist | evaluation | `/components` |
 
 ### Collisions this map resolves
 
@@ -68,6 +75,14 @@ is in the "unowned" table at the end, on purpose.
 - **Component pages vs each other.** Each component page links its alternatives under Related components (Dialog →
   Alert Dialog, Modal, Sheet, Drawer), so a reader who landed on the wrong sibling is one click from the right one
   instead of two pages competing for "modal dialog".
+- **Sibling component pages (Phase 2A).** Twenty pages now say when to choose a sibling instead (Dialog → Sheet,
+  Select → Combobox), in a "When to choose something else" section with links, so a reader who lands on the wrong
+  sibling is told why, not only shown a link. Each page keeps its own primary intent.
+- **Guides vs the homepage and `/docs/platforms`.** The homepage owns the category ("cross-platform design system",
+  the product); the pillar owns the *architecture* question ("how is one built, and what are the trade-offs"); and
+  `/docs/platforms` owns *this library's* coverage. The pillar links to `/docs/platforms` and never claims the
+  category phrase as its own title. The supporting guides each own one narrower question and link back to the
+  pillar ([§ Content cluster](#content-cluster)).
 - **ART-001 vs `/docs/platforms`.** See below.
 
 ---
@@ -76,14 +91,49 @@ is in the "unowned" table at the end, on purpose.
 
 | Family | Why no page owns it yet | Where it would go |
 | --- | --- | --- |
-| React design system | Saturated and our least differentiated story ([`../seo.md`](../seo.md)); no React platform page exists (baseline F-13) | a future `/docs/react` only if Search Console shows React-qualified impressions worth it |
+| React design system | Saturated and our least differentiated story ([`../seo.md`](../seo.md)). Phase 2 decided against `/docs/react`: Installation is the React adoption page and now carries React's at-a-glance block ([`CONTENT-BACKLOG.md`](./CONTENT-BACKLOG.md) Phase 2A) | `/docs/installation`; a separate page only if Search Console shows React-qualified impressions landing on the wrong page |
 | design tokens Flutter / SwiftUI / Compose (as standalone pages) | `../seo.md` ranks `/design-tokens/flutter` first, but it is new IA and content, not metadata | [`CONTENT-BACKLOG.md`](./CONTENT-BACKLOG.md) cluster B |
-| cross-platform design system (pillar article) | A long-form answer; lives off-site until `/blog` is justified | backlog cluster A |
 | component categories ("overlay components", "form components") | Categories are a client-side filter (`?filter=`), canonicalized to `/components`; no category routes exist | backlog; only if per-category pages prove they add something the gallery does not |
 | individual blocks ("settings page block") | 20 blocks render on one page; no per-block routes | backlog; only with real per-block depth |
 | wearables | Nothing is implemented ([`../CLAIMS.md`](../CLAIMS.md) C5) | none |
 
 ---
+
+## Content cluster
+
+Phase 2B's guides live at `/guides/<slug>` and are registered in
+[`apps/web/src/lib/guides.ts`](../../apps/web/src/lib/guides.ts), which is the source of each guide's title,
+description, primary intent, CTA and publication state. All four shipped as drafts (#364) and were
+**published together on 2026-10-12** after the owner's review: indexable, in the sitemap, with TechArticle structured
+data, and linked from the docs pages below. They publish and unpublish as a set: a published guide that links a
+draft fails `check:editorial` (`draft-linked`).
+
+| Guide | Role | Owns | CTA | Links into |
+| --- | --- | --- | --- | --- |
+| Cross-platform design systems: architecture, parity and trade-offs | pillar | cross-platform design system architecture | Explore platform coverage → `/docs/platforms` | every supporting guide; platforms, tokens, accessibility, RTL; the four platform pages |
+| Generated tokens vs generated components | supporting | generated design tokens vs generated components | See token implementation → `/docs/tokens` | pillar; tokens; parity guide |
+| How to verify design system parity across web, iOS and Android | supporting | design system parity verification | View verification evidence → `/docs/platforms` | pillar; platforms; accessibility; RTL |
+| What a cross-platform component library should actually give you | supporting | cross-platform component library evaluation | Explore components → `/components` | pillar; platforms; the platform pages; accessibility; RTL; theming; tokens; changelog |
+
+Not written, on purpose: *Design tokens across React, SwiftUI, Compose and Flutter*. Its intent is already owned
+by `/docs/tokens` and was the subject of ART-002; a guide would compete with both.
+
+Docs pages that link the published guides (`<FurtherReading>`): `/docs/platforms` (pillar, parity),
+`/docs/tokens` (tokens vs components), `/docs/accessibility` (parity), `/docs/installation` (evaluation).
+`pnpm check:editorial` fails if a guide's intent differs from its row above, if an indexable page links a draft,
+if a draft is indexable, or if the pillar and the supporting guides stop linking each other.
+
+### ART-001 → pillar → proof
+
+ART-001 (*"Your cross-platform design system may be lying about parity"*, dev.to) stays the **awareness** piece:
+an opinion about coverage claims, canonical on dev.to. The pillar is the **canonical deep guide** on
+kinetixui.com, and `/docs/platforms` is the **proof**. The flow is: ART-001 → pillar (for the architecture) and
+→ `/docs/platforms` (for the evidence); pillar → `/docs/platforms`. They do not compete: ART-001's intent is "is
+my parity real?" (a reaction), the pillar's is "how is a cross-platform design system built?" (a question), and
+the parity guide is the how-to the article stops short of. ART-001's package is not changed before its
+publication; the pillar is now published (2026-10-12), so once ART-001 is live, add one tagged link to the pillar
+in the dev.to post as a post-publication edit (`utm_content=art_pillar`, same campaign), recorded in the ART-001
+close-out.
 
 ## ART-001 alignment
 

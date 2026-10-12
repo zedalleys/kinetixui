@@ -30,6 +30,30 @@ to the token source it depends on.
 
 <PlatformAtAGlance platform="Flutter" />
 
+## What differs from the React library
+
+- **Widgets, written natively.** State is caller-owned (`value` plus a change callback), and overlays are
+  placed in a top-level `Stack`.
+- **You can adopt the design language without the widgets.** Flutter is the one platform with ready-made
+  adapters for stock UI: `KinetixMaterialTheme` and `KinetixCupertinoTheme` put the same tokens behind
+  Material and Cupertino widgets. See
+  [Using KinetixUI without Kinetix widgets](#using-kinetixui-without-kinetix-widgets).
+- **Its own colour scheme output.** The token build writes a Flutter colour scheme with real dark values for
+  this package, beside the older light-only output (see [Tokens](#tokens-a-real-dark-pass-no-name-collision)).
+- **Distribution and evidence.** It is a git or path dependency pinned to a commit; it is not on pub.dev. CI
+  analyses and tests the package itself, and the evidence counts in the summary above say how much of the
+  catalogue those tests cover.
+
+## A first adoption path
+
+1. If you already have a Material or Cupertino app, start with the
+   [theme adapters](#using-kinetixui-without-kinetix-widgets): your existing widgets take the KinetixUI tokens
+   with no rewrite.
+2. Add `kinetix_ui` as a dependency [pinned to a commit](#setup).
+3. Replace screens with `Kinetix*` widgets where you want the components themselves, and apply
+   [a custom theme](#a-custom-theme).
+4. Read [Not ported](#not-ported-deliberate) and [Known gaps](#known-gaps) before planning around a component.
+
 ## Setup
 
 `pubspec.yaml` targets `sdk: ">=3.6.0 <4.0.0"` / `flutter: ">=3.27.0"`.

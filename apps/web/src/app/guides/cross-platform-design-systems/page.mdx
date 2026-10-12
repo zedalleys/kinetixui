@@ -1,0 +1,172 @@
+import { guideMetadata } from "@/lib/guides";
+
+export const metadata = guideMetadata("cross-platform-design-systems");
+
+# Cross-platform design systems: architecture, parity and trade-offs
+
+<GuideStatus slug="cross-platform-design-systems" />
+
+A team that ships the same product on the web, on iOS and on Android eventually wants one design system for all
+of it: the same colours, the same type, the same components behaving the same way. This guide is about what that
+takes. It covers how such a system is usually put together, where "the same" quietly stops being true, how to
+check it, and what to look at before you adopt one. KinetixUI is used as the worked example throughout, because
+its architecture and its gaps are public and checkable; it is one way to build this, not the only one.
+
+## What "cross-platform" has to mean
+
+There are two very different things a library can mean by cross-platform.
+
+The first is **one implementation that runs everywhere**: a web component in a web view, or a framework that
+draws its own widgets on every platform. You get one codebase and identical pixels, and you give up the
+platform's own controls, gestures and accessibility behaviour wherever the framework does not reproduce them.
+
+The second is **one design language implemented natively on each platform**: a SwiftUI view on iOS, a composable
+on Android, a widget in Flutter, a component in React and in Angular, each written in that platform's idiom and
+each held to the same decisions. You keep native behaviour, and you take on the work of keeping several
+implementations in agreement.
+
+This guide is about the second kind. It is the harder one to build and the one where most of the interesting
+failures live, because nothing forces five implementations to agree except the process around them.
+
+## Same API everywhere is not parity
+
+The tempting definition of parity is a shared API: `Button(variant: .outline)` on every platform, the same prop
+names, the same enum values. A shared vocabulary is worth having. KinetixUI's variant and size names, for
+instance, mean the same thing on every platform. But two components with identical signatures can still differ in
+everything a user notices:
+
+- **Behaviour.** One menu wraps from the last item to the first and another stops; one dialog closes on an outside
+  press and another does not.
+- **Accessibility.** One switch is announced as a switch, another as a button with a state the screen reader never
+  reads.
+- **Direction.** One popover mirrors in a right-to-left layout and another opens on the physical left because its
+  content was rendered somewhere that never learned the direction.
+- **Motion.** One spinner stops under the reduced-motion setting, another slows down, a third ignores it.
+- **Visual states.** Hover, focus, pressed, selected and disabled exist on one platform and are approximated on
+  another.
+
+Parity is a statement about those, not about signatures. Which makes it something you have to measure.
+
+## The usual architecture: shared decisions, native components
+
+Most native-per-platform systems settle on the same split, for good reasons.
+
+**Design decisions are shared and generated.** Colour, spacing, radius, type and motion live once, as design
+tokens, and a build step translates them into each platform's own format. In KinetixUI that source is a set of
+DTCG token files, and Style Dictionary emits CSS custom properties and a typed object for the web, Swift for iOS,
+Kotlin for Android and Dart for Flutter, with a real dark pass for each. The generated files are committed, and a
+test resolves every platform's value back to the source so none of them can disagree.
+[Tokens](/docs/tokens) traces one token from its source to every platform.
+
+**Components are hand-written per platform.** A token is a value; a component is behaviour. Focus, gestures,
+accessibility APIs and layout direction work differently on each platform, so a generated component would have to
+choose one platform's answers for all of them. The detail of that trade-off is in
+[Generated tokens vs generated components](/guides/generated-tokens-vs-generated-components).
+
+**A shared contract ties them together.** Not shared source, but a shared description of what each component is,
+which states it has and what its parts mean. In KinetixUI that contract is a manifest that lists every catalogue
+entry and what each platform has for it, and a component spec per entry.
+
+The consequence is that a cross-platform design system has three layers that can drift apart independently: the
+tokens (which a generator keeps honest), the components (which only people keep honest), and the claims made about
+the components (which nothing keeps honest unless you build something that does).
+
+## Where parity breaks
+
+Some differences are deliberate and correct. A web-only escape hatch like a native select element has no reason to
+exist on iOS, where the system picker already is the native control. A hover-triggered mega-menu has no touch
+idiom. KinetixUI lists these on [Supported platforms](/docs/platforms#not-on-every-platform-on-purpose) with a
+reason for each, and shows a native equivalent or a composition on the component's page instead of pretending a
+port exists.
+
+The differences that hurt are the accidental ones, and they cluster:
+
+- **Overlays.** Focus trapping, return focus, Escape handling, scroll locking and stacking are where
+  implementations diverge most, because every platform solves them differently. On the web alone, KinetixUI's
+  React library uses Radix portals while its Angular library uses the browser's top layer, and the two had to be
+  held to the same behaviour contract by tests rather than by shared code.
+- **Direction.** On the web, a portaled popup does not inherit the `dir` of the element that opened it; in React,
+  Radix reads direction from its own context and defaults to left-to-right without a provider. Native frameworks
+  carry layout direction themselves, which removes that bug and introduces others. [RTL](/docs/rtl) covers the
+  details.
+- **Scoped ports.** A native port that reuses a strong platform control inherits its limits: a calendar that picks
+  one date where the web picks a range, a sheet that only comes from the bottom. Those are fine when they are
+  written down. They are a parity bug when the documentation implies otherwise.
+- **Motion and large text.** Reduced-motion and text-size settings are honoured or ignored per implementation, and
+  only a test on that platform tells you which.
+- **Visual states.** Without screenshot tests, nobody knows whether a pressed state on Android looks like a pressed
+  state on the web.
+
+## Verifying parity
+
+If parity is measured rather than asserted, the measurement needs three properties.
+
+1. **Evidence by kind.** "Tested" is not one thing. Building, behaviour, accessibility semantics, right-to-left,
+   large text, reduced motion and visual regression are separate claims, and a component can have one without
+   another.
+2. **Derived from the tests themselves.** A hand-maintained matrix decays toward optimism. KinetixUI's tests mark
+   what kind of verification each passage performs, and the components it covers are read from the code the
+   passage calls, so deleting a test removes the evidence on the next run.
+3. **Reported by the weakest component.** A platform's catalogue is as verified as its least-verified component,
+   because you will apply the figure to whichever component you are about to use.
+
+Here is that measurement for KinetixUI today, generated from the repository:
+
+<PlatformVerificationTable />
+
+It is not flattering everywhere, and it should not be. [How to verify design system parity across web, iOS and
+Android](/guides/verify-design-system-parity) explains how to build the same instrument for your own system,
+including how to prove that each check can actually fail.
+
+## Source-only and package-distributed platforms
+
+Availability and distribution are separate questions, and a cross-platform system rarely answers them the same way
+on every platform. Publishing an npm package is routine; publishing to Swift Package Manager, Maven Central and
+pub.dev each needs its own release process, signing and versioning story.
+
+KinetixUI's React and Angular libraries install from npm. Its SwiftUI, Jetpack Compose and Flutter libraries are
+real, compiled in CI, and consumed from a repository checkout pinned to a commit: their publication workflows exist
+but have not been used for a real release. That is a legitimate way to adopt a native library, the same
+own-the-source model as copying React components with a CLI, but it changes how you take updates: you move a pin
+and read the diff instead of bumping a version. A library that does not tell you which of the two you are getting
+on each platform is leaving out something you need to plan around.
+
+Maturity is a third question. Angular in KinetixUI is published to npm and is still a Preview package, because its
+catalogue is knowingly incomplete; being installable says nothing about the API having settled.
+[Angular](/docs/angular#what-stable-would-require) lists what Stable would require.
+
+## What to evaluate before adopting
+
+Before you commit a product to a multi-platform library, check at least:
+
+- **Coverage per platform, with the denominator.** How many components on each platform, out of what, and what the
+  gaps are filled with.
+- **Distribution per platform.** Package, source checkout, or nothing; and how updates reach you.
+- **Maturity separately from availability.** Whether each platform's API is settled.
+- **Behaviour evidence by kind.** What is tested on each platform, not whether "tests pass".
+- **Accessibility on each platform's own terms.** Screen-reader semantics on iOS and Android are not the same
+  thing as an axe pass on the web.
+- **Theming on every platform.** Whether your brand reaches native code through the same tokens, or through a
+  second, hand-kept theme.
+
+[What a cross-platform component library should actually give you](/guides/evaluate-cross-platform-component-library)
+turns that into a full checklist, with what a good answer looks like for each item.
+
+## Where KinetixUI fits
+
+KinetixUI takes the native-per-platform route: one token source generated for React, Angular, SwiftUI, Jetpack
+Compose and Flutter, components written natively on each, and platform claims checked against source in CI. It
+covers <ComponentTotalInline /> catalogue entries on React, and the [platform coverage](/docs/platforms) page shows
+every other platform's count, its gaps and its evidence, all generated from the repository.
+
+It is a reasonable fit if your team ships the same product on web and native and wants shared design decisions
+with native behaviour, and if you can work with source-distributed native libraries for now. It is a poor fit if
+you need one implementation that renders identically everywhere, or native packages from a registry today. Either
+way, the pages that answer the question for your platforms are [Supported platforms](/docs/platforms),
+[Tokens](/docs/tokens), [Accessibility](/docs/accessibility), [RTL](/docs/rtl), and the platform pages for
+[Angular](/docs/angular), [SwiftUI](/docs/swiftui), [Jetpack Compose](/docs/compose) and
+[Flutter](/docs/flutter).
+
+<GuideCta slug="cross-platform-design-systems" />
+
+<GuideFooter slug="cross-platform-design-systems" />

@@ -176,6 +176,21 @@ SwiftUI and Compose have no equivalent adapter for stock controls yet. Their `Ki
 token colours to KinetixUI's own native components; see [SwiftUI](/docs/swiftui) and
 [Jetpack Compose](/docs/compose).
 
+## Why tokens are generated and components are not
+
+A token is a named value. Translating `color.primary` into a CSS custom property, a Swift `Color`, a Kotlin
+constant and a Dart `Color` is mechanical, and it is checkable: the test described
+[above](#one-token-on-every-platform) resolves every platform's value back to the source and fails if one
+disagrees. So the translation is generated, and nobody types a value twice.
+
+A component is behaviour as well as values: how focus moves, which gestures it answers, which accessibility
+API announces it, how it mirrors in a right-to-left layout. Those differ per platform, and a generator would
+have to pick one platform's answer for all of them. KinetixUI writes each platform's components by hand
+against the same token contract instead, and says how far each implementation is tested on
+[Supported platforms](/docs/platforms) rather than assuming that shared tokens mean shared behaviour.
+
+<FurtherReading guides={["generated-tokens-vs-generated-components"]} />
+
 ## See the tokens in a component
 
 The [Button](/docs/components/button) is the most direct place to watch this token at work. Its primary
