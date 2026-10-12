@@ -9,6 +9,9 @@ import { TraceLayer, type TracePair } from "./trace-layer";
  * Every label is a real path or name handed in from `lib/systems-in-motion.ts`. The two halves are styled
  * differently on purpose — a solid trace into the generated files, a broken one into the hand-written
  * packages — so the boundary the copy describes is also the thing the eye sees first.
+ *
+ * The repeated rows (four outputs, five packages) take their styling from `.kx-pipe-*` in globals.css rather
+ * than repeating the same utility lists nine times in the page's HTML and component payload.
  */
 export function TokenPipeline({
   token,
@@ -61,11 +64,9 @@ export function TokenPipeline({
           <p className={stage}>03 · generated</p>
           <ul className="mt-3 grid gap-2">
             {outputs.map((o) => (
-              <li key={o.id} data-anchor={`out-${o.id}`} className="rounded-lg border border-primary/40 bg-primary/5 px-3 py-2">
-                <span className="block text-sm text-foreground">{o.language}</span>
-                <span className="block font-mono [overflow-wrap:anywhere] text-xs text-muted-foreground" dir="ltr">
-                  {breakable(o.files.light)}
-                </span>
+              <li key={o.id} data-anchor={`out-${o.id}`} className="kx-pipe-out">
+                <span>{o.language}</span>
+                <span dir="ltr">{breakable(o.files.light)}</span>
               </li>
             ))}
           </ul>
@@ -79,20 +80,14 @@ export function TokenPipeline({
           <p className={stage}>04 · written per platform</p>
           <ul className="mt-3 grid gap-2">
             {platforms.map((p) => (
-              <li
-                key={p.platform}
-                data-anchor={`impl-${p.platform}`}
-                className="flex items-center gap-3 rounded-lg border border-dashed border-foreground/25 px-3 py-2"
-              >
+              <li key={p.platform} data-anchor={`impl-${p.platform}`} className="kx-pipe-impl">
                 <PlatformMark platform={p.platform} className="size-4 shrink-0 text-muted-foreground" />
                 <span className="min-w-0">
-                  <span className="block text-sm text-foreground">
+                  <span>
                     {p.label}
-                    {p.maturity !== "stable" ? <span className="ms-2 font-mono text-xs text-primary">{p.maturity}</span> : null}
+                    {p.maturity !== "stable" ? <span>{p.maturity}</span> : null}
                   </span>
-                  <span className="block font-mono [overflow-wrap:anywhere] text-xs text-muted-foreground" dir="ltr">
-                    {breakable(dirs[p.platform])}
-                  </span>
+                  <span dir="ltr">{breakable(dirs[p.platform])}</span>
                 </span>
               </li>
             ))}

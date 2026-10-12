@@ -346,6 +346,121 @@
       linear-gradient(hsl(var(--primary)), hsl(var(--primary))) no-repeat left bottom / var(--kx-meter, 0%) 4px,
       linear-gradient(hsl(var(--foreground) / 0.1), hsl(var(--foreground) / 0.1)) no-repeat left bottom / 100% 4px;
   }
+  /* Token pipeline rows (`token-pipeline.tsx`): a generated output, solid; a hand-written package, dashed. */
+  .kx-pipe-out {
+    @apply rounded-lg border border-primary/40 bg-primary/5 px-3 py-2;
+  }
+  .kx-pipe-impl {
+    @apply flex items-center gap-3 rounded-lg border border-dashed border-foreground/25 px-3 py-2;
+  }
+  .kx-pipe-out > span,
+  .kx-pipe-impl > span > span {
+    @apply block;
+  }
+  .kx-pipe-out > span:first-child,
+  .kx-pipe-impl > span > span:first-child {
+    @apply text-sm text-foreground;
+  }
+  .kx-pipe-out > span:last-child,
+  .kx-pipe-impl > span > span:last-child {
+    @apply font-mono text-xs text-muted-foreground [overflow-wrap:anywhere];
+  }
+  .kx-pipe-impl > span > span:first-child > span {
+    @apply ms-2 font-mono text-xs text-primary;
+  }
+  /* Component Spotlight tiles (`component-spotlight.tsx`); the composed lead tile is roomier (`data-lead`). */
+  .kx-tile {
+    @apply flex flex-col overflow-hidden rounded-2xl border border-border bg-background transition-colors duration-fast [container-type:inline-size] focus-within:border-primary/40 hover:border-primary/40;
+  }
+  .kx-tile-head {
+    @apply flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-5 pt-5;
+  }
+  .kx-tile-head > h3 {
+    @apply min-w-0 break-words font-display text-lg font-semibold;
+  }
+  .kx-tile-head > a {
+    @apply inline-flex min-h-9 shrink-0 items-center gap-1 text-sm font-medium text-primary underline underline-offset-4;
+  }
+  .kx-tile-note {
+    @apply max-w-prose px-5 pt-1 text-sm text-muted-foreground;
+  }
+  .kx-tile-preview {
+    @apply flex flex-1 items-center justify-center px-5 py-5;
+  }
+  .kx-tile-mount {
+    @apply flex min-h-10 w-full items-center justify-center;
+  }
+  .kx-tile-foot {
+    @apply border-t border-border bg-muted/30 px-5 py-3 transition-colors duration-fast group-focus-within:bg-primary/5 group-hover:bg-primary/5;
+  }
+  .kx-tile-foot > p {
+    @apply font-mono text-label-md text-muted-foreground;
+  }
+  .kx-tile[data-lead] .kx-tile-head {
+    @apply sm:px-7 sm:pt-7;
+  }
+  .kx-tile[data-lead] .kx-tile-head > h3 {
+    @apply text-2xl;
+  }
+  .kx-tile[data-lead] .kx-tile-note {
+    @apply sm:px-7;
+  }
+  .kx-tile[data-lead] .kx-tile-preview {
+    @apply py-8 sm:px-7;
+  }
+  .kx-tile[data-lead] .kx-tile-mount {
+    @apply min-h-[20rem];
+  }
+  /* Component Spotlight status strip: platform name over its state; a real implementation's state in the accent. */
+  .kx-strip > li {
+    @apply min-w-0 text-body-sm;
+  }
+  .kx-strip > li > span {
+    @apply block;
+  }
+  .kx-strip > li > span:first-child {
+    @apply font-medium text-foreground;
+  }
+  .kx-strip > li > span:last-child {
+    @apply font-mono text-muted-foreground;
+  }
+  .kx-strip > li[data-implemented] > span:last-child {
+    @apply text-primary;
+  }
+  /* "Claims you can check." (`evidence-columns.tsx`): one card per platform, its facts, then its meters. */
+  .kx-evidence > li {
+    @apply flex flex-col rounded-xl border border-border bg-card p-4;
+  }
+  .kx-evidence > li > p {
+    @apply font-display text-base font-semibold text-foreground;
+  }
+  .kx-evidence > li > p > span {
+    @apply ms-2 font-mono text-label-md font-normal text-primary;
+  }
+  .kx-evidence dl:first-of-type {
+    @apply mt-3 text-sm;
+  }
+  .kx-evidence dl:first-of-type dt {
+    @apply font-mono text-label-md text-muted-foreground;
+  }
+  .kx-evidence dl:first-of-type dd {
+    @apply text-foreground;
+  }
+  .kx-evidence dl:first-of-type dd:not(:last-child) {
+    @apply mb-2;
+  }
+  .kx-evidence dl:last-of-type {
+    @apply mt-4 grid grid-cols-1 gap-2 border-t border-border pt-3;
+  }
+  .kx-evidence .kx-meter {
+    @apply flex items-baseline justify-between gap-2 pb-2 text-xs;
+  }
+  .kx-evidence .kx-meter dt {
+    @apply text-muted-foreground;
+  }
+  .kx-evidence .kx-meter dd {
+    @apply font-mono text-foreground;
+  }
   [dir="rtl"] .kx-meter {
     background-position: right bottom;
   }
@@ -536,12 +651,48 @@
   }
 
   /*
-   * Code browser: the lines that read the story token are marked, so the token is visible in every language.
-   * Source is always set LTR (`dir="ltr"` on the pre), so the marker is on the left in either page direction.
+   * Code browser (`explorer-panel.tsx`). Named classes rather than utility lists, because the panel is the
+   * heaviest repeated markup on the homepage and every class string is sent twice (HTML and component payload).
+   * One element per line; the line number is a CSS counter with empty alternative text (`/ ""`), so it is drawn
+   * but neither selected, copied nor read out — what the old `aria-hidden` number span did, without the element.
+   * The lines that read the story token are marked, so the token is visible in every language. Source is always
+   * set LTR (`dir="ltr"` on the pre), so the marker is on the left in either page direction.
    */
-  .kx-code-line[data-reads] {
+  .kx-code-file {
+    @apply flex flex-wrap items-baseline gap-x-3 border-b border-border py-2.5 pe-14 ps-4 font-mono text-label-md text-muted-foreground;
+  }
+  .kx-code-scroll {
+    @apply overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring;
+  }
+  .kx-code {
+    @apply py-3;
+  }
+  .kx-code > code {
+    @apply grid min-w-max;
+  }
+  .kx-ln {
+    @apply block pe-6;
+  }
+  .kx-ln::before {
+    content: counter(kx-line) / "";
+    counter-increment: kx-line;
+    @apply inline-block w-[3.25rem] select-none pe-4 text-end text-muted-foreground;
+  }
+  .kx-ln[data-reads] {
     background: hsl(var(--primary) / 0.1);
     box-shadow: inset 2px 0 0 hsl(var(--primary));
+  }
+  .kx-code-facts {
+    @apply grid grid-cols-1 gap-x-6 gap-y-3 border-t border-border bg-card/60 px-4 py-4 text-sm sm:grid-cols-3;
+  }
+  .kx-code-facts > div {
+    @apply min-w-0;
+  }
+  .kx-code-facts dt {
+    @apply font-mono text-label-md text-muted-foreground;
+  }
+  .kx-code-facts dd {
+    @apply mt-0.5 text-foreground;
   }
   .kx-tok-comment {
     color: hsl(var(--muted-foreground));

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import * as Tabs from "@radix-ui/react-tabs";
+import { ExplorerPanel, type PanelData } from "./explorer-panel";
 import { PlatformMark } from "./platform-marks";
 import { analytics } from "@/lib/analytics";
 import { PLATFORM_FROM_CODE_TAB } from "@/lib/analytics-surfaces";
@@ -14,12 +15,14 @@ import { cn } from "@/lib/utils";
 /**
  * The implementation explorer's interactive part, and only that: which platform is showing.
  *
- * Every panel arrives already rendered on the server (`implementation-explorer.tsx`), so the source, its
- * highlighting and the facts under it are HTML, not client state. The shell owns the selection (the reader's
- * remembered platform, shared with the docs), reports a real choice the way the docs do, and follows the page's
- * direction live so Left/Right move in reading order on an RTL page.
+ * The first panel arrives already rendered on the server (`implementation-explorer.tsx`) as `initial`. The other
+ * panels arrive as `later` — compact data, no markup — and are drawn with the shared renderer only while their
+ * tab is the selected one (Radix mounts only the active panel), so nothing is rendered for a tab the reader never
+ * opens and nothing has to load when they do. The shell owns the selection (the reader's remembered platform,
+ * shared with the docs), reports a real choice the way the docs do, and follows the page's direction live so
+ * Left/Right move in reading order on an RTL page.
  */
-export type ExplorerTab = { tab: CodeTab; platform: Platform; label: string; maturity: string; panel: React.ReactNode };
+export type ExplorerTab = { tab: CodeTab; platform: Platform; label: string; maturity: string };
 
 const tabTrigger = cn(
   "relative inline-flex min-h-11 items-center gap-2 border-b-2 border-transparent px-3 font-display text-sm text-muted-foreground transition-colors duration-fast",
@@ -27,7 +30,21 @@ const tabTrigger = cn(
   "data-[state=active]:border-primary data-[state=active]:text-foreground",
 );
 
-export function ExplorerTabs({ component, tabs, footer }: { component: string; tabs: ExplorerTab[]; footer: React.ReactNode }) {
+export function ExplorerTabs({
+  component,
+  tabs,
+  initial,
+  later,
+  footer,
+}: {
+  component: string;
+  tabs: ExplorerTab[];
+  /** the first tab's panel, server-rendered */
+  initial: React.ReactNode;
+  /** every other tab's panel, as data */
+  later: Partial<Record<CodeTab, PanelData>>;
+  footer: React.ReactNode;
+}) {
   const dir = useDocumentDirection();
   const preferred = codeTabFor(usePreferredPlatform());
   const value: CodeTab = tabs.some((t) => t.tab === preferred) ? preferred : tabs[0]!.tab;
@@ -63,7 +80,7 @@ export function ExplorerTabs({ component, tabs, footer }: { component: string; t
       </Tabs.List>
       {tabs.map((t) => (
         <Tabs.Content key={t.tab} value={t.tab} className="focus-visible:outline-none">
-          {t.panel}
+          {t.tab === tabs[0]!.tab ? initial : <ExplorerPanel component={component} data={later[t.tab]!} />}
         </Tabs.Content>
       ))}
       {footer}

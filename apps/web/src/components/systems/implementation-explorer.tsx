@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { CopyButton } from "@/components/copy-button";
 import type { Token } from "@/lib/highlight";
 import type { Platform } from "@/lib/platform-parity";
 import { TAB_OF, type CodeTab } from "@/lib/platform-tabs";
+import { ExplorerPanel, toRuns, type PanelData } from "./explorer-panel";
 import { ExplorerTabs } from "./explorer-tabs";
 
 /**
@@ -15,8 +15,10 @@ import { ExplorerTabs } from "./explorer-tabs";
  * the real ones; the whole file is a link away. The line that reads the token is marked, so the token the hero
  * follows is visible again here, consumed natively in five languages.
  *
- * A server component: the source, its highlighting and the facts under it render here, once, as HTML. Only the
- * tab selection is client state (`explorer-tabs.tsx`).
+ * A server component. The panel the page opens on (the first platform) renders here as HTML; the other four
+ * reach the page only as compact data and are drawn by the same renderer (`explorer-panel.tsx`) when their tab
+ * is chosen, so four excerpts the reader may never open add neither markup nor a component tree to the page.
+ * The tab selection is the only client state (`explorer-tabs.tsx`).
  */
 
 export type ExplorerFile = {
@@ -49,14 +51,6 @@ const EVIDENCE_LABEL: Record<string, string> = {
   published: "published",
 };
 
-const TOKEN_CLASS: Record<Token[0], string | undefined> = {
-  comment: "kx-tok-comment",
-  string: "kx-tok-string",
-  keyword: "kx-tok-keyword",
-  type: "kx-tok-type",
-  plain: undefined,
-};
-
 export function ImplementationExplorer({
   component,
   componentHref,
@@ -66,17 +60,22 @@ export function ImplementationExplorer({
   componentHref: string;
   platforms: ExplorerPlatform[];
 }) {
-  const tabs = platforms.map((t) => ({
-    tab: TAB_OF[t.platform] as CodeTab,
-    platform: t.platform,
+  const data = (t: ExplorerPlatform): PanelData => ({
     label: t.label,
     maturity: t.maturity,
-    panel: <Panel component={component} platform={t} />,
-  }));
+    distribution: t.distribution,
+    verification: t.verification,
+    evidence: t.evidence.map((e) => EVIDENCE_LABEL[e] ?? e).join(" · "),
+    files: t.files.map((f) => ({ file: f.file, firstLine: f.firstLine, lastLine: f.lastLine, lines: toRuns(f.lines), reads: f.readsToken })),
+  });
+  const [first, ...rest] = platforms;
   return (
     <ExplorerTabs
       component={component}
-      tabs={tabs}
+      tabs={platforms.map((t) => ({ tab: TAB_OF[t.platform] as CodeTab, platform: t.platform, label: t.label, maturity: t.maturity }))}
+      // the panel the page opens on, rendered here as HTML; the rest wait as data until their tab is chosen
+      initial={<ExplorerPanel component={component} data={data(first!)} />}
+      later={Object.fromEntries(rest.map((t) => [TAB_OF[t.platform], data(t)]))}
       footer={
         <p className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 text-body-sm text-muted-foreground">
           <span>
@@ -89,81 +88,5 @@ export function ImplementationExplorer({
         </p>
       }
     />
-  );
-}
-
-function Panel({ component, platform: t }: { component: string; platform: ExplorerPlatform }) {
-  return (
-    <>
-      <div className="relative">
-        <CopyButton
-          value={t.files.map((f) => f.text).join("\n\n")}
-          label={`Copy the ${t.label} ${component} excerpt`}
-          className="absolute end-3 top-2.5 z-10"
-        />
-        {t.files.map((f) => (
-          <div key={f.file}>
-            <p className="flex flex-wrap items-baseline gap-x-3 border-b border-border py-2.5 pe-14 ps-4 font-mono text-label-md text-muted-foreground">
-              <span className="text-foreground [overflow-wrap:anywhere]" dir="ltr">
-                {f.file}
-              </span>
-              <span>
-                lines {f.firstLine}–{f.lastLine}
-              </span>
-            </p>
-            <div
-              // long lines scroll sideways, so the keyboard has to be able to reach the region
-              tabIndex={0}
-              role="region"
-              aria-label={`${t.label} ${component} source, ${f.file} lines ${f.firstLine} to ${f.lastLine}`}
-              className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-            >
-              <pre dir="ltr" className="py-3 font-mono text-body-sm leading-relaxed">
-                <code className="grid min-w-max">
-                  {f.lines.map((line, i) => (
-                    <span key={i} className="kx-code-line grid grid-cols-[3.25rem_1fr] pe-6" {...(f.readsToken.includes(i) ? { "data-reads": "" } : {})}>
-                      <span aria-hidden="true" className="select-none pe-4 text-end text-muted-foreground">
-                        {f.firstLine + i}
-                      </span>
-                      <span>
-                        {line.length === 0
-                          ? " "
-                          : line.map(([kind, text], j) =>
-                              TOKEN_CLASS[kind] ? (
-                                <span key={j} className={TOKEN_CLASS[kind]}>
-                                  {text}
-                                </span>
-                              ) : (
-                                text
-                              ),
-                            )}
-                      </span>
-                    </span>
-                  ))}
-                </code>
-              </pre>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* what is true of THIS implementation: three separate facts, never one badge */}
-      <dl className="grid grid-cols-1 gap-x-6 gap-y-3 border-t border-border bg-card/60 px-4 py-4 text-sm sm:grid-cols-3">
-        <div className="min-w-0">
-          <dt className="font-mono text-label-md text-muted-foreground">Package</dt>
-          <dd className="mt-0.5 text-foreground">
-            {t.maturity} · {t.distribution}
-          </dd>
-        </div>
-        <div className="min-w-0">
-          <dt className="font-mono text-label-md text-muted-foreground">{component} verification</dt>
-          <dd className="mt-0.5 text-foreground">{t.verification ?? "none recorded"}</dd>
-        </div>
-        <div className="min-w-0">
-          <dt className="font-mono text-label-md text-muted-foreground">Evidence on file</dt>
-          <dd className="mt-0.5 text-foreground">{t.evidence.map((e) => EVIDENCE_LABEL[e] ?? e).join(" · ") || "none"}</dd>
-        </div>
-      </dl>
-    </>
   );
 }

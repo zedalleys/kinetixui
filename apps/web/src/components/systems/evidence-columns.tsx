@@ -18,42 +18,35 @@ const KIND_LABEL: Record<PlatformEvidence["evidence"][number]["kind"], string> =
  * page was built from, and it says so.
  */
 export function EvidenceColumns({ platforms }: { platforms: PlatformEvidence[] }) {
+  // Styled by `.kx-evidence` in globals.css rather than per-element utility lists: five cards of nine rows repeat
+  // the same few class strings dozens of times, and the page sends every one twice (HTML and component payload).
   return (
-    <ul data-evidence-columns="" className="grid grid-cols-1 gap-3 [&>*]:min-w-0 sm-rem:grid-cols-2 xl-rem:grid-cols-5">
+    <ul data-evidence-columns="" className="kx-evidence grid grid-cols-1 gap-3 [&>*]:min-w-0 sm-rem:grid-cols-2 xl-rem:grid-cols-5">
       {platforms.map((p) => (
         // flat facts, so an opaque card: glass is kept for surfaces that sit over other system information
-        <li key={p.platform} className="flex flex-col rounded-xl border border-border bg-card p-4">
-          <p className="font-display text-base font-semibold text-foreground">
+        <li key={p.platform}>
+          <p>
             {p.label}
-            {p.maturity !== "stable" ? <span className="ms-2 font-mono text-label-md font-normal text-primary">{p.maturity}</span> : null}
+            {p.maturity !== "stable" ? <span>{p.maturity}</span> : null}
           </p>
-          <dl className="mt-3 grid grid-cols-1 gap-2 text-sm">
-            <div>
-              <dt className="font-mono text-label-md text-muted-foreground">Catalogue entries</dt>
-              <dd className="text-foreground">
-                {p.entries} of {p.total}
-              </dd>
-            </div>
-            <div>
-              <dt className="font-mono text-label-md text-muted-foreground">Verified to at least</dt>
-              <dd className="text-foreground">{p.floor ?? "not recorded"}</dd>
-            </div>
-            <div>
-              <dt className="font-mono text-label-md text-muted-foreground">Distribution</dt>
-              <dd className="text-foreground">{p.distribution}</dd>
-            </div>
+          {/* dt and dd straight in the list: a fact needs no row element of its own */}
+          <dl>
+            <dt>Catalogue entries</dt>
+            <dd>
+              {p.entries} of {p.total}
+            </dd>
+            <dt>Verified to at least</dt>
+            <dd>{p.floor ?? "not recorded"}</dd>
+            <dt>Distribution</dt>
+            <dd>{p.distribution}</dd>
           </dl>
-          <dl className="mt-4 grid grid-cols-1 gap-2 border-t border-border pt-3">
+          <dl>
             {p.evidence.map((e) => (
               // dt and dd sit directly in the row (axe: dlitem); the meter is the row's own bottom edge (`.kx-meter`),
               // drawn in CSS from the fraction, so a row is three elements rather than five
-              <div
-                key={e.kind}
-                className="kx-meter flex items-baseline justify-between gap-2 pb-2 text-xs"
-                style={{ ["--kx-meter" as string]: `${e.of ? (e.count / e.of) * 100 : 0}%` }}
-              >
-                <dt className="text-muted-foreground">{KIND_LABEL[e.kind]}</dt>
-                <dd className="font-mono text-foreground">
+              <div key={e.kind} className="kx-meter" style={{ ["--kx-meter" as string]: `${e.of ? (e.count / e.of) * 100 : 0}%` }}>
+                <dt>{KIND_LABEL[e.kind]}</dt>
+                <dd>
                   {e.count} / {e.of}
                 </dd>
               </div>

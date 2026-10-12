@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -10,7 +10,9 @@ import { componentTotal, platformCount } from "@/lib/platform-support";
 import { platformEvidence, STORY_COMPONENT, systemsInMotion } from "@/lib/systems-in-motion";
 import { breakable } from "./breakable";
 import { repoRoot } from "@/lib/token-evidence";
+import { ExplorerPanel, toRuns } from "./explorer-panel";
 import { HeroSystemMap } from "./hero-system-map";
+import { ImplementationExplorer } from "./implementation-explorer";
 
 /**
  * The homepage's system visuals (hero map, token pipeline, implementation explorer, evidence columns) draw
@@ -283,6 +285,60 @@ describe("systems in motion: weight and restraint", () => {
   it("renders the static visuals on the server: only the interactive shells are client components", () => {
     for (const f of ["implementation-explorer.tsx", "component-spotlight.tsx", "evidence-columns.tsx", "token-pipeline.tsx", "platform-marks.tsx"]) {
       expect(read(`components/systems/${f}`), f).not.toMatch(/^"use client"/);
+    }
+  });
+
+  it("has exactly the intended client components: the two tab controllers, the trace layer and the defer mount", () => {
+    const dir = join(web, "components/systems");
+    const client = readdirSync(dir)
+      .filter((f) => f.endsWith(".tsx") && !f.endsWith(".test.tsx"))
+      .filter((f) => /^\s*["']use client["']/.test(readFileSync(join(dir, f), "utf8")))
+      .sort();
+    expect(client).toEqual(["explorer-tabs.tsx", "hero-system-map.tsx", "mount-near.tsx", "trace-layer.tsx"]);
+  });
+
+  it("sends the explorer's first panel as markup and the other four as data, never as five rendered panels", () => {
+    const explorer = story.platforms.map((p) => ({
+      platform: p.platform,
+      label: p.label,
+      maturity: p.maturity,
+      distribution: p.distribution,
+      files: p.component.files,
+      verification: p.component.verification,
+      evidence: p.component.evidence,
+    }));
+    const html = renderToStaticMarkup(<ImplementationExplorer component="Switch" componentHref="/docs/components/switch" platforms={explorer} />);
+    expect(html.match(/<pre\b/g)).toHaveLength(story.platforms[0]!.component.files.length);
+    expect(html.match(/role="tab"/g)).toHaveLength(story.platforms.length);
+    for (const p of story.platforms.slice(1)) {
+      for (const f of p.component.files) expect(html, `${p.label} excerpt rendered before its tab is chosen`).not.toContain(f.file);
+    }
+  });
+
+  it("renders an excerpt with one element per line, real line numbers and the token line marked", () => {
+    const p = story.platforms[0]!;
+    const f = p.component.files[0]!;
+    const data = {
+      label: p.label,
+      maturity: p.maturity,
+      distribution: p.distribution,
+      verification: p.component.verification,
+      evidence: "",
+      files: [{ file: f.file, firstLine: f.firstLine, lastLine: f.lastLine, lines: toRuns(f.lines), reads: f.readsToken }],
+    };
+    const html = renderToStaticMarkup(<ExplorerPanel component="Switch" data={data} />);
+    expect(html.match(/class="kx-ln"/g)).toHaveLength(f.lastLine - f.firstLine + 1);
+    expect(html).toContain(`counter-reset:kx-line ${f.firstLine - 1}`);
+    expect(html.match(/data-reads=""/g)).toHaveLength(f.readsToken.length);
+    expect(html).toContain(`lines ${f.firstLine}–${f.lastLine}`);
+  });
+
+  it("compacts highlighted lines into runs without losing a character", () => {
+    for (const p of story.platforms) {
+      for (const f of p.component.files) {
+        const text = toRuns(f.lines).map((line) => line.map((r) => (typeof r === "string" ? r : r[1])).join(""));
+        expect(text.join("\n")).toBe(f.text);
+      }
     }
   });
 

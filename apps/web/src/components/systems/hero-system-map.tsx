@@ -106,7 +106,8 @@ export function HeroSystemMap({
   // Bumped on every reader action; keys the pulse paths so a change replays one pulse, and only then.
   const [pulse, setPulse] = React.useState(0);
   const [pulseScope, setPulseScope] = React.useState<"one" | "all">("one");
-  const [geometry, setGeometry] = React.useState<Geometry | null>(null);
+  // The traces own their geometry (`MapTraces`): a measurement redraws the drawing, not the whole map.
+  const drawTraces = React.useRef<(g: Geometry) => void>(() => {});
   // Follow the site theme (the header's toggle puts `.dark` on <html>); a change after load pulses every branch.
   React.useEffect(() => {
     const root = document.documentElement;
@@ -184,7 +185,7 @@ export function HeroSystemMap({
         written.push({ platform: p.platform, d: wide ? vcurve(c.bottom, b.top) : hcurve(c.end, b.start) });
       }
     }
-    setGeometry({ width: r.width, height: r.height, generated, written });
+    drawTraces.current({ width: r.width, height: r.height, generated, written });
   }, [outputs, platforms]);
 
   // Measured from the ResizeObserver's first callback, which runs after layout, rather than synchronously during
@@ -215,185 +216,116 @@ export function HeroSystemMap({
     setPulse((n) => n + 1);
   };
 
-  const pulsing = (output: string, platform?: Platform) =>
-    pulse > 0 && (pulseScope === "all" || (platform ? platform === selected : output === current.output));
-
-  return (
-    <figure
-      ref={root}
-      data-hero-system-map=""
-      data-map-intro=""
-      data-map-layout={columns ? "columns" : "rows"}
-      {...(active ? { "data-map-active": "" } : {})}
-      className="relative m-0 [container-type:inline-size]"
-    >
-      {/* the traces: a drawing of what the text says, so assistive technology skips it */}
-      {geometry ? (
-        <svg
-          aria-hidden="true"
-          focusable="false"
-          className="pointer-events-none absolute inset-0 overflow-visible"
-          width={geometry.width}
-          height={geometry.height}
-          viewBox={`0 0 ${geometry.width} ${geometry.height}`}
+  // The map's static text is built once per theme and reused across renders: a hover, a selection, a measured
+  // layout or the phone layout's orientation change re-renders the map without rebuilding the source card, the
+  // output chips, the platform labels or the panels' evidence (only the selected platform's panel is mounted).
+  const sourceCard = React.useMemo(
+    () => (
+        <div
+          ref={source}
+          className="kx-glass kx-map-stage relative mx-auto w-full max-w-md rounded-xl p-4 sm:p-5"
+          style={{ ["--stage" as string]: 0 }}
         >
-          {geometry.generated.map((g) => (
-            <path
-              key={g.output}
-              d={g.d}
-              pathLength={1}
-              className="kx-trace"
-              data-kind="generated"
-              {...(g.output === activeOutput ? { "data-active": "" } : {})}
+          <p className="font-mono text-label-md text-muted-foreground [overflow-wrap:anywhere]" dir="ltr">
+            <span className="sr-only">Source: </span>
+            {breakable(token.files[theme])}
+          </p>
+          <div className="mt-3 flex items-center gap-3">
+            <span
+              key={theme}
+              aria-hidden="true"
+              className="kx-swap size-9 shrink-0 rounded-md border border-border"
+              style={{ backgroundColor: token.resolved[theme] }}
             />
-          ))}
-          {geometry.written.map((w) => (
-            <path
-              key={w.platform}
-              d={w.d}
-              className="kx-trace"
-              data-kind="written"
-              {...(w.platform === active ? { "data-active": "" } : {})}
-            />
-          ))}
-          {pulse > 0
-            ? [
-                ...geometry.generated.filter((g) => pulsing(g.output)).map((g) => (
-                  <path key={`g-${g.output}-${pulse}`} d={g.d} pathLength={1} className="kx-trace-pulse" />
-                )),
-                ...geometry.written.filter((w) => pulsing("", w.platform)).map((w) => (
-                  <path key={`w-${w.platform}-${pulse}`} d={w.d} pathLength={1} className="kx-trace-pulse" style={{ animationDelay: "420ms" }} />
-                )),
-              ]
-            : null}
-        </svg>
-      ) : null}
-
-      {/* ── the canonical source ── */}
-      <div
-        ref={source}
-        className="kx-glass kx-map-stage relative mx-auto w-full max-w-md rounded-xl p-4 sm:p-5"
-        style={{ ["--stage" as string]: 0 }}
-      >
-        <p className="font-mono text-label-md text-muted-foreground [overflow-wrap:anywhere]" dir="ltr">
-          <span className="sr-only">Source: </span>
-          {breakable(token.files[theme])}
-        </p>
-        <div className="mt-3 flex items-center gap-3">
-          <span
-            key={theme}
-            aria-hidden="true"
-            className="kx-swap size-9 shrink-0 rounded-md border border-border"
-            style={{ backgroundColor: token.resolved[theme] }}
-          />
-          <div className="min-w-0">
-            <p className="font-mono text-lg font-semibold leading-tight text-foreground sm:text-xl" dir="ltr">
-              {token.path}
-            </p>
-            <p key={theme} className="kx-swap mt-1 font-mono text-body-sm text-muted-foreground [overflow-wrap:anywhere]" dir="ltr">
-              {token.chain[theme].slice(1).map((step) => `→ ${step} `)}→ {token.resolved[theme]}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <Tabs.Root
-        value={selected}
-        onValueChange={select}
-        activationMode="automatic"
-        dir={dir}
-        orientation={columns ? "horizontal" : "vertical"}
-        className="kx-map-grid mt-8"
-        style={{ ["--kx-impl" as string]: platforms.length }}
-      >
-        {/* ── the token boundary ── */}
-        <p className="kx-map-boundary flex items-center gap-3">
-          <span aria-hidden="true" className="h-px flex-1 border-t border-dashed border-border" />
-          <span className="min-w-0 bg-background px-1 text-center font-mono text-label-md text-muted-foreground">
-            <span className="text-foreground">Tokens generated</span> · components written per platform
-          </span>
-          <span aria-hidden="true" className="h-px flex-1 border-t border-dashed border-border" />
-        </p>
-        <span aria-hidden="true" className="kx-map-rule" />
-
-        {/* ── generated outputs (a drawing; the panel says the same in words) ── */}
-        <div aria-hidden="true" className="kx-map-outputs">
-          {outputs.map((o, i) => (
-            <div
-              key={o.id}
-              ref={(n) => {
-                if (n) chips.current.set(o.id, n);
-                else chips.current.delete(o.id);
-              }}
-              data-output={o.id}
-              className={cn(
-                "kx-map-chip kx-map-stage min-w-0 self-center rounded-lg border bg-background px-2.5 py-2 transition-colors duration-fast",
-                o.id === activeOutput ? "border-primary/70" : "border-border",
-              )}
-              style={{ ["--span" as string]: o.platforms.length, ["--stage" as string]: i, ["--stage-base" as string]: "650ms" }}
-            >
-              <div className="flex items-center gap-1.5">
-                <span
-                  key={theme}
-                  className="kx-swap size-2.5 shrink-0 rounded-[3px]"
-                  style={{ backgroundColor: token.resolved[theme] }}
-                />
-                <span className="font-mono text-label-md text-foreground">{o.language}</span>
-              </div>
-              <p className="mt-1 font-mono text-label-md text-muted-foreground [overflow-wrap:anywhere]" dir="ltr">
-                {breakable(o.reference)}
+            <div className="min-w-0">
+              <p className="font-mono text-lg font-semibold leading-tight text-foreground sm:text-xl" dir="ltr">
+                {token.path}
+              </p>
+              <p key={theme} className="kx-swap mt-1 font-mono text-body-sm text-muted-foreground [overflow-wrap:anywhere]" dir="ltr">
+                {token.chain[theme].slice(1).map((step) => `→ ${step} `)}→ {token.resolved[theme]}
               </p>
             </div>
-          ))}
+          </div>
         </div>
-
-        {/* ── the implementations ── */}
-        <Tabs.List aria-label="Platform implementations" className="kx-map-tabs">
-          {platforms.map((p, i) => (
-            <Tabs.Trigger
-              key={p.platform}
-              value={p.platform}
-              ref={(n) => {
-                if (n) nodes.current.set(p.platform, n);
-                else nodes.current.delete(p.platform);
-              }}
-              onPointerEnter={() => setHovered(p.platform)}
-              onPointerLeave={() => setHovered(null)}
-              data-platform={p.platform}
-              className={cn(
-                "kx-map-tab kx-map-stage group flex min-h-11 min-w-0 items-center gap-2.5 rounded-lg border border-dashed px-2.5 py-2 text-start transition-colors duration-fast",
-                "border-foreground/25 bg-background text-muted-foreground hover:border-primary/60 hover:text-foreground",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                "data-[state=active]:border-solid data-[state=active]:border-primary data-[state=active]:bg-primary/10 data-[state=active]:text-foreground",
-              )}
-              style={{ ["--stage" as string]: i, ["--stage-base" as string]: "1000ms" }}
-            >
-              <PlatformMark platform={p.platform} className="size-5 shrink-0" />
-              <span className="kx-map-tab-text flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
-                <span className="font-display text-sm font-semibold">{p.short}</span>
-                {p.maturity !== "stable" ? <span className="font-mono text-label-md text-primary">{p.maturity}</span> : null}
-                <span className="font-mono text-label-md text-muted-foreground">
-                  {p.entries}/{p.total}
-                  <span className="sr-only"> catalogue entries</span>
-                </span>
-              </span>
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
-
-        {platforms.map((p) => {
+    ),
+    [token, theme],
+  );
+  const chipLayer = React.useMemo(
+    () => (
+      <div aria-hidden="true" className="kx-map-outputs">
+        {outputs.map((o, i) => (
+          <div
+            key={o.id}
+            ref={(n) => {
+              if (n) chips.current.set(o.id, n);
+              else chips.current.delete(o.id);
+            }}
+            data-output={o.id}
+            className={cn(
+              "kx-map-chip kx-map-stage min-w-0 self-center rounded-lg border bg-background px-2.5 py-2 transition-colors duration-fast",
+              o.id === activeOutput ? "border-primary/70" : "border-border",
+            )}
+            style={{ ["--span" as string]: o.platforms.length, ["--stage" as string]: i, ["--stage-base" as string]: "650ms" }}
+          >
+            <div className="flex items-center gap-1.5">
+              <span
+                key={theme}
+                className="kx-swap size-2.5 shrink-0 rounded-[3px]"
+                style={{ backgroundColor: token.resolved[theme] }}
+              />
+              <span className="font-mono text-label-md text-foreground">{o.language}</span>
+            </div>
+            <p className="mt-1 font-mono text-label-md text-muted-foreground [overflow-wrap:anywhere]" dir="ltr">
+              {breakable(o.reference)}
+            </p>
+          </div>
+        ))}
+      </div>
+    ),
+    [outputs, token, theme, activeOutput],
+  );
+  const triggers = React.useMemo(
+    () =>
+      platforms.map((p, i) => (
+        <Tabs.Trigger
+          key={p.platform}
+          value={p.platform}
+          ref={(n) => {
+            if (n) nodes.current.set(p.platform, n);
+            else nodes.current.delete(p.platform);
+          }}
+          onPointerEnter={() => setHovered(p.platform)}
+          onPointerLeave={() => setHovered(null)}
+          data-platform={p.platform}
+          className={cn(
+            "kx-map-tab kx-map-stage group flex min-h-11 min-w-0 items-center gap-2.5 rounded-lg border border-dashed px-2.5 py-2 text-start transition-colors duration-fast",
+            "border-foreground/25 bg-background text-muted-foreground hover:border-primary/60 hover:text-foreground",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "data-[state=active]:border-solid data-[state=active]:border-primary data-[state=active]:bg-primary/10 data-[state=active]:text-foreground",
+          )}
+          style={{ ["--stage" as string]: i, ["--stage-base" as string]: "1000ms" }}
+        >
+          <PlatformMark platform={p.platform} className="size-5 shrink-0" />
+          <span className="kx-map-tab-text flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
+            <span className="font-display text-sm font-semibold">{p.short}</span>
+            {p.maturity !== "stable" ? <span className="font-mono text-label-md text-primary">{p.maturity}</span> : null}
+            <span className="font-mono text-label-md text-muted-foreground">
+              {p.entries}/{p.total}
+              <span className="sr-only"> catalogue entries</span>
+            </span>
+          </span>
+        </Tabs.Trigger>
+      )),
+    [platforms],
+  );
+  const panelBodies = React.useMemo(
+    () =>
+      new Map(
+        platforms.map((p) => {
           const out = outputs.find((o) => o.id === p.output)!;
-          return (
-            <Tabs.Content
-              key={p.platform}
-              value={p.platform}
-              // the entrance belongs to first load only; a later selection cross-fades without the intro's delay
-              className={cn(
-                "kx-map-panel kx-glass rounded-xl p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-5",
-                pulse === 0 ? "kx-map-stage" : "kx-swap",
-              )}
-              style={pulse === 0 ? { ["--stage" as string]: 0, ["--stage-base" as string]: "1350ms" } : undefined}
-            >
+          return [
+            p.platform,
+            <>
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <p className="font-display text-base font-semibold text-foreground">
                   {p.label}
@@ -425,6 +357,75 @@ export function HeroSystemMap({
               >
                 {p.label} setup and coverage <ArrowUpRight aria-hidden="true" className="size-3.5 rtl:-scale-x-100" />
               </Link>
+            </>,
+          ] as const;
+        }),
+      ),
+    [platforms, outputs, theme],
+  );
+
+  return (
+    <figure
+      ref={root}
+      data-hero-system-map=""
+      data-map-intro=""
+      data-map-layout={columns ? "columns" : "rows"}
+      {...(active ? { "data-map-active": "" } : {})}
+      className="relative m-0 [container-type:inline-size]"
+    >
+      {/* the traces: a drawing of what the text says, so assistive technology skips it */}
+      <MapTraces
+        connect={drawTraces}
+        activeOutput={activeOutput}
+        active={active}
+        selected={selected}
+        selectedOutput={current.output}
+        pulse={pulse}
+        pulseScope={pulseScope}
+      />
+
+      {sourceCard}
+
+      <Tabs.Root
+        value={selected}
+        onValueChange={select}
+        activationMode="automatic"
+        dir={dir}
+        orientation={columns ? "horizontal" : "vertical"}
+        className="kx-map-grid mt-8"
+        style={{ ["--kx-impl" as string]: platforms.length }}
+      >
+        {/* ── the token boundary ── */}
+        <p className="kx-map-boundary flex items-center gap-3">
+          <span aria-hidden="true" className="h-px flex-1 border-t border-dashed border-border" />
+          <span className="min-w-0 bg-background px-1 text-center font-mono text-label-md text-muted-foreground">
+            <span className="text-foreground">Tokens generated</span> · components written per platform
+          </span>
+          <span aria-hidden="true" className="h-px flex-1 border-t border-dashed border-border" />
+        </p>
+        <span aria-hidden="true" className="kx-map-rule" />
+
+        {/* ── generated outputs (a drawing; the panel says the same in words) ── */}
+{chipLayer}
+
+        {/* ── the implementations ── */}
+        <Tabs.List aria-label="Platform implementations" className="kx-map-tabs">
+          {triggers}
+        </Tabs.List>
+
+        {platforms.map((p) => {
+          return (
+            <Tabs.Content
+              key={p.platform}
+              value={p.platform}
+              // the entrance belongs to first load only; a later selection cross-fades without the intro's delay
+              className={cn(
+                "kx-map-panel kx-glass rounded-xl p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-5",
+                pulse === 0 ? "kx-map-stage" : "kx-swap",
+              )}
+              style={pulse === 0 ? { ["--stage" as string]: 0, ["--stage-base" as string]: "1350ms" } : undefined}
+            >
+              {panelBodies.get(p.platform)}
             </Tabs.Content>
           );
         })}
@@ -435,5 +436,81 @@ export function HeroSystemMap({
         {platforms.length} platforms reads it from a Switch written by hand.
       </figcaption>
     </figure>
+  );
+}
+
+/**
+ * The trace drawing, with its own geometry state. The map measures; this draws. A new measurement (load, resize,
+ * direction flip) re-renders this SVG only, and an identical one renders nothing, so the map's text, tabs and
+ * panel are not rebuilt every time the layout is read.
+ */
+function MapTraces({
+  connect,
+  activeOutput,
+  active,
+  selected,
+  selectedOutput,
+  pulse,
+  pulseScope,
+}: {
+  connect: React.MutableRefObject<(g: Geometry) => void>;
+  activeOutput: string;
+  active: Platform;
+  selected: Platform;
+  selectedOutput: string;
+  pulse: number;
+  pulseScope: "one" | "all";
+}) {
+  const [geometry, setGeometry] = React.useState<Geometry | null>(null);
+  React.useEffect(() => {
+    let last = "";
+    connect.current = (g) => {
+      const key = JSON.stringify(g);
+      if (key === last) return;
+      last = key;
+      setGeometry(g);
+    };
+    return () => {
+      connect.current = () => {};
+    };
+  }, [connect]);
+  if (!geometry) return null;
+
+  const pulsing = (output: string, platform?: Platform) =>
+    pulse > 0 && (pulseScope === "all" || (platform ? platform === selected : output === selectedOutput));
+
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      className="pointer-events-none absolute inset-0 overflow-visible"
+      width={geometry.width}
+      height={geometry.height}
+      viewBox={`0 0 ${geometry.width} ${geometry.height}`}
+    >
+      {geometry.generated.map((g) => (
+        <path
+          key={g.output}
+          d={g.d}
+          pathLength={1}
+          className="kx-trace"
+          data-kind="generated"
+          {...(g.output === activeOutput ? { "data-active": "" } : {})}
+        />
+      ))}
+      {geometry.written.map((w) => (
+        <path key={w.platform} d={w.d} className="kx-trace" data-kind="written" {...(w.platform === active ? { "data-active": "" } : {})} />
+      ))}
+      {pulse > 0
+        ? [
+            ...geometry.generated.filter((g) => pulsing(g.output)).map((g) => (
+              <path key={`g-${g.output}-${pulse}`} d={g.d} pathLength={1} className="kx-trace-pulse" />
+            )),
+            ...geometry.written.filter((w) => pulsing("", w.platform)).map((w) => (
+              <path key={`w-${w.platform}-${pulse}`} d={w.d} pathLength={1} className="kx-trace-pulse" style={{ animationDelay: "420ms" }} />
+            )),
+          ]
+        : null}
+    </svg>
   );
 }

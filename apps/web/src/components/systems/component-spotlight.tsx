@@ -71,52 +71,29 @@ export function ComponentSpotlight({ items }: { items: SpotlightItem[] }) {
 
 function Tile({ item, lead = false, className }: { item: SpotlightItem; lead?: boolean; className?: string }) {
   const preview = PREVIEW[item.slug];
+  // Styled by `.kx-tile*` in globals.css (the lead tile through `data-lead`): four tiles repeating the same utility
+  // lists cost more in the page's HTML and component payload than everything they hold.
   return (
-    <article
-      data-spotlight={item.slug}
-      className={cn(
-        "group flex flex-col overflow-hidden rounded-2xl border border-border bg-background transition-colors duration-fast [container-type:inline-size]",
-        "hover:border-primary/40 focus-within:border-primary/40",
-        className,
-      )}
-    >
-      <div className={cn("flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-5 pt-5", lead && "sm:px-7 sm:pt-7")}>
-        <h3 className={cn("min-w-0 break-words font-display font-semibold", lead ? "text-2xl" : "text-lg")}>{item.name}</h3>
-        <Link
-          href={item.href}
-          className="inline-flex min-h-9 shrink-0 items-center gap-1 text-sm font-medium text-primary underline underline-offset-4"
-        >
+    <article data-spotlight={item.slug} {...(lead ? { "data-lead": "" } : {})} className={cn("kx-tile group", className)}>
+      <div className="kx-tile-head">
+        <h3>{item.name}</h3>
+        <Link href={item.href}>
           Open<span className="sr-only"> {item.name}</span> <ArrowUpRight aria-hidden="true" className="size-3.5" />
         </Link>
       </div>
-      <p className={cn("max-w-prose px-5 pt-1 text-sm text-muted-foreground", lead && "sm:px-7")}>{item.note}</p>
-      <div
-        className={cn(
-          "flex flex-1 items-center justify-center px-5",
-          lead ? "py-8 sm:px-7" : "py-5",
-        )}
-      >
+      <p className="kx-tile-note">{item.note}</p>
+      <div className="kx-tile-preview">
         {/* the live component mounts as the tile nears the screen; the box holds its height until then */}
-        {preview ? (
-          <MountNear className={cn("flex w-full items-center justify-center", lead ? "min-h-[20rem]" : "min-h-10")}>{preview()}</MountNear>
-        ) : null}
+        {preview ? <MountNear className="kx-tile-mount">{preview()}</MountNear> : null}
       </div>
-      <div className="border-t border-border bg-muted/30 px-5 py-3 transition-colors duration-fast group-hover:bg-primary/5 group-focus-within:bg-primary/5">
-        <p id={`strip-${item.slug}`} className="font-mono text-label-md text-muted-foreground">
-          {item.stripLabel}
-        </p>
-        <ul aria-labelledby={`strip-${item.slug}`} className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 [@container(min-width:30rem)]:grid-cols-5">
+      <div className="kx-tile-foot">
+        <p id={`strip-${item.slug}`}>{item.stripLabel}</p>
+        {/* cells styled by `.kx-strip`: four strips of five cells would otherwise repeat the same utilities */}
+        <ul aria-labelledby={`strip-${item.slug}`} className="kx-strip mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 [@container(min-width:30rem)]:grid-cols-5">
           {item.strip.map((c) => (
-            <li key={c.platform} className="min-w-0 text-body-sm">
-              <span className="block font-medium text-foreground">{c.short}</span>
-              <span
-                className={cn(
-                  "block font-mono",
-                  c.kind === "implementation" ? "text-primary" : "text-muted-foreground",
-                )}
-              >
-                {c.state}
-              </span>
+            <li key={c.platform} {...(c.kind === "implementation" ? { "data-implemented": "" } : {})}>
+              <span>{c.short}</span>
+              <span>{c.state}</span>
             </li>
           ))}
         </ul>

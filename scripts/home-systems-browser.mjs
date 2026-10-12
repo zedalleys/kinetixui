@@ -15,6 +15,10 @@
  *     written branches are dashed and the generated ones solid
  *   - map, desktop: four outputs over five platforms, and no trace runs through an output it does not belong to
  *   - no horizontal overflow at any of those widths, in either direction
+ *   - structure (a performance guard, not a timing threshold): the HTML carries only the open explorer panel and
+ *     the payload no second copy of it; the hero map's client props stay under a byte budget; the hero map, its
+ *     outputs and its tabs exist once at phone and desktop widths (no duplicate mobile tree); every excerpt, on
+ *     every tab, stays inside the 7-line window
  */
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
@@ -270,9 +274,96 @@ for (const [width, dir] of [[320, 'ltr'], [390, 'ltr'], [390, 'rtl'], [768, 'ltr
   });
 }
 
+// ---- structure: what the page sends before anyone interacts with it ----------------------------------------------
+
+/** The page's raw HTML, split into the markup a reader sees and the decoded React payload that rides with it. */
+async function rawPage() {
+  const html = await (await fetch(`${base}/`)).text();
+  let flight = '';
+  for (const m of html.matchAll(/self\.__next_f\.push\(\[1,("(?:[^"\\]|\\.)*")\]\)/g)) flight += JSON.parse(m[1]);
+  return { html, flight, markup: html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, '') };
+}
+
+/** The JSON object that starts at `start` in `text`, by brace matching (strings respected). */
+function objectAt(text, start) {
+  let depth = 0;
+  let inString = false;
+  for (let i = start; i < text.length; i++) {
+    const c = text[i];
+    if (inString) {
+      if (c === '\\') i++;
+      else if (c === '"') inString = false;
+    } else if (c === '"') inString = true;
+    else if (c === '{') depth++;
+    else if (c === '}' && --depth === 0) return text.slice(start, i + 1);
+  }
+  throw new Error('unterminated object');
+}
+
+const EXCERPT_LINES = 7; // lib/systems-in-motion.ts cuts every excerpt to a 7-line window
+const HERO_PROPS_BUDGET = 4096; // the hero map's serialized props: token, outputs, platforms, theme facts
+
+await check('structure: the explorer sends one panel as HTML, the other four as data only', async () => {
+  const { markup, flight } = await rawPage();
+  const pres = (markup.match(/<pre\b[^>]*class="kx-code /g) ?? []).length;
+  assert.equal(pres, 1, `${pres} explorer code blocks in the HTML; only the open panel belongs there`);
+  // the open panel's element tree rides once in the payload for hydration; a second copy means a hidden panel
+  // was rendered as elements again
+  const trees = flight.split('kx-code font-mono').length - 1;
+  assert.ok(trees <= 1, `${trees} explorer code trees in the React payload`);
+});
+
+await check(`structure: hero map props stay under ${HERO_PROPS_BUDGET} bytes (static evidence stays on the server)`, async () => {
+  const { flight } = await rawPage();
+  const at = flight.indexOf('{"token":');
+  assert.ok(at >= 0, 'hero map props not found in the payload');
+  const size = Buffer.byteLength(objectAt(flight, at));
+  assert.ok(size <= HERO_PROPS_BUDGET, `hero map props are ${size} bytes`);
+});
+
+for (const width of [390, 1440]) {
+  await check(`structure at ${width}px: one hero map, one explorer, one panel of at most ${EXCERPT_LINES} lines per file`, async () => {
+    const { page, context } = await open({ width });
+    const f = await page.evaluate(() => {
+      const count = (sel) => document.querySelectorAll(sel).length;
+      return {
+        maps: count('[data-hero-system-map]'),
+        heroTabs: count('[data-hero-system-map] [role="tab"]'),
+        outputs: count('[data-hero-system-map] .kx-map-outputs'),
+        tablists: count('[data-hero-system-map] .kx-map-tabs'),
+        explorers: count('[data-implementation-explorer]'),
+        explorerTabs: count('[data-implementation-explorer] [role="tab"]'),
+        pres: count('[data-implementation-explorer] pre.kx-code'),
+        lines: [...document.querySelectorAll('[data-implementation-explorer] pre.kx-code')].map(
+          (p) => p.querySelectorAll('.kx-ln').length,
+        ),
+      };
+    });
+    // one adaptive structure: a phone gets the same tree laid out as rows, never a second copy
+    assert.equal(f.maps, 1, `${f.maps} hero maps`);
+    assert.equal(f.heroTabs, 5, `${f.heroTabs} hero platform tabs`);
+    assert.equal(f.outputs, 1, `${f.outputs} output layers`);
+    assert.equal(f.tablists, 1, `${f.tablists} hero tab lists`);
+    assert.equal(f.explorers, 1, `${f.explorers} explorers`);
+    assert.equal(f.explorerTabs, 5, `${f.explorerTabs} explorer tabs`);
+    assert.equal(f.pres, 1, `${f.pres} explorer code blocks mounted; only the open panel should be`);
+    assert.ok(f.lines.every((n) => n >= 1 && n <= EXCERPT_LINES), `excerpt line counts ${f.lines}`);
+    // switching tabs mounts that panel and only that one, still inside the line window
+    const platforms = await page.locator(`${EXPLORER} [role="tab"]`).evaluateAll((t) => t.map((n) => n.dataset.platform));
+    for (const platform of platforms.slice(1)) {
+      await page.locator(`${EXPLORER} [role="tab"][data-platform="${platform}"]`).click();
+      const g = await page.evaluate(() => [...document.querySelectorAll('[data-implementation-explorer] pre.kx-code')].map((p) => p.querySelectorAll('.kx-ln').length));
+      assert.ok(g.length >= 1 && g.every((n) => n >= 1 && n <= EXCERPT_LINES), `${platform}: excerpt line counts ${g}`);
+      const shown = await page.locator('[data-implementation-explorer] [role="tabpanel"]:not([hidden])').count();
+      assert.equal(shown, 1, `${platform}: ${shown} panels mounted`);
+    }
+    await context.close();
+  });
+}
+
 await browser.close();
 if (failures.length) {
   console.error(`\nhome-systems: ${failures.length} check(s) failed`);
   process.exit(1);
 }
-console.log('\nhome-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing');
+console.log('\nhome-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing, structure');
