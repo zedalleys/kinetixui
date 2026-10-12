@@ -75,6 +75,15 @@ export const VISUAL_GATES = [
       Angular: ["dropdown-menu", "context-menu", "menubar", "select", "multi-select"],
     },
   },
+  {
+    script: "scripts/layout-visual.mjs",
+    command: "check:layout-visual",
+    contract: "TOKENS.md — Layout and pointer",
+    // Angular only: React's layout components are not changed by the Angular layout tranche and are not measured here
+    covers: {
+      Angular: ["scroll-area", "resizable", "carousel", "comparison-slider"],
+    },
+  },
 ];
 
 /** The registry entry for a gate script, by its path relative to the repository root. */
