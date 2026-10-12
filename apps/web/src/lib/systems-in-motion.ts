@@ -55,8 +55,8 @@ export interface TokenOutput {
   id: OutputBlock["platform"];
   /** "CSS custom property", "Swift", … — what the file is, not a platform */
   language: string;
-  /** the light file, repository-relative */
-  file: string;
+  /** the generated file per theme, repository-relative: each theme's declaration lives in its own file */
+  files: { light: string; dark: string };
   /** how code on that platform refers to the token */
   reference: string;
   /** the declaration exactly as written in each theme's generated file */
@@ -217,7 +217,7 @@ export function systemsInMotion(root = repoRoot()): SystemsInMotion {
   const outputs: TokenOutput[] = evidence.outputs.map((block) => ({
     id: block.platform,
     language: LANGUAGE_NAME[block.platform],
-    file: block.files[0]!,
+    files: { light: block.files[0]!, dark: block.files[1] ?? block.files[0]! },
     reference: block.reference,
     declaration: block.members,
     platforms: PLATFORMS.filter((p) => OUTPUT_OF[p] === block.platform),

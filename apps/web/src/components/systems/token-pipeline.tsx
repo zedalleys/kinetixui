@@ -64,7 +64,7 @@ export function TokenPipeline({
               <li key={o.id} data-anchor={`out-${o.id}`} className="rounded-lg border border-primary/40 bg-primary/5 px-3 py-2">
                 <span className="block text-sm text-foreground">{o.language}</span>
                 <span className="block font-mono [overflow-wrap:anywhere] text-xs text-muted-foreground" dir="ltr">
-                  {breakable(o.file)}
+                  {breakable(o.files.light)}
                 </span>
               </li>
             ))}

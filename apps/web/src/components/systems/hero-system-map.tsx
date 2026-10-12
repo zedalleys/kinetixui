@@ -42,7 +42,7 @@ export type MapPlatform = {
 export type MapOutput = {
   id: string;
   language: string;
-  file: string;
+  files: { light: string; dark: string };
   reference: string;
   declaration: { light: string; dark: string };
   platforms: Platform[];
@@ -385,7 +385,7 @@ export function HeroSystemMap({
               <dl className="mt-3 grid grid-cols-1 gap-3 text-sm">
                 <div className="min-w-0">
                   <dt className="font-mono text-xs text-muted-foreground">
-                    Generated · <span dir="ltr">{out.file}</span>
+                    Generated · <span dir="ltr">{out.files[theme]}</span>
                   </dt>
                   <dd key={theme} className="kx-swap mt-1 overflow-x-auto font-mono text-xs text-foreground" dir="ltr">
                     <code className="whitespace-pre-wrap [overflow-wrap:anywhere]">{out.declaration[theme]}</code>

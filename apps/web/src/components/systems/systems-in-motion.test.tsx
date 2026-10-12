@@ -78,9 +78,11 @@ describe("systems in motion: data", () => {
     }
   });
 
-  it("only quotes generated declarations that exist in the generated files", () => {
+  it("only quotes generated declarations that exist in the generated file it names, per theme", () => {
     for (const o of story.outputs) {
-      expect(readFileSync(join(root, o.file), "utf8")).toContain(o.declaration.light);
+      for (const theme of ["light", "dark"] as const) {
+        expect(readFileSync(join(root, o.files[theme]), "utf8"), `${o.id} ${theme}`).toContain(o.declaration[theme]);
+      }
       expect(o.platforms.length).toBeGreaterThan(0);
     }
   });
