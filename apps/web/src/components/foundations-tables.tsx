@@ -505,10 +505,12 @@ export function PlatformComponentList({ platform }: { platform: Platform }) {
   return (
     <ul className="my-4 flex flex-wrap gap-2 p-0" aria-label={`Components available for ${platform}`}>
       {slugs.map((slug) => (
-        <li key={slug} className="list-none">
+        // max-w-full + overflow-wrap: at 200% text on a 320px phone a long name ("NotificationCenter") is wider than
+        // the page; it wraps inside its chip instead of scrolling the page sideways
+        <li key={slug} className="max-w-full list-none">
           <a
             href={`/docs/components/${slug}`}
-            className="inline-block rounded-md border border-border px-2 py-1 font-mono text-xs text-foreground no-underline hover:bg-muted"
+            className="inline-block max-w-full rounded-md border border-border px-2 py-1 font-mono text-xs text-foreground no-underline [overflow-wrap:anywhere] hover:bg-muted"
           >
             {componentName(slug)}
           </a>
