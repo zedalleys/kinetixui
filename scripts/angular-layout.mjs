@@ -485,9 +485,10 @@ const dividerAt = (c, value, rtl) => (rtl ? c.host.right - (c.host.width * value
  *   focus at an end (aria-disabled, never disabled) and do not run past it unless `loop`; arrows on the region but
  *   not in a text field; focus inside a slide leaving the view moves to the slide now in view; a press on a
  *   slide's button is still a click, a drag past the threshold moves the slides and swallows the click; travel or
- *   a flick moves one position and a short slow drag settles back; resistance at the ends; touch and pen swipes;
- *   a cross-axis touch is left to the page; several slides to a view, loop and vertical; a resized viewport keeps
- *   the position aligned; and one polite announcement when a move lands, none during a drag.
+ *   a flick moves one position, while a short slow drag, or a quick one held still before the release, settles
+ *   back; resistance at the ends; touch and pen swipes; a cross-axis touch is left to the page; several slides to
+ *   a view, loop and vertical; a resized viewport keeps the position aligned; a direction changed at runtime is
+ *   read by the next move; and one polite announcement when a move lands, none during a drag.
  * KxComparisonSlider — one focusable element, a slider named "Comparison position" with min 0, max 100 and the
  *   value; arrows, Page Up, Home and End; a press, a drag and a release outside; touch and pen; a bound value
  *   out of range drawn at the end; the after picture not moving as the divider does; and a narrowed box keeping
@@ -926,6 +927,16 @@ async function carouselInteraction(page, t) {
   // a quick flick moves on
   await slowDrag(page, sc, { x: sc.x - c.view.width * 0.1, y: sc.y }, { steps: 3, wait: 0 });
   t((await out(page, "cr-basic")) === "2", `${B}: a quick short flick moves one position`, `index ${await out(page, "cr-basic")}`);
+  // a quick move held still before the release is not a flick
+  await rect(page, B);
+  c = await carousel(page, B);
+  const held = centre(c.view);
+  await slowDrag(page, held, { x: held.x - c.view.width * 0.1, y: held.y }, { steps: 3, wait: 0, release: false });
+  await pause(page, 300);
+  await page.mouse.up();
+  await idle(page);
+  c = await carousel(page, B);
+  t((await out(page, "cr-basic")) === "2" && near(c.slides[2].left, c.view.left, 1), `${B}: a quick short move held still before the release settles back (not a flick)`, `index ${await out(page, "cr-basic")}`);
   // resistance at the start
   await focus(page, "#cr-basic-prev");
   await press(page, "ArrowLeft");
@@ -998,6 +1009,18 @@ async function carouselInteraction(page, t) {
   t((await out(page, "cr-basic")) === atIndex && near(c.slides[i3].left, c.view.left, 1) && near(c.slides[i3].width, c.view.width, 1), `${B}: the viewport narrows: the same slide stays aligned, slides resized with it`, `slide ${i3 + 1} at ${f(c.slides[i3].left - c.view.left)}, ${f(c.slides[i3].width)} of ${f(c.view.width)}px`);
   await page.setViewportSize({ width: 1024, height: 800 });
   await pause(page, 100);
+  // a direction changed at runtime (it resizes nothing): the next move reads it
+  await idle(page);
+  const before = Number(await out(page, "cr-basic"));
+  await page.locator(B).evaluate((el) => el.setAttribute("dir", "rtl"));
+  await click(page, "#cr-basic-next", { force: true });
+  c = await carousel(page, B);
+  const after = Number(await out(page, "cr-basic"));
+  t(after === before + 1 && near(c.slides[after].right, c.view.right, 1), `${B}: turned RTL at runtime, Next moves on with the slide aligned at the inline start`, `index ${before} -> ${after}, slide ends ${f(c.slides[after].right - c.view.right)} from the right edge`);
+  await page.locator(B).evaluate((el) => el.removeAttribute("dir"));
+  await click(page, "#cr-basic-prev", { force: true });
+  c = await carousel(page, B);
+  t((await out(page, "cr-basic")) === String(before) && near(c.slides[before].left, c.view.left, 1), `${B}: turned back to LTR, Previous moves back with the slide aligned at the left`, `slide at ${f(c.slides[before].left - c.view.left)}`);
   await idle(page);
   c = await carousel(page, B);
   t(near(c.slides[i3].left, c.view.left, 1), `${B}: and when it widens again`);

@@ -1775,20 +1775,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-layout.mjs:468-1190"
+          "scripts/angular-layout.mjs:468-1213"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-layout.mjs:468-1190"
+          "scripts/angular-layout.mjs:468-1213"
         ],
         "rtl": [
-          "scripts/angular-layout.mjs:1191-1351"
+          "scripts/angular-layout.mjs:1214-1374"
         ],
         "largeText": [
-          "scripts/angular-layout.mjs:1352-1474"
+          "scripts/angular-layout.mjs:1375-1497"
         ],
         "reducedMotion": [
-          "scripts/angular-layout.mjs:1475-1573"
+          "scripts/angular-layout.mjs:1498-1596"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2245,17 +2245,17 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-layout.mjs:468-1190"
+          "scripts/angular-layout.mjs:468-1213"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-layout.mjs:468-1190"
+          "scripts/angular-layout.mjs:468-1213"
         ],
         "rtl": [
-          "scripts/angular-layout.mjs:1191-1351"
+          "scripts/angular-layout.mjs:1214-1374"
         ],
         "largeText": [
-          "scripts/angular-layout.mjs:1352-1474"
+          "scripts/angular-layout.mjs:1375-1497"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4656,17 +4656,17 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-layout.mjs:468-1190"
+          "scripts/angular-layout.mjs:468-1213"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-layout.mjs:468-1190"
+          "scripts/angular-layout.mjs:468-1213"
         ],
         "rtl": [
-          "scripts/angular-layout.mjs:1191-1351"
+          "scripts/angular-layout.mjs:1214-1374"
         ],
         "largeText": [
-          "scripts/angular-layout.mjs:1352-1474"
+          "scripts/angular-layout.mjs:1375-1497"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4712,17 +4712,17 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-layout.mjs:468-1190"
+          "scripts/angular-layout.mjs:468-1213"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-layout.mjs:468-1190"
+          "scripts/angular-layout.mjs:468-1213"
         ],
         "rtl": [
-          "scripts/angular-layout.mjs:1191-1351"
+          "scripts/angular-layout.mjs:1214-1374"
         ],
         "largeText": [
-          "scripts/angular-layout.mjs:1352-1474"
+          "scripts/angular-layout.mjs:1375-1497"
         ],
         "published": [
           "npm: @kinetixui/angular"

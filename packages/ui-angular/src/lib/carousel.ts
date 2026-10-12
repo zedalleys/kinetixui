@@ -45,7 +45,8 @@ import { KxPointerDrag, clamp } from './pointer-drag';
  * readable through `#c="kxCarousel"`. With `loop`, Next at the end goes back to the first position and Previous at
  * the start to the last — a rewind, not an endless strip. Slides are measured by a `ResizeObserver` (the viewport
  * and every slide), created after the first render and disconnected on destroy, so a container or slide that
- * changes size re-measures, and the current position is kept.
+ * changes size re-measures, and the current position is kept. A direction change resizes nothing, so every move
+ * (a control, a key, `scrollTo`, a press) also measures again first.
  *
  * ── What a reader can reach ────────────────────────────────────────────────
  *
@@ -87,6 +88,8 @@ import { KxPointerDrag, clamp } from './pointer-drag';
 const MOVE_FRACTION = 0.2;
 /** …or a flick faster than this (px per ms) over the last moments of the drag. */
 const FLICK = 0.4;
+/** A flick's speed counts only when the pointer was still moving this close to the release (ms). */
+const FLICK_WINDOW = 100;
 
 interface KxSlideExtent {
   start: number;
@@ -307,17 +310,20 @@ export class KxCarousel {
   }
 
   next(origin: Origin = 'code'): void {
+    this.measure();
     if (!this.canNext()) return;
     this.go(this.current() + 1 >= this.count() ? 0 : this.current() + 1, origin);
   }
 
   previous(origin: Origin = 'code'): void {
+    this.measure();
     if (!this.canPrevious()) return;
     this.go(this.current() - 1 < 0 ? this.count() - 1 : this.current() - 1, origin);
   }
 
   /** Go to a position. */
   scrollTo(position: number): void {
+    this.measure();
     this.go(clamp(Math.round(position), 0, this.count() - 1), 'code');
   }
 
@@ -355,6 +361,8 @@ export class KxCarousel {
   press(event: PointerEvent): void {
     const content = this.content();
     if (!content || event.button !== 0 || !event.isPrimary || isEditable(event.target) || this.drag.active) return;
+    // a direction changed since the last resize (an ancestor's `dir`) resizes nothing: read it again before moving
+    this.measure();
     const vertical = this.orientation() === 'vertical';
     const rtl = !vertical && isRtl(this.element);
     const view = this.view();
@@ -385,8 +393,10 @@ export class KxCarousel {
           if (dt > 0) velocity = (along - last.d) / dt;
           last = { t: e.timeStamp, d: along };
         },
-        end: (released) => {
+        end: (released, e) => {
           const travelled = this.travel();
+          // a pointer held still before the release is not a flick, however fast it moved before
+          if (e && e.timeStamp - last.t > FLICK_WINDOW) velocity = 0;
           this.travel.set(0);
           this.dragging.set(false);
           if (!moving) return;
