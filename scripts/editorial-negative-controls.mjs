@@ -78,9 +78,87 @@ export const CONTROLS = [
     gate: EDITORIAL,
     expect: "near-duplicate",
   },
+  {
+    id: 8,
+    name: "draft guide accidentally indexed (robots meta flipped)",
+    file: built("guides/verify-design-system-parity.html"),
+    mutate: (s) => s.replace(/<meta name="robots" content="noindex, nofollow"\/>/, '<meta name="robots" content="index, follow"/>'),
+    gate: EDITORIAL,
+    expect: "draft-indexed",
+  },
+  {
+    id: 9,
+    name: "guide loses its primary CTA",
+    file: built("guides/generated-tokens-vs-generated-components.html"),
+    mutate: (s) => s.replace("data-guide-cta", "data-guide-cta-removed"),
+    gate: EDITORIAL,
+    expect: "guide-cta",
+  },
+  {
+    id: 10,
+    name: "guide loses its internal product links",
+    file: built("guides/evaluate-cross-platform-component-library.html"),
+    mutate: (s) => s.replace(/href="\/(docs|components|blocks)([^"]*)"/g, 'href="https://example.com/$1$2"'),
+    gate: EDITORIAL,
+    expect: "guide-product-links",
+  },
+  {
+    id: 11,
+    name: "supporting guide fails to link back to the pillar",
+    file: resolve("apps/web/src/app/guides/verify-design-system-parity/page.mdx"),
+    // a source mutation, checked against the built HTML would need a rebuild; the unit test guards the source
+    mutate: (s) => s.replace("](/guides/cross-platform-design-systems)", "](/docs/platforms)"),
+    gate: "apps/web/src/lib/guides.test.ts",
+    expect: "guides.test",
+  },
+  {
+    id: 12,
+    name: "supporting guide's body link to the pillar removed from the built page",
+    file: built("guides/generated-tokens-vs-generated-components.html"),
+    mutate: (s) => {
+      const [body, rest] = [s.slice(0, s.indexOf("data-guide-related")), s.slice(s.indexOf("data-guide-related"))];
+      const meta = body.match(/<p data-guide-meta[\s\S]*?<\/p>/)?.[0] ?? "";
+      const stripped = body.replace(meta, "@@META@@").replaceAll('href="/guides/cross-platform-design-systems"', 'href="/docs/platforms"').replace("@@META@@", meta);
+      return stripped + rest;
+    },
+    gate: EDITORIAL,
+    expect: "guide-pillar",
+  },
+  {
+    id: 13,
+    name: "an indexable docs page links a draft guide",
+    file: built("docs/platforms.html"),
+    mutate: (s) => s.replace("</main>", '<a href="/guides/cross-platform-design-systems">Guide</a></main>'),
+    gate: EDITORIAL,
+    expect: "draft-linked",
+  },
+  {
+    id: 14,
+    name: "guide claims an intent the map gives elsewhere (duplicate intent owner)",
+    file: resolve("marketing/seo/SEARCH-INTENT-MAP.md"),
+    mutate: (s) => s.replace("**design system parity verification**", "**cross-platform design system architecture**"),
+    gate: EDITORIAL,
+    expect: "intent-duplicate",
+  },
+  {
+    id: 15,
+    name: "one guide published on its own while the guides it links are still drafts",
+    file: resolve("apps/web/src/lib/guides-data.ts"),
+    // the build still holds the draft pages, so the published pillar is read with its draft links intact
+    mutate: (s) => s.replace('role: "pillar",\n    status: "draft",', 'role: "pillar",\n    status: "published", datePublished: "2026-01-01",'),
+    gate: EDITORIAL,
+    expect: "draft-linked",
+  },
 ];
 
 function runGate(script) {
+  if (script.endsWith(".test.ts")) {
+    try {
+      return { code: 0, out: execFileSync("npx", ["vitest", "run", script.replace("apps/web/", "")], { cwd: resolve("apps/web"), encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }) };
+    } catch (e) {
+      return { code: 1, out: `[guides.test] ${String(e.stdout)}` };
+    }
+  }
   try {
     return { code: 0, out: execFileSync("node", [script, "--all"], { encoding: "utf8" }) };
   } catch (e) {
@@ -88,7 +166,7 @@ function runGate(script) {
   }
 }
 
-for (const g of [EDITORIAL, SEO]) {
+for (const g of [EDITORIAL, SEO, "apps/web/src/lib/guides.test.ts"]) {
   const base = runGate(g);
   if (base.code !== 0) {
     console.error(`editorial negative controls: ${g} is not green on the unmodified tree — fix that first.\n${base.out}`);
@@ -113,7 +191,7 @@ for (const c of CONTROLS) {
   results.push({ ...c, ok: caught && restored, caught, restored, hash: before.slice(0, 12) });
 }
 
-const after = [EDITORIAL, SEO].map(runGate);
+const after = [EDITORIAL, SEO, "apps/web/src/lib/guides.test.ts"].map(runGate);
 for (const r of results) {
   console.log(
     `${r.ok ? "✓" : "✗"} EC-${String(r.id).padStart(2, "0")} ${r.name} → ${r.caught ? `caught by ${r.expect}` : r.why ?? "NOT CAUGHT"}; restored ${r.restored ? `sha256 ${r.hash}… matches` : "MISMATCH"}`,

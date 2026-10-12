@@ -9,6 +9,7 @@ import { NpmLinks } from "@/components/npm-links";
 import { Callout } from "@/components/callout";
 import { DocsH2, DocsH3, DocsH4 } from "@/components/docs-heading";
 import { ComponentGuide, ComponentIntro } from "@/components/component-guide";
+import { FurtherReading, GuideCta, GuideFooter, GuideStatus } from "@/components/guide-parts";
 import { Steps, Step } from "@/components/steps";
 import { CodePre } from "@/components/code-pre";
 import { TokenTable } from "@/components/token-table";
@@ -77,6 +78,10 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ComponentMeta,
     ComponentIntro,
     ComponentGuide,
+    GuideStatus,
+    GuideCta,
+    GuideFooter,
+    FurtherReading,
     NpmLinks,
     Callout,
     Steps,
