@@ -241,16 +241,23 @@ export class KxToaster {
 
     const visibility = () => this.set(this.holds.hidden, this.doc.visibilityState === 'hidden');
     // `showModal()` and `close()` add and remove a dialog's `open` attribute, so watching that attribute sees
-    // every modal dialog open and close, whoever opened it
+    // every modal dialog open and close, whoever opened it. A modal can also leave still open — its component
+    // destroyed by a route change, or the sidebar's sheet by a breakpoint crossing — with no `open` change; so
+    // while the hold is on, any removal from the document re-checks it, or the toasts would wait forever.
     const modal = () => this.set(this.holds.modal, this.excludedByModal());
     const Observer = (this.doc.defaultView as (Window & typeof globalThis) | null)?.MutationObserver;
-    const modals = typeof Observer === 'function' ? new Observer(modal) : null;
+    const modals =
+      typeof Observer === 'function'
+        ? new Observer((records) => {
+            if (this.active.has(this.holds.modal) || records.some((r) => r.type === 'attributes')) modal();
+          })
+        : null;
     const hotkey = (event: KeyboardEvent) => this.onHotkey(event);
     afterNextRender(() => {
       visibility();
       modal();
       this.doc.addEventListener('visibilitychange', visibility);
-      modals?.observe(this.doc.documentElement, { subtree: true, attributes: true, attributeFilter: ['open'] });
+      modals?.observe(this.doc.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['open'] });
       this.doc.addEventListener('keydown', hotkey);
     });
     inject(DestroyRef).onDestroy(() => {

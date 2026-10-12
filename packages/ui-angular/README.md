@@ -14,7 +14,7 @@ npm install @kinetixui/angular @kinetixui/tokens
 
 ## What it currently provides
 
-76 catalogue entries, as **250 exported symbols**: 75 components and one recipe, the combobox — a popover
+76 catalogue entries, as **249 exported symbols**: 75 components and one recipe, the combobox — a popover
 holding a command, which adds no symbol of its own (a component plus its parts and variant types count
 separately). Present today:
 

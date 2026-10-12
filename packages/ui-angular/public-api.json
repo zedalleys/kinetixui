@@ -250,7 +250,6 @@
     "KxTooltipTrigger",
     "KxTour",
     "KxTourStep",
-    "KxTourSurface",
     "KxTrend"
   ],
   "declarations": [
@@ -3220,20 +3219,6 @@
       "projectsContent": false,
       "standalone": true,
       "extends": "KxDialogRoot",
-      "exported": true
-    },
-    {
-      "name": "KxTourSurface",
-      "kind": "directive",
-      "selector": "dialog[kxTourSurface]",
-      "inputs": [
-        "id",
-        "label"
-      ],
-      "outputs": [],
-      "projectsContent": false,
-      "standalone": true,
-      "extends": "KxModalSurface",
       "exported": true
     },
     {

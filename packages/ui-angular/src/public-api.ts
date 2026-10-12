@@ -225,7 +225,7 @@ export {
   KxNotificationItem,
 } from './lib/notification-center';
 export type { KxTourStep } from './lib/tour';
-export { KxTour, KxTourSurface } from './lib/tour';
+export { KxTour } from './lib/tour';
 export type { KxSidebarSide } from './lib/sidebar';
 export {
   KxSidebar,

@@ -1053,6 +1053,9 @@ const BEHAVIOUR = [
       const wide = await page.evaluate(() => ({ modal: document.querySelectorAll("dialog:modal").length, open: document.querySelectorAll("dialog.kx-sidebar__sheet[open]").length, copies: document.querySelectorAll("#sb-home").length, focusBody: document.activeElement === document.body }));
       t(wide.modal === 0 && wide.open === 0 && wide.copies === 1 && !(await locked(page)), "widened while the sheet is open: the sheet closes, one sidebar remains, the page scrolls", JSON.stringify(wide));
       t((await visible(panel)) && !wide.focusBody, "the desktop panel is back, and focus did not fall to the page", await active(page));
+      // the sheet leaves the document still open (no `open` change): the toaster's modal hold must still let go
+      const toasterPaused = await page.evaluate(() => document.querySelector("section.kx-toaster")?.hasAttribute("data-paused"));
+      t(toasterPaused === false, "the sheet that left with the breakpoint does not leave the toasts paused", `data-paused: ${toasterPaused}`);
       await page.setViewportSize({ width: 390, height: 844 });
       await page.waitForTimeout(100);
       await idle(page);
