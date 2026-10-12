@@ -64,13 +64,50 @@ extra page.
 
 ---
 
+## Phase 2B — first content cluster
+
+**Drafted** (PR "feat(web): add cross-platform design system content cluster"), all four as `draft` in
+`apps/web/src/lib/guides.ts`: noindex, out of the sitemap, reviewable by URL on a preview deployment. Ownership,
+CTAs and links: [`SEARCH-INTENT-MAP.md` § Content cluster](./SEARCH-INTENT-MAP.md#content-cluster).
+
+| Guide | Status | Next step |
+| --- | --- | --- |
+| Pillar: Cross-platform design systems — architecture, parity and trade-offs (`/guides/cross-platform-design-systems`) | drafted | owner review, then publish with the real date |
+| Generated tokens vs generated components | drafted | publish with or after the pillar |
+| How to verify design system parity across web, iOS and Android | drafted | publish with or after the pillar |
+| What a cross-platform component library should actually give you | drafted | publish with or after the pillar |
+| Design tokens across React, SwiftUI, Compose and Flutter | **deferred** | owned by `/docs/tokens` and ART-002; would cannibalise both |
+| `/guides` index page | **deferred** | only once at least two guides are published; until then the guides link each other |
+| A diagram for the pillar (token source → generated outputs; components per platform → evidence) | **brief only** | reuse the `/infographic` pipeline art if it fits; not a blocker for publishing |
+
+### Next candidates
+
+| Candidate | Intent | Stage | Target page | CTA | Calendar relationship |
+| --- | --- | --- | --- | --- | --- |
+| Choosing an overlay: Dialog, Sheet, Drawer, Popover | dialog vs sheet vs drawer | evaluation | guide (only if in-page comparisons prove too thin in Search Console) | Explore components | none yet |
+| Accessibility parity across platforms | accessible design system cross platform | evaluation | `/docs/accessibility` + guide | Read the evidence | LI-008 (partial evidence) |
+| RTL across platforms | rtl design system | evaluation | `/docs/rtl` | See direction-aware evidence | — |
+| Source-copy vs package distribution | shadcn style copy vs npm | adoption | `/docs/installation` section | Install | LI-007 / X-008 (two trades) |
+
+### Calendar alignment
+
+The calendar is not rescheduled. Existing assets that can promote a guide once it is published:
+
+| Guide | Promoted by | How |
+| --- | --- | --- |
+| Pillar | ART-001 (dev.to, day 15), LI-001, X-001 | post-publication edit of ART-001 adds a tagged pillar link; LI-001/X-001 keep `/docs/platforms` as their destination |
+| Generated tokens vs generated components | ART-002, LI-005, X-004, COM-001 | reply/comment link from the existing ART-002 thread; no new post needed |
+| Parity verification | LI-008 (*a partial count is not a tick*), COM-002 | LI-008's natural "how do you measure it" follow-up; COM-002 answers "how to verify a coverage claim" |
+| Evaluation checklist | LI-007 / X-008 (*two trades*), week 4 adoption posts | the checklist is the "what to check next" link for evaluators |
+| Docs | the "Further reading" lines on `/docs/platforms`, `/docs/tokens`, `/docs/accessibility` and `/docs/installation` (automatic on publish) | — |
+
 ## Cluster A — Cross-platform design systems *(primary ICP, awareness → evaluation)*
 
 | Idea | Search intent | Target route | Stage | CTA | Reuses |
 | --- | --- | --- | --- | --- | --- |
-| **Pillar:** Cross-platform design systems — architecture, parity and trade-offs | cross platform design system | new page (e.g. `/cross-platform-design-system`) or `/docs` section — decide when written | awareness | Platform coverage | MESSAGING §1D, ART-001 |
+| **Pillar:** Cross-platform design systems — architecture, parity and trade-offs | cross platform design system architecture | `/guides/cross-platform-design-systems` (**drafted**, 2B) | awareness | Platform coverage | MESSAGING §1D, ART-001 |
 | Design tokens across web, iOS and Android | design tokens web ios android | `/docs/tokens` (expand) | evaluation | Start with the tokens | ART-002 (*Your design tokens stop at the web boundary*) |
-| Generated tokens vs generated components | generate components from figma; token pipeline | article (off-site first) | awareness | Platform coverage | CLAIMS B-series, `/docs/tokens` trace |
+| Generated tokens vs generated components | generated tokens vs components; token pipeline | `/guides/generated-tokens-vs-generated-components` (**drafted**, 2B) | awareness | See token implementation | CLAIMS B-series, `/docs/tokens` trace |
 | Keeping React, Angular, SwiftUI, Compose and Flutter aligned | design system parity across platforms | article → `/docs/platforms` | awareness | Platform coverage | ART-001, `verification.json` |
 
 ## Cluster B — Platform evaluation *(secondary ICP)*
@@ -91,7 +128,7 @@ extra page.
 | Platform parity, measured | design system platform parity | `/docs/platforms` | evaluation | View verification | `verification.json`, ladder |
 | Accessibility parity across platforms | accessible design system cross platform | `/docs/accessibility` (+ native evidence) | evaluation | Read the evidence | a11y-site, Compose TalkBack work |
 | RTL across platforms | rtl design system; flutter rtl; compose rtl | `/docs/rtl` or `/rtl-design-system` ([`../seo.md`](../seo.md) rank 2) | evaluation | See direction-aware evidence | `check:rtl`, RTL.md |
-| How to verify a component library's claims | how to evaluate a component library | article | awareness | Platform coverage | ART-001 |
+| How to verify a component library's claims | design system parity verification | `/guides/verify-design-system-parity` (**drafted**, 2B) | evaluation | View verification evidence | ART-001 |
 
 ## Cluster D — Adoption
 
@@ -99,7 +136,7 @@ extra page.
 | --- | --- | --- | --- | --- | --- |
 | Migrating from a React-only design system | migrate react design system to native | article → `/docs/installation` | adoption | Install | — |
 | Source-copy vs package distribution | shadcn style copy components vs npm package | `/docs/installation` section | adoption | Install | registry + npm docs |
-| How to evaluate a component library | component library evaluation checklist | article | awareness | Explore components | evaluator journey audit |
+| How to evaluate a component library | cross-platform component library evaluation | `/guides/evaluate-cross-platform-component-library` (**drafted**, 2B) | evaluation | Explore components | evaluator journey audit |
 
 ---
 

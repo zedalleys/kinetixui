@@ -1,0 +1,102 @@
+import { guideMetadata } from "@/lib/guides";
+
+export const metadata = guideMetadata("evaluate-cross-platform-component-library");
+
+# What a cross-platform component library should actually give you
+
+<GuideStatus slug="evaluate-cross-platform-component-library" />
+
+"Cross-platform component library" is used for very different products: a web library with a React Native port, a
+framework that draws its own widgets everywhere, a set of native libraries that share a design language. Before a
+team commits a product to one, it helps to agree on what the phrase should promise. This is a checklist for that
+evaluation. Each item says what to ask and what a good answer looks like, and each points at the page where
+KinetixUI answers it, so you can see one concrete set of answers next to the questions.
+
+## Coverage
+
+**Ask:** how many components exist on each platform you ship, out of how many, and what fills each gap?
+
+**A good answer** gives a count per platform with its denominator, lists the gaps by name, and says what each gap
+is: a port that is planned, a composition of other components, or a native control that already does the job. "Not
+on Android" and "use the platform's own picker on Android" are different answers, and only the second helps.
+
+KinetixUI's counts and gaps are generated from its manifest on [Supported platforms](/docs/platforms), and each
+component page shows what that component is on every platform.
+
+## Distribution
+
+**Ask:** how does each platform's library reach your app, and how do you take an update?
+
+**A good answer** names the channel per platform: npm, Swift Package Manager, Maven Central, pub.dev, or a source
+checkout. Source distribution is a legitimate model (you own the code and update by moving a pinned commit), but
+it changes your update process, so it should be stated rather than discovered.
+
+In KinetixUI, React and Angular install from npm; SwiftUI, Jetpack Compose and Flutter are consumed from a
+repository checkout today. Each platform page says so at the top: [SwiftUI](/docs/swiftui),
+[Jetpack Compose](/docs/compose), [Flutter](/docs/flutter).
+
+## Maturity
+
+**Ask:** is each platform's API settled, separately from whether it is available?
+
+**A good answer** labels maturity per platform and says what would change the label. A package that is published
+can still be a preview; availability is not maturity.
+
+KinetixUI's Angular library is published and labelled Preview, and [Angular](/docs/angular#what-stable-would-require)
+lists what Stable would require.
+
+## Behaviour evidence
+
+**Ask:** what is tested on each platform, by kind: interaction, accessibility semantics, right-to-left, large text,
+reduced motion, visual states?
+
+**A good answer** reports evidence per kind and per platform, derived from the tests, and reports the weakest
+component rather than an average. "All tests pass" is not an answer to this question; it says nothing about what
+the tests cover. [How to verify design system parity](/guides/verify-design-system-parity) describes what a
+trustworthy report looks like.
+
+## Accessibility on each platform's terms
+
+**Ask:** what does accessibility mean on each platform the library covers, and what backs the claim?
+
+**A good answer** distinguishes web evidence (keyboard, ARIA, contrast, axe) from native evidence (VoiceOver
+traits, TalkBack semantics, Flutter semantics) and says which components have which. Beware of a single
+"accessible" badge: an axe pass on the web says nothing about TalkBack.
+
+KinetixUI's [Accessibility](/docs/accessibility) page says what "verified" means for the React library and points
+to the per-platform counts.
+
+## Right-to-left
+
+**Ask:** does each platform mirror, and how is it checked?
+
+**A good answer** describes the mechanism per platform (the web needs both logical CSS properties and direction
+reaching portaled content; native frameworks carry direction themselves) and which components have tests that
+prove mirrored behaviour. See [RTL](/docs/rtl).
+
+## Theming
+
+**Ask:** does your brand reach every platform through the same source, or does each platform keep its own theme?
+
+**A good answer** generates each platform's theme from the same tokens, so a colour change is made once. A good
+library also tells you what is not themeable. KinetixUI's [Theming](/docs/theming) page covers applying one theme
+on each platform, and [Tokens](/docs/tokens) shows how a value reaches each one.
+
+## Updates and change
+
+**Ask:** how are changes announced per platform, and do platforms version together?
+
+**A good answer** has a changelog that says which platform each change affects, and is explicit when platforms
+version independently. KinetixUI's Angular package, for example, versions separately from the React packages; the
+[changelog](/docs/changelog) can be filtered by what changed.
+
+## Fit
+
+Finally, check the library's shape against your team's. A native-per-platform library suits teams that want
+platform behaviour and can accept per-platform gaps. A single-renderer framework suits teams that want one
+codebase and identical pixels. Neither is better in general; they solve different problems. The wider trade-offs are
+in [Cross-platform design systems: architecture, parity and trade-offs](/guides/cross-platform-design-systems).
+
+<GuideCta slug="evaluate-cross-platform-component-library" />
+
+<GuideFooter slug="evaluate-cross-platform-component-library" />

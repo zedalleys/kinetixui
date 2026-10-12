@@ -1,0 +1,87 @@
+import { guideMetadata } from "@/lib/guides";
+
+export const metadata = guideMetadata("generated-tokens-vs-generated-components");
+
+# Generated tokens vs generated components
+
+<GuideStatus slug="generated-tokens-vs-generated-components" />
+
+Every multi-platform design system reaches the same fork. The design tokens are already generated from one source
+for every platform, and it works. So why not generate the components too: describe a button once and emit React,
+SwiftUI, Compose and Flutter from it? This guide explains why the two halves usually end up being treated
+differently, what each choice costs, and what has to be true if you do generate components.
+
+## Why tokens generate well
+
+A token is a name and a value: `color.primary` is a particular blue, `spacing.4` is sixteen pixels. Turning that
+into a CSS custom property, a Swift `Color`, a Kotlin constant and a Dart `Color` is a translation between formats.
+Three properties make it a good job for a generator:
+
+- **The output is fully determined by the input.** There is one correct Kotlin constant for a given hex value.
+- **The result is checkable.** You can read every platform's generated value back and compare it with the source.
+  KinetixUI's token tests do exactly that, and fail if one platform disagrees.
+- **Nothing platform-specific is lost.** A colour on iOS is the same colour; only its type changes.
+
+So in KinetixUI the token source is a set of DTCG files, Style Dictionary emits each platform's format, the output
+is committed, and CI fails if the committed files differ from a fresh generation. A value is written once and never
+typed again. [Tokens](/docs/tokens) shows one token followed from source to every platform.
+
+## Why components resist it
+
+A component is not a value. A button is a set of decisions about focus, pressed feedback, disabled behaviour,
+touch target size, how assistive technology announces it, and how it lays out in a right-to-left language. Each
+platform answers those questions with its own APIs:
+
+- **Focus** is a DOM concept on the web, a focus engine on iOS, a focus system with its own traversal rules in
+  Compose and Flutter.
+- **Accessibility semantics** go through ARIA in a browser, the accessibility traits of a SwiftUI view, Compose
+  semantics properties for TalkBack, and Flutter's semantics tree.
+- **Overlays** are portals, the browser's top layer, presentation modifiers, or an `Overlay` in Flutter, each
+  with different rules for stacking and dismissal.
+- **Direction** is an attribute on the web and part of the framework's environment on every native platform.
+
+A generator has two options. It can emit the lowest common denominator, which loses the behaviour each platform
+does well. Or it can carry a separate branch for every platform-specific decision, at which point the "single
+source" is several hand-written implementations sharing a file. Neither removes the work; the first removes the
+quality.
+
+## What hand-written components cost, and buy
+
+Writing components natively per platform costs exactly what you would expect: more code, more reviews, and the
+constant risk that implementations drift apart. In exchange, each component behaves like its platform. A
+KinetixUI select on iOS wraps SwiftUI's own menu; on Android the slider and calendar reuse Material 3 controls,
+re-themed onto the tokens; on the web, the React library uses Radix primitives and the Angular library uses native
+dialog and popover elements.
+
+The drift risk does not go away; it moves. Instead of a generator guaranteeing agreement, something else has to
+show it:
+
+1. **A shared contract** that says what each component is, its states and its parts, independent of any platform.
+2. **A coverage record** that says which platforms implement each component, and what the others show instead,
+   checked against real source.
+3. **Behaviour evidence** per platform and per kind of behaviour, read from the tests rather than written by hand.
+
+Without those, "hand-written per platform" is just several libraries that happen to share a name.
+[How to verify design system parity](/guides/verify-design-system-parity) covers the third.
+
+## When generating components does make sense
+
+Generation is not wrong for components; it is wrong for behaviour. It works well for parts of a component system
+that are values or structure rather than behaviour:
+
+- **Variant tables**: the mapping from `variant` and `size` to tokens is data, and data can be shared and checked.
+- **Usage examples**: an example quoted out of a file the platform's CI compiles cannot show an API that does not
+  exist. Every KinetixUI block's code is extracted that way.
+- **Documentation**: platform coverage, counts and evidence on the site are generated from the manifest and the
+  tests, never typed.
+
+## A rule of thumb
+
+Generate what is fully determined by its input and checkable after the fact. Hand-write what depends on the
+platform, and then generate the evidence that the hand-written parts agree. That second step is the one most
+systems skip, and it is the one that decides whether "cross-platform" means anything. The broader architecture is
+in [Cross-platform design systems: architecture, parity and trade-offs](/guides/cross-platform-design-systems).
+
+<GuideCta slug="generated-tokens-vs-generated-components" />
+
+<GuideFooter slug="generated-tokens-vs-generated-components" />
