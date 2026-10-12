@@ -914,14 +914,11 @@
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
-        "React"
+        "React",
+        "Angular"
       ],
       "platformNote": "standing non-port",
       "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "navigation"
-        },
         "SwiftUI": {
           "type": "composition",
           "reason": "NavigationMenu is a hover-triggered desktop mega-menu with no touch idiom — compose KinetixTabBar or a KinetixDropdownMenu for the same navigation."
@@ -941,17 +938,12 @@
       "since": "0.12.0",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
       ],
       "lifecycleReason": "Product boundary unresolved. `unread` is a per-item flag with nothing owning the transition: `onMarkAllRead` has no item-level counterpart, so marking one notification read has no API. There is also no empty-state contract, and whether this belongs as a component or as a Block over Popover + List is an open question — see the PR C handoff.",
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "overlays"
-        }
-      },
       "sourceNames": {
         "React": "NotificationItem"
       }
@@ -1139,16 +1131,11 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
-      ],
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "layout"
-        }
-      }
+      ]
     },
     "skeleton": {
       "status": "stable",
@@ -1177,19 +1164,15 @@
       "since": "0.4.1",
       "platforms": [
         "React",
+        "Angular",
         "SwiftUI",
         "Compose",
         "Flutter"
       ],
       "sourceNames": {
         "SwiftUI": "Toaster",
+        "Angular": "Toaster",
         "Flutter": "toaster"
-      },
-      "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "overlays"
-        }
       }
     },
     "spinner": {
@@ -1344,14 +1327,11 @@
       "status": "stable",
       "since": "0.12.0",
       "platforms": [
-        "React"
+        "React",
+        "Angular"
       ],
       "platformNote": "standing non-port — targeting an arbitrary already-rendered element needs a CSS-selector-equivalent live-tree query, which no native platform has",
       "platformGuidance": {
-        "Angular": {
-          "type": "planned",
-          "wave": "overlays"
-        },
         "SwiftUI": {
           "type": "composition",
           "reason": "Tour targets an arbitrary rendered element by CSS selector; no native platform has a live-tree query like it — compose KinetixPopover anchored to the view you already hold."

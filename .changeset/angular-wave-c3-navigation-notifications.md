@@ -1,0 +1,5 @@
+---
+"@kinetixui/angular": minor
+---
+
+Add the navigation menu, notifications and sidebar. `nav[kxNavigationMenu]` (with `kxNavigationMenuList`, `kxNavigationMenuItem`, `kxNavigationMenuTrigger`, `kx-navigation-menu-content`, `kxNavigationMenuLink` and `kx-navigation-menu-indicator`) is site navigation: disclosure buttons and real links, never menu roles, with arrow keys that follow the reading direction. `kx-toaster` and `KxToasterService` show toasts from one shared queue: a polite live region that never takes focus, pausing on hover and focus with the elapsed time kept, separate toasters by `id`, Alt+T to reach them. `kx-notification-center` (with `kxNotificationCenterTrigger`, `kx-notification-center-content` and `kx-notification-item`) is a popover of notifications whose state stays in the application. `kx-tour` is a modal walkthrough that follows its targets, including ones that move, are removed or never exist. `kx-sidebar-provider` and `kx-sidebar` (with its header, content, group, menu, trigger and inset parts) are a persistent panel on desktop and the sheet on a phone, with one state model. Angular stays Preview.
