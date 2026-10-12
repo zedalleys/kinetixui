@@ -81,6 +81,13 @@ const PAGES = [
   "/docs/components/tabs",
   "/docs/components/dialog",
   "/docs/components/alert",
+  // The guides cluster (SEO Phase 3): long-form reading pages with their own layout, a status line, a wrapping CTA
+  // button and a related-reading footer. Swept in whichever publication state the registry is in, so the pages
+  // are already under the gate on the day they go live (marketing/seo/GUIDE-PUBLISH-RUNBOOK.md).
+  "/guides/cross-platform-design-systems",
+  "/guides/generated-tokens-vs-generated-components",
+  "/guides/verify-design-system-parity",
+  "/guides/evaluate-cross-platform-component-library",
 ];
 const WIDTHS = [
   // 320 is the narrowest width the site claims to support, and it is not a rounding of 375: a fixed-width

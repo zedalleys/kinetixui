@@ -47,6 +47,18 @@ function nativeDescription(p: Platform, lead: string): string {
 
 const angular = PLATFORM_DEFINITIONS.Angular;
 
+/** "Angular installs from npm; SwiftUI, Jetpack Compose and Flutter build from a repository checkout." — derived. */
+function installDistribution(): string {
+  const others = PLATFORMS.filter((p) => p !== "React");
+  const registry = others.filter((p) => PLATFORM_DEFINITIONS[p].distribution.published);
+  const source = others.filter((p) => !PLATFORM_DEFINITIONS[p].distribution.published);
+  const parts = [
+    ...registry.map((p) => `${label(p)} installs from ${PLATFORM_DEFINITIONS[p].distribution.channel}`),
+    source.length ? `${list(source.map(label))} build from a repository checkout` : "",
+  ].filter(Boolean);
+  return parts.length ? `${parts.join("; ")}.` : "";
+}
+
 /** Keyed by route. The order follows SEARCH-INTENT-MAP.md. */
 export const ROUTE_SEO = {
   "/": {
@@ -102,8 +114,8 @@ export const ROUTE_SEO = {
   },
   "/docs/installation": {
     title: "Installation: CLI, npm packages and native source",
-    description:
-      "Install KinetixUI two ways: the registry, which copies component source into your repo with the CLI, or the npm packages as versioned dependencies. Both use the same tokens.",
+    // the page opens with a platform choice, so the snippet names every platform's route, derived like the title
+    description: `Install KinetixUI on your platform. React: the CLI copies component source into your repo, or npm adds it as a versioned dependency, on the same tokens. ${installDistribution()}`,
   },
   "/docs/foundations": {
     title: "Foundations: spacing grid, radius, elevation and motion",

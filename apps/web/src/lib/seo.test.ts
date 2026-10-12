@@ -157,6 +157,12 @@ describe("component metadata", () => {
     expect(d).not.toMatch(/[`<>]/);
   });
 
+  it("does not repeat the component's name when the lead already opens with it", () => {
+    expect(componentDescription("popover", "Popover opens a small panel.")).toMatch(/^KinetixUI Popover opens a small panel\. Implemented for /);
+    // a lead that only starts with the same letters is not the name
+    expect(componentDescription("tabs", "Tabsets switch panels.")).toMatch(/^KinetixUI Tabs: Tabsets switch panels\./);
+  });
+
   it("says which platforms install and which are source, from the manifest", () => {
     const d = componentDescription("button", "Trigger an action.");
     expect(d).toMatch(/^KinetixUI Button: Trigger an action\. Implemented for /);

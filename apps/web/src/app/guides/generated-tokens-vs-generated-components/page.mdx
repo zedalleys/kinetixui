@@ -58,7 +58,7 @@ show it:
 
 1. **A shared contract** that says what each component is, its states and its parts, independent of any platform.
 2. **A coverage record** that says which platforms implement each component, and what the others show instead,
-   checked against real source.
+   checked against real source. KinetixUI's is the [platform coverage](/docs/platforms) page.
 3. **Behaviour evidence** per platform and per kind of behaviour, read from the tests rather than written by hand.
 
 Without those, "hand-written per platform" is just several libraries that happen to share a name.
@@ -71,7 +71,7 @@ that are values or structure rather than behaviour:
 
 - **Variant tables**: the mapping from `variant` and `size` to tokens is data, and data can be shared and checked.
 - **Usage examples**: an example quoted out of a file the platform's CI compiles cannot show an API that does not
-  exist. Every KinetixUI block's code is extracted that way.
+  exist. The code for every KinetixUI [block](/blocks) is extracted that way.
 - **Documentation**: platform coverage, counts and evidence on the site are generated from the manifest and the
   tests, never typed.
 

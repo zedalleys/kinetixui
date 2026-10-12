@@ -22,7 +22,7 @@ Phase 1 shipped related components, the platform "at a glance" blocks and the fo
 | Remaining component editorial work | the 98 component MDX pages | **Partly implemented in Phase 2A** (below): 20 pages. The rest are listed there as deferred. |
 | Component-page accessibility summary | the component template | A one-line, per-component keyboard model from evidence (`verification.json` interaction/accessibility sources), never "WCAG compliant". Needs a data field per component first. |
 | Blocks → component pages | `/blocks` | **Implemented in Phase 2A**: every block lists the component pages its React version is built from. |
-| Search Console and Bing setup | owner | DNS verification and sitemap submission, per [`MEASUREMENT.md`](./MEASUREMENT.md) §5. |
+| Search Console and Bing setup | owner | DNS verification and sitemap submission, per [`MEASUREMENT.md`](./MEASUREMENT.md) §7 and §8. |
 | First-load font reflow on docs pages | root layout fonts | Intermittent CLS of 0.05–0.10 on a cold load, on `main` as well (baseline §9). |
 
 ---
@@ -100,6 +100,56 @@ The calendar is not rescheduled. Existing assets that can promote a guide once i
 | Parity verification | LI-008 (*a partial count is not a tick*), COM-002 | LI-008's natural "how do you measure it" follow-up; COM-002 answers "how to verify a coverage claim" |
 | Evaluation checklist | LI-007 / X-008 (*two trades*), week 4 adoption posts | the checklist is the "what to check next" link for evaluators |
 | Docs | the "Further reading" lines on `/docs/platforms`, `/docs/tokens`, `/docs/accessibility` and `/docs/installation` (automatic on publish) | — |
+
+## Phase 3 — publication system and organic measurement
+
+**Implemented** (PR "feat(marketing): prepare SEO guide publication and organic measurement"). No content cluster
+was added and no guide was published.
+
+| Item | Where |
+| --- | --- |
+| Publication procedure for the four guides | [`GUIDE-PUBLISH-RUNBOOK.md`](./GUIDE-PUBLISH-RUNBOOK.md) |
+| Publication gate: cluster-partial, cluster-date, sitemap-state, further-reading, pillar-proof, CTA destination, typed counts in guide snippets | `scripts/check-editorial.mjs` |
+| Rendered guide checks in both states (draft: noindex and no TechArticle; published: indexable with TechArticle) | `scripts/seo-browser.mjs` |
+| The four guides in the CI a11y-site sweep | `scripts/a11y-site.mjs` |
+| Simulated publication, reverted by hash | `scripts/simulate-guide-publication.mjs` |
+| Negative controls EC-16 to EC-27, state-aware | `scripts/editorial-negative-controls.mjs` |
+| Authority and link-target plan | [`AUTHORITY-PLAN.md`](./AUTHORITY-PLAN.md) |
+| Organic measurement workflow, dashboard spec, Search Console and Bing checklists, Day 0/7/14/30 cadence, baseline capture | [`MEASUREMENT.md`](./MEASUREMENT.md) §3–§8 |
+| ART-001 → pillar post-publication edit, with anchor text and UTM | runbook §6; register row `ART-001-PILLAR` (status `brief`) |
+| Final intent ownership | [`SEARCH-INTENT-MAP.md`](./SEARCH-INTENT-MAP.md#final-ownership-seo-phase-3) |
+
+**Snippet audit** (built HTML of `/`, `/components`, `/docs/platforms`, `/docs/tokens`, `/docs/accessibility`,
+`/docs/installation`, `/docs/angular`, the 20 editorial component pages and the four guides). No markup, no typed
+counts, no duplicate or near-duplicate titles or descriptions. Two targeted edits:
+
+| Route(s) | Before | After | Why |
+| --- | --- | --- | --- |
+| 21 component pages whose lead opens with the component's name (all 20 editorial pages among them) | "KinetixUI Popover: Popover opens a small panel…" | "KinetixUI Popover opens a small panel…" | the name was repeated in the first words of the visible snippet; `componentDescription` in `lib/seo.ts` |
+| `/docs/installation` | "Install KinetixUI two ways: the registry … or the npm packages…" (React only) | names every platform's install route, derived from the manifest | the page now opens with a platform choice and its title says "native source"; the snippet described only React |
+
+Left as they are, on purpose: descriptions longer than a results page shows (most component pages, `/`,
+`/components`). Their first sentence carries the meaning and the rest is the derived platform truth; shortening
+them without impression data would be guessing. Revisit at Day 14 with Search Console CTR
+([`MEASUREMENT.md`](./MEASUREMENT.md) §5). Title lengths: four component titles exceed ~70 characters because they
+list all five platforms; the platform list is the point of the title.
+
+**Acquisition paths** (from each landing page to a component view, code, a platform choice, installation or
+verification evidence, in the built HTML): every audited docs page and editorial component page links all four
+kinds. The guides: the pillar and the parity guide link the evidence, the evaluation guide links components and
+platform pages, and the tokens guide linked only `/docs/tokens`; it now also links the platform coverage page from
+its "coverage record" point and `/blocks` from its "usage examples" point, in the existing sentences.
+
+**Found, not changed:**
+
+- `/components` server HTML contains **no** links to component pages; the gallery's links exist only after
+  hydration (`check:seo-browser` sees them in Chromium). Crawlers that render JavaScript and the sitemap both
+  reach every component page, so this is robustness, not a gap today. Owner surface: the gallery's
+  client-side rendering (the same area as the `/components?filter=` CLS item below).
+- **ART-001's typed counts are stale.** The draft (`marketing/content/drafts/a01/article.md`, "Ours, today")
+  says Angular 64; the live manifest says Angular 76 of 98 (React 98, SwiftUI, Compose and Flutter 90). The
+  article publishes on Tue 13 Oct and was not edited here, as briefed. The owner decides whether to update the
+  sentence before publishing; its own text already says the numbers are generated and move.
 
 ## Cluster A — Cross-platform design systems *(primary ICP, awareness → evaluation)*
 
