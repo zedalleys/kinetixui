@@ -105,7 +105,7 @@ organic code copies, organic install views and copies, organic platform selectio
 | Tokens / Foundations | `/docs/tokens`, `/docs/foundations`, `/docs/theming`, `/docs/colors`, `/docs/dark-mode` |
 | Accessibility / RTL | `/docs/accessibility`, `/docs/rtl` |
 | IoT | `/iot`, `/docs/iot`, `/demos/*` |
-| Guides (content cluster) | `/guides/*`, once published (drafts are noindex and get no organic traffic) |
+| Guides (content cluster) | `/guides/*`, published 2026-10-12 (all four; before that they were noindex drafts) |
 | Articles | off-site (dev.to); measured through campaign attribution, not organic |
 
 ### Content-cluster reporting (SEO Phase 2B)

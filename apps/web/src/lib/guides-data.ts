@@ -33,7 +33,8 @@ export const GUIDES: readonly Guide[] = [
       "How a design system for web, iOS and Android is put together: shared tokens, native components, what parity really requires, how to verify it, and what to check before adopting one.",
     primaryIntent: "cross-platform design system architecture",
     role: "pillar",
-    status: "draft",
+    status: "published",
+    datePublished: "2026-10-12",
     cta: { label: "Explore platform coverage", href: "/docs/platforms" },
   },
   {
@@ -44,7 +45,8 @@ export const GUIDES: readonly Guide[] = [
       "Why design tokens can be generated for every platform from one source while components usually cannot, and what a hand-written component on each platform costs and buys.",
     primaryIntent: "generated design tokens vs generated components",
     role: "supporting",
-    status: "draft",
+    status: "published",
+    datePublished: "2026-10-12",
     cta: { label: "See token implementation", href: "/docs/tokens" },
   },
   {
@@ -55,7 +57,8 @@ export const GUIDES: readonly Guide[] = [
       "A practical way to check that components behave alike on every platform: evidence by kind, measured from the tests, reported by the weakest component, with negative controls.",
     primaryIntent: "design system parity verification",
     role: "supporting",
-    status: "draft",
+    status: "published",
+    datePublished: "2026-10-12",
     cta: { label: "View verification evidence", href: "/docs/platforms#availability-package-maturity-and-verification-are-three-different-things" },
   },
   {
@@ -66,7 +69,8 @@ export const GUIDES: readonly Guide[] = [
       "A checklist for teams choosing a component library for more than one platform: coverage per platform, distribution, maturity, behaviour evidence, accessibility, RTL, theming and updates.",
     primaryIntent: "cross-platform component library evaluation",
     role: "supporting",
-    status: "draft",
+    status: "published",
+    datePublished: "2026-10-12",
     cta: { label: "Explore components", href: "/components" },
   },
 ];

@@ -103,10 +103,10 @@ is in the "unowned" table at the end, on purpose.
 
 Phase 2B's guides live at `/guides/<slug>` and are registered in
 [`apps/web/src/lib/guides.ts`](../../apps/web/src/lib/guides.ts), which is the source of each guide's title,
-description, primary intent, CTA and publication state. **All four ship as drafts**: built and reviewable by URL,
-`noindex`, out of the sitemap, without article structured data, and unlinked from indexable pages. Publishing one
-is two fields (`status: "published"` and the real `datePublished`); the docs pages that name it in a "Further
-reading" line then start linking it on the next build.
+description, primary intent, CTA and publication state. All four shipped as drafts (#364) and were
+**published together on 2026-10-12** after the owner's review: indexable, in the sitemap, with TechArticle structured
+data, and linked from the docs pages below. They publish and unpublish as a set: a published guide that links a
+draft fails `check:editorial` (`draft-linked`).
 
 | Guide | Role | Owns | CTA | Links into |
 | --- | --- | --- | --- | --- |
@@ -118,7 +118,7 @@ reading" line then start linking it on the next build.
 Not written, on purpose: *Design tokens across React, SwiftUI, Compose and Flutter*. Its intent is already owned
 by `/docs/tokens` and was the subject of ART-002; a guide would compete with both.
 
-Docs pages that will link the guides once published (`<FurtherReading>`): `/docs/platforms` (pillar, parity),
+Docs pages that link the published guides (`<FurtherReading>`): `/docs/platforms` (pillar, parity),
 `/docs/tokens` (tokens vs components), `/docs/accessibility` (parity), `/docs/installation` (evaluation).
 `pnpm check:editorial` fails if a guide's intent differs from its row above, if an indexable page links a draft,
 if a draft is indexable, or if the pillar and the supporting guides stop linking each other.
@@ -131,8 +131,9 @@ kinetixui.com, and `/docs/platforms` is the **proof**. The flow is: ART-001 → 
 → `/docs/platforms` (for the evidence); pillar → `/docs/platforms`. They do not compete: ART-001's intent is "is
 my parity real?" (a reaction), the pillar's is "how is a cross-platform design system built?" (a question), and
 the parity guide is the how-to the article stops short of. ART-001's package is not changed before its
-publication; once the pillar is published, add one tagged link to it in the dev.to post as a post-publication edit
-(`utm_content=art_pillar`, same campaign), recorded in the ART-001 close-out.
+publication; the pillar is now published (2026-10-12), so once ART-001 is live, add one tagged link to the pillar
+in the dev.to post as a post-publication edit (`utm_content=art_pillar`, same campaign), recorded in the ART-001
+close-out.
 
 ## ART-001 alignment
 
