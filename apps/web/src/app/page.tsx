@@ -11,6 +11,7 @@ import { ComponentSpotlight, type SpotlightItem } from "@/components/systems/com
 import { EditorialMedia } from "@/components/systems/editorial-media";
 import { EvidenceColumns } from "@/components/systems/evidence-columns";
 import { HeroSystemMap } from "@/components/systems/hero-system-map";
+import { PlatformMarkSprite } from "@/components/systems/platform-marks";
 import { ImplementationExplorer } from "@/components/systems/implementation-explorer";
 import { TokenPipeline } from "@/components/systems/token-pipeline";
 import { TraceLayer } from "@/components/systems/trace-layer";
@@ -97,7 +98,7 @@ const FEATURES = [
  * The page follows one real token, `color.action`, from its DTCG source, through the files Style Dictionary
  * writes, across the token boundary, into the `Switch` each platform implements by hand, and finally into
  * evidence. Everything those visuals say is read from the repository at build time (`lib/systems-in-motion.ts`).
- * Chapters alternate between the page's own theme and the existing `.dark` token set, applied to a section.
+ * Every chapter follows the site theme; the header's toggle is the only theme control on the page.
  */
 
 /** "Five", from the platform count — a word in the headline, but never a typed one. */
@@ -171,6 +172,7 @@ export default function HomePage() {
   return (
     <div>
       <StructuredData />
+      <PlatformMarkSprite />
 
       {/* ─── [01] hero ───────────────────────────────────────────────────────── */}
       <section className="kx-chapter overflow-hidden border-b border-border">
@@ -183,7 +185,8 @@ export default function HomePage() {
             follows it — beside it once there is room, below it on a phone.
           */}
           <div className="grid grid-cols-1 gap-14 py-12 sm:py-16 md:py-24 lg-rem:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg-rem:items-center lg-rem:gap-12 xl-rem:gap-20">
-            <div className="max-w-3xl">
+            {/* a size container: the headline is sized against this column, so its longest word always fits it */}
+            <div className="max-w-3xl [container-type:inline-size]">
               {/*
                 The headline names the architecture rather than counting platforms: one shared language, and an
                 implementation per platform written in that platform's idiom (CLAIMS.md A2, A3). The number is
@@ -191,7 +194,7 @@ export default function HomePage() {
                 `siteConfig.tagline` — One design language. N platforms. Claims you can check. — whose last
                 sentence now heads the evidence chapter, where it is demonstrated rather than asserted.
               */}
-              <h1 className="min-w-0 break-words hyphens-auto text-balance font-display text-[length:min(2.125rem,calc(1rem+5vw))] font-bold leading-[1.05] tracking-[-0.035em] sm:text-6xl sm:leading-[1.02] lg-rem:text-[3rem] xl-rem:text-[3.625rem]">
+              <h1 className="kx-hero-title min-w-0 font-display font-bold leading-[1.05] tracking-[-0.035em] sm:leading-[1.02]">
                 One design language.{" "}
                 <br className="hidden sm:block" />
                 <span className="kx-underline text-primary">{countWord(componentPlatformCount)} native</span>{" "}
@@ -267,7 +270,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── [02] the trade ─────────────────────────────────────────────────────────────────────── */}
-      <section className="border-b border-border">
+      <section className="kx-defer border-b border-border">
         <div className={`${container} py-20 md:py-28`}>
           <Reveal>
             <SectionHead index="02" label="The trade" meta="shared contract, not shared runtime" />
@@ -328,7 +331,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── [03] token boundary ───────────────────────────────────────────────── */}
-      <section className="kx-chapter overflow-hidden bg-muted/30 border-b border-border">
+      <section className="kx-defer kx-chapter overflow-hidden bg-muted/30 border-b border-border">
         <div aria-hidden="true" className="kx-glow -start-48 top-1/3 size-[40rem]" />
         <div className={`${container} py-20 md:py-28`}>
           <Reveal>
@@ -362,7 +365,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── [04] same contract, different platform ─────────────────────────────────────────────── */}
-      <section id="flagship" className="scroll-mt-24 border-b border-border">
+      <section id="flagship" className="kx-defer scroll-mt-24 border-b border-border">
         <div className={`${container} py-20 md:py-28`}>
           <div className="grid grid-cols-1 gap-12 lg-rem:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg-rem:gap-16">
             <Reveal className="lg-rem:sticky lg-rem:top-28 lg-rem:self-start">
@@ -402,7 +405,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── [05] components ────────────────────────────────────────────────────────────────────── */}
-      <section className="border-b border-border bg-muted/30">
+      <section className="kx-defer border-b border-border bg-muted/30">
         <div className={`${container} py-20 md:py-28`}>
           <Reveal>
             <SectionHead index="05" label="Components" meta={`${componentTotal} catalogue entries`} />
@@ -430,7 +433,7 @@ export default function HomePage() {
         `STRATEGY.md` names verification as the position and §7 names Credibility as the funnel's narrowest point.
         Benefit first, mechanism second; the numbers are the manifest this page was built from, and are labelled so.
       */}
-      <section className="kx-chapter overflow-hidden bg-muted/30 border-b border-border">
+      <section className="kx-defer kx-chapter overflow-hidden bg-muted/30 border-b border-border">
         <div aria-hidden="true" className="kx-glow -end-32 top-10 size-[38rem]" />
         <div className={`${container} py-20 md:py-28`}>
           <Reveal>
@@ -526,7 +529,7 @@ export default function HomePage() {
         `PERSONAS.md` P2 objects "we do not have time to adopt a design system". Three independent entry points,
         each a real capability rather than a tier; rung 1 is the one a team with no design-system owner can take.
       */}
-      <section className="border-b border-border">
+      <section className="kx-defer border-b border-border">
         <div className={`${container} py-20 md:py-28`}>
           <Reveal>
             <SectionHead index="07" label="Start small" meta="three ways in" />
@@ -608,7 +611,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── [08] modules ───────────────────────────────────────────────────────────────────────── */}
-      <section className="border-b border-border bg-muted/30">
+      <section className="kx-defer border-b border-border bg-muted/30">
         <div className={`${container} grid grid-cols-1 gap-6 py-14 md:grid-cols-[minmax(0,0.6fr)_minmax(0,1.4fr)] md:items-baseline md:gap-12`}>
           <SectionHead index="08" label="Modules" meta="beyond the catalogue" className="md:border-t-0 md:pt-0" />
           <div>
@@ -633,7 +636,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── [09] closer ────────────────────────────────────────────────────────────────────────── */}
-      <section>
+      <section className="kx-defer">
         <div className={`${container} py-24 md:py-32`}>
           <Reveal>
             <SectionHead index="09" label="Who it's for" />

@@ -1,4 +1,4 @@
-import { PlatformLogo } from "@/components/platform-logo";
+import { PlatformMark } from "./platform-marks";
 import type { MapOutput, MapPlatform, MapToken } from "./hero-system-map";
 import { breakable } from "./breakable";
 import { TraceLayer, type TracePair } from "./trace-layer";
@@ -30,15 +30,15 @@ export function TokenPipeline({
     ...outputs.map((o) => ({ from: "build", to: `out-${o.id}` })),
     ...platforms.map((p) => ({ from: `out-${p.output}`, to: `impl-${p.platform}`, kind: "written" as const })),
   ];
-  const stage = "font-mono text-xs text-muted-foreground";
+  const stage = "font-mono text-label-md text-muted-foreground";
 
   return (
-    <div className="relative">
+    <div data-token-pipeline="" className="relative">
       <TraceLayer pairs={pairs} />
       <ol className="relative grid grid-cols-1 gap-8 lg-rem:grid-cols-[minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,1.1fr)_auto_minmax(0,1.3fr)] lg-rem:items-center lg-rem:gap-12">
         <li className="min-w-0">
           <p className={stage}>01 · canonical source</p>
-          <div data-anchor="source" className="kx-glass mt-3 rounded-xl p-4">
+          <div data-anchor="source" className="mt-3 rounded-xl border border-border bg-card p-4">
             <p className="font-mono text-sm text-foreground [overflow-wrap:anywhere]" dir="ltr">
               {breakable(token.files.light)}
             </p>
@@ -84,7 +84,7 @@ export function TokenPipeline({
                 data-anchor={`impl-${p.platform}`}
                 className="flex items-center gap-3 rounded-lg border border-dashed border-foreground/25 px-3 py-2"
               >
-                <PlatformLogo platform={p.platform} className="size-4 shrink-0 text-muted-foreground" />
+                <PlatformMark platform={p.platform} className="size-4 shrink-0 text-muted-foreground" />
                 <span className="min-w-0">
                   <span className="block text-sm text-foreground">
                     {p.label}

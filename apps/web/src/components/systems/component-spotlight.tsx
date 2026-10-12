@@ -1,6 +1,4 @@
-"use client";
-
-import * as React from "react";
+import type * as React from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import {
@@ -12,6 +10,7 @@ import {
 } from "@kinetixui/ui";
 import { PreferencesPanel } from "@/examples/flagship-preferences";
 import { cn } from "@/lib/utils";
+import { MountNear } from "./mount-near";
 
 /**
  * The homepage's component discovery: fewer components, shown larger, each with what is true of it on every
@@ -21,6 +20,9 @@ import { cn } from "@/lib/utils";
  * manifest (`platformStateFor`) and `verification.json` (`verificationFor`), so it can say "composition" or
  * "planned" where that is the truth instead of a row of identical ticks. It is always visible; hovering or
  * focusing a tile only brings it forward.
+ *
+ * A server component: the tiles, notes and strips are HTML. The previews are the real interactive components,
+ * mounted on the client as their tile nears the screen (`MountNear`).
  */
 
 export type StripCell = { platform: string; short: string; state: string; kind: "implementation" | "guidance" | "none" };
@@ -56,8 +58,10 @@ const PREVIEW: Record<string, () => React.ReactNode> = {
 export function ComponentSpotlight({ items }: { items: SpotlightItem[] }) {
   const [lead, ...rest] = items;
   return (
-    <div className="grid grid-cols-1 gap-4 [&>*]:min-w-0 lg-rem:grid-cols-12">
-      {lead ? <Tile item={lead} lead className="lg-rem:col-span-7 lg-rem:row-span-3" /> : null}
+    // Tablet: the composed interface across the top, the three components in a row under it. Desktop: the
+    // composed interface beside the three, which stack; no tile is stretched past what its content needs.
+    <div className="grid grid-cols-1 gap-4 [&>*]:min-w-0 md:grid-cols-3 lg-rem:grid-cols-12 lg-rem:items-start">
+      {lead ? <Tile item={lead} lead className="md:col-span-3 lg-rem:col-span-7 lg-rem:row-span-3" /> : null}
       {rest.map((item) => (
         <Tile key={item.slug} item={item} className="lg-rem:col-span-5" />
       ))}
@@ -71,7 +75,7 @@ function Tile({ item, lead = false, className }: { item: SpotlightItem; lead?: b
     <article
       data-spotlight={item.slug}
       className={cn(
-        "group flex flex-col overflow-hidden rounded-2xl border border-border bg-background transition-colors duration-fast",
+        "group flex flex-col overflow-hidden rounded-2xl border border-border bg-background transition-colors duration-fast [container-type:inline-size]",
         "hover:border-primary/40 focus-within:border-primary/40",
         className,
       )}
@@ -85,22 +89,25 @@ function Tile({ item, lead = false, className }: { item: SpotlightItem; lead?: b
           Open<span className="sr-only"> {item.name}</span> <ArrowUpRight aria-hidden="true" className="size-3.5" />
         </Link>
       </div>
-      <p className={cn("px-5 pt-1 text-sm text-muted-foreground", lead && "sm:px-7")}>{item.note}</p>
+      <p className={cn("max-w-prose px-5 pt-1 text-sm text-muted-foreground", lead && "sm:px-7")}>{item.note}</p>
       <div
         className={cn(
           "flex flex-1 items-center justify-center px-5",
-          lead ? "min-h-[22rem] py-10 sm:px-7" : "min-h-[8.5rem] py-6",
+          lead ? "py-8 sm:px-7" : "py-5",
         )}
       >
-        {preview ? preview() : null}
+        {/* the live component mounts as the tile nears the screen; the box holds its height until then */}
+        {preview ? (
+          <MountNear className={cn("flex w-full items-center justify-center", lead ? "min-h-[20rem]" : "min-h-10")}>{preview()}</MountNear>
+        ) : null}
       </div>
       <div className="border-t border-border bg-muted/30 px-5 py-3 transition-colors duration-fast group-hover:bg-primary/5 group-focus-within:bg-primary/5">
-        <p id={`strip-${item.slug}`} className="font-mono text-xs text-muted-foreground">
+        <p id={`strip-${item.slug}`} className="font-mono text-label-md text-muted-foreground">
           {item.stripLabel}
         </p>
-        <ul aria-labelledby={`strip-${item.slug}`} className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 sm:grid-cols-5">
+        <ul aria-labelledby={`strip-${item.slug}`} className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 [@container(min-width:30rem)]:grid-cols-5">
           {item.strip.map((c) => (
-            <li key={c.platform} className="min-w-0 text-xs">
+            <li key={c.platform} className="min-w-0 text-body-sm">
               <span className="block font-medium text-foreground">{c.short}</span>
               <span
                 className={cn(

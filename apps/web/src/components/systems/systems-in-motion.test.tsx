@@ -8,6 +8,7 @@ import { highlight } from "@/lib/highlight";
 import { CATALOGUE_VERIFICATION, PLATFORM_DEFINITIONS, PLATFORMS } from "@/lib/platform-parity";
 import { componentTotal, platformCount } from "@/lib/platform-support";
 import { platformEvidence, STORY_COMPONENT, systemsInMotion } from "@/lib/systems-in-motion";
+import { breakable } from "./breakable";
 import { repoRoot } from "@/lib/token-evidence";
 import { HeroSystemMap } from "./hero-system-map";
 
@@ -97,6 +98,24 @@ describe("systems in motion: data", () => {
     }
   });
 
+  it("shows a window around the token line, not the file: at most seven lines per excerpt, with real line numbers", () => {
+    for (const p of story.platforms) {
+      for (const f of p.component.files) {
+        expect(f.lastLine - f.firstLine + 1, `${p.platform} ${f.file}`).toBeLessThanOrEqual(7);
+        expect(f.text.split("\n")).toHaveLength(f.lastLine - f.firstLine + 1);
+      }
+      const hit = p.component.files.find((f) => f.readsToken.length > 0)!;
+      expect(p.component.reads.line).toBeGreaterThanOrEqual(hit.firstLine);
+      expect(p.component.reads.line).toBeLessThanOrEqual(hit.lastLine);
+    }
+  });
+
+  it("orders the outputs by the platforms they feed, each feeding neighbours, so the map never crosses", () => {
+    const order = story.outputs.flatMap((o) => o.platforms);
+    expect(order).toEqual([...PLATFORMS]);
+    expect(story.outputs.length).toBeLessThan(PLATFORMS.length);
+  });
+
   it("follows a component every platform implements", () => {
     for (const p of story.platforms) expect(p.component.verification).not.toBeNull();
     expect(STORY_COMPONENT).toBe("switch");
@@ -107,6 +126,7 @@ describe("systems in motion: no hard-coded truth", () => {
   const sources = [
     "components/systems/hero-system-map.tsx",
     "components/systems/implementation-explorer.tsx",
+    "components/systems/explorer-tabs.tsx",
     "components/systems/evidence-columns.tsx",
     "components/systems/token-pipeline.tsx",
     "components/systems/component-spotlight.tsx",
@@ -151,7 +171,8 @@ describe("systems in motion: no hard-coded truth", () => {
 });
 
 describe("systems in motion: hero map semantics", () => {
-  const html = renderToStaticMarkup(<HeroSystemMap {...mapProps()} />);
+  // `<wbr>` break opportunities inside paths are layout, not text
+  const html = renderToStaticMarkup(<HeroSystemMap {...mapProps()} />).replace(/<wbr\/?>/g, "");
 
   it("keeps every trace and output chip decorative and unfocusable", () => {
     for (const m of html.matchAll(/<svg\b[^>]*>/g)) expect(m[0]).toMatch(/aria-hidden="true"/);
@@ -191,6 +212,34 @@ describe("systems in motion: hero map semantics", () => {
     expect(trigger).not.toMatch(/tabIndex|disabled|aria-hidden/);
   });
 
+  it("keeps the generated-output layer in the markup at every width: one structure, nothing hidden by breakpoint", () => {
+    const outputs = /<div aria-hidden="true" class="([^"]*kx-map-outputs[^"]*)"/.exec(html);
+    expect(outputs, "output layer").not.toBeNull();
+    expect(outputs![1]).not.toMatch(/(^|\s)hidden(\s|$)/);
+    expect(html.match(/data-output="/g)).toHaveLength(story.outputs.length);
+    expect(html).toMatch(/Tokens generated/);
+  });
+
+  it("draws every hand-written branch dashed, at every width", () => {
+    const src = read("components/systems/hero-system-map.tsx");
+    const written = src.slice(src.indexOf("geometry.written.map((w) => ("), src.indexOf("{pulse > 0"));
+    expect(written).toMatch(/data-kind="written"/);
+    expect(written).not.toMatch(/data-kind=\{/);
+  });
+
+  it("follows the page's direction live, and turns the platform list vertical when it stacks", () => {
+    for (const f of ["components/systems/hero-system-map.tsx", "components/systems/explorer-tabs.tsx"]) {
+      const src = read(f);
+      expect(src, f).toMatch(/useDocumentDirection\(\)/);
+      expect(src.slice(src.indexOf("<Tabs.Root"), src.indexOf(">", src.indexOf("<Tabs.Root"))), f).toMatch(/dir=\{dir\}/);
+    }
+    expect(read("components/systems/hero-system-map.tsx")).toMatch(/orientation=\{columns \? "horizontal" : "vertical"\}/);
+  });
+
+  it("sets quoted source on the type scale, never the 0.85em inline-code size (10.2px inside 12px text)", () => {
+    for (const m of html.matchAll(/<code class="([^"]*)"/g)) expect(m[1]).toMatch(/\bkx-source\b.*\btext-body-sm\b/);
+  });
+
   it("has no theme switch of its own: the header's toggle is the only one", () => {
     expect(html).not.toMatch(/aria-pressed=/);
     expect(html).not.toMatch(/Token value to show/);
@@ -223,6 +272,38 @@ describe("systems in motion: reduced motion and transparency", () => {
       expect(r).not.toMatch(/#[0-9a-f]{3,8}\b/i);
       expect(r).not.toMatch(/rgba?\(\s*\d/);
     }
+  });
+});
+
+describe("systems in motion: weight and restraint", () => {
+  it("renders the static visuals on the server: only the interactive shells are client components", () => {
+    for (const f of ["implementation-explorer.tsx", "component-spotlight.tsx", "evidence-columns.tsx", "token-pipeline.tsx", "platform-marks.tsx"]) {
+      expect(read(`components/systems/${f}`), f).not.toMatch(/^"use client"/);
+    }
+  });
+
+  it("keeps glass for the hero's layered surfaces only; flat information cards are opaque", () => {
+    for (const f of ["evidence-columns.tsx", "token-pipeline.tsx", "implementation-explorer.tsx", "component-spotlight.tsx"]) {
+      expect(read(`components/systems/${f}`), f).not.toMatch(/kx-glass/);
+    }
+    expect(read("components/systems/hero-system-map.tsx").match(/kx-glass/g)).toHaveLength(2);
+  });
+
+  it("never lets the headline hyphenate, and sizes it so its longest word fits its column", () => {
+    const css = read("app/globals.css");
+    const rules = css.match(/\.kx-hero-title\s*\{[^}]*\}/g) ?? [];
+    expect(rules.length).toBeGreaterThan(1);
+    expect(rules[0]).toMatch(/hyphens:\s*manual/);
+    for (const r of rules) expect(r).toMatch(/font-size:\s*min\([^;]*cqi\)/);
+    const page = read("app/page.tsx");
+    const h1 = page.slice(page.indexOf("<h1"), page.indexOf(">", page.indexOf("<h1")));
+    expect(h1).toMatch(/kx-hero-title/);
+    expect(h1).not.toMatch(/hyphens-auto/);
+  });
+
+  it("breaks code references at their joints and camelCase words, never mid-word", () => {
+    const html = renderToStaticMarkup(<>{breakable("KinetixColorScheme.action")}</>);
+    expect(html).toBe("Kinetix<wbr/>Color<wbr/>Scheme<wbr/>.action");
   });
 });
 

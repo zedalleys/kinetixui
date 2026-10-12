@@ -4,7 +4,8 @@ import * as React from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { PlatformLogo } from "@/components/platform-logo";
+import { PlatformMark } from "./platform-marks";
+import { useDocumentDirection } from "@/lib/use-document-direction";
 import type { Platform } from "@/lib/platform-parity";
 import { cn } from "@/lib/utils";
 import { breakable } from "./breakable";
@@ -17,10 +18,17 @@ import { breakable } from "./breakable";
  * string in it arrives as a prop from `lib/systems-in-motion.ts`, which reads the repository at build time;
  * this file holds no platform name, path, value or count of its own.
  *
+ * Layout: one structure at every width (no second tree hidden with CSS). The outputs and the platforms share a
+ * grid (`.kx-map-grid`, subgrid): side by side in rows on a phone — each output beside the platforms that read
+ * it, the token boundary a dashed rule between the two columns — and in columns from 34rem, where the CSS
+ * output spans the two web platforms it feeds. Either way the generated layer, the boundary and the written
+ * layer are all on screen, and four outputs visibly feed five platforms.
+ *
  * Semantics: the platforms are a tablist and the detail overlay is its tabpanel, so a keyboard or screen-reader
  * user gets exactly what a pointer user gets — selecting a platform is the interaction, hovering only
- * emphasises a branch. The traces and the output chips are a drawing of what the panel says in words, so
- * they are hidden from assistive technology rather than read twice.
+ * emphasises a branch. The list follows the page's direction (`<html dir>`, live), and its orientation follows
+ * the layout: vertical rows take Up/Down, a horizontal row takes Left/Right in reading order. The traces and the
+ * output chips are a drawing of what the panel says in words, so they are hidden from assistive technology.
  *
  * Theme: the map shows the token's value for the site theme the reader is in, and follows the header's theme
  * toggle; it has no switch of its own.
@@ -59,19 +67,27 @@ export type MapToken = {
 
 type Theme = "light" | "dark";
 type Point = { x: number; y: number };
-type Box = { top: Point; bottom: Point; start: Point; width: number };
+type Box = { top: Point; bottom: Point; start: Point; end: Point; mid: number; width: number };
 type Geometry = {
   width: number;
   height: number;
-  stacked: boolean;
   generated: { output: string; d: string }[];
   written: { platform: Platform; d: string }[];
 };
 
-const curve = (a: Point, b: Point) => {
+/** A vertical S-curve (columns layout). */
+const vcurve = (a: Point, b: Point) => {
   const my = (a.y + b.y) / 2;
   return `M${a.x} ${a.y} C ${a.x} ${my}, ${b.x} ${my}, ${b.x} ${b.y}`;
 };
+/** A horizontal S-curve (rows layout). */
+const hcurve = (a: Point, b: Point) => {
+  const mx = (a.x + b.x) / 2;
+  return `M${a.x} ${a.y} C ${mx} ${a.y}, ${mx} ${b.y}, ${b.x} ${b.y}`;
+};
+
+/** The container width (in rem) at which outputs and platforms turn from rows into columns: `.kx-map-grid`. */
+const COLUMNS_AT_REM = 34;
 
 export function HeroSystemMap({
   token,
@@ -82,11 +98,15 @@ export function HeroSystemMap({
   outputs: MapOutput[];
   platforms: MapPlatform[];
 }) {
+  const dir = useDocumentDirection();
   const [selected, setSelected] = React.useState<Platform>(platforms[0]!.platform);
   const [hovered, setHovered] = React.useState<Platform | null>(null);
   const [theme, setTheme] = React.useState<Theme>("light");
+  const [columns, setColumns] = React.useState(true);
   // Bumped on every reader action; keys the pulse paths so a change replays one pulse, and only then.
   const [pulse, setPulse] = React.useState(0);
+  const [pulseScope, setPulseScope] = React.useState<"one" | "all">("one");
+  const [geometry, setGeometry] = React.useState<Geometry | null>(null);
   // Follow the site theme (the header's toggle puts `.dark` on <html>); a change after load pulses every branch.
   React.useEffect(() => {
     const root = document.documentElement;
@@ -104,8 +124,6 @@ export function HeroSystemMap({
     mo.observe(root, { attributes: true, attributeFilter: ["class"] });
     return () => mo.disconnect();
   }, []);
-  const [pulseScope, setPulseScope] = React.useState<"one" | "all">("one");
-  const [geometry, setGeometry] = React.useState<Geometry | null>(null);
 
   const root = React.useRef<HTMLElement>(null);
   const source = React.useRef<HTMLDivElement>(null);
@@ -122,55 +140,59 @@ export function HeroSystemMap({
     const src = source.current;
     if (!el || !src) return;
     const r = el.getBoundingClientRect();
+    const rtl = getComputedStyle(el).direction === "rtl";
     const box = (n: Element): Box => {
       const b = n.getBoundingClientRect();
-      const rtl = getComputedStyle(n).direction === "rtl";
       const x = b.left - r.left + b.width / 2;
+      const mid = b.top - r.top + b.height / 2;
+      const left = b.left - r.left;
+      const right = b.right - r.left;
       return {
         top: { x, y: b.top - r.top },
         bottom: { x, y: b.bottom - r.top },
-        start: { x: rtl ? b.right - r.left : b.left - r.left, y: b.top - r.top + b.height / 2 },
+        start: { x: rtl ? right : left, y: mid },
+        end: { x: rtl ? left : right, y: mid },
+        mid,
         width: b.width,
       };
     };
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const wide = r.width >= COLUMNS_AT_REM * rem;
+    setColumns(wide);
     const s = box(src);
-    const chipBoxes = new Map([...chips.current].map(([id, n]) => [id, box(n)]));
-    const stacked = [...chipBoxes.values()].every((b) => b.width === 0);
     const generated: Geometry["generated"] = [];
     const written: Geometry["written"] = [];
 
-    if (!stacked) {
-      for (const o of outputs) {
-        const c = chipBoxes.get(o.id);
-        if (c) generated.push({ output: o.id, d: curve(s.bottom, c.top) });
+    for (const o of outputs) {
+      const n = chips.current.get(o.id);
+      if (!n) continue;
+      const c = box(n);
+      if (wide) {
+        generated.push({ output: o.id, d: vcurve(s.bottom, c.top) });
+      } else {
+        // one spine down the outputs column's inline-start edge, a branch into each output
+        const spineX = c.start.x + (rtl ? 10 : -10);
+        generated.push({
+          output: o.id,
+          d: `M${spineX} ${s.bottom.y} L${spineX} ${c.mid - 8} Q ${spineX} ${c.mid}, ${c.start.x} ${c.mid}`,
+        });
       }
-      for (const p of platforms) {
-        const c = chipBoxes.get(p.output);
-        const n = nodes.current.get(p.platform);
-        if (c && n) written.push({ platform: p.platform, d: curve(c.bottom, box(n).top) });
-      }
-    } else {
-      // One spine along the inline-start edge of the platform list, a branch into each row.
-      const rtl = getComputedStyle(el).direction === "rtl";
-      const rows = platforms.map((p) => ({ p, b: nodes.current.get(p.platform) })).filter((x) => x.b);
-      if (rows.length) {
-        const first = box(rows[0]!.b!);
-        const spineX = first.start.x + (rtl ? 14 : -14);
-        const startY = s.bottom.y;
-        for (const { p, b } of rows) {
-          const n = box(b!);
-          const d = `M${spineX} ${startY} L${spineX} ${n.start.y - 8} Q ${spineX} ${n.start.y}, ${n.start.x} ${n.start.y}`;
-          written.push({ platform: p.platform, d });
-        }
+      for (const p of platforms.filter((q) => q.output === o.id)) {
+        const t = nodes.current.get(p.platform);
+        if (!t) continue;
+        const b = box(t);
+        written.push({ platform: p.platform, d: wide ? vcurve(c.bottom, b.top) : hcurve(c.end, b.start) });
       }
     }
-    setGeometry({ width: r.width, height: r.height, stacked, generated, written });
+    setGeometry({ width: r.width, height: r.height, generated, written });
   }, [outputs, platforms]);
 
-  React.useLayoutEffect(() => {
-    measure();
+  // Measured from the ResizeObserver's first callback, which runs after layout, rather than synchronously during
+  // hydration: reading geometry in a layout effect forced a whole-page layout inside the hydration task.
+  React.useEffect(() => {
     const el = root.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
+    if (!el) return;
+    if (typeof ResizeObserver === "undefined") return measure();
     const ro = new ResizeObserver(() => measure());
     ro.observe(el);
     // a direction flip moves the anchors without resizing anything, so watch the document's direction too
@@ -181,6 +203,11 @@ export function HeroSystemMap({
       mo.disconnect();
     };
   }, [measure]);
+
+  // `dir` reaches the grid through Radix, a render after `<html dir>` changes, so measure again once it has
+  React.useEffect(() => {
+    measure();
+  }, [dir, measure]);
 
   const select = (value: string) => {
     setSelected(value as Platform);
@@ -196,6 +223,7 @@ export function HeroSystemMap({
       ref={root}
       data-hero-system-map=""
       data-map-intro=""
+      data-map-layout={columns ? "columns" : "rows"}
       {...(active ? { "data-map-active": "" } : {})}
       className="relative m-0 [container-type:inline-size]"
     >
@@ -224,8 +252,7 @@ export function HeroSystemMap({
               key={w.platform}
               d={w.d}
               className="kx-trace"
-              data-kind={geometry.stacked ? "generated" : "written"}
-              {...(geometry.stacked ? { pathLength: 1 } : {})}
+              data-kind="written"
               {...(w.platform === active ? { "data-active": "" } : {})}
             />
           ))}
@@ -235,13 +262,7 @@ export function HeroSystemMap({
                   <path key={`g-${g.output}-${pulse}`} d={g.d} pathLength={1} className="kx-trace-pulse" />
                 )),
                 ...geometry.written.filter((w) => pulsing("", w.platform)).map((w) => (
-                  <path
-                    key={`w-${w.platform}-${pulse}`}
-                    d={w.d}
-                    pathLength={1}
-                    className="kx-trace-pulse"
-                    style={{ animationDelay: geometry.stacked ? "0ms" : "420ms" }}
-                  />
+                  <path key={`w-${w.platform}-${pulse}`} d={w.d} pathLength={1} className="kx-trace-pulse" style={{ animationDelay: "420ms" }} />
                 )),
               ]
             : null}
@@ -254,9 +275,9 @@ export function HeroSystemMap({
         className="kx-glass kx-map-stage relative mx-auto w-full max-w-md rounded-xl p-4 sm:p-5"
         style={{ ["--stage" as string]: 0 }}
       >
-        <p className="font-mono text-xs text-muted-foreground [overflow-wrap:anywhere]">
+        <p className="font-mono text-label-md text-muted-foreground [overflow-wrap:anywhere]" dir="ltr">
           <span className="sr-only">Source: </span>
-          {token.files[theme]}
+          {breakable(token.files[theme])}
         </p>
         <div className="mt-3 flex items-center gap-3">
           <span
@@ -269,59 +290,65 @@ export function HeroSystemMap({
             <p className="font-mono text-lg font-semibold leading-tight text-foreground sm:text-xl" dir="ltr">
               {token.path}
             </p>
-            <p key={theme} className="kx-swap mt-1 font-mono text-xs text-muted-foreground" dir="ltr">
+            <p key={theme} className="kx-swap mt-1 font-mono text-body-sm text-muted-foreground [overflow-wrap:anywhere]" dir="ltr">
               {token.chain[theme].slice(1).map((step) => `→ ${step} `)}→ {token.resolved[theme]}
             </p>
           </div>
         </div>
       </div>
 
-      {/* ── generated outputs (a drawing; the panel below says the same in words) ── */}
-      <div aria-hidden="true" className="kx-map-outputs mt-14 hidden grid-cols-2 gap-2 [@container(min-width:50rem)]:grid-cols-4 [@container(min-width:34rem)]:grid">
-        {outputs.map((o, i) => (
-          <div
-            key={o.id}
-            ref={(n) => {
-              if (n) chips.current.set(o.id, n);
-              else chips.current.delete(o.id);
-            }}
-            data-output={o.id}
-            className={cn(
-              "kx-map-stage rounded-lg border bg-background/70 px-2.5 py-2 transition-colors duration-fast",
-              o.id === activeOutput ? "border-primary/70" : "border-border",
-            )}
-            style={{ ["--stage" as string]: i, ["--stage-base" as string]: "650ms" }}
-          >
-            <div className="flex items-center gap-1.5">
-              <span
-                key={theme}
-                className="kx-swap size-2.5 shrink-0 rounded-[3px]"
-                style={{ backgroundColor: token.resolved[theme] }}
-              />
-              <span className="font-mono text-xs text-foreground">{o.language}</span>
-            </div>
-            <p className="mt-1 font-mono text-xs text-muted-foreground [overflow-wrap:anywhere]" dir="ltr">
-              {breakable(o.reference)}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* ── the token boundary ── */}
-      <div className="relative mt-6 flex items-center gap-3 [@container(min-width:34rem)]:mt-5">
-        <span aria-hidden="true" className="h-px flex-1 border-t border-dashed border-border" />
-        <p className="min-w-0 text-center font-mono text-xs text-muted-foreground">
-          <span className="text-foreground">Tokens generated</span> · components written per platform
+      <Tabs.Root
+        value={selected}
+        onValueChange={select}
+        activationMode="automatic"
+        dir={dir}
+        orientation={columns ? "horizontal" : "vertical"}
+        className="kx-map-grid mt-8"
+        style={{ ["--kx-impl" as string]: platforms.length }}
+      >
+        {/* ── the token boundary ── */}
+        <p className="kx-map-boundary flex items-center gap-3">
+          <span aria-hidden="true" className="h-px flex-1 border-t border-dashed border-border" />
+          <span className="min-w-0 bg-background px-1 text-center font-mono text-label-md text-muted-foreground">
+            <span className="text-foreground">Tokens generated</span> · components written per platform
+          </span>
+          <span aria-hidden="true" className="h-px flex-1 border-t border-dashed border-border" />
         </p>
-        <span aria-hidden="true" className="h-px flex-1 border-t border-dashed border-border" />
-      </div>
+        <span aria-hidden="true" className="kx-map-rule" />
 
-      {/* ── the implementations ── */}
-      <Tabs.Root value={selected} onValueChange={select} activationMode="automatic" className="mt-5 [@container(min-width:34rem)]:mt-14">
-        <Tabs.List
-          aria-label="Platform implementations"
-          className="grid grid-cols-1 gap-2 ps-7 [@container(min-width:34rem)]:grid-cols-5 [@container(min-width:34rem)]:ps-0"
-        >
+        {/* ── generated outputs (a drawing; the panel says the same in words) ── */}
+        <div aria-hidden="true" className="kx-map-outputs">
+          {outputs.map((o, i) => (
+            <div
+              key={o.id}
+              ref={(n) => {
+                if (n) chips.current.set(o.id, n);
+                else chips.current.delete(o.id);
+              }}
+              data-output={o.id}
+              className={cn(
+                "kx-map-chip kx-map-stage min-w-0 self-center rounded-lg border bg-background px-2.5 py-2 transition-colors duration-fast",
+                o.id === activeOutput ? "border-primary/70" : "border-border",
+              )}
+              style={{ ["--span" as string]: o.platforms.length, ["--stage" as string]: i, ["--stage-base" as string]: "650ms" }}
+            >
+              <div className="flex items-center gap-1.5">
+                <span
+                  key={theme}
+                  className="kx-swap size-2.5 shrink-0 rounded-[3px]"
+                  style={{ backgroundColor: token.resolved[theme] }}
+                />
+                <span className="font-mono text-label-md text-foreground">{o.language}</span>
+              </div>
+              <p className="mt-1 font-mono text-label-md text-muted-foreground [overflow-wrap:anywhere]" dir="ltr">
+                {breakable(o.reference)}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* ── the implementations ── */}
+        <Tabs.List aria-label="Platform implementations" className="kx-map-tabs">
           {platforms.map((p, i) => (
             <Tabs.Trigger
               key={p.platform}
@@ -334,21 +361,18 @@ export function HeroSystemMap({
               onPointerLeave={() => setHovered(null)}
               data-platform={p.platform}
               className={cn(
-                "kx-map-stage group flex min-h-11 items-center gap-3 rounded-lg border px-3 py-2 text-start transition-colors duration-fast",
-                "[@container(min-width:34rem)]:flex-col [@container(min-width:34rem)]:items-center [@container(min-width:34rem)]:gap-1.5 [@container(min-width:34rem)]:px-1.5 [@container(min-width:34rem)]:py-3 [@container(min-width:34rem)]:text-center",
-                "border-border bg-background/70 text-muted-foreground hover:border-primary/50 hover:text-foreground",
+                "kx-map-tab kx-map-stage group flex min-h-11 min-w-0 items-center gap-2.5 rounded-lg border border-dashed px-2.5 py-2 text-start transition-colors duration-fast",
+                "border-foreground/25 bg-background text-muted-foreground hover:border-primary/60 hover:text-foreground",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                "data-[state=active]:border-primary data-[state=active]:bg-primary/10 data-[state=active]:text-foreground",
+                "data-[state=active]:border-solid data-[state=active]:border-primary data-[state=active]:bg-primary/10 data-[state=active]:text-foreground",
               )}
               style={{ ["--stage" as string]: i, ["--stage-base" as string]: "1000ms" }}
             >
-              <PlatformLogo platform={p.platform} className="size-5 shrink-0" />
-              <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 [@container(min-width:34rem)]:flex-col [@container(min-width:34rem)]:items-center">
+              <PlatformMark platform={p.platform} className="size-5 shrink-0" />
+              <span className="kx-map-tab-text flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
                 <span className="font-display text-sm font-semibold">{p.short}</span>
-                {p.maturity !== "stable" ? (
-                  <span className="font-mono text-xs text-primary">{p.maturity}</span>
-                ) : null}
-                <span className="font-mono text-xs text-muted-foreground">
+                {p.maturity !== "stable" ? <span className="font-mono text-label-md text-primary">{p.maturity}</span> : null}
+                <span className="font-mono text-label-md text-muted-foreground">
                   {p.entries}/{p.total}
                   <span className="sr-only"> catalogue entries</span>
                 </span>
@@ -365,7 +389,7 @@ export function HeroSystemMap({
               value={p.platform}
               // the entrance belongs to first load only; a later selection cross-fades without the intro's delay
               className={cn(
-                "kx-glass mt-3 rounded-xl p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-5",
+                "kx-map-panel kx-glass rounded-xl p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-5",
                 pulse === 0 ? "kx-map-stage" : "kx-swap",
               )}
               style={pulse === 0 ? { ["--stage" as string]: 0, ["--stage-base" as string]: "1350ms" } : undefined}
@@ -373,25 +397,25 @@ export function HeroSystemMap({
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <p className="font-display text-base font-semibold text-foreground">
                   {p.label}
-                  {p.maturity !== "stable" ? <span className="ms-2 font-mono text-xs font-normal text-primary">{p.maturity}</span> : null}
+                  {p.maturity !== "stable" ? <span className="ms-2 font-mono text-label-md font-normal text-primary">{p.maturity}</span> : null}
                 </p>
-                <p className="font-mono text-xs text-muted-foreground">{p.distribution}</p>
+                <p className="font-mono text-label-md text-muted-foreground">{p.distribution}</p>
               </div>
-              <dl className="mt-3 grid grid-cols-1 gap-3 text-sm">
+              <dl className="mt-3 grid grid-cols-1 gap-3">
                 <div className="min-w-0">
-                  <dt className="font-mono text-xs text-muted-foreground">
-                    Generated · <span dir="ltr">{out.files[theme]}</span>
+                  <dt className="font-mono text-label-md text-muted-foreground [overflow-wrap:anywhere]">
+                    Generated · <span dir="ltr">{breakable(out.files[theme])}</span>
                   </dt>
-                  <dd key={theme} className="kx-swap mt-1 overflow-x-auto font-mono text-xs text-foreground" dir="ltr">
-                    <code className="whitespace-pre-wrap [overflow-wrap:anywhere]">{out.declaration[theme]}</code>
+                  <dd key={theme} className="kx-swap mt-1 text-foreground" dir="ltr">
+                    <code className="kx-source text-body-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{out.declaration[theme]}</code>
                   </dd>
                 </div>
                 <div className="min-w-0">
-                  <dt className="font-mono text-xs text-muted-foreground">
-                    Written by hand · <span dir="ltr">{p.reads.file}:{p.reads.line}</span>
+                  <dt className="font-mono text-label-md text-muted-foreground [overflow-wrap:anywhere]">
+                    Written by hand · <span dir="ltr">{breakable(`${p.reads.file}:${p.reads.line}`)}</span>
                   </dt>
-                  <dd className="mt-1 overflow-x-auto font-mono text-xs text-foreground" dir="ltr">
-                    <code className="whitespace-pre-wrap [overflow-wrap:anywhere]">{p.reads.code}</code>
+                  <dd className="mt-1 text-foreground" dir="ltr">
+                    <code className="kx-source text-body-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{p.reads.code}</code>
                   </dd>
                 </div>
               </dl>
@@ -399,17 +423,17 @@ export function HeroSystemMap({
                 href={p.href}
                 className="mt-4 inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
               >
-                {p.label} setup and coverage <ArrowUpRight aria-hidden="true" className="size-3.5" />
+                {p.label} setup and coverage <ArrowUpRight aria-hidden="true" className="size-3.5 rtl:-scale-x-100" />
               </Link>
             </Tabs.Content>
           );
         })}
       </Tabs.Root>
       <figcaption className="sr-only">
-        The {token.path} token, defined once in {token.files.light}, generated into {outputs.length} platform files, and read
-        by a separately written Switch on each of {platforms.length} platforms.
+        The {token.path} token, defined once in {token.files.light}, is generated into {outputs.length} platform token
+        files ({outputs.map((o) => `${o.language}, read by ${o.platforms.join(" and ")}`).join("; ")}). Each of the{" "}
+        {platforms.length} platforms reads it from a Switch written by hand.
       </figcaption>
     </figure>
   );
 }
-

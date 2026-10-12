@@ -280,8 +280,8 @@
 
   /*
    * KinetixUI glass: layered system information, not a card style.
-   * Used only where a surface sits OVER other system information — the token source, the platform detail
-   * overlay, the evidence columns. Text contrast does not depend on the blur: `--card` at 0.78 over the dark
+   * Used only where a surface sits OVER other system information: the hero's token source and its platform
+   * detail overlay. Flat information cards (evidence columns, the pipeline's source) are opaque `--card`. Text contrast does not depend on the blur: `--card` at 0.78 over the dark
    * chapter is still darker than every foreground role measured against it (see the PR's contrast samples),
    * and every fallback below is fully opaque.
    */
@@ -298,6 +298,60 @@
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .kx-glass {
       background-color: hsl(var(--card));
+    }
+  }
+
+  /*
+   * The hero headline. Its longest word ("implementations.") is about 8.4em wide in the display face, so the size
+   * is capped at a share of the copy column (`cqi`, the column is a size container) as well as by the type ramp:
+   * the word always fits whole, and never hyphenates. Words break only, without a hyphen, if a column is narrower
+   * than any size could fit (an emergency, not a layout). The rem steps follow the site's rem breakpoints.
+   */
+  .kx-hero-title {
+    font-size: min(2.125rem, calc(1rem + 5vw), 11cqi);
+    hyphens: manual;
+    overflow-wrap: break-word;
+    text-wrap: balance;
+  }
+  @media (min-width: 40rem) {
+    .kx-hero-title {
+      font-size: min(3.75rem, 11cqi);
+    }
+  }
+  @media (min-width: 64rem) {
+    .kx-hero-title {
+      font-size: min(3.25rem, 11cqi);
+    }
+  }
+  @media (min-width: 80rem) {
+    .kx-hero-title {
+      font-size: min(3.75rem, 11cqi);
+    }
+  }
+
+  /*
+   * Chapters below the hero. `content-visibility: auto` lets the browser skip style, layout and paint for a chapter
+   * until it nears the viewport, which is most of the first-load rendering work on a slow phone. The content stays
+   * in the DOM and the accessibility tree (find-in-page, screen readers and anchors all reach it); the intrinsic
+   * size is a placeholder until a chapter has rendered once, after which the browser remembers its real height.
+   */
+  .kx-defer {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 60rem;
+  }
+
+  /* Evidence meter: a 4px track along the row's bottom edge, filled to `--kx-meter` (the count over its own denominator). */
+  .kx-meter {
+    background:
+      linear-gradient(hsl(var(--primary)), hsl(var(--primary))) no-repeat left bottom / var(--kx-meter, 0%) 4px,
+      linear-gradient(hsl(var(--foreground) / 0.1), hsl(var(--foreground) / 0.1)) no-repeat left bottom / 100% 4px;
+  }
+  [dir="rtl"] .kx-meter {
+    background-position: right bottom;
+  }
+  @media (forced-colors: active) {
+    .kx-meter {
+      border-block-end: 1px solid CanvasText;
     }
   }
 
@@ -378,13 +432,116 @@
     animation: kx-fade-in var(--duration-base) var(--easing-standard) both;
   }
 
-  /* Code browser: the lines that read the story token are marked, so the token is visible in every language. */
+  /*
+   * The hero map's one adaptive structure (hero-system-map.tsx). Outputs and platforms share a grid and line up
+   * through subgrid, so the drawing can join each output to exactly the platforms that read it:
+   *
+   *   rows (a phone):      [outputs] ┆ [platforms]   one row per platform; the CSS output spans the two web rows
+   *   columns (≥ 34rem):   outputs above, the boundary, platforms below; the CSS output spans the two web columns
+   *
+   * `--kx-impl` is the platform count and `--span` the number of platforms an output feeds, both set from the
+   * manifest-derived props, so nothing here knows there are five.
+   */
+  .kx-map-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) 1.75rem minmax(0, 1.1fr);
+    grid-template-rows: auto repeat(var(--kx-impl, 5), auto);
+    row-gap: 0.5rem;
+    /* room for the generated spine, which runs down the outputs' inline-start edge */
+    padding-inline-start: 1rem;
+  }
+  .kx-map-boundary {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    margin-block-end: 0.5rem;
+  }
+  .kx-map-rule {
+    grid-column: 2;
+    grid-row: 2 / span var(--kx-impl, 5);
+    justify-self: center;
+    border-inline-start: 1px dashed hsl(var(--border));
+  }
+  .kx-map-outputs {
+    grid-column: 1;
+    grid-row: 2 / span var(--kx-impl, 5);
+    display: grid;
+    grid-template-rows: subgrid;
+  }
+  .kx-map-chip {
+    grid-row: span var(--span, 1);
+  }
+  .kx-map-tabs {
+    grid-column: 3;
+    grid-row: 2 / span var(--kx-impl, 5);
+    display: grid;
+    grid-template-rows: subgrid;
+  }
+  .kx-map-panel {
+    grid-column: 1 / -1;
+    margin-block-start: 0.75rem;
+  }
+  @container (min-width: 34rem) {
+    .kx-map-grid {
+      grid-template-columns: repeat(var(--kx-impl, 5), minmax(0, 1fr));
+      grid-template-rows: auto auto auto;
+      column-gap: 0.5rem;
+      row-gap: 0;
+      padding-inline-start: 0;
+    }
+    .kx-map-outputs {
+      grid-column: 1 / -1;
+      grid-row: 1;
+      grid-template-rows: none;
+      grid-template-columns: subgrid;
+    }
+    .kx-map-chip {
+      grid-row: auto;
+      grid-column: span var(--span, 1);
+    }
+    /* the traces cross the boundary between the two layers, under its label */
+    .kx-map-boundary {
+      grid-row: 2;
+      margin-block: 2.75rem;
+    }
+    .kx-map-rule {
+      display: none;
+    }
+    .kx-map-tabs {
+      grid-column: 1 / -1;
+      grid-row: 3;
+      grid-template-rows: none;
+      grid-template-columns: subgrid;
+    }
+    .kx-map-tab {
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.375rem;
+      padding-block: 0.75rem;
+      text-align: center;
+    }
+    .kx-map-tab-text {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+  /*
+   * Source quoted on its own line: the site's inline-code rule sizes `code` at 0.85em of its parent (10.2px inside
+   * 12px text) and gives it a chip. A quoted line is not inline code, so it takes neither; its size is set where
+   * it is used, from the type scale (`text-body-sm`, 12px).
+   */
+  .kx-source {
+    font-family: var(--font-mono);
+    padding: 0;
+    background: none;
+  }
+
+  /*
+   * Code browser: the lines that read the story token are marked, so the token is visible in every language.
+   * Source is always set LTR (`dir="ltr"` on the pre), so the marker is on the left in either page direction.
+   */
   .kx-code-line[data-reads] {
     background: hsl(var(--primary) / 0.1);
     box-shadow: inset 2px 0 0 hsl(var(--primary));
-  }
-  [dir="rtl"] .kx-code-line[data-reads] {
-    box-shadow: inset -2px 0 0 hsl(var(--primary));
   }
   .kx-tok-comment {
     color: hsl(var(--muted-foreground));

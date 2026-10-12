@@ -78,26 +78,26 @@ export interface TokenOutput {
 type Excerpt = {
   file: string;
   language: HighlightLanguage;
-  /** first line of the excerpt (inclusive); the whole file when omitted */
-  start?: RegExp;
-  /** how many lines before `start` to include (a doc comment's opening line) */
-  lead?: number;
-  /** last line of the excerpt (inclusive), searched after `start` */
-  end?: RegExp;
+  /** the line the window is centred on; the platform's `reads` pattern when omitted */
+  anchor?: RegExp;
+  /** search for `anchor` only after the first line matching this (a rule inside a large stylesheet) */
+  after?: RegExp;
+  /** lines kept before and after the anchor; the excerpt is a window, not the file */
+  before?: number;
+  following?: number;
 };
+
+/** Lines either side of the anchor by default: seven lines, enough to show the token read in its real context. */
+const WINDOW = 3;
 
 const SWITCH_SOURCES = {
   React: { reads: /bg-action\b/, files: [{ file: "packages/ui/src/components/switch.tsx", language: "tsx" }] },
   Angular: {
     reads: /hsl\(var\(--action\)\)/,
     files: [
-      { file: "packages/ui-angular/src/lib/toggles.ts", language: "ts", start: /^ \*   <kx-switch /, lead: 1, end: /^}$/ },
-      {
-        file: "packages/ui-angular/src/styles.css",
-        language: "css",
-        start: /^\.kx-switch \{/,
-        end: /^\.kx-switch\[aria-checked='true'\] \.kx-switch__thumb/,
-      },
+      // the component: its selector and the start of its template (the colour lives in the package stylesheet)
+      { file: "packages/ui-angular/src/lib/toggles.ts", language: "ts", anchor: /^  selector: 'kx-switch',$/, before: 1, following: 5 },
+      { file: "packages/ui-angular/src/styles.css", language: "css", after: /^\.kx-switch \{/ },
     ],
   },
   SwiftUI: { reads: /colors\.action\b/, files: [{ file: "packages/ui-swiftui/Sources/KinetixUI/Switch.swift", language: "swift" }] },
@@ -120,16 +120,20 @@ export interface SourceFile {
   readsToken: number[];
 }
 
-/** Cut an excerpt out of `text` by its markers; the whole file when it has none. */
-export function cut(text: string, spec: Excerpt): { first: number; last: number; body: string } {
+/**
+ * Cut a window out of `text`: `before` lines above the anchor line and `following` below it (clamped to the file).
+ * The homepage shows enough source to prove the line is real; the whole file is one link away.
+ */
+export function cut(text: string, spec: Excerpt, reads: RegExp): { first: number; last: number; body: string } {
   const all = text.replace(/\n$/, "").split("\n");
-  if (!spec.start) return { first: 1, last: all.length, body: all.join("\n") };
-  const at = all.findIndex((l) => spec.start!.test(l));
-  if (at < 0) throw new Error(`systems-in-motion: ${spec.file} has no line matching ${spec.start}`);
-  const from = Math.max(0, at - (spec.lead ?? 0));
-  const endAt = spec.end ? all.findIndex((l, i) => i > at && spec.end!.test(l)) : all.length - 1;
-  if (endAt < 0) throw new Error(`systems-in-motion: ${spec.file} has no line matching ${spec.end} after ${spec.start}`);
-  return { first: from + 1, last: endAt + 1, body: all.slice(from, endAt + 1).join("\n") };
+  const from0 = spec.after ? all.findIndex((l) => spec.after!.test(l)) : 0;
+  if (from0 < 0) throw new Error(`systems-in-motion: ${spec.file} has no line matching ${spec.after}`);
+  const anchor = spec.anchor ?? reads;
+  const at = all.findIndex((l, i) => i >= from0 && anchor.test(l));
+  if (at < 0) throw new Error(`systems-in-motion: ${spec.file} has no line matching ${anchor}`);
+  const from = Math.max(0, at - (spec.before ?? WINDOW));
+  const to = Math.min(all.length - 1, at + (spec.following ?? WINDOW));
+  return { first: from + 1, last: to + 1, body: all.slice(from, to + 1).join("\n") };
 }
 
 /* ------------------------------------------------------------------ per platform */
@@ -224,6 +228,13 @@ export function systemsInMotion(root = repoRoot()): SystemsInMotion {
   }));
   // Every output must feed at least one implementation, and every implementation must have an output.
   for (const o of outputs) if (o.platforms.length === 0) throw new Error(`systems-in-motion: ${o.id} output feeds no platform`);
+  // The hero lays each output beside (or above) exactly the platforms that read it, so the outputs follow the
+  // manifest's platform order and each one's platforms must be neighbours in it; otherwise the drawing would cross.
+  outputs.sort((a, b) => PLATFORMS.indexOf(a.platforms[0]!) - PLATFORMS.indexOf(b.platforms[0]!));
+  for (const o of outputs) {
+    const at = o.platforms.map((p) => PLATFORMS.indexOf(p));
+    if (at.some((i, k) => k > 0 && i !== at[k - 1]! + 1)) throw new Error(`systems-in-motion: ${o.id} feeds platforms that are not adjacent in the manifest`);
+  }
 
   const read = (rel: string) => {
     const abs = join(root, rel);
@@ -236,7 +247,7 @@ export function systemsInMotion(root = repoRoot()): SystemsInMotion {
     const spec = SWITCH_SOURCES[p];
     const files: SourceFile[] = spec.files.map((f: Excerpt) => {
       if (!f.file.startsWith(`${def.dir}/`)) throw new Error(`systems-in-motion: ${p} source ${f.file} is outside ${def.dir}`);
-      const { first, last, body } = cut(read(f.file), f);
+      const { first, last, body } = cut(read(f.file), f, spec.reads);
       const plain = body.split("\n");
       return {
         file: f.file,

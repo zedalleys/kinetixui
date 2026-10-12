@@ -58,6 +58,7 @@
     "check:iot-monitoring": "node scripts/iot-monitoring.mjs",
     "check:docs-trees": "node scripts/docs-tree-browser.mjs --base http://127.0.0.1:3000",
     "check:platform-preference": "node scripts/platform-preference-browser.mjs --base http://127.0.0.1:3000",
+    "check:home-systems": "node scripts/home-systems-browser.mjs --base http://127.0.0.1:3000",
     "check:platform-ticker": "node scripts/platform-ticker.mjs --base http://127.0.0.1:3000",
     "check:type-scale": "node scripts/check-type-scale.mjs",
     "check:typography": "node scripts/check-typography.mjs",

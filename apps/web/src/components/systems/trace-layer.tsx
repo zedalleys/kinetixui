@@ -41,10 +41,12 @@ export function TraceLayer({ pairs }: { pairs: TracePair[] }) {
     setState({ w: r.width, h: r.height, paths });
   }, [pairs]);
 
-  React.useLayoutEffect(() => {
-    measure();
+  // Measured from the ResizeObserver's first callback, which runs after layout, rather than synchronously during
+  // hydration: reading geometry in a layout effect forced a whole-page layout inside the hydration task.
+  React.useEffect(() => {
     const host = svg.current?.parentElement;
-    if (!host || typeof ResizeObserver === "undefined") return;
+    if (!host) return;
+    if (typeof ResizeObserver === "undefined") return measure();
     const ro = new ResizeObserver(() => measure());
     ro.observe(host);
     // a direction flip moves the anchors without resizing anything, so watch the document's direction too
