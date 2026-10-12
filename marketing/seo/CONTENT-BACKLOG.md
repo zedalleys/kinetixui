@@ -66,18 +66,18 @@ extra page.
 
 ## Phase 2B — first content cluster
 
-**Drafted** (PR "feat(web): add cross-platform design system content cluster"), all four as `draft` in
-`apps/web/src/lib/guides.ts`: noindex, out of the sitemap, reviewable by URL on a preview deployment. Ownership,
+**Published 2026-10-12.** Drafted in #364 (noindex, out of the sitemap), reviewed by the owner, then published
+together in `apps/web/src/lib/guides-data.ts`. Ownership,
 CTAs and links: [`SEARCH-INTENT-MAP.md` § Content cluster](./SEARCH-INTENT-MAP.md#content-cluster).
 
 | Guide | Status | Next step |
 | --- | --- | --- |
-| Pillar: Cross-platform design systems — architecture, parity and trade-offs (`/guides/cross-platform-design-systems`) | drafted | owner review, then publish with the real date |
-| Generated tokens vs generated components | drafted | publish together with the pillar (a published guide linking a draft fails `draft-linked`) |
-| How to verify design system parity across web, iOS and Android | drafted | publish together with the pillar (a published guide linking a draft fails `draft-linked`) |
-| What a cross-platform component library should actually give you | drafted | publish together with the pillar (a published guide linking a draft fails `draft-linked`) |
+| Pillar: Cross-platform design systems — architecture, parity and trade-offs (`/guides/cross-platform-design-systems`) | **published** 2026-10-12 | measure per [`MEASUREMENT.md`](./MEASUREMENT.md) § content-cluster reporting |
+| Generated tokens vs generated components | **published** 2026-10-12 | with the pillar; the set unpublishes together too |
+| How to verify design system parity across web, iOS and Android | **published** 2026-10-12 | with the pillar; the set unpublishes together too |
+| What a cross-platform component library should actually give you | **published** 2026-10-12 | with the pillar; the set unpublishes together too |
 | Design tokens across React, SwiftUI, Compose and Flutter | **deferred** | owned by `/docs/tokens` and ART-002; would cannibalise both |
-| `/guides` index page | **deferred** | only once at least two guides are published; until then the guides link each other |
+| `/guides` index page | **next candidate** | four guides are now published; build when a fifth is planned (the guides already link each other) |
 | A diagram for the pillar (token source → generated outputs; components per platform → evidence) | **brief only** | reuse the `/infographic` pipeline art if it fits; not a blocker for publishing |
 
 ### Next candidates
@@ -105,9 +105,9 @@ The calendar is not rescheduled. Existing assets that can promote a guide once i
 
 | Idea | Search intent | Target route | Stage | CTA | Reuses |
 | --- | --- | --- | --- | --- | --- |
-| **Pillar:** Cross-platform design systems — architecture, parity and trade-offs | cross platform design system architecture | `/guides/cross-platform-design-systems` (**drafted**, 2B) | awareness | Platform coverage | MESSAGING §1D, ART-001 |
+| **Pillar:** Cross-platform design systems — architecture, parity and trade-offs | cross platform design system architecture | `/guides/cross-platform-design-systems` (**published** 2026-10-12) | awareness | Platform coverage | MESSAGING §1D, ART-001 |
 | Design tokens across web, iOS and Android | design tokens web ios android | `/docs/tokens` (expand) | evaluation | Start with the tokens | ART-002 (*Your design tokens stop at the web boundary*) |
-| Generated tokens vs generated components | generated tokens vs components; token pipeline | `/guides/generated-tokens-vs-generated-components` (**drafted**, 2B) | awareness | See token implementation | CLAIMS B-series, `/docs/tokens` trace |
+| Generated tokens vs generated components | generated tokens vs components; token pipeline | `/guides/generated-tokens-vs-generated-components` (**published** 2026-10-12) | awareness | See token implementation | CLAIMS B-series, `/docs/tokens` trace |
 | Keeping React, Angular, SwiftUI, Compose and Flutter aligned | design system parity across platforms | article → `/docs/platforms` | awareness | Platform coverage | ART-001, `verification.json` |
 
 ## Cluster B — Platform evaluation *(secondary ICP)*
@@ -128,7 +128,7 @@ The calendar is not rescheduled. Existing assets that can promote a guide once i
 | Platform parity, measured | design system platform parity | `/docs/platforms` | evaluation | View verification | `verification.json`, ladder |
 | Accessibility parity across platforms | accessible design system cross platform | `/docs/accessibility` (+ native evidence) | evaluation | Read the evidence | a11y-site, Compose TalkBack work |
 | RTL across platforms | rtl design system; flutter rtl; compose rtl | `/docs/rtl` or `/rtl-design-system` ([`../seo.md`](../seo.md) rank 2) | evaluation | See direction-aware evidence | `check:rtl`, RTL.md |
-| How to verify a component library's claims | design system parity verification | `/guides/verify-design-system-parity` (**drafted**, 2B) | evaluation | View verification evidence | ART-001 |
+| How to verify a component library's claims | design system parity verification | `/guides/verify-design-system-parity` (**published** 2026-10-12) | evaluation | View verification evidence | ART-001 |
 
 ## Cluster D — Adoption
 
@@ -136,7 +136,7 @@ The calendar is not rescheduled. Existing assets that can promote a guide once i
 | --- | --- | --- | --- | --- | --- |
 | Migrating from a React-only design system | migrate react design system to native | article → `/docs/installation` | adoption | Install | — |
 | Source-copy vs package distribution | shadcn style copy components vs npm package | `/docs/installation` section | adoption | Install | registry + npm docs |
-| How to evaluate a component library | cross-platform component library evaluation | `/guides/evaluate-cross-platform-component-library` (**drafted**, 2B) | evaluation | Explore components | evaluator journey audit |
+| How to evaluate a component library | cross-platform component library evaluation | `/guides/evaluate-cross-platform-component-library` (**published** 2026-10-12) | evaluation | Explore components | evaluator journey audit |
 
 ---
 

@@ -18,6 +18,10 @@ const sha = (f) => createHash("sha256").update(readFileSync(f)).digest("hex");
 const built = (f) => join(APP, f);
 
 const EDITORIAL = "scripts/check-editorial.mjs";
+const GUIDES_DATA = resolve("apps/web/src/lib/guides-data.ts");
+// unpublish one guide in the registry while the build still holds it published: the state a partial unpublish ships
+const unpublish = (slug) => (s) =>
+  s.replace(new RegExp(`(slug: "${slug}",[\\s\\S]*?)status: "published",\\n\\s*datePublished: "[^"]*",`), '$1status: "draft",');
 const SEO = "scripts/check-seo.mjs";
 
 export const CONTROLS = [
@@ -80,9 +84,9 @@ export const CONTROLS = [
   },
   {
     id: 8,
-    name: "draft guide accidentally indexed (robots meta flipped)",
-    file: built("guides/verify-design-system-parity.html"),
-    mutate: (s) => s.replace(/<meta name="robots" content="noindex, nofollow"\/>/, '<meta name="robots" content="index, follow"/>'),
+    name: "a guide marked draft is still indexable, in the sitemap and carrying article JSON-LD",
+    file: GUIDES_DATA,
+    mutate: unpublish("evaluate-cross-platform-component-library"),
     gate: EDITORIAL,
     expect: "draft-indexed",
   },
@@ -127,8 +131,9 @@ export const CONTROLS = [
   {
     id: 13,
     name: "an indexable docs page links a draft guide",
-    file: built("docs/platforms.html"),
-    mutate: (s) => s.replace("</main>", '<a href="/guides/cross-platform-design-systems">Guide</a></main>'),
+    file: GUIDES_DATA,
+    // /docs/platforms names the pillar in its Further reading line
+    mutate: unpublish("cross-platform-design-systems"),
     gate: EDITORIAL,
     expect: "draft-linked",
   },
@@ -142,10 +147,9 @@ export const CONTROLS = [
   },
   {
     id: 15,
-    name: "one guide published on its own while the guides it links are still drafts",
-    file: resolve("apps/web/src/lib/guides-data.ts"),
-    // the build still holds the draft pages, so the published pillar is read with its draft links intact
-    mutate: (s) => s.replace('role: "pillar",\n    status: "draft",', 'role: "pillar",\n    status: "published", datePublished: "2026-01-01",'),
+    name: "one guide unpublished while the published guides still link it",
+    file: GUIDES_DATA,
+    mutate: unpublish("verify-design-system-parity"),
     gate: EDITORIAL,
     expect: "draft-linked",
   },
