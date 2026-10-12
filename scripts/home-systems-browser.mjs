@@ -33,13 +33,23 @@ const FLOOR = 12;
 
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 const failures = [];
+// a check that hangs (a page that never settles) fails after this long instead of stalling the whole gate
+const CHECK_TIMEOUT = 180_000;
 const check = async (name, fn) => {
+  let timer;
   try {
-    await fn();
+    await Promise.race([
+      fn(),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`timed out after ${CHECK_TIMEOUT / 1000}s`)), CHECK_TIMEOUT);
+      }),
+    ]);
     console.log(`ok   ${name}`);
   } catch (e) {
     failures.push(name);
     console.log(`FAIL ${name}\n     ${String(e.message).split('\n').slice(0, 6).join('\n     ')}`);
+  } finally {
+    clearTimeout(timer);
   }
 };
 
@@ -131,7 +141,7 @@ for (const width of [390, 1440]) {
     const { page, context } = await open({ width });
     // render every chapter (content-visibility skips offscreen ones) and every tab panel of the explorer
     await page.evaluate(async () => {
-      for (let y = 0; y < document.body.scrollHeight; y += 500) {
+      for (let y = 0; y < Math.min(document.body.scrollHeight, 100_000); y += 500) {
         window.scrollTo(0, y);
         await new Promise((r) => setTimeout(r, 30));
       }
