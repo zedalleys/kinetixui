@@ -178,7 +178,7 @@ export function WorldMap() {
 
       <figcaption
         aria-live="polite"
-        className="mt-3 border-t border-border pt-2 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
+        className="mt-3 border-t border-border pt-2 text-center font-mono text-label-md uppercase tracking-[0.14em] text-muted-foreground"
       >
         {node ? (
           <>

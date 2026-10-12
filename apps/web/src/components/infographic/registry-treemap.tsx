@@ -38,7 +38,7 @@ function Node({ x = 0, y = 0, width = 0, height = 0, index = 0, name, value }: N
         strokeWidth={2}
       />
       {width > 78 && height > 34 ? (
-        <text x={x + 8} y={y + 20} className="fill-background font-mono" style={{ fontSize: 11 }}>
+        <text x={x + 8} y={y + 20} className="fill-background font-mono" style={{ fontSize: "0.75rem" }}>
           {name} · {value}
         </text>
       ) : null}

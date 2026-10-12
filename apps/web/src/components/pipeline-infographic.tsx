@@ -25,9 +25,9 @@ export function PipelineInfographic() {
         {STAGES.map((s, i) => (
           <React.Fragment key={s.n}>
             <div className="flex-1 rounded-md border border-border/70 bg-background p-3">
-              <p className="font-mono text-[10px] text-primary">[{s.n}]</p>
+              <p className="font-mono text-body-sm text-primary">[{s.n}]</p>
               <p className="mt-1 font-display text-sm font-semibold text-foreground">{s.label}</p>
-              <p className="mt-0.5 break-words font-mono text-[10px] text-muted-foreground">{s.sub}</p>
+              <p className="mt-0.5 break-words font-mono text-body-sm text-muted-foreground">{s.sub}</p>
               {i === STAGES.length - 1 && (
                 <div className="mt-2.5 flex flex-wrap gap-1">
                   {OUTPUTS.map((o) => (
@@ -43,7 +43,7 @@ export function PipelineInfographic() {
         ))}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 font-mono text-label-md uppercase tracking-[0.14em] text-muted-foreground">
         <span>one source</span>
         <span className="text-foreground">
           {componentTotal} catalogue entries · {PLATFORMS.length} platform libraries · light + dark

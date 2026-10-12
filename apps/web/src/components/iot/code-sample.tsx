@@ -21,7 +21,7 @@ export function CodeSample({
 }) {
   return (
     <div className={cn("overflow-hidden rounded-lg border border-border bg-muted/40", className)}>
-      <div className="border-b border-border px-4 py-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+      <div className="border-b border-border px-4 py-1.5 text-label-md uppercase tracking-wide text-muted-foreground">
         {language}
       </div>
       {/* `tabIndex={0}` because this scrolls horizontally on a phone, and a scroll container that only a
@@ -30,7 +30,7 @@ export function CodeSample({
       <pre
         dir="ltr"
         tabIndex={0}
-        className="overflow-x-auto p-4 text-[13px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+        className="overflow-x-auto p-4 text-code leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       >
         <code>{code}</code>
       </pre>

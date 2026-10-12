@@ -139,7 +139,7 @@ function SemanticField({
       <div className="min-w-0 flex-1">
         <label htmlFor={id} className="flex items-baseline gap-2 text-sm">
           {label}
-          <span className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+          <span className="font-mono text-label-md uppercase tracking-wide text-muted-foreground">
             {manual ? "manual" : follows ? `from ${follows}` : "generated"}
           </span>
         </label>

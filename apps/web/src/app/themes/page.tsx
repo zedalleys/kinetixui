@@ -37,12 +37,12 @@ export default function ThemesPage() {
             Customize this contract in Create and preview it on real components.
           </span>
         </span>
-        <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-primary transition-transform group-hover:translate-x-0.5">
+        <span className="font-mono text-label-md uppercase tracking-[0.1em] text-primary transition-transform group-hover:translate-x-0.5">
           Customize in Create →
         </span>
       </Link>
 
-      <h2 className="mt-14 font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+      <h2 className="mt-14 font-mono text-label-md uppercase tracking-[0.15em] text-muted-foreground">
         The contract
       </h2>
       <TokenTable />

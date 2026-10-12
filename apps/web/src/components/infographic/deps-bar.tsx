@@ -32,7 +32,7 @@ export function DepsBar() {
           <div key={r.name} className="grid grid-cols-[minmax(0,40%)_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)]">
             <span
               className={
-                "truncate text-right font-mono text-[11px] " +
+                "truncate text-right font-mono text-body-sm " +
                 (r.self ? "font-semibold text-foreground" : "text-muted-foreground")
               }
             >
@@ -50,7 +50,7 @@ export function DepsBar() {
               />
               <span
                 className={
-                  "font-mono text-[11px] tabular-nums " +
+                  "font-mono text-body-sm tabular-nums " +
                   (r.self ? "font-semibold text-primary" : "text-muted-foreground")
                 }
               >
@@ -60,7 +60,7 @@ export function DepsBar() {
           </div>
         ))}
       </div>
-      <figcaption className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground">
+      <figcaption className="mt-3 font-mono text-body-sm leading-relaxed text-muted-foreground">
         Through the CLI, KinetixUI is source in your repo rather than a package you depend on — the CLI copies
         component source and installs the npm packages it imports, so there is no runtime dependency you cannot
         patch and no KinetixUI version lock. A pasted component pulls in only the primitives it imports (e.g.

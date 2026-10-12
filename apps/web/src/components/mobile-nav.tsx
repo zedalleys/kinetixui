@@ -8,7 +8,7 @@ import { Menu, X } from "lucide-react";
 import { docsGuideNav, mainNav, siteConfig } from "@/lib/site";
 
 const iconButton =
-  "inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "kx-hit inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 // A modal dialog rather than a hand-rolled panel: Radix traps Tab inside, makes
 // the rest of the page inert/aria-hidden, closes on Esc, and returns focus to the
@@ -41,7 +41,7 @@ export function MobileNav() {
             <div className="mb-2 flex items-center justify-between">
               <div className="flex min-w-0 items-baseline gap-2 px-2">
                 <Dialog.Title className="text-sm font-medium">Menu</Dialog.Title>
-                <span className="font-mono text-[11px] text-muted-foreground">
+                <span className="font-mono text-body-sm text-muted-foreground">
                   v{siteConfig.version} — beta
                 </span>
               </div>
@@ -60,7 +60,7 @@ export function MobileNav() {
                 >
                   {i.title}
                   {i.soon && (
-                    <span className="rounded-[3px] border border-border px-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                    <span className="rounded-[3px] border border-border px-1 font-mono text-label-md uppercase tracking-wider text-muted-foreground">
                       soon
                     </span>
                   )}
@@ -84,7 +84,7 @@ export function MobileNav() {
                       className="block rounded px-2 py-1.5 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       {i.title}
-                      {i.badge && <span className="ml-2 rounded-[3px] border border-border px-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">{i.badge}</span>}
+                      {i.badge && <span className="ml-2 rounded-[3px] border border-border px-1 font-mono text-label-md uppercase tracking-wider text-muted-foreground">{i.badge}</span>}
                     </Link>
                   ))}
                 </div>

@@ -178,7 +178,7 @@ export default function HomePage() {
               */}
               <div className="mt-6 w-full max-w-xl">
                 <HeroCommand />
-                <p className="mt-2 text-[13px] text-muted-foreground sm:whitespace-nowrap">
+                <p className="mt-2 text-body-md text-muted-foreground sm:whitespace-nowrap">
                   Example — adds one component.{" "}
                   <Link
                     href="/docs/installation"
@@ -222,13 +222,13 @@ export default function HomePage() {
             <aside className="flex max-w-sm flex-col gap-4 self-start lg:max-w-none">
               <HeroTokenFan />
               <div className="kx-frame hidden border border-border bg-background/60 lg:block">
-                <p className="border-b border-border px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                <p className="border-b border-border px-4 py-2.5 font-mono text-label-md uppercase tracking-[0.18em] text-muted-foreground">
                   spec
                 </p>
                 <dl className="divide-y divide-border">
                   {SPEC.map(([k, v]) => (
                     <div key={k} className="flex items-center justify-between gap-4 px-4 py-3">
-                      <dt className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+                      <dt className="font-mono text-label-md uppercase tracking-wide text-muted-foreground">
                         {k}
                       </dt>
                       <dd className="font-display text-sm font-semibold">{v}</dd>
@@ -243,7 +243,7 @@ export default function HomePage() {
         {/* targets ticker — a hard structural band */}
         <div className="relative border-t border-border">
           <div className="mx-auto flex max-w-screen-2xl items-stretch">
-            <span className="hidden shrink-0 items-center border-r border-border px-4 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground sm:flex sm:px-6 lg:px-8">
+            <span className="hidden shrink-0 items-center border-r border-border px-4 font-mono text-label-md uppercase tracking-[0.18em] text-muted-foreground sm:flex sm:px-6 lg:px-8">
               Targets&nbsp;→
             </span>
             <PlatformTicker />
@@ -491,7 +491,7 @@ export default function HomePage() {
               element that takes the homepage from 26px of overflow to 0 at 320px/200% text. */}
           <Reveal className="mt-12 grid gap-6 [&>*]:min-w-0 md:grid-cols-3">
             <div className="kx-frame flex flex-col border border-border p-6">
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              <p className="font-mono text-label-md uppercase tracking-[0.18em] text-muted-foreground">
                 Level 01 — tokens
               </p>
               <h3 className="mt-3 font-display text-lg font-semibold">Keep your components</h3>
@@ -510,7 +510,7 @@ export default function HomePage() {
             </div>
 
             <div className="kx-frame flex flex-col border border-border p-6">
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              <p className="font-mono text-label-md uppercase tracking-[0.18em] text-muted-foreground">
                 Level 02 — components
               </p>
               <h3 className="mt-3 font-display text-lg font-semibold">Copy what you need</h3>
@@ -529,7 +529,7 @@ export default function HomePage() {
             </div>
 
             <div className="kx-frame flex flex-col border border-border p-6">
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              <p className="font-mono text-label-md uppercase tracking-[0.18em] text-muted-foreground">
                 Level 03 — blocks
               </p>
               <h3 className="mt-3 font-display text-lg font-semibold">Whole patterns</h3>

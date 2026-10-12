@@ -6,7 +6,7 @@ function Panel({ scheme }: { scheme: "light" | "dark" }) {
   return (
     <div className={scheme === "dark" ? "dark" : "theme-light"}>
       <div className="rounded-xl border border-border bg-background p-6 text-foreground">
-        <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+        <p className="font-mono text-label-md uppercase tracking-[0.15em] text-muted-foreground">
           {scheme}
         </p>
         <div className="mt-4 space-y-4">
