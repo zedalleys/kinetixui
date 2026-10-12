@@ -5,6 +5,7 @@ import { CollectionsFixture } from './collections';
 import { CompositeStates } from './composite';
 import { CompositionsFixture } from './compositions';
 import { EntryStates } from './entry';
+import { LayoutFixture } from './layout';
 import { ListboxesFixture } from './listboxes';
 import { NavigationFixture } from './navigation';
 import { NotificationsFixture } from './notifications';
@@ -27,6 +28,7 @@ export const FIXTURES: Record<string, Type<unknown>> = {
   composite: CompositeStates,
   compositions: CompositionsFixture,
   entry: EntryStates,
+  layout: LayoutFixture,
   listboxes: ListboxesFixture,
   navigation: NavigationFixture,
   notifications: NotificationsFixture,
