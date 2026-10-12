@@ -7,6 +7,7 @@ import { UsageExampleTabs } from "@/components/usage-example-tabs";
 import { ComponentApi } from "@/components/component-api";
 import { ComponentKeyboard } from "@/components/component-keyboard";
 import { ComponentMeta } from "@/components/component-meta";
+import { NpmLinks } from "@/components/npm-links";
 import { Callout } from "@/components/callout";
 import { Steps, Step } from "@/components/steps";
 import { CodePre } from "@/components/code-pre";
@@ -97,6 +98,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ComponentApi,
     ComponentKeyboard,
     ComponentMeta,
+    NpmLinks,
     Callout,
     Steps,
     Step,

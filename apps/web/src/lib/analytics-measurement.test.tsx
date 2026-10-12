@@ -89,7 +89,7 @@ describe("the measurement model matches the strategy", () => {
   });
 
   it("keeps generic engagement out of both definitions", () => {
-    for (const event of ["$pageview", "docs_viewed", "github_clicked", "external_link_clicked", "changelog_viewed", "preset_shared", "iot_example_copied"]) {
+    for (const event of ["$pageview", "docs_viewed", "github_clicked", "external_link_clicked", "changelog_viewed", "preset_shared", "iot_example_copied", "component_code_viewed"]) {
       expect(isQualifiedEvaluation({ event }), event).toBe(false);
       expect(isAdoptionIntent({ event }), event).toBe(false);
     }

@@ -16,9 +16,9 @@ to `pnpm install` / Turborepo. It lives here for proximity to the token
 source it's built from.
 
 <Callout>
-  Not on Maven Central yet. Consume it by cloning the repo and copying the
-  `packages/ui-compose/ui` module into your project (or `includeBuild`-ing
-  it), the same "own the code" model as the web CLI. A publication workflow
+  Not on Maven Central yet. Consume it by cloning the repo at a pinned commit
+  and copying the `packages/ui-compose/ui` module into your project, the same
+  "own the code" model as the web CLI. A publication workflow
   (`publish-compose.yml`, staging to the Central Portal) exists but needs
   signing credentials and has not been used for a real release.
 </Callout>
@@ -43,8 +43,43 @@ The `ui` module is `com.android.library`, `namespace com.kinetixui.ui`,
 
 ### 1. Copy the module and register it
 
-Copy `packages/ui-compose/ui` into your project as a folder named `kinetixui-ui`,
-next to your `app` folder, then register it:
+There is no released version, so copy from a checkout pinned to a commit. From
+your project's root folder:
+
+```bash
+git clone https://github.com/zedalleys/kinetixui.git ../kinetixui
+git -C ../kinetixui checkout <commit-sha>
+cp -R ../kinetixui/packages/ui-compose/ui kinetixui-ui
+```
+
+Note the commit in your own repository (a line in your README or the commit
+message that adds the folder), so the next update knows where it started.
+
+To update, read what changed first:
+`git -C ../kinetixui log --oneline <commit-sha>..<newer-commit-sha> -- packages/ui-compose/ui`.
+Then replace the whole folder rather than copying over it: `cp -R` onto an
+existing `kinetixui-ui` nests the new copy inside it as `kinetixui-ui/ui`, and
+copying file by file would leave behind files the newer commit deleted. Replacing
+it also deletes any edits you made inside `kinetixui-ui`, so the first two lines
+save them as a patch against the commit you copied (skip them if you changed
+nothing), and the last line puts them back:
+
+```bash
+git -C ../kinetixui checkout <commit-sha>
+diff -ruN -x build -x .gradle ../kinetixui/packages/ui-compose/ui kinetixui-ui > kinetixui-local.patch
+git -C ../kinetixui fetch
+git -C ../kinetixui checkout <newer-commit-sha>
+rm -rf kinetixui-ui
+cp -R ../kinetixui/packages/ui-compose/ui kinetixui-ui
+patch -p1 -d kinetixui-ui < kinetixui-local.patch
+```
+
+`patch` reports each edit it could not apply and saves it beside the file as a
+`.rej`; resolve those by hand, then delete the `.rej` and `.orig` files it leaves.
+Build, and commit the folder together with the new commit SHA.
+
+That leaves `packages/ui-compose/ui` in your project as a folder named `kinetixui-ui`,
+next to your `app` folder. Register it:
 
 ```kotlin
 // settings.gradle.kts: add to your existing settings

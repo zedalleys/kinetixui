@@ -5,6 +5,10 @@ export const metadata = {
 
 # Accessibility
 
+This page is about the React library, `@kinetixui/ui`, unless a line names another platform. What the
+Angular, SwiftUI, Compose and Flutter implementations are tested for (accessibility semantics, RTL and large
+text) is counted per platform, from the test files, on [Supported platforms](/docs/platforms).
+
 Accessibility is a build constraint here, not a review step. Most interactive
 components are a [Radix Primitive](https://www.radix-ui.com/primitives) underneath,
 so keyboard interaction, focus management, and ARIA roles come correct by
@@ -79,6 +83,13 @@ documented here and pinned by tests in `packages/ui/src/components-keyboard.test
 | `KanbanBoard` | `group` of sortable lists | dnd-kit's keyboard sensor: `Space` / `Enter` picks up, arrows move, `Space` / `Enter` drops, `Esc` cancels | — (drag within and across columns is exercised in real Chromium by the browser pass) |
 
 The known gaps are deliberate omissions, not oversights.
+
+## Known exceptions
+
+The browser audit (`pnpm check:a11y-browser`, run in CI by `a11y-browser.yml`) scans every Storybook story with
+axe in light and dark. Each finding it accepts is listed with the reason it is accepted in
+[`a11y-baseline.json`](https://github.com/zedalleys/kinetixui/blob/main/a11y-baseline.json), and the run fails
+on any finding that is not listed there.
 
 ## The one trade-off
 

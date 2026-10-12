@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { BlocksContent } from "./blocks-content";
+import { BlocksInstallGuide } from "./block-install";
+import { blockComponents } from "@/lib/block-components";
 import { blockTotal, everyBlockIsFivePlatform, platformsWithBlocks } from "@/lib/blocks";
 import { PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
 
@@ -22,8 +24,7 @@ export default function BlocksPage() {
       <h1 className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] md:text-4xl">Blocks</h1>
       <p className="mt-3 max-w-2xl text-muted-foreground">
         Whole sections put together from the registry — sign-in cards, dashboard headers, pricing,
-        toolbars. Copy the code, add the components it uses with{" "}
-        <code className="text-foreground">npx @kinetixui/cli add …</code>, and adjust.{" "}
+        toolbars. Copy the code, install what it uses on your platform, and adjust.{" "}
         {everyBlockIsFivePlatform ? (
           <>
             All <span className="text-foreground">{blockTotal}</span> carry real source for{" "}
@@ -37,7 +38,8 @@ export default function BlocksPage() {
           </>
         )}
       </p>
-      <BlocksContent />
+      <BlocksInstallGuide />
+      <BlocksContent components={blockComponents()} />
     </div>
   );
 }

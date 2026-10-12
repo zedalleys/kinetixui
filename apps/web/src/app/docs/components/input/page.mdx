@@ -1,24 +1,32 @@
 export const metadata = {
   title: "Input",
-  description: "A single-line text field. Reconciled 1:1 with design source node 54855:13836.",
+  description: "A single-line text field.",
 };
 
 # Input
 
 <ComponentMeta />
 
-A single-line text field. Reconciled 1:1 with design source node `54855:13836`
-(Figma `KinetixUI` › 01. Form Inputs › Input).
+A single-line text field.
 
 <ComponentPreview name="input-demo" />
 
-## Installation
+## React installation
+
+Install the package the usage below imports from:
+
+```bash
+npm i @kinetixui/ui @kinetixui/tokens
+```
+
+The project also needs Tailwind CSS 3 and the KinetixUI preset; see [Installation](/docs/installation). To own
+the source instead, copy it into your project with the CLI and import from the folder it writes to:
 
 ```bash
 npx @kinetixui/cli add input
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Input } from "@kinetixui/ui";
@@ -47,3 +55,8 @@ Plus all native `<input>` attributes.
 ## Keyboard
 
 <ComponentKeyboard slug="input" />
+
+## Design source
+
+Reconciled 1:1 with design source node `54855:13836`
+(Figma `KinetixUI` › 01. Form Inputs › Input).

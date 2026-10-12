@@ -24,6 +24,7 @@ const anyComponent = componentDocs[0]!.href.split("/").pop()!;
 describe("packages come from the package.json files, not from this test or the site", () => {
   it("are the public packages the site can name", () => {
     expect(Object.values(PACKAGES).sort()).toEqual([
+      "@kinetixui/angular",
       "@kinetixui/cli",
       "@kinetixui/iot",
       "@kinetixui/tokens",
