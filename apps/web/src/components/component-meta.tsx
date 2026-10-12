@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { registryItemFor } from "@/lib/registry-items";
 import { PRIMITIVE, COMPONENT_CATEGORY } from "@/lib/component-registry";
 import { PlatformVerification } from "@/components/platform-verification";
 import { STATUS } from "@/lib/component-status";
@@ -137,12 +138,12 @@ export function ComponentMeta() {
       </Row>
       <Row label="Registry">
         <a
-          href={`/r/${slug}.json`}
+          href={`/r/${registryItemFor(slug)}.json`}
           target="_blank"
           rel="noreferrer"
           className="text-primary underline underline-offset-2"
         >
-          /r/{slug}.json
+          /r/{registryItemFor(slug)}.json
         </a>
       </Row>
       <Row label="A11y">

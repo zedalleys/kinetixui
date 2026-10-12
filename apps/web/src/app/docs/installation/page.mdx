@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Installation",
-  description: "Install KinetixUI two ways: the registry, which copies component source into your repo with the CLI, or the npm packages as versioned dependencies. Both use the same tokens.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/installation");
 
 # Installation
 
@@ -195,3 +194,9 @@ the Tailwind layers there; you do not need to import a second copy of the token 
 ## Dark mode
 
 KinetixUI's dark theme is a class toggle on `<html>`. See [Dark Mode](/docs/dark-mode).
+
+## Next steps
+
+- [Design tokens](/docs/tokens) and [theming](/docs/theming): change the look without forking components.
+- [Accessibility](/docs/accessibility): what the React library is tested for.
+- [Blocks](/blocks): sign-in, settings and dashboard sections built from the components.

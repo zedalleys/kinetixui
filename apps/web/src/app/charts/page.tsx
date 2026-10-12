@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/route-seo";
 import { ChartsContent } from "./charts-content";
 
-export const metadata: Metadata = {
-  title: "Charts",
-  description: "Recharts, themed with the KinetixUI token contract.",
-};
+export const metadata: Metadata = routeMetadata("/charts");
 
 export default function ChartsPage() {
   return (

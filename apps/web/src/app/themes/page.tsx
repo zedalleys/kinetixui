@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/route-seo";
 import Link from "next/link";
 import { ThemePreview } from "@/components/theme-preview";
 import { TokenTable } from "@/components/token-table";
 
-export const metadata: Metadata = {
-  title: "Themes",
-  description: "One semantic contract, two value sets.",
-};
+export const metadata: Metadata = routeMetadata("/themes");
 
 export default function ThemesPage() {
   return (

@@ -111,6 +111,8 @@
     "check:angular-collections": "node scripts/angular-collections.mjs",
     "check:content": "node scripts/check-content-register.mjs",
     "check:distribution": "node scripts/check-distribution.mjs",
+    "check:seo": "node scripts/check-seo.mjs",
+    "check:seo-browser": "node scripts/seo-browser.mjs --base http://127.0.0.1:3000",
     "check:analytics-browser": "node scripts/analytics-browser.mjs --base http://127.0.0.1:3100",
     "gen:visuals": "node scripts/gen-marketing-visuals.mjs",
     "render:visuals": "node scripts/render-marketing-visuals.mjs"

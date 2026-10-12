@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Theming",
-  description: "The semantic token contract — background, foreground, action, destructive and the rest — and how to retheme KinetixUI by overriding those variables rather than restyling components.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/theming");
 
 # Theming
 
@@ -356,3 +355,10 @@ Colours only in all three: a design's radius and surface treatment apply on the
 web and have no runtime token to land on natively. Flutter carries the whole
 semantic contract; Compose is missing fields for `input`, `ring` and
 `tertiary-foreground`, and its generated file says so.
+
+## Related guides
+
+- [Design tokens](/docs/tokens): where every value above comes from, and what each platform receives.
+- [Accessibility](/docs/accessibility): the contrast a theme has to keep, and how it is checked.
+- [Platform coverage](/docs/platforms): which components exist on each platform before you theme them.
+- [Explore components](/components) to see a theme applied.

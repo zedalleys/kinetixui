@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Boxes, Palette, Smartphone, Zap } from "lucide-react";
 import { Button } from "@kinetixui/ui";
@@ -8,12 +9,15 @@ import { PlatformTicker } from "@/components/platform-ticker";
 import { Reveal } from "@/components/reveal";
 import { SectionHead } from "@/components/section-head";
 import { StructuredData } from "@/components/structured-data";
+import { routeMetadata } from "@/lib/route-seo";
 import { ctaAttrs } from "@/lib/analytics-surfaces";
 import { IOT_MATURITY_LABEL } from "@/lib/iot";
 import { componentCount, componentTotal, recipes } from "@/lib/platform-support";
 import { installableSentence, platformSentence, sourceOnlySentence } from "@/lib/platform-prose";
 import { componentPlatformCount, projectLicense, projectVersion } from "@/lib/project-stats";
 import { siteConfig } from "@/lib/site";
+
+export const metadata: Metadata = routeMetadata("/");
 
 /*
  * The spec panel, derived.
