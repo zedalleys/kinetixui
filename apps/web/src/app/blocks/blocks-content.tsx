@@ -5,7 +5,7 @@ import { blocks } from "@/lib/blocks";
 import { PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
 import { blockPreviews } from "@/registry/block-previews";
 import { blockExampleSource } from "@/registry/block-examples.generated";
-import { BlockReactInstall } from "./block-install";
+import { BlockComponentLinks, BlockReactInstall } from "./block-install";
 
 /**
  * Every block on the page, driven by blocks.manifest.json.
@@ -34,7 +34,12 @@ export function BlocksContent({ components }: { components: Record<string, strin
             sources={sources}
             platforms={block.platforms.map((p) => PLATFORM_DEFINITIONS[p].label)}
             analyticsBlock={block.slug}
-            aside={<BlockReactInstall components={components[block.slug] ?? []} platforms={block.platforms} />}
+            aside={
+              <>
+                <BlockComponentLinks components={components[block.slug] ?? []} />
+                <BlockReactInstall components={components[block.slug] ?? []} platforms={block.platforms} />
+              </>
+            }
           >
             <Preview />
           </Showcase>

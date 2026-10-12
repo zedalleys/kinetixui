@@ -295,6 +295,12 @@ jobs:
       - name: SEO gate (built HTML, sitemap, robots)
         run: pnpm check:seo
 
+      # The editorial layer on top: component intros and guides, typed counts on platform pages, one owner per
+      # search intent, near-duplicate titles/descriptions. Rules and negative controls: scripts/check-editorial.mjs,
+      # scripts/editorial-negative-controls.mjs.
+      - name: Editorial gate (intros, intent ownership, typed counts)
+        run: pnpm check:editorial
+
       # Every workspace with a `typecheck` script (@kinetixui/ui, @kinetixui/cli, @kinetixui/web) via turbo.
       # Was `--filter @kinetixui/ui` + `continue-on-error`, which let real apps/web type errors through unseen.
       - name: Typecheck (all workspaces)

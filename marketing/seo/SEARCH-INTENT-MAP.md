@@ -11,6 +11,9 @@ repository, and Search Console is not set up yet ([`MEASUREMENT.md`](./MEASUREME
 the questions the product genuinely answers; which of them bring traffic is what the first eight weeks of Search
 Console data will say. Revisit this map then.
 
+**Checked.** `pnpm check:editorial` parses the route table below and fails if two routes claim the same primary
+intent (the bold phrase, or the whole cell when nothing is bold).
+
 **How to read it.** *Primary* is the one intent the page's title and H1 are written for. *Secondary* intents may
 appear in the description or body, but another page owns each of them as its primary. A query family with no owner
 is in the "unowned" table at the end, on purpose.
@@ -68,6 +71,9 @@ is in the "unowned" table at the end, on purpose.
 - **Component pages vs each other.** Each component page links its alternatives under Related components (Dialog →
   Alert Dialog, Modal, Sheet, Drawer), so a reader who landed on the wrong sibling is one click from the right one
   instead of two pages competing for "modal dialog".
+- **Sibling component pages (Phase 2A).** Twenty pages now say when to choose a sibling instead (Dialog → Sheet,
+  Select → Combobox), in a "When to choose something else" section with links, so a reader who lands on the wrong
+  sibling is told why, not only shown a link. Each page keeps its own primary intent.
 - **ART-001 vs `/docs/platforms`.** See below.
 
 ---
@@ -76,7 +82,7 @@ is in the "unowned" table at the end, on purpose.
 
 | Family | Why no page owns it yet | Where it would go |
 | --- | --- | --- |
-| React design system | Saturated and our least differentiated story ([`../seo.md`](../seo.md)); no React platform page exists (baseline F-13) | a future `/docs/react` only if Search Console shows React-qualified impressions worth it |
+| React design system | Saturated and our least differentiated story ([`../seo.md`](../seo.md)). Phase 2 decided against `/docs/react`: Installation is the React adoption page and now carries React's at-a-glance block ([`CONTENT-BACKLOG.md`](./CONTENT-BACKLOG.md) Phase 2A) | `/docs/installation`; a separate page only if Search Console shows React-qualified impressions landing on the wrong page |
 | design tokens Flutter / SwiftUI / Compose (as standalone pages) | `../seo.md` ranks `/design-tokens/flutter` first, but it is new IA and content, not metadata | [`CONTENT-BACKLOG.md`](./CONTENT-BACKLOG.md) cluster B |
 | cross-platform design system (pillar article) | A long-form answer; lives off-site until `/blog` is justified | backlog cluster A |
 | component categories ("overlay components", "form components") | Categories are a client-side filter (`?filter=`), canonicalized to `/components`; no category routes exist | backlog; only if per-category pages prove they add something the gallery does not |
