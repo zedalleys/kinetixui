@@ -99,7 +99,7 @@ export function ImplementationExplorer({
     <Tabs.Root
       value={value}
       onValueChange={onChange}
-      className="kx-chapter-dark dark overflow-hidden rounded-2xl border border-border shadow-2xl shadow-black/20"
+      className="kx-chapter overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/10"
     >
       <Tabs.List aria-label="Implementation platform" className="flex flex-wrap items-stretch gap-x-1 border-b border-border px-2 sm:px-3">
         {tabs.map((t) => (

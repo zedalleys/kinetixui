@@ -263,15 +263,12 @@
    */
 
   /*
-   * A dark chapter: the existing `.dark` token set, applied to one section instead of the page — the same
-   * mechanism `.theme-light` uses in the other direction. Text colour is re-declared here because `body`
-   * resolved it against the page's own theme before this section's variables existed.
+   * A chapter: a section that holds a glow, so it isolates its own stacking context. It follows the site theme
+   * like everything else; light mode stays light (a forced-dark section under a light header read as a bug).
    */
-  .kx-chapter-dark {
+  .kx-chapter {
     position: relative;
     isolation: isolate;
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
   }
   /* A localised action-blue glow behind the chapter's subject. Low alpha, never behind body copy. */
   .kx-glow {

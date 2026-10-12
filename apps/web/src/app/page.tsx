@@ -172,8 +172,8 @@ export default function HomePage() {
     <div>
       <StructuredData />
 
-      {/* ─── [01] hero — a dark chapter ───────────────────────────────────────────────────────── */}
-      <section className="kx-chapter-dark dark overflow-hidden border-b border-border">
+      {/* ─── [01] hero ───────────────────────────────────────────────────────── */}
+      <section className="kx-chapter overflow-hidden border-b border-border">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 kx-grid-bg opacity-50" />
         <div aria-hidden="true" className="kx-glow -end-40 -top-32 size-[46rem]" />
         <div className={container}>
@@ -327,8 +327,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── [03] token boundary — a dark chapter ───────────────────────────────────────────────── */}
-      <section className="kx-chapter-dark dark overflow-hidden border-b border-border">
+      {/* ─── [03] token boundary ───────────────────────────────────────────────── */}
+      <section className="kx-chapter overflow-hidden bg-muted/30 border-b border-border">
         <div aria-hidden="true" className="kx-glow -start-48 top-1/3 size-[40rem]" />
         <div className={`${container} py-20 md:py-28`}>
           <Reveal>
@@ -425,12 +425,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── [06] verification — a dark chapter ─────────────────────────────────────────────────── */}
+      {/* ─── [06] verification ─────────────────────────────────────────────────── */}
       {/*
         `STRATEGY.md` names verification as the position and §7 names Credibility as the funnel's narrowest point.
         Benefit first, mechanism second; the numbers are the manifest this page was built from, and are labelled so.
       */}
-      <section className="kx-chapter-dark dark overflow-hidden border-b border-border">
+      <section className="kx-chapter overflow-hidden bg-muted/30 border-b border-border">
         <div aria-hidden="true" className="kx-glow -end-32 top-10 size-[38rem]" />
         <div className={`${container} py-20 md:py-28`}>
           <Reveal>

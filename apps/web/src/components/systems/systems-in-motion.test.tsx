@@ -217,7 +217,7 @@ describe("systems in motion: reduced motion and transparency", () => {
   });
 
   it("derives new colours from tokens instead of hard-coding them", () => {
-    const rules = css.match(/\.kx-(chapter-dark|glow|glass|trace|map-stage|swap|code-line|tok)[^{]*\{[^}]*\}/g) ?? [];
+    const rules = css.match(/\.kx-(chapter|glow|glass|trace|map-stage|swap|code-line|tok)[^{]*\{[^}]*\}/g) ?? [];
     expect(rules.length).toBeGreaterThan(5);
     for (const r of rules) {
       expect(r).not.toMatch(/#[0-9a-f]{3,8}\b/i);

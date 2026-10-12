@@ -84,6 +84,10 @@ export function HeroSystemMap({
   const [theme, setTheme] = React.useState<Theme>("light");
   // Bumped on every reader action; keys the pulse paths so a change replays one pulse, and only then.
   const [pulse, setPulse] = React.useState(0);
+  // Open on the token value of the theme the reader is already in; the toggle then shows the other one.
+  React.useEffect(() => {
+    if (document.documentElement.classList.contains("dark")) setTheme("dark");
+  }, []);
   const [pulseScope, setPulseScope] = React.useState<"one" | "all">("one");
   const [geometry, setGeometry] = React.useState<Geometry | null>(null);
 
