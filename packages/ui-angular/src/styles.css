@@ -3251,6 +3251,279 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
   .kx-sidebar[data-collapsible='offcanvas'] .kx-sidebar__panel { transition-delay: 0s; }
 }
 
+/* ══ layout, pointer and scroll ═══════════════════════════════════════════
+   scroll area · resizable · carousel · comparison slider
+
+   Four components whose state is a POSITION — how far a view has scrolled, where a boundary sits, which slide
+   is showing, where a divider is — changed by a pointer, a key or a swipe. Each draws that position with logical
+   properties, so it mirrors with the reading direction (TOKENS.md, "Layout and pointer").
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── scroll area ────────────────────────────────────────────────────────── */
+/* The viewport scrolls natively with its own scrollbars hidden; the drawn bars sit in their own grid tracks,
+   so they never cover content, and the vertical bar's column is at the inline end (the left in RTL). The thumb
+   is two numbers from KxScrollArea — the visible fraction (`--kx-scroll-size`) and the logical progress
+   (`--kx-scroll-progress`) — turned into a length and an inline/block-start offset here. Sizes are rem, so a bar
+   and its thumb grow with text. */
+.kx-scroll-area {
+  --kx-scrollbar-size: 0.625rem;
+  --kx-scroll-thumb-min: 1.25rem;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-block-size: 0;
+  font-family: var(--font-family-sans);
+}
+.kx-scroll-area__viewport {
+  grid-area: 1 / 1;
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: auto;
+  scrollbar-width: none;
+  border-radius: inherit;
+}
+.kx-scroll-area__viewport::-webkit-scrollbar { display: none; }
+/* drawn inside the viewport's own edge (an outline paints above its content and is not clipped by its own
+   scrolling), so neither the area's rounded edge nor an ancestor's overflow can cut it */
+.kx-scroll-area__viewport:focus { outline: none; }
+.kx-scroll-area__viewport:focus-visible { outline: 2px solid hsl(var(--focus)); outline-offset: -2px; }
+/* the content may be wider than the view (a wide table) but is never narrower */
+.kx-scroll-area__content { display: table; min-inline-size: 100%; }
+.kx-scroll-area__scrollbar { position: relative; touch-action: none; user-select: none; }
+.kx-scroll-area__scrollbar[data-orientation='vertical'] { grid-area: 1 / 2; inline-size: var(--kx-scrollbar-size); }
+.kx-scroll-area__scrollbar[data-orientation='horizontal'] { grid-area: 2 / 1; block-size: var(--kx-scrollbar-size); }
+.kx-scroll-area__corner { grid-area: 2 / 2; }
+.kx-scroll-area__thumb {
+  --kx-thumb: max(calc(var(--kx-scroll-size, 1) * 100%), var(--kx-scroll-thumb-min));
+  position: absolute;
+  border-radius: var(--radius-full);
+  /* rest: the muted foreground, 3:1 or more against the page in light and dark (check:layout-visual) */
+  background-color: hsl(var(--muted-foreground));
+  transition: background-color var(--duration-fast) var(--easing-standard);
+}
+.kx-scroll-area__scrollbar[data-orientation='vertical'] .kx-scroll-area__thumb {
+  inset-inline: 0.125rem;
+  block-size: var(--kx-thumb);
+  inset-block-start: calc((100% - var(--kx-thumb)) * var(--kx-scroll-progress, 0));
+}
+.kx-scroll-area__scrollbar[data-orientation='horizontal'] .kx-scroll-area__thumb {
+  inset-block: 0.125rem;
+  inline-size: var(--kx-thumb);
+  inset-inline-start: calc((100% - var(--kx-thumb)) * var(--kx-scroll-progress, 0));
+}
+/* hover and drag: the thumb takes the full foreground — a step a reader can see before and while pressing */
+@media (hover: hover) {
+  .kx-scroll-area__scrollbar:hover .kx-scroll-area__thumb { background-color: hsl(var(--foreground)); }
+}
+.kx-scroll-area[data-dragging] .kx-scroll-area__thumb { background-color: hsl(var(--foreground)); }
+.kx-scroll-area[data-dragging] { user-select: none; }
+
+/* ── resizable ──────────────────────────────────────────────────────────── */
+/* Panels are flex weights (KxResizablePanel sets `flex: <size> 1 0px`), so a group that changes size keeps its
+   proportions; a panel's content scrolls rather than being clipped once it no longer fits. A horizontal group is
+   laid out in the reading direction. The handle is a 1px rule in the `border` token with a 12px hit area either
+   side of it; hover and drag widen it to the action colour, focus is the ring. */
+.kx-resizable { display: flex; inline-size: 100%; block-size: 100%; min-inline-size: 0; font-family: var(--font-family-sans); }
+.kx-resizable[data-direction='vertical'] { flex-direction: column; }
+.kx-resizable[data-dragging] { user-select: none; cursor: col-resize; }
+.kx-resizable[data-direction='vertical'][data-dragging] { cursor: row-resize; }
+.kx-resizable__panel { display: block; min-inline-size: 0; min-block-size: 0; overflow: auto; }
+.kx-resizable__handle {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1px;
+  background-color: hsl(var(--border));
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+  transition:
+    background-color var(--duration-fast) var(--easing-standard),
+    box-shadow var(--duration-fast) var(--easing-standard);
+}
+.kx-resizable[data-direction='vertical'] > .kx-resizable__handle { inline-size: auto; block-size: 1px; cursor: row-resize; }
+/* the hit area: 0.375rem (6px at the default size) beyond each side of the rule */
+.kx-resizable__handle::after { content: ''; position: absolute; inset-block: 0; inset-inline: -0.375rem; }
+.kx-resizable[data-direction='vertical'] > .kx-resizable__handle::after { inset-inline: 0; inset-block: -0.375rem; }
+@media (hover: hover) {
+  .kx-resizable__handle:not([aria-disabled='true']):hover { background-color: hsl(var(--action)); box-shadow: 0 0 0 1px hsl(var(--action)); }
+}
+.kx-resizable__handle[data-dragging] { background-color: hsl(var(--action)); box-shadow: 0 0 0 1px hsl(var(--action)); }
+.kx-resizable__handle:focus-visible { box-shadow: var(--shadow-focus); }
+.kx-resizable__handle[aria-disabled='true'] { cursor: default; opacity: var(--opacity-disabled); }
+.kx-resizable__grip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: 0.75rem;
+  block-size: 1rem;
+  border: var(--border-width-default) solid hsl(var(--border));
+  border-radius: var(--radius-sm);
+  background-color: hsl(var(--background));
+  color: hsl(var(--muted-foreground));
+}
+.kx-resizable[data-direction='vertical'] > .kx-resizable__handle > .kx-resizable__grip { rotate: 90deg; }
+.kx-resizable__grip svg { inline-size: 0.375rem; block-size: 0.75rem; fill: currentColor; }
+
+/* ── carousel ───────────────────────────────────────────────────────────── */
+/* A grid: [previous] [viewport] [next], so the controls never sit outside the carousel's own box (React places
+   them 3rem outside it, off a 320px screen) and the columns mirror with the reading direction. The track moves
+   by `transform` (KxCarousel), which is the one transition here; under reduced motion it is none. The viewport
+   clips with `overflow: clip` — it cannot be scrolled by focusing something in it — and lets a focus ring
+   4px beyond its edge stay visible. */
+.kx-carousel {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--spacing-2);
+  font-family: var(--font-family-sans);
+}
+.kx-carousel[data-orientation='vertical'] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  justify-items: center;
+  row-gap: var(--spacing-2);
+}
+.kx-carousel__viewport {
+  display: block;
+  grid-column: 2;
+  grid-row: 1;
+  min-inline-size: 0;
+  overflow: clip;
+  overflow-clip-margin: var(--spacing-1);
+  touch-action: pan-y;
+}
+.kx-carousel[data-orientation='vertical'] > .kx-carousel__viewport { grid-column: 1; grid-row: 2; justify-self: stretch; block-size: 100%; touch-action: pan-x; }
+.kx-carousel__track {
+  display: flex;
+  gap: var(--kx-carousel-gap, var(--spacing-4));
+  transition: transform var(--duration-base) var(--easing-standard);
+}
+.kx-carousel[data-orientation='vertical'] .kx-carousel__track { flex-direction: column; block-size: 100%; }
+.kx-carousel[data-dragging] .kx-carousel__track { transition: none; }
+.kx-carousel[data-dragging] { cursor: grabbing; user-select: none; }
+.kx-carousel__item { display: block; flex: 0 0 var(--kx-carousel-item-size, 100%); min-inline-size: 0; min-block-size: 0; border-radius: var(--radius-md); }
+.kx-carousel__item:focus { outline: none; }
+.kx-carousel__item:focus-visible { outline: 2px solid hsl(var(--focus)); outline-offset: -2px; }
+.kx-carousel__viewport img { -webkit-user-drag: none; }
+.kx-carousel__control { inline-size: 2rem; block-size: 2rem; padding: 0; border-radius: var(--radius-full); }
+/* at a non-looping end a control is aria-disabled, not disabled, so it keeps focus: it must also keep the pointer,
+   or a press on it falls through to the page and focus goes with it (.kx-btn drops pointer events when disabled) */
+.kx-carousel__control[aria-disabled='true'] { pointer-events: auto; cursor: not-allowed; }
+.kx-carousel__control[aria-disabled='true']:is(:hover, :active) { border-color: hsl(var(--input)); background-color: transparent; color: hsl(var(--foreground)); }
+.kx-carousel__previous { grid-column: 1; grid-row: 1; }
+.kx-carousel__next { grid-column: 3; grid-row: 1; }
+.kx-carousel[data-orientation='vertical'] > .kx-carousel__previous { grid-column: 1; grid-row: 1; }
+.kx-carousel[data-orientation='vertical'] > .kx-carousel__next { grid-column: 1; grid-row: 3; }
+/* ‹ › are bidi-mirrored, so they point toward the inline start and end in either direction; a vertical carousel
+   turns them (and marks them ltr, so they do not also mirror) to point up and down */
+.kx-carousel__glyph { font-size: 1.25em; line-height: 1; }
+.kx-carousel[data-orientation='vertical'] .kx-carousel__glyph { rotate: 90deg; }
+
+/* ── comparison slider ──────────────────────────────────────────────────── */
+/* The before layer fills the area; the after layer is a window from the divider to the inline end, its picture
+   laid out at the area's full size (`100cqi`) and anchored to the inline end, so it never moves as the divider
+   does. Everything is placed by `--kx-comparison-position` (KxComparisonSlider) with logical properties. The
+   range input covers the area, transparent; its thumb is a 1px line so a press maps straight to a position.
+   The drawn handle is held 1.25rem inside the edges so it — and its focus ring — is never cut in half at 0 or
+   100; the divider itself goes all the way. */
+.kx-comparison-slider {
+  position: relative;
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  container-type: inline-size;
+  border-radius: var(--radius-md);
+  background-color: hsl(var(--muted));
+  font-family: var(--font-family-sans);
+  user-select: none;
+}
+.kx-comparison-slider__layer { position: absolute; inset: 0; }
+.kx-comparison-slider__layer > :is(img, video, picture, svg, canvas) { display: block; inline-size: 100%; block-size: 100%; object-fit: cover; }
+.kx-comparison-slider__after {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: var(--kx-comparison-position, 50%);
+  inset-inline-end: 0;
+  overflow: hidden;
+}
+.kx-comparison-slider__after-layer { inset-inline-start: auto; inset-inline-end: 0; inline-size: 100cqi; }
+.kx-comparison-slider__divider {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: var(--kx-comparison-position, 50%);
+  inline-size: 2px;
+  margin-inline-start: -1px;
+  /* a light core with a dark edge (or the reverse, in dark) reads on any picture; the edge clears 3:1 against
+     both layers (check:layout-visual) */
+  background-color: hsl(var(--background));
+  box-shadow: 0 0 0 1px hsl(var(--foreground) / 0.7);
+  pointer-events: none;
+}
+.kx-comparison-slider__handle {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: clamp(1.25rem, var(--kx-comparison-position, 50%), 100% - 1.25rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  margin-block-start: -1rem;
+  margin-inline-start: -1rem;
+  border: 2px solid hsl(var(--background));
+  border-radius: var(--radius-full);
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+}
+.kx-comparison-slider__handle svg { inline-size: 1rem; block-size: 1rem; }
+.kx-comparison-slider:has(.kx-comparison-slider__input:focus-visible) .kx-comparison-slider__handle { box-shadow: var(--shadow-focus); }
+.kx-comparison-slider__input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  opacity: 0;
+  cursor: ew-resize;
+  touch-action: pan-y;
+}
+.kx-comparison-slider__input::-webkit-slider-runnable-track { block-size: 100%; background: transparent; }
+.kx-comparison-slider__input::-moz-range-track { block-size: 100%; background: transparent; }
+.kx-comparison-slider__input::-webkit-slider-thumb { appearance: none; inline-size: 1px; block-size: 100%; }
+.kx-comparison-slider__input::-moz-range-thumb { inline-size: 1px; block-size: 100%; border: 0; }
+.kx-comparison-slider__label {
+  position: absolute;
+  inset-block-start: var(--spacing-2);
+  max-inline-size: calc(50% - var(--spacing-4));
+  padding: 0.125rem var(--spacing-2);
+  border-radius: var(--radius-sm);
+  background-color: hsl(var(--background) / 0.85);
+  color: hsl(var(--foreground));
+  font: var(--text-label-sm);
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+.kx-comparison-slider__label--before { inset-inline-start: var(--spacing-2); }
+.kx-comparison-slider__label--after { inset-inline-end: var(--spacing-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .kx-carousel__track,
+  .kx-scroll-area__thumb,
+  .kx-resizable__handle { transition: none; }
+}
+
 /* ── forced colours ─────────────────────────────────────────────────────── */
 /* Every focus ring above is a box-shadow, and a forced palette (Windows contrast themes, `forced-colors:
    active`) removes box-shadow entirely. With one on, the keyboard had no visible position on any control
@@ -3304,4 +3577,14 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
   .kx-notification-item[data-unread] .kx-notification-item__dot,
   .kx-notification-center__dot { forced-color-adjust: none; background-color: Highlight; }
   .kx-tour__spotlight { outline: 2px solid Highlight; }
+  /* the layout family's drawn positions are fills, which the mode would flatten: the scroll thumb, the
+     resizable rule and the comparison divider keep a system colour, and the focus rings become outlines */
+  .kx-scroll-area__thumb,
+  .kx-resizable__handle,
+  .kx-comparison-slider__divider { forced-color-adjust: none; background-color: CanvasText; }
+  .kx-resizable__handle:focus-visible,
+  .kx-comparison-slider:has(.kx-comparison-slider__input:focus-visible) .kx-comparison-slider__handle,
+  .kx-carousel__control:focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+  .kx-scroll-area__viewport:focus-visible,
+  .kx-carousel__item:focus-visible { outline-color: Highlight; }
 }

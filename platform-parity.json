@@ -109,7 +109,7 @@
   },
   "coverage": {
     "React": 98,
-    "Angular": 76,
+    "Angular": 80,
     "SwiftUI": 90,
     "Compose": 90,
     "Flutter": 90
@@ -217,6 +217,7 @@
     ],
     "carousel": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -274,6 +275,7 @@
     ],
     "comparison-slider": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -583,12 +585,14 @@
     ],
     "resizable": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
     ],
     "scroll-area": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -794,12 +798,6 @@
         "wave": "advanced"
       }
     },
-    "carousel": {
-      "Angular": {
-        "type": "planned",
-        "wave": "layout"
-      }
-    },
     "chart": {
       "Angular": {
         "type": "planned",
@@ -824,12 +822,6 @@
       "Flutter": {
         "type": "composition",
         "reason": "Combobox is a recipe over Command on the web, not a component anywhere — compose a popover with a filtered list, or use KinetixSelect for a fixed set."
-      }
-    },
-    "comparison-slider": {
-      "Angular": {
-        "type": "planned",
-        "wave": "layout"
       }
     },
     "data-grid": {
@@ -960,18 +952,6 @@
       "Flutter": {
         "type": "composition",
         "reason": "NavigationMenu is a hover-triggered desktop mega-menu with no touch idiom — compose KinetixTabBar or a KinetixDropdownMenu for the same navigation."
-      }
-    },
-    "resizable": {
-      "Angular": {
-        "type": "planned",
-        "wave": "layout"
-      }
-    },
-    "scroll-area": {
-      "Angular": {
-        "type": "planned",
-        "wave": "layout"
       }
     },
     "table": {
@@ -1134,6 +1114,7 @@
     },
     "carousel": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1191,6 +1172,7 @@
     },
     "comparison-slider": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1500,12 +1482,14 @@
     },
     "resizable": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
     },
     "scroll-area": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1678,7 +1662,7 @@
       "beta": 98
     },
     "Angular": {
-      "preview": 76
+      "preview": 80
     },
     "SwiftUI": {
       "experimental": 90
@@ -2064,6 +2048,15 @@
         "build",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -2267,6 +2260,14 @@
         "accessibility",
         "build",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3364,6 +3365,14 @@
         "build",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -3381,6 +3390,14 @@
         "accessibility",
         "build",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -4031,14 +4048,14 @@
       "published": 98
     },
     "Angular": {
-      "build": 76,
-      "interaction": 76,
-      "accessibility": 76,
-      "rtl": 43,
-      "largeText": 49,
-      "reducedMotion": 22,
+      "build": 80,
+      "interaction": 80,
+      "accessibility": 80,
+      "rtl": 47,
+      "largeText": 53,
+      "reducedMotion": 23,
       "visual": 0,
-      "published": 76
+      "published": 80
     },
     "SwiftUI": {
       "build": 90,

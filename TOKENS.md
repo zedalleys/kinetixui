@@ -432,6 +432,34 @@ sidebar slides over `duration-fast`; reduced motion removes every one and lands 
 | React | Not changed by this contract; parity is not claimed |
 | SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
 
+### Layout and pointer
+
+The Angular layout, pointer and scroll tranche (`@kinetixui/angular`: scroll area, resizable, carousel,
+comparison slider). Each draws a POSITION a reader moves with a pointer, a key or a swipe, with logical properties
+so it mirrors with the reading direction. No token is added; the drag threshold is the existing
+`interaction-drag-threshold`.
+
+| Part | Token(s) | Notes |
+|---|---|---|
+| Scroll area thumb | `muted-foreground` at rest; `foreground` on hover and while dragged; radius `full`; bar `0.625rem`, thumb at least `1.25rem` | at least 3:1 against the page at rest. The bars sit in their own grid tracks beside the viewport, never over content; the vertical bar is at the inline end. rem sizes, so the bar grows with text |
+| Scroll area focus | a 2px `focus` outline inside the viewport's edge | the viewport is a Tab stop only while it overflows; the ring is drawn inside, so neither the area's radius nor an ancestor's overflow cuts it |
+| Resizable handle | a 1px `border` rule at rest; hover and drag a 3px `action` rule; focus `--shadow-focus`; disabled `opacity-disabled` | a 0.375rem hit area each side of the rule. The grip (`withHandle`) is a `background` chip with a `border` edge and `muted-foreground` dots (at least 3:1), turned 90° in a vertical group |
+| Carousel controls | the outline icon button (`input` edge, `foreground` glyph), 2rem; focus `--shadow-focus` | in the carousel's own grid columns, centred on the slides, never outside its box (React places them 3rem outside). At a non-looping end a control is `aria-disabled` (it keeps focus) at `opacity-disabled`, and hover paints no layer. The glyphs ‹ › mirror in RTL |
+| Carousel slide | a 2px `focus` outline inside the slide's edge when a slide takes focus | the track moves by `transform` over `duration-base` with `easing-standard`; none under reduced motion and none while dragging |
+| Comparison divider | a 2px `background` core with a 1px `foreground` edge at 70% | the edge clears 3:1 against the layers either side, in light and dark |
+| Comparison handle | `background` fill and edge, `foreground` grip, `shadow-md`; focus `--shadow-focus` | held 1.25rem inside the area's edges so it and its ring are never cut in half at 0 or 100; it is a picture of the range input's position and takes no focus of its own |
+| Comparison labels | `background` at 85% behind `foreground`, `text-label-sm` | at least 4.5:1; the before label at the inline start |
+
+Forced colours: the thumb, the handle rule and the divider are drawn in `CanvasText`; the viewport, the handle,
+the comparison handle, the carousel controls and a focused slide draw an outline. Motion: only the carousel moves
+(above); the thumb's and the handle's colour changes are `duration-fast`, and none under reduced motion.
+
+| Platform | Status |
+|---|---|
+| Angular | Implemented in `styles.css`. Verified on rendered pixels by `check:layout-visual` (light and dark, LTR and RTL, normal and 200% text). Behaviour, pointer lifecycle and teardown, direction, 200% text and the carousel's motion are measured on the live application by `check:angular-layout` |
+| React | Not changed by this contract; parity is not claimed |
+| SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
+
 ## Role tokens (added on top of `primary`)
 
 `brand`, `action` (+ `action-foreground`), `link` and `focus` are **repo-owned** — none exist in Figma. `action`,

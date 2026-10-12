@@ -6,16 +6,16 @@ CI — and this document describes it; where the two disagree, the script is rig
 
 Publication is distribution, not maturity. The package is on npm and stays Preview.
 
-## Current truth (computed, 2026-10-12, main `eb6957f` + Wave C3)
+## Current truth (computed, 2026-10-12, main `b3b9207` + the layout tranche)
 
 | | Count | Source |
 |---|---|---|
-| Implemented | 76 of 98 (75 components and one recipe, the combobox) | `components.manifest.json` |
+| Implemented | 80 of 98 (79 components and one recipe, the combobox) | `components.manifest.json` |
 | Native-equivalent | 2 (`direction-provider`, `form`) | manifest `platformGuidance`, each with its reason |
-| Planned | 20 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
+| Planned | 16 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
 | `catalogComplete` | false | manifest |
-| Evidence (verification.json) | build 76 · interaction 76 · accessibility 76 · rtl 43 · largeText 49 · reducedMotion 22 · visual 0 | generated from the tests |
-| Rendered visual/state gate | 39 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs, select; `check:composite-visual`: input-group, number-input, input-otp, password-input, multi-select; `check:navigation-visual`, Angular only: breadcrumb, pagination, table-of-contents, tab-bar, app-bar, footer, accordion, navigation-menu, sidebar; `check:overlay-visual`, Angular only: dialog, alert-dialog, modal, sheet, drawer, popover, tooltip, hover-card, sonner, notification-center, tour; `check:menu-visual`, Angular only: dropdown-menu, context-menu, menubar, plus select and multi-select open), no `partial` marks | `scripts/visual-gates.mjs` |
+| Evidence (verification.json) | build 80 · interaction 80 · accessibility 80 · rtl 47 · largeText 53 · reducedMotion 23 · visual 0 | generated from the tests |
+| Rendered visual/state gate | 43 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs, select; `check:composite-visual`: input-group, number-input, input-otp, password-input, multi-select; `check:navigation-visual`, Angular only: breadcrumb, pagination, table-of-contents, tab-bar, app-bar, footer, accordion, navigation-menu, sidebar; `check:overlay-visual`, Angular only: dialog, alert-dialog, modal, sheet, drawer, popover, tooltip, hover-card, sonner, notification-center, tour; `check:menu-visual`, Angular only: dropdown-menu, context-menu, menubar, plus select and multi-select open; `check:layout-visual`, Angular only: scroll-area, resizable, carousel, comparison-slider), no `partial` marks | `scripts/visual-gates.mjs` |
 
 Wave A moved Angular's evidence into a real browser. `check:angular-browser` (scripts/angular-browser.mjs)
 builds the package's fixtures AOT and bootstraps them as a live, zoneless Angular application in Chromium,
@@ -121,7 +121,7 @@ Run against deliberately broken inputs during this change (none committed):
 
 ## The waves
 
-Derived from the manifest's own `wave` tags (now `layout` 7, `data` 7, `advanced` 7, `overlays` 3,
+Derived from the manifest's own `wave` tags (now `layout` 3, `data` 7, `advanced` 7, `overlays` 3,
 `navigation` 1 — the `inputs` tag closed with Wave A), reordered by dependency. The evidence instrument came
 first, before more unverified components were added; every later wave arrives through it.
 
@@ -445,7 +445,84 @@ queue unit test for the removal hook), and each proven by a control run after th
 - 36: a toast removed by `KxToasterService.dismiss()` from code while it had focus → "dismiss(id) from code on the focused toast moves focus to the toast that stays, never to the page", and the dismiss-all case.
 - 37: the toaster re-checking its modal hold only on `open` changes, so a modal that leaves the document still open (the phone sidebar's Sheet when the viewport widens) keeps every toast paused → "the sheet that left with the breakpoint does not leave the toasts paused".
 
-### What remains after Wave C3, ranked
+### Layout, pointer and scroll (done)
+
+**Catalogue entries:** `scroll-area`, `resizable` (Angular source name `ResizablePanelGroup`: `kx-resizable-panel-group`,
+`kx-resizable-panel`, `kx-resizable-handle`), `carousel`, `comparison-slider`. 12/13 held; Angular 76 → 80 implemented
+(79 components and one recipe), 78/98 → 82/98, 20 → 16 planned, 249 → 260 exported symbols. `table` and
+`virtual-list` keep their `layout` tag and go with Wave D.
+
+**One new internal primitive.** `lib/pointer-drag.ts` (`KxPointerDrag`, not exported) is the pointer lifecycle every
+drag here shares: one pointer id, travel measured from the press, `end` called exactly once (release, cancel, lost
+capture, `cancel()`, destroy), and listeners that exist only while the drag runs. Two modes: `capture` (the handle,
+the scrollbar thumb, the comparison slider's pen) and `page` (no capture, listening on the element's own document:
+the carousel, whose slides keep their clicks). Direction is the C2a core's `isRtl`/`inlineKey`; nothing reads a
+global (`ownerDocument.defaultView` only, created after the first render).
+
+- **Scroll area** (`lib/scroll-area.ts`): native scrolling with the native bars hidden; bars drawn in their own grid
+  tracks (never over content, the vertical one at the inline end), thumb length and logical progress as two CSS
+  numbers. A ResizeObserver on the viewport and the content re-measures for content and container changes. A Tab
+  stop and a named region only while something overflows. A thumb drag and a track press (Radix's jump-then-drag).
+  Both axes scroll when they overflow (React draws only the vertical bar by default).
+- **Resizable** (`lib/resizable.ts`): flex weights, the window-splitter pattern (`separator`, `aria-orientation`,
+  `aria-valuenow/min/max` of the reachable range, `aria-controls`), arrows by 5, Home/End, F6/Shift+F6. Keys and
+  drag are LOGICAL in RTL; React's library reads physical arrows (a deliberate fix). Moves the adjacent pair only:
+  React's cascade and collapsible panels are not ported.
+- **Carousel** (`lib/carousel.ts`): a transform track over measured snap positions (Embla's trimmed snaps), loop
+  as a rewind, aria-disabled (never disabled) controls that keep focus and keep the pointer, inert off-view slides,
+  focus moved into the slide now in view, one polite announcement when a move lands (never during a drag), a drag
+  past the `interaction-drag-threshold` token with resistance at the ends and a swallowed click, logical arrow keys
+  and swipes in RTL (React's are physical). No autoplay. Reduced motion: no transition, same end position.
+- **Comparison slider** (`lib/comparison-slider.ts`): the browser's range input stretched transparent over two
+  layers — one focusable element, slider semantics, keyboard and touch from the browser — with the divider and the
+  after layer drawn logically (React's divider and clip are physical, and disagree with its slider in RTL).
+
+| | |
+|---|---|
+| Behavioural contracts | `check:angular-layout`: scroll area (Tab stop only when it overflows, keys and wheel natively with the thumb following, thumb drag released outside, track press, content growing and shrinking, box resized, nested, focus scrolling into view); resizable (keys and limits, F6, a mouse drag with no jump, released outside, past both limits, the group narrowed mid-drag, the handle disabled mid-drag, a lost capture, pen, touch and touch cancel, one `layoutChange` per change, vertical); carousel (buttons and ends with focus kept, keys, focus out of an inert slide, text fields keep their arrows, clicks inside slides, drag with travel / flick / settle-back, swallowed click, resistance, touch, cross-axis touch, pen, several to a view, loop, vertical, viewport resize, no autoplay); comparison slider (keys, press, drag, release outside, touch, pen, bound values out of range, the after picture still, a narrowed box). The page is instrumented: pointer listeners exist only during a drag, and removing a component mid-drag leaves no listener and no ResizeObserver watching a removed node |
+| Accessibility | region/`carousel`, group/`slide` "N of M", named controls, no tab roles; window splitter with value attributes; one slider named "Comparison position" (min 0, max 100, value, from the accessibility tree); a named region only while scrollable; axe light and dark; forced colours (thumbs, rule and divider in `CanvasText`, focus outlines kept) |
+| RTL | all four in four direction cases (LTR page, RTL page, LTR region in RTL, RTL region in LTR): bar side, logical thumb progress and drag, track press; first panel at the inline start, logical keys and drag; slide order, control placement, mirrored glyphs, logical keys and swipe; divider and labels from the inline start, logical keys and press |
+| Large text | all four at 320, 390, 768 and 1280px at 100% and 200% text: fits the width, text grows, still operable (bars grow, End scrolls, focus ring unclipped; arrows resize; controls ≥ 24px inside the box beside the slides; labels do not overlap) |
+| Motion | the carousel's track (horizontal LTR and RTL, vertical): a rendered midpoint over `duration-base` with motion allowed, none under reduced motion landing on the same position, and nothing transitioning during a drag |
+| Visual | `check:layout-visual` (new, Angular only, 232 checks): thumb 3:1 at rest and stronger on hover and drag, bars beside content, the viewport's ring on four edges; rule at rest / hover / drag / focus, grip, disabled; controls centred, inside the box, glyphs 3:1 and pointing logically, focus ring, an end control, a focused slide's ring; divider edge 3:1 against both layers, grip, focus ring, labels 4.5:1; light and dark, LTR and RTL, 100% and 200% |
+| Defects it found and fixed | a focused button inside a slide lost focus to `<body>` when an arrow moved the carousel (the target slide was still inert when focused; focus now moves after the render); a press on a carousel control at its end fell through to the page and took focus with it (`.kx-btn` drops pointer events when aria-disabled; the carousel's controls keep them); Chromium's range input sets a value where a pen presses but does not follow a pen drag (measured on a bare input), so the comparison slider handles a pen itself; the comparison divider's edge was 1.6:1 against its layers (now 7.4:1 / 7.8:1); `check:angular-package` rejected the string `'document'` in the bundle (the drag mode is `page`) |
+
+**Not ported, by design or for later:** resizable cascade and collapsible panels; carousel plugins (autoplay is not
+offered at all) and Embla's free drag; vertical comparison slider (React has none). React's physical RTL behaviour
+(carousel keys and glyphs, resizable arrows, comparison clip and divider) and its carousel controls 3rem outside the
+box (off a 320px screen) are recorded, not changed: React is out of this tranche's scope.
+
+**Findings not fixed:** the pre-existing ones still stand and were not touched (no tag, overlay or breadcrumb source
+changed): the base `KxTag` remove button's ring, C1's one-frame popover convergence, and the container-only
+"KxBreadcrumb: nothing truncated inside it" in `check:angular-browser`, reproduced identically on base `b3b9207`
+(1087 ok, 1 failure) and on this branch (1103 ok, the same 1 failure).
+
+#### Negative controls (layout tranche)
+
+12 controls (38–49), run after the implementation was committed (`79c1a11`): each a real break in the source, a
+fresh harness built from it, `check:angular-layout` run with `--only`, and the file restored from git and checked by
+hash against HEAD before the next (logs and `summary.json`: `/mnt/project-files/angular-layout/negative-controls/`).
+None committed. Every one was caught:
+
+- 38: the scroll area reads RTL `scrollLeft` physically → `--only=rtl`: "ArrowLeft scrolls toward the inline end and the thumb follows that way" (thumb 0.000 vs 0.115).
+- 39: the content is no longer observed → "content grows: the bar appears, sized to it" (no bar), and two more.
+- 40: the viewport's ring drawn outside it while the area clips its overflow → "its focus ring is painted on all four edges (not clipped)" (0.00 on every edge).
+- 41: the pointer is never captured → "released outside, past the end: at the end, the drag over, no listener left" (still dragging), 17 failures across the thumb, the handle and the slider.
+- 42: the keyboard ignores min and max → "arrows by 5, End and Home to the reachable limits, never past them" (End:150).
+- 43: the handle's drag delta is physical in RTL → `--only=rtl`: "a drag toward the inline end grows the first panel by the distance" (shrank 32px).
+- 44: the carousel track moves the LTR way in RTL → `--only=rtl`: slides aligned at the wrong edge, 4 failures.
+- 45: the end control drops the pointer again → "Next stops at the last slide, turns aria-disabled and keeps focus" (focus body), 13 failures.
+- 46: the track transitions under reduced motion → `--only=reducedMotion`: "no perceptible motion" (300ms).
+- 47: a bound comparison value is not held to 0–100 → "bound to 150: drawn and offered at 100".
+- 48: `aria-valuenow` stays at the default → the keyboard sequence reads 50 throughout, 7 failures.
+- 49: carousel arrows read physically in RTL → `--only=rtl`: "the arrow toward the inline end is Next, the other Previous".
+
+### What remains after the layout tranche, ranked
+
+16 planned. **Data and advanced (Wave D)** — `table`, `virtual-list` and the rest below; composes the layout
+tranche (a scroll area for dense tables, the drag lifecycle for a keyboard-alternative kanban). Not started.
+
+### What remains after Wave C3, ranked (superseded by the section above)
 
 20 planned. Ranked by what each group unblocks and by the evidence React already holds for it (which Angular
 will owe the moment it implements the component):
