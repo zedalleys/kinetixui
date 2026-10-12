@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/route-seo";
 import tokens from "@kinetixui/tokens";
 import { PipelineInfographic } from "@/components/pipeline-infographic";
 import { SectionHead } from "@/components/section-head";
@@ -16,10 +17,7 @@ import { componentCount, componentTotal, recipes } from "@/lib/platform-support"
 const PLATFORMS = ALL_PLATFORMS;
 const PLATFORM_OUTPUTS = ["Web CSS", "tokens.ts", "SwiftUI", "Compose", "Flutter"] as const;
 
-export const metadata: Metadata = {
-  title: "Infographic",
-  description: `The KinetixUI system drawn to scale — one design source, ${PLATFORM_OUTPUTS.length} outputs, ${PLATFORMS.length} component libraries, measured.`,
-};
+export const metadata: Metadata = routeMetadata("/infographic");
 
 /* -------- build-time counts: every figure below is derived, not typed -------- */
 

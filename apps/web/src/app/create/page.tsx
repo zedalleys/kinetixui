@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { canonical } from "@/lib/seo";
+import { routeMetadata } from "@/lib/route-seo";
 import { CreateWorkspace } from "@/components/create/create-workspace";
 
 /**
@@ -13,14 +13,7 @@ import { CreateWorkspace } from "@/components/create/create-workspace";
  * that any of this is *previewed* anywhere but the web, or that radius and surface reach a native
  * runtime. They do not, and the Export panel says so per target.
  */
-export const metadata: Metadata = {
-  title: "Create",
-  description:
-    "Shape the KinetixUI design language visually — theme colour, neutral, radius and surface — preview it on real web components in light and dark, then export the same theme as web CSS, SwiftUI, Jetpack Compose or Flutter.",
-  // Self-referencing, though there is no query state to collapse yet — the URL-serialized presets that
-  // make this load-bearing are a later change, and the canonical should already be there when they land.
-  ...canonical("/create"),
-};
+export const metadata: Metadata = routeMetadata("/create");
 
 export default function CreatePage() {
   return <CreateWorkspace />;

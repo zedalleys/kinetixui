@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Accessibility",
-  description: "How KinetixUI components meet WCAG, and the known trade-offs.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/accessibility");
 
 # Accessibility
 
@@ -128,3 +127,10 @@ WCAG AA (dark mode was already fine for both):
 Remaining: `check-contrast.mjs` doesn't yet assert the four `--shadow-focus*`
 composites (the dark set exists — `tokens/semantic/shadow.dark.json` →
 `@kinetixui/tokens/css/extras/dark` — it's just not in the script's checks).
+
+## Related guides
+
+- [Right-to-left layouts](/docs/rtl): direction handling on the web and on each native platform.
+- [Theming](/docs/theming): the contrast rules a custom theme must keep.
+- [Platform coverage](/docs/platforms): the accessibility test evidence counted per platform and component.
+- [Explore components](/components): each component page shows its own evidence per platform.
