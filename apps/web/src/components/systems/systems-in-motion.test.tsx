@@ -191,9 +191,9 @@ describe("systems in motion: hero map semantics", () => {
     expect(trigger).not.toMatch(/tabIndex|disabled|aria-hidden/);
   });
 
-  it("labels the theme switch as a group of pressed buttons", () => {
-    expect(html).toMatch(/role="group" aria-label="Token value to show"/);
-    expect(html.match(/aria-pressed=/g)).toHaveLength(2);
+  it("has no theme switch of its own: the header's toggle is the only one", () => {
+    expect(html).not.toMatch(/aria-pressed=/);
+    expect(html).not.toMatch(/Token value to show/);
   });
 });
 

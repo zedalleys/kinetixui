@@ -22,8 +22,11 @@ import { breakable } from "./breakable";
  * emphasises a branch. The traces and the output chips are a drawing of what the panel says in words, so
  * they are hidden from assistive technology rather than read twice.
  *
- * Motion: a first-load sequence, then nothing moves until the reader acts. Selecting a platform or switching
- * the token's theme value sends one pulse along the affected branches. Under `prefers-reduced-motion` the map
+ * Theme: the map shows the token's value for the site theme the reader is in, and follows the header's theme
+ * toggle; it has no switch of its own.
+ *
+ * Motion: a first-load sequence, then nothing moves until the reader acts. Selecting a platform, or changing
+ * the site theme, sends one pulse along the affected branches. Under `prefers-reduced-motion` the map
  * renders complete and static, and a selection is shown only by the highlighted branch.
  */
 
@@ -84,9 +87,22 @@ export function HeroSystemMap({
   const [theme, setTheme] = React.useState<Theme>("light");
   // Bumped on every reader action; keys the pulse paths so a change replays one pulse, and only then.
   const [pulse, setPulse] = React.useState(0);
-  // Open on the token value of the theme the reader is already in; the toggle then shows the other one.
+  // Follow the site theme (the header's toggle puts `.dark` on <html>); a change after load pulses every branch.
   React.useEffect(() => {
-    if (document.documentElement.classList.contains("dark")) setTheme("dark");
+    const root = document.documentElement;
+    const read = (): Theme => (root.classList.contains("dark") ? "dark" : "light");
+    let last = read();
+    setTheme(last);
+    const mo = new MutationObserver(() => {
+      const next = read();
+      if (next === last) return;
+      last = next;
+      setTheme(next);
+      setPulseScope("all");
+      setPulse((n) => n + 1);
+    });
+    mo.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => mo.disconnect();
   }, []);
   const [pulseScope, setPulseScope] = React.useState<"one" | "all">("one");
   const [geometry, setGeometry] = React.useState<Geometry | null>(null);
@@ -171,12 +187,6 @@ export function HeroSystemMap({
     setPulseScope("one");
     setPulse((n) => n + 1);
   };
-  const switchTheme = (next: Theme) => {
-    if (next === theme) return;
-    setTheme(next);
-    setPulseScope("all");
-    setPulse((n) => n + 1);
-  };
 
   const pulsing = (output: string, platform?: Platform) =>
     pulse > 0 && (pulseScope === "all" || (platform ? platform === selected : output === current.output));
@@ -244,29 +254,10 @@ export function HeroSystemMap({
         className="kx-glass kx-map-stage relative mx-auto w-full max-w-md rounded-xl p-4 sm:p-5"
         style={{ ["--stage" as string]: 0 }}
       >
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <p className="font-mono text-xs text-muted-foreground">
-            <span className="sr-only">Source: </span>
-            {token.files[theme]}
-          </p>
-          <div role="group" aria-label="Token value to show" className="flex rounded-md border border-border p-0.5">
-            {(["light", "dark"] as const).map((t) => (
-              <button
-                key={t}
-                type="button"
-                aria-pressed={theme === t}
-                onClick={() => switchTheme(t)}
-                className={cn(
-                  "min-h-9 rounded-[5px] px-3 font-mono text-xs capitalize text-muted-foreground transition-colors duration-fast",
-                  "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  "aria-pressed:bg-muted aria-pressed:text-foreground",
-                )}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
+        <p className="font-mono text-xs text-muted-foreground [overflow-wrap:anywhere]">
+          <span className="sr-only">Source: </span>
+          {token.files[theme]}
+        </p>
         <div className="mt-3 flex items-center gap-3">
           <span
             key={theme}
