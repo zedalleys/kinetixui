@@ -434,6 +434,9 @@ async function tour(theme) {
   const fill = await token(page, "--popover");
   const border = await token(page, "--border");
   const sum = (p) => p.reduce((t, v) => t + v, 0);
+  // the tour scrolls its target to the centre: put it there first, so "before" and "after" are the same place
+  await page.locator("#tour-a").evaluate((el) => el.scrollIntoView({ block: "center", inline: "nearest" }));
+  await rest(page);
   const before = await screen(page);
   const target = await box(page, "#tour-a");
   await page.locator("#tour-start").click();

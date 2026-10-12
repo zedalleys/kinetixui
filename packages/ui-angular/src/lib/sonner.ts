@@ -243,7 +243,8 @@ export class KxToaster {
     // `showModal()` and `close()` add and remove a dialog's `open` attribute, so watching that attribute sees
     // every modal dialog open and close, whoever opened it
     const modal = () => this.set(this.holds.modal, this.excludedByModal());
-    const modals = typeof MutationObserver === 'function' ? new MutationObserver(modal) : null;
+    const Observer = (this.doc.defaultView as (Window & typeof globalThis) | null)?.MutationObserver;
+    const modals = typeof Observer === 'function' ? new Observer(modal) : null;
     const hotkey = (event: KeyboardEvent) => this.onHotkey(event);
     afterNextRender(() => {
       visibility();
