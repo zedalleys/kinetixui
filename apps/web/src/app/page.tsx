@@ -2,20 +2,35 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Boxes, Palette, Smartphone, Zap } from "lucide-react";
 import { Button } from "@kinetixui/ui";
-import { CrossPlatformFlagship } from "@/components/cross-platform-flagship";
 import { HeroCommand } from "@/components/hero-command";
-import { HeroTokenFan } from "@/components/hero-token-fan";
 import { PlatformTicker } from "@/components/platform-ticker";
 import { Reveal } from "@/components/reveal";
 import { SectionHead } from "@/components/section-head";
 import { StructuredData } from "@/components/structured-data";
+import { ComponentSpotlight, type SpotlightItem } from "@/components/systems/component-spotlight";
+import { EditorialMedia } from "@/components/systems/editorial-media";
+import { EvidenceColumns } from "@/components/systems/evidence-columns";
+import { HeroSystemMap } from "@/components/systems/hero-system-map";
+import { ImplementationExplorer } from "@/components/systems/implementation-explorer";
+import { TokenPipeline } from "@/components/systems/token-pipeline";
+import { TraceLayer } from "@/components/systems/trace-layer";
 import { routeMetadata } from "@/lib/route-seo";
 import { ctaAttrs } from "@/lib/analytics-surfaces";
 import { IOT_MATURITY_LABEL } from "@/lib/iot";
+import { PLATFORMS, PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
 import { componentCount, componentTotal, recipes } from "@/lib/platform-support";
 import { installableSentence, platformSentence, sourceOnlySentence } from "@/lib/platform-prose";
-import { componentPlatformCount, projectLicense, projectVersion } from "@/lib/project-stats";
+import {
+  catalogPlatformCount,
+  componentPlatformCount,
+  documentedExceptionCount,
+  fullCoverageCount,
+  projectLicense,
+  projectVersion,
+} from "@/lib/project-stats";
 import { siteConfig } from "@/lib/site";
+import { STORY_COMPONENT, componentStrip, platformEvidence, systemsInMotion } from "@/lib/systems-in-motion";
+import { flagshipExampleSource } from "@/registry/flagship-example.generated";
 
 export const metadata: Metadata = routeMetadata("/");
 
@@ -76,77 +91,120 @@ const FEATURES = [
   },
 ];
 
+/*
+ * ── Systems in Motion ─────────────────────────────────────────────────────────────────────────────────────────
+ *
+ * The page follows one real token, `color.action`, from its DTCG source, through the files Style Dictionary
+ * writes, across the token boundary, into the `Switch` each platform implements by hand, and finally into
+ * evidence. Everything those visuals say is read from the repository at build time (`lib/systems-in-motion.ts`).
+ * Chapters alternate between the page's own theme and the existing `.dark` token set, applied to a section.
+ */
+
+/** "Five", from the platform count — a word in the headline, but never a typed one. */
+const COUNT_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
+const countWord = (n: number) => COUNT_WORDS[n] ?? String(n);
+
+/** The flagship recipe's copies, by manifest platform: the generated registry's keys, not a typed list. */
+const RECIPE_PLATFORM: Record<string, string> = { react: "React", swiftui: "SwiftUI", compose: "Compose", flutter: "Flutter" };
+const recipePlatforms = new Set(Object.keys(flagshipExampleSource).map((k) => RECIPE_PLATFORM[k]));
+
+/** The homepage's component spotlight: a composed interface first, then three components that differ honestly. */
+const SPOTLIGHT: SpotlightItem[] = [
+  {
+    slug: "flagship-preferences",
+    name: "Notification preferences",
+    stripLabel: "Compiled copies of this recipe",
+    note: "A composed interface — Card, Badge, Switch and Button — rendered live with the React implementation.",
+    href: "/docs/components/card",
+    strip: PLATFORMS.map((p) => ({
+      platform: p,
+      short: p,
+      state: recipePlatforms.has(p) ? "compiled in CI" : "not written yet",
+      kind: recipePlatforms.has(p) ? ("implementation" as const) : ("none" as const),
+    })),
+  },
+  ...(
+    [
+      ["segmented-control", "Segmented control", "One choice from a few, with the selection carried by shape as well as colour."],
+      ["slider", "Slider", "A value on a track, keyboard-adjustable on every platform that implements it."],
+      ["native-select", "Native select", "The browser's own select, on the web only. Native platforms compose Select instead, and the manifest says so."],
+    ] as const
+  ).map(([slug, name, note]) => ({
+    slug,
+    name,
+    note,
+    stripLabel: "Verification by platform",
+    href: `/docs/components/${slug}`,
+    strip: componentStrip(slug),
+  })),
+];
+
 export default function HomePage() {
+  const story = systemsInMotion();
+  const mapPlatforms = story.platforms.map((p) => ({
+    platform: p.platform,
+    label: p.label,
+    short: p.short,
+    maturity: p.maturity,
+    entries: p.entries,
+    total: p.total,
+    distribution: p.distribution,
+    output: p.output,
+    reads: p.component.reads,
+    href: p.href,
+  }));
+  const explorer = story.platforms.map((p) => ({
+    platform: p.platform,
+    label: p.label,
+    maturity: p.maturity,
+    distribution: p.distribution,
+    files: p.component.files,
+    verification: p.component.verification,
+    evidence: p.component.evidence,
+  }));
+  const dirs = Object.fromEntries(PLATFORMS.map((p) => [p, PLATFORM_DEFINITIONS[p].dir]));
+  const rollingOut = PLATFORMS.filter((p) => !PLATFORM_DEFINITIONS[p].catalogComplete).map(
+    (p) => `${PLATFORM_DEFINITIONS[p].label} (${PLATFORM_DEFINITIONS[p].maturity})`,
+  );
+  const container = "kx-edges relative mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8";
+
   return (
     <div>
       <StructuredData />
-      {/* ─── hero ─────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-b border-border">
-        <div className="pointer-events-none absolute inset-0 kx-grid-bg" />
-        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+
+      {/* ─── [01] hero — a dark chapter ───────────────────────────────────────────────────────── */}
+      <section className="kx-chapter-dark dark overflow-hidden border-b border-border">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 kx-grid-bg opacity-50" />
+        <div aria-hidden="true" className="kx-glow -end-40 -top-32 size-[46rem]" />
+        <div className={container}>
           {/*
-            Hero vertical rhythm is a mobile-first decision. At 390×800 — a typical iPhone first viewport —
-            `py-16` above the headline plus a badge line plus three architecture paragraphs put the primary
-            CTA at y≈763 and the install command at y≈939: nothing actionable was on screen at all. The
-            padding is smaller below `sm` for the same reason the copy below it is: the first viewport is the
-            scarcest space on the site.
+            Hero vertical rhythm is a mobile-first decision. At 390×800 the primary CTA and the install command
+            have to land in the first viewport, so the copy column comes first in the DOM and the system map
+            follows it — beside it once there is room, below it on a phone.
           */}
-          <div className="grid gap-12 py-12 sm:py-16 md:py-28 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-16">
-            {/* headline */}
-            <div className="kx-hero-enter max-w-3xl">
+          <div className="grid grid-cols-1 gap-14 py-12 sm:py-16 md:py-24 lg-rem:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg-rem:items-center lg-rem:gap-12 xl-rem:gap-20">
+            <div className="max-w-3xl">
               {/*
-                Canonical hero, `marketing/MESSAGING.md` §E.
-
-                The previous headline — "One token architecture, in motion across every platform" — led with
-                the mechanism and said "every platform", which invites exactly the parity reading the
-                positioning rejects. It also spoke only to someone who already believes token architecture is
-                the answer. P2 does not: they arrive with two apps that have visibly diverged.
-
-                So the order is outcome, then the problem in their words, then mechanism, then evidence.
-                The platform count is derived, never typed.
-
-                The headline is now the first thing in the hero, with no `mt-6`: the beta badge used to sit
-                above it and spend a full line of the first viewport on a disclosure that is not the
-                visitor's first question. It is not gone — it moved down to the install cluster, where a
-                reader who has decided to try this is exactly the reader who needs to know every package is
-                0.x. See the comment there.
+                The headline names the architecture rather than counting platforms: one shared language, and an
+                implementation per platform written in that platform's idiom (CLAIMS.md A2, A3). The number is
+                the manifest's platform count, spelled out. The page title and share card keep
+                `siteConfig.tagline` — One design language. N platforms. Claims you can check. — whose last
+                sentence now heads the evidence chapter, where it is demonstrated rather than asserted.
               */}
-              <h1 className="text-balance font-display text-[2rem] font-bold leading-[1.1] tracking-[-0.03em] sm:text-6xl sm:leading-[1.02] lg:text-[4.5rem]">
+              <h1 className="min-w-0 break-words hyphens-auto text-balance font-display text-[length:min(2.125rem,calc(1rem+5vw))] font-bold leading-[1.05] tracking-[-0.035em] sm:text-6xl sm:leading-[1.02] lg-rem:text-[3rem] xl-rem:text-[3.625rem]">
                 One design language.{" "}
                 <br className="hidden sm:block" />
-                <span className="kx-underline text-primary">{componentPlatformCount} platforms.</span>{" "}
-                <br className="hidden sm:block" />
-                Claims you can check.
+                <span className="kx-underline text-primary">{countWord(componentPlatformCount)} native</span>{" "}
+                implementations.
               </h1>
 
-              {/*
-                One supporting paragraph, and only one.
-
-                The hero used to carry three: the drift problem, then the token/implementation architecture,
-                then package availability. That is ~130 words of architecture in front of every visitor
-                before anything is clickable. None of it is wrong and none of it has been cut — the second
-                and third paragraphs now open section 01, which is where a reader who wants the mechanism
-                is already heading. What stays here answers only "what is this and why does it matter";
-                "what do I do next" is immediately below it.
-              */}
-              <p className="mt-5 max-w-xl text-muted-foreground md:text-lg">
-                Your web app and your native apps drift apart the moment they are maintained separately —
-                different spacing, a brand colour fixed in one place only. KinetixUI is the design system
-                for teams in that position.
+              {/* One supporting paragraph, and only one: what this is and why it matters. The mechanism opens chapter 03. */}
+              <p className="mt-6 max-w-xl text-muted-foreground md:text-lg">
+                Shared tokens, native components, and platform differences documented instead of hidden — for teams
+                whose web and native apps drift apart the moment they are maintained separately.
               </p>
 
-              {/*
-                Primary is the lowest-friction thing that is also evidence: real components, rendered. It
-                replaces "Get started → /docs", which asked a visitor who does not yet know what this is to
-                begin reading documentation — the highest-friction option on the page, and the one that skips
-                both Comprehension and Credibility in the funnel.
-
-                Secondary serves evaluation, which `STRATEGY.md` §7 names as the narrowest point: a sceptic
-                who wants the coverage table before anything else. "Get started" moves to the closer, where
-                intent is higher. Analytics targets stay semantic, so the labels can change without breaking
-                the funnel.
-              */}
-              <div className="mt-7 flex flex-wrap items-center gap-3">
+              <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Button asChild size="lg">
                   <Link href="/components" {...ctaAttrs("homepage_hero", "browse_components")}>
                     Explore components <ArrowUpRight className="size-4" />
@@ -160,23 +218,14 @@ export default function HomePage() {
               </div>
 
               {/*
-                The platform names, in static text, at every width.
-
-                Below `lg` the spec panel is hidden and the only other place the platforms appear is the ticker,
-                which is decorative and `aria-hidden`. So a phone visitor read "N platforms." in the headline and
-                was never told which. Derived from the manifest like every other list on this page, with Angular's
-                maturity carried rather than flattened.
+                The platform names, in static text, at every width — derived, with Angular's maturity carried.
+                The map beside this names them too, but as a control; this is the sentence.
               */}
-              <p data-hero-platforms className="mt-4 max-w-xl text-sm text-muted-foreground">
+              <p data-hero-platforms className="mt-5 max-w-xl text-sm text-muted-foreground">
                 {componentPlatformCount} implementations: {platformSentence}.
               </p>
 
-              {/*
-                The install command stays directly behind the CTAs: it is the strongest single piece of
-                proof in the hero — a real command for a real package — and on a phone it now lands inside
-                the first viewport rather than ~140px below it.
-              */}
-              <div className="mt-6 w-full max-w-xl">
+              <div className="mt-7 w-full max-w-xl">
                 <HeroCommand />
                 <p className="mt-2 text-[13px] text-muted-foreground sm:whitespace-nowrap">
                   Example — adds one component.{" "}
@@ -191,59 +240,25 @@ export default function HomePage() {
                 </p>
               </div>
 
-              {/*
-                The beta badge, demoted rather than deleted.
-
-                It is honest work — every package really is 0.x and really is MIT, and `marketing-claims`
-                asserts this page keeps saying so — but above the headline it was the first focusable
-                element and a full wide-tracked mono line of the most valuable space on the site, answering
-                a question nobody has yet asked. Attached to the install command instead, it qualifies the
-                thing it is actually about: what you get when you run that command. It is still a link to
-                the changelog, still keyboard reachable, and now reached after the headline and the CTAs
-                rather than before them.
-              */}
+              {/* The beta disclosure qualifies the install command it sits under: every package is 0.x. */}
               <Link
                 href="/docs/changelog"
                 {...ctaAttrs("homepage_hero", "view_changelog")}
-                className="eyebrow group mt-5 inline-flex items-center gap-2 transition-colors hover:text-foreground"
+                className="eyebrow group mt-5 inline-flex min-h-9 items-center gap-2 transition-colors hover:text-foreground"
               >
                 <span className="text-primary">[00]</span> Beta — every package is 0.x, MIT
-                <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
+                <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100" />
               </Link>
             </div>
 
-            {/* right rail: token fan-out + spec panel */}
-            {/*
-              Capped below `lg`, where this column is still full width: the fan is a `w-full` SVG, so at
-              tablet widths it was rendering ~690px across with 36px labels — a decorative diagram louder
-              than the headline above it. From `lg` the grid's 16rem track constrains it and the cap is
-              released. 24rem keeps the tablet fan close to the size it settles at on desktop.
-            */}
-            <aside className="flex max-w-sm flex-col gap-4 self-start lg:max-w-none">
-              <HeroTokenFan />
-              <div className="kx-frame hidden border border-border bg-background/60 lg:block">
-                <p className="border-b border-border px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                  spec
-                </p>
-                <dl className="divide-y divide-border">
-                  {SPEC.map(([k, v]) => (
-                    <div key={k} className="flex items-center justify-between gap-4 px-4 py-3">
-                      <dt className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
-                        {k}
-                      </dt>
-                      <dd className="font-display text-sm font-semibold">{v}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            </aside>
+            <HeroSystemMap token={story.token} outputs={story.outputs} platforms={mapPlatforms} />
           </div>
         </div>
 
-        {/* targets ticker — a hard structural band */}
+        {/* targets ticker — a hard structural band, unchanged */}
         <div className="relative border-t border-border">
           <div className="mx-auto flex max-w-screen-2xl items-stretch">
-            <span className="hidden shrink-0 items-center border-r border-border px-4 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground sm:flex sm:px-6 lg:px-8">
+            <span className="hidden shrink-0 items-center border-e border-border px-4 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground sm:flex sm:px-6 lg:px-8">
               Targets&nbsp;→
             </span>
             <PlatformTicker />
@@ -251,98 +266,206 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── flagship cross-platform proof ──────────────────────────────── */}
-      <section id="flagship" className="border-b border-border bg-muted/20 scroll-mt-24">
-        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 lg:px-8">
+      {/* ─── [02] the trade ─────────────────────────────────────────────────────────────────────── */}
+      <section className="border-b border-border">
+        <div className={`${container} py-20 md:py-28`}>
           <Reveal>
-            <SectionHead index="01" label="One design contract, web and native implementations" meta="live" />
-            <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-              The tokens and component contract stay shared. The implementation stays native.
-            </h2>
-            <p className="mt-4 max-w-2xl text-muted-foreground">
-              One real interface, built from <code className="text-foreground">Card</code>,{" "}
-              <code className="text-foreground">Badge</code>, <code className="text-foreground">Switch</code> and{" "}
-              <code className="text-foreground">Button</code> — rendered here with the live React implementation, and
-              backed by real, CI-compiled source for SwiftUI, Jetpack Compose and Flutter. Switch tabs to read the
-              actual platform code, not a mock-up. Angular, in preview, has no tab in this example yet; its
-              compiled examples are on each component&rsquo;s page.
-            </p>
+            <SectionHead index="02" label="The trade" meta="shared contract, not shared runtime" />
+            <div className="mt-10 grid grid-cols-1 gap-12 lg-rem:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg-rem:gap-20">
+              <div>
+                <h2 className="min-w-0 break-words text-balance font-display text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-6xl">
+                  Share the contract. Keep the platform.
+                </h2>
+                <p className="mt-6 max-w-xl text-muted-foreground md:text-lg">
+                  There are two ways to keep one design consistent across platforms. One runtime can draw every screen,
+                  and each platform&rsquo;s own behaviour becomes something to imitate. Or a contract is shared and
+                  each platform implements it in its own idiom — which means differences exist, and have to be written
+                  down. KinetixUI takes the second trade, and writes them down.
+                </p>
+              </div>
+              <dl className="self-end border-t border-border">
+                {(
+                  [
+                    ["Drawn by", "Each platform's own UI toolkit: the DOM, Angular templates, SwiftUI views, Compose and Flutter widgets."],
+                    ["Accessibility", "Each platform's own semantics, with test evidence recorded per platform where it exists."],
+                    ["Where platforms differ", `In the manifest, with a reason — ${documentedExceptionCount} documented exceptions today.`],
+                  ] as const
+                ).map(([k, v]) => (
+                  <div key={k} className="grid grid-cols-1 gap-1 border-b border-border py-5 sm-rem:grid-cols-[minmax(0,10rem)_minmax(0,1fr)] sm-rem:gap-6">
+                    <dt className="font-mono text-xs text-muted-foreground">{k}</dt>
+                    <dd className="text-sm leading-relaxed">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </Reveal>
 
-            {/*
-              The architecture, moved down from the hero unchanged in substance.
+          {/* Why systems drift: the four principles, staggered rather than stacked in equal rows. */}
+          <Reveal className="mt-20 grid grid-cols-1 gap-x-16 gap-y-12 md:grid-cols-2">
+            {FEATURES.map((f, i) => (
+              <div key={f.title} className={`group min-w-0 ${i % 2 === 1 ? "md:mt-16" : ""}`}>
+                <div className="flex items-center gap-4">
+                  {/* decorative sequence marker (a 40% tint): out of the accessibility tree; the heading carries the meaning */}
+                  <span
+                    aria-hidden
+                    data-n={String(i + 1).padStart(2, "0")}
+                    className="font-display text-5xl font-bold leading-none text-muted-foreground/40 transition-colors before:content-[attr(data-n)] group-hover:text-primary"
+                  />
+                  <span className="h-px flex-1 bg-border" aria-hidden="true" />
+                  <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <f.icon className="size-5" />
+                  </span>
+                </div>
+                <h3 className="min-w-0 break-words mt-5 min-w-0 font-display text-xl font-semibold">{f.title}</h3>
+                <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground md:text-base">{f.body}</p>
+              </div>
+            ))}
+          </Reveal>
 
-              Two things share a source and two things do not, and this is the paragraph that keeps them
-              apart. It used to be the hero's second paragraph, where it sat between a visitor and every
-              action on the page. Here it introduces the tabs that demonstrate exactly what it claims —
-              which is where a reader who wants the mechanism was going anyway. Nothing is softened: the
-              platform list is still derived, the hand-written claim still stands, CI verification is still
-              stated.
-            */}
-            <p className="mt-4 max-w-2xl text-sm text-muted-foreground">
-              One DTCG token source generates every platform&rsquo;s native token output.{" "}
-              {platformSentence} each implement the same component contract natively — hand-written per
-              platform, never one source converted into five. And every platform claim is checked against
-              real source in CI, so the coverage you read is the coverage that exists.
-            </p>
+          {/* An editorial interruption for real photography or video, later. Renders nothing without media. */}
+          <EditorialMedia className="mt-20" />
+        </div>
+      </section>
 
-            {/*
-              Availability, which is not maturity.
-
-              `platformSentence` above is derived from `maturity`, on which every native port is "stable" —
-              and none of them is on a package registry. Naming five platforms and leaving that out is the
-              one place this page was misleading: a reader came away expecting five installable things.
-              This says which two install and what the other three are, without shrinking them, because the
-              implementations are real and compiled in CI.
-
-              It followed the paragraph above out of the hero and has to stay somewhere on this page: both
-              sentences are generated from the manifest and `marketing-claims.test.ts` requires this file to
-              qualify every undistributed platform it names.
-            */}
-            <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-              <span className="text-foreground">{installableSentence}</span> install from a package registry
-              today. <span className="text-foreground">{sourceOnlySentence}</span> are real implementations,
-              compiled in their own CI, that you build from source — not yet distributed as packages.{" "}
-              <Link
-                href="/docs/platforms"
-                {...ctaAttrs("homepage_flagship", "platform_availability")}
-                // Always underlined, not just on hover: inside a paragraph that mixes foreground and muted
-                // text, colour alone does not separate a link from its surroundings (axe link-in-text-block).
-                className="text-primary underline underline-offset-4"
-              >
-                What ships where
-              </Link>
-              .
-            </p>
-
-            <CrossPlatformFlagship />
+      {/* ─── [03] token boundary — a dark chapter ───────────────────────────────────────────────── */}
+      <section className="kx-chapter-dark dark overflow-hidden border-b border-border">
+        <div aria-hidden="true" className="kx-glow -start-48 top-1/3 size-[40rem]" />
+        <div className={`${container} py-20 md:py-28`}>
+          <Reveal>
+            <SectionHead index="03" label="Token boundary" meta="generated · written per platform" />
+            <div className="mt-10 grid grid-cols-1 gap-8 lg-rem:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg-rem:items-end">
+              <h2 className="min-w-0 break-words text-balance font-display text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-6xl">
+                Generated tokens. Hand-written components.
+              </h2>
+              {/*
+                The architecture paragraph: two things share a source and two things do not. Nothing is softened —
+                the platform list is derived, the hand-written claim stands, CI verification is stated.
+              */}
+              <p className="max-w-xl text-muted-foreground">
+                One DTCG token source generates every platform&rsquo;s native token output. {platformSentence} each
+                implement the same component contract natively — hand-written per platform, never one source
+                converted into five. And every platform claim is checked against real source in CI, so the coverage
+                you read is the coverage that exists.
+              </p>
+            </div>
+          </Reveal>
+          <Reveal className="mt-16">
+            <TokenPipeline
+              token={story.token}
+              outputs={story.outputs}
+              platforms={mapPlatforms}
+              buildScript="style-dictionary/build.mjs"
+              dirs={dirs}
+            />
           </Reveal>
         </div>
       </section>
 
-      {/* ─── verification: the core position, previously absent from this page ─── */}
-      {/*
-        `STRATEGY.md` names verification as the position and §7 names Credibility as the funnel's narrowest
-        point — yet this page never mentioned it. A visitor could read the whole homepage without learning the
-        one thing that separates KinetixUI from every other cross-platform claim.
+      {/* ─── [04] same contract, different platform ─────────────────────────────────────────────── */}
+      <section id="flagship" className="scroll-mt-24 border-b border-border">
+        <div className={`${container} py-20 md:py-28`}>
+          <div className="grid grid-cols-1 gap-12 lg-rem:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg-rem:gap-16">
+            <Reveal className="lg-rem:sticky lg-rem:top-28 lg-rem:self-start">
+              <SectionHead index="04" label="Implementations" meta={`${STORY_COMPONENT} · ${componentPlatformCount} source trees`} />
+              <h2 className="min-w-0 break-words mt-8 text-balance font-display text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-5xl">
+                Same contract. Different platform.
+              </h2>
+              <p className="mt-6 text-muted-foreground md:text-lg">
+                KinetixUI does not convert one component implementation into five. The token is shared; the Switch
+                beside this is written once per platform, in that platform&rsquo;s own language — and every copy
+                reads the same <code className="text-foreground">action</code> colour.
+              </p>
+              {/*
+                Availability, which is not maturity. Both sentences are generated from the manifest, and
+                `marketing-claims.test.ts` requires this page to qualify every undistributed platform it names.
+              */}
+              <p className="mt-5 text-sm text-muted-foreground">
+                <span className="text-foreground">{installableSentence}</span> install from a package registry today.{" "}
+                <span className="text-foreground">{sourceOnlySentence}</span> are real implementations, compiled in
+                their own CI, that you build from source — not yet distributed as packages.{" "}
+                <Link
+                  href="/docs/platforms"
+                  {...ctaAttrs("homepage_flagship", "platform_availability")}
+                  // Always underlined: inside mixed foreground/muted text, colour alone does not mark a link.
+                  className="text-primary underline underline-offset-4"
+                >
+                  What ships where
+                </Link>
+                .
+              </p>
+            </Reveal>
+            <Reveal className="min-w-0">
+              <ImplementationExplorer component="Switch" componentHref={`/docs/components/${STORY_COMPONENT}`} platforms={explorer} />
+            </Reveal>
+          </div>
+        </div>
+      </section>
 
-        Benefit first, mechanism second: the check names are the evidence, not the pitch. Nothing here counts
-        anything — the numbers that would date it live on /docs/platforms, generated.
-      */}
-      <section className="border-b border-border">
-        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-20 lg:px-8">
+      {/* ─── [05] components ────────────────────────────────────────────────────────────────────── */}
+      <section className="border-b border-border bg-muted/30">
+        <div className={`${container} py-20 md:py-28`}>
           <Reveal>
-            <SectionHead index="02" label="Why you can believe the coverage table" meta="checked in CI" />
-            <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-              A platform badge costs nothing to add. Ours has to compile.
-            </h2>
-            <p className="mt-4 max-w-2xl text-muted-foreground">
-              Every design system claims to be cross-platform, and almost none publishes where it falls short.
-              That is why coverage tables drift into aspiration — and why you usually find out after migrating.
-              KinetixUI derives its coverage from one manifest and fails the build when a claim outruns the
-              source behind it.
-            </p>
+            <SectionHead index="05" label="Components" meta={`${componentTotal} catalogue entries`} />
+            <div className="mt-10 flex flex-wrap items-end justify-between gap-6">
+              <h2 className="min-w-0 break-words max-w-2xl text-balance font-display text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-5xl">
+                Real components, and what is true of each one everywhere.
+              </h2>
+              <Link
+                href="/components"
+                {...ctaAttrs("homepage", "browse_components")}
+                className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
+              >
+                Browse all {componentTotal} catalogue entries <ArrowUpRight className="size-3.5" />
+              </Link>
+            </div>
+          </Reveal>
+          <Reveal className="mt-12">
+            <ComponentSpotlight items={SPOTLIGHT} />
+          </Reveal>
+        </div>
+      </section>
 
-            <dl className="mt-10 grid gap-x-10 gap-y-8 border-t border-border pt-8 sm:grid-cols-2">
+      {/* ─── [06] verification — a dark chapter ─────────────────────────────────────────────────── */}
+      {/*
+        `STRATEGY.md` names verification as the position and §7 names Credibility as the funnel's narrowest point.
+        Benefit first, mechanism second; the numbers are the manifest this page was built from, and are labelled so.
+      */}
+      <section className="kx-chapter-dark dark overflow-hidden border-b border-border">
+        <div aria-hidden="true" className="kx-glow -end-32 top-10 size-[38rem]" />
+        <div className={`${container} py-20 md:py-28`}>
+          <Reveal>
+            <SectionHead index="06" label="Verification" meta="from the manifest this page was built from" />
+            <div className="mt-10 grid grid-cols-1 gap-8 lg-rem:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg-rem:items-end">
+              <h2 className="min-w-0 break-words text-balance font-display text-5xl font-semibold leading-[1.02] tracking-[-0.035em] md:text-7xl">
+                Claims you can check.
+              </h2>
+              <div>
+                <p className="font-display text-xl font-semibold md:text-2xl">A platform badge costs nothing to add. Ours has to compile.</p>
+                <p className="mt-4 max-w-xl text-muted-foreground">
+                  Every design system claims to be cross-platform, and almost none publishes where it falls short.
+                  That is why coverage tables drift into aspiration — and why you usually find out after migrating.
+                  KinetixUI derives its coverage from one manifest and fails the build when a claim outruns the
+                  source behind it.
+                </p>
+              </div>
+            </div>
+          </Reveal>
+
+          <Reveal className="mt-14">
+            <EvidenceColumns platforms={platformEvidence()} />
+            <p className="mt-4 font-mono text-xs text-muted-foreground">
+              <Link href="/docs/platforms" className="underline-offset-4 hover:text-foreground hover:underline">
+                {/* "all 4" under a headline of 5 read as a miscount: these are the catalogue-complete platforms, and
+                    the one still rolling out is named rather than left for the reader to subtract. */}
+                {fullCoverageCount}/{componentTotal} catalogue entries on all {catalogPlatformCount} catalogue-complete platforms ·{" "}
+                {documentedExceptionCount} documented exceptions
+                {rollingOut.length > 0 ? ` · ${rollingOut.join(", ")} still rolling out` : ""}
+              </Link>
+            </p>
+          </Reveal>
+
+          <Reveal className="mt-16">
+            <dl className="grid grid-cols-1 gap-x-12 gap-y-10 border-t border-border pt-10 md:grid-cols-2">
               <div>
                 <dt className="font-display text-lg font-semibold">A claim without source fails the build</dt>
                 <dd className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -382,14 +505,14 @@ export default function HomePage() {
               <Link
                 href="/docs/platforms"
                 {...ctaAttrs("homepage_verification", "view_verification")}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
+                className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
               >
                 See what is verified, platform by platform <ArrowUpRight className="size-3.5" />
               </Link>
               <Link
                 href="/docs/component-specs"
                 {...ctaAttrs("homepage_verification", "read_docs")}
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                className="inline-flex min-h-9 items-center gap-1.5 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
               >
                 Component specs
               </Link>
@@ -398,200 +521,159 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── features ledger ──────────────────────────────────────────── */}
+      {/* ─── [07] start small — a rising stair, joined by the trace ─────────────────────────────── */}
+      {/*
+        `PERSONAS.md` P2 objects "we do not have time to adopt a design system". Three independent entry points,
+        each a real capability rather than a tier; rung 1 is the one a team with no design-system owner can take.
+      */}
       <section className="border-b border-border">
-        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+        <div className={`${container} py-20 md:py-28`}>
           <Reveal>
-            <SectionHead index="03" label="Why KinetixUI" meta="04 principles" />
-            <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-              A design system that moves with your design, not after it.
+            <SectionHead index="07" label="Start small" meta="three ways in" />
+            <h2 className="min-w-0 break-words mt-8 max-w-3xl text-balance font-display text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-5xl">
+              You do not have to replace your design system to use this one.
             </h2>
+            <p className="mt-5 max-w-2xl text-muted-foreground md:text-lg">
+              Most adoption cost lands before any benefit does. These are three independent entry points — take the
+              first and stop, if that is all you need.
+            </p>
           </Reveal>
 
-          <Reveal className="mt-12 border-t border-border">
-            {FEATURES.map((f, i) => (
-              <div
-                key={f.title}
-                className="group grid grid-cols-[minmax(0,1fr)] gap-4 border-b border-border py-8 md:grid-cols-[minmax(0,5rem)_1fr_1.4fr] md:gap-8 md:py-10"
-              >
-                {/* decorative sequence marker (a 40% tint): generated content, not text — WCAG exempts decoration, and it
-                    stays out of the accessibility tree; the heading beside it carries the meaning */}
-                <span
-                  aria-hidden
-                  data-n={String(i + 1).padStart(2, "0")}
-                  className="font-display text-4xl font-bold leading-none text-muted-foreground/40 transition-colors before:content-[attr(data-n)] group-hover:text-primary md:text-5xl"
-                />
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
-                    <f.icon className="size-5" />
-                  </span>
-                  {/* `min-w-0`: a flex item's `min-width` defaults to `auto`, i.e. its min-content
-                      width, so at doubled text this heading's longest word floored the row. */}
-                  <h3 className="mt-1 min-w-0 font-display text-lg font-semibold">{f.title}</h3>
+          {/* `[&>*]:min-w-0`: grid items cannot shrink below min-content otherwise — the 320px/200% overflow fix. */}
+          <Reveal className="relative mt-14">
+            <TraceLayer
+              pairs={[
+                { from: "rung-1", to: "rung-2" },
+                { from: "rung-2", to: "rung-3" },
+              ]}
+            />
+            <ol className="relative grid grid-cols-1 gap-6 [&>*]:min-w-0 lg-rem:grid-cols-3 lg-rem:gap-10">
+              <li className="lg-rem:mt-24">
+                <div data-anchor="rung-1" className="flex h-full flex-col rounded-2xl border border-border bg-background p-6">
+                  <p className="font-mono text-xs text-muted-foreground">Level 01 — tokens</p>
+                  <h3 className="min-w-0 break-words mt-3 font-display text-xl font-semibold">Keep your components</h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+                    Install the token package and generate your platform&rsquo;s native output. On Flutter the
+                    Material and Cupertino adapters style stock widgets, so nothing of ours has to appear in your
+                    tree. Your components stay exactly as they are.
+                  </p>
+                  <Link
+                    href="/docs/tokens"
+                    {...ctaAttrs("homepage_adoption", "adopt_tokens")}
+                    className="mt-4 inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
+                  >
+                    Start with tokens <ArrowUpRight className="size-3.5" />
+                  </Link>
                 </div>
-                <p className="text-sm leading-relaxed text-muted-foreground md:text-base">{f.body}</p>
-              </div>
-            ))}
+              </li>
+              <li className="lg-rem:mt-12">
+                <div data-anchor="rung-2" className="flex h-full flex-col rounded-2xl border border-border bg-background p-6">
+                  <p className="font-mono text-xs text-muted-foreground">Level 02 — components</p>
+                  <h3 className="min-w-0 break-words mt-3 font-display text-xl font-semibold">Copy what you need</h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+                    Bring in one component at a time. The CLI writes the source into your repository and resolves
+                    the npm packages those files import, so what lands is yours to edit — no runtime dependency you
+                    cannot patch.
+                  </p>
+                  <Link
+                    href="/components"
+                    {...ctaAttrs("homepage_adoption", "adopt_components")}
+                    className="mt-4 inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
+                  >
+                    Browse the catalogue <ArrowUpRight className="size-3.5" />
+                  </Link>
+                </div>
+              </li>
+              <li>
+                <div data-anchor="rung-3" className="flex h-full flex-col rounded-2xl border border-border bg-background p-6">
+                  <p className="font-mono text-xs text-muted-foreground">Level 03 — blocks</p>
+                  <h3 className="min-w-0 break-words mt-3 font-display text-xl font-semibold">Whole patterns</h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+                    Composed interface patterns — settings panels, pricing tiers, forms — with real source on every
+                    platform that lists them. The step past primitives, for when the pattern rather than the button
+                    is what you are rebuilding.
+                  </p>
+                  <Link
+                    href="/blocks"
+                    {...ctaAttrs("homepage_adoption", "adopt_blocks")}
+                    className="mt-4 inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
+                  >
+                    See the blocks <ArrowUpRight className="size-3.5" />
+                  </Link>
+                </div>
+              </li>
+            </ol>
           </Reveal>
         </div>
       </section>
 
-      {/* ─── modules ──────────────────────────────────────────────────── */}
-      <section className="border-b border-border bg-muted/20">
-        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-20 lg:px-8">
-          <Reveal>
-            <SectionHead index="04" label="Modules" meta="beyond the catalogue" />
-            <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-              Connected-device products
-            </h2>
-            <p className="mt-4 max-w-2xl text-muted-foreground">
+      {/* ─── [08] modules ───────────────────────────────────────────────────────────────────────── */}
+      <section className="border-b border-border bg-muted/30">
+        <div className={`${container} grid grid-cols-1 gap-6 py-14 md:grid-cols-[minmax(0,0.6fr)_minmax(0,1.4fr)] md:items-baseline md:gap-12`}>
+          <SectionHead index="08" label="Modules" meta="beyond the catalogue" className="md:border-t-0 md:pt-0" />
+          <div>
+            <h2 className="min-w-0 break-words font-display text-2xl font-semibold tracking-[-0.02em] md:text-3xl">Connected-device products</h2>
+            <p className="mt-3 max-w-2xl text-muted-foreground">
               Models, framework-independent functions and accessible React primitives for device status,
               telemetry, battery, signal, firmware and alerts. A module on top of the token contract — not a sixth
               platform, and not part of the component catalogue.
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
               <Link
                 href="/iot"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
+                className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
                 {...ctaAttrs("homepage", "explore_iot")}
               >
                 Explore IoT <ArrowUpRight className="size-3.5" />
               </Link>
               <span className="text-xs text-muted-foreground">{IOT_MATURITY_LABEL}</span>
             </div>
-          </Reveal>
+          </div>
         </div>
       </section>
 
-      {/* ─── adoption ladder — P2's real blocker ───────────────────────── */}
-      {/*
-        `PERSONAS.md` P2 objects "we do not have time to adopt a design system", and the answer already existed
-        in the product — three genuinely independent entry points — but appeared nowhere a visitor would find
-        it. Without this the page implies all-or-nothing adoption, which is the fastest way to lose the audience
-        the hero was just written for.
-
-        Each rung is a real capability, not a marketing tier. Rung 1 is the one a team with no design-system
-        owner can actually take on a Tuesday afternoon.
-      */}
-      <section className="border-b border-border">
-        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-16 sm:px-6 md:py-20 lg:px-8">
-          <Reveal>
-            <SectionHead index="05" label="Start small" meta="three ways in" />
-            <h2 className="mt-6 max-w-2xl text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-              You do not have to replace your design system to use this one.
-            </h2>
-            <p className="mt-4 max-w-2xl text-muted-foreground">
-              Most adoption cost lands before any benefit does. These are three independent entry points — take
-              the first and stop, if that is all you need.
-            </p>
-          </Reveal>
-
-          {/* `[&>*]:min-w-0`: these cards are grid items, and a grid track with `min-width: auto` cannot
-              shrink below its content's min-content width. Proven by greedy mutation — this is the
-              element that takes the homepage from 26px of overflow to 0 at 320px/200% text. */}
-          <Reveal className="mt-12 grid gap-6 [&>*]:min-w-0 md:grid-cols-3">
-            <div className="kx-frame flex flex-col border border-border p-6">
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                Level 01 — tokens
-              </p>
-              <h3 className="mt-3 font-display text-lg font-semibold">Keep your components</h3>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
-                Install the token package and generate your platform&rsquo;s native output. On Flutter the
-                Material and Cupertino adapters style stock widgets, so nothing of ours has to appear in your
-                tree. Your components stay exactly as they are.
-              </p>
-              <Link
-                href="/docs/tokens"
-                {...ctaAttrs("homepage_adoption", "adopt_tokens")}
-                className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
-              >
-                Start with tokens <ArrowUpRight className="size-3.5" />
-              </Link>
-            </div>
-
-            <div className="kx-frame flex flex-col border border-border p-6">
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                Level 02 — components
-              </p>
-              <h3 className="mt-3 font-display text-lg font-semibold">Copy what you need</h3>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
-                Bring in one component at a time. The CLI writes the source into your repository and resolves
-                the npm packages those files import, so what lands is yours to edit — no runtime dependency you
-                cannot patch.
-              </p>
-              <Link
-                href="/components"
-                {...ctaAttrs("homepage_adoption", "adopt_components")}
-                className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
-              >
-                Browse the catalogue <ArrowUpRight className="size-3.5" />
-              </Link>
-            </div>
-
-            <div className="kx-frame flex flex-col border border-border p-6">
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                Level 03 — blocks
-              </p>
-              <h3 className="mt-3 font-display text-lg font-semibold">Whole patterns</h3>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
-                Composed interface patterns — settings panels, pricing tiers, forms — with real source on every
-                platform that lists them. The step past primitives, for when the pattern rather than the button
-                is what you are rebuilding.
-              </p>
-              <Link
-                href="/blocks"
-                {...ctaAttrs("homepage_adoption", "adopt_blocks")}
-                className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4"
-              >
-                See the blocks <ArrowUpRight className="size-3.5" />
-              </Link>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ─── closer ───────────────────────────────────────────────────── */}
+      {/* ─── [09] closer ────────────────────────────────────────────────────────────────────────── */}
       <section>
-        <div className="kx-edges relative mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 md:py-28 lg:px-8">
-          <Reveal className="max-w-3xl">
-            <SectionHead index="06" label="Who it's for" />
-            <h2 className="mt-6 text-balance font-display text-3xl font-semibold tracking-[-0.02em] md:text-5xl">
+        <div className={`${container} py-24 md:py-32`}>
+          <Reveal>
+            <SectionHead index="09" label="Who it's for" />
+            <h2 className="min-w-0 break-words mt-10 max-w-5xl text-balance font-display text-5xl font-semibold leading-[1.02] tracking-[-0.035em] md:text-7xl">
               Built for teams that ship on more than one platform.
             </h2>
             {/*
-              The paid-tier tease is gone. `marketing/CLAIMS.md` F2 prohibits it outright: no such tier exists
-              and none is being built, so promising future commercial tooling here was promising a product to
-              people deciding whether to depend on this one. MIT is the whole commercial story, stated as such.
-              (Deliberately paraphrased: the guard that now enforces F2 reads this file, and a guard that fires
-              on the comment explaining its own rule is one that gets deleted.)
+              The paid-tier tease is gone: `marketing/CLAIMS.md` F2 prohibits it outright. MIT is the whole
+              commercial story, stated as such. (Paraphrased: the guard that enforces F2 reads this file.)
             */}
-            <p className="mt-5 max-w-xl text-muted-foreground md:text-lg">
-              Agencies and product teams shipping a consistent design across {platformSentence} — one token
-              contract, a native implementation per platform, with documented exceptions where a
-              platform-native pattern serves better than a forced port. MIT licensed, all of it.
-            </p>
-            {/* `[&>*]:max-w-full` on the row: Button is `whitespace-nowrap` by design, so at the reader's
-                doubled text size each label is wider than a 320px content column and the row could not wrap
-                its way out of it. Capping each child at the row's width is what lets the label itself wrap. */}
-            <div className="mt-8 flex flex-wrap items-center gap-3 [&>*]:max-w-full">
-              {/* Installation, not the Introduction: a visitor who reaches the closer and says "get started" is asking
-                  how to set it up, and the Introduction is an explanation they can still reach from the docs nav. */}
-              <Button asChild size="lg" className="whitespace-normal">
-                <Link href="/docs/installation" {...ctaAttrs("homepage", "get_started")}>
-                  Get started <ArrowUpRight className="size-4" />
-                </Link>
-              </Button>
-              {/* `whitespace-normal` at the call site: Button is `whitespace-nowrap` by design, which at the
-                  reader's doubled text size makes this four-word label 317px wide — wider than a small phone.
-                  Overridden here rather than in the published component, where nowrap is the right default. */}
-              {/* No ctaAttrs: this is the repository, not the docs. Unmarked, the provider reports it as
-                  github_clicked (source homepage, location content); marked `read_docs` it was counted as a
-                  docs CTA and never as a GitHub click. */}
-              <Button asChild size="lg" variant="Outline" className="whitespace-normal">
-                <Link href={siteConfig.repo}>
-                  Read the source
-                </Link>
-              </Button>
+            <div className="mt-10 grid grid-cols-1 gap-10 lg-rem:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg-rem:gap-16">
+              <div>
+                <p className="max-w-xl text-muted-foreground md:text-lg">
+                  Agencies and product teams shipping a consistent design across {platformSentence} — one token
+                  contract, a native implementation per platform, with documented exceptions where a
+                  platform-native pattern serves better than a forced port. MIT licensed, all of it.
+                </p>
+                {/* `[&>*]:max-w-full` + `whitespace-normal`: Button is nowrap by design, which at 200% text is wider than a phone. */}
+                <div className="mt-8 flex flex-wrap items-center gap-3 [&>*]:max-w-full">
+                  {/* Installation, not the Introduction: "get started" here means "how do I set it up". */}
+                  <Button asChild size="lg" className="whitespace-normal">
+                    <Link href="/docs/installation" {...ctaAttrs("homepage", "get_started")}>
+                      Get started <ArrowUpRight className="size-4" />
+                    </Link>
+                  </Button>
+                  {/* No ctaAttrs: this is the repository, reported as github_clicked, not a docs CTA. */}
+                  <Button asChild size="lg" variant="Outline" className="whitespace-normal">
+                    <Link href={siteConfig.repo}>Read the source</Link>
+                  </Button>
+                </div>
+              </div>
+              {/* The colophon: the spec panel, derived, set as the page's last word rather than a hero sidebar. */}
+              <dl className="grid grid-cols-2 self-end border-t border-border sm:grid-cols-3">
+                {SPEC.map(([k, v]) => (
+                  <div key={k} className="border-b border-border py-4 pe-4">
+                    <dt className="font-mono text-xs text-muted-foreground">{k}</dt>
+                    <dd className="mt-1 font-display text-lg font-semibold">{v}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           </Reveal>
         </div>

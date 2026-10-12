@@ -97,7 +97,7 @@ export function HeroCommand() {
           />
         </span>
       </div>
-      <pre className="overflow-x-auto p-4 text-[13px] leading-relaxed">
+      <pre className="overflow-x-auto whitespace-pre-wrap p-4 text-[13px] leading-relaxed [overflow-wrap:anywhere]">
         <code>
           <span className="text-muted-foreground">{PREFIX}</span>
           <span className="text-foreground">{typed}</span>

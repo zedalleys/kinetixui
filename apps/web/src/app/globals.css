@@ -254,63 +254,154 @@
     animation-delay: 0.35s;
   }
 
-  /* hero token fan-out diagram (decorative; rows derive from platformDefinitions) */
-  .kx-fan-wire {
+  /*
+   * ── Systems in Motion ──────────────────────────────────────────────────────────────────────────────
+   *
+   * The homepage's art direction. Nothing below introduces a colour: every surface, glow, trace and highlight
+   * is an existing semantic token (`--primary`, `--card`, `--border`, `--foreground`, `--background`) at an
+   * alpha. The redesign is meant to feel new through composition, depth and motion, not a new palette.
+   */
+
+  /*
+   * A dark chapter: the existing `.dark` token set, applied to one section instead of the page — the same
+   * mechanism `.theme-light` uses in the other direction. Text colour is re-declared here because `body`
+   * resolved it against the page's own theme before this section's variables existed.
+   */
+  .kx-chapter-dark {
+    position: relative;
+    isolation: isolate;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  /* A localised action-blue glow behind the chapter's subject. Low alpha, never behind body copy. */
+  .kx-glow {
+    pointer-events: none;
+    position: absolute;
+    z-index: -1;
+    background: radial-gradient(closest-side, hsl(var(--primary) / 0.2), hsl(var(--primary) / 0.06) 55%, transparent);
+  }
+
+  /*
+   * KinetixUI glass: layered system information, not a card style.
+   * Used only where a surface sits OVER other system information — the token source, the platform detail
+   * overlay, the evidence columns. Text contrast does not depend on the blur: `--card` at 0.78 over the dark
+   * chapter is still darker than every foreground role measured against it (see the PR's contrast samples),
+   * and every fallback below is fully opaque.
+   */
+  .kx-glass {
+    background-color: hsl(var(--card) / 0.78);
+    border: 1px solid hsl(var(--border));
+    box-shadow:
+      inset 0 1px 0 hsl(var(--foreground) / 0.07),
+      0 1px 0 hsl(var(--background) / 0.4),
+      0 18px 40px -24px hsl(var(--background) / 0.9);
+    -webkit-backdrop-filter: blur(14px) saturate(1.1);
+    backdrop-filter: blur(14px) saturate(1.1);
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .kx-glass {
+      background-color: hsl(var(--card));
+    }
+  }
+
+  /* The Kinetix Trace: source → token → platform → implementation → evidence. */
+  .kx-trace {
     fill: none;
-    stroke: color-mix(in srgb, hsl(var(--primary)) 78%, transparent);
+    stroke: hsl(var(--primary) / 0.5);
+    stroke-width: 1.25;
+    stroke-linecap: round;
+    transition:
+      stroke var(--duration-fast) var(--easing-standard),
+      stroke-width var(--duration-fast) var(--easing-standard),
+      opacity var(--duration-fast) var(--easing-standard);
+  }
+  /* Hand-written, not generated: the same line, broken. The boundary is drawn, not just described. */
+  .kx-trace[data-kind="written"] {
+    stroke: hsl(var(--foreground) / 0.32);
+    stroke-dasharray: 2 5;
+  }
+  [data-map-active] .kx-trace:not([data-active]) {
+    opacity: 0.45;
+  }
+  .kx-trace[data-active] {
+    stroke: hsl(var(--primary));
     stroke-width: 1.75;
-    stroke-dasharray: 4 6;
-    animation: kx-flow 1.1s linear infinite;
   }
-  .kx-fan-source {
-    fill: hsl(var(--primary));
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: kx-source-pulse 2.4s ease-in-out infinite;
+  .kx-trace[data-active][data-kind="written"] {
+    stroke: hsl(var(--primary) / 0.85);
   }
-  .kx-fan-node {
-    fill: hsl(var(--primary));
-    animation: kx-node-pulse 2s ease-in-out infinite;
+  /* One travelling pulse per change — never a loop. `pathLength="1"` on the element makes the dash units fractions. */
+  .kx-trace-pulse {
+    fill: none;
+    stroke: hsl(var(--primary));
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-dasharray: 0.07 2;
+    stroke-dashoffset: 0.07;
+    animation: kx-trace-pulse 900ms var(--easing-emphasized) both;
   }
-  .kx-fan-label {
-    fill: hsl(var(--muted-foreground));
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.04em;
-  }
-  /* Maturity word under a non-stable platform (Angular · preview). Quieter than the label on purpose:
-     it qualifies the row without turning a decorative diagram into a maturity matrix. */
-  .kx-fan-note {
-    fill: hsl(var(--muted-foreground));
-    font-family: var(--font-mono);
-    font-size: 8px;
-    letter-spacing: 0.08em;
-    opacity: 0.75;
-  }
-  @keyframes kx-flow {
+  @keyframes kx-trace-pulse {
     to {
-      stroke-dashoffset: -20;
+      stroke-dashoffset: -1;
     }
   }
-  @keyframes kx-node-pulse {
-    0%,
-    100% {
-      opacity: 0.5;
+  /* First-load sequence: the source activates, generated traces draw, outputs land, platforms resolve. */
+  [data-map-intro] .kx-trace[data-kind="generated"] {
+    stroke-dasharray: 1 1;
+    animation: kx-trace-draw 700ms var(--easing-enter) 250ms both;
+  }
+  [data-map-intro] .kx-trace[data-kind="written"] {
+    animation: kx-fade-in 500ms var(--easing-enter) 850ms both;
+  }
+  @keyframes kx-trace-draw {
+    from {
+      stroke-dashoffset: 1;
     }
-    50% {
-      opacity: 1;
+    to {
+      stroke-dashoffset: 0;
     }
   }
-  @keyframes kx-source-pulse {
-    0%,
-    100% {
-      transform: scale(1);
-      opacity: 1;
+  @keyframes kx-fade-in {
+    from {
+      opacity: 0;
     }
-    50% {
-      transform: scale(1.12);
-      opacity: 0.82;
+  }
+  .kx-map-stage {
+    animation: kx-stage-in 520ms var(--easing-enter) both;
+    animation-delay: calc(var(--stage, 0) * 70ms + var(--stage-base, 0ms));
+  }
+  @keyframes kx-stage-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.985);
     }
+  }
+  /* The swatch and declarations cross-fade when the token's theme value changes. */
+  .kx-swap {
+    animation: kx-fade-in var(--duration-base) var(--easing-standard) both;
+  }
+
+  /* Code browser: the lines that read the story token are marked, so the token is visible in every language. */
+  .kx-code-line[data-reads] {
+    background: hsl(var(--primary) / 0.1);
+    box-shadow: inset 2px 0 0 hsl(var(--primary));
+  }
+  [dir="rtl"] .kx-code-line[data-reads] {
+    box-shadow: inset -2px 0 0 hsl(var(--primary));
+  }
+  .kx-tok-comment {
+    color: hsl(var(--muted-foreground));
+    font-style: italic;
+  }
+  .kx-tok-string {
+    color: hsl(var(--secondary-foreground));
+  }
+  .kx-tok-keyword {
+    color: hsl(var(--primary));
+  }
+  .kx-tok-type {
+    color: hsl(var(--foreground));
+    font-weight: 600;
   }
 
   /* pipeline infographic — animated flow bar between stages + output chips */
@@ -554,9 +645,9 @@
   .kx-underline::after,
   .kx-marquee-track,
   .kx-grid-bg,
-  .kx-fan-wire,
-  .kx-fan-source,
-  .kx-fan-node,
+  .kx-trace,
+  .kx-map-stage,
+  .kx-swap,
   .kx-caret,
   .kx-flow-bar::after,
   .kx-iot-art *,
@@ -575,8 +666,9 @@
   .kx-hero-enter > * {
     animation: none !important;
   }
-  .kx-fan-node {
-    opacity: 0.85;
+  /* No travelling pulse at all: the selection is still shown by the highlighted branch, which does not move. */
+  .kx-trace-pulse {
+    display: none;
   }
   /* Nothing moves, so the loop's repeats go and the one real list wraps inside the band: every platform stays
      visible at any width instead of being clipped by the strip's overflow. */
@@ -592,6 +684,36 @@
     flex-wrap: wrap;
     flex-shrink: 1;
     row-gap: 0.5rem;
+  }
+}
+
+/*
+ * Glass falls back to an opaque surface for readers who ask for less transparency, and to system colours in
+ * forced-colours mode, where a translucent token colour would be replaced anyway.
+ */
+@media (prefers-reduced-transparency: reduce) {
+  .kx-glass {
+    background-color: hsl(var(--card));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .kx-glow {
+    display: none;
+  }
+}
+@media (forced-colors: active) {
+  .kx-glass {
+    background-color: Canvas;
+    border-color: CanvasText;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .kx-glow {
+    display: none;
+  }
+  .kx-trace,
+  .kx-trace[data-active] {
+    stroke: CanvasText;
   }
 }
 
