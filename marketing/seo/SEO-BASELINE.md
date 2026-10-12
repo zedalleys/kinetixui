@@ -314,13 +314,13 @@ the container.
 ### `pnpm check:seo` (CI: `ci.yml`, after `Build site`)
 
 Reads every prerendered HTML file plus `sitemap.xml` and `robots.txt`. Rules: `title-missing`, `title-duplicate`,
-`desc-missing`, `desc-duplicate`, `canonical-missing`, `canonical-host`, `canonical-query`, `canonical-self`,
+`desc-missing`, `desc-markup`, `desc-duplicate`, `canonical-missing`, `canonical-host`, `canonical-query`, `canonical-self`,
 `og-url`, `h1-count`, `sitemap-missing-page`, `sitemap-bad-url`, `sitemap-omits`, `link-broken`, `og-image`,
 `jsonld-invalid`, `breadcrumb-mismatch`, `component-title`, `component-related`, `noindex-important`, `robots`,
 `orphan`.
 
 Baseline on `bc62ed7`: **FAIL**. After: **129 built pages, 128 indexable, 128 sitemap URLs, 15,470 internal links
-checked, all rules pass.**
+checked, all 23 rules pass.**
 
 ### `pnpm check:seo-browser` (CI: `a11y-site.yml`, against `next start`)
 
@@ -360,8 +360,9 @@ verifies its SHA-256. Nothing in the source tree is touched, and no control is c
 | 13 | drop the only link to `/demos/building-operations` | `orphan` | ✓ |
 | 14 | drop Related components from `/docs/components/slider` | `component-related` | ✓ |
 | 15 | canonical on `https://kinetixui.com.evil.example` (the origin as a host prefix) | `canonical-host` | ✓ |
+| 16 | MDX inline code (`` `<kbd>` ``) in a meta description | `desc-markup` | ✓ |
 
-All 15 were caught and the gate is green again afterwards. The browser check's platform assertion was checked the
+All 16 were caught and the gate is green again afterwards. The browser check's platform assertion was checked the
 same way: expecting Flutter on `button?platform=SwiftUI` failed with the SwiftUI tab reported as selected, and the
 script was restored.
 

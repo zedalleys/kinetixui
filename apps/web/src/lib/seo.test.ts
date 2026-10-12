@@ -151,6 +151,12 @@ describe("component metadata", () => {
     }
   });
 
+  it("keeps MDX markup out of the plain-text snippet", () => {
+    const d = componentDescription("native-select", "A wrapper around the native `<select>` element, with `size=\"sm\"`.");
+    expect(d).toMatch(/^KinetixUI Native Select: A wrapper around the native select element, with size="sm"\./);
+    expect(d).not.toMatch(/[`<>]/);
+  });
+
   it("says which platforms install and which are source, from the manifest", () => {
     const d = componentDescription("button", "Trigger an action.");
     expect(d).toMatch(/^KinetixUI Button: Trigger an action\. Implemented for /);

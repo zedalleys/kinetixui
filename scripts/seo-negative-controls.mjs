@@ -127,6 +127,13 @@ const CONTROLS = [
     mutate: (s) => s.replace('href="https://kinetixui.com/docs/rtl"/>', 'href="https://kinetixui.com.evil.example/docs/rtl"/>'),
     expect: "canonical-host",
   },
+  {
+    id: 16,
+    name: "MDX inline code in a meta description",
+    file: "docs/components/kbd.html",
+    mutate: (s) => s.replace(/(<meta name="description" content="KinetixUI Kbd: )/, "$1`&lt;kbd&gt;` "),
+    expect: "desc-markup",
+  },
 ];
 
 function runGate() {

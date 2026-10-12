@@ -14,6 +14,7 @@
  *   title-missing        an indexable page has no <title>
  *   title-duplicate      two indexable pages share a <title>
  *   desc-missing         an indexable page has no meta description
+ *   desc-markup          a description carries Markdown/MDX markup (backticks, angle brackets) into a plain-text snippet
  *   desc-duplicate       two indexable pages share a meta description
  *   canonical-missing    an indexable page has no <link rel=canonical>
  *   canonical-host       a canonical is not on the production origin
@@ -179,6 +180,7 @@ function dupes(field, rule) {
 for (const p of indexable) {
   if (!p.title) fail("title-missing", p.route, "no <title>");
   if (!p.description) fail("desc-missing", p.route, "no meta description");
+  else if (/[`<>]/.test(p.description)) fail("desc-markup", p.route, `description carries markup: ${p.description}`);
   if (!p.canonical) fail("canonical-missing", p.route, "no rel=canonical");
   else {
     if (!onOrigin(p.canonical)) fail("canonical-host", p.route, `canonical ${p.canonical} is not on ${ORIGIN}`);

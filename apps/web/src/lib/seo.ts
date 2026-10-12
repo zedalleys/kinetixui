@@ -133,7 +133,12 @@ export function componentDescription(slug: string, summary: string): string {
     installable.length ? `${named(installable)} from npm` : "",
     source.length ? `${list(source.map((p) => PLATFORM_DEFINITIONS[p].label))} as source you build` : "",
   ].filter(Boolean);
-  const lead = summary.trim().replace(/\s+/g, " ");
+  // a snippet is plain text: MDX inline code (`<audio>`) would show its backticks and brackets in results and cards
+  const lead = summary
+    .replace(/`([^`]*)`/g, "$1")
+    .replace(/<\/?([a-z][\w-]*)\s*\/?>/gi, "$1")
+    .trim()
+    .replace(/\s+/g, " ");
   return `KinetixUI ${componentName(slug)}: ${lead}${/[.!?]$/.test(lead) ? "" : "."} Implemented for ${parts.join("; ")}.`;
 }
 
