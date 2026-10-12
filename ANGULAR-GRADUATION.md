@@ -403,7 +403,7 @@ engine, direction system or focus framework.
 | Large text | all five at 2× text at 1024px and 390px: inside the viewport, nothing cut off sideways, 24px targets, still operable |
 | Motion | navigation panel (opacity); toast arrival (opacity); notification center (opacity); tour card and spotlight between steps (position); sidebar slide (inline-start offset): each through a rendered midpoint with normal motion, and none under reduced motion, landing on the same value, LTR and RTL |
 | Visual | `check:navigation-visual` (navigation menu: trigger and top-level link hover 8%, pressed 12%, focus ring, open layer and chevron, the current page by weight and an underline; sidebar: its surface and edge, entry hover/pressed/focus, the active entry by weight); `check:overlay-visual` (notification center as a floating surface; toast surface, edge, shadow or dark surface step, text, icons 3:1, action label, close-button ring; tour cut-out, scrim, card, text, the no-target scrim) |
-| Defects it found and fixed | at 2× text at 390px the toast's action and cancel buttons squeezed its text to a few characters per line (the actions now sit under the text); in dark mode the toast was told apart from the page only by a 2.70:1 edge (it is now painted `popover`, a surface step); the toaster's list clipped the toasts' shadows and focus rings (it now has a bleed inside its padding); the navigation trigger, navigation panel links and sidebar entries had no pressed state deeper than hover (12% on `:active` now); a toast removed while hovered or focused left its channel held, so the next toast never expired (removal now releases the hold); the committed public-API snapshot was stale; `check:angular-browser` found `KxSidebarInput`, `KxSidebarSeparator` and `KxSidebarMenuSkeleton` exported but never rendered (the usage example now shows them) |
+| Defects it found and fixed | at 2× text at 390px the toast's action and cancel buttons squeezed its text to a few characters per line (the actions now sit under the text); in dark mode the toast was told apart from the page only by a 2.70:1 edge (it is now painted `popover`, a surface step); the toaster's list clipped the toasts' shadows and focus rings (it now has a bleed inside its padding); the navigation trigger, navigation panel links and sidebar entries had no pressed state deeper than hover (12% on `:active` now); a toast removed while hovered or focused left its channel held, so the next toast never expired (removal now releases the hold); a toaster kept counting down under a modal dialog that made it inert, so a toast raised there could expire unseen (it now holds while a modal outside it is open; Codex review); a toast removed by `KxToasterService.dismiss()` while focused dropped focus to `<body>` (the queue now tells toasters before any removal; Codex review); an end sidebar left its gap at the inline start and the page ran under the panel, and the icon collapse leaked into the phone Sheet (Codex review); the committed public-API snapshot was stale; `check:angular-browser` found `KxSidebarInput`, `KxSidebarSeparator` and `KxSidebarMenuSkeleton` exported but never rendered (the usage example now shows them) |
 
 **Not ported, by design or for later:** React's sidebar cookie persistence (persistence is the application's,
 through `[(open)]`) and the menu button's tooltip in icon mode (the label stays in the accessible name);
@@ -416,7 +416,7 @@ in `check:angular-browser`, which fails identically on main `eb6957f`).
 
 #### Negative controls (Wave C3)
 
-13 controls (20–32), run after the implementation was committed (`9eb32a8`): each a real break in the source, a
+13 controls (20–32), and four more after the review (33–36), run after the implementation was committed (`9eb32a8`): each a real break in the source, a
 fresh harness built from it, the gate run against it with `--only`, and the file restored from git and checked by
 hash against HEAD before the next (logs and `summary.json`: `/mnt/project-files/angular-wave-c3/negative-controls/`).
 None committed. Every one was caught, across ten classes (direction, disclosure, roles, timing, focus, layering,
@@ -435,6 +435,14 @@ target tracking, viewport, sheet composition, duplication):
 - 30: the phone sidebar rendered as a plain `div`, not the Sheet → "the trigger opens it as a Sheet: one modal dialog, the family's own", "named, the page locked behind it, focus inside", and axe/forced-colours "nothing opened".
 - 31: the phone open state not reset when the breakpoint is crossed → "narrowed again, the sheet does not reopen by itself".
 - 32: the desktop panel also rendered on a phone → "below the breakpoint the persistent panel is gone; its content is still rendered once" and the widening case.
+
+Codex review of the PR found four more, each fixed with a regression check in `check:angular-overlays` (and a
+queue unit test for the removal hook), and each proven by a control run after the fix was committed (`ee4e23b`):
+
+- 33: an end sidebar's gap left at the inline start (`side="end"` written before its inset) → "side=\"end\": the panel at the inline end, the page from the inline start up to it, no empty gutter and nothing underneath", and the icon-collapsed case.
+- 34: the desktop icon collapse carried into the phone Sheet → "an icon-collapsed sidebar opens on a phone as the full sidebar: labels shown, entries full width".
+- 35: a toast's clock running while a modal dialog makes the toaster inert → "a modal dialog open outside the toaster holds its clock" and "a toast raised under a modal outlives its duration while the modal is open".
+- 36: a toast removed by `KxToasterService.dismiss()` from code while it had focus → "dismiss(id) from code on the focused toast moves focus to the toast that stays, never to the page", and the dismiss-all case.
 
 ### What remains after Wave C3, ranked
 
