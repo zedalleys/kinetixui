@@ -24,7 +24,7 @@ is in the "unowned" table at the end, on purpose.
 | `/` | **cross-platform design system** (infrastructure, the category) | multi-platform component library; design system for React Angular SwiftUI Compose Flutter | discovery | Explore components; platform coverage |
 | `/components` | **UI components for React, Angular, SwiftUI, Compose and Flutter** (multi-platform component library) | cross-platform UI components; accessible component library | evaluation | a component page |
 | `/docs/components/<slug>` (98) | **`<component>` component for `<its platforms>`** — e.g. "select component swiftui", "dialog component angular" | the component's own use ("dropdown select", "modal dialog") | evaluation | install by platform; related components |
-| `/docs/platforms` | **design system platform parity / coverage** — what is actually implemented per platform | cross-platform verification | evaluation | a platform page; components |
+| `/docs/platforms` | **design system platform parity / coverage** — what is actually implemented per platform | **design system verification** (how coverage claims are checked) | evaluation | a platform page; components |
 | `/docs/tokens` | **design tokens across web, iOS and Android** (DTCG → CSS, Swift, Kotlin, Dart) | style dictionary design tokens; semantic vs primitive tokens | evaluation | theming; installation |
 | `/docs/angular` | **Angular component library / Angular design system** (preview, on npm) | — | evaluation | install; components |
 | `/docs/swiftui` | **SwiftUI design system / component library** | design tokens SwiftUI | evaluation | source checkout; tokens |
@@ -45,7 +45,7 @@ is in the "unowned" table at the end, on purpose.
 | `/docs/changelog` | KinetixUI changelog (navigational / brand) | — | retention | platforms; components |
 | `/docs/contributing` | contributing — the platform rule (brand / community) | — | retention | — |
 | `/blocks` | **application UI blocks** — sign-in, settings, dashboard, pricing sections | settings UI block; dashboard block; authentication block | evaluation | the components a block uses |
-| `/iot` | **IoT UI components** — device state, telemetry, command lifecycle | device control interface components; asynchronous hardware UI states | evaluation | `/docs/iot`; the demo |
+| `/iot` | **IoT interface patterns / IoT UI components** — device state, telemetry, command lifecycle | device control interface components; asynchronous hardware UI states | evaluation | `/docs/iot`; the demo |
 | `/docs/iot` | IoT module documentation (`@kinetixui/iot`, React-only, experimental) | — | adoption | install `@kinetixui/iot` |
 | `/demos/building-operations` | building operations dashboard demo (simulated) | — | evaluation | `/iot` |
 | `/create` | design system theme builder exporting web, SwiftUI, Compose and Flutter themes | — | evaluation | theming |
@@ -62,8 +62,12 @@ is in the "unowned" table at the end, on purpose.
   theming owns "retheme with semantic tokens", foundations owns the non-colour scales.
 - **`/iot` vs `/docs/iot`.** The showcase owns the category query; the docs page owns the package.
 - **Platform pages vs each other.** Each title names one platform and its real distribution state, derived from the
-  manifest, so the four pages are not one template with the name swapped: Angular says "preview" and "npm"; the
-  native pages say "source you build today, not yet on <channel>".
+  manifest, and each page opens with a derived "at a glance" block (maturity, distribution, coverage, gaps,
+  evidence, tokens), so the four pages are not one template with the name swapped: Angular says "preview" and
+  "npm"; the native pages say "source you build today, not yet on <channel>" and show their own evidence counts.
+- **Component pages vs each other.** Each component page links its alternatives under Related components (Dialog →
+  Alert Dialog, Modal, Sheet, Drawer), so a reader who landed on the wrong sibling is one click from the right one
+  instead of two pages competing for "modal dialog".
 - **ART-001 vs `/docs/platforms`.** See below.
 
 ---

@@ -29,10 +29,11 @@ const ORIGIN = "https://kinetixui.com";
 const ROUTES = [
   { path: "/", links: ["/components", "/docs/platforms"] },
   { path: "/components", query: "?filter=Overlays&platform=SwiftUI&q=dia", links: ["/docs/components/dialog"] },
-  { path: "/docs/components/button", query: "?platform=React", links: ["/components", "/docs/installation"], breadcrumb: true },
-  { path: "/docs/components/dialog", query: "?platform=Angular", links: ["/components"], breadcrumb: true },
+  // the #350 platform override must keep working for the visitor while the canonical stays the clean route
+  { path: "/docs/components/button", query: "?platform=SwiftUI", selected: "SwiftUI", links: ["/components", "/docs/installation", "/docs/swiftui", "/docs/components/button-group"], breadcrumb: true },
+  { path: "/docs/components/dialog", query: "?platform=Angular", selected: "Angular", links: ["/components", "/docs/components/alert-dialog", "/docs/components/sheet"], breadcrumb: true },
   { path: "/docs/angular", links: ["/docs/platforms"], breadcrumb: true },
-  { path: "/docs/swiftui", links: ["/docs/platforms"], breadcrumb: true },
+  { path: "/docs/swiftui", links: ["/docs/platforms", "/components", "/docs/tokens"], breadcrumb: true },
   { path: "/docs/compose", links: ["/docs/platforms"], breadcrumb: true },
   { path: "/docs/flutter", links: ["/docs/platforms"], breadcrumb: true },
   { path: "/docs/tokens", links: ["/docs/platforms"], breadcrumb: true },
@@ -109,6 +110,13 @@ for (const r of ROUTES) {
   if (r.breadcrumb && !data.jsonld.some((t) => t.includes('"BreadcrumbList"'))) fail("no BreadcrumbList JSON-LD");
   // query state must still work for the visitor: the URL keeps it after hydration
   if (r.query && !data.href.includes(r.query.slice(1).split("&")[0])) fail(`query state dropped: ${data.href}`);
+  // ...and it still does what it says: the requested platform's tab is the one showing
+  if (r.selected) {
+    // the platform tabs live under the first preview's Code tab
+    await page.getByRole("tab", { name: "Code" }).first().click();
+    const selected = await page.$$eval('[role="tab"][aria-selected="true"]', (els) => els.map((t) => t.textContent.trim()));
+    if (!selected.some((t) => t.startsWith(r.selected))) fail(`?platform= did not select ${r.selected} (selected: ${JSON.stringify(selected)})`);
+  }
 
   const row = { route: where, status: res?.status(), title: data.title, canonical: data.canonical, h1: data.h1[0] };
   if (perf) {

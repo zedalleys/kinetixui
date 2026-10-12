@@ -113,6 +113,13 @@ const CONTROLS = [
     mutate: (s) => s.replaceAll('href="/demos/building-operations', 'href="/iot#environments'),
     expect: "orphan",
   },
+  {
+    id: 14,
+    name: "drop the Related components links from a component page",
+    file: "docs/components/slider.html",
+    mutate: (s) => s.replace(/data-related-components="true"/, 'data-related-components-removed="true"'),
+    expect: "component-related",
+  },
 ];
 
 function runGate() {

@@ -29,6 +29,7 @@
  *   jsonld-invalid       a JSON-LD block does not parse, or has no @context/@type
  *   breadcrumb-mismatch  BreadcrumbList JSON-LD disagrees with the visible breadcrumb
  *   component-title      a component page's title/description does not name the component and a platform
+ *   component-related    a component page has no "Related components" links to other component pages
  *   noindex-important    a sitemap or core page is noindex
  *   robots               robots.txt disallows a page route or points at the wrong sitemap
  *   orphan               an indexable page no other page links to (the sitemap alone is not a link graph)
@@ -138,6 +139,7 @@ function extract(route, file) {
     ogImage: meta('meta[property="og:image"]'),
     twitterCard: meta('meta[name="twitter:card"]'),
     h1: [...d.querySelectorAll("h1")].map((h) => h.textContent.replace(/\s+/g, " ").trim()),
+    related: [...d.querySelectorAll("[data-related-components] a[href]")].map((a) => a.getAttribute("href")),
     jsonld,
     crumbs,
     links: [...new Set([...d.querySelectorAll("a[href]")].map((a) => a.getAttribute("href")))],
@@ -205,6 +207,8 @@ for (const p of indexable) {
     if (!name || !norm(p.title).includes(norm(name))) fail("component-title", p.route, `title "${p.title}" does not name "${name}"`);
     if (!PLATFORM.test(p.title ?? "")) fail("component-title", p.route, `title "${p.title}" names no platform`);
     if (!name || !norm(p.description).includes(norm(name))) fail("component-title", p.route, `description does not name "${name}"`);
+    const related = p.related.filter((h) => h.startsWith("/docs/components/") && h !== p.route);
+    if (related.length === 0) fail("component-related", p.route, "no Related components links to other component pages");
   }
 }
 dupes("title", "title-duplicate");

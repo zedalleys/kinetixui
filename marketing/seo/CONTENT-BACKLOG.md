@@ -1,28 +1,29 @@
 # SEO content backlog
 
-**Supporting document.** Editorial and IA work the first SEO workstream deliberately left out. Nothing here is
+**Supporting document.** Editorial and IA work SEO Phase 1 deliberately left out (Phase 2 and follow-ups). Nothing here is
 drafted; each row is a candidate, mapped to the intent it serves ([`SEARCH-INTENT-MAP.md`](./SEARCH-INTENT-MAP.md)),
 the page it would land on, its funnel stage, its call to action, and any existing asset it can reuse. Claims follow
 [`../CLAIMS.md`](../CLAIMS.md); the "build one at a time, fully" rule in [`../seo.md`](../seo.md) still applies.
 
-**Order of work.** Cluster A's pillar first (it is the category), then B's two strongest native pages, then the
-component-page template work already planned as the second SEO PR. Re-rank once Search Console has eight weeks of
+**Order of work.** The 1280px/200% readability follow-up first (it affects every docs reader), then cluster A's
+pillar (it is the category), then B's two strongest native pages, then the remaining component editorial work. Re-rank once Search Console has eight weeks of
 data ([`MEASUREMENT.md`](./MEASUREMENT.md)).
 
 ---
 
-## Second SEO PR (planned, builds on #350)
+## Follow-ups from SEO Phase 1
 
-On-page work on the shared templates rather than new content:
+Phase 1 shipped related components, the platform "at a glance" blocks and the foundation cross-links
+([`SEO-BASELINE.md`](./SEO-BASELINE.md) §7). What it left, in priority order:
 
 | Item | Where | Notes |
 | --- | --- | --- |
-| Component-page intro from metadata | the component template | 1–2 sentences: what it does, platform availability (derived), and the accessibility behaviour that exists as evidence (keyboard model, verification level) — never "WCAG compliant" |
-| Related components | the component template | from category + an explicit relation table (Dialog → Alert Dialog, Modal, Sheet, Drawer; Select → Native Select, Combobox, Multi-Select, Command; Input → Input Group, Textarea, Password Input, Number Input; Breadcrumb → Pagination, Tabs, Navigation Menu) |
-| Platform docs link | the component template | link to the reader's chosen platform page, reusing #350's platform preference instead of a second store |
-| Platform pages' first-component path and token section | `/docs/angular`, `/docs/swiftui`, `/docs/compose`, `/docs/flutter` | make each page answer maturity, distribution, what exists, what does not, verification, first component and tokens — after #350's native install edits land, to avoid conflicting with them |
-| Foundation pages' cross-links | tokens, theming, accessibility, RTL, installation | descriptive anchors along the evaluator journey |
-| Blocks → component dependencies | `/blocks` | #350 adds `block-components.ts`; link each block to the component pages it uses |
+| **Docs readability at 1280px with 200% text** (baseline F-20) | docs layout (sidebar + article + table of contents) | The article column narrows to about 128px. Left out of Phase 1 by instruction; a layout fix (collapse the TOC or the sidebar earlier when text is enlarged), verified with `check:a11y-site` at 200% text. |
+| Remaining component editorial work | the 98 component MDX pages | Phase 1 cleaned 10 summaries and generated every title and description. Still hand work: a sharper lead paragraph where the summary is generic ("A window overlaid on …"), and a "when to use it instead of …" line for the explicit related-component families. One family at a time, no claims beyond evidence. |
+| Component-page accessibility summary | the component template | A one-line, per-component keyboard model from evidence (`verification.json` interaction/accessibility sources), never "WCAG compliant". Needs a data field per component first. |
+| Blocks → component pages | `/blocks` | `block-components.ts` already lists each block's React components; link them to their component pages. |
+| Search Console and Bing setup | owner | DNS verification and sitemap submission, per [`MEASUREMENT.md`](./MEASUREMENT.md) §5. |
+| First-load font reflow on docs pages | root layout fonts | Intermittent CLS of 0.05–0.10 on a cold load, on `main` as well (baseline §9). |
 
 ---
 
