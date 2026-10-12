@@ -24,6 +24,13 @@
  *   motion      a destination's colour change runs over a perceptible duration, and under reduced motion
  *               runs none and lands on the same colours
  *
+ * Angular Wave C3 brings two more families onto the same language, each on the fixture its behaviour gate
+ * drives: the navigation menu (src/fixtures/collections.ts) — its triggers and top-level links take the
+ * layer, press and focus states, an open trigger keeps the layer and turns its chevron up, and the page you
+ * are on inside a panel is set apart by weight — and the sidebar (src/fixtures/notifications.ts) — its entries
+ * take the layer, press and focus states on the sidebar's own surface, and the active entry is set apart by
+ * weight (its `sidebar-accent` fill too); the panel is painted the `sidebar` token with a `sidebar-border` edge facing the page.
+ *
  * Light and dark. Thresholds appear only where a standard names one (3:1 for an indicator or focus ring,
  * SC 1.4.11; 4.5:1 for text, SC 1.4.3); every other assertion is a relation between two renderings in the
  * same run. Text colour is read from computed style, because glyph pixels measure the runner's font.
@@ -116,7 +123,7 @@ const dir = buildAngularSubject("navigation", { name: "navigation-visual", layou
 const server = await serveStatic(dir);
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 
-async function open(theme, { rtl = false, reduced = false, dpr = DPR } = {}) {
+async function open(theme, { rtl = false, reduced = false, dpr = DPR, fixture = null } = {}) {
   const context = await browser.newContext({
     viewport: { width: 1300, height: 1000 },
     deviceScaleFactor: dpr,
@@ -124,7 +131,8 @@ async function open(theme, { rtl = false, reduced = false, dpr = DPR } = {}) {
   });
   const page = await context.newPage();
   await page.route((url) => !url.href.startsWith(server.base) && !url.href.startsWith("data:"), (route) => route.abort());
-  await page.goto(`${server.base}/${theme}.html${rtl ? "?dir=rtl" : ""}`, { waitUntil: "load" });
+  const q = new URLSearchParams({ ...(rtl ? { dir: "rtl" } : {}), ...(fixture ? { fixture } : {}) });
+  await page.goto(`${server.base}/${theme}.html${q.size ? `?${q}` : ""}`, { waitUntil: "load" });
   await waitForAngular(page);
   await page.mouse.move(0, 0);
   await page.waitForTimeout(SETTLE);
@@ -375,11 +383,130 @@ async function motion(theme) {
   }
 }
 
+/** A token's colour as the page resolves it. */
+const token = (page, name) =>
+  page.evaluate((v) => {
+    const probe = document.createElement("i");
+    probe.style.color = `hsl(var(${v}))`;
+    document.body.append(probe);
+    const c = getComputedStyle(probe).color.match(/[\d.]+/g).slice(0, 3).map(Number);
+    probe.remove();
+    return c;
+  }, name);
+/** Hover draws a layer at `at`, press deepens it; returns both contrasts against rest. */
+async function layer(page, r, at) {
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(SETTLE);
+  const base = (await frame(page, r)).at(...at);
+  await hover(page, r);
+  const h = (await frame(page, r)).at(...at);
+  await page.mouse.down();
+  await page.waitForTimeout(SETTLE);
+  const p = (await frame(page, r)).at(...at);
+  await page.mouse.move(0, 0);
+  await page.mouse.up();
+  await page.waitForTimeout(SETTLE);
+  return [contrast(h, base), contrast(p, base)];
+}
+
+async function navigationMenu(theme) {
+  const name = `${theme} navigation-menu`;
+  const { page, close } = await open(theme, { fixture: "collections" });
+  const pageBg = rgb(await page.evaluate(() => getComputedStyle(document.body).backgroundColor));
+  for (const [sel, what] of [["#nm-resources", "trigger"], ["#nm-pricing", "top-level link"]]) {
+    const tc = textContrast(await ink(page, sel));
+    check(tc >= 4.5, `${name} ${what} text readable`, `${r2(tc)}:1`);
+    const r = await box(page, sel);
+    const [hs, ps] = await layer(page, r, [r.x + 4, r.y + 4]);
+    check(hs >= 1.05 && ps > hs, `${name} ${what} hover draws a layer, press deepens it`, `hover ${r2(hs)}:1, pressed ${r2(ps)}:1 against rest`);
+    const focused = await keyboardFocus(page, sel);
+    const ring = outside(await frame(page, r), r, pageBg);
+    check(focused && ring >= 3, `${name} ${what} focus ring clears 3:1`, `${focused ? "" : "NOT FOCUSED, "}ring ${r2(ring)}:1`);
+    await page.evaluate(() => document.activeElement?.blur());
+  }
+  // open: the trigger keeps a layer, and its chevron turns up
+  const tr = await box(page, "#nm-resources");
+  const chevR = await box(page, "#nm-resources .kx-navigation-menu__chevron");
+  const closedChev = chevron(await frame(page, chevR), chevR, pageBg);
+  const restFill = (await frame(page, tr)).at(tr.x + 4, tr.y + 4);
+  await keyboardFocus(page, "#nm-resources");
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(SETTLE);
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.waitForTimeout(SETTLE);
+  const openF = await frame(page, tr);
+  const openChev = chevron(await frame(page, chevR), chevR, pageBg);
+  check(contrast(openF.at(tr.x + 4, tr.y + 4), restFill) >= 1.05, `${name} an open trigger keeps the layer`, `${r2(contrast(openF.at(tr.x + 4, tr.y + 4), restFill))}:1 against rest`);
+  check(closedChev === "down" && openChev === "up", `${name} chevron points down closed, up open`, `closed ${closedChev}, open ${openChev}`);
+  await page.keyboard.press("Escape");
+  // current: inside a panel, the page you are on is set apart by weight and an underline, not hue alone
+  await keyboardFocus(page, "#nm-products");
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(SETTLE);
+  const [cur, rest] = [await ink(page, "#nm-billing"), await ink(page, "#nm-analytics")];
+  // the text's own box (the link is a full-width row), and the strip under it where an underline sits
+  const textBox = (sel) =>
+    page.locator(sel).evaluate((el) => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const t = range.getBoundingClientRect();
+      return { x: t.left, y: t.top, width: t.width, height: t.height + 12 };
+    });
+  const [cr, rr] = [await textBox("#nm-billing"), await textBox("#nm-analytics")];
+  const fill = await token(page, "--popover");
+  // an underline is a row of ink across the text's width; glyphs (descenders included) never fill a row
+  const under = (f, r) => {
+    let best = 0;
+    for (let y = r.y + r.height / 2; y < r.y + r.height; y += 1 / DPR) {
+      const row = f.row(y, r.x + 1, r.x + r.width - 1);
+      const inked = row.filter((px) => contrast(px, fill) >= 3).length / row.length;
+      if (inked > best) best = inked;
+    }
+    return best;
+  };
+  const [cu, ru] = [under(await frame(page, cr), cr), under(await frame(page, rr), rr)];
+  check(cur.weight > rest.weight && textContrast(cur) >= 4.5, `${name} current page set apart by weight, readable`, `weight ${cur.weight} vs ${rest.weight}, ${r2(textContrast(cur))}:1`);
+  check(cu >= 0.8 && ru < 0.5, `${name} current page carries an underline, 3:1 against the panel`, `a 3:1 row across ${Math.round(cu * 100)}% of the text (rest: ${Math.round(ru * 100)}%)`);
+  await close();
+}
+
+async function sidebar(theme) {
+  const name = `${theme} sidebar`;
+  const { page, close } = await open(theme, { fixture: "notifications" });
+  const surface = await token(page, "--sidebar");
+  const panel = await box(page, "#sb .kx-sidebar__panel");
+  const pf = await frame(page, panel);
+  const inner = pf.at(panel.x + panel.width / 2, panel.y + panel.height - 40);
+  check(contrast(inner, surface) < 1.05, `${name} the panel is painted the sidebar token`, `${inner} vs ${surface}`);
+  const border = await token(page, "--sidebar-border");
+  const edge = pf.at(panel.x + panel.width - 0.5, panel.y + panel.height / 2);
+  check(contrast(edge, border) < 1.1, `${name} its edge facing the page is the sidebar-border token`, `${edge} vs ${border}`);
+  const restInk = await ink(page, "#sb-projects");
+  const rc = textContrast(restInk);
+  check(rc >= 4.5, `${name} entry text readable on the sidebar`, `${r2(rc)}:1`);
+  const r = await box(page, "#sb-projects");
+  const [hs, ps] = await layer(page, r, [r.x + r.width - 6, r.y + 4]);
+  check(hs >= 1.05 && ps > hs, `${name} entry hover draws a layer, press deepens it`, `hover ${r2(hs)}:1, pressed ${r2(ps)}:1 against rest`);
+  const focused = await keyboardFocus(page, "#sb-projects");
+  const ring = maxContrast((await frame(page, r)).column(r.x + r.width / 2, r.y + r.height + 0.5, r.y + r.height + 1.5), surface);
+  check(focused && ring >= 3, `${name} entry focus ring clears 3:1 against the sidebar`, `${focused ? "" : "NOT FOCUSED, "}ring ${r2(ring)}:1`);
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.waitForTimeout(SETTLE);
+  const cr = await box(page, "#sb-home");
+  const [cf, rf] = [(await frame(page, cr)).at(cr.x + cr.width - 6, cr.y + 4), (await frame(page, r)).at(r.x + r.width - 6, r.y + 4)];
+  const cur = await ink(page, "#sb-home");
+  // the `sidebar-accent` fill is faint in light (it is shadcn's); the cue that does not rest on colour is weight
+  check(cur.weight > restInk.weight && textContrast(cur) >= 4.5, `${name} the active entry is set apart by weight, readable`, `weight ${cur.weight} vs ${restInk.weight}, ${r2(textContrast(cur))}:1; fill ${r2(contrast(cf, rf))}:1 against rest`);
+  await close();
+}
+
 const slugs = new Set(COVERS.Angular);
 for (const theme of ["light", "dark"]) {
   report.push(`\nAngular · ${theme}`);
   for (const D of DESTINATIONS) if (slugs.has(D.slug)) await destination(theme, D);
   if (slugs.has("accordion")) await accordion(theme);
+  if (slugs.has("navigation-menu")) await navigationMenu(theme);
+  if (slugs.has("sidebar")) await sidebar(theme);
   await direction(theme);
   await motion(theme);
 }

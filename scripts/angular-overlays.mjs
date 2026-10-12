@@ -12,6 +12,11 @@
  * outside its dialog, the page scrolling again while a modal is still open — so the subjects here are driven
  * alone AND nested, the way an application nests them (src/fixtures/overlays.ts).
  *
+ * Wave C3 adds what stands on the same layer without being a dialog or a popover of its own: the toaster
+ * (which is not a top-layer surface at all, and must never take focus), the notification center (a popover),
+ * the tour (a modal dialog pointed at the page) and the sidebar (a persistent panel that becomes the family's
+ * Sheet on a phone). They are driven on src/fixtures/notifications.ts.
+ *
  * The conventions are scripts/angular-browser.mjs's, and its rules hold: each pass is a marked passage
  * (`kx-verify: <kind>`, read by gen-verification.mjs), the components a passage claims are the KinetixUI
  * symbols named in it, and `assertClaims()` fails the run before a browser opens if a passage names a
@@ -227,6 +232,37 @@ const centredOrShifted = (tip, tr, vw) =>
  *   KxHoverCard    no role and no description on the trigger (it is a preview, not a label); keyboard focus
  *                  opens it, Tab walks into its link and on out (closing it); Escape closes it; hover with
  *                  intent opens it and the pointer can travel onto it; the trigger is still a link
+ *
+ *
+ * Wave C3, on the notifications fixture:
+ *
+ *   KxToaster      each toaster a region named by its label and the Alt+T hotkey, a polite live region that
+ *                  announces additions; a toast never takes focus; it leaves after its duration through
+ *                  onAutoClose; the pointer resting on it, or focus inside it, pauses its clock with the elapsed
+ *                  time kept, and it resumes with what was left — never the full duration again; Alt+T moves
+ *                  focus to the toasts and Escape sends it back; the icon's meaning is in text; action, cancel
+ *                  and close each dismiss it (an action that calls preventDefault keeps it); dismissing the
+ *                  focused toast from the keyboard never drops focus to the page; a toast sent again with the
+ *                  same id updates in place; three shown at once; an Infinity toast waits; two toasters are
+ *                  separate — a toast shows only where it was sent, and pausing one never pauses the other.
+ *                  (The queue's clock alone, with fake timers, is src/lib/toast-queue.spec.ts.)
+ *   KxNotificationCenter  the trigger a button named with the unread count, the dot decoration; a non-modal
+ *                  dialog named by its heading, focus in; the notifications a list, an unread one saying so in
+ *                  text; pressable ones are Tab stops that run their action; Mark all read clears the count and
+ *                  the trigger's name follows; Escape closes it with focus back, a press outside closes it
+ *   KxTour         a modal dialog named by the step's title and described by its text; first focus the dialog
+ *                  itself; Tab held inside; the page locked and a press on it not a way out; the card below its
+ *                  target, aligned to its inline start, shifted to stay inside the viewport at an edge; the
+ *                  spotlight around the target; a target removed while its step shows falls back to a centred
+ *                  card (and points again when it returns); a target below the fold scrolled into view; a target
+ *                  that never exists, a centred card; Back, Next, Done; Escape ends it with focus back on its
+ *                  starter. Opened from inside a dialog, one Escape closes the tour alone and the next the dialog
+ *   KxSidebar      desktop: a persistent panel, its content rendered once, the active entry aria-current; the
+ *                  trigger (named, aria-expanded) and Ctrl+B collapse it, and collapsed it is hidden and inert.
+ *                  Below the breakpoint the persistent panel is gone and the trigger opens the same content as
+ *                  the family's Sheet — one modal dialog, named, the page locked, focus inside, Escape back to
+ *                  the trigger — with its own open state. Crossing the breakpoint opens nothing; widening while
+ *                  the sheet is open closes it, leaving one sidebar and focus on the page's content, not lost
  *
  * Then axe, light and dark, on every surface OPEN (the accessibility pass in angular-browser.mjs reads them
  * closed), on the overlay usage examples opened, and on the compositions; and forced colours: every focus
@@ -680,6 +716,365 @@ const BEHAVIOUR = [
       t(!(await showing(page, "#hc-content")), "leaving both closes it after its close delay");
     },
   },
+  {
+    component: "KxToaster",
+    fixture: "notifications",
+    async run(page, t) {
+      const main = page.locator("#toaster-main section.kx-toaster");
+      const side = page.locator("#toaster-panel section.kx-toaster");
+      t((await page.getByRole("region", { name: "Notifications alt+T", exact: true }).count()) === 1 && (await page.getByRole("region", { name: "Panel notifications alt+T", exact: true }).count()) === 1, "each toaster is a region named by its label and the hotkey");
+      const live = await main.evaluate((el) => [el.getAttribute("aria-live"), el.getAttribute("aria-atomic"), el.getAttribute("aria-relevant")].join(" "));
+      t(live === "polite false additions text", "a polite live region that announces each toast as it is added, not the whole stack", live);
+      const toasts = (sel = "#toaster-main") => page.locator(`${sel} li.kx-toast`).allTextContents().then((all) => all.map((s) => s.replace(/\s+/g, " ").trim()));
+
+      // ── it arrives without taking focus, and leaves on its clock ──
+      await focus(page, "#toast-show");
+      await press(page, "Enter");
+      t((await active(page)) === "toast-show" && (await toasts()).length === 1, "a toast appears and focus stays where the reader is: it never steals focus", await active(page));
+      t((await toasts())[0]?.startsWith("Event created") && (await main.evaluate((el) => el.contains(document.querySelector("li.kx-toast")))), "its text is inside the live region", (await toasts())[0]);
+      await page.waitForTimeout(1000);
+      t((await toasts()).length === 1, "it is still there before its duration (1.5s) has run");
+      await page.waitForTimeout(800);
+      await idle(page);
+      t((await toasts()).length === 0 && (await out(page, "expired")) === "1" && (await out(page, "dismissed")) === "0", "it leaves after its duration, through onAutoClose (not onDismiss)", `expired ${await out(page, "expired")}`);
+
+      // ── hover pauses with the elapsed time kept; leaving resumes with what was left ──
+      await click(page, "#toast-show");
+      await page.mouse.move(2, 2);
+      await page.waitForTimeout(1000);
+      await page.locator("#toaster-main li.kx-toast").hover();
+      await idle(page);
+      t((await main.getAttribute("data-paused")) === "", "the pointer resting on the toaster pauses it");
+      await page.waitForTimeout(1600);
+      await idle(page);
+      t((await toasts()).length === 1, "paused, it outlives its duration");
+      await page.mouse.move(2, 2);
+      await idle(page);
+      t((await main.getAttribute("data-paused")) === null, "the pointer leaving resumes it");
+      await page.waitForTimeout(150);
+      await idle(page);
+      t((await toasts()).length === 1, "it does not vanish the moment it resumes");
+      await page.waitForTimeout(750);
+      await idle(page);
+      t((await toasts()).length === 0, "it leaves with the time it had left (~0.5s), not a fresh 1.5s: the elapsed time was kept");
+
+      // ── keyboard: Alt+T into the toasts pauses them; Escape goes back ──
+      await focus(page, "#toast-error");
+      await press(page, "Enter");
+      t((await active(page)) === "toast-error", "an error toast arrives without taking focus either");
+      const error = (await toasts())[0] ?? "";
+      t(error.startsWith("Error: Upload failed"), "the icon's meaning is in its text: a screen reader hears “Error: Upload failed”", error);
+      await press(page, "Alt+t");
+      t((await page.evaluate(() => document.activeElement?.classList.contains("kx-toaster__list"))) && (await main.getAttribute("data-paused")) === "", "Alt+T moves focus to the toasts, and focus there pauses them");
+      await page.waitForTimeout(1800);
+      await idle(page);
+      t((await toasts()).length === 1, "with focus in the toaster, a toast outlives its duration");
+      await press(page, "Escape");
+      t((await active(page)) === "toast-error" && (await main.getAttribute("data-paused")) === null, "Escape returns focus to where it came from, and the clock resumes", await active(page));
+      await page.waitForTimeout(1700);
+      await idle(page);
+      t((await toasts()).length === 0, "and the toast then leaves");
+
+      // ── its buttons ──
+      await click(page, "#toast-error");
+      await click(page, "#toaster-main .kx-toast__button--action");
+      t((await out(page, "actions")) === "1" && (await toasts()).length === 0, "an action runs and dismisses its toast", `actions ${await out(page, "actions")}`);
+      const d0 = Number(await out(page, "dismissed"));
+      await click(page, "#toast-error");
+      await click(page, "#toaster-main .kx-toast__button--cancel");
+      t((await toasts()).length === 0 && Number(await out(page, "dismissed")) === d0 + 1, "cancel dismisses it, through onDismiss");
+      await click(page, "#toast-keep");
+      await click(page, "#toaster-main .kx-toast__button--action");
+      t((await out(page, "actions")) === "2" && (await toasts()).length === 1, "an action that calls preventDefault keeps its toast");
+      const close = page.locator("#toaster-main .kx-toast__close").first();
+      t((await close.getAttribute("aria-label")) === "Close toast", "the close button is named");
+      await close.click();
+      await idle(page);
+      t((await toasts()).length === 0, "the close button dismisses it");
+
+      // ── keyboard dismissal never drops focus to the page ──
+      await click(page, "#toast-error");
+      await click(page, "#toast-show");
+      await focus(page, "#toast-show");
+      await press(page, "Alt+t");
+      await press(page, "Tab");
+      const first = await page.evaluate(() => document.activeElement?.closest("li.kx-toast") !== null);
+      await press(page, "Enter");
+      const after = await page.evaluate(() => ({ inToaster: !!document.activeElement?.closest(".kx-toaster"), body: document.activeElement === document.body }));
+      t(first && after.inToaster && !after.body, "dismissing the focused toast from the keyboard moves focus to the next toast, never to the page", JSON.stringify(after));
+      await press(page, "Escape");
+      await click(page, "#toast-dismiss-all");
+
+      // ── dismissed by code (KxToasterService.dismiss), not by a press in the toaster: focus still moves on ──
+      await click(page, "#toast-error");
+      await click(page, "#toast-show");
+      await focus(page, "#toast-show");
+      await press(page, "Alt+t");
+      await press(page, "Tab");
+      const inNewest = await page.evaluate(() => !!document.activeElement?.closest("li.kx-toast")?.textContent.includes("Event created"));
+      await page.evaluate(() => document.getElementById("toast-dismiss-newest").click());
+      await idle(page);
+      const byId = await page.evaluate(() => ({ body: document.activeElement === document.body, toast: document.activeElement?.closest("li.kx-toast")?.textContent.replace(/\s+/g, " ").trim() ?? null }));
+      t(inNewest && !byId.body && !!byId.toast?.includes("Upload failed"), "dismiss(id) from code on the focused toast moves focus to the toast that stays, never to the page", JSON.stringify(byId));
+      await page.evaluate(() => document.getElementById("toast-dismiss-all").click());
+      await idle(page);
+      t((await toasts()).length === 0 && (await active(page)) === "toast-show", "dismiss() of every toast from code while one has focus sends focus back where it came from", await active(page));
+
+      // ── under a modal dialog the toaster is inert and unseen: its clock waits for the dialog ──
+      const e0 = Number(await out(page, "expired"));
+      await click(page, "#toast-modal-open");
+      await click(page, "#toast-modal-raise");
+      await idle(page);
+      t((await main.getAttribute("data-paused")) === "", "a modal dialog open outside the toaster holds its clock");
+      await page.waitForTimeout(2000);
+      await idle(page);
+      t((await toasts()).length === 1 && Number(await out(page, "expired")) === e0, "a toast raised under a modal outlives its duration while the modal is open");
+      await press(page, "Escape");
+      await settled(page);
+      t(!(await showing(page, "#toast-modal-content")) && (await main.getAttribute("data-paused")) === null, "the modal closed, the clock runs again");
+      await page.waitForTimeout(900);
+      await idle(page);
+      t((await toasts()).length === 1, "and the toast has its time after the modal: still there just after it closed");
+      await page.waitForTimeout(900);
+      await idle(page);
+      t((await toasts()).length === 0 && Number(await out(page, "expired")) === e0 + 1, "then it leaves on its clock, through onAutoClose");
+
+      // ── an update in place; a visible limit; a toast that waits; toasters kept apart ──
+      await click(page, "#toast-update");
+      await click(page, "#toast-update");
+      const up = await page.locator("#toaster-main li.kx-toast").evaluateAll((li) => li.map((l) => `${l.getAttribute("data-type")} ${l.textContent.replace(/\s+/g, " ").trim()}`));
+      t(up.length === 1 && up[0].startsWith("success Success: Uploaded"), "a toast sent again with the same id updates in place: one toast, its new type and text", up.join(" | "));
+      await click(page, "#toast-dismiss-all");
+      await click(page, "#toast-many");
+      const many = await toasts();
+      t(many.length === 3 && many[0] === "Message 5", "five sent, three shown (the visible limit), newest first in the DOM", many.join(" | "));
+      await click(page, "#toast-dismiss-all");
+      await click(page, "#toast-forever");
+      await page.waitForTimeout(1800);
+      await idle(page);
+      t((await toasts()).length === 1, "a toast with an Infinity duration waits until it is dismissed");
+      await click(page, "#toast-dismiss-all");
+      await click(page, "#toast-panel");
+      await click(page, "#toast-show");
+      t((await toasts("#toaster-panel")).length === 1 && (await toasts()).length === 1 && (await toasts("#toaster-panel"))[0] === "Saved to the panel", "a toast sent to a named toaster shows there, and only there");
+      await page.locator("#toaster-main li.kx-toast").hover();
+      await page.waitForTimeout(1800);
+      await idle(page);
+      t((await toasts("#toaster-panel")).length === 0 && (await toasts()).length === 1 && (await side.getAttribute("data-paused")) === null, "hovering one toaster pauses it alone: the other's toast still leaves on time");
+      await page.mouse.move(2, 2);
+    },
+  },
+  {
+    component: "KxNotificationCenter",
+    fixture: "notifications",
+    async run(page, t) {
+      const trigger = page.locator("#nc-trigger");
+      t((await page.getByRole("button", { name: "Notifications, 2 unread" }).count()) === 1, "the trigger is a button named with the unread count");
+      t((await trigger.getAttribute("aria-haspopup")) === "dialog" && (await trigger.getAttribute("aria-expanded")) === "false", "it says it opens a dialog, and that it is closed");
+      t((await trigger.locator(".kx-notification-center__dot").getAttribute("aria-hidden")) === "true", "the unread dot is decoration; the count is in the name");
+      await focus(page, "#nc-trigger");
+      await press(page, "Enter");
+      t((await showing(page, "#nc-content")) && (await out(page, "nc-open")) === "true", "Enter opens it");
+      t((await page.getByRole("dialog", { name: "Notifications" }).count()) === 1, "a non-modal dialog named by its heading");
+      t((await active(page)) !== "nc-trigger" && (await page.evaluate(() => document.activeElement?.textContent?.trim())) === "Mark all read", "focus moves in, to its first control", await active(page));
+      const items = await page.locator("#nc-content [role='list'] > [role='listitem']").count();
+      t(items === 3, "the notifications are a list of three", `${items}`);
+      const unread = await page.locator("#nc-item-1").evaluate((el) => el.textContent.replace(/\s+/g, " ").trim());
+      t(unread.startsWith("Unread: PR #106 merged"), "an unread notification says so in text, not only with a dot", unread);
+      t(!(await page.evaluate(() => document.querySelector("main, body > *")?.closest("[inert]"))) && !(await locked(page)), "the page is not inert and does not lock");
+      const tabs = await tabWalk(page, 2);
+      t(tabs.join(",") === "nc-item-1,nc-item-2", "Tab walks the pressable notifications; a static one is not a stop", tabs.join(" > "));
+      await press(page, "Enter");
+      t((await out(page, "nc-selected")) === "deploy", "Enter on a notification runs its action", await out(page, "nc-selected"));
+      await focus(page, "#nc-content .kx-notification-center__mark");
+      await press(page, "Enter");
+      t((await out(page, "nc-unread")) === "0" && (await page.getByRole("button", { name: "Notifications" }).count()) === 1, "Mark all read clears the count, and the trigger's name follows", await trigger.getAttribute("aria-label"));
+      await press(page, "Escape");
+      t(!(await showing(page, "#nc-content")) && (await active(page)) === "nc-trigger", "Escape closes it and returns focus to the trigger", await active(page));
+      await click(page, "#nc-trigger");
+      await pressAt(page, 20, 20);
+      t(!(await showing(page, "#nc-content")), "a press outside closes it");
+    },
+  },
+  {
+    component: "KxTour",
+    fixture: "notifications",
+    async run(page, t) {
+      const dialog = "#tour dialog";
+      const card = "#tour .kx-tour__card";
+      const next = () => click(page, "#tour .kx-tour__actions button:last-child");
+      const scrollEnd = () => page.evaluate(() => new Promise((r) => { let last = -1; const f = () => (scrollY === last ? r() : ((last = scrollY), setTimeout(f, 80))); f(); }));
+      await focus(page, "#tour-start");
+      await press(page, "Enter");
+      await settled(page);
+      // the first step scrolls its target towards the centre, smoothly: measure once the page has stopped
+      await scrollEnd();
+      await idle(page);
+      t((await showing(page, dialog)) && (await out(page, "tour-open")) === "true", "it opens as a modal dialog in the top layer");
+      t((await page.getByRole("dialog", { name: "Save your work" }).count()) === 1 && (await description(page, dialog)).startsWith("Changes save automatically"), "named by the step's title and described by its text");
+      t((await page.locator(dialog).evaluate((el) => el === document.activeElement)), "first focus is the dialog itself: the reader hears the step, then Tabs to its buttons");
+      t((await locked(page)), "the page does not scroll behind it");
+      const sr = await page.locator("#tour .kx-tour__counter .kx-sr-only").textContent();
+      t(sr === "Step 1 of 5", "the step count is said in words", sr);
+      const [ta, ca, spot] = [await rectOf(page, "#tour-a"), await rectOf(page, card), await rectOf(page, "#tour .kx-tour__spotlight")];
+      t(ca.top >= ta.bottom && Math.abs(ca.left - ta.left) <= 1, "the card sits below its target, aligned to the target's inline start", `target ${ta.left.toFixed(0)},${ta.bottom.toFixed(0)} card ${ca.left.toFixed(0)},${ca.top.toFixed(0)}`);
+      t(spot.left <= ta.left && spot.right >= ta.right && spot.top <= ta.top && spot.bottom >= ta.bottom && (await page.locator(dialog).getAttribute("data-target")) === "found", "the spotlight surrounds the target", `spot ${spot.left.toFixed(0)},${spot.top.toFixed(0)}–${spot.right.toFixed(0)},${spot.bottom.toFixed(0)} target ${ta.left.toFixed(0)},${ta.top.toFixed(0)}–${ta.right.toFixed(0)},${ta.bottom.toFixed(0)} ${await page.locator(dialog).getAttribute("data-target")}`);
+      const trap = [];
+      for (let i = 0; i < 4; i++) {
+        await press(page, "Tab");
+        trap.push(await page.evaluate(() => (document.activeElement?.closest("#tour dialog") ? document.activeElement.textContent.trim() : `outside: ${document.activeElement?.id}`)));
+      }
+      t(trap.join(",") === "Skip,Next,Skip,Next", "Tab stays inside the tour, cycling its buttons", trap.join(" > "));
+      await pressAt(page, 500, 790);
+      t(await showing(page, dialog), "a press on the page behind is not a way out");
+
+      await next();
+      await settled(page);
+      const vp = await viewportOf(page);
+      const [tb, cb] = [await rectOf(page, "#tour-b"), await rectOf(page, card)];
+      t((await page.getByRole("dialog", { name: "Invite others" }).count()) === 1 && (await out(page, "tour-step")) === "1", "Next shows the next step, and the dialog's name follows it");
+      t(cb.right <= vp.width - 8 + 0.5 && cb.top >= tb.bottom, "against the viewport's inline end the card shifts to stay inside it", `card ${cb.left.toFixed(0)}–${cb.right.toFixed(0)} of ${vp.width}`);
+      t((await page.locator(dialog).evaluate((el) => el === document.activeElement)), "focus goes back to the dialog, so the new step is read");
+
+      await next();
+      await settled(page);
+      t((await page.locator(dialog).getAttribute("data-target")) === "found", "the third step finds its target");
+      await page.evaluate(() => document.querySelector("#tour-remove-c").click());
+      await page.waitForTimeout(100);
+      await idle(page);
+      await settled(page);
+      const [cm, vm] = [await rectOf(page, card), await viewportOf(page)];
+      t((await page.locator(dialog).getAttribute("data-target")) === "missing" && Math.abs((cm.left + cm.right) / 2 - vm.width / 2) <= 1, "its target removed while it shows, the step falls back to a centred card — never pointing at a stale place", `card centre ${((cm.left + cm.right) / 2).toFixed(0)}`);
+      await page.evaluate(() => document.querySelector("#tour-remove-c").click());
+      await page.waitForTimeout(100);
+      await idle(page);
+      t((await page.locator(dialog).getAttribute("data-target")) === "found", "and the target back, it points at it again");
+
+      await next();
+      await scrollEnd();
+      await settled(page);
+      await idle(page);
+      const [tl, cl, vl] = [await rectOf(page, "#tour-low"), await rectOf(page, card), await viewportOf(page)];
+      t(tl.top >= 0 && tl.bottom <= vl.height && cl.top >= 0 && cl.bottom <= vl.height, "a target below the fold is scrolled into view, and the card with it", `target ${tl.top.toFixed(0)}–${tl.bottom.toFixed(0)}, card ${cl.top.toFixed(0)}–${cl.bottom.toFixed(0)}`);
+
+      await next();
+      await settled(page);
+      const [cn, vn] = [await rectOf(page, card), await viewportOf(page)];
+      t((await page.locator(dialog).getAttribute("data-target")) === "missing" && Math.abs((cn.top + cn.bottom) / 2 - vn.height / 2) <= 1 && Math.abs((cn.left + cn.right) / 2 - vn.width / 2) <= 1, "a target that never exists: the card centred in the viewport, no spotlight");
+      t((await page.locator("#tour .kx-tour__actions button").allTextContents()).map((s) => s.trim()).join(",") === "Back,Done", "the last step offers Back and Done");
+      await click(page, "#tour .kx-tour__actions button:first-child");
+      t((await out(page, "tour-step")) === "3", "Back goes to the previous step");
+      await press(page, "Escape");
+      t(!(await showing(page, dialog)) && (await out(page, "tour-open")) === "false" && (await active(page)) === "tour-start" && !(await locked(page)), "Escape ends it and returns focus to what started it; the page scrolls again", await active(page));
+
+      // ── on top of a dialog: Escape closes the top layer only ──
+      await click(page, "#tour-dialog-trigger");
+      await focus(page, "#tour-in-dialog-start");
+      await press(page, "Enter");
+      await settled(page);
+      t((await showing(page, "#tour-inner dialog")) && (await showing(page, "#tour-dialog-content")), "a tour opened from inside a dialog stacks above it");
+      await press(page, "Escape");
+      t(!(await showing(page, "#tour-inner dialog")) && (await showing(page, "#tour-dialog-content")) && (await active(page)) === "tour-in-dialog-start", "one Escape closes the tour alone, focus back on its starter inside the dialog", await active(page));
+      await press(page, "Escape");
+      t(!(await showing(page, "#tour-dialog-content")) && (await active(page)) === "tour-dialog-trigger", "the next closes the dialog", await active(page));
+      await click(page, "#tour-start");
+      for (let i = 0; i < 4; i++) await next();
+      await click(page, "#tour .kx-tour__actions button:last-child");
+      t((await out(page, "tour-open")) === "false" && (await active(page)) === "tour-start", "Done ends it, focus back on its starter");
+    },
+  },
+  {
+    component: "KxSidebar",
+    fixture: "notifications",
+    async run(page, t) {
+      const panel = "#sb .kx-sidebar__panel";
+      const copies = () => page.evaluate(() => document.querySelectorAll("#sb-home").length);
+      const visible = (sel) => page.locator(sel).first().evaluate((el) => el.checkVisibility({ visibilityProperty: true }));
+      const trigger = page.locator("#sb-trigger");
+      t((await page.getByRole("button", { name: "Toggle Sidebar" }).count()) === 1 && (await trigger.getAttribute("aria-expanded")) === "true", "the trigger is a named button that says the sidebar is expanded");
+      t((await visible(panel)) && (await page.locator("#sb").getAttribute("data-state")) === "expanded" && (await copies()) === 1, "desktop: a persistent panel, its content rendered once");
+      t((await page.locator("#sb-home").getAttribute("aria-current")) === "page" && (await page.locator("#sb-projects").getAttribute("aria-current")) === null, "the active entry is aria-current=page");
+      await focus(page, "#sb-search");
+      const tabs = await tabWalk(page, 4);
+      t(tabs.join(",") === "sb-home,sb-projects,sb-signout,sb-trigger", "Tab walks the sidebar in order, then into the page", tabs.join(" > "));
+      await press(page, "Enter");
+      await settled(page);
+      t((await out(page, "sb-open")) === "false" && (await trigger.getAttribute("aria-expanded")) === "false" && (await page.locator("#sb").getAttribute("data-state")) === "collapsed", "the trigger collapses it, and says so");
+      t(!(await visible(panel)) && (await page.locator(panel).getAttribute("inert")) === "", "collapsed off-canvas, it is hidden and inert: nothing in it can be reached");
+      await focus(page, "#sb-trigger");
+      await press(page, "Shift+Tab");
+      t(!(await page.evaluate(() => !!document.activeElement?.closest("#sb"))), "Shift+Tab from the trigger does not land in the hidden sidebar", await active(page));
+      await focus(page, "#sb-after");
+      await press(page, "Control+b");
+      await settled(page);
+      t((await out(page, "sb-open")) === "true" && (await visible(panel)), "Ctrl+B toggles it from anywhere on the page");
+
+      // ── side="end", written before its inset: the gap and the panel on the same side, nothing underneath ──
+      const endPanel = "#sb-end .kx-sidebar__panel";
+      const endLayout = async () => {
+        await page.locator("#sb-end-frame").evaluate((el) => el.scrollIntoView({ block: "start" }));
+        await idle(page);
+        return { frame: await rectOf(page, "#sb-end-frame"), panel: await rectOf(page, endPanel), main: await rectOf(page, "#sb-end-main") };
+      };
+      const fmt = ({ frame, panel, main }) => `frame ${frame.left.toFixed(0)}–${frame.right.toFixed(0)}, panel ${panel.left.toFixed(0)}–${panel.right.toFixed(0)}, page ${main.left.toFixed(0)}–${main.right.toFixed(0)}`;
+      const e1 = await endLayout();
+      t(Math.abs(e1.panel.right - e1.frame.right) <= 1.5 && Math.abs(e1.main.left - e1.frame.left) <= 1.5 && e1.main.right <= e1.panel.left + 0.5, "side=\"end\": the panel at the inline end, the page from the inline start up to it, no empty gutter and nothing underneath", fmt(e1));
+      await click(page, "#sb-end-trigger");
+      await settled(page);
+      const e2 = await endLayout();
+      t((await out(page, "sb-end-open")) === "false" && e2.panel.width < 60 && e2.main.right <= e2.panel.left + 0.5 && Math.abs(e2.main.left - e2.frame.left) <= 1.5, "collapsed to icons at the end: the page widens up to the narrow panel", fmt(e2));
+
+      // ── the phone: the same content in the family's Sheet ──
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.waitForTimeout(100);
+      await idle(page);
+      t((await page.locator("#sb").getAttribute("data-mobile")) === "" && (await page.locator("#sb .kx-sidebar__panel").count()) === 0 && (await copies()) === 1, "below the breakpoint the persistent panel is gone; its content is still rendered once");
+      t((await page.evaluate(() => document.querySelectorAll("dialog:modal").length)) === 0 && !(await locked(page)), "crossing the breakpoint opens nothing");
+      await focus(page, "#sb-trigger");
+      await press(page, "Enter");
+      await settled(page);
+      const sheets = await page.evaluate(() => [...document.querySelectorAll("dialog:modal")].map((d) => d.className));
+      t(sheets.length === 1 && /kx-sheet/.test(sheets[0]) && /kx-sidebar__sheet/.test(sheets[0]), "the trigger opens it as a Sheet: one modal dialog, the family's own", sheets.join(" | "));
+      t((await page.getByRole("dialog", { name: "Sidebar" }).count()) === 1 && (await locked(page)) && (await page.evaluate(() => !!document.activeElement?.closest("dialog.kx-sidebar__sheet"))), "named, the page locked behind it, focus inside");
+      const sr = await rectOf(page, "dialog.kx-sidebar__sheet");
+      t(Math.abs(sr.left) <= 1, "it attaches to the sidebar's side (the inline start)", `${sr.left.toFixed(0)}–${sr.right.toFixed(0)}`);
+      t((await out(page, "sb-open")) === "true", "the phone's open state is its own: the desktop state is untouched");
+      await press(page, "Escape");
+      await settled(page);
+      t((await page.evaluate(() => document.querySelectorAll("dialog:modal").length)) === 0 && (await active(page)) === "sb-trigger", "Escape closes it, focus back on the trigger", await active(page));
+
+      // ── open on a phone, then wide: no sheet left open behind a desktop panel ──
+      await click(page, "#sb-trigger");
+      await focus(page, "#sb-projects");
+      await page.setViewportSize({ width: 1024, height: 800 });
+      await page.waitForTimeout(100);
+      await idle(page);
+      await settled(page);
+      const wide = await page.evaluate(() => ({ modal: document.querySelectorAll("dialog:modal").length, open: document.querySelectorAll("dialog.kx-sidebar__sheet[open]").length, copies: document.querySelectorAll("#sb-home").length, focusBody: document.activeElement === document.body }));
+      t(wide.modal === 0 && wide.open === 0 && wide.copies === 1 && !(await locked(page)), "widened while the sheet is open: the sheet closes, one sidebar remains, the page scrolls", JSON.stringify(wide));
+      t((await visible(panel)) && !wide.focusBody, "the desktop panel is back, and focus did not fall to the page", await active(page));
+      // the sheet leaves the document still open (no `open` change): the toaster's modal hold must still let go
+      const toasterPaused = await page.evaluate(() => document.querySelector("section.kx-toaster")?.hasAttribute("data-paused"));
+      t(toasterPaused === false, "the sheet that left with the breakpoint does not leave the toasts paused", `data-paused: ${toasterPaused}`);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.waitForTimeout(100);
+      await idle(page);
+      t((await page.evaluate(() => document.querySelectorAll("dialog:modal").length)) === 0, "narrowed again, the sheet does not reopen by itself");
+
+      // ── collapsed to icons on desktop, then a phone: the sheet shows the whole sidebar, not the icon rail ──
+      await click(page, "#sb-end-trigger");
+      await settled(page);
+      const phone = await page.evaluate(() => {
+        const label = document.querySelector("#sb-end-label");
+        const entry = document.querySelector("#sb-end-inbox");
+        return { collapsible: document.querySelector("#sb-end").getAttribute("data-collapsible"), sheet: !!entry?.closest("dialog.kx-sidebar__sheet:modal"), label: Number(getComputedStyle(label).opacity), entry: entry.getBoundingClientRect().width };
+      });
+      t(phone.sheet && phone.collapsible === "" && phone.label === 1 && phone.entry > 100, "an icon-collapsed sidebar opens on a phone as the full sidebar: labels shown, entries full width", JSON.stringify(phone));
+      t((await out(page, "sb-end-open")) === "false", "and the desktop collapse is kept for when the viewport widens again");
+      await press(page, "Escape");
+      await settled(page);
+    },
+  },
 ];
 
 /** Every surface, open, the way a gate opens it — for axe and forced colours. */
@@ -694,9 +1089,22 @@ const OPENED = [
   { name: "popover", open: async (p) => { await click(p, "#pop-trigger"); }, surface: "#pop-content" },
   { name: "tooltip", open: async (p) => { await focus(p, "#tip-trigger"); }, surface: "#tip-content" },
   { name: "hover card", open: async (p) => { await focus(p, "#hc-trigger"); }, surface: "#hc-content" },
+  { name: "toaster, an error toast with focus in it", fixture: "notifications", c3: true, open: async (p) => { await click(p, "#toast-error"); await click(p, "#toast-show"); await press(p, "Alt+t"); await press(p, "Tab"); }, surface: "#toaster-main li.kx-toast", stops: ["#toaster-main .kx-toast__button--cancel", "#toaster-main .kx-toast__button--action", "#toaster-main .kx-toast__close"] },
+  { name: "notification center", fixture: "notifications", c3: true, open: async (p) => { await click(p, "#nc-trigger"); }, surface: "#nc-content", stops: ["#nc-content .kx-notification-center__mark", "#nc-item-1 button", "#nc-item-2 button"] },
+  { name: "tour, a step on its target", fixture: "notifications", c3: true, open: async (p) => { await click(p, "#tour-start"); await settled(p); }, surface: "#tour .kx-tour__card", stops: ["#tour dialog", "#tour .kx-tour__actions button:first-child", "#tour .kx-tour__actions button:last-child"] },
+  { name: "tour, a step with no target", fixture: "notifications", c3: true, open: async (p) => { await click(p, "#tour-start"); for (let i = 0; i < 4; i++) await click(p, "#tour .kx-tour__actions button:last-child"); await settled(p); }, surface: "#tour .kx-tour__card", stops: ["#tour .kx-tour__actions button:last-child"] },
+  { name: "sidebar, desktop", fixture: "notifications", c3: true, open: async (p) => { await focus(p, "#sb-home"); }, surface: "#sb .kx-sidebar__panel", stops: ["#sb-home", "#sb-projects", "#sb-signout", "#sb-trigger"], edge: false },
+  { name: "sidebar, phone sheet", fixture: "notifications", c3: true, open: async (p) => { await p.setViewportSize({ width: 390, height: 844 }); await p.waitForTimeout(100); await idle(p); await click(p, "#sb-trigger"); await settled(p); }, surface: "dialog.kx-sidebar__sheet", stops: ["#sb-home", "#sb-projects", "#sb-signout"] },
 ];
 /** The overlay usage examples (src/usage/examples.ts), each opened by its own trigger. */
 const DEMOS = ["DialogDemo", "AlertDialogDemo", "ModalDemo", "SheetDemo", "DrawerDemo", "PopoverDemo", "TooltipDemo", "HoverCardDemo"];
+/** Wave C3's usage examples, each brought to the state a reader sees. */
+const DEMOS_C3 = [
+  { demo: "SonnerDemo", open: async (p) => { await click(p, "button"); } },
+  { demo: "NotificationCenterDemo", open: async (p) => { await click(p, "[kxNotificationCenterTrigger]"); } },
+  { demo: "TourDemo", open: async (p) => { await click(p, "button"); await settled(p); } },
+  { demo: "SidebarDemo", open: async (p) => { await focus(p, "[kxSidebarMenuButton]"); } },
+];
 /** The compositions (src/fixtures/overlay-compositions.ts), at their deepest open state. */
 const COMPOSITIONS = [
   { name: "destructive confirmation", open: async (p) => { await click(p, "#cmp-delete"); } },
@@ -711,7 +1119,7 @@ if (runs("interaction")) {
   report.push(`\ninteraction — ${BEHAVIOUR.length} overlay components driven by keyboard and pointer in Chromium`);
   for (const subject of BEHAVIOUR) {
     const context = await browser.newContext({ viewport: { width: 1024, height: 800 } });
-    const page = await open(context);
+    const page = await open(context, subject.fixture);
     try {
       await subject.run(page, (ok, what, detail) => check(ok, `${subject.component}: ${what}`, detail));
     } catch (err) {
@@ -724,7 +1132,8 @@ if (runs("interaction")) {
   for (const theme of ["light", "dark"]) {
     const context = await browser.newContext({ viewport: { width: 1024, height: 800 }, colorScheme: theme, reducedMotion: "reduce" });
     const cases = [
-      ...OPENED.map((c) => ({ ...c, fixture: "overlays" })),
+      ...OPENED.map((c) => ({ ...c, fixture: c.fixture ?? "overlays" })),
+      ...DEMOS_C3.map((c) => ({ ...c, name: `usage ${c.demo}`, fixture: "usage" })),
       ...DEMOS.map((demo) => ({ name: `usage ${demo}`, fixture: "usage", demo, open: async (p) => { const t = p.locator("[kxDialogTrigger], [kxPopoverTrigger]").first(); if (await t.count()) { await t.click(); await idle(p); } else await focus(p, "[kxTooltipTrigger], [kxHoverCardTrigger]"); } })),
       ...COMPOSITIONS.map((c) => ({ ...c, name: `composition ${c.name}`, fixture: "overlay-compositions" })),
     ];
@@ -732,7 +1141,7 @@ if (runs("interaction")) {
       const page = await open(context, c.fixture, { theme, demo: c.demo });
       try {
         await c.open(page);
-        const opened = await page.evaluate(() => document.querySelectorAll("dialog:modal, :popover-open").length);
+        const opened = await page.evaluate(() => document.querySelectorAll("dialog:modal, :popover-open, li.kx-toast, .kx-sidebar__panel:not([inert])").length);
         const violations = (await axe(page)).flatMap((v) => v.targets.map((target) => `${v.id} ${target}`));
         check(opened > 0 && violations.length === 0, `axe ${theme} ${c.name} (open)`, opened ? violations.join("; ") : "nothing opened");
       } catch (err) {
@@ -746,7 +1155,7 @@ if (runs("interaction")) {
   // Forced colours: inside every open surface, each focus stop keeps an outline, and the surface keeps an edge.
   {
     const context = await browser.newContext({ viewport: { width: 1024, height: 800 }, forcedColors: "active", reducedMotion: "reduce" });
-    for (const c of OPENED) {
+    for (const c of OPENED.filter((x) => !x.c3)) {
       const page = await open(context);
       try {
         await c.open(page);
@@ -778,6 +1187,33 @@ if (runs("interaction")) {
       }
       await page.close();
     }
+    // Wave C3's: each named focus stop focused from the keyboard (a tour's first stop is the dialog itself,
+    // whose ring is drawn on its card), and the surface's edge.
+    for (const c of OPENED.filter((x) => x.c3)) {
+      const page = await open(context, c.fixture);
+      try {
+        await c.open(page);
+        const edge = await page.locator(c.surface).first().evaluate((el) => {
+          const cs = getComputedStyle(el);
+          return ["Top", "Bottom", "Left", "Right"].some((s) => parseFloat(cs[`border${s}Width`]) > 0 && cs[`border${s}Style`] !== "none");
+        });
+        check(edge, `forced colours ${c.name}: the surface keeps a visible edge`);
+        const missing = [];
+        for (const stop of c.stops) {
+          await focus(page, stop);
+          const ok = await page.locator(stop).first().evaluate((el) => {
+            const ring = el.matches("dialog.kx-tour") ? el.querySelector(".kx-tour__card") : el;
+            const cs = getComputedStyle(ring);
+            return el === document.activeElement && cs.outlineStyle !== "none" && parseFloat(cs.outlineWidth) > 0;
+          });
+          if (!ok) missing.push(stop);
+        }
+        check(missing.length === 0, `forced colours ${c.name}: every focus stop keeps an outline (${c.stops.length} stops)`, missing.join(", "));
+      } catch (err) {
+        check(false, `forced colours ${c.name}: ran to completion`, String(err.message).split("\n")[0]);
+      }
+      await page.close();
+    }
     await context.close();
   }
 }
@@ -802,6 +1238,19 @@ if (runs("interaction")) {
  *                  `side="start"` toward the start, each flipping at the viewport edge it lacks room against
  *   KxTooltip      centred above its trigger, its text in the trigger's direction
  *   KxHoverCard    its text in the trigger's direction, aligned to the inline start
+ *
+ * Wave C3's, the same four cases, on the notifications fixture:
+ *
+ *   KxToaster      `bottom-end` at the inline-end corner and `top-start` at the inline-start one; a toast's icon
+ *                  at its inline start, its close button at the inline end, the action toward the inline end
+ *                  of cancel; its text in the region's direction
+ *   KxNotificationCenter  `align="end"`: the panel lines up with the trigger's inline end; Mark all read at the
+ *                  inline end of the heading, a notification's unread dot at its inline start
+ *   KxTour         the card below its target, aligned to the target's inline start, and inside the viewport
+ *                  against the inline end; Next toward the inline end of Skip, the count at the inline start
+ *   KxSidebar      `side="start"` against the inline-start edge of its frame, the page beside it toward the
+ *                  inline end, its border on the edge facing the page; collapsed, it leaves past that edge; on
+ *                  a phone its Sheet attaches to the inline-start edge of the viewport
  * ════════════════════════════════════════════════════════════════════════════ */
 const towardEnd = (dir, a, b) => (dir === "rtl" ? b - a : a - b);
 const mid = (r) => (r.left + r.right) / 2;
@@ -917,6 +1366,94 @@ const RTL = [
       t(d.direction === dir && ["start", dir === "rtl" ? "right" : "left"].includes(d.align), "its text in the trigger's direction, aligned to the inline start", `${d.direction}, ${d.align}`);
     },
   },
+  {
+    component: "KxToaster",
+    fixture: "notifications",
+    region: "#toasts",
+    async run(page, dir, t) {
+      await click(page, "#toast-error");
+      await click(page, "#toast-panel");
+      const vp = await viewportOf(page);
+      const [main, side] = [await rectOf(page, "#toaster-main .kx-toaster__list"), await rectOf(page, "#toaster-panel .kx-toaster__list")];
+      const atEnd = (r) => (dir === "rtl" ? Math.abs(r.left - 16) <= 1 : Math.abs(r.right - (vp.width - 16)) <= 1);
+      const atStart = (r) => (dir === "rtl" ? Math.abs(r.right - (vp.width - 16)) <= 1 : Math.abs(r.left - 16) <= 1);
+      t(atEnd(main), "position bottom-end puts the toaster at the inline-end corner", `${main.left.toFixed(0)}–${main.right.toFixed(0)} of ${vp.width}`);
+      t(atStart(side), "position top-start puts it at the inline-start corner", `${side.left.toFixed(0)}–${side.right.toFixed(0)}`);
+      const [icon, content, x] = [await rectOf(page, "#toaster-main .kx-toast__icon"), await rectOf(page, "#toaster-main .kx-toast__content"), await rectOf(page, "#toaster-main .kx-toast__close")];
+      t(towardEnd(dir, mid(content), mid(icon)) > 0 && towardEnd(dir, mid(x), mid(content)) > 0, "the icon at the toast's inline start, the close button at its inline end");
+      const [cancel, action] = [await rectOf(page, "#toaster-main .kx-toast__button--cancel"), await rectOf(page, "#toaster-main .kx-toast__button--action")];
+      t(towardEnd(dir, mid(action), mid(cancel)) > 0, "the action toward the inline end of cancel");
+      t((await textDir(page, "#toaster-main li.kx-toast")).direction === dir, "its text resolves to the region's direction");
+      await click(page, "#toast-dismiss-all");
+    },
+  },
+  {
+    component: "KxNotificationCenter",
+    fixture: "notifications",
+    region: "#nc",
+    async run(page, dir, t) {
+      await click(page, "#nc-trigger");
+      await settled(page);
+      const [tr, pr] = [await rectOf(page, "#nc-trigger"), await rectOf(page, "#nc-content")];
+      const end = (r) => (dir === "rtl" ? r.left : r.right);
+      t(Math.abs(end(pr) - end(tr)) <= 1, "align=end: the panel lines up with the trigger's inline end", `trigger ${end(tr).toFixed(0)}, panel ${end(pr).toFixed(0)}`);
+      const [h, mark] = [await rectOf(page, "#nc-content .kx-notification-center__title"), await rectOf(page, "#nc-content .kx-notification-center__mark")];
+      t(towardEnd(dir, mid(mark), mid(h)) > 0, "Mark all read at the inline end of the heading");
+      const [dot, text] = [await rectOf(page, "#nc-item-1 .kx-notification-item__dot"), await rectOf(page, "#nc-item-1 .kx-notification-item__text")];
+      t(towardEnd(dir, mid(text), mid(dot)) > 0, "a notification's unread dot at its inline start, the text after it");
+      t((await textDir(page, "#nc-content")).direction === dir, "its text resolves to the trigger's direction");
+      await press(page, "Escape");
+    },
+  },
+  {
+    component: "KxTour",
+    fixture: "notifications",
+    region: "#tour-region",
+    async run(page, dir, t) {
+      await click(page, "#tour-start");
+      await settled(page);
+      const [ta, ca] = [await rectOf(page, "#tour-a"), await rectOf(page, "#tour .kx-tour__card")];
+      const start = (r) => (dir === "rtl" ? r.right : r.left);
+      t(Math.abs(start(ca) - start(ta)) <= 1 && ca.top >= ta.bottom, "the card below its target, aligned to the target's inline start", `target ${start(ta).toFixed(0)}, card ${start(ca).toFixed(0)}`);
+      const [skip, next] = [await rectOf(page, "#tour .kx-tour__actions button:first-child"), await rectOf(page, "#tour .kx-tour__actions button:last-child")];
+      t(towardEnd(dir, mid(next), mid(skip)) > 0, "Next toward the inline end of Skip");
+      const [counter, actions] = [await rectOf(page, "#tour .kx-tour__counter"), await rectOf(page, "#tour .kx-tour__actions")];
+      t(towardEnd(dir, mid(actions), mid(counter)) > 0, "the step count at the inline start, the buttons at the inline end");
+      t((await textDir(page, "#tour .kx-tour__card")).direction === dir, "its text resolves to the region's direction");
+      await click(page, "#tour .kx-tour__actions button:last-child");
+      await settled(page);
+      const [tb, cb, vp] = [await rectOf(page, "#tour-b"), await rectOf(page, "#tour .kx-tour__card"), await viewportOf(page)];
+      t(cb.left >= 8 - 0.5 && cb.right <= vp.width - 8 + 0.5 && cb.top >= tb.bottom, "against the region's inline end the card stays inside the viewport", `card ${cb.left.toFixed(0)}–${cb.right.toFixed(0)}`);
+      await press(page, "Escape");
+    },
+  },
+  {
+    component: "KxSidebar",
+    fixture: "notifications",
+    region: "#sidebar-region",
+    async run(page, dir, t) {
+      const [frame, panel] = [await rectOf(page, "#sb-frame"), await rectOf(page, "#sb .kx-sidebar__panel")];
+      const atStart = dir === "rtl" ? Math.abs(panel.right - (frame.right - 1)) <= 1 : Math.abs(panel.left - (frame.left + 1)) <= 1;
+      t(atStart, "side=start: the panel against the inline-start edge of its frame", `frame ${frame.left.toFixed(0)}–${frame.right.toFixed(0)}, panel ${panel.left.toFixed(0)}–${panel.right.toFixed(0)}`);
+      const main = await rectOf(page, "#sb-main");
+      t(towardEnd(dir, mid(main), mid(panel)) > 0, "the page content beside it, toward the inline end");
+      const border = await page.locator("#sb .kx-sidebar__panel").evaluate((el, d) => { const cs = getComputedStyle(el); return parseFloat(d === "rtl" ? cs.borderLeftWidth : cs.borderRightWidth); }, dir);
+      t(border > 0, "its border on the edge that faces the page");
+      await click(page, "#sb-trigger");
+      await settled(page);
+      const gone = await rectOf(page, "#sb .kx-sidebar__panel");
+      t(dir === "rtl" ? gone.left >= frame.right - 1 : gone.right <= frame.left + 1, "collapsed, it leaves past its inline-start edge", `${gone.left.toFixed(0)}–${gone.right.toFixed(0)}`);
+      await click(page, "#sb-trigger");
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.waitForTimeout(100);
+      await idle(page);
+      await click(page, "#sb-trigger");
+      await settled(page);
+      const [sheet, vp] = [await rectOf(page, "dialog.kx-sidebar__sheet"), await viewportOf(page)];
+      t(dir === "rtl" ? Math.abs(sheet.right - vp.width) <= 1 : Math.abs(sheet.left) <= 1, "on a phone its Sheet attaches to the inline-start edge of the viewport", `${sheet.left.toFixed(0)}–${sheet.right.toFixed(0)} of ${vp.width}`);
+      await press(page, "Escape");
+    },
+  },
 ];
 const DIRECTION_CASES = [
   { page: "ltr", region: null },
@@ -932,7 +1469,7 @@ if (runs("rtl")) {
     const label = c.region ? `${c.region} region in an ${c.page} page` : `${c.page} page`;
     for (const subject of RTL) {
       const context = await browser.newContext({ viewport: { width: 1024, height: 800 }, reducedMotion: "reduce" });
-      const page = await open(context, "overlays", { dir: c.page });
+      const page = await open(context, subject.fixture ?? "overlays", { dir: c.page });
       const name = `${subject.component} (${label})`;
       try {
         if (c.region) await page.locator(subject.region).first().evaluate((el, d) => el.closest("section").setAttribute("dir", d), c.region);
@@ -962,6 +1499,15 @@ if (runs("rtl")) {
  *   KxPopover, KxHoverCard             the text grows; the surface is capped to the room beside its trigger
  *   KxTooltip                          the text grows; it stays inside the viewport
  *
+ * Wave C3's, the same reading, on the notifications fixture:
+ *
+ *   KxToaster                          an error toast: its title grows, its buttons stay whole 24px targets,
+ *                                      it stays inside the viewport; Alt+T still reaches it, Escape comes back
+ *   KxNotificationCenter               the heading grows; Mark all read and the notifications stay targets
+ *   KxTour                             the title grows; the card stays inside the viewport, its buttons whole
+ *   KxSidebar                          at 1024px the panel, at 390px its Sheet: the entries grow and stay
+ *                                      24px targets, nothing cut off sideways; still operable
+ *
  * And the overlays page as a whole fits 390px at 2x with no horizontal scroll.
  * ════════════════════════════════════════════════════════════════════════════ */
 const LARGE = [
@@ -974,9 +1520,16 @@ const LARGE = [
   { component: "KxTooltip", focusOpen: "#tip-trigger", surface: "#tip-content", text: "#tip-content", floating: true },
   { component: "KxHoverCard", focusOpen: "#hc-trigger", surface: "#hc-content", text: "#hc-content p", floating: true },
 ];
+/** Wave C3's four (src/fixtures/notifications.ts): each opened its own way, read the same way as LARGE. */
+const LARGE_C3 = [
+  { component: "KxToaster", open: async (p) => { await click(p, "#toast-error"); await settled(p); }, surface: "#toaster-main li.kx-toast", text: "#toaster-main .kx-toast__title", actions: "#toaster-main li.kx-toast button", floating: true, operable: async (p) => { await focus(p, "#toast-error"); await press(p, "Alt+t"); const inside = await p.evaluate(() => !!document.activeElement?.closest(".kx-toaster")); await press(p, "Escape"); return inside && (await active(p)) === "toast-error"; }, how: "Alt+T reaches it, Escape comes back" },
+  { component: "KxNotificationCenter", open: async (p) => { await click(p, "#nc-trigger"); }, surface: "#nc-content", text: "#nc-content .kx-notification-center__title", actions: "#nc-content button", floating: true, operable: async (p) => { await press(p, "Escape"); return !(await showing(p, "#nc-content")) && (await active(p)) === "nc-trigger"; }, how: "Escape closes it, focus comes back" },
+  { component: "KxTour", open: async (p) => { await click(p, "#tour-start"); await settled(p); }, surface: "#tour .kx-tour__card", text: "#tour .kx-tour__title", actions: "#tour .kx-tour__actions button", floating: true, operable: async (p) => { await press(p, "Escape"); return !(await showing(p, "#tour dialog")) && (await active(p)) === "tour-start"; }, how: "Escape ends it, focus comes back" },
+  { component: "KxSidebar", open: async (p) => { await p.locator("#sb-frame").evaluate((el) => el.scrollIntoView({ block: "start" })); await idle(p); if ((await viewportOf(p)).width < 768) { await click(p, "#sb-trigger"); await settled(p); } }, surface: (w) => (w < 768 ? "dialog.kx-sidebar__sheet" : "#sb .kx-sidebar__panel"), text: "#sb-home span", actions: "#sb-home, #sb-projects, #sb-signout", operable: async (p) => { if ((await viewportOf(p)).width >= 768) { await focus(p, "#sb-trigger"); await press(p, "Enter"); await settled(p); const ok = (await out(p, "sb-open")) === "false"; await press(p, "Enter"); return ok; } await press(p, "Escape"); return (await p.evaluate(() => document.querySelectorAll("dialog:modal").length)) === 0 && (await active(p)) === "sb-trigger"; }, how: "the trigger collapses it / Escape closes its sheet, focus comes back" },
+];
 const SCALE = 2;
 if (runs("largeText")) {
-  assertClaims("largeText", LARGE);
+  assertClaims("largeText", [...LARGE, ...LARGE_C3]);
   report.push(`\nlargeText — ${LARGE.length} overlays open at ${SCALE}x the root font size, 1024px and 390px`);
   for (const s of LARGE) {
     for (const viewport of [{ width: 1024, height: 800 }, { width: 390, height: 844 }]) {
@@ -1036,6 +1589,53 @@ if (runs("largeText")) {
       await context.close();
     }
   }
+  for (const s of LARGE_C3) {
+    for (const viewport of [{ width: 1024, height: 800 }, { width: 390, height: 844 }]) {
+      const context = await browser.newContext({ viewport, reducedMotion: "reduce" });
+      const page = await open(context, "notifications");
+      const name = `${s.component} @${viewport.width}px`;
+      const surface = typeof s.surface === "function" ? s.surface(viewport.width) : s.surface;
+      try {
+        await s.open(page);
+        const before = await page.locator(s.text).first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+        await page.keyboard.press("Escape");
+        await click(page, "#toast-dismiss-all");
+        await page.evaluate(() => document.activeElement?.blur());
+        await page.evaluate((px) => (document.documentElement.style.fontSize = `${px}px`), 16 * SCALE);
+        await idle(page);
+        await s.open(page);
+        await settled(page);
+        const m = await page.evaluate(({ surface, text, actions }) => {
+          const el = document.querySelector(surface);
+          const r = el.getBoundingClientRect();
+          const buttons = [...document.querySelectorAll(actions)].filter((b) => b.getClientRects().length && b.checkVisibility({ visibilityProperty: true }));
+          return {
+            rect: { left: r.left, right: r.right, top: r.top, bottom: r.bottom },
+            vw: document.documentElement.clientWidth,
+            vh: innerHeight,
+            sideways: el.scrollWidth - el.clientWidth,
+            fontSize: parseFloat(getComputedStyle(document.querySelector(text)).fontSize),
+            truncated: buttons.filter((b) => b.scrollWidth > b.clientWidth + 1).map((b) => b.textContent.trim()),
+            small: buttons.filter((b) => Math.min(b.getBoundingClientRect().width, b.getBoundingClientRect().height) < 24).map((b) => b.textContent.trim()),
+            count: buttons.length,
+            pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          };
+        }, { surface, text: s.text, actions: s.actions });
+        const pad = s.floating ? 8 - 0.5 : -0.5;
+        const inside = m.rect.left >= pad && m.rect.right <= m.vw - pad && m.rect.top >= pad && m.rect.bottom <= m.vh - pad;
+        check(inside, `${name}: the open surface stays inside the viewport at ${SCALE}x`, `${m.rect.left.toFixed(0)},${m.rect.top.toFixed(0)}–${m.rect.right.toFixed(0)},${m.rect.bottom.toFixed(0)} in ${m.vw}x${m.vh}`);
+        check(m.sideways <= 1, `${name}: nothing inside it is cut off sideways`, `${m.sideways}px`);
+        check(m.fontSize >= before * 1.8, `${name}: its text grows with the reader's`, `${before}px -> ${m.fontSize}px`);
+        check(m.count > 0 && m.truncated.length === 0, `${name}: no control is truncated`, m.truncated.join(", "));
+        check(m.small.length === 0, `${name}: every control is at least a 24px target`, m.small.join(", "));
+        check(m.pageOverflow <= 0, `${name}: no horizontal page overflow`, `${m.pageOverflow}px`);
+        check(await s.operable(page), `${name}: still operable — ${s.how}`, await active(page));
+      } catch (err) {
+        check(false, `${name}: ran to completion`, String(err.message).split("\n")[0]);
+      }
+      await context.close();
+    }
+  }
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await open(context);
   await page.evaluate((px) => (document.documentElement.style.fontSize = `${px}px`), 16 * SCALE);
@@ -1060,6 +1660,14 @@ if (runs("largeText")) {
  *   KxDrawer                           its translation: up from the bottom edge and back down
  *   KxPopover, KxHoverCard             opacity (with a 4px settle away from the trigger)
  *   KxTooltip                          opacity
+ *   KxNotificationCenter               opacity, as the popover it is
+ *
+ * And Wave C3's travels that are not a surface opening, read the same way (a midpoint with normal motion; under
+ * reduced motion none, landing on the same value):
+ *
+ *   KxToaster      a toast's opacity as it arrives
+ *   KxTour         the card's and the spotlight's position as the step changes
+ *   KxSidebar      the panel's inline-start offset as it slides out and back
  * ════════════════════════════════════════════════════════════════════════════ */
 const MOTION = [
   { component: "KxDialog", control: "#dlg-trigger", target: "#dlg-content", property: "opacity" },
@@ -1070,7 +1678,70 @@ const MOTION = [
   { component: "KxPopover", control: "#pop-trigger", target: "#pop-content", property: "opacity" },
   { component: "KxTooltip", control: "#tip-trigger", target: "#tip-content", property: "opacity", byFocus: true },
   { component: "KxHoverCard", control: "#hc-trigger", target: "#hc-content", property: "opacity", byFocus: true },
+  { component: "KxNotificationCenter", fixture: "notifications", control: "#nc-trigger", target: "#nc-content", property: "opacity" },
 ];
+/**
+ * Wave C3's travels, which are not a surface opening and closing (src/fixtures/notifications.ts): a toast
+ * arriving, the tour's card moving to the next step, the sidebar sliding out and back. `setup` reaches the
+ * state before the travel; `act` is the click that starts it; the target is looked up each frame (a toast does
+ * not exist until it arrives).
+ */
+const MOTION_C3 = [
+  { component: "KxToaster", travels: [{ name: "a toast arrives", act: "#toast-show", target: "#toaster-main li.kx-toast", property: "opacity" }] },
+  {
+    component: "KxTour",
+    setup: async (p) => { await click(p, "#tour-start"); await settled(p); },
+    travels: [
+      { name: "the card moves to the next step", act: "#tour .kx-tour__actions button:last-child", target: "#tour .kx-tour__card", property: "left" },
+      { name: "the spotlight follows it", act: "#tour .kx-tour__actions button:first-child", target: "#tour .kx-tour__spotlight", property: "left" },
+    ],
+  },
+  {
+    component: "KxSidebar",
+    travels: [
+      { name: "it slides out", act: "#sb-trigger", target: "#sb .kx-sidebar__panel", property: "insetInlineStart" },
+      { name: "and back in", act: "#sb-trigger", target: "#sb .kx-sidebar__panel", property: "insetInlineStart" },
+    ],
+  },
+];
+function sampleMove(page, { act, target, property }) {
+  return page.evaluate(
+    ({ act, target, property }) =>
+      new Promise((resolve) => {
+        const num = (v) => {
+          const n = String(v ?? "").match(/-?[\d.]+(?:e[-+]?\d+)?/gi);
+          return n ? Number(n[n.length - 1]) : 0;
+        };
+        const read = (el) => num(getComputedStyle(el)[property]);
+        document.querySelector(act).click();
+        let frames = 0;
+        const tick = () => {
+          frames++;
+          const el = document.querySelector(target);
+          const running = el ? el.getAnimations().filter((x) => x.playState === "running" && Number(x.effect?.getComputedTiming?.().activeDuration) > 0) : [];
+          if (running.length) {
+            const longest = Math.max(...running.map((x) => Number(x.effect.getComputedTiming().activeDuration)));
+            running.forEach((x) => x.pause());
+            running.forEach((x) => (x.currentTime = 0));
+            const a = read(el);
+            running.forEach((x) => (x.currentTime = Number(x.effect.getComputedTiming().activeDuration) / 2));
+            const mid = read(el);
+            running.forEach((x) => (x.currentTime = Number(x.effect.getComputedTiming().activeDuration) - 0.01));
+            const b = read(el);
+            running.forEach((x) => x.finish());
+            requestAnimationFrame(() => resolve({ a, mid, b, durationMs: longest, end: read(el) }));
+          } else if (el && frames > 10) {
+            resolve({ a: null, mid: null, b: read(el), durationMs: 0, end: read(el) });
+          } else if (frames > 90) {
+            resolve({ a: null, mid: null, b: null, durationMs: 0, end: null, timeout: true });
+          } else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+    { act, target, property },
+  );
+}
+
 /**
  * Start a travel (open: activate the control; close: Escape), then, frame by frame until the change has
  * rendered, read the property before, at the midpoint of every running transition on the target, and after.
@@ -1126,7 +1797,7 @@ function sampleTravel(page, { control, target, property, byFocus }, travel) {
   );
 }
 if (runs("reducedMotion")) {
-  assertClaims("reducedMotion", MOTION);
+  assertClaims("reducedMotion", [...MOTION, ...MOTION_C3]);
   const { PERCEPTIBLE_MS, SUPPRESSED_MS } = await import("./motion-states.mjs");
   report.push(`\nreducedMotion — ${MOTION.length} overlays, open and close, LTR and RTL, normal and reduced`);
   for (const s of MOTION) {
@@ -1134,7 +1805,7 @@ if (runs("reducedMotion")) {
       const ends = {};
       for (const reduced of [false, true]) {
         const context = await browser.newContext({ viewport: { width: 1024, height: 800 }, reducedMotion: reduced ? "reduce" : "no-preference" });
-        const page = await open(context, "overlays", { dir });
+        const page = await open(context, s.fixture ?? "overlays", { dir });
         if (s.byFocus) await page.keyboard.press("Shift");
         for (const travel of ["open", "close"]) {
           const name = `${s.component} ${travel} (${dir}, ${reduced ? "reduced" : "normal"} motion)`;
@@ -1160,6 +1831,35 @@ if (runs("reducedMotion")) {
           } catch (err) {
             check(false, `${name}: ran to completion`, String(err.message).split("\n")[0]);
           }
+        }
+        await context.close();
+      }
+    }
+  }
+  for (const s of MOTION_C3) {
+    for (const dir of ["ltr", "rtl"]) {
+      const ends = {};
+      for (const reduced of [false, true]) {
+        const context = await browser.newContext({ viewport: { width: 1024, height: 800 }, reducedMotion: reduced ? "reduce" : "no-preference" });
+        const page = await open(context, "notifications", { dir });
+        try {
+          await s.setup?.(page);
+          for (const travel of s.travels) {
+            const name = `${s.component}: ${travel.name} (${dir}, ${reduced ? "reduced" : "normal"} motion)`;
+            const m = await sampleMove(page, travel);
+            await settled(page);
+            await idle(page);
+            if (!reduced) {
+              ends[travel.name] = m.end;
+              const between = m.mid != null && Math.min(m.a, m.b) < m.mid && m.mid < Math.max(m.a, m.b);
+              check(m.durationMs >= PERCEPTIBLE_MS && between, `${name}: travels through a rendered midpoint`, `${m.a} → ${m.mid} → ${m.b} over ${m.durationMs}ms`);
+            } else {
+              check(m.durationMs <= SUPPRESSED_MS && !m.timeout, `${name}: no perceptible motion`, `${m.durationMs}ms`);
+              check(m.end != null && Math.abs(m.end - ends[travel.name]) <= 0.5, `${name}: lands on the same end state`, `${m.end} (normal: ${ends[travel.name]})`);
+            }
+          }
+        } catch (err) {
+          check(false, `${s.component} (${dir}, ${reduced ? "reduced" : "normal"} motion): ran to completion`, String(err.message).split("\n")[0]);
         }
         await context.close();
       }

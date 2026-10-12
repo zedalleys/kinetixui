@@ -206,3 +206,42 @@ export {
 } from './lib/command';
 export type { KxMultiSelectOption } from './lib/multi-select';
 export { KxMultiSelect } from './lib/multi-select';
+export {
+  KxNavigationMenu,
+  KxNavigationMenuContent,
+  KxNavigationMenuIndicator,
+  KxNavigationMenuItem,
+  KxNavigationMenuLink,
+  KxNavigationMenuList,
+  KxNavigationMenuTrigger,
+} from './lib/navigation-menu';
+export type { KxToast, KxToastButton, KxToastOptions, KxToastType } from './lib/toast-queue';
+export type { KxToasterPosition } from './lib/sonner';
+export { KxToaster, KxToasterService } from './lib/sonner';
+export {
+  KxNotificationCenter,
+  KxNotificationCenterContent,
+  KxNotificationCenterTrigger,
+  KxNotificationItem,
+} from './lib/notification-center';
+export type { KxTourStep } from './lib/tour';
+export { KxTour } from './lib/tour';
+export type { KxSidebarSide } from './lib/sidebar';
+export {
+  KxSidebar,
+  KxSidebarContent,
+  KxSidebarFooter,
+  KxSidebarGroup,
+  KxSidebarGroupContent,
+  KxSidebarGroupLabel,
+  KxSidebarHeader,
+  KxSidebarInput,
+  KxSidebarInset,
+  KxSidebarMenu,
+  KxSidebarMenuButton,
+  KxSidebarMenuItem,
+  KxSidebarMenuSkeleton,
+  KxSidebarProvider,
+  KxSidebarSeparator,
+  KxSidebarTrigger,
+} from './lib/sidebar';

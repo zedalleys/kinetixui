@@ -6,16 +6,16 @@ CI — and this document describes it; where the two disagree, the script is rig
 
 Publication is distribution, not maturity. The package is on npm and stays Preview.
 
-## Current truth (computed, 2026-10-11, main `4a7a587` + Wave C2b)
+## Current truth (computed, 2026-10-12, main `eb6957f` + Wave C3)
 
 | | Count | Source |
 |---|---|---|
-| Implemented | 71 of 98 (70 components and one recipe, the combobox) | `components.manifest.json` |
+| Implemented | 76 of 98 (75 components and one recipe, the combobox) | `components.manifest.json` |
 | Native-equivalent | 2 (`direction-provider`, `form`) | manifest `platformGuidance`, each with its reason |
-| Planned | 25 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
+| Planned | 20 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
 | `catalogComplete` | false | manifest |
-| Evidence (verification.json) | build 71 · interaction 71 · accessibility 71 · rtl 38 · largeText 44 · reducedMotion 17 · visual 0 | generated from the tests |
-| Rendered visual/state gate | 34 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs, select; `check:composite-visual`: input-group, number-input, input-otp, password-input, multi-select; `check:navigation-visual`, Angular only: breadcrumb, pagination, table-of-contents, tab-bar, app-bar, footer, accordion; `check:overlay-visual`, Angular only: dialog, alert-dialog, modal, sheet, drawer, popover, tooltip, hover-card; `check:menu-visual`, Angular only: dropdown-menu, context-menu, menubar, plus select and multi-select open), no `partial` marks | `scripts/visual-gates.mjs` |
+| Evidence (verification.json) | build 76 · interaction 76 · accessibility 76 · rtl 43 · largeText 49 · reducedMotion 22 · visual 0 | generated from the tests |
+| Rendered visual/state gate | 39 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs, select; `check:composite-visual`: input-group, number-input, input-otp, password-input, multi-select; `check:navigation-visual`, Angular only: breadcrumb, pagination, table-of-contents, tab-bar, app-bar, footer, accordion, navigation-menu, sidebar; `check:overlay-visual`, Angular only: dialog, alert-dialog, modal, sheet, drawer, popover, tooltip, hover-card, sonner, notification-center, tour; `check:menu-visual`, Angular only: dropdown-menu, context-menu, menubar, plus select and multi-select open), no `partial` marks | `scripts/visual-gates.mjs` |
 
 Wave A moved Angular's evidence into a real browser. `check:angular-browser` (scripts/angular-browser.mjs)
 builds the package's fixtures AOT and bootstraps them as a live, zoneless Angular application in Chromium,
@@ -41,18 +41,18 @@ maturity — they are statements about today, and CI fails the moment one is fal
 
 | Dimension | Criterion | Kind | Today |
 |---|---|---|---|
-| Catalogue | No Angular entry is still planned | gate | **open** — 25 planned |
+| Catalogue | No Angular entry is still planned | gate | **open** — 20 planned |
 | Catalogue | Every native-equivalent / composition entry carries its reason | always | met |
 | Catalogue | `catalogComplete` is true only when nothing is planned | always | met |
-| Build / distribution | Every implemented component compiles in CI (ng-packagr, strict templates) | gate | met — 71/71 |
+| Build / distribution | Every implemented component compiles in CI (ng-packagr, strict templates) | gate | met — 76/76 |
 | Build / distribution | CI builds the package, checks the public API snapshot, runs the tests and this guard; the clean-consumer install + AOT build runs (`angular-package.yml`) | always | met |
-| Behaviour | Every implemented component has `interaction` evidence | gate | met — 71/71 (jsdom, and a real keyboard in Chromium for the 51 interactive components; the stepper, which is display, by its state following `current`) |
-| Behaviour | `interaction` wherever React has it | gate | met — 29/29 (Wave C2a added dropdown menu, context menu and menubar, Wave C2b select and multi-select; React has no interaction evidence for the hover card, Angular does) |
-| Accessibility | Every implemented component has `accessibility` evidence | gate | met — 71/71 |
-| Accessibility | `accessibility` wherever React has it | gate | met — 71/71 |
-| Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | met — 71/71 (`angular-browser.mjs`: axe over every usage example and state fixture, light and dark, plus forced colours and reduced motion; `angular-overlays.mjs`: axe over every overlay OPEN, nested and composed; `angular-collections.mjs`: axe over every menu and listbox OPEN, submenus and empty lists included) |
-| RTL | `rtl` wherever React has it | gate | met — 18/18 (this row read 10/10 after Wave C1 while the guard computed 13/13; Wave C2a added the three menus, Wave C2b select and multi-select; Angular measures 38 in four direction cases) |
-| Large text | `largeText` wherever React has it | gate | met — 26/26 (Wave C2a added the three menus, Wave C2b select and multi-select; Angular measures 44) |
+| Behaviour | Every implemented component has `interaction` evidence | gate | met — 76/76 (jsdom, and a real keyboard in Chromium for the interactive components, the five of Wave C3 among them; the stepper, which is display, by its state following `current`) |
+| Behaviour | `interaction` wherever React has it | gate | met — 30/30 (Wave C2a added dropdown menu, context menu and menubar, Wave C2b select and multi-select, Wave C3 the tour; React has no interaction evidence for the hover card, Angular does) |
+| Accessibility | Every implemented component has `accessibility` evidence | gate | met — 76/76 |
+| Accessibility | `accessibility` wherever React has it | gate | met — 76/76 |
+| Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | met — 76/76 (`angular-browser.mjs`: axe over every usage example and state fixture, light and dark, plus forced colours and reduced motion; `angular-overlays.mjs`: axe over every overlay OPEN, nested and composed, and over a toast with focus in it, the notification center, the tour on and off its target and the sidebar on desktop and as a phone sheet; `angular-collections.mjs`: axe over every menu and listbox OPEN, submenus and empty lists included, and a navigation panel open) |
+| RTL | `rtl` wherever React has it | gate | met — 20/20 (this row read 10/10 after Wave C1 while the guard computed 13/13; Wave C2a added the three menus, Wave C2b select and multi-select, Wave C3 the navigation menu and the tour; Angular measures 43 in four direction cases) |
+| Large text | `largeText` wherever React has it | gate | met — 26/26 (Wave C2a added the three menus, Wave C2b select and multi-select; Angular measures 49) |
 | Large text | …from a real browser (`large-text.mjs`) | gate | met — 26/26 |
 | Motion | `reducedMotion` wherever React has it | gate | met — 3/3 (switch, accordion, collapsible) |
 | Motion | …from a real browser (`motion.mjs`) | gate | met — 3/3 (Angular's in `angular-browser.mjs`, which also measures the app bar's menu) |
@@ -62,7 +62,7 @@ maturity — they are statements about today, and CI fails the moment one is fal
 | Documentation | The package README's counts, component list and Preview label match the manifest and evidence | always | met (it was stale — 31 components, 69 symbols — and is corrected in this change) |
 | CI | The guard itself: fails if `maturity` is `stable` with any gate criterion open | — | in `ci.yml` |
 
-12 of 13 gate criteria are met; only the catalogue is open (25 planned). Angular stays Preview.
+12 of 13 gate criteria are met; only the catalogue is open (20 planned). Angular stays Preview.
 
 `published` is reported but is not a criterion. Neither is `visual` from verification.json: that kind
 means comparison against stored reference images, which KinetixUI does not keep on any platform.
@@ -348,19 +348,113 @@ restored from git and checked by hash before the next (logs and `summary.json`:
 - 18: keyboard highlight identical to the pointer highlight in a listbox → `check:menu-visual`: "keyboard highlight: an inset ring clears 3:1 against the layer" (1.00:1) and "keyboard and pointer highlights look different", for select and multi-select.
 - 19 (post-review regression, added after the Codex fixes): the disabled-close effect in `KxOptionField` reads `open()` untracked again, so an already-disabled field can be opened through `[(open)]` → `check:angular-collections`: "a disabled field cannot be externally reopened" (open=true), for select and multi-select.
 
-### What remains after Wave C2b, ranked
+### Wave C3 — navigation menu, notifications and sidebar (done)
 
-25 planned. Ranked by what each group unblocks and by the evidence React already holds for it (which Angular
+**Catalogue entries:** `navigation-menu`, `sonner` (Angular source name `Toaster`: `kx-toaster` and
+`KxToasterService`), `notification-center`, `tour`, `sidebar`. 12/13 held; Angular 71 → 76 implemented
+(75 components and one recipe), 73/98 → 78/98, 25 → 20 planned. Wave C is complete.
+
+**Nothing new underneath.** Every part stands on what C1, C2a and C2b built: no new overlay stack, positioning
+engine, direction system or focus framework.
+
+- **Navigation menu** (`lib/navigation-menu.ts`) is site navigation, not a menu: a named `navigation` landmark,
+  plain buttons that disclose panels (`aria-expanded`, `aria-controls` while open) and links that stay links
+  (`aria-current="page"`). It uses the C2a core for movement (`moveIndex`, non-wrapping, and `inlineKey`, so
+  ArrowRight and ArrowLeft swap by the direction the navigation's own element resolves to); each item is a C1
+  hover root (open delay 200ms, a skip delay of 300ms while one is open, a close delay so the pointer can
+  cross to the panel) and each panel a C1 floating surface placed by `autoPlace` against the whole navigation
+  at its logical start. Escape is the stack's: it closes the panel and focus returns to its trigger. One
+  addition to the C1 layer: `autoPlace` takes an optional `placed` callback, run after its final write (the
+  tour uses it to light the spotlight on the same frame as the card).
+- **The toaster** (`lib/sonner.ts` over the internal `lib/toast-queue.ts`). One root queue with one clock per
+  toast (remaining time, started-at, at most one timer). A toaster attaches to its channel (its `id`); a
+  channel no toaster shows is held, so a toast nobody can see does not expire. Hold reasons are a set per
+  channel — hover, focus, a hidden document — so releasing one never releases another, and a pause keeps the
+  elapsed time: it resumes with what was left, never the full duration. An update with the same id replaces
+  the toast in place and keeps its clock (a changed duration restarts it). The region is a polite live region
+  (`aria-relevant="additions text"`), a toast never takes focus, Alt+T moves focus to the toasts and Escape
+  sends it back; dismissing the focused toast moves focus to the next, never to `<body>`. The toaster is not
+  a top-layer surface: it is the one overlay with a z-index (`--z-index-overlay`).
+- **Notification center** (`lib/notification-center.ts`) is a C1 popover: the trigger a button named with the
+  unread count (the dot is decoration), the content a non-modal dialog named by its heading, the items a list.
+  It is separate from the toaster and holds no state of its own: the count, read state and persistence are
+  the application's. React's subset: the trigger, the item (`title`, `description`, `time`, `unread`,
+  `pressable` → `(select)`), Mark all read.
+- **Tour** (`lib/tour.ts`) is a C1 dialog root with a C1 modal surface (`showModal()`, `aria-modal` by the
+  top layer, Tab held, scroll locked, focus restored). Its surface is the whole viewport, transparent; the
+  card is placed by `autoPlace` below the target at its inline start, flipped and shifted at the viewport
+  edges, and the spotlight's spread shadow is the scrim. A target is resolved by selector on every step and
+  watched (a `MutationObserver`, throttled to a frame, ignoring the tour's own nodes): removed while its step
+  shows, the step falls back to a centred card, and back, it points again — never at a stale place. A target
+  below the fold is scrolled into view (smoothly, unless reduced motion). Escape closes only the top layer,
+  so a tour opened from inside a dialog closes first.
+- **Sidebar** (`lib/sidebar.ts`): one state model (`KxSidebarProvider`: `[(open)]` for desktop, a separate
+  open state for the phone, Ctrl/⌘+B). Desktop is a persistent panel against the logical start or end, inert
+  and hidden once collapsed off-canvas. Below 768px the same content is rendered inside the family's
+  `kx-sheet` (one modal dialog, named, scroll-locked, focus inside). The body is one `ng-template` rendered in
+  exactly one place, so there are never two copies of the sidebar or of its ids; crossing the breakpoint
+  closes the phone sheet, so no sheet is left open behind a desktop panel.
+
+| | |
+|---|---|
+| Behavioural contracts | navigation menu (Tab reaches every trigger and top-level link and never a closed panel; arrows move between stops and stop at the ends; Home/End; ArrowDown into an open panel; Enter/Space toggle with focus kept; one panel at a time; Tab out, a link followed, a press outside and Escape each close; the hover delays; a panel closed by a press does not reopen under a resting pointer); toaster (real time, 1.5s: expiry through `onAutoClose`; hover and focus pause with the elapsed time kept; Alt+T and Escape; action, cancel, close, `preventDefault` to keep; update in place; three visible; `Infinity`; separate toasters); notification center (count in the name, list, pressable items, Mark all read, Escape, outside press); tour (modal, Tab held, steps, Back/Next/Done, edges, scrolled-to, missing and removed targets, a press behind is not a way out, Escape top layer only, focus restored); sidebar (desktop, Ctrl+B, inert when collapsed, phone sheet, breakpoint both ways, no duplicates) |
+| Accessibility | `navigation` named, no menu roles; region + polite live region; dialog named by heading (notification center) and by step title (tour); `aria-current`, `aria-expanded`, `aria-controls`; axe light and dark over a navigation panel open, a toast with focus in it, the notification center, the tour on and off its target, the sidebar on desktop and as a phone sheet, and the five usage examples; forced colours: focus outlines, the open trigger, the current page, the active entry, the unread dots, the spotlight |
+| RTL | all five in four direction cases: navigation keys and chevron mirror, panel at the navigation's inline start; toaster corners logical, toast icon and close at the inline start and end; notification center aligned to the trigger's inline end; tour card at the target's inline start; sidebar at the frame's inline start, phone sheet at the viewport's |
+| Large text | all five at 2× text at 1024px and 390px: inside the viewport, nothing cut off sideways, 24px targets, still operable |
+| Motion | navigation panel (opacity); toast arrival (opacity); notification center (opacity); tour card and spotlight between steps (position); sidebar slide (inline-start offset): each through a rendered midpoint with normal motion, and none under reduced motion, landing on the same value, LTR and RTL |
+| Visual | `check:navigation-visual` (navigation menu: trigger and top-level link hover 8%, pressed 12%, focus ring, open layer and chevron, the current page by weight and an underline; sidebar: its surface and edge, entry hover/pressed/focus, the active entry by weight); `check:overlay-visual` (notification center as a floating surface; toast surface, edge, shadow or dark surface step, text, icons 3:1, action label, close-button ring; tour cut-out, scrim, card, text, the no-target scrim) |
+| Defects it found and fixed | at 2× text at 390px the toast's action and cancel buttons squeezed its text to a few characters per line (the actions now sit under the text); in dark mode the toast was told apart from the page only by a 2.70:1 edge (it is now painted `popover`, a surface step); the toaster's list clipped the toasts' shadows and focus rings (it now has a bleed inside its padding); the navigation trigger, navigation panel links and sidebar entries had no pressed state deeper than hover (12% on `:active` now); a toast removed while hovered or focused left its channel held, so the next toast never expired (removal now releases the hold); a toaster kept counting down under a modal dialog that made it inert, so a toast raised there could expire unseen (it now holds while a modal outside it is open; Codex review); a toast removed by `KxToasterService.dismiss()` while focused dropped focus to `<body>` (the queue now tells toasters before any removal; Codex review); an end sidebar left its gap at the inline start and the page ran under the panel, and the icon collapse leaked into the phone Sheet (Codex review); a modal dialog that left the document still open (the phone sidebar's Sheet when the viewport widened) left the toaster's modal hold on, so no toast expired again (removals now re-check the hold; final review); the Angular docs page scrolled sideways at 200% text on a 320px phone, because the new "NotificationCenter" chip in its component list was wider than the page (the chips wrap now; `check:a11y-site`, final review); the tour's internal modal surface `KxTourSurface` was exported (it is internal now, like `KxModalSurface`; final review); the committed public-API snapshot was stale; `check:angular-browser` found `KxSidebarInput`, `KxSidebarSeparator` and `KxSidebarMenuSkeleton` exported but never rendered (the usage example now shows them) |
+
+**Not ported, by design or for later:** React's sidebar cookie persistence (persistence is the application's,
+through `[(open)]`) and the menu button's tooltip in icon mode (the label stays in the accessible name);
+sonner's promise toasts, swipe to dismiss, rich colours and the expanding stack; the notification center
+holds no persistence. The toast is painted `popover`, not React's `background` (see TOKENS.md).
+
+**Findings not fixed:** the pre-existing ones listed under C2b still stand (the base `KxTag` remove button's
+ring, C1's one-frame popover convergence, and the container-only "KxBreadcrumb: nothing truncated inside it"
+in `check:angular-browser`, which fails identically on main `eb6957f` and again on main `bc62ed7` in the final review).
+
+#### Negative controls (Wave C3)
+
+13 controls (20–32), four more after the Codex review (33–36) and one after the final review (37), run after the implementation was committed (`9eb32a8`): each a real break in the source, a
+fresh harness built from it, the gate run against it with `--only`, and the file restored from git and checked by
+hash against HEAD before the next (logs and `summary.json`: `/mnt/project-files/angular-wave-c3/negative-controls/`).
+None committed. Every one was caught, across ten classes (direction, disclosure, roles, timing, focus, layering,
+target tracking, viewport, sheet composition, duplication):
+
+- 20: the navigation menu's `inlineKey` ignores direction → `check:angular-collections --only=rtl`: "ArrowLeft (the inline-end arrow) moves to the next stop", in both RTL cases (8 failures, including the panel's and indicator's placement).
+- 21: opening a second navigation panel no longer closes the first → "opening a second trigger closes the first".
+- 22: `role="menubar"` / `menuitem` on the navigation list → "no menu, menubar or menuitem role anywhere inside", and axe `aria-required-children` in every open case (17 failures).
+- 23: the toast queue's `hold()` is a no-op → "paused, it outlives its duration", "with focus in the toaster, a toast outlives its duration", "hovering one toaster pauses it alone".
+- 24: resuming restarts the full duration → "it leaves with the time it had left (~0.5s), not a fresh 1.5s".
+- 25: the toaster focuses its list when a toast arrives → "a toast appears and focus stays where the reader is: it never steals focus".
+- 26: Escape on a tour also closes the dialog under it → "one Escape closes the tour alone, focus back on its starter inside the dialog".
+- 27: the tour's target watcher removed → "its target removed while it shows, the step falls back to a centred card — never pointing at a stale place".
+- 28: the tour card's inline position forced, unshifted → "against the viewport's inline end the card shifts to stay inside it" (card 917–1237 of 1024).
+- 29: the tour card aligned by the document's direction rather than the target's → `--only=rtl`: "the card below its target, aligned to the target's inline start", both mixed-direction cases.
+- 30: the phone sidebar rendered as a plain `div`, not the Sheet → "the trigger opens it as a Sheet: one modal dialog, the family's own", "named, the page locked behind it, focus inside", and axe/forced-colours "nothing opened".
+- 31: the phone open state not reset when the breakpoint is crossed → "narrowed again, the sheet does not reopen by itself".
+- 32: the desktop panel also rendered on a phone → "below the breakpoint the persistent panel is gone; its content is still rendered once" and the widening case.
+
+Codex review of the PR found four more, each fixed with a regression check in `check:angular-overlays` (and a
+queue unit test for the removal hook), and each proven by a control run after the fix was committed (`ee4e23b`):
+
+- 33: an end sidebar's gap left at the inline start (`side="end"` written before its inset) → "side=\"end\": the panel at the inline end, the page from the inline start up to it, no empty gutter and nothing underneath", and the icon-collapsed case.
+- 34: the desktop icon collapse carried into the phone Sheet → "an icon-collapsed sidebar opens on a phone as the full sidebar: labels shown, entries full width".
+- 35: a toast's clock running while a modal dialog makes the toaster inert → "a modal dialog open outside the toaster holds its clock" and "a toast raised under a modal outlives its duration while the modal is open".
+- 36: a toast removed by `KxToasterService.dismiss()` from code while it had focus → "dismiss(id) from code on the focused toast moves focus to the toast that stays, never to the page", and the dismiss-all case.
+- 37: the toaster re-checking its modal hold only on `open` changes, so a modal that leaves the document still open (the phone sidebar's Sheet when the viewport widens) keeps every toast paused → "the sheet that left with the breakpoint does not leave the toasts paused".
+
+### What remains after Wave C3, ranked
+
+20 planned. Ranked by what each group unblocks and by the evidence React already holds for it (which Angular
 will owe the moment it implements the component):
 
-1. **The rest of Wave C (below)** — `navigation-menu`, notifications (`sonner`, `notification-center`,
-   `tour`), then `sidebar`. The collection core now has both roving focus (menus) and the active descendant
-   (listboxes); notifications add the toast queue.
-2. **Layout, pointer and scroll** — `scroll-area`, `resizable`, `carousel`, `comparison-slider`. Owes only
+1. **Layout, pointer and scroll** — `scroll-area`, `resizable`, `carousel`, `comparison-slider`. Owes only
    browser axe, so it is cheap, but it brings drag with a keyboard alternative and direction-dependent
    handles, which no implemented Angular component has yet. `table` and `virtual-list` (also `layout`) go
    with the data wave.
-3. **Data and advanced (Wave D)** — composes 1 and 2.
+2. **Data and advanced (Wave D)** — composes 1. Not started.
 
 ### Wave C — overlays and complex interaction
 
@@ -383,12 +477,11 @@ below its breakpoint.
 | Visual | overlay elevation above raised cards (the slice 1 follow-up), focus ring inside overlays |
 | Proof it creates | a settings flow with dialogs and menus in Angular; overlay parity table |
 
-**C1, C2a and C2b are done** (above): the layer, the eight dialog-family members, the three menus and the four
-listbox entries. What follows is `navigation-menu`, notifications and `sidebar`.
+**C1, C2a, C2b and C3 are done** (above): the layer, the eight dialog-family members, the three menus, the four
+listbox entries, and the navigation menu, the three notification entries and the sidebar. Wave C is complete.
 
-**Owed by the remaining 5 (React has it):** interaction 1 (tour) · rtl 2 (navigation-menu, tour) · browser
-axe 5. Before C2b this line read 9 entries: C2b paid select's and multi-select's interaction, rtl, largeText
-and visual-gate debts and the four entries' browser axe.
+**Owed by Wave C (React has it):** nothing. C3 paid the last five entries' debts — the tour's interaction,
+the navigation menu's and the tour's rtl, and the five entries' browser axe.
 
 ### Wave D — data and advanced
 
