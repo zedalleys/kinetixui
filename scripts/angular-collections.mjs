@@ -287,15 +287,35 @@ const listboxOf = (page, field) => page.locator(field).first().getAttribute("ari
  *                   input — never the page; a pointer press on one does the same; with `creatable`, a new text is
  *                   offered and added. The form control is touched on blur
  *
+ * Wave C3 adds the navigation menu, measured here beside the menus because it must NOT be one: it is the
+ * disclosure-navigation pattern (src/lib/navigation-menu.ts), on the same collection core and floating layer.
+ *
+ *   KxNavigationMenu  a `navigation` landmark, named; no menu, menubar or menuitem role anywhere inside; its
+ *                   triggers are plain buttons, `aria-expanded`, with `aria-controls` only while open; its links
+ *                   are links (`<a href>`, the page you are on `aria-current="page"`). Every trigger and top-level
+ *                   link is a Tab stop and a closed panel is never reached by Tab; with a panel open, Tab runs
+ *                   trigger → the panel's links → the next trigger. Arrows move between the top-level stops and
+ *                   stop at the ends (no wrap); Home / End jump; ArrowDown on a closed trigger moves on, and on
+ *                   an open one goes into the panel, where the arrows, Home and End walk its links. Enter and
+ *                   Space toggle a panel with focus kept on the trigger; the panel is named by its trigger and
+ *                   has no role of its own. Escape closes the panel and returns focus to its trigger; opening a
+ *                   second trigger closes the first; Tab out of the navigation closes it; following a link
+ *                   closes it (and the link navigated). Pointer: resting on a trigger opens its panel after the
+ *                   open delay and not before, the next one opens at once while one is open (the skip delay),
+ *                   the pointer can travel onto the panel, and leaving both closes it; a trigger closed by a
+ *                   press does not reopen under a pointer that has not left it; a press outside closes it. The
+ *                   indicator sits under the open trigger and follows it to the next
+ *
  * Compositions: a select and a multi-select inside a dialog — Escape closes the listbox alone (focus stays on
  * its field), the next Escape closes the dialog and focus returns to the button that opened it; the command
  * dialog — focus starts in its search field, Enter runs an item, the dialog closes and focus returns. With every
  * listbox open on the page at once, no id is used twice and every id reference resolves.
  *
  * Then axe, light and dark, with each menu open, with a submenu open, in a menu inside a dialog, on a data
- * row's action menu, and on the three usage examples opened; disabled items carry `aria-disabled` and no
+ * row's action menu, with a navigation panel open (and focus in it), and on the usage examples opened; disabled items carry `aria-disabled` and no
  * native `disabled`; and visible focus: a keyboard-highlighted item draws a focus ring a pointer highlight does
- * not, and under forced colours every highlighted item, menubar trigger and the context region keep an outline.
+ * not, and under forced colours every highlighted item, menubar trigger and the context region keep an outline,
+ * and so does every navigation trigger and link with focus, and the open trigger.
  * ════════════════════════════════════════════════════════════════════════════ */
 const BEHAVIOUR = [
   {
@@ -990,6 +1010,121 @@ const BEHAVIOUR = [
       t((await out(page, "ms-lock")) === "", "…and no option can change the selection", await out(page, "ms-lock"));
     },
   },
+  {
+    component: "KxNavigationMenu",
+    async run(page, t) {
+      const nav = page.locator("#nm");
+      t((await page.getByRole("navigation", { name: "Site" }).count()) === 1, "a navigation landmark, named by its label");
+      t((await nav.locator('[role="menu"], [role="menubar"], [role="menuitem"]').count()) === 0, "no menu, menubar or menuitem role anywhere inside: site navigation, not an application menu");
+      const trig = page.locator("#nm-products");
+      const plain = await trig.evaluate((el) => el.tagName === "BUTTON" && el.type === "button" && !el.hasAttribute("role") && !el.hasAttribute("aria-haspopup"));
+      t(plain && (await trig.getAttribute("aria-expanded")) === "false" && (await trig.getAttribute("aria-controls")) === null, "a trigger is a plain button, collapsed, controlling nothing while closed");
+      const links = await page.locator("#nm a[kxNavigationMenuLink]").evaluateAll((as) => as.map((a) => a.tagName === "A" && a.hasAttribute("href") && !a.hasAttribute("role")));
+      t(links.length === 6 && links.every(Boolean), "every link is a real link with an href and no role of its own", `${links.length} links`);
+      t((await page.locator("#nm-billing").getAttribute("aria-current")) === "page" && (await page.locator("#nm-analytics").getAttribute("aria-current")) === null, "the page you are on is aria-current=page, the others are not");
+
+      // ── Tab: every trigger and top-level link, never a closed panel ──
+      await focus(page, "#nm-before");
+      const tabs = await walk(page, "Tab", 4);
+      t(tabs.join(",") === "nm-products,nm-resources,nm-pricing,nm-after", "Tab walks the triggers and the top-level link; closed panels are skipped", tabs.join(" > "));
+
+      // ── arrows between the top-level stops ──
+      await focus(page, "#nm-products");
+      const right = await walk(page, "ArrowRight", 3);
+      t(right.join(",") === "nm-resources,nm-pricing,nm-pricing", "ArrowRight moves to the next stop and stops at the end (no wrap)", right.join(" > "));
+      await press(page, "Home");
+      t((await active(page)) === "nm-products", "Home jumps to the first stop", await active(page));
+      await press(page, "End");
+      t((await active(page)) === "nm-pricing", "End jumps to the last stop", await active(page));
+      await press(page, "ArrowLeft");
+      await press(page, "ArrowUp");
+      t((await active(page)) === "nm-products", "ArrowLeft and ArrowUp move back", await active(page));
+      await press(page, "ArrowDown");
+      t((await active(page)) === "nm-resources" && (await out(page, "nav")) === "", "ArrowDown on a closed trigger moves on and opens nothing", await active(page));
+
+      // ── open, into the panel, out again ──
+      await focus(page, "#nm-products");
+      await press(page, "Enter");
+      const panel = page.locator("#nm-products-content");
+      t((await showing(page, "#nm-products-content")) && (await out(page, "nav")) === "products" && (await active(page)) === "nm-products", "Enter opens the panel with focus kept on the trigger", await active(page));
+      t((await trig.getAttribute("aria-expanded")) === "true" && (await trig.getAttribute("aria-controls")) === "nm-products-content", "the trigger says it is expanded and controls the panel");
+      t((await panel.getAttribute("aria-labelledby")) === "nm-products" && (await panel.getAttribute("role")) === null, "the panel is named by its trigger and has no role of its own");
+      await press(page, "ArrowDown");
+      t((await active(page)) === "nm-analytics", "ArrowDown on an open trigger goes into the panel, to its first link", await active(page));
+      const inPanel = await walk(page, "ArrowDown", 3);
+      t(inPanel.join(",") === "nm-billing,nm-security,nm-security", "the arrows walk the panel's links and stop at the end", inPanel.join(" > "));
+      await press(page, "Home");
+      t((await active(page)) === "nm-analytics", "Home jumps to the panel's first link", await active(page));
+      await press(page, "Escape");
+      t(!(await showing(page, "#nm-products-content")) && (await out(page, "nav")) === "" && (await active(page)) === "nm-products", "Escape closes the panel and returns focus to its trigger", await active(page));
+      await press(page, " ");
+      t((await out(page, "nav")) === "products", "Space opens it");
+      const through = await walk(page, "Tab", 4);
+      t(through.join(",") === "nm-analytics,nm-billing,nm-security,nm-resources", "with a panel open, Tab runs trigger → its links → the next trigger", through.join(" > "));
+      await focus(page, "#nm-products");
+      await press(page, " ");
+      t((await out(page, "nav")) === "", "Space closes it again");
+
+      // ── one panel at a time; leaving closes ──
+      await press(page, "Enter");
+      await focus(page, "#nm-resources");
+      await press(page, "Enter");
+      t((await out(page, "nav")) === "resources" && (await trig.getAttribute("aria-expanded")) === "false" && !(await showing(page, "#nm-products-content")), "opening a second trigger closes the first");
+      const out1 = await walk(page, "Tab", 4);
+      t(out1.at(-1) === "nm-after" && (await out(page, "nav")) === "", "Tab out of the navigation closes the panel", out1.join(" > "));
+      await focus(page, "#nm-products");
+      await press(page, "Enter");
+      await click(page, "#nm-analytics");
+      t((await out(page, "nav")) === "" && (await out(page, "picked")) === "analytics" && (await page.evaluate(() => location.hash)) === "#analytics", "following a link closes the panel, and the link navigated", await page.evaluate(() => location.hash));
+
+      // ── the pointer ──
+      await page.mouse.move(2, 2);
+      await page.waitForTimeout(400);
+      await idle(page);
+      const res = await rectOf(page, "#nm-resources");
+      await page.mouse.move(res.left + 10, res.top + 10);
+      await page.mouse.move(res.left + 12, res.top + 12);
+      await page.waitForTimeout(100);
+      await idle(page);
+      t((await out(page, "nav")) === "", "resting on a trigger does not open it before the open delay");
+      await page.waitForTimeout(250);
+      await idle(page);
+      t((await out(page, "nav")) === "resources", "…and opens it after the delay");
+      const pro = await rectOf(page, "#nm-products");
+      await page.mouse.move(pro.left + 10, pro.top + 10);
+      await page.mouse.move(pro.left + 12, pro.top + 12);
+      await page.waitForTimeout(40);
+      await idle(page);
+      t((await out(page, "nav")) === "products", "with one open, the next opens at once (the skip delay)");
+      await settled(page);
+      const ind = await rectOf(page, "#nm-indicator");
+      t(Math.abs(centre(ind).x - centre(pro).x) <= 1.5 && ind.top >= pro.bottom - 1, "the indicator sits under the open trigger", `trigger ${centre(pro).x.toFixed(0)}, indicator ${centre(ind).x.toFixed(0)}`);
+      const pr = await rectOf(page, "#nm-products-content");
+      await page.mouse.move(pro.left + 12, pr.top - 2, { steps: 4 });
+      await page.mouse.move(pr.left + 20, pr.top + 20, { steps: 4 });
+      await page.waitForTimeout(300);
+      await idle(page);
+      t((await out(page, "nav")) === "products", "the pointer can travel onto the panel without it closing");
+      await page.mouse.move(pr.right + 200, pr.bottom + 150, { steps: 4 });
+      await page.waitForTimeout(350);
+      await idle(page);
+      t((await out(page, "nav")) === "", "leaving trigger and panel closes it");
+      await page.mouse.click(pro.left + 12, pro.top + 12);
+      await idle(page);
+      t((await out(page, "nav")) === "products", "a press opens it");
+      await page.mouse.click(pro.left + 12, pro.top + 12);
+      await idle(page);
+      await page.mouse.move(pro.left + 16, pro.top + 14);
+      await page.waitForTimeout(400);
+      await idle(page);
+      t((await out(page, "nav")) === "", "closed by a press, it does not reopen under a pointer that has not left");
+      await page.mouse.click(pro.left + 12, pro.top + 12);
+      await idle(page);
+      await page.mouse.click(4, 760);
+      await idle(page);
+      t((await out(page, "nav")) === "", "a press outside closes it");
+    },
+  },
 ];
 
 /** Each menu open the way a reader opens it, for axe and forced colours. */
@@ -1009,6 +1144,8 @@ const OPENED = [
   { name: "dialog → select", fixture: "listboxes", open: async (p) => { await click(p, "#dlg-trigger"); await focus(p, "#dlg-sel-trigger"); await press(p, "Enter"); } },
   { name: "dialog → multi-select", fixture: "listboxes", open: async (p) => { await click(p, "#dlg-trigger"); await focus(p, "#dlg-ms-input"); await press(p, "ArrowDown"); } },
   { name: "command dialog", fixture: "listboxes", open: async (p) => { await click(p, "#pal-open"); } },
+  { name: "navigation menu, panel open", open: async (p) => { await focus(p, "#nm-products"); await press(p, "Enter"); } },
+  { name: "navigation menu, focus in the panel", open: async (p) => { await focus(p, "#nm-resources"); await press(p, "Enter"); await press(p, "ArrowDown"); } },
 ];
 const DEMOS = [
   { demo: "DropdownMenuDemo", open: async (p) => { await focus(p, "[kxDropdownMenuTrigger]"); await press(p, "Enter"); await press(p, "s"); await press(p, "ArrowRight"); } },
@@ -1018,6 +1155,7 @@ const DEMOS = [
   { demo: "CommandDemo", open: async (p) => { await focus(p, "[kxCommandInput]"); await press(p, "ArrowDown"); } },
   { demo: "ComboboxDemo", open: async (p) => { await focus(p, ".combobox-trigger"); await press(p, "Enter"); } },
   { demo: "MultiSelectDemo", open: async (p) => { await focus(p, "#platforms"); await press(p, "ArrowDown"); } },
+  { demo: "NavigationMenuDemo", open: async (p) => { await focus(p, "[kxNavigationMenuTrigger]"); await press(p, "Enter"); await press(p, "ArrowDown"); } },
 ];
 
 if (runs("interaction")) {
@@ -1134,7 +1272,7 @@ if (runs("interaction")) {
       try {
         await c.open(page);
         // a menu or a listbox popup open in the top layer, or (a command) a listbox on the page with a search field driving it
-        const opened = await page.evaluate(() => [...document.querySelectorAll('[role="menu"]:popover-open, [role="listbox"], .kx-command__list')].filter((el) => el.checkVisibility()).length);
+        const opened = await page.evaluate(() => [...document.querySelectorAll('[role="menu"]:popover-open, [role="listbox"], .kx-command__list, .kx-navigation-menu__content:popover-open')].filter((el) => el.checkVisibility()).length);
         const violations = (await axe(page)).flatMap((v) => v.targets.map((target) => `${v.id} ${target}`));
         check(opened > 0 && violations.length === 0, `axe ${theme} ${c.name} (${opened} surface${opened === 1 ? "" : "s"} open)`, opened ? violations.join("; ") : "nothing opened");
       } catch (err) {
@@ -1189,6 +1327,18 @@ if (runs("interaction")) {
       check(bar.length === 0, "forced colours: every menubar trigger keeps a focus outline", bar.join(", "));
       await focus(page, "#ctx-region");
       check(await outlined("#ctx-region"), "forced colours: the context region keeps a focus outline");
+      const navMissing = [];
+      for (const id of ["nm-products", "nm-resources", "nm-pricing"]) {
+        await focus(page, `#${id}`);
+        if (!(await outlined(`#${id}`))) navMissing.push(id);
+      }
+      await press(page, "Escape");
+      await focus(page, "#nm-products");
+      await press(page, "Enter");
+      await press(page, "Tab");
+      if (!(await outlined("#nm-analytics"))) navMissing.push("nm-analytics");
+      if (!(await outlined("#nm-products"))) navMissing.push("nm-products (open)");
+      check(navMissing.length === 0, "forced colours: every navigation trigger and link with focus, and the open trigger, keeps an outline", navMissing.join(", "));
     } catch (err) {
       check(false, "forced colours: ran to completion", String(err.message).split("\n")[0]);
     }
@@ -1290,6 +1440,13 @@ if (runs("interaction")) {
  *   KxMultiSelect   the chips run in reading order from the field's inline start, the input after them; the
  *                   listbox lines up with the field's inline-start edge; the check mark sits at an option's
  *                   inline start
+ *
+ * The navigation menu, in the same four cases:
+ *
+ *   KxNavigationMenu  the triggers run in reading order; the inline-end arrow (ArrowRight in LTR, ArrowLeft in
+ *                   RTL) moves to the next stop and the other arrow back; the chevron sits at each trigger's
+ *                   inline end; the panel lines up with the navigation's inline-start edge; the indicator sits
+ *                   under the open trigger; the panel's text resolves to the region's direction
  * ════════════════════════════════════════════════════════════════════════════ */
 const towardEnd = (dir, a, b) => (dir === "rtl" ? b - a : a - b);
 const RTL = [
@@ -1439,6 +1596,29 @@ const RTL = [
       await press(page, "Escape");
     },
   },
+  {
+    component: "KxNavigationMenu",
+    probe: "#nm-products-content",
+    async run(page, dir, t) {
+      const [next, back] = dir === "rtl" ? ["ArrowLeft", "ArrowRight"] : ["ArrowRight", "ArrowLeft"];
+      const [p, r] = [await rectOf(page, "#nm-products"), await rectOf(page, "#nm-resources")];
+      t(towardEnd(dir, r.left, p.left) > 0, "the triggers run in reading order", `products ${p.left.toFixed(0)}, resources ${r.left.toFixed(0)}`);
+      await focus(page, "#nm-products");
+      await press(page, next);
+      t((await active(page)) === "nm-resources", `${next} (the inline-end arrow) moves to the next stop`, await active(page));
+      await press(page, back);
+      t((await active(page)) === "nm-products", `${back} moves back`, await active(page));
+      const [label, chev] = [await page.locator("#nm-products").evaluate((el) => { const range = document.createRange(); range.selectNodeContents(el.firstChild); return range.getBoundingClientRect().toJSON(); }), await rectOf(page, "#nm-products .kx-navigation-menu__chevron")];
+      t(towardEnd(dir, chev.left, label.left) > 0, "the chevron sits at the trigger's inline end", `label ${label.left.toFixed(0)}, chevron ${chev.left.toFixed(0)}`);
+      await press(page, "Enter");
+      await settled(page);
+      const [navR, panel, trig, ind] = [await rectOf(page, "#nm"), await rectOf(page, "#nm-products-content"), await rectOf(page, "#nm-products"), await rectOf(page, "#nm-indicator")];
+      const aligned = dir === "rtl" ? Math.abs(panel.right - navR.right) <= 1.5 : Math.abs(panel.left - navR.left) <= 1.5;
+      t(aligned, "the panel lines up with the navigation's inline-start edge", `nav ${navR.left.toFixed(0)}–${navR.right.toFixed(0)}, panel ${panel.left.toFixed(0)}–${panel.right.toFixed(0)}`);
+      t(Math.abs(centre(ind).x - centre(trig).x) <= 1.5, "the indicator sits under the open trigger", `trigger ${centre(trig).x.toFixed(0)}, indicator ${centre(ind).x.toFixed(0)}`);
+      await press(page, "Escape");
+    },
+  },
 ];
 const DIRECTION_CASES = [
   { page: "ltr", region: null },
@@ -1494,6 +1674,10 @@ if (runs("rtl")) {
  *   KxCombobox      the recipe's popover with its search field and list
  *   KxMultiSelect   with every enabled option chosen (a long selection): the chips wrap inside the field, every
  *                   remove button is a 24px target, and the field never pushes the page sideways
+ *
+ *   KxNavigationMenu  the triggers wrap rather than overflow at 390px and stay 24px targets; a panel opened from
+ *                   the keyboard stays inside the viewport, cuts nothing off sideways, grows its text and keeps
+ *                   its links 24px targets; Escape closes it and focus returns to its trigger
  * ════════════════════════════════════════════════════════════════════════════ */
 const LARGE = [
   { component: "KxDropdownMenu", trigger: "#dd-trigger", keys: ["Enter"], surface: "#dd-content", sub: { keys: ["s", "ArrowRight"], surface: "#dd-sub-content" } },
@@ -1503,6 +1687,7 @@ const LARGE = [
   { component: "KxCommand", fixture: "listboxes", field: "#cmd-input", keys: [], surface: "#cmd-list", items: ".kx-option", inline: true },
   { component: "KxCombobox", fixture: "listboxes", field: "#cb-trigger", keys: ["Enter"], surface: "#cb-content", items: ".kx-option", focusAfter: "cb-input" },
   { component: "KxMultiSelect", fixture: "listboxes", field: "#ms-input", keys: ["ArrowDown"], surface: "#ms .kx-option-popup", items: ".kx-option", long: true },
+  { component: "KxNavigationMenu", navigation: true, trigger: "#nm-products", surface: "#nm-products-content" },
 ];
 const SCALE = 2;
 const measure = (page, surface) =>
@@ -1525,7 +1710,7 @@ const measure = (page, surface) =>
 if (runs("largeText")) {
   assertClaims("largeText", LARGE);
   report.push(`\nlargeText — ${LARGE.length} menus and listboxes open at ${SCALE}x the root font size, 1024px and 390px`);
-  for (const s of LARGE.filter((x) => !x.fixture)) {
+  for (const s of LARGE.filter((x) => !x.fixture && !x.navigation)) {
     for (const viewport of [{ width: 1024, height: 800 }, { width: 390, height: 844 }]) {
       const context = await browser.newContext({ viewport, reducedMotion: "reduce" });
       const page = await open(context);
@@ -1709,6 +1894,56 @@ if (runs("largeText")) {
       await context.close();
     }
   }
+  for (const s of LARGE.filter((x) => x.navigation)) {
+    for (const viewport of [{ width: 1024, height: 800 }, { width: 390, height: 844 }]) {
+      const context = await browser.newContext({ viewport, reducedMotion: "reduce" });
+      const page = await open(context);
+      const name = `${s.component} @${viewport.width}px`;
+      try {
+        const size = () => page.locator(`${s.surface} a`).first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+        await focus(page, s.trigger);
+        await press(page, "Enter");
+        const before = await size();
+        await press(page, "Escape");
+        await page.evaluate((px) => (document.documentElement.style.fontSize = `${px}px`), 16 * SCALE);
+        await idle(page);
+        const bar = await page.evaluate(() => {
+          const stops = [...document.querySelectorAll("#nm .kx-navigation-menu__trigger, #nm .kx-navigation-menu__link--top")];
+          const vw = document.documentElement.clientWidth;
+          return { out: stops.filter((el) => el.getBoundingClientRect().right > vw + 0.5 || el.getBoundingClientRect().left < -0.5).map((el) => el.id), small: stops.filter((el) => Math.min(el.getBoundingClientRect().width, el.getBoundingClientRect().height) < 24).map((el) => el.id) };
+        });
+        check(bar.out.length === 0 && bar.small.length === 0, `${name}: the triggers stay inside the viewport and are 24px targets`, [...bar.out, ...bar.small].join(", "));
+        await focus(page, s.trigger);
+        await press(page, "Enter");
+        await settled(page);
+        const m = await page.evaluate((surface) => {
+          const el = document.querySelector(surface);
+          const r = el.getBoundingClientRect();
+          const links = [...el.querySelectorAll("a")];
+          return {
+            rect: { left: r.left, right: r.right, top: r.top, bottom: r.bottom },
+            vw: document.documentElement.clientWidth,
+            vh: innerHeight,
+            sideways: el.scrollWidth - el.clientWidth,
+            small: links.filter((a) => Math.min(a.getBoundingClientRect().width, a.getBoundingClientRect().height) < 24).map((a) => a.id),
+            pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          };
+        }, s.surface);
+        const inside = m.rect.left >= 7.5 && m.rect.right <= m.vw - 7.5 && m.rect.top >= 7.5 && m.rect.bottom <= m.vh - 7.5;
+        check(inside, `${name}: the panel stays inside the viewport at ${SCALE}x`, `${m.rect.left.toFixed(0)},${m.rect.top.toFixed(0)}–${m.rect.right.toFixed(0)},${m.rect.bottom.toFixed(0)} in ${m.vw}x${m.vh}`);
+        check(m.sideways <= 1, `${name}: nothing in the panel is cut off sideways`, `${m.sideways}px`);
+        const after = await size();
+        check(after >= before * 1.8, `${name}: the panel's text grows with the reader's`, `${before}px -> ${after}px`);
+        check(m.small.length === 0, `${name}: every link in the panel is at least a 24px target`, m.small.join(", "));
+        check(m.pageOverflow <= 0, `${name}: no horizontal page overflow`, `${m.pageOverflow}px`);
+        await press(page, "Escape");
+        check(!(await showing(page, s.surface)) && (await active(page)) === s.trigger.slice(1), `${name}: still operable — Escape closes it, focus back on its trigger`, await active(page));
+      } catch (err) {
+        check(false, `${name}: ran to completion`, String(err.message).split("\n")[0]);
+      }
+      await context.close();
+    }
+  }
   {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
     const page = await open(context, "listboxes");
@@ -1738,6 +1973,10 @@ if (runs("largeText")) {
  *
  *   KxSelect        opened by pressing its trigger
  *   KxMultiSelect   opened by pressing its field
+ *
+ * And the navigation menu's panel, which floats on the same surface:
+ *
+ *   KxNavigationMenu  opened by pressing its trigger
  * ════════════════════════════════════════════════════════════════════════════ */
 const MOTION = [
   { component: "KxDropdownMenu", control: "#dd-trigger", target: "#dd-content", how: "click" },
@@ -1745,6 +1984,7 @@ const MOTION = [
   { component: "KxMenubar", control: "#mb-file", target: "#mb-file-content", how: "click" },
   { component: "KxSelect", fixture: "listboxes", control: "#sel-trigger", target: "#sel-content", how: "click" },
   { component: "KxMultiSelect", fixture: "listboxes", control: "#ms-input", target: "#ms .kx-option-popup", how: "click" },
+  { component: "KxNavigationMenu", control: "#nm-products", target: "#nm-products-content", how: "click" },
 ];
 function sampleTravel(page, { control, target, how }, travel) {
   return page.evaluate(

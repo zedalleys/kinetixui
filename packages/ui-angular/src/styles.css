@@ -2746,6 +2746,507 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
   .kx-command__input { transition: none; }
 }
 
+/* ── navigation menu ─────────────────────────────────────────────────────── */
+/* navigation-menu.ts. Site navigation, not a menu: triggers and top-level links share one look (the menubar
+   trigger's states, on the page background), and a panel is a floating surface (above) of plain links. The
+   panel is placed by overlay.ts against the whole navigation, at its logical start, so nothing here names a
+   physical side. */
+.kx-navigation-menu { position: relative; display: flex; max-inline-size: max-content; font-family: var(--font-family-sans); }
+.kx-navigation-menu__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.kx-navigation-menu__item { position: static; }
+.kx-navigation-menu__trigger,
+.kx-navigation-menu__link--top {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-block-size: 2.5rem;
+  margin: 0;
+  padding-block: var(--spacing-2);
+  padding-inline: var(--spacing-4);
+  border: 0;
+  border-radius: var(--radius-control);
+  background-color: transparent;
+  color: hsl(var(--foreground));
+  font: var(--text-label-lg);
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--duration-instant) var(--easing-standard), box-shadow var(--duration-instant) var(--easing-standard);
+}
+@media (hover: hover) {
+  .kx-navigation-menu__trigger:hover,
+  .kx-navigation-menu__link--top:hover { background-color: hsl(var(--foreground) / 0.08); }
+}
+.kx-navigation-menu__trigger[data-state='open'] { background-color: hsl(var(--foreground) / 0.08); }
+.kx-navigation-menu__trigger:active,
+.kx-navigation-menu__link--top:active { background-color: hsl(var(--foreground) / 0.12); }
+.kx-navigation-menu__trigger:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.kx-navigation-menu__chevron {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  margin-inline-start: var(--spacing-1);
+  transition: rotate var(--duration-fast) var(--easing-standard);
+}
+.kx-navigation-menu__trigger[data-state='open'] .kx-navigation-menu__chevron { rotate: 180deg; }
+.kx-navigation-menu__content {
+  inline-size: max-content;
+  max-inline-size: min(40rem, var(--kx-available-width, 40rem));
+  padding: var(--spacing-2);
+}
+.kx-navigation-menu__content :is(ul, ol) { margin: 0; padding: 0; list-style: none; }
+.kx-navigation-menu__link:not(.kx-navigation-menu__link--top) {
+  display: block;
+  padding: var(--spacing-3);
+  border-radius: var(--radius-control);
+  color: hsl(var(--popover-foreground));
+  font: var(--text-body-md);
+  text-decoration: none;
+  outline: none;
+  transition: background-color var(--duration-instant) var(--easing-standard), box-shadow var(--duration-instant) var(--easing-standard);
+}
+@media (hover: hover) {
+  .kx-navigation-menu__link:not(.kx-navigation-menu__link--top):hover { background-color: hsl(var(--popover-foreground) / 0.08); }
+}
+.kx-navigation-menu__link:not(.kx-navigation-menu__link--top):active { background-color: hsl(var(--popover-foreground) / 0.12); }
+/* "you are here": weight and an underline, never colour alone */
+.kx-navigation-menu__link[aria-current='page'] { font-weight: var(--font-weight-semibold); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.375em; }
+.kx-navigation-menu__trigger:focus-visible,
+.kx-navigation-menu__link:focus-visible { box-shadow: var(--shadow-focus); }
+/* The arrow under the open trigger: measured into place (navigation-menu.ts), decoration only. */
+.kx-navigation-menu__indicator {
+  position: absolute;
+  inset-block-start: 100%;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  block-size: 0.375rem;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: left var(--duration-fast) var(--easing-standard), width var(--duration-fast) var(--easing-standard), opacity var(--duration-fast) var(--easing-standard);
+}
+.kx-navigation-menu__indicator[data-state='visible'] { opacity: 1; }
+.kx-navigation-menu__arrow {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  margin-block-start: 0.125rem;
+  rotate: 45deg;
+  border-start-start-radius: 2px;
+  background-color: hsl(var(--border));
+  box-shadow: var(--shadow-md);
+}
+
+/* ── sonner: toasts ──────────────────────────────────────────────────────── */
+/* sonner.ts. The toaster is not a top-layer surface (it never takes focus or blocks the page), so it is the one
+   overlay here with a z-index: the overlay layer token. The region itself takes no pointer: only its toasts
+   do, so an empty corner never swallows a click. Positions are logical — `bottom-end` is the bottom right in
+   a left-to-right page and the bottom left in a right-to-left one. */
+.kx-toaster-host { display: contents; }
+/* The region scrolls when its toasts outgrow the viewport (200% text), and a scroll container clips what its
+   children paint outside it — the toasts' shadows. So it reaches `--kx-toaster-bleed` past the toasts on every
+   side, with padding to match: the toasts sit where the insets say, and their shadows are inside the region. */
+.kx-toaster {
+  --kx-toaster-bleed: var(--spacing-3);
+  position: fixed;
+  z-index: var(--z-index-overlay);
+  box-sizing: border-box;
+  inline-size: calc(min(22.25rem, 100vw - 2 * var(--spacing-4)) + 2 * var(--kx-toaster-bleed));
+  max-block-size: calc(100dvh - 2 * var(--spacing-4) + 2 * var(--kx-toaster-bleed));
+  padding: var(--kx-toaster-bleed);
+  overflow: auto;
+  pointer-events: none;
+  font-family: var(--font-family-sans);
+}
+.kx-toaster[data-position^='top'] { inset-block-start: calc(max(var(--spacing-4), env(safe-area-inset-top)) - var(--kx-toaster-bleed)); }
+.kx-toaster[data-position^='bottom'] { inset-block-end: calc(max(var(--spacing-4), env(safe-area-inset-bottom)) - var(--kx-toaster-bleed)); }
+.kx-toaster[data-position$='-start'] { inset-inline-start: calc(var(--spacing-4) - var(--kx-toaster-bleed)); }
+.kx-toaster[data-position$='-end'] { inset-inline-end: calc(var(--spacing-4) - var(--kx-toaster-bleed)); }
+.kx-toaster[data-position$='-center'] { inset-inline: 0; margin-inline: auto; }
+.kx-toaster__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  outline: none;
+}
+/* newest nearest the edge it enters from: at the bottom of a bottom toaster, at the top of a top one */
+.kx-toaster[data-position^='bottom'] .kx-toaster__list { flex-direction: column-reverse; }
+.kx-toaster__list:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+.kx-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  border: var(--border-width-default) solid hsl(var(--border));
+  border-radius: var(--radius-control);
+  /* the floating surface (Overlays): in dark, `background` would be the page's own fill and only the edge
+     would separate the toast from it; `popover` is the surface step every other floating surface takes */
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  box-shadow: var(--shadow-lg);
+  font: var(--text-body-md);
+  overflow-wrap: break-word;
+  pointer-events: auto;
+  opacity: 1;
+  translate: 0 0;
+  transition: opacity var(--duration-fast) var(--easing-enter), translate var(--duration-fast) var(--easing-enter);
+}
+@starting-style {
+  .kx-toaster[data-position^='bottom'] .kx-toast { opacity: 0; translate: 0 0.5rem; }
+  .kx-toaster[data-position^='top'] .kx-toast { opacity: 0; translate: 0 -0.5rem; }
+}
+.kx-toast__icon { display: inline-flex; flex: none; margin-block-start: 0.125rem; }
+.kx-toast__icon svg { inline-size: 1rem; block-size: 1rem; }
+.kx-toast[data-type='success'] .kx-toast__icon { color: hsl(var(--success)); }
+.kx-toast[data-type='info'] .kx-toast__icon { color: hsl(var(--info)); }
+.kx-toast[data-type='warning'] .kx-toast__icon { color: hsl(var(--warning)); }
+.kx-toast[data-type='error'] .kx-toast__icon { color: hsl(var(--destructive)); }
+.kx-toast__content { display: flex; flex: 1; flex-direction: column; gap: var(--spacing-1); min-inline-size: 0; }
+.kx-toast__title { font: var(--text-label-lg); font-weight: var(--font-weight-semibold); }
+.kx-toast__description { color: hsl(var(--muted-foreground)); font: var(--text-body-sm); }
+.kx-toast__actions { display: flex; flex-wrap: wrap; gap: var(--spacing-2); margin-block-start: var(--spacing-2); }
+.kx-toast__actions:empty { display: none; }
+.kx-toast__button {
+  min-block-size: 1.75rem;
+  padding-block: var(--spacing-1);
+  padding-inline: var(--spacing-3);
+  border: 0;
+  border-radius: calc(var(--radius-control) - 2px);
+  font: var(--text-label-md);
+  cursor: pointer;
+  outline: none;
+}
+.kx-toast__button--action { background-color: hsl(var(--action)); color: hsl(var(--action-foreground)); }
+.kx-toast__button--cancel { background-color: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+@media (hover: hover) {
+  .kx-toast__button--action:hover { background-color: hsl(var(--action-hover)); }
+}
+.kx-toast__close {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  margin-block: calc(-1 * var(--spacing-1));
+  margin-inline-end: calc(-1 * var(--spacing-2));
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  outline: none;
+}
+.kx-toast__close svg { inline-size: 0.875rem; block-size: 0.875rem; }
+@media (hover: hover) {
+  .kx-toast__close:hover { background-color: hsl(var(--foreground) / 0.08); color: hsl(var(--foreground)); }
+}
+.kx-toast__button:focus-visible,
+.kx-toast__close:focus-visible { box-shadow: var(--shadow-focus); }
+
+/* ── notification center ─────────────────────────────────────────────────── */
+/* notification-center.ts: popover content (above) holding a heading, "Mark all read" and a list. */
+.kx-notification-center__trigger { position: relative; }
+.kx-notification-center__bell { inline-size: 1.25rem; block-size: 1.25rem; }
+.kx-notification-center__dot {
+  position: absolute;
+  inset-block-start: 0.375rem;
+  inset-inline-end: 0.375rem;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: var(--radius-full);
+  background-color: hsl(var(--destructive));
+  box-shadow: 0 0 0 2px hsl(var(--background));
+}
+.kx-notification-center { inline-size: min(20rem, var(--kx-available-width, 20rem)); padding: 0; }
+.kx-notification-center:popover-open { gap: 0; }
+.kx-notification-center__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+  padding-block: var(--spacing-3);
+  padding-inline: var(--spacing-4);
+  border-block-end: var(--border-width-default) solid hsl(var(--border));
+}
+.kx-notification-center__title { margin: 0; font: var(--text-title-sm); font-weight: var(--font-weight-medium); color: hsl(var(--foreground)); }
+.kx-notification-center__mark {
+  padding: var(--spacing-1);
+  border: 0;
+  border-radius: calc(var(--radius-control) - 2px);
+  background: transparent;
+  color: hsl(var(--link));
+  font: var(--text-label-md);
+  font-weight: var(--font-weight-medium);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  outline: none;
+}
+.kx-notification-center__mark:focus-visible { box-shadow: var(--shadow-focus); }
+.kx-notification-center__list { max-block-size: 20rem; overflow: auto; }
+.kx-notification-center__list > :not(.kx-notification-item) { margin: var(--spacing-4); }
+.kx-notification-item { display: block; }
+.kx-notification-item + .kx-notification-item { border-block-start: var(--border-width-default) solid hsl(var(--border)); }
+.kx-notification-item__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  inline-size: 100%;
+  margin: 0;
+  padding-block: var(--spacing-3);
+  padding-inline: var(--spacing-4);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  outline: none;
+}
+.kx-notification-item__row--pressable { cursor: pointer; transition: background-color var(--duration-instant) var(--easing-standard); }
+@media (hover: hover) {
+  .kx-notification-item__row--pressable:hover { background-color: hsl(var(--foreground) / 0.06); }
+}
+.kx-notification-item__row--pressable:focus-visible { box-shadow: inset 0 0 0 2px hsl(var(--ring)); }
+.kx-notification-item__dot { flex: none; inline-size: 0.5rem; block-size: 0.5rem; margin-block-start: 0.4375rem; border-radius: var(--radius-full); }
+.kx-notification-item[data-unread] .kx-notification-item__dot { background-color: hsl(var(--action)); }
+.kx-notification-item__text { display: flex; flex-direction: column; gap: var(--spacing-1); min-inline-size: 0; overflow-wrap: break-word; }
+.kx-notification-item__title { color: hsl(var(--muted-foreground)); font: var(--text-body-sm); }
+.kx-notification-item[data-unread] .kx-notification-item__title { color: hsl(var(--foreground)); font-weight: var(--font-weight-medium); }
+.kx-notification-item__description { color: hsl(var(--muted-foreground)); font: var(--text-body-sm); }
+.kx-notification-item__time { color: hsl(var(--muted-foreground)); font: var(--text-label-sm); }
+
+/* ── tour ────────────────────────────────────────────────────────────────── */
+/* tour.ts. The modal surface is the whole viewport, transparent: it holds the spotlight and the card, both
+   placed in viewport coordinates. The scrim is the spotlight's own spread shadow — the CSS-only cut-out React
+   uses — so there is no second layer to keep in step; with no target it is a plain full scrim. */
+.kx-tour {
+  position: fixed;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: none;
+  max-block-size: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: hsl(var(--popover-foreground));
+  font-family: var(--font-family-sans);
+  outline: none;
+}
+.kx-tour::backdrop { background: transparent; }
+.kx-tour__spotlight {
+  position: absolute;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 9999px hsl(var(--scrim, 0 0% 0% / 0.4));
+  pointer-events: none;
+  transition:
+    left var(--duration-fast) var(--easing-standard),
+    top var(--duration-fast) var(--easing-standard),
+    width var(--duration-fast) var(--easing-standard),
+    height var(--duration-fast) var(--easing-standard);
+}
+.kx-tour[data-target='missing'] .kx-tour__spotlight { inset: 0; border-radius: 0; box-shadow: none; background-color: hsl(var(--scrim, 0 0% 0% / 0.4)); }
+.kx-tour__card {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  inline-size: min(20rem, 100% - 2 * var(--spacing-2));
+  max-inline-size: var(--kx-available-width, calc(100% - 2 * var(--spacing-2)));
+  max-block-size: var(--kx-available-height, calc(100% - 2 * var(--spacing-2)));
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: var(--spacing-4);
+  border: var(--border-width-default) solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+  background-color: hsl(var(--popover));
+  box-shadow: var(--shadow-lg);
+  overflow-wrap: break-word;
+  transition: left var(--duration-fast) var(--easing-standard), top var(--duration-fast) var(--easing-standard);
+}
+.kx-tour[data-target='missing'] .kx-tour__card {
+  inset: 0;
+  block-size: fit-content;
+  max-inline-size: calc(100% - 2 * var(--spacing-2));
+  max-block-size: calc(100% - 2 * var(--spacing-2));
+  margin: auto;
+}
+.kx-tour:focus-visible .kx-tour__card { box-shadow: var(--shadow-lg), var(--shadow-focus); }
+.kx-tour__title { margin: 0; font: var(--text-title-sm); font-weight: var(--font-weight-medium); color: hsl(var(--foreground)); }
+.kx-tour__content { margin: 0; font: var(--text-body-sm); color: hsl(var(--muted-foreground)); }
+.kx-tour__footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-2); margin-block-start: var(--spacing-2); }
+.kx-tour__counter { font: var(--text-label-sm); color: hsl(var(--muted-foreground)); }
+.kx-tour__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-2); }
+
+/* ── sidebar ─────────────────────────────────────────────────────────────── */
+/* sidebar.ts. Desktop: a gap that the page flows around plus a fixed panel against the logical start or end
+   of its containing block (the viewport, or a frame with a transform). Collapsing slides it out or narrows it
+   to icons. Phone: the same content inside the family's Sheet, so the sheet's own rules apply there. */
+.kx-sidebar-wrapper {
+  --sidebar-width: 16rem;
+  --sidebar-width-icon: 3rem;
+  display: flex;
+  inline-size: 100%;
+  min-block-size: 100%;
+  font-family: var(--font-family-sans);
+}
+.kx-sidebar-wrapper:has(> .kx-sidebar[data-variant='inset']) { background-color: hsl(var(--sidebar)); }
+.kx-sidebar { display: block; flex: none; color: hsl(var(--sidebar-foreground)); }
+.kx-sidebar[data-mobile] { display: contents; }
+.kx-sidebar[data-collapsible='none'] { display: flex; inline-size: var(--sidebar-width); background-color: hsl(var(--sidebar)); }
+.kx-sidebar__gap {
+  inline-size: var(--sidebar-width);
+  block-size: 100%;
+  transition: inline-size var(--duration-fast) var(--easing-standard);
+}
+.kx-sidebar[data-collapsible='offcanvas'] .kx-sidebar__gap { inline-size: 0; }
+.kx-sidebar[data-collapsible='icon'] .kx-sidebar__gap { inline-size: var(--sidebar-width-icon); }
+.kx-sidebar:is([data-variant='floating'], [data-variant='inset'])[data-collapsible='icon'] .kx-sidebar__gap { inline-size: calc(var(--sidebar-width-icon) + var(--spacing-4)); }
+.kx-sidebar__panel {
+  position: fixed;
+  inset-block: 0;
+  z-index: var(--z-index-docked);
+  display: flex;
+  inline-size: var(--sidebar-width);
+  transition:
+    inset-inline-start var(--duration-fast) var(--easing-standard),
+    inset-inline-end var(--duration-fast) var(--easing-standard),
+    inline-size var(--duration-fast) var(--easing-standard),
+    visibility 0s linear;
+}
+.kx-sidebar[data-side='start'] .kx-sidebar__panel { inset-inline-start: 0; }
+.kx-sidebar[data-side='end'] .kx-sidebar__panel { inset-inline-end: 0; }
+.kx-sidebar[data-variant='sidebar'][data-side='start'] .kx-sidebar__panel { border-inline-end: var(--border-width-default) solid hsl(var(--sidebar-border)); }
+.kx-sidebar[data-variant='sidebar'][data-side='end'] .kx-sidebar__panel { border-inline-start: var(--border-width-default) solid hsl(var(--sidebar-border)); }
+.kx-sidebar:is([data-variant='floating'], [data-variant='inset']) .kx-sidebar__panel { padding: var(--spacing-2); }
+/* collapsed off-canvas: out past its edge, and `visibility: hidden` once it has left (the panel is also inert) */
+.kx-sidebar[data-collapsible='offcanvas'][data-side='start'] .kx-sidebar__panel { inset-inline-start: calc(-1 * var(--sidebar-width)); }
+.kx-sidebar[data-collapsible='offcanvas'][data-side='end'] .kx-sidebar__panel { inset-inline-end: calc(-1 * var(--sidebar-width)); }
+.kx-sidebar[data-collapsible='offcanvas'] .kx-sidebar__panel { visibility: hidden; transition-delay: 0s, 0s, 0s, var(--duration-fast); }
+.kx-sidebar[data-collapsible='icon'] .kx-sidebar__panel { inline-size: var(--sidebar-width-icon); }
+.kx-sidebar:is([data-variant='floating'], [data-variant='inset'])[data-collapsible='icon'] .kx-sidebar__panel { inline-size: calc(var(--sidebar-width-icon) + var(--spacing-4) + 2px); }
+.kx-sidebar__inner {
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 0;
+  background-color: hsl(var(--sidebar));
+  color: hsl(var(--sidebar-foreground));
+}
+.kx-sidebar[data-variant='floating'] .kx-sidebar__inner {
+  border: var(--border-width-default) solid hsl(var(--sidebar-border));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.kx-sidebar__sheet.kx-sheet { --kx-sheet-size: min(18rem, 100% - 3rem); padding: 0; background-color: hsl(var(--sidebar)); }
+.kx-sidebar__header,
+.kx-sidebar__footer { display: flex; flex-direction: column; gap: var(--spacing-2); padding: var(--spacing-2); }
+.kx-sidebar__content { display: flex; flex: 1; flex-direction: column; gap: var(--spacing-2); min-block-size: 0; overflow: auto; }
+.kx-sidebar[data-collapsible='icon'] .kx-sidebar__content { overflow: hidden; }
+.kx-sidebar__group { position: relative; display: flex; flex-direction: column; inline-size: 100%; min-inline-size: 0; padding: var(--spacing-2); }
+.kx-sidebar__group-label {
+  display: flex;
+  align-items: center;
+  min-block-size: 2rem;
+  margin: 0;
+  padding-inline: var(--spacing-2);
+  border-radius: calc(var(--radius-control) - 2px);
+  color: hsl(var(--sidebar-foreground) / 0.7);
+  font: var(--text-label-md);
+  font-weight: var(--font-weight-medium);
+  transition: margin var(--duration-fast) var(--easing-standard), opacity var(--duration-fast) var(--easing-standard);
+}
+.kx-sidebar[data-collapsible='icon'] .kx-sidebar__group-label { margin-block-start: -2rem; opacity: 0; }
+.kx-sidebar__group-content { inline-size: 100%; font: var(--text-body-sm); }
+.kx-sidebar__separator-host { display: block; margin-inline: var(--spacing-2); }
+.kx-sidebar__separator-host .kx-separator { background-color: hsl(var(--sidebar-border)); }
+.kx-sidebar__menu { display: flex; flex-direction: column; gap: var(--spacing-1); inline-size: 100%; min-inline-size: 0; margin: 0; padding: 0; list-style: none; }
+.kx-sidebar__menu-item { position: relative; }
+.kx-sidebar__menu-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  inline-size: 100%;
+  min-block-size: 2rem;
+  margin: 0;
+  padding: var(--spacing-2);
+  overflow: hidden;
+  border: 0;
+  border-radius: calc(var(--radius-control) - 2px);
+  background: transparent;
+  color: hsl(var(--sidebar-foreground));
+  font: var(--text-body-sm);
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard),
+    inline-size var(--duration-fast) var(--easing-standard),
+    padding var(--duration-fast) var(--easing-standard);
+}
+.kx-sidebar__menu-button > svg { flex: none; inline-size: 1rem; block-size: 1rem; }
+.kx-sidebar__menu-button > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kx-sidebar__menu-button[data-size='sm'] { min-block-size: 1.75rem; font: var(--text-label-sm); }
+.kx-sidebar__menu-button[data-size='lg'] { min-block-size: 3rem; }
+.kx-sidebar__menu-button[data-variant='outline'] { background-color: hsl(var(--background)); box-shadow: 0 0 0 1px hsl(var(--sidebar-border)); }
+/* the shared state language on the sidebar's own surface: hover an 8% layer of its text colour, pressed 12% */
+@media (hover: hover) {
+  .kx-sidebar__menu-button:hover { background-color: hsl(var(--sidebar-foreground) / 0.08); }
+}
+.kx-sidebar__menu-button:active { background-color: hsl(var(--sidebar-foreground) / 0.12); }
+.kx-sidebar__menu-button[data-active='true'] { background-color: hsl(var(--sidebar-accent)); color: hsl(var(--sidebar-accent-foreground)); font-weight: var(--font-weight-medium); }
+.kx-sidebar__menu-button:disabled,
+.kx-sidebar__menu-button[aria-disabled='true'] { opacity: var(--opacity-disabled); pointer-events: none; }
+.kx-sidebar__menu-button:focus-visible { box-shadow: 0 0 0 2px hsl(var(--sidebar-ring)); }
+.kx-sidebar[data-collapsible='icon'] .kx-sidebar__menu-button { inline-size: 2rem; min-block-size: 2rem; padding: var(--spacing-2); }
+.kx-sidebar__menu-skeleton { display: flex; align-items: center; gap: var(--spacing-2); min-block-size: 2rem; padding-inline: var(--spacing-2); }
+.kx-sidebar__skeleton-icon { inline-size: 1rem; block-size: 1rem; border-radius: var(--radius-sm); background-color: hsl(var(--muted)); }
+.kx-sidebar__skeleton-text { flex: 1; block-size: 1rem; border-radius: var(--radius-sm); background-color: hsl(var(--muted)); }
+.kx-sidebar__input.kx-input { block-size: 2rem; inline-size: 100%; background-color: hsl(var(--background)); box-shadow: none; }
+.kx-sidebar__trigger svg { inline-size: 1rem; block-size: 1rem; }
+.kx-sidebar-inset { position: relative; display: flex; flex: 1; flex-direction: column; min-inline-size: 0; background-color: hsl(var(--background)); }
+.kx-sidebar[data-variant='inset']:not([data-mobile]) ~ .kx-sidebar-inset {
+  margin: var(--spacing-2);
+  margin-inline-start: 0;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+.kx-sidebar[data-variant='inset'][data-collapsible]:not([data-collapsible='']):not([data-mobile]) ~ .kx-sidebar-inset { margin-inline-start: var(--spacing-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .kx-navigation-menu__trigger,
+  .kx-navigation-menu__link,
+  .kx-navigation-menu__chevron,
+  .kx-navigation-menu__indicator,
+  .kx-toast,
+  .kx-notification-item__row--pressable,
+  .kx-tour__spotlight,
+  .kx-tour__card,
+  .kx-sidebar__gap,
+  .kx-sidebar__panel,
+  .kx-sidebar__group-label,
+  .kx-sidebar__menu-button { transition: none; }
+  .kx-sidebar[data-collapsible='offcanvas'] .kx-sidebar__panel { transition-delay: 0s; }
+}
+
 /* ── forced colours ─────────────────────────────────────────────────────── */
 /* Every focus ring above is a box-shadow, and a forced palette (Windows contrast themes, `forced-colors:
    active`) removes box-shadow entirely. With one on, the keyboard had no visible position on any control
@@ -2760,8 +3261,10 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
       .kx-inform [kxInformAction], a.kx-card, button.kx-card, .kx-accordion__trigger, .kx-breadcrumb__link,
       .kx-pagination__link, .kx-toc__link, .kx-tab-bar__item, .kx-navigation-bar__back, .kx-app-bar__toggle,
       .kx-app-bar__link, a.kx-app-bar__brand, .kx-footer__link, .kx-dialog__close, .kx-menubar__trigger,
-      .kx-context-menu__trigger, .kx-select__trigger
+      .kx-context-menu__trigger, .kx-select__trigger, .kx-navigation-menu__trigger, .kx-navigation-menu__link,
+      .kx-toast__button, .kx-toast__close, .kx-toaster__list, .kx-notification-center__mark, .kx-sidebar__menu-button
     ):focus-visible,
+  .kx-tour:focus-visible .kx-tour__card,
   .kx-multi-select__field:has(.kx-multi-select__input:focus-visible),
   :is(.kx-segmented__radio, .kx-toggle-group__radio):focus-visible + label,
   .kx-rating__item:has(.kx-rating__radio:focus-visible),
@@ -2788,4 +3291,13 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
   /* the same for the current option of a listbox, which is drawn rather than focused */
   .kx-option[data-highlighted] { outline: 2px solid Highlight; outline-offset: -2px; }
   .kx-menubar__trigger[data-state='open'] { outline: 2px solid CanvasText; outline-offset: -2px; }
+  .kx-notification-item__row--pressable:focus-visible { outline: 2px solid Highlight; outline-offset: -2px; }
+  /* drawn states that are fills or shadows: the open trigger, the current page, the active entry, the unread dot,
+     and the spotlight's scrim, which is a shadow and would vanish (the dimmed page is a cue, the card is not) */
+  .kx-navigation-menu__trigger[data-state='open'],
+  .kx-navigation-menu__link[aria-current='page'],
+  .kx-sidebar__menu-button[data-active='true'] { outline: 2px solid CanvasText; outline-offset: -2px; }
+  .kx-notification-item[data-unread] .kx-notification-item__dot,
+  .kx-notification-center__dot { forced-color-adjust: none; background-color: Highlight; }
+  .kx-tour__spotlight { outline: 2px solid Highlight; }
 }

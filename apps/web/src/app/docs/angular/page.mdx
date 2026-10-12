@@ -226,7 +226,9 @@ it was built once, with the dialog family (dialog, alert dialog, modal, sheet,
 drawer, popover, tooltip, hover card). The menus (dropdown menu, context menu,
 menubar) are built on it, with one shared collection core for keyboard
 navigation, and the listboxes (select, command, multi-select and the combobox
-recipe) on both; the notifications still to come are built on it too.
+recipe) on both. The notifications (toast, notification center, tour) are built
+on it too, and so are the navigation menu's panels and the sidebar's sheet on a
+phone.
 
 ## What Stable would require
 
@@ -238,8 +240,8 @@ not by itself change the label, and nothing here is graded on a curve:
    gap reclassified as a native equivalent or a composition with a reason.
 2. **Overlays complete**, on one shared architecture with focus trapping,
    scroll locking, dismissal and return-focus behaviour. The architecture,
-   the dialog family, the menus and the listboxes are in place;
-   notifications are not.
+   the dialog family, the menus, the listboxes and the notifications are in
+   place.
 3. **Forms complete** — every control a `ControlValueAccessor`, validation
    states wired to `aria-invalid`, and error messaging tested.
 4. **Documentation complete** — every shipped component reachable from its own

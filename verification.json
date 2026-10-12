@@ -31,14 +31,14 @@
       "published": 98
     },
     "Angular": {
-      "build": 71,
-      "interaction": 71,
-      "accessibility": 71,
-      "rtl": 38,
-      "largeText": 44,
-      "reducedMotion": 17,
+      "build": 76,
+      "interaction": 76,
+      "accessibility": 76,
+      "rtl": 43,
+      "largeText": 49,
+      "reducedMotion": 22,
       "visual": 0,
-      "published": 71
+      "published": 76
     },
     "SwiftUI": {
       "build": 90,
@@ -639,6 +639,8 @@
           "multi-select",
           "native-select",
           "navigation-bar",
+          "navigation-menu",
+          "notification-center",
           "number-input",
           "page-header",
           "pagination",
@@ -652,8 +654,10 @@
           "select",
           "separator",
           "sheet",
+          "sidebar",
           "skeleton",
           "slider",
+          "sonner",
           "spinner",
           "stepper",
           "switch",
@@ -665,7 +669,8 @@
           "timeline",
           "toggle",
           "toggle-group",
-          "tooltip"
+          "tooltip",
+          "tour"
         ]
       },
       {
@@ -684,6 +689,7 @@
           "dropdown-menu",
           "menubar",
           "multi-select",
+          "navigation-menu",
           "select"
         ]
       },
@@ -702,9 +708,13 @@
           "drawer",
           "hover-card",
           "modal",
+          "notification-center",
           "popover",
           "sheet",
-          "tooltip"
+          "sidebar",
+          "sonner",
+          "tooltip",
+          "tour"
         ]
       }
     ],
@@ -1107,20 +1117,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "rtl": [
-          "scripts/angular-overlays.mjs:786-951"
+          "scripts/angular-overlays.mjs:1154-1420"
         ],
         "largeText": [
-          "scripts/angular-overlays.mjs:952-1048"
+          "scripts/angular-overlays.mjs:1421-1580"
         ],
         "reducedMotion": [
-          "scripts/angular-overlays.mjs:1049-1181"
+          "scripts/angular-overlays.mjs:1581-1813"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2106,17 +2116,17 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:215-1266"
+          "scripts/angular-collections.mjs:215-1416"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-collections.mjs:215-1266"
+          "scripts/angular-collections.mjs:215-1416"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:1267-1472"
+          "scripts/angular-collections.mjs:1417-1652"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:1473-1723"
+          "scripts/angular-collections.mjs:1653-1958"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2141,17 +2151,17 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:215-1266"
+          "scripts/angular-collections.mjs:215-1416"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-collections.mjs:215-1266"
+          "scripts/angular-collections.mjs:215-1416"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:1267-1472"
+          "scripts/angular-collections.mjs:1417-1652"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:1473-1723"
+          "scripts/angular-collections.mjs:1653-1958"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2230,20 +2240,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:215-1266"
+          "scripts/angular-collections.mjs:215-1416"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-collections.mjs:215-1266"
+          "scripts/angular-collections.mjs:215-1416"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:1267-1472"
+          "scripts/angular-collections.mjs:1417-1652"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:1473-1723"
+          "scripts/angular-collections.mjs:1653-1958"
         ],
         "reducedMotion": [
-          "scripts/angular-collections.mjs:1724-1842"
+          "scripts/angular-collections.mjs:1959-2082"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2436,20 +2446,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "rtl": [
-          "scripts/angular-overlays.mjs:786-951"
+          "scripts/angular-overlays.mjs:1154-1420"
         ],
         "largeText": [
-          "scripts/angular-overlays.mjs:952-1048"
+          "scripts/angular-overlays.mjs:1421-1580"
         ],
         "reducedMotion": [
-          "scripts/angular-overlays.mjs:1049-1181"
+          "scripts/angular-overlays.mjs:1581-1813"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2561,20 +2571,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "rtl": [
-          "scripts/angular-overlays.mjs:786-951"
+          "scripts/angular-overlays.mjs:1154-1420"
         ],
         "largeText": [
-          "scripts/angular-overlays.mjs:952-1048"
+          "scripts/angular-overlays.mjs:1421-1580"
         ],
         "reducedMotion": [
-          "scripts/angular-overlays.mjs:1049-1181"
+          "scripts/angular-overlays.mjs:1581-1813"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2631,20 +2641,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:215-1266"
+          "scripts/angular-collections.mjs:215-1416"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-collections.mjs:215-1266"
+          "scripts/angular-collections.mjs:215-1416"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:1267-1472"
+          "scripts/angular-collections.mjs:1417-1652"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:1473-1723"
+          "scripts/angular-collections.mjs:1653-1958"
         ],
         "reducedMotion": [
-          "scripts/angular-collections.mjs:1724-1842"
+          "scripts/angular-collections.mjs:1959-2082"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -2954,20 +2964,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "rtl": [
-          "scripts/angular-overlays.mjs:786-951"
+          "scripts/angular-overlays.mjs:1154-1420"
         ],
         "largeText": [
-          "scripts/angular-overlays.mjs:952-1048"
+          "scripts/angular-overlays.mjs:1421-1580"
         ],
         "reducedMotion": [
-          "scripts/angular-overlays.mjs:1049-1181"
+          "scripts/angular-overlays.mjs:1581-1813"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3604,20 +3614,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:215-1266"
+          "scripts/angular-collections.mjs:215-1416"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-collections.mjs:215-1266"
+          "scripts/angular-collections.mjs:215-1416"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:1267-1472"
+          "scripts/angular-collections.mjs:1417-1652"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:1473-1723"
+          "scripts/angular-collections.mjs:1653-1958"
         ],
         "reducedMotion": [
-          "scripts/angular-collections.mjs:1724-1842"
+          "scripts/angular-collections.mjs:1959-2082"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3752,20 +3762,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "rtl": [
-          "scripts/angular-overlays.mjs:786-951"
+          "scripts/angular-overlays.mjs:1154-1420"
         ],
         "largeText": [
-          "scripts/angular-overlays.mjs:952-1048"
+          "scripts/angular-overlays.mjs:1421-1580"
         ],
         "reducedMotion": [
-          "scripts/angular-overlays.mjs:1049-1181"
+          "scripts/angular-overlays.mjs:1581-1813"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3823,20 +3833,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:215-1266"
+          "scripts/angular-collections.mjs:215-1416"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-collections.mjs:215-1266"
+          "scripts/angular-collections.mjs:215-1416"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:1267-1472"
+          "scripts/angular-collections.mjs:1417-1652"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:1473-1723"
+          "scripts/angular-collections.mjs:1653-1958"
         ],
         "reducedMotion": [
-          "scripts/angular-collections.mjs:1724-1842"
+          "scripts/angular-collections.mjs:1959-2082"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3968,6 +3978,30 @@
         "published": [
           "npm: @kinetixui/ui"
         ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-collections.mjs:215-1416"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-collections.mjs:215-1416"
+        ],
+        "rtl": [
+          "scripts/angular-collections.mjs:1417-1652"
+        ],
+        "largeText": [
+          "scripts/angular-collections.mjs:1653-1958"
+        ],
+        "reducedMotion": [
+          "scripts/angular-collections.mjs:1959-2082"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
+        ]
       }
     },
     "notification-center": {
@@ -3981,6 +4015,30 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-overlays.mjs:195-1153"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-overlays.mjs:195-1153"
+        ],
+        "rtl": [
+          "scripts/angular-overlays.mjs:1154-1420"
+        ],
+        "largeText": [
+          "scripts/angular-overlays.mjs:1421-1580"
+        ],
+        "reducedMotion": [
+          "scripts/angular-overlays.mjs:1581-1813"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -4253,20 +4311,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "rtl": [
-          "scripts/angular-overlays.mjs:786-951"
+          "scripts/angular-overlays.mjs:1154-1420"
         ],
         "largeText": [
-          "scripts/angular-overlays.mjs:952-1048"
+          "scripts/angular-overlays.mjs:1421-1580"
         ],
         "reducedMotion": [
-          "scripts/angular-overlays.mjs:1049-1181"
+          "scripts/angular-overlays.mjs:1581-1813"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4667,20 +4725,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-collections.mjs:215-1266"
+          "scripts/angular-collections.mjs:215-1416"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-collections.mjs:215-1266"
+          "scripts/angular-collections.mjs:215-1416"
         ],
         "rtl": [
-          "scripts/angular-collections.mjs:1267-1472"
+          "scripts/angular-collections.mjs:1417-1652"
         ],
         "largeText": [
-          "scripts/angular-collections.mjs:1473-1723"
+          "scripts/angular-collections.mjs:1653-1958"
         ],
         "reducedMotion": [
-          "scripts/angular-collections.mjs:1724-1842"
+          "scripts/angular-collections.mjs:1959-2082"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4786,20 +4844,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "rtl": [
-          "scripts/angular-overlays.mjs:786-951"
+          "scripts/angular-overlays.mjs:1154-1420"
         ],
         "largeText": [
-          "scripts/angular-overlays.mjs:952-1048"
+          "scripts/angular-overlays.mjs:1421-1580"
         ],
         "reducedMotion": [
-          "scripts/angular-overlays.mjs:1049-1181"
+          "scripts/angular-overlays.mjs:1581-1813"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -4838,6 +4896,30 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-overlays.mjs:195-1153"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-overlays.mjs:195-1153"
+        ],
+        "rtl": [
+          "scripts/angular-overlays.mjs:1154-1420"
+        ],
+        "largeText": [
+          "scripts/angular-overlays.mjs:1421-1580"
+        ],
+        "reducedMotion": [
+          "scripts/angular-overlays.mjs:1581-1813"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -5000,6 +5082,30 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-overlays.mjs:195-1153"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-overlays.mjs:195-1153"
+        ],
+        "rtl": [
+          "scripts/angular-overlays.mjs:1154-1420"
+        ],
+        "largeText": [
+          "scripts/angular-overlays.mjs:1421-1580"
+        ],
+        "reducedMotion": [
+          "scripts/angular-overlays.mjs:1581-1813"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       },
       "SwiftUI": {
@@ -5798,20 +5904,20 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "accessibility": [
           "scripts/angular-browser.mjs:182-309",
-          "scripts/angular-overlays.mjs:190-785"
+          "scripts/angular-overlays.mjs:195-1153"
         ],
         "rtl": [
-          "scripts/angular-overlays.mjs:786-951"
+          "scripts/angular-overlays.mjs:1154-1420"
         ],
         "largeText": [
-          "scripts/angular-overlays.mjs:952-1048"
+          "scripts/angular-overlays.mjs:1421-1580"
         ],
         "reducedMotion": [
-          "scripts/angular-overlays.mjs:1049-1181"
+          "scripts/angular-overlays.mjs:1581-1813"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -5850,6 +5956,30 @@
         ],
         "published": [
           "npm: @kinetixui/ui"
+        ]
+      },
+      "Angular": {
+        "build": [
+          "packages/ui-angular (compiled by CI)"
+        ],
+        "interaction": [
+          "scripts/angular-overlays.mjs:195-1153"
+        ],
+        "accessibility": [
+          "scripts/angular-browser.mjs:182-309",
+          "scripts/angular-overlays.mjs:195-1153"
+        ],
+        "rtl": [
+          "scripts/angular-overlays.mjs:1154-1420"
+        ],
+        "largeText": [
+          "scripts/angular-overlays.mjs:1421-1580"
+        ],
+        "reducedMotion": [
+          "scripts/angular-overlays.mjs:1581-1813"
+        ],
+        "published": [
+          "npm: @kinetixui/angular"
         ]
       }
     },

@@ -109,7 +109,7 @@
   },
   "coverage": {
     "React": 98,
-    "Angular": 71,
+    "Angular": 76,
     "SwiftUI": 90,
     "Compose": 90,
     "Flutter": 90
@@ -508,10 +508,12 @@
       "Flutter"
     ],
     "navigation-menu": [
-      "React"
+      "React",
+      "Angular"
     ],
     "notification-center": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -621,6 +623,7 @@
     ],
     "sidebar": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -641,6 +644,7 @@
     ],
     "sonner": [
       "React",
+      "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
@@ -736,7 +740,8 @@
       "Flutter"
     ],
     "tour": [
-      "React"
+      "React",
+      "Angular"
     ],
     "tree-view": [
       "React",
@@ -944,10 +949,6 @@
       }
     },
     "navigation-menu": {
-      "Angular": {
-        "type": "planned",
-        "wave": "navigation"
-      },
       "SwiftUI": {
         "type": "composition",
         "reason": "NavigationMenu is a hover-triggered desktop mega-menu with no touch idiom — compose KinetixTabBar or a KinetixDropdownMenu for the same navigation."
@@ -959,12 +960,6 @@
       "Flutter": {
         "type": "composition",
         "reason": "NavigationMenu is a hover-triggered desktop mega-menu with no touch idiom — compose KinetixTabBar or a KinetixDropdownMenu for the same navigation."
-      }
-    },
-    "notification-center": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
       }
     },
     "resizable": {
@@ -979,18 +974,6 @@
         "wave": "layout"
       }
     },
-    "sidebar": {
-      "Angular": {
-        "type": "planned",
-        "wave": "layout"
-      }
-    },
-    "sonner": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
-      }
-    },
     "table": {
       "Angular": {
         "type": "planned",
@@ -998,10 +981,6 @@
       }
     },
     "tour": {
-      "Angular": {
-        "type": "planned",
-        "wave": "overlays"
-      },
       "SwiftUI": {
         "type": "composition",
         "reason": "Tour targets an arbitrary rendered element by CSS selector; no native platform has a live-tree query like it — compose KinetixPopover anchored to the view you already hold."
@@ -1446,10 +1425,12 @@
       "Flutter": "experimental"
     },
     "navigation-menu": {
-      "React": "beta"
+      "React": "beta",
+      "Angular": "preview"
     },
     "notification-center": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1559,6 +1540,7 @@
     },
     "sidebar": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1579,6 +1561,7 @@
     },
     "sonner": {
       "React": "beta",
+      "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
@@ -1674,7 +1657,8 @@
       "Flutter": "experimental"
     },
     "tour": {
-      "React": "beta"
+      "React": "beta",
+      "Angular": "preview"
     },
     "tree-view": {
       "React": "beta",
@@ -1694,7 +1678,7 @@
       "beta": 98
     },
     "Angular": {
-      "preview": 71
+      "preview": 76
     },
     "SwiftUI": {
       "experimental": 90
@@ -3106,6 +3090,15 @@
         "build",
         "published",
         "rtl"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
       ]
     },
     "notification-center": {
@@ -3113,6 +3106,15 @@
         "accessibility",
         "build",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3506,6 +3508,15 @@
         "build",
         "published"
       ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
+      ],
       "SwiftUI": [
         "build"
       ],
@@ -3579,6 +3590,15 @@
         "accessibility",
         "build",
         "published"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -3954,6 +3974,15 @@
         "interaction",
         "published",
         "rtl"
+      ],
+      "Angular": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "reducedMotion",
+        "rtl"
       ]
     },
     "tree-view": {
@@ -4002,14 +4031,14 @@
       "published": 98
     },
     "Angular": {
-      "build": 71,
-      "interaction": 71,
-      "accessibility": 71,
-      "rtl": 38,
-      "largeText": 44,
-      "reducedMotion": 17,
+      "build": 76,
+      "interaction": 76,
+      "accessibility": 76,
+      "rtl": 43,
+      "largeText": 49,
+      "reducedMotion": 22,
       "visual": 0,
-      "published": 71
+      "published": 76
     },
     "SwiftUI": {
       "build": 90,
