@@ -367,27 +367,43 @@ function write(where: Where, key: string, a: Attribution): boolean {
   }
 }
 
+/** The mark for this page load when `sessionStorage` is blocked; a full reload forgets it. */
+let memoryMark = false;
+
 /**
  * `?kx_traffic=diagnostic` marks this tab, `?kx_traffic=clear` unmarks it, anything else leaves the stored mark
- * as it is. Returns whether the tab is marked. Blocked storage keeps the mark for this page only.
+ * as it is. Returns whether the tab is marked. Blocked storage keeps the mark in memory for this page load, so it
+ * survives client-side navigation.
  */
 function diagnosticMark(search: string): boolean {
   const requested = new URLSearchParams(search).get("kx_traffic");
+  if (requested === DIAGNOSTIC_TRAFFIC_TYPE) memoryMark = true;
+  else if (requested === "clear") memoryMark = false;
   try {
     const s = store("session");
     if (requested === DIAGNOSTIC_TRAFFIC_TYPE) s?.setItem(TRAFFIC_KEY, DIAGNOSTIC_TRAFFIC_TYPE);
     else if (requested === "clear") s?.removeItem(TRAFFIC_KEY);
     if (s) return s.getItem(TRAFFIC_KEY) === DIAGNOSTIC_TRAFFIC_TYPE;
   } catch {
-    // fall through: storage is unavailable, so only this page's URL can mark it
+    // fall through: storage is unavailable, so the in-memory mark is all there is
   }
-  return requested === DIAGNOSTIC_TRAFFIC_TYPE;
+  return memoryMark;
+}
+
+/**
+ * Whether this tab is marked as diagnostic, applying `?kx_traffic=` from the current URL first. For a second
+ * analytics tool (analytics-vercel.ts) that cannot carry a property and therefore drops marked traffic instead. It
+ * goes through the same writer as PostHog, so the mark holds even when PostHog is off (no config) and never ran
+ * `initAttribution`.
+ */
+export function isDiagnosticTab(search: string = typeof window === "undefined" ? "" : window.location.search): boolean {
+  return diagnosticMark(search);
 }
 
 /* ------------------------------------------------------------------ lifecycle */
 
 /** Mirrors PostHog's own `respect_dnt`: with Do Not Track on, nothing is persisted either. */
-function doNotTrack(): boolean {
+export function doNotTrack(): boolean {
   try {
     const w = window as unknown as { doNotTrack?: unknown };
     const n = navigator as unknown as { doNotTrack?: unknown; msDoNotTrack?: unknown };
@@ -450,4 +466,5 @@ export function getAttributionContext(): Readonly<Record<string, string>> {
 /** Test-only. */
 export function resetAttributionForTests() {
   context = Object.freeze({});
+  memoryMark = false;
 }
