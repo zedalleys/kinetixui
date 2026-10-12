@@ -5,6 +5,7 @@
  */
 import type { Metadata } from "next";
 import { PLATFORMS, PLATFORM_DEFINITIONS, platformsFor, type Platform } from "./platform-parity";
+import { COMPONENT_EDITORIAL } from "./component-editorial";
 import { list } from "./platform-prose";
 import { allDocsLinks, componentDocs, mainNav, siteConfig } from "./site";
 
@@ -142,11 +143,20 @@ export function componentDescription(slug: string, summary: string): string {
   return `KinetixUI ${componentName(slug)}: ${lead}${/[.!?]$/.test(lead) ? "" : "."} Implemented for ${parts.join("; ")}.`;
 }
 
-export function componentMetadata(slug: string, summary: string): Metadata {
+/**
+ * A component page's metadata. Pages with editorial copy (`COMPONENT_EDITORIAL`) omit `summary` and get their
+ * entry's summary, which is also the lead paragraph `<ComponentIntro>` renders, so snippet and page agree. Passing
+ * a summary for a page that has an entry is refused: the two would drift.
+ */
+export function componentMetadata(slug: string, summary?: string): Metadata {
+  const editorial = COMPONENT_EDITORIAL[slug]?.summary;
+  if (editorial && summary) throw new Error(`componentMetadata("${slug}"): has editorial copy; drop the summary argument`);
+  const lead = editorial ?? summary;
+  if (!lead) throw new Error(`componentMetadata("${slug}"): no summary and no COMPONENT_EDITORIAL entry`);
   return pageMetadata({
     path: `/docs/components/${slug}`,
     title: componentTitle(slug),
-    description: componentDescription(slug, summary),
+    description: componentDescription(slug, lead),
   });
 }
 

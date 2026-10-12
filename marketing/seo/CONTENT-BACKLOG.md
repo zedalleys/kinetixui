@@ -19,11 +19,48 @@ Phase 1 shipped related components, the platform "at a glance" blocks and the fo
 | Item | Where | Notes |
 | --- | --- | --- |
 | **Docs readability at 1280px with 200% text** (baseline F-20) | docs layout (sidebar + article + table of contents) | The article column narrows to about 128px. Left out of Phase 1 by instruction; a layout fix (collapse the TOC or the sidebar earlier when text is enlarged), verified with `check:a11y-site` at 200% text. |
-| Remaining component editorial work | the 98 component MDX pages | Phase 1 cleaned 10 summaries and generated every title and description. Still hand work: a sharper lead paragraph where the summary is generic ("A window overlaid on …"), and a "when to use it instead of …" line for the explicit related-component families. One family at a time, no claims beyond evidence. |
+| Remaining component editorial work | the 98 component MDX pages | **Partly implemented in Phase 2A** (below): 20 pages. The rest are listed there as deferred. |
 | Component-page accessibility summary | the component template | A one-line, per-component keyboard model from evidence (`verification.json` interaction/accessibility sources), never "WCAG compliant". Needs a data field per component first. |
-| Blocks → component pages | `/blocks` | `block-components.ts` already lists each block's React components; link them to their component pages. |
+| Blocks → component pages | `/blocks` | **Implemented in Phase 2A**: every block lists the component pages its React version is built from. |
 | Search Console and Bing setup | owner | DNS verification and sitemap submission, per [`MEASUREMENT.md`](./MEASUREMENT.md) §5. |
 | First-load font reflow on docs pages | root layout fonts | Intermittent CLS of 0.05–0.10 on a cold load, on `main` as well (baseline §9). |
+
+---
+
+## Phase 2A — editorial depth on existing pages
+
+**Implemented** (PR "feat(web): deepen component and platform SEO content"):
+
+| Surface | What changed | Source of truth |
+| --- | --- | --- |
+| 20 component pages | A specific lead ("what it is", also the search description), "When to use it", "When to choose something else" with links to the siblings, and accessibility notes only where a named test asserts the behaviour | `apps/web/src/lib/component-editorial.ts` |
+| Dialog, Alert Dialog, Modal, Sheet, Drawer | the overlay family, compared with each other | same |
+| Select, Native Select, Combobox, Multi-Select, Command, Dropdown Menu | selection vs actions | same |
+| Table, Data Table, Data Grid | static vs sortable vs editable/virtualised | same |
+| Tabs, Segmented Control; Tooltip, Popover, Hover Card; Form | panels vs values; label vs interactive vs preview; RHF vs Field | same |
+| Calendar, Date Picker summaries | corrected: Calendar is an inline grid (single or range), Date Picker's trigger is a button (single date) | their page.mdx |
+| Form summary | corrected: Form wires React Hook Form; it does not use Zod itself | `component-editorial.ts` |
+| Angular, SwiftUI, Compose, Flutter | "What differs from the React library" and "A first adoption path", each written from that page's own facts | the platform page.mdx |
+| Installation | React at a glance (the derived summary block), so React has the same summary as the other four | `PlatformAtAGlance` |
+| Tokens | why tokens are generated and components are hand-written | tokens/page.mdx |
+| Accessibility | what "verified" means: computed checks, jsdom tests, browser passes, and what none of them proves | accessibility/page.mdx |
+| RTL | overlays and placement (provider, Sheet's physical side, Angular's top layer); what is checked | rtl/page.mdx |
+| Blocks | links to the component pages each block is built from | `BlockComponentLinks` |
+
+**Gate:** `pnpm check:editorial` (CI, after `check:seo`) and `node scripts/editorial-negative-controls.mjs`.
+
+**React platform page: not added.** `/docs/installation` already is the React adoption page (`@kinetixui/ui`, the
+Tailwind preset, the CLI ownership model, tokens), and coverage and verification live on `/docs/platforms` and
+`/docs/accessibility`. A `/docs/react` would duplicate Installation and compete with it for "install KinetixUI".
+Installation now carries React's at-a-glance block instead. Revisit only if Search Console shows React-qualified
+impressions landing on the wrong page (baseline F-13).
+
+**Deferred component pages** (evaluated, not edited in 2A), in priority order: Button, Input (broad demand, but the
+current pages are already specific); Calendar and Date Picker guidance beyond the summary fix; Sonner vs
+Notification Center (Notification Center is beta with an unresolved product boundary, so guidance would describe a
+moving target); Sidebar; File Upload; Context Menu, Menubar and Navigation Menu as a menu family; Field. One "Choosing
+an overlay" guide page was considered and not built: the in-page comparisons cover the family without a thin
+extra page.
 
 ---
 
