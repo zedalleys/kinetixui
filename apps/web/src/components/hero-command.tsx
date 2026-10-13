@@ -97,8 +97,9 @@ export function HeroCommand() {
           />
         </span>
       </div>
-      <pre className="overflow-x-auto p-4 text-code leading-relaxed">
-        <code>
+      <pre className="overflow-x-auto whitespace-pre-wrap p-4 text-code leading-relaxed">
+        {/* globals.css puts `pre *` back to overflow-wrap: normal, so the wrap is set on the code and every span in it */}
+        <code className="[overflow-wrap:anywhere] [&_*]:[overflow-wrap:anywhere]">
           <span className="text-muted-foreground">{PREFIX}</span>
           <span className="text-foreground">{typed}</span>
           <span aria-hidden className="kx-caret" {...(paused ? { "data-paused": "" } : {})} />
