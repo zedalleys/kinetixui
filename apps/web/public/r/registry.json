@@ -812,6 +812,13 @@
       ]
     },
     {
+      "name": "pass-card",
+      "type": "registry:ui",
+      "title": "Pass Card",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": []
+    },
+    {
       "name": "password-input",
       "type": "registry:ui",
       "title": "Password Input",
@@ -836,6 +843,13 @@
         "Compose",
         "Flutter"
       ]
+    },
+    {
+      "name": "price-breakdown",
+      "type": "registry:ui",
+      "title": "Price Breakdown",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": []
     },
     {
       "name": "progress",
@@ -890,6 +904,13 @@
       ]
     },
     {
+      "name": "reference-code",
+      "type": "registry:ui",
+      "title": "Reference Code",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": []
+    },
+    {
       "name": "resizable",
       "type": "registry:ui",
       "title": "Resizable",
@@ -901,6 +922,13 @@
         "Compose",
         "Flutter"
       ]
+    },
+    {
+      "name": "result-state",
+      "type": "registry:ui",
+      "title": "Result State",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": []
     },
     {
       "name": "scroll-area",

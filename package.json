@@ -36,6 +36,8 @@
     "check:verification": "node scripts/gen-verification.mjs --check",
     "gen:manifest": "node scripts/gen-manifest.mjs",
     "check:manifest": "node scripts/gen-manifest.mjs --check",
+    "gen:capabilities": "node scripts/gen-business-roadmap.mjs",
+    "check:capabilities": "node scripts/gen-business-roadmap.mjs --check",
     "gen:flagship": "node scripts/gen-flagship-examples.mjs",
     "check:flagship-examples": "node scripts/gen-flagship-examples.mjs --check",
     "check:a11y-browser": "node scripts/a11y-browser.mjs",

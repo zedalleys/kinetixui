@@ -2411,4 +2411,227 @@ KinetixVirtualList<Row>(
   itemBuilder: (context, row, index) => Text(row.label),
 )`,
   },
+
+  // ── Transactional foundations (business capability roadmap, Phase 1) ─────────────────────────────
+  // React-first. These tabs are compositions of primitives each native package already ships, labelled as
+  // guidance rather than a port — see platformGuidance in components.manifest.json.
+
+  "result-state-demo": {
+    swift: `// No native ResultState yet — KinetixEmpty carries the same anatomy.
+// State the outcome in the title; the glyph gets a label so the status is
+// never carried by the icon alone.
+KinetixEmpty {
+  KinetixEmptyHeader {
+    KinetixEmptyMedia(variant: .icon) {
+      Image(systemName: "checkmark.circle").accessibilityLabel("Success")
+    }
+    KinetixEmptyTitle("Payment received")
+    KinetixEmptyDescription("We've emailed a receipt to sam@example.com.")
+  }
+  KinetixEmptyContent {
+    KinetixButton(action: viewReceipt) { Text("View receipt") }
+    KinetixButton(variant: .outline, action: goBack) { Text("Back to dashboard") }
+  }
+}`,
+    kotlin: `// No native ResultState yet — KinetixEmpty carries the same anatomy.
+// State the outcome in the title; the icon gets a contentDescription so the
+// status is never carried by the icon alone.
+KinetixEmpty {
+  KinetixEmptyHeader {
+    KinetixEmptyMedia(variant = KinetixEmptyMediaVariant.Icon) {
+      Icon(Icons.Default.CheckCircle, contentDescription = "Success")
+    }
+    KinetixEmptyTitle("Payment received")
+    KinetixEmptyDescription("We've emailed a receipt to sam@example.com.")
+  }
+  KinetixEmptyContent {
+    KinetixButton(::viewReceipt) { Text("View receipt") }
+    KinetixButton(::goBack, variant = KinetixButtonVariant.Outline) { Text("Back to dashboard") }
+  }
+}`,
+    dart: `// No native ResultState yet — KinetixEmpty carries the same anatomy.
+// State the outcome in the title; the icon gets a semanticLabel so the
+// status is never carried by the icon alone.
+KinetixEmpty(
+  children: [
+    KinetixEmptyHeader(
+      children: [
+        const KinetixEmptyMedia(
+          variant: KinetixEmptyMediaVariant.icon,
+          child: Icon(Icons.check_circle_outline, semanticLabel: 'Success'),
+        ),
+        const KinetixEmptyTitle('Payment received'),
+        const KinetixEmptyDescription("We've emailed a receipt to sam@example.com."),
+      ],
+    ),
+    KinetixEmptyContent(
+      children: [
+        KinetixButton(onPressed: viewReceipt, child: const Text('View receipt')),
+        KinetixButton(
+          onPressed: goBack,
+          variant: KinetixButtonVariant.outline,
+          child: const Text('Back to dashboard'),
+        ),
+      ],
+    ),
+  ],
+)`,
+  },
+
+  "reference-code-demo": {
+    swift: `// No native ReferenceCode yet. Selectable text, a copy button, and an
+// announcement so VoiceOver users hear that the copy worked.
+VStack(alignment: .leading, spacing: 4) {
+  Text("Booking reference").font(.caption).foregroundStyle(.secondary)
+  HStack {
+    Text("K7Q2XP").font(.title2.monospaced()).textSelection(.enabled)
+    KinetixButton(variant: .outline, size: .sm, action: {
+      UIPasteboard.general.string = "K7Q2XP"
+      UIAccessibility.post(notification: .announcement, argument: "Copied")
+    }) { Text("Copy") }
+    .accessibilityLabel("Copy booking reference")
+  }
+}`,
+    kotlin: `// No native ReferenceCode yet. A SelectionContainer makes the code
+// selectable; Android 13+ confirms the copy itself, older versions need a
+// snackbar or announcement.
+val clipboard = LocalClipboardManager.current
+Column {
+  Text("Booking reference", style = MaterialTheme.typography.labelMedium)
+  Row(verticalAlignment = Alignment.CenterVertically) {
+    SelectionContainer { Text("K7Q2XP", fontFamily = FontFamily.Monospace) }
+    KinetixButton(
+      onClick = { clipboard.setText(AnnotatedString("K7Q2XP")) },
+      variant = KinetixButtonVariant.Outline,
+      size = KinetixButtonSize.Sm,
+      modifier = Modifier.semantics { contentDescription = "Copy booking reference" },
+    ) { Text("Copy") }
+  }
+}`,
+    dart: `// No native ReferenceCode yet. SelectableText plus a copy button that
+// announces the result.
+Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    const Text('Booking reference'),
+    Row(
+      children: [
+        const SelectableText('K7Q2XP', style: TextStyle(fontFamily: 'monospace')),
+        Semantics(
+          label: 'Copy booking reference',
+          child: KinetixButton(
+            onPressed: () async {
+              await Clipboard.setData(const ClipboardData(text: 'K7Q2XP'));
+              SemanticsService.announce('Copied', Directionality.of(context));
+            },
+            variant: KinetixButtonVariant.outline,
+            size: KinetixButtonSize.sm,
+            child: const Text('Copy'),
+          ),
+        ),
+      ],
+    ),
+  ],
+)`,
+  },
+
+  "price-breakdown-demo": {
+    swift: `// No native PriceBreakdown yet — KinetixDescriptionList is already a
+// term/amount list. Pass amounts formatted, sign included.
+KinetixDescriptionList {
+  KinetixDescriptionListItem(term: "Subtotal") { Text("€120.00").monospacedDigit() }
+  KinetixDescriptionListItem(term: "Discount") { Text("−€12.00").monospacedDigit() }
+  KinetixDescriptionListItem(term: "Tax") { Text("€23.69").monospacedDigit() }
+}
+KinetixSeparator()
+KinetixDescriptionListItem(term: "Total") { Text("€132.14").monospacedDigit().bold() }`,
+    kotlin: `// No native PriceBreakdown yet — KinetixDescriptionList is already a
+// term/amount list. Pass amounts formatted, sign included.
+KinetixDescriptionList {
+  KinetixDescriptionListItem(term = "Subtotal") { Text("€120.00", fontFeatureSettings = "tnum") }
+  KinetixDescriptionListItem(term = "Discount") { Text("−€12.00", fontFeatureSettings = "tnum") }
+  KinetixDescriptionListItem(term = "Tax") { Text("€23.69", fontFeatureSettings = "tnum") }
+}
+KinetixSeparator()
+KinetixDescriptionListItem(term = "Total") { Text("€132.14", fontWeight = FontWeight.SemiBold) }`,
+    dart: `// No native PriceBreakdown yet — KinetixDescriptionList is already a
+// term/amount list. Pass amounts formatted, sign included.
+const tabular = TextStyle(fontFeatures: [FontFeature.tabularFigures()]);
+Column(
+  children: [
+    KinetixDescriptionList(
+      children: [
+        KinetixDescriptionListItem(term: 'Subtotal', child: const Text('€120.00', style: tabular)),
+        KinetixDescriptionListItem(term: 'Discount', child: const Text('−€12.00', style: tabular)),
+        KinetixDescriptionListItem(term: 'Tax', child: const Text('€23.69', style: tabular)),
+      ],
+    ),
+    const KinetixSeparator(),
+    KinetixDescriptionListItem(term: 'Total', child: const Text('€132.14', style: tabular)),
+  ],
+)`,
+  },
+
+  "pass-card-demo": {
+    swift: `// No native PassCard yet. KinetixCard + a description list of the pass
+// fields + the code image your app or the issuer generated. (Apple Wallet
+// passes are a separate PassKit concern.)
+KinetixCard {
+  KinetixCardHeader {
+    KinetixCardTitle("Boarding pass")
+    KinetixCardDescription("Lisbon (LIS) to Amsterdam (AMS)")
+  }
+  KinetixCardContent {
+    KinetixDescriptionList {
+      KinetixDescriptionListItem(term: "Gate") { Text("B12") }
+      KinetixDescriptionListItem(term: "Seat") { Text("14C") }
+    }
+    Image(uiImage: qrCode).accessibilityLabel("Boarding pass QR code")
+    Text("K7Q2XP").font(.caption.monospaced())
+  }
+}`,
+    kotlin: `// No native PassCard yet. KinetixCard + a description list of the pass
+// fields + the code image your app or the issuer generated.
+KinetixCard {
+  KinetixCardHeader {
+    KinetixCardTitle("Boarding pass")
+    KinetixCardDescription("Lisbon (LIS) to Amsterdam (AMS)")
+  }
+  KinetixCardContent {
+    KinetixDescriptionList {
+      KinetixDescriptionListItem(term = "Gate") { Text("B12") }
+      KinetixDescriptionListItem(term = "Seat") { Text("14C") }
+    }
+    Image(qrCode, contentDescription = "Boarding pass QR code")
+    Text("K7Q2XP", fontFamily = FontFamily.Monospace)
+  }
+}`,
+    dart: `// No native PassCard yet. KinetixCard + a description list of the pass
+// fields + the code image your app or the issuer generated.
+KinetixCard(
+  child: Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      const KinetixCardHeader(children: [
+        KinetixCardTitle('Boarding pass'),
+        KinetixCardDescription('Lisbon (LIS) to Amsterdam (AMS)'),
+      ]),
+      KinetixCardContent(
+        child: Column(
+          children: [
+            KinetixDescriptionList(
+              children: [
+                KinetixDescriptionListItem(term: 'Gate', child: const Text('B12')),
+                KinetixDescriptionListItem(term: 'Seat', child: const Text('14C')),
+              ],
+            ),
+            Image.memory(qrCodePng, semanticLabel: 'Boarding pass QR code'),
+            const Text('K7Q2XP', style: TextStyle(fontFamily: 'monospace')),
+          ],
+        ),
+      ),
+    ],
+  ),
+)`,
+  },
 };

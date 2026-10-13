@@ -109,6 +109,10 @@ const BUILT = {
   "color-picker": ["ColorPicker", "A saturation/value square, hue and alpha sliders, a hex field, swatches, and an optional eyedropper."],
   "kanban-board": ["KanbanBoard", "Draggable cards across columns with keyboard DnD, built on @dnd-kit's multiple-containers sortable pattern."],
   "markdown-editor": ["MarkdownEditor", "A formatting toolbar over a plain textarea (not contenteditable) with an optional rendered preview pane."],
+  "result-state": ["ResultState", "The outcome of something the reader just did — success, error, warning, pending, info or partial — with a title, a reference, details and the next action."],
+  "reference-code": ["ReferenceCode", "A code the reader will need again — a booking reference, order number or transaction ID — that is easy to select and copy, and says whether the copy worked."],
+  "price-breakdown": ["PriceBreakdown, PriceBreakdownLine, PriceBreakdownTotal", "How an amount is made up — subtotal, taxes, fees, discounts, shipping, credits and the total — as a description list that mirrors under RTL and wraps at large text sizes."],
+  "pass-card": ["PassCard, PassCardHeader, PassCardTitle, PassCardDescription, PassCardFields, PassCardField, PassCardDivider, PassCardCode, PassCardFooter", "The foundation for anything a person carries and presents — a boarding pass, a ticket, a parking permit, a voucher, a membership card — with fields, a tear line and a supplied scannable code."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
