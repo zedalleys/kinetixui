@@ -261,6 +261,14 @@ describe("systems in motion: reduced motion and transparency", () => {
     expect(reduced).toMatch(/\.kx-trace-pulse[^{]*\{[^}]*display:\s*none/);
   });
 
+  it("tours the platforms only with a remembered pause control, and never under reduced motion (WCAG 2.2.2)", () => {
+    const src = read("components/systems/hero-system-map.tsx");
+    expect(src).toMatch(/usePersistedPause\("kx-hero-tour"\)/);
+    expect(src).toMatch(/prefers-reduced-motion: reduce/);
+    expect(src).toMatch(/data-hero-tour=""[\s\S]*aria-pressed=/);
+    expect(src).toMatch(/const touring = !reduced && !paused && !stopped/);
+  });
+
   it("never loops a trace (WCAG 2.2.2)", () => {
     const traceRules = css.match(/\.kx-trace[^{]*\{[^}]*\}/g) ?? [];
     for (const r of traceRules) expect(r).not.toMatch(/infinite/);

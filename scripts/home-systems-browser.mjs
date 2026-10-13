@@ -15,6 +15,8 @@
  *     written branches are dashed and the generated ones solid
  *   - map, desktop: four outputs over five platforms, and no trace runs through an output it does not belong to
  *   - no horizontal overflow at any of those widths, in either direction
+ *   - hero tour: the platforms advance on their own, hold under the pointer, pause from a keyboard-operable
+ *     button (aria-pressed), stop once the reader chooses one, and do not run at all under reduced motion
  *   - structure (a performance guard, not a timing threshold): the HTML carries only the open explorer panel and
  *     the payload no second copy of it; the hero map's client props stay under a byte budget; the hero map, its
  *     outputs and its tabs exist once at phone and desktop widths (no duplicate mobile tree); every excerpt, on
@@ -284,6 +286,56 @@ for (const [width, dir] of [[320, 'ltr'], [390, 'ltr'], [390, 'rtl'], [768, 'ltr
   });
 }
 
+// ---- the hero tour: platforms change on their own, and WCAG 2.2.2 holds ---------------------------------------------
+const heroSelected = (page) => page.locator(`${HERO} [role="tab"][aria-selected="true"]`).getAttribute('data-platform');
+
+await check('hero tour: advances on its own, holds under the pointer, pauses from its button, stops on a choice', async () => {
+  const { page, context } = await open({ width: 1440, reducedMotion: 'no-preference' });
+  await page.mouse.move(0, 890); // keep the pointer off the map
+  const first = await heroSelected(page);
+  await page.waitForTimeout(5500);
+  const second = await heroSelected(page);
+  assert.notEqual(second, first, 'the tour did not advance');
+  // the pointer on the map holds it
+  await page.locator('[data-hero-system-map]').hover();
+  await page.waitForTimeout(5500);
+  assert.equal(await heroSelected(page), second, 'the tour advanced under the pointer');
+  await page.mouse.move(0, 890);
+  // the button pauses it, by keyboard, and says so
+  const button = page.locator('[data-hero-tour]');
+  await button.focus();
+  await page.keyboard.press('Enter');
+  assert.equal(await button.getAttribute('aria-pressed'), 'true', 'pause is not reflected in aria-pressed');
+  await button.evaluate((b) => b.blur());
+  const held = await heroSelected(page);
+  await page.waitForTimeout(5500);
+  assert.equal(await heroSelected(page), held, 'the tour advanced while paused');
+  // play resumes it; choosing a platform stops it again
+  await button.click();
+  await page.mouse.move(0, 890);
+  await page.waitForTimeout(5500);
+  assert.notEqual(await heroSelected(page), held, 'play did not resume the tour');
+  await page.evaluate(() => localStorage.removeItem('kx-hero-tour'));
+  const tabs = page.locator(`${HERO} [role="tab"]`);
+  await tabs.last().click();
+  const chosen = await heroSelected(page);
+  await page.mouse.move(0, 890);
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.waitForTimeout(5500);
+  assert.equal(await heroSelected(page), chosen, "the tour overrode the reader's choice");
+  await context.close();
+});
+
+await check('hero tour: none under reduced motion, and no pause button', async () => {
+  const { page, context } = await open({ width: 1440 });
+  await page.mouse.move(0, 890);
+  const first = await heroSelected(page);
+  await page.waitForTimeout(5500);
+  assert.equal(await heroSelected(page), first, 'the tour ran under reduced motion');
+  assert.equal(await page.locator('[data-hero-tour]').count(), 0, 'a pause button with nothing to pause');
+  await context.close();
+});
+
 // ---- structure: what the page sends before anyone interacts with it ----------------------------------------------
 
 /** The page's raw HTML and the decoded React payload that rides with it (in which elements are JSON, never `<pre`). */
@@ -376,4 +428,4 @@ if (failures.length) {
   console.error(`\nhome-systems: ${failures.length} check(s) failed`);
   process.exit(1);
 }
-console.log('\nhome-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing, structure');
+console.log('\nhome-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing, tour, structure');

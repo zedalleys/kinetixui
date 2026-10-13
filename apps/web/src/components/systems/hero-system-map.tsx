@@ -3,9 +3,10 @@
 import * as React from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Pause, Play } from "lucide-react";
 import { PlatformMark } from "./platform-marks";
 import { useDocumentDirection } from "@/lib/use-document-direction";
+import { usePersistedPause } from "@/lib/use-persisted-pause";
 import type { Platform } from "@/lib/platform-parity";
 import { cn } from "@/lib/utils";
 import { breakable } from "./breakable";
@@ -33,10 +34,19 @@ import { breakable } from "./breakable";
  * Theme: the map shows the token's value for the site theme the reader is in, and follows the header's theme
  * toggle; it has no switch of its own.
  *
- * Motion: a first-load sequence, then nothing moves until the reader acts. Selecting a platform, or changing
- * the site theme, sends one pulse along the affected branches. Under `prefers-reduced-motion` the map
- * renders complete and static, and a selection is shown only by the highlighted branch.
+ * Motion: a first-load sequence, then a tour: every few seconds the map selects the next platform on its own,
+ * looping through all of them, so a reader who never touches it still sees each implementation. Selecting a
+ * platform, or changing the site theme, sends one pulse along the affected branches.
+ *
+ * The tour changes content on its own, so WCAG 2.2.2 applies: a keyboard-operable button pauses it (the choice
+ * is remembered, as the ticker's is), and it holds while the pointer or focus is on the map, while the map is
+ * off screen and while the tab is hidden. Choosing a platform stops it for the page view; the button resumes it.
+ * Under `prefers-reduced-motion` there is no tour and no button: the map renders complete and static, and a
+ * selection is shown only by the highlighted branch.
  */
+
+/** How long each platform stays selected during the tour. */
+const TOUR_STEP_MS = 4500;
 
 export type MapPlatform = {
   platform: Platform;
@@ -210,10 +220,56 @@ export function HeroSystemMap({
     measure();
   }, [dir, measure]);
 
-  const select = (value: string) => {
-    setSelected(value as Platform);
+  const show = (value: Platform) => {
+    setSelected(value);
     setPulseScope("one");
     setPulse((n) => n + 1);
+  };
+  // a reader's choice ends the tour for this page view; the tour's own steps come through `show`
+  const select = (value: string) => {
+    setStopped(true);
+    show(value as Platform);
+  };
+
+  /* ── the tour ── */
+  const [paused, togglePaused] = usePersistedPause("kx-hero-tour");
+  const [stopped, setStopped] = React.useState(false);
+  const [reduced, setReduced] = React.useState(true); // no tour until the client has read the preference
+  const [held, setHeld] = React.useState({ pointer: false, focus: false, offscreen: false, hidden: false });
+  React.useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const read = () => setReduced(mq.matches);
+    read();
+    mq.addEventListener("change", read);
+    const el = root.current;
+    const io =
+      el && typeof IntersectionObserver !== "undefined"
+        ? new IntersectionObserver(([e]) => setHeld((h) => ({ ...h, offscreen: !e!.isIntersecting })))
+        : null;
+    if (el) io?.observe(el);
+    const vis = () => setHeld((h) => ({ ...h, hidden: document.hidden }));
+    document.addEventListener("visibilitychange", vis);
+    return () => {
+      mq.removeEventListener("change", read);
+      io?.disconnect();
+      document.removeEventListener("visibilitychange", vis);
+    };
+  }, []);
+  const touring = !reduced && !paused && !stopped;
+  const running = touring && !held.pointer && !held.focus && !held.offscreen && !held.hidden;
+  React.useEffect(() => {
+    if (!running) return;
+    const t = window.setTimeout(() => {
+      const i = platforms.findIndex((p) => p.platform === selected);
+      show(platforms[(i + 1) % platforms.length]!.platform);
+    }, TOUR_STEP_MS);
+    return () => window.clearTimeout(t);
+  }, [running, selected, platforms]);
+  const toggleTour = () => {
+    if (stopped || paused) {
+      setStopped(false);
+      if (paused) togglePaused();
+    } else togglePaused();
   };
 
   // The map's static text is built once per theme and reused across renders: a hover, a selection, a measured
@@ -372,6 +428,13 @@ export function HeroSystemMap({
       data-map-layout={columns ? "columns" : "rows"}
       {...(active ? { "data-map-active": "" } : {})}
       className="relative m-0 [container-type:inline-size]"
+      onPointerEnter={() => setHeld((h) => ({ ...h, pointer: true }))}
+      onPointerLeave={() => setHeld((h) => ({ ...h, pointer: false }))}
+      // focus on a tab or panel holds the tour while it is read; focus on the tour's own button does not
+      onFocus={(e) => setHeld((h) => ({ ...h, focus: !(e.target as HTMLElement).closest("[data-hero-tour]") }))}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHeld((h) => ({ ...h, focus: false }));
+      }}
     >
       {/* the traces: a drawing of what the text says, so assistive technology skips it */}
       <MapTraces
@@ -430,6 +493,21 @@ export function HeroSystemMap({
           );
         })}
       </Tabs.Root>
+      {/* the tour's pause control (WCAG 2.2.2); nothing tours under reduced motion, so nothing to pause */}
+      {!reduced && (
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            data-hero-tour=""
+            aria-pressed={!touring}
+            onClick={toggleTour}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-md px-2 font-mono text-label-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {touring ? <Pause aria-hidden="true" className="size-3.5" /> : <Play aria-hidden="true" className="size-3.5" />}
+            {touring ? "Pause the platform tour" : "Play the platform tour"}
+          </button>
+        </div>
+      )}
       <figcaption className="sr-only">
         The {token.path} token, defined once in {token.files.light}, is generated into {outputs.length} platform token
         files ({outputs.map((o) => `${o.language}, read by ${o.platforms.join(" and ")}`).join("; ")}). Each of the{" "}
