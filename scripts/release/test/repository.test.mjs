@@ -446,7 +446,9 @@ describe("a release cannot run while changesets are pending", () => {
   it("keeps the workflow's two-stage inputs, which is what routes a changeset to the Version PR", () => {
     const workflow = readFileSync(`${root}.github/workflows/release.yml`, "utf8");
     assert.match(workflow, /uses: changesets\/action@[0-9a-f]{40}/, "the action must stay pinned to the audited commit");
-    assert.match(workflow, /version: pnpm changeset version/);
+    assert.match(workflow, /version: pnpm version-packages/);
+    const manifest = JSON.parse(readFileSync(`${root}package.json`, "utf8"));
+    assert.equal(manifest.scripts["version-packages"], "changeset version && node scripts/version-release-meta.mjs");
     assert.match(workflow, /publish: pnpm release/);
   });
 

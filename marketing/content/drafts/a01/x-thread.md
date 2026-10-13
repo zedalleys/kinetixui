@@ -3,8 +3,8 @@ id: a01
 channel: x
 format: thread
 supports: article.md
-cta: <DEV_ARTICLE_URL>
-status: drafted
+cta: https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0
+status: ready
 ---
 
 # X — thread (9 posts)
@@ -134,7 +134,7 @@ extracted region. Six of a hundred-odd so far.
 Current coverage is generated from the manifest — edit it by hand and the build
 fails.
 
-<DEV_ARTICLE_URL>
+https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0
 
 ---
 
