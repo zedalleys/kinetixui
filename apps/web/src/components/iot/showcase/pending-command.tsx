@@ -95,7 +95,17 @@ export function PendingCommand({
   details?: boolean;
   className?: string;
 }) {
-  const view = pendingCommandView(lifecycle, now);
+  // The simulated clock can stop right after a confirmation (reduced motion holds time while nothing is in
+  // flight, or the user pauses), which would leave "Confirmed" up for good. A wall-clock timer ends it too.
+  const settledKey = lifecycle?.stage === "confirmed" ? (lifecycle.settledAt ?? null) : null;
+  const [expiredKey, setExpiredKey] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    if (!settledKey) return;
+    const id = setTimeout(() => setExpiredKey(settledKey), CONFIRMATION_MS);
+    return () => clearTimeout(id);
+  }, [settledKey]);
+  const simView = pendingCommandView(lifecycle, now);
+  const view = simView === "confirmed" && settledKey !== null && expiredKey === settledKey ? "none" : simView;
   const format = (v: unknown) => (v === undefined || v === null ? "Unknown" : (formatValue ?? String)(v));
   const want = lifecycle ? format(lifecycle.requestedValue) : "";
   const have = lifecycle ? format(lifecycle.confirmedValue) : "";

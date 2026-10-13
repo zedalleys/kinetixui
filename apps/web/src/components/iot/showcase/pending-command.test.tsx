@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { KinetixCommandLifecycle } from "@kinetixui/iot/functions";
 import { CONFIRMATION_MS, PendingCommand, pendingCommandView } from "./pending-command";
@@ -104,6 +104,21 @@ describe("PendingCommand", () => {
     rerender(<PendingCommand lifecycle={life({ stage: "confirmed", confirmedValue: "unlocked", settledAt: at(-500) })} action={action} reserve now={NOW} details={false} formatValue={format} />);
     expect(row().textContent).toContain("Confirmed: Unlocked");
     expect(screen.getByRole("button", { name: "Unlock" })).toBeInTheDocument();
+  });
+
+  it("ends the confirmation on the wall clock when the simulated clock stops (reduced motion, paused)", () => {
+    vi.useFakeTimers();
+    try {
+      const confirmed = life({ stage: "confirmed", confirmedValue: "unlocked", settledAt: at(0) });
+      // `now` never moves: the simulation holds time once nothing is in flight
+      render(<PendingCommand lifecycle={confirmed} now={NOW} reserve details={false} formatValue={format} action={<button type="button">Lock</button>} />);
+      expect(screen.getByRole("status")).toHaveTextContent("Confirmed");
+      act(() => vi.advanceTimersByTime(CONFIRMATION_MS));
+      expect(screen.getByRole("status")).not.toHaveTextContent("Confirmed");
+      expect(screen.getByRole("button", { name: "Lock" })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("offers Cancel only while a request can still be cancelled, and Retry only on a failure", () => {
