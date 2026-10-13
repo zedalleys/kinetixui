@@ -239,7 +239,7 @@ Cross-platform token architecture.
 
 ## Article distribution {#article-distribution}
 
-For **ART-001** and **ART-002**, both finished.
+For **ART-001** and **ART-002**, both published.
 
 | | ART-001 | ART-002 |
 | --- | --- | --- |
@@ -247,6 +247,7 @@ For **ART-001** and **ART-002**, both finished.
 | **Pillar / ICP** | A / P1 | B / P2 |
 | **Canonical** | **dev.to** | **dev.to** |
 | **Day** | 15 (week 3) | **8** |
+| **Published** | 2026-10-13, [dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0](https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0) | 2026-10-06, [dev.to/zedalleys/your-design-tokens-stop-at-the-web-boundary-4p6a](https://dev.to/zedalleys/your-design-tokens-stop-at-the-web-boundary-4p6a) |
 | **Destination** | `/docs/platforms` | `/docs/tokens` |
 | **Campaign** | `kx_p1_a_parity_proof` | `kx_p2_b_token_boundary` |
 | **Social derivatives** | LI-001 (day 16), LI-002 (day 36+), X-001 (day 17) | LI-005 (day 9), X-004 (day 11) |

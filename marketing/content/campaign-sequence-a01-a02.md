@@ -156,7 +156,7 @@ not a01's.
 
 | Placeholder | Where | Kind | Resolved by |
 | --- | --- | --- | --- |
-| `<DEV_ARTICLE_URL>` | a01 `linkedin.md` ×4, `x-thread.md` ×2, `measurement.md`, `publish-checklist.md` | **Blocking** | Publishing the DEV article and capturing the real URL. No a01 social post may go out before this. Enforced by `a01/verify-package.mjs`. |
+| `<DEV_ARTICLE_URL>` | a01 `linkedin.md` ×3, `x-thread.md` ×2 | **Resolved 2026-10-13** | ART-001 published on DEV; every occurrence now reads https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0. `a01/verify-package.mjs` now fails if the placeholder returns or any other dev.to URL appears. |
 | `<FILL>` ×6 | a01 `measurement.md` baseline table | **Blocking for measurement, not for publication** | Reading the trailing-7-day numbers out of PostHog on day 0. **Do not fabricate them** — an invented baseline makes a fabricated delta look measured. |
 | `<DATE>`, `<WHO>` | a01 `measurement.md` | Clerical | Whoever takes the baseline, when they take it. |
 | `<pkg>` | a02 `sources.md` | **Not a placeholder** | A literal argument in the documented command `npm view <pkg> version`. |

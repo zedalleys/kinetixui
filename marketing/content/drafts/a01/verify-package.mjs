@@ -46,7 +46,7 @@ t(dev.includes("title: " + TITLE), "devto front matter title matches");
 t(bl.title === TITLE, "backlog title matches");
 t(!dev.includes("canonical_url:"), "devto has NO canonical_url set");
 t(dev.includes("published: false"), "devto published: false");
-t(bl.status === "drafted", "backlog status still 'drafted'");
+t(bl.status === "published", "backlog status 'published' (ART-001 went out on DEV 2026-10-13)");
 t(bl.publishWindow === null, "no publish window set");
 
 for (const f of files) {
@@ -62,8 +62,13 @@ for (const f of files) {
 }
 t(true, "claim hygiene sweep (denominator, superlatives, Angular maturity)");
 
-t(li.includes("<DEV_ARTICLE_URL>") && xt.includes("<DEV_ARTICLE_URL>"), "placeholders present in both social files");
-t(!/https?:\/\/dev\.to\/\S+/i.test(li + xt + art), "no fabricated dev.to URL anywhere");
+// The article is live, so the placeholder is gone and exactly one dev.to URL may appear: the real one,
+// untagged (measurement.md: DEV is not our property, so campaign parameters on it are noise).
+const DEV_ARTICLE_URL = "https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0";
+t(!(li + xt).includes("<DEV_ARTICLE_URL>"), "no placeholder left in either social file");
+t(li.includes(DEV_ARTICLE_URL) && xt.includes(DEV_ARTICLE_URL), "live DEV URL present in both social files");
+const devUrls = [...(li + xt + art).matchAll(/https?:\/\/dev\.to\/\S+/gi)].map((m) => m[0]);
+t(devUrls.every((u) => u === DEV_ARTICLE_URL), `no other or tagged dev.to URL anywhere${devUrls.some((u) => u !== DEV_ARTICLE_URL) ? ` (${devUrls.find((u) => u !== DEV_ARTICLE_URL)})` : ""}`);
 t(/utm_campaign=kx_p1_a_parity_proof/.test(read("measurement.md")), "campaign tag uses the kx_ prefix the regex requires");
 // Only recommended links matter. measurement.md quotes the bad tag deliberately, as the warning.
 const recommended = read("measurement.md").split("\n").filter((l) => l.startsWith("| ") && l.includes("utm_campaign="));

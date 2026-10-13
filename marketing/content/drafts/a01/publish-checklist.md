@@ -1,7 +1,7 @@
 ---
 id: a01
 type: publish checklist
-status: not scheduled
+status: published 2026-10-13
 ---
 
 # a01 — publish checklist
@@ -60,12 +60,12 @@ past tense. See `sources.md`.
       be wrong — that is not this article
 - [ ] Code blocks have language hints (`kotlin`, `json`)
 - [ ] Preview on DEV before publishing
-- [ ] Publish → capture the real URL
+- [x] Publish → capture the real URL (published 2026-10-13)
 
 ## 4. Replace the placeholder
 
-- [ ] `<DEV_ARTICLE_URL>` → the real URL in `linkedin.md` (A and B) and
-      `x-thread.md` (post 9)
+- [x] `<DEV_ARTICLE_URL>` → the real URL in `linkedin.md` (A and B) and
+      `x-thread.md` (post 9). Done 2026-10-13: https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0
 - [ ] Append the campaign parameters from `measurement.md` per channel
       (paste each asset's built `url` from `../../register.json`: DEV CTA
       `utm_medium=referral&utm_content=art_primary`, LinkedIn/X `utm_medium=social` —

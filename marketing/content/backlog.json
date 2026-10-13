@@ -32,7 +32,7 @@
       ],
       "format": "article",
       "intent": "awareness",
-      "status": "drafted",
+      "status": "published",
       "sourceFeature": "check-platform-source",
       "insight": "Parity is a claim with no source behind it until something verifies it against the packages.",
       "cta": "/docs/platforms",
