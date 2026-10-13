@@ -51,6 +51,9 @@ jobs:
       - name: Publish allowlist and package metadata
         run: pnpm release:check
 
+      - name: Website component dogfooding (reviewed native-pattern ratchet)
+        run: pnpm check:web-dogfooding
+
       - name: Lint
         run: pnpm lint
 

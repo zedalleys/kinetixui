@@ -120,7 +120,8 @@
     "check:seo-browser": "node scripts/seo-browser.mjs --base http://127.0.0.1:3000",
     "check:analytics-browser": "node scripts/analytics-browser.mjs --base http://127.0.0.1:3100",
     "gen:visuals": "node scripts/gen-marketing-visuals.mjs",
-    "render:visuals": "node scripts/render-marketing-visuals.mjs"
+    "render:visuals": "node scripts/render-marketing-visuals.mjs",
+    "check:web-dogfooding": "node --test scripts/check-web-dogfooding.test.mjs && node scripts/check-web-dogfooding.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

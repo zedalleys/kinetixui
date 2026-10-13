@@ -1,0 +1,62 @@
+[
+  {
+    "route": "/iot/page",
+    "baseline": {
+      "files": 14,
+      "bytes": 1736725,
+      "gzipBytes": 501785
+    },
+    "wave1": {
+      "files": 13,
+      "bytes": 1734035,
+      "gzipBytes": 500248
+    },
+    "deltaBytes": -2690,
+    "deltaGzipBytes": -1537
+  },
+  {
+    "route": "/docs/installation/page",
+    "baseline": {
+      "files": 17,
+      "bytes": 1819995,
+      "gzipBytes": 523391
+    },
+    "wave1": {
+      "files": 17,
+      "bytes": 1817453,
+      "gzipBytes": 522044
+    },
+    "deltaBytes": -2542,
+    "deltaGzipBytes": -1347
+  },
+  {
+    "route": "/components/page",
+    "baseline": {
+      "files": 14,
+      "bytes": 1701012,
+      "gzipBytes": 490649
+    },
+    "wave1": {
+      "files": 14,
+      "bytes": 1700682,
+      "gzipBytes": 490219
+    },
+    "deltaBytes": -330,
+    "deltaGzipBytes": -430
+  },
+  {
+    "route": "/create/page",
+    "baseline": {
+      "files": 11,
+      "bytes": 1558283,
+      "gzipBytes": 456610
+    },
+    "wave1": {
+      "files": 11,
+      "bytes": 1555956,
+      "gzipBytes": 455482
+    },
+    "deltaBytes": -2327,
+    "deltaGzipBytes": -1128
+  }
+]
