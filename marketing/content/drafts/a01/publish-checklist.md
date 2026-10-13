@@ -110,7 +110,7 @@ first one is worth watching in real time.
 
 ## 7. After
 
-- [ ] Update `a01` in `backlog.json` — the schema already has `status` and
+- [x] Update `a01` in `backlog.json` (done 2026-10-13, date only: the time is not recorded) — the schema already has `status` and
       `publishWindow`; add `publishedAt` (ISO date) and `url` (the real DEV URL):
       ```json
       "status": "published",
