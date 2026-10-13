@@ -2814,13 +2814,15 @@
   ],
   "components": {
     "accordion": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "alert": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "application-foundations"
       ],
@@ -2831,7 +2833,8 @@
       ]
     },
     "alert-dialog": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -2841,7 +2844,8 @@
       ]
     },
     "app-bar": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "application-foundations"
       ],
@@ -2849,19 +2853,22 @@
       "workflows": []
     },
     "aspect-ratio": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "audio-player": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "avatar": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -2875,13 +2882,15 @@
       ]
     },
     "avatar-group": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "badge": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "observability"
       ],
@@ -2895,7 +2904,8 @@
       ]
     },
     "banner": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "observability",
         "application-foundations"
@@ -2909,7 +2919,8 @@
       ]
     },
     "breadcrumb": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -2918,7 +2929,8 @@
       ]
     },
     "button": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -2927,7 +2939,8 @@
       ]
     },
     "button-group": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -2955,7 +2968,8 @@
       ]
     },
     "card": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -2977,13 +2991,15 @@
       ]
     },
     "carousel": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "chart": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "data-analytics"
       ],
@@ -2991,7 +3007,8 @@
       "workflows": []
     },
     "checkbox": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3000,7 +3017,8 @@
       ]
     },
     "circular-progress": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "data-analytics"
       ],
@@ -3008,7 +3026,8 @@
       "workflows": []
     },
     "code-block": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "developer-tools"
       ],
@@ -3018,7 +3037,8 @@
       "workflows": []
     },
     "collapsible": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3027,7 +3047,8 @@
       ]
     },
     "color-picker": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3036,7 +3057,8 @@
       ]
     },
     "combobox": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3046,7 +3068,8 @@
       ]
     },
     "command": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3056,13 +3079,15 @@
       ]
     },
     "comparison-slider": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "context-menu": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
@@ -3097,7 +3122,8 @@
       ]
     },
     "date-picker": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "forms"
       ],
@@ -3112,7 +3138,8 @@
       ]
     },
     "description-list": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "transactions"
       ],
@@ -3131,7 +3158,8 @@
       ]
     },
     "dialog": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
@@ -3153,19 +3181,22 @@
       ]
     },
     "direction-provider": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "drawer": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "dropdown-menu": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3174,19 +3205,22 @@
       ]
     },
     "empty": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "fab": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "field": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "forms"
       ],
@@ -3206,7 +3240,8 @@
       ]
     },
     "file-upload": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "documents"
       ],
@@ -3219,13 +3254,15 @@
       ]
     },
     "footer": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "form": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "forms"
       ],
@@ -3244,13 +3281,15 @@
       ]
     },
     "hover-card": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "image": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3259,7 +3298,8 @@
       ]
     },
     "inform": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "application-foundations"
       ],
@@ -3267,7 +3307,8 @@
       "workflows": []
     },
     "input": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3277,7 +3318,8 @@
       ]
     },
     "input-group": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "transactions",
         "forms"
@@ -3291,7 +3333,8 @@
       ]
     },
     "input-otp": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "identity-security"
       ],
@@ -3326,19 +3369,22 @@
       "workflows": []
     },
     "kbd": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "label": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "list": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3352,7 +3398,8 @@
       ]
     },
     "markdown-editor": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "developer-tools",
         "ai"
@@ -3363,13 +3410,15 @@
       "workflows": []
     },
     "marquee": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "menubar": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
@@ -3386,7 +3435,8 @@
       "workflows": []
     },
     "metric": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "data-analytics",
         "transactions",
@@ -3404,13 +3454,15 @@
       ]
     },
     "modal": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "multi-select": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "data-analytics"
       ],
@@ -3421,13 +3473,15 @@
       ]
     },
     "native-select": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "navigation-bar": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "application-foundations"
       ],
@@ -3435,19 +3489,22 @@
       "workflows": []
     },
     "navigation-menu": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "notification-center": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "number-input": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "transactions",
         "forms"
@@ -3476,7 +3533,8 @@
       "workflows": []
     },
     "pagination": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
@@ -3505,7 +3563,8 @@
       ]
     },
     "password-input": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "identity-security"
       ],
@@ -3513,7 +3572,8 @@
       "workflows": []
     },
     "popover": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3553,7 +3613,8 @@
       ]
     },
     "progress": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "transactions"
       ],
@@ -3566,13 +3627,15 @@
       ]
     },
     "quote": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "radio-group": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3581,7 +3644,8 @@
       ]
     },
     "rating": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
@@ -3613,7 +3677,8 @@
       ]
     },
     "resizable": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "application-foundations"
       ],
@@ -3660,7 +3725,8 @@
       ]
     },
     "scroll-area": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3669,7 +3735,8 @@
       ]
     },
     "segmented-control": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3678,7 +3745,8 @@
       ]
     },
     "select": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3690,13 +3758,15 @@
       ]
     },
     "separator": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "sheet": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3720,25 +3790,29 @@
       ]
     },
     "skeleton": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "slider": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "sonner": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "spinner": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "application-foundations"
       ],
@@ -3746,7 +3820,8 @@
       "workflows": []
     },
     "stepper": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "workflow"
       ],
@@ -3759,19 +3834,22 @@
       ]
     },
     "switch": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "tab-bar": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "table": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3781,19 +3859,22 @@
       ]
     },
     "table-of-contents": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "tabs": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "tag": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "data-analytics"
       ],
@@ -3822,7 +3903,8 @@
       ]
     },
     "textarea": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3832,7 +3914,8 @@
       ]
     },
     "timeline": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [
         "transactions",
         "workflow"
@@ -3843,13 +3926,15 @@
       "workflows": []
     },
     "toggle": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "toggle-group": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],
@@ -3860,25 +3945,29 @@
       ]
     },
     "tooltip": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "tour": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "tree-view": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": []
     },
     "virtual-list": {
-      "layer": "L1",
+      "layer": "unclassified",
+      "target": "unclassified",
       "capabilities": [],
       "domains": [],
       "workflows": [],

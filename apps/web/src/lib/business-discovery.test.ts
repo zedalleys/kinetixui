@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
+import blocksManifest from "../../../../blocks.manifest.json";
+import componentManifest from "../../../../components.manifest.json";
 import capabilities from "../../../../docs/business-capabilities.json";
+import { buildDiscovery } from "../../../../scripts/business-discovery.mjs";
 import {
   BLOCK_DISCOVERY,
   BUSINESS_NEEDS,
@@ -8,6 +11,7 @@ import {
   DISCOVERY_ROUTES,
   DOMAINS,
   ROWS,
+  UNCLASSIFIED,
   WORKFLOWS,
   businessContextFor,
   catalogueFacets,
@@ -82,16 +86,38 @@ describe("relationships derived for a component", () => {
     expect(ctx.workflows.find((w) => w.id === "money-transfer")!.href).toBeUndefined();
   });
 
-  it("says nothing for a plain core primitive", () => {
+  it("says nothing for a component with no classification and no business context", () => {
     expect(businessContextFor("accordion")).toBeNull();
   });
 
   it("classifies a component by the roadmap row that is it, and only that row", () => {
     expect(COMPONENT_DISCOVERY["data-grid"]!.layer).toBe("L2");
     expect(COMPONENT_DISCOVERY["data-grid"]!.target).toBe("web-first-enterprise");
-    // cited by partial L2 rows (CartQuantity, PercentageInput) but not one of them: still a core primitive
-    expect(COMPONENT_DISCOVERY["number-input"]!.layer).toBe("L1");
-    expect(COMPONENT_DISCOVERY["number-input"]!.target).toBeUndefined();
+    // an explicit L1 row is kept as L1
+    expect(COMPONENT_DISCOVERY["calendar"]!.layer).toBe("L1");
+    expect(COMPONENT_DISCOVERY["calendar"]!.target).toBe("cross-platform-core");
+    // cited by partial L2 rows (CartQuantity, PercentageInput) but not one of them: unclassified, not L1
+    expect(COMPONENT_DISCOVERY["number-input"]!.layer).toBe(UNCLASSIFIED);
+    expect(COMPONENT_DISCOVERY["number-input"]!.target).toBe(UNCLASSIFIED);
+    expect(COMPONENT_DISCOVERY["number-input"]!.capabilities.length).toBeGreaterThan(0);
+  });
+
+  it("never turns a missing classification into Core / L1 (regression)", () => {
+    // a manifest component no roadmap row names, run through the real generator
+    const manifest = { ...componentManifest.components, "zz-unmatched-widget": {} } as Record<string, unknown>;
+    const { index, errors } = buildDiscovery(capabilities, manifest, blocksManifest.blocks);
+    expect(errors).toEqual([]);
+    const entry = (index as { components: Record<string, { layer: string; target: string }> }).components["zz-unmatched-widget"]!;
+    expect(entry.layer).toBe("unclassified");
+    expect(entry.target).toBe("unclassified");
+    expect(entry.layer).not.toBe("L1");
+    expect(entry.target).not.toBe("cross-platform-core");
+    // and the site neither labels it Core nor says anything about its layer
+    for (const [slug, e] of Object.entries(COMPONENT_DISCOVERY).filter(([, e]) => e.layer === UNCLASSIFIED)) {
+      expect(businessContextFor(slug)?.layer, slug).toBeUndefined();
+      expect(businessContextFor(slug)?.target, slug).toBeUndefined();
+      expect(e.target, slug).toBe(UNCLASSIFIED);
+    }
   });
 });
 
@@ -103,6 +129,11 @@ describe("catalogue facets", () => {
       expect(Object.values(facets.bySlug).some((b) => b.capabilities.includes(o.id)), o.id).toBe(true);
     for (const o of facets.domains) expect(Object.values(facets.bySlug).some((b) => b.domains.includes(o.id)), o.id).toBe(true);
     expect(facets.domains.map((d) => d.id)).not.toContain("healthcare");
+  });
+
+  it("does not offer unclassified as a layer filter", () => {
+    expect(facets.layers.map((l) => l.id)).not.toContain(UNCLASSIFIED);
+    expect(facets.layers.map((l) => l.id)).toEqual(["L1", "L2"]);
   });
 
   it("lets a search for the job find the part", () => {

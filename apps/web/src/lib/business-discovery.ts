@@ -23,6 +23,12 @@ export type DiscoveryRow = {
   iot: string[];
 };
 export type Layer = "L1" | "L2" | "L3" | "L4";
+/**
+ * A catalogue entry no roadmap row classifies carries `unclassified` for layer and target. It is not L1: a missing
+ * classification is not a product-architecture claim. It has no label, so it is never shown or offered as a filter.
+ */
+export type Unclassified = "unclassified";
+export const UNCLASSIFIED: Unclassified = "unclassified";
 export type Counts = { existing: number; partial: number; planned: number };
 export type Capability = {
   id: string;
@@ -38,8 +44,8 @@ export type Capability = {
 export type Domain = Omit<Capability, "families"> & { page: boolean; capabilities: string[]; workflows: string[] };
 export type Workflow = { id: string; title: string; domain: string; summary: string; stages: { title: string; rows: string[] }[] };
 export type ComponentDiscovery = {
-  layer: Layer;
-  target?: string;
+  layer: Layer | Unclassified;
+  target: string;
   roadmapRow?: string;
   capabilities: string[];
   domains: string[];
@@ -83,7 +89,7 @@ export type CatalogueFacets = {
   domains: FacetOption[];
   layers: FacetOption[];
   /** `terms`: the entry's capability, domain and workflow names and its roadmap row, lower-cased, for search. */
-  bySlug: Record<string, { layer: Layer; capabilities: string[]; domains: string[]; terms: string }>;
+  bySlug: Record<string, { layer: Layer | Unclassified; capabilities: string[]; domains: string[]; terms: string }>;
 };
 
 /**
@@ -124,7 +130,8 @@ export function catalogueFacets(): CatalogueFacets {
 /* ------------------------------------------------------------------------------ component page context */
 
 export type BusinessContext = {
-  layer: string;
+  /** Absent when the roadmap does not classify the component; the page then says nothing about its layer. */
+  layer?: string;
   target?: string;
   capabilities: FacetOption[];
   domains: (FacetOption & { href?: string })[];
@@ -133,16 +140,19 @@ export type BusinessContext = {
 };
 
 /**
- * The "Business context" a component page shows, or null when there is nothing beyond "a core primitive" to say —
- * most of the catalogue, which would otherwise carry the same line on every page.
+ * The "In applications" context a component page shows, or null when there is nothing to say: no classification, no
+ * capability, no workflow and nothing planned on top of it. An unclassified layer or target is left out, not
+ * rendered as "Core primitive".
  */
 export function businessContextFor(slug: string): BusinessContext | null {
   const e = COMPONENT_DISCOVERY[slug];
   if (!e) return null;
-  if (e.layer === "L1" && !e.capabilities.length && !e.workflows.length && !e.buildsToward?.length) return null;
+  const layer = e.layer === UNCLASSIFIED ? undefined : LAYER_LABEL[e.layer];
+  const target = e.target === UNCLASSIFIED ? undefined : TARGET_LABEL[e.target];
+  if (!layer && !target && !e.capabilities.length && !e.workflows.length && !e.buildsToward?.length) return null;
   return {
-    layer: LAYER_LABEL[e.layer],
-    ...(e.target ? { target: TARGET_LABEL[e.target] } : {}),
+    ...(layer ? { layer } : {}),
+    ...(target ? { target } : {}),
     capabilities: e.capabilities.map((id) => ({ id, label: capabilityById(id)!.title })),
     domains: e.domains.map((id) => {
       const d = domainById(id)!;

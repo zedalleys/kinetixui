@@ -498,8 +498,9 @@ with a page has nothing that ships.
   the domain of every workflow that uses such a row. A *planned* row contributes its name, labelled planned, and
   never a component or a link.
 - A component's layer and platform target come from the one row that **is** it (cites it and is named after it,
-  `DataGrid` ↔ `data-grid`). Every other catalogue entry is an L1 core primitive, as the §1 audit classified the
-  pre-roadmap catalogue; its platform target is left unclassified rather than guessed.
+  `DataGrid` ↔ `data-grid`). Every other catalogue entry is `unclassified` for both layer and target: a missing
+  classification is not evidence, so it never defaults to L1 / Core. `unclassified` lives in the generated index only;
+  the site shows no layer for such a component and does not offer it as a filter.
 - "Planned on top of it" on a component page is the planned rows whose `dependsOn` names the component.
 - "Used in blocks" is read from each block's React source (`apps/web/src/lib/block-components.ts`), not from here.
 - Pro-candidate rows never reach the index or the website (`marketing/STRATEGY.md` rule 7). Tier stays a planning
@@ -522,3 +523,12 @@ workflow or domain is an entry in `discovery`, validated by the same check.
 - `/use-cases/<domain>`: the reusable domain template (workflows, components available now, blocks, planned
   capabilities, related capabilities). W1 builds Commerce and Travel & booking.
 - Component pages: an "In applications" section (layer, capabilities, domains, workflows, blocks, planned work).
+
+**Follow-ups (W2 and dogfooding)**
+
+- Classify the remaining catalogue explicitly. At W1, 89 of 102 catalogue entries are unclassified for layer and
+  target (13 are classified by a row named after them: 6 L1, 7 L2). Each should get an explicit classification over
+  time, so the layer filter and the component pages can say more. Unclassified is reported, not an error.
+- `componentDocs` and the category taxonomy are still hand-maintained twice (`apps/web/src/lib/site.ts`
+  `COMPONENT_CATEGORY` and `scripts/gen-stories.mjs` `GROUP`, which already disagree). Make the category canonical in
+  `components.manifest.json` and generate both; out of scope for W1.

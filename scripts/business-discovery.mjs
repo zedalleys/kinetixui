@@ -20,12 +20,14 @@
  *     workflow whose stages use such a row. A domain-neutral family reaches a domain only through a workflow.
  *   - A component's layer and platform target come from the one row that IS it: a shipping row that cites it and
  *     whose name (or one of its " / " alternatives) is the slug once punctuation and case are dropped (DataGrid ↔
- *     data-grid). Any other catalogue entry is an L1 core primitive, which is how the roadmap's audit classified the
- *     whole pre-roadmap catalogue (BUSINESS-CAPABILITY-ROADMAP.md §2.1); its platform target is left unclassified
- *     rather than guessed.
+ *     data-grid). Any other catalogue entry is "unclassified" on both: a missing roadmap classification is not
+ *     evidence of a layer or a target, so it never becomes "L1 core primitive" by default. `unclassified` is carried in
+ *     the index only; it has no label, so the site neither shows it nor offers it as a filter.
  *   - "Builds toward" for a component is the planned rows whose `dependsOn` names it.
  */
 
+/** Layer and target of a catalogue entry no roadmap row classifies. Distinct from L1: absence is not a claim. */
+export const UNCLASSIFIED = "unclassified";
 const LAYER_LABEL = { L1: "Core primitive", L2: "Enterprise", L3: "Domain", L4: "Block" };
 const TARGET_LABEL = {
   "cross-platform-core": "Cross-platform core",
@@ -153,8 +155,8 @@ export function buildDiscovery(data, manifest, blocks) {
       .filter((r) => r.status === "planned" && r.dependsOn.some((d) => names.has(kebab(d))))
       .map((r) => r.name);
     const entry = {
-      layer: own?.layer ?? "L1",
-      ...(own && own.target !== "pro-candidate" ? { target: own.target } : {}),
+      layer: own?.layer ?? UNCLASSIFIED,
+      target: own && own.target !== "pro-candidate" ? own.target : UNCLASSIFIED,
       ...(own ? { roadmapRow: own.name } : {}),
       capabilities: rel.capabilities,
       domains: rel.domains,

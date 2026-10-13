@@ -63,11 +63,8 @@ export function BusinessContext({
         In applications
       </h2>
       <dl className="mt-2 divide-y divide-border/60">
-        {ctx && (
-          <Row label="Layer">
-            {ctx.layer}
-            {ctx.target ? ` · ${ctx.target}` : ""}
-          </Row>
+        {ctx && (ctx.layer || ctx.target) && (
+          <Row label="Layer">{[ctx.layer, ctx.target].filter(Boolean).join(" · ")}</Row>
         )}
         {ctx && ctx.capabilities.length > 0 && (
           <Row label="Capabilities">
