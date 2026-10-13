@@ -1,5 +1,8 @@
 "use client";
 
+import { Toggle } from "@kinetixui/ui";
+import { PlatformLogo } from "./platform-logo";
+
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -109,11 +112,14 @@ export function platformChipLabel(p: Platform): string {
  */
 const NATIVE_LABELS = NATIVE_PLATFORMS.map((p) => PLATFORM_DEFINITIONS[p].label);
 const NATIVE_SENTENCE =
-  NATIVE_LABELS.length > 1 ? `${NATIVE_LABELS.slice(0, -1).join(", ")} and ${NATIVE_LABELS.at(-1)}` : NATIVE_LABELS.join("");
+  NATIVE_LABELS.length > 1
+    ? `${NATIVE_LABELS.slice(0, -1).join(", ")} and ${NATIVE_LABELS.at(-1)}`
+    : NATIVE_LABELS.join("");
 const ABBR_ROW = PLATFORMS.map((p) => PLATFORM_ABBR[p]).join(" ");
 /** "Angular (preview) implements 64 so far" — the platforms still rolling out, named rather than left to a tag. */
 const ROLLING_OUT = PLATFORMS.filter((p) => !PLATFORM_DEFINITIONS[p].catalogComplete).map(
-  (p) => `${PLATFORM_DEFINITIONS[p].label} (${PLATFORM_DEFINITIONS[p].maturity}) implements ${countOnPlatform(ALL_SLUGS, p)} so far`,
+  (p) =>
+    `${PLATFORM_DEFINITIONS[p].label} (${PLATFORM_DEFINITIONS[p].maturity}) implements ${countOnPlatform(ALL_SLUGS, p)} so far`,
 );
 
 function Thumbnail({ item }: { item: Item }) {
@@ -121,15 +127,13 @@ function Thumbnail({ item }: { item: Item }) {
   // sheet, menus…) and near-empty demos (table, chart, image…) don't read as a
   // decorative thumbnail otherwise.
   const Mock = THUMBNAIL_MOCKS[item.slug];
-  const Demo =
-    Mock || NO_LIVE_THUMBNAIL.has(item.slug)
-      ? undefined
-      : demoRegistry[`${item.slug}-demo`]?.component;
+  const Demo = Mock || NO_LIVE_THUMBNAIL.has(item.slug) ? undefined : demoRegistry[`${item.slug}-demo`]?.component;
 
   return (
     <div
       data-gallery-thumbnail={Mock ? "mock" : Demo ? "demo" : "label"}
-      className="relative h-[184px] overflow-hidden border-b border-border/60 bg-muted/20 bg-[radial-gradient(hsl(var(--border)/0.45)_1px,transparent_1px)] [background-size:16px_16px]">
+      className="relative h-[184px] overflow-hidden border-b border-border/60 bg-muted/20 bg-[radial-gradient(hsl(var(--border)/0.45)_1px,transparent_1px)] [background-size:16px_16px]"
+    >
       {Mock ? (
         <div
           aria-hidden
@@ -199,9 +203,7 @@ function Card({ item }: { item: Item }) {
                 data-gallery-status
                 className={cn(
                   "shrink-0 rounded border px-1 font-mono text-label-md uppercase tracking-[0.1em]",
-                  item.status === "deprecated"
-                    ? "border-destructive/40 text-destructive"
-                    : "border-info/40 text-info",
+                  item.status === "deprecated" ? "border-destructive/40 text-destructive" : "border-info/40 text-info",
                 )}
               >
                 {item.status}
@@ -229,17 +231,6 @@ function Card({ item }: { item: Item }) {
     </Link>
   );
 }
-
-const catButton = (active: boolean) =>
-  cn(
-    // coarse:min-h-10 — a 26px pill under a mouse, 40px under a finger; the groups' gap grows with it so the
-    // taller rows never touch
-    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-label-md uppercase tracking-[0.12em] transition-colors coarse:min-h-10",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-    active
-      ? "border-primary bg-primary text-primary-foreground"
-      : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
-  );
 
 export function ComponentGallery() {
   const router = useRouter();
@@ -320,24 +311,24 @@ export function ComponentGallery() {
   const facetGroups = (
     <>
       <div role="group" aria-label="Filter by category" className="flex flex-wrap gap-1.5 coarse:gap-2">
-        <button
-          type="button"
-          aria-pressed={!activeCat}
+        <Toggle
+          pressed={!activeCat}
           onClick={() => setCat(null)}
-          className={catButton(!activeCat)}
+          variant="pill"
+          className="font-mono uppercase tracking-[0.12em]"
         >
           All <span className="tabular-nums">{ITEMS.length}</span>
-        </button>
+        </Toggle>
         {CATEGORY_ORDER.map((cat) => (
-          <button
+          <Toggle
             key={cat}
-            type="button"
-            aria-pressed={activeCat === cat}
+            pressed={activeCat === cat}
             onClick={() => setCat(activeCat === cat ? null : cat)}
-            className={catButton(activeCat === cat)}
+            variant="pill"
+            className="font-mono uppercase tracking-[0.12em]"
           >
             {cat} <span className="tabular-nums">{CATEGORY_COUNT[cat] ?? 0}</span>
-          </button>
+          </Toggle>
         ))}
       </div>
 
@@ -348,28 +339,29 @@ export function ComponentGallery() {
         {PLATFORMS.map((p) => {
           const on = activePlatform === p;
           return (
-            <button
+            <Toggle
               key={p}
-              type="button"
-              aria-pressed={on}
+              pressed={on}
+              leadingIcon={<PlatformLogo platform={p} />}
               onClick={() => setPlatform(on ? null : p)}
-              className={catButton(on)}
+              variant="pill"
+              className="font-mono uppercase tracking-[0.12em]"
               title={`Components implemented in the ${PLATFORM_DEFINITIONS[p].label} library`}
             >
               {platformChipLabel(p)} <span className="tabular-nums">{PLATFORM_COUNT[p] ?? 0}</span>
-            </button>
+            </Toggle>
           );
         })}
         {BETA_COUNT > 0 && (
-          <button
-            type="button"
-            aria-pressed={activeStatus === "beta"}
+          <Toggle
+            pressed={activeStatus === "beta"}
             onClick={() => setStatus(activeStatus === "beta" ? null : "beta")}
-            className={catButton(activeStatus === "beta")}
+            variant="pill"
+            className="font-mono uppercase tracking-[0.12em]"
             title="Components new this release"
           >
             Beta <span className="tabular-nums">{BETA_COUNT}</span>
-          </button>
+          </Toggle>
         )}
       </div>
     </>
@@ -381,12 +373,11 @@ export function ComponentGallery() {
         {componentTotal} catalogue entries — {componentCount} components and {recipes.length} documented{" "}
         {recipes.length === 1 ? "recipe" : "recipes"} — across {CATEGORY_ORDER.length} categories, built from Figma,
         styled against the token contract, distributed through the kinetixui registry. Each one ships React source;{" "}
-        {fullCoverageCount} of {componentTotal} also have {NATIVE_SENTENCE} implementations, and their snippets
-        appear on the component page.{" "}
+        {fullCoverageCount} of {componentTotal} also have {NATIVE_SENTENCE} implementations, and their snippets appear
+        on the component page.{" "}
         {ROLLING_OUT.length > 0 && <>{ROLLING_OUT.join("; ")}, and its catalogue is still rolling out. </>}
-        The{" "}
-        <span className="font-mono text-label-md uppercase tracking-[0.1em]">{ABBR_ROW}</span> tags on each card mark
-        which libraries carry it today.
+        The <span className="font-mono text-label-md uppercase tracking-[0.1em]">{ABBR_ROW}</span> tags on each card
+        mark which libraries carry it today.
       </p>
 
       {/* filter bar */}
@@ -498,9 +489,7 @@ export function ComponentGallery() {
       </div>
 
       <p role="status" aria-live="polite" className="mt-4 font-mono text-body-sm text-muted-foreground">
-        {filtered.length === ITEMS.length
-          ? `${ITEMS.length} entries`
-          : `${filtered.length} of ${ITEMS.length} entries`}
+        {filtered.length === ITEMS.length ? `${ITEMS.length} entries` : `${filtered.length} of ${ITEMS.length} entries`}
         {activeCat ? ` · ${activeCat}` : ""}
         {activePlatformLabel ? ` · ${activePlatformLabel}` : ""}
         {activeStatus ? ` · ${activeStatus}` : ""}
@@ -529,11 +518,7 @@ export function ComponentGallery() {
             if (rows.length === 0) return null;
             return (
               <section key={cat} aria-labelledby={`cat-${i}`}>
-                <SectionHead
-                  index={String(i + 1).padStart(2, "0")}
-                  label={cat}
-                  meta={`${rows.length} components`}
-                />
+                <SectionHead index={String(i + 1).padStart(2, "0")} label={cat} meta={`${rows.length} components`} />
                 <h2 id={`cat-${i}`} className="sr-only">
                   {cat}
                 </h2>

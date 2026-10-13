@@ -94,6 +94,7 @@ if (functionsClosure.length === 0) {
   fail("the functions closure is empty — nothing was verified");
 }
 for (const { file, source } of functionsClosure) {
+  if (/^\s*["']use client["'];/.test(source)) fail(`dist/${file} must stay server-importable`);
   const match = REACT_REFERENCE.exec(source);
   if (match) {
     fail(
@@ -136,6 +137,14 @@ for (const name of readdirSync(distDir)) {
       `dist/${name} is not reachable from any entry point — a stale chunk from an earlier build that ` +
         `\`files: ["dist"]\` would publish. The build needs --clean.`,
     );
+  }
+}
+
+// RSC consumers must reach a client boundary before any module imports React.
+for (const name of readdirSync(distDir).filter((n) => n.endsWith(".js"))) {
+  const code = readFileSync(path.resolve(distDir, name), "utf8");
+  if (/\bfrom\s+["']react(?:\/[^"']+)?["']/.test(code) && !/^\s*["']use client["'];/.test(code)) {
+    problems.push(`${name} imports React without a client boundary`);
   }
 }
 

@@ -20,7 +20,7 @@ describe("component onboarding", () => {
     const user = userEvent.setup();
     const track = vi.spyOn(analytics, "track").mockImplementation(() => {});
     render(<ComponentPreview name="button-demo" />);
-    await user.click(screen.getByRole("tab", { name: "code" }));
+    await user.click(screen.getByRole("radio", { name: "code" }));
     const platforms = [
       ["React", "/docs/installation", "react"],
       ["Angular", "/docs/angular", "angular"],

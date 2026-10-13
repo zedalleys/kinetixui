@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import * as Tabs from "@radix-ui/react-tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent, SegmentedControl, SegmentedControlItem } from "@kinetixui/ui";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { CopyButton } from "./copy-button";
@@ -21,7 +21,12 @@ import {
   type PlatformTab,
 } from "@/lib/platform-tabs";
 import { usageExamples } from "@/registry/usage-examples.generated";
-import { codeTabFor, platformIdForCodeTab, setPreferredPlatform, usePreferredPlatform } from "@/lib/platform-preference";
+import {
+  codeTabFor,
+  platformIdForCodeTab,
+  setPreferredPlatform,
+  usePreferredPlatform,
+} from "@/lib/platform-preference";
 
 const setupHref: Record<CodeTab, string> = {
   react: "/docs/installation",
@@ -30,11 +35,6 @@ const setupHref: Record<CodeTab, string> = {
   kotlin: "/docs/compose",
   dart: "/docs/flutter",
 };
-
-const tabTrigger = cn(
-  "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground transition-colors coarse:min-h-10",
-  "hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground",
-);
 
 function CodePane({ code, onCopy }: { code: string; onCopy?: () => void }) {
   return (
@@ -81,6 +81,7 @@ export function ComponentPreview({
   const preferred = codeTabFor(usePreferredPlatform());
   const pathname = usePathname();
   // the preview / code strip follows the page (the stage below carries the same direction); source stays LTR
+  const [mode, setMode] = React.useState("preview");
   const dir = useDocumentDirection();
   const entry = demoRegistry[name];
   // the component whose page this is — from the route, validated against the docs' own component list. A demo
@@ -125,13 +126,23 @@ export function ComponentPreview({
   // someone looked at the source: only from a click on Code or on another platform's tab, never on mount or restore
   const viewed = (tab: CodeTab, location: "code_tab" | "platform_tabs") => {
     if (component && showsCode(tab)) {
-      analytics.track("component_code_viewed", { component, platform: PLATFORM_FROM_CODE_TAB[tab], location, source: "component_page" });
+      analytics.track("component_code_viewed", {
+        component,
+        platform: PLATFORM_FROM_CODE_TAB[tab],
+        location,
+        source: "component_page",
+      });
     }
   };
 
   // the code itself is never reported — only which component and which platform's snippet was copied
   const copied = (tab: CodeTab) => {
-    if (component) analytics.track("component_code_copied", { component, platform: PLATFORM_FROM_CODE_TAB[tab], source: "component_page" });
+    if (component)
+      analytics.track("component_code_copied", {
+        component,
+        platform: PLATFORM_FROM_CODE_TAB[tab],
+        source: "component_page",
+      });
   };
 
   const renderTab = ({ tab, platform: manifestPlatform, label }: PlatformTab) => {
@@ -141,10 +152,9 @@ export function ComponentPreview({
     if (state && state !== "implementation" && state.type === "planned") {
       return (
         <p className="px-4 py-5 text-body-md text-muted-foreground">
-          <span className="font-medium text-foreground">Not implemented in {label} yet.</span>{" "}
-          {label} is in preview and rolling out in waves; this component is in the{" "}
-          {WAVE_LABEL[state.wave ?? ""] ?? state.wave} wave. There is deliberately no example here — an
-          invented one would be worse than none.
+          <span className="font-medium text-foreground">Not implemented in {label} yet.</span> {label} is in preview and
+          rolling out in waves; this component is in the {WAVE_LABEL[state.wave ?? ""] ?? state.wave} wave. There is
+          deliberately no example here — an invented one would be worse than none.
         </p>
       );
     }
@@ -173,73 +183,83 @@ export function ComponentPreview({
   };
 
   return (
-    <div
-      data-cp
-      className={cn("my-6 overflow-hidden rounded-xl border border-border", className)}
-    >
-      <Tabs.Root defaultValue="preview" dir={dir} onValueChange={(v) => v === "code" && viewed(tabs.length > 1 ? platform : "react", "code_tab")}>
-        <Tabs.List aria-label="View preview or code" className="flex items-center gap-1 bg-muted/30 px-2">
+    <div data-cp className={cn("my-6 overflow-hidden rounded-xl border border-border", className)}>
+      <div dir={dir}>
+        <SegmentedControl
+          value={mode}
+          dir={dir}
+          onValueChange={(next) => {
+            if (!next) return;
+            setMode(next);
+            if (next === "code") viewed(tabs.length > 1 ? platform : "react", "code_tab");
+          }}
+          aria-label="View preview or code"
+        >
           {["preview", "code"].map((v) => (
-            <Tabs.Trigger key={v} value={v} className={tabTrigger}>
+            <SegmentedControlItem key={v} value={v} className="capitalize">
               {v}
-            </Tabs.Trigger>
+            </SegmentedControlItem>
           ))}
-        </Tabs.List>
+        </SegmentedControl>
 
-        <Tabs.Content value="preview">
-          <PreviewEnvironment align={align}>
-            <Demo />
-          </PreviewEnvironment>
-        </Tabs.Content>
-
-        <Tabs.Content value="code">
-          <div className="border-t border-border bg-muted/40">
-            {tabs.length > 1 ? (
-              <Tabs.Root
-                dir={dir}
-                value={platform}
-                onValueChange={(v) => {
-                  const next = v as CodeTab;
-                  // only an explicit change of platform; the default React tab rendering is not a selection
-                  if (next === platform) return;
-                  setPreferredPlatform(platformIdForCodeTab(next));
-                  if (component) {
-                    analytics.track("platform_selected", { platform: PLATFORM_FROM_CODE_TAB[next], component, source: "component_page", location: "platform_tabs" });
-                  }
-                  viewed(next, "platform_tabs");
-                }}
-              >
-                <Tabs.List aria-label="Platform" className="flex flex-wrap items-center gap-1 border-b border-border px-2">
-                  {tabs.map((t) => (
-                    <Tabs.Trigger
-                      key={t.tab}
-                      value={t.tab}
-                      className={cn(
-                        "-mb-px border-b-2 border-transparent px-2.5 py-1.5 font-mono text-label-md uppercase tracking-[0.1em] text-muted-foreground transition-colors coarse:min-h-10",
-                        "hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground",
-                      )}
-                    >
-                      {t.label}
-                      {/* a preview platform says so on the tab itself — the tab sitting beside four stable
-                          ones would otherwise imply the same maturity */}
-                      {t.maturity !== "stable" && (
-                        <span className="ml-1.5 normal-case tracking-normal text-muted-foreground">· {t.maturity}</span>
-                      )}
-                    </Tabs.Trigger>
-                  ))}
-                </Tabs.List>
-                {tabs.map((t) => (
-                  <Tabs.Content key={t.tab} value={t.tab}>
-                    {renderTab(t)}
-                  </Tabs.Content>
-                ))}
-              </Tabs.Root>
-            ) : (
-              <CodePane code={entry.source} onCopy={() => copied("react")} />
-            )}
+        {mode === "preview" && (
+          <div role="region" aria-label={"Component preview"}>
+            <PreviewEnvironment align={align}>
+              <Demo />
+            </PreviewEnvironment>
           </div>
-        </Tabs.Content>
-      </Tabs.Root>
+        )}
+
+        {mode === "code" && (
+          <div role="region" aria-label={"Component code"}>
+            <div className="border-t border-border bg-muted/40">
+              {tabs.length > 1 ? (
+                <Tabs
+                  dir={dir}
+                  value={platform}
+                  onValueChange={(v) => {
+                    const next = v as CodeTab;
+                    // only an explicit change of platform; the default React tab rendering is not a selection
+                    if (next === platform) return;
+                    setPreferredPlatform(platformIdForCodeTab(next));
+                    if (component) {
+                      analytics.track("platform_selected", {
+                        platform: PLATFORM_FROM_CODE_TAB[next],
+                        component,
+                        source: "component_page",
+                        location: "platform_tabs",
+                      });
+                    }
+                    viewed(next, "platform_tabs");
+                  }}
+                >
+                  <TabsList aria-label="Platform" className="px-2">
+                    {tabs.map((t) => (
+                      <TabsTrigger key={t.tab} value={t.tab}>
+                        {t.label}
+                        {/* a preview platform says so on the tab itself — the tab sitting beside four stable
+                          ones would otherwise imply the same maturity */}
+                        {t.maturity !== "stable" && (
+                          <span className="ml-1.5 normal-case tracking-normal text-muted-foreground">
+                            · {t.maturity}
+                          </span>
+                        )}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  {tabs.map((t) => (
+                    <TabsContent key={t.tab} value={t.tab}>
+                      {renderTab(t)}
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              ) : (
+                <CodePane code={entry.source} onCopy={() => copied("react")} />
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -7,8 +7,7 @@ import { cn } from "../lib/utils";
 /**
  * SegmentedControl — an iOS-style single-select strip. Functionally
  * `ToggleGroup type="single"`: a thin, documented preset over the same
- * Radix primitive with the segmented look (`Tabs`' `TabsList`/
- * `TabsTrigger` visual treatment — filled track, raised active segment)
+ * Radix primitive with the segmented look (filled track, raised active segment)
  * instead of `Toggle`'s individually-outlined-button look. `type="single"`
  * is fixed, not exposed — a segmented control that could go fully
  * unselected or multi-select isn't the pattern. Gap-fill addition (not in
@@ -33,7 +32,7 @@ const SegmentedControl = React.forwardRef<
   <ToggleGroupPrimitive.Root
     ref={ref}
     type="single"
-    className={cn("inline-flex items-center rounded-lg bg-surface-grouped p-1 font-sans", className)}
+    className={cn("inline-flex min-w-0 max-w-full flex-wrap items-center rounded-lg bg-surface-grouped p-1 font-sans", className)}
     {...props}
   />
 ));
@@ -46,15 +45,15 @@ const SegmentedControlItem = React.forwardRef<
   <ToggleGroupPrimitive.Item
     ref={ref}
     className={cn(
-      "inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-label-md font-medium text-muted-foreground",
-      "transition-[color,background-color,box-shadow] duration-fast ease-standard",
+      "inline-flex coarse:min-h-11 flex-1 items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-label-md font-medium text-muted-foreground",
+      "transition-[color,background-color,box-shadow] duration-fast ease-standard motion-reduce:transition-none",
       "[@media(hover:hover)]:enabled:hover:data-[state=off]:bg-foreground/[0.08] [@media(hover:hover)]:enabled:hover:data-[state=off]:text-foreground",
       // Pressed is written twice: bare for touch, and again inside the hover media query, because Tailwind
       // emits media-wrapped utilities after plain ones and the hover layer would otherwise outrank the press.
       "enabled:active:data-[state=off]:bg-foreground/[0.14] enabled:active:data-[state=off]:text-foreground",
       "[@media(hover:hover)]:enabled:active:data-[state=off]:bg-foreground/[0.14] [@media(hover:hover)]:enabled:active:data-[state=off]:text-foreground",
       "data-[state=on]:bg-card data-[state=on]:text-foreground data-[state=on]:[box-shadow:inset_0_0_0_1px_hsl(var(--border)/0.5),var(--shadow-sm)]",
-      "outline-none focus-visible:!ring-2 focus-visible:ring-ring",
+      "outline-none focus-visible:!ring-2 focus-visible:ring-ring forced-colors:focus-visible:[outline:2px_solid_Highlight] forced-colors:focus-visible:outline-offset-[-2px]",
       "disabled:pointer-events-none disabled:opacity-disabled",
       className,
     )}
