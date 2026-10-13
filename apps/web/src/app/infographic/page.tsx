@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/route-seo";
 import tokens from "@kinetixui/tokens";
 import { PipelineInfographic } from "@/components/pipeline-infographic";
 import { SectionHead } from "@/components/section-head";
@@ -16,10 +17,7 @@ import { componentCount, componentTotal, recipes } from "@/lib/platform-support"
 const PLATFORMS = ALL_PLATFORMS;
 const PLATFORM_OUTPUTS = ["Web CSS", "tokens.ts", "SwiftUI", "Compose", "Flutter"] as const;
 
-export const metadata: Metadata = {
-  title: "Infographic",
-  description: `The KinetixUI system drawn to scale — one design source, ${PLATFORM_OUTPUTS.length} outputs, ${PLATFORMS.length} component libraries, measured.`,
-};
+export const metadata: Metadata = routeMetadata("/infographic");
 
 /* -------- build-time counts: every figure below is derived, not typed -------- */
 
@@ -127,7 +125,7 @@ export default function InfographicPage() {
             <div key={s.label} className="bg-background p-4">
               <p className="font-display text-3xl font-bold tabular-nums tracking-[-0.02em]">{s.n}</p>
               <p className="mt-1 text-sm font-medium">{s.label}</p>
-              <p className="mt-0.5 font-mono text-[10px] leading-tight text-muted-foreground">{s.sub}</p>
+              <p className="mt-0.5 font-mono text-body-sm leading-tight text-muted-foreground">{s.sub}</p>
             </div>
           ))}
         </div>
@@ -156,7 +154,7 @@ export default function InfographicPage() {
               <tr className="border-b border-border">
                 <th
                   scope="col"
-                  className="py-2 pr-4 text-left font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+                  className="py-2 pr-4 text-left font-mono text-label-md font-medium uppercase tracking-[0.12em] text-muted-foreground"
                 >
                   Capability
                 </th>
@@ -164,7 +162,7 @@ export default function InfographicPage() {
                   <th
                     key={p}
                     scope="col"
-                    className="px-3 py-2 text-center font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+                    className="px-3 py-2 text-center font-mono text-label-md font-medium uppercase tracking-[0.12em] text-muted-foreground"
                   >
                     {p}
                   </th>
@@ -187,7 +185,7 @@ export default function InfographicPage() {
             </tbody>
           </table>
         </div>
-        <p className="mt-3 font-mono text-[10px] text-muted-foreground">
+        <p className="mt-3 font-mono text-body-sm text-muted-foreground">
           Of the {componentDocs.length} React catalogue entries, SwiftUI ports {NATIVE_COUNT.SwiftUI},
           Jetpack Compose {NATIVE_COUNT.Compose} and Flutter {NATIVE_COUNT.Flutter}; the rest
           (Form, Navigation Menu, Combobox and a couple of platform-specific gaps) stay React-only,
@@ -205,7 +203,7 @@ export default function InfographicPage() {
                 aria-hidden
                 className="absolute -left-[5px] top-1.5 size-2.5 rounded-full border-2 border-background bg-primary"
               />
-              <p className="font-mono text-[13px] font-semibold text-foreground">v{t.v}</p>
+              <p className="font-mono text-body-md font-semibold text-foreground">v{t.v}</p>
               <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">{t.note}</p>
             </li>
           ))}
@@ -229,7 +227,7 @@ export default function InfographicPage() {
               <tr className="border-b border-border">
                 <th
                   scope="col"
-                  className="py-2 pr-4 text-left font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+                  className="py-2 pr-4 text-left font-mono text-label-md font-medium uppercase tracking-[0.12em] text-muted-foreground"
                 >
                   <span className="sr-only">Capability</span>
                 </th>
@@ -238,7 +236,7 @@ export default function InfographicPage() {
                     key={c}
                     scope="col"
                     className={
-                      "px-3 py-2 text-center font-mono text-[11px] font-medium uppercase tracking-[0.12em] " +
+                      "px-3 py-2 text-center font-mono text-label-md font-medium uppercase tracking-[0.12em] " +
                       (i === 0 ? "text-primary" : "text-muted-foreground")
                     }
                   >

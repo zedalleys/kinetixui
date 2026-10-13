@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as Tabs from "@radix-ui/react-tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@kinetixui/ui";
 import { Check } from "lucide-react";
 import Link from "next/link";
 import { PreferencesPanel } from "@/examples/flagship-preferences";
@@ -14,7 +14,6 @@ import { componentTotal } from "@/lib/platform-support";
 import { PLATFORM_TABS, type CodeTab } from "@/lib/platform-tabs";
 import { codeTabFor, platformIdForCodeTab, setPreferredPlatform, usePreferredPlatform } from "@/lib/platform-preference";
 import { CopyButton } from "./copy-button";
-import { cn } from "@/lib/utils";
 
 /** "Angular (preview)" — platforms whose catalogue is still rolling out, derived rather than typed. */
 const ROLLING_OUT = PLATFORMS.filter((p) => !PLATFORM_DEFINITIONS[p].catalogComplete).map(
@@ -49,11 +48,6 @@ const VERIFICATION: Partial<Record<CodeTab, string>> = {
 /** The tabs, in manifest order, restricted to the platforms this recipe really has a source file for. */
 const FLAGSHIP_TABS = PLATFORM_TABS.filter((t) => SOURCE_KEY[t.tab]);
 
-const tabTrigger = cn(
-  "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
-  "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-  "data-[state=active]:border-primary data-[state=active]:text-foreground",
-);
 
 export function CrossPlatformFlagship() {
   // the reader's platform, shared with the docs; this recipe has no Angular copy, so Angular shows React here
@@ -92,7 +86,7 @@ export function CrossPlatformFlagship() {
           </div>
           <ul className="mt-6 space-y-2 border-t border-border pt-4">
             {FLAGSHIP_TABS.map((t) => (
-              <li key={t.tab} className="flex items-start gap-2 text-[12px] text-muted-foreground">
+              <li key={t.tab} className="flex items-start gap-2 text-body-sm text-muted-foreground">
                 <Check aria-hidden className="mt-0.5 size-3.5 shrink-0 text-primary" />
                 <span>
                   <span className="font-medium text-foreground">{t.label}</span> — {VERIFICATION[t.tab]}
@@ -103,35 +97,35 @@ export function CrossPlatformFlagship() {
         </div>
 
         {/* platform tabs + real, CI-compiled source */}
-        <Tabs.Root value={platform} onValueChange={onPlatformChange} className="flex flex-col bg-background">
-          <Tabs.List aria-label="Implementation platform" className="flex flex-wrap items-center gap-x-1 border-b border-border px-4">
+        <Tabs value={platform} onValueChange={onPlatformChange} className="flex flex-col bg-background">
+          <TabsList aria-label="Implementation platform" className="px-4">
             {FLAGSHIP_TABS.map((t) => (
-              <Tabs.Trigger key={t.tab} value={t.tab} className={tabTrigger}>
+              <TabsTrigger key={t.tab} value={t.tab} >
                 {t.label}
-              </Tabs.Trigger>
+              </TabsTrigger>
             ))}
-          </Tabs.List>
+          </TabsList>
           {FLAGSHIP_TABS.map((t) => {
             const source = flagshipExampleSource[SOURCE_KEY[t.tab]!];
             return (
-              <Tabs.Content key={t.tab} value={t.tab} className="relative flex-1">
+              <TabsContent key={t.tab} value={t.tab} className="relative flex-1">
                 {/* copies fine; intentionally reports nothing — see the note above */}
                 <CopyButton value={source} className="absolute right-3 top-3 z-10" />
                 <pre
                   // a code block scrolls sideways/vertically when it overflows, so the keyboard must be able to reach it
                   tabIndex={0}
                   aria-label={`${t.label} source`}
-                  className="h-full max-h-[420px] overflow-auto p-4 font-mono text-[12.5px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                  className="h-full max-h-[420px] overflow-auto p-4 font-mono text-code leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                 >
                   <code>{source}</code>
                 </pre>
-              </Tabs.Content>
+              </TabsContent>
             );
           })}
-        </Tabs.Root>
+        </Tabs>
       </div>
 
-      <p className="mt-4 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+      <p className="mt-4 font-mono text-label-md uppercase tracking-wide text-muted-foreground">
         <Link href="/docs/platforms" className="underline-offset-4 hover:text-foreground hover:underline">
           {/* "all 4" under a headline of 5 read as a miscount. These are the catalogue-complete platforms; the one
               still rolling out is named rather than left for the reader to subtract. */}

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "reference-code",
+  "title": "Reference Code",
+  "status": "beta",
+  "since": "0.25.0",
+  "platforms": [
+    "React"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "ReferenceCode",
+      "props": [
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "What the code is — \"Booking reference\", \"Order number\". Shown above the code and used to name the copy button."
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "The code itself, copied exactly as given."
+        },
+        {
+          "name": "copyable",
+          "type": "boolean",
+          "required": false,
+          "description": "Show the copy button. Default true."
+        },
+        {
+          "name": "size",
+          "type": "\"md\" | \"lg\"",
+          "required": false,
+          "description": "`lg` for a code that is the point of the screen (a confirmation); `md` (default) inside details."
+        },
+        {
+          "name": "copyLabel",
+          "type": "string",
+          "required": false,
+          "description": "Visible text of the copy button. Default \"Copy\"."
+        },
+        {
+          "name": "copiedMessage",
+          "type": "string",
+          "required": false,
+          "description": "Announced and shown after a successful copy. Default \"Copied\"."
+        },
+        {
+          "name": "copyFailedMessage",
+          "type": "string",
+          "required": false,
+          "description": "Announced and shown when the clipboard is unavailable or refused."
+        },
+        {
+          "name": "onCopy",
+          "type": "((value: string) => void)",
+          "required": false,
+          "description": "Called with the value after it reached the clipboard."
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/reference-code.tsx"
+}

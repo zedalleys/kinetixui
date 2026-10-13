@@ -3,9 +3,9 @@ id: a01
 channel: linkedin
 format: post
 supports: article.md
-cta: <DEV_ARTICLE_URL>
+cta: https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0
 secondary_cta: /docs/platforms
-status: drafted
+status: ready
 ---
 
 # LinkedIn
@@ -59,7 +59,7 @@ mine: **what would fail if this claim were false?** If the answer is nothing,
 the claim is decoration.
 
 Full writeup, including the component page that documented an API nobody had
-ever written: <DEV_ARTICLE_URL>
+ever written: https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0
 
 #designsystems #frontend
 
@@ -101,7 +101,7 @@ About 1% fiction — enough to publish an API that had never existed.
 Those examples are moving into files our CI compiles, with the site quoting the
 extracted region. Six of a hundred-odd so far.
 
-Writeup: <DEV_ARTICLE_URL>
+Writeup: https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0
 
 ---
 
@@ -111,4 +111,4 @@ Writeup: <DEV_ARTICLE_URL>
 - Do not name another library as the bad example.
 - Do not claim this is solved — it is 90/98 with 8 documented exceptions.
 - Do not make the CTA installation-focused. This is an awareness piece.
-- Do not post before `<DEV_ARTICLE_URL>` is a real URL.
+- Do not post before the attribution stop gate in `publish-checklist.md` §4 has passed.

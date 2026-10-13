@@ -1,0 +1,112 @@
+import { guideMetadata } from "@/lib/guides";
+
+export const metadata = guideMetadata("verify-design-system-parity");
+
+# How to verify design system parity across web, iOS and Android
+
+<GuideStatus slug="verify-design-system-parity" />
+
+A coverage table that says a component exists on every platform answers the first question an evaluator asks.
+It does not answer the second: does it behave the same? This guide describes a way to measure behavioural parity
+across platforms that stays honest as the code changes, using KinetixUI's own setup as the example. It assumes
+coverage itself is already checked against source; that half is about whether an implementation exists at all.
+This half is about what it has been shown to do.
+
+## Start by naming the kinds of evidence
+
+"Tested" hides too much. Split it into kinds that a reader can act on, each of which is either present for a
+component on a platform or not:
+
+| Kind | What it shows | Typical instrument |
+| --- | --- | --- |
+| Build | The implementation compiles on its platform | the platform's own compiler in CI |
+| Interaction | Behaviour: keys, gestures, state changes | unit or UI tests on that platform |
+| Accessibility | What assistive technology is told: roles, names, states | ARIA assertions, axe; SwiftUI traits; Compose semantics; Flutter semantics |
+| RTL | The layout and the key handling mirror | tests run under a right-to-left direction |
+| Large text | The layout survives the platform's text-size setting | tests at a large font scale |
+| Reduced motion | Animation honours the platform setting and still reaches the final state | tests with the setting on |
+| Visual | Each state looks as designed | screenshot comparison |
+
+A component on one platform can have interaction evidence and no RTL evidence. Keeping the kinds separate is what
+lets the report say so.
+
+## Derive the evidence from the tests
+
+The usual failure is a matrix someone fills in by hand. It is correct the day it is written and drifts toward
+optimism afterwards, because nobody removes a tick when a test is deleted.
+
+KinetixUI avoids that by marking test passages instead of components. A test states what kind of check it performs,
+in a comment such as `kx-verify: interaction`, and a generator reads which components the passage covers from the
+KinetixUI symbols the passage actually calls. Three rules keep that from over-claiming:
+
+- **A marker covers its passage, not its file.** A long suite that checks right-to-left behaviour for three
+  components reports RTL for three, not for every component the file mentions.
+- **Coverage comes from code, never from a list.** A marker cannot claim a component its passage does not exercise.
+- **The result is generated and checked in CI.** If the committed evidence file differs from a fresh run, the build
+  fails, so nobody can edit a number by hand.
+
+## Report the weakest component, not the average
+
+Averages flatter. If nine components on a platform have accessibility tests and one does not, "90%" invites a
+reader to assume the one they need is covered. Instead, define levels by the evidence they require and give a
+platform's catalogue the level of its least-verified component. KinetixUI's levels are:
+
+<VerificationLadderTable />
+
+and the result today, per platform, generated from the repository:
+
+<PlatformVerificationTable />
+
+Individual components often sit above their platform's floor, and each KinetixUI component page shows its own
+evidence per platform. The floor is what you can rely on without looking.
+
+## Keep three questions apart
+
+Evidence answers one question. Two others are often folded into it, and each makes the report less useful:
+
+- **Availability**: is there an implementation on this platform at all, or a documented alternative?
+- **Package maturity**: is this platform's package a finished product with a settled API?
+- **Verification**: what do the tests show about this implementation?
+
+A package can be published and immature, or unpublished and well tested. [Supported
+platforms](/docs/platforms#availability-package-maturity-and-verification-are-three-different-things) keeps them in
+separate columns for that reason.
+
+## Prove each check can fail
+
+A gate that never goes red proves nothing about the defect it was written for. For each important check, run a
+negative control:
+
+1. Establish the broken condition, or reintroduce the original bug.
+2. Run the gate and confirm it fails with the expected rule.
+3. Restore the fix, confirm the file is byte-identical to before, and confirm the gate passes again.
+
+KinetixUI keeps these as scripts next to its gates, and a control the gate no longer catches fails the script, so a
+check that has quietly stopped detecting anything shows up the next time the controls run. The habit matters more than the tooling: a check written after a real bug, and proven against that
+bug, is worth more than ten written against hypotheticals.
+
+## Know what each instrument cannot see
+
+Every kind of evidence has a blind spot, and the report should say which:
+
+- A **unit test in jsdom** proves roles, names and key handling. It does no layout, so it proves nothing about
+  what a page looks like.
+- **Mocked geometry** proves the component's logic, not the browser's.
+- An **axe pass** proves what axe can detect, on the states it was shown.
+- A **structural RTL check** proves that the right properties are used, not that every screen looks right mirrored.
+- **None of it** is an audit by people using assistive technology.
+
+KinetixUI's [Accessibility](/docs/accessibility) page states which of these back each claim, and [RTL](/docs/rtl)
+does the same for direction.
+
+## Where to start
+
+If you have nothing yet, start with build evidence on every platform and accessibility evidence on the components
+people use most, mark passages rather than components, generate the report, and publish the weakest-component
+figure even when it is low. The low number is the useful one: it tells you where the next test goes. The wider
+context, including where parity tends to break first, is in
+[Cross-platform design systems: architecture, parity and trade-offs](/guides/cross-platform-design-systems).
+
+<GuideCta slug="verify-design-system-parity" />
+
+<GuideFooter slug="verify-design-system-parity" />

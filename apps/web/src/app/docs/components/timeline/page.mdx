@@ -1,13 +1,12 @@
-export const metadata = {
-  title: "Timeline",
-  description: "Ordered events down a rail — dot, connector, time, content — left-aligned or alternating left/right of a centered rail.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("timeline", "Ordered events down a rail — marker, connector, time, content — on one side or alternating sides of a centred rail, with optional spoken statuses.");
 
 # Timeline
 
 <ComponentMeta />
 
-Ordered events down a rail — dot, connector, time, content — left-aligned or alternating left/right of a centered rail.
+Ordered events down a rail — marker, connector, time, content — on one side or alternating sides of a centred rail, with optional spoken statuses.
 
 <ComponentPreview name="timeline-demo" />
 
@@ -22,6 +21,40 @@ npx @kinetixui/cli add timeline
 ```tsx
 import { Timeline } from "@kinetixui/ui";
 ```
+
+## Statuses
+
+Give items a `status` to turn the timeline into an order, refund, booking or delivery tracker. Without statuses the
+timeline renders exactly as before.
+
+<ComponentPreview name="timeline-status" />
+
+```tsx
+<Timeline
+  items={[
+    { title: "Refund requested", time: "12 Mar", status: "complete" },
+    { title: "Approved", time: "13 Mar", status: "complete" },
+    { title: "Sent to your bank", time: "14 Mar", status: "current", content: "Usually 3 to 5 working days." },
+    { title: "Received", status: "pending" },
+  ]}
+/>
+```
+
+| Status | Marker | Spoken before the title |
+| --- | --- | --- |
+| `complete` | filled, with a check | "Completed" |
+| `current` | ringed; the item has `aria-current="step"` | "Current" |
+| `pending` | hollow | "Pending" |
+| `warning` | warning triangle | "Needs attention" |
+| `error` | cross | "Failed" |
+| `neutral` | plain dot | nothing |
+
+Each status has its own marker **shape** and its own spoken word, so status is never colour alone. Replace the words
+with `statusLabels` (all items) or `statusLabel` (one item) to localise. An item can carry an `action`, such as a
+"Track parcel" button, under its content.
+
+`alternating` places items on both sides of a centred rail using logical sides: in RTL the rail and the alternating items
+mirror, and text on the start side aligns towards the rail with `text-end`. Screen-reader output was checked in jsdom, not with VoiceOver or NVDA.
 
 Styled entirely from the KinetixUI token contract — `bg-action`,
 `text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark

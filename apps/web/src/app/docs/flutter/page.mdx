@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Flutter",
-  description: "The Flutter component library — a Dart implementation of the shared KinetixUI component contract, on the same token contract.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/flutter");
 
 # Flutter
 
@@ -28,6 +27,32 @@ to the token source it depends on.
   ports. A publication workflow (`publish-flutter.yml`) exists but has not been
   used for a real release.
 </Callout>
+
+<PlatformAtAGlance platform="Flutter" />
+
+## What differs from the React library
+
+- **Widgets, written natively.** State is caller-owned (`value` plus a change callback), and overlays are
+  placed in a top-level `Stack`.
+- **You can adopt the design language without the widgets.** Flutter is the one platform with ready-made
+  adapters for stock UI: `KinetixMaterialTheme` and `KinetixCupertinoTheme` put the same tokens behind
+  Material and Cupertino widgets. See
+  [Using KinetixUI without Kinetix widgets](#using-kinetixui-without-kinetix-widgets).
+- **Its own colour scheme output.** The token build writes a Flutter colour scheme with real dark values for
+  this package, beside the older light-only output (see [Tokens](#tokens-a-real-dark-pass-no-name-collision)).
+- **Distribution and evidence.** It is a git or path dependency pinned to a commit; it is not on pub.dev. CI
+  analyses and tests the package itself, and the evidence counts in the summary above say how much of the
+  catalogue those tests cover.
+
+## A first adoption path
+
+1. If you already have a Material or Cupertino app, start with the
+   [theme adapters](#using-kinetixui-without-kinetix-widgets): your existing widgets take the KinetixUI tokens
+   with no rewrite.
+2. Add `kinetix_ui` as a dependency [pinned to a commit](#setup).
+3. Replace screens with `Kinetix*` widgets where you want the components themselves, and apply
+   [a custom theme](#a-custom-theme).
+4. Read [Not ported](#not-ported-deliberate) and [Known gaps](#known-gaps) before planning around a component.
 
 ## Setup
 
@@ -332,6 +357,30 @@ overlays and disclosures. Overlay widgets (`KinetixDialog`,
   drag-and-drop; hand-rolling that from scratch is a much bigger lift
   than porting the component. Use `Draggable` / `DragTarget` directly
   for the specific board.
+- **`ResultState`** — a React-first beta (business capability roadmap,
+  Phase 1); a native port is an open roadmap decision, not a refusal.
+  Compose `KinetixEmpty` with a status icon, title and actions.
+- **`ReferenceCode`** — React-first beta, same decision. Compose
+  `SelectableText` with a `KinetixButton` that copies.
+- **`PriceBreakdown`** — React-first beta, same decision. Compose
+  `KinetixDescriptionList` rows with the total after a `KinetixSeparator`.
+- **`PassCard`** — React-first beta, same decision. Compose `KinetixCard`,
+  `KinetixDescriptionList` and the supplied code as an `Image`.
+- **`AmountDisplay`** — a React-first beta (business capability roadmap,
+  Phase 2); same open decision. Compose a tabular-figure `Text` with the
+  sign in the string and a full accessibility label.
+- **`GuestPicker`** — React-first beta, same decision. Compose one
+  `KinetixNumberInput` per category, named after it, in a `KinetixPopover`.
+- **`CountrySelect`** — React-first beta, same decision. Compose
+  `KinetixSelect` over your own country list.
+- **`PhoneInput`** — React-first beta, same decision. Compose
+  a calling-code `KinetixSelect` and a `TextField` with `TextInputType.phone` in a left-to-right `Directionality`.
+- **`DateRangeInput`** — React-first beta, same decision. Compose
+  `showDateRangePicker`, keeping the results date-only.
+- **`TimeSlotPicker`** — React-first beta, same decision. Compose
+  `ChoiceChip`s in one mutually exclusive group.
+- **`AddressFields`** — React-first beta, same decision. Compose a
+  `KinetixField` per address field with the platform's autofill hints.
 
 ## Known gaps
 

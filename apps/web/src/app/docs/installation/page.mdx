@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Installation",
-  description: "Install KinetixUI two ways: the registry, which copies component source into your repo with the CLI, or the npm packages as versioned dependencies. Both use the same tokens.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/installation");
 
 # Installation
 
@@ -12,6 +11,13 @@ KinetixUI is cross-platform design system infrastructure. Choose your platform f
 - **[SwiftUI](/docs/swiftui)** — a local SwiftPM package from a repository checkout; iOS 16 / macOS 13 or newer.
 - **[Jetpack Compose](/docs/compose)** — the Android library module from a repository checkout; no Maven Central install yet.
 - **[Flutter](/docs/flutter)** — a local path dependency from a repository checkout; no pub.dev install yet.
+
+React is the reference implementation and the most complete library: every catalogue entry has a React
+implementation, and the other platforms are compared with it. In one place:
+
+<PlatformAtAGlance platform="React" />
+
+<FurtherReading guides={["evaluate-cross-platform-component-library"]} />
 
 The rest of this page covers **React with Tailwind CSS 3**. Tailwind 4 setup is not verified here.
 Start with an app that already renders React and loads a global stylesheet. The CLI adds component source
@@ -195,3 +201,9 @@ the Tailwind layers there; you do not need to import a second copy of the token 
 ## Dark mode
 
 KinetixUI's dark theme is a class toggle on `<html>`. See [Dark Mode](/docs/dark-mode).
+
+## Next steps
+
+- [Design tokens](/docs/tokens) and [theming](/docs/theming): change the look without forking components.
+- [Accessibility](/docs/accessibility): what the React library is tested for.
+- [Blocks](/blocks): sign-in, settings and dashboard sections built from the components.

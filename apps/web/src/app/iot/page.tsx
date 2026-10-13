@@ -1,5 +1,6 @@
 import type * as React from "react";
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/route-seo";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { KINETIX_PAIRING_FAILURES, KINETIX_PAIRING_METHODS, KINETIX_PAIRING_STAGES } from "@kinetixui/iot/functions";
@@ -34,7 +35,6 @@ import {
   IOT_VERSION,
   type IotCategoryId,
 } from "@/lib/iot";
-import { canonical } from "@/lib/seo";
 
 /**
  * /iot — the Connected Product Lab. `/docs/iot` stays the reference.
@@ -58,25 +58,7 @@ import { canonical } from "@/lib/seo";
 const NOW = "2026-01-01T12:00:00.000Z";
 const FIVE_MINUTES_AGO = new Date(Date.parse(NOW) - 5 * 60_000).toISOString();
 
-export const metadata: Metadata = {
-  title: "IoT — Connected Product Lab",
-  description:
-    "Controls, telemetry, pairing and automation patterns for real asynchronous hardware. KinetixUI IoT is a React-only, experimental module that draws what a device confirmed differently from what a user requested. It ships no transport, no automation engine and no video; every demo on this page is simulated.",
-  ...canonical("/iot"),
-  openGraph: {
-    title: "KinetixUI IoT — Build connected products that tell the truth about device state",
-    description:
-      "Controls, telemetry, pairing and automation patterns for real asynchronous hardware. React-only and experimental, with no transport and no automation engine.",
-    url: "/iot",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "KinetixUI IoT — Build connected products that tell the truth about device state",
-    description:
-      "Controls, telemetry, pairing and automation patterns for real asynchronous hardware. React-only and experimental, with no transport and no automation engine.",
-  },
-};
+export const metadata: Metadata = routeMetadata("/iot");
 
 /** The on-page contents, in section order. Ids match the `LabSection` ids below. */
 const CONTENTS: readonly { id: string; label: string }[] = [
@@ -124,8 +106,8 @@ function CategoryPanel({
     .map((layer) => ({ layer, names: parts.filter((name) => (IOT_PART_LAYER[name] ?? "pattern") === layer) }))
     .filter((group) => group.names.length > 0);
   return (
-    <div className="grid gap-10">
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:gap-16">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-10">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:gap-16">
         <div className="min-w-0">
           <p className="eyebrow">{label}</p>
           <h3 className="mt-3 max-w-2xl text-balance font-display text-2xl font-semibold tracking-[-0.02em] md:text-3xl">
@@ -361,7 +343,7 @@ export default function IotPage() {
           <ol aria-label="The questions every environment asks" className={ENVIRONMENT_GRID}>
             {ENVIRONMENT_QUESTIONS.map((q, i) => (
               <li key={q.question} className="min-w-0 rounded-xl border border-border bg-card p-4">
-                <span aria-hidden className="font-mono text-[11px] text-muted-foreground">
+                <span aria-hidden className="font-mono text-body-sm text-muted-foreground">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <p className="mt-1 font-display text-base font-semibold">{q.question}</p>
@@ -411,7 +393,7 @@ export default function IotPage() {
             className="flex min-w-0 flex-col gap-4 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="min-w-0">
-              <p className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Full-page demo · simulated</p>
+              <p className="font-mono text-label-md uppercase tracking-wide text-muted-foreground">Full-page demo · simulated</p>
               <h3 id="iot-building-demo" className="mt-1 font-display text-lg font-semibold">
                 Building operations
               </h3>
@@ -474,7 +456,7 @@ export default function IotPage() {
                       <ol aria-label="One command, told honestly" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                         {COMMAND_STORY.map((step, i) => (
                           <li key={step.word} className="rounded-xl border border-border bg-card p-4">
-                            <span aria-hidden className="font-mono text-[11px] text-muted-foreground">
+                            <span aria-hidden className="font-mono text-body-sm text-muted-foreground">
                               {String(i + 1).padStart(2, "0")}
                             </span>
                             <p className="mt-1 font-display text-base font-semibold">{step.word}</p>
@@ -997,8 +979,8 @@ import { SensorReading, formatLastSeen } from "${IOT_PACKAGE}";`}
                 <span
                   className={
                     column.state === "shipped"
-                      ? "rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
-                      : "rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+                      ? "rounded-full bg-primary/10 px-2 py-0.5 text-label-md font-medium text-primary"
+                      : "rounded-full bg-muted px-2 py-0.5 text-label-md font-medium text-muted-foreground"
                   }
                 >
                   {column.state === "shipped" ? "In the module" : column.state === "excluded" ? "Excluded" : "Deferred"}

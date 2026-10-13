@@ -46,6 +46,11 @@
     "KxCardFooter",
     "KxCardHeader",
     "KxCardTitle",
+    "KxCarousel",
+    "KxCarouselContent",
+    "KxCarouselItem",
+    "KxCarouselNext",
+    "KxCarouselPrevious",
     "KxCheckbox",
     "KxCircularProgress",
     "KxCodeBlock",
@@ -64,6 +69,7 @@
     "KxCommandList",
     "KxCommandSeparator",
     "KxCommandShortcut",
+    "KxComparisonSlider",
     "KxContextMenu",
     "KxContextMenuContent",
     "KxContextMenuTrigger",
@@ -147,6 +153,17 @@
     "KxMultiSelectOption",
     "KxNativeSelect",
     "KxNavigationBar",
+    "KxNavigationMenu",
+    "KxNavigationMenuContent",
+    "KxNavigationMenuIndicator",
+    "KxNavigationMenuItem",
+    "KxNavigationMenuLink",
+    "KxNavigationMenuList",
+    "KxNavigationMenuTrigger",
+    "KxNotificationCenter",
+    "KxNotificationCenterContent",
+    "KxNotificationCenterTrigger",
+    "KxNotificationItem",
     "KxNumberInput",
     "KxOrientation",
     "KxPageHeader",
@@ -168,6 +185,11 @@
     "KxRadio",
     "KxRadioGroup",
     "KxRating",
+    "KxResizableDirection",
+    "KxResizableHandle",
+    "KxResizablePanel",
+    "KxResizablePanelGroup",
+    "KxScrollArea",
     "KxSegment",
     "KxSegmentedControl",
     "KxSelect",
@@ -183,6 +205,23 @@
     "KxSheetContent",
     "KxSheetSide",
     "KxSide",
+    "KxSidebar",
+    "KxSidebarContent",
+    "KxSidebarFooter",
+    "KxSidebarGroup",
+    "KxSidebarGroupContent",
+    "KxSidebarGroupLabel",
+    "KxSidebarHeader",
+    "KxSidebarInput",
+    "KxSidebarInset",
+    "KxSidebarMenu",
+    "KxSidebarMenuButton",
+    "KxSidebarMenuItem",
+    "KxSidebarMenuSkeleton",
+    "KxSidebarProvider",
+    "KxSidebarSeparator",
+    "KxSidebarSide",
+    "KxSidebarTrigger",
     "KxSkeleton",
     "KxSlider",
     "KxSpinner",
@@ -204,6 +243,13 @@
     "KxTimeline",
     "KxTimelineItem",
     "KxTimelineStatus",
+    "KxToast",
+    "KxToastButton",
+    "KxToastOptions",
+    "KxToastType",
+    "KxToaster",
+    "KxToasterPosition",
+    "KxToasterService",
     "KxTocItem",
     "KxToggle",
     "KxToggleGroup",
@@ -213,6 +259,8 @@
     "KxTooltip",
     "KxTooltipContent",
     "KxTooltipTrigger",
+    "KxTour",
+    "KxTourStep",
     "KxTrend"
   ],
   "declarations": [
@@ -663,6 +711,64 @@
       "exported": true
     },
     {
+      "name": "KxCarousel",
+      "kind": "component",
+      "selector": "kx-carousel",
+      "inputs": [
+        "index",
+        "loop",
+        "orientation"
+      ],
+      "outputs": [
+        "indexChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCarouselContent",
+      "kind": "component",
+      "selector": "kx-carousel-content",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCarouselItem",
+      "kind": "component",
+      "selector": "kx-carousel-item",
+      "inputs": [
+        "aria-label"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCarouselNext",
+      "kind": "component",
+      "selector": "button[kxCarouselNext]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCarouselPrevious",
+      "kind": "component",
+      "selector": "button[kxCarouselPrevious]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
       "name": "KxCheckbox",
       "kind": "component",
       "selector": "kx-checkbox",
@@ -864,6 +970,23 @@
       "selector": "kx-command-shortcut",
       "inputs": [],
       "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxComparisonSlider",
+      "kind": "component",
+      "selector": "kx-comparison-slider",
+      "inputs": [
+        "afterLabel",
+        "beforeLabel",
+        "label",
+        "value"
+      ],
+      "outputs": [
+        "valueChange"
+      ],
       "projectsContent": true,
       "standalone": true,
       "exported": true
@@ -1960,6 +2083,168 @@
       "exported": true
     },
     {
+      "name": "KxNavigationMenu",
+      "kind": "directive",
+      "selector": "nav[kxNavigationMenu]",
+      "inputs": [
+        "delayDuration",
+        "skipDelayDuration",
+        "value"
+      ],
+      "outputs": [
+        "valueChange"
+      ],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxNavigationMenuContent",
+      "kind": "component",
+      "selector": "kx-navigation-menu-content",
+      "inputs": [
+        "align",
+        "id",
+        "offset"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxFloatingSurface",
+      "exported": true
+    },
+    {
+      "name": "KxNavigationMenuIndicator",
+      "kind": "component",
+      "selector": "kx-navigation-menu-indicator",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxNavigationMenuItem",
+      "kind": "directive",
+      "selector": "li[kxNavigationMenuItem]",
+      "inputs": [
+        "open",
+        "value"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": false,
+      "standalone": true,
+      "extends": "KxHoverRoot",
+      "exported": true
+    },
+    {
+      "name": "KxNavigationMenuLink",
+      "kind": "directive",
+      "selector": "a[kxNavigationMenuLink]",
+      "inputs": [
+        "active"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxNavigationMenuList",
+      "kind": "directive",
+      "selector": "ul[kxNavigationMenuList]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxNavigationMenuTrigger",
+      "kind": "component",
+      "selector": "button[kxNavigationMenuTrigger]",
+      "inputs": [
+        "id"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxNotificationCenter",
+      "kind": "component",
+      "selector": "kx-notification-center",
+      "inputs": [
+        "open"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxPopover",
+      "exported": true
+    },
+    {
+      "name": "KxNotificationCenterContent",
+      "kind": "component",
+      "selector": "kx-notification-center-content",
+      "inputs": [
+        "align",
+        "heading",
+        "id",
+        "label",
+        "labelledby",
+        "markAllReadLabel",
+        "offset",
+        "showMarkAllRead",
+        "side"
+      ],
+      "outputs": [
+        "markAllRead"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "extends": "KxPopoverContent",
+      "exported": true
+    },
+    {
+      "name": "KxNotificationCenterTrigger",
+      "kind": "component",
+      "selector": "button[kxNotificationCenterTrigger]",
+      "inputs": [
+        "label",
+        "unreadCount",
+        "unreadLabel"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxNotificationItem",
+      "kind": "component",
+      "selector": "kx-notification-item",
+      "inputs": [
+        "description",
+        "pressable",
+        "time",
+        "title",
+        "unread",
+        "unreadLabel"
+      ],
+      "outputs": [
+        "select"
+      ],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
       "name": "KxNumberInput",
       "kind": "component",
       "selector": "kx-number-input",
@@ -2289,6 +2574,60 @@
       "exported": true
     },
     {
+      "name": "KxResizableHandle",
+      "kind": "component",
+      "selector": "kx-resizable-handle",
+      "inputs": [
+        "disabled",
+        "label",
+        "withHandle"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxResizablePanel",
+      "kind": "component",
+      "selector": "kx-resizable-panel",
+      "inputs": [
+        "defaultSize",
+        "maxSize",
+        "minSize"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxResizablePanelGroup",
+      "kind": "component",
+      "selector": "kx-resizable-panel-group",
+      "inputs": [
+        "direction"
+      ],
+      "outputs": [
+        "layoutChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxScrollArea",
+      "kind": "component",
+      "selector": "kx-scroll-area",
+      "inputs": [
+        "label"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
       "name": "KxSegment",
       "kind": "component",
       "selector": "kx-segment",
@@ -2467,6 +2806,186 @@
       "projectsContent": true,
       "standalone": true,
       "extends": "KxModalSurface",
+      "exported": true
+    },
+    {
+      "name": "KxSidebar",
+      "kind": "component",
+      "selector": "kx-sidebar",
+      "inputs": [
+        "collapsible",
+        "sheetDescription",
+        "sheetTitle",
+        "side",
+        "variant"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarContent",
+      "kind": "component",
+      "selector": "kx-sidebar-content",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarFooter",
+      "kind": "component",
+      "selector": "kx-sidebar-footer",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarGroup",
+      "kind": "component",
+      "selector": "kx-sidebar-group",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarGroupContent",
+      "kind": "component",
+      "selector": "kx-sidebar-group-content",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarGroupLabel",
+      "kind": "directive",
+      "selector": "[kxSidebarGroupLabel]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarHeader",
+      "kind": "component",
+      "selector": "kx-sidebar-header",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarInput",
+      "kind": "directive",
+      "selector": "input[kxSidebarInput]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarInset",
+      "kind": "directive",
+      "selector": "main[kxSidebarInset]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarMenu",
+      "kind": "directive",
+      "selector": "ul[kxSidebarMenu]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarMenuButton",
+      "kind": "directive",
+      "selector": "a[kxSidebarMenuButton], button[kxSidebarMenuButton]",
+      "inputs": [
+        "active",
+        "size",
+        "variant"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarMenuItem",
+      "kind": "directive",
+      "selector": "li[kxSidebarMenuItem]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarMenuSkeleton",
+      "kind": "component",
+      "selector": "kx-sidebar-menu-skeleton",
+      "inputs": [
+        "showIcon",
+        "width"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarProvider",
+      "kind": "component",
+      "selector": "kx-sidebar-provider",
+      "inputs": [
+        "keyboardShortcut",
+        "open"
+      ],
+      "outputs": [
+        "openChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarSeparator",
+      "kind": "component",
+      "selector": "kx-sidebar-separator",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxSidebarTrigger",
+      "kind": "component",
+      "selector": "button[kxSidebarTrigger]",
+      "inputs": [
+        "label"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
       "exported": true
     },
     {
@@ -2693,6 +3212,25 @@
       "exported": true
     },
     {
+      "name": "KxToaster",
+      "kind": "component",
+      "selector": "kx-toaster",
+      "inputs": [
+        "closeButton",
+        "closeLabel",
+        "duration",
+        "id",
+        "label",
+        "position",
+        "typeLabels",
+        "visibleToasts"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
       "name": "KxToggle",
       "kind": "directive",
       "selector": "button[kxToggle]",
@@ -2800,6 +3338,30 @@
       "exported": true
     },
     {
+      "name": "KxTour",
+      "kind": "component",
+      "selector": "kx-tour",
+      "inputs": [
+        "backLabel",
+        "counterLabel",
+        "doneLabel",
+        "nextLabel",
+        "open",
+        "returnFocus",
+        "skipLabel",
+        "stepIndex",
+        "steps"
+      ],
+      "outputs": [
+        "openChange",
+        "stepIndexChange"
+      ],
+      "projectsContent": false,
+      "standalone": true,
+      "extends": "KxDialogRoot",
+      "exported": true
+    },
+    {
       "name": "KxValueBase",
       "kind": "directive",
       "selector": null,
@@ -2894,6 +3456,10 @@
       "definition": "'horizontal' | 'vertical'"
     },
     {
+      "name": "KxResizableDirection",
+      "definition": "'horizontal' | 'vertical'"
+    },
+    {
       "name": "KxSelectionMode",
       "definition": "'single' | 'multiple' | 'none'"
     },
@@ -2904,6 +3470,10 @@
     {
       "name": "KxSide",
       "definition": "'top' | 'bottom' | 'start' | 'end'"
+    },
+    {
+      "name": "KxSidebarSide",
+      "definition": "'start' | 'end'"
     },
     {
       "name": "KxSpinnerSize",
@@ -2920,6 +3490,14 @@
     {
       "name": "KxTimelineStatus",
       "definition": "'default' | 'active' | 'success' | 'error'"
+    },
+    {
+      "name": "KxToasterPosition",
+      "definition": "'top-start' | 'top-center' | 'top-end' | 'bottom-start' | 'bottom-center' | 'bottom-end'"
+    },
+    {
+      "name": "KxToastType",
+      "definition": "'default' | 'success' | 'info' | 'warning' | 'error'"
     },
     {
       "name": "KxToggleSize",

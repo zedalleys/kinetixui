@@ -77,7 +77,7 @@ this campaign's data, and it fails without any error.
 Do **not** append campaign parameters to the DEV article URL itself when linking
 from LinkedIn or X. DEV is not our property, our parser never sees those hits,
 and the parameters would only clutter a shared link. Tag the links that point at
-`kinetixui.com`; leave `<DEV_ARTICLE_URL>` clean.
+`kinetixui.com`; leave the DEV article URL clean.
 
 `utm_content` (optional, for distinguishing post variants) must match
 `/^[a-z0-9][a-z0-9_-]{0,63}$/` and is only kept when a valid campaign is present.

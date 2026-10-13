@@ -73,7 +73,7 @@ export function HeroCommand() {
 
   return (
     <div className="group relative overflow-hidden rounded-lg border border-border bg-muted/40">
-      <div className="flex items-center justify-between border-b border-border px-4 py-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+      <div className="flex items-center justify-between border-b border-border px-4 py-1.5 text-label-md uppercase tracking-wide text-muted-foreground">
         <span>bash</span>
         <span className="flex items-center gap-1">
           <button
@@ -97,8 +97,9 @@ export function HeroCommand() {
           />
         </span>
       </div>
-      <pre className="overflow-x-auto p-4 text-[13px] leading-relaxed">
-        <code>
+      <pre className="overflow-x-auto whitespace-pre-wrap p-4 text-code leading-relaxed">
+        {/* globals.css puts `pre *` back to overflow-wrap: normal, so the wrap is set on the code and every span in it */}
+        <code className="[overflow-wrap:anywhere] [&_*]:[overflow-wrap:anywhere]">
           <span className="text-muted-foreground">{PREFIX}</span>
           <span className="text-foreground">{typed}</span>
           <span aria-hidden className="kx-caret" {...(paused ? { "data-paused": "" } : {})} />

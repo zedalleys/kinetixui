@@ -1,21 +1,14 @@
 import * as React from "react";
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/route-seo";
 import Link from "next/link";
 import { LATEST_VERSION, PACKAGE_CHANGELOGS, RELEASES, isNotable, packagesChanged, releaseTypeAt } from "@/lib/releases";
 import { PLATFORMS, PLATFORM_ABBR, platformsFor } from "@/lib/platform-parity";
 import { componentDocs } from "@/lib/site";
 import { ChangelogView, ReleaseList, type ViewComponent, type ViewRelease } from "@/components/changelog-view";
-import { canonical } from "@/lib/seo";
 import { packageLines, type PackageLine } from "@/lib/package-lines";
 
-export const metadata: Metadata = {
-  title: "Changelog",
-  description:
-    "New components, platform support, token updates, CLI improvements, accessibility fixes, and breaking changes across KinetixUI.",
-  // the filter + search write ?filter= / ?q= into the URL; without this every combination a crawler
-  // follows would look like a separate document
-  ...canonical("/docs/changelog"),
-};
+export const metadata: Metadata = routeMetadata("/docs/changelog");
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -119,7 +112,7 @@ export default function ChangelogPage() {
       </p>
 
       <p className="mt-5 text-sm">
-        <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Latest </span>
+        <span className="font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">Latest </span>
         <a href={`#${latest.version}`} className="font-semibold text-primary underline-offset-4 hover:underline">
           v{latest.version}
         </a>

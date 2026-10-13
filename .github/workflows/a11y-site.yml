@@ -17,10 +17,13 @@ on:
       - "packages/create-preset/**"
       - "style-dictionary/**"
       - "scripts/a11y-site.mjs"
+      - "scripts/seo-browser.mjs"
       - "scripts/theme-isolation.mjs"
       - "scripts/iot-state-spatial.mjs"
       - "scripts/platform-ticker.mjs"
       - "scripts/platform-preference-browser.mjs"
+      - "scripts/home-systems-browser.mjs"
+      - "scripts/web-quality-browser.mjs"
       # The ticker reads its platforms and labels from these, so a manifest change can move its geometry.
       - "components.manifest.json"
       - "platform-parity.json"
@@ -37,10 +40,13 @@ on:
       - "packages/create-preset/**"
       - "style-dictionary/**"
       - "scripts/a11y-site.mjs"
+      - "scripts/seo-browser.mjs"
       - "scripts/theme-isolation.mjs"
       - "scripts/iot-state-spatial.mjs"
       - "scripts/platform-ticker.mjs"
       - "scripts/platform-preference-browser.mjs"
+      - "scripts/home-systems-browser.mjs"
+      - "scripts/web-quality-browser.mjs"
       # The ticker reads its platforms and labels from these, so a manifest change can move its geometry.
       - "components.manifest.json"
       - "platform-parity.json"
@@ -106,6 +112,12 @@ jobs:
       - name: IoT state and spatial pass (ring clearance, lock/light fidelity, plan markers)
         run: pnpm check:iot-state-spatial
 
+      # Search metadata as a JavaScript-running crawler sees it on representative routes: title, description, a
+      # canonical with no query state (also when the page is opened with ?platform= / ?filter= / ?q=), one <h1>,
+      # key internal links and parseable JSON-LD. The whole inventory is checked statically by `check:seo` in ci.yml.
+      - name: Rendered SEO metadata (representative routes, with query state)
+        run: pnpm check:seo-browser
+
       # The homepage platform ticker moves, so its contract is geometric and needs the same running site: one
       # accessible list of the canonical platforms with decorative marks, a seamless gap-free loop in LTR and RTL,
       # a keyboard pause (WCAG 2.2.2), and a static wrapping list under reduced motion, at phone to wide widths and
@@ -117,3 +129,16 @@ jobs:
       # storage, and the component-page install strip fits a phone and 200% text (evaluator audit F-02/F-10).
       - name: Platform choice and install strip
         run: pnpm check:platform-preference
+
+      # The homepage's Systems in Motion visuals: both platform tablists move in reading order and follow a live
+      # direction change (vertical on a phone), no text in them is under 12px, the headline never splits a word,
+      # and the hero map keeps its generated layer, boundary and dashed written layer on a phone with no trace
+      # running through an output it does not belong to.
+      - name: Homepage systems visuals (tabs, type floor, headline, map)
+        run: pnpm check:home-systems
+
+      # The website's own compact text, measured rather than read from source: no readable label under 12px, the
+      # touched labels at 4.5:1 in light and dark, touch-sized hit areas on a coarse pointer with no overlaps, and
+      # gallery thumbnails that stay decorative and in their frame in LTR and RTL (check:typography covers source).
+      - name: Web type floor, contrast, touch targets and thumbnails
+        run: pnpm check:web-quality

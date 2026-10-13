@@ -50,18 +50,18 @@ export const VISUAL_GATES = [
     script: "scripts/navigation-visual.mjs",
     command: "check:navigation-visual",
     contract: "TOKENS.md — Navigation and disclosure",
-    // Angular only: React's navigation components are not changed by Angular Wave B and are not measured here
+    // Angular only: React's navigation components are not changed by Angular Waves B and C3 and are not measured here
     covers: {
-      Angular: ["breadcrumb", "pagination", "table-of-contents", "tab-bar", "app-bar", "footer", "accordion"],
+      Angular: ["breadcrumb", "pagination", "table-of-contents", "tab-bar", "app-bar", "footer", "accordion", "navigation-menu", "sidebar"],
     },
   },
   {
     script: "scripts/overlay-visual.mjs",
     command: "check:overlay-visual",
     contract: "TOKENS.md — Overlays",
-    // Angular only: React's overlays are not changed by Angular Wave C1 and are not measured here
+    // Angular only: React's overlays are not changed by Angular Waves C1 and C3 and are not measured here
     covers: {
-      Angular: ["dialog", "alert-dialog", "modal", "sheet", "drawer", "popover", "tooltip", "hover-card"],
+      Angular: ["dialog", "alert-dialog", "modal", "sheet", "drawer", "popover", "tooltip", "hover-card", "sonner", "notification-center", "tour"],
     },
   },
   {
@@ -73,6 +73,15 @@ export const VISUAL_GATES = [
     // check:entry-visual's and check:composite-visual's).
     covers: {
       Angular: ["dropdown-menu", "context-menu", "menubar", "select", "multi-select"],
+    },
+  },
+  {
+    script: "scripts/layout-visual.mjs",
+    command: "check:layout-visual",
+    contract: "TOKENS.md — Layout and pointer",
+    // Angular only: React's layout components are not changed by the Angular layout tranche and are not measured here
+    covers: {
+      Angular: ["scroll-area", "resizable", "carousel", "comparison-slider"],
     },
   },
 ];

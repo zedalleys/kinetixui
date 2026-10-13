@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/route-seo";
 import Link from "next/link";
 import { ThemePreview } from "@/components/theme-preview";
 import { TokenTable } from "@/components/token-table";
 
-export const metadata: Metadata = {
-  title: "Themes",
-  description: "One semantic contract, two value sets.",
-};
+export const metadata: Metadata = routeMetadata("/themes");
 
 export default function ThemesPage() {
   return (
@@ -39,12 +37,12 @@ export default function ThemesPage() {
             Customize this contract in Create and preview it on real components.
           </span>
         </span>
-        <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-primary transition-transform group-hover:translate-x-0.5">
+        <span className="font-mono text-label-md uppercase tracking-[0.1em] text-primary transition-transform group-hover:translate-x-0.5">
           Customize in Create →
         </span>
       </Link>
 
-      <h2 className="mt-14 font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+      <h2 className="mt-14 font-mono text-label-md uppercase tracking-[0.15em] text-muted-foreground">
         The contract
       </h2>
       <TokenTable />

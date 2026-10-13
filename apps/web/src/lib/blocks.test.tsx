@@ -99,7 +99,7 @@ describe("the /blocks page", () => {
       const section = container.querySelector(`section#${block.slug}`)!;
       // each Showcase owns its own tabs, and Radix keeps an unselected panel unmounted — so the code tab has
       // to be opened per block rather than once for the page
-      const codeTab = [...section.querySelectorAll('[role="tab"]')].find((t) => t.textContent === "code");
+      const codeTab = [...section.querySelectorAll('[role="radio"]')].find((t) => t.textContent === "code");
       await user.click(codeTab as HTMLElement);
       const list = section.querySelector('[role="tablist"][aria-label$="implementation platform"]');
       if (block.platforms.length < 2) {
@@ -121,7 +121,7 @@ describe("the /blocks page", () => {
   it("shows the generated source, not a hand-written copy", async () => {
     const user = userEvent.setup();
     const { container } = render(<BlocksContent components={blockComponents()} />);
-    await user.click(screen.getAllByRole("tab", { name: "code" })[0]!);
+    await user.click(screen.getAllByRole("radio", { name: "code" })[0]!);
     const pre = container.querySelector("section#sign-in pre")!;
     expect(pre.textContent).toBe(blockExampleSource["sign-in"].React);
   });
@@ -129,7 +129,7 @@ describe("the /blocks page", () => {
   it("copies exactly the generated snippet", async () => {
     const user = userEvent.setup();
     const { container } = render(<BlocksContent components={blockComponents()} />);
-    await user.click(screen.getAllByRole("tab", { name: "code" })[0]!);
+    await user.click(screen.getAllByRole("radio", { name: "code" })[0]!);
     await user.click(container.querySelector("section#sign-in button[aria-label='Copy']") as HTMLElement);
     await waitFor(async () => expect(await navigator.clipboard.readText()).toBe(blockExampleSource["sign-in"].React));
   });
@@ -144,7 +144,7 @@ describe("the /blocks page", () => {
   it("makes each code block reachable by keyboard, since long native lines scroll", async () => {
     const user = userEvent.setup();
     const { container } = render(<BlocksContent components={blockComponents()} />);
-    await user.click(screen.getAllByRole("tab", { name: "code" })[0]!);
+    await user.click(screen.getAllByRole("radio", { name: "code" })[0]!);
     const pre = container.querySelector("section#sign-in pre")!;
     expect(pre.getAttribute("tabindex")).toBe("0");
     expect(pre.getAttribute("aria-label")).toContain("source");

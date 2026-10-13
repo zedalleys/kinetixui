@@ -16,7 +16,7 @@ export function ComingSoon({
     <span
       className={cn(
         "inline-flex items-center gap-2 border border-border px-3 py-1.5",
-        "font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground",
+        "font-mono text-label-md uppercase tracking-[0.18em] text-muted-foreground",
         className,
       )}
     >

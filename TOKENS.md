@@ -403,6 +403,63 @@ draw a system outline. Motion: the popup's motion is the floating surface's; opt
 | React | Not changed by this contract; parity is not claimed |
 | SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
 
+### Navigation menu, notifications and sidebar
+
+Angular Wave C3 (`@kinetixui/angular`: navigation menu, toaster (sonner), notification center, tour, sidebar).
+Each takes a contract above rather than starting its own. No token is added.
+
+| Part | Token(s) | Notes |
+|---|---|---|
+| Navigation menu trigger, top-level link | the menubar trigger's states (Menus): transparent at rest, `foreground` text, `text-label-lg`; hover 8%, open 8%, pressed 12% `foreground` layer; focus `--shadow-focus` | the chevron turns up while its panel is open; the indicator under the open trigger is `border`, decoration only |
+| Navigation menu panel | the floating surface (Overlays); its links `popover-foreground`, hover 8%, pressed 12% `popover-foreground` layer | the page you are on: `font-weight-semibold` and a 2px underline — weight and a shape, never colour alone |
+| Toast | the floating surface: `popover` fill, `popover-foreground` text, full `border` edge, `shadow-lg`, radius `control` | React paints `background`; in dark that is the page's own fill, and the edge alone (2.70:1) would separate the toast from the page. Title `text-label-lg` semibold, description `muted-foreground`; actions sit under the text, never beside it |
+| Toast type icon | `success`, `info`, `warning`, `destructive` | at least 3:1 against the toast (gate); the type is also said in text before the title |
+| Toast buttons | action `action` / `action-foreground`; cancel `muted` / `muted-foreground`; close the dialog close button's states | |
+| Toaster region | `--z-index-overlay`; logical corners (`bottom-end` is bottom right in LTR, bottom left in RTL) | the only overlay with a z-index: it is not a top-layer surface. It scrolls past the viewport at 200% text, and reaches `spacing-3` past its toasts so the scroll clip never cuts their shadows or the list's focus ring |
+| Notification center | the floating surface; unread dot `action`; Mark all read `link` | the dot is decoration; "Unread:" is in the item's text and the count is in the trigger's name |
+| Tour | the card is the floating surface; the scrim is the spotlight's own spread shadow in `scrim`, cut out around the target | with no target, a plain full scrim and a centred card |
+| Sidebar | `sidebar` surface, `sidebar-foreground` text, `sidebar-border` edge on the side facing the page; entries hover 8%, pressed 12% `sidebar-foreground` layer; focus a 2px `sidebar-ring` | the active entry: `sidebar-accent` fill and `font-weight-medium` (the fill is faint in light, 1.03:1; the weight is the cue that is not colour). On a phone it is the family's sheet |
+
+Forced colours: every focus stop draws an outline; the open navigation trigger, the current page and the active
+sidebar entry draw a `CanvasText` outline; the unread dots keep `Highlight`; the tour's spotlight draws a
+`Highlight` outline, since its scrim is a shadow and vanishes. Motion: the panel, the notification center and a
+toast arriving fade on the floating surface's timing; the tour's card and spotlight move between steps and the
+sidebar slides over `duration-fast`; reduced motion removes every one and lands on the same end state.
+
+| Platform | Status |
+|---|---|
+| Angular | Implemented in `styles.css`. Verified on rendered pixels by `check:navigation-visual` (navigation menu, sidebar) and `check:overlay-visual` (toast, notification center, tour), light and dark. Behaviour, direction, 200% text and motion are measured on the live application by `check:angular-collections` (navigation menu) and `check:angular-overlays` (the other four) |
+| React | Not changed by this contract; parity is not claimed |
+| SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
+
+### Layout and pointer
+
+The Angular layout, pointer and scroll tranche (`@kinetixui/angular`: scroll area, resizable, carousel,
+comparison slider). Each draws a POSITION a reader moves with a pointer, a key or a swipe, with logical properties
+so it mirrors with the reading direction. No token is added; the drag threshold is the existing
+`interaction-drag-threshold`.
+
+| Part | Token(s) | Notes |
+|---|---|---|
+| Scroll area thumb | `muted-foreground` at rest; `foreground` on hover and while dragged; radius `full`; bar `0.625rem`, thumb at least `1.25rem` | at least 3:1 against the page at rest. The bars sit in their own grid tracks beside the viewport, never over content; the vertical bar is at the inline end. rem sizes, so the bar grows with text |
+| Scroll area focus | a 2px `focus` outline inside the viewport's edge | the viewport is a Tab stop only while it overflows; the ring is drawn inside, so neither the area's radius nor an ancestor's overflow cuts it |
+| Resizable handle | a 1px `border` rule at rest; hover and drag a 3px `action` rule; focus `--shadow-focus`; disabled `opacity-disabled` | a 0.375rem hit area each side of the rule. The grip (`withHandle`) is a `background` chip with a `border` edge and `muted-foreground` dots (at least 3:1), turned 90° in a vertical group |
+| Carousel controls | the outline icon button (`input` edge, `foreground` glyph), 2rem; focus `--shadow-focus` | in the carousel's own grid columns, centred on the slides, never outside its box (React places them 3rem outside). At a non-looping end a control is `aria-disabled` (it keeps focus) at `opacity-disabled`, and hover paints no layer. The glyphs ‹ › mirror in RTL |
+| Carousel slide | a 2px `focus` outline inside the slide's edge when a slide takes focus | the track moves by `transform` over `duration-base` with `easing-standard`; none under reduced motion and none while dragging |
+| Comparison divider | a 2px `background` core with a 1px `foreground` edge at 70% | the edge clears 3:1 against the layers either side, in light and dark |
+| Comparison handle | `background` fill and edge, `foreground` grip, `shadow-md`; focus `--shadow-focus` | held 1.25rem inside the area's edges so it and its ring are never cut in half at 0 or 100; it is a picture of the range input's position and takes no focus of its own |
+| Comparison labels | `background` at 85% behind `foreground`, `text-label-sm` | at least 4.5:1; the before label at the inline start |
+
+Forced colours: the thumb, the handle rule and the divider are drawn in `CanvasText`; the viewport, the handle,
+the comparison handle, the carousel controls and a focused slide draw an outline. Motion: only the carousel moves
+(above); the thumb's and the handle's colour changes are `duration-fast`, and none under reduced motion.
+
+| Platform | Status |
+|---|---|
+| Angular | Implemented in `styles.css`. Verified on rendered pixels by `check:layout-visual` (light and dark, LTR and RTL, normal and 200% text). Behaviour, pointer lifecycle and teardown, direction, 200% text and the carousel's motion are measured on the live application by `check:angular-layout` |
+| React | Not changed by this contract; parity is not claimed |
+| SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
+
 ## Role tokens (added on top of `primary`)
 
 `brand`, `action` (+ `action-foreground`), `link` and `focus` are **repo-owned** — none exist in Figma. `action`,

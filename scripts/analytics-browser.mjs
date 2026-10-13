@@ -157,7 +157,7 @@ const evidence = {};
   await page.goto(base + "/blocks", { waitUntil: "networkidle" });
   const block = page.locator("section[id]").first();
   const slug = await block.getAttribute("id");
-  await block.getByRole("tab", { name: "code" }).tap();
+  await block.getByRole("radio", { name: "code" }).tap();
   const tabs = block.getByRole("tablist", { name: /implementation platform/ }).getByRole("tab");
   const platformTab = tabs.nth(1);
   const platformLabel = (await platformTab.textContent())?.trim();

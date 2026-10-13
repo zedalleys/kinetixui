@@ -25,7 +25,7 @@ export function ComponentKeyboard({ slug }: { slug: string }) {
 
   return (
     <div className="my-6 overflow-hidden rounded-xl border border-border">
-      <p className="border-b border-border bg-muted/30 px-4 py-2.5 text-[13px] text-muted-foreground">
+      <p className="border-b border-border bg-muted/30 px-4 py-2.5 text-body-md text-muted-foreground">
         {entries.length} behaviour{entries.length === 1 ? "" : "s"} asserted on every commit by{" "}
         <code className="text-foreground">{KEYBOARD_SOURCE}</code>. Listed because they are tested, not the
         other way round — if one stops being tested it stops appearing here.
@@ -33,7 +33,7 @@ export function ComponentKeyboard({ slug }: { slug: string }) {
       <ul className="divide-y divide-border">
         {entries.map((e) => (
           <li key={e.behaviour} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
-            <p className="m-0 min-w-0 text-[14px]">{e.behaviour}</p>
+            <p className="m-0 min-w-0 text-body-md">{e.behaviour}</p>
             {/*
               "Exercised", not "supported". The Checkbox test presses Enter precisely to prove it does NOT
               toggle, so a list headed "supported keys" would contradict the sentence beside it.
@@ -45,7 +45,7 @@ export function ComponentKeyboard({ slug }: { slug: string }) {
               {e.keys.map((k) => (
                 <li
                   key={k}
-                  className="rounded border border-border bg-muted/40 px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
+                  className="rounded border border-border bg-muted/40 px-1.5 py-0.5 font-mono text-label-md text-muted-foreground"
                 >
                   {k}
                 </li>

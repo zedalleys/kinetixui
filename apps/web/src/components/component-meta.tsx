@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { registryItemFor } from "@/lib/registry-items";
 import { PRIMITIVE, COMPONENT_CATEGORY } from "@/lib/component-registry";
 import { PlatformVerification } from "@/components/platform-verification";
 import { STATUS } from "@/lib/component-status";
@@ -14,14 +15,14 @@ import { CopyButton } from "./copy-button";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-wrap items-baseline gap-x-3 px-3.5 py-2">
+    <div data-component-meta className="flex flex-wrap items-baseline gap-x-3 px-3.5 py-2">
       {/* The 5rem label column resolves to 160px at the reader's doubled text size and `shrink-0`
           forbade it from yielding, so the row could not fit a narrow viewport. Below `sm` the label and
           its value wrap instead; the aligned column returns where there is room for it. */}
-      <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground sm:w-20 sm:shrink-0">
+      <dt className="font-mono text-label-md uppercase tracking-[0.14em] text-muted-foreground sm:w-20 sm:shrink-0">
         {label}
       </dt>
-      <dd className="min-w-0 font-mono text-[12px] sm:flex-1 sm:basis-0">{children}</dd>
+      <dd className="min-w-0 font-mono text-body-sm sm:flex-1 sm:basis-0">{children}</dd>
     </div>
   );
 }
@@ -31,7 +32,8 @@ function Command({ value, label, pathname }: { value: string; label: string; pat
   return (
     // wraps rather than overflowing: at 200% text the docs column can be very narrow, and the button then sits under the command
     <span className="flex flex-wrap items-center gap-1">
-      <code className="min-w-0 break-all">{value}</code>
+      {/* text-body-sm: the global inline-code rule is 0.875em, which inside this 12px row is 10.5px */}
+      <code className="min-w-0 break-all text-body-sm">{value}</code>
       {/* The command is classified by the same rule as a docs fence; only a package name and platform are sent. */}
       <CopyButton value={value} label={label} onCopy={() => trackFenceCopy(value, "bash", pathname)} className="size-6 shrink-0" />
     </span>
@@ -48,7 +50,12 @@ function Command({ value, label, pathname }: { value: string; label: string; pat
  */
 function InstallStrip({ slug, pathname }: { slug: string; pathname: string }) {
   return (
-    <ul aria-label="Install by platform" className="space-y-2 font-sans text-[13px]">
+    // `overflow-wrap:anywhere`: this strip used to be pinned at 13px, which does not grow with the reader's text size,
+    // and that is the only reason it fitted the 70px-wide column a docs page leaves it at 1280px and 200% text. On the
+    // type scale it grows, and a word such as "Compose" is then wider than the column; `anywhere` (unlike
+    // `break-word`) lets the flex rows' min-content shrink below a word, so it wraps instead of overflowing.
+    // The narrow column itself is the docs layout's, recorded as a follow-up.
+    <ul aria-label="Install by platform" className="space-y-2 font-sans text-body-md [overflow-wrap:anywhere]">
       {PLATFORMS.map((p) => {
         const def = PLATFORM_DEFINITIONS[p];
         const state = platformStateFor(slug, p);
@@ -72,7 +79,7 @@ function InstallStrip({ slug, pathname }: { slug: string; pathname: string }) {
                   : `${GUIDANCE_LABEL[state.type]} · KinetixUI ships no ${def.label} component for this.`}
               </p>
             ) : def.distribution.published ? (
-              <div className="space-y-1 font-mono text-[12px]">
+              <div className="space-y-1 font-mono text-body-sm">
                 {p === "React" && <Command value={`npx ${PACKAGES.cli} add ${slug}`} label={`Copy ${def.label} CLI command`} pathname={pathname} />}
                 <Command value={`npm i ${def.distribution.coordinate} ${PACKAGES.tokens}`} label={`Copy ${def.label} npm command`} pathname={pathname} />
                 <NpmLinks names={[def.distribution.coordinate, PACKAGES.tokens]} />
@@ -137,12 +144,12 @@ export function ComponentMeta() {
       </Row>
       <Row label="Registry">
         <a
-          href={`/r/${slug}.json`}
+          href={`/r/${registryItemFor(slug)}.json`}
           target="_blank"
           rel="noreferrer"
           className="text-primary underline underline-offset-2"
         >
-          /r/{slug}.json
+          /r/{registryItemFor(slug)}.json
         </a>
       </Row>
       <Row label="A11y">

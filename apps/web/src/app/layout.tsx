@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import { PlatformLocationSync } from "@/components/platform-location-sync";
+import { VercelAnalytics } from "@/components/vercel-analytics";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
@@ -74,12 +75,13 @@ export const metadata: Metadata = {
   description: siteConfig.description,
   metadataBase: new URL(siteConfig.url),
   applicationName: siteConfig.name,
-  // Every page inherits these; a page only overrides what differs (title/description do, via its own
-  // `metadata` export, and Open Graph picks those up automatically from the resolved title/description).
+  // Fallbacks only. Every indexable page declares its own canonical, og:url and share card through
+  // `pageMetadata` (lib/seo.ts), because Next merges `openGraph` shallowly: a page that set any field here
+  // replaced the whole object. There is deliberately no `url` — it used to be the homepage, and every page that
+  // set nothing inherited it, so a shared docs link told LinkedIn and Slack it was the homepage.
   openGraph: {
     type: "website",
     siteName: siteConfig.name,
-    url: siteConfig.url,
     locale: "en",
   },
   twitter: {
@@ -115,6 +117,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </ThemeProvider>
         <AnalyticsProvider />
+        <VercelAnalytics />
         <Suspense fallback={null}>
           <PlatformLocationSync />
         </Suspense>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/route-seo";
 import { BlocksContent } from "./blocks-content";
 import { BlocksInstallGuide } from "./block-install";
 import { blockComponents } from "@/lib/block-components";
@@ -12,10 +13,7 @@ const platformSentence =
     ? `${platformList.slice(0, -1).join(", ")} and ${platformList[platformList.length - 1]}`
     : platformList[0];
 
-export const metadata: Metadata = {
-  title: "Blocks",
-  description: "Ready-made sections assembled from KinetixUI components.",
-};
+export const metadata: Metadata = routeMetadata("/blocks");
 
 export default function BlocksPage() {
   return (

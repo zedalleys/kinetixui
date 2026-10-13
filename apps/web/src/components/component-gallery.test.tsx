@@ -11,6 +11,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { ComponentGallery } from "./component-gallery";
+import { THUMBNAIL_MOCKS } from "./component-thumbnails";
 
 beforeEach(() => {
   // the cards reveal on scroll; jsdom has no IntersectionObserver
@@ -141,4 +142,60 @@ describe("ComponentGallery thumbnails", () => {
     const { container } = render(<ComponentGallery />);
     expect(container.textContent).not.toMatch(/open-source UI kit/i);
   });
+
+  /**
+   * The gallery's hybrid thumbnails: a static mock where the live demo would mislead or misbehave, the live demo
+   * where it is safe, a text label otherwise. Every drawn thumbnail is decoration inside the card's own link, so it
+   * must be out of the accessibility tree, and a live one must also be inert.
+   */
+  it("keeps every drawn thumbnail aria-hidden, and every live one inert", () => {
+    const { container } = render(<ComponentGallery />);
+    const frames = [...container.querySelectorAll<HTMLElement>("[data-gallery-thumbnail]")];
+    const kinds = new Set(frames.map((f) => f.dataset.galleryThumbnail));
+    expect(kinds).toContain("mock");
+    expect(kinds).toContain("demo");
+    for (const frame of frames) {
+      if (frame.dataset.galleryThumbnail === "label") continue;
+      const body = frame.querySelector<HTMLElement>("[data-gallery-thumbnail-body]");
+      const slug = frame.closest("[data-gallery-card]")?.getAttribute("data-gallery-card");
+      expect(body, `${slug}: thumbnail body`).not.toBeNull();
+      expect(body!.getAttribute("aria-hidden"), `${slug}: aria-hidden`).toBe("true");
+      if (frame.dataset.galleryThumbnail === "demo") expect(body!.inert, `${slug}: inert`).toBe(true);
+    }
+  });
+
+  it("uses the static mock for every slug that has one", () => {
+    const { container } = render(<ComponentGallery />);
+    for (const slug of Object.keys(THUMBNAIL_MOCKS)) {
+      const card = container.querySelector(`[data-gallery-card="${slug}"]`);
+      if (!card) continue; // a mock may outlive its catalogue entry's slug only if nothing renders it
+      expect(card.querySelector("[data-gallery-thumbnail]")?.getAttribute("data-gallery-thumbnail"), slug).toBe("mock");
+    }
+  });
 });
+
+describe("static thumbnail mocks", () => {
+  const FOCUSABLE =
+    'a[href], button, input, select, textarea, summary, iframe, [tabindex], [contenteditable=""], [contenteditable="true"]';
+
+  it.each(Object.entries(THUMBNAIL_MOCKS))("%s draws shapes and text only — nothing focusable, no heading", (_slug, Mock) => {
+    const { container } = render(<Mock />);
+    expect(container.querySelectorAll(FOCUSABLE)).toHaveLength(0);
+    expect(container.querySelectorAll("h1, h2, h3, h4, h5, h6, [role='heading']")).toHaveLength(0);
+    // a mock is a picture: it carries no roles or names of its own for assistive technology to announce
+    expect(container.querySelectorAll("[role], [aria-label]")).toHaveLength(0);
+  });
+});
+
+
+ it("renders five decorative canonical platform marks with text labels", () => {
+    render(<ComponentGallery />);
+    const group = screen.getAllByRole("group", { name: "Filter by platform" })[0]!;
+    expect(group.querySelectorAll("[data-platform-logo]")).toHaveLength(5);
+    for (const svg of group.querySelectorAll("[data-platform-logo]")) {
+      expect(svg).toHaveAttribute("aria-hidden", "true");
+      expect(svg).toHaveAttribute("fill", "currentColor");
+      expect(svg).toHaveAttribute("width", "16");
+      expect(svg.closest("button")).toHaveAccessibleName(/React|Angular|SwiftUI|Jetpack Compose|Flutter/);
+    }
+  });

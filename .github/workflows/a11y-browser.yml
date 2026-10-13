@@ -38,6 +38,7 @@ on:
       - "scripts/navigation-visual.mjs"
       - "scripts/overlay-visual.mjs"
       - "scripts/menu-visual.mjs"
+      - "scripts/layout-visual.mjs"
       - "scripts/visual-harness.mjs"
       - "scripts/visual-gates.mjs"
       - "packages/ui-angular/src/**"
@@ -45,6 +46,7 @@ on:
       - "scripts/angular-browser.mjs"
       - "scripts/angular-overlays.mjs"
       - "scripts/angular-collections.mjs"
+      - "scripts/angular-layout.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -71,6 +73,7 @@ on:
       - "scripts/navigation-visual.mjs"
       - "scripts/overlay-visual.mjs"
       - "scripts/menu-visual.mjs"
+      - "scripts/layout-visual.mjs"
       - "scripts/visual-harness.mjs"
       - "scripts/visual-gates.mjs"
       - "packages/ui-angular/src/**"
@@ -78,6 +81,7 @@ on:
       - "scripts/angular-browser.mjs"
       - "scripts/angular-overlays.mjs"
       - "scripts/angular-collections.mjs"
+      - "scripts/angular-layout.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -92,7 +96,7 @@ concurrency:
 jobs:
   axe:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -209,6 +213,15 @@ jobs:
       - name: Menu visual contract (Angular, light and dark)
         run: pnpm check:menu-visual
 
+      # The layout and pointer state contract (TOKENS.md, "Layout and pointer") on rendered pixels, Angular only:
+      # the scroll area's thumb (3:1 at rest, stronger on hover and drag), its bars beside the content and its
+      # focus ring on all four edges; the resizable rule at rest, hover and drag, its focus ring, grip and disabled
+      # state; the carousel's controls (placement, glyph direction, focus ring, an end control) and a focused
+      # slide's ring; the comparison divider at its value, its handle's grip, focus ring and labels; in light and
+      # dark, LTR and RTL, at normal and 200% text.
+      - name: Layout and pointer visual contract (Angular, light and dark)
+        run: pnpm check:layout-visual
+
       # Which way React's component-owned directional icons point, read from ink in LTR and in an RTL preview
       # scoped to the story root (never <html>): Back, Previous / Next and the breadcrumb separator mirror; a
       # collapsed disclosure mirrors; an expanded disclosure and the accordion chevron do not (/docs/icons).
@@ -238,3 +251,12 @@ jobs:
       # and 390px, and the open/close motion with and without reduced motion. verification.json publishes this.
       - name: Angular menus in the browser (keyboard, pointer, submenus, axe open, RTL, 200% text, motion)
         run: pnpm check:angular-collections
+
+      # Scroll area, resizable, carousel and comparison slider as a live Angular application: keyboard, mouse,
+      # pen and touch (DevTools input, so the pointer events are the browser's own); releases outside, a group
+      # resized and a handle disabled mid-drag, lost capture and touch cancel; content and containers that resize;
+      # the page instrumented so pointer listeners exist only while a drag runs and no ResizeObserver outlives its
+      # component; then axe (light and dark), forced colours, four direction cases, 320–1280px at normal and 200%
+      # text, and the carousel's motion with and without reduced motion. verification.json publishes this.
+      - name: Angular layout, pointer and scroll in the browser (keyboard, pointer, touch, teardown, RTL, 200% text, motion)
+        run: pnpm check:angular-layout

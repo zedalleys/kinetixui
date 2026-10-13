@@ -57,6 +57,8 @@ export interface OutputBlock {
   files: string[];
   /** the excerpt, line by line — each code line is a line of the file it names */
   lines: string[];
+  /** just the token's own declaration in each theme's file, exactly as written (no trailing doc comment) */
+  members: { light: string; dark: string };
 }
 
 export interface TokenEvidence {
@@ -140,12 +142,22 @@ export function tokenEvidence(name: string, root = repoRoot()): TokenEvidence {
     closer: string,
   ): OutputBlock => {
     const lines: string[] = [];
+    const members: string[] = [];
     files.forEach((file, i) => {
       const found = excerpt(read(`${DIST}/${file}`), `${DIST}/${file}`, headers[i]!, member);
       if (i > 0) lines.push("");
       lines.push(comment(file), found.header, found.member, closer);
+      members.push(found.member.trim());
     });
-    return { platform, language, languageLabel, reference, files: files.map((f) => `${DIST}/${f}`), lines };
+    return {
+      platform,
+      language,
+      languageLabel,
+      reference,
+      files: files.map((f) => `${DIST}/${f}`),
+      lines,
+      members: { light: members[0]!, dark: members[1]! },
+    };
   };
 
   const css = `--${name}`;

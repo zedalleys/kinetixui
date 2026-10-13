@@ -14,7 +14,7 @@
  * `check:platform-source` reads the public API to decide what the manifest may claim, and an example
  * appearing there would let a demo masquerade as a component.
  */
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { KxButton } from '../lib/button';
@@ -216,6 +216,40 @@ import {
   KxCommandShortcut,
 } from '../lib/command';
 import { KxMultiSelect, type KxMultiSelectOption } from '../lib/multi-select';
+import {
+  KxNavigationMenu,
+  KxNavigationMenuContent,
+  KxNavigationMenuIndicator,
+  KxNavigationMenuItem,
+  KxNavigationMenuLink,
+  KxNavigationMenuList,
+  KxNavigationMenuTrigger,
+} from '../lib/navigation-menu';
+import { KxToaster, KxToasterService } from '../lib/sonner';
+import { KxScrollArea } from '../lib/scroll-area';
+import { KxResizableHandle, KxResizablePanel, KxResizablePanelGroup } from '../lib/resizable';
+import { KxCarousel, KxCarouselContent, KxCarouselItem, KxCarouselNext, KxCarouselPrevious } from '../lib/carousel';
+import { KxComparisonSlider } from '../lib/comparison-slider';
+import { KxNotificationCenter, KxNotificationCenterContent, KxNotificationCenterTrigger, KxNotificationItem } from '../lib/notification-center';
+import { KxTour, type KxTourStep } from '../lib/tour';
+import {
+  KxSidebar,
+  KxSidebarContent,
+  KxSidebarFooter,
+  KxSidebarGroup,
+  KxSidebarGroupContent,
+  KxSidebarGroupLabel,
+  KxSidebarHeader,
+  KxSidebarInput,
+  KxSidebarInset,
+  KxSidebarMenu,
+  KxSidebarMenuButton,
+  KxSidebarMenuSkeleton,
+  KxSidebarMenuItem,
+  KxSidebarProvider,
+  KxSidebarSeparator,
+  KxSidebarTrigger,
+} from '../lib/sidebar';
 
 /* ── primitives ─────────────────────────────────────────────────────────── */
 
@@ -1484,4 +1518,281 @@ export class MultiSelectDemo {
     { value: 'flutter', label: 'Flutter' },
   ];
 }
+// kx-usage:end
+
+// kx-usage:navigation-menu-demo
+@Component({
+  selector: 'app-navigation-menu-demo',
+  imports: [
+    KxNavigationMenu,
+    KxNavigationMenuList,
+    KxNavigationMenuItem,
+    KxNavigationMenuTrigger,
+    KxNavigationMenuContent,
+    KxNavigationMenuLink,
+    KxNavigationMenuIndicator,
+  ],
+  template: `
+    <nav kxNavigationMenu aria-label="Docs">
+      <ul kxNavigationMenuList>
+        <li kxNavigationMenuItem value="getting-started">
+          <button kxNavigationMenuTrigger>Getting started</button>
+          <kx-navigation-menu-content>
+            <ul class="links">
+              <li><a kxNavigationMenuLink href="#introduction" [active]="true">Introduction</a></li>
+              <li><a kxNavigationMenuLink href="#installation">Installation</a></li>
+              <li><a kxNavigationMenuLink href="#theming">Theming</a></li>
+            </ul>
+          </kx-navigation-menu-content>
+        </li>
+        <li kxNavigationMenuItem value="components">
+          <button kxNavigationMenuTrigger>Components</button>
+          <kx-navigation-menu-content>
+            <ul class="links">
+              <li><a kxNavigationMenuLink href="#button">Button</a></li>
+              <li><a kxNavigationMenuLink href="#dialog">Dialog</a></li>
+              <li><a kxNavigationMenuLink href="#tabs">Tabs</a></li>
+            </ul>
+          </kx-navigation-menu-content>
+        </li>
+        <li kxNavigationMenuItem><a kxNavigationMenuLink href="#changelog">Changelog</a></li>
+      </ul>
+      <kx-navigation-menu-indicator />
+    </nav>
+  `,
+  styles: `
+    .links { display: grid; gap: var(--spacing-1); inline-size: min(20rem, 100%); }
+  `,
+})
+export class NavigationMenuDemo {}
+// kx-usage:end
+
+// kx-usage:sonner-demo
+@Component({
+  selector: 'app-sonner-demo',
+  imports: [KxButton, KxToaster],
+  template: `
+    <!-- once, in the application's root template -->
+    <kx-toaster />
+
+    <button kxButton variant="Outline" (click)="notify()">Show toast</button>
+  `,
+})
+export class SonnerDemo {
+  private readonly toast = inject(KxToasterService);
+
+  notify(): void {
+    this.toast.show('Event created', {
+      description: 'Sunday, December 03 at 9:00 AM',
+      action: { label: 'Undo', onClick: () => {} },
+    });
+  }
+}
+// kx-usage:end
+
+// kx-usage:notification-center-demo
+@Component({
+  selector: 'app-notification-center-demo',
+  imports: [KxNotificationCenter, KxNotificationCenterTrigger, KxNotificationCenterContent, KxNotificationItem],
+  template: `
+    <kx-notification-center>
+      <button kxNotificationCenterTrigger [unreadCount]="unread"></button>
+      <kx-notification-center-content showMarkAllRead (markAllRead)="unread = 0">
+        <kx-notification-item title="PR #106 merged" description="feat(ui): add PageHeader" time="2m ago" [unread]="unread > 0" />
+        <kx-notification-item title="Deploy succeeded" description="v0.11.0 is live" time="1h ago" [unread]="unread > 1" />
+        <kx-notification-item title="Welcome to KinetixUI" time="2d ago" />
+      </kx-notification-center-content>
+    </kx-notification-center>
+  `,
+})
+export class NotificationCenterDemo {
+  unread = 2;
+}
+// kx-usage:end
+
+// kx-usage:tour-demo
+@Component({
+  selector: 'app-tour-demo',
+  imports: [KxButton, KxTour],
+  template: `
+    <button kxButton size="sm" (click)="start()">Start tour</button>
+    <div class="row">
+      <button kxButton variant="Outline" size="sm" data-tour-demo="save">Save</button>
+      <button kxButton variant="Outline" size="sm" data-tour-demo="share">Share</button>
+      <button kxButton variant="Ghost" size="sm" data-tour-demo="settings">Settings</button>
+    </div>
+    <kx-tour [steps]="steps" [(open)]="open" [(stepIndex)]="step" />
+  `,
+  styles: `
+    :host { display: flex; flex-direction: column; align-items: flex-start; gap: var(--spacing-4); }
+    .row { display: flex; gap: var(--spacing-3); }
+  `,
+})
+export class TourDemo {
+  open = false;
+  step = 0;
+  readonly steps: KxTourStep[] = [
+    { target: '[data-tour-demo="save"]', title: 'Save your work', content: 'Changes save automatically, but you can force a save here.' },
+    { target: '[data-tour-demo="share"]', title: 'Invite others', content: 'Share this project with your team.' },
+    { target: '[data-tour-demo="settings"]', title: 'Fine-tune settings', content: 'Adjust preferences for this workspace.' },
+  ];
+
+  start(): void {
+    this.step = 0;
+    this.open = true;
+  }
+}
+// kx-usage:end
+
+// kx-usage:sidebar-demo
+@Component({
+  selector: 'app-sidebar-demo',
+  imports: [
+    KxSidebarProvider,
+    KxSidebar,
+    KxSidebarHeader,
+    KxSidebarContent,
+    KxSidebarFooter,
+    KxSidebarGroup,
+    KxSidebarGroupLabel,
+    KxSidebarGroupContent,
+    KxSidebarMenu,
+    KxSidebarMenuItem,
+    KxSidebarMenuButton,
+    KxSidebarInset,
+    KxSidebarTrigger,
+    KxSidebarInput,
+    KxSidebarSeparator,
+    KxSidebarMenuSkeleton,
+  ],
+  template: `
+    <kx-sidebar-provider [(open)]="open">
+      <kx-sidebar collapsible="icon">
+        <kx-sidebar-header>
+          <strong>Acme</strong>
+          <input kxSidebarInput type="search" placeholder="Search" aria-label="Search the workspace" />
+        </kx-sidebar-header>
+        <kx-sidebar-content>
+          <kx-sidebar-group>
+            <h2 kxSidebarGroupLabel>Platform</h2>
+            <kx-sidebar-group-content>
+              <ul kxSidebarMenu>
+                <li kxSidebarMenuItem><a kxSidebarMenuButton href="#home" [active]="true"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.5" /></svg><span>Home</span></a></li>
+                <li kxSidebarMenuItem><a kxSidebarMenuButton href="#projects"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.5" /></svg><span>Projects</span></a></li>
+                <li kxSidebarMenuItem><a kxSidebarMenuButton href="#settings"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.5" /></svg><span>Settings</span></a></li>
+              </ul>
+            </kx-sidebar-group-content>
+          </kx-sidebar-group>
+          <kx-sidebar-separator />
+          <kx-sidebar-group aria-busy="true">
+            <h2 kxSidebarGroupLabel>Recent</h2>
+            <kx-sidebar-group-content>
+              <!-- while the recent projects load -->
+              <kx-sidebar-menu-skeleton showIcon width="60%" />
+              <kx-sidebar-menu-skeleton showIcon width="80%" />
+            </kx-sidebar-group-content>
+          </kx-sidebar-group>
+        </kx-sidebar-content>
+        <kx-sidebar-footer><button kxSidebarMenuButton><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.5" /></svg><span>Sign out</span></button></kx-sidebar-footer>
+      </kx-sidebar>
+      <main kxSidebarInset>
+        <button kxSidebarTrigger></button>
+        <p>Page content</p>
+      </main>
+    </kx-sidebar-provider>
+  `,
+  styles: `
+    /* a frame for the demo: the panel is fixed to its containing block, which the transform makes this box */
+    :host { display: block; block-size: 20rem; overflow: hidden; border: 1px solid hsl(var(--border)); border-radius: var(--radius-lg); transform: translateZ(0); }
+    main { padding: var(--spacing-4); }
+  `,
+})
+export class SidebarDemo {
+  open = true;
+}
+// kx-usage:end
+
+// kx-usage:scroll-area-demo
+@Component({
+  selector: 'app-scroll-area-demo',
+  imports: [KxScrollArea],
+  template: `
+    <kx-scroll-area label="Tags" class="tags">
+      @for (tag of tags; track tag) {
+        <div class="tag">{{ tag }}</div>
+      }
+    </kx-scroll-area>
+  `,
+  styles: `
+    .tags { block-size: 10rem; inline-size: min(14rem, 100%); border: 1px solid hsl(var(--border)); border-radius: var(--radius-md); }
+    .tag { padding: var(--spacing-1) var(--spacing-4); font: var(--text-body-sm); }
+  `,
+})
+export class ScrollAreaDemo {
+  readonly tags = Array.from({ length: 20 }, (_, i) => `Tag ${i + 1}`);
+}
+// kx-usage:end
+
+// kx-usage:resizable-demo
+@Component({
+  selector: 'app-resizable-demo',
+  imports: [KxResizablePanelGroup, KxResizablePanel, KxResizableHandle],
+  template: `
+    <kx-resizable-panel-group direction="horizontal" class="frame">
+      <kx-resizable-panel [defaultSize]="50"><div class="pane">One</div></kx-resizable-panel>
+      <kx-resizable-handle withHandle />
+      <kx-resizable-panel [defaultSize]="50"><div class="pane">Two</div></kx-resizable-panel>
+    </kx-resizable-panel-group>
+  `,
+  styles: `
+    .frame { max-inline-size: 28rem; block-size: 8rem; border: 1px solid hsl(var(--border)); border-radius: var(--radius-lg); }
+    .pane { display: grid; place-items: center; block-size: 100%; padding: var(--spacing-6); font: var(--text-body-sm); }
+  `,
+})
+export class ResizableDemo {}
+// kx-usage:end
+
+// kx-usage:carousel-demo
+@Component({
+  selector: 'app-carousel-demo',
+  imports: [KxCarousel, KxCarouselContent, KxCarouselItem, KxCarouselPrevious, KxCarouselNext],
+  template: `
+    <kx-carousel aria-label="Featured" class="carousel">
+      <kx-carousel-content>
+        @for (n of slides; track n) {
+          <kx-carousel-item><div class="slide">{{ n }}</div></kx-carousel-item>
+        }
+      </kx-carousel-content>
+      <button kxCarouselPrevious></button>
+      <button kxCarouselNext></button>
+    </kx-carousel>
+  `,
+  styles: `
+    .carousel { inline-size: min(20rem, 100%); }
+    .slide { display: grid; place-items: center; aspect-ratio: 1; border: 1px solid hsl(var(--border)); border-radius: var(--radius-lg); background: hsl(var(--muted)); font: var(--text-title-lg); }
+  `,
+})
+export class CarouselDemo {
+  readonly slides = [1, 2, 3, 4, 5];
+}
+// kx-usage:end
+
+// kx-usage:comparison-slider-demo
+@Component({
+  selector: 'app-comparison-slider-demo',
+  imports: [KxComparisonSlider],
+  template: `
+    <kx-comparison-slider class="compare" beforeLabel="Before" afterLabel="After">
+      <div kxComparisonBefore class="layer before">Original</div>
+      <div kxComparisonAfter class="layer after">Redesign</div>
+    </kx-comparison-slider>
+  `,
+  styles: `
+    .compare { max-inline-size: 28rem; }
+    .layer { display: grid; place-items: center; block-size: 100%; font: var(--text-body-sm); }
+    .before { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+    .after { background: hsl(var(--primary) / 0.15); color: hsl(var(--primary)); }
+  `,
+})
+export class ComparisonSliderDemo {}
 // kx-usage:end

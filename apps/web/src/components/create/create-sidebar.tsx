@@ -120,7 +120,7 @@ function ContrastPanel({ results, manual }: { results: ContrastResult[]; manual:
       <span className="min-w-0 truncate">
         {readable(c.pair[0])} <span className="text-muted-foreground">/ {c.pair[1].replace(`${c.pair[0]}-`, "")}</span>
         {(manual.has(c.pair[0]) || manual.has(c.pair[1])) && (
-          <span className="ms-2 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">manual</span>
+          <span className="ms-2 font-mono text-label-md uppercase tracking-wide text-muted-foreground">manual</span>
         )}
       </span>
       <span className="flex shrink-0 items-center gap-2 font-mono text-xs">

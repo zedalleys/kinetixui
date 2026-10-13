@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Toggle",
-  description: "A two-state button that can be either on or off.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("toggle", "A two-state button that can be either on or off.");
 
 # Toggle
 
@@ -29,6 +28,19 @@ with no extra config. Keyboard and ARIA behaviour is inherited from Radix where 
 component is built on a primitive; the hand-built widgets (DataGrid, TreeView,
 ColorPicker, MultiSelect, Tour, KanbanBoard) have their own documented interaction
 models — see [Accessibility](/docs/accessibility).
+
+## Filter chips
+
+Use `variant="pill"` for optional filters. `leadingIcon` accepts a decorative React node before the text;
+its wrapper is hidden from screen readers. Keep a visible text label. The icon inherits color and follows direction.
+
+```tsx
+<Toggle variant="pill" pressed={selected} onPressedChange={setSelected} leadingIcon={<PlatformIcon />}>
+  React <span>98</span>
+</Toggle>
+```
+
+The chip grows with text and uses an outline for its selected state in forced colors.
 
 <ComponentApi slug="toggle" />
 

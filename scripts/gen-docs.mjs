@@ -94,7 +94,7 @@ const BUILT = {
   "description-list": ["DescriptionList, DescriptionListItem", "`<dl>` term/detail rows with a spec-sheet skin — a `row` or `stacked` layout, each row with its own divider."],
   banner: ["Banner", "A full-bleed, page-level notice — dismissible, with an optional action, distinct from Alert (in-flow) and the toast (transient)."],
   "segmented-control": ["SegmentedControl, SegmentedControlItem", "An iOS-style single-select strip — a thin, documented preset over ToggleGroup type=\"single\"."],
-  timeline: ["Timeline", "Ordered events down a rail — dot, connector, time, content — left-aligned or alternating left/right of a centered rail."],
+  timeline: ["Timeline", "Ordered events down a rail — marker, connector, time, content — on one side or alternating sides of a centred rail, with optional spoken statuses."],
   marquee: ["Marquee", "An auto-scrolling horizontal ticker (logo strip, testimonials), pausing on hover and respecting prefers-reduced-motion."],
   "comparison-slider": ["ComparisonSlider", "A drag handle wiping between two stacked layers — a before/after image, a redesign preview."],
   "page-header": ["PageHeader", "Title + optional breadcrumb + description + action cluster + optional tabs row — a recipe every docs/app screen re-lays out by hand."],
@@ -109,6 +109,17 @@ const BUILT = {
   "color-picker": ["ColorPicker", "A saturation/value square, hue and alpha sliders, a hex field, swatches, and an optional eyedropper."],
   "kanban-board": ["KanbanBoard", "Draggable cards across columns with keyboard DnD, built on @dnd-kit's multiple-containers sortable pattern."],
   "markdown-editor": ["MarkdownEditor", "A formatting toolbar over a plain textarea (not contenteditable) with an optional rendered preview pane."],
+  "result-state": ["ResultState", "The outcome of something the reader just did — success, error, warning, pending, info or partial — with a title, a reference, details and the next action."],
+  "reference-code": ["ReferenceCode", "A code the reader will need again — a booking reference, order number or transaction ID — that is easy to select and copy, and says whether the copy worked."],
+  "price-breakdown": ["PriceBreakdown, PriceBreakdownLine, PriceBreakdownTotal", "How an amount is made up — subtotal, taxes, fees, discounts, shipping, credits and the total — as a description list that mirrors under RTL and wraps at large text sizes."],
+  "pass-card": ["PassCard, PassCardHeader, PassCardTitle, PassCardDescription, PassCardFields, PassCardField, PassCardDivider, PassCardCode, PassCardFooter", "The foundation for anything a person carries and presents — a boarding pass, a ticket, a parking permit, a voucher, a membership card — with fields, a tear line and a supplied scannable code."],
+  "amount-display": ["AmountDisplay", "A formatted money-like or quantified value — SAR 1,250.00, −USD 25.00, +14.2% — with tabular figures, a spoken sign, its own bidi run and a full screen-reader label, without ever calculating it."],
+  "guest-picker": ["GuestPicker", "Several counts chosen together — adults, children, rooms, ticket types — as NumberInput steppers in a popover, with per-type and total limits and a summary on the trigger."],
+  "country-select": ["CountrySelect", "Choose a country by typing its name, code or a keyword: the combobox recipe with a country data adapter, and the country list supplied by the product."],
+  "phone-input": ["PhoneInput", "An international phone number — a native calling-code select and a tel field in one left-to-right control — that keeps the displayed number apart from the raw value and does not pretend to validate."],
+  "date-range-input": ["DateRangeInput", "A start and end calendar date in one field, from Calendar in range mode in a Popover, with ISO date strings instead of Date instants so no time zone can move a booking."],
+  "time-slot-picker": ["TimeSlotPicker", "Choose one time from the slots a product offers, as a radio group of tiles with unavailable and limited slots, periods and a stated time zone."],
+  "address-fields": ["AddressFields", "The fields of a postal address in the order, wording and requiredness the app decides, inside a named fieldset, with the right autofill token on each."],
 };
 
 const title = (s) => s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");

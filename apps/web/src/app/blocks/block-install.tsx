@@ -8,6 +8,7 @@ import { PACKAGES } from "@/lib/packages";
 import { PLATFORM_DEFINITIONS, type Platform } from "@/lib/platform-parity";
 import { manifestPlatformFor, usePreferredPlatform } from "@/lib/platform-preference";
 import { SETUP_HREF } from "@/lib/platform-tabs";
+import { componentDocs } from "@/lib/site";
 
 const link = "text-primary underline underline-offset-2";
 
@@ -88,6 +89,32 @@ export function BlockReactInstall({ components, platforms }: { components: strin
       </code>
       {/* classified like a docs fence: a CLI copy reports the package and nothing else */}
       <CopyButton value={command} label="Copy React CLI command for this block" onCopy={() => trackFenceCopy(command, "bash", pathname ?? "/blocks")} className="size-6 shrink-0" />
+    </p>
+  );
+}
+
+/**
+ * Under every block, on every platform: links to the component pages its React version is built from. The list is
+ * the same one the CLI command uses (read from the block's React source), and it is labelled as React's because only
+ * that file is read; each component page then says what the component is on every platform. Plain links,
+ * server-rendered with the page, so a reader (or a crawler) on /blocks is one step from the components themselves.
+ */
+export function BlockComponentLinks({ components }: { components: string[] }) {
+  const pages = components
+    .map((slug) => componentDocs.find((c) => c.href === `/docs/components/${slug}`))
+    .filter((c): c is (typeof componentDocs)[number] => Boolean(c));
+  if (pages.length === 0) return null;
+  return (
+    <p data-block-components className="mt-1.5 text-xs text-muted-foreground">
+      <span>Built from (React version): </span>
+      {pages.map((c, i) => (
+        <span key={c.href}>
+          {i > 0 ? ", " : null}
+          <Link href={c.href} className={link}>
+            {c.title}
+          </Link>
+        </span>
+      ))}
     </p>
   );
 }

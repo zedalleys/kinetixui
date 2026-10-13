@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Angular",
-  description: "KinetixUI for Angular — standalone components and directives on the shared KinetixUI token contract. Preview.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/angular");
 
 # Angular
 
@@ -11,6 +10,33 @@ export const metadata = {
 <PlatformCountInline platform="Angular" /> of the <ComponentTotalInline />
 KinetixUI catalogue entries today — a foundation subset, not the full catalogue —
 and grows incrementally.
+
+<PlatformAtAGlance platform="Angular" />
+
+## What differs from the React library
+
+- **Written for Angular, not wrapped.** Standalone components and directives with signal inputs and
+  `ControlValueAccessor`, so a KinetixUI control drops into a reactive form like any other Angular control.
+- **Plain CSS, no Tailwind.** The component stylesheet only spends the token custom properties, so an app does
+  not adopt React's styling toolchain to get the design language.
+- **Overlays use the browser's top layer.** Dialogs are a native `<dialog>` and floating surfaces use the
+  `popover` attribute, where React uses Radix portals. The behaviour contract (focus, Escape, return focus) is
+  the same; the mechanism is Angular's and the DOM's own.
+- **Some gaps are answered by Angular itself.** Form is `ReactiveFormsModule` and Direction Provider is the
+  `dir` attribute, shown on each component page as a native equivalent rather than counted as coverage.
+- **The catalogue is still arriving**, which is why the package is
+  <PlatformMaturityInline platform="Angular" />. The unbuilt entries are listed by wave
+  [below](#what-is-left-by-wave), and nothing else on this page is promised for them.
+
+## A first adoption path
+
+1. [Install](#install) the package and load the token sheets before the component styles.
+2. Start where Angular already has a strong idiom: buttons, inputs, selects and switches in a reactive form,
+   as in the [example](#example).
+3. Before planning a screen, check each component it needs in [What's available](#whats-available); a
+   planned one shows its wave on its own page.
+4. Read [What Stable would require](#what-stable-would-require) before you commit a product to the API: a
+   Preview package can still change.
 
 ## Install
 
@@ -226,7 +252,9 @@ it was built once, with the dialog family (dialog, alert dialog, modal, sheet,
 drawer, popover, tooltip, hover card). The menus (dropdown menu, context menu,
 menubar) are built on it, with one shared collection core for keyboard
 navigation, and the listboxes (select, command, multi-select and the combobox
-recipe) on both; the notifications still to come are built on it too.
+recipe) on both. The notifications (toast, notification center, tour) are built
+on it too, and so are the navigation menu's panels and the sidebar's sheet on a
+phone.
 
 ## What Stable would require
 
@@ -238,8 +266,8 @@ not by itself change the label, and nothing here is graded on a curve:
    gap reclassified as a native equivalent or a composition with a reason.
 2. **Overlays complete**, on one shared architecture with focus trapping,
    scroll locking, dismissal and return-focus behaviour. The architecture,
-   the dialog family, the menus and the listboxes are in place;
-   notifications are not.
+   the dialog family, the menus, the listboxes and the notifications are in
+   place.
 3. **Forms complete** — every control a `ControlValueAccessor`, validation
    states wired to `aria-invalid`, and error messaging tested.
 4. **Documentation complete** — every shipped component reachable from its own
