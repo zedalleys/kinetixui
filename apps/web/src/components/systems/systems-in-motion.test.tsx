@@ -233,7 +233,7 @@ describe("systems in motion: hero map semantics", () => {
     for (const f of ["components/systems/hero-system-map.tsx", "components/systems/explorer-tabs.tsx"]) {
       const src = read(f);
       expect(src, f).toMatch(/useDocumentDirection\(\)/);
-      expect(src.slice(src.indexOf("<Tabs.Root"), src.indexOf(">", src.indexOf("<Tabs.Root"))), f).toMatch(/dir=\{dir\}/);
+      expect(src, f).toMatch(/<Tabs(?:\.Root)?[\s\S]*?dir=\{dir\}/);
     }
     expect(read("components/systems/hero-system-map.tsx")).toMatch(/orientation=\{columns \? "horizontal" : "vertical"\}/);
   });

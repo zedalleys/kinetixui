@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as Tabs from "@radix-ui/react-tabs";
+import { SegmentedControl, SegmentedControlItem } from "@kinetixui/ui";
 import { CopyButton } from "@/components/copy-button";
 import { analytics } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
@@ -50,6 +50,7 @@ export function IotExampleShowcase({
 }) {
   // "Built from" is a quiet inline list from `md`; below it, a disclosure that starts closed. The list is rendered
   // once, inside the `<details>`, which is forced open from `md` up (and follows the breakpoint when it changes).
+  const [mode, setMode] = React.useState("preview");
   const [partsOpen, setPartsOpen] = React.useState(false);
   // Radix Tabs stamps `dir="ltr"` on its root unless told otherwise, which would force every preview LTR. Read the
   // document's direction after mount (so server render and hydration agree) and hand it down.
@@ -82,7 +83,22 @@ export function IotExampleShowcase({
             <span>
               Built from {uses.length} {uses.length === 1 ? "part" : "parts"}
             </span>
-            <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" className={cn("transition-transform duration-fast motion-reduce:transition-none", partsOpen && "rotate-180")}>
+            <svg
+              viewBox="0 0 24 24"
+              width={18}
+              height={18}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              focusable="false"
+              className={cn(
+                "transition-transform duration-fast motion-reduce:transition-none",
+                partsOpen && "rotate-180",
+              )}
+            >
               <path d="m6 9 6 6 6-6" />
             </svg>
           </summary>
@@ -93,7 +109,10 @@ export function IotExampleShowcase({
                 lower a flex item's min-content width, which is what overflowed. */}
             <ul className="flex min-w-0 flex-wrap gap-x-3 gap-y-1">
               {uses.map((name) => (
-                <li key={name} className="min-w-0 font-mono text-label-md text-muted-foreground [overflow-wrap:anywhere]">
+                <li
+                  key={name}
+                  className="min-w-0 font-mono text-label-md text-muted-foreground [overflow-wrap:anywhere]"
+                >
                   {name}
                 </li>
               ))}
@@ -102,24 +121,23 @@ export function IotExampleShowcase({
         </details>
       </header>
 
-      <Tabs.Root defaultValue="preview" dir={dir} className="flex min-w-0 flex-col gap-4">
-        <div className="flex items-center justify-between gap-2">
-          <Tabs.List aria-label={`${title}: preview or code`} className="inline-flex max-w-full flex-wrap rounded-full bg-muted/70 p-1">
+      <div dir={dir} className="flex min-w-0 flex-col gap-4">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+          <SegmentedControl
+            value={mode}
+            dir={dir}
+            onValueChange={(next) => {
+              if (!next) return;
+              setMode(next);
+            }}
+            aria-label={`${title}: preview or code`}
+          >
             {(["preview", "code"] as const).map((value) => (
-              <Tabs.Trigger
-                key={value}
-                value={value}
-                className={cn(
-                  "min-h-11 rounded-full px-5 text-label-lg capitalize text-muted-foreground md:min-h-9 md:px-4",
-                  "transition-colors duration-fast hover:text-foreground motion-reduce:transition-none",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  "data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm",
-                )}
-              >
+              <SegmentedControlItem key={value} value={value} className="capitalize">
                 {value}
-              </Tabs.Trigger>
+              </SegmentedControlItem>
             ))}
-          </Tabs.List>
+          </SegmentedControl>
           <CopyButton
             value={code}
             className="size-11 md:size-8"
@@ -129,7 +147,7 @@ export function IotExampleShowcase({
           />
         </div>
 
-        <Tabs.Content value="preview" forceMount className="data-[state=inactive]:hidden">
+        <div role="region" aria-label={`${title}: preview`} hidden={mode !== "preview"}>
           {/* `overflow-x-auto` with a focusable region: the dashboard is wide, and a scroll container
               only a pointer can reach strands keyboard users (axe `scrollable-region-focusable`). The
               region keeps its tabindex and its name whether or not it currently overflows — whether it
@@ -152,9 +170,9 @@ export function IotExampleShowcase({
           >
             {children}
           </div>
-        </Tabs.Content>
+        </div>
 
-        <Tabs.Content value="code" forceMount className="data-[state=inactive]:hidden">
+        <div role="region" aria-label={`${title}: code`} hidden={mode !== "code"}>
           <div className="overflow-hidden rounded-2xl bg-muted/40">
             <pre
               // Code is code: the surrounding prose flips under RTL and this must not.
@@ -169,8 +187,8 @@ export function IotExampleShowcase({
               {path}
             </p>
           </div>
-        </Tabs.Content>
-      </Tabs.Root>
+        </div>
+      </div>
       <span className="sr-only" data-example={slug} />
     </section>
   );

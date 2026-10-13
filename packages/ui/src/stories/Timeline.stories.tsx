@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SegmentedControl, Timeline } from "@kinetixui/ui";
+import { Button, Card, SegmentedControl, Timeline } from "@kinetixui/ui";
 
 const Demo = () => (
     <Timeline
@@ -26,3 +26,27 @@ const meta = {
 export default meta;
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const Statuses: StoryObj<typeof meta> = { render: () => (
+    <div className="grid w-full max-w-3xl gap-10 md:grid-cols-2">
+      <Timeline
+        aria-label="Refund history"
+        items={[
+          { time: "2 Mar", title: "Refund requested", status: "complete" },
+          { time: "3 Mar", title: "Bank details needed", content: "Add an IBAN to receive the refund.", status: "warning", action: <Button size="sm" variant="Outline">Add bank details</Button> },
+          { time: "4 Mar", title: "Card refund failed", content: "The card was closed.", status: "error" },
+          { title: "Note added by support", status: "neutral" },
+          { title: "Refund sent", status: "pending" },
+        ]}
+      />
+      <Timeline
+        alternating
+        aria-label="Shipment"
+        items={[
+          { time: "12 Mar", title: "Packed", status: "complete" },
+          { time: "13 Mar", title: "In transit", content: "Riyadh hub", status: "current" },
+          { title: "Delivered", status: "pending" },
+        ]}
+      />
+    </div>
+  ) };
