@@ -17,6 +17,7 @@
  */
 import { readFileSync } from "node:fs";
 import { rmSync } from "node:fs";
+import { releaseDateErrors } from "./dates.mjs";
 import { discoverWorkspace } from "./workspace.mjs";
 import { buildPlan, isNoOp } from "./plan.mjs";
 import { readPendingChangesets } from "./peers.mjs";
@@ -74,6 +75,12 @@ export async function preflight({ root, log = () => {}, fetchImpl, skipSmokeTest
     log("Nothing to publish — every allowlisted version is already on the registry.");
     return { plan: releasePlan, packed: [], outDir: null, builds: [] };
   }
+
+  const dateErrors = releaseDateErrors({
+    plan: releasePlan,
+    source: readFileSync(resolveInside(root, "apps/web/src/lib/releases.ts"), "utf8"),
+  });
+  if (dateErrors.length) throw new ReleaseError(dateErrors);
 
   const builds = await buildPlanned(releasePlan, { root, log });
   const { outDir, packed } = await packPlanned(releasePlan, { root, log });

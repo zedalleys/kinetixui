@@ -34,7 +34,7 @@ could go out, work, and be unattributable with nothing complaining.
 
 | ID | Piece | Status | Notes |
 | --- | --- | --- | --- |
-| **a01** → ART-001 / LI-001 / LI-002 / X-001 | "Your cross-platform design system may be lying about parity" — article, X thread, LinkedIn, dev.to, plus sources, measurement, visual brief, checklist | **READY** | Argument holds and is still the flagship pillar-A piece. Version facts re-derived 2026-09-29; `verify-package.mjs` and `verify-evidence.mjs` both pass (48/48 claims) |
+| **a01** → ART-001 / LI-001 / LI-002 / X-001 | "Your cross-platform design system may be lying about parity" — article, X thread, LinkedIn, dev.to, plus sources, measurement, visual brief, checklist | **PUBLISHED** (ART-001 on dev.to, 2026-10-13); LI-001 and X-001 ready, LI-002 held | Argument holds and is still the flagship pillar-A piece. Version facts re-derived 2026-09-29; `verify-package.mjs` and `verify-evidence.mjs` both pass (48/48 claims) |
 | **a02** → LI-010 / X-002 | Second sequence piece | **READY** | Version facts re-derived 2026-09-29; `verify-package.mjs` passes |
 | `campaign-sequence-a01-a02.md` | Operator sequence for a01 → a02 | **READY** | Unchanged; neither piece is scheduled |
 | `visual-production-a01-a02.md` | Visual production brief | **NEEDS UPDATE** | Brief is finalised and no asset is built. One line names `@kinetixui/angular 0.24.0` as current state — correct today, but it is a version in an asset brief and should be re-derived at production time |
