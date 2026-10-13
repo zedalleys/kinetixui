@@ -4,7 +4,7 @@ KinetixUI for Angular — standalone directives and components built on the same
 contract as the other KinetixUI implementations.
 
 > **Preview.** This package is published so it can be used and reported on, and publication is
-> distribution, not maturity. It carries **80 of the 102 entries in the KinetixUI catalogue** and is
+> distribution, not maturity. It carries **80 of the 109 entries in the KinetixUI catalogue** and is
 > rolling out in waves. Expect gaps, and expect APIs to move within `0.x`. If you need the full
 > catalogue today, that is the React implementation (`@kinetixui/ui`).
 
@@ -139,7 +139,7 @@ The per-component, per-kind evidence table is at
 
 ## Limitations
 
-- **Preview, and 80 of 102 entries.** Do not plan around a component that is not in the list above.
+- **Preview, and 80 of 109 entries.** Do not plan around a component that is not in the list above.
 - Versioned independently of `@kinetixui/{ui,tokens,cli}` — its version number does not track theirs.
 - The token peer range is a deliberate compatibility claim, widened only after the package is verified
   against a new token version. It will not silently follow the token package.

@@ -1,0 +1,55 @@
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("phone-input", "An international phone number — a native calling-code select and a tel field in one left-to-right control — that keeps the displayed number apart from the raw value and does not pretend to validate.");
+
+# Phone Input
+
+<ComponentMeta />
+
+An international phone number — a native calling-code select and a tel field in one left-to-right control — that keeps the displayed number apart from the raw value and does not pretend to validate.
+
+<ComponentPreview name="phone-input-demo" />
+
+## React installation
+
+```bash
+npx @kinetixui/cli add phone-input
+```
+
+## React usage
+
+```tsx
+import { PhoneInput } from "@kinetixui/ui";
+
+const [phone, setPhone] = React.useState({ country: "SA", national: "" });
+
+<PhoneInput
+  label="Mobile number"
+  countries={[
+    { code: "SA", name: "Saudi Arabia", callingCode: "966" },
+    { code: "GB", name: "United Kingdom", callingCode: "44" },
+  ]}
+  value={phone}
+  onValueChange={({ raw, ...next }) => {
+    setPhone(next);
+    // raw is "+966501234567": send it to your verification service
+  }}
+/>
+```
+
+- **Two values.** `national` is the number as the reader typed it; `raw` is `+`, the calling code and the digits.
+- **Paste.** Pasting "+44 20 7946 0958" or "0044…" selects the country whose calling code matches and keeps the rest.
+- **No validation and no numbering database.** Whether a number is valid depends on numbering plans that change and on
+  libraries of hundreds of kilobytes. Validate on your server, then show the result with `invalid` and
+  `aria-describedby`. Trunk prefixes are not removed for the same reason.
+- **Your list.** No calling-code table is bundled; pass the countries you serve.
+
+## Accessibility and RTL
+
+- The calling code is a real `<select>` named "Country code" (`countryLabel`), so it keeps the platform's keyboard
+  behaviour and native picker. The number field is `type="tel"` with `autocomplete="tel-national"`.
+- The control is `dir="ltr"` in every language, because a phone number is a left-to-right string; its label follows
+  the page. An Arabic form shows "+966 50 123 4567", not a reversed number.
+- Checked in jsdom and Chromium; no screen reader run.
+
+<ComponentApi slug="phone-input" />

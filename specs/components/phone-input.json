@@ -1,0 +1,53 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "phone-input",
+  "title": "Phone Input",
+  "status": "beta",
+  "since": "0.25.0",
+  "platforms": [
+    "React"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "PhoneInput",
+      "props": [
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "The field's visible label."
+        },
+        {
+          "name": "countries",
+          "type": "PhoneCountry[]",
+          "required": true
+        },
+        {
+          "name": "value",
+          "type": "PhoneValue",
+          "required": true
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: PhoneValue & { raw: string; }) => void",
+          "required": true,
+          "description": "`raw` is \"+\" + calling code + the number's digits (\"\" when there are no digits)."
+        },
+        {
+          "name": "countryLabel",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name of the calling-code select. Default \"Country code\"."
+        },
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks both parts invalid; pair it with a visible message referenced by `aria-describedby`."
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/phone-input.tsx"
+}
