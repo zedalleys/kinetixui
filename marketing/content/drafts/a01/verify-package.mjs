@@ -66,8 +66,11 @@ t(true, "claim hygiene sweep (denominator, superlatives, Angular maturity)");
 // untagged (measurement.md: DEV is not our property, so campaign parameters on it are noise).
 const DEV_ARTICLE_URL = "https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0";
 t(!(li + xt).includes("<DEV_ARTICLE_URL>"), "no placeholder left in either social file");
-t(li.includes(DEV_ARTICLE_URL) && xt.includes(DEV_ARTICLE_URL), "live DEV URL present in both social files");
-const devUrls = [...(li + xt + art).matchAll(/https?:\/\/dev\.to\/\S+/gi)].map((m) => m[0]);
+// Compared by equality on extracted URLs, never by substring: a substring match would accept the URL
+// embedded inside some other link.
+const devUrlsIn = (s) => [...s.matchAll(/https?:\/\/dev\.to\/\S+/gi)].map((m) => m[0]);
+t([li, xt].every((s) => devUrlsIn(s).some((u) => u === DEV_ARTICLE_URL)), "live DEV URL present in both social files");
+const devUrls = devUrlsIn(li + xt + art);
 t(devUrls.every((u) => u === DEV_ARTICLE_URL), `no other or tagged dev.to URL anywhere${devUrls.some((u) => u !== DEV_ARTICLE_URL) ? ` (${devUrls.find((u) => u !== DEV_ARTICLE_URL)})` : ""}`);
 t(/utm_campaign=kx_p1_a_parity_proof/.test(read("measurement.md")), "campaign tag uses the kx_ prefix the regex requires");
 // Only recommended links matter. measurement.md quotes the bad tag deliberately, as the warning.
