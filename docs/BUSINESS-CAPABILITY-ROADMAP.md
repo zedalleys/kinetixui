@@ -88,7 +88,7 @@ The brief proposed phases 0–10. The order below keeps that shape; changes are 
 | --- | --- | --- |
 | **0 — Audit and roadmap** | This document, the capability data, the truthfulness check. | Done in the same change as Phase 1. |
 | **1 — Transactional foundations** | ResultState, ReferenceCode, PriceBreakdown, PassCard (React; native composition guidance; Angular planned). | Smallest set that unlocks the most domain screens. **Shipped in this change — see §4.** |
-| **2 — Money, status and commerce/booking blocks** | **AmountDisplay** (pulled forward from 5), **StatusTimeline** (fix React/Angular drift), Receipt block, address/phone/country/date-range fields (pulled forward from AC), quantity contract, migrate `order-summary` onto PriceBreakdown, booking pickers. | Every commerce and booking surface prints money and a status timeline; building those surfaces before the money contract would freeze ad-hoc formatting into each. |
+| **2 — Money, status and commerce/booking blocks** | **AmountDisplay** (pulled forward from 5), **StatusTimeline** (fix React/Angular drift), Receipt block, address/phone/country/date-range fields (pulled forward from AC), quantity contract, migrate `order-summary` onto PriceBreakdown, booking pickers. | Every commerce and booking surface prints money and a status timeline; building those surfaces before the money contract would freeze ad-hoc formatting into each. **Foundations shipped — see §4a.** The domain cards and flows in this phase (ProductCard, FlightCard, SeatMap, booking and checkout blocks, the order-summary migration) are not built yet. |
 | **3 — Data, analytics and status** | DataGrid RTL pinning fix, then its missing enterprise features; FilterBar as a component; QueryBuilder; Metric goal + sparkline; chart export decision; lift IoT's freshness/connectivity model into Core status states. | Needs Phase 2's AmountDisplay for financial cells. |
 | **4 — Admin, IAM, workflow and audit** | PermissionMatrix, WorkspaceSwitcher, API keys, ApprovalFlow, TaskQueue, SLAIndicator, AuditTrail, EntityCard, enterprise layouts. | Builds on StatusTimeline and DataTable. |
 | **5 — Finance, billing and loyalty** | MoneyInput, TransactionList, **TransactionCard** (deferred from Phase 1), subscriptions, usage meters, invoices, wallet/rewards. | Needs AmountDisplay (2) and the data patterns (3). |
@@ -124,6 +124,31 @@ Not built in Phase 1, on purpose: **SummaryList/KeyValueList** (exists as Descri
 composition), **TransactionCard** (Phase 5, see above), **Receipt** (a block, Phase 2 — publishing a block requires all
 five platforms).
 
+## 4a. Phase 2 record
+
+Seven components, all `@kinetixui/ui`, React, status **beta** (since 0.25.0, the same unreleased minor as Phase 1),
+plus one block on all five platforms and two improvements to existing components. Native platforms get *composition*
+guidance, Angular is *planned* (data wave). Nothing here bundles country, phone, postal or time-zone data, and nothing
+adds a dependency.
+
+| Capability | Delivered as | Key decisions |
+| --- | --- | --- |
+| AmountDisplay | `AmountDisplay` (new) | Displays a value the product formatted; never calculates. The sign is a real U+2212 or "+" and is spoken as a word; `tone` is separate from `sign` (a refund is negative and good). Tabular figures, its own `dir="auto"` run, optional `accessibleLabel` for the full spoken amount. |
+| StatusTimeline | `Timeline` gains `status`, `statusLabel(s)`, `action` | Six statuses (complete, current, pending, warning, error, neutral), each a different marker shape plus a spoken word; `aria-current="step"`. Timeline was converted to logical alignment (removed from the RTL ratchet). No status = unchanged output. Angular already had a narrower status set; natives have none, so the row stays *partial*. |
+| QuantityPicker | `NumberInput` (improved, no new component) | Localisable stepper names; bounds use `aria-disabled` so focus survives pressing down to the minimum; stepper changes announced politely. |
+| GuestPicker | `GuestPicker` (new composition) | NumberInputs in a Popover; per-category `min`/`max` plus `maxTotal`; summary on the trigger; every label supplied. |
+| CountrySelect | `CountrySelect` (new adapter) | The combobox recipe (Popover + Command) over a supplied list; searches name, code and keywords; a flag adornment is optional and never the only identifier. |
+| PhoneInput | `PhoneInput` (new) | A real `<select>` for the calling code and a `type="tel"` field in one `dir="ltr"` control; `national` (as typed) and `raw` (+ code + digits) are separate; paste of "+…"/"00…" picks the country. No validation, no numbering data. |
+| DateRangeInput | `DateRangeInput` (new) | Calendar range mode in a Popover; the value is ISO calendar dates (`YYYY-MM-DD`), never instants, so no time zone conversion can happen. Calendar's chevrons now mirror under `KinetixDirectionProvider` and its classes are logical (removed from the RTL ratchet). |
+| TimeSlotPicker | `TimeSlotPicker` (new) | A Radix radio group of tiles across labelled periods; unavailable slots are disabled, struck through and spoken; notes such as "2 left" are read with the time; empty state; the time zone is stated, never converted. |
+| AddressForm | `AddressFields` (new) | Fields in a fieldset, not a `<form>`; the app supplies field order, labels and requiredness per country; section-prefixed `autocomplete` tokens; `render` for custom controls. |
+| Receipt | `receipt` block (React, Angular, SwiftUI, Compose, Flutter) | Composition of AmountDisplay, ReferenceCode, DescriptionList and PriceBreakdown. Download, Print and Share are callbacks only: no PDF, print or payment code. |
+
+Not built in Phase 2, on purpose: **TimezoneSelect** and **DateTimeRangeInput** (not in this phase's brief; the
+time-zone rule above means they need their own design), **the order-summary migration onto PriceBreakdown**, and the
+**domain cards and flows** listed in Phase 2 of the table (ProductCard, FlightCard, SeatMap, BookingCard, checkout and
+booking blocks, other receipt variants). Native Timeline status is a follow-up.
+
 ## 5. Capability table
 
 Generated from `docs/business-capabilities.json` by `pnpm gen:capabilities`; `pnpm check:capabilities` fails if this
@@ -133,7 +158,7 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 
 <!-- BEGIN GENERATED: capability tables (pnpm gen:capabilities) -->
 
-169 capabilities in 30 families. Existing 41, partial 27, planned 92, Pro candidate 8, not planned 1.
+169 capabilities in 30 families. Existing 46, partial 28, planned 86, Pro candidate 8, not planned 1.
 
 ### Summary by phase
 
@@ -187,8 +212,8 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 | PassCard | PassCardHeader, PassCardTitle, PassCardDescription, PassCardFields, PassCardField, PassCardDivider, PassCardCode, PassCardFooter | L2 Enterprise | Core | Cross-platform Core | existing | ui:pass-card | — | 1 | Phase 1. Foundation for boarding passes, tickets, vouchers, permits, memberships. Renders a supplied code; never encodes. |
 | TicketCard | — | L3 Domain | Core | Block / composition | recipe | ui:pass-card | — | 1 | A PassCard composition (a stub after PassCardDivider), shown on the PassCard page. Not a component. |
 | TransactionCard | — | L2 Enterprise | Core | Cross-platform Core | planned | — | AmountDisplay, ResultState, StatusTimeline | 5 | Deferred from Phase 1 on purpose: its amount, sign and status vocabulary belong to the money-display contract (AmountDisplay, TransactionRow). Building it first would freeze that API by accident. |
-| Receipt | ReceiptHeader, ReceiptLine, ReceiptTotal, ReceiptTax, ReceiptPaymentMethod, ReceiptReference | L4 Block | Core | Block / composition | planned (block) | — | PriceBreakdown, ReferenceCode, DescriptionList, Card | 2 | A block, not a component: Card + DescriptionList (merchant, date, payment method) + PriceBreakdown + ReferenceCode. ReceiptLine/Total/Tax ARE PriceBreakdownLine/Total. Publishing a block needs all five platforms (check:block-source). |
-| StatusTimeline | — | L1 Core primitive | Core | Cross-platform Core | partial | ui:timeline | — | 2 | Timeline exists on all five platforms, but only Angular's KxTimelineItem carries a per-item `status`; React's Timeline has none. Align React (and natives) with Angular instead of adding a component — OrderTimeline, BookingTimeline, ShipmentTimeline all need it. |
+| Receipt | ReceiptHeader, ReceiptLine, ReceiptTotal, ReceiptTax, ReceiptPaymentMethod, ReceiptReference | L4 Block | Core | Block / composition | block | block:receipt | PriceBreakdown, ReferenceCode, DescriptionList, Card | 2 | Phase 2. A beta block on all five platforms: Card + AmountDisplay + ReferenceCode + DescriptionList (date, payment method, payee) + PriceBreakdown. Download, Print and Share are callbacks only: no PDF, print or payment infrastructure. ReceiptLine/Total/Tax ARE PriceBreakdownLine/Total. |
+| StatusTimeline | — | L1 Core primitive | Core | Cross-platform Core | partial | ui:timeline | — | 2 | Phase 2: React's Timeline now takes a per-item `status` (complete, current, pending, warning, error, neutral) with a distinct marker shape and a spoken word per status, `aria-current="step"`, an optional per-item action, and logical alignment (RTL-converted). Angular's KxTimelineItem has default/active/success/error but no pending or warning and does not speak its status. SwiftUI, Compose and Flutter timelines have no status yet, so this stays partial. |
 | Domain result screens | PaymentSuccess, BookingConfirmed, OrderConfirmed, RefundConfirmed, TransferSuccess, ApplicationSubmitted, TicketIssued, VoucherRedeemed | L4 Block | Core | Block / composition | planned (block) | — | ResultState, ReferenceCode, PriceBreakdown, PassCard | 2 | Blocks (or docs recipes) composed from the foundations — never components. |
 
 ### D. Commerce
@@ -197,7 +222,7 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ProductCard | ProductListItem, ProductPrice, ProductAvailability | L3 Domain | Core | React-only Domain | planned | — | Card, AmountDisplay, Badge | 2 | Domain composition over Card; price via AmountDisplay, availability as text plus a status Tag. |
 | ProductVariant / ProductOption | — | L3 Domain | Core | React-only Domain | planned | — | ToggleGroup, SegmentedControl, ColorPicker | 2 | Mostly a recipe over ToggleGroup (size, colour swatches with names, not colour alone). |
-| ProductQuantity / CartQuantity / QuantityPicker | — | L2 Enterprise | Core | Cross-platform Core | partial | ui:number-input, block:order-summary | — | 2 | NumberInput (with steppers) covers it; the order-summary block already uses it per line. One shared QuantityPicker contract, not three. |
+| ProductQuantity / CartQuantity / QuantityPicker | — | L2 Enterprise | Core | Cross-platform Core | existing | ui:number-input, block:order-summary | — | 2 | Phase 2: NumberInput IS the QuantityPicker contract, now with localisable stepper names, `aria-disabled` bounds that keep keyboard focus, and a polite announcement of stepper changes. No separate QuantityPicker component. The order-summary block uses it per line. |
 | Cart | CartItem, CartGroup, CartSummary | L3 Domain | Core | Block / composition | partial | block:order-summary | PriceBreakdown, NumberInput | 2 | order-summary block hand-rolls its totals; migrate them onto PriceBreakdown. |
 | CartDrawer / MiniCart | — | L4 Block | Core | Block / composition | planned (block) | — | Sheet, Cart | 2 | Sheet + Cart composition. |
 | Checkout | CheckoutStepper | L4 Block | Core | Block / composition | planned (block) | — | Stepper, Form, AddressForm, PaymentCardInput, PriceBreakdown, ResultState | 2 | A block. Never a component. |
@@ -211,8 +236,8 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 | Capability | Parts | Layer | Core/Pro | Platform target | Status | Evidence | Depends on | Phase | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | AvailabilityPicker / AppointmentPicker | — | L2 Enterprise | Core | Web-first Enterprise | planned | — | Calendar, TimeSlotPicker | 2 | Calendar with availability (disabled/limited days announced, not only greyed). |
-| TimeSlotPicker | — | L2 Enterprise | Core | Cross-platform Core | planned | — | ToggleGroup | 2 | A labelled radio/toggle grid of slots with an empty state; time zones stated in text. |
-| GuestPicker | — | L2 Enterprise | Core | Cross-platform Core | planned | — | NumberInput, Popover | 2 | Grouped steppers (adults, children) in a Popover with a summary trigger. |
+| TimeSlotPicker | — | L2 Enterprise | Core | Cross-platform Core | existing | ui:time-slot-picker | ToggleGroup | 2 | Phase 2. React beta: a Radix radio group of tiles (arrow keys across periods, Space selects), unavailable slots disabled, struck through and spoken, limited slots carry a note, empty state, and a stated time zone; times are never converted. Native tabs show a composition; Angular planned. |
+| GuestPicker | — | L2 Enterprise | Core | Cross-platform Core | existing | ui:guest-picker, ui:number-input | NumberInput, Popover | 2 | Phase 2. React beta composed from NumberInput steppers in a Popover: per-category and total limits, a summary on the trigger, every label supplied. Native tabs show a composition; Angular planned. |
 | ResourcePicker / ProviderPicker / LocationPicker / ServicePicker | — | L2 Enterprise | Core | Web-first Enterprise | planned (recipe) | — | Select, Combobox, Card | 2 | One picker pattern (searchable list of rich options) — a recipe over Command/Select, not four components. |
 | BookingCard / ReservationCard | BookingSummary, BookingReference, BookingStatus, ReservationDetails, ReservationStatus, ReservationActions | L3 Domain | Core | React-only Domain | planned | — | PassCard, ReferenceCode, DescriptionList, Tag | 2 | BookingReference is ReferenceCode; BookingStatus is a Tag; a reservation confirmation is a PassCard composition. |
 | BookingTimeline | — | L3 Domain | Core | React-only Domain | planned | — | StatusTimeline | 2 | StatusTimeline. |
@@ -245,13 +270,13 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 | Capability | Parts | Layer | Core/Pro | Platform target | Status | Evidence | Depends on | Phase | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Invoice | InvoiceHeader, InvoiceParty, InvoiceLine, InvoiceTotals, InvoiceStatus | L4 Block | Core | Block / composition | planned (block) | — | Table, PriceBreakdown, DescriptionList, Tag | 5 | InvoiceLine is a Table row; InvoiceTotals is PriceBreakdown. |
-| Receipt blocks | PaymentReceipt, TransferReceipt, BookingReceipt, RefundReceipt | L4 Block | Core | Block / composition | planned (block) | — | Receipt | 2 | Word changes over one Receipt block. |
+| Receipt blocks | PaymentReceipt, TransferReceipt, BookingReceipt, RefundReceipt | L4 Block | Core | Block / composition | partial | block:receipt | Receipt | 2 | The payment receipt exists as the Receipt block; booking, transfer, order and refund receipts are word changes over it and are not written as separate blocks yet. |
 
 ### I. Finance & banking
 
 | Capability | Parts | Layer | Core/Pro | Platform target | Status | Evidence | Depends on | Phase | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| AmountDisplay | ConvertedAmount | L2 Enterprise | Core | Cross-platform Core | planned | — | — | 2 | Pulled forward from Phase 5: every price in Commerce and Booking needs one money-display contract (Intl formatting supplied by the product, sign, currency code for screen readers, tabular figures). |
+| AmountDisplay | ConvertedAmount | L2 Enterprise | Core | Cross-platform Core | existing | ui:amount-display | — | 2 | Phase 2. React beta: formatted value supplied by the product (never calculated), real minus or plus sign spoken as a word, tone independent of sign (a refund is negative and good), tabular figures, its own `dir="auto"` run, optional full screen-reader label. Native tabs show a composition; Angular planned (data wave). |
 | MoneyInput | CurrencySelect | L2 Enterprise | Core | Cross-platform Core | planned | — | InputGroup, NumberInput, Select | 5 | Locale-aware entry; the stored value is the product's minor-unit integer, never a float. |
 | ExchangeRateDisplay / ExchangeRate | — | L2 Enterprise | Core | Cross-platform Core | planned | — | AmountDisplay | 5 |  |
 | PercentageInput / UnitInput | — | L2 Enterprise | Core | Cross-platform Core | partial | ui:number-input, ui:input-group | — | 5 | NumberInput + InputGroup addon covers it today. |
@@ -459,8 +484,8 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 | Capability | Parts | Layer | Core/Pro | Platform target | Status | Evidence | Depends on | Phase | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | FormSection / FieldArray / RepeatableFieldGroup / ConditionalField / DependentSelect | — | L2 Enterprise | Core | Cross-platform Core | partial | ui:form, ui:field | — | 2 | Form (react-hook-form) and Field exist; repeatable groups and dependent selects are recipes to write. |
-| AddressForm / PhoneInput / CountrySelect / TimezoneSelect | — | L2 Enterprise | Core | Cross-platform Core | planned | — | Field, Select, Combobox | 2 | Pulled into Phase 2: checkout and booking need them. Country/phone data is supplied, not bundled. |
-| DateRangeInput / DateTimeRangeInput | — | L2 Enterprise | Core | Cross-platform Core | partial | ui:calendar, ui:date-picker | — | 2 | Calendar has range mode; DatePicker is single-date — a range field is the gap. |
+| AddressForm / PhoneInput / CountrySelect / TimezoneSelect | — | L2 Enterprise | Core | Cross-platform Core | partial | ui:address-fields, ui:phone-input, ui:country-select | Field, Select, Combobox | 2 | Phase 2: AddressForm shipped as AddressFields (fields in a fieldset, not a `<form>`; order, labels and requiredness supplied per country; section-prefixed autocomplete tokens; no postal database). PhoneInput (native calling-code select + tel field, `dir="ltr"`, raw value, paste detection, no validation and no numbering database) and CountrySelect (combobox recipe over a supplied list; a flag is never the only identifier) are React betas. TimezoneSelect is not built. |
+| DateRangeInput / DateTimeRangeInput | — | L2 Enterprise | Core | Cross-platform Core | partial | ui:date-range-input, ui:calendar | — | 2 | Phase 2: DateRangeInput is a React beta over Calendar range mode in a Popover with ISO calendar-date strings, so no time zone moves a booking; Calendar's chevrons now mirror under RTL. DateTimeRangeInput is not built. |
 | DurationInput / UnitInput | — | L2 Enterprise | Core | Cross-platform Core | partial | ui:number-input, ui:input-group | — | 5 |  |
 
 ### AD. Motion

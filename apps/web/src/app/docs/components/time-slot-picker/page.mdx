@@ -1,0 +1,52 @@
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("time-slot-picker", "Choose one time from the slots a product offers, as a radio group of tiles with unavailable and limited slots, periods and a stated time zone.");
+
+# Time Slot Picker
+
+<ComponentMeta />
+
+Choose one time from the slots a product offers, as a radio group of tiles with unavailable and limited slots, periods and a stated time zone.
+
+<ComponentPreview name="time-slot-picker-demo" />
+
+## React installation
+
+```bash
+npx @kinetixui/cli add time-slot-picker
+```
+
+## React usage
+
+```tsx
+import { TimeSlotPicker } from "@kinetixui/ui";
+
+<TimeSlotPicker
+  label="Pickup time"
+  timeZoneLabel="Times in Riyadh (GMT+3)"
+  groups={[
+    { label: "Morning", slots: [
+      { value: "09:00", label: "09:00" },
+      { value: "09:30", label: "09:30", unavailable: true },
+      { value: "10:00", label: "10:00", note: "2 left" },
+    ] },
+  ]}
+  value={slot}
+  onValueChange={setSlot}
+/>
+```
+
+Availability is data: slots arrive with their state, and nothing here fetches, holds or releases a slot. The labels are
+shown exactly as given; the component never converts times, and `timeZoneLabel` says which zone they are in.
+
+## Accessibility and RTL
+
+- A radio group (Radix): Tab enters at the selected slot, arrow keys move across all available slots and groups and
+  wrap, Space selects.
+- Selected is a filled tile **and** a check mark. Unavailable is disabled, dashed, struck through and spoken as
+  "Unavailable", so neither state is colour alone. A note such as "2 left" is read with the time.
+- With no available slot, `emptyMessage` is shown instead of a grid of disabled tiles.
+- Tiles wrap at a rem minimum width, so 200% text gives fewer, wider tiles. Logical layout mirrors under RTL.
+- Checked in jsdom and Chromium; no screen reader run.
+
+<ComponentApi slug="time-slot-picker" />

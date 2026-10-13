@@ -45,6 +45,24 @@
           "name": "onChange",
           "type": "((value: number) => void)",
           "required": false
+        },
+        {
+          "name": "decrementLabel",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name of the decrement button. Default \"Decrease\"."
+        },
+        {
+          "name": "incrementLabel",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name of the increment button. Default \"Increase\"."
+        },
+        {
+          "name": "formatAnnouncement",
+          "type": "((value: number) => string)",
+          "required": false,
+          "description": "What is announced after a stepper press. Default: the number itself."
         }
       ]
     }

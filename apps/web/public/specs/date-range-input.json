@@ -1,0 +1,109 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "date-range-input",
+  "title": "Date Range Input",
+  "status": "beta",
+  "since": "0.25.0",
+  "platforms": [
+    "React"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "DateRangeInput",
+      "props": [
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": true
+        },
+        {
+          "name": "value",
+          "type": "DateRangeValue",
+          "required": true
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: DateRangeValue) => void",
+          "required": true
+        },
+        {
+          "name": "min",
+          "type": "string",
+          "required": false,
+          "description": "Earliest selectable date, inclusive."
+        },
+        {
+          "name": "max",
+          "type": "string",
+          "required": false,
+          "description": "Latest selectable date, inclusive."
+        },
+        {
+          "name": "isDateDisabled",
+          "type": "((iso: string) => boolean)",
+          "required": false,
+          "description": "Return true for a date that cannot be chosen."
+        },
+        {
+          "name": "locale",
+          "type": "string",
+          "required": false,
+          "description": "BCP 47 locale for the default display format."
+        },
+        {
+          "name": "formatDate",
+          "type": "((iso: string) => string)",
+          "required": false,
+          "description": "Replaces the default `Intl.DateTimeFormat` display of one date."
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "required": false,
+          "description": "Trigger text with no selection. Default \"Select dates\"."
+        },
+        {
+          "name": "openEndLabel",
+          "type": "string",
+          "required": false,
+          "description": "Shown in place of a missing end date. Default \"…\"."
+        },
+        {
+          "name": "numberOfMonths",
+          "type": "number",
+          "required": false,
+          "description": "Months shown side by side. Default 1."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks the trigger invalid; pair it with a visible message referenced by `aria-describedby`."
+        },
+        {
+          "name": "aria-describedby",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "calendarProps",
+          "type": "Omit<DayPickerProps, \"onSelect\" | \"disabled\" | \"selected\" | \"required\" | \"mode\" | \"numberOfMonths\">",
+          "required": false,
+          "description": "Passed to the Calendar, e.g. `weekStartsOn`. Selection props are owned by this component."
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/date-range-input.tsx"
+}

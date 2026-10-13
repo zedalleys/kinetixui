@@ -369,6 +369,16 @@ different name.
   that copies for a reference code, `KinetixDescriptionList` rows for a
   price breakdown, and `KinetixCard` + `KinetixDescriptionList` + the
   supplied code as an `Image` for a pass.
+- **`AmountDisplay`, `GuestPicker`, `CountrySelect`, `PhoneInput`,
+  `DateRangeInput`, `TimeSlotPicker` and `AddressFields` aren't ported
+  yet.** They are React-first betas from the roadmap's Phase 2, with the
+  same open decision. Compose a tabular-figure `Text` with a content
+  description for an amount, `KinetixNumberInput`s in a `KinetixPopover`
+  for guests, `KinetixSelectTrigger` + `KinetixSelectItem` for a country,
+  a calling-code select and a `KeyboardType.Phone` `KinetixInput` in a
+  left-to-right row for a phone number, Material 3's `DateRangePicker`
+  for dates, `KinetixToggle` chips in a `selectableGroup()` for time
+  slots, and `KinetixField`s for an address.
 - **Scoped ports:** `KinetixSheet` is bottom-only. `KinetixSidebar` drops
   rail/icon-collapse mode, `SidebarInset`, the cookie and the shortcut.
   `KinetixAppBar` drops the mobile menu-toggle collapse — the nav stays
