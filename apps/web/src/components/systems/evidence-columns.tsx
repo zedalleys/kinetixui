@@ -1,12 +1,14 @@
 import type { PlatformEvidence } from "@/lib/systems-in-motion";
 
+// Named for the evidence, not the capability: "Accessibility verification: not yet verified" cannot be read as
+// "SwiftUI has no accessibility" the way a bare "Accessibility 0 / 90" can.
 const KIND_LABEL: Record<PlatformEvidence["evidence"][number]["kind"], string> = {
-  build: "Build",
-  interaction: "Interaction",
-  accessibility: "Accessibility",
-  rtl: "RTL",
-  largeText: "Large text",
-  reducedMotion: "Reduced motion",
+  build: "Build verification",
+  interaction: "Interaction verification",
+  accessibility: "Accessibility verification",
+  rtl: "RTL verification",
+  largeText: "Large-text verification",
+  reducedMotion: "Reduced-motion verification",
 };
 
 /**
@@ -16,6 +18,10 @@ const KIND_LABEL: Record<PlatformEvidence["evidence"][number]["kind"], string> =
  * numbers are out of ITS OWN catalogue entries, which is the only denominator that does not flatter the
  * platforms with fewer entries or punish the ones with more. Nothing here is live; it is the manifest this
  * page was built from, and it says so.
+ *
+ * Each row says how mature the EVIDENCE is ("Not yet verified", "Limited evidence", "Partial", "Verified"; see
+ * `evidenceStatus`), never how capable the platform is. "0 / 90" or "1 / 90" over a near-empty meter reads as a
+ * failed score, and the generator only ever records evidence found, so those rows are words and a sentence.
  */
 export function EvidenceColumns({ platforms }: { platforms: PlatformEvidence[] }) {
   // Styled by `.kx-evidence` in globals.css rather than per-element utility lists: five cards of nine rows repeat
@@ -42,13 +48,26 @@ export function EvidenceColumns({ platforms }: { platforms: PlatformEvidence[] }
           </dl>
           <dl>
             {p.evidence.map((e) => (
-              // dt and dd sit directly in the row (axe: dlitem); the meter is the row's own bottom edge (`.kx-meter`),
-              // drawn in CSS from the fraction, so a row is three elements rather than five
-              <div key={e.kind} className="kx-meter" style={{ ["--kx-meter" as string]: `${e.of ? (e.count / e.of) * 100 : 0}%` }}>
+              // The state in words first, the count second, the sentence last. A meter (`.kx-meter`, the row's bottom
+              // edge drawn in CSS) only where the fraction is substantial: under a zero or a handful it reads as a
+              // failing score. dt and dd sit directly in the row (axe: dlitem), and the sentence is a dd of the same
+              // dt, so it belongs to the metric. Assistive technology hears the state and the sentence, not "7 slash 90".
+              <div
+                key={e.kind}
+                className={e.meter ? "kx-meter" : "kx-evidence-gap"}
+                data-evidence-state={e.state}
+                style={e.meter ? { ["--kx-meter" as string]: `${(e.count / e.of) * 100}%` } : undefined}
+              >
                 <dt>{KIND_LABEL[e.kind]}</dt>
                 <dd>
-                  {e.count} / {e.of}
+                  {e.label}
+                  {e.count > 0 ? (
+                    <span aria-hidden="true">
+                      {e.count} / {e.of}
+                    </span>
+                  ) : null}
                 </dd>
+                <dd className={e.meter ? "sr-only" : undefined}>{e.summary}</dd>
               </div>
             ))}
           </dl>
