@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import * as Tabs from "@radix-ui/react-tabs";
+import { useDocumentDirection } from "@/lib/use-document-direction";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@kinetixui/ui";
 import { cn } from "@/lib/utils";
 
 /**
@@ -49,7 +50,7 @@ export function CategoryExplorer({ categories, label }: { categories: readonly E
     return map;
   }, [categories]);
   const [value, setValue] = React.useState(ids[0]!);
-  const [dir, setDir] = React.useState<"ltr" | "rtl">("ltr");
+  const dir = useDocumentDirection();
   const [headerHeight, setHeaderHeight] = React.useState<number | null>(null);
   const root = React.useRef<HTMLDivElement>(null);
   const bar = React.useRef<HTMLDivElement>(null);
@@ -110,7 +111,6 @@ export function CategoryExplorer({ categories, label }: { categories: readonly E
   }, []);
 
   React.useEffect(() => {
-    setDir(document.documentElement.dir === "rtl" ? "rtl" : "ltr");
     const header = document.querySelector<HTMLElement>("body header.sticky, body > div header.sticky, header.sticky");
     let observer: ResizeObserver | undefined;
     if (header && typeof ResizeObserver !== "undefined") {
@@ -152,7 +152,7 @@ export function CategoryExplorer({ categories, label }: { categories: readonly E
   };
 
   return (
-    <Tabs.Root ref={root} value={value} onValueChange={select} dir={dir}>
+    <Tabs ref={root} value={value} onValueChange={select} dir={dir}>
       <div
         ref={bar}
         data-category-bar=""
@@ -162,27 +162,22 @@ export function CategoryExplorer({ categories, label }: { categories: readonly E
           headerHeight === null && "top-12 md:top-[5.5rem]",
         )}
       >
-        <Tabs.List aria-label={label} className="flex gap-1 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:thin]">
+        <TabsList aria-label={label} className="">
           {categories.map((category) => (
-            <Tabs.Trigger
+            <TabsTrigger
               key={category.id}
               value={category.id}
               data-category-tab={category.id}
-              className={cn(
-                "inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full px-4 text-label-lg text-muted-foreground",
-                "transition-colors duration-fast hover:bg-muted hover:text-foreground motion-reduce:transition-none",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-                "data-[state=active]:bg-foreground data-[state=active]:text-background",
-              )}
+              className="text-label-lg"
             >
               {category.label}
-            </Tabs.Trigger>
+            </TabsTrigger>
           ))}
-        </Tabs.List>
+        </TabsList>
       </div>
 
       {categories.map((category) => (
-        <Tabs.Content
+        <TabsContent
           key={category.id}
           value={category.id}
           forceMount
@@ -192,9 +187,9 @@ export function CategoryExplorer({ categories, label }: { categories: readonly E
         >
           {/* The stable hook lives inside: the panel's own id is Radix's, and each tab's aria-controls points at it. */}
           <div id={`explore-${category.id}`}>{category.panel}</div>
-        </Tabs.Content>
+        </TabsContent>
       ))}
-    </Tabs.Root>
+    </Tabs>
   );
 }
 

@@ -69,7 +69,7 @@ async function selectedPlatforms(page) {
   const out = [];
   for (let i = 0; i < n; i++) {
     const cp = previews.nth(i);
-    await cp.getByRole('tab', { name: 'code', exact: true }).click();
+    await cp.getByRole('radio', { name: 'code', exact: true }).click();
     const tab = cp.getByRole('tablist', { name: 'Platform' }).getByRole('tab', { selected: true });
     out.push(((await tab.textContent()) ?? '').replace(/·.*/, '').trim());
   }
@@ -92,7 +92,7 @@ try {
   await check('the choice survives a full page load and a client-side navigation', async () => {
     const { page, errors } = await newPage();
     await go(page, '/docs/components/button');
-    await page.locator('[data-cp]').first().getByRole('tab', { name: 'code', exact: true }).click();
+    await page.locator('[data-cp]').first().getByRole('radio', { name: 'code', exact: true }).click();
     await page.locator('[data-cp]').first().getByRole('tablist', { name: 'Platform' }).getByRole('tab', { name: 'Flutter' }).click();
     await go(page, '/docs/components/dialog');
     assert.deepEqual([...new Set(await selectedPlatforms(page))], ['Flutter'], 'full load of the next page');
@@ -107,7 +107,7 @@ try {
   await check('/blocks and the homepage flagship open on the remembered platform', async () => {
     const { page, errors } = await newPage();
     await go(page, '/docs/components/button');
-    await page.locator('[data-cp]').first().getByRole('tab', { name: 'code', exact: true }).click();
+    await page.locator('[data-cp]').first().getByRole('radio', { name: 'code', exact: true }).click();
     await page.locator('[data-cp]').first().getByRole('tablist', { name: 'Platform' }).getByRole('tab', { name: 'SwiftUI' }).click();
 
     await go(page, '/');
@@ -120,7 +120,7 @@ try {
     let checked = 0;
     for (let i = 0; i < (await sections.count()) && checked < 1; i++) {
       const s = sections.nth(i);
-      const code = s.getByRole('tab', { name: 'code', exact: true });
+      const code = s.getByRole('radio', { name: 'code', exact: true });
       if (!(await code.count())) continue;
       await code.click();
       const list = s.locator('[role="tablist"][aria-label$="implementation platform"]');
@@ -135,7 +135,7 @@ try {
   await check('?platform= opens a page on that platform without overwriting the saved choice', async () => {
     const { page } = await newPage();
     await go(page, '/docs/components/button');
-    await page.locator('[data-cp]').first().getByRole('tab', { name: 'code', exact: true }).click();
+    await page.locator('[data-cp]').first().getByRole('radio', { name: 'code', exact: true }).click();
     await page.locator('[data-cp]').first().getByRole('tablist', { name: 'Platform' }).getByRole('tab', { name: 'Jetpack Compose' }).click();
     await go(page, '/docs/components/button?platform=angular');
     assert.deepEqual([...new Set(await selectedPlatforms(page))], ['Angular']);
@@ -147,7 +147,7 @@ try {
   await check('client-side navigation into, between and away from ?platform= follows the URL and restores the saved choice', async () => {
     const { page, errors } = await newPage();
     await go(page, '/docs/components/button');
-    await page.locator('[data-cp]').first().getByRole('tab', { name: 'code', exact: true }).click();
+    await page.locator('[data-cp]').first().getByRole('radio', { name: 'code', exact: true }).click();
     await page.locator('[data-cp]').first().getByRole('tablist', { name: 'Platform' }).getByRole('tab', { name: 'Jetpack Compose' }).click();
     // a marker on window survives only while no full page load happens: every step below must keep it
     await page.evaluate(() => { window.__kxSameDocument = true; });
@@ -178,7 +178,7 @@ try {
     assert.equal(await guide.getAttribute('data-blocks-install'), 'React');
     const signIn = page.locator('section#sign-in');
     assert.equal((await signIn.locator('code', { hasText: 'npx @kinetixui/cli add' }).textContent())?.trim(), 'npx @kinetixui/cli add button card checkbox input label');
-    await signIn.getByRole('tab', { name: 'code', exact: true }).click();
+    await signIn.getByRole('radio', { name: 'code', exact: true }).click();
     await signIn.locator('[role="tablist"][aria-label$="implementation platform"]').getByRole('tab', { name: 'SwiftUI' }).click();
     assert.equal(await guide.getAttribute('data-blocks-install'), 'SwiftUI');
     assert.match(await guide.textContent(), /source only and not on Swift Package Manager yet/);

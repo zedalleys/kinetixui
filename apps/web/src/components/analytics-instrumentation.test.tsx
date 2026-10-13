@@ -139,7 +139,7 @@ describe("ComponentPreview (component page: code tabs and platform switcher)", (
     const user = userEvent.setup();
     nav.pathname = "/docs/components/button";
     render(<ComponentPreview name="button-demo" />);
-    await user.click(screen.getByRole("tab", { name: "code" }));
+    await user.click(screen.getByRole("radio", { name: "code" }));
     track.mockClear(); // opening Code is its own event, asserted below; these tests are about what follows
     return user;
   };
@@ -155,11 +155,11 @@ describe("ComponentPreview (component page: code tabs and platform switcher)", (
     const user = userEvent.setup();
     nav.pathname = "/docs/components/button";
     render(<ComponentPreview name="button-demo" />);
-    await user.click(screen.getByRole("tab", { name: "code" }));
+    await user.click(screen.getByRole("radio", { name: "code" }));
     expect(track.mock.calls).toEqual([["component_code_viewed", { component: "button", platform: "react", location: "code_tab", source: "component_page" }]]);
     // back to Preview and the same Code tab again: each explicit open is one inspection
-    await user.click(screen.getByRole("tab", { name: "preview" }));
-    await user.click(screen.getByRole("tab", { name: "code" }));
+    await user.click(screen.getByRole("radio", { name: "preview" }));
+    await user.click(screen.getByRole("radio", { name: "code" }));
     expect(track).toHaveBeenCalledTimes(2);
     expectSanitary();
   });
@@ -221,7 +221,7 @@ describe("ComponentPreview (component page: code tabs and platform switcher)", (
     const user = userEvent.setup();
     nav.pathname = "/some/other/page";
     render(<ComponentPreview name="button-demo" />);
-    await user.click(screen.getByRole("tab", { name: "code" }));
+    await user.click(screen.getByRole("radio", { name: "code" }));
     await user.click(screen.getByRole("tab", { name: "SwiftUI" }));
     await user.click(screen.getByRole("button", { name: "Copy" }));
     await new Promise((r) => setTimeout(r, 20));
