@@ -58,7 +58,8 @@ describe("operations environment", () => {
     fireEvent.click(run);
     // Immediately after the request the confirmed value is unchanged and the request is worded.
     expect(within(inspector).getByRole("switch", { name: "Transfer pump P-201 run" })).toHaveAttribute("aria-checked", "true");
-    expect(within(inspector).getAllByText(/requested off/i).length).toBeGreaterThan(0);
+    // Worded once, in the command row: "Changing to Off". The switch keeps the confirmed state.
+    expect(within(inspector).getAllByText(/Changing to Off/).length).toBeGreaterThan(0);
     expect(within(inspector).getByRole("switch", { name: "Transfer pump P-201 run" })).toBeDisabled();
     tick(5000);
     expect(within(screen.getByRole("region", { name: /Selected machine: Transfer pump P-201/ })).getByRole("switch", { name: "Transfer pump P-201 run" })).toHaveAttribute("aria-checked", "false");

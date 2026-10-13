@@ -349,9 +349,12 @@ export function FloorPlan({ floor, snapshot, selectedCameraId, zoneId, showCamer
                     "absolute grid size-[36px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 outline-none",
                     "transition-[transform,box-shadow] duration-fast ease-standard motion-reduce:transition-none",
                     "focus-visible:shadow-focus",
-                    st.tone === "ok" && "border-foreground/70 bg-card text-foreground",
+                    // Severity, not alarm: a healthy camera is a quiet outline, a stale or reconnecting one is the
+                    // loud warning fill, and an offline one is muted and dashed. Offline is a connection fact, not
+                    // a dangerous condition, so it no longer wears the same red as an over-capacity zone.
+                    st.tone === "ok" && "border-foreground/40 bg-card text-muted-foreground",
                     st.tone === "attention" && "border-warning bg-warning text-warning-foreground",
-                    st.tone === "down" && "border-destructive bg-destructive text-destructive-foreground",
+                    st.tone === "down" && "border-dashed border-muted-foreground bg-muted text-muted-foreground",
                     selected && "z-10 scale-110 ring-[3px] ring-foreground ring-offset-2 ring-offset-background",
                     dimmed && !selected && "opacity-50",
                   )}

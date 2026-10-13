@@ -90,6 +90,33 @@
         "Flutter"
       ]
     },
+    "address-fields": {
+      "status": "beta",
+      "lifecycleReason": "New in the Phase 2 business foundations (business capability roadmap): the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
+      "since": "0.25.0",
+      "platforms": [
+        "React"
+      ],
+      "platformNote": "React-first business foundation (business capability roadmap, Phase 2 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Roadmap target: Cross-platform Core. Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "data"
+        },
+        "SwiftUI": {
+          "type": "composition",
+          "reason": "No native AddressFields yet. A Form Section of KinetixField + KinetixInput pairs in the product's own order, each with the matching .textContentType (.streetAddressLine1, .addressCity, .postalCode, …) for AutoFill."
+        },
+        "Compose": {
+          "type": "composition",
+          "reason": "No native AddressFields yet. A Column of KinetixField + KinetixInput pairs in the product's own order, one per address part, with keyboardType = KeyboardType.Number on numeric parts. Autofill content types need a field that exposes semantics, which KinetixInput does not yet."
+        },
+        "Flutter": {
+          "type": "composition",
+          "reason": "No native AddressFields yet. An AutofillGroup of TextField widgets in the product's own order, each with the matching AutofillHints (streetAddressLine1, addressCity, postalCode, …); KinetixInput has no autofill-hints parameter yet, so it cannot carry them."
+        }
+      }
+    },
     "alert": {
       "status": "stable",
       "since": "0.4.1",
@@ -111,6 +138,33 @@
         "Compose",
         "Flutter"
       ]
+    },
+    "amount-display": {
+      "status": "beta",
+      "lifecycleReason": "New in the Phase 2 business foundations (business capability roadmap): the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
+      "since": "0.25.0",
+      "platforms": [
+        "React"
+      ],
+      "platformNote": "React-first business foundation (business capability roadmap, Phase 2 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Roadmap target: Cross-platform Core. Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "data"
+        },
+        "SwiftUI": {
+          "type": "composition",
+          "reason": "No native AmountDisplay yet. Format with the product's FormatStyle (.currency(code:)), render Text with .monospacedDigit(), write the sign into the string, and give the Text an .accessibilityLabel with the full spoken amount."
+        },
+        "Compose": {
+          "type": "composition",
+          "reason": "No native AmountDisplay yet. Format with the product's NumberFormat, render Text with fontFeatureSettings = \"tnum\", write the sign into the string, and give it a semantics contentDescription with the full spoken amount."
+        },
+        "Flutter": {
+          "type": "composition",
+          "reason": "No native AmountDisplay yet. Format with the product's NumberFormat (intl), render Text with FontFeature.tabularFigures(), write the sign into the string, and wrap it in Semantics(label:) with the full spoken amount."
+        }
+      }
     },
     "app-bar": {
       "status": "stable",
@@ -412,6 +466,33 @@
         "Flutter"
       ]
     },
+    "country-select": {
+      "status": "beta",
+      "lifecycleReason": "New in the Phase 2 business foundations (business capability roadmap): the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
+      "since": "0.25.0",
+      "platforms": [
+        "React"
+      ],
+      "platformNote": "React-first business foundation (business capability roadmap, Phase 2 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Roadmap target: Cross-platform Core. Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "data"
+        },
+        "SwiftUI": {
+          "type": "composition",
+          "reason": "No native CountrySelect yet. KinetixSelect over the product's country list for a short set, or a searchable List in a sheet (.searchable) for the full list; names from Locale.current.localizedString(forRegionCode:)."
+        },
+        "Compose": {
+          "type": "composition",
+          "reason": "No native CountrySelect yet. KinetixSelectTrigger with KinetixSelectItem rows over the product's country list for a short set, or a filtered LazyColumn in a bottom sheet for the full list; names from Locale(\"\", code).displayCountry."
+        },
+        "Flutter": {
+          "type": "composition",
+          "reason": "No native CountrySelect yet. KinetixSelect over the product's country list for a short set, or a filtered ListView in a bottom sheet for the full list; names supplied in the reader's language."
+        }
+      }
+    },
     "data-grid": {
       "status": "stable",
       "since": "0.12.0",
@@ -457,6 +538,33 @@
         "Angular": {
           "type": "planned",
           "wave": "advanced"
+        }
+      }
+    },
+    "date-range-input": {
+      "status": "beta",
+      "lifecycleReason": "New in the Phase 2 business foundations (business capability roadmap): the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
+      "since": "0.25.0",
+      "platforms": [
+        "React"
+      ],
+      "platformNote": "React-first business foundation (business capability roadmap, Phase 2 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Roadmap target: Cross-platform Core. Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "data"
+        },
+        "SwiftUI": {
+          "type": "composition",
+          "reason": "No native DateRangeInput yet. Two DatePicker(displayedComponents: .date) fields (start, end) with the end's range starting at the chosen start, storing calendar dates as DateComponents, not Date instants."
+        },
+        "Compose": {
+          "type": "composition",
+          "reason": "No native DateRangeInput yet. Material3's DateRangePicker in a dialog, opened from a KinetixButton that shows the range; convert its UTC-midnight millis to LocalDate before storing."
+        },
+        "Flutter": {
+          "type": "composition",
+          "reason": "No native DateRangeInput yet. Flutter's showDateRangePicker opened from a KinetixButton that shows the range; store DateUtils.dateOnly values (calendar dates), not instants."
         }
       }
     },
@@ -629,6 +737,33 @@
         "Flutter": {
           "type": "composition",
           "reason": "Form is react-hook-form glue with no native analogue. KinetixField and the platform's own state hold the same job."
+        }
+      }
+    },
+    "guest-picker": {
+      "status": "beta",
+      "lifecycleReason": "New in the Phase 2 business foundations (business capability roadmap): the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
+      "since": "0.25.0",
+      "platforms": [
+        "React"
+      ],
+      "platformNote": "React-first business foundation (business capability roadmap, Phase 2 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Roadmap target: Cross-platform Core. Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "data"
+        },
+        "SwiftUI": {
+          "type": "composition",
+          "reason": "No native GuestPicker yet. One KinetixNumberInput per category, each with an accessibilityLabel naming the category, in a KinetixPopover (or a sheet on iPhone) opened from a button that shows the summary."
+        },
+        "Compose": {
+          "type": "composition",
+          "reason": "No native GuestPicker yet. One KinetixNumberInput per category, each with a contentDescription naming the category, in a KinetixPopover or bottom sheet opened from a button that shows the summary."
+        },
+        "Flutter": {
+          "type": "composition",
+          "reason": "No native GuestPicker yet. One KinetixNumberInput per category, each wrapped in Semantics(label:) naming the category, in a KinetixPopover or bottom sheet opened from a button that shows the summary."
         }
       }
     },
@@ -1009,6 +1144,33 @@
         "Flutter"
       ]
     },
+    "phone-input": {
+      "status": "beta",
+      "lifecycleReason": "New in the Phase 2 business foundations (business capability roadmap): the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
+      "since": "0.25.0",
+      "platforms": [
+        "React"
+      ],
+      "platformNote": "React-first business foundation (business capability roadmap, Phase 2 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Roadmap target: Cross-platform Core. Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "data"
+        },
+        "SwiftUI": {
+          "type": "composition",
+          "reason": "No native PhoneInput yet. HStack of a KinetixSelect for the calling code and a KinetixInput with .keyboardType(.phonePad) and .textContentType(.telephoneNumber), with .environment(\\.layoutDirection, .leftToRight) so the number reads left to right in an RTL layout."
+        },
+        "Compose": {
+          "type": "composition",
+          "reason": "No native PhoneInput yet. Row of a KinetixSelectTrigger with KinetixSelectItem rows for the calling code and a KinetixInput with keyboardType = KeyboardType.Phone, inside CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) so the number reads left to right in an RTL layout."
+        },
+        "Flutter": {
+          "type": "composition",
+          "reason": "No native PhoneInput yet. Row of a KinetixSelect for the calling code and a TextField with keyboardType: TextInputType.phone and autofillHints: [AutofillHints.telephoneNumberNational] (KinetixInput has no keyboard-type parameter yet), inside Directionality(textDirection: TextDirection.ltr) so the number reads left to right in an RTL layout."
+        }
+      }
+    },
     "popover": {
       "status": "stable",
       "since": "0.4.1",
@@ -1369,6 +1531,33 @@
         "Compose",
         "Flutter"
       ]
+    },
+    "time-slot-picker": {
+      "status": "beta",
+      "lifecycleReason": "New in the Phase 2 business foundations (business capability roadmap): the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
+      "since": "0.25.0",
+      "platforms": [
+        "React"
+      ],
+      "platformNote": "React-first business foundation (business capability roadmap, Phase 2 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Roadmap target: Cross-platform Core. Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+      "platformGuidance": {
+        "Angular": {
+          "type": "planned",
+          "wave": "data"
+        },
+        "SwiftUI": {
+          "type": "composition",
+          "reason": "No native TimeSlotPicker yet. A LazyVGrid(columns: [GridItem(.adaptive(minimum:))]) of slot buttons with .accessibilityAddTraits(.isSelected) on the chosen one and .disabled plus an accessibilityValue for unavailable slots."
+        },
+        "Compose": {
+          "type": "composition",
+          "reason": "No native TimeSlotPicker yet. A FlowRow of slot chips in a Modifier.selectableGroup(), each Modifier.selectable(role = Role.RadioButton); unavailable chips enabled = false with a stateDescription."
+        },
+        "Flutter": {
+          "type": "composition",
+          "reason": "No native TimeSlotPicker yet. A Wrap of ChoiceChip slots under one Semantics(container: true) group, each with Semantics(inMutuallyExclusiveGroup: true, checked:); unavailable chips have onSelected null and a semantic hint."
+        }
+      }
     },
     "timeline": {
       "status": "stable",

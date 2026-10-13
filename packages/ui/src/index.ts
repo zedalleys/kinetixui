@@ -356,7 +356,7 @@ export {
   SegmentedControlItem,
   type SegmentedControlProps,
 } from "./components/segmented-control";
-export { Timeline, type TimelineItem, type TimelineProps } from "./components/timeline";
+export { Timeline, type TimelineItem, type TimelineProps, type TimelineStatus } from "./components/timeline";
 export { Marquee, type MarqueeProps } from "./components/marquee";
 export { ComparisonSlider, type ComparisonSliderProps } from "./components/comparison-slider";
 export { PageHeader, type PageHeaderProps } from "./components/page-header";
@@ -405,5 +405,20 @@ export {
   type PassCardFieldProps,
   type PassCardCodeProps,
 } from "./components/pass-card";
+
+// Money, status and booking fields (Business capability roadmap, Phase 2). QuantityPicker is NumberInput.
+export { AmountDisplay, type AmountDisplayProps } from "./components/amount-display";
+export { GuestPicker, type GuestPickerProps, type GuestCategory } from "./components/guest-picker";
+export { CountrySelect, type CountrySelectProps, type CountryOption } from "./components/country-select";
+export { PhoneInput, type PhoneInputProps, type PhoneCountry, type PhoneValue } from "./components/phone-input";
+export { DateRangeInput, type DateRangeInputProps, type DateRangeValue } from "./components/date-range-input";
+export { TimeSlotPicker, type TimeSlotPickerProps, type TimeSlot, type TimeSlotGroup } from "./components/time-slot-picker";
+export {
+  AddressFields,
+  type AddressFieldsProps,
+  type AddressFieldConfig,
+  type AddressFieldName,
+  type AddressFieldRenderProps,
+} from "./components/address-fields";
 
 export { cn } from "./lib/utils";
