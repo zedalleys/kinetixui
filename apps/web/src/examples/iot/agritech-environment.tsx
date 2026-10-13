@@ -6,7 +6,6 @@ import {
   AlertList,
   AutomationRuleView,
   BatteryIndicator,
-  CommandLifecycle,
   DeviceGroupCard,
   DeviceHealthSummary,
   DeviceModeControl,
@@ -25,6 +24,7 @@ import {
   DeviceIllustration,
   Disclosure,
   Panel,
+  PendingCommand,
   PillSelector,
   ShowcaseShell,
   SpaceCanvas,
@@ -96,54 +96,14 @@ const ValveClosedGlyph = () => (
   </svg>
 );
 
-const FAILED_STAGES = new Set(["failed", "timed-out", "unreachable"]);
-
 /**
- * The lifecycle of a request that has not landed, or did not.
- *
- * Compact, because the words around it already carry the requested and the confirmed value. A failure
- * is lifted into its own tinted block with a heading, so that at phone width the WHY — the device's own
- * reason, from `describeCommandLifecycle` — is read before the control is pressed again, and Retry sits
- * with it. Nothing retries itself.
+ * The request in one line (Level 1): "Changing to Open", "Waiting for device", a brief "Confirmed", or — for
+ * Irrigation Valve 03, which fails once on purpose — what did not happen and the device's own reason, with Retry.
+ * The lifecycle record (acknowledgement, attempts, times) is under "Request details" (Level 3). Nothing retries
+ * itself, and nothing at all is drawn once the request has settled.
  */
-function CommandProgress({ binding, failureTitle }: { binding: ControlBinding; failureTitle: string }) {
-  if (!binding.command || !binding.unsettled) return null;
-  const body = (
-    <CommandLifecycle
-      lifecycle={binding.command.lifecycle}
-      formatValue={binding.format}
-      onRetry={binding.retry}
-      onCancel={binding.cancel}
-      density="compact"
-      className="w-full"
-    />
-  );
-  if (!FAILED_STAGES.has(binding.command.lifecycle.stage)) return body;
-  const reason = binding.command.lifecycle.reason;
-  return (
-    <div className="flex min-w-0 flex-col gap-2 rounded-xl bg-warning/15 p-3">
-      {/* The device's own reason, at full contrast: on a phone it was the first thing to become unreadable,
-          and without it the honest "it went back" looks like a bug rather than a report. */}
-      <p className="flex min-w-0 items-start gap-2 text-title-md text-foreground">
-        <StateGlyph state="warning" className="mt-0.5 text-warning" />
-        <span>
-          {failureTitle}
-          {reason ? ` — ${reason}` : ""}
-        </span>
-      </p>
-      {body}
-    </div>
-  );
-}
-
-/** The request, worded and dashed, beside the confirmed value: never a substitute for it. */
-function RequestNotice({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="flex min-w-0 items-start gap-2 rounded-xl border-2 border-dashed border-primary p-3 text-body-md text-foreground">
-      <StateGlyph state="pending" className="mt-0.5 text-primary" />
-      <span>{children}</span>
-    </p>
-  );
+function CommandProgress({ binding, failureTitle, now }: { binding: ControlBinding; failureTitle: string; now: string }) {
+  return <PendingCommand lifecycle={binding.command?.lifecycle} formatValue={binding.format} onRetry={binding.retry} onCancel={binding.cancel} now={now} failureTitle={failureTitle} />;
 }
 
 /** The confirmed state of a control: the label, then the word the device itself reported. */
@@ -344,12 +304,7 @@ export function AgritechEnvironmentExample() {
           onToggle={pump.send}
         />
       </div>
-      {pump.requested !== undefined ? (
-        <RequestNotice>
-          Requested: {pump.format(pump.requested)}, not yet confirmed. The pump still reports {pump.confirmed === "on" ? "running" : "stopped"}.
-        </RequestNotice>
-      ) : null}
-      <CommandProgress binding={pump} failureTitle="The pump did not change" />
+      <CommandProgress binding={pump} failureTitle="The pump did not change" now={sim.now} />
       {large ? null : <TelemetryMetric {...flow} label="Pump flow" size="md" quietWhenNormal />}
     </Panel>
   );
@@ -421,12 +376,7 @@ export function AgritechEnvironmentExample() {
             note={valve.device.status === "offline" ? <StateBadge state="offline">Last known position</StateBadge> : null}
           />
         </div>
-        {valve.requested !== undefined ? (
-          <RequestNotice>
-            Requested: {valve.format(valve.requested)}, not yet confirmed. The valve still reports {valve.format(valve.confirmed).toLowerCase()}.
-          </RequestNotice>
-        ) : null}
-        <CommandProgress binding={valve} failureTitle={`${valve.device.name} did not move`} />
+        <CommandProgress binding={valve} failureTitle={`${valve.device.name} did not move`} now={sim.now} />
         <DeviceModeControl
           presentation="tiles"
           modes={(valve.capability.modes ?? []).map((m) => ({ ...m, icon: m.id === "open" ? <ValveOpenGlyph /> : <ValveClosedGlyph /> }))}
@@ -467,13 +417,13 @@ export function AgritechEnvironmentExample() {
       {hero}
       {sensorAttention}
       {zone.sensorId ? (
-        <Disclosure title="Moisture, 7 days">{trendCard(zone.sensorId, "soil-moisture", `${zone.name} soil moisture, last seven days`, 160)}</Disclosure>
+        <Disclosure title="Moisture, 7 days" defaultOpen={false}>{trendCard(zone.sensorId, "soil-moisture", `${zone.name} soil moisture, last seven days`, 160)}</Disclosure>
       ) : (
-        <Disclosure title="Pump flow, 24 hours">{trendCard("pump-01", "flow", "Pump flow, last 24 hours", 160)}</Disclosure>
+        <Disclosure title="Pump flow, 24 hours" defaultOpen={false}>{trendCard("pump-01", "flow", "Pump flow, last 24 hours", 160)}</Disclosure>
       )}
       {irrigation}
       {conditions}
-      <Disclosure title="Air and weather">
+      <Disclosure title="Air and weather" defaultOpen={false}>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {trendCard("climate-a", "temperature", "Greenhouse air temperature, last 24 hours")}
           {trendCard("climate-a", "humidity", "Greenhouse humidity, last 24 hours")}
@@ -504,7 +454,10 @@ export function AgritechEnvironmentExample() {
         </Panel>
       </div>
 
-      <Panel title="Device health" description="Batteries and reporting, lowest first">
+      {/* Level 2: batteries and reporting for every device. The exceptions are already in view (the alerts above,
+          "Sensor attention" in the zone); the full list is one press away. */}
+      <Disclosure title="Device health" count={batteryDevices.length} countNoun="devices" defaultOpen={false}>
+        <p className="text-body-sm text-muted-foreground">Batteries and reporting, lowest first</p>
         <DeviceHealthSummary summary={selectFleetHealth(sim)} noun={{ one: "device", other: "devices" }} />
         <ul aria-label="Batteries and reporting" className="m-0 flex list-none flex-col gap-3 p-0">
           {batteryDevices.map((d) => (
@@ -521,9 +474,10 @@ export function AgritechEnvironmentExample() {
             </li>
           ))}
         </ul>
-      </Panel>
+      </Disclosure>
 
-      <Panel title="Irrigation rule" description="Shown, not executed: KinetixUI has no automation engine." className="md:col-span-2 xl:col-span-1">
+      <Disclosure title="Irrigation rule" defaultOpen={false} className="md:col-span-2 xl:col-span-1">
+        <p className="text-body-sm text-muted-foreground">Shown, not executed: KinetixUI has no automation engine.</p>
         <AutomationRuleView rule={rule} labelFor={(_kind, id) => sim.scenario.labels?.[id]} />
         <div className="flex flex-col gap-1 rounded-xl bg-muted/60 p-3">
           <p className="text-title-sm text-foreground">
@@ -536,9 +490,9 @@ export function AgritechEnvironmentExample() {
             <RoutineCard key={automation.id} automation={automation} now={sim.now} className="bg-muted/40" />
           ))}
         </div>
-      </Panel>
+      </Disclosure>
 
-      <Disclosure title="Activity" count={selectActivity(sim, { limit: 6 }).length} countNoun="events" className="md:col-span-2 xl:col-span-1">
+      <Disclosure title="Activity" count={selectActivity(sim, { limit: 6 }).length} countNoun="events" defaultOpen={false} className="md:col-span-2 xl:col-span-1">
         <ActivityTimeline variant="rail" events={selectActivity(sim, { limit: 6 })} deviceName={(id) => deviceOf(sim, id).name} now={sim.now} />
       </Disclosure>
     </>

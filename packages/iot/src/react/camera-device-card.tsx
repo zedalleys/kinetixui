@@ -7,6 +7,7 @@ import { LastSync } from "./last-sync";
 import { SignalStrength } from "./signal-strength";
 import { Glyph } from "./glyph";
 import { cn } from "./cn";
+import { DeviceMeta, type DeviceCardDensity } from "./device-meta";
 import { withDisplayName } from "./display-name";
 
 /**
@@ -53,6 +54,13 @@ export interface CameraDeviceCardProps extends Omit<React.HTMLAttributes<HTMLDiv
   /** Buttons or switches the product operates. */
   controls?: React.ReactNode;
   now?: string | Date | number | null;
+  /**
+   * `full` (default): every chip and indicator. `glance`: the status badge over the frame only when the camera is
+   * not online (online is said to assistive technology only); recording and privacy stay, because they are
+   * privacy facts; battery shows only when low or critical; battery, signal and last update otherwise sit behind
+   * one "Device details" disclosure. Nothing is removed.
+   */
+  density?: DeviceCardDensity;
 }
 
 /**
@@ -123,7 +131,7 @@ function fillFrame(poster: React.ReactNode): React.ReactNode {
 }
 
 const CameraDeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, CameraDeviceCardProps>(
-  ({ device, poster, posterLabel, scene = "room", privacy, recording, lastEvent, controls, now, className, ...props }, ref) => {
+  ({ device, poster, posterLabel, scene = "room", privacy, recording, lastEvent, controls, now, density = "full", className, ...props }, ref) => {
     const status = normalizeDeviceStatus(device?.status);
     const hidden = privacy === "on";
     const caption = posterLabel?.trim() ? posterLabel : poster || hidden ? undefined : "Sample image — no live feed";
@@ -159,7 +167,7 @@ const CameraDeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
 
             {/* Status over the frame, where the eye already is. Words and glyphs, not colour alone. */}
             <div className="absolute inset-x-2 top-2 z-raised flex flex-wrap items-start justify-between gap-2">
-              <DeviceStatusBadge status={status} className="shadow-sm" />
+              {density === "glance" && status === "online" ? <span className="sr-only">Online</span> : <DeviceStatusBadge status={status} className="shadow-sm" />}
               <ul className="m-0 flex list-none flex-wrap justify-end gap-1.5 p-0 text-label-md text-foreground">
                 {recording !== undefined ? (
                   <li data-recording={recording === null ? "unknown" : recording ? "on" : "off"} className="inline-flex items-center gap-1.5 rounded-full bg-background/90 px-2.5 py-1 shadow-sm">
@@ -184,7 +192,17 @@ const CameraDeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
           {device?.locationName ? <span className="truncate text-body-md text-muted-foreground">{device.locationName}</span> : null}
         </div>
 
-        {lastEvent || device?.battery !== undefined || device?.signal !== undefined ? (
+        {density === "glance" ? (
+          <div className="flex min-w-0 flex-col gap-2 px-1">
+            {lastEvent ? (
+              <p data-last-event="" className="m-0 flex min-w-0 flex-wrap items-center gap-x-2 text-body-md text-foreground">
+                <span className="break-words">{lastEvent.label}</span>
+                {lastEvent.at !== undefined && lastEvent.at !== null ? <LastSync value={lastEvent.at} now={now} className="text-label-md" /> : null}
+              </p>
+            ) : null}
+            <DeviceMeta device={device} now={now} density="glance" />
+          </div>
+        ) : lastEvent || device?.battery !== undefined || device?.signal !== undefined ? (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-body-sm text-muted-foreground">
             {lastEvent ? (
               <p data-last-event="" className="m-0 flex min-w-0 flex-wrap items-center gap-x-2 text-body-md text-foreground">

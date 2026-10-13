@@ -49,7 +49,10 @@ describe("agritech environment", () => {
     expect(within(detail).getByText("Closed", { selector: "p" })).toBeInTheDocument();
 
     fireEvent.click(within(within(detail).getByRole("radiogroup", { name: /Irrigation Valve 03 position/ })).getByRole("radio", { name: /Open/ }));
-    expect(within(detail).getByText(/Requested: Open, not yet confirmed/)).toBeInTheDocument();
+    // One compact line, "Changing to Open" — never a second "Open" drawn as the valve's state.
+    expect(within(detail).getByText(/Changing to Open\. Not yet confirmed; the device reports Closed\./)).toBeInTheDocument();
+    expect(detail.querySelector('[data-pending-command="changing"]')).not.toBeNull();
+    expect(detail.querySelector('ol[aria-label="Progress of the request"]')).toBeNull();
     expect(within(detail).getByText("Closed", { selector: "p" })).toBeInTheDocument();
     expect(within(detail).getByRole("radio", { name: /Closed/ })).toBeChecked();
 
@@ -59,7 +62,7 @@ describe("agritech environment", () => {
     fireEvent.click(retry);
     tick(3000);
     expect(within(detail).getByText("Open", { selector: "p" })).toBeInTheDocument();
-    expect(within(detail).queryByText(/Requested: Open/)).toBeNull();
+    expect(within(detail).queryByText(/Changing to Open/)).toBeNull();
   });
 
   it("marks the pump request as requested, not running-confirmed", () => {
@@ -68,7 +71,7 @@ describe("agritech environment", () => {
     const detail = screen.getByRole("region", { name: "Utility yard detail" });
     expect(within(detail).getByText("Running")).toBeInTheDocument();
     fireEvent.click(within(detail).getByRole("switch", { name: /Pump Station power/ }));
-    expect(within(detail).getByText(/Requested: Off, not yet confirmed/)).toBeInTheDocument();
+    expect(within(detail).getByText(/Changing to Off\. Not yet confirmed/)).toBeInTheDocument();
     expect(within(detail).getByText("Running")).toBeInTheDocument();
   });
 
@@ -82,7 +85,9 @@ describe("agritech environment", () => {
   it("derives device health and open alerts from the simulation", () => {
     render(<AgritechEnvironmentExample />);
     expect(screen.getByText(/3 open alerts/)).toBeInTheDocument();
-    const health = screen.getByRole("heading", { name: "Device health" }).closest("section")!;
+    // Level 2: the full battery and reporting list is one press away, not open beside the alerts.
+    const health = screen.getByText("Device health").closest("details")!;
+    expect(health.open).toBe(false);
     expect(within(health).getByText("9")).toBeInTheDocument();
     expect(within(health).getAllByRole("img", { name: /battery/i }).length).toBeGreaterThanOrEqual(4);
   });
@@ -120,11 +125,16 @@ describe("agritech environment", () => {
     const detail = screen.getByRole("region", { name: "Zone 3 detail" });
     fireEvent.click(within(within(detail).getByRole("radiogroup", { name: /Irrigation Valve 03 position/ })).getByRole("radio", { name: /Open/ }));
     // In flight: the request is worded and says what the valve still reports.
-    expect(within(detail).getByText(/Requested: Open, not yet confirmed\. The valve still reports closed\./)).toBeInTheDocument();
+    expect(within(detail).getByText(/Changing to Open\. Not yet confirmed; the device reports Closed\./)).toBeInTheDocument();
 
     tick(3000);
     // Failed: the reason the scenario scripted is on screen at full contrast, not only in the summary line.
-    expect(within(detail).getByText(/Irrigation Valve 03 did not move — Valve position not reported\./)).toBeInTheDocument();
+    expect(within(detail).getByText(/Irrigation Valve 03 did not move\. Valve position not reported\./)).toBeInTheDocument();
+    expect(within(detail).getByText("Irrigation Valve 03 did not move")).toBeInTheDocument();
+    // The lifecycle record is Level 3: present, closed, one press away.
+    const record = within(detail).getByText("Request details").closest("details")!;
+    expect(record.open).toBe(false);
+    expect(within(record).getByText("Attempts")).toBeInTheDocument();
     // The confirmed position is still the authoritative one, and the control still reports it.
     expect(within(detail).getByText("Closed", { selector: "p" })).toBeInTheDocument();
     expect(within(detail).getByRole("radio", { name: /Closed/ })).toBeChecked();

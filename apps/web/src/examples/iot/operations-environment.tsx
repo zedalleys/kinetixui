@@ -5,7 +5,6 @@ import {
   ActivityTimeline,
   AlertList,
   BatteryIndicator,
-  CommandLifecycle,
   ConnectionHealth,
   DeviceHealthSummary,
   DeviceLevelControl,
@@ -37,6 +36,7 @@ import {
   Disclosure,
   DeviceIllustration,
   Panel,
+  PendingCommand,
   RailItem,
   RailList,
   SpaceCanvas,
@@ -99,16 +99,18 @@ const isRunning = (iot: ReturnType<typeof useIotSimulation>, id: string) => {
   return rt.confirmedValues.power === "on" && !isDown(rt.device.status);
 };
 
-/** The lifecycle of a request that has not landed, or did not. Nothing for a confirmed one. */
-function Lifecycle({ binding }: { binding: ControlBinding }) {
-  if (!binding.command || !binding.unsettled) return null;
+/**
+ * The request in one line (Level 1): "Changing to …", "Waiting for device", a brief "Confirmed", or a failure
+ * with Retry. The lifecycle record is under its "Request details" (Level 3). Nothing once it has settled.
+ */
+function Lifecycle({ binding, now }: { binding: ControlBinding; now: string }) {
   return (
-    <CommandLifecycle
-      lifecycle={binding.command.lifecycle}
+    <PendingCommand
+      lifecycle={binding.command?.lifecycle}
       formatValue={binding.format}
       onRetry={binding.retry}
       onCancel={binding.cancel}
-      className="w-full"
+      now={now}
     />
   );
 }
@@ -553,21 +555,6 @@ export function OperationsEnvironmentExample() {
               description={`${line.name} is highlighted. Select a machine on the plan.`}
               aria-label="Site plan"
               className="p-2 sm:p-5"
-              action={
-                <span className="inline-flex items-center gap-1.5 text-body-md text-foreground">
-                  <StateGlyph
-                    state={status.state}
-                    className={
-                      status.state === "confirmed"
-                        ? "text-success"
-                        : status.state === "warning"
-                          ? "text-warning"
-                          : "text-muted-foreground"
-                    }
-                  />
-                  {status.word}
-                </span>
-              }
             >
               <SpaceCanvas
                 plan={sitePlan}
@@ -645,15 +632,14 @@ export function OperationsEnvironmentExample() {
                     <p className="text-body-md text-muted-foreground">
                       {lineName}
                     </p>
-                    <StateBadge state={inspectorState}>
-                      {down
-                        ? "Offline. Showing the last known settings."
-                        : device.status === "warning"
-                          ? "Needs attention"
-                          : pending.length
-                            ? "Requested, not yet confirmed"
-                            : "Confirmed"}
-                    </StateBadge>
+                    {/* Exceptions only. A pending request is the line under the controls; healthy is quiet. */}
+                    {inspectorState === "offline" || inspectorState === "warning" ? (
+                      <StateBadge state={inspectorState}>
+                        {down
+                          ? "Offline. Showing the last known settings."
+                          : "Needs attention"}
+                      </StateBadge>
+                    ) : null}
                   </div>
                   {power ? (
                     <p
@@ -679,18 +665,16 @@ export function OperationsEnvironmentExample() {
                   <div
                     role="group"
                     aria-label={`${device.name} controls`}
-                    className={`flex min-w-0 flex-col gap-4 rounded-xl bg-muted/60 p-4 ${pending.length ? "border-2 border-dashed border-primary" : ""}`}
+                    className="flex min-w-0 flex-col gap-4 rounded-xl bg-muted/60 p-4"
                   >
                     <div className="flex min-w-0 items-center justify-between gap-4">
                       <div className="flex min-w-0 flex-col">
                         <span className="text-title-md text-foreground">
                           Run
                         </span>
+                        {/* The confirmed word only: the request is the one line below, not a third copy here. */}
                         <span className="text-body-md text-muted-foreground">
                           {power.format(power.confirmed)}
-                          {power.requested !== undefined
-                            ? `, requested ${power.format(power.requested)} — not yet confirmed`
-                            : ""}
                         </span>
                       </div>
                       <DevicePowerControl
@@ -703,7 +687,7 @@ export function OperationsEnvironmentExample() {
                         onToggle={power.send}
                       />
                     </div>
-                    <Lifecycle binding={power} />
+                    <Lifecycle binding={power} now={sim.now} />
                     {level && levelCap ? (
                       <>
                         {/* The `track` variant, not `pill`: at 326px the pill's inline label and value had
@@ -717,7 +701,7 @@ export function OperationsEnvironmentExample() {
                           label={levelCap.label ?? levelCap.id}
                           onCommit={level.send}
                         />
-                        <Lifecycle binding={level} />
+                        <Lifecycle binding={level} now={sim.now} />
                       </>
                     ) : null}
                   </div>
@@ -732,7 +716,7 @@ export function OperationsEnvironmentExample() {
 
               {/* Tertiary: how the device is connected and what firmware it runs. Present and complete,
                   but behind a disclosure on a phone so it does not sit beside the run control. */}
-              <Disclosure title="Connection and firmware">
+              <Disclosure title="Connection and firmware" defaultOpen={false}>
                 <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="min-w-0">
                     <ConnectionHealth
@@ -782,6 +766,7 @@ export function OperationsEnvironmentExample() {
                 title="Telemetry"
                 count={metrics.length}
                 countNoun="metrics"
+                defaultOpen={false}
               >
                 {metrics.length === 0 ? (
                   <p className="text-body-md text-muted-foreground">
@@ -847,6 +832,7 @@ export function OperationsEnvironmentExample() {
             title="Shift log"
             count={selectActivity(sim).length}
             countNoun="events"
+            defaultOpen={false}
           >
             <ActivityTimeline
               variant="blocks"
@@ -861,6 +847,7 @@ export function OperationsEnvironmentExample() {
             title="Routines"
             count={sim.automations.length}
             countNoun="routines"
+            defaultOpen={false}
           >
             <p className="text-body-sm text-muted-foreground">
               Shown, not executed: KinetixUI has no automation engine.

@@ -261,11 +261,11 @@ describe("smart space: connected space", () => {
     expect(rail().getByRole("button", { name: /Bedroom/ })).toHaveAccessibleName(/offline/);
   });
 
-  it("keeps the room name larger than the room temperature on a phone, and the temperature as it was from `sm`", () => {
+  it("keeps the room temperature a context reading below the room name, never a second hero number", () => {
     render(<SmartSpaceEnvironmentExample />);
     const temperature = screen.getByText(/Room temperature ·/).previousElementSibling!;
     expect(temperature.className).toMatch(/text-headline-sm/);
-    expect(temperature.className).toMatch(/sm:text-display-sm/);
+    expect(temperature.className).not.toMatch(/display-/);
     expect(screen.getByRole("heading", { name: "Hallway" }).className).toMatch(/text-headline-lg/);
   });
 
