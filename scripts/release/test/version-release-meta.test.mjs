@@ -16,13 +16,14 @@ it("activates curated notes after versioning, regenerates metadata, and is idemp
     writeFileSync(file, original);
     const manifest = path.join(root, "packages/ui/package.json");
     writeFileSync(manifest, JSON.stringify({ version: "0.24.0" }));
-    writeFileSync(path.join(root, "release/notes/0.24.1.json"), JSON.stringify({ version: "0.24.1", date: "2026-10-13", breaking: [], changes: [] }));
+    writeFileSync(path.join(root, "release/notes/0.24.1.json"), JSON.stringify({ version: "0.24.1", breaking: [], changes: [] }));
     const run = () => spawnSync(process.execPath, ["scripts/version-release-meta.mjs"], { cwd: root, encoding: "utf8" });
     assert.equal(run().status, 0);
     assert.equal(readFileSync(file, "utf8"), original, "upcoming notes must not appear on main");
     writeFileSync(manifest, JSON.stringify({ version: "0.24.1" }));
     assert.equal(run().status, 0);
     const updated = readFileSync(file, "utf8");
+    assert.ok(updated.includes(`date: "${new Date().toISOString().slice(0, 10)}"`));
     assert.ok(updated.indexOf('version: "0.24.1"') < updated.indexOf('version: "0.24.0"'));
     assert.equal(run().status, 0);
     assert.equal(readFileSync(file, "utf8"), updated);

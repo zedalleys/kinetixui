@@ -1,6 +1,5 @@
 {
   "version": "0.24.1",
-  "date": "2026-10-13",
   "summary": "Keyboard-reachable code scroll regions in @kinetixui/ui 0.24.1, with tokens and CLI on the same 0.24.1 release line. On its independent Preview line, @kinetixui/angular 0.26.0 adds menus, listboxes, navigation, notifications and layout controls.",
   "breaking": [],
   "changes": [

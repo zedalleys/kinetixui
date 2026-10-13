@@ -16,6 +16,7 @@ if (!history.includes(`version: "${version}"`)) {
   const noteFile = `${root}/release/notes/${version}.json`;
   if (!existsSync(noteFile)) throw new Error(`Missing curated release notes: ${noteFile}`);
   const entry = JSON.parse(readFileSync(noteFile, "utf8"));
+  entry.date = new Date().toISOString().slice(0, 10);
   if (entry.version !== version) throw new Error(`Curated release notes must describe ${version}`);
   if (!source.includes(marker)) throw new Error("Cannot locate RELEASES insertion point");
   // JSON is valid TypeScript; retain unquoted property names for the release tools' parser.
