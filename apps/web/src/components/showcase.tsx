@@ -193,7 +193,8 @@ export function Showcase({
                   onValueChange={(next) => {
                     if (next === lang) return;
                     const id = platformIdForManifest(next);
-                    if (id) setPreferredPlatform(id);
+                    // a repeated callback for the same click changes nothing, so it reports nothing
+                    if (id && !setPreferredPlatform(id)) return;
                     // Only a real platform the manifest knows, and only for a block. `isAnalyticsPlatform`
                     // rejects anything else, so a future non-platform tab cannot leak in as one.
                     const platform = analyticsPlatformFor(next);

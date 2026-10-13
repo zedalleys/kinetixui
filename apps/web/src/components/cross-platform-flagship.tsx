@@ -57,7 +57,7 @@ export function CrossPlatformFlagship() {
   const onPlatformChange = (value: string) => {
     const next = value as CodeTab;
     if (next === platform) return; // an explicit change only — the default React tab rendering is not a selection
-    setPreferredPlatform(platformIdForCodeTab(next));
+    if (!setPreferredPlatform(platformIdForCodeTab(next))) return; // a repeated callback for the same click
     analytics.track("platform_selected", {
       platform: PLATFORM_FROM_CODE_TAB[next],
       component: FLAGSHIP_COMPONENT,
