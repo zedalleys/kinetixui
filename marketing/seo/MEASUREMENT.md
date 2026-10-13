@@ -289,20 +289,22 @@ change nothing that is not a defect.
 
 The guides went live on 2026-10-12, so the baseline is taken for that day (or the first day after it that the
 tools are available, with that date written down). Recorded once, as text, in `marketing/measurement/` (a dated file), from the live site and the tools, never from
-memory. If a tool is not set up yet, write "not available" and the reason: an empty cell is better than an
-invented one.
+memory. Every value carries its **source** (the tool or command) and its **reporting window** (literal dates).
+If a value cannot be read yet, write `pending` (data not complete yet) or `not available` (no access or tool not
+set up) with the reason; never write an assumed value, and never fill a gap with zero. Search Console data lags by
+a few days: a value read before the window is complete is marked `preliminary` and re-read before Day 7 uses it.
 
 | Value | How |
 | --- | --- |
 | Indexable page count | `pnpm check:seo` on the deployed commit ("N indexable") |
 | Sitemap URL count | the same line ("N sitemap URLs"); confirm against `https://kinetixui.com/sitemap.xml` |
-| Guide URLs in the sitemap | 4, by name |
+| Guide URLs in the sitemap | the count and names read from the live `https://kinetixui.com/sitemap.xml` (4 expected) |
 | Indexed pages | Search Console → Indexing → Pages, indexed count and date |
 | Organic landing sessions, last 28 days | §3.3, with the literal window |
 | Organic QE sessions and organic eligible sessions, last 28 days | §3.3; two counts, no rate |
 | Top 10 organic landing pages, last 28 days | §3.3 |
-| Guide impressions and clicks | 0 / 0 for each guide on Day 0, by definition; recorded so Day 7 has a start |
-| Search Console site totals, last 28 days | impressions, clicks, CTR, non-brand clicks |
+| Guide impressions and clicks | per guide, as Search Console reports them for a fixed, dated window (e.g. 2026-10-12 to the capture date); source and window recorded. Zero only if the tool reports zero for that window; otherwise `pending` or `not available` with the reason |
+| Search Console site totals, last 28 days | impressions, clicks, CTR, non-brand clicks, with the literal window |
 | Deployed commit | the merge commit on `main` |
 
 ---
