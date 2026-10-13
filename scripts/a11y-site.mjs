@@ -95,6 +95,11 @@ const PAGES = [
   // button and a related-reading footer. Swept in whichever publication state the registry is in, so the pages
   // are already under the gate on the day they go live (marketing/seo/GUIDE-PUBLISH-RUNBOOK.md).
   ...GUIDE_PAGES,
+  // Business discovery (W1): the capability index and the domain template, swept with the catalogue they filter. Both
+  // use-case pages share one template; each is listed because each renders different workflows and component cards.
+  "/capabilities",
+  "/use-cases/commerce",
+  "/use-cases/travel-booking",
 ];
 const WIDTHS = [
   // 320 is the narrowest width the site claims to support, and it is not a rounding of 375: a fixed-width

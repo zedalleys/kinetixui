@@ -47,6 +47,8 @@ is in the "unowned" table at the end, on purpose.
 | `/docs` | KinetixUI documentation (navigational / brand) | how tokens and native components fit together | evaluation | installation; platforms |
 | `/docs/changelog` | KinetixUI changelog (navigational / brand) | — | retention | platforms; components |
 | `/docs/contributing` | contributing — the platform rule (brand / community) | — | retention | — |
+| `/capabilities` | **business application capabilities** — what can I build (transactions, booking, data, identity, workflow, connected devices) | commerce, booking or finance UI components (owned by the use-case pages below) | evaluation | a use-case page; a component page |
+| `/use-cases/<domain>` (2: commerce, travel-booking) | **`<domain>` UI components and workflows** — e.g. "checkout UI components", "booking flow UI" | the domain's workflows | evaluation | a component page; the filtered catalogue |
 | `/blocks` | **application UI blocks** — sign-in, settings, dashboard, pricing sections | settings UI block; dashboard block; authentication block | evaluation | the components a block uses |
 | `/iot` | **IoT interface patterns / IoT UI components** — device state, telemetry, command lifecycle | device control interface components; asynchronous hardware UI states | evaluation | `/docs/iot`; the demo |
 | `/docs/iot` | IoT module documentation (`@kinetixui/iot`, React-only, experimental) | — | adoption | install `@kinetixui/iot` |
@@ -93,7 +95,7 @@ is in the "unowned" table at the end, on purpose.
 | --- | --- | --- |
 | React design system | Saturated and our least differentiated story ([`../seo.md`](../seo.md)). Phase 2 decided against `/docs/react`: Installation is the React adoption page and now carries React's at-a-glance block ([`CONTENT-BACKLOG.md`](./CONTENT-BACKLOG.md) Phase 2A) | `/docs/installation`; a separate page only if Search Console shows React-qualified impressions landing on the wrong page |
 | design tokens Flutter / SwiftUI / Compose (as standalone pages) | `../seo.md` ranks `/design-tokens/flutter` first, but it is new IA and content, not metadata | [`CONTENT-BACKLOG.md`](./CONTENT-BACKLOG.md) cluster B |
-| component categories ("overlay components", "form components") | Categories are a client-side filter (`?filter=`), canonicalized to `/components`; no category routes exist | backlog; only if per-category pages prove they add something the gallery does not |
+| component categories ("overlay components", "form components") | Categories, capabilities, business domains and layers are client-side filters (`?cat=`, `?capability=`, `?domain=`, `?layer=`), canonicalized to `/components`; no category routes exist. Business domains that need a page get one under `/use-cases/<domain>`, from `"page": true` in `docs/business-capabilities.json` | backlog; only if per-category pages prove they add something the gallery does not |
 | individual blocks ("settings page block") | 20 blocks render on one page; no per-block routes | backlog; only with real per-block depth |
 | wearables | Nothing is implemented ([`../CLAIMS.md`](../CLAIMS.md) C5) | none |
 

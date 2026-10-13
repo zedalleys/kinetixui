@@ -15,14 +15,20 @@
  *     the rows in CORE_FLOOR must stay tier "core";
  *   - enums are the documented ones, phases are 1–10 or null.
  * It cannot judge whether a "partial" note is fair. That is review's job; the script makes the facts checkable.
+ *
+ * It also writes the website's discovery index, `discovery-index.json`, from the same data (scripts/business-discovery.mjs
+ * documents the derivation), and `--check` fails if that file is stale or the `discovery` block names a family, domain,
+ * workflow or row that does not exist.
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildDiscovery } from "./business-discovery.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DATA = join(ROOT, "docs/business-capabilities.json");
 const DOC = join(ROOT, "docs/BUSINESS-CAPABILITY-ROADMAP.md");
+const INDEX = join(ROOT, "discovery-index.json");
 const BEGIN = "<!-- BEGIN GENERATED: capability tables (pnpm gen:capabilities) -->";
 const END = "<!-- END GENERATED: capability tables -->";
 const check = process.argv.includes("--check");
@@ -141,19 +147,31 @@ const a = doc.indexOf(BEGIN);
 const b = doc.indexOf(END);
 if (a < 0 || b < 0) errors.push(`${DOC}: generated-region markers missing`);
 
+const discovery = buildDiscovery(data, manifest, blocks);
+errors.push(...discovery.errors);
+
 if (errors.length) {
   console.error(`✗ business capability roadmap — ${errors.length} problem(s):\n  ${errors.join("\n  ")}`);
   process.exit(1);
 }
 
 const next = doc.slice(0, a) + out + doc.slice(b + END.length);
+const nextIndex = `${JSON.stringify(discovery.index, null, 2)}\n`;
 if (check) {
   if (next !== doc) {
     console.error("✗ docs/BUSINESS-CAPABILITY-ROADMAP.md is stale — run `pnpm gen:capabilities`.");
     process.exit(1);
   }
-  console.log(`✓ business capability roadmap — ${all.length} capabilities, every evidence reference resolves, tables current.`);
+  if (!existsSync(INDEX) || readFileSync(INDEX, "utf8") !== nextIndex) {
+    console.error("✗ discovery-index.json is stale — run `pnpm gen:capabilities`.");
+    process.exit(1);
+  }
+  console.log(
+    `✓ business capability roadmap — ${all.length} capabilities, every evidence reference resolves, tables current; ` +
+      `discovery index current (${discovery.index.capabilities.length} capability groups, ${discovery.index.domains.length} domains, ${discovery.index.workflows.length} workflows).`,
+  );
 } else {
   writeFileSync(DOC, next);
-  console.log(`✓ wrote ${all.length} capability rows into docs/BUSINESS-CAPABILITY-ROADMAP.md`);
+  writeFileSync(INDEX, nextIndex);
+  console.log(`✓ wrote ${all.length} capability rows into docs/BUSINESS-CAPABILITY-ROADMAP.md and the discovery index into discovery-index.json`);
 }

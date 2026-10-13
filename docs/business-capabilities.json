@@ -1,5 +1,5 @@
 {
-  "$comment": "Canonical business capability roadmap. Edit this file, then run `pnpm gen:capabilities` to regenerate the tables in docs/BUSINESS-CAPABILITY-ROADMAP.md. `pnpm check:capabilities` fails if the tables are stale or an evidence reference does not resolve.",
+  "$comment": "Canonical business capability roadmap and website discovery metadata. Edit this file, then run `pnpm gen:capabilities` to regenerate the tables in docs/BUSINESS-CAPABILITY-ROADMAP.md and the website's discovery-index.json. `pnpm check:capabilities` fails if either is stale, an evidence reference does not resolve, or a discovery reference names something that does not exist.",
   "families": [
     {
       "id": "A",
@@ -3235,5 +3235,375 @@
         }
       ]
     }
-  ]
+  ],
+  "discovery": {
+    "$comment": "Website discovery (Business Discovery W1). Every family belongs to exactly one capability group; a family may also belong to business domains. A family with no domain is domain-neutral: it reaches a domain only through a workflow that uses it. Workflow stages name capability rows above, never components, so what a stage offers is whatever those rows' evidence says ships today. Nothing here may restate a status, a layer or a platform: those stay on the rows and in components.manifest.json. Pro-candidate rows never reach the website (marketing/STRATEGY.md rule 7).",
+    "capabilities": [
+      {
+        "id": "data-analytics",
+        "title": "Data & analytics",
+        "summary": "Tables, grids, metrics, charts and the clinical and operational data displays built on them.",
+        "families": [
+          "A",
+          "B",
+          "Q"
+        ]
+      },
+      {
+        "id": "transactions",
+        "title": "Transactions & money",
+        "summary": "Outcomes, references, amounts, carts, receipts, billing and rewards: the surfaces where money or an order changes state.",
+        "families": [
+          "C",
+          "D",
+          "H",
+          "I",
+          "J",
+          "K"
+        ]
+      },
+      {
+        "id": "passes-tickets",
+        "title": "Passes & tickets",
+        "summary": "Boarding passes, tickets, vouchers, memberships and the supplied codes they carry.",
+        "families": [
+          "G"
+        ]
+      },
+      {
+        "id": "booking-scheduling",
+        "title": "Booking & scheduling",
+        "summary": "Availability, time slots, reservations, itineraries and calendars.",
+        "families": [
+          "E",
+          "F",
+          "T"
+        ]
+      },
+      {
+        "id": "identity-security",
+        "title": "Identity & security",
+        "summary": "Sign-in, one-time codes, sessions, recovery codes, roles and API keys.",
+        "families": [
+          "L",
+          "M"
+        ]
+      },
+      {
+        "id": "workflow",
+        "title": "Workflow & approvals",
+        "summary": "Steps, approvals, queues, audit trails, pipelines and boards.",
+        "families": [
+          "N",
+          "O",
+          "U",
+          "V"
+        ]
+      },
+      {
+        "id": "documents",
+        "title": "Documents & files",
+        "summary": "Upload, file management, document viewing and version history.",
+        "families": [
+          "P"
+        ]
+      },
+      {
+        "id": "forms",
+        "title": "Advanced forms",
+        "summary": "Form sections, repeatable groups, address, phone, date-range and unit inputs.",
+        "families": [
+          "AC"
+        ]
+      },
+      {
+        "id": "spatial",
+        "title": "Maps & logistics",
+        "summary": "Map controls, markers, routes and shipment status.",
+        "families": [
+          "R"
+        ]
+      },
+      {
+        "id": "connected-devices",
+        "title": "Connected devices",
+        "summary": "Device controls, telemetry, freshness and the requested-versus-reported command lifecycle.",
+        "families": [
+          "S"
+        ]
+      },
+      {
+        "id": "communication",
+        "title": "Communication",
+        "summary": "Messages, conversations, comments and mentions.",
+        "families": [
+          "W"
+        ]
+      },
+      {
+        "id": "developer-tools",
+        "title": "Developer tools",
+        "summary": "Code, diffs, JSON, logs and deployment status.",
+        "families": [
+          "X"
+        ]
+      },
+      {
+        "id": "observability",
+        "title": "Observability",
+        "summary": "Status, health checks, incidents and alert rules.",
+        "families": [
+          "Y"
+        ]
+      },
+      {
+        "id": "ai",
+        "title": "AI & agent interfaces",
+        "summary": "Prompt input, assistant responses, tool calls and citations: visible execution status, never hidden reasoning.",
+        "families": [
+          "Z"
+        ]
+      },
+      {
+        "id": "application-foundations",
+        "title": "Application foundations",
+        "summary": "App shells, page headers, split panes, status and feedback states, and motion.",
+        "families": [
+          "AA",
+          "AB",
+          "AD"
+        ]
+      }
+    ],
+    "domains": [
+      {
+        "id": "commerce",
+        "title": "Commerce",
+        "summary": "Products, carts, checkout, orders, refunds, gift cards and loyalty.",
+        "families": [
+          "D",
+          "H",
+          "K"
+        ],
+        "page": true
+      },
+      {
+        "id": "travel-booking",
+        "title": "Travel & booking",
+        "summary": "Reservations, availability, itineraries, travellers and boarding passes.",
+        "families": [
+          "E",
+          "F",
+          "G"
+        ],
+        "page": true
+      },
+      {
+        "id": "finance",
+        "title": "Finance & banking",
+        "summary": "Amounts, transfers, fees, transactions, invoices and money inputs.",
+        "families": [
+          "H",
+          "I"
+        ],
+        "page": false
+      },
+      {
+        "id": "saas-admin",
+        "title": "Enterprise administration",
+        "summary": "Workspaces, roles, sessions, subscriptions, approvals, audit and work management.",
+        "families": [
+          "J",
+          "L",
+          "N",
+          "O",
+          "U",
+          "V"
+        ],
+        "page": false
+      },
+      {
+        "id": "iot",
+        "title": "IoT & connected operations",
+        "summary": "Device control, monitoring, alerts, spaces, pairing and firmware, in the @kinetixui/iot package.",
+        "families": [
+          "S"
+        ],
+        "page": false
+      },
+      {
+        "id": "developer-platforms",
+        "title": "Developer platforms",
+        "summary": "Code review, payload inspection, logs, deployments and service health.",
+        "families": [
+          "X",
+          "Y"
+        ],
+        "page": false
+      },
+      {
+        "id": "healthcare",
+        "title": "Healthcare",
+        "summary": "Patient summaries, vitals, medications, appointments and lab results.",
+        "families": [
+          "Q"
+        ],
+        "page": false
+      },
+      {
+        "id": "logistics",
+        "title": "Logistics & fleet",
+        "summary": "Maps, routes, vehicles and shipment tracking.",
+        "families": [
+          "R"
+        ],
+        "page": false
+      }
+    ],
+    "workflows": [
+      {
+        "id": "checkout",
+        "title": "Checkout",
+        "domain": "commerce",
+        "summary": "From a reviewed cart to a confirmed order with a receipt.",
+        "stages": [
+          {
+            "title": "Review the cart",
+            "uses": [
+              "Cart",
+              "ProductQuantity / CartQuantity / QuantityPicker"
+            ]
+          },
+          {
+            "title": "Review the price",
+            "uses": [
+              "PriceBreakdown",
+              "AmountDisplay"
+            ]
+          },
+          {
+            "title": "Delivery details",
+            "uses": [
+              "AddressForm / PhoneInput / CountrySelect / TimezoneSelect",
+              "FormSection / FieldArray / RepeatableFieldGroup / ConditionalField / DependentSelect"
+            ]
+          },
+          {
+            "title": "Pay",
+            "uses": [
+              "PaymentCardInput",
+              "Checkout"
+            ]
+          },
+          {
+            "title": "Confirm",
+            "uses": [
+              "ResultState",
+              "ReferenceCode"
+            ]
+          },
+          {
+            "title": "Receipt",
+            "uses": [
+              "Receipt"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "flight-booking",
+        "title": "Flight booking",
+        "domain": "travel-booking",
+        "summary": "From searching dates to a boarding pass.",
+        "stages": [
+          {
+            "title": "Search dates and travellers",
+            "uses": [
+              "DateRangeInput / DateTimeRangeInput",
+              "GuestPicker"
+            ]
+          },
+          {
+            "title": "Choose a flight",
+            "uses": [
+              "FlightCard"
+            ]
+          },
+          {
+            "title": "Choose seats",
+            "uses": [
+              "SeatMap"
+            ]
+          },
+          {
+            "title": "Traveller details",
+            "uses": [
+              "TravelerCard / PassengerList / TravelerDocumentStatus",
+              "FormSection / FieldArray / RepeatableFieldGroup / ConditionalField / DependentSelect"
+            ]
+          },
+          {
+            "title": "Review the price",
+            "uses": [
+              "PriceBreakdown"
+            ]
+          },
+          {
+            "title": "Pay",
+            "uses": [
+              "PaymentCardInput"
+            ]
+          },
+          {
+            "title": "Confirm",
+            "uses": [
+              "ResultState",
+              "ReferenceCode"
+            ]
+          },
+          {
+            "title": "Boarding pass",
+            "uses": [
+              "BoardingPass",
+              "PassCard"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "money-transfer",
+        "title": "Money transfer",
+        "domain": "finance",
+        "summary": "From entering an amount to a confirmed transfer in the history.",
+        "stages": [
+          {
+            "title": "Enter the amount",
+            "uses": [
+              "MoneyInput",
+              "AmountDisplay"
+            ]
+          },
+          {
+            "title": "Review fees",
+            "uses": [
+              "MoneyMovementSummary / FeeBreakdown"
+            ]
+          },
+          {
+            "title": "Confirm",
+            "uses": [
+              "ResultState",
+              "ReferenceCode"
+            ]
+          },
+          {
+            "title": "History",
+            "uses": [
+              "TransactionList"
+            ]
+          }
+        ]
+      }
+    ]
+  }
 }

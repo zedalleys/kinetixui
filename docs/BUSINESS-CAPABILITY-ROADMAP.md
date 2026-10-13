@@ -471,3 +471,54 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 | Pro motion | MotionProvider, MotionPreset, MotionStyle, MotionSequence, MotionStagger, MotionInspector, brand motion packs | L2 Enterprise | Pro | Pro candidate | Pro candidate | — | Core motion | 10 | Not in Phase 1. Accessibility motion (reduced motion, accessible end states) stays Core. |
 
 <!-- END GENERATED: capability tables -->
+
+## 6. Website discovery (Business Discovery W1)
+
+The website lets a reader find components by the job they do, not only by name. It does that without a second
+source of truth: everything is derived from this roadmap's data.
+
+**Canonical inputs**
+
+| Input | Owns |
+| --- | --- |
+| `docs/business-capabilities.json` → `families[].capabilities[]` | each capability row: status, layer, platform target, tier, evidence, `dependsOn` |
+| `docs/business-capabilities.json` → `discovery.capabilities` | the capability groups a reader filters by; every family belongs to exactly one |
+| `docs/business-capabilities.json` → `discovery.domains` | the business domains; a family may belong to several, or none (domain-neutral); `"page": true` gives a domain its `/use-cases/<id>` page |
+| `docs/business-capabilities.json` → `discovery.workflows` | example workflows, stage by stage; each stage names capability **rows**, never components |
+| `components.manifest.json`, `blocks.manifest.json` | which catalogue slugs and blocks exist, platforms, lifecycle status |
+
+`pnpm gen:capabilities` writes `discovery-index.json` from these (`scripts/business-discovery.mjs` documents every
+rule), and `pnpm check:capabilities` fails when it is stale, when a family is in no capability group or in two, when a
+domain, workflow or stage names something that does not exist, when a stage uses a Pro-candidate row, or when a domain
+with a page has nothing that ships.
+
+**Derivation rules**
+
+- A component's capabilities and domains come from every *existing* or *partial* row that cites it as evidence, plus
+  the domain of every workflow that uses such a row. A *planned* row contributes its name, labelled planned, and
+  never a component or a link.
+- A component's layer and platform target come from the one row that **is** it (cites it and is named after it,
+  `DataGrid` ↔ `data-grid`). Every other catalogue entry is an L1 core primitive, as the §1 audit classified the
+  pre-roadmap catalogue; its platform target is left unclassified rather than guessed.
+- "Planned on top of it" on a component page is the planned rows whose `dependsOn` names the component.
+- "Used in blocks" is read from each block's React source (`apps/web/src/lib/block-components.ts`), not from here.
+- Pro-candidate rows never reach the index or the website (`marketing/STRATEGY.md` rule 7). Tier stays a planning
+  field in this file.
+- Maturity is the existing lifecycle status (`stable`/`beta`/`deprecated` in `components.manifest.json`) and platform
+  coverage is the existing per-platform state; discovery adds neither.
+
+**Adding a component (Phase 2 onward).** Ship it through the normal manifest chain, then flip its roadmap row to
+`existing` with `ui:<slug>` evidence and run `pnpm gen:capabilities`. It then appears under its capability, its
+domains, the workflows that use its row, and the catalogue's business filters, with no other list to edit. A new
+workflow or domain is an entry in `discovery`, validated by the same check.
+
+**Surfaces**
+
+- `/components`: business filters (capability, business domain, layer) behind a disclosure, alongside the existing
+  search, category, platform and status filters; search also matches capability, domain and workflow names. All are
+  query parameters on a page whose canonical stays `/components`.
+- `/capabilities`: "What can I build with KinetixUI?": business needs (domains with something shipping) and every
+  capability group with what ships today and what is planned.
+- `/use-cases/<domain>`: the reusable domain template (workflows, components available now, blocks, planned
+  capabilities, related capabilities). W1 builds Commerce and Travel & booking.
+- Component pages: an "In applications" section (layer, capabilities, domains, workflows, blocks, planned work).
