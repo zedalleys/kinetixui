@@ -55,10 +55,12 @@ export interface CameraDeviceCardProps extends Omit<React.HTMLAttributes<HTMLDiv
   controls?: React.ReactNode;
   now?: string | Date | number | null;
   /**
-   * `full` (default): every chip and indicator. `glance`: the status badge over the frame only when the camera is
-   * not online (online is said to assistive technology only); recording and privacy stay, because they are
-   * privacy facts; battery shows only when low or critical; battery, signal and last update otherwise sit behind
-   * one "Device details" disclosure. Nothing is removed.
+   * `full` (default): the poster as the card's hero, with every chip and indicator. `glance`: the poster becomes a
+   * thumbnail beside the camera's facts, because a sample frame is the least informative thing on the card; the
+   * status badge shows only when the camera is not online (online is said to assistive technology only);
+   * recording and privacy stay in words, because they are privacy facts; battery shows only when low or
+   * critical; battery, signal and last update otherwise sit behind one "Device details" disclosure; `controls`
+   * stack beneath the facts. Nothing is removed.
    */
   density?: DeviceCardDensity;
 }
@@ -122,6 +124,27 @@ function Scene({ scene }: { scene: "room" | "entrance" | "yard" }) {
   );
 }
 
+/** Recording and privacy, each as a glyph and words. Chips over a full-size frame; a plain list beside a thumbnail. */
+function PrivacyFacts({ recording, privacy, chip = false }: { recording?: boolean | null; privacy?: "on" | "off" | "unknown"; chip?: boolean }) {
+  const item = chip ? "inline-flex items-center gap-1.5 rounded-full bg-background/90 px-2.5 py-1 shadow-sm" : "inline-flex items-center gap-1.5";
+  return (
+    <>
+      {recording !== undefined ? (
+        <li data-recording={recording === null ? "unknown" : recording ? "on" : "off"} className={item}>
+          <Glyph name={recording === null ? "dash" : recording ? "record" : "circle"} size={14} className={recording ? "text-destructive" : undefined} />
+          <span>{recording === null ? "Recording status unknown" : recording ? "Recording" : "Not recording"}</span>
+        </li>
+      ) : null}
+      {privacy !== undefined ? (
+        <li data-privacy-state={privacy} className={item}>
+          <Glyph name={privacy === "on" ? "eye-off" : privacy === "off" ? "circle" : "dash"} size={14} />
+          <span>{privacy === "on" ? "Privacy mode on" : privacy === "off" ? "Privacy mode off" : "Privacy mode unknown"}</span>
+        </li>
+      ) : null}
+    </>
+  );
+}
+
 /** A plain `<img>` poster is made to fill the frame; any other node is the product's to size. */
 function fillFrame(poster: React.ReactNode): React.ReactNode {
   if (React.isValidElement<{ className?: string }>(poster) && poster.type === "img") {
@@ -136,6 +159,80 @@ const CameraDeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
     const hidden = privacy === "on";
     const caption = posterLabel?.trim() ? posterLabel : poster || hidden ? undefined : "Sample image — no live feed";
 
+    const frame = (compact: boolean) => (
+      <div
+        data-poster-frame=""
+        className={cn(
+          "relative w-full overflow-hidden rounded-xl bg-muted",
+          compact ? "aspect-video" : "aspect-video min-h-40",
+          status === "offline" && "border border-dashed border-border",
+        )}
+      >
+        {hidden ? (
+          <div data-privacy-cover="" className={cn("absolute inset-0 flex flex-col items-center justify-center gap-1 bg-muted text-center text-foreground", compact ? "p-2" : "justify-end gap-1.5 p-4 pb-5")}>
+            <Glyph name="eye-off" size={compact ? 18 : 24} />
+            <span className={compact ? "text-label-sm" : "text-label-lg"}>{compact ? "Image hidden" : "Privacy mode is on — image hidden"}</span>
+          </div>
+        ) : poster ? (
+          <div className="absolute inset-0">{fillFrame(poster)}</div>
+        ) : (
+          <div data-poster-placeholder="" data-scene={scene} className="absolute inset-0 text-muted-foreground">
+            <Scene scene={scene} />
+          </div>
+        )}
+        {compact ? null : (
+          // Status over the frame, where the eye already is. Words and glyphs, not colour alone.
+          <div className="absolute inset-x-2 top-2 z-raised flex flex-wrap items-start justify-between gap-2">
+            <DeviceStatusBadge status={status} className="shadow-sm" />
+            <ul className="m-0 flex list-none flex-wrap justify-end gap-1.5 p-0 text-label-md text-foreground">
+              <PrivacyFacts recording={recording} privacy={privacy} chip />
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+
+    if (density === "glance") {
+      // A thumbnail, not a hero: with no live feed the picture is the least informative thing on the card, so it
+      // sits beside the camera's facts instead of above them. The facts read first: name, place, any exception,
+      // the privacy and recording state in words, and what the camera last did.
+      return (
+        <div
+          ref={ref}
+          data-status={status}
+          data-privacy={privacy}
+          data-density="glance"
+          className={cn("flex min-w-0 flex-col gap-3 rounded-2xl bg-card p-3 font-sans text-card-foreground shadow-sm", className)}
+          {...props}
+        >
+          <div className="flex min-w-0 items-start gap-3">
+            <figure className="m-0 flex w-28 shrink-0 flex-col gap-1 sm:w-36">
+              {frame(true)}
+              {caption ? <figcaption className="text-label-sm text-muted-foreground">{caption}</figcaption> : null}
+            </figure>
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <span className="break-words text-title-md text-foreground">{device?.name}</span>
+                {device?.locationName ? <span className="break-words text-body-md text-muted-foreground">{device.locationName}</span> : null}
+              </div>
+              {status === "online" ? <span className="sr-only">Online</span> : <DeviceStatusBadge status={status} className="self-start" />}
+              <ul className="m-0 flex list-none flex-wrap gap-x-3 gap-y-1 p-0 text-label-md text-foreground">
+                <PrivacyFacts recording={recording} privacy={privacy} />
+              </ul>
+              {lastEvent ? (
+                <p data-last-event="" className="m-0 flex min-w-0 flex-wrap items-center gap-x-2 text-body-sm text-foreground">
+                  <span className="break-words">{lastEvent.label}</span>
+                  {lastEvent.at !== undefined && lastEvent.at !== null ? <LastSync value={lastEvent.at} now={now} className="text-label-md" /> : null}
+                </p>
+              ) : null}
+            </div>
+          </div>
+          {controls ? <div className="flex min-w-0 flex-col gap-2">{controls}</div> : null}
+          <DeviceMeta device={device} now={now} density="glance" className="px-1" />
+        </div>
+      );
+    }
+
     return (
       <div
         ref={ref}
@@ -145,45 +242,7 @@ const CameraDeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
         {...props}
       >
         <figure className="m-0 flex flex-col gap-2">
-          <div
-            data-poster-frame=""
-            className={cn(
-              "relative aspect-video min-h-40 w-full overflow-hidden rounded-xl bg-muted",
-              status === "offline" && "border border-dashed border-border",
-            )}
-          >
-            {hidden ? (
-              <div data-privacy-cover="" className="absolute inset-0 flex flex-col items-center justify-end gap-1.5 bg-muted p-4 pb-5 text-center text-foreground">
-                <Glyph name="eye-off" size={24} />
-                <span className="text-label-lg">Privacy mode is on — image hidden</span>
-              </div>
-            ) : poster ? (
-              <div className="absolute inset-0">{fillFrame(poster)}</div>
-            ) : (
-              <div data-poster-placeholder="" data-scene={scene} className="absolute inset-0 text-muted-foreground">
-                <Scene scene={scene} />
-              </div>
-            )}
-
-            {/* Status over the frame, where the eye already is. Words and glyphs, not colour alone. */}
-            <div className="absolute inset-x-2 top-2 z-raised flex flex-wrap items-start justify-between gap-2">
-              {density === "glance" && status === "online" ? <span className="sr-only">Online</span> : <DeviceStatusBadge status={status} className="shadow-sm" />}
-              <ul className="m-0 flex list-none flex-wrap justify-end gap-1.5 p-0 text-label-md text-foreground">
-                {recording !== undefined ? (
-                  <li data-recording={recording === null ? "unknown" : recording ? "on" : "off"} className="inline-flex items-center gap-1.5 rounded-full bg-background/90 px-2.5 py-1 shadow-sm">
-                    <Glyph name={recording === null ? "dash" : recording ? "record" : "circle"} size={14} className={recording ? "text-destructive" : undefined} />
-                    <span>{recording === null ? "Recording status unknown" : recording ? "Recording" : "Not recording"}</span>
-                  </li>
-                ) : null}
-                {privacy !== undefined ? (
-                  <li data-privacy-state={privacy} className="inline-flex items-center gap-1.5 rounded-full bg-background/90 px-2.5 py-1 shadow-sm">
-                    <Glyph name={privacy === "on" ? "eye-off" : privacy === "off" ? "circle" : "dash"} size={14} />
-                    <span>{privacy === "on" ? "Privacy mode on" : privacy === "off" ? "Privacy mode off" : "Privacy mode unknown"}</span>
-                  </li>
-                ) : null}
-              </ul>
-            </div>
-          </div>
+          {frame(false)}
           {caption ? <figcaption className="text-label-md text-muted-foreground">{caption}</figcaption> : null}
         </figure>
 
@@ -192,17 +251,7 @@ const CameraDeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.f
           {device?.locationName ? <span className="truncate text-body-md text-muted-foreground">{device.locationName}</span> : null}
         </div>
 
-        {density === "glance" ? (
-          <div className="flex min-w-0 flex-col gap-2 px-1">
-            {lastEvent ? (
-              <p data-last-event="" className="m-0 flex min-w-0 flex-wrap items-center gap-x-2 text-body-md text-foreground">
-                <span className="break-words">{lastEvent.label}</span>
-                {lastEvent.at !== undefined && lastEvent.at !== null ? <LastSync value={lastEvent.at} now={now} className="text-label-md" /> : null}
-              </p>
-            ) : null}
-            <DeviceMeta device={device} now={now} density="glance" />
-          </div>
-        ) : lastEvent || device?.battery !== undefined || device?.signal !== undefined ? (
+        {lastEvent || device?.battery !== undefined || device?.signal !== undefined ? (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-body-sm text-muted-foreground">
             {lastEvent ? (
               <p data-last-event="" className="m-0 flex min-w-0 flex-wrap items-center gap-x-2 text-body-md text-foreground">

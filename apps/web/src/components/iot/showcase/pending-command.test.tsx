@@ -56,7 +56,8 @@ describe("PendingCommand", () => {
     const { container } = render(<PendingCommand lifecycle={life({ stage: "acknowledged", ackAt: at(-500) })} formatValue={format} now={NOW} />);
     expect(container.textContent).toContain("Waiting for device");
     expect(container.textContent).not.toMatch(/Confirmed:/);
-    expect(screen.getByRole("status")).toHaveTextContent(/has not confirmed it; it reports Locked/);
+    // The live region says the request once: acknowledgement is protocol, so it does not re-announce.
+    expect(screen.getByRole("status")).toHaveTextContent("Changing to Unlocked. Not yet confirmed; the device reports Locked.");
   });
 
   it("offers Retry on a failure, with the reason, and keeps the reported value", () => {
@@ -78,5 +79,52 @@ describe("PendingCommand", () => {
     expect(screen.getByRole("status")).toHaveTextContent("");
     expect(screen.queryByRole("button")).toBeNull();
     expect(screen.queryByText("Request details")).toBeNull();
+  });
+
+  it("holds the next action at rest and the request line during a request, in one reserved row", () => {
+    const action = <button type="button">Unlock</button>;
+    const { container, rerender } = render(<PendingCommand lifecycle={undefined} action={action} reserve subject="Front door lock" />);
+    const row = () => container.querySelector("[data-command-row]")!;
+    expect(row()).not.toBeNull();
+    expect(row().className).toContain("min-h-14");
+    expect(screen.getByRole("button", { name: "Unlock" })).toBeInTheDocument();
+
+    rerender(<PendingCommand lifecycle={life({})} action={action} reserve subject="Front door lock" onCancel={() => {}} now={NOW} details={false} formatValue={format} />);
+    // the action gives way to the request line, in the same row
+    expect(screen.queryByRole("button", { name: "Unlock" })).toBeNull();
+    expect(row().textContent).toContain("Changing to Unlocked");
+    expect(screen.getByRole("button", { name: "Cancel the Front door lock request" })).toBeInTheDocument();
+    // with details={false}, the record is the card's to place (inside its own "Details")
+    expect(screen.queryByText("Request details")).toBeNull();
+    // the status line names the device, and there is no spinner: the wait is words
+    expect(screen.getByRole("status")).toHaveTextContent("Front door lock: Changing to Unlocked.");
+    expect(container.querySelector('[class*="animate-spin"]')).toBeNull();
+
+    // a confirmation shows briefly with the next action beside it
+    rerender(<PendingCommand lifecycle={life({ stage: "confirmed", confirmedValue: "unlocked", settledAt: at(-500) })} action={action} reserve now={NOW} details={false} formatValue={format} />);
+    expect(row().textContent).toContain("Confirmed: Unlocked");
+    expect(screen.getByRole("button", { name: "Unlock" })).toBeInTheDocument();
+  });
+
+  it("offers Cancel only while a request can still be cancelled, and Retry only on a failure", () => {
+    const { rerender } = render(<PendingCommand lifecycle={life({})} now={NOW} formatValue={format} subject="Lock" />);
+    // no onCancel passed: nothing claims the request can be withdrawn
+    expect(screen.queryByRole("button", { name: /Cancel/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Retry/ })).toBeNull();
+    rerender(<PendingCommand lifecycle={life({ stage: "failed", reason: "Jammed.", settledAt: at(-100) })} now={NOW} formatValue={format} subject="Lock" onRetry={() => {}} onCancel={() => {}} />);
+    expect(screen.getByRole("button", { name: "Retry Lock: Unlocked" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Dismiss the Lock failure" })).toBeInTheDocument();
+  });
+
+  it("moves focus to the row's new button when the button that had it goes away", () => {
+    const Harness = ({ lifecycle }: { lifecycle: KinetixCommandLifecycle | undefined }) => (
+      <PendingCommand lifecycle={lifecycle} reserve now={NOW} formatValue={format} subject="Front door lock" onCancel={() => {}} action={<button type="button">Unlock</button>} details={false} />
+    );
+    const { rerender } = render(<Harness lifecycle={undefined} />);
+    screen.getByRole("button", { name: "Unlock" }).focus();
+    rerender(<Harness lifecycle={life({})} />);
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel the Front door lock request" }));
+    rerender(<Harness lifecycle={life({ stage: "confirmed", confirmedValue: "unlocked", settledAt: at(-60_000) })} />);
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Unlock" }));
   });
 });

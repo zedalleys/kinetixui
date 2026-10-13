@@ -49,4 +49,42 @@ describe("CameraDeviceCard density (M5A)", () => {
     expect(container.querySelector("details")).toBeNull();
     expect(screen.getByText("Online")).not.toHaveClass("sr-only");
   });
+
+  it("glance draws the sample frame as a thumbnail beside the facts, not as the card's hero", () => {
+    const { container } = render(<CameraDeviceCard device={device({ name: "Hallway camera", type: "camera", locationName: "Hallway" })} privacy="off" now={NOW} density="glance" />);
+    const frame = container.querySelector("[data-poster-frame]")!;
+    expect(frame.className).not.toContain("min-h-40");
+    expect(frame.closest("figure")!.className).toMatch(/\bw-28\b/);
+    // the placeholder is decoration; the caption says what it is in words
+    expect(container.querySelector("[data-poster-placeholder] svg")!.getAttribute("aria-hidden")).toBe("true");
+    expect(screen.getByText("Sample image — no live feed").tagName).toBe("FIGCAPTION");
+    // no chips over the thumbnail: the privacy fact is a plain, non-interactive line beside it
+    const privacy = container.querySelector("[data-privacy-state]")!;
+    expect(privacy.closest("[data-poster-frame]")).toBeNull();
+    expect(privacy.querySelector("button, [role=switch]")).toBeNull();
+    expect(container.querySelector('[data-density="glance"]')).not.toBeNull();
+  });
+
+  it("glance renders only the controls it is given, and no feed, recording or snapshot actions of its own", () => {
+    const { container } = render(
+      <CameraDeviceCard device={device({ name: "Hallway camera", type: "camera" })} now={NOW} density="glance" lastEvent={{ label: "Firmware 6.0.1 installed", at: "2026-10-12T10:00:00.000Z" }} controls={<button type="button">Activity</button>} />,
+    );
+    expect(screen.getByRole("button", { name: "Activity" })).toBeInTheDocument();
+    const names = [...container.querySelectorAll("button, summary")].map((b) => b.textContent?.trim());
+    expect(names.filter((n) => /live|record|snapshot|talk|mute/i.test(n ?? ""))).toEqual([]);
+    expect(container.querySelector("video")).toBeNull();
+    expect(container.querySelector("[data-last-event]")!.textContent).toContain("Firmware 6.0.1 installed");
+  });
+
+  it("glance escalates exceptions: offline in words, a low battery in view, privacy on hides the image", () => {
+    const { container } = render(<CameraDeviceCard device={device({ name: "Yard camera", type: "camera", status: "offline", battery: 9 })} privacy="on" now={NOW} density="glance" />);
+    expect(screen.getByText("Offline")).not.toHaveClass("sr-only");
+    // the low battery sits outside the closed "Device details", in view
+    const battery = container.querySelector('[data-level="critical"], [data-level="low"]')!;
+    expect(battery).not.toBeNull();
+    expect(battery.closest("details")).toBeNull();
+    expect(container.querySelector("[data-privacy-cover]")).not.toBeNull();
+    expect(container.querySelector("[data-poster-placeholder]")).toBeNull();
+    expect(screen.getByText("Privacy mode on")).toBeInTheDocument();
+  });
 });

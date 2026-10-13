@@ -8,7 +8,6 @@ import {
   BatteryIndicator,
   DeviceGroupCard,
   DeviceHealthSummary,
-  DeviceModeControl,
   DevicePowerControl,
   RoutineCard,
   TelemetryGrid,
@@ -24,7 +23,6 @@ import {
   DeviceIllustration,
   Disclosure,
   Panel,
-  PendingCommand,
   PillSelector,
   ShowcaseShell,
   SpaceCanvas,
@@ -37,7 +35,13 @@ import {
 } from "@/components/iot/showcase";
 import { agritech, agritechRainForecast } from "./scenarios";
 import { fieldAnchors, fieldPlan } from "./scenarios/plans";
-import { SimNotice, SimTransport, controlOf, deviceOf, readingOf, trendOf, type ControlBinding } from "./harness";
+import { SimNotice, SimTransport, controlOf, deviceOf, readingOf, trendOf } from "./harness";
+import { CommandRow, DeviceDetails, NextAction, quietPending } from "./command-card";
+
+const VALVE_VERBS = { open: "Open", closed: "Close" };
+const VALVE_LABELS = { open: "Open valve", closed: "Close valve" };
+/** The other position of a known valve, or both when its position is unknown. */
+const valveActions = (confirmed: unknown) => (confirmed === "open" ? ["closed"] : confirmed === "closed" ? ["open"] : ["open", "closed"]);
 
 // kx-iot:start
 /**
@@ -82,28 +86,6 @@ function FarmMark() {
       </svg>
     </span>
   );
-}
-
-const ValveOpenGlyph = () => (
-  <svg viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-    <path d="M12 3.5s6 6.4 6 10.5a6 6 0 0 1-12 0c0-4.1 6-10.5 6-10.5Z" />
-  </svg>
-);
-const ValveClosedGlyph = () => (
-  <svg viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-    <circle cx="12" cy="12" r="9" />
-    <path d="M8 12h8" />
-  </svg>
-);
-
-/**
- * The request in one line (Level 1): "Changing to Open", "Waiting for device", a brief "Confirmed", or — for
- * Irrigation Valve 03, which fails once on purpose — what did not happen and the device's own reason, with Retry.
- * The lifecycle record (acknowledgement, attempts, times) is under "Request details" (Level 3). Nothing retries
- * itself, and nothing at all is drawn once the request has settled.
- */
-function CommandProgress({ binding, failureTitle, now }: { binding: ControlBinding; failureTitle: string; now: string }) {
-  return <PendingCommand lifecycle={binding.command?.lifecycle} formatValue={binding.format} onRetry={binding.retry} onCancel={binding.cancel} now={now} failureTitle={failureTitle} />;
 }
 
 /** The confirmed state of a control: the label, then the word the device itself reported. */
@@ -289,6 +271,7 @@ export function AgritechEnvironmentExample() {
       title="Pump Station"
       description={large ? "Feeds every irrigation zone" : "Supplies this zone"}
       tone={large ? "surface" : "inset"}
+      data-device="pump-01"
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-w-0 flex-wrap items-center gap-4">
@@ -298,14 +281,15 @@ export function AgritechEnvironmentExample() {
         <DevicePowerControl
           state={pump.confirmed as "on" | "off"}
           requested={pump.requested as "on" | "off" | undefined}
-          control={pump.control}
+          control={quietPending(pump.control)}
           label="Pump Station power"
           size="lg"
           onToggle={pump.send}
         />
       </div>
-      <CommandProgress binding={pump} failureTitle="The pump did not change" now={sim.now} />
+      <CommandRow binding={pump} failureTitle="The pump did not change" now={sim.now} />
       {large ? null : <TelemetryMetric {...flow} label="Pump flow" size="md" quietWhenNormal />}
+      <DeviceDetails device={pump.device} now={sim.now} bindings={[pump]} className={large ? undefined : "bg-card"} />
     </Panel>
   );
 
@@ -366,7 +350,7 @@ export function AgritechEnvironmentExample() {
   // 4 IRRIGATION: the confirmed position first, then anything in flight or failed, then the control.
   const irrigation = valve ? (
     <>
-      <Panel title="Irrigation valve" description={`${valve.device.name} · ${valve.device.locationName ?? zone.name}`}>
+      <Panel title="Irrigation valve" description={`${valve.device.name} · ${valve.device.locationName ?? zone.name}`} data-device={valve.device.id}>
         {/* At 320 the large illustration left too little room and clipped the reported word; it grows from sm up. */}
         <div className="flex min-w-0 flex-wrap items-center gap-4">
           <DeviceIllustration category="valve" on={valve.confirmed === "open"} size="md" className="sm:size-28" />
@@ -376,16 +360,14 @@ export function AgritechEnvironmentExample() {
             note={valve.device.status === "offline" ? <StateBadge state="offline">Last known position</StateBadge> : null}
           />
         </div>
-        <CommandProgress binding={valve} failureTitle={`${valve.device.name} did not move`} now={sim.now} />
-        <DeviceModeControl
-          presentation="tiles"
-          modes={(valve.capability.modes ?? []).map((m) => ({ ...m, icon: m.id === "open" ? <ValveOpenGlyph /> : <ValveClosedGlyph /> }))}
-          value={valve.confirmed as string}
-          requested={valve.requested as string | undefined}
-          control={valve.control}
-          label={`${valve.device.name} position`}
-          onSelect={valve.send}
+        {/* One reserved row: the other position as a command at rest, the request line while the valve works. */}
+        <CommandRow
+          binding={valve}
+          failureTitle={`${valve.device.name} did not move`}
+          now={sim.now}
+          action={<NextAction binding={valve} verbs={VALVE_VERBS} labels={VALVE_LABELS} actions={valveActions(valve.confirmed)} />}
         />
+        <DeviceDetails device={valve.device} now={sim.now} bindings={[valve]} />
       </Panel>
       {pumpBlock(false)}
     </>

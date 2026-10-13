@@ -20,18 +20,40 @@ ordinary native `<details>`.
 
 ## Pending presentation
 
-`apps/web/src/components/iot/showcase/pending-command.tsx` (showcase code, three callers) maps the lifecycle
-stage to one line:
+`apps/web/src/components/iot/showcase/pending-command.tsx` (showcase code) maps the lifecycle stage to one line,
+and `apps/web/src/examples/iot/command-card.tsx` gives every command card on /iot (lock, valve, thermostat,
+light, plug, pump, line) the same reserved row:
 
-| Stage | Line |
+| Stage | The reserved row shows |
 |---|---|
-| idle / settled | nothing: the confirmed value is the whole story |
-| requested, retrying | "Changing to **X**" (with Cancel request) |
-| acknowledged | "Waiting for device · X requested" |
-| confirmed | "Confirmed: X" for 4 s of the simulated clock, then nothing |
-| failed, timed-out, unreachable | the failure and its reason, "Still reports Y", Retry / Dismiss, and the record one press away |
+| idle / settled | the next action (the lock's "Unlock" or "Lock", the valve's "Open valve"); on a card whose controls are the action (dial, slider, switch) the row is empty but keeps its height |
+| requested, retrying | "Changing to **X**" and Cancel (named "Cancel the *device* request") |
+| acknowledged | "Waiting for device", with "X requested" under it, and Cancel while the device allows it |
+| confirmed | "Confirmed: X" for 4 s of the simulated clock, beside the next action, then the next action alone |
+| failed, timed-out, unreachable | the failure and its reason, "Still reports Y" from the sm breakpoint, Retry ("Retry *device*: X") and Dismiss |
 
-One polite `role="status"` line is mounted from the first render. The record holds no second live region.
+The row is `min-h-14`, sized to the tallest single-line state, so asking does not push the card. At 100% text the
+lock, thermostat and valve keep their height to the pixel through every state at 1280 and 390 (a failure at 390
+may wrap to a second line). The control's own "requested, not yet confirmed" sentence is suppressed while the row
+says it (`quietPending`), and the request's record ("Request details": stage, acknowledgement, attempts, times)
+sits closed inside the card's closed "Details", so neither appears beside the control.
+
+Two-state devices offer one named action from the confirmed state (`lockActions` from `@kinetixui/iot/functions`;
+both when the state is unknown), never equal tiles, and the big state word reads the confirmed value only.
+
+One polite `role="status"` line is mounted from the first render. It speaks "Changing to X. Not yet confirmed; the
+device reports Y." once for both requested and acknowledged, so the acknowledgement is not announced, then the
+confirmation or the failure. When the button that had focus disappears (Cancel at confirmation), focus moves to
+the row's next action, never to the page.
+
+## Camera glance
+
+`CameraDeviceCard density="glance"` is a thumbnail beside the facts, not a large preview: name, location, privacy
+and recording as words with a glyph (not colour), the camera's last event from the activity record, and a status
+badge only when the camera is not online (healthy Online is sr-only). Below it: only the actions the device has.
+The /iot hallway camera has no commands, so it offers "Activity" (its events) and "Device details"; it shows no
+live, record, snapshot, talk, mute or pan control. Privacy is a fact, not a switch, because nothing can change it.
+The sample image is `aria-hidden`; its caption ("Sample image — no live feed") says what it is.
 
 ## Severity order
 
@@ -65,7 +87,7 @@ marker now uses the named group `group/marker`.
 
 `DeviceCard` and `CameraDeviceCard` in `@kinetixui/iot/react` accept `density?: "full" | "glance"` (default
 `"full"`, unchanged). `"glance"` keeps a low or critical battery inline and puts battery, signal and last update
-behind a closed "Device details" disclosure. Changeset held in `.changeset-held/iot/`.
+behind a closed "Device details" disclosure; on a camera it also draws the compact thumbnail layout above. Changeset held in `.changeset-held/iot/`.
 
 ## Guarded by
 
@@ -73,6 +95,9 @@ behind a closed "Device details" disclosure. Changeset held in `.changeset-held/
   healthy markers carry no badge; offline badges are not destructive red; the overview names no device and has
   room summaries; a lock request shows one "Changing to" line, no visible stepper, its record closed, the lock
   word unchanged until the device confirms, and the line settles after confirmation.
+- Same script (part "stability"): samples card height every animation frame through a lock, thermostat and failing
+  valve request at 1280 and 390; tolerance 1px for every in-flight state, 24px (one wrapped line) for a failure at
+  phone width, and no visible protocol rows or stepper.
 - Unit tests: `pending-command.test.tsx`, `space-canvas.test.tsx` (semantic zoom), `card-density.test.tsx`.
 
 ## Motion Phase 2 candidates (not implemented)

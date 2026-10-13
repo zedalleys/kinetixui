@@ -16,7 +16,7 @@ import {
   TelemetryGrid,
   TelemetryMetric,
 } from "@kinetixui/iot/react";
-import { classifyBatteryLevel, describeDeviceStatus, formatRelativeTime, resolveDeviceCategory, type KinetixDevice, type KinetixDeviceCategory } from "@kinetixui/iot/functions";
+import { classifyBatteryLevel, lockActions, normalizeLockState, resolveDeviceCategory, type KinetixDevice, type KinetixDeviceCategory } from "@kinetixui/iot/functions";
 import {
   DateStrip,
   DeviceIllustration,
@@ -25,7 +25,6 @@ import {
   IconButton,
   IconCluster,
   Panel,
-  PendingCommand,
   PillSelector,
   RailItem,
   RailList,
@@ -44,6 +43,7 @@ import { useIotSimulation, type UseIotSimulation } from "@/lib/iot-sim/use-simul
 import { smartSpace } from "./scenarios";
 import { homeAnchors, homePlan } from "./scenarios/plans";
 import { SimNotice, SimTransport, controlOf, deviceOf, readingOf, type ControlBinding } from "./harness";
+import { CommandRow, DeviceDetails, NextAction, SUBGROUP, pickBinding, quietPending } from "./command-card";
 
 // kx-iot:start
 /**
@@ -85,11 +85,6 @@ const HOME = "home";
 const HOME_ADDRESS = "12 Example Lane, Sample City (fabricated)";
 /** How many of a day's events the aside shows before the rest are grouped behind their real count. */
 const ACTIVITY_HEAD = 3;
-/**
- * A group nested inside a panel or another disclosure: the same control, one tonal step quieter, so the
- * outer surface stays the card and the group reads as part of it rather than as a second card.
- */
-const SUBGROUP = "bg-muted/40 shadow-none";
 
 type IconName = "home" | "bell" | "flame" | "leaf" | "power" | "lock" | "unlock";
 
@@ -120,14 +115,6 @@ const TILE_COLUMNS: React.CSSProperties = { gridTemplateColumns: "repeat(auto-fi
 const MODE_ICONS: Record<string, IconName> = { heat: "flame", eco: "leaf", off: "power", locked: "lock", unlocked: "unlock" };
 const withIcons = (modes: readonly { id: string; label: string }[]) => modes.map((m) => ({ ...m, icon: MODE_ICONS[m.id] ? <Glyph name={MODE_ICONS[m.id]!} size={22} /> : undefined }));
 
-/**
- * The request in one line (Level 1): "Changing to …", "Waiting for device", a brief "Confirmed", or a failure with
- * Retry. The lifecycle record is under its "Request details" (Level 3). Nothing at all once it has settled.
- */
-function Lifecycle({ binding, now }: { binding: ControlBinding; now: string }) {
-  return <PendingCommand lifecycle={binding.command?.lifecycle} formatValue={binding.format} onRetry={binding.retry} onCancel={binding.cancel} now={now} />;
-}
-
 const batteryAlarm = (value: number | undefined) => {
   const level = classifyBatteryLevel(value);
   return level === "low" || level === "critical";
@@ -135,34 +122,6 @@ const batteryAlarm = (value: number | undefined) => {
 
 /** Level 1 only for an exception: an offline device says so; a working one has no status line at all. */
 const glanceOf = (device: KinetixDevice) => (device.status === "offline" ? "Offline. Showing the last known settings." : undefined);
-
-/**
- * Level 2, closed by default: what was asked against what the device reports (only while a request is open),
- * then battery, connection, signal and when it last reported. Everything the panel used to say at once.
- */
-function DeviceDetails({ device, now, bindings = [], extra = [] }: { device: KinetixDevice; now: string; bindings?: readonly ControlBinding[]; extra?: readonly { term: string; value: React.ReactNode }[] }) {
-  const rows: { term: string; value: React.ReactNode }[] = [...extra];
-  for (const b of bindings) {
-    if (b.requested === undefined) continue;
-    rows.push({ term: `${b.capability.label ?? b.capability.id} requested`, value: b.format(b.requested) });
-    rows.push({ term: `${b.capability.label ?? b.capability.id} reported`, value: b.format(b.confirmed) });
-  }
-  if (device.battery !== undefined) rows.push({ term: "Battery", value: <BatteryIndicator value={device.battery} label={`${device.name} battery`} /> });
-  rows.push({ term: "Connection", value: describeDeviceStatus(device.status) });
-  if (device.lastSeenAt) rows.push({ term: "Last update", value: formatRelativeTime(device.lastSeenAt, { now }) });
-  return (
-    <Disclosure title="Details" defaultOpen={false} className={SUBGROUP}>
-      <dl className="m-0 grid min-w-0 grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-body-md">
-        {rows.map((r) => (
-          <React.Fragment key={r.term}>
-            <dt className="text-muted-foreground">{r.term}</dt>
-            <dd className="m-0 min-w-0 break-words text-foreground">{r.value}</dd>
-          </React.Fragment>
-        ))}
-      </dl>
-    </Disclosure>
-  );
-}
 
 /**
  * A worded battery row, at Level 1 only when it needs attention: a low lock battery is an exception, a healthy
@@ -181,6 +140,7 @@ function Battery({ value, name }: { value: number | undefined; name: string }) {
 }
 
 const shown = (value: unknown) => String(value);
+const LOCK_VERBS = { unlocked: "Unlock", locked: "Lock" };
 const onOff = (value: unknown) => (value === "on" ? "On" : value === "off" ? "Off" : "Unknown");
 
 /** What the plan, the tiles and the rail need to say about one device, read from the simulation. */
@@ -316,7 +276,8 @@ function ClimateHero({ iot, id, roomName }: { iot: UseIotSimulation; id: string;
   const battery = target.device.battery;
   return (
     <Panel title={target.device.name} description={glanceOf(target.device)} as="h5" data-device={id}>
-      <div className="grid min-w-0 items-center gap-6 md:grid-cols-2">
+      {/* Two columns while each has 12rem; one column at 200% text, so the command row is never a sliver. */}
+      <div className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] items-center gap-6">
         <DeviceSetpointControl
           presentation="ring"
           current={readingOf(iot, id, "temperature").value}
@@ -326,7 +287,7 @@ function ClimateHero({ iot, id, roomName }: { iot: UseIotSimulation; id: string;
           max={target.capability.max ?? 26}
           step={target.capability.step ?? 0.5}
           unit="°C"
-          control={target.control}
+          control={quietPending(target.control)}
           label={`${target.device.name} target`}
           onCommit={target.send}
         />
@@ -336,16 +297,16 @@ function ClimateHero({ iot, id, roomName }: { iot: UseIotSimulation; id: string;
             modes={withIcons(mode.capability.modes ?? [])}
             value={mode.confirmed as string}
             requested={mode.requested as string | undefined}
-            control={mode.control}
+            control={quietPending(mode.control)}
             label={`${target.device.name} mode`}
             onSelect={mode.send}
             style={TILE_COLUMNS}
           />
           <Battery value={battery} name={target.device.name} />
+          {/* Beside the dial on wide screens, where the column already has room, so a request adds no height. */}
+          <CommandRow binding={pickBinding(iot.sim.now, target, mode)} now={iot.sim.now} />
         </div>
       </div>
-      <Lifecycle binding={target} now={iot.sim.now} />
-      <Lifecycle binding={mode} now={iot.sim.now} />
       <DeviceDetails device={target.device} now={iot.sim.now} bindings={[target, mode]} extra={[{ term: "Mode", value: mode.format(mode.confirmed) }, { term: "Room", value: roomName }]} />
     </Panel>
   );
@@ -368,15 +329,14 @@ function LightPanel({ iot, id }: { iot: UseIotSimulation; id: string }) {
             size="lg"
             state={power.confirmed as "on" | "off"}
             requested={power.requested as "on" | "off" | undefined}
-            control={power.control}
+            control={quietPending(power.control)}
             label={`${power.device.name} power`}
             onToggle={power.send}
           />
         </div>
       </div>
-      <DeviceLevelControl variant="pill" size="lg" value={level.confirmed as number} target={level.requested as number | undefined} unit="%" step={5} control={level.control} label={`${power.device.name} brightness`} onCommit={level.send} />
-      <Lifecycle binding={power} now={iot.sim.now} />
-      <Lifecycle binding={level} now={iot.sim.now} />
+      <DeviceLevelControl variant="pill" size="lg" value={level.confirmed as number} target={level.requested as number | undefined} unit="%" step={5} control={quietPending(level.control)} label={`${power.device.name} brightness`} onCommit={level.send} />
+      <CommandRow binding={pickBinding(iot.sim.now, power, level)} now={iot.sim.now} />
       <DeviceDetails device={power.device} now={iot.sim.now} bindings={[power, level]} />
     </Panel>
   );
@@ -394,35 +354,40 @@ function PlugTile({ iot, id }: { iot: UseIotSimulation; id: string }) {
         value={onOff(power.confirmed)}
         requested={power.requested !== undefined}
         requestedWord={`Changing to ${onOff(power.requested)}`}
-        control={<DevicePowerControl size="lg" state={power.confirmed as "on" | "off"} requested={power.requested as "on" | "off" | undefined} control={power.control} label={`${power.device.name} power`} showLabel={false} onToggle={power.send} />}
+        control={<DevicePowerControl size="lg" state={power.confirmed as "on" | "off"} requested={power.requested as "on" | "off" | undefined} control={quietPending(power.control)} label={`${power.device.name} power`} showLabel={false} onToggle={power.send} />}
       />
-      <Lifecycle binding={power} now={iot.sim.now} />
+      <CommandRow binding={power} now={iot.sim.now} />
       <DeviceDetails device={power.device} now={iot.sim.now} bindings={[power]} />
     </div>
   );
 }
 
 /**
- * The door: the lock itself, the confirmed word, and locked or unlocked as icon tiles. The lock is slow on purpose,
- * so the gap between asking and locked is visible — and the bolt in the drawing moves when the device CONFIRMS,
- * like the word, never on the request. Word, tile, bolt and the radio's checked state all read `lock.confirmed`.
+ * The door: the lock itself, the confirmed word, and ONE action — the other state, named as a command ("Unlock",
+ * "Lock"), because pressing it starts something that may not finish; a jammed or unknown lock offers both. The
+ * lock is slow on purpose, so the gap between asking and locked is visible — and the word, the bolt in the drawing
+ * and `data-lock-state` all read `lock.confirmed`, so they change when the device CONFIRMS, never on the request.
+ * The action and the request line share one reserved row: asking does not push the card.
  */
 function LockPanel({ iot, id }: { iot: UseIotSimulation; id: string }) {
   const lock = controlOf(iot, id, "lock");
-  const locked = lock.confirmed === "locked" ? true : lock.confirmed === "unlocked" ? false : undefined;
+  const reported = normalizeLockState(lock.confirmed);
+  const locked = reported === "locked" ? true : reported === "unlocked" ? false : undefined;
   return (
     <Panel title={lock.device.name} description={glanceOf(lock.device)} as="h5" data-device={id}>
-      <div className="flex min-w-0 items-center gap-4">
+      {/* Wraps only when the word has under 8rem beside the drawing (200% text on a phone), so it is never squeezed out. */}
+      <div className="flex min-w-0 flex-wrap items-center gap-4">
         <span className="shrink-0 rounded-2xl bg-muted/60 p-2">
           <DeviceIllustration category="lock" locked={locked} size="lg" />
         </span>
-        <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
-          <p className="text-headline-lg text-foreground">{lock.format(lock.confirmed)}</p>
+        <div className="flex min-w-0 flex-1 basis-32 flex-wrap items-center gap-x-4 gap-y-2">
+          <p className="text-headline-lg text-foreground" data-lock-state={reported}>
+            {lock.format(lock.confirmed)}
+          </p>
           <Battery value={lock.device.battery} name={lock.device.name} />
         </div>
       </div>
-      <DeviceModeControl presentation="tiles" modes={withIcons(lock.capability.modes ?? [])} value={lock.confirmed as string} requested={lock.requested as string | undefined} control={lock.control} label="Front door lock" onSelect={lock.send} style={TILE_COLUMNS} />
-      <Lifecycle binding={lock} now={iot.sim.now} />
+      <CommandRow binding={lock} now={iot.sim.now} action={<NextAction binding={lock} verbs={LOCK_VERBS} actions={lockActions(reported)} dataAttribute="data-lock-action" />} />
       <DeviceDetails device={lock.device} now={iot.sim.now} bindings={[lock]} />
     </Panel>
   );
@@ -440,6 +405,44 @@ function ReadingsPanel({ iot, id, title, metrics }: { iot: UseIotSimulation; id:
       <Battery value={device.battery} name={device.name} />
       <DeviceDetails device={device} now={iot.sim.now} />
     </Panel>
+  );
+}
+
+/** "Hallway camera: firmware 6.0.1 installed" reads as "Firmware 6.0.1 installed" on the camera's own card. */
+const ownWords = (message: string, name: string) => {
+  const rest = message.startsWith(`${name}: `) ? message.slice(name.length + 2) : message;
+  return rest.charAt(0).toUpperCase() + rest.slice(1);
+};
+
+/**
+ * The camera, at glance density: a thumbnail beside its name, place and privacy state, and what it last did. The
+ * demo has no feed, no recording and no camera commands, so the card offers what it can truthfully do: read the
+ * camera's own activity (primary) and its device details. Privacy mode is stated, not offered as a switch,
+ * because nothing in the simulation can change it.
+ */
+function CameraPanel({ iot, id }: { iot: UseIotSimulation; id: string }) {
+  const device = deviceOf(iot.sim, id);
+  const events = selectActivity(iot.sim, { deviceId: id });
+  const latest = events[0];
+  return (
+    <div className="min-w-0" data-device={id}>
+      <CameraDeviceCard
+        device={device}
+        scene="entrance"
+        posterLabel={SAMPLE_IMAGE_LABEL}
+        privacy="off"
+        now={iot.sim.now}
+        density="glance"
+        lastEvent={latest ? { label: ownWords(latest.message, device.name), at: latest.timestamp } : undefined}
+        controls={
+          events.length > 0 ? (
+            <Disclosure title="Activity" count={events.length} countNoun={events.length === 1 ? "event from this camera" : "events from this camera"} defaultOpen={false} className={SUBGROUP}>
+              <ActivityTimeline variant="blocks" events={events} label={`${device.name} activity`} now={iot.sim.now} />
+            </Disclosure>
+          ) : undefined
+        }
+      />
+    </div>
   );
 }
 
@@ -468,11 +471,7 @@ function DevicePanel({ iot, id, roomName }: { iot: UseIotSimulation; id: string;
         />
       );
     case "camera":
-      return (
-        <div className="min-w-0" data-device={id}>
-          <CameraDeviceCard device={device} scene="entrance" posterLabel={SAMPLE_IMAGE_LABEL} privacy="off" now={iot.sim.now} density="glance" />
-        </div>
-      );
+      return <CameraPanel iot={iot} id={id} />;
     default:
       return <ReadingsPanel iot={iot} id={id} title={`Sensor · ${roomName}`} metrics={[{ metric: "temperature", label: "Temperature" }]} />;
   }
