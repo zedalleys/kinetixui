@@ -74,6 +74,9 @@ const AmountDisplay = React.forwardRef<HTMLSpanElement, AmountDisplayProps>(
       </span>
     );
 
+    // `relative` keeps the absolutely positioned sr-only words inside this box. Without it they resolve
+    // against a far ancestor and escape any scroll container the amount sits in (a table, a preview),
+    // widening the page.
     return (
       <span
         ref={ref}
@@ -81,7 +84,7 @@ const AmountDisplay = React.forwardRef<HTMLSpanElement, AmountDisplayProps>(
         data-tone={tone}
         data-sign={sign}
         className={cn(
-          "inline-block whitespace-nowrap font-sans font-semibold tabular-nums",
+          "relative inline-block whitespace-nowrap font-sans font-semibold tabular-nums",
           size === "compact" ? "text-body-md" : "text-title-lg",
           tone === "positive" && "text-success",
           tone === "negative" && "text-destructive",
