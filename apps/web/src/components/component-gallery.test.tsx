@@ -12,6 +12,9 @@ vi.mock("next/navigation", () => ({
 
 import { ComponentGallery } from "./component-gallery";
 import { THUMBNAIL_MOCKS } from "./component-thumbnails";
+import { catalogueFacets } from "@/lib/business-discovery";
+
+const FACETS = catalogueFacets();
 
 beforeEach(() => {
   // the cards reveal on scroll; jsdom has no IntersectionObserver
@@ -35,7 +38,7 @@ vi.setConfig({ testTimeout: 30_000 });
 
 describe("ComponentGallery filters on a phone", () => {
   it("folds the category and platform chips behind one Filters button", async () => {
-    render(<ComponentGallery />);
+    render(<ComponentGallery facets={FACETS} />);
     const trigger = screen.getByRole("button", { name: "Filters" });
     // the inline copy is CSS-hidden on phones; the sheet's copy does not exist until it is opened
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -48,7 +51,7 @@ describe("ComponentGallery filters on a phone", () => {
   });
 
   it("chooses a filter from the sheet through the same URL parameters as the inline chips", async () => {
-    render(<ComponentGallery />);
+    render(<ComponentGallery facets={FACETS} />);
     await userEvent.click(screen.getByRole("button", { name: "Filters" }));
     const dialog = screen.getByRole("dialog", { name: "Filters" });
     await userEvent.click(within(dialog).getByRole("button", { name: /^SwiftUI/i }));
@@ -57,13 +60,13 @@ describe("ComponentGallery filters on a phone", () => {
 
   it("says how many filters are active without relying on the badge alone", () => {
     nav.search = "platform=SwiftUI&status=beta";
-    render(<ComponentGallery />);
+    render(<ComponentGallery facets={FACETS} />);
     expect(screen.getByRole("button", { name: "Filters, 2 active" })).toBeInTheDocument();
   });
 
   it("counts only the chip filters, not the search box", () => {
     nav.search = "q=button";
-    render(<ComponentGallery />);
+    render(<ComponentGallery facets={FACETS} />);
     expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
   });
 });
@@ -74,7 +77,7 @@ describe("ComponentGallery platform filter covers every implementation platform"
   const status = () => screen.getByRole("status").textContent ?? "";
 
   it("offers React, Angular and the three native platforms, with user-facing labels", () => {
-    render(<ComponentGallery />);
+    render(<ComponentGallery facets={FACETS} />);
     const names = within(platformGroup())
       .getAllByRole("button")
       .map((b) => b.textContent ?? "");
@@ -86,7 +89,7 @@ describe("ComponentGallery platform filter covers every implementation platform"
   });
 
   it("marks Angular as Preview on its chip", () => {
-    render(<ComponentGallery />);
+    render(<ComponentGallery facets={FACETS} />);
     expect(within(platformGroup()).getByRole("button", { name: /^Angular · Preview \d+$/ })).toBeInTheDocument();
   });
 
@@ -98,7 +101,7 @@ describe("ComponentGallery platform filter covers every implementation platform"
     ["Flutter", "Flutter"],
   ])("filters by ?platform=%s", (key, label) => {
     nav.search = `platform=${key}`;
-    render(<ComponentGallery />);
+    render(<ComponentGallery facets={FACETS} />);
     const chip = within(platformGroup()).getByRole("button", { name: new RegExp(`^${label}`) });
     expect(chip).toHaveAttribute("aria-pressed", "true");
     const count = Number((chip.textContent ?? "").match(/(\d+)$/)?.[1]);
@@ -110,7 +113,7 @@ describe("ComponentGallery platform filter covers every implementation platform"
 
   it("narrows Angular below the full catalogue, because its catalogue is still rolling out", () => {
     nav.search = "platform=Angular";
-    render(<ComponentGallery />);
+    render(<ComponentGallery facets={FACETS} />);
     const [shown, total] = (status().match(/(\d+) of (\d+)/) ?? []).slice(1).map(Number);
     expect(shown).toBeGreaterThan(0);
     expect(shown).toBeLessThan(total!);
@@ -118,7 +121,7 @@ describe("ComponentGallery platform filter covers every implementation platform"
 
   it("ignores an unknown platform rather than filtering to nothing", () => {
     nav.search = "platform=WearOS";
-    render(<ComponentGallery />);
+    render(<ComponentGallery facets={FACETS} />);
     expect(status()).toMatch(/^\d+ entries$/);
     for (const chip of within(platformGroup()).getAllByRole("button")) {
       expect(chip).toHaveAttribute("aria-pressed", "false");
@@ -126,7 +129,7 @@ describe("ComponentGallery platform filter covers every implementation platform"
   });
 
   it("chooses a web platform through the same URL parameter", async () => {
-    render(<ComponentGallery />);
+    render(<ComponentGallery facets={FACETS} />);
     await userEvent.click(within(platformGroup()).getByRole("button", { name: /^React \d+$/ }));
     expect(nav.replace).toHaveBeenCalledWith(expect.stringContaining("platform=React"), { scroll: false });
   });
@@ -134,12 +137,12 @@ describe("ComponentGallery platform filter covers every implementation platform"
 
 describe("ComponentGallery thumbnails", () => {
   it("adds no heading of its own: the page's h1 stays the only one", () => {
-    const { container } = render(<ComponentGallery />);
+    const { container } = render(<ComponentGallery facets={FACETS} />);
     expect(container.querySelectorAll("h1")).toHaveLength(0);
   });
 
   it("does not describe KinetixUI as an open-source UI kit", () => {
-    const { container } = render(<ComponentGallery />);
+    const { container } = render(<ComponentGallery facets={FACETS} />);
     expect(container.textContent).not.toMatch(/open-source UI kit/i);
   });
 
@@ -149,7 +152,7 @@ describe("ComponentGallery thumbnails", () => {
    * must be out of the accessibility tree, and a live one must also be inert.
    */
   it("keeps every drawn thumbnail aria-hidden, and every live one inert", () => {
-    const { container } = render(<ComponentGallery />);
+    const { container } = render(<ComponentGallery facets={FACETS} />);
     const frames = [...container.querySelectorAll<HTMLElement>("[data-gallery-thumbnail]")];
     const kinds = new Set(frames.map((f) => f.dataset.galleryThumbnail));
     expect(kinds).toContain("mock");
@@ -165,7 +168,7 @@ describe("ComponentGallery thumbnails", () => {
   });
 
   it("uses the static mock for every slug that has one", () => {
-    const { container } = render(<ComponentGallery />);
+    const { container } = render(<ComponentGallery facets={FACETS} />);
     for (const slug of Object.keys(THUMBNAIL_MOCKS)) {
       const card = container.querySelector(`[data-gallery-card="${slug}"]`);
       if (!card) continue; // a mock may outlive its catalogue entry's slug only if nothing renders it
@@ -188,8 +191,71 @@ describe("static thumbnail mocks", () => {
 });
 
 
+describe("ComponentGallery business filters", () => {
+  const cards = (container: HTMLElement) =>
+    [...container.querySelectorAll("[data-gallery-card]")].map((el) => el.getAttribute("data-gallery-card"));
+
+  it("filters by capability from the URL and opens the business group so the active chip is in view", () => {
+    nav.search = "capability=transactions";
+    const { container } = render(<ComponentGallery facets={FACETS} />);
+    const shown = cards(container);
+    expect(shown).toContain("price-breakdown");
+    expect(shown).not.toContain("accordion");
+    expect(screen.getByRole("button", { name: /Business filters/ })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: "Remove filter Capability: Transactions & money" })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(/Transactions & money/);
+  });
+
+  it("filters by business domain, and combines with the platform filter", () => {
+    nav.search = "domain=travel-booking";
+    const { container, unmount } = render(<ComponentGallery facets={FACETS} />);
+    expect(cards(container)).toEqual(expect.arrayContaining(["pass-card", "price-breakdown"]));
+    unmount();
+
+    nav.search = "domain=travel-booking&platform=Angular";
+    const combined = render(<ComponentGallery facets={FACETS} />);
+    // the Phase 1 foundations are React-only today; Angular is planned
+    expect(cards(combined.container)).not.toContain("pass-card");
+  });
+
+  it("shows the no-results state, naming the filters, when a combination matches nothing", () => {
+    nav.search = "capability=transactions&layer=L1&cat=Overlays";
+    render(<ComponentGallery facets={FACETS} />);
+    expect(screen.getByText(/No components match .*in Overlays.*for Transactions & money/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clear filters" })).toBeInTheDocument();
+  });
+
+  it("ignores an unknown capability rather than showing an empty grid", () => {
+    nav.search = "capability=teleportation";
+    const { container } = render(<ComponentGallery facets={FACETS} />);
+    expect(cards(container).length).toBeGreaterThan(90);
+    expect(screen.queryByRole("list", { name: "Active filters" })).toBeNull();
+  });
+
+  it("removes one active filter at a time through the URL", async () => {
+    nav.search = "capability=transactions&platform=React";
+    render(<ComponentGallery facets={FACETS} />);
+    await userEvent.click(screen.getByRole("button", { name: "Remove filter Capability: Transactions & money" }));
+    expect(nav.replace).toHaveBeenCalledWith("/components?platform=React", { scroll: false });
+  });
+
+  it("finds components by the job they do", async () => {
+    nav.search = "q=checkout";
+    const { container } = render(<ComponentGallery facets={FACETS} />);
+    expect(cards(container)).toEqual(expect.arrayContaining(["price-breakdown", "result-state", "reference-code"]));
+  });
+
+  it("puts the business groups in the phone sheet and counts them on the trigger", async () => {
+    nav.search = "domain=commerce";
+    render(<ComponentGallery facets={FACETS} />);
+    await userEvent.click(screen.getByRole("button", { name: "Filters, 1 active" }));
+    const dialog = screen.getByRole("dialog", { name: "Filters" });
+    expect(within(dialog).getByRole("group", { name: "Filter by capability" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: /^Commerce \d+$/ })).toHaveAttribute("aria-pressed", "true");
+  });
+});
  it("renders five decorative canonical platform marks with text labels", () => {
-    render(<ComponentGallery />);
+    render(<ComponentGallery facets={FACETS} />);
     const group = screen.getAllByRole("group", { name: "Filter by platform" })[0]!;
     expect(group.querySelectorAll("[data-platform-logo]")).toHaveLength(5);
     for (const svg of group.querySelectorAll("[data-platform-logo]")) {

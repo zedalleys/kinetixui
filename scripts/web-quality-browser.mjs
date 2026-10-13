@@ -306,7 +306,11 @@ if (only.has("touch")) {
         el.scrollIntoView({ block: "center", inline: "nearest" });
         const hit = window.__kxHit(el);
         // does this control's hit area swallow a neighbouring control's centre?
-        const others = [...document.querySelectorAll("a[href], button, [role='tab'], input")].filter((o) => o !== el && !el.contains(o) && !o.contains(el));
+        // Inside a modal dialog only the dialog's own controls are reachable: the page behind it is inert (Radix hides
+        // it and blocks its pointer events), so a page control whose centre a dialog chip happens to sit over is not a
+        // control the chip steals a tap from.
+        const scope = el.closest('[role="dialog"]') ?? document;
+        const others = [...scope.querySelectorAll("a[href], button, [role='tab'], input")].filter((o) => o !== el && !el.contains(o) && !o.contains(el));
         const stolen = others.filter((o) => {
           const r = o.getBoundingClientRect();
           if (r.width === 0 || r.bottom < 0 || r.top > innerHeight) return false;
@@ -375,7 +379,12 @@ if (only.has("thumbs")) {
 
 /* ── layout ───────────────────────────────────────────────────────────────────────────────── */
 
-const LAYOUT_PAGES = ["/", "/components", "/docs", "/docs/changelog", "/docs/components/button", "/docs/tokens", "/docs/foundations"];
+const LAYOUT_PAGES = [
+  "/", "/components", "/docs", "/docs/changelog", "/docs/components/button", "/docs/tokens", "/docs/foundations",
+  // business discovery: the index, the domain template, a component page with its "In applications" section, and the
+  // catalogue with the business filter group open and two filters active (their chips, the status line)
+  "/capabilities", "/use-cases/commerce", "/docs/components/price-breakdown", "/components?capability=transactions&domain=commerce",
+];
 const LAYOUT_WIDTHS = [320, 375, 390, 768, 1280];
 
 if (only.has("layout")) {
