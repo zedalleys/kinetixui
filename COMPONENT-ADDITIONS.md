@@ -1,5 +1,11 @@
 # KinetixUI — Additions Roadmap
 
+> **Business applications:** the capability roadmap for business-application families (transactional, commerce,
+> booking, finance, admin, workflow, data, domain packs) lives in
+> [`docs/BUSINESS-CAPABILITY-ROADMAP.md`](./docs/BUSINESS-CAPABILITY-ROADMAP.md), generated from
+> `docs/business-capabilities.json` and checked by `pnpm check:capabilities`. Check it before proposing a
+> business component here — most already exist under another name.
+
 What to add next: **components**, **chart types**, and **infographic modules**.
 Written as a prioritised backlog — nothing here is built yet.
 

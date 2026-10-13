@@ -1,0 +1,56 @@
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("result-state", "The outcome of something the reader just did — success, error, warning, pending, info or partial — with a title, a reference, details and the next action.");
+
+# Result State
+
+<ComponentMeta />
+
+The outcome of something the reader just did — success, error, warning, pending, info or partial — with a title, a reference, details and the next action.
+
+<ComponentPreview name="result-state-demo" />
+
+One component for every confirmation and failure screen: a payment received, a booking confirmed, an application
+submitted, a refund issued, a transfer where some items did not move. Those are a `ResultState` with different words,
+not separate components.
+
+<ComponentPreview name="result-state-states" />
+
+## React installation
+
+```bash
+npx @kinetixui/cli add result-state
+```
+
+## React usage
+
+```tsx
+import { Button, ReferenceCode, ResultState } from "@kinetixui/ui";
+
+<ResultState
+  status="success"
+  title="Booking confirmed"
+  description="We've emailed your confirmation."
+  reference={<ReferenceCode label="Booking reference" value="K7Q2XP" size="lg" />}
+  primaryAction={<Button>View booking</Button>}
+  secondaryAction={<Button variant="Outline">Back to search</Button>}
+/>
+```
+
+- `status` is one of `success`, `error`, `warning`, `pending`, `info`, `partial`.
+- `title` is required and states the outcome in words ("Payment received", not "Success").
+- `children` are the details — usually a `PriceBreakdown` or a `DescriptionList`.
+- `icon` swaps the glyph; `media` swaps the whole mark for an illustration.
+- `align="start"` for a result inside a panel; `headingLevel` to fit the page outline.
+
+## Accessibility
+
+- A `<section>` named by its title and described by its description.
+- The status is never carried by colour or icon alone: each status has its own glyph shape, and the mark is an image
+  named by `statusLabel` (English defaults; pass your own to localise). `media` keeps that name.
+- `pending` sets `aria-busy` on the section.
+- `announce` turns the title and description into a polite live region, for a result that changes in place
+  (pending, then success after a poll). A result reached by navigation is announced by moving focus to it, which is
+  the router's job.
+
+<ComponentApi slug="result-state" />
