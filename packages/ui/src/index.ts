@@ -381,4 +381,29 @@ export { ColorPicker, type ColorPickerProps } from "./components/color-picker";
 export { KanbanBoard, type KanbanBoardProps, type KanbanColumn, type KanbanCard } from "./components/kanban-board";
 export { MarkdownEditor, type MarkdownEditorProps } from "./components/markdown-editor";
 
+// Transactional foundations (Business capability roadmap, Phase 1 — docs/BUSINESS-CAPABILITY-ROADMAP.md).
+export { ResultState, type ResultStateProps, type ResultStateStatus } from "./components/result-state";
+export { ReferenceCode, type ReferenceCodeProps } from "./components/reference-code";
+export {
+  PriceBreakdown,
+  PriceBreakdownLine,
+  PriceBreakdownTotal,
+  type PriceBreakdownLineProps,
+  type PriceBreakdownTotalProps,
+} from "./components/price-breakdown";
+export {
+  PassCard,
+  PassCardHeader,
+  PassCardTitle,
+  PassCardDescription,
+  PassCardFields,
+  PassCardField,
+  PassCardDivider,
+  PassCardCode,
+  PassCardFooter,
+  type PassCardTitleProps,
+  type PassCardFieldProps,
+  type PassCardCodeProps,
+} from "./components/pass-card";
+
 export { cn } from "./lib/utils";

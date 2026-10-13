@@ -3,7 +3,7 @@
 The React implementation of KinetixUI — CVA + Radix + Tailwind components styled only against the
 KinetixUI semantic token layer, never a raw hex.
 
-**Beta.** The catalogue is settled enough to build on (97 of 98 entries are lifecycle `stable`), but the
+**Beta.** The catalogue is settled enough to build on (97 of 102 entries are lifecycle `stable`; the rest are `beta`), but the
 package is pre-1.0 and minor versions can still move an API.
 
 ```bash
@@ -120,7 +120,7 @@ conversion is enforced forward in CI, but it is not complete — see
 - Pre-1.0: minor versions can move an API.
 - No per-component tree-shaking (above).
 - One catalogue entry, `combobox`, is a documented **recipe** over `Command` rather than a component —
-  there is no `Combobox` export. The catalogue is 98 entries, 97 of which are components.
+  there is no `Combobox` export. The catalogue is 102 entries, 101 of which are components.
 - No visual-regression suite exists yet, on any platform.
 
 ## Links

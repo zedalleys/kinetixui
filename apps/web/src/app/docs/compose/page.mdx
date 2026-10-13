@@ -362,6 +362,13 @@ different name.
   `@dnd-kit`'s accessible multi-container drag-and-drop, with no
   equivalent dependency in this repo's native packages — use Compose's
   own drag gestures + `LazyColumn` for the specific board.
+- **`ResultState`, `ReferenceCode`, `PriceBreakdown` and `PassCard` aren't
+  ported yet.** They are React-first betas from the business capability
+  roadmap's Phase 1, and a native port is an open roadmap decision. Compose
+  `KinetixEmpty` for a result, a `SelectionContainer` with a `KinetixButton`
+  that copies for a reference code, `KinetixDescriptionList` rows for a
+  price breakdown, and `KinetixCard` + `KinetixDescriptionList` + the
+  supplied code as an `Image` for a pass.
 - **Scoped ports:** `KinetixSheet` is bottom-only. `KinetixSidebar` drops
   rail/icon-collapse mode, `SidebarInset`, the cookie and the shortcut.
   `KinetixAppBar` drops the mobile menu-toggle collapse — the nav stays

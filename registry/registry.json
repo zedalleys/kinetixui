@@ -1720,6 +1720,31 @@
       ]
     },
     {
+      "name": "pass-card",
+      "type": "registry:ui",
+      "title": "Pass Card",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/pass-card.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/pass-card.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "password-input",
       "type": "registry:ui",
       "title": "Password Input",
@@ -1765,6 +1790,31 @@
           "path": "registry/kinetixui/ui/popover.tsx",
           "type": "registry:ui",
           "target": "components/ui/popover.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "price-breakdown",
+      "type": "registry:ui",
+      "title": "Price Breakdown",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/price-breakdown.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/price-breakdown.tsx"
         },
         {
           "path": "registry/kinetixui/lib/utils.ts",
@@ -1879,6 +1929,32 @@
       ]
     },
     {
+      "name": "reference-code",
+      "type": "registry:ui",
+      "title": "Reference Code",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/reference-code.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/reference-code.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "resizable",
       "type": "registry:ui",
       "title": "Resizable",
@@ -1897,6 +1973,34 @@
           "path": "registry/kinetixui/ui/resizable.tsx",
           "type": "registry:ui",
           "target": "components/ui/resizable.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "result-state",
+      "type": "registry:ui",
+      "title": "Result State",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "class-variance-authority",
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens",
+        "spinner"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/result-state.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/result-state.tsx"
         },
         {
           "path": "registry/kinetixui/lib/utils.ts",

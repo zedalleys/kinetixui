@@ -69,7 +69,7 @@ const GROUP = {
   "notification-center": "Overlays", tour: "Overlays",
   "context-menu": "Overlays", modal: "Overlays",
   alert: "Feedback", inform: "Feedback", banner: "Feedback", progress: "Feedback", "circular-progress": "Feedback",
-  empty: "Feedback",
+  empty: "Feedback", "result-state": "Feedback",
   sonner: "Feedback", badge: "Feedback", tag: "Feedback", metric: "Feedback",
   accordion: "Data Display", card: "Data Display", table: "Data Display", "data-table": "Data Display", "data-grid": "Data Display",
   carousel: "Data Display", chart: "Data Display", avatar: "Data Display", "avatar-group": "Data Display",
@@ -77,7 +77,8 @@ const GROUP = {
   quote: "Data Display", footer: "Data Display", "audio-player": "Data Display", "description-list": "Data Display",
   timeline: "Data Display", marquee: "Data Display", "message-bubble": "Data Display",
   "virtual-list": "Data Display", "json-viewer": "Data Display", "diff-viewer": "Data Display",
-  "kanban-board": "Data Display",
+  "kanban-board": "Data Display", "reference-code": "Data Display", "price-breakdown": "Data Display",
+  "pass-card": "Data Display",
 };
 
 const PADDED = new Set([
@@ -96,6 +97,9 @@ const PADDED = new Set([
   // wider than a 390px viewport at 2x text, measured by the large-text pass in Visual Slice 4 — which is a
   // property of the story frame, not of a form column on a page.
   "input-group",
+  // The transactional foundations are `w-full` with a max width — a column on a page, not a shrink-wrapped
+  // control — and the large-text pass measures them at 390px, where only a frame with a width is honest.
+  "result-state", "price-breakdown", "pass-card", "reference-code",
 ]);
 
 /**
@@ -444,6 +448,93 @@ const CONTROLS = {
  * assembled to make a rule fire. `imports` names identifiers the render needs beyond the demo's own.
  */
 const EXTRA = {
+  // Business capability roadmap, Phase 1: every status, composition and state the single demo does not
+  // reach, so both axe passes (light and dark) and the large-text pass see them.
+  "result-state": [{ name: "Statuses", render: `() => (
+    <div className="grid w-full max-w-3xl gap-x-8 gap-y-10 sm:grid-cols-2">
+      <ResultState align="start" headingLevel={3} status="success" title="Booking confirmed" description="Two nights from 14 March. We've sent the details to your email." />
+      <ResultState align="start" headingLevel={3} status="error" title="Payment declined" description="Your bank declined the charge. Nothing was taken from your account." primaryAction={<Button size="sm">Try another card</Button>} />
+      <ResultState align="start" headingLevel={3} status="warning" title="Application submitted with a gap" description="We received it, but the proof of address is missing. Add it within 7 days." primaryAction={<Button size="sm" variant="Outline">Add document</Button>} />
+      <ResultState align="start" headingLevel={3} status="pending" title="Transfer processing" description="Transfers usually arrive within one business day. You can leave this page." />
+      <ResultState align="start" headingLevel={3} status="info" title="Request received" description="A specialist will review it and reply by Thursday." />
+      <ResultState align="start" headingLevel={3} status="partial" title="3 of 4 refunds issued" description="One refund needs your bank details before we can send it." primaryAction={<Button size="sm" variant="Outline">Review refunds</Button>} />
+    </div>
+  )` }],
+  "price-breakdown": [{ name: "TransferAndLoading", render: `() => (
+    <div className="grid w-full max-w-2xl gap-10 sm:grid-cols-2">
+      <PriceBreakdown aria-label="Transfer summary">
+        <PriceBreakdownLine label="You send" value="1,000.00 USD" />
+        <PriceBreakdownLine label="Transfer fee" value="−4.20 USD" kind="deduction" />
+        <PriceBreakdownLine label="Exchange rate" description="Guaranteed for 24 hours" value="1 USD = 0.9213 EUR" />
+        <PriceBreakdownTotal label="They receive" value="917.43 EUR" />
+      </PriceBreakdown>
+      {/* While a quote is recalculated: aria-busy on the list, and placeholders the same shape as the amounts. */}
+      <PriceBreakdown aria-label="Quote" aria-busy="true">
+        <PriceBreakdownLine label="2 nights" value={<Skeleton className="h-4 w-16" />} />
+        <PriceBreakdownLine label="Cleaning fee" value={<Skeleton className="h-4 w-12" />} />
+        <PriceBreakdownLine label="Taxes" value={<Skeleton className="h-4 w-12" />} />
+        <PriceBreakdownTotal label="Total" value={<Skeleton className="h-6 w-20" />} />
+      </PriceBreakdown>
+    </div>
+  )`, imports: "Skeleton" }],
+  "pass-card": [{ name: "Compositions", render: `() => (
+    <div className="grid w-full max-w-4xl items-start gap-6 md:grid-cols-3">
+      <PassCard>
+        <PassCardHeader>
+          <div className="flex min-w-0 flex-col gap-1">
+            <PassCardTitle>Northern Lights Live</PassCardTitle>
+            <PassCardDescription>Harbour Arena · General admission</PassCardDescription>
+          </div>
+        </PassCardHeader>
+        <PassCardFields>
+          <PassCardField label="Doors">
+            <time dateTime="2026-05-02T19:00">2 May, 19:00</time>
+          </PassCardField>
+          <PassCardField label="Entrance" emphasis>C</PassCardField>
+        </PassCardFields>
+        <PassCardDivider />
+        <PassCardCode label="Ticket QR code" value="0742 1189 2201">
+          <QR_DEMO size={112} />
+        </PassCardCode>
+      </PassCard>
+      <PassCard>
+        <PassCardHeader>
+          <div className="flex min-w-0 flex-col gap-1">
+            <PassCardTitle>Parking permit</PassCardTitle>
+            <PassCardDescription>Riverside Garage, level 2</PassCardDescription>
+          </div>
+          <Tag>Active</Tag>
+        </PassCardHeader>
+        <PassCardFields>
+          <PassCardField label="Plate" emphasis>KX 24 RTL</PassCardField>
+          <PassCardField label="Bay" emphasis>2-117</PassCardField>
+          <PassCardField label="Valid until">
+            <time dateTime="2026-12-31">31 Dec 2026</time>
+          </PassCardField>
+        </PassCardFields>
+        <PassCardFooter>Show this permit if asked. It is not transferable.</PassCardFooter>
+      </PassCard>
+      <PassCard>
+        <PassCardHeader>
+          <div className="flex min-w-0 flex-col gap-1">
+            <PassCardTitle>€25 gift voucher</PassCardTitle>
+            <PassCardDescription>Studio Kinetix</PassCardDescription>
+          </div>
+          <Tag variant="outline">Used</Tag>
+        </PassCardHeader>
+        <PassCardFields>
+          <PassCardField label="Redeemed">
+            <time dateTime="2026-02-11">11 Feb 2026</time>
+          </PassCardField>
+          <PassCardField label="Balance">€0.00</PassCardField>
+        </PassCardFields>
+        <PassCardDivider />
+        <PassCardCode label="Voucher code" value="GIFT-7KQ2-XP19">
+          <QR_DEMO size={96} />
+        </PassCardCode>
+      </PassCard>
+    </div>
+  )`, imports: "Tag" }],
   // The surface model (TOKENS.md) in the three places a card actually lives, so both axe passes and
   // `check:card-visual` see the states a tidy single-card demo never reaches.
   card: [

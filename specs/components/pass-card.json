@@ -1,0 +1,94 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "pass-card",
+  "title": "Pass Card",
+  "status": "beta",
+  "since": "0.25.0",
+  "platforms": [
+    "React"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "PassCard",
+      "props": []
+    },
+    {
+      "name": "PassCardHeader",
+      "props": []
+    },
+    {
+      "name": "PassCardTitle",
+      "props": [
+        {
+          "name": "level",
+          "type": "HeadingLevel",
+          "required": false,
+          "description": "Default 3 — a pass is usually one item inside a page or a list."
+        }
+      ]
+    },
+    {
+      "name": "PassCardDescription",
+      "props": []
+    },
+    {
+      "name": "PassCardFields",
+      "props": []
+    },
+    {
+      "name": "PassCardField",
+      "props": [
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": true
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "Use `<time dateTime>` for dates and times so they are machine-readable."
+        },
+        {
+          "name": "emphasis",
+          "type": "boolean",
+          "required": false,
+          "description": "For the one or two values a person looks for first — a gate, a seat, a bay."
+        }
+      ]
+    },
+    {
+      "name": "PassCardDivider",
+      "props": []
+    },
+    {
+      "name": "PassCardCode",
+      "props": [
+        {
+          "name": "label",
+          "type": "string",
+          "required": true,
+          "description": "What the code is, for people who cannot see it — \"Boarding pass QR code\"."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "The barcode or QR code, generated elsewhere and passed in as an `<img>` or `<svg>`."
+        },
+        {
+          "name": "value",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The human-readable value printed under the code, for when it will not scan. A string or a `<ReferenceCode>`."
+        }
+      ]
+    },
+    {
+      "name": "PassCardFooter",
+      "props": []
+    }
+  ],
+  "source": "packages/ui/src/components/pass-card.tsx"
+}
