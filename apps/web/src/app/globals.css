@@ -584,6 +584,8 @@
   }
   .kx-map-chip {
     grid-row: span var(--span, 1);
+    /* rows: centred beside the platforms it feeds */
+    align-self: center;
   }
   .kx-map-tabs {
     grid-column: 3;
@@ -612,6 +614,8 @@
     .kx-map-chip {
       grid-row: auto;
       grid-column: span var(--span, 1);
+      /* columns: every output as tall as the tallest, so CSS matches Swift, Kotlin and Dart */
+      align-self: stretch;
     }
     /* the traces cross the boundary between the two layers, under its label */
     .kx-map-boundary {

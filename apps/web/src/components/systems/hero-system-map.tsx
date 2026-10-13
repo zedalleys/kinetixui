@@ -318,7 +318,7 @@ export function HeroSystemMap({
             }}
             data-output={o.id}
             className={cn(
-              "kx-map-chip kx-map-stage min-w-0 self-center rounded-lg border bg-background px-2.5 py-2 transition-colors duration-fast",
+              "kx-map-chip kx-map-stage min-w-0 rounded-lg border bg-background px-2.5 py-2 transition-colors duration-fast",
               o.id === activeOutput ? "border-primary/70" : "border-border",
             )}
             style={{ ["--span" as string]: o.platforms.length, ["--stage" as string]: i, ["--stage-base" as string]: "650ms" }}
