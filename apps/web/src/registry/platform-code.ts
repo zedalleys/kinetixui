@@ -2634,4 +2634,308 @@ KinetixCard(
   ),
 )`,
   },
+  /* ---- money, status and booking fields (business capability roadmap, Phase 2) ---- */
+
+  "amount-display-demo": {
+    swift: `// No native AmountDisplay yet. Format with your money layer, sign included,
+// and give VoiceOver the full amount.
+Text("−SAR 25.00")
+  .font(.title3.weight(.semibold))
+  .monospacedDigit()
+  .foregroundStyle(KinetixColors.light.success) // reinforcement only — the sign carries it
+  .accessibilityLabel("Refund of 25 Saudi riyals")`,
+    kotlin: `// No native AmountDisplay yet. Format with your money layer, sign included,
+// and give TalkBack the full amount.
+Text(
+  "−SAR 25.00",
+  fontWeight = FontWeight.SemiBold,
+  fontFeatureSettings = "tnum",
+  modifier = Modifier.semantics { contentDescription = "Refund of 25 Saudi riyals" },
+)`,
+    dart: `// No native AmountDisplay yet. Format with your money layer (intl), sign
+// included, and give TalkBack/VoiceOver the full amount.
+Semantics(
+  label: 'Refund of 25 Saudi riyals',
+  excludeSemantics: true,
+  child: const Text(
+    '−SAR 25.00',
+    style: TextStyle(fontWeight: FontWeight.w600, fontFeatures: [FontFeature.tabularFigures()]),
+  ),
+)`,
+  },
+
+  "guest-picker-demo": {
+    swift: `// No native GuestPicker yet. One KinetixNumberInput per category, named
+// after it, in a popover opened from a button showing the summary.
+KinetixPopover(isPresented: $showGuests) {
+  KinetixButton(variant: .outline, action: { showGuests = true }) { Text(summary) }
+} content: {
+  VStack(alignment: .leading, spacing: 12) {
+    HStack {
+      Text("Adults")
+      Spacer()
+      KinetixNumberInput(value: $adults, in: 1...9).accessibilityLabel("Adults")
+    }
+    HStack {
+      Text("Children")
+      Spacer()
+      KinetixNumberInput(value: $children, in: 0...9).accessibilityLabel("Children")
+    }
+  }
+}`,
+    kotlin: `// No native GuestPicker yet. One KinetixNumberInput per category, named
+// after it, in a popover opened from a button showing the summary.
+KinetixPopover(
+  visible = showGuests,
+  onDismissRequest = { showGuests = false },
+  anchor = {
+    KinetixButton(onClick = { showGuests = true }, variant = KinetixButtonVariant.Outline) { Text(summary) }
+  },
+) {
+  Row(verticalAlignment = Alignment.CenterVertically) {
+    Text("Adults", Modifier.weight(1f))
+    KinetixNumberInput(adults, { adults = it }, Modifier.semantics { contentDescription = "Adults" }, min = 1, max = 9)
+  }
+  Row(verticalAlignment = Alignment.CenterVertically) {
+    Text("Children", Modifier.weight(1f))
+    KinetixNumberInput(children, { children = it }, Modifier.semantics { contentDescription = "Children" }, min = 0, max = 9)
+  }
+}`,
+    dart: `// No native GuestPicker yet. One KinetixNumberInput per category, named
+// after it, in a popover opened from a button showing the summary.
+KinetixPopover(
+  visible: showGuests,
+  onDismiss: () => setState(() => showGuests = false),
+  anchor: KinetixButton(
+    variant: KinetixButtonVariant.outline,
+    onPressed: () => setState(() => showGuests = true),
+    child: Text(summary),
+  ),
+  child: Column(
+    children: [
+      Row(children: [
+        const Expanded(child: Text('Adults')),
+        KinetixNumberInput(value: adults, min: 1, max: 9, semanticsLabel: 'Adults', onChanged: (v) => setState(() => adults = v)),
+      ]),
+      Row(children: [
+        const Expanded(child: Text('Children')),
+        KinetixNumberInput(value: children, min: 0, max: 9, semanticsLabel: 'Children', onChanged: (v) => setState(() => children = v)),
+      ]),
+    ],
+  ),
+)`,
+  },
+
+  "country-select-demo": {
+    swift: `// No native CountrySelect yet. KinetixSelect over your country list, with
+// names from the system in the reader's language.
+let countries = ["SA", "AE", "EG", "GB"].map { code in
+  KinetixSelectOption(value: code, label: Locale.current.localizedString(forRegionCode: code) ?? code)
+}
+KinetixField {
+  KinetixFieldLabel("Country")
+  KinetixSelect(selection: $country, options: countries, placeholder: "Select a country")
+}`,
+    kotlin: `// No native CountrySelect yet. A select over your country list, with names
+// from the system in the reader's language.
+val countries = listOf("SA", "AE", "EG", "GB").map { it to Locale("", it).displayCountry }
+KinetixField {
+  KinetixFieldLabel("Country")
+  Box {
+    KinetixSelectTrigger(
+      text = countries.firstOrNull { it.first == country }?.second ?: "Select a country",
+      expanded = open,
+      onClick = { open = true },
+    )
+    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+      countries.forEach { (code, name) ->
+        KinetixSelectItem(text = name, selected = code == country, onClick = { country = code; open = false })
+      }
+    }
+  }
+}`,
+    dart: `// No native CountrySelect yet. KinetixSelect over your country list, names
+// supplied in the reader's language.
+KinetixField(children: [
+  const KinetixFieldLabel('Country'),
+  KinetixSelect<String>(
+    value: country,
+    placeholder: 'Select a country',
+    options: const [
+      KinetixSelectOption(value: 'SA', label: 'Saudi Arabia'),
+      KinetixSelectOption(value: 'AE', label: 'United Arab Emirates'),
+    ],
+    onChanged: (code) => setState(() => country = code),
+  ),
+])`,
+  },
+
+  "phone-input-demo": {
+    swift: `// No native PhoneInput yet. Calling code + number as one left-to-right row,
+// even in an RTL layout. No validation here — do that on your server.
+KinetixField {
+  KinetixFieldLabel("Mobile number")
+  HStack(spacing: 8) {
+    KinetixSelect(selection: $callingCode, options: callingCodes)
+      .accessibilityLabel("Country code")
+    KinetixInput(text: $number, placeholder: "50 123 4567") { EmptyView() }
+      .keyboardType(.phonePad)
+      .textContentType(.telephoneNumber)
+  }
+  .environment(\\.layoutDirection, .leftToRight)
+}`,
+    kotlin: `// No native PhoneInput yet. Calling code + number as one left-to-right row,
+// even in an RTL layout. No validation here — do that on your server.
+KinetixField {
+  KinetixFieldLabel("Mobile number")
+  CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      KinetixSelectTrigger(text = "+966", expanded = codesOpen, onClick = { codesOpen = true })
+      KinetixInput(
+        value = number,
+        onValueChange = { number = it },
+        placeholder = "50 123 4567",
+        keyboardType = KeyboardType.Phone,
+        modifier = Modifier.weight(1f),
+      )
+    }
+  }
+}`,
+    dart: `// No native PhoneInput yet. Calling code + number as one left-to-right row,
+// even in an RTL layout. KinetixInput has no keyboard-type parameter yet, so
+// the number is a TextField. No validation here — do that on your server.
+KinetixField(children: [
+  const KinetixFieldLabel('Mobile number'),
+  Directionality(
+    textDirection: TextDirection.ltr,
+    child: Row(children: [
+      KinetixSelect<String>(value: callingCode, options: callingCodes, onChanged: (c) => setState(() => callingCode = c)),
+      const SizedBox(width: 8),
+      const Expanded(
+        child: TextField(
+          keyboardType: TextInputType.phone,
+          autofillHints: [AutofillHints.telephoneNumberNational],
+        ),
+      ),
+    ]),
+  ),
+])`,
+  },
+
+  "date-range-input-demo": {
+    swift: `// No native DateRangeInput yet. Two date-only pickers, the end bounded by the
+// start. Store DateComponents (a calendar date), not the Date instant.
+KinetixField {
+  KinetixFieldLabel("Check-in")
+  DatePicker("Check-in", selection: $start, in: Date()..., displayedComponents: .date)
+  KinetixFieldLabel("Check-out")
+  DatePicker("Check-out", selection: $end, in: start..., displayedComponents: .date)
+}`,
+    kotlin: `// No native DateRangeInput yet. Material 3's DateRangePicker; its millis
+// are UTC midnight, so convert to LocalDate before storing.
+val state = rememberDateRangePickerState()
+KinetixButton(onClick = { open = true }, variant = KinetixButtonVariant.Outline) { Text(rangeLabel) }
+if (open) {
+  DatePickerDialog(
+    onDismissRequest = { open = false },
+    confirmButton = { KinetixButton(onClick = { open = false }) { Text("Done") } },
+  ) {
+    DateRangePicker(state = state)
+  }
+}`,
+    dart: `// No native DateRangeInput yet. Flutter's range picker; keep the results as
+// date-only values (DateUtils.dateOnly), never instants.
+KinetixButton(
+  variant: KinetixButtonVariant.outline,
+  onPressed: () async {
+    final range = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2026, 3, 1),
+      lastDate: DateTime(2026, 12, 31),
+    );
+    if (range != null) setState(() => stay = range);
+  },
+  child: Text(rangeLabel),
+)`,
+  },
+
+  "time-slot-picker-demo": {
+    swift: `// No native TimeSlotPicker yet. An adaptive grid of slot buttons; the
+// selected one says so, unavailable ones are disabled and say why.
+LazyVGrid(columns: [GridItem(.adaptive(minimum: 88))], spacing: 8) {
+  ForEach(slots) { slot in
+    KinetixToggle(isOn: Binding(get: { selected == slot.id }, set: { _ in selected = slot.id })) {
+      Text(slot.label).monospacedDigit()
+    }
+    .disabled(slot.unavailable)
+    .accessibilityValue(slot.unavailable ? "Unavailable" : "")
+  }
+}`,
+    kotlin: `// No native TimeSlotPicker yet. Slot chips in one selectable group, each a
+// radio button to accessibility services.
+FlowRow(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+  slots.forEach { slot ->
+    KinetixToggle(
+      pressed = selected == slot.id,
+      onPressedChange = if (slot.unavailable) null else { _ -> selected = slot.id },
+      enabled = !slot.unavailable,
+    ) { Text(slot.label) }
+  }
+}`,
+    dart: `// No native TimeSlotPicker yet. Slot chips in one mutually exclusive group.
+Wrap(
+  spacing: 8,
+  runSpacing: 8,
+  children: [
+    for (final slot in slots)
+      Semantics(
+        inMutuallyExclusiveGroup: true,
+        checked: selected == slot.id,
+        child: ChoiceChip(
+          label: Text(slot.label),
+          selected: selected == slot.id,
+          onSelected: slot.unavailable ? null : (_) => setState(() => selected = slot.id),
+        ),
+      ),
+  ],
+)`,
+  },
+
+  "address-fields-demo": {
+    swift: `// No native AddressFields yet. Your fields, in your order, each with the
+// AutoFill content type that matches it.
+KinetixField {
+  KinetixFieldLabel("Street")
+  KinetixInput(text: $street) { EmptyView() }.textContentType(.streetAddressLine1)
+}
+KinetixField {
+  KinetixFieldLabel("City")
+  KinetixInput(text: $city) { EmptyView() }.textContentType(.addressCity)
+}
+KinetixField {
+  KinetixFieldLabel("Postal code")
+  KinetixInput(text: $postalCode) { EmptyView() }.textContentType(.postalCode)
+}`,
+    kotlin: `// No native AddressFields yet. Your fields, in your order.
+Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+  KinetixField {
+    KinetixFieldLabel("Street")
+    KinetixInput(value = street, onValueChange = { street = it })
+  }
+  KinetixField {
+    KinetixFieldLabel("Postal code")
+    KinetixInput(value = postalCode, onValueChange = { postalCode = it }, keyboardType = KeyboardType.Number)
+  }
+}`,
+    dart: `// No native AddressFields yet. Your fields, in your order, in one autofill
+// group. KinetixInput has no autofill-hints parameter yet, so these are
+// TextFields.
+AutofillGroup(
+  child: Column(children: const [
+    TextField(decoration: InputDecoration(labelText: 'Street'), autofillHints: [AutofillHints.streetAddressLine1]),
+    TextField(decoration: InputDecoration(labelText: 'City'), autofillHints: [AutofillHints.addressCity]),
+    TextField(decoration: InputDecoration(labelText: 'Postal code'), autofillHints: [AutofillHints.postalCode]),
+  ]),
+)`,
+  },
 };

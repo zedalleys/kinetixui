@@ -1,0 +1,96 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "guest-picker",
+  "title": "Guest Picker",
+  "status": "beta",
+  "since": "0.25.0",
+  "platforms": [
+    "React"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "GuestPicker",
+      "props": [
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "The field's visible label — \"Guests\", \"Travellers\". Also names the trigger."
+        },
+        {
+          "name": "categories",
+          "type": "GuestCategory[]",
+          "required": true
+        },
+        {
+          "name": "value",
+          "type": "Record<string, number>",
+          "required": true,
+          "description": "Counts keyed by category id. Missing ids read as that category's `min`."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: Record<string, number>) => void",
+          "required": true
+        },
+        {
+          "name": "maxTotal",
+          "type": "number",
+          "required": false,
+          "description": "Cap on the sum of all categories."
+        },
+        {
+          "name": "totalHint",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Shown in the panel once `maxTotal` is reached — \"You can book up to 9 travellers.\""
+        },
+        {
+          "name": "formatSummary",
+          "type": "((value: Record<string, number>, categories: GuestCategory[]) => string)",
+          "required": false,
+          "description": "Trigger text for the current counts."
+        },
+        {
+          "name": "decrementLabel",
+          "type": "((category: GuestCategory) => string)",
+          "required": false,
+          "description": "Stepper names, for localisation. Defaults: (label) => `Decrease ${label}` / `Increase ${label}`."
+        },
+        {
+          "name": "incrementLabel",
+          "type": "((category: GuestCategory) => string)",
+          "required": false
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "footer",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Extra content at the end of the panel — a \"Done\" button, a policy note."
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "onOpenChange",
+          "type": "((open: boolean) => void)",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/guest-picker.tsx"
+}
