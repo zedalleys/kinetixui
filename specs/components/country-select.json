@@ -1,0 +1,91 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "country-select",
+  "title": "Country Select",
+  "status": "beta",
+  "since": "0.25.0",
+  "platforms": [
+    "React"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "CountrySelect",
+      "props": [
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": true
+        },
+        {
+          "name": "countries",
+          "type": "CountryOption[]",
+          "required": true
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "onValueChange",
+          "type": "((code: string) => void)",
+          "required": false
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "required": false,
+          "description": "Trigger text with no selection. Default \"Select a country\"."
+        },
+        {
+          "name": "searchPlaceholder",
+          "type": "string",
+          "required": false,
+          "description": "Search field placeholder and accessible name. Default \"Search countries\"."
+        },
+        {
+          "name": "emptyMessage",
+          "type": "string",
+          "required": false,
+          "description": "Shown when nothing matches. Default \"No country found.\""
+        },
+        {
+          "name": "showCode",
+          "type": "boolean",
+          "required": false,
+          "description": "Show the code beside each name."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "Submitted with a form as a hidden input."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks the trigger invalid; pair it with a visible message."
+        },
+        {
+          "name": "aria-describedby",
+          "type": "string",
+          "required": false,
+          "description": "id of a description or error message for the trigger."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/country-select.tsx"
+}

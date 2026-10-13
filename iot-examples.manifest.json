@@ -44,8 +44,7 @@
         "EnergySummary",
         "AlertList",
         "ActivityTimeline",
-        "RoutineCard",
-        "CommandLifecycle"
+        "RoutineCard"
       ],
       "source": "apps/web/src/examples/iot/smart-space-environment.tsx"
     },
@@ -56,14 +55,12 @@
         "TelemetryGrid",
         "TelemetryMetric",
         "TelemetryTrend",
-        "DeviceModeControl",
         "DevicePowerControl",
         "DeviceGroupCard",
         "DeviceHealthSummary",
         "AlertList",
         "AutomationRuleView",
         "ActivityTimeline",
-        "CommandLifecycle",
         "BatteryIndicator",
         "RoutineCard"
       ],
@@ -81,7 +78,6 @@
         "SignalStrength",
         "DevicePowerControl",
         "DeviceLevelControl",
-        "CommandLifecycle",
         "TelemetryGrid",
         "TelemetryMetric",
         "TelemetryTrend",

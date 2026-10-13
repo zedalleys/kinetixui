@@ -2256,3 +2256,265 @@ add(
 );
 
 export const demoRegistry = reg;
+
+/* ---- money, status and booking fields (business capability roadmap, Phase 2) ------------------------ */
+
+import {
+  AmountDisplay,
+  GuestPicker,
+  CountrySelect,
+  PhoneInput,
+  DateRangeInput,
+  TimeSlotPicker,
+  AddressFields,
+} from "@kinetixui/ui";
+
+/** Supplied data, as a product would: names in the reader's language, nothing bundled by the library. */
+const DEMO_COUNTRIES = [
+  { code: "SA", name: "Saudi Arabia", callingCode: "966" },
+  { code: "AE", name: "United Arab Emirates", callingCode: "971", keywords: ["UAE"] },
+  { code: "EG", name: "Egypt", callingCode: "20" },
+  { code: "GB", name: "United Kingdom", callingCode: "44", keywords: ["UK", "Britain"] },
+  { code: "US", name: "United States", callingCode: "1", keywords: ["USA"] },
+  { code: "JP", name: "Japan", callingCode: "81" },
+];
+
+add(
+  "amount-display-demo",
+  () => (
+    <div className="flex flex-col gap-4">
+      <AmountDisplay value="1,250.00" currency="SAR" />
+      <AmountDisplay value="42.50" currency="USD" size="compact" />
+      <AmountDisplay value="25.00" currency="SAR" sign="negative" tone="positive" accessibleLabel="Refund of 25 Saudi riyals" />
+      <AmountDisplay value="14.2%" sign="positive" tone="positive" size="compact" />
+      <AmountDisplay value="3.2" currency="kWh" currencyPosition="after" size="compact" />
+    </div>
+  ),
+  `<AmountDisplay value="1,250.00" currency="SAR" />
+<AmountDisplay value="42.50" currency="USD" size="compact" />
+<AmountDisplay value="25.00" currency="SAR" sign="negative" tone="positive" accessibleLabel="Refund of 25 Saudi riyals" />
+<AmountDisplay value="14.2%" sign="positive" tone="positive" size="compact" />
+<AmountDisplay value="3.2" currency="kWh" currencyPosition="after" size="compact" />`,
+);
+
+add(
+  "timeline-status",
+  () => (
+    <Timeline
+      className="w-full max-w-sm"
+      aria-label="Order history"
+      items={[
+        { time: "12 Mar, 09:14", title: "Order placed", status: "complete" },
+        { time: "12 Mar, 09:15", title: "Payment confirmed", status: "complete" },
+        { time: "13 Mar, 16:40", title: "Out for delivery", content: "Courier: Swift Logistics", status: "current", action: <Button size="sm" variant="Outline">Track parcel</Button> },
+        { title: "Delivered", status: "pending" },
+      ]}
+    />
+  ),
+  `<Timeline
+  aria-label="Order history"
+  items={[
+    { time: "12 Mar, 09:14", title: "Order placed", status: "complete" },
+    { time: "13 Mar, 16:40", title: "Out for delivery", status: "current", action: <Button size="sm">Track parcel</Button> },
+    { title: "Delivered", status: "pending" },
+  ]}
+/>`,
+);
+
+add(
+  "guest-picker-demo",
+  () => {
+    const [value, setValue] = React.useState<Record<string, number>>({ adults: 2, children: 0, infants: 0 });
+    return (
+      <GuestPicker
+        className="w-full max-w-xs"
+        label="Guests"
+        categories={[
+          { id: "adults", label: "Adults", description: "13 or older", min: 1 },
+          { id: "children", label: "Children", description: "Ages 2–12" },
+          { id: "infants", label: "Infants", description: "Under 2", max: 2 },
+        ]}
+        value={value}
+        onValueChange={setValue}
+        maxTotal={9}
+        totalHint="You can book up to 9 guests."
+        formatSummary={(v) =>
+          [
+            `${v.adults} ${v.adults === 1 ? "adult" : "adults"}`,
+            v.children ? `${v.children} ${v.children === 1 ? "child" : "children"}` : null,
+            v.infants ? `${v.infants} ${v.infants === 1 ? "infant" : "infants"}` : null,
+          ]
+            .filter(Boolean)
+            .join(", ")
+        }
+      />
+    );
+  },
+  `<GuestPicker
+  label="Guests"
+  categories={[
+    { id: "adults", label: "Adults", description: "13 or older", min: 1 },
+    { id: "children", label: "Children", description: "Ages 2–12" },
+    { id: "infants", label: "Infants", description: "Under 2", max: 2 },
+  ]}
+  value={guests}
+  onValueChange={setGuests}
+  maxTotal={9}
+  formatSummary={(v) => /* your plural rules */ \`\${v.adults} adults\`}
+/>`,
+);
+
+add(
+  "country-select-demo",
+  () => {
+    const [value, setValue] = React.useState<string>();
+    return (
+      <CountrySelect className="w-full max-w-xs" label="Country" countries={DEMO_COUNTRIES} value={value} onValueChange={setValue} showCode />
+    );
+  },
+  `// Names in the reader's language — e.g. from Intl.DisplayNames — supplied by the product.
+const countries = [{ code: "SA", name: "Saudi Arabia" }, { code: "AE", name: "United Arab Emirates", keywords: ["UAE"] }];
+
+<CountrySelect label="Country" countries={countries} value={country} onValueChange={setCountry} showCode />`,
+);
+
+add(
+  "phone-input-demo",
+  () => {
+    const [value, setValue] = React.useState({ country: "SA", national: "" });
+    const [raw, setRaw] = React.useState("");
+    return (
+      <div className="flex w-full max-w-xs flex-col gap-2">
+        <PhoneInput
+          label="Mobile number"
+          countries={DEMO_COUNTRIES}
+          value={value}
+          onValueChange={({ raw: next, ...rest }) => {
+            setValue(rest);
+            setRaw(next);
+          }}
+          placeholder="50 123 4567"
+        />
+        <p className="text-body-sm text-muted-foreground">
+          Sent to your server: <code translate="no">{raw || "—"}</code>
+        </p>
+      </div>
+    );
+  },
+  `<PhoneInput
+  label="Mobile number"
+  countries={[{ code: "SA", name: "Saudi Arabia", callingCode: "966" }]}
+  value={phone}
+  onValueChange={({ raw, ...value }) => { setPhone(value); setRaw(raw); }}
+/>`,
+);
+
+add(
+  "date-range-input-demo",
+  () => {
+    const [value, setValue] = React.useState<{ start?: string; end?: string }>({ start: "2026-03-14", end: "2026-03-16" });
+    return (
+      <DateRangeInput
+        className="w-full max-w-xs"
+        label="Stay"
+        value={value}
+        onValueChange={setValue}
+        min="2026-03-01"
+        isDateDisabled={(iso) => iso === "2026-03-20" || iso === "2026-03-21"}
+        locale="en-GB"
+      />
+    );
+  },
+  `// Calendar dates as "YYYY-MM-DD" — never a Date, so no time zone can move a check-in.
+<DateRangeInput
+  label="Stay"
+  value={{ start: "2026-03-14", end: "2026-03-16" }}
+  onValueChange={setStay}
+  min="2026-03-01"
+  isDateDisabled={(iso) => soldOut.has(iso)}
+/>`,
+);
+
+add(
+  "time-slot-picker-demo",
+  () => {
+    const [value, setValue] = React.useState<string>();
+    return (
+      <TimeSlotPicker
+        className="w-full max-w-md"
+        label="Pickup time"
+        timeZoneLabel="Times in Riyadh (GMT+3)"
+        value={value}
+        onValueChange={setValue}
+        groups={[
+          {
+            label: "Morning",
+            slots: [
+              { value: "09:00", label: "09:00" },
+              { value: "09:30", label: "09:30", unavailable: true },
+              { value: "10:00", label: "10:00", note: "2 left" },
+              { value: "10:30", label: "10:30" },
+            ],
+          },
+          {
+            label: "Afternoon",
+            slots: [
+              { value: "13:00", label: "13:00", unavailable: true },
+              { value: "13:30", label: "13:30" },
+              { value: "14:00", label: "14:00", note: "1 left" },
+            ],
+          },
+        ]}
+      />
+    );
+  },
+  `<TimeSlotPicker
+  label="Pickup time"
+  timeZoneLabel="Times in Riyadh (GMT+3)"
+  value={slot}
+  onValueChange={setSlot}
+  groups={[
+    { label: "Morning", slots: [{ value: "09:00", label: "09:00" }, { value: "09:30", label: "09:30", unavailable: true }] },
+    { label: "Afternoon", slots: [{ value: "14:00", label: "14:00", note: "1 left" }] },
+  ]}
+/>`,
+);
+
+add(
+  "address-fields-demo",
+  () => {
+    const [value, setValue] = React.useState<Record<string, string>>({});
+    return (
+      <AddressFields
+        className="w-full max-w-lg"
+        legend="Shipping address"
+        section="shipping"
+        value={value}
+        onValueChange={setValue}
+        fields={[
+          { name: "building", label: "Building number", required: true, width: "half", inputMode: "numeric" },
+          { name: "street", label: "Street", required: true, width: "half" },
+          { name: "district", label: "District", required: true, width: "half" },
+          { name: "locality", label: "City", required: true, width: "half" },
+          { name: "postalCode", label: "Postal code", required: true, width: "half", inputMode: "numeric" },
+          { name: "additional", label: "Additional number", width: "half", description: "The 4 digits on your national address" },
+        ]}
+      />
+    );
+  },
+  `// The field list is yours: this one follows a Saudi national address. Pass a different array per country.
+<AddressFields
+  legend="Shipping address"
+  section="shipping"
+  value={address}
+  onValueChange={setAddress}
+  fields={[
+    { name: "building", label: "Building number", required: true, width: "half" },
+    { name: "street", label: "Street", required: true, width: "half" },
+    { name: "district", label: "District", required: true, width: "half" },
+    { name: "locality", label: "City", required: true, width: "half" },
+    { name: "postalCode", label: "Postal code", required: true, width: "half" },
+    { name: "additional", label: "Additional number", width: "half" },
+  ]}
+/>`,
+);

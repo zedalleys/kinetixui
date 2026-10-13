@@ -19,6 +19,20 @@ import { cn } from "../lib/utils";
  *   read-only  `readOnly` → the inset `--muted` fill, and the steppers are disabled: a read-only value is
  *              not one a button may change either
  *   disabled   `--opacity-disabled`, inert
+ *
+ * It is also the catalogue's QuantityPicker (cart lines, tickets, rooms, guests — business capability
+ * roadmap, Phase 2), so two things a quantity needs are part of the base contract:
+ *
+ *   bounds     a stepper at `min`/`max` is `aria-disabled`, not `disabled`. A focused button that becomes
+ *              `disabled` drops keyboard focus to the page body, so pressing Decrease down to the minimum
+ *              used to lose the reader's place. It stays focusable, says it is unavailable, and does nothing
+ *   announced  a stepper press changes a value the reader is not focused on, which no screen reader reads
+ *              out. The new value goes into a polite visually hidden status region (`formatAnnouncement`
+ *              turns 2 into "2 guests"); typing in the field is not announced, because the field itself is
+ *              read back as it changes
+ *
+ * The stepper names default to "Decrease"/"Increase" and are replaceable (`decrementLabel`,
+ * `incrementLabel`) for localisation or to name what is counted.
  */
 export interface NumberInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type" | "value" | "defaultValue" | "onChange"> {
@@ -28,12 +42,38 @@ export interface NumberInputProps
   max?: number;
   step?: number;
   onChange?: (value: number) => void;
+  /** Accessible name of the decrement button. Default "Decrease". */
+  decrementLabel?: string;
+  /** Accessible name of the increment button. Default "Increase". */
+  incrementLabel?: string;
+  /** What is announced after a stepper press. Default: the number itself. */
+  formatAnnouncement?: (value: number) => string;
 }
 
 const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
-  ({ className, value, defaultValue = 0, min, max, step = 1, onChange, disabled, readOnly, ...props }, ref) => {
+  (
+    {
+      className,
+      value,
+      defaultValue = 0,
+      min,
+      max,
+      step = 1,
+      onChange,
+      disabled,
+      readOnly,
+      decrementLabel = "Decrease",
+      incrementLabel = "Increase",
+      formatAnnouncement = String,
+      ...props
+    },
+    ref,
+  ) => {
     const [internal, setInternal] = React.useState(defaultValue);
+    const [announcement, setAnnouncement] = React.useState("");
     const current = value ?? internal;
+    const atMin = min != null && current <= min;
+    const atMax = max != null && current >= max;
 
     const clamp = (n: number) => {
       let v = n;
@@ -46,6 +86,12 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
       const v = clamp(n);
       setInternal(v);
       onChange?.(v);
+      return v;
+    };
+
+    const stepBy = (delta: number, blocked: boolean) => {
+      if (blocked || disabled || readOnly) return;
+      setAnnouncement(formatAnnouncement(set(current + delta)));
     };
 
     return (
@@ -65,10 +111,11 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
       >
         <button
           type="button"
-          aria-label="Decrease"
-          disabled={disabled || readOnly || (min != null && current <= min)}
-          onClick={() => set(current - step)}
-          className="flex w-9 shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-disabled"
+          aria-label={decrementLabel}
+          disabled={disabled || readOnly}
+          aria-disabled={atMin || undefined}
+          onClick={() => stepBy(-step, atMin)}
+          className="flex w-9 shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-disabled aria-disabled:cursor-not-allowed aria-disabled:opacity-disabled aria-disabled:hover:bg-transparent"
         >
           <Minus className="size-4" />
         </button>
@@ -91,13 +138,17 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
         />
         <button
           type="button"
-          aria-label="Increase"
-          disabled={disabled || readOnly || (max != null && current >= max)}
-          onClick={() => set(current + step)}
-          className="flex w-9 shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-disabled"
+          aria-label={incrementLabel}
+          disabled={disabled || readOnly}
+          aria-disabled={atMax || undefined}
+          onClick={() => stepBy(step, atMax)}
+          className="flex w-9 shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-disabled aria-disabled:cursor-not-allowed aria-disabled:opacity-disabled aria-disabled:hover:bg-transparent"
         >
           <Plus className="size-4" />
         </button>
+        <span role="status" className="sr-only" data-slot="number-input-announcement">
+          {announcement}
+        </span>
       </div>
     );
   },

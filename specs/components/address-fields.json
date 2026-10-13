@@ -1,0 +1,58 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "address-fields",
+  "title": "Address Fields",
+  "status": "beta",
+  "since": "0.25.0",
+  "platforms": [
+    "React"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "AddressFields",
+      "props": [
+        {
+          "name": "legend",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "The fieldset's legend — \"Shipping address\"."
+        },
+        {
+          "name": "fields",
+          "type": "AddressFieldConfig[]",
+          "required": true
+        },
+        {
+          "name": "value",
+          "type": "Record<string, string>",
+          "required": true
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: Record<string, string>) => void",
+          "required": true
+        },
+        {
+          "name": "errors",
+          "type": "Record<string, React.ReactNode>",
+          "required": false,
+          "description": "Error message per field name. A field with a message is marked invalid."
+        },
+        {
+          "name": "section",
+          "type": "\"shipping\" | \"billing\"",
+          "required": false,
+          "description": "Which address this is, for autofill: prefixes every token (\"shipping address-line1\")."
+        },
+        {
+          "name": "optionalLabel",
+          "type": "string",
+          "required": false,
+          "description": "Shown beside the label of a field that is not required. Default \"(optional)\". Pass \"\" to hide."
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/address-fields.tsx"
+}
