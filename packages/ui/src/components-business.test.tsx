@@ -60,10 +60,15 @@ const SLOTS: TimeSlotGroup[] = [
 
 // kx-verify: interaction
 
-function Phone({ initial, onRaw }: { initial: PhoneValue; onRaw: (raw: string, value: PhoneValue) => void }) {
+function Phone({
+  initial,
+  onRaw,
+  ...rest
+}: { initial: PhoneValue; onRaw: (raw: string, value: PhoneValue) => void } & Partial<React.ComponentProps<typeof PhoneInput>>) {
   const [value, setValue] = React.useState(initial);
   return (
     <PhoneInput
+      {...rest}
       label="Mobile number"
       countries={PHONE_COUNTRIES}
       value={value}
@@ -189,6 +194,10 @@ describe("Phase 2 behaviour", () => {
     const { container: c2 } = render(<CountrySelect label="Country" countries={COUNTRIES} value="GB" name="country" />);
     expect(screen.getByRole("button", { name: "Country United Kingdom" })).toBeInTheDocument();
     expect(c2.querySelector("input[type=hidden][name=country]")).toHaveValue("GB");
+    // A disabled field submits nothing, like any disabled form control.
+    cleanup();
+    const { container: c3 } = render(<CountrySelect label="Country" countries={COUNTRIES} value="GB" name="country" disabled />);
+    expect(c3.querySelector("input[type=hidden][name=country]")).toBeDisabled();
     expect(container).toBeTruthy();
   });
 
@@ -218,6 +227,14 @@ describe("Phase 2 behaviour", () => {
     paste("0044 20 7946 0958");
     expect(onRaw).toHaveBeenLastCalledWith("+442079460958", { country: "GB", national: "2079460958" });
     expect(screen.getByRole("combobox", { name: "Country code" })).toHaveValue("GB");
+
+    // A consumer's own onPaste runs alongside the parsing, never instead of it.
+    cleanup();
+    const consumerPaste = vi.fn();
+    render(<Phone initial={{ country: "SA", national: "" }} onRaw={onRaw} onPaste={consumerPaste} />);
+    fireEvent.paste(screen.getByRole("textbox", { name: "Mobile number" }), { clipboardData: { getData: () => "+44 20 7946 0958" } });
+    expect(consumerPaste).toHaveBeenCalledTimes(1);
+    expect(onRaw).toHaveBeenLastCalledWith("+442079460958", { country: "GB", national: "2079460958" });
   });
 
   it("DateRangeInput reports calendar dates as ISO strings, respects min and shows an open end", async () => {
@@ -233,6 +250,25 @@ describe("Phase 2 behaviour", () => {
     await user.click(within(grid).getByRole("button", { name: /16 March 2026|March 16/ }));
     expect(onChange).toHaveBeenLastCalledWith({ start: "2026-03-14", end: "2026-03-16" });
     expect(screen.getByRole("button", { name: "Stay 14 Mar 2026 – 16 Mar 2026" })).toBeInTheDocument();
+
+    // A range across an unavailable day is not accepted: the second click restarts the range there.
+    cleanup();
+    const onBlocked = vi.fn();
+    render(
+      <Range
+        initial={{}}
+        min="2026-03-10"
+        max="2026-03-31"
+        isDateDisabled={(iso) => iso === "2026-03-20"}
+        onChange={onBlocked}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Stay Select dates" }));
+    const grid2 = await screen.findByRole("grid");
+    await user.click(within(grid2).getByRole("button", { name: /19 March 2026|March 19/ }));
+    await user.click(within(grid2).getByRole("button", { name: /21 March 2026|March 21/ }));
+    expect(onBlocked).toHaveBeenLastCalledWith({ start: "2026-03-21", end: undefined });
+    expect(onBlocked).not.toHaveBeenCalledWith({ start: "2026-03-19", end: "2026-03-21" });
 
     cleanup();
     render(<Range initial={{ start: "2026-03-14" }} openEndLabel="open" />);
@@ -401,6 +437,24 @@ describe("Phase 2 semantics", () => {
     expect(phone).toHaveAttribute("autocomplete", "tel-national");
     // The code select's option text is the full country name, which is what a screen reader hears.
     expect(screen.getByRole("combobox", { name: "Country code" })).toHaveDisplayValue("Saudi Arabia (+966)");
+  });
+
+  it("PhoneInput links its error to both parts of the field", () => {
+    render(
+      <>
+        <PhoneInput
+          label="Mobile number"
+          countries={PHONE_COUNTRIES}
+          value={{ country: "SA", national: "12" }}
+          onValueChange={() => {}}
+          invalid
+          aria-describedby="phone-error"
+        />
+        <p id="phone-error">Enter the full number.</p>
+      </>,
+    );
+    expect(screen.getByRole("textbox", { name: "Mobile number" })).toHaveAccessibleDescription("Enter the full number.");
+    expect(screen.getByRole("combobox", { name: "Country code" })).toHaveAccessibleDescription("Enter the full number.");
   });
 });
 

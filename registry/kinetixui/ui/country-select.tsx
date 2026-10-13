@@ -157,7 +157,7 @@ const CountrySelect = React.forwardRef<HTMLButtonElement, CountrySelectProps>(
             </Command>
           </PopoverContent>
         </Popover>
-        {name && <input type="hidden" name={name} value={value ?? ""} />}
+        {name && <input type="hidden" name={name} value={value ?? ""} disabled={disabled} />}
       </div>
     );
   },

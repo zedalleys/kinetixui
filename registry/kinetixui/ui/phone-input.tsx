@@ -82,6 +82,7 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
       className,
       id: idProp,
       "aria-describedby": describedBy,
+      onPaste: onPasteProp,
       ...props
     },
     ref,
@@ -96,6 +97,9 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
     };
 
     const onPaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+      // A consumer's own handler runs first and can opt out with preventDefault; it never replaces this one.
+      onPasteProp?.(event);
+      if (event.defaultPrevented) return;
       const text = event.clipboardData.getData("text").trim();
       const international = text.startsWith("+") ? text.slice(1) : text.startsWith("00") ? text.slice(2) : null;
       if (international == null) return;
@@ -133,6 +137,7 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
               value={value.country}
               disabled={disabled}
               aria-invalid={invalid || undefined}
+              aria-describedby={describedBy}
               onChange={(e) => emit(e.target.value, value.national)}
               className="absolute inset-0 cursor-pointer appearance-none bg-transparent text-transparent opacity-0 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:cursor-not-allowed [&_option]:text-foreground"
             >

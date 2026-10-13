@@ -98,7 +98,7 @@
         },
         {
           "name": "calendarProps",
-          "type": "Omit<DayPickerProps, \"onSelect\" | \"disabled\" | \"selected\" | \"required\" | \"mode\" | \"numberOfMonths\">",
+          "type": "Omit<DayPickerProps, \"onSelect\" | \"disabled\" | \"selected\" | \"required\" | \"mode\" | \"numberOfMonths\" | \"excludeDisabled\">",
           "required": false,
           "description": "Passed to the Calendar, e.g. `weekStartsOn`. Selection props are owned by this component."
         }

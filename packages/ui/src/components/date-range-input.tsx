@@ -65,7 +65,7 @@ export interface DateRangeInputProps {
   "aria-describedby"?: string;
   className?: string;
   /** Passed to the Calendar, e.g. `weekStartsOn`. Selection props are owned by this component. */
-  calendarProps?: Omit<CalendarProps, "mode" | "selected" | "onSelect" | "disabled" | "numberOfMonths" | "required">;
+  calendarProps?: Omit<CalendarProps, "mode" | "selected" | "onSelect" | "disabled" | "excludeDisabled" | "numberOfMonths" | "required">;
 }
 
 /** "YYYY-MM-DD" → a local-midnight Date. Only for talking to the calendar. */
@@ -165,6 +165,10 @@ const DateRangeInput = React.forwardRef<HTMLButtonElement, DateRangeInputProps>(
               startMonth={min ? isoToLocalDate(min) : undefined}
               endMonth={max ? isoToLocalDate(max) : undefined}
               disabled={disabledMatchers}
+              // A range across a sold-out day is not a bookable stay. react-day-picker includes disabled
+              // days in a range unless told otherwise; with this, a second click past one restarts the
+              // range from that click instead of reporting a span the product said is unavailable.
+              excludeDisabled
               onSelect={(range) => {
                 const start = range?.from ? localDateToIso(range.from) : undefined;
                 let end = range?.to ? localDateToIso(range.to) : undefined;
