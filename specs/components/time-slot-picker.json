@@ -1,0 +1,48 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "time-slot-picker",
+  "title": "Time Slot Picker",
+  "status": "beta",
+  "since": "0.25.0",
+  "platforms": [
+    "React"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "TimeSlotPicker",
+      "props": [
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "Names the group — \"Pickup time\". Required: an unnamed radio group is announced as just \"group\"."
+        },
+        {
+          "name": "groups",
+          "type": "TimeSlotGroup[]",
+          "required": true
+        },
+        {
+          "name": "emptyMessage",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Shown when no slot is available. Default \"No times are available.\""
+        },
+        {
+          "name": "timeZoneLabel",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The time zone the labels are in. Shown, and used as the group's description."
+        },
+        {
+          "name": "unavailableLabel",
+          "type": "string",
+          "required": false,
+          "description": "Spoken after an unavailable slot's label. Default \"Unavailable\"."
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/time-slot-picker.tsx"
+}

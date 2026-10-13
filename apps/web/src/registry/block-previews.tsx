@@ -23,6 +23,7 @@ import { OnboardingChecklistBlock } from "@/examples/blocks/onboarding-checklist
 import { OrderSummaryBlock } from "@/examples/blocks/order-summary";
 import { PricingTierBlock } from "@/examples/blocks/pricing-tier";
 import { ProfileFormBlock } from "@/examples/blocks/profile-form";
+import { ReceiptBlock } from "@/examples/blocks/receipt";
 import { SettingsListBlock } from "@/examples/blocks/settings-list";
 import { SignInBlock } from "@/examples/blocks/sign-in";
 import { StatCardsBlock } from "@/examples/blocks/stat-cards";
@@ -51,4 +52,5 @@ export const blockPreviews: Record<string, ComponentType> = {
   "loading-state": LoadingStateBlock,
   "order-summary": OrderSummaryBlock,
   "create-account": CreateAccountBlock,
+  "receipt": ReceiptBlock,
 };

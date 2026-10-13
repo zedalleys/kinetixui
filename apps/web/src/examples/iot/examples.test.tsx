@@ -415,12 +415,16 @@ describe("environments and alert centre", () => {
 
   it("smart space: a lock request stays unconfirmed until the device reports", () => {
     render(<SmartSpaceEnvironmentExample />);
-    const group = screen.getByRole("radiogroup", { name: /Front door lock/ });
-    expect(within(group).getByRole("radio", { name: /Locked/ })).toBeChecked();
-    fireEvent.click(within(group).getByRole("radio", { name: /Unlocked/ }));
-    expect(within(screen.getByRole("radiogroup", { name: /Front door lock/ })).getByRole("radio", { name: /Locked/ })).toBeChecked();
+    const word = () => document.querySelector('[data-device="lock-front"] [data-lock-state]')!.getAttribute("data-lock-state");
+    expect(word()).toBe("locked");
+    fireEvent.click(screen.getByRole("button", { name: "Unlock Front door lock" }));
+    // The request is the row's "Changing to Unlocked", never the lock's word.
+    expect(word()).toBe("locked");
+    expect(screen.getAllByText(/Changing to/).length).toBeGreaterThan(0);
     tick(4000);
-    expect(within(screen.getByRole("radiogroup", { name: /Front door lock/ })).getByRole("radio", { name: /Unlocked/ })).toBeChecked();
+    expect(word()).toBe("unlocked");
+    // The next action is the opposite one, named as a command.
+    expect(screen.getByRole("button", { name: "Lock Front door lock" })).toBeInTheDocument();
   });
 
   it("smart space: labels the camera as a sample with no live feed", () => {
