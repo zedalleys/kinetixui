@@ -23,12 +23,13 @@ import { join } from "node:path";
 import { highlight, type HighlightLanguage, type Token } from "./highlight";
 import {
   CATALOGUE_VERIFICATION,
-  EVIDENCE_COUNTS,
   PLATFORMS,
   PLATFORM_DEFINITIONS,
   evidenceFor,
+  evidenceStatus,
   verificationFor,
   type EvidenceKind,
+  type EvidenceStatus,
   type Platform,
 } from "./platform-parity";
 import { componentTotal, platformCount } from "./platform-support";
@@ -325,14 +326,16 @@ export interface PlatformEvidence {
   floor: string | null;
   entries: number;
   total: number;
-  /** components holding each evidence kind, out of the platform's own entries */
-  evidence: { kind: (typeof SUMMARY_EVIDENCE)[number]; count: number; of: number }[];
+  /**
+   * components holding each evidence kind, out of the platform's own entries, with what that count means:
+   * a zero with no test behind it is "not yet verified", never an empty score (see `evidenceStatus`)
+   */
+  evidence: ({ kind: (typeof SUMMARY_EVIDENCE)[number] } & EvidenceStatus)[];
 }
 
 /** Per-platform proof for the evidence chapter, straight from `platform-parity.json`. */
 export function platformEvidence(): PlatformEvidence[] {
   return PLATFORMS.map((p) => {
-    const counts = EVIDENCE_COUNTS[p] as Record<string, number>;
     const of = platformCount(p);
     return {
       platform: p,
@@ -343,9 +346,9 @@ export function platformEvidence(): PlatformEvidence[] {
       entries: of,
       total: componentTotal,
       evidence: SUMMARY_EVIDENCE.map((kind) => {
-        const count = counts[kind] ?? 0;
-        if (count > of) throw new Error(`systems-in-motion: ${p} claims ${kind} evidence for ${count} of ${of} entries`);
-        return { kind, count, of };
+        const status = evidenceStatus(p, kind);
+        if (status.of !== of) throw new Error(`systems-in-motion: ${p} evidence is out of ${status.of}, not its ${of} entries`);
+        return { kind, ...status };
       }),
     };
   });

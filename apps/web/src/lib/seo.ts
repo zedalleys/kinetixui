@@ -8,6 +8,7 @@ import { PLATFORMS, PLATFORM_DEFINITIONS, platformsFor, type Platform } from "./
 import { COMPONENT_EDITORIAL } from "./component-editorial";
 import { list } from "./platform-prose";
 import { allDocsLinks, componentDocs, mainNav, siteConfig } from "./site";
+import { DISCOVERY_ROUTES } from "./discovery-routes";
 
 /**
  * Public routes that are not in any nav: real pages a visitor can reach and a crawler should see, but that
@@ -30,6 +31,10 @@ export function publicRoutes(): string[] {
     ...allDocsLinks.map((i) => i.href),
     ...componentDocs.map((i) => i.href),
     ...UNLISTED_PUBLIC_ROUTES,
+    // /capabilities and each /use-cases/<domain> page, derived from discovery-index.json: a domain page is listed
+    // the day `"page": true` is set on it, and never before. They are linked from /components and component pages,
+    // not from the header, until the information architecture is settled (Business Discovery W1).
+    ...DISCOVERY_ROUTES,
   ];
   // `soon` nav items point at pages that do not exist yet — never advertise them to a crawler.
   const comingSoon = new Set([...mainNav, ...allDocsLinks].filter((i) => i.soon).map((i) => i.href));
