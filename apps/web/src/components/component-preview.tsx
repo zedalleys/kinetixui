@@ -203,7 +203,7 @@ export function ComponentPreview({
         </SegmentedControl>
 
         {mode === "preview" && (
-          <div role="region" aria-label={"Component preview"}>
+          <div role="group" aria-label={"Component preview"}>
             <PreviewEnvironment align={align}>
               <Demo />
             </PreviewEnvironment>
@@ -211,7 +211,7 @@ export function ComponentPreview({
         )}
 
         {mode === "code" && (
-          <div role="region" aria-label={"Component code"}>
+          <div role="group" aria-label={"Component code"}>
             <div className="border-t border-border bg-muted/40">
               {tabs.length > 1 ? (
                 <Tabs

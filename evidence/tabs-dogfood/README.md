@@ -129,3 +129,12 @@ Locally ready for review and merge after GitHub's required checks pass. Review t
 - `scripts/tabs-dogfood-browser.mjs`
 - `specs/components/toggle-group.json`
 - `specs/components/toggle.json`
+
+## CI follow-up after updating with main
+
+The branch was updated with main at `55176e54` (integration head `f62b046e`). CI exposed two focused regressions missed by the initial surface-only browser gate:
+
+- The Tabs States story's implicit grid track expanded to its content's minimum width at 200% text. Its generator now constrains that track with `minmax(0, 1fr)`, preserving local scrolling. Storybook builds and generated-story checks pass; the exact large-text run measures **0px** Tabs page overflow at 390px / 200% text. That local macOS Chrome run separately reports a Label content-fit issue, which passed in Linux CI and was not changed here; final CI is still required.
+- Repeated ComponentPreview panes introduced duplicate named page landmarks. They are now named groups, which matches a local mode's content rather than page navigation. An axe regression test renders duplicate previews and checks landmark uniqueness. The 46 relevant unit tests and web typecheck/lint pass. A production sweep over `/docs/components/button` and `/docs/components/input` passes all **32** combinations of theme, width and text size, with no axe findings or page overflow.
+
+Additional changed file: `packages/ui/src/stories/Tabs.stories.tsx`. GitHub checks must rerun successfully before the authorized merge; no protections are bypassed.

@@ -839,15 +839,14 @@ const EXTRA = {
   )`,
     },
   ],
-  // The navigation state contract: a selected tab, an unselected one and a disabled one, on the page and
-  // inside a raised Card — the two places a tab list sits, and the arrangement that inverts in dark mode
-  // if the selected tab is the page colour.
+  // Selected, unselected and disabled content tabs, on the page and inside a raised Card.
+  // A zero-minimum grid track keeps large-text overflow inside the tab list instead of widening the fixture.
   tabs: [
     {
       name: "States",
       imports: "Card CardContent",
       render: `() => (
-    <div className="grid w-[26rem] max-w-full gap-6">
+    <div className="grid w-[26rem] max-w-full grid-cols-[minmax(0,1fr)] gap-6">
       {(["page", "card"] as const).map((where) => {
         const tabs = (
           <Tabs defaultValue="overview">
