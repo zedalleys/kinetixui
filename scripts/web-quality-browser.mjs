@@ -173,8 +173,8 @@ const CONTRAST_TARGETS = [
   ["/components", "filter chip (resting)", '[role="group"][aria-label="Filter by category"] button[aria-pressed="false"]'],
   ["/components", "filter chip (selected)", '[role="group"][aria-label="Filter by category"] button[aria-pressed="true"]'],
   ["/components", "section meta", "[data-section-meta]"],
-  ["/docs/components/button", "showcase tab (resting)", '[role="tab"][aria-selected="false"]'],
-  ["/docs/components/button", "showcase tab (selected)", '[role="tab"][aria-selected="true"]'],
+  ["/docs/components/button", "showcase mode (resting)", '[data-cp] [role="radio"][aria-checked="false"]'],
+  ["/docs/components/button", "showcase mode (selected)", '[data-cp] [role="radio"][aria-checked="true"]'],
   ["/docs/components/button", "breadcrumb", 'nav[aria-label="Docs breadcrumb"] a'],
   ["/docs/components/button", "component meta term", "[data-component-meta] dt"],
   ["/docs/tokens", "token-table heading", "table thead th"],
@@ -253,13 +253,13 @@ const TOUCH_TARGETS = [
   ["header theme toggle", "/docs/components/button", "header button:has(.sr-only)", 390],
   ["header GitHub link", "/docs/components/button", 'header a[href*="github.com"]', 390],
   ["header menu button", "/docs/components/button", 'header button[aria-label="Menu"]', 390],
-  ["showcase tabs", "/docs/components/button", '[role="tab"]', 390],
+  ["showcase modes", "/docs/components/button", '[data-cp] [role="radio"]', 390],
   ["copy buttons", "/docs/components/button", 'button[aria-label^="Copy"]', 390, "code"],
   ["gallery Filters trigger", "/components", 'button[aria-label^="Filters"]', 390],
   ["gallery chips (sheet)", "/components", '[role="dialog"] [role="group"] button', 390, "sheet"],
   ["gallery clear search", "/components", 'button[aria-label="Clear search"]', 390, "search"],
   ["gallery chips (inline)", "/components", '[role="group"][aria-label^="Filter by"] button', 768],
-  ["showcase tabs (tablet)", "/docs/components/button", '[role="tab"]', 768],
+  ["showcase modes (tablet)", "/docs/components/button", '[data-cp] [role="radio"]', 768],
   ["header controls (tablet)", "/docs/components/button", "header button, header a[href*='github.com']", 768],
 ];
 
@@ -273,7 +273,7 @@ async function touchSetup(page, setup) {
     await page.waitForSelector('button[aria-label="Clear search"]');
   } else if (setup === "code") {
     // the first showcase's Code tab reveals its copy button
-    const tab = page.locator('[role="tab"]', { hasText: /^code$/i }).first();
+    const tab = page.getByRole("radio", { name: /^code$/i }).first();
     await tab.click();
     await page.waitForTimeout(200);
   }

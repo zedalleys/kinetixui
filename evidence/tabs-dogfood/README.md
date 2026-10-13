@@ -138,3 +138,11 @@ The branch was updated with main at `55176e54` (integration head `f62b046e`). CI
 - Repeated ComponentPreview panes introduced duplicate named page landmarks. They are now named groups, which matches a local mode's content rather than page navigation. An axe regression test renders duplicate previews and checks landmark uniqueness. The 46 relevant unit tests and web typecheck/lint pass. A production sweep over `/docs/components/button` and `/docs/components/input` passes all **32** combinations of theme, width and text size, with no axe findings or page overflow.
 
 Additional changed file: `packages/ui/src/stories/Tabs.stories.tsx`. GitHub checks must rerun successfully before the authorized merge; no protections are bypassed.
+
+## Verification migration follow-up
+
+The next CI run confirmed that the large-text and site accessibility repairs passed, then reached additional gates that still assumed the old control family. The React pixel adapter now verifies the line indicator (at least 3:1, visibly stronger than the inactive rail) instead of a raised selected surface; focus, hover, disabled-state and reduced-motion requirements remain intact. The React gate passes in both themes. The rendered metadata, analytics, platform-preference and web-quality scripts now locate Preview/Code as radios and check `aria-checked` where appropriate; implementation-platform controls remain Tabs.
+
+Local confirmation: all 17 rendered metadata routes pass; all 10 platform-preference browser scenarios pass; contrast and touch gates pass, including 44px-high showcase mode controls on phone/tablet. No product metadata, analytics behavior or SEO feature was changed. The full GitHub runs must finish green before merging.
+
+Additional verification files changed: `scripts/entry-visual.mjs`, `scripts/seo-browser.mjs`, `scripts/analytics-browser.mjs`, `scripts/platform-preference-browser.mjs`, and `scripts/web-quality-browser.mjs`.
