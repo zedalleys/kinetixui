@@ -476,14 +476,29 @@
   .kx-evidence dl:last-of-type {
     @apply mt-4 grid grid-cols-1 gap-2 border-t border-border pt-3;
   }
-  .kx-evidence .kx-meter {
-    @apply flex items-baseline justify-between gap-2 pb-2 text-xs;
+  /* One evidence row: the label, then the state with its count, then the sentence (where shown). */
+  .kx-evidence .kx-meter,
+  .kx-evidence .kx-evidence-gap {
+    @apply flex flex-wrap items-baseline justify-between gap-x-2 pb-2 text-xs;
   }
-  .kx-evidence .kx-meter dt {
-    @apply text-muted-foreground;
+  /* the label on its own line in every row, so the state starts in the same place whatever its length */
+  .kx-evidence .kx-meter dt,
+  .kx-evidence .kx-evidence-gap dt {
+    @apply basis-full text-muted-foreground;
   }
-  .kx-evidence .kx-meter dd {
-    @apply font-mono text-foreground;
+  /* the state in words, then the count as secondary detail */
+  .kx-evidence .kx-meter dd:first-of-type,
+  .kx-evidence .kx-evidence-gap dd:first-of-type {
+    @apply text-foreground;
+  }
+  .kx-evidence .kx-meter dd:first-of-type > span,
+  .kx-evidence .kx-evidence-gap dd:first-of-type > span {
+    @apply ms-1.5 font-mono text-muted-foreground;
+  }
+  /* No meter and no warning colour for "Not yet verified" or "Limited evidence": a gap in the evidence, not a
+     failure, so neutral text and the reason on its own line. */
+  .kx-evidence .kx-evidence-gap dd:last-of-type {
+    @apply basis-full text-muted-foreground;
   }
   [dir="rtl"] .kx-meter {
     background-position: right bottom;

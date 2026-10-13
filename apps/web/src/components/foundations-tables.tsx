@@ -4,12 +4,12 @@ import { durations, easings, elevation, platformUnits, radiusRoles, radiusScale,
 import manifest from "../../../../components.manifest.json";
 import {
   CATALOGUE_VERIFICATION,
-  EVIDENCE_COUNTS,
   EVIDENCE_KINDS,
   PLATFORMS,
   PLATFORM_DEFINITIONS,
   VERIFICATION_COUNTS,
   VERIFICATION_REQUIRES,
+  evidenceStatus,
   type EvidenceKind,
   type Platform,
 } from "@/lib/platform-parity";
@@ -283,12 +283,25 @@ const EVIDENCE_LABEL: Record<EvidenceKind, string> = {
   published: "Published",
 };
 
+/** The verification cards name the metric as evidence, not as the capability ("Accessibility verification"). */
+const EVIDENCE_ROW_LABEL: Record<EvidenceKind, string> = {
+  build: "Build verification",
+  interaction: "Interaction verification",
+  accessibility: "Accessibility verification",
+  rtl: "RTL verification",
+  largeText: "Large-text verification",
+  visual: "Visual verification",
+  published: "Published",
+};
+
 /**
  * Per-platform verification summary: what the package promises, and separately what the tests prove.
  *
  * Every evidence row is a fraction, never a tick. "Interaction 21 / 98" and a green check are different
  * claims, and only one of them is true — a tick beside a partially covered catalogue is the single most
- * misleading thing this page could print.
+ * misleading thing this page could print. Each row leads with the evidence state in words ("Not yet verified",
+ * "Limited evidence", "Partial", "Verified"; see `evidenceStatus`), because "0 / 90" or "1 / 90" alone reads as a
+ * measured failure of the platform rather than as how much a test has recorded.
  */
 export function PlatformVerificationTable() {
   return (
@@ -296,7 +309,6 @@ export function PlatformVerificationTable() {
       {PLATFORMS.map((platform) => {
         const def = PLATFORM_DEFINITIONS[platform];
         const total = platformCount(platform);
-        const counts = EVIDENCE_COUNTS[platform];
         const rungs = VERIFICATION_COUNTS[platform] ?? {};
         return (
           // min-w-0 and wrapping rows: a grid item sized by its widest unbroken row pushed the page sideways at 200%
@@ -325,15 +337,27 @@ export function PlatformVerificationTable() {
               </div>
             </dl>
             <p className="mt-3 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">Evidence</p>
-            <dl className="mt-1 grid gap-x-5 gap-y-0.5 font-mono text-body-sm sm:grid-cols-2">
-              {EVIDENCE_KINDS.map((kind) => (
-                <div key={kind} className="flex flex-wrap justify-between gap-x-3">
-                  <dt className="text-muted-foreground">{EVIDENCE_LABEL[kind]}</dt>
-                  <dd className="tabular-nums">
-                    {counts?.[kind] ?? 0} / {total}
-                  </dd>
-                </div>
-              ))}
+            <dl className="mt-1 grid gap-y-1 font-mono text-body-sm">
+              {EVIDENCE_KINDS.map((kind) => {
+                const e = evidenceStatus(platform, kind);
+                // the evidence state in words, the count as secondary detail, and the sentence: shown where there is
+                // no fraction worth reading ("Not yet verified", "Limited evidence"), heard by assistive technology
+                // everywhere. "0 / 90" or "1 / 90" alone reads as a failed score; the generator never records failures
+                return (
+                  <div key={kind} data-evidence-state={e.state} className="flex flex-wrap justify-between gap-x-3">
+                    <dt className="text-muted-foreground">{EVIDENCE_ROW_LABEL[kind]}</dt>
+                    <dd>
+                      {e.label}
+                      {e.count > 0 ? (
+                        <span aria-hidden="true" className="ms-1.5 tabular-nums text-muted-foreground">
+                          {e.count} / {e.of}
+                        </span>
+                      ) : null}
+                    </dd>
+                    <dd className={e.meter ? "sr-only" : "basis-full font-sans text-label-md text-muted-foreground"}>{e.summary}</dd>
+                  </div>
+                );
+              })}
             </dl>
             <p className="mt-3 text-body-sm text-muted-foreground">
               {Object.entries(rungs)
@@ -568,10 +592,11 @@ export function PlatformAtAGlance({ platform }: { platform: Platform }) {
   const row = platforms.find((r) => r.id === platform.toLowerCase());
   const shipped = platformCount(platform);
   const missing = componentTotal - shipped;
-  const evidence = EVIDENCE_COUNTS[platform] ?? ({} as Record<EvidenceKind, number>);
-  const kinds = (["interaction", "accessibility", "rtl", "largeText"] as const).map(
-    (k) => `${EVIDENCE_LABEL[k]} ${evidence[k] ?? 0}/${shipped}`,
-  );
+  // a kind no test records yet, or only a handful do, says so in words; "Interaction 0/90" reads as a failed score
+  const kinds = (["interaction", "accessibility", "rtl", "largeText"] as const).map((k) => {
+    const e = evidenceStatus(platform, k);
+    return e.meter ? `${EVIDENCE_LABEL[k]} ${e.count}/${e.of}` : `${EVIDENCE_LABEL[k]} ${e.label.toLowerCase()}${e.count ? ` (${e.count}/${e.of})` : ""}`;
+  });
   const level = CATALOGUE_VERIFICATION[platform];
   const link = "text-primary underline underline-offset-2";
   return (
