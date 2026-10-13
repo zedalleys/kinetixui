@@ -199,6 +199,10 @@ The token boundary, in five.
 
 Two trades: runtime versus native implementations.
 
+**Published 2026-10-12 at 17:36:41 UTC** (`2026-10-12T17:36:41Z`), after the scheduled day 13.
+[Live LinkedIn post](https://www.linkedin.com/feed/update/urn:li:activity:7515463797164265473/) — URL and posting time supplied by the author.
+Performance counts are not yet recorded; see the canonical `register.json` result.
+
 | | |
 | --- | --- |
 | **Primary** | LinkedIn, with **VIS-005**. Campaign `kx_p2_f_two_trades`, destination `/components` |
