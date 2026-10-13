@@ -74,6 +74,12 @@ export const ROUTE_SEO = {
     type: "website",
     description: `Browse every component in the KinetixUI registry — live previews, which platforms implement each one, and the CLI command to add it. React and Angular install from npm; the ${list(native.map(label))} implementations are source you compile.`,
   },
+  "/capabilities": {
+    title: "What you can build: business capabilities by domain",
+    type: "website",
+    description:
+      "KinetixUI's components by the job they do: transactions, booking, data, identity, workflow and connected devices, with what ships today, what ships in part and what is only planned.",
+  },
   "/docs/platforms": {
     title: `Platform coverage for ${shortAll}`,
     description: `What KinetixUI implements on each platform — component coverage, maturity, distribution and the CI that verifies each claim, read from the manifest, including where coverage is thin.`,
