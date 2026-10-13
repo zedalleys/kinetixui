@@ -1,0 +1,41 @@
+{
+  "version": "0.24.1",
+  "date": "2026-10-13",
+  "summary": "Keyboard-reachable code scroll regions in @kinetixui/ui 0.24.1, with tokens and CLI on the same 0.24.1 release line. On its independent Preview line, @kinetixui/angular 0.26.0 adds menus, listboxes, navigation, notifications and layout controls.",
+  "breaking": [],
+  "changes": [
+    {
+      "kind": "accessibility",
+      "area": "components",
+      "title": "CodeBlock and DiffViewer overflow is keyboard reachable",
+      "body": "Each scroll region takes a Tab stop only while it can scroll, with a visible focus ring. A CodeBlock showing a file is named by that file. No new props or exports."
+    },
+    {
+      "kind": "fixed",
+      "area": [
+        "components",
+        "tokens"
+      ],
+      "title": "Minimal usage loads the complete token stylesheets",
+      "body": "The UI and tokens README examples include css/extras and css/extras/dark so focus rings and their dark variants are available."
+    },
+    {
+      "kind": "improved",
+      "area": "release",
+      "title": "UI, tokens and CLI share 0.24.1",
+      "body": "UI carries the patch changes. Tokens and CLI move with the fixed Changesets cohort; neither has a separate feature change in this release."
+    },
+    {
+      "kind": "new",
+      "area": "components",
+      "title": "@kinetixui/angular 0.26.0 \u2014 still Preview",
+      "body": "Menus and submenus; select, command and multi-select; navigation menu, toasts, notification center, tour and sidebar; scroll area, resizable panels, carousel and comparison slider. Angular releases on its own version line.",
+      "href": "/docs/angular"
+    }
+  ],
+  "limitations": [
+    "Angular remains Preview. This release does not graduate it.",
+    "Tokens and CLI have no independent feature changes; their patch versions follow the fixed core cohort.",
+    "This release does not publish SwiftUI, Compose or Flutter packages."
+  ]
+}
