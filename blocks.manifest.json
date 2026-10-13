@@ -267,6 +267,19 @@
         "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/OrderSummaryBlockTest.kt",
         "Flutter": "packages/ui-flutter/test/blocks/order_summary_block_test.dart"
       }
+    },
+    "receipt": {
+      "title": "Receipt",
+      "description": "Issuer, amount paid, reference, payment details and the breakdown, with download, print and share actions.",
+      "category": "Commerce",
+      "status": "beta",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/receipt.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/receipt.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/ReceiptBlockTests.swift",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/ReceiptBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/receipt_block_test.dart"
+      }
     }
   }
 }
