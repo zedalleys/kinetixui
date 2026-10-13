@@ -26,7 +26,9 @@
       "type": "registry:ui",
       "title": "Address Fields",
       "description": "Ported onto the KinetixUI token contract.",
-      "platforms": [],
+      "platforms": [
+        "React"
+      ],
       "status": "beta"
     },
     {
@@ -60,7 +62,9 @@
       "type": "registry:ui",
       "title": "Amount Display",
       "description": "Ported onto the KinetixUI token contract.",
-      "platforms": [],
+      "platforms": [
+        "React"
+      ],
       "status": "beta"
     },
     {
@@ -337,7 +341,9 @@
       "type": "registry:ui",
       "title": "Country Select",
       "description": "Ported onto the KinetixUI token contract.",
-      "platforms": [],
+      "platforms": [
+        "React"
+      ],
       "status": "beta"
     },
     {
@@ -381,7 +387,9 @@
       "type": "registry:ui",
       "title": "Date Range Input",
       "description": "Ported onto the KinetixUI token contract.",
-      "platforms": [],
+      "platforms": [
+        "React"
+      ],
       "status": "beta"
     },
     {
@@ -535,7 +543,9 @@
       "type": "registry:ui",
       "title": "Guest Picker",
       "description": "Ported onto the KinetixUI token contract.",
-      "platforms": [],
+      "platforms": [
+        "React"
+      ],
       "status": "beta"
     },
     {
@@ -879,7 +889,9 @@
       "type": "registry:ui",
       "title": "Phone Input",
       "description": "Ported onto the KinetixUI token contract.",
-      "platforms": [],
+      "platforms": [
+        "React"
+      ],
       "status": "beta"
     },
     {
@@ -1228,7 +1240,9 @@
       "type": "registry:ui",
       "title": "Time Slot Picker",
       "description": "Ported onto the KinetixUI token contract.",
-      "platforms": [],
+      "platforms": [
+        "React"
+      ],
       "status": "beta"
     },
     {

@@ -118,13 +118,17 @@ const CountrySelect = React.forwardRef<HTMLButtonElement, CountrySelectProps>(
           </PopoverTrigger>
           <PopoverContent
             align="start"
-            className="w-[var(--radix-popover-trigger-width)] min-w-64 p-0"
+            // `min-width` beats `max-width`, so the 16rem floor is itself capped by the room Radix measured:
+            // at 2x text on a phone a bare `min-w-64` is 512px and pushes the list off screen.
+            className="w-[var(--radix-popover-trigger-width)] min-w-[min(16rem,var(--radix-popper-available-width))] p-0"
             aria-labelledby={labelId}
           >
             {/* cmdk names its input from `label` (via aria-labelledby, which would override an aria-label). */}
             <Command label={searchPlaceholder}>
               <CommandInput placeholder={searchPlaceholder} />
-              <CommandList>
+              {/* The list scrolls rather than crops: `overflow-x-auto` instead of cmdk's hidden x-axis, and
+                  names wrap, so nothing in it is out of reach at 2x text. */}
+              <CommandList className="overflow-x-auto">
                 <CommandEmpty>{emptyMessage}</CommandEmpty>
                 <CommandGroup>
                   {countries.map((c) => (

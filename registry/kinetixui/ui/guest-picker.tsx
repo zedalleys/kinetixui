@@ -119,7 +119,13 @@ const GuestPicker = React.forwardRef<HTMLButtonElement, GuestPickerProps>(
               <ChevronDown aria-hidden className="size-4 shrink-0 text-muted-foreground" />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-80 p-0" aria-labelledby={labelId}>
+          <PopoverContent
+            align="start"
+            // At 2x text the rows can be taller than the room below the trigger; the panel scrolls within
+            // the height Radix measured instead of running off screen.
+            className="max-h-[var(--radix-popover-content-available-height)] w-80 overflow-y-auto p-0"
+            aria-labelledby={labelId}
+          >
             <ul className="flex flex-col divide-y divide-border">
               {categories.map((c) => {
                 const count = countOf(c);
