@@ -46,6 +46,11 @@
     "KxCardFooter",
     "KxCardHeader",
     "KxCardTitle",
+    "KxCarousel",
+    "KxCarouselContent",
+    "KxCarouselItem",
+    "KxCarouselNext",
+    "KxCarouselPrevious",
     "KxCheckbox",
     "KxCircularProgress",
     "KxCodeBlock",
@@ -64,6 +69,7 @@
     "KxCommandList",
     "KxCommandSeparator",
     "KxCommandShortcut",
+    "KxComparisonSlider",
     "KxContextMenu",
     "KxContextMenuContent",
     "KxContextMenuTrigger",
@@ -179,6 +185,11 @@
     "KxRadio",
     "KxRadioGroup",
     "KxRating",
+    "KxResizableDirection",
+    "KxResizableHandle",
+    "KxResizablePanel",
+    "KxResizablePanelGroup",
+    "KxScrollArea",
     "KxSegment",
     "KxSegmentedControl",
     "KxSelect",
@@ -700,6 +711,64 @@
       "exported": true
     },
     {
+      "name": "KxCarousel",
+      "kind": "component",
+      "selector": "kx-carousel",
+      "inputs": [
+        "index",
+        "loop",
+        "orientation"
+      ],
+      "outputs": [
+        "indexChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCarouselContent",
+      "kind": "component",
+      "selector": "kx-carousel-content",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCarouselItem",
+      "kind": "component",
+      "selector": "kx-carousel-item",
+      "inputs": [
+        "aria-label"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCarouselNext",
+      "kind": "component",
+      "selector": "button[kxCarouselNext]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxCarouselPrevious",
+      "kind": "component",
+      "selector": "button[kxCarouselPrevious]",
+      "inputs": [],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
       "name": "KxCheckbox",
       "kind": "component",
       "selector": "kx-checkbox",
@@ -901,6 +970,23 @@
       "selector": "kx-command-shortcut",
       "inputs": [],
       "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxComparisonSlider",
+      "kind": "component",
+      "selector": "kx-comparison-slider",
+      "inputs": [
+        "afterLabel",
+        "beforeLabel",
+        "label",
+        "value"
+      ],
+      "outputs": [
+        "valueChange"
+      ],
       "projectsContent": true,
       "standalone": true,
       "exported": true
@@ -2488,6 +2574,60 @@
       "exported": true
     },
     {
+      "name": "KxResizableHandle",
+      "kind": "component",
+      "selector": "kx-resizable-handle",
+      "inputs": [
+        "disabled",
+        "label",
+        "withHandle"
+      ],
+      "outputs": [],
+      "projectsContent": false,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxResizablePanel",
+      "kind": "component",
+      "selector": "kx-resizable-panel",
+      "inputs": [
+        "defaultSize",
+        "maxSize",
+        "minSize"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxResizablePanelGroup",
+      "kind": "component",
+      "selector": "kx-resizable-panel-group",
+      "inputs": [
+        "direction"
+      ],
+      "outputs": [
+        "layoutChange"
+      ],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxScrollArea",
+      "kind": "component",
+      "selector": "kx-scroll-area",
+      "inputs": [
+        "label"
+      ],
+      "outputs": [],
+      "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
       "name": "KxSegment",
       "kind": "component",
       "selector": "kx-segment",
@@ -3313,6 +3453,10 @@
     },
     {
       "name": "KxOrientation",
+      "definition": "'horizontal' | 'vertical'"
+    },
+    {
+      "name": "KxResizableDirection",
       "definition": "'horizontal' | 'vertical'"
     },
     {
