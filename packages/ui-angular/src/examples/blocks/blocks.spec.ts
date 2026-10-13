@@ -16,6 +16,7 @@ import { OnboardingChecklistBlock } from './onboarding-checklist';
 import { OrderSummaryBlock } from './order-summary';
 import { PricingTierBlock } from './pricing-tier';
 import { ProfileFormBlock } from './profile-form';
+import { ReceiptBlock } from './receipt';
 import { SettingsListBlock } from './settings-list';
 import { SignInBlock } from './sign-in';
 import { StatCardsBlock } from './stat-cards';
@@ -61,6 +62,7 @@ const BLOCKS = [
   ['dashboard-tabs', DashboardTabsBlock],
   ['loading-state', LoadingStateBlock],
   ['order-summary', OrderSummaryBlock],
+  ['receipt', ReceiptBlock],
 ] as const;
 
 describe('Angular blocks', () => {
@@ -185,6 +187,37 @@ describe('the semantics each block exists to demonstrate', () => {
     expect(names).toEqual(['Quantity, Kinetix T-shirt', 'Quantity, Sticker pack']);
     // 2 x $28 + 1 x $6 = $62, over the $50 threshold, so shipping is a word rather than $0.00.
     expect(el.querySelector('.totals')?.textContent).toContain('Free');
+  });
+
+  it('receipt states its status in words, and its breakdown is a <dl> ending in the total', () => {
+    const el = mount(ReceiptBlock).nativeElement as HTMLElement;
+    expect(el.querySelector('kx-tag')?.textContent?.trim()).toBe('Paid');
+
+    const pairs = [...el.querySelectorAll('dl.breakdown > div')];
+    expect(pairs.every((p) => p.querySelector(':scope > dt') && p.querySelector(':scope > dd'))).toBe(true);
+    const total = pairs.at(-1)!;
+    expect(total.querySelector('dt')?.textContent?.trim()).toBe('Total paid');
+    expect(total.querySelector('dd')?.textContent?.trim()).toBe('SAR 162.75');
+    // The deduction is a minus sign in the text, not only a colour.
+    expect(el.querySelector('dl.breakdown .deduction dd')?.textContent?.trim()).toBe('−SAR 12.40');
+  });
+
+  it('receipt says honestly when the clipboard refuses the copy', async () => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: () => Promise.reject(new Error('denied')) },
+      configurable: true,
+    });
+    const fixture = mount(ReceiptBlock);
+    const el = fixture.nativeElement as HTMLElement;
+    const status = el.querySelector('.reference [role="status"]')!;
+    // Always rendered, so the result is announced when it arrives.
+    expect(status.textContent?.trim()).toBe('');
+    const copy = el.querySelector('.reference button') as HTMLButtonElement;
+    expect(copy.getAttribute('aria-labelledby')).toBe('rc-copy-text rc-ref-label');
+
+    await fixture.componentInstance.copy();
+    fixture.detectChanges();
+    expect(status.textContent).toContain("Couldn't copy automatically");
   });
 
   it('loading-state tells a screen reader that it is loading, which the shapes cannot', () => {

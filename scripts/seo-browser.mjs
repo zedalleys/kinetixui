@@ -126,7 +126,7 @@ for (const r of ROUTES) {
   // ...and it still does what it says: the requested platform's tab is the one showing
   if (r.selected) {
     // the platform tabs live under the first preview's Code tab
-    await page.getByRole("tab", { name: "Code" }).first().click();
+    await page.getByRole("radio", { name: /^code$/i }).first().click();
     const selected = await page.$$eval('[role="tab"][aria-selected="true"]', (els) => els.map((t) => t.textContent.trim()));
     if (!selected.some((t) => t.startsWith(r.selected))) fail(`?platform= did not select ${r.selected} (selected: ${JSON.stringify(selected)})`);
   }

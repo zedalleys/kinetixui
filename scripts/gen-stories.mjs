@@ -57,6 +57,8 @@ const GROUP = {
   "input-group": "Form Inputs", "password-input": "Form Inputs", "number-input": "Form Inputs",
   field: "Form Inputs", form: "Form Inputs", "file-upload": "Form Inputs", "date-picker": "Form Inputs",
   calendar: "Form Inputs", rating: "Form Inputs", "color-picker": "Form Inputs", "markdown-editor": "Form Inputs",
+  "guest-picker": "Form Inputs", "country-select": "Form Inputs", "phone-input": "Form Inputs",
+  "date-range-input": "Form Inputs", "time-slot-picker": "Form Inputs", "address-fields": "Form Inputs",
   button: "Controls & Actions", "button-group": "Controls & Actions", toggle: "Controls & Actions", "toggle-group": "Controls & Actions", "segmented-control": "Controls & Actions",
   fab: "Controls & Actions", pagination: "Controls & Actions", command: "Controls & Actions",
   combobox: "Controls & Actions", "comparison-slider": "Controls & Actions",
@@ -78,7 +80,7 @@ const GROUP = {
   timeline: "Data Display", marquee: "Data Display", "message-bubble": "Data Display",
   "virtual-list": "Data Display", "json-viewer": "Data Display", "diff-viewer": "Data Display",
   "kanban-board": "Data Display", "reference-code": "Data Display", "price-breakdown": "Data Display",
-  "pass-card": "Data Display",
+  "pass-card": "Data Display", "amount-display": "Data Display",
 };
 
 const PADDED = new Set([
@@ -100,6 +102,9 @@ const PADDED = new Set([
   // The transactional foundations are `w-full` with a max width — a column on a page, not a shrink-wrapped
   // control — and the large-text pass measures them at 390px, where only a frame with a width is honest.
   "result-state", "price-breakdown", "pass-card", "reference-code",
+  // The Phase 2 fields are form columns (`w-full` with a max width) for the same reason; GuestPicker,
+  // CountrySelect and DateRangeInput also open a popover the width of their trigger.
+  "guest-picker", "country-select", "phone-input", "date-range-input", "time-slot-picker", "address-fields",
 ]);
 
 /**
@@ -181,7 +186,7 @@ const CONTROLS = {
     imports: "Italic",
     args: `{ variant: "default", size: "default" }`,
     argTypes: `{
-    variant: { control: "inline-radio", options: ["default", "outline"] },
+    variant: { control: "inline-radio", options: ["default", "outline", "pill"] },
     size: { control: "inline-radio", options: ["default", "sm", "lg"] },
   }`,
     render: `(args) => (
@@ -448,6 +453,39 @@ const CONTROLS = {
  * assembled to make a rule fire. `imports` names identifiers the render needs beyond the demo's own.
  */
 const EXTRA = {
+  // Business capability roadmap, Phase 2: every timeline status (and the alternating layout, which is where
+  // text alignment has to mirror), so both axe passes and the large-text pass see the status markers.
+  timeline: [{ name: "Statuses", render: `() => (
+    <div className="grid w-full max-w-3xl gap-10 md:grid-cols-2">
+      <Timeline
+        aria-label="Refund history"
+        items={[
+          { time: "2 Mar", title: "Refund requested", status: "complete" },
+          { time: "3 Mar", title: "Bank details needed", content: "Add an IBAN to receive the refund.", status: "warning", action: <Button size="sm" variant="Outline">Add bank details</Button> },
+          { time: "4 Mar", title: "Card refund failed", content: "The card was closed.", status: "error" },
+          { title: "Note added by support", status: "neutral" },
+          { title: "Refund sent", status: "pending" },
+        ]}
+      />
+      <Timeline
+        alternating
+        aria-label="Shipment"
+        items={[
+          { time: "12 Mar", title: "Packed", status: "complete" },
+          { time: "13 Mar", title: "In transit", content: "Riyadh hub", status: "current" },
+          { title: "Delivered", status: "pending" },
+        ]}
+      />
+    </div>
+  )`, imports: "Button" }],
+  "time-slot-picker": [{ name: "FullyBooked", render: `() => (
+    <TimeSlotPicker
+      className="w-full max-w-md"
+      label="Pickup time"
+      emptyMessage="No pickup times are left today. Try tomorrow."
+      groups={[{ slots: [{ value: "09:00", label: "09:00", unavailable: true }, { value: "09:30", label: "09:30", unavailable: true }] }]}
+    />
+  )` }],
   // Business capability roadmap, Phase 1: every status, composition and state the single demo does not
   // reach, so both axe passes (light and dark) and the large-text pass see them.
   "result-state": [{ name: "Statuses", render: `() => (
@@ -839,15 +877,14 @@ const EXTRA = {
   )`,
     },
   ],
-  // The navigation state contract: a selected tab, an unselected one and a disabled one, on the page and
-  // inside a raised Card — the two places a tab list sits, and the arrangement that inverts in dark mode
-  // if the selected tab is the page colour.
+  // Selected, unselected and disabled content tabs, on the page and inside a raised Card.
+  // A zero-minimum grid track keeps large-text overflow inside the tab list instead of widening the fixture.
   tabs: [
     {
       name: "States",
       imports: "Card CardContent",
       render: `() => (
-    <div className="grid w-[26rem] max-w-full gap-6">
+    <div className="grid w-[26rem] max-w-full grid-cols-[minmax(0,1fr)] gap-6">
       {(["page", "card"] as const).map((where) => {
         const tabs = (
           <Tabs defaultValue="overview">

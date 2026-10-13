@@ -254,3 +254,14 @@ describe("ComponentGallery business filters", () => {
     expect(within(dialog).getByRole("button", { name: /^Commerce \d+$/ })).toHaveAttribute("aria-pressed", "true");
   });
 });
+ it("renders five decorative canonical platform marks with text labels", () => {
+    render(<ComponentGallery facets={FACETS} />);
+    const group = screen.getAllByRole("group", { name: "Filter by platform" })[0]!;
+    expect(group.querySelectorAll("[data-platform-logo]")).toHaveLength(5);
+    for (const svg of group.querySelectorAll("[data-platform-logo]")) {
+      expect(svg).toHaveAttribute("aria-hidden", "true");
+      expect(svg).toHaveAttribute("fill", "currentColor");
+      expect(svg).toHaveAttribute("width", "16");
+      expect(svg.closest("button")).toHaveAccessibleName(/React|Angular|SwiftUI|Jetpack Compose|Flutter/);
+    }
+  });

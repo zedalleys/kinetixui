@@ -25,20 +25,20 @@ describe("Showcase direction", () => {
     document.documentElement.setAttribute("dir", "ltr");
     render(<Showcase title="Sign in" sources={sources}><div data-testid="preview">preview</div></Showcase>);
     expect(nearestDir(screen.getByTestId("preview"))).toBe("ltr");
-    expect(nearestDir(screen.getByRole("tablist", { name: /preview or source/ }))).toBe("ltr");
+    expect(nearestDir(screen.getByRole("radiogroup", { name: /preview or source/ }))).toBe("ltr");
   });
 
   it("shows the preview and its controls in the page's direction on an RTL page", () => {
     document.documentElement.setAttribute("dir", "rtl");
     render(<Showcase title="Sign in" sources={sources}><div data-testid="preview">preview</div></Showcase>);
     expect(nearestDir(screen.getByTestId("preview"))).toBe("rtl");
-    expect(nearestDir(screen.getByRole("tablist", { name: /preview or source/ }))).toBe("rtl");
+    expect(nearestDir(screen.getByRole("radiogroup", { name: /preview or source/ }))).toBe("rtl");
   });
 
   it("keeps the source LTR inside an RTL page, with the platform strip following the page", async () => {
     document.documentElement.setAttribute("dir", "rtl");
     render(<Showcase title="Sign in" sources={sources}><div>preview</div></Showcase>);
-    await userEvent.click(screen.getByRole("tab", { name: /code/i }));
+    await userEvent.click(screen.getByRole("radio", { name: /code/i }));
     expect(nearestDir(screen.getByRole("tablist", { name: /implementation platform/ }))).toBe("rtl");
     expect(nearestDir(screen.getByLabelText(/React source/))).toBe("ltr");
   });

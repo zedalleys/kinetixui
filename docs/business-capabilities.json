@@ -466,9 +466,11 @@
           "layer": "L4",
           "tier": "core",
           "target": "block",
-          "status": "planned",
+          "status": "existing",
           "delivery": "block",
-          "evidence": [],
+          "evidence": [
+            "block:receipt"
+          ],
           "dependsOn": [
             "PriceBreakdown",
             "ReferenceCode",
@@ -476,7 +478,7 @@
             "Card"
           ],
           "phase": 2,
-          "notes": "A block, not a component: Card + DescriptionList (merchant, date, payment method) + PriceBreakdown + ReferenceCode. ReceiptLine/Total/Tax ARE PriceBreakdownLine/Total. Publishing a block needs all five platforms (check:block-source)."
+          "notes": "Phase 2. A beta block on all five platforms: Card + AmountDisplay + ReferenceCode + DescriptionList (date, payment method, payee) + PriceBreakdown. Download, Print and Share are callbacks only: no PDF, print or payment infrastructure. ReceiptLine/Total/Tax ARE PriceBreakdownLine/Total."
         },
         {
           "name": "StatusTimeline",
@@ -491,7 +493,7 @@
           ],
           "dependsOn": [],
           "phase": 2,
-          "notes": "Timeline exists on all five platforms, but only Angular's KxTimelineItem carries a per-item `status`; React's Timeline has none. Align React (and natives) with Angular instead of adding a component — OrderTimeline, BookingTimeline, ShipmentTimeline all need it."
+          "notes": "Phase 2: React's Timeline now takes a per-item `status` (complete, current, pending, warning, error, neutral) with a distinct marker shape and a spoken word per status, `aria-current=\"step\"`, an optional per-item action, and logical alignment (RTL-converted). Angular's KxTimelineItem has default/active/success/error but no pending or warning and does not speak its status. SwiftUI, Compose and Flutter timelines have no status yet, so this stays partial."
         },
         {
           "name": "Domain result screens",
@@ -570,7 +572,7 @@
           "layer": "L2",
           "tier": "core",
           "target": "cross-platform-core",
-          "status": "partial",
+          "status": "existing",
           "delivery": "component",
           "evidence": [
             "ui:number-input",
@@ -578,7 +580,7 @@
           ],
           "dependsOn": [],
           "phase": 2,
-          "notes": "NumberInput (with steppers) covers it; the order-summary block already uses it per line. One shared QuantityPicker contract, not three."
+          "notes": "Phase 2: NumberInput IS the QuantityPicker contract, now with localisable stepper names, `aria-disabled` bounds that keep keyboard focus, and a polite announcement of stepper changes. No separate QuantityPicker component. The order-summary block uses it per line."
         },
         {
           "name": "Cart",
@@ -746,14 +748,16 @@
           "layer": "L2",
           "tier": "core",
           "target": "cross-platform-core",
-          "status": "planned",
+          "status": "existing",
           "delivery": "component",
-          "evidence": [],
+          "evidence": [
+            "ui:time-slot-picker"
+          ],
           "dependsOn": [
             "ToggleGroup"
           ],
           "phase": 2,
-          "notes": "A labelled radio/toggle grid of slots with an empty state; time zones stated in text."
+          "notes": "Phase 2. React beta: a Radix radio group of tiles (arrow keys across periods, Space selects), unavailable slots disabled, struck through and spoken, limited slots carry a note, empty state, and a stated time zone; times are never converted. Native tabs show a composition; Angular planned."
         },
         {
           "name": "GuestPicker",
@@ -761,15 +765,18 @@
           "layer": "L2",
           "tier": "core",
           "target": "cross-platform-core",
-          "status": "planned",
+          "status": "existing",
           "delivery": "component",
-          "evidence": [],
+          "evidence": [
+            "ui:guest-picker",
+            "ui:number-input"
+          ],
           "dependsOn": [
             "NumberInput",
             "Popover"
           ],
           "phase": 2,
-          "notes": "Grouped steppers (adults, children) in a Popover with a summary trigger."
+          "notes": "Phase 2. React beta composed from NumberInput steppers in a Popover: per-category and total limits, a summary on the trigger, every label supplied. Native tabs show a composition; Angular planned."
         },
         {
           "name": "ResourcePicker / ProviderPicker / LocationPicker / ServicePicker",
@@ -1122,14 +1129,16 @@
           "layer": "L4",
           "tier": "core",
           "target": "block",
-          "status": "planned",
+          "status": "partial",
           "delivery": "block",
-          "evidence": [],
+          "evidence": [
+            "block:receipt"
+          ],
           "dependsOn": [
             "Receipt"
           ],
           "phase": 2,
-          "notes": "Word changes over one Receipt block."
+          "notes": "The payment receipt exists as the Receipt block; booking, transfer, order and refund receipts are word changes over it and are not written as separate blocks yet."
         }
       ]
     },
@@ -1145,14 +1154,16 @@
           "layer": "L2",
           "tier": "core",
           "target": "cross-platform-core",
-          "status": "planned",
+          "status": "existing",
           "delivery": "component",
-          "evidence": [],
+          "evidence": [
+            "ui:amount-display"
+          ],
           "dependsOn": [
             "—"
           ],
           "phase": 2,
-          "notes": "Pulled forward from Phase 5: every price in Commerce and Booking needs one money-display contract (Intl formatting supplied by the product, sign, currency code for screen readers, tabular figures)."
+          "notes": "Phase 2. React beta: formatted value supplied by the product (never calculated), real minus or plus sign spoken as a word, tone independent of sign (a refund is negative and good), tabular figures, its own `dir=\"auto\"` run, optional full screen-reader label. Native tabs show a composition; Angular planned (data wave)."
         },
         {
           "name": "MoneyInput",
@@ -3140,16 +3151,20 @@
           "layer": "L2",
           "tier": "core",
           "target": "cross-platform-core",
-          "status": "planned",
+          "status": "partial",
           "delivery": "component",
-          "evidence": [],
+          "evidence": [
+            "ui:address-fields",
+            "ui:phone-input",
+            "ui:country-select"
+          ],
           "dependsOn": [
             "Field",
             "Select",
             "Combobox"
           ],
           "phase": 2,
-          "notes": "Pulled into Phase 2: checkout and booking need them. Country/phone data is supplied, not bundled."
+          "notes": "Phase 2: AddressForm shipped as AddressFields (fields in a fieldset, not a `<form>`; order, labels and requiredness supplied per country; section-prefixed autocomplete tokens; no postal database). PhoneInput (native calling-code select + tel field, `dir=\"ltr\"`, raw value, paste detection, no validation and no numbering database) and CountrySelect (combobox recipe over a supplied list; a flag is never the only identifier) are React betas. TimezoneSelect is not built."
         },
         {
           "name": "DateRangeInput / DateTimeRangeInput",
@@ -3160,12 +3175,12 @@
           "status": "partial",
           "delivery": "component",
           "evidence": [
-            "ui:calendar",
-            "ui:date-picker"
+            "ui:date-range-input",
+            "ui:calendar"
           ],
           "dependsOn": [],
           "phase": 2,
-          "notes": "Calendar has range mode; DatePicker is single-date — a range field is the gap."
+          "notes": "Phase 2: DateRangeInput is a React beta over Calendar range mode in a Popover with ISO calendar-date strings, so no time zone moves a booking; Calendar's chevrons now mirror under RTL. DateTimeRangeInput is not built."
         },
         {
           "name": "DurationInput / UnitInput",

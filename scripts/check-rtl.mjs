@@ -62,7 +62,6 @@ const RULES = [
 const NOT_YET_CONVERTED = new Set([
   "audio-player.tsx",
   "button-group.tsx",
-  "calendar.tsx",
   "carousel.tsx",
   "code-block.tsx",
   "comparison-slider.tsx",
@@ -76,7 +75,6 @@ const NOT_YET_CONVERTED = new Set([
   "sidebar.tsx",
   "tab-bar.tsx",
   "table.tsx",
-  "timeline.tsx",
   "tree-view.tsx",
 ]);
 

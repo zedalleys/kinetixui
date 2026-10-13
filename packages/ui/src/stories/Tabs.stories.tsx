@@ -50,7 +50,7 @@ export const Playground: StoryObj<typeof meta> = { render: (args) => (
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
 
 export const States: StoryObj<typeof meta> = { render: () => (
-    <div className="grid w-[26rem] max-w-full gap-6">
+    <div className="grid w-[26rem] max-w-full grid-cols-[minmax(0,1fr)] gap-6">
       {(["page", "card"] as const).map((where) => {
         const tabs = (
           <Tabs defaultValue="overview">

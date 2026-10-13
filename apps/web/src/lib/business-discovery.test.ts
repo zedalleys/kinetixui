@@ -80,7 +80,10 @@ describe("relationships derived for a component", () => {
     expect(ctx.capabilities.map((c) => c.id)).toEqual(["transactions"]);
     expect(ctx.domains.map((d) => d.id).sort()).toEqual(["commerce", "finance", "travel-booking"]);
     expect(ctx.workflows.map((w) => w.id).sort()).toEqual(["checkout", "flight-booking", "money-transfer"]);
-    expect(ctx.buildsToward).toContain("Receipt");
+    expect(ctx.buildsToward).not.toContain("Receipt");
+    expect(ROWS.Receipt.status).toBe("existing");
+    expect(ROWS.Receipt.blocks).toEqual(["receipt"]);
+    expect(BLOCK_DISCOVERY.receipt.workflows).toContain("checkout");
     // a domain with a page links to the workflow on it; one without stays plain text
     expect(ctx.workflows.find((w) => w.id === "checkout")!.href).toBe("/use-cases/commerce#checkout");
     expect(ctx.workflows.find((w) => w.id === "money-transfer")!.href).toBeUndefined();

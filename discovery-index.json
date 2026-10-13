@@ -217,11 +217,13 @@
     },
     "Receipt": {
       "name": "Receipt",
-      "status": "planned",
+      "status": "existing",
       "delivery": "block",
       "layer": "L4",
       "components": [],
-      "blocks": [],
+      "blocks": [
+        "receipt"
+      ],
       "iot": []
     },
     "StatusTimeline": {
@@ -264,7 +266,7 @@
     },
     "ProductQuantity / CartQuantity / QuantityPicker": {
       "name": "ProductQuantity / CartQuantity / QuantityPicker",
-      "status": "partial",
+      "status": "existing",
       "delivery": "component",
       "layer": "L2",
       "components": [
@@ -353,19 +355,24 @@
     },
     "TimeSlotPicker": {
       "name": "TimeSlotPicker",
-      "status": "planned",
+      "status": "existing",
       "delivery": "component",
       "layer": "L2",
-      "components": [],
+      "components": [
+        "time-slot-picker"
+      ],
       "blocks": [],
       "iot": []
     },
     "GuestPicker": {
       "name": "GuestPicker",
-      "status": "planned",
+      "status": "existing",
       "delivery": "component",
       "layer": "L2",
-      "components": [],
+      "components": [
+        "guest-picker",
+        "number-input"
+      ],
       "blocks": [],
       "iot": []
     },
@@ -525,19 +532,23 @@
     },
     "Receipt blocks": {
       "name": "Receipt blocks",
-      "status": "planned",
+      "status": "partial",
       "delivery": "block",
       "layer": "L4",
       "components": [],
-      "blocks": [],
+      "blocks": [
+        "receipt"
+      ],
       "iot": []
     },
     "AmountDisplay": {
       "name": "AmountDisplay",
-      "status": "planned",
+      "status": "existing",
       "delivery": "component",
       "layer": "L2",
-      "components": [],
+      "components": [
+        "amount-display"
+      ],
       "blocks": [],
       "iot": []
     },
@@ -1595,10 +1606,14 @@
     },
     "AddressForm / PhoneInput / CountrySelect / TimezoneSelect": {
       "name": "AddressForm / PhoneInput / CountrySelect / TimezoneSelect",
-      "status": "planned",
+      "status": "partial",
       "delivery": "component",
       "layer": "L2",
-      "components": [],
+      "components": [
+        "address-fields",
+        "phone-input",
+        "country-select"
+      ],
       "blocks": [],
       "iot": []
     },
@@ -1608,8 +1623,8 @@
       "delivery": "component",
       "layer": "L2",
       "components": [
-        "calendar",
-        "date-picker"
+        "date-range-input",
+        "calendar"
       ],
       "blocks": [],
       "iot": []
@@ -1726,11 +1741,12 @@
         }
       ],
       "counts": {
-        "existing": 9,
+        "existing": 12,
         "partial": 7,
-        "planned": 26
+        "planned": 23
       },
       "components": [
+        "amount-display",
         "description-list",
         "input-group",
         "metric",
@@ -1744,7 +1760,8 @@
       ],
       "blocks": [
         "order-summary",
-        "pricing-tier"
+        "pricing-tier",
+        "receipt"
       ],
       "iot": [],
       "rows": [
@@ -1837,13 +1854,16 @@
         }
       ],
       "counts": {
-        "existing": 3,
+        "existing": 5,
         "partial": 0,
-        "planned": 15
+        "planned": 13
       },
       "components": [
         "calendar",
-        "pass-card"
+        "guest-picker",
+        "number-input",
+        "pass-card",
+        "time-slot-picker"
       ],
       "blocks": [],
       "iot": [],
@@ -2004,16 +2024,19 @@
       ],
       "counts": {
         "existing": 0,
-        "partial": 3,
-        "planned": 1
+        "partial": 4,
+        "planned": 0
       },
       "components": [
+        "address-fields",
         "calendar",
-        "date-picker",
+        "country-select",
+        "date-range-input",
         "field",
         "form",
         "input-group",
-        "number-input"
+        "number-input",
+        "phone-input"
       ],
       "blocks": [],
       "iot": [],
@@ -2298,21 +2321,26 @@
       "summary": "Products, carts, checkout, orders, refunds, gift cards and loyalty.",
       "page": true,
       "counts": {
-        "existing": 4,
-        "partial": 4,
-        "planned": 18
+        "existing": 7,
+        "partial": 5,
+        "planned": 14
       },
       "components": [
+        "address-fields",
+        "amount-display",
+        "country-select",
         "field",
         "form",
         "number-input",
         "pass-card",
+        "phone-input",
         "price-breakdown",
         "reference-code",
         "result-state"
       ],
       "blocks": [
-        "order-summary"
+        "order-summary",
+        "receipt"
       ],
       "iot": [],
       "capabilities": [
@@ -2357,19 +2385,22 @@
       "summary": "Reservations, availability, itineraries, travellers and boarding passes.",
       "page": true,
       "counts": {
-        "existing": 9,
+        "existing": 11,
         "partial": 2,
-        "planned": 14
+        "planned": 12
       },
       "components": [
         "calendar",
-        "date-picker",
+        "date-range-input",
         "field",
         "form",
+        "guest-picker",
+        "number-input",
         "pass-card",
         "price-breakdown",
         "reference-code",
-        "result-state"
+        "result-state",
+        "time-slot-picker"
       ],
       "blocks": [],
       "iot": [],
@@ -2416,18 +2447,21 @@
       "summary": "Amounts, transfers, fees, transactions, invoices and money inputs.",
       "page": false,
       "counts": {
-        "existing": 3,
-        "partial": 1,
-        "planned": 8
+        "existing": 4,
+        "partial": 2,
+        "planned": 6
       },
       "components": [
+        "amount-display",
         "input-group",
         "number-input",
         "price-breakdown",
         "reference-code",
         "result-state"
       ],
-      "blocks": [],
+      "blocks": [
+        "receipt"
+      ],
       "iot": [],
       "capabilities": [
         "transactions"
@@ -2820,6 +2854,19 @@
       "domains": [],
       "workflows": []
     },
+    "address-fields": {
+      "layer": "unclassified",
+      "target": "unclassified",
+      "capabilities": [
+        "forms"
+      ],
+      "domains": [
+        "commerce"
+      ],
+      "workflows": [
+        "checkout"
+      ]
+    },
     "alert": {
       "layer": "unclassified",
       "target": "unclassified",
@@ -2841,6 +2888,30 @@
       "buildsToward": [
         "Upgrade / downgrade / cancel flows",
         "APIKeyTable / SecretKeyManager"
+      ]
+    },
+    "amount-display": {
+      "layer": "L2",
+      "target": "cross-platform-core",
+      "roadmapRow": "AmountDisplay",
+      "capabilities": [
+        "transactions"
+      ],
+      "domains": [
+        "finance",
+        "commerce"
+      ],
+      "workflows": [
+        "checkout",
+        "money-transfer"
+      ],
+      "buildsToward": [
+        "TransactionCard",
+        "ProductCard",
+        "ExchangeRateDisplay / ExchangeRate",
+        "TransactionList",
+        "InvoiceList / PaymentHistory",
+        "WalletBalance / GiftCardBalance"
       ]
     },
     "app-bar": {
@@ -2974,7 +3045,6 @@
       "domains": [],
       "workflows": [],
       "buildsToward": [
-        "Receipt",
         "ProductCard",
         "OrderCard",
         "ResourcePicker / ProviderPicker / LocationPicker / ServicePicker",
@@ -3063,8 +3133,7 @@
       "domains": [],
       "workflows": [],
       "buildsToward": [
-        "ResourcePicker / ProviderPicker / LocationPicker / ServicePicker",
-        "AddressForm / PhoneInput / CountrySelect / TimezoneSelect"
+        "ResourcePicker / ProviderPicker / LocationPicker / ServicePicker"
       ]
     },
     "command": {
@@ -3091,6 +3160,23 @@
       "capabilities": [],
       "domains": [],
       "workflows": []
+    },
+    "country-select": {
+      "layer": "L2",
+      "target": "cross-platform-core",
+      "roadmapRow": "AddressForm / PhoneInput / CountrySelect / TimezoneSelect",
+      "capabilities": [
+        "forms"
+      ],
+      "domains": [
+        "commerce"
+      ],
+      "workflows": [
+        "checkout"
+      ],
+      "buildsToward": [
+        "Checkout"
+      ]
     },
     "data-grid": {
       "layer": "L2",
@@ -3124,6 +3210,17 @@
     "date-picker": {
       "layer": "unclassified",
       "target": "unclassified",
+      "capabilities": [],
+      "domains": [],
+      "workflows": [],
+      "buildsToward": [
+        "QueryBuilder"
+      ]
+    },
+    "date-range-input": {
+      "layer": "L2",
+      "target": "cross-platform-core",
+      "roadmapRow": "DateRangeInput / DateTimeRangeInput",
       "capabilities": [
         "forms"
       ],
@@ -3132,9 +3229,6 @@
       ],
       "workflows": [
         "flight-booking"
-      ],
-      "buildsToward": [
-        "QueryBuilder"
       ]
     },
     "description-list": {
@@ -3146,7 +3240,6 @@
       "domains": [],
       "workflows": [],
       "buildsToward": [
-        "Receipt",
         "BookingCard / ReservationCard",
         "BaggageAllowance / GateInfo / BoardingGroup",
         "Invoice",
@@ -3235,8 +3328,7 @@
       "buildsToward": [
         "IBANInput / AccountNumberInput",
         "PaymentCardInput",
-        "GiftCardRedeem",
-        "AddressForm / PhoneInput / CountrySelect / TimezoneSelect"
+        "GiftCardRedeem"
       ]
     },
     "file-upload": {
@@ -3278,6 +3370,23 @@
         "Checkout",
         "ReturnRequest",
         "RoleEditor"
+      ]
+    },
+    "guest-picker": {
+      "layer": "L2",
+      "target": "cross-platform-core",
+      "roadmapRow": "GuestPicker",
+      "capabilities": [
+        "booking-scheduling"
+      ],
+      "domains": [
+        "travel-booking"
+      ],
+      "workflows": [
+        "flight-booking"
+      ],
+      "buildsToward": [
+        "Booking flow"
       ]
     },
     "hover-card": {
@@ -3507,18 +3616,20 @@
       "target": "unclassified",
       "capabilities": [
         "transactions",
+        "booking-scheduling",
         "forms"
       ],
       "domains": [
         "commerce",
+        "travel-booking",
         "finance"
       ],
       "workflows": [
-        "checkout"
+        "checkout",
+        "flight-booking"
       ],
       "buildsToward": [
         "QueryBuilder",
-        "GuestPicker",
         "MoneyInput"
       ]
     },
@@ -3571,6 +3682,23 @@
       "domains": [],
       "workflows": []
     },
+    "phone-input": {
+      "layer": "L2",
+      "target": "cross-platform-core",
+      "roadmapRow": "AddressForm / PhoneInput / CountrySelect / TimezoneSelect",
+      "capabilities": [
+        "forms"
+      ],
+      "domains": [
+        "commerce"
+      ],
+      "workflows": [
+        "checkout"
+      ],
+      "buildsToward": [
+        "Checkout"
+      ]
+    },
     "popover": {
       "layer": "unclassified",
       "target": "unclassified",
@@ -3578,7 +3706,6 @@
       "domains": [],
       "workflows": [],
       "buildsToward": [
-        "GuestPicker",
         "WorkspaceSwitcher",
         "MapMarker / MapMarkerCard / MapCluster",
         "PresenceIndicator / ReactionPicker"
@@ -3602,7 +3729,6 @@
         "money-transfer"
       ],
       "buildsToward": [
-        "Receipt",
         "Domain result screens",
         "Checkout",
         "RefundSummary / RefundStatus",
@@ -3668,7 +3794,6 @@
         "money-transfer"
       ],
       "buildsToward": [
-        "Receipt",
         "Domain result screens",
         "OrderCard",
         "BookingCard / ReservationCard",
@@ -3753,8 +3878,7 @@
       "buildsToward": [
         "QueryBuilder",
         "ResourcePicker / ProviderPicker / LocationPicker / ServicePicker",
-        "MoneyInput",
-        "AddressForm / PhoneInput / CountrySelect / TimezoneSelect"
+        "MoneyInput"
       ]
     },
     "separator": {
@@ -3913,6 +4037,21 @@
         "PromptInput"
       ]
     },
+    "time-slot-picker": {
+      "layer": "L2",
+      "target": "cross-platform-core",
+      "roadmapRow": "TimeSlotPicker",
+      "capabilities": [
+        "booking-scheduling"
+      ],
+      "domains": [
+        "travel-booking"
+      ],
+      "workflows": [],
+      "buildsToward": [
+        "AvailabilityPicker / AppointmentPicker"
+      ]
+    },
     "timeline": {
       "layer": "unclassified",
       "target": "unclassified",
@@ -3940,7 +4079,6 @@
       "workflows": [],
       "buildsToward": [
         "ProductVariant / ProductOption",
-        "TimeSlotPicker",
         "SeatMap"
       ]
     },
@@ -4066,6 +4204,18 @@
       "capabilities": [],
       "domains": [],
       "workflows": []
+    },
+    "receipt": {
+      "capabilities": [
+        "transactions"
+      ],
+      "domains": [
+        "commerce",
+        "finance"
+      ],
+      "workflows": [
+        "checkout"
+      ]
     },
     "settings-list": {
       "capabilities": [],

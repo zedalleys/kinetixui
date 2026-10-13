@@ -1,0 +1,51 @@
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("country-select", "Choose a country by typing its name, code or a keyword: the combobox recipe with a country data adapter, and the country list supplied by the product.");
+
+# Country Select
+
+<ComponentMeta />
+
+Choose a country by typing its name, code or a keyword: the combobox recipe with a country data adapter, and the country list supplied by the product.
+
+<ComponentPreview name="country-select-demo" />
+
+## React installation
+
+```bash
+npx @kinetixui/cli add country-select
+```
+
+## React usage
+
+```tsx
+import { CountrySelect } from "@kinetixui/ui";
+
+<CountrySelect
+  label="Country"
+  countries={[
+    { code: "SA", name: "Saudi Arabia", keywords: ["KSA", "السعودية"] },
+    { code: "AE", name: "United Arab Emirates", keywords: ["UAE"] },
+  ]}
+  value={country}
+  onValueChange={setCountry}
+  name="country"
+/>
+```
+
+CountrySelect is the [combobox recipe](/docs/components/combobox) with a country data adapter. It ships **no country
+list**: you pass the countries you serve, with names in the reader's language (for example from
+`Intl.DisplayNames`), so nothing is bundled that you cannot localise or trim.
+
+- Search matches the name, the code and any `keywords` you add (alternative names, local spellings).
+- `showCode` shows the ISO code beside each name. `adornment` can hold a flag, but a flag is never the only
+  identifier: the name is always shown and always spoken.
+- `name` renders a hidden input so the value posts with a native form.
+
+## Accessibility and RTL
+
+- The trigger is a button with `aria-haspopup="listbox"` whose name is the label and the chosen country.
+- The search field is named by `searchPlaceholder`, and the list is cmdk's listbox with arrow-key navigation.
+- Logical properties throughout; the panel mirrors under RTL. Checked in jsdom and Chromium; no screen reader run.
+
+<ComponentApi slug="country-select" />
