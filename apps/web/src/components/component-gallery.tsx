@@ -127,10 +127,13 @@ function Thumbnail({ item }: { item: Item }) {
       : demoRegistry[`${item.slug}-demo`]?.component;
 
   return (
-    <div className="relative h-[184px] overflow-hidden border-b border-border/60 bg-muted/20 bg-[radial-gradient(hsl(var(--border)/0.45)_1px,transparent_1px)] [background-size:16px_16px]">
+    <div
+      data-gallery-thumbnail={Mock ? "mock" : Demo ? "demo" : "label"}
+      className="relative h-[184px] overflow-hidden border-b border-border/60 bg-muted/20 bg-[radial-gradient(hsl(var(--border)/0.45)_1px,transparent_1px)] [background-size:16px_16px]">
       {Mock ? (
         <div
           aria-hidden
+          data-gallery-thumbnail-body
           className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 transition-transform duration-300 motion-safe:group-hover:scale-[1.04]"
         >
           <Mock />
@@ -145,6 +148,7 @@ function Thumbnail({ item }: { item: Item }) {
             if (el) el.inert = true;
           }}
           aria-hidden
+          data-gallery-thumbnail-body
           className="pointer-events-none absolute inset-0 flex origin-center scale-[0.72] items-center justify-center px-4 transition-transform duration-300 motion-safe:group-hover:scale-[0.76]"
         >
           <Demo />
@@ -155,7 +159,11 @@ function Thumbnail({ item }: { item: Item }) {
         </div>
       )}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-card via-card/80 to-transparent" />
-      <span className="pointer-events-none absolute left-2.5 top-2.5 rounded bg-background/70 px-1.5 py-0.5 font-mono text-[10px] tracking-[0.14em] text-muted-foreground backdrop-blur-sm">
+      {/* The slug repeats the title printed under the thumbnail, so it stays out of the card link's name. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute start-2.5 top-2.5 max-w-[calc(100%-1.25rem)] truncate rounded bg-background px-1.5 py-0.5 font-mono text-label-md tracking-[0.14em] text-muted-foreground"
+      >
         {item.slug}
       </span>
     </div>
@@ -166,6 +174,7 @@ function Card({ item }: { item: Item }) {
   return (
     <Link
       href={item.href}
+      data-gallery-card={item.slug}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card",
         "transition-[transform,box-shadow,border-color] duration-200 motion-safe:hover:-translate-y-1",
@@ -176,17 +185,20 @@ function Card({ item }: { item: Item }) {
       {/* accent edge that wipes in on hover/focus */}
       <span
         aria-hidden
-        className="absolute inset-x-0 top-0 z-10 h-0.5 origin-left scale-x-0 bg-primary transition-transform duration-300 group-hover:scale-x-100 group-focus-visible:scale-x-100"
+        className="absolute inset-x-0 top-0 z-10 h-0.5 origin-left scale-x-0 rtl:origin-right bg-primary transition-transform duration-300 group-hover:scale-x-100 group-focus-visible:scale-x-100"
       />
       <Thumbnail item={item} />
-      <div className="flex items-center justify-between gap-3 p-4">
+      {/* flex-wrap: at 320px and 200% text the arrow (2rem, so 64px) drops under the text instead of squeezing the
+          title and the platform tags into a column one tag wide */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4">
         <span className="min-w-0">
           <span className="flex items-center gap-1.5">
             <span className="block truncate font-medium">{item.title}</span>
             {item.status && (
               <span
+                data-gallery-status
                 className={cn(
-                  "shrink-0 rounded border px-1 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em]",
+                  "shrink-0 rounded border px-1 font-mono text-label-md uppercase tracking-[0.1em]",
                   item.status === "deprecated"
                     ? "border-destructive/40 text-destructive"
                     : "border-info/40 text-info",
@@ -196,7 +208,10 @@ function Card({ item }: { item: Item }) {
               </span>
             )}
           </span>
-          <span className="mt-1 inline-block max-w-full truncate rounded border border-border/70 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
+          <span
+            data-gallery-primitive
+            className="mt-1 inline-block max-w-full truncate rounded border border-border/70 px-1.5 py-0.5 font-mono text-label-md uppercase tracking-[0.1em] text-muted-foreground"
+          >
             {item.primitive ?? item.category}
           </span>
           <PlatformBadges slug={item.slug} className="mt-2" />
@@ -208,7 +223,7 @@ function Card({ item }: { item: Item }) {
             "transition-colors duration-200 group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground",
           )}
         >
-          <ArrowRight className="size-4 motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5" />
+          <ArrowRight className="size-4 rtl:-scale-x-100 motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5 rtl:motion-safe:group-hover:-translate-x-0.5" />
         </span>
       </div>
     </Link>
@@ -217,7 +232,9 @@ function Card({ item }: { item: Item }) {
 
 const catButton = (active: boolean) =>
   cn(
-    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] transition-colors",
+    // coarse:min-h-10 — a 26px pill under a mouse, 40px under a finger; the groups' gap grows with it so the
+    // taller rows never touch
+    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-label-md uppercase tracking-[0.12em] transition-colors coarse:min-h-10",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
     active
       ? "border-primary bg-primary text-primary-foreground"
@@ -302,7 +319,7 @@ export function ComponentGallery() {
   // while it is open, and the inline copy is `display: none` on phones, so a screen reader never meets both.
   const facetGroups = (
     <>
-      <div role="group" aria-label="Filter by category" className="flex flex-wrap gap-1.5">
+      <div role="group" aria-label="Filter by category" className="flex flex-wrap gap-1.5 coarse:gap-2">
         <button
           type="button"
           aria-pressed={!activeCat}
@@ -324,8 +341,8 @@ export function ComponentGallery() {
         ))}
       </div>
 
-      <div role="group" aria-label="Filter by platform" className="flex flex-wrap items-center gap-1.5">
-        <span className="mr-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+      <div role="group" aria-label="Filter by platform" className="flex flex-wrap items-center gap-1.5 coarse:gap-2">
+        <span className="me-0.5 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">
           Platform
         </span>
         {PLATFORMS.map((p) => {
@@ -368,7 +385,7 @@ export function ComponentGallery() {
         appear on the component page.{" "}
         {ROLLING_OUT.length > 0 && <>{ROLLING_OUT.join("; ")}, and its catalogue is still rolling out. </>}
         The{" "}
-        <span className="font-mono text-[11px] uppercase tracking-[0.1em]">{ABBR_ROW}</span> tags on each card mark
+        <span className="font-mono text-label-md uppercase tracking-[0.1em]">{ABBR_ROW}</span> tags on each card mark
         which libraries carry it today.
       </p>
 
@@ -384,7 +401,8 @@ export function ComponentGallery() {
             <label htmlFor="component-search" className="sr-only">
               Filter components by name, primitive or category
             </label>
-            <InputGroup className="h-9 flex-1 rounded-md sm:max-w-xs">
+            {/* 44px on a touch screen: the clear button lives inside this clipped box, so the box is its hit area's ceiling */}
+            <InputGroup className="h-9 flex-1 rounded-md coarse:h-11 sm:max-w-xs">
               <InputGroupAddon>
                 <Search aria-hidden />
               </InputGroupAddon>
@@ -406,7 +424,7 @@ export function ComponentGallery() {
                       setQuery("");
                       searchRef.current?.focus();
                     }}
-                    className="rounded-sm p-0.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="kx-hit rounded-sm p-0.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <X aria-hidden className="size-3.5" />
                   </button>
@@ -419,7 +437,7 @@ export function ComponentGallery() {
                   type="button"
                   aria-label={facetCount > 0 ? `Filters, ${facetCount} active` : "Filters"}
                   className={cn(
-                    "relative inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-border px-3 text-sm md:hidden",
+                    "kx-hit relative inline-flex h-9 shrink-0 items-center coarse:h-11 gap-1.5 rounded-md border border-border px-3 text-sm md:hidden",
                     facetCount > 0 ? "border-primary text-foreground" : "text-muted-foreground",
                     "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   )}
@@ -429,7 +447,7 @@ export function ComponentGallery() {
                   {facetCount > 0 && (
                     <span
                       aria-hidden
-                      className="grid min-w-5 place-items-center rounded-full bg-primary px-1 font-mono text-[10px] tabular-nums text-primary-foreground"
+                      className="grid min-w-5 place-items-center rounded-full bg-primary px-1 font-mono text-label-md tabular-nums text-primary-foreground"
                     >
                       {facetCount}
                     </span>
@@ -479,7 +497,7 @@ export function ComponentGallery() {
         </div>
       </div>
 
-      <p role="status" aria-live="polite" className="mt-4 font-mono text-[11px] text-muted-foreground">
+      <p role="status" aria-live="polite" className="mt-4 font-mono text-body-sm text-muted-foreground">
         {filtered.length === ITEMS.length
           ? `${ITEMS.length} entries`
           : `${filtered.length} of ${ITEMS.length} entries`}
@@ -499,7 +517,7 @@ export function ComponentGallery() {
           <button
             type="button"
             onClick={clearAll}
-            className="mt-3 font-mono text-[11px] uppercase tracking-[0.12em] text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="mt-3 font-mono text-label-md uppercase tracking-[0.12em] text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             Clear filters
           </button>

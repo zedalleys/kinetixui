@@ -1364,7 +1364,7 @@ add(
   () => (
     <AppBar className="w-full max-w-2xl rounded-md border">
       <AppBarBrand>
-        <span className="grid size-6 place-items-center rounded bg-primary text-[11px] font-bold text-primary-foreground">
+        <span className="grid size-6 place-items-center rounded bg-primary text-body-sm font-bold text-primary-foreground">
           A
         </span>
         Acme

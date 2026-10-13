@@ -18,7 +18,7 @@ import { trackFenceCopy } from "@/lib/analytics-surfaces";
 export function InstallCommand({ command, language = "bash" }: { command: string; language?: string }) {
   return (
     <div className="group relative overflow-hidden rounded-lg border border-border bg-muted/40">
-      <div className="flex items-center justify-between border-b border-border px-4 py-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+      <div className="flex items-center justify-between border-b border-border px-4 py-1.5 text-label-md uppercase tracking-wide text-muted-foreground">
         <span>{language}</span>
         <CopyButton value={command} onCopy={() => trackFenceCopy(command, language, "/iot")} />
       </div>
@@ -27,7 +27,7 @@ export function InstallCommand({ command, language = "bash" }: { command: string
       <pre
         dir="ltr"
         tabIndex={0}
-        className="overflow-x-auto p-4 text-[13px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+        className="overflow-x-auto p-4 text-code leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       >
         <code>{command}</code>
       </pre>

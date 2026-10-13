@@ -112,7 +112,7 @@ export default function ChangelogPage() {
       </p>
 
       <p className="mt-5 text-sm">
-        <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Latest </span>
+        <span className="font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">Latest </span>
         <a href={`#${latest.version}`} className="font-semibold text-primary underline-offset-4 hover:underline">
           v{latest.version}
         </a>

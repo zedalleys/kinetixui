@@ -70,7 +70,8 @@ export function ColorsContent() {
 
       <Link
         href="/create"
-        className="group mt-6 flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/20 px-4 py-3 transition-colors hover:border-primary/40"
+        // flex-wrap: at 320px and 200% text the CTA needs its own line rather than pushing the page sideways
+        className="group mt-6 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-border bg-muted/20 px-4 py-3 transition-colors hover:border-primary/40"
       >
         <span>
           <span className="font-medium">Want your own palette?</span>{" "}
@@ -78,7 +79,7 @@ export function ColorsContent() {
             Pick a theme colour in Create and it derives the interactive roles, in OKLCH.
           </span>
         </span>
-        <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-primary transition-transform group-hover:translate-x-0.5">
+        <span className="font-mono text-label-md uppercase tracking-[0.1em] text-primary transition-transform group-hover:translate-x-0.5">
           Customize in Create →
         </span>
       </Link>
@@ -87,7 +88,7 @@ export function ColorsContent() {
       <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-y border-border py-3">
         <nav
           aria-label="Jump to a ramp"
-          className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground"
+          className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground"
         >
           {RAMPS.map((r) => (
             <a
@@ -107,7 +108,7 @@ export function ColorsContent() {
               aria-pressed={format === f}
               onClick={() => setFormat(f)}
               className={cn(
-                "rounded px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors",
+                "rounded px-2.5 py-1 font-mono text-label-md uppercase tracking-[0.1em] transition-colors",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 format === f ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
               )}
@@ -133,7 +134,7 @@ export function ColorsContent() {
               <div className="mt-5 flex justify-end">
                 <button
                   onClick={() => copyRamp(ramp, steps)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground transition-colors hover:text-foreground"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 font-mono text-label-md uppercase tracking-[0.1em] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   <Copy className="size-3.5" />
                   Copy ramp as CSS
@@ -172,10 +173,10 @@ export function ColorsContent() {
                         style={{ background: hex, color: textHex }}
                       >
                         <span className="flex items-start justify-between gap-1">
-                          <span className="font-mono text-[11px] font-medium">{step}</span>
+                          <span className="font-mono text-body-sm font-medium">{step}</span>
                           {aaTag && (
                             <span
-                              className="rounded px-1 py-0.5 font-mono text-[9px] uppercase leading-none"
+                              className="rounded px-1 py-0.5 font-mono text-label-md uppercase leading-none"
                               style={{ boxShadow: `inset 0 0 0 1px ${textHex}66` }}
                             >
                               {aaTag}
@@ -183,12 +184,12 @@ export function ColorsContent() {
                           )}
                         </span>
                         {tokenName && (
-                          <span className="self-start rounded px-1.5 py-0.5 font-mono text-[9px] uppercase leading-none" style={{ boxShadow: `inset 0 0 0 1px ${textHex}66` }}>
+                          <span className="max-w-full self-start rounded px-1.5 py-0.5 font-mono text-label-md uppercase leading-none [overflow-wrap:anywhere]" style={{ boxShadow: `inset 0 0 0 1px ${textHex}66` }}>
                             --{tokenName}
                           </span>
                         )}
                       </span>
-                      <span className="flex items-center justify-between gap-1 px-2 py-1.5 text-[11px]">
+                      <span className="flex items-center justify-between gap-1 px-2 py-1.5 text-body-sm">
                         <span className="truncate font-mono text-muted-foreground">{value}</span>
                         <span className="shrink-0 text-muted-foreground">
                           {copied === value ? <Check className="size-3" /> : <Copy className="size-3 opacity-0 transition-opacity group-hover:opacity-100" />}

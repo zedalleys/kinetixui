@@ -72,7 +72,7 @@ function usePrefersReducedMotion() {
 }
 
 const toggle = cn(
-  "min-h-8 rounded px-2 py-1 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors",
+  "min-h-8 rounded px-2 py-1 font-mono text-label-md uppercase tracking-[0.1em] transition-colors",
   "text-muted-foreground hover:text-foreground",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
   "aria-pressed:bg-background aria-pressed:text-foreground aria-pressed:shadow-sm",
@@ -122,7 +122,7 @@ export function PreviewEnvironment({
           changes only when the reader changes their own OS preference, and announcing it then would
           interrupt them to tell them what they just did.
         */}
-        <p className="m-0 font-mono text-[11px] text-muted-foreground">
+        <p className="m-0 font-mono text-body-sm text-muted-foreground">
           Reduced motion:{" "}
           <span className="text-foreground">{reduced ? "on" : "off"}</span>
           <span className="hidden sm:inline"> · your browser setting</span>

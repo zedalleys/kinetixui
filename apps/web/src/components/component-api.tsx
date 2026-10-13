@@ -112,13 +112,13 @@ export function ComponentApi({ slug }: { slug: string }) {
               <caption className="sr-only">{part.name} props</caption>
               <thead>
                 <tr className="border-b border-border bg-muted/30 text-left">
-                  <th scope="col" className="px-3 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                  <th scope="col" className="px-3 py-2 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">
                     Prop
                   </th>
-                  <th scope="col" className="px-3 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                  <th scope="col" className="px-3 py-2 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">
                     Type
                   </th>
-                  <th scope="col" className="hidden px-3 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground sm:table-cell">
+                  <th scope="col" className="hidden px-3 py-2 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground sm:table-cell">
                     Notes
                   </th>
                 </tr>
@@ -126,25 +126,25 @@ export function ComponentApi({ slug }: { slug: string }) {
               <tbody>
                 {part.props!.map((p) => (
                   <tr key={p.name} className="border-b border-border/60 align-top">
-                    <th scope="row" className="px-2 py-2 text-left font-mono text-[12px] font-medium [overflow-wrap:break-word] sm:px-3">
+                    <th scope="row" className="px-2 py-2 text-left font-mono text-body-sm font-medium [overflow-wrap:break-word] sm:px-3">
                       {p.name}
                       {p.required && (
-                        <span className="ml-1.5 font-sans text-[10px] uppercase tracking-wide text-muted-foreground">
+                        <span className="ml-1.5 font-sans text-label-md uppercase tracking-wide text-muted-foreground">
                           required
                         </span>
                       )}
                     </th>
-                    <td className="px-2 py-2 font-mono text-[12px] text-muted-foreground [overflow-wrap:anywhere] sm:px-3">
+                    <td className="px-2 py-2 font-mono text-body-sm text-muted-foreground [overflow-wrap:anywhere] sm:px-3">
                       {p.type}
                       {/* below `sm` the notes column is dropped, so the note rides under the type rather
                           than being lost — the information stays, the column does not */}
                       {p.description && (
-                        <span className="mt-1 block font-sans text-[12px] text-muted-foreground [overflow-wrap:break-word] sm:hidden">
+                        <span className="mt-1 block font-sans text-body-sm text-muted-foreground [overflow-wrap:break-word] sm:hidden">
                           {p.description}
                         </span>
                       )}
                     </td>
-                    <td className="hidden px-3 py-2 text-[13px] text-muted-foreground [overflow-wrap:break-word] sm:table-cell">
+                    <td className="hidden px-3 py-2 text-body-md text-muted-foreground [overflow-wrap:break-word] sm:table-cell">
                       {p.description ?? ""}
                     </td>
                   </tr>

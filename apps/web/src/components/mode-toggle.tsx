@@ -31,7 +31,7 @@ export function ModeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="Ghost" size="icon" aria-label="Select theme">
+        <Button variant="Ghost" size="icon" aria-label="Select theme" className="kx-hit">
           <TriggerIcon />
           <span className="sr-only">Select theme</span>
         </Button>
