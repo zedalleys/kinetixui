@@ -5,7 +5,7 @@ audience: design-system engineers, frontend leads
 intent: awareness
 channels: [dev.to, linkedin]
 cta: /docs/platforms
-status: drafted
+status: published
 title_options:
   A: "Your cross-platform design system may be lying about parity"   # default
   B: "Your cross-platform parity numbers may be wrong"

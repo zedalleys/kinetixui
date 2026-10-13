@@ -242,7 +242,7 @@
       "result": "Posted 2026-10-09, on its scheduled day 11. Post 1 is https://x.com/zedalleys/status/2108651928087413167 (author-supplied; x.com is not reachable from this environment, so the thread's text was not read back). Posting time about 20:12:51 UTC, derived from the status ID's embedded timestamp rather than read from the post; the author confirmed keeping it as derived, not verified. The author confirmed the thread went out exactly as the X-004 publication package (post 4 reading 'Angular components'); the live thread was not read back. Counts as of 2026-10-09 20:16 UTC, read from PostHog: 0 sessions carried kx_p2_b_token_boundary with utm_content=x_thread, minutes after posting, so not a settled figure. Replies are not readable from this environment and are not recorded; the author can add them. Organic only, no amplification. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {
-      "date": null,
+      "date": "2026-10-12",
       "day": 13,
       "asset": "LI-007",
       "channel": "linkedin",
@@ -260,6 +260,72 @@
       "secondary": null,
       "communityReuse": null,
       "metricToWatch": "/components arrivals that reach component_viewed",
+      "status": "published",
+      "result": "Posted 2026-10-12 at 17:36:41 UTC (2026-10-12T17:36:41Z), with the publication URL and exact posting time supplied by the author: https://www.linkedin.com/feed/update/urn:li:activity:7515463797164265473/ Scheduled day 13; actually published 2026-10-12. Campaign kx_p2_f_two_trades, destination /components, visual VIS-005. Performance counts were not retrieved or recorded at close-out; follow up on /components arrivals that reach component_viewed. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
+    },
+    {
+      "date": "2026-10-13",
+      "day": 15,
+      "asset": "ART-001",
+      "channel": "devto",
+      "destination": "/docs/platforms",
+      "icpHypothesis": "p1",
+      "pillar": "a",
+      "attribution": {
+        "utm_source": "devto",
+        "utm_medium": "referral",
+        "utm_campaign": "kx_p1_a_parity_proof",
+        "utm_content": "art_primary"
+      },
+      "visual": null,
+      "linkPlacement": "in the article body (primary CTA, utm_content=art_primary). The pillar link (utm_content=art_pillar, register row ART-001-PILLAR) is a separate post-publication edit",
+      "secondary": "hashnode, canonical_url pointing at the dev.to article. Optional, after dev.to indexes",
+      "communityReuse": "COM-002 derives from it",
+      "metricToWatch": "kx_p1_a_parity_proof sessions with utm_content=art_primary that reach /docs/platforms, then Qualified Evaluation, as counts",
+      "status": "published",
+      "result": "Published on dev.to on 2026-10-13 (author-supplied date), on its scheduled day 15. The live article is https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0 (author-supplied). Exact publication time: not recorded. The author did not supply one and dev.to is not reachable from this environment (the egress proxy refused the request), so it is left unknown rather than guessed. The live article text was not read back for the same reason, so its links are as the author states: the tracked primary CTA is the register's built URL for ART-001 (utm_content=art_primary). The pillar link (utm_content=art_pillar) is logged separately as ART-001-PILLAR, which stays at brief until the author confirms the edit is live. Counts as of 2026-10-13 14:40 UTC, read from PostHog: 0 events carried kx_p1_a_parity_proof and 0 carried kx_source=devto since 2026-10-12 00:00 UTC, hours after publication, so not a settled figure; it also means publish-checklist.md's attribution stop gate had not yet been observed. dev.to's own view and reaction counts are not readable from this environment and are not recorded; the author can add them. Organic only, no amplification; no hashnode cross-post. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
+    },
+    {
+      "date": null,
+      "day": 16,
+      "asset": "LI-001",
+      "channel": "linkedin",
+      "destination": "/docs/platforms",
+      "icpHypothesis": "p1",
+      "pillar": "a",
+      "attribution": {
+        "utm_source": "linkedin",
+        "utm_medium": "social",
+        "utm_campaign": "kx_p1_a_parity_proof",
+        "utm_content": "li_primary"
+      },
+      "visual": null,
+      "linkPlacement": "dev.to article URL in the post body; the register's tracked /docs/platforms URL as the first comment",
+      "secondary": null,
+      "communityReuse": null,
+      "metricToWatch": "kx_p1_a_parity_proof sessions with utm_content=li_primary that reach /docs/platforms. The post body links the dev.to article, which first-party analytics cannot see, so only the tagged link is countable",
+      "status": "planned",
+      "result": null
+    },
+    {
+      "date": null,
+      "day": 17,
+      "asset": "X-001",
+      "channel": "x",
+      "destination": "/docs/platforms",
+      "icpHypothesis": "p1",
+      "pillar": "a",
+      "attribution": {
+        "utm_source": "x",
+        "utm_medium": "social",
+        "utm_campaign": "kx_p1_a_parity_proof",
+        "utm_content": "x_thread"
+      },
+      "visual": null,
+      "linkPlacement": "dev.to article URL in post 9; the register's tracked /docs/platforms URL as a reply under post 9",
+      "secondary": null,
+      "communityReuse": null,
+      "metricToWatch": "kx_p1_a_parity_proof sessions with utm_content=x_thread that reach /docs/platforms. The post body links the dev.to article, which first-party analytics cannot see, so only the tagged link is countable",
       "status": "planned",
       "result": null
     },
