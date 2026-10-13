@@ -20,7 +20,7 @@ export function DocsBreadcrumb() {
     return (
       <nav
         aria-label="Docs breadcrumb"
-        className="font-mono text-[11px] uppercase tracking-[0.14em] text-foreground"
+        className="font-mono text-label-md uppercase tracking-[0.14em] text-foreground"
       >
         <span data-crumb>Docs</span>
       </nav>
@@ -34,7 +34,7 @@ export function DocsBreadcrumb() {
   return (
     <nav
       aria-label="Docs breadcrumb"
-      className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground"
+      className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-label-md uppercase tracking-[0.14em] text-muted-foreground"
     >
       <Link href={docs!.href!} className="transition-colors hover:text-foreground">
         {docs!.name}

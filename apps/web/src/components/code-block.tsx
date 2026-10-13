@@ -12,11 +12,11 @@ export function CodeBlock({
 }) {
   return (
     <div className={cn("group relative overflow-hidden rounded-lg border border-border bg-muted/40", className)}>
-      <div className="flex items-center justify-between border-b border-border px-4 py-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+      <div className="flex items-center justify-between border-b border-border px-4 py-1.5 text-label-md uppercase tracking-wide text-muted-foreground">
         <span>{language}</span>
         <CopyButton value={code} />
       </div>
-      <pre className="overflow-x-auto p-4 text-[13px] leading-relaxed">
+      <pre className="overflow-x-auto p-4 text-code leading-relaxed">
         <code>{code}</code>
       </pre>
     </div>

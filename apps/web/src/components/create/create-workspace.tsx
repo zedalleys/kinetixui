@@ -202,7 +202,7 @@ export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfi
           <div className="lg-rem:sticky lg-rem:top-20">
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
               <div className="flex items-baseline gap-4">
-                <span className="font-mono text-[11px] font-medium text-primary">[08]</span>
+                <span className="font-mono text-body-sm font-medium text-primary">[08]</span>
                 {/* Named for what it is. A browser rendering the web components — not a SwiftUI, Compose
                     or Flutter preview, and never to be captioned as one. */}
                 <h2 id="create-preview-heading" className="eyebrow">

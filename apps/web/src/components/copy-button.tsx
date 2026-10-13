@@ -40,7 +40,8 @@ export function CopyButton({
           );
         }}
         className={cn(
-          "inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+          // kx-hit: 28px drawn, 44px tappable on a touch screen (globals.css)
+          "kx-hit inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
           className,
         )}
       >

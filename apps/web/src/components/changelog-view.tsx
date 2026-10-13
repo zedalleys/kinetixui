@@ -44,7 +44,7 @@ function Inline({ text }: { text: string }) {
     <>
       {text.split(/(`[^`]+`)/g).map((part, i) =>
         part.startsWith("`") && part.endsWith("`") && part.length > 2 ? (
-          <code key={i} className="rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.85em] text-foreground">
+          <code key={i} className="rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.875em] text-foreground">
             {part.slice(1, -1)}
           </code>
         ) : (
@@ -55,11 +55,11 @@ function Inline({ text }: { text: string }) {
   );
 }
 
-const PILL = "rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]";
+const PILL = "rounded-full border px-2 py-0.5 font-mono text-label-md uppercase tracking-[0.12em]";
 
 function KindTag({ kind }: { kind?: ChangeKind }) {
   if (!kind) return null;
-  return <span className={`${PILL} ${KIND_STYLE[kind]} mr-2 align-middle`}>{KIND_LABEL[kind]}</span>;
+  return <span data-changelog-pill className={`${PILL} ${KIND_STYLE[kind]} mr-2 align-middle`}>{KIND_LABEL[kind]}</span>;
 }
 
 function Packages({ packages }: { packages: NonNullable<ViewRelease["packages"]> }) {
@@ -69,7 +69,7 @@ function Packages({ packages }: { packages: NonNullable<ViewRelease["packages"]>
     { key: "cli", label: "CLI" },
   ];
   return (
-    <ul aria-label="Packages changed in this release" className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] uppercase tracking-[0.1em]">
+    <ul aria-label="Packages changed in this release" className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-label-md uppercase tracking-[0.1em]">
       <li className="text-muted-foreground">Packages</li>
       {items.map(({ key, label }) => (
         <li
@@ -90,7 +90,7 @@ function ComponentGroups({ groups }: { groups: NonNullable<ViewRelease["groups"]
     <div className="mt-4 space-y-3">
       {groups.map((g) => (
         <div key={g.group}>
-          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{g.group}</p>
+          <p data-changelog-group className="font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">{g.group}</p>
           <ul className="mt-1.5 flex flex-wrap gap-2 [&>li]:min-w-0 [&>li]:flex-wrap [&>li]:break-words">
             {g.items.map((c) => (
               <li key={c.slug} className="flex items-center gap-2 rounded-md border border-border px-2.5 py-1 text-sm">
@@ -101,7 +101,7 @@ function ComponentGroups({ groups }: { groups: NonNullable<ViewRelease["groups"]
                 ) : (
                   <span className="font-medium">{c.name}</span>
                 )}
-                <span role="img" className="flex gap-0.5 font-mono text-[10px]" aria-label={`Platforms: ${c.platforms.filter((p) => p.on).map((p) => p.name).join(", ")}`}>
+                <span role="img" className="flex gap-0.5 font-mono text-body-sm" aria-label={`Platforms: ${c.platforms.filter((p) => p.on).map((p) => p.name).join(", ")}`}>
                   {c.platforms.map((p) => (
                     <span
                       key={p.abbr}
@@ -166,7 +166,7 @@ function FullEntry({ release, changes }: { release: ViewRelease; changes: Releas
 
       {release.limitations?.length ? (
         <div className="mt-5">
-          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Known limitations</p>
+          <p className="font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">Known limitations</p>
           <ul className="mt-1.5 list-disc space-y-1 pl-5 text-sm leading-relaxed text-muted-foreground">
             {release.limitations.map((l) => (
               <li key={l}>
@@ -179,7 +179,7 @@ function FullEntry({ release, changes }: { release: ViewRelease; changes: Releas
 
       {audited ? (
         <div className="mt-5 text-sm leading-relaxed">
-          <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Breaking changes </span>
+          <span className="font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">Breaking changes </span>
           {hasBreaking ? (
             <ul className="mt-1.5 list-disc space-y-1 pl-5 text-foreground">
               {release.breaking!.map((b) => (
@@ -203,7 +203,7 @@ function FullEntry({ release, changes }: { release: ViewRelease; changes: Releas
         </details>
       ) : null}
 
-      <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+      <p className="mt-5 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">
         {/* A GitHub Release page exists only for some versions, so it is linked only when the data says so
             (`githubReleaseUrl`); every other version falls back to its git tag, which always exists. */}
         {release.githubReleaseUrl ? (
@@ -262,7 +262,7 @@ export function ReleaseList({
         <nav aria-label="Jump to a version" className="mt-6 space-y-2">
           {years.map((y) => (
             <div key={y} className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-              <span className="w-10 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{y}</span>
+              <span className="w-10 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">{y}</span>
               {releases
                 .filter((r) => r.date.startsWith(y))
                 .map((r) => (
@@ -304,12 +304,12 @@ export function ReleaseList({
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border pb-2">
                 <h2 className="font-display text-2xl font-semibold">{release.version}</h2>
                 {release.isLatest ? (
-                  <span data-cp className={`${PILL} border-primary/40 bg-primary/10 text-primary`}>
+                  <span data-cp data-changelog-pill className={`${PILL} border-primary/40 bg-primary/10 text-primary`}>
                     Latest
                   </span>
                 ) : null}
-                <span className={`${PILL} border-border text-muted-foreground`}>{release.type}</span>
-                <time dateTime={release.date} className="ml-auto font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                <span data-changelog-pill className={`${PILL} border-border text-muted-foreground`}>{release.type}</span>
+                <time dateTime={release.date} className="ml-auto font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">
                   {release.dateLabel}
                 </time>
               </div>
@@ -411,7 +411,7 @@ export function ChangelogView({ releases }: { releases: ViewRelease[] }) {
     <div>
       <div className="mt-6 space-y-3">
         <div className="w-full sm:max-w-sm">
-          <label htmlFor="changelog-search" className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+          <label htmlFor="changelog-search" className="mb-1.5 block font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">
             Search releases
           </label>
           <input

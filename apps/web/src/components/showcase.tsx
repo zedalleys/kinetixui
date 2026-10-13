@@ -115,7 +115,7 @@ export function Showcase({
         more useful and the only honest phrasing.
       */}
       {platforms && platforms.length > 0 && (
-        <p className="mt-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+        <p className="mt-1.5 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">
           <span className="sr-only">Available for: </span>
           {platforms.join(" · ")}
         </p>
@@ -130,7 +130,7 @@ export function Showcase({
                 key={v}
                 value={v}
                 className={cn(
-                  "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
+                  "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground transition-colors coarse:min-h-10",
                   "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                   "data-[state=active]:border-primary data-[state=active]:text-foreground",
                 )}
@@ -143,6 +143,7 @@ export function Showcase({
           <Tabs.Content value="preview">
             <div
               ref={previewRef}
+              data-showcase-preview
               {...(previewScrollable ? { tabIndex: 0, role: "group", "aria-label": `${title} preview, scrollable` } : {})}
               className={cn(
                 // wide demos scroll inside their frame; `safe center` keeps overflowing content reachable (plain center
@@ -190,7 +191,7 @@ export function Showcase({
                         key={l.key}
                         value={l.key}
                         className={cn(
-                          "-mb-px border-b-2 border-transparent px-2 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
+                          "-mb-px border-b-2 border-transparent px-2 py-1.5 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground transition-colors coarse:min-h-10",
                           "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                           "data-[state=active]:border-primary data-[state=active]:text-foreground",
                         )}
@@ -216,7 +217,7 @@ export function Showcase({
                             })
                         : undefined
                     }
-                    className={cn("absolute right-3 z-10", multi ? "top-11" : "top-3")}
+                    className={cn("absolute right-3 z-10", multi ? "top-11 coarse:top-14" : "top-3")}
                   />
                   <pre
                     // source code reads left to right whatever the page direction
@@ -225,7 +226,7 @@ export function Showcase({
                     // must be able to reach it (WCAG 2.1.1 / axe scrollable-region-focusable)
                     tabIndex={0}
                     aria-label={`${title} — ${active.label} source`}
-                    className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                    className="overflow-x-auto p-4 font-mono text-code leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                   >
                     <code>{active.value}</code>
                   </pre>

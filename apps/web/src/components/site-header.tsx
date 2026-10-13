@@ -28,12 +28,12 @@ export function SiteHeader() {
           <span className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:rotate-6">
             <Layers className="size-[18px]" />
           </span>
-          <span className="font-display text-[15px] font-bold uppercase tracking-[0.18em]">
+          <span className="font-display text-wordmark font-bold uppercase tracking-[0.18em]">
             Kinetix<span className="text-primary">ui</span>
           </span>
         </Link>
 
-        <span className="hidden font-mono text-[11px] text-muted-foreground sm:inline">
+        <span data-site-version className="hidden font-mono text-body-sm text-muted-foreground sm:inline">
           v{siteConfig.version} — beta
         </span>
 
@@ -44,7 +44,7 @@ export function SiteHeader() {
           106px. It needs to wrap internally too, and `justify-end` keeps it against the inline end whether it
           sits beside the mark or under it.
         */}
-        <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
+        <div className="ms-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
           <CommandMenu />
           <GitHubButton />
           <ModeToggle />
@@ -88,12 +88,12 @@ export function SiteHeader() {
                 active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <span className="font-mono text-[10px] text-muted-foreground transition-colors group-hover:text-primary">
+              <span className="font-mono text-body-sm text-muted-foreground transition-colors group-hover:text-primary">
                 {String(i + 1).padStart(2, "0")}
               </span>
               {item.title}
               {item.soon && (
-                <span className="rounded-[3px] border border-border px-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                <span className="rounded-[3px] border border-border px-1 font-mono text-label-md uppercase tracking-wider text-muted-foreground">
                   soon
                 </span>
               )}

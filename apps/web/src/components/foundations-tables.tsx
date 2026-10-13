@@ -37,7 +37,7 @@ function Table({ head, children, label }: { head: string[]; children: React.Reac
         <thead>
           <tr className="border-b border-border bg-muted/30 text-left">
             {head.map((h) => (
-              <th key={h} scope="col" className="px-4 py-2 font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
+              <th key={h} scope="col" className="px-4 py-2 font-mono text-label-md uppercase tracking-[0.1em] text-muted-foreground">
                 {h}
               </th>
             ))}
@@ -50,7 +50,7 @@ function Table({ head, children, label }: { head: string[]; children: React.Reac
 }
 
 const Code = ({ children }: { children: React.ReactNode }) => (
-  <code className="rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.85em] text-foreground">{children}</code>
+  <code className="rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.875em] text-foreground">{children}</code>
 );
 const td = "px-4 py-2";
 
@@ -196,7 +196,7 @@ export function ElevationTable() {
  * horizontal scroll that readers had to discover. Cards wrap to the container and never scroll sideways.
  */
 export function PlatformSupportTable() {
-  const field = "text-[11px] font-mono uppercase tracking-[0.1em] text-muted-foreground";
+  const field = "text-label-md font-mono uppercase tracking-[0.1em] text-muted-foreground";
   return (
     <ul aria-label="Supported platforms" className="my-6 grid list-none gap-4 p-0">
       {platforms.map((p) => {
@@ -206,10 +206,12 @@ export function PlatformSupportTable() {
         return (
           <li key={p.id} className="min-w-0 rounded-lg border border-border">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border bg-muted/30 px-4 py-3">
-              <p className="m-0 text-base font-medium">
+              {/* a flex row, so the maturity tag can drop under the name at 200% text: there is no space between
+                  them for a line break, and together they were 8px wider than a 320px card */}
+              <p className="m-0 flex flex-wrap items-center gap-x-2 text-base font-medium">
                 {p.name}
                 {maturity && maturity !== "stable" && (
-                  <span className="ml-2 rounded-[3px] border border-border px-1 align-middle font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                  <span className="rounded-[3px] border border-border px-1 font-mono text-label-md uppercase tracking-wider text-muted-foreground">
                     {maturity}
                   </span>
                 )}
@@ -248,7 +250,7 @@ export function PlatformSupportTable() {
                 <dd className="m-0 mt-1">
                   <Inline text={p.verification} />
                   {/* each named workflow links to its run history, so the claim beside it can be checked */}
-                  <span className="mt-1 flex flex-wrap gap-x-2 font-mono text-[11px] text-muted-foreground">
+                  <span className="mt-1 flex flex-wrap gap-x-2 font-mono text-body-sm text-muted-foreground">
                     {p.workflow.split(/,\s*/).map((file) => (
                       <a
                         key={file}
@@ -297,33 +299,35 @@ export function PlatformVerificationTable() {
         const counts = EVIDENCE_COUNTS[platform];
         const rungs = VERIFICATION_COUNTS[platform] ?? {};
         return (
-          <section key={platform} className="rounded-lg border border-border p-4">
+          // min-w-0 and wrapping rows: a grid item sized by its widest unbroken row pushed the page sideways at 200%
+          // text; each label/value pair now wraps onto two lines instead of the card growing past the viewport
+          <section key={platform} className="min-w-0 rounded-lg border border-border p-4">
             <h3 className="font-mono text-sm text-foreground">{def.label}</h3>
-            <dl className="mt-2 space-y-1 font-mono text-[11px]">
-              <div className="flex justify-between gap-3">
+            <dl className="mt-2 space-y-1 font-mono text-body-sm">
+              <div className="flex flex-wrap justify-between gap-x-3">
                 <dt className="text-muted-foreground">Implementations</dt>
                 <dd className="tabular-nums">
                   {total} of {componentTotal}
                   {def.catalogComplete ? " · catalogue complete" : " · catalogue incomplete"}
                 </dd>
               </div>
-              <div className="flex justify-between gap-3">
+              <div className="flex flex-wrap justify-between gap-x-3">
                 <dt className="text-muted-foreground">Package maturity</dt>
                 <dd className="capitalize">{def.maturity}</dd>
               </div>
-              <div className="flex justify-between gap-3">
+              <div className="flex flex-wrap justify-between gap-x-3">
                 <dt className="text-muted-foreground">Distribution</dt>
                 <dd>{def.distribution.published ? def.distribution.channel : `${def.distribution.channel} — not published`}</dd>
               </div>
-              <div className="flex justify-between gap-3">
+              <div className="flex flex-wrap justify-between gap-x-3">
                 <dt className="text-muted-foreground">Catalogue verification</dt>
                 <dd className="capitalize text-foreground">{CATALOGUE_VERIFICATION[platform] ?? "—"}</dd>
               </div>
             </dl>
-            <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Evidence</p>
-            <dl className="mt-1 grid gap-x-5 gap-y-0.5 font-mono text-[11px] sm:grid-cols-2">
+            <p className="mt-3 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">Evidence</p>
+            <dl className="mt-1 grid gap-x-5 gap-y-0.5 font-mono text-body-sm sm:grid-cols-2">
               {EVIDENCE_KINDS.map((kind) => (
-                <div key={kind} className="flex justify-between gap-3">
+                <div key={kind} className="flex flex-wrap justify-between gap-x-3">
                   <dt className="text-muted-foreground">{EVIDENCE_LABEL[kind]}</dt>
                   <dd className="tabular-nums">
                     {counts?.[kind] ?? 0} / {total}
@@ -331,7 +335,7 @@ export function PlatformVerificationTable() {
                 </div>
               ))}
             </dl>
-            <p className="mt-3 text-[11px] text-muted-foreground">
+            <p className="mt-3 text-body-sm text-muted-foreground">
               {Object.entries(rungs)
                 .map(([level, n]) => `${n} ${level}`)
                 .join(" · ")}
@@ -617,7 +621,7 @@ export function PlatformAtAGlance({ platform }: { platform: Platform }) {
         ...(FIRST_STEP[platform] ? [["Start", <a key="start" href={FIRST_STEP[platform]} className={link}>{platform === "Angular" ? "Install" : "Set up"} {def.label}</a>] as const] : []),
       ].map(([label, value]) => (
         <div key={label as string} className="flex flex-wrap items-baseline gap-x-3 px-3.5 py-2">
-          <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground sm:w-28 sm:shrink-0">{label}</dt>
+          <dt className="font-mono text-label-md uppercase tracking-[0.14em] text-muted-foreground sm:w-28 sm:shrink-0">{label}</dt>
           <dd className="min-w-0 sm:flex-1 sm:basis-0">{value}</dd>
         </div>
       ))}

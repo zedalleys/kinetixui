@@ -32,7 +32,7 @@ const setupHref: Record<CodeTab, string> = {
 };
 
 const tabTrigger = cn(
-  "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
+  "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground transition-colors coarse:min-h-10",
   "hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground",
 );
 
@@ -40,7 +40,7 @@ function CodePane({ code, onCopy }: { code: string; onCopy?: () => void }) {
   return (
     <div className="relative">
       <CopyButton value={code} onCopy={onCopy} className="absolute right-3 top-3 z-10" />
-      <pre dir="ltr" className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed">
+      <pre dir="ltr" className="overflow-x-auto p-4 font-mono text-code leading-relaxed">
         <code>{code}</code>
       </pre>
     </div>
@@ -55,9 +55,9 @@ function CodePane({ code, onCopy }: { code: string; onCopy?: () => void }) {
  */
 function GuidanceNote({ kind, label, children }: { kind: string; label: string; children: React.ReactNode }) {
   return (
-    <p className="border-b border-border bg-background/60 px-4 py-2.5 text-[13px] text-muted-foreground">
+    <p className="border-b border-border bg-background/60 px-4 py-2.5 text-body-md text-muted-foreground">
       <span
-        className="mr-2 rounded-sm border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-foreground"
+        className="mr-2 rounded-sm border border-border px-1.5 py-0.5 font-mono text-label-md uppercase tracking-[0.1em] text-foreground"
         data-guidance={kind}
       >
         {label}
@@ -140,7 +140,7 @@ export function ComponentPreview({
 
     if (state && state !== "implementation" && state.type === "planned") {
       return (
-        <p className="px-4 py-5 text-[13px] text-muted-foreground">
+        <p className="px-4 py-5 text-body-md text-muted-foreground">
           <span className="font-medium text-foreground">Not implemented in {label} yet.</span>{" "}
           {label} is in preview and rolling out in waves; this component is in the{" "}
           {WAVE_LABEL[state.wave ?? ""] ?? state.wave} wave. There is deliberately no example here — an
@@ -153,7 +153,7 @@ export function ComponentPreview({
 
     return (
       <>
-        <p className="border-b border-border px-4 py-2 text-[13px] text-muted-foreground">
+        <p className="border-b border-border px-4 py-2 text-body-md text-muted-foreground">
           {`${label} source; the live preview uses React. `}
           <Link href={setupHref[tab]} className="text-primary underline underline-offset-2">
             {label} installation and setup
@@ -215,7 +215,7 @@ export function ComponentPreview({
                       key={t.tab}
                       value={t.tab}
                       className={cn(
-                        "-mb-px border-b-2 border-transparent px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground transition-colors",
+                        "-mb-px border-b-2 border-transparent px-2.5 py-1.5 font-mono text-label-md uppercase tracking-[0.1em] text-muted-foreground transition-colors coarse:min-h-10",
                         "hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground",
                       )}
                     >

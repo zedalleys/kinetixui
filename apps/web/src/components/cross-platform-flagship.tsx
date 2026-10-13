@@ -50,7 +50,7 @@ const VERIFICATION: Partial<Record<CodeTab, string>> = {
 const FLAGSHIP_TABS = PLATFORM_TABS.filter((t) => SOURCE_KEY[t.tab]);
 
 const tabTrigger = cn(
-  "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
+  "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground transition-colors coarse:min-h-10",
   "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
   "data-[state=active]:border-primary data-[state=active]:text-foreground",
 );
@@ -92,7 +92,7 @@ export function CrossPlatformFlagship() {
           </div>
           <ul className="mt-6 space-y-2 border-t border-border pt-4">
             {FLAGSHIP_TABS.map((t) => (
-              <li key={t.tab} className="flex items-start gap-2 text-[12px] text-muted-foreground">
+              <li key={t.tab} className="flex items-start gap-2 text-body-sm text-muted-foreground">
                 <Check aria-hidden className="mt-0.5 size-3.5 shrink-0 text-primary" />
                 <span>
                   <span className="font-medium text-foreground">{t.label}</span> — {VERIFICATION[t.tab]}
@@ -121,7 +121,7 @@ export function CrossPlatformFlagship() {
                   // a code block scrolls sideways/vertically when it overflows, so the keyboard must be able to reach it
                   tabIndex={0}
                   aria-label={`${t.label} source`}
-                  className="h-full max-h-[420px] overflow-auto p-4 font-mono text-[12.5px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                  className="h-full max-h-[420px] overflow-auto p-4 font-mono text-code leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                 >
                   <code>{source}</code>
                 </pre>
@@ -131,7 +131,7 @@ export function CrossPlatformFlagship() {
         </Tabs.Root>
       </div>
 
-      <p className="mt-4 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+      <p className="mt-4 font-mono text-label-md uppercase tracking-wide text-muted-foreground">
         <Link href="/docs/platforms" className="underline-offset-4 hover:text-foreground hover:underline">
           {/* "all 4" under a headline of 5 read as a miscount. These are the catalogue-complete platforms; the one
               still rolling out is named rather than left for the reader to subtract. */}
