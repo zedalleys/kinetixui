@@ -66,8 +66,7 @@ export const ships = (row: Pick<DiscoveryRow, "status">) => row.status === "exis
 /** Domains whose discovery page exists: `/use-cases/<id>`. */
 export const DOMAIN_PAGES = DOMAINS.filter((d) => d.page);
 export const domainHref = (id: string) => `/use-cases/${id}`;
-/** Routes the sitemap and `check:seo` must know about. Derived, so a new domain page is listed the day it is flagged. */
-export const DISCOVERY_ROUTES = ["/capabilities", ...DOMAIN_PAGES.map((d) => domainHref(d.id))];
+export { DISCOVERY_ROUTES } from "./discovery-routes";
 
 /**
  * A domain is worth offering under "Explore by business need" only when something in it ships today. Healthcare and

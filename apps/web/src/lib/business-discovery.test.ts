@@ -37,7 +37,8 @@ describe("business discovery index", () => {
   });
 
   it("never carries a Pro-candidate row onto the website", () => {
-    const pro = capabilities.families.flatMap((f) => f.capabilities).filter((r) => r.tier === "pro");
+    const rows = (capabilities.families as { capabilities: { name: string; tier: string }[] }[]).flatMap((f) => f.capabilities);
+    const pro = rows.filter((r) => r.tier === "pro");
     expect(pro.length).toBeGreaterThan(0);
     for (const r of pro) expect(ROWS[r.name], r.name).toBeUndefined();
     expect(JSON.stringify(COMPONENT_DISCOVERY)).not.toMatch(/pro-candidate/);

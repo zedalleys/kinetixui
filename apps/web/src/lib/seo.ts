@@ -8,7 +8,7 @@ import { PLATFORMS, PLATFORM_DEFINITIONS, platformsFor, type Platform } from "./
 import { COMPONENT_EDITORIAL } from "./component-editorial";
 import { list } from "./platform-prose";
 import { allDocsLinks, componentDocs, mainNav, siteConfig } from "./site";
-import { DISCOVERY_ROUTES } from "./business-discovery";
+import { DISCOVERY_ROUTES } from "./discovery-routes";
 
 /**
  * Public routes that are not in any nav: real pages a visitor can reach and a crawler should see, but that
