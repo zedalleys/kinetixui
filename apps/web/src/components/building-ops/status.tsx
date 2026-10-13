@@ -29,7 +29,8 @@ export function cameraState(status: CameraStatus | undefined): { word: string; t
 export const TONE_TEXT: Record<CameraTone, string> = {
   ok: "text-foreground",
   attention: "text-warning",
-  down: "text-destructive",
+  // Offline and unreachable are connection exceptions: muted, never the destructive tone of a hazard.
+  down: "text-muted-foreground",
 };
 
 export function zoneState(z: ZoneOccupancy | undefined): { word: string; Icon: typeof Users; tone: "ok" | "busy" | "over" | "muted" } {

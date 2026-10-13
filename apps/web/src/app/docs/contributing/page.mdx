@@ -82,6 +82,13 @@ ships:
 | `ReferenceCode` | React-first beta; the native port waits on a roadmap decision | selectable `Text` (`textSelection(.enabled)` / `SelectionContainer` / `SelectableText`) plus a `KinetixButton` that copies |
 | `PriceBreakdown` | React-first beta; the native port waits on a roadmap decision | `KinetixDescriptionList` rows with the total after a `KinetixSeparator` |
 | `PassCard` | React-first beta; the native port waits on a roadmap decision | `KinetixCard` + `KinetixDescriptionList` + the supplied code as an `Image` |
+| `AmountDisplay` | React-first beta (Phase 2); the native port waits on a roadmap decision | `Text` with monospaced/tabular digits, the sign written in the string and a full accessibility label |
+| `GuestPicker` | React-first beta (Phase 2); the native port waits on a roadmap decision | one `KinetixNumberInput` per category, named after it, in a `KinetixPopover` |
+| `CountrySelect` | React-first beta (Phase 2); the native port waits on a roadmap decision | `KinetixSelect` over the product's own country list, names in the reader's language |
+| `PhoneInput` | React-first beta (Phase 2); the native port waits on a roadmap decision | a calling-code `KinetixSelect` and a phone-keyboard text field in one left-to-right row |
+| `DateRangeInput` | React-first beta (Phase 2); the native port waits on a roadmap decision | the platform's own date or date-range picker, stored as calendar dates |
+| `TimeSlotPicker` | React-first beta (Phase 2); the native port waits on a roadmap decision | a wrapping grid of `KinetixToggle` slots (SwiftUI, Compose) or `ChoiceChip`s (Flutter) in one exclusive group |
+| `AddressFields` | React-first beta (Phase 2); the native port waits on a roadmap decision | `KinetixField` + an input per field, with the platform's address autofill hints |
 
 Anything else that can't be ported cleanly is **scoped down and
 documented**, not silently skipped — e.g. `KinetixSheet` is bottom-only,

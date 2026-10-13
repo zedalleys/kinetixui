@@ -6,10 +6,8 @@ import {
   AlertList,
   AutomationRuleView,
   BatteryIndicator,
-  CommandLifecycle,
   DeviceGroupCard,
   DeviceHealthSummary,
-  DeviceModeControl,
   DevicePowerControl,
   RoutineCard,
   TelemetryGrid,
@@ -37,7 +35,13 @@ import {
 } from "@/components/iot/showcase";
 import { agritech, agritechRainForecast } from "./scenarios";
 import { fieldAnchors, fieldPlan } from "./scenarios/plans";
-import { SimNotice, SimTransport, controlOf, deviceOf, readingOf, trendOf, type ControlBinding } from "./harness";
+import { SimNotice, SimTransport, controlOf, deviceOf, readingOf, trendOf } from "./harness";
+import { CommandRow, DeviceDetails, NextAction, quietPending } from "./command-card";
+
+const VALVE_VERBS = { open: "Open", closed: "Close" };
+const VALVE_LABELS = { open: "Open valve", closed: "Close valve" };
+/** The other position of a known valve, or both when its position is unknown. */
+const valveActions = (confirmed: unknown) => (confirmed === "open" ? ["closed"] : confirmed === "closed" ? ["open"] : ["open", "closed"]);
 
 // kx-iot:start
 /**
@@ -81,68 +85,6 @@ function FarmMark() {
         <path d="M12 40V34M20 40V31M28 40V31M36 40V33" className="stroke-primary" strokeWidth={2.5} />
       </svg>
     </span>
-  );
-}
-
-const ValveOpenGlyph = () => (
-  <svg viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-    <path d="M12 3.5s6 6.4 6 10.5a6 6 0 0 1-12 0c0-4.1 6-10.5 6-10.5Z" />
-  </svg>
-);
-const ValveClosedGlyph = () => (
-  <svg viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-    <circle cx="12" cy="12" r="9" />
-    <path d="M8 12h8" />
-  </svg>
-);
-
-const FAILED_STAGES = new Set(["failed", "timed-out", "unreachable"]);
-
-/**
- * The lifecycle of a request that has not landed, or did not.
- *
- * Compact, because the words around it already carry the requested and the confirmed value. A failure
- * is lifted into its own tinted block with a heading, so that at phone width the WHY — the device's own
- * reason, from `describeCommandLifecycle` — is read before the control is pressed again, and Retry sits
- * with it. Nothing retries itself.
- */
-function CommandProgress({ binding, failureTitle }: { binding: ControlBinding; failureTitle: string }) {
-  if (!binding.command || !binding.unsettled) return null;
-  const body = (
-    <CommandLifecycle
-      lifecycle={binding.command.lifecycle}
-      formatValue={binding.format}
-      onRetry={binding.retry}
-      onCancel={binding.cancel}
-      density="compact"
-      className="w-full"
-    />
-  );
-  if (!FAILED_STAGES.has(binding.command.lifecycle.stage)) return body;
-  const reason = binding.command.lifecycle.reason;
-  return (
-    <div className="flex min-w-0 flex-col gap-2 rounded-xl bg-warning/15 p-3">
-      {/* The device's own reason, at full contrast: on a phone it was the first thing to become unreadable,
-          and without it the honest "it went back" looks like a bug rather than a report. */}
-      <p className="flex min-w-0 items-start gap-2 text-title-md text-foreground">
-        <StateGlyph state="warning" className="mt-0.5 text-warning" />
-        <span>
-          {failureTitle}
-          {reason ? ` — ${reason}` : ""}
-        </span>
-      </p>
-      {body}
-    </div>
-  );
-}
-
-/** The request, worded and dashed, beside the confirmed value: never a substitute for it. */
-function RequestNotice({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="flex min-w-0 items-start gap-2 rounded-xl border-2 border-dashed border-primary p-3 text-body-md text-foreground">
-      <StateGlyph state="pending" className="mt-0.5 text-primary" />
-      <span>{children}</span>
-    </p>
   );
 }
 
@@ -329,6 +271,7 @@ export function AgritechEnvironmentExample() {
       title="Pump Station"
       description={large ? "Feeds every irrigation zone" : "Supplies this zone"}
       tone={large ? "surface" : "inset"}
+      data-device="pump-01"
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-w-0 flex-wrap items-center gap-4">
@@ -338,19 +281,15 @@ export function AgritechEnvironmentExample() {
         <DevicePowerControl
           state={pump.confirmed as "on" | "off"}
           requested={pump.requested as "on" | "off" | undefined}
-          control={pump.control}
+          control={quietPending(pump.control)}
           label="Pump Station power"
           size="lg"
           onToggle={pump.send}
         />
       </div>
-      {pump.requested !== undefined ? (
-        <RequestNotice>
-          Requested: {pump.format(pump.requested)}, not yet confirmed. The pump still reports {pump.confirmed === "on" ? "running" : "stopped"}.
-        </RequestNotice>
-      ) : null}
-      <CommandProgress binding={pump} failureTitle="The pump did not change" />
+      <CommandRow binding={pump} failureTitle="The pump did not change" now={sim.now} />
       {large ? null : <TelemetryMetric {...flow} label="Pump flow" size="md" quietWhenNormal />}
+      <DeviceDetails device={pump.device} now={sim.now} bindings={[pump]} className={large ? undefined : "bg-card"} />
     </Panel>
   );
 
@@ -411,7 +350,7 @@ export function AgritechEnvironmentExample() {
   // 4 IRRIGATION: the confirmed position first, then anything in flight or failed, then the control.
   const irrigation = valve ? (
     <>
-      <Panel title="Irrigation valve" description={`${valve.device.name} · ${valve.device.locationName ?? zone.name}`}>
+      <Panel title="Irrigation valve" description={`${valve.device.name} · ${valve.device.locationName ?? zone.name}`} data-device={valve.device.id}>
         {/* At 320 the large illustration left too little room and clipped the reported word; it grows from sm up. */}
         <div className="flex min-w-0 flex-wrap items-center gap-4">
           <DeviceIllustration category="valve" on={valve.confirmed === "open"} size="md" className="sm:size-28" />
@@ -421,21 +360,14 @@ export function AgritechEnvironmentExample() {
             note={valve.device.status === "offline" ? <StateBadge state="offline">Last known position</StateBadge> : null}
           />
         </div>
-        {valve.requested !== undefined ? (
-          <RequestNotice>
-            Requested: {valve.format(valve.requested)}, not yet confirmed. The valve still reports {valve.format(valve.confirmed).toLowerCase()}.
-          </RequestNotice>
-        ) : null}
-        <CommandProgress binding={valve} failureTitle={`${valve.device.name} did not move`} />
-        <DeviceModeControl
-          presentation="tiles"
-          modes={(valve.capability.modes ?? []).map((m) => ({ ...m, icon: m.id === "open" ? <ValveOpenGlyph /> : <ValveClosedGlyph /> }))}
-          value={valve.confirmed as string}
-          requested={valve.requested as string | undefined}
-          control={valve.control}
-          label={`${valve.device.name} position`}
-          onSelect={valve.send}
+        {/* One reserved row: the other position as a command at rest, the request line while the valve works. */}
+        <CommandRow
+          binding={valve}
+          failureTitle={`${valve.device.name} did not move`}
+          now={sim.now}
+          action={<NextAction binding={valve} verbs={VALVE_VERBS} labels={VALVE_LABELS} actions={valveActions(valve.confirmed)} />}
         />
+        <DeviceDetails device={valve.device} now={sim.now} bindings={[valve]} />
       </Panel>
       {pumpBlock(false)}
     </>
@@ -467,13 +399,13 @@ export function AgritechEnvironmentExample() {
       {hero}
       {sensorAttention}
       {zone.sensorId ? (
-        <Disclosure title="Moisture, 7 days">{trendCard(zone.sensorId, "soil-moisture", `${zone.name} soil moisture, last seven days`, 160)}</Disclosure>
+        <Disclosure title="Moisture, 7 days" defaultOpen={false}>{trendCard(zone.sensorId, "soil-moisture", `${zone.name} soil moisture, last seven days`, 160)}</Disclosure>
       ) : (
-        <Disclosure title="Pump flow, 24 hours">{trendCard("pump-01", "flow", "Pump flow, last 24 hours", 160)}</Disclosure>
+        <Disclosure title="Pump flow, 24 hours" defaultOpen={false}>{trendCard("pump-01", "flow", "Pump flow, last 24 hours", 160)}</Disclosure>
       )}
       {irrigation}
       {conditions}
-      <Disclosure title="Air and weather">
+      <Disclosure title="Air and weather" defaultOpen={false}>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {trendCard("climate-a", "temperature", "Greenhouse air temperature, last 24 hours")}
           {trendCard("climate-a", "humidity", "Greenhouse humidity, last 24 hours")}
@@ -504,7 +436,10 @@ export function AgritechEnvironmentExample() {
         </Panel>
       </div>
 
-      <Panel title="Device health" description="Batteries and reporting, lowest first">
+      {/* Level 2: batteries and reporting for every device. The exceptions are already in view (the alerts above,
+          "Sensor attention" in the zone); the full list is one press away. */}
+      <Disclosure title="Device health" count={batteryDevices.length} countNoun="devices" defaultOpen={false}>
+        <p className="text-body-sm text-muted-foreground">Batteries and reporting, lowest first</p>
         <DeviceHealthSummary summary={selectFleetHealth(sim)} noun={{ one: "device", other: "devices" }} />
         <ul aria-label="Batteries and reporting" className="m-0 flex list-none flex-col gap-3 p-0">
           {batteryDevices.map((d) => (
@@ -521,9 +456,10 @@ export function AgritechEnvironmentExample() {
             </li>
           ))}
         </ul>
-      </Panel>
+      </Disclosure>
 
-      <Panel title="Irrigation rule" description="Shown, not executed: KinetixUI has no automation engine." className="md:col-span-2 xl:col-span-1">
+      <Disclosure title="Irrigation rule" defaultOpen={false} className="md:col-span-2 xl:col-span-1">
+        <p className="text-body-sm text-muted-foreground">Shown, not executed: KinetixUI has no automation engine.</p>
         <AutomationRuleView rule={rule} labelFor={(_kind, id) => sim.scenario.labels?.[id]} />
         <div className="flex flex-col gap-1 rounded-xl bg-muted/60 p-3">
           <p className="text-title-sm text-foreground">
@@ -536,9 +472,9 @@ export function AgritechEnvironmentExample() {
             <RoutineCard key={automation.id} automation={automation} now={sim.now} className="bg-muted/40" />
           ))}
         </div>
-      </Panel>
+      </Disclosure>
 
-      <Disclosure title="Activity" count={selectActivity(sim, { limit: 6 }).length} countNoun="events" className="md:col-span-2 xl:col-span-1">
+      <Disclosure title="Activity" count={selectActivity(sim, { limit: 6 }).length} countNoun="events" defaultOpen={false} className="md:col-span-2 xl:col-span-1">
         <ActivityTimeline variant="rail" events={selectActivity(sim, { limit: 6 })} deviceName={(id) => deviceOf(sim, id).name} now={sim.now} />
       </Disclosure>
     </>

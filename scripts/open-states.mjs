@@ -89,6 +89,11 @@ export const OPEN_STATES = [
   { component: "dropdown-menu", modal: false, stampsDir: true, story: "overlays-dropdownmenu--default", state: "open menu", open: { click: "#storybook-root button" }, surface: '[role="menu"]' },
   { component: "context-menu", modal: false, stampsDir: true, story: "overlays-contextmenu--default", state: "open context menu", open: { rightClick: "#storybook-root [data-state]" }, surface: '[role="menu"]' },
   { component: "menubar", modal: false, stampsDir: true, story: "navigation-menubar--default", state: "open menubar menu", open: { click: '#storybook-root [role="menuitem"]' }, surface: '[role="menu"]' },
+  // The Phase 2 booking fields open a Popover, so what a reader operates — the steppers, the country list,
+  // the calendar — only exists while it is open (business capability roadmap, Phase 2).
+  { component: "guest-picker", modal: false, story: "form-inputs-guestpicker--default", state: "open guest panel", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "country-select", modal: false, story: "form-inputs-countryselect--default", state: "open country list", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "date-range-input", modal: false, story: "form-inputs-daterangeinput--default", state: "open range calendar", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
 ];
 
 /** The one action key each entry carries, so a malformed entry is a failure rather than a silent no-op. */
