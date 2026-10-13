@@ -196,7 +196,7 @@ const lockState = (page) =>
     const svg = el.querySelector('svg[data-illustration="lock"]');
     return {
       word: el.querySelector(".text-headline-lg")?.textContent?.trim(),
-      checked: el.querySelector('[role="radio"][aria-checked="true"]')?.getAttribute("data-mode-id"),
+      checked: el.querySelector("[data-lock-state]")?.getAttribute("data-lock-state"),
       drawn: svg?.getAttribute("data-state"),
       bolt: svg?.querySelector("[data-bolt]")?.getAttribute("data-bolt"),
       boltTransition: svg?.querySelector("[data-bolt]") ? getComputedStyle(svg.querySelector("[data-bolt]")).transitionDuration : null,
@@ -208,7 +208,7 @@ function assertLock(tag, s, expected) {
   checks++;
   const want = { word: expected === "locked" ? "Locked" : "Unlocked", bolt: expected === "locked" ? "thrown" : "withdrawn" };
   if (s.word !== want.word) fail(tag, `word is "${s.word}", expected "${want.word}"`);
-  if (s.checked !== expected) fail(tag, `checked radio is "${s.checked}", expected "${expected}"`);
+  if (s.checked !== expected) fail(tag, `data-lock-state is "${s.checked}", expected "${expected}"`);
   if (s.drawn !== expected) fail(tag, `drawing says "${s.drawn}" beside the word "${s.word}"`);
   if (s.bolt !== want.bolt) fail(tag, `bolt is "${s.bolt}" for a ${expected} lock`);
 }
@@ -224,12 +224,12 @@ for (const reducedMotion of runs("lock") ? ["no-preference", "reduce"] : []) {
       ["unlocked", "locked"],
       ["locked", "unlocked"],
     ]) {
-      await lock.locator(`[role="radio"][data-mode-id="${to}"]`).click();
+      await lock.locator(`[data-lock-action="${to}"]`).click();
       await page.waitForTimeout(150);
       const inFlight = await lockState(page);
       // A request is not a state: until the device confirms, the drawing keeps the confirmed state too.
       if (inFlight.checked === from) assertLock(`${tag} requesting ${to}`, inFlight, from);
-      await page.waitForFunction((id) => document.querySelector(`[data-device="lock-front"] [role="radio"][aria-checked="true"]`)?.getAttribute("data-mode-id") === id, to, { timeout: 20000 });
+      await page.waitForFunction((id) => document.querySelector(`[data-device="lock-front"] [data-lock-state]`)?.getAttribute("data-lock-state") === id, to, { timeout: 20000 });
       await page.waitForTimeout(reducedMotion === "reduce" ? 50 : 400);
       const settled = await lockState(page);
       assertLock(`${tag} confirmed ${to}`, settled, to);
@@ -239,8 +239,8 @@ for (const reducedMotion of runs("lock") ? ["no-preference", "reduce"] : []) {
       if ((to === "locked") !== atRest) fail(tag, `bolt transform "${settled.boltTransform}" does not match a ${to} lock`);
     }
     // The whole-home tile draws the same lock from the same confirmed value.
-    await lock.locator('[role="radio"][data-mode-id="unlocked"]').click();
-    await page.waitForFunction(() => document.querySelector('[data-device="lock-front"] [role="radio"][aria-checked="true"]')?.getAttribute("data-mode-id") === "unlocked", null, { timeout: 20000 });
+    await lock.locator('[data-lock-action="unlocked"]').click();
+    await page.waitForFunction(() => document.querySelector('[data-device="lock-front"] [data-lock-state]')?.getAttribute("data-lock-state") === "unlocked", null, { timeout: 20000 });
     await page.getByRole("button", { name: "Show the whole home" }).click();
     await page.waitForFunction(() => !document.querySelector('[data-device="lock-front"]') && document.querySelector('svg[data-illustration="lock"]'));
     checks++;
@@ -345,6 +345,194 @@ for (const env of runs("plan") ? ["Smart space", "Agritech", "Operations"] : [])
   }
 }
 
+/* ------------------------------------------------------------------ information hierarchy (M5A/M5B) */
+
+/**
+ * The plan and the request line say only what their level calls for, measured on the rendered page:
+ *   labels    hovering the environment (not a marker) names no extra device: only selected markers are labelled.
+ *             An unnamed Tailwind `group` once matched the page's <details class="group">, so any hover over the
+ *             environment revealed every marker name at once.
+ *   quiet     a healthy (confirmed) marker carries no state badge; an offline marker's badge is never painted in
+ *             the destructive colour of a dangerous condition.
+ *   overview  the whole-home plan names no device and gives rooms their summaries.
+ *   pending   a lock request reads as one "Changing to …" line with no visible protocol stepper and its record
+ *             closed; after confirmation the line settles back to nothing.
+ */
+function page_visibleLabels() {
+  const panel = [...document.querySelectorAll("[role=tabpanel]:not([hidden])")].find((p) => p.querySelector("[data-hotspot]"));
+  const labels = [...panel.querySelectorAll("[data-hotspot] [data-marker-label]")].filter((l) => l.getBoundingClientRect().width > 0 && parseFloat(getComputedStyle(l).opacity) > 0.5);
+  const pressed = [...panel.querySelectorAll('[data-hotspot][aria-pressed="true"]')].length;
+  return { labels: labels.length, pressed };
+}
+
+for (const env of runs("hierarchy") ? ["Smart space", "Agritech", "Operations"] : []) {
+  const tag = `hierarchy ${env}`;
+  const { context, page } = await openIot({ width: 1280 });
+  try {
+    await chooseEnvironment(page, env);
+    await mount(page, "[role=tabpanel]:not([hidden]) [data-hotspot]");
+    await page.waitForTimeout(600);
+    // hover the environment itself, away from any marker: the simulation notice above the plan
+    const notice = page.locator("[role=tabpanel]:not([hidden]) [data-simulation-notice]").first();
+    await notice.hover();
+    await page.waitForTimeout(250);
+    checks++;
+    const hovered = await page.evaluate(page_visibleLabels);
+    if (hovered.labels > hovered.pressed) fail(tag, `hovering the environment shows ${hovered.labels} marker names for ${hovered.pressed} selected marker(s)`);
+    checks++;
+    const quiet = await page.evaluate(() => {
+      const probe = document.createElement("span");
+      probe.className = "text-destructive";
+      document.body.append(probe);
+      const red = getComputedStyle(probe).color;
+      probe.remove();
+      const panel = [...document.querySelectorAll("[role=tabpanel]:not([hidden])")].find((p) => p.querySelector("[data-hotspot]"));
+      const out = [];
+      for (const m of panel.querySelectorAll("[data-hotspot]")) {
+        const badge = m.querySelector(":scope > span > span.absolute svg");
+        if (m.dataset.state === "confirmed" && badge) out.push(`${m.dataset.hotspot}: healthy marker carries a state badge`);
+        if (m.dataset.state === "offline" && badge && getComputedStyle(badge).color === red) out.push(`${m.dataset.hotspot}: offline badge is destructive red`);
+      }
+      return out;
+    });
+    for (const q of quiet) fail(tag, q);
+
+    if (env === "Smart space") {
+      await page.getByRole("button", { name: "Show the whole home" }).click();
+      await page.waitForTimeout(400);
+      checks++;
+      const overview = await page.evaluate(() => {
+        const plan = document.querySelector("[role=tabpanel]:not([hidden]) [data-plan-density]");
+        const summaries = [...plan.querySelectorAll("[data-room-summary]")].filter((e) => e.getBoundingClientRect().width > 0).length;
+        return { density: plan.dataset.planDensity, summaries };
+      });
+      const labels = await page.evaluate(page_visibleLabels);
+      if (overview.density !== "overview") fail(tag, `whole home is drawn at "${overview.density}" density`);
+      if (labels.labels > 0) fail(tag, `the overview names ${labels.labels} device(s) on the plan`);
+      if (overview.summaries === 0) fail(tag, "the overview gives no room a summary");
+
+      await page.getByRole("button", { name: /^Hallway/ }).first().click();
+      await page.waitForSelector('[data-device="lock-front"]');
+      const lock = page.locator('[data-device="lock-front"]');
+      await lock.locator('[data-lock-action="unlocked"]').click();
+      await page.waitForTimeout(200);
+      checks++;
+      const inFlight = await page.evaluate(() => {
+        const el = document.querySelector('[data-device="lock-front"]');
+        const line = el.querySelector("[data-pending-command]");
+        const steppers = [...el.querySelectorAll('ol[aria-label="Progress of the request"]')].filter((o) => o.getBoundingClientRect().width > 0).length;
+        const record = [...el.querySelectorAll("details")].find((d) => d.querySelector("summary")?.textContent?.includes("Request details"));
+        return { view: line?.getAttribute("data-pending-command"), text: line?.textContent ?? "", steppers, recordOpen: record?.open ?? null, word: el.querySelector(".text-headline-lg")?.textContent?.trim() };
+      });
+      if (!["changing", "waiting"].includes(inFlight.view)) fail(tag, `lock request shows "${inFlight.view}", not a compact pending line`);
+      if (!/Changing to Unlocked|Waiting for device/.test(inFlight.text)) fail(tag, `lock request line reads "${inFlight.text}"`);
+      if (inFlight.steppers) fail(tag, `a protocol stepper is visible during a normal request`);
+      if (inFlight.recordOpen !== false) fail(tag, `the request record is ${inFlight.recordOpen === null ? "missing" : "open"} by default`);
+      if (inFlight.word !== "Locked") fail(tag, `the lock reads "${inFlight.word}" before the device confirmed`);
+      await page.waitForFunction(() => document.querySelector('[data-device="lock-front"] [data-lock-state]')?.getAttribute("data-lock-state") === "unlocked", null, { timeout: 20000 });
+      await page.waitForFunction(() => document.querySelector('[data-device="lock-front"] [data-pending-command]')?.getAttribute("data-pending-command") === "none", null, { timeout: 15000 }).catch(() => fail(tag, "the confirmation never settled back to the normal state"));
+    }
+  } catch (error) {
+    fail(tag, error.message);
+  } finally {
+    await context.close();
+  }
+}
+
+/* ------------------------------------------------------------------ command row stability */
+
+/**
+ * A request must not push its card. Every command card keeps one reserved row: the next action at rest, the
+ * compact request line while the device works, a brief confirmation, the failure with Retry. The card's height
+ * is recorded on every animation frame from before the press until the request has settled, and compared
+ * with its height at rest.
+ *
+ * Tolerance: STABLE_PX for idle → requested → acknowledged → confirmed → settled (sub-pixel rounding only).
+ * A failure may wrap to a second line where the reason is long and the card is narrow; it is held to
+ * FAILED_PX, one body line, at 1280px. Protocol rows (attempts, acknowledgement, requested/reported) must not
+ * be visible at any frame of a normal request.
+ */
+const STABLE_PX = 1;
+const FAILED_PX = 24;
+
+const trackCard = (page, selector, ms) =>
+  page.evaluate(
+    ({ selector, ms }) =>
+      new Promise((resolve) => {
+        const seen = {};
+        let protocol = 0;
+        const t0 = performance.now();
+        const visible = (n) => {
+          const r = n.getBoundingClientRect();
+          if (r.width < 1 || r.height < 1) return false;
+          for (let x = n; x && x !== document.body; x = x.parentElement) if (x.tagName === "DETAILS" && !x.open && !x.querySelector(":scope > summary")?.contains(n)) return false;
+          return true;
+        };
+        const tick = () => {
+          const card = document.querySelector(selector);
+          if (card) {
+            const h = card.getBoundingClientRect().height;
+            const view = card.querySelector("[data-pending-command]")?.getAttribute("data-pending-command") ?? "none";
+            const v = (seen[view] ??= { min: h, max: h });
+            v.min = Math.min(v.min, h);
+            v.max = Math.max(v.max, h);
+            protocol = Math.max(protocol, [...card.querySelectorAll("dt, ol[aria-label='Progress of the request']")].filter(visible).length);
+          }
+          if (performance.now() - t0 < ms) requestAnimationFrame(tick);
+          else resolve({ seen, protocol });
+        };
+        tick();
+      }),
+    { selector, ms },
+  );
+
+function judge(tag, rest, { seen, protocol }, { expectFailure = false } = {}) {
+  checks++;
+  for (const [view, { min, max }] of Object.entries(seen)) {
+    const delta = Math.max(Math.abs(max - rest), Math.abs(min - rest));
+    const limit = view === "failed" ? FAILED_PX : STABLE_PX;
+    if (delta > limit) fail(tag, `"${view}" moves the card ${delta.toFixed(1)}px (rest ${rest.toFixed(1)}px, limit ${limit}px)`);
+  }
+  if (!seen.changing && !seen.waiting) fail(tag, "no request line was ever shown");
+  if (expectFailure && !seen.failed) fail(tag, "the scripted failure was never shown");
+  if (protocol) fail(tag, `${protocol} protocol row(s) visible by default during the request`);
+}
+
+for (const width of runs("stability") ? [1280, 390] : []) {
+  const tag = `stability @${width}`;
+  const { context, page } = await openIot({ width });
+  try {
+    await chooseEnvironment(page, "Smart space");
+    await mount(page, '[data-device="lock-front"]');
+    for (const [name, selector, press] of [
+      ["lock", '[data-device="lock-front"]', '[data-device="lock-front"] [data-lock-action]'],
+      ["thermostat", '[data-device="thermostat-hall"]', '[data-device="thermostat-hall"] button[aria-label^="Increase"]'],
+    ]) {
+      await page.locator(selector).evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+      await page.waitForTimeout(150);
+      const rest = await page.locator(selector).evaluate((el) => el.getBoundingClientRect().height);
+      const tracking = trackCard(page, selector, 9000);
+      await page.locator(press).first().click();
+      judge(`${tag} ${name}`, rest, await tracking);
+    }
+    if (width === 1280) {
+      await chooseEnvironment(page, "Agritech");
+      await page.getByRole("button", { name: /^Zone 3/ }).first().click();
+      await mount(page, '[data-device="valve-03"]');
+      const selector = '[data-device="valve-03"]';
+      await page.locator(selector).evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+      const rest = await page.locator(selector).evaluate((el) => el.getBoundingClientRect().height);
+      const tracking = trackCard(page, selector, 5000);
+      await page.locator(`${selector} [data-command-action]`).first().click();
+      judge(`${tag} valve (fails once)`, rest, await tracking, { expectFailure: true });
+    }
+  } catch (error) {
+    fail(tag, error.message);
+  } finally {
+    await context.close();
+  }
+}
+
 await browser.close();
 
 if (failures.length) {
@@ -355,4 +543,4 @@ if (!checks) {
   console.error("✗ iot-state-spatial: nothing was checked");
   process.exit(1);
 }
-console.log(`iot-state-spatial ok — ${checks} checks${ONLY ? ` (only ${ONLY.join(", ")})` : ": ring clearance (6 views), lock fidelity (2 motion modes), light fidelity (2 themes), plan markers and open-environment overflow (3 environments × 4 views)"}.`);
+console.log(`iot-state-spatial ok — ${checks} checks${ONLY ? ` (only ${ONLY.join(", ")})` : ": ring clearance (6 views), lock fidelity (2 motion modes), light fidelity (2 themes), plan markers and open-environment overflow (3 environments × 4 views), information hierarchy (3 environments), command row stability (lock + thermostat at 1280 and 390, failing valve at 1280)"}.`);

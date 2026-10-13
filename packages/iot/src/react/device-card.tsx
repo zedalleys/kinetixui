@@ -3,12 +3,10 @@
 import * as React from "react";
 import type { KinetixDevice } from "../types/device";
 import { normalizeDeviceStatus } from "../functions/status";
-import { BatteryIndicator } from "./battery-indicator";
 import { DeviceStatusBadge } from "./device-status-badge";
-import { LastSync } from "./last-sync";
 import { SensorReading } from "./sensor-reading";
-import { SignalStrength } from "./signal-strength";
 import { cn } from "./cn";
+import { DeviceMeta, type DeviceCardDensity } from "./device-meta";
 import { withDisplayName } from "./display-name";
 
 /**
@@ -58,13 +56,20 @@ export interface DeviceCardProps extends Omit<React.HTMLAttributes<HTMLDivElemen
   icon?: React.ReactNode;
   /** Size of the headline reading. `lg` draws it as a hero numeral. Default `md`. */
   readingSize?: "md" | "lg" | "xl";
+  /**
+   * `full` (default) shows every indicator the device carries. `glance` keeps the operational view: the status
+   * badge only when the device is not online (an online device says so to assistive technology only), a battery
+   * only when it is low or critical, and the rest — battery, signal, last update — behind one "Device details"
+   * disclosure. Nothing is removed.
+   */
+  density?: DeviceCardDensity;
 }
 
 /** Statuses during which a previously-reported value must not be presented as current. */
 const IN_TRANSITION = new Set(["syncing", "pairing", "updating"]);
 
 const DeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLDivElement, DeviceCardProps>(
-  ({ device, action, reading, footer, now, hideMeta = false, icon, readingSize = "md", className, ...props }, ref) => {
+  ({ device, action, reading, footer, now, hideMeta = false, icon, readingSize = "md", density = "full", className, ...props }, ref) => {
     const status = normalizeDeviceStatus(device?.status);
     const transitioning = IN_TRANSITION.has(status);
     const hasMeta = !hideMeta && (device?.battery !== undefined || device?.signal !== undefined || device?.lastSeenAt !== undefined);
@@ -95,7 +100,7 @@ const DeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forward
           </div>
           {/* `ms-auto` rather than `ml-auto`: the trailing corner is the end edge, which flips under RTL. */}
           <div className="ms-auto flex shrink-0 items-center gap-2">
-            <DeviceStatusBadge status={status} />
+            {density === "glance" && status === "online" ? <span className="sr-only">Online</span> : <DeviceStatusBadge status={status} />}
             {action}
           </div>
         </div>
@@ -120,15 +125,7 @@ const DeviceCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forward
           )
         ) : null}
 
-        {hasMeta ? (
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            {device?.battery !== undefined ? <BatteryIndicator value={device.battery} /> : null}
-            {device?.signal !== undefined ? <SignalStrength value={device.signal} /> : null}
-            {device?.lastSeenAt !== undefined ? (
-              <LastSync value={device.lastSeenAt} now={now} className="text-label-md text-muted-foreground" />
-            ) : null}
-          </div>
-        ) : null}
+        {hasMeta ? <DeviceMeta device={device} now={now} density={density} /> : null}
 
         {footer}
       </div>
