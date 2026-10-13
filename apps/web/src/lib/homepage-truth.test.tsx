@@ -144,7 +144,10 @@ describe("homepage rendering: matches the repository's current truth", () => {
   });
 
   it("renders the flagship cross-platform demo, not the old static button/input strip", () => {
-    expect(text()).toContain("Notifications"); // the flagship preview's real content
+    // the live preview mounts on the client as its tile nears the screen (MountNear); the server renders its
+    // tile, its compiled-copies strip and the reserved slot it mounts into
+    expect(text()).toContain("Notification preferences");
+    expect(text()).toContain("Compiled copies of this recipe");
     expect(text()).not.toContain("Rendered by @kinetixui/ui");
   });
 });

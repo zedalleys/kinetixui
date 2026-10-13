@@ -79,10 +79,6 @@ const WEB_ALLOWED = {
     n: 5,
     why: "satori renders this into a 1200×630 PNG; its px are image pixels, not a page text size",
   },
-  "app/globals.css": {
-    n: 2,
-    why: ".kx-fan-label / .kx-fan-note: SVG <text> in the aria-hidden hero token fan (user units, viewBox-scaled)",
-  },
 };
 
 const walk = (dir) =>
