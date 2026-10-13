@@ -145,12 +145,16 @@ export const componentDocs: NavItem[] = [
   built("Number Input", "number-input"),
   built("Page Header", "page-header"),
   built("Pagination", "pagination"),
+  built("Pass Card", "pass-card"),
   built("Popover", "popover"),
+  built("Price Breakdown", "price-breakdown"),
   built("Progress", "progress"),
   built("Quote", "quote"),
   built("Radio Group", "radio-group"),
   built("Rating", "rating"),
+  built("Reference Code", "reference-code"),
   built("Resizable", "resizable"),
+  built("Result State", "result-state"),
   built("Scroll Area", "scroll-area"),
   built("Segmented Control", "segmented-control"),
   built("Select", "select"),
@@ -206,7 +210,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   "context-menu": "Overlays", modal: "Overlays",
 
   alert: "Feedback", inform: "Feedback", banner: "Feedback", progress: "Feedback", "circular-progress": "Feedback",
-  empty: "Feedback",
+  empty: "Feedback", "result-state": "Feedback",
   sonner: "Feedback", badge: "Feedback", tag: "Feedback", metric: "Feedback",
 
   accordion: "Data Display", card: "Data Display", table: "Data Display", "data-table": "Data Display", "data-grid": "Data Display",
@@ -215,7 +219,8 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   footer: "Data Display", "audio-player": "Data Display", "description-list": "Data Display",
   timeline: "Data Display", marquee: "Data Display", "message-bubble": "Data Display",
   "virtual-list": "Data Display", "json-viewer": "Data Display", "diff-viewer": "Data Display",
-  "kanban-board": "Data Display",
+  "kanban-board": "Data Display", "reference-code": "Data Display", "price-breakdown": "Data Display",
+  "pass-card": "Data Display",
 };
 
 export const CATEGORY_ORDER = [

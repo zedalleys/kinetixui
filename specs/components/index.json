@@ -66,13 +66,17 @@
     "number-input",
     "page-header",
     "pagination",
+    "pass-card",
     "password-input",
     "popover",
+    "price-breakdown",
     "progress",
     "quote",
     "radio-group",
     "rating",
+    "reference-code",
     "resizable",
+    "result-state",
     "scroll-area",
     "segmented-control",
     "select",
@@ -104,7 +108,7 @@
     "combobox"
   ],
   "coverage": {
-    "covered": 96,
-    "total": 96
+    "covered": 100,
+    "total": 100
   }
 }
