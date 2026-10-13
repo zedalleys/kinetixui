@@ -140,7 +140,12 @@ export function componentDescription(slug: string, summary: string): string {
     .replace(/<\/?([a-z][\w-]*)\s*\/?>/gi, "$1")
     .trim()
     .replace(/\s+/g, " ");
-  return `KinetixUI ${componentName(slug)}: ${lead}${/[.!?]$/.test(lead) ? "" : "."} Implemented for ${parts.join("; ")}.`;
+  const end = /[.!?]$/.test(lead) ? "" : ".";
+  // a lead that opens with the component's own name ("Popover opens a small panel…") reads on from the brand
+  // instead of repeating the name after a colon, which spent the start of the visible snippet on a stutter
+  const name = componentName(slug);
+  const opening = lead.toLowerCase().startsWith(`${name.toLowerCase()} `) ? `KinetixUI ${lead}` : `KinetixUI ${name}: ${lead}`;
+  return `${opening}${end} Implemented for ${parts.join("; ")}.`;
 }
 
 /**

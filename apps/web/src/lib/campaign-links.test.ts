@@ -123,3 +123,28 @@ describe("the failures each campaign's measurement notes warn about are real", (
     expect(bag).not.toHaveProperty("kx_content");
   });
 });
+
+describe("the ART-001 → pillar post-publication link (SEO Phase 3)", () => {
+  // Read from the runbook the operator follows and from the register row, so the two cannot drift apart and the
+  // link is proved against the parser before anyone pastes it into dev.to.
+  const runbook = readFileSync(`${ROOT}/marketing/seo/GUIDE-PUBLISH-RUNBOOK.md`, "utf8");
+  const links = taggedLinks([runbook]);
+  const register = JSON.parse(readFileSync(`${ROOT}/marketing/content/register.json`, "utf8")) as {
+    assets: { id: string; url?: string; campaign?: string; utm_content?: string }[];
+  };
+  const row = register.assets.find((a) => a.id === "ART-001-PILLAR");
+
+  it("is the one tagged link in the runbook, and the register carries it byte for byte", () => {
+    expect(links).toHaveLength(1);
+    expect(row?.url).toBe(links[0]);
+  });
+
+  it("keeps ART-001's campaign, tells itself apart with utm_content, and lands on the pillar", () => {
+    const bag = propsFor(links[0]);
+    expect(bag.kx_campaign).toBe("kx_p1_a_parity_proof");
+    expect(bag.kx_content).toBe("art_pillar");
+    expect(bag.kx_source).toBe("devto");
+    expect(bag.kx_medium).toBe("referral");
+    expect(bag.kx_landing_page).toBe("/guides/cross-platform-design-systems");
+  });
+});

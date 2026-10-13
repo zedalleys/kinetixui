@@ -14,7 +14,10 @@
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium (local runs); CI uses `playwright install chromium`.
  */
 import { writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { chromium } from "playwright";
+
+const { GUIDES } = await import(resolve("apps/web/src/lib/guides-data.ts"));
 
 const arg = (flag, fallback) => {
   const i = process.argv.indexOf(flag);
@@ -41,6 +44,9 @@ const ROUTES = [
   { path: "/blocks", query: "?filter=Forms", links: ["/components"] },
   { path: "/iot", links: ["/docs/iot"] },
   { path: "/docs/changelog", query: "?filter=components&q=angular", links: ["/docs/platforms"], breadcrumb: true },
+  // the guides, in whatever state the registry says: a draft must render noindex with no article data, a published
+  // guide indexable with its TechArticle (marketing/seo/GUIDE-PUBLISH-RUNBOOK.md)
+  ...GUIDES.map((g) => ({ path: `/guides/${g.slug}`, links: [g.cta.href.replace(/#.*$/, "")], guide: g })),
 ];
 
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
@@ -97,7 +103,14 @@ for (const r of ROUTES) {
   if (!data.description) fail("no description");
   if (data.canonical !== `${ORIGIN}${r.path === "/" ? "" : r.path}`) fail(`canonical ${data.canonical}`);
   if (data.ogUrl !== data.canonical) fail(`og:url ${data.ogUrl} ≠ canonical`);
-  if (/noindex/i.test(data.robots ?? "")) fail(`robots ${data.robots}`);
+  const article = data.jsonld.some((t) => t.includes('"TechArticle"'));
+  if (r.guide?.status === "draft") {
+    if (!/noindex/i.test(data.robots ?? "")) fail(`draft guide is indexable (robots ${data.robots})`);
+    if (article) fail("draft guide carries TechArticle JSON-LD");
+  } else {
+    if (/noindex/i.test(data.robots ?? "")) fail(`robots ${data.robots}`);
+    if (r.guide && !article) fail("published guide has no TechArticle JSON-LD");
+  }
   if (data.h1.length !== 1) fail(`${data.h1.length} h1: ${JSON.stringify(data.h1)}`);
   for (const l of r.links) if (!data.links.some((h) => h === l || h.startsWith(`${l}?`) || h.startsWith(`${l}#`))) fail(`no link to ${l}`);
   for (const [i, text] of data.jsonld.entries()) {

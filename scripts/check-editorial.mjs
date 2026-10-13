@@ -24,6 +24,20 @@
  *   draft-linked        an indexable page (a published guide included) links to a draft guide
  *   guide-date          a published guide has no datePublished in its TechArticle JSON-LD
  *   guide-intent        a guide's primary intent is not the one SEARCH-INTENT-MAP.md assigns to its route
+ *
+ * Publication rules (SEO Phase 3; the operator procedure is marketing/seo/GUIDE-PUBLISH-RUNBOOK.md). They hold in
+ * both states, all drafts and all published, so the gate guards the cluster before and after it goes live:
+ *
+ *   cluster-partial     the cluster (the pillar plus every guide its prose links) does not share one status: it
+ *                       publishes and unpublishes together. A new guide the pillar does not link yet may be a draft.
+ *   guide-date          (also) a draft carries a datePublished, or a published guide's registry date is not ISO
+ *                       or differs from its TechArticle's
+ *   sitemap-state       a published guide is missing from the sitemap (a draft in it is draft-indexed)
+ *   further-reading     a docs page's "Further reading" line does not show exactly the published guides it names,
+ *                       or a published guide is named by no docs page's "Further reading"
+ *   guide-cta           (also) the built CTA does not point where the registry says
+ *   pillar-proof        the pillar's body stops linking the proof: /docs/platforms, /docs/tokens, a platform page
+ *   count-hardcoded     (also) a guide's registry title or description types a component count
  *   near-duplicate      two indexable non-component pages have near-identical titles or descriptions
  *                       (word-set overlap ≥ 0.8; component pages are excluded because their titles share a
  *                       deliberate template and differ by the component's name)
@@ -120,6 +134,9 @@ for (const slug of readdirSync(componentDir)) {
 /* Guides: the content cluster. Drafts are built (so they can be reviewed) but must stay out of search entirely. */
 const sitemap = readFileSync(join(APP_DIR, "sitemap.xml.body"), "utf8");
 const PRODUCT = /^\/(docs(\/|$)|components$|blocks$)/;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const PILLAR_PROOF = ["/docs/platforms", "/docs/tokens"];
+const PLATFORM_ROUTES = ["/docs/angular", "/docs/swiftui", "/docs/compose", "/docs/flutter"];
 for (const g of GUIDES) {
   const route = `/guides/${g.slug}`;
   if (!built.has(route)) {
@@ -134,10 +151,14 @@ for (const g of GUIDES) {
   if (product.size < 2) fail("guide-product-links", route, `links ${product.size} product page(s): ${[...product].join(", ") || "none"}`);
   if (p.ctas.length !== 1) fail("guide-cta", route, `${p.ctas.length} primary CTAs`);
   else if (!p.ctas[0].startsWith("/") || p.ctas[0].startsWith("//")) fail("guide-cta", route, `CTA leaves the site: ${p.ctas[0]}`);
+  else if (p.ctas[0] !== g.cta.href) fail("guide-cta", route, `CTA points to ${p.ctas[0]}, the registry says ${g.cta.href}`);
   const bodyLinks = (target) => {
     const html = readFileSync(built.get(route), "utf8");
-    // the prose only: not the "part of …" line under the H1, not the shared "Related reading" footer
-    const body = html.split("data-guide-related")[0].replace(/<p data-guide-meta[\s\S]*?<\/p>/, "");
+    // the prose only: not the "part of …" line under the H1, not the CTA button, not the shared "Related reading" footer
+    const body = html
+      .split("data-guide-related")[0]
+      .replace(/<p data-guide-meta[\s\S]*?<\/p>/, "")
+      .replace(/<a[^>]*data-guide-cta[^>]*>/g, "");
     return body.includes(`href="${target}"`);
   };
   if (g.role === "supporting" && !bodyLinks(`/guides/${PILLAR.slug}`)) fail("guide-pillar", route, "the body does not link back to the pillar");
@@ -145,16 +166,51 @@ for (const g of GUIDES) {
   if (g.role === "pillar")
     for (const s of GUIDES.filter((x) => x.role === "supporting" && (g.status === "draft" || x.status === "published")))
       if (!bodyLinks(`/guides/${s.slug}`)) fail("guide-pillar", route, `the body does not link ${s.slug}`);
+  // the pillar is the bridge from the architecture question to the evidence; without these it is an essay
+  if (g.role === "pillar") {
+    for (const proof of PILLAR_PROOF) if (!bodyLinks(proof)) fail("pillar-proof", route, `the body does not link ${proof}`);
+    if (!PLATFORM_ROUTES.some(bodyLinks)) fail("pillar-proof", route, `the body links none of ${PLATFORM_ROUTES.join(", ")}`);
+  }
   const article = p.jsonld.find((n) => n["@type"] === "TechArticle" || n["@type"] === "Article");
   if (g.status === "draft") {
     if (!p.noindex) fail("draft-indexed", route, "draft guide is indexable");
     if (sitemap.includes(`<loc>https://kinetixui.com${route}</loc>`)) fail("draft-indexed", route, "draft guide is in the sitemap");
     if (article) fail("draft-indexed", route, "draft guide carries article JSON-LD");
+    if (g.datePublished) fail("guide-date", route, `draft carries datePublished ${g.datePublished}; a date is set only when it goes live`);
   } else {
     if (p.noindex) fail("draft-indexed", route, "published guide is noindex");
     if (!article?.datePublished) fail("guide-date", route, "published guide has no TechArticle datePublished");
+    else if (!ISO_DATE.test(g.datePublished ?? "") || article.datePublished !== g.datePublished)
+      fail("guide-date", route, `registry datePublished "${g.datePublished}" vs TechArticle "${article.datePublished}"`);
+    if (!sitemap.includes(`<loc>https://kinetixui.com${route}</loc>`)) fail("sitemap-state", route, "published guide is not in the sitemap");
   }
 }
+
+/* Publication is one act for the whole cluster: the guides cross-link in their prose, so a partial cluster either
+ * links drafts or reads as an essay with holes. Checked from the registry, independent of what was built. */
+// the cluster is derived from the pillar's source, so it is the same in either state and needs no hand-kept list
+const pillarSrc = readFileSync(join(resolve("apps/web/src/app/guides"), PILLAR.slug, "page.mdx"), "utf8");
+const cluster = GUIDES.filter((g) => g === PILLAR || pillarSrc.includes(`](/guides/${g.slug})`));
+if (new Set(cluster.map((g) => g.status)).size > 1)
+  fail("cluster-partial", "guides-data.ts", cluster.map((g) => `${g.slug}=${g.status}`).join(", "));
+
+/* "Further reading" on docs pages: the source names guides; the build must show exactly the published ones. */
+const named = new Set();
+for (const file of walk(resolve("apps/web/src/app")).filter((f) => f.endsWith("page.mdx"))) {
+  for (const m of readFileSync(file, "utf8").matchAll(/<FurtherReading guides=\{\[([^\]]*)\]\}/g)) {
+    const slugs = [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
+    const route = "/" + relative(resolve("apps/web/src/app"), file).replace(/\/page\.mdx$/, "");
+    slugs.forEach((x) => named.add(x));
+    if (!built.has(route)) continue;
+    const want = slugs.filter((x) => GUIDES.find((g) => g.slug === x)?.status === "published").map((x) => `/guides/${x}`);
+    const html = readFileSync(built.get(route), "utf8");
+    const line = html.match(/<p[^>]*data-further-reading[^>]*>[\s\S]*?<\/p>/)?.[0] ?? "";
+    const got = [...line.matchAll(/href="([^"]+)"/g)].map((x) => x[1]);
+    if (want.join() !== got.join()) fail("further-reading", route, `shows [${got.join(", ")}], published guides it names: [${want.join(", ")}]`);
+  }
+}
+for (const g of GUIDES.filter((x) => x.status === "published"))
+  if (!named.has(g.slug)) fail("further-reading", `/guides/${g.slug}`, "published, but no docs page names it in <FurtherReading>");
 const drafts = new Set(GUIDES.filter((g) => g.status === "draft").map((g) => `/guides/${g.slug}`));
 for (const route of built.keys()) {
   if (route === "/_not-found" || drafts.has(route)) continue; // published guides are checked too
@@ -207,6 +263,10 @@ for (const [name, file] of COUNT_FILES) {
     for (const m of line.matchAll(COUNT)) fail("count-hardcoded", `${name}:${i + 1}`, `typed count "${m[0]}"`);
   });
 }
+
+for (const g of GUIDES)
+  for (const [field, text] of [["title", g.title], ["searchTitle", g.searchTitle], ["description", g.description]])
+    for (const m of (text ?? "").matchAll(COUNT)) fail("count-hardcoded", `guides-data.ts ${g.slug}.${field}`, `typed count "${m[0]}"`);
 
 /* Search intent map: one primary intent per route. */
 const map = readFileSync(INTENT_MAP, "utf8");

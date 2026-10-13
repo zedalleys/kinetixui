@@ -44,7 +44,8 @@
         "X-001",
         "LI-010",
         "X-002",
-        "COM-002"
+        "COM-002",
+        "ART-001-PILLAR"
       ],
       "idea": "A platform claim is free to write and expensive to verify"
     },
@@ -93,6 +94,21 @@
       "campaign": "kx_p1_a_parity_proof",
       "utm_content": "art_primary",
       "url": "https://kinetixui.com/docs/platforms?utm_source=devto&utm_medium=referral&utm_campaign=kx_p1_a_parity_proof&utm_content=art_primary"
+    },
+    {
+      "id": "ART-001-PILLAR",
+      "kind": "article-edit",
+      "channel": "devto",
+      "icp": "p1",
+      "pillar": "a",
+      "stage": "awareness",
+      "status": "brief",
+      "file": "marketing/seo/GUIDE-PUBLISH-RUNBOOK.md",
+      "derived_from": "ART-001",
+      "destination": "/guides/cross-platform-design-systems",
+      "campaign": "kx_p1_a_parity_proof",
+      "utm_content": "art_pillar",
+      "url": "https://kinetixui.com/guides/cross-platform-design-systems?utm_source=devto&utm_medium=referral&utm_campaign=kx_p1_a_parity_proof&utm_content=art_pillar"
     },
     {
       "id": "LI-001",

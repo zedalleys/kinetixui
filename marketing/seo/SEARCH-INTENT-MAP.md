@@ -7,7 +7,7 @@ follows [`../MESSAGING.md`](../MESSAGING.md) and [`../CLAIMS.md`](../CLAIMS.md);
 `componentMetadata` in [`apps/web/src/lib/seo.ts`](../../apps/web/src/lib/seo.ts) (component pages).
 
 **No search-volume numbers appear here.** None were measured: there is no keyword tool connected to this
-repository, and Search Console is not set up yet ([`MEASUREMENT.md`](./MEASUREMENT.md) §5). The families below are
+repository, and Search Console is not set up yet ([`MEASUREMENT.md`](./MEASUREMENT.md) §7). The families below are
 the questions the product genuinely answers; which of them bring traffic is what the first eight weeks of Search
 Console data will say. Revisit this map then.
 
@@ -102,11 +102,12 @@ is in the "unowned" table at the end, on purpose.
 ## Content cluster
 
 Phase 2B's guides live at `/guides/<slug>` and are registered in
-[`apps/web/src/lib/guides.ts`](../../apps/web/src/lib/guides.ts), which is the source of each guide's title,
+[`apps/web/src/lib/guides-data.ts`](../../apps/web/src/lib/guides-data.ts), which is the source of each guide's title,
 description, primary intent, CTA and publication state. All four shipped as drafts (#364) and were
 **published together on 2026-10-12** after the owner's review: indexable, in the sitemap, with TechArticle structured
 data, and linked from the docs pages below. They publish and unpublish as a set: a published guide that links a
-draft fails `check:editorial` (`draft-linked`).
+draft fails `check:editorial` (`draft-linked`, `cluster-partial`). The procedure for publishing, unpublishing and
+adding a guide is [`GUIDE-PUBLISH-RUNBOOK.md`](./GUIDE-PUBLISH-RUNBOOK.md).
 
 | Guide | Role | Owns | CTA | Links into |
 | --- | --- | --- | --- | --- |
@@ -133,7 +134,8 @@ my parity real?" (a reaction), the pillar's is "how is a cross-platform design s
 the parity guide is the how-to the article stops short of. ART-001's package is not changed before its
 publication; the pillar is now published (2026-10-12), so once ART-001 is live, add one tagged link to the pillar
 in the dev.to post as a post-publication edit (`utm_content=art_pillar`, same campaign), recorded in the ART-001
-close-out.
+close-out. The exact sentence, anchor text and URL are in
+[`GUIDE-PUBLISH-RUNBOOK.md`](./GUIDE-PUBLISH-RUNBOOK.md) §6, and the register row is `ART-001-PILLAR`.
 
 ## ART-001 alignment
 
@@ -154,3 +156,32 @@ ART-001, *"Your cross-platform design system may be lying about parity"*, publis
   — the component the story is about — tagged with the same campaign and `utm_content=art_story`. Recommendation:
   **do not change the package before Tuesday**; add it in the post-publication close-out if at all.
 - **Article canonical.** The article stays canonical on dev.to (as ART-002 is); there is no `/blog` to point at.
+
+---
+
+## Final ownership (SEO Phase 3)
+
+Re-checked after the Phase 3 metadata edits with `pnpm check:editorial` (intent-duplicate, guide-intent,
+near-duplicate: pass) in both publication states (all four published, as on `main` since #366, and all four
+reverted to drafts in the simulated unpublication). One owner per question, across the site and the two articles:
+
+| Question | Owner | Not the owner, and why |
+| --- | --- | --- |
+| What is a cross-platform design system (the category, the product) | `/` | the pillar explains how one is built; it does not claim the category phrase |
+| How is a cross-platform design system built, and what are the trade-offs | `/guides/cross-platform-design-systems` | `/docs/platforms` shows this library's coverage, not the architecture in general |
+| Is my cross-platform design system's parity real? (reaction, opinion) | ART-001 (dev.to, canonical there) | the parity guide is the how-to; `/docs/platforms` is the proof |
+| What does this library implement per platform | `/docs/platforms` | ART-001 links it as evidence; the guides link it as their proof |
+| How do I verify parity | `/guides/verify-design-system-parity` | `/docs/accessibility` describes this library's checks, not the method |
+| Design tokens across web, iOS and Android | `/docs/tokens` | ART-002 (dev.to) is the awareness piece and links it; no guide competes |
+| Why tokens are generated and components are not | `/guides/generated-tokens-vs-generated-components` | `/docs/tokens` has one section on it and links the guide |
+| How to evaluate a cross-platform component library | `/guides/evaluate-cross-platform-component-library` | `/components` is the catalogue, not the checklist |
+| Install KinetixUI (React adoption included) | `/docs/installation` | no `/docs/react` (Phase 2A decision) |
+| `<component>` component for `<platforms>` | `/docs/components/<slug>` | sibling pages each keep their own primary intent |
+| Angular component library | `/docs/angular` | `/components` |
+
+### Snippet audit (SEO Phase 3)
+
+Checked from the built HTML for `/`, `/components`, `/docs/platforms`, `/docs/tokens`, `/docs/accessibility`,
+`/docs/installation`, `/docs/angular`, the 20 editorial component pages and the four guides: title clarity,
+description clarity, markup, typed counts, cannibalisation, length. Results and the one edit are recorded in
+[`CONTENT-BACKLOG.md`](./CONTENT-BACKLOG.md) *Phase 3*.

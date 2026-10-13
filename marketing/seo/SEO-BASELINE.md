@@ -154,7 +154,7 @@ None. Robots allowed every page, the sitemap matched the built pages (128 = 128)
 | --- | --- | --- |
 | F-12 | Generic descriptions on `/blocks`, `/themes`, `/charts`. | **Fixed** with inventory-backed descriptions. |
 | F-13 | No React platform page. | **Deferred**: a content decision ([`CONTENT-BACKLOG.md`](./CONTENT-BACKLOG.md) cluster B). |
-| F-14 | No Search Console or Bing verification. | **Documented** ([`MEASUREMENT.md`](./MEASUREMENT.md) §5); no tokens invented. |
+| F-14 | No Search Console or Bing verification. | **Documented** ([`MEASUREMENT.md`](./MEASUREMENT.md) §7–§8); no tokens invented. |
 | F-15 | `/demos/building-operations`' H1 is the fictional building's name. | Deferred; the title and description carry the intent. |
 | F-16 | The homepage's `SoftwareApplication` used `codeRepository` (not a SoftwareApplication property) and stated `@kinetixui/ui`'s version for a multi-package project. | **Fixed**: the node is now `SoftwareSourceCode` (§8). |
 | F-19 | Some descriptions run past ~160 characters (`/iot` 306, component pages up to ~275) and will be truncated in results. | Kept: the component name and intent come first; the platform qualifier is the part that truncates. Revisit with Search Console CTR. |
