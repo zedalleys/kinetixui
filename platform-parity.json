@@ -108,7 +108,7 @@
     "Flutter": "FL"
   },
   "coverage": {
-    "React": 98,
+    "React": 102,
     "Angular": 80,
     "SwiftUI": 90,
     "Compose": 90,
@@ -541,6 +541,9 @@
       "Compose",
       "Flutter"
     ],
+    "pass-card": [
+      "React"
+    ],
     "password-input": [
       "React",
       "Angular",
@@ -554,6 +557,9 @@
       "SwiftUI",
       "Compose",
       "Flutter"
+    ],
+    "price-breakdown": [
+      "React"
     ],
     "progress": [
       "React",
@@ -583,12 +589,18 @@
       "Compose",
       "Flutter"
     ],
+    "reference-code": [
+      "React"
+    ],
     "resizable": [
       "React",
       "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
+    ],
+    "result-state": [
+      "React"
     ],
     "scroll-area": [
       "React",
@@ -768,6 +780,10 @@
     "kanban-board": "standing non-port — built on @dnd-kit; each native platform would need its own from-scratch accessible multi-container drag-and-drop implementation (no equivalent dependency exists in this repo's native packages)",
     "native-select": "standing non-port — KinetixSelect already wraps each platform's own native picker",
     "navigation-menu": "standing non-port",
+    "pass-card": "React-first business foundation (business capability roadmap, Phase 1 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+    "price-breakdown": "React-first business foundation (business capability roadmap, Phase 1 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+    "reference-code": "React-first business foundation (business capability roadmap, Phase 1 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+    "result-state": "React-first business foundation (business capability roadmap, Phase 1 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
     "tour": "standing non-port — targeting an arbitrary already-rendered element needs a CSS-selector-equivalent live-tree query, which no native platform has"
   },
   "platformNotes": {},
@@ -952,6 +968,78 @@
       "Flutter": {
         "type": "composition",
         "reason": "NavigationMenu is a hover-triggered desktop mega-menu with no touch idiom — compose KinetixTabBar or a KinetixDropdownMenu for the same navigation."
+      }
+    },
+    "pass-card": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native PassCard yet. KinetixCard with a KinetixCardHeader, a KinetixDescriptionList of the pass fields and the supplied code Image (with an accessibilityLabel) composes the same pass; Apple Wallet passes are a separate PassKit concern."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native PassCard yet. KinetixCard with a KinetixCardHeader, a KinetixDescriptionList of the pass fields and the supplied code Image (with a contentDescription) composes the same pass; Google Wallet passes are a separate API."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native PassCard yet. KinetixCard with a KinetixCardHeader, a KinetixDescriptionList of the pass fields and the supplied code Image (with a semanticLabel) composes the same pass."
+      }
+    },
+    "price-breakdown": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native PriceBreakdown yet. KinetixDescriptionList is already a term/value list; one KinetixDescriptionListItem per line with a monospaced-digit amount, and a KinetixSeparator before the total, is the same structure."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native PriceBreakdown yet. KinetixDescriptionList is already a term/value list; one KinetixDescriptionListItem per line with tabular-figure amounts, and a KinetixSeparator before the total, is the same structure."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native PriceBreakdown yet. KinetixDescriptionList is already a term/value list; one KinetixDescriptionListItem per line with tabular-figure amounts, and a KinetixSeparator before the total, is the same structure."
+      }
+    },
+    "reference-code": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native ReferenceCode yet. A Text with .textSelection(.enabled) plus a KinetixButton that writes to UIPasteboard and posts an accessibility announcement gives the same selectable, copyable, announced result."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native ReferenceCode yet. A SelectionContainer around the code plus a KinetixButton that writes through LocalClipboardManager gives the same selectable, copyable result; Android 13+ shows its own copy confirmation."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native ReferenceCode yet. A SelectableText plus a KinetixButton that calls Clipboard.setData and SemanticsService.announce gives the same selectable, copyable, announced result."
+      }
+    },
+    "result-state": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native ResultState yet. KinetixEmpty already carries the media / title / description / actions anatomy; put a status glyph with an accessibilityLabel in KinetixEmptyMedia and state the outcome in the title."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native ResultState yet. KinetixEmpty already carries the media / title / description / actions anatomy; put a status icon with a contentDescription in KinetixEmptyMedia and state the outcome in the title."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native ResultState yet. KinetixEmpty already carries the media / title / description / actions anatomy; put a status icon with a semanticLabel in KinetixEmptyMedia and state the outcome in the title."
       }
     },
     "table": {
@@ -1438,6 +1526,9 @@
       "Compose": "experimental",
       "Flutter": "experimental"
     },
+    "pass-card": {
+      "React": "beta"
+    },
     "password-input": {
       "React": "beta",
       "Angular": "preview",
@@ -1451,6 +1542,9 @@
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
+    },
+    "price-breakdown": {
+      "React": "beta"
     },
     "progress": {
       "React": "beta",
@@ -1480,12 +1574,18 @@
       "Compose": "experimental",
       "Flutter": "experimental"
     },
+    "reference-code": {
+      "React": "beta"
+    },
     "resizable": {
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
+    },
+    "result-state": {
+      "React": "beta"
     },
     "scroll-area": {
       "React": "beta",
@@ -1659,7 +1759,7 @@
   },
   "verificationCounts": {
     "React": {
-      "beta": 98
+      "beta": 102
     },
     "Angular": {
       "preview": 80
@@ -3202,6 +3302,15 @@
         "rtl"
       ]
     },
+    "pass-card": {
+      "React": [
+        "accessibility",
+        "build",
+        "largeText",
+        "published",
+        "rtl"
+      ]
+    },
     "password-input": {
       "React": [
         "accessibility",
@@ -3254,6 +3363,15 @@
       ],
       "Flutter": [
         "build"
+      ]
+    },
+    "price-breakdown": {
+      "React": [
+        "accessibility",
+        "build",
+        "largeText",
+        "published",
+        "rtl"
       ]
     },
     "progress": {
@@ -3359,6 +3477,16 @@
         "rtl"
       ]
     },
+    "reference-code": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
+      ]
+    },
     "resizable": {
       "React": [
         "accessibility",
@@ -3382,6 +3510,16 @@
       "Flutter": [
         "build",
         "largeText",
+        "rtl"
+      ]
+    },
+    "result-state": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
         "rtl"
       ]
     },
@@ -4038,14 +4176,14 @@
   },
   "evidenceCounts": {
     "React": {
-      "build": 98,
-      "interaction": 38,
-      "accessibility": 98,
-      "rtl": 22,
-      "largeText": 27,
+      "build": 102,
+      "interaction": 40,
+      "accessibility": 102,
+      "rtl": 26,
+      "largeText": 31,
       "reducedMotion": 3,
       "visual": 0,
-      "published": 98
+      "published": 102
     },
     "Angular": {
       "build": 80,

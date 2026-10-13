@@ -243,6 +243,30 @@ await new Promise((r) => server.listen(0, "127.0.0.1", r));
 const base = `http://127.0.0.1:${server.address().port}`;
 
 /**
+ * The transactional display family — <ResultState>, <ReferenceCode>, <PriceBreakdown> and <PassCard>
+ * (business capability roadmap, Phase 1). None of them is a control with a box to grow, so neither ratio
+ * rule above fits. What a reader at 200% needs from a receipt, a result or a pass is:
+ *
+ *   its own text grows,                          a px size would leave the amounts at 1x
+ *   nothing leaves its container,                a pass is `overflow: hidden` — escaping it is being clipped
+ *   the page gains no horizontal scroll,         a 14-character reference must wrap, not push the page
+ *   the copy button stays a usable target,       WCAG 2.5.8, at the size the reader chose
+ *   amounts stay on the inline END,              which is the RTL claim: the amount column mirrors to the left
+ *
+ * Measured at desktop and phone width, in both directions, every story of each component (the Default
+ * demo and the extra stories that reach every status and composition).
+ */
+const DISPLAY_SUBJECTS = [
+  { component: "ResultState", story: "feedback-resultstate--default", root: "section", text: "section h2" },
+  { component: "ResultState", story: "feedback-resultstate--statuses", root: "section", text: "section h3" },
+  { component: "ReferenceCode", story: "data-display-referencecode--default", root: "[role=group]", text: "[translate=no]", target: "[role=group] button" },
+  { component: "PriceBreakdown", story: "data-display-pricebreakdown--default", root: "dl", text: "dl dd", ends: "dl > div" },
+  { component: "PriceBreakdown", story: "data-display-pricebreakdown--transfer-and-loading", root: "dl", text: "dl dt span", ends: "dl > div" },
+  { component: "PassCard", story: "data-display-passcard--default", root: "article", text: "article dd" },
+  { component: "PassCard", story: "data-display-passcard--compositions", root: "article", text: "article dd" },
+];
+
+/**
  * The verification claim is derived from prose; the measurements are derived from the subject lists.
  * Nothing otherwise keeps the two in step, and a claim that outruns its measurement is the exact failure
  * this whole evidence model exists to prevent — so it is checked rather than trusted.
@@ -264,7 +288,7 @@ function assertClaimMatchesSubjects() {
   // The claim is what is measured AND passes the text-growth rule — a pending subject is measured in
   // full but must not reach verification.json, so it must not be named in the passage at all.
   const claimed = new Set(
-    [...SUBJECTS, ...FORM_SUBJECTS, ...OPEN_STATES]
+    [...SUBJECTS, ...FORM_SUBJECTS, ...OPEN_STATES, ...DISPLAY_SUBJECTS]
       .map((s) => s.component ?? s)
       .filter((c) => !TEXT_SCALE_PENDING.has(c))
       .map(slugOf),
@@ -590,6 +614,76 @@ for (const entry of OPEN_STATES) {
   }
 }
 
+const displayRows = [];
+for (const subject of DISPLAY_SUBJECTS) {
+  for (const viewport of VIEWPORTS) {
+    for (const dir of ["ltr", "rtl"]) {
+      const where = `${subject.component} (${subject.story}, ${viewport.label}/${dir})`;
+      const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } });
+      try {
+        await page.goto(`${base}/iframe.html?id=${subject.story}&viewMode=story`, { waitUntil: "networkidle" });
+        await page.waitForSelector(subject.root, { timeout: 15_000 });
+        await page.evaluate((d) => { document.documentElement.dir = d; }, dir);
+        const measure = () =>
+          page.evaluate(({ root, text, target, ends }) => {
+            const roots = [...document.querySelectorAll(root)];
+            // Every descendant must sit inside its root, horizontally — that is where clipping and overflow live.
+            let escaped = 0;
+            for (const r of roots) {
+              const box = r.getBoundingClientRect();
+              for (const el of r.querySelectorAll("*")) {
+                const b = el.getBoundingClientRect();
+                if (b.width === 0 && b.height === 0) continue;
+                if (b.left < box.left - 1 || b.right > box.right + 1) escaped++;
+              }
+            }
+            // Amounts: distance from the row's inline-end edge. 0 in LTR means flush right, in RTL flush left.
+            const endGaps = ends
+              ? [...document.querySelectorAll(ends)].map((row) => {
+                  const dd = row.querySelector("dd").getBoundingClientRect();
+                  const rb = row.getBoundingClientRect();
+                  return document.documentElement.dir === "rtl" ? dd.left - rb.left : rb.right - dd.right;
+                })
+              : [];
+            const t = target ? document.querySelector(target).getBoundingClientRect() : null;
+            return {
+              fontSize: parseFloat(getComputedStyle(document.querySelector(text)).fontSize),
+              escaped,
+              endGap: endGaps.length ? Math.max(...endGaps) : 0,
+              target: t ? Math.min(t.width, t.height) : null,
+              overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            };
+          }, subject);
+        const before = await measure();
+        await setRootFontSize(page, 16 * SCALE);
+        await page.waitForTimeout(200);
+        const after = await measure();
+        if (after.fontSize < before.fontSize * MIN_RATIO) {
+          problems.push(`${where}: its text did not grow with the reader's — ${before.fontSize}px -> ${after.fontSize}px.`);
+        }
+        if (after.escaped) problems.push(`${where}: ${after.escaped} element(s) leave their container at ${SCALE}x text.`);
+        if (after.overflowX !== 0) problems.push(`${where}: ${after.overflowX}px of horizontal page overflow at ${SCALE}x text.`);
+        if (after.endGap > 1 || before.endGap > 1) {
+          problems.push(`${where}: an amount is ${Math.max(before.endGap, after.endGap).toFixed(1)}px off the inline end of its row — it did not mirror.`);
+        }
+        if (after.target !== null && after.target < MIN_TARGET) {
+          problems.push(`${where}: the copy button is ${after.target.toFixed(1)}px at ${SCALE}x text, under ${MIN_TARGET}px.`);
+        }
+        displayRows.push(
+          `  ${subject.component.padEnd(14)} ${subject.story.split("--")[1].padEnd(22)} ${viewport.label.padEnd(7)} ${dir}  ` +
+            `text ${before.fontSize}px -> ${after.fontSize}px  escaped ${after.escaped}  overflowX ${after.overflowX}px` +
+            (subject.ends ? `  amount end-gap ${after.endGap.toFixed(1)}px` : "") +
+            (after.target !== null ? `  copy target ${after.target.toFixed(0)}px` : ""),
+        );
+      } catch (err) {
+        problems.push(`${where}: ${String(err.message).split("\n")[0]}`);
+      } finally {
+        await page.close();
+      }
+    }
+  }
+}
+
 await browser.close();
 server.close();
 
@@ -605,6 +699,8 @@ console.log(`large-text — the same controls at ${NARROW.width}px wide and ${SC
 for (const r of narrowRows) console.log(r);
 console.log(`large-text — ${OPEN_STATES.length} overlays opened and measured at ${SCALE}x text, both widths, both directions:`);
 for (const r of overlayRows) console.log(r);
+console.log(`large-text — ${DISPLAY_SUBJECTS.length} transactional display stories at ${SCALE}x text, both widths, both directions:`);
+for (const r of displayRows) console.log(r);
 
 if (problems.length) {
   console.error(`\nlarge-text FAILED:\n  ${problems.join("\n  ")}`);
@@ -614,5 +710,6 @@ console.log(
   `large-text ok — ${SUBJECTS.length} selection controls scaled with the text; ` +
     `${FORM_SUBJECTS.length - TEXT_SCALE_PENDING.size} form controls grew their own text and ` +
     `${TEXT_SCALE_PENDING.size} are still pinned by the type scale. None clipped, overlapped, escaped its ` +
-    `container or overflowed the page, and every overlay fitted the viewport.`,
+    `container or overflowed the page, every overlay fitted the viewport, and the transactional display family \n` +
+    `grew its text, stayed inside its containers and kept its amounts on the inline end in both directions.`,
 );

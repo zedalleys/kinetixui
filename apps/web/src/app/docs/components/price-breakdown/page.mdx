@@ -1,0 +1,52 @@
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("price-breakdown", "How an amount is made up — subtotal, taxes, fees, discounts, shipping, credits and the total — as a description list that mirrors under RTL and wraps at large text sizes.");
+
+# Price Breakdown
+
+<ComponentMeta />
+
+How an amount is made up — subtotal, taxes, fees, discounts, shipping, credits and the total — as a description list that mirrors under RTL and wraps at large text sizes.
+
+<ComponentPreview name="price-breakdown-demo" />
+
+The same shape serves a checkout, an invoice, a booking quote, a refund, a transfer and a payslip, so nothing in it
+says "cart" or "order".
+
+<ComponentPreview name="price-breakdown-states" />
+
+## React installation
+
+```bash
+npx @kinetixui/cli add price-breakdown
+```
+
+## React usage
+
+```tsx
+import { PriceBreakdown, PriceBreakdownLine, PriceBreakdownTotal } from "@kinetixui/ui";
+
+<PriceBreakdown aria-label="Price summary">
+  <PriceBreakdownLine label="Subtotal" value="€120.00" />
+  <PriceBreakdownLine label="Tax" description="VAT 20%" value="€21.60" />
+  <PriceBreakdownLine label="Discount" description="Code SPRING10" value="−€12.00" kind="deduction" />
+  <PriceBreakdownTotal label="Total" value="€129.60" />
+</PriceBreakdown>
+```
+
+**Amounts are supplied formatted.** Currency, locale, rounding and how a negative amount is written belong to your
+money layer; a UI component that formatted them would be guessing. For the same reason a `deduction` line must carry
+its minus sign in `value` — the colour is reinforcement only.
+
+For loading, render the same rows with a `Skeleton` in `value` and set `aria-busy` on the list, as in the second
+example above.
+
+## Accessibility
+
+- A `<dl>`: each line is a term (what the amount is, plus an optional qualifier) and its definition (the amount), read
+  in that order.
+- The total is the last pair, set apart by weight and a rule, so it is still read as part of the same list.
+- Amounts use tabular figures and sit on the inline end with logical properties, so they line up and mirror in RTL.
+  At 200% text on a phone, an amount that does not fit drops onto its own line instead of clipping.
+
+<ComponentApi slug="price-breakdown" />

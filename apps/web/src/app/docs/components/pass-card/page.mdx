@@ -1,0 +1,63 @@
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("pass-card", "The foundation for anything a person carries and presents — a boarding pass, a ticket, a parking permit, a voucher, a membership card — with fields, a tear line and a supplied scannable code.");
+
+# Pass Card
+
+<ComponentMeta />
+
+The foundation for anything a person carries and presents — a boarding pass, a ticket, a parking permit, a voucher, a membership card — with fields, a tear line and a supplied scannable code.
+
+<ComponentPreview name="pass-card-demo" />
+
+A boarding pass, an event ticket and a parking permit are the same anatomy with different words, so they are
+compositions of one component rather than components with "flight" in their props.
+
+<ComponentPreview name="pass-card-variants" />
+
+## React installation
+
+```bash
+npx @kinetixui/cli add pass-card
+```
+
+## React usage
+
+```tsx
+import {
+  PassCard, PassCardHeader, PassCardTitle, PassCardDescription,
+  PassCardFields, PassCardField, PassCardDivider, PassCardCode, PassCardFooter,
+} from "@kinetixui/ui";
+
+<PassCard>
+  <PassCardHeader>
+    <PassCardTitle>Parking permit</PassCardTitle>
+    <PassCardDescription>North campus</PassCardDescription>
+  </PassCardHeader>
+  <PassCardFields>
+    <PassCardField label="Bay" emphasis>C-14</PassCardField>
+    <PassCardField label="Valid until"><time dateTime="2026-12-31">31 Dec 2026</time></PassCardField>
+  </PassCardFields>
+  <PassCardDivider />
+  <PassCardCode label="Permit QR code" value="PRK-2026-C14">
+    <img src={qrCodeFromYourServer} alt="" />
+  </PassCardCode>
+  <PassCardFooter>Display on the dashboard.</PassCardFooter>
+</PassCard>
+```
+
+**PassCard does not generate codes.** Pass the barcode or QR code your product or the issuer generated, as an `<img>`
+or `<svg>`, with its own light background: a scanner needs dark modules on a light quiet zone, so the component
+never inverts it for dark mode. Validity and status are fields and tags your product decides.
+
+## Accessibility
+
+- An `<article>` named by its title, so a list of passes reads as a list of named items. An explicit `aria-label` is
+  left alone.
+- Fields are a `<dl>`. Use `<time dateTime>` for dates and times. The grid falls to fewer columns at 200% text or on a
+  phone instead of truncating a gate or a plate number.
+- The tear line is a real `<hr>`.
+- The code is a `<figure>`: the visual is an image named by `label`, and the caption is the readable value for when
+  the code will not scan.
+
+<ComponentApi slug="pass-card" />

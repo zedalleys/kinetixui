@@ -1,0 +1,3239 @@
+{
+  "$comment": "Canonical business capability roadmap. Edit this file, then run `pnpm gen:capabilities` to regenerate the tables in docs/BUSINESS-CAPABILITY-ROADMAP.md. `pnpm check:capabilities` fails if the tables are stale or an evidence reference does not resolve.",
+  "families": [
+    {
+      "id": "A",
+      "title": "Data & analytics",
+      "capabilities": [
+        {
+          "name": "DataGrid",
+          "parts": [
+            "DataGridHeader",
+            "DataGridHeaderCell",
+            "DataGridBody",
+            "DataGridRow",
+            "DataGridCell",
+            "DataGridGroupRow",
+            "DataGridColumnMenu",
+            "DataGridFilterMenu",
+            "DataGridSelectionToolbar",
+            "DataGridColumnVisibility",
+            "DataGridDensityControl",
+            "DataGridPagination",
+            "DataGridEmptyState"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:data-grid"
+          ],
+          "dependsOn": [
+            "Pagination",
+            "Empty",
+            "FilterBar"
+          ],
+          "phase": 3,
+          "notes": "Shipped (React): row virtualization, column resize, drag reorder, pinning, client sort, editable cells, range selection and copy, full keyboard model. Missing: server-driven sort/filter hooks, row groups, expandable rows, column visibility and density controls, a batch-action toolbar, cell validation, pagination or infinite loading. Pinning is spelled `left`/`right`, not start/end — an RTL contract defect to fix before extending. Native ports are a documented scope-down; Angular is planned."
+        },
+        {
+          "name": "DataTable",
+          "parts": [],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:data-table"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "TanStack-based table on React plus native ports; the light alternative to DataGrid. Angular planned (data wave)."
+        },
+        {
+          "name": "DataGrid advanced",
+          "parts": [
+            "aggregation",
+            "multi-level grouping with totals",
+            "spreadsheet export",
+            "million-row server model",
+            "master/detail"
+          ],
+          "layer": "L2",
+          "tier": "pro",
+          "target": "pro-candidate",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "DataGrid"
+          ],
+          "phase": 10,
+          "notes": "Advanced organisational value (analyst tooling), not difficulty, is why this is a Pro candidate. Keyboard, RTL and accessibility of the base grid stay Core."
+        },
+        {
+          "name": "QueryBuilder",
+          "parts": [
+            "QueryGroup",
+            "QueryRule",
+            "QueryFieldSelect",
+            "QueryOperatorSelect",
+            "QueryValueEditor",
+            "QueryPresetSelect"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Select",
+            "MultiSelect",
+            "DatePicker",
+            "NumberInput",
+            "FilterBar"
+          ],
+          "phase": 3,
+          "notes": "A rule tree with a keyboard-operable add/remove/reorder model. The query it produces is data the product executes; the component never runs it."
+        },
+        {
+          "name": "FilterBar",
+          "parts": [
+            "FilterChip",
+            "FilterGroup",
+            "FilterPreset",
+            "FilterSearch",
+            "FilterClear"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "block:filter-panel",
+            "ui:tag",
+            "ui:multi-select"
+          ],
+          "dependsOn": [],
+          "phase": 3,
+          "notes": "Today a block (removable tags, a price slider, the filters behind them) assembled from Tag and MultiSelect. Promote to a component once two consumers (DataGrid, QueryBuilder) need the same chip contract."
+        },
+        {
+          "name": "MetricCard",
+          "parts": [
+            "MetricValue",
+            "MetricDelta",
+            "MetricTrend",
+            "MetricGoal",
+            "MetricSparkline"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:metric",
+            "block:stat-cards"
+          ],
+          "dependsOn": [
+            "Sparkline"
+          ],
+          "phase": 3,
+          "notes": "Metric already has label, value, trend, change, icon and a chart slot on all five platforms — it IS MetricCard under another name. Missing: progress toward a goal, and a built-in sparkline (bring-your-own today). Extend Metric; do not add MetricCard."
+        },
+        {
+          "name": "PivotTable",
+          "parts": [],
+          "layer": "L2",
+          "tier": "pro",
+          "target": "pro-candidate",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "DataGrid"
+          ],
+          "phase": 10,
+          "notes": "Analyst tooling. Pro candidate."
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "title": "Data visualization",
+      "capabilities": [
+        {
+          "name": "Chart infrastructure",
+          "parts": [
+            "Chart",
+            "ChartAxis",
+            "ChartLegend",
+            "ChartTooltip",
+            "ChartCrosshair",
+            "ChartReferenceLine",
+            "ChartBrush",
+            "ChartEmptyState"
+          ],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:chart",
+            "file:apps/web/src/app/charts/charts-content.tsx"
+          ],
+          "dependsOn": [],
+          "phase": 3,
+          "notes": "React: ChartContainer, tooltip, legend, loading/empty/error states and a screen-reader data table on Recharts. Reference lines and brush exist as recipes; a crosshair does not. Natives ship a narrower KinetixChart; Angular planned. No new charting dependency without an architecture review."
+        },
+        {
+          "name": "Core chart types",
+          "parts": [
+            "LineChart",
+            "AreaChart",
+            "BarChart",
+            "StackedBarChart",
+            "PieChart",
+            "DonutChart",
+            "ScatterChart",
+            "Histogram",
+            "Sparkline"
+          ],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "recipe",
+          "evidence": [
+            "file:apps/web/src/app/charts/charts-content.tsx"
+          ],
+          "dependsOn": [
+            "Chart infrastructure"
+          ],
+          "phase": 3,
+          "notes": "Shipped as React recipes on /charts (themed Recharts compositions), not exported components. Exporting typed components is a Phase 3 decision, and native parity is narrower."
+        },
+        {
+          "name": "Gauge",
+          "parts": [
+            "ProgressRing"
+          ],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "recipe",
+          "evidence": [
+            "file:apps/web/src/app/charts/charts-content.tsx",
+            "ui:circular-progress"
+          ],
+          "dependsOn": [],
+          "phase": 3,
+          "notes": "Gauge is a /charts recipe; ProgressRing exists as CircularProgress on all five platforms."
+        },
+        {
+          "name": "Advanced chart types",
+          "parts": [
+            "WaterfallChart",
+            "FunnelChart",
+            "Heatmap",
+            "Treemap",
+            "RadarChart",
+            "CandlestickChart",
+            "BoxPlot"
+          ],
+          "layer": "L1",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "existing",
+          "delivery": "recipe",
+          "evidence": [
+            "file:apps/web/src/app/charts/charts-content.tsx"
+          ],
+          "dependsOn": [
+            "Chart infrastructure"
+          ],
+          "phase": 3,
+          "notes": "All seven ship as React recipes on /charts (plus Sankey, bullet, bump, dumbbell). Web-first; no native recipes."
+        },
+        {
+          "name": "RangeChart",
+          "parts": [],
+          "layer": "L1",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "recipe",
+          "evidence": [],
+          "dependsOn": [
+            "Chart infrastructure"
+          ],
+          "phase": 3,
+          "notes": "Min/max band over time (forecast ranges, vital ranges). A recipe on the existing infrastructure."
+        },
+        {
+          "name": "TimelineChart",
+          "parts": [],
+          "layer": "L1",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "recipe",
+          "evidence": [],
+          "dependsOn": [
+            "Chart infrastructure"
+          ],
+          "phase": 8,
+          "notes": "Events on a time axis; overlaps Scheduling's TimelinePlanner — build once."
+        },
+        {
+          "name": "GanttChart",
+          "parts": [],
+          "layer": "L2",
+          "tier": "pro",
+          "target": "pro-candidate",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "TimelinePlanner",
+            "DataGrid"
+          ],
+          "phase": 10,
+          "notes": "Dependency-aware planning is advanced organisational tooling."
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "title": "Transactional experience",
+      "capabilities": [
+        {
+          "name": "ResultState",
+          "parts": [
+            "ResultStateActions (primaryAction/secondaryAction props)"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:result-state"
+          ],
+          "dependsOn": [],
+          "phase": 1,
+          "notes": "Phase 1. One foundation for PaymentSuccess, BookingConfirmed, OrderConfirmed, RefundConfirmed, TransferSuccess, ApplicationSubmitted, TicketIssued, VoucherRedeemed. success, error, warning, pending, info and partial. React-first; natives compose KinetixEmpty; Angular planned."
+        },
+        {
+          "name": "SuccessState / ErrorState / WarningState / PendingState / PartialSuccessState",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:result-state"
+          ],
+          "dependsOn": [],
+          "phase": 1,
+          "notes": "Not separate components: each is `<ResultState status=\"…\">`. Listed so nobody builds them."
+        },
+        {
+          "name": "ReferenceCode",
+          "parts": [
+            "ReferenceCodeCopy (built in)"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:reference-code"
+          ],
+          "dependsOn": [],
+          "phase": 1,
+          "notes": "Phase 1. Selectable, copyable, announced; honest failure path when the clipboard is unavailable."
+        },
+        {
+          "name": "PriceBreakdown",
+          "parts": [
+            "PriceBreakdownLine",
+            "PriceBreakdownTotal"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:price-breakdown"
+          ],
+          "dependsOn": [],
+          "phase": 1,
+          "notes": "Phase 1. Subtotal, tax, fees, discount, shipping, credit, total — values supplied formatted; no commerce-only wording."
+        },
+        {
+          "name": "SummaryList / KeyValueList",
+          "parts": [],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:description-list"
+          ],
+          "dependsOn": [],
+          "phase": 1,
+          "notes": "Exists as DescriptionList on all five platforms. No new component. Its term column is a fixed 6rem mono caps skin; a `variant` for plain summaries is a candidate follow-up, not a new primitive."
+        },
+        {
+          "name": "PassCard",
+          "parts": [
+            "PassCardHeader",
+            "PassCardTitle",
+            "PassCardDescription",
+            "PassCardFields",
+            "PassCardField",
+            "PassCardDivider",
+            "PassCardCode",
+            "PassCardFooter"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:pass-card"
+          ],
+          "dependsOn": [],
+          "phase": 1,
+          "notes": "Phase 1. Foundation for boarding passes, tickets, vouchers, permits, memberships. Renders a supplied code; never encodes."
+        },
+        {
+          "name": "TicketCard",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "block",
+          "status": "existing",
+          "delivery": "recipe",
+          "evidence": [
+            "ui:pass-card"
+          ],
+          "dependsOn": [],
+          "phase": 1,
+          "notes": "A PassCard composition (a stub after PassCardDivider), shown on the PassCard page. Not a component."
+        },
+        {
+          "name": "TransactionCard",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "AmountDisplay",
+            "ResultState",
+            "StatusTimeline"
+          ],
+          "phase": 5,
+          "notes": "Deferred from Phase 1 on purpose: its amount, sign and status vocabulary belong to the money-display contract (AmountDisplay, TransactionRow). Building it first would freeze that API by accident."
+        },
+        {
+          "name": "Receipt",
+          "parts": [
+            "ReceiptHeader",
+            "ReceiptLine",
+            "ReceiptTotal",
+            "ReceiptTax",
+            "ReceiptPaymentMethod",
+            "ReceiptReference"
+          ],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "PriceBreakdown",
+            "ReferenceCode",
+            "DescriptionList",
+            "Card"
+          ],
+          "phase": 2,
+          "notes": "A block, not a component: Card + DescriptionList (merchant, date, payment method) + PriceBreakdown + ReferenceCode. ReceiptLine/Total/Tax ARE PriceBreakdownLine/Total. Publishing a block needs all five platforms (check:block-source)."
+        },
+        {
+          "name": "StatusTimeline",
+          "parts": [],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:timeline"
+          ],
+          "dependsOn": [],
+          "phase": 2,
+          "notes": "Timeline exists on all five platforms, but only Angular's KxTimelineItem carries a per-item `status`; React's Timeline has none. Align React (and natives) with Angular instead of adding a component — OrderTimeline, BookingTimeline, ShipmentTimeline all need it."
+        },
+        {
+          "name": "Domain result screens",
+          "parts": [
+            "PaymentSuccess",
+            "BookingConfirmed",
+            "OrderConfirmed",
+            "RefundConfirmed",
+            "TransferSuccess",
+            "ApplicationSubmitted",
+            "TicketIssued",
+            "VoucherRedeemed"
+          ],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "ResultState",
+            "ReferenceCode",
+            "PriceBreakdown",
+            "PassCard"
+          ],
+          "phase": 2,
+          "notes": "Blocks (or docs recipes) composed from the foundations — never components."
+        }
+      ]
+    },
+    {
+      "id": "D",
+      "title": "Commerce",
+      "capabilities": [
+        {
+          "name": "ProductCard",
+          "parts": [
+            "ProductListItem",
+            "ProductPrice",
+            "ProductAvailability"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Card",
+            "AmountDisplay",
+            "Badge"
+          ],
+          "phase": 2,
+          "notes": "Domain composition over Card; price via AmountDisplay, availability as text plus a status Tag."
+        },
+        {
+          "name": "ProductVariant / ProductOption",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "ToggleGroup",
+            "SegmentedControl",
+            "ColorPicker"
+          ],
+          "phase": 2,
+          "notes": "Mostly a recipe over ToggleGroup (size, colour swatches with names, not colour alone)."
+        },
+        {
+          "name": "ProductQuantity / CartQuantity / QuantityPicker",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:number-input",
+            "block:order-summary"
+          ],
+          "dependsOn": [],
+          "phase": 2,
+          "notes": "NumberInput (with steppers) covers it; the order-summary block already uses it per line. One shared QuantityPicker contract, not three."
+        },
+        {
+          "name": "Cart",
+          "parts": [
+            "CartItem",
+            "CartGroup",
+            "CartSummary"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "block",
+          "status": "partial",
+          "delivery": "block",
+          "evidence": [
+            "block:order-summary"
+          ],
+          "dependsOn": [
+            "PriceBreakdown",
+            "NumberInput"
+          ],
+          "phase": 2,
+          "notes": "order-summary block hand-rolls its totals; migrate them onto PriceBreakdown."
+        },
+        {
+          "name": "CartDrawer / MiniCart",
+          "parts": [],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "Sheet",
+            "Cart"
+          ],
+          "phase": 2,
+          "notes": "Sheet + Cart composition."
+        },
+        {
+          "name": "Checkout",
+          "parts": [
+            "CheckoutStepper"
+          ],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "Stepper",
+            "Form",
+            "AddressForm",
+            "PaymentCardInput",
+            "PriceBreakdown",
+            "ResultState"
+          ],
+          "phase": 2,
+          "notes": "A block. Never a component."
+        },
+        {
+          "name": "OrderSummary",
+          "parts": [
+            "OrderLine",
+            "OrderTotal",
+            "OrderTax",
+            "OrderDiscount",
+            "OrderShipping"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "block",
+          "status": "partial",
+          "delivery": "block",
+          "evidence": [
+            "block:order-summary"
+          ],
+          "dependsOn": [
+            "PriceBreakdown"
+          ],
+          "phase": 2,
+          "notes": "Exists as the order-summary block (five platforms). Its lines are PriceBreakdown lines — no OrderLine/OrderTotal components."
+        },
+        {
+          "name": "OrderCard",
+          "parts": [
+            "OrderStatus",
+            "OrderTimeline"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Card",
+            "StatusTimeline",
+            "ReferenceCode",
+            "Tag"
+          ],
+          "phase": 2,
+          "notes": "OrderTimeline is StatusTimeline."
+        },
+        {
+          "name": "ReturnRequest",
+          "parts": [],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "Form",
+            "RadioGroup",
+            "FileUpload"
+          ],
+          "phase": 2,
+          "notes": "Block."
+        },
+        {
+          "name": "RefundSummary / RefundStatus",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "PriceBreakdown",
+            "ResultState",
+            "StatusTimeline"
+          ],
+          "phase": 2,
+          "notes": "Composition of Phase 1 foundations."
+        }
+      ]
+    },
+    {
+      "id": "E",
+      "title": "Booking & reservations",
+      "capabilities": [
+        {
+          "name": "AvailabilityPicker / AppointmentPicker",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Calendar",
+            "TimeSlotPicker"
+          ],
+          "phase": 2,
+          "notes": "Calendar with availability (disabled/limited days announced, not only greyed)."
+        },
+        {
+          "name": "TimeSlotPicker",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "ToggleGroup"
+          ],
+          "phase": 2,
+          "notes": "A labelled radio/toggle grid of slots with an empty state; time zones stated in text."
+        },
+        {
+          "name": "GuestPicker",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "NumberInput",
+            "Popover"
+          ],
+          "phase": 2,
+          "notes": "Grouped steppers (adults, children) in a Popover with a summary trigger."
+        },
+        {
+          "name": "ResourcePicker / ProviderPicker / LocationPicker / ServicePicker",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "recipe",
+          "evidence": [],
+          "dependsOn": [
+            "Select",
+            "Combobox",
+            "Card"
+          ],
+          "phase": 2,
+          "notes": "One picker pattern (searchable list of rich options) — a recipe over Command/Select, not four components."
+        },
+        {
+          "name": "BookingCard / ReservationCard",
+          "parts": [
+            "BookingSummary",
+            "BookingReference",
+            "BookingStatus",
+            "ReservationDetails",
+            "ReservationStatus",
+            "ReservationActions"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "PassCard",
+            "ReferenceCode",
+            "DescriptionList",
+            "Tag"
+          ],
+          "phase": 2,
+          "notes": "BookingReference is ReferenceCode; BookingStatus is a Tag; a reservation confirmation is a PassCard composition."
+        },
+        {
+          "name": "BookingTimeline",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "StatusTimeline"
+          ],
+          "phase": 2,
+          "notes": "StatusTimeline."
+        },
+        {
+          "name": "Booking flow",
+          "parts": [],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "AvailabilityPicker",
+            "GuestPicker",
+            "PriceBreakdown",
+            "ResultState"
+          ],
+          "phase": 2,
+          "notes": "Block."
+        }
+      ]
+    },
+    {
+      "id": "F",
+      "title": "Travel & aviation",
+      "capabilities": [
+        {
+          "name": "FlightCard",
+          "parts": [
+            "FlightSegment",
+            "FlightRoute",
+            "FlightStatus",
+            "FlightTime",
+            "FlightDuration",
+            "FlightClassBadge"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Card",
+            "Badge",
+            "`<time>`"
+          ],
+          "phase": 2,
+          "notes": "Route and times as text with machine-readable `<time>`; direction-aware route arrow."
+        },
+        {
+          "name": "BaggageAllowance / GateInfo / BoardingGroup",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "recipe",
+          "evidence": [],
+          "dependsOn": [
+            "PassCardField",
+            "DescriptionList"
+          ],
+          "phase": 2,
+          "notes": "Fields, not components."
+        },
+        {
+          "name": "BoardingPass",
+          "parts": [
+            "BoardingPassPassenger",
+            "BoardingPassFlight",
+            "BoardingPassGate"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "existing",
+          "delivery": "recipe",
+          "evidence": [
+            "ui:pass-card"
+          ],
+          "dependsOn": [],
+          "phase": 2,
+          "notes": "Shown as the PassCard demo. A domain wrapper may come later; the base never says \"flight\"."
+        },
+        {
+          "name": "TrainTicket / BusTicket / EventTicket",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "existing",
+          "delivery": "recipe",
+          "evidence": [
+            "ui:pass-card"
+          ],
+          "dependsOn": [],
+          "phase": 2,
+          "notes": "PassCard compositions (EventTicket is on the PassCard page)."
+        },
+        {
+          "name": "SeatMap",
+          "parts": [
+            "Seat",
+            "SeatLegend",
+            "SeatSelection",
+            "SeatSummary"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "ToggleGroup"
+          ],
+          "phase": 2,
+          "notes": "Hard accessibility problem (2D grid, roving focus, availability not by colour). Web-first; dedicated design spike before code."
+        },
+        {
+          "name": "TravelerCard / PassengerList / TravelerDocumentStatus",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Card",
+            "List",
+            "Tag"
+          ],
+          "phase": 2,
+          "notes": ""
+        },
+        {
+          "name": "Itinerary",
+          "parts": [
+            "ItineraryDay",
+            "ItinerarySegment",
+            "ItineraryTimeline"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "StatusTimeline",
+            "Card"
+          ],
+          "phase": 2,
+          "notes": "ItineraryTimeline is StatusTimeline."
+        },
+        {
+          "name": "TripSummary / TripPriceBreakdown / TripStatus",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "PriceBreakdown",
+            "ResultState"
+          ],
+          "phase": 2,
+          "notes": "TripPriceBreakdown is PriceBreakdown."
+        }
+      ]
+    },
+    {
+      "id": "G",
+      "title": "Vouchers, passes & credentials",
+      "capabilities": [
+        {
+          "name": "PassCard foundation",
+          "parts": [
+            "PassHeader",
+            "PassHolder",
+            "PassCode",
+            "PassValidity",
+            "PassStatus",
+            "PassTerms"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:pass-card"
+          ],
+          "dependsOn": [],
+          "phase": 1,
+          "notes": "Shipped as PassCard*: PassHolder is PassCardDescription or a field; PassValidity is a PassCardField with `<time>`; PassStatus composes Tag; PassTerms is PassCardFooter."
+        },
+        {
+          "name": "PassBarcode / PassQRCode",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:pass-card"
+          ],
+          "dependsOn": [],
+          "phase": 1,
+          "notes": "PassCardCode renders a SUPPLIED barcode or QR image with a text alternative and readable value. Encoding stays out of the library — no barcode dependency, no invented security model."
+        },
+        {
+          "name": "Pass compositions",
+          "parts": [
+            "Voucher",
+            "GiftCard",
+            "MembershipCard",
+            "LoyaltyCard",
+            "DigitalPass",
+            "AccessPass",
+            "EventPass",
+            "ParkingPass",
+            "MealVoucher",
+            "PromoVoucher"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "existing",
+          "delivery": "recipe",
+          "evidence": [
+            "ui:pass-card"
+          ],
+          "dependsOn": [],
+          "phase": 2,
+          "notes": "Compositions of PassCard (parking permit and voucher are on the PassCard page). Promote one to a component only when its behaviour, not its words, differs."
+        },
+        {
+          "name": "Wallet export (Apple Wallet / Google Wallet)",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "not-planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "Platform wallet passes are issued server-side by the product; out of scope for a UI library."
+        }
+      ]
+    },
+    {
+      "id": "H",
+      "title": "Receipts & invoices",
+      "capabilities": [
+        {
+          "name": "Invoice",
+          "parts": [
+            "InvoiceHeader",
+            "InvoiceParty",
+            "InvoiceLine",
+            "InvoiceTotals",
+            "InvoiceStatus"
+          ],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "Table",
+            "PriceBreakdown",
+            "DescriptionList",
+            "Tag"
+          ],
+          "phase": 5,
+          "notes": "InvoiceLine is a Table row; InvoiceTotals is PriceBreakdown."
+        },
+        {
+          "name": "Receipt blocks",
+          "parts": [
+            "PaymentReceipt",
+            "TransferReceipt",
+            "BookingReceipt",
+            "RefundReceipt"
+          ],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "Receipt"
+          ],
+          "phase": 2,
+          "notes": "Word changes over one Receipt block."
+        }
+      ]
+    },
+    {
+      "id": "I",
+      "title": "Finance & banking",
+      "capabilities": [
+        {
+          "name": "AmountDisplay",
+          "parts": [
+            "ConvertedAmount"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "—"
+          ],
+          "phase": 2,
+          "notes": "Pulled forward from Phase 5: every price in Commerce and Booking needs one money-display contract (Intl formatting supplied by the product, sign, currency code for screen readers, tabular figures)."
+        },
+        {
+          "name": "MoneyInput",
+          "parts": [
+            "CurrencySelect"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "InputGroup",
+            "NumberInput",
+            "Select"
+          ],
+          "phase": 5,
+          "notes": "Locale-aware entry; the stored value is the product's minor-unit integer, never a float."
+        },
+        {
+          "name": "ExchangeRateDisplay / ExchangeRate",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "AmountDisplay"
+          ],
+          "phase": 5,
+          "notes": ""
+        },
+        {
+          "name": "PercentageInput / UnitInput",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:number-input",
+            "ui:input-group"
+          ],
+          "dependsOn": [],
+          "phase": 5,
+          "notes": "NumberInput + InputGroup addon covers it today."
+        },
+        {
+          "name": "IBANInput / AccountNumberInput",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Input",
+            "Field"
+          ],
+          "phase": 5,
+          "notes": "Formatting and checksum hints only; validation authority stays server-side."
+        },
+        {
+          "name": "PaymentCardInput",
+          "parts": [
+            "CardNumberInput",
+            "ExpiryInput",
+            "SecurityCodeInput",
+            "CardHolderInput"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Input",
+            "Field"
+          ],
+          "phase": 5,
+          "notes": "Never claim PCI compliance: a UI component cannot provide it. Most products should use their PSP's hosted fields; this would be for PSP-agnostic styling only."
+        },
+        {
+          "name": "TransactionList",
+          "parts": [
+            "TransactionRow",
+            "TransactionAmount",
+            "TransactionStatus"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "AmountDisplay",
+            "List",
+            "Tag"
+          ],
+          "phase": 5,
+          "notes": ""
+        },
+        {
+          "name": "MoneyMovementSummary / FeeBreakdown",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "recipe",
+          "evidence": [
+            "ui:price-breakdown"
+          ],
+          "dependsOn": [],
+          "phase": 1,
+          "notes": "PriceBreakdown (the transfer example on its page)."
+        }
+      ]
+    },
+    {
+      "id": "J",
+      "title": "Billing & subscriptions",
+      "capabilities": [
+        {
+          "name": "PricingTable",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "block",
+          "status": "partial",
+          "delivery": "block",
+          "evidence": [
+            "block:pricing-tier"
+          ],
+          "dependsOn": [
+            "AmountDisplay"
+          ],
+          "phase": 5,
+          "notes": "pricing-tier block is one tier; a comparison table is the gap."
+        },
+        {
+          "name": "PlanSummary / SubscriptionCard / SubscriptionStatus / BillingCycle / RenewalStatus",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Card",
+            "DescriptionList",
+            "Tag"
+          ],
+          "phase": 5,
+          "notes": ""
+        },
+        {
+          "name": "UsageMeter / QuotaMeter / CreditBalance",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:progress",
+            "ui:metric"
+          ],
+          "dependsOn": [],
+          "phase": 5,
+          "notes": "Progress + Metric compose it; a meter with thresholds announced in text is the gap."
+        },
+        {
+          "name": "InvoiceList / PaymentHistory",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "DataTable",
+            "AmountDisplay"
+          ],
+          "phase": 5,
+          "notes": ""
+        },
+        {
+          "name": "Upgrade / downgrade / cancel flows",
+          "parts": [],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "ResultState",
+            "PriceBreakdown",
+            "AlertDialog"
+          ],
+          "phase": 5,
+          "notes": "Blocks."
+        }
+      ]
+    },
+    {
+      "id": "K",
+      "title": "Loyalty, rewards & wallet",
+      "capabilities": [
+        {
+          "name": "WalletBalance / GiftCardBalance",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "AmountDisplay",
+            "Metric"
+          ],
+          "phase": 5,
+          "notes": ""
+        },
+        {
+          "name": "WalletTransaction",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "TransactionList"
+          ],
+          "phase": 5,
+          "notes": "TransactionRow."
+        },
+        {
+          "name": "WalletCard / GiftCard / LoyaltyCard",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "existing",
+          "delivery": "recipe",
+          "evidence": [
+            "ui:pass-card"
+          ],
+          "dependsOn": [],
+          "phase": 2,
+          "notes": "PassCard compositions."
+        },
+        {
+          "name": "RewardPoints / RewardProgress / RewardTier / LoyaltyStatus / LoyaltyBenefits",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Metric",
+            "Progress",
+            "Tag"
+          ],
+          "phase": 5,
+          "notes": ""
+        },
+        {
+          "name": "RewardHistory",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "TransactionList"
+          ],
+          "phase": 5,
+          "notes": ""
+        },
+        {
+          "name": "GiftCardRedeem",
+          "parts": [],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "Field",
+            "ResultState"
+          ],
+          "phase": 5,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "L",
+      "title": "IAM & enterprise admin",
+      "capabilities": [
+        {
+          "name": "PermissionMatrix",
+          "parts": [
+            "PermissionGroup",
+            "PermissionRow",
+            "PermissionCell",
+            "PermissionBulkAction",
+            "PermissionInheritance"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Table",
+            "Checkbox"
+          ],
+          "phase": 4,
+          "notes": "A grid of checkbox cells with row/column bulk actions and an inheritance explanation in text; keyboard grid model."
+        },
+        {
+          "name": "RoleEditor",
+          "parts": [],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "PermissionMatrix",
+            "Form"
+          ],
+          "phase": 4,
+          "notes": ""
+        },
+        {
+          "name": "WorkspaceSwitcher",
+          "parts": [
+            "WorkspaceItem",
+            "WorkspaceSearch"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Command",
+            "Popover",
+            "Avatar"
+          ],
+          "phase": 4,
+          "notes": "A Command-in-Popover recipe first."
+        },
+        {
+          "name": "SessionManager / DeviceSession",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "block",
+          "status": "partial",
+          "delivery": "block",
+          "evidence": [
+            "block:account-security"
+          ],
+          "dependsOn": [
+            "List",
+            "AlertDialog"
+          ],
+          "phase": 4,
+          "notes": "The account-security block lists active sessions you can end."
+        },
+        {
+          "name": "APIKeyTable / SecretKeyManager",
+          "parts": [
+            "SecretScope",
+            "SecretExpiration",
+            "SecretRotation"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "DataTable",
+            "ReferenceCode",
+            "AlertDialog"
+          ],
+          "phase": 4,
+          "notes": "ReferenceCode covers reveal-once copy; secrets are never rendered after creation."
+        }
+      ]
+    },
+    {
+      "id": "M",
+      "title": "Authentication",
+      "capabilities": [
+        {
+          "name": "AuthShell / AuthCard",
+          "parts": [],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "existing",
+          "delivery": "block",
+          "evidence": [
+            "block:sign-in",
+            "block:create-account"
+          ],
+          "dependsOn": [],
+          "phase": 4,
+          "notes": "The sign-in and create-account blocks."
+        },
+        {
+          "name": "OTPInput",
+          "parts": [],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:input-otp"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "InputOTP on all five platforms."
+        },
+        {
+          "name": "PasswordStrength / PasswordRequirement",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "block",
+          "status": "partial",
+          "delivery": "block",
+          "evidence": [
+            "block:create-account",
+            "ui:password-input"
+          ],
+          "dependsOn": [
+            "Progress"
+          ],
+          "phase": 4,
+          "notes": "The create-account block's meter names what is missing; not yet a reusable component."
+        },
+        {
+          "name": "RecoveryCodeList",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "block",
+          "status": "partial",
+          "delivery": "block",
+          "evidence": [
+            "block:account-security"
+          ],
+          "dependsOn": [
+            "ReferenceCode"
+          ],
+          "phase": 4,
+          "notes": "In the account-security block."
+        },
+        {
+          "name": "MFA setup",
+          "parts": [],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "InputOTP",
+            "PassCardCode",
+            "ResultState"
+          ],
+          "phase": 4,
+          "notes": "A block: the QR is a supplied image (PassCardCode), never generated here."
+        }
+      ]
+    },
+    {
+      "id": "N",
+      "title": "Workflow & approvals",
+      "capabilities": [
+        {
+          "name": "WorkflowStepper",
+          "parts": [],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:stepper"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "Stepper on all five platforms."
+        },
+        {
+          "name": "ApprovalFlow",
+          "parts": [
+            "ApprovalStage",
+            "ApprovalActor",
+            "ApprovalStatus",
+            "ApprovalActions"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "StatusTimeline",
+            "Avatar",
+            "Tag"
+          ],
+          "phase": 4,
+          "notes": ""
+        },
+        {
+          "name": "TaskQueue",
+          "parts": [
+            "TaskQueueItem",
+            "TaskPriority",
+            "TaskAssignee",
+            "TaskDueDate"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "List",
+            "Tag",
+            "Avatar"
+          ],
+          "phase": 4,
+          "notes": ""
+        },
+        {
+          "name": "SLAIndicator",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Tag",
+            "`<time>`"
+          ],
+          "phase": 4,
+          "notes": "Remaining time stated in text; colour is reinforcement."
+        },
+        {
+          "name": "WorkflowHistory",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "AuditTrail"
+          ],
+          "phase": 4,
+          "notes": ""
+        },
+        {
+          "name": "Advanced workflow tooling (visual designer, simulation)",
+          "parts": [],
+          "layer": "L2",
+          "tier": "pro",
+          "target": "pro-candidate",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "ApprovalFlow"
+          ],
+          "phase": 10,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "O",
+      "title": "Audit & compliance",
+      "capabilities": [
+        {
+          "name": "AuditTrail",
+          "parts": [
+            "AuditEvent",
+            "AuditActor",
+            "AuditChange",
+            "AuditMetadata",
+            "AuditFilter"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "StatusTimeline",
+            "DiffViewer",
+            "FilterBar"
+          ],
+          "phase": 4,
+          "notes": "AuditChange reuses DiffViewer."
+        },
+        {
+          "name": "VerificationStepper",
+          "parts": [
+            "VerificationStep",
+            "VerificationStatus"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:stepper"
+          ],
+          "dependsOn": [],
+          "phase": 6,
+          "notes": "Stepper covers the shape; per-step status is the gap."
+        },
+        {
+          "name": "DocumentCapture / DocumentPreview",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "FileUpload",
+            "Image"
+          ],
+          "phase": 6,
+          "notes": ""
+        },
+        {
+          "name": "IdentityReview",
+          "parts": [
+            "IdentityField",
+            "IdentityMatchStatus"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "DescriptionList",
+            "Tag"
+          ],
+          "phase": 6,
+          "notes": ""
+        },
+        {
+          "name": "SignaturePad",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "—"
+          ],
+          "phase": 6,
+          "notes": "Needs a keyboard alternative (typed signature) to be Core."
+        },
+        {
+          "name": "KYC flow",
+          "parts": [],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "block",
+          "evidence": [],
+          "dependsOn": [
+            "VerificationStepper",
+            "DocumentCapture",
+            "ResultState"
+          ],
+          "phase": 6,
+          "notes": "A block/domain workflow, never one primitive."
+        }
+      ]
+    },
+    {
+      "id": "P",
+      "title": "Documents & files",
+      "capabilities": [
+        {
+          "name": "FileUploader",
+          "parts": [
+            "UploadItem",
+            "UploadProgress",
+            "UploadError"
+          ],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:file-upload"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "FileUpload has per-file loading/uploaded/error status and progress."
+        },
+        {
+          "name": "FileManager",
+          "parts": [
+            "FileRow",
+            "FileGrid",
+            "FileBreadcrumb",
+            "FileActions"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "DataTable",
+            "Breadcrumb",
+            "DropdownMenu"
+          ],
+          "phase": 6,
+          "notes": ""
+        },
+        {
+          "name": "DocumentViewer shell",
+          "parts": [
+            "DocumentToolbar",
+            "DocumentPage",
+            "DocumentThumbnailRail",
+            "DocumentZoomControl",
+            "DocumentSearch"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Toolbar",
+            "ScrollArea"
+          ],
+          "phase": 6,
+          "notes": "A shell around a renderer the product supplies — no PDF engine in the library."
+        },
+        {
+          "name": "VersionHistory",
+          "parts": [
+            "VersionEntry",
+            "VersionCompare"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "StatusTimeline",
+            "DiffViewer"
+          ],
+          "phase": 6,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "Q",
+      "title": "Healthcare",
+      "capabilities": [
+        {
+          "name": "PatientSummary / PatientStatus / PatientAlert",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Card",
+            "Alert",
+            "DescriptionList"
+          ],
+          "phase": 6,
+          "notes": "Display only: clinical and diagnostic logic stays out of the library."
+        },
+        {
+          "name": "VitalSign",
+          "parts": [
+            "VitalSignTrend",
+            "VitalSignRange",
+            "VitalSignStatus"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Metric",
+            "RangeChart"
+          ],
+          "phase": 6,
+          "notes": "Ranges are supplied by the product; the component never decides what is abnormal."
+        },
+        {
+          "name": "MedicationList",
+          "parts": [
+            "MedicationItem",
+            "Dosage",
+            "MedicationStatus"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "List",
+            "Tag"
+          ],
+          "phase": 6,
+          "notes": ""
+        },
+        {
+          "name": "AppointmentCard / AppointmentStatus",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "PassCard",
+            "Tag"
+          ],
+          "phase": 6,
+          "notes": "A PassCard composition first."
+        },
+        {
+          "name": "ClinicalTimeline",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "StatusTimeline"
+          ],
+          "phase": 6,
+          "notes": ""
+        },
+        {
+          "name": "LabResultTable",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "DataTable"
+          ],
+          "phase": 6,
+          "notes": ""
+        },
+        {
+          "name": "ConsentStatus",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Tag",
+            "ResultState"
+          ],
+          "phase": 6,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "R",
+      "title": "Maps, logistics & fleet",
+      "capabilities": [
+        {
+          "name": "Map controls",
+          "parts": [
+            "MapControls",
+            "MapZoom",
+            "MapCompass",
+            "MapLayers",
+            "MapLegend"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "ButtonGroup"
+          ],
+          "phase": 7,
+          "notes": "Controls around a map engine the product supplies; no map dependency in the library."
+        },
+        {
+          "name": "MapMarker / MapMarkerCard / MapCluster",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Popover",
+            "Card"
+          ],
+          "phase": 7,
+          "notes": ""
+        },
+        {
+          "name": "RouteSummary",
+          "parts": [
+            "RouteDistance",
+            "RouteDuration",
+            "RouteStops"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "DescriptionList",
+            "StatusTimeline"
+          ],
+          "phase": 7,
+          "notes": ""
+        },
+        {
+          "name": "FleetVehicleCard / VehicleStatus",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Card",
+            "Tag"
+          ],
+          "phase": 7,
+          "notes": ""
+        },
+        {
+          "name": "ShipmentCard / ShipmentStatus / ShipmentTimeline / TrackingTimeline / DeliveryStatus",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "StatusTimeline",
+            "ReferenceCode",
+            "PassCard"
+          ],
+          "phase": 7,
+          "notes": "ShipmentTimeline and TrackingTimeline are StatusTimeline; the tracking number is ReferenceCode."
+        },
+        {
+          "name": "GeofenceEditor",
+          "parts": [],
+          "layer": "L3",
+          "tier": "pro",
+          "target": "pro-candidate",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Map controls"
+          ],
+          "phase": 10,
+          "notes": "Pro candidate."
+        }
+      ]
+    },
+    {
+      "id": "S",
+      "title": "IoT",
+      "capabilities": [
+        {
+          "name": "IoT controls",
+          "parts": [
+            "DevicePowerControl",
+            "DeviceLevelControl",
+            "DeviceSetpointControl",
+            "DeviceModeControl",
+            "DeviceColorControl",
+            "DeviceLockControl",
+            "DeviceMediaControl"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "iot:DevicePowerControl",
+            "iot:DeviceLevelControl",
+            "iot:DeviceSetpointControl",
+            "iot:DeviceModeControl",
+            "iot:DeviceColorControl",
+            "iot:DeviceLockControl",
+            "iot:DeviceMediaControl"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "@kinetixui/iot, React only. Requested state is never shown as physical truth until the device reports it."
+        },
+        {
+          "name": "IoT monitoring",
+          "parts": [
+            "TelemetryMetric",
+            "TelemetryGrid",
+            "TelemetryCard",
+            "TelemetryTrend",
+            "EnergySummary",
+            "DeviceBattery",
+            "DeviceConnection"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "iot:TelemetryMetric",
+            "iot:TelemetryGrid",
+            "iot:TelemetryCard",
+            "iot:TelemetryTrend",
+            "iot:EnergySummary",
+            "iot:DeviceBattery",
+            "iot:DeviceConnection"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "Freshness contract: stale data says so."
+        },
+        {
+          "name": "IoT summaries & cards",
+          "parts": [
+            "DeviceStateSummary",
+            "DeviceCard",
+            "DeviceGroupCard",
+            "DeviceControlCard",
+            "DeviceListItem",
+            "RoutineCard",
+            "CameraDeviceCard"
+          ],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "iot:DeviceStateSummary",
+            "iot:DeviceCard",
+            "iot:DeviceGroupCard",
+            "iot:DeviceControlCard",
+            "iot:DeviceListItem",
+            "iot:RoutineCard",
+            "iot:CameraDeviceCard"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "DeviceSummary exists as DeviceStateSummary."
+        },
+        {
+          "name": "RequestedState / ReportedState / PendingDeviceState / CommandStatus",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "iot:CommandStatus",
+            "iot:CommandFeedback",
+            "iot:CommandLifecycle"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "Exists as the command lifecycle (requested, pending, confirmed, failed, timed out). Do not weaken: requested is not reported."
+        },
+        {
+          "name": "DeviceAlert",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "iot:AlertCard",
+            "iot:AlertList"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "AlertCard / AlertList."
+        },
+        {
+          "name": "ZoneSummary",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "iot:SpaceRollup",
+            "iot:SpaceBreadcrumb"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "SpaceRollup / SpaceBreadcrumb."
+        },
+        {
+          "name": "DeviceActivityTimeline",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "iot:DeviceActivity",
+            "iot:ActivityTimeline"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "DeviceActivity / ActivityTimeline."
+        },
+        {
+          "name": "DeviceProvisioningStepper",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "iot:PairingStepper",
+            "iot:PairingMethodPicker",
+            "iot:PairingFailure"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "The pairing family."
+        },
+        {
+          "name": "DeviceFirmwareStatus",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "iot:FirmwareStatus"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "FirmwareStatus."
+        },
+        {
+          "name": "SpatialDeviceMarker",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Map controls"
+          ],
+          "phase": 7,
+          "notes": "Waits on real-device validation (IoT is paused until hardware evidence exists)."
+        },
+        {
+          "name": "DeviceMaintenance",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "DeviceHealthSummary"
+          ],
+          "phase": 7,
+          "notes": "DeviceHealthSummary covers health; maintenance scheduling is new."
+        }
+      ]
+    },
+    {
+      "id": "T",
+      "title": "Scheduling",
+      "capabilities": [
+        {
+          "name": "Calendar",
+          "parts": [
+            "CalendarMonth"
+          ],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:calendar"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "Month calendar with single and range modes (react-day-picker on React). Angular planned."
+        },
+        {
+          "name": "CalendarWeek / CalendarDay / CalendarEvent / CalendarResource",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Calendar"
+          ],
+          "phase": 8,
+          "notes": "A time-grid view; keyboard model and event density at 200% text are the hard part."
+        },
+        {
+          "name": "Scheduler / AvailabilityGrid / TimelinePlanner",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "CalendarWeek",
+            "DataGrid"
+          ],
+          "phase": 8,
+          "notes": ""
+        },
+        {
+          "name": "Gantt",
+          "parts": [],
+          "layer": "L2",
+          "tier": "pro",
+          "target": "pro-candidate",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "TimelinePlanner"
+          ],
+          "phase": 10,
+          "notes": "Pro candidate."
+        }
+      ]
+    },
+    {
+      "id": "U",
+      "title": "CRM & sales",
+      "capabilities": [
+        {
+          "name": "EntityCard / StatusCard foundation",
+          "parts": [
+            "ContactCard",
+            "CompanyCard",
+            "DealCard"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Card",
+            "Avatar",
+            "DescriptionList",
+            "Tag"
+          ],
+          "phase": 4,
+          "notes": "One EntityCard (avatar/logo, name, key facts, status, actions) instead of three cards."
+        },
+        {
+          "name": "PipelineBoard",
+          "parts": [],
+          "layer": "L3",
+          "tier": "core",
+          "target": "react-domain",
+          "status": "existing",
+          "delivery": "recipe",
+          "evidence": [
+            "ui:kanban-board"
+          ],
+          "dependsOn": [],
+          "phase": 8,
+          "notes": "KanbanBoard with deal cards."
+        },
+        {
+          "name": "ActivityFeed",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:timeline",
+            "iot:ActivityTimeline"
+          ],
+          "dependsOn": [
+            "StatusTimeline"
+          ],
+          "phase": 4,
+          "notes": "Timeline covers the shape; IoT's ActivityTimeline is a domain version."
+        }
+      ]
+    },
+    {
+      "id": "V",
+      "title": "Project & work management",
+      "capabilities": [
+        {
+          "name": "KanbanBoard",
+          "parts": [
+            "KanbanColumn",
+            "KanbanCard",
+            "KanbanSwimlane"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:kanban-board"
+          ],
+          "dependsOn": [],
+          "phase": 8,
+          "notes": "Shipped with keyboard drag and drop (React only, standing native non-port). Swimlanes are missing."
+        },
+        {
+          "name": "TaskCard / Milestone",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Card",
+            "Tag",
+            "Avatar"
+          ],
+          "phase": 8,
+          "notes": ""
+        },
+        {
+          "name": "DependencyGraph",
+          "parts": [],
+          "layer": "L2",
+          "tier": "pro",
+          "target": "pro-candidate",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "—"
+          ],
+          "phase": 10,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "W",
+      "title": "Collaboration",
+      "capabilities": [
+        {
+          "name": "MessageBubble / Conversation / Thread",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:message-bubble"
+          ],
+          "dependsOn": [],
+          "phase": 9,
+          "notes": "MessageBubble and TypingIndicator on React and natives; a scrolling Conversation with grouping and unread markers is the gap."
+        },
+        {
+          "name": "CommentComposer / CommentThread",
+          "parts": [],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "partial",
+          "delivery": "block",
+          "evidence": [
+            "block:comment-box"
+          ],
+          "dependsOn": [
+            "MentionInput"
+          ],
+          "phase": 9,
+          "notes": "comment-box block."
+        },
+        {
+          "name": "MentionInput",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Command",
+            "Textarea"
+          ],
+          "phase": 9,
+          "notes": ""
+        },
+        {
+          "name": "PresenceIndicator / ReactionPicker",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Avatar",
+            "Popover"
+          ],
+          "phase": 9,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "X",
+      "title": "Developer tools",
+      "capabilities": [
+        {
+          "name": "CodeEditorShell",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:code-block",
+            "ui:markdown-editor"
+          ],
+          "dependsOn": [],
+          "phase": 9,
+          "notes": "CodeBlock (read-only) and MarkdownEditor (plain-textarea editing) exist; a shell around a real editor engine is the gap."
+        },
+        {
+          "name": "DiffViewer",
+          "parts": [],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:diff-viewer"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": ""
+        },
+        {
+          "name": "JSONViewer",
+          "parts": [
+            "JSONNode"
+          ],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:json-viewer"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "JsonViewer."
+        },
+        {
+          "name": "LogViewer",
+          "parts": [
+            "LogLine",
+            "LogLevel"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "VirtualList"
+          ],
+          "phase": 9,
+          "notes": "Virtualised, level as text plus colour."
+        },
+        {
+          "name": "EnvironmentBadge / DeploymentStatus / DeploymentStep",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Tag",
+            "StatusTimeline"
+          ],
+          "phase": 9,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "Y",
+      "title": "Observability",
+      "capabilities": [
+        {
+          "name": "StatusCard / StatusIndicator",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:metric",
+            "ui:badge"
+          ],
+          "dependsOn": [
+            "EntityCard"
+          ],
+          "phase": 9,
+          "notes": "Metric and Badge cover it today."
+        },
+        {
+          "name": "HealthCheckList",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "List",
+            "ResultState"
+          ],
+          "phase": 9,
+          "notes": ""
+        },
+        {
+          "name": "IncidentBanner",
+          "parts": [],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:banner"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "Banner (dismissible, intent-tinted, page-level)."
+        },
+        {
+          "name": "IncidentTimeline",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "StatusTimeline"
+          ],
+          "phase": 9,
+          "notes": ""
+        },
+        {
+          "name": "AlertRuleBuilder",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "QueryBuilder"
+          ],
+          "phase": 9,
+          "notes": "QueryBuilder with thresholds."
+        }
+      ]
+    },
+    {
+      "id": "Z",
+      "title": "AI / agent interfaces",
+      "capabilities": [
+        {
+          "name": "PromptInput",
+          "parts": [
+            "PromptAttachment",
+            "PromptActions"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Textarea",
+            "FileUpload",
+            "Button"
+          ],
+          "phase": 9,
+          "notes": ""
+        },
+        {
+          "name": "ChatMessage / AssistantResponse / StreamingText",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:message-bubble",
+            "ui:markdown-editor"
+          ],
+          "dependsOn": [],
+          "phase": 9,
+          "notes": "MessageBubble + rendered markdown; streaming announcement strategy (polite, chunked) is the gap."
+        },
+        {
+          "name": "ToolCall / Citation / SourcesPanel",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Collapsible",
+            "Card"
+          ],
+          "phase": 9,
+          "notes": "User-visible tool and source information only."
+        },
+        {
+          "name": "AgentTask",
+          "parts": [
+            "AgentStep",
+            "AgentProgress",
+            "AgentResult"
+          ],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "StatusTimeline",
+            "ResultState"
+          ],
+          "phase": 9,
+          "notes": "Shows user-visible execution status only — never hidden chain-of-thought."
+        }
+      ]
+    },
+    {
+      "id": "AA",
+      "title": "Enterprise layouts",
+      "capabilities": [
+        {
+          "name": "AppShell / Sidebar / Header",
+          "parts": [],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:sidebar",
+            "ui:app-bar",
+            "ui:navigation-bar"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "Sidebar, AppBar, NavigationBar."
+        },
+        {
+          "name": "PageHeader / ContextBar",
+          "parts": [],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:page-header"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "PageHeader; ContextBar is a PageHeader slot."
+        },
+        {
+          "name": "SplitPane / ResizablePanels",
+          "parts": [],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:resizable"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "Resizable."
+        },
+        {
+          "name": "MasterDetail",
+          "parts": [
+            "MasterList",
+            "DetailPanel"
+          ],
+          "layer": "L4",
+          "tier": "core",
+          "target": "block",
+          "status": "planned",
+          "delivery": "recipe",
+          "evidence": [],
+          "dependsOn": [
+            "Resizable",
+            "List",
+            "Sheet"
+          ],
+          "phase": 4,
+          "notes": "A responsive recipe (split on wide, push on narrow)."
+        },
+        {
+          "name": "InspectorPanel / UtilityPanel / WorkspaceLayout",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "web-first-enterprise",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Sheet",
+            "Resizable",
+            "Sidebar"
+          ],
+          "phase": 4,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "AB",
+      "title": "Enterprise status & feedback",
+      "capabilities": [
+        {
+          "name": "StatusBanner / InlineStatus",
+          "parts": [],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:banner",
+            "ui:inform",
+            "ui:alert"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "Banner, Inform, Alert."
+        },
+        {
+          "name": "ProcessingState / PendingState",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "existing",
+          "delivery": "component",
+          "evidence": [
+            "ui:result-state",
+            "ui:spinner"
+          ],
+          "dependsOn": [],
+          "phase": 1,
+          "notes": "ResultState status=\"pending\" for a whole result; Spinner inline."
+        },
+        {
+          "name": "ApprovalStatus",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Tag"
+          ],
+          "phase": 4,
+          "notes": ""
+        },
+        {
+          "name": "SyncStatus / ConnectionStatus / StaleDataState / OfflineState",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "iot:LastSync",
+            "iot:DeviceConnection",
+            "iot:ConnectionHealth"
+          ],
+          "dependsOn": [],
+          "phase": 3,
+          "notes": "The IoT freshness and connectivity contract already exists; lifting a domain-neutral version into Core (with IoT re-using it) is the job — do not fork a second model."
+        },
+        {
+          "name": "ConflictState / MaintenanceState",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "ResultState",
+            "Banner"
+          ],
+          "phase": 3,
+          "notes": "ResultState and Banner variants with resolution actions."
+        }
+      ]
+    },
+    {
+      "id": "AC",
+      "title": "Advanced forms",
+      "capabilities": [
+        {
+          "name": "FormSection / FieldArray / RepeatableFieldGroup / ConditionalField / DependentSelect",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:form",
+            "ui:field"
+          ],
+          "dependsOn": [],
+          "phase": 2,
+          "notes": "Form (react-hook-form) and Field exist; repeatable groups and dependent selects are recipes to write."
+        },
+        {
+          "name": "AddressForm / PhoneInput / CountrySelect / TimezoneSelect",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Field",
+            "Select",
+            "Combobox"
+          ],
+          "phase": 2,
+          "notes": "Pulled into Phase 2: checkout and booking need them. Country/phone data is supplied, not bundled."
+        },
+        {
+          "name": "DateRangeInput / DateTimeRangeInput",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:calendar",
+            "ui:date-picker"
+          ],
+          "dependsOn": [],
+          "phase": 2,
+          "notes": "Calendar has range mode; DatePicker is single-date — a range field is the gap."
+        },
+        {
+          "name": "DurationInput / UnitInput",
+          "parts": [],
+          "layer": "L2",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "ui:number-input",
+            "ui:input-group"
+          ],
+          "dependsOn": [],
+          "phase": 5,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "AD",
+      "title": "Motion",
+      "capabilities": [
+        {
+          "name": "Core motion",
+          "parts": [
+            "Presence",
+            "StateTransition",
+            "MovingIndicator",
+            "LayoutTransition",
+            "ValueTransition"
+          ],
+          "layer": "L1",
+          "tier": "core",
+          "target": "cross-platform-core",
+          "status": "partial",
+          "delivery": "component",
+          "evidence": [
+            "file:scripts/motion.mjs"
+          ],
+          "dependsOn": [],
+          "phase": null,
+          "notes": "Token-based durations and easings, reduced-motion evidence in CI. Primitives are not yet exported as components. Never paywalled."
+        },
+        {
+          "name": "Pro motion",
+          "parts": [
+            "MotionProvider",
+            "MotionPreset",
+            "MotionStyle",
+            "MotionSequence",
+            "MotionStagger",
+            "MotionInspector",
+            "brand motion packs"
+          ],
+          "layer": "L2",
+          "tier": "pro",
+          "target": "pro-candidate",
+          "status": "planned",
+          "delivery": "component",
+          "evidence": [],
+          "dependsOn": [
+            "Core motion"
+          ],
+          "phase": 10,
+          "notes": "Not in Phase 1. Accessibility motion (reduced motion, accessible end states) stays Core."
+        }
+      ]
+    }
+  ]
+}
