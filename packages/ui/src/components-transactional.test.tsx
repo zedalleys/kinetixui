@@ -74,6 +74,27 @@ describe("ReferenceCode copy", () => {
     expect(window.getSelection()?.toString()).toBe("ORD-2026-004519");
   });
 
+  it("a throwing onCopy does not turn a successful copy into a failure message", async () => {
+    setClipboard({ writeText: vi.fn().mockResolvedValue(undefined) });
+    const onCopy = vi.fn(() => {
+      throw new Error("analytics down");
+    });
+    const onError = vi.fn((e: ErrorEvent) => e.preventDefault());
+    window.addEventListener("error", onError);
+    const unhandled = vi.fn();
+    process.on("unhandledRejection", unhandled);
+    render(<ReferenceCode label="Order number" value="ORD-1" onCopy={onCopy} />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Copy Order number" }));
+    });
+    process.off("unhandledRejection", unhandled);
+    window.removeEventListener("error", onError);
+    expect(onCopy).toHaveBeenCalledWith("ORD-1");
+    expect(screen.getByRole("status")).toHaveTextContent("Copied");
+    // The consumer's error is not swallowed: it surfaces as the click handler's rejected promise.
+    expect(unhandled).toHaveBeenCalled();
+  });
+
   it("with no Clipboard API at all (an insecure context) takes the same honest path", async () => {
     render(<ReferenceCode label="Ticket" value="0742 1189" />);
     await act(async () => {

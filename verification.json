@@ -2630,7 +2630,7 @@
           "packages/ui/src/components-overlay.test.tsx:324-382",
           "packages/ui/src/components-rtl.test.tsx:60-259",
           "packages/ui/src/components-selection.test.tsx:138-208",
-          "packages/ui/src/components-transactional.test.tsx:234-296"
+          "packages/ui/src/components-transactional.test.tsx:255-317"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4322,11 +4322,11 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "packages/ui/src/components-transactional.test.tsx:126-233",
+          "packages/ui/src/components-transactional.test.tsx:147-254",
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
-          "packages/ui/src/components-transactional.test.tsx:234-296"
+          "packages/ui/src/components-transactional.test.tsx:255-317"
         ],
         "largeText": [
           "scripts/large-text.mjs:99-716"
@@ -4467,11 +4467,11 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "packages/ui/src/components-transactional.test.tsx:126-233",
+          "packages/ui/src/components-transactional.test.tsx:147-254",
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
-          "packages/ui/src/components-transactional.test.tsx:234-296"
+          "packages/ui/src/components-transactional.test.tsx:255-317"
         ],
         "largeText": [
           "scripts/large-text.mjs:99-716"
@@ -4714,15 +4714,15 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-transactional.test.tsx:35-125"
+          "packages/ui/src/components-transactional.test.tsx:35-146"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "packages/ui/src/components-transactional.test.tsx:126-233",
+          "packages/ui/src/components-transactional.test.tsx:147-254",
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
-          "packages/ui/src/components-transactional.test.tsx:234-296"
+          "packages/ui/src/components-transactional.test.tsx:255-317"
         ],
         "largeText": [
           "scripts/large-text.mjs:99-716"
@@ -4794,15 +4794,15 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-transactional.test.tsx:35-125"
+          "packages/ui/src/components-transactional.test.tsx:35-146"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "packages/ui/src/components-transactional.test.tsx:126-233",
+          "packages/ui/src/components-transactional.test.tsx:147-254",
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
-          "packages/ui/src/components-transactional.test.tsx:234-296"
+          "packages/ui/src/components-transactional.test.tsx:255-317"
         ],
         "largeText": [
           "scripts/large-text.mjs:99-716"

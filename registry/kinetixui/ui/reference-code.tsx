@@ -86,14 +86,16 @@ const ReferenceCode = React.forwardRef<HTMLDivElement, ReferenceCodeProps>(
       try {
         if (!navigator.clipboard?.writeText) throw new Error("Clipboard API unavailable");
         await navigator.clipboard.writeText(value);
-        setFeedback("copied");
-        onCopy?.(value);
-        timer.current = window.setTimeout(() => setFeedback("idle"), FEEDBACK_MS);
       } catch {
         // Leave the failure message up: the reader still has to act on it.
         selectValue();
         setFeedback("failed");
+        return;
       }
+      setFeedback("copied");
+      timer.current = window.setTimeout(() => setFeedback("idle"), FEEDBACK_MS);
+      // Outside the clipboard try: a consumer callback that throws must not turn a real copy into "Couldn't copy".
+      onCopy?.(value);
     };
 
     return (
