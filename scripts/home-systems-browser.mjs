@@ -286,12 +286,12 @@ for (const [width, dir] of [[320, 'ltr'], [390, 'ltr'], [390, 'rtl'], [768, 'ltr
 
 // ---- structure: what the page sends before anyone interacts with it ----------------------------------------------
 
-/** The page's raw HTML, split into the markup a reader sees and the decoded React payload that rides with it. */
+/** The page's raw HTML and the decoded React payload that rides with it (in which elements are JSON, never `<pre`). */
 async function rawPage() {
   const html = await (await fetch(`${base}/`)).text();
   let flight = '';
   for (const m of html.matchAll(/self\.__next_f\.push\(\[1,("(?:[^"\\]|\\.)*")\]\)/g)) flight += JSON.parse(m[1]);
-  return { html, flight, markup: html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, '') };
+  return { html, flight };
 }
 
 /** The JSON object that starts at `start` in `text`, by brace matching (strings respected). */
@@ -314,8 +314,8 @@ const EXCERPT_LINES = 7; // lib/systems-in-motion.ts cuts every excerpt to a 7-l
 const HERO_PROPS_BUDGET = 4096; // the hero map's serialized props: token, outputs, platforms, theme facts
 
 await check('structure: the explorer sends one panel as HTML, the other four as data only', async () => {
-  const { markup, flight } = await rawPage();
-  const pres = (markup.match(/<pre\b[^>]*class="kx-code /g) ?? []).length;
+  const { html, flight } = await rawPage();
+  const pres = (html.match(/<pre\b[^>]*class="kx-code /g) ?? []).length;
   assert.equal(pres, 1, `${pres} explorer code blocks in the HTML; only the open panel belongs there`);
   // the open panel's element tree rides once in the payload for hydration; a second copy means a hidden panel
   // was rendered as elements again
