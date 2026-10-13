@@ -5,7 +5,7 @@
  * repository does not implement is listed under `notSupported`, not given a status.
  */
 import manifest from "../../../../components.manifest.json";
-import { CATALOG_PLATFORMS, EVIDENCE_COUNTS, NATIVE_PLATFORMS, type Platform } from "./platform-parity";
+import { CATALOG_PLATFORMS, NATIVE_PLATFORMS, evidenceStatus, type Platform } from "./platform-parity";
 
 type Guidance = { type: "native-equivalent" | "composition" | "planned"; reason?: string; wave?: string };
 type ManifestComponent = {
@@ -58,9 +58,14 @@ export const nonPorts = all.filter((n) => NATIVE.every((p) => !components[n]!.pl
  * fact about the platform rather than a measurement.
  */
 const rtlCell = (platform: Platform, mechanism: string) => {
-  const proven = EVIDENCE_COUNTS[platform]?.rtl ?? 0;
-  const total = count(platform);
-  const evidence = proven === 0 ? "no component has RTL test evidence yet" : `${proven} of ${total} components have RTL test evidence; the rest are not audited`;
+  // the same evidence state the verification cards print, so the two cannot describe one count differently
+  const e = evidenceStatus(platform, "rtl");
+  const evidence =
+    e.state === "not-yet-verified"
+      ? "no RTL test evidence yet"
+      : e.count === e.of
+        ? `RTL test evidence for all ${e.of} catalogue entries`
+        : `${e.label.toLowerCase()}: RTL test evidence for ${e.count} of ${e.of} catalogue entries; the rest are not audited`;
   return `${mechanism} — ${evidence}`;
 };
 
