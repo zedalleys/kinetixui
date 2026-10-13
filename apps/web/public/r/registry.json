@@ -816,7 +816,10 @@
       "type": "registry:ui",
       "title": "Pass Card",
       "description": "Ported onto the KinetixUI token contract.",
-      "platforms": []
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
     },
     {
       "name": "password-input",
@@ -849,7 +852,10 @@
       "type": "registry:ui",
       "title": "Price Breakdown",
       "description": "Ported onto the KinetixUI token contract.",
-      "platforms": []
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
     },
     {
       "name": "progress",
@@ -908,7 +914,10 @@
       "type": "registry:ui",
       "title": "Reference Code",
       "description": "Ported onto the KinetixUI token contract.",
-      "platforms": []
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
     },
     {
       "name": "resizable",
@@ -928,7 +937,10 @@
       "type": "registry:ui",
       "title": "Result State",
       "description": "Ported onto the KinetixUI token contract.",
-      "platforms": []
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
     },
     {
       "name": "scroll-area",
