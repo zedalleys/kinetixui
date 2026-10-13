@@ -39,7 +39,7 @@ describe("agritech environment", () => {
     const hero = within(screen.getByRole("heading", { name: "Orchard block soil moisture" }).closest("section")!);
     expect(hero.queryByText("Normal")).toBeNull();
     // no valve is registered here, so nothing to open or close
-    expect(within(detail).queryByRole("radiogroup")).toBeNull();
+    expect(within(detail).queryByRole("button", { name: /^(Open|Close) Irrigation Valve/ })).toBeNull();
     expect(within(rail().getByText("Orchard block").closest("[data-variant]") as HTMLElement).getByText("Last known")).toBeInTheDocument();
   });
 
@@ -48,10 +48,15 @@ describe("agritech environment", () => {
     const detail = screen.getByRole("region", { name: "Zone 3 detail" });
     expect(within(detail).getByText("Closed", { selector: "p" })).toBeInTheDocument();
 
-    fireEvent.click(within(within(detail).getByRole("radiogroup", { name: /Irrigation Valve 03 position/ })).getByRole("radio", { name: /Open/ }));
-    expect(within(detail).getByText(/Requested: Open, not yet confirmed/)).toBeInTheDocument();
+    fireEvent.click(within(detail).getByRole("button", { name: "Open Irrigation Valve 03" }));
+    // One compact line, "Changing to Open" — never a second "Open" drawn as the valve's state.
+    expect(within(detail).getByText(/Changing to Open\. Not yet confirmed; the device reports Closed\./)).toBeInTheDocument();
+    expect(detail.querySelector('[data-pending-command="changing"]')).not.toBeNull();
+    expect(detail.querySelector('ol[aria-label="Progress of the request"]')).toBeNull();
     expect(within(detail).getByText("Closed", { selector: "p" })).toBeInTheDocument();
-    expect(within(detail).getByRole("radio", { name: /Closed/ })).toBeChecked();
+    // The action is not offered again while the valve works: the row holds the request line instead.
+    expect(within(detail).queryByRole("button", { name: "Open Irrigation Valve 03" })).toBeNull();
+    expect(within(detail).getByRole("button", { name: "Cancel the Irrigation Valve 03 request" })).toBeInTheDocument();
 
     tick(3000);
     expect(within(detail).getByText("Closed", { selector: "p" })).toBeInTheDocument();
@@ -59,7 +64,7 @@ describe("agritech environment", () => {
     fireEvent.click(retry);
     tick(3000);
     expect(within(detail).getByText("Open", { selector: "p" })).toBeInTheDocument();
-    expect(within(detail).queryByText(/Requested: Open/)).toBeNull();
+    expect(within(detail).queryByText(/Changing to Open/)).toBeNull();
   });
 
   it("marks the pump request as requested, not running-confirmed", () => {
@@ -68,7 +73,7 @@ describe("agritech environment", () => {
     const detail = screen.getByRole("region", { name: "Utility yard detail" });
     expect(within(detail).getByText("Running")).toBeInTheDocument();
     fireEvent.click(within(detail).getByRole("switch", { name: /Pump Station power/ }));
-    expect(within(detail).getByText(/Requested: Off, not yet confirmed/)).toBeInTheDocument();
+    expect(within(detail).getByText(/Changing to Off\. Not yet confirmed/)).toBeInTheDocument();
     expect(within(detail).getByText("Running")).toBeInTheDocument();
   });
 
@@ -82,7 +87,9 @@ describe("agritech environment", () => {
   it("derives device health and open alerts from the simulation", () => {
     render(<AgritechEnvironmentExample />);
     expect(screen.getByText(/3 open alerts/)).toBeInTheDocument();
-    const health = screen.getByRole("heading", { name: "Device health" }).closest("section")!;
+    // Level 2: the full battery and reporting list is one press away, not open beside the alerts.
+    const health = screen.getByText("Device health").closest("details")!;
+    expect(health.open).toBe(false);
     expect(within(health).getByText("9")).toBeInTheDocument();
     expect(within(health).getAllByRole("img", { name: /battery/i }).length).toBeGreaterThanOrEqual(4);
   });
@@ -118,18 +125,23 @@ describe("agritech environment", () => {
   it("words the flaky valve's failure with the device's own reason and keeps the confirmed position", () => {
     render(<AgritechEnvironmentExample />);
     const detail = screen.getByRole("region", { name: "Zone 3 detail" });
-    fireEvent.click(within(within(detail).getByRole("radiogroup", { name: /Irrigation Valve 03 position/ })).getByRole("radio", { name: /Open/ }));
+    fireEvent.click(within(detail).getByRole("button", { name: "Open Irrigation Valve 03" }));
     // In flight: the request is worded and says what the valve still reports.
-    expect(within(detail).getByText(/Requested: Open, not yet confirmed\. The valve still reports closed\./)).toBeInTheDocument();
+    expect(within(detail).getByText(/Changing to Open\. Not yet confirmed; the device reports Closed\./)).toBeInTheDocument();
 
     tick(3000);
     // Failed: the reason the scenario scripted is on screen at full contrast, not only in the summary line.
-    expect(within(detail).getByText(/Irrigation Valve 03 did not move — Valve position not reported\./)).toBeInTheDocument();
+    expect(within(detail).getByText(/Irrigation Valve 03 did not move\. Valve position not reported\./)).toBeInTheDocument();
+    expect(within(detail).getByText("Irrigation Valve 03 did not move")).toBeInTheDocument();
+    // The lifecycle record is Level 3: present, closed, one press away.
+    const record = within(detail).getByText("Request details").closest("details")!;
+    expect(record.open).toBe(false);
+    expect(within(record).getByText("Attempts")).toBeInTheDocument();
     // The confirmed position is still the authoritative one, and the control still reports it.
     expect(within(detail).getByText("Closed", { selector: "p" })).toBeInTheDocument();
-    expect(within(detail).getByRole("radio", { name: /Closed/ })).toBeChecked();
-    // Retry is offered, never taken for you.
-    const retry = within(detail).getByRole("button", { name: /^Retry$/ });
+    // Retry is offered, never taken for you, and named for what it asks again.
+    const retry = within(detail).getByRole("button", { name: "Retry Irrigation Valve 03: Open" });
+    expect(within(detail).getByRole("button", { name: "Dismiss the Irrigation Valve 03 failure" })).toBeInTheDocument();
     tick(5000);
     expect(within(detail).getByText("Closed", { selector: "p" })).toBeInTheDocument();
     fireEvent.click(retry);

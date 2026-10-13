@@ -25,6 +25,15 @@
  *   only; ambient chips and unselected hotspot names were already held back below `sm`. So at 390 the plan
  *   carries exactly one room name, one device name (the selected one) and a handful of markers.
  *
+ * Semantic zoom (M5B): the plan has three densities, derived from the selection alone (`planDensity`).
+ * - overview (nothing selected): each room's name, up to two readings, its exception count and a device count;
+ *   no device names, and healthy markers recede so only exceptions carry a full marker.
+ * - zone (a room selected): that room's boundary and tint dominate, its markers are full and its readings stay;
+ *   other rooms step back to a muted fill and lose their readings, and their markers recede.
+ * - device (a marker selected): the selected marker is filled, larger and named; the detail itself is the
+ *   composition's focused panel beside the plan, not a floating card on it.
+ * Receded markers are still 44px buttons with full names. A critical marker never recedes.
+ *
  * Direction: the SVG mirrors under RTL (`rtl:-scale-x-100`) and every HTML overlay positions with logical
  * inset, so hotspots stay on the same spot of the drawing in both directions.
  */
@@ -33,6 +42,7 @@ import { DeviceIcon } from "@kinetixui/iot/react";
 import type { KinetixDeviceCategory } from "@kinetixui/iot/functions";
 import { cn } from "@/lib/utils";
 import { StateGlyph, STATE_TEXT, type ShowcaseState } from "./primitives";
+import { severityRank } from "./severity";
 
 /* -------------------------------------------------------------------------------------------------
  * Plan data
@@ -164,14 +174,16 @@ function hits(a: Box, b: Box): boolean {
   return Math.abs(a.cx - b.cx) * 2 < a.w + b.w && Math.abs(a.cy - b.cy) * 2 < a.h + b.h;
 }
 
-/** Attention first, then the selected room, then everything else. Lower sorts earlier. */
+/**
+ * The selected device, then the showcase severity order (`severity.ts`: critical, needs attention, pending,
+ * offline), then the selected room, then everything else. Lower sorts earlier. Offline ranks below a pending
+ * request: a device that is not reporting is not a hazard, and a request in flight is what someone is watching.
+ */
 function rankOf(h: PlanHotspot, selectedRoomId: string | null, selectedHotspotId: string | null): number {
   if (h.id === selectedHotspotId) return 0;
-  if (h.state === "critical") return 1;
-  if (h.state === "warning") return 2;
-  if (h.state === "offline") return 3;
-  if (h.roomId === selectedRoomId) return 4;
-  return 5;
+  if (h.state !== "confirmed") return 1 + severityRank(h.state);
+  if (h.roomId === selectedRoomId) return 5;
+  return 6;
 }
 
 export type PhonePlanLayout = {
@@ -232,8 +244,8 @@ export function phonePlanLayout(input: {
     taken.push({ cx: box.cx + shift, cy: box.cy + LABEL.offset, w: LABEL.width, h: LABEL.height });
   }
 
-  // Anything needing attention goes down next: an alert outranks the room's name, which is also in the hidden
-  // list and in the composition's heading beside the plan.
+  // Anything needing attention, and a request in flight, goes down next: it outranks the room's name, which is
+  // also in the hidden list and in the composition's heading beside the plan. Offline (rank 4) waits its turn.
   for (const { h, rank } of order) {
     if (rank === 0 || rank > 3) continue;
     const box = marker(h);
@@ -303,14 +315,16 @@ function FeatureShape({ feature, hatchId, dotsId }: { feature: PlanFeature; hatc
   return <path d={feature.d} strokeDasharray={feature.dashed || tone === "pipe" ? "5 5" : undefined} {...common} />;
 }
 
-function RoomShape({ room, selected, onClick, hatchId, dotsId }: { room: PlanRoom; selected: boolean; onClick?: () => void; hatchId: string; dotsId: string }) {
+function RoomShape({ room, selected, receded = false, onClick, hatchId, dotsId }: { room: PlanRoom; selected: boolean; receded?: boolean; onClick?: () => void; hatchId: string; dotsId: string }) {
+  // A selected zone dominates: a full primary boundary and tint. Its neighbours step back to a muted fill and a
+  // fainter wall, so the boundary reads at a glance without a second highlight.
   const cls = cn(
     "transition-colors duration-fast motion-reduce:transition-none",
-    selected ? "fill-primary/10 stroke-primary" : "fill-card stroke-border",
+    selected ? "fill-primary/10 stroke-primary" : receded ? "fill-muted/50 stroke-border/70" : "fill-card stroke-border",
     onClick && !selected && "hover:fill-muted",
     onClick && "cursor-pointer",
   );
-  const props = { className: cls, strokeWidth: selected ? 2.5 : 1.5, onClick, "data-room": room.id, "data-selected": selected ? "true" : undefined } as const;
+  const props = { className: cls, strokeWidth: selected ? 3 : 1.5, onClick, "data-room": room.id, "data-selected": selected ? "true" : undefined } as const;
   const overlayFill = room.pattern === "dots" ? `url(#${dotsId})` : room.pattern === "hatch" ? `url(#${hatchId})` : undefined;
   return (
     <g>
@@ -340,10 +354,40 @@ const CENTRE = "-translate-x-1/2 -translate-y-1/2 rtl:translate-x-1/2";
 
 const HOTSPOT_STATE_WORD: Partial<Record<HotspotState, string>> = { pending: "Requested", offline: "Offline", warning: "Needs attention", critical: "Critical" };
 
+/**
+ * How loud a marker is at the plan's current density.
+ * `focus`  the selected device: filled, larger, named.
+ * `normal` a device in the selected zone, or an exception that belongs at the glance level.
+ * `recede` context: smaller and untinted (muted glyph on the card, a hairline ring — no opacity, so it keeps
+ *         its contrast), no badge unless it is an exception. Still a real 44px button.
+ */
+export type MarkerEmphasis = "focus" | "normal" | "recede";
+
+/** The plan's semantic zoom: the whole site, one zone, or one device. Derived from the selection alone. */
+export type PlanDensity = "overview" | "zone" | "device";
+
+export function planDensity(selectedRoomId: string | null | undefined, selectedHotspotId: string | null | undefined): PlanDensity {
+  if (selectedHotspotId) return "device";
+  if (selectedRoomId) return "zone";
+  return "overview";
+}
+
+/**
+ * Pure, so the hierarchy is tested without a browser. A critical device is never receded; otherwise anything
+ * outside the selected zone recedes, and in the overview only exceptions keep their full marker.
+ */
+export function markerEmphasis(h: Pick<PlanHotspot, "id" | "roomId" | "state">, density: PlanDensity, selectedRoomId: string | null, selectedHotspotId: string | null): MarkerEmphasis {
+  if (h.id === selectedHotspotId) return "focus";
+  if (h.state === "critical") return "normal";
+  if (density === "overview") return h.state === "confirmed" ? "recede" : "normal";
+  return h.roomId === selectedRoomId ? "normal" : "recede";
+}
+
 function Hotspot({
   hotspot,
   selected,
   labelled,
+  emphasis,
   phone,
   culled = false,
   onSelect,
@@ -351,6 +395,7 @@ function Hotspot({
   hotspot: PlanHotspot;
   selected: boolean;
   labelled: boolean;
+  emphasis: MarkerEmphasis;
   /** Drawn below `sm` too. When false the marker only appears from `sm` up. */
   phone: boolean;
   /** Held back at every width, not only below `sm`: the measured plan has no room for it (see `SpaceCanvas`). */
@@ -360,6 +405,9 @@ function Hotspot({
   const { state } = hotspot;
   const word = HOTSPOT_STATE_WORD[state];
   const align = selectedLabelAlign(hotspot.x);
+  const recede = emphasis === "recede";
+  // Healthy is quiet: no badge. Every other state keeps its glyph (shape, not colour alone) at every emphasis.
+  const badge = state !== "confirmed";
   return (
     <div
       className={cn("absolute", CENTRE, selected ? "z-focus" : "z-raised", culled ? "hidden" : !phone && "hidden sm:block")}
@@ -372,43 +420,53 @@ function Hotspot({
         aria-pressed={selected}
         data-hotspot={hotspot.id}
         data-state={state}
+        data-emphasis={emphasis}
         onClick={() => onSelect?.(hotspot.id)}
-        // size-11 at every width: the visible bubble is smaller, the padding is the touch target.
-        className="group relative flex size-11 items-center justify-center rounded-full focus-visible:outline-none"
+        // size-11 at every width: the visible bubble is smaller, the padding is the touch target. The group is
+        // NAMED: an unnamed `group` matched any ancestor `.group` (the page's <details>), so hovering anywhere
+        // over the environment revealed every marker's name at once.
+        className="group/marker relative flex size-11 items-center justify-center rounded-full focus-visible:outline-none"
       >
-        {/* pending: a dashed ring that breathes, only when motion is welcome */}
+        {/* pending: a dashed ring, static — the dash is the meaning, not the motion */}
         {state === "pending" ? (
-          <span aria-hidden="true" className="absolute -inset-1 rounded-full border-2 border-dashed border-primary motion-safe:animate-pulse motion-reduce:animate-none" />
+          <span aria-hidden="true" className={cn("absolute rounded-full border-2 border-dashed border-primary", recede ? "inset-1" : "-inset-1")} />
         ) : null}
-        {/* a circular tinted bubble: a soft halo ring, the device glyph, and a small state badge */}
         <span
           aria-hidden="true"
           className={cn(
-            "relative flex items-center justify-center rounded-full ring-4 shadow-sm transition-colors duration-fast motion-reduce:transition-none",
-            selected ? "size-10" : "size-9",
-            "group-focus-visible:ring-ring",
-            state === "confirmed" && (selected ? "bg-primary text-primary-foreground ring-primary/30" : "bg-primary/15 text-primary ring-card/80 group-hover:bg-primary/25"),
+            "relative flex items-center justify-center rounded-full transition-colors duration-fast motion-reduce:transition-none",
+            emphasis === "focus" ? "size-10 shadow-sm ring-4" : recede ? "size-7 ring-2" : "size-9 shadow-sm ring-4",
+            "group-focus-visible/marker:ring-ring",
+            state === "confirmed" &&
+              (emphasis === "focus"
+                ? "bg-primary text-primary-foreground ring-primary/30"
+                : recede
+                  ? "bg-card text-muted-foreground ring-border group-hover/marker:text-primary"
+                  : "bg-primary/15 text-primary ring-card/80 group-hover/marker:bg-primary/25"),
             state === "pending" && "bg-card text-primary ring-primary/15",
-            state === "offline" && "border-2 border-dashed border-muted-foreground bg-muted text-muted-foreground ring-card/80",
+            state === "offline" && "border-2 border-dashed border-muted-foreground/70 bg-muted text-muted-foreground ring-card/80",
             state === "warning" && "bg-warning/20 text-foreground ring-warning/20",
-            state === "critical" && "bg-destructive/15 text-foreground ring-destructive/20",
+            state === "critical" && "bg-destructive/15 text-foreground ring-destructive/30",
             selected && state !== "confirmed" && "ring-primary/40",
           )}
         >
-          <DeviceIcon category={hotspot.category} size={18} />
+          <DeviceIcon category={hotspot.category} size={recede ? 14 : 18} />
           {state === "offline" ? (
             <svg viewBox="0 0 32 32" className="absolute inset-0 size-full text-muted-foreground" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" focusable="false" aria-hidden="true">
               <path d="M8 24 24 8" />
             </svg>
           ) : null}
-          <span className="absolute -bottom-1 -end-1 flex size-4 items-center justify-center rounded-full bg-card shadow-sm">
-            <StateGlyph state={state} size={12} className={STATE_TEXT[state]} />
-          </span>
+          {badge ? (
+            <span className="absolute -bottom-1 -end-1 flex size-4 items-center justify-center rounded-full bg-card shadow-sm">
+              <StateGlyph state={state} size={12} className={STATE_TEXT[state]} />
+            </span>
+          ) : null}
         </span>
-        {/* the name beside the marker: hidden below md except for the selected one, which must read at 390;
-            everywhere else the aria-label carries it */}
+        {/* the name beside the marker: only where the density calls for it (see `labelMode`), otherwise on
+            this marker's own hover or focus; the aria-label always carries it */}
         <span
           aria-hidden="true"
+          data-marker-label=""
           className={cn(
             "pointer-events-none absolute top-full mt-0.5",
             // near an edge the chip hangs off the marker's edge instead of straddling it, so it stays on the plan
@@ -416,7 +474,7 @@ function Hotspot({
             // capped only at phone width, where the plan is ~250 px wide; unchanged from `sm` up
             selected ? "flex max-w-40 sm:max-w-none" : "hidden md:flex",
             "flex-col items-center overflow-hidden whitespace-nowrap rounded-lg bg-card px-2 py-0.5 text-center shadow-sm transition-opacity duration-fast motion-reduce:transition-none",
-            labelled ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100",
+            labelled ? "opacity-100" : "opacity-0 group-hover/marker:opacity-100 group-focus-visible/marker:opacity-100",
           )}
         >
           <span className={cn("max-w-full truncate text-label-md text-foreground", selected && "font-semibold")}>{hotspot.label}</span>
@@ -424,7 +482,7 @@ function Hotspot({
             <span className="max-w-full truncate text-label-md tabular-nums text-muted-foreground">
               {hotspot.value ? <bdi>{hotspot.value}</bdi> : null}
               {hotspot.value && word ? " · " : null}
-              {state === "pending" && hotspot.requested ? <>Requested <bdi>{hotspot.requested}</bdi></> : word}
+              {state === "pending" && hotspot.requested ? <>Changing to <bdi>{hotspot.requested}</bdi></> : word}
             </span>
           ) : null}
         </span>
@@ -451,8 +509,9 @@ export type SpaceCanvasProps = {
   /**
    * Which hotspot names are drawn beside their markers (from `md` up; every name is always in the accessible name and
    * appears on hover or focus). `selected`: only the selected hotspot. `room`: every hotspot in the selected room.
-   * `all`: everything. Default `auto`: `room` while the selected room holds three hotspots or fewer, otherwise
-   * `selected`, so a dense room does not turn into overlapping text.
+   * `all`: everything. Default `auto` follows the plan's density (`planDensity`): no names in the overview, `room`
+   * for a selected zone of three hotspots or fewer, otherwise `selected`, so a dense room does not turn into
+   * overlapping text.
    */
   hotspotLabels?: "auto" | "selected" | "room" | "all";
   /**
@@ -473,12 +532,17 @@ export type SpaceCanvasProps = {
   className?: string;
 };
 
+/** In severity order. Healthy carries no mark on the plan, so its key entry is a plain marker and the word. */
 const LEGEND: { state: HotspotState; word: string }[] = [
-  { state: "confirmed", word: "Confirmed" },
-  { state: "pending", word: "Requested, not confirmed" },
+  { state: "critical", word: "Critical" },
   { state: "warning", word: "Needs attention" },
+  { state: "pending", word: "Requested, not confirmed" },
   { state: "offline", word: "Offline" },
+  { state: "confirmed", word: "No mark: confirmed" },
 ];
+
+const roomSentence = (c: { devices: number; attention: number }) =>
+  `${c.devices} ${c.devices === 1 ? "device" : "devices"}${c.attention ? `, ${c.attention} ${c.attention === 1 ? "needs" : "need"} attention` : ""}`;
 
 export function SpaceCanvas({
   plan,
@@ -515,7 +579,19 @@ export function SpaceCanvas({
   const visibleHotspots = hotspots.filter((h) => roomIds.has(h.roomId));
 
   const inSelectedRoom = visibleHotspots.filter((h) => h.roomId === selectedRoomId).length;
-  const labelMode = hotspotLabels === "auto" ? (inSelectedRoom <= 3 ? "room" : "selected") : hotspotLabels;
+  const density = planDensity(selectedRoomId, selectedHotspotId);
+  // The overview names no device on the plan: it is rooms, their aggregates and their exceptions. A zone names
+  // its own few devices; a device names itself. Names are always in each marker's accessible name and on its hover.
+  const labelMode =
+    hotspotLabels === "auto" ? (density === "overview" ? "none" : density === "zone" && inSelectedRoom <= 3 ? "room" : "selected") : hotspotLabels;
+  // Per-room aggregates for the overview, counted from the markers themselves so nothing is hand-typed.
+  const roomCounts = new Map<string, { devices: number; attention: number }>();
+  for (const h of visibleHotspots) {
+    const c = roomCounts.get(h.roomId) ?? { devices: 0, attention: 0 };
+    c.devices++;
+    if (h.state === "warning" || h.state === "critical") c.attention++;
+    roomCounts.set(h.roomId, c);
+  }
 
   const selectedRoom = level.rooms.find((r) => r.id === selectedRoomId) ?? null;
   // The first render (server and hydration) judges collisions on the constant phone plan, below `sm` only, so
@@ -567,7 +643,7 @@ export function SpaceCanvas({
   const pct = (value: number, of: number) => `${(value / of) * 100}%`;
 
   return (
-    <div role="group" aria-label={plan.label} className={cn("flex min-w-0 flex-col gap-3", className)}>
+    <div role="group" aria-label={plan.label} data-plan-density={density} className={cn("flex min-w-0 flex-col gap-3", className)}>
       {plan.levels.length > 1 ? (
         <div role="group" aria-label={`${plan.label} levels`} className="flex flex-wrap gap-1 self-start rounded-full bg-muted/60 p-1">
           {plan.levels.map((l) => (
@@ -614,6 +690,7 @@ export function SpaceCanvas({
                 key={room.id}
                 room={room}
                 selected={room.id === selectedRoomId}
+                receded={selectedRoom !== null && room.id !== selectedRoomId}
                 onClick={onSelectRoom ? () => onSelectRoom(room.id) : undefined}
                 hatchId={hatchId}
                 dotsId={dotsId}
@@ -638,39 +715,50 @@ export function SpaceCanvas({
             </span>
           ) : null}
 
-          {/* room names and ambient readings: visual only, repeated once in the hidden list below */}
+          {/* room names and aggregates: visual only, repeated once in the hidden list below. The overview gives
+              every room its name, up to two readings and its exceptions; once a zone is chosen only that zone
+              keeps its readings and the others are names, one step quieter. */}
           {level.rooms.map((room) => {
             const selected = room.id === selectedRoomId;
-            const chips = ambient?.[room.id] ?? [];
+            const showReadings = density === "overview" || selected;
+            const chips = showReadings ? (ambient?.[room.id] ?? []).slice(0, 2) : [];
+            const counts = roomCounts.get(room.id);
             return (
               <div
                 key={room.id}
                 aria-hidden="true"
-                className={cn(
-                  "pointer-events-none absolute z-base hidden max-w-40 flex-col items-start gap-1 sm:flex",
-                )}
+                data-room-label={room.id}
+                className={cn("pointer-events-none absolute z-base hidden max-w-40 flex-col items-start gap-1 sm:flex")}
                 style={{ insetInlineStart: pct(room.labelAt.x, vw), insetBlockStart: pct(room.labelAt.y, vh) }}
               >
-                <span className={cn("flex min-w-0 max-w-full flex-col items-start", selected ? "font-semibold text-primary" : "text-muted-foreground")}>
+                <span className={cn("flex min-w-0 max-w-full flex-col items-start", selected ? "font-semibold text-primary" : selectedRoom ? "text-muted-foreground/80" : "text-muted-foreground")}>
                   <span className="flex min-w-0 max-w-full items-center gap-1 text-label-md uppercase tracking-wide">
                     {selected ? <StateGlyph state="confirmed" size={12} className="text-primary" /> : null}
                     <span className="truncate">{room.label}</span>
                   </span>
                   {selected ? <span className="hidden text-label-md font-medium sm:inline">Selected</span> : null}
                 </span>
-                {chips.length ? (
+                {chips.length || (density === "overview" && counts) ? (
                   <span className="flex flex-wrap gap-1">
                     {chips.map((chip) => (
-                      <span
-                        key={chip}
-                        className={cn(
-                          "items-center rounded-full bg-card/90 px-2 text-label-md tabular-nums text-foreground shadow-sm",
-                          "hidden sm:inline-flex",
-                        )}
-                      >
+                      <span key={chip} data-ambient-chip="" className="hidden items-center rounded-full bg-card/90 px-2 text-label-md tabular-nums text-foreground shadow-sm sm:inline-flex">
                         <bdi>{chip}</bdi>
                       </span>
                     ))}
+                    {density === "overview" && counts ? (
+                      <span data-room-summary="" className="hidden items-center gap-1 rounded-full bg-card/90 px-2 text-label-md tabular-nums text-muted-foreground shadow-sm sm:inline-flex">
+                        {counts.attention ? (
+                          <>
+                            <StateGlyph state="warning" size={12} className={STATE_TEXT.warning} />
+                            <span className="text-foreground">{counts.attention}</span>
+                            <span>·</span>
+                          </>
+                        ) : null}
+                        <span>
+                          {counts.devices} {counts.devices === 1 ? "device" : "devices"}
+                        </span>
+                      </span>
+                    ) : null}
                   </span>
                 ) : null}
               </div>
@@ -683,6 +771,7 @@ export function SpaceCanvas({
               hotspot={h}
               selected={h.id === selectedHotspotId}
               labelled={labelMode === "all" || h.id === selectedHotspotId || (labelMode === "room" && h.roomId === selectedRoomId)}
+              emphasis={markerEmphasis(h, density, selectedRoomId, selectedHotspotId)}
               phone={phone.shown === null || phone.shown.has(h.id)}
               culled={everywhere && phone.shown !== null && !phone.shown.has(h.id)}
               onSelect={onSelectHotspot}
@@ -697,6 +786,7 @@ export function SpaceCanvas({
             {room.label}
             {room.id === selectedRoomId ? " (selected)" : ""}
             {ambient?.[room.id]?.length ? `: ${ambient[room.id]!.join(", ")}` : ""}
+            {roomCounts.get(room.id) ? `; ${roomSentence(roomCounts.get(room.id)!)}` : ""}
           </li>
         ))}
       </ul>
@@ -716,7 +806,11 @@ export function SpaceCanvas({
         <ul aria-label="Marker key" className="flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-muted-foreground">
           {LEGEND.map(({ state, word }) => (
             <li key={state} className="inline-flex items-center gap-1.5">
-              <StateGlyph state={state} size={14} className={STATE_TEXT[state]} />
+              {state === "confirmed" ? (
+                <span aria-hidden="true" className="inline-block size-3.5 rounded-full bg-primary/15 ring-2 ring-card" />
+              ) : (
+                <StateGlyph state={state} size={14} className={STATE_TEXT[state]} />
+              )}
               <span>{word}</span>
             </li>
           ))}

@@ -25,6 +25,12 @@
           "name": "alternating",
           "type": "boolean",
           "required": false
+        },
+        {
+          "name": "statusLabels",
+          "type": "Partial<Record<TimelineStatus, string>>",
+          "required": false,
+          "description": "Spoken words per status, for localisation. Unset entries keep their English default."
         }
       ]
     }

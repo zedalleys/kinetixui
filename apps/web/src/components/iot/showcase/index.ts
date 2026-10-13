@@ -35,3 +35,5 @@ export {
 export { DeviceIllustration, type IllustrationKind } from "./device-illustration";
 export { PillSelector, PILL_ALL_ID, type PillOption } from "./pill-selector";
 export { DateStrip, type DateStripDay } from "./date-strip";
+export { PendingCommand, RequestDetails, hasRequestRecord, pendingCommandView, CONFIRMATION_MS, type PendingCommandView } from "./pending-command";
+export { SEVERITY_ORDER, severityRank, worseState, isException } from "./severity";

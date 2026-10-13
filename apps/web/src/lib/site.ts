@@ -79,8 +79,10 @@ const slugOf = (href: string) => href.split("/").pop() ?? "";
 /** Alphabetical master list — drives the /components gallery. */
 export const componentDocs: NavItem[] = [
   built("Accordion", "accordion"),
+  built("Address Fields", "address-fields"),
   built("Alert", "alert"),
   built("Alert Dialog", "alert-dialog"),
+  built("Amount Display", "amount-display"),
   built("App Bar", "app-bar"),
   built("Aspect Ratio", "aspect-ratio"),
   built("Audio Player", "audio-player"),
@@ -104,9 +106,11 @@ export const componentDocs: NavItem[] = [
   built("Command", "command"),
   built("Comparison Slider", "comparison-slider"),
   built("Context Menu", "context-menu"),
+  built("Country Select", "country-select"),
   built("Data Grid", "data-grid"),
   built("Data Table", "data-table"),
   built("Date Picker", "date-picker"),
+  built("Date Range Input", "date-range-input"),
   built("Description List", "description-list"),
   built("Dialog", "dialog"),
   built("Diff Viewer", "diff-viewer"),
@@ -119,6 +123,7 @@ export const componentDocs: NavItem[] = [
   built("File Upload", "file-upload"),
   built("Footer", "footer"),
   built("Form", "form"),
+  built("Guest Picker", "guest-picker"),
   built("Hover Card", "hover-card"),
   built("Image", "image"),
   built("Inform", "inform"),
@@ -146,6 +151,7 @@ export const componentDocs: NavItem[] = [
   built("Page Header", "page-header"),
   built("Pagination", "pagination"),
   built("Pass Card", "pass-card"),
+  built("Phone Input", "phone-input"),
   built("Popover", "popover"),
   built("Price Breakdown", "price-breakdown"),
   built("Progress", "progress"),
@@ -173,6 +179,7 @@ export const componentDocs: NavItem[] = [
   built("Table of Contents", "table-of-contents"),
   built("Tabs", "tabs"),
   built("Textarea", "textarea"),
+  built("Time Slot Picker", "time-slot-picker"),
   built("Timeline", "timeline"),
   built("Toggle", "toggle"),
   built("Toggle Group", "toggle-group"),
@@ -193,6 +200,8 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   "input-group": "Form Inputs", "password-input": "Form Inputs", "number-input": "Form Inputs",
   field: "Form Inputs", form: "Form Inputs", "file-upload": "Form Inputs", "date-picker": "Form Inputs",
   calendar: "Form Inputs", rating: "Form Inputs", "color-picker": "Form Inputs", "markdown-editor": "Form Inputs",
+  "guest-picker": "Form Inputs", "country-select": "Form Inputs", "phone-input": "Form Inputs",
+  "date-range-input": "Form Inputs", "time-slot-picker": "Form Inputs", "address-fields": "Form Inputs",
 
   button: "Controls & Actions", "button-group": "Controls & Actions", toggle: "Controls & Actions",
   "toggle-group": "Controls & Actions", "segmented-control": "Controls & Actions",
@@ -220,7 +229,7 @@ export const COMPONENT_CATEGORY: Record<string, string> = {
   timeline: "Data Display", marquee: "Data Display", "message-bubble": "Data Display",
   "virtual-list": "Data Display", "json-viewer": "Data Display", "diff-viewer": "Data Display",
   "kanban-board": "Data Display", "reference-code": "Data Display", "price-breakdown": "Data Display",
-  "pass-card": "Data Display",
+  "pass-card": "Data Display", "amount-display": "Data Display",
 };
 
 export const CATEGORY_ORDER = [

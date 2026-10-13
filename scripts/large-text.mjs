@@ -264,7 +264,29 @@ const DISPLAY_SUBJECTS = [
   { component: "PriceBreakdown", story: "data-display-pricebreakdown--transfer-and-loading", root: "dl", text: "dl dt span", ends: "dl > div" },
   { component: "PassCard", story: "data-display-passcard--default", root: "article", text: "article dd" },
   { component: "PassCard", story: "data-display-passcard--compositions", root: "article", text: "article dd" },
+  ...BUSINESS_SUBJECTS(),
 ];
+
+/**
+ * The Phase 2 money, status and booking foundations (business capability roadmap): <AmountDisplay>,
+ * <Timeline> with statuses, <TimeSlotPicker>, <AddressFields>, <PhoneInput>, <GuestPicker>, <CountrySelect>
+ * and <DateRangeInput> — the closed field of each of the last three; their open panels are measured with
+ * the overlays below. Same rules as the display family: their own text grows, nothing leaves its container,
+ * no horizontal page scroll, and a slot tile stays a usable target at 2x text, in both directions and at
+ * both widths. A hoisted function, because DISPLAY_SUBJECTS above is read before this line runs.
+ */
+function BUSINESS_SUBJECTS() {
+  return [
+    { component: "AmountDisplay", story: "data-display-amountdisplay--default", root: "[data-slot=amount-display]", text: "[data-slot=amount-value]" },
+    { component: "Timeline", story: "data-display-timeline--statuses", root: "#storybook-root ol", text: "#storybook-root ol li p" },
+    { component: "TimeSlotPicker", story: "form-inputs-timeslotpicker--default", root: "[role=radiogroup]", text: "[role=radio] span", target: "[role=radio]" },
+    { component: "AddressFields", story: "form-inputs-addressfields--default", root: "fieldset", text: "fieldset input" },
+    { component: "PhoneInput", story: "form-inputs-phoneinput--default", root: "[data-slot=phone-input]", text: "input[type=tel]", target: "[data-slot=phone-input] select" },
+    { component: "GuestPicker", story: "form-inputs-guestpicker--default", root: "button[aria-labelledby]", text: "button[aria-labelledby] span" },
+    { component: "CountrySelect", story: "form-inputs-countryselect--default", root: "button[aria-labelledby]", text: "button[aria-labelledby] span" },
+    { component: "DateRangeInput", story: "form-inputs-daterangeinput--default", root: "button[aria-labelledby]", text: "button[aria-labelledby] bdi" },
+  ];
+}
 
 /**
  * The verification claim is derived from prose; the measurements are derived from the subject lists.
@@ -549,7 +571,7 @@ for (const name of TEXT_SCALE_PENDING) {
 
 /**
  * Overlays: <Dialog>, <AlertDialog>, <Sheet>, <Drawer>, <Modal>, <Popover>, <Tooltip>, <DropdownMenu>,
- * <ContextMenu> and <Menubar> — opened, then measured at 1x and 2x, at desktop and phone width, in both
+ * <ContextMenu> and <Menubar>, and the panels of <GuestPicker>, <CountrySelect> and <DateRangeInput> — opened, then measured at 1x and 2x, at desktop and phone width, in both
  * directions. Named here rather than in the file header because the claim is the passage from the marker
  * to the end of the file, and the header is above it: names written there are read by nobody.
  *

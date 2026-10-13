@@ -413,7 +413,7 @@ function FloorRail({
               {/* Text stays at body contrast on the selected tint; the glyph (a non-text cue, 3:1) carries the colour. */}
               <span className="inline-flex items-center gap-1 text-label-sm tabular-nums text-foreground">
                 {cams.down ? (
-                  <CameraOff aria-hidden="true" className="size-3.5 shrink-0 text-destructive" />
+                  <CameraOff aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground" />
                 ) : (
                   <Camera aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground" />
                 )}

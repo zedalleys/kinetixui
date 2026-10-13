@@ -1,7 +1,8 @@
 # Held `@kinetixui/iot` changesets
 
-These four changesets are real, unreleased `@kinetixui/iot` changes on `main` (M4A lifecycle edges,
-M4B device ledger, offline request wording, offline pending pulse). Together they make `0.6.0`.
+These changesets are real, unreleased `@kinetixui/iot` changes on `main` (M4A lifecycle edges,
+M4B device ledger, offline request wording, offline pending pulse, M5A card glance density). Together they
+make `0.6.0`.
 
 They are held here, outside `.changeset/`, because `@kinetixui/iot` 0.6.0 is not released until the
 device ledger has been validated against a live provider and a physical device (owner decision,
